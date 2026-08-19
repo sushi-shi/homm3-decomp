@@ -1164,21 +1164,80 @@ inline void update_artifact_slot(long id, int artifact)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2365
-// Pinned from BELOW: update_all_slots (0x004db1d0, next claim) is a
-// 23-byte `for (i = 0; i < 0x13; i++) <this>->call(i)` loop whose only
-// callee is this body, so this is the per-slot updater it drives.
-// Retail is 570 B against DC's 88 - the free helper update_artifact_slot
-// (DC 92 B, no retail row of its own) is inlined into it, and so is the
-// SoD combination-artifact bookkeeping that the DC roster has no rows
-// for at all (the 0x693898 bitset walk).
+// Pinned from BELOW: update_all_slots (0x004db1d0) is a 23-byte
+// `for (i = 0; i < 0x13; i++) <this>->call(i)` loop whose only callee is
+// this body, so this is the per-slot updater it drives.
+// Retail is 570 B against DC's 88 - update_artifact_slot is inlined FOUR
+// times (once per arm of the two paints), and so is the SoD
+// combination-artifact bookkeeping the DC roster has no rows for at all.
+// That bookkeeping is fully typed by artifact.h: `[0x660b64][8*slot+4]`
+// is akArtifactSlotTraits[slot].type, the 15-way allowable-slot class,
+// and `4*type + 0x693898` is aArtifactSlotMasks[type], one bitset<19>
+// per class. The walk counts how many of that class's physical slots are
+// still empty and, if the slot being painted is itself one of them,
+// paints the assembled-artifact frame 0x91.
+// `this` is dead - retail overwrites ECX with gpCurrentHero in the first
+// instruction and never reads the window again.
+// The reverse walk has NO exit test of its own: VC6 strength-reduced the
+// index to `8*i` and the surviving `cmp ecx,0x98 / jb` IS the bitset's
+// own `19 <= _P` bounds check, whose failing side calls _Xran. That is
+// what fixes the loop as `for (i = 18; ; i--)` and not a bounded for -
+// a real `i >= 0` condition would need an exit block, and there is none.
+//
+// Residual (81.7%): a callee-saved ROLE PERMUTATION plus the two-break
+// routing it drags along. Retail binds slot->EBX, 0->EDI, artifact->ESI;
+// we bind slot->EDI, 0->ESI, artifact->EBX, and every one of the four
+// inlined update_artifact_slot expansions then names the other register.
+// `why-reg --model` proves this is NOT source-addressable: the pseudo
+// DEFINITION SLOTS AND ORDER AGREE on both sides (ref ebx@5/edi@8/esi@9
+// against base edi@7/esi@8/ebx@9), only the bindings are permuted, which
+// is C1 front-end handle state; its one model-passing candidate moved
+// the distance by 0. `why-branch` puts the rest at D3/D12 - retail keeps
+// the two loop exits as two blocks that each reload `artifact` from its
+// home, our CL cross-jumps them into one - and its own catalog sweep
+// only offers semantically wrong mutations (`short i`, -2; `unsigned
+// char artifact`, -1), both of which contradict retail's 32-bit
+// `cmp i,slot`.
+// Tried and rejected, one compile each: hoisting the decrement to the
+// loop header as a statement (69.67) and as an explicit goto loop
+// (69.67 - both stop VC6 reusing the parameter slot [ebp+8] for the
+// strength-reduced index, which costs a frame slot); splitting the
+// `&& --remaining == 0` into nested ifs (81.70, byte-flat).
 VA(0x004daf90, 0x23A)  // anchor-caller, dc 0xcd6e8
 void THeroScreenWindow::update_slot(long slot)
 {
-    // @stub
-}
+    int artifact = gpCurrentHero->equipped[slot].artifactId;
+    if (artifact == ARTIFACT_NONE) {
+        int type = akArtifactSlotTraits[slot].type;
+        unsigned int remaining = gpCurrentHero->artifactSlotCounts[type];
+        if (remaining > 0) {
+            for (int i = ARTIFACT_SLOT_COUNT - 1; ; i--) {
+                if (!aArtifactSlotMasks[type].test(i))
+                    continue;
+                if (i == slot) {
+                    artifact = 0x91;
+                    break;
+                }
+                if (gpCurrentHero->equipped[i].artifactId == ARTIFACT_NONE
+                    && --remaining == 0)
+                    break;
+            }
+        }
+    }
 
-#endif  // @carcass
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE
+        && gpCurrentHero->HeroFn_004E2840(
+               gHeroScreenDraggedArtifact.artifactId, slot)) {
+        update_artifact_slot(slot + 0x15, artifact);
+        update_artifact_slot(slot + 2, 0x90);
+    } else {
+        update_artifact_slot(slot + 0x15, ARTIFACT_NONE);
+        update_artifact_slot(slot + 2, artifact);
+    }
+}
 
 // E:\gamedcs\hero.cpp:2383
 VA(0x004db1d0, 0x17)  // anchor-callee (update_slot), dc 0xcd740
