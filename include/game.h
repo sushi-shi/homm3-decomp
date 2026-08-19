@@ -207,6 +207,9 @@ public:
     int saveObject(TAbstractFile* outfile, CObject* object);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
     int saveMapObjects(TAbstractFile* outfile);
+    // `ret 0xc`: the layer index is the third argument, and the return is
+    // the cell count (size * size), not a status.
+    int saveMapLayer(TAbstractFile* outfile, int size, int layer);
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
