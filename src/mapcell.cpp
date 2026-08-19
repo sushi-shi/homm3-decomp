@@ -1257,14 +1257,108 @@ BlackBoxData::~BlackBoxData()
 {
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1751
+// The pandora's-box record, and the fullest statement of BlackBoxData's
+// layout there is - every offset the header models is written here in
+// order, and the total lands exactly on the armyGroup at +0xac that closes
+// the 228-byte record.
+//
+// saveTreasureData is INLINED into the leading conditional rather than
+// called, which is why the guardians flag gets a byte local of its own
+// while every other byte write shares one.
+//
+// Three list members go out as a one-byte count followed by that many
+// records; the counts are taken with the empty-vector guard, so a null
+// _First writes a literal zero rather than differencing two pointers.  The
+// fixed-length loops count with a signed `int` against 7 and 4, while the
+// three list loops compare against size() and so come out unsigned.
+//
+// The army tail is retail's own asymmetry: the creature type's Write is
+// NOT gated on a short write, only the count's is, and each rides in its
+// own short local.
 VA(0x004ffea0, 0x35A)  // order-map: calls armyGroup::GetNumArmies + armyGroup::save + saveString 0x4bbb60 (saveTreasureData inlined); called by Save (saveBlackBoxList inlined), dc 0xeebdc
-int NewfullMap::saveBlackBox(void* outfile, BlackBoxData* thisBox)
+int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 {
-    // @stub
+    unsigned char value = thisBox->HasCustomTreasure;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    if (thisBox->HasCustomTreasure) {
+        if (saveTreasureData(outfile, thisBox) < 0)
+            return -1;
+    }
+
+    int dwordValue = thisBox->ExperienceBonus;
+    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+        return -1;
+    dwordValue = thisBox->ManaBonus;
+    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+        return -1;
+
+    value = thisBox->MoraleBonus;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    value = thisBox->LuckBonus;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    int i;
+    for (i = 0; i < 7; ++i) {
+        dwordValue = thisBox->ResQty[i];
+        if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+            return -1;
+    }
+    for (i = 0; i < 4; ++i) {
+        value = thisBox->PrimarySkillBonus[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->SecondarySkills.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->SecondarySkills.size(); ++i) {
+        value = thisBox->SecondarySkills[i].type;
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+        value = thisBox->SecondarySkills[i].level;
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->Artifacts.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->Artifacts.size(); ++i) {
+        value = thisBox->Artifacts[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->Spells.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->Spells.size(); ++i) {
+        value = thisBox->Spells[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    int numArmies = thisBox->Creatures.GetNumArmies();
+    value = numArmies;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < numArmies; ++i) {
+        short creature = thisBox->Creatures.armies[i];
+        outfile->Write(&creature, 2);
+        short count = thisBox->Creatures.numTroops[i];
+        if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1891
 VA(0x00500200, 0x222)  // order-map: calls loadBlackBox 0x500430; called by Load; EH-bearing, dc 0xef0a0
