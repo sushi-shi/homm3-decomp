@@ -64,12 +64,18 @@ delinker (that step is not yet ported).
 ## Tooling layout
 
 One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:
-`core/` (shared primitives — `cc_wrap`, `common`, `image`), `build/` (ninja-graph
-actors and the delink loop), `match/` (status/ratchet + the function-universe
-classifier), `init/` (toolchain/prefix setup). Retired tools live in
-`scripts/archive/` (the carve bootstrap pipeline is there — do not resurrect).
-Later phases add `ghidra/`, `sema/`, `audit/` per the port plan. Add a tool to its
-role package, not to a new top-level file.
+`core/` (shared primitives — `cc_wrap`, `common`, `image`, `tsv`), `build/`
+(ninja-graph actors and the delink loop), `retail_labels/` (every label as a
+typed Claim record: parse-only censuses/providers/IAT channels plus the
+source-macro extraction that caches per-TU fragments under `build/gen/claims/`;
+CLI `homm3 labels`), `match/` (status/ratchet + the function-universe
+classifier), `init/` (toolchain/prefix setup). Two top-level spine modules
+mirror the gruntz template: `manifest.py` (the thin `units.toml` reader) and
+`model.py` (the ONE label join — the only place labeling policy lives — writing
+`build/gen/symbol_names.csv` + `compgen_claims.tsv`; CLI `homm3 model`). Retired
+tools live in `scripts/archive/` (the carve bootstrap pipeline is there — do not
+resurrect). Later phases add `ghidra/`, `audit/` per the port plan. Add a tool
+to its role package, not to a new top-level file.
 
 ## Repository model (contracts; enforcement lands with each phase)
 

@@ -3,7 +3,8 @@
 
 Explicit invocation only, never part of `homm3 build` (the homm2 rule):
 
-    labels -> synth_pdb -> data_manifest
+    labels (extraction -> claim fragments) -> model (the one join
+        -> build/gen/symbol_names.csv) -> synth_pdb -> data_manifest
         -> vostok-delinker (--reloc-manifest config/retail-relocs.tsv)
         -> build/delink/<unit>.c.obj (the whole image, ~100 objects)
         -> copy the units.toml-scoped objects to build/objdiff/target/
@@ -19,9 +20,10 @@ import shutil
 import subprocess
 import sys
 
-from homm3.build import (configure, data_manifest, labels, normalize_objs,
-                         synth_pdb)
+from homm3 import model
+from homm3.build import configure, data_manifest, normalize_objs, synth_pdb
 from homm3.core import common
+from homm3.retail_labels import source as labels_source
 
 DELINK_DIR = common.HOMM3_DIR / "build/delink"
 TARGET_DIR = common.HOMM3_DIR / "build/objdiff/target"
@@ -29,7 +31,10 @@ PDB = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
 
 
 def main(argv=None) -> int:
-    for stage in (labels, synth_pdb, data_manifest):
+    rc = labels_source.main(["--all"])   # src macros -> claim fragments
+    if rc:
+        return rc
+    for stage in (model, synth_pdb, data_manifest):
         rc = stage.main([])
         if rc:
             return rc

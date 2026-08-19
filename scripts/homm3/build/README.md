@@ -1,14 +1,17 @@
 # homm3.build - ninja-graph actors and the delink toolchain
 
 Pipeline actors (the gruntz shape: `src → cl(wine) base objs → labels →
-synth_pdb → vostok delink target objs → normalize both sides → objdiff`):
+model → synth_pdb → vostok delink target objs → normalize both sides →
+objdiff`). Labeling itself lives outside this package since the
+retail_labels port: `homm3.retail_labels` extracts and parses (source
+macros -> build/gen/claims/<unit>.tsv fragments; censuses/providers/iat
+parse the admitted tables), and `homm3.model` is the one join that writes
+build/gen/symbol_names.csv (rva,name,unit,size,kind,provenance) +
+build/gen/compgen_claims.tsv.
 
 ```
 configure    config/units.toml -> build.ninja (+ objdiff wiring later)
 link         opt-in VC6 candidate link (/FORCE /NODEFAULTLIB /MAP)
-labels       src/ VA-family annotations (include/va.h contract v2) +
-             config maps -> build/gen/symbol_names.csv, the synth-PDB
-             inventory (rva,name,unit,size,kind,provenance)
 synth_pdb    symbol_names.csv + pinned exe -> PDB-YAML -> llvm-pdbutil
              yaml2pdb -> DBI byte-patch -> build/pdb/HEROES3.pdb
 data_manifest vostok's data-side tsvs at the PINNED schemas (1393e24):
@@ -24,7 +27,7 @@ normalize_objs
              build/objdiff/normalized/ + .symbols.tsv sidecars
 
 delink       THE LOOP (explicit invocation only, never in `homm3 build`):
-             labels -> synth_pdb -> data_manifest -> vostok
+             labels -> model -> synth_pdb -> data_manifest -> vostok
              -> build/delink/<unit>.c.obj -> copy units.toml scope to
              build/objdiff/target/ -> normalize both sides -> re-emit
              objdiff.json against the normalized copies

@@ -260,6 +260,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-19 — the labeling monolith restructured into gruntz's modern
+  `retail_labels/` + `model.py` shape (lane/gruntz-port), byte-identical.**
+  Gruntz has evolved past the layout this plan describes (its 1411-line
+  `labels.py` became `retail_labels/` - typed `Claim` records, parse-only
+  censuses/providers, a per-TU fragment cache under `build/gen/claims/`,
+  extraction public as `gruntz labels` - plus the one-join top-level
+  `model.py`). Ported here as a pure restructure of `build/labels.py`:
+  `homm3.retail_labels` (censuses / providers / iat / fragments / source),
+  `homm3.model`, `homm3.manifest`, `homm3.core.tsv`; CLI verbs
+  `homm3 labels` and `homm3 model`; `homm3 delink` chains labels -> model.
+  Every mechanism moved unchanged (lexical VA scan, base-obj authority
+  join, put-order policy, all fatal gates); fragments keep the RAW
+  declarator name beside the joined spelling so the model replays the
+  monolith's scan-order dedup exactly. Proven by running old and new into
+  scratch: `symbol_names.csv` and `compgen_claims.tsv` byte-identical
+  modulo the generator header lines, and row-identical to the live
+  last-delink outputs; `homm3 build` green at 1421/1809 throughout.
+  Deliberately NOT ported: clang-IR extraction (would change names - the
+  P0.2 interim declarator+base-obj binding stays; the IR channel now has a
+  clean seam inside `retail_labels/source.py`), `bindings.tsv`/alias
+  records (`symbol_names.csv` IS the binding file here; duplicate rva
+  stays fatal), gruntz's derived-extent censuses (our functions census
+  admits explicit sizes), and its completeness sweep (the
+  `verify_va_claims` build gate already owns that job). One quirk fixed
+  in passing, behavior-equivalent by analysis: extraction-time join keys
+  come from raw names rather than post-dedup suffix-stripped ones.
+
 - **2026-08-15 — `army::get_controller` / `get_owner` CLOSED, and the merged
   reading was right.** `0x442690` is `get_controller`, `0x4426d0` is
   `get_owner`, `combatSide` (+0xf4) holds the OWNING side. The decisive proof

@@ -31,7 +31,7 @@ class SymbolDb:
     def __init__(self, extent_of=None):
         if not SYMCSV.is_file():
             die(f"{SYMCSV.relative_to(common.HOMM3_DIR)} missing - run "
-                "`homm3 delink` (or `python3 -m homm3.build.labels`)")
+                "`homm3 delink` (or `homm3 labels --all && homm3 model`)")
         self._extent_of = extent_of  # () -> image virtual size, for resolve()
         self.funcs = {}   # rva -> (name, unit, size, provenance)
         self.datas = {}   # rva -> (name, unit, size, provenance)
