@@ -950,6 +950,7 @@ hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920
 hero	?GetHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0
 hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	100.0000	100.0000	100.0000	0xe51c0
 hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0
+hero	?GetLuck@hero@@QAEHPBV1@EE@Z	75.0406	75.0406	75.0406	0xe36c0
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380
@@ -1047,7 +1048,6 @@ hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
 hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
 hero	hero_Deallocate	0.0000	0.0000	0.0000	0xd9ec0
-hero	hero_GetLuck	0.0000	0.0000	0.0000	0xe36c0
 hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
 hero	hero_GetNecromancyFactor	0.0000	0.0000	0.0000	0xe3cd0
 hero	hero_GiveArtifact	0.0000	0.0000	0.0000	0xe3070
