@@ -213,7 +213,7 @@ public:
     }
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
 #endif
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
