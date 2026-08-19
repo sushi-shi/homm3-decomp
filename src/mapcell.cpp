@@ -1097,11 +1097,92 @@ int NewfullMap::readHeroData(void* infile, CObject* heroObject)
 }
 
 // E:\gamedcs\mapcell.cpp:3229
+#endif  // @carcass
+
+// The map file's garrison record, appended to the game's garrison pool with
+// the object's extraInfo left holding its index.
+//
+// ARITY: retail's `ret 0xc` takes THREE stack arguments where the Dreamcast
+// prototype declares two - one of this tree's calibrated "retail carries one
+// more parameter" rows, and here the extra one is legible: [ebp+0x10] is
+// compared against MAP_FORMAT_RESTORATION_OF_ERATHIA to pick the creature
+// field's WIDTH, one byte on the
+// oldest map version and two on every later one.  A second version test,
+// this one on gpGame->mapHeader.version, decides whether the removable-units
+// flag is read from the stream or forced on.
+//
+// The creature-type reads are UNCHECKED and the troop counts are not - that
+// asymmetry is retail's, not a transcription slip.  game::LoadGarrisonPool
+// (0x4b96f0) is the save-file twin of this loop and already exact; the field
+// names and the `pad_3c` flag come from there.
+//
+// Residual (99.9632%): reloc NAMES only - the delinked side spells `gpGame`
+// as `bss_2994e8` and vector<garrison>::insert as `game_b9340_sub01_d0ba0`
+// because neither is claimed yet.  Every code byte agrees.
+//
+// The last 2.4 points came from where the creature value is STORED.  Writing
+// `armies[slot] = creature;` inside both arms of the width test anchors the
+// loop's induction pointer on `armies` (97.5294); hoisting the value to an
+// `int` and storing once after the join anchors it on `numTroops` the way
+// retail does, addressing the type as `[edi-0x1c]` (99.9632).  Same stores,
+// same order, one induction base apart.
 VA(0x00502a00, 0x151)  // order-map: calls armyGroup ctor (garrison ctor inlined) + FindTrigger 0x4fec30; called by readObject, dc 0xf151c
-int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject)
+int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
+                                 int mapVersion)
 {
-    // @stub
+    garrison newGarrison;
+
+    unsigned char owner;
+    if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+        return -1;
+    newGarrison.playerOwner = owner;
+
+    unsigned char pad[3];
+    if (infile->Read(pad, sizeof(pad)) < sizeof(pad))
+        return -1;
+
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        int creature;
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            creature = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            creature = wide;
+        }
+        newGarrison.garrisonArmy.armies[slot] = creature;
+
+        short count;
+        if (infile->Read(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        newGarrison.garrisonArmy.numTroops[slot] = count;
+    }
+
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        newGarrison.pad_3c = 1;
+    } else {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        newGarrison.pad_3c = value != 0;
+    }
+
+    int triggerX;
+    int triggerY;
+    garrisonObject->FindTrigger(&triggerX, &triggerY);
+    newGarrison.mapX = static_cast<unsigned char>(triggerX);
+    newGarrison.mapY = static_cast<unsigned char>(triggerY);
+    newGarrison.mapZ = garrisonObject->z;
+
+    gpGame->garrisons.push_back(newGarrison);
+    garrisonObject->extraInfo = gpGame->garrisons.size() - 1;
+
+    unsigned char padding[8];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3290
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8

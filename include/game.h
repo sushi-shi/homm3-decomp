@@ -218,7 +218,10 @@ public:
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readTownData(TAbstractFile* infile, CObject* townObject);
     int readHeroData(TAbstractFile* infile, CObject* heroObject);
-    int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject);
+    // Three arguments: retail's `ret 0xc` against the Dreamcast's two.
+    // mapVersion picks the creature field's width (1 byte at 14, 2 after).
+    int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
+                         int mapVersion);
     int readMineData(TAbstractFile* infile, CObject* object);
     int readAbandonedMineData(TAbstractFile* infile, CObject* object);
     int readSignData(TAbstractFile* infile, CObject* object);
