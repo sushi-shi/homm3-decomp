@@ -25,7 +25,12 @@
 // entry, not an inlined fsqrt.
 #include <math.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
+// hero.obj owns get_morale_description / get_luck_description, so the
+// owning compiland joins their gate rather than defining armygrp's
+// wider HOMM3_ARMYGRP_DESCRIPTION_API.
+#define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
+#undef HOMM3_HERO_DESCRIPTION_DEFS
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -47,6 +52,9 @@
 #include "exec.h"
 #include "findpath.h"
 #include "town.h"
+// GetBuildingName - the Grail arm of both description bodies names the
+// building it credits.
+#include "castle.h"
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
@@ -1925,28 +1933,262 @@ void hero::HeroFn_004DC100(long slot)
         HeroFn_004DBF30(targetCombo, slot);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:2849
 // PROVEN BY CALLER: armygrp's armyGroup::get_morale_description
 // (0x44b960) calls exactly this address, and window.obj's hero-screen
 // status path (0x4f32a0) is the second site. /GX frame + hidden
 // return-UDT pointer, as the by-value std::string return needs.
+//
+// The description twin of hero::GetMorale (0x4e39b0): the same modifier
+// ladder, but each rung appends its ARRAYTXT line and accumulates what
+// it described, and the tail prints GetMorale's own answer MINUS that
+// sum as the "other modifiers" line. Every IsWieldingArtifact is
+// /Ob2-expanded exactly as in GetMorale. The Grail arm expands
+// town::HasBuilding INLINE here - `active & bitNumber[HOLY_GRAIL_ID]` -
+// where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
+// The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
+// size_type)`), it does not append.
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
-std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_morale_description(__$ReturnUdt)
+std::string hero::get_morale_description() const
 {
-    // @stub
+    int morale = 0;
+    std::string result;
+
+    if (flags & 0x800000) {
+        result = gpGeneralText->GetText(438);
+        morale = 500;
+    }
+
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+        result += gMoraleTexts[26];
+        morale += 3;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+        result += gMoraleTexts[4];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x31)) {
+        result += gMoraleTexts[5];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x32)) {
+        result += gMoraleTexts[6];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x33)) {
+        result += gMoraleTexts[7];
+        morale++;
+    }
+
+    if (flags & 0x2000000) {
+        result += gMoraleTexts[8];
+        morale++;
+    }
+    if (flags & 0x4) {
+        result += gMoraleTexts[9];
+        morale++;
+    }
+    if (flags & 0x80) {
+        result += gMoraleTexts[10];
+        morale++;
+    }
+    if (flags & 0x100) {
+        result += gMoraleTexts[11];
+        morale++;
+    }
+    if (flags & 0x4000000) {
+        result += gMoraleTexts[12];
+        morale += 2;
+    }
+    if (flags & 0x400) {
+        result += gMoraleTexts[13];
+        morale--;
+    }
+    if (flags & 0x200) {
+        result += gMoraleTexts[14];
+        morale--;
+    }
+    if (flags & 0x40) {
+        result += gMoraleTexts[15];
+        morale++;
+    }
+    if (flags & 0x800) {
+        result += gMoraleTexts[16];
+        morale--;
+    }
+    if (flags & 0x10000) {
+        result += gMoraleTexts[17];
+        morale++;
+    }
+    if (flags & 0x4000) {
+        result += gMoraleTexts[18];
+        morale++;
+    }
+    if (flags & 0x200000) {
+        result += gMoraleTexts[19];
+        morale -= 3;
+    }
+
+    if (skillLevel[eSecSkillLeadership] == eMasteryBasic) {
+        result += gMoraleTexts[20];
+        morale++;
+    }
+    if (skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
+        result += gMoraleTexts[21];
+        morale += 2;
+    }
+    if (skillLevel[eSecSkillLeadership] == eMasteryExpert) {
+        result += gMoraleTexts[22];
+        morale += 3;
+    }
+
+    if (owner >= 0) {
+        playerData& player = gpGame->players[owner];
+        for (int i = 0; i < player.numTowns; i++) {
+            town* ownedTown = gpGame->GetTown(player.townIds[i]);
+            if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0
+                && ownedTown->type == TOWN_CASTLE) {
+                result += format_string(
+                    "\n%s +2",
+                    GetBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
+                morale += 2;
+                break;
+            }
+        }
+    }
+
+    int otherModifier =
+        const_cast<hero*>(this)->GetMorale(0, 0, 0) - morale;
+    if (otherModifier < 0)
+        result += format_string(gMoraleTexts[24], abs(otherModifier));
+    else if (otherModifier > 0)
+        result += format_string(gMoraleTexts[25], abs(otherModifier));
+
+    return result;
 }
 
 // E:\gamedcs\hero.cpp:3021
 // PROVEN BY CALLER: armygrp's armyGroup::get_luck_description
 // (0x44c1c0) calls exactly this address; 0x4f3540 is the second site.
 // Same /GX + return-UDT shape as its morale twin above.
+//
+// hero::GetLuck's describer, the exact shape of the morale twin. FOUR of
+// the flag rungs carry a SIGN as a format argument instead of their own
+// line: they share ONE carrier format, gLuckTexts[10], and pass the
+// literals "-1"/"+1"/"+2"/"+3" out of hero.obj's own pool. The Grail arm
+// expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
+// hero::GetLuck's own arm, which calls it.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
-std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_luck_description(__$ReturnUdt)
+std::string hero::get_luck_description() const
 {
-    // @stub
+    int luck = 0;
+    std::string result;
+
+    if (flags & 0x400000) {
+        result = gpGeneralText->GetText(438);
+        luck = 500;
+    }
+
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+        result += gLuckTexts[21];
+        luck += 3;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+        result += gLuckTexts[4];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2e)) {
+        result += gLuckTexts[5];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2f)) {
+        result += gLuckTexts[6];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x30)) {
+        result += gLuckTexts[7];
+        luck++;
+    }
+
+    if (flags & 0x8) {
+        result += gLuckTexts[8];
+        luck += 2;
+    }
+    if (flags & 0x10) {
+        result += gLuckTexts[9];
+        luck++;
+    }
+    if (flags & 0x20) {
+        result += format_string(gLuckTexts[10], "-1");
+        luck--;
+    }
+    if (flags & 0x8000000) {
+        result += format_string(gLuckTexts[10], "+1");
+        luck++;
+    }
+    if (flags & 0x10000000) {
+        result += format_string(gLuckTexts[10], "+2");
+        luck += 2;
+    }
+    if (flags & 0x20000000) {
+        result += format_string(gLuckTexts[10], "+3");
+        luck += 3;
+    }
+    if (flags & 0x1000) {
+        result += gLuckTexts[11];
+        luck -= 2;
+    }
+    if (flags & 0x2000) {
+        result += gLuckTexts[12];
+        luck++;
+    }
+    if (flags & 0x8000) {
+        result += gLuckTexts[13];
+        luck++;
+    }
+    if (flags & 0x10000) {
+        result += gLuckTexts[14];
+        luck++;
+    }
+
+    if (skillLevel[eSecSkillLuck] == eMasteryBasic) {
+        result += gLuckTexts[15];
+        luck++;
+    }
+    if (skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
+        result += gLuckTexts[16];
+        luck += 2;
+    }
+    if (skillLevel[eSecSkillLuck] == eMasteryExpert) {
+        result += gLuckTexts[17];
+        luck += 3;
+    }
+
+    if (owner >= 0) {
+        playerData& player = gpGame->players[owner];
+        for (int i = 0; i < player.numTowns; i++) {
+            town* ownedTown = gpGame->GetTown(player.townIds[i]);
+            if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0
+                && ownedTown->type == TOWN_RAMPART) {
+                result += format_string(
+                    "\n%s +2",
+                    GetBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
+                luck += 2;
+                break;
+            }
+        }
+    }
+
+    int otherModifier = const_cast<hero*>(this)->GetLuck(0, 0, 0) - luck;
+    if (otherModifier < 0)
+        result += format_string(gLuckTexts[19], abs(otherModifier));
+    else if (otherModifier > 0)
+        result += format_string(gLuckTexts[20], abs(otherModifier));
+
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:3181
 DC_ONLY(0xcea3c, 0x1A4)
