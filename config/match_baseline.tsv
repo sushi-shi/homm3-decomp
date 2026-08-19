@@ -928,6 +928,7 @@ gzio	@gzopen@8	100.0000	100.0000	100.0000	0x206220
 gzio	@gzread@12	100.0000	100.0000	100.0000	0x2066f0
 gzio	@gzwrite@12	100.0000	100.0000	100.0000	0x206930
 gzio	@putLong@8	100.0000	100.0000	100.0000	0x206b10
+hero	??0THeroScreenWindow@@QAE@XZ	100.0000	100.0000	100.0000	0xde710
 hero	??0hero@@QAE@XZ	70.9892	70.9892	70.9892	0xd85f0
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550
@@ -1044,7 +1045,6 @@ hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
-hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
