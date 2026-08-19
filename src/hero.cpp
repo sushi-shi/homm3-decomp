@@ -1315,9 +1315,12 @@ DC_ONLY(0xccc8c, 0x110)
 inline int hero::GetLevel(int iExperience)
 {
     int heroLevel = 1;
-    const short* threshold = kExperienceForLevel;
-    for (; threshold <= &kExperienceForLevel[11]; threshold++, heroLevel++) {
-        if (iExperience < *threshold)
+    // INDEX loop, not a pointer walk: retail closes this with `jle`, and a
+    // C++ pointer relational compare is UNSIGNED (`jbe`). VC6 strength-
+    // reduces the signed `i <= 11` into the pointer form retail emits while
+    // keeping the original compare's signedness.
+    for (int i = 0; i <= 11; i++, heroLevel++) {
+        if (iExperience < kExperienceForLevel[i])
             return heroLevel - 1;
     }
     int total = kExperienceForLevel[11];
