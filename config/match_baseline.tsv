@@ -1381,6 +1381,7 @@ mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	76.9111	76.9111	76.9111	0xff4d0
+mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	95.6955	95.6955	95.6955	0x100b30
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270
 mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	93.3240	93.3240	93.3240	0xff2f0
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000
@@ -1412,7 +1413,6 @@ mapcell	NewfullMap_readHeroData	0.0000	0.0000	0.0000	0x1021c0
 mapcell	NewfullMap_readMapObjects	0.0000	0.0000	0.0000	0x104470
 mapcell	NewfullMap_readObject	0.0000	0.0000	0.0000	0x102e00
 mapcell	NewfullMap_readObjectType	0.0000	0.0000	0.0000	0x103780
-mapcell	NewfullMap_readScholarData	0.0000	0.0000	0.0000	0x100b30
 mapcell	NewfullMap_readTownData	0.0000	0.0000	0.0000	0x1019f0
 mapcell	NewfullMap_saveBlackBox	0.0000	0.0000	0.0000	0xffea0
 mapcell	NewmapCell_get_trigger_cell	0.0000	0.0000	0.0000	0xfcaa0

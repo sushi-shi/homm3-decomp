@@ -293,6 +293,31 @@ SIZE(TreasureInfo, 4);
 // 13..22 (`shl eax,9 / sar eax,0x16`). Only ONE of the three payload lanes
 // is ever read on a given visit, which is what the award selects. GATED
 // for MonsterInfo's reason.
+#endif  // HOMM3_EVENTS_VIEW (ScholarInfo steps outside it, just below)
+
+// ScholarInfo is the one arm mapcell.obj needs as well as events.obj:
+// readScholarData (0x500b30) writes all four lanes and then switches on a
+// SIGNED three-bit award read back out of the field. It is pulled out of
+// the events-only block above rather than widening that block's gate,
+// which would put SIX type definitions into the mapcell view's closure
+// instead of one - the include-set sensitivity class charges by type
+// population, so the narrow gate is the cheap one.
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
+// The award selector's own domain, DC-attested: enums.csv carries
+// ScholarAwards with exactly these three enumerators and values, and
+// events.h already carries the canonical copy for DoEventScholar.
+// readScholarData needs the same names to case on, and events.h is
+// included by exactly one TU (events.cpp), so this mirror is gated OUT of
+// that TU: events.obj keeps its enum where it always was, at its original
+// position in its own symbol order, and nothing there moves.
+#if !defined(HOMM3_EVENTS_VIEW)
+enum ScholarAwards {
+    const_scholar_primary_skill = 0,
+    const_scholar_secondary_skill = 1,
+    const_scholar_spell = 2
+};
+#endif
+
 struct ScholarInfo {
     signed long award : 3;
     signed long primary : 3;
@@ -301,6 +326,9 @@ struct ScholarInfo {
     unsigned long tail : 9;
 };
 SIZE(ScholarInfo, 4);
+#endif
+
+#ifdef HOMM3_EVENTS_VIEW
 
 // The sea chest's arm. advManager::DoEventSeaChest (0x4a5030) reads a
 // SIGNED three-bit reward kind at bits 0..2 (`shl edi,0x1d / sar

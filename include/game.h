@@ -1061,9 +1061,12 @@ public:
     unsigned char spellDisabled[70];
     unsigned char field_90;
     char pad_00091[0x1f3c3];
-#elif defined(HOMM3_TOWN_OBJ_DECLS)
+#elif defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     char pad_00000[0x4a];
     // +0x4a, one scenario-level prohibition byte per retail town spell.
+    // mapcell.obj joins this arm for readScholarData, which rolls a random
+    // scholar reward by collecting every spell whose prohibition byte is
+    // clear and picking one.
     unsigned char spellDisabled[70];
     unsigned char field_90;
     char pad_00091[0x1f3c3];
