@@ -2906,23 +2906,95 @@ void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
         (thisCell->flags_00_11 >> 5) & 1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:6573
 VA(0x00411f50, 0x15F)  // linkorder, dc 0x13c68
-void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY)
+void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX,
+                                 int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    if (!arrow)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    GetCell(point);
+
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    arrowTileset->DrawTileShadow(arrow - 1, tilex, tiley, tilew, tileh,
+                                 gpWindowManager->screenBitmap, baseX,
+                                 baseY + 8, 0, 0);
 }
 
 // E:\gamedcs\advmgr.cpp:6637
 VA(0x004120b0, 0x162)  // linkorder, dc 0x13e28
 void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    if (!arrow)
+        return;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    GetCell(point);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    arrowTileset->DrawTile(arrow - 1, tilex, tiley, tilew, tileh,
+                           gpWindowManager->screenBitmap, baseX, baseY + 8,
+                           0, 0);
+}
 
 // E:\gamedcs\advmgr.cpp:6699
 // A zero cloud lookup shares the full-draw star tail; it does not skip the

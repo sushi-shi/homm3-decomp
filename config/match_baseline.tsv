@@ -43,6 +43,8 @@ advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.2068	83.2068	83.2068	0x11590
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0
+advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0
+advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0
 advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900
@@ -111,8 +113,6 @@ advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
 advmgr	advManager_DemobilizeCurrHero	0.0000	0.0000	0.0000	0x17680
 advmgr	advManager_DoAdvCommand	0.0000	0.0000	0.0000	0x7b80
 advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
-advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
-advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10
 advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
