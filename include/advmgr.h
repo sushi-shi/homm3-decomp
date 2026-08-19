@@ -1434,6 +1434,8 @@ public:
                         unsigned char draw_changes);
     void ShowRoute(int updateScreen, int reseed, int changeButton);
     void StartLocalPlayerTurn();
+    void ScreenScroll(int iDir, int bChangeMouse);
+    void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
