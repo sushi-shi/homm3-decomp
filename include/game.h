@@ -215,6 +215,7 @@ public:
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
+    int loadTownEventList(TAbstractFile* infile, int saveVersion);
     int readGeneratorData(TAbstractFile* infile, CObject* object);
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
     int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
