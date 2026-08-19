@@ -1402,16 +1402,54 @@ void type_artifact::get_rollover_text(char* buffer)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2450
 // Only free row between get_rollover_text (0x004db350, claimed) and
 // UpdateHeroScreenStatusBar; carries a /GX frame and a hidden
-// return-UDT pointer, which is what a std::string-by-value member
-// needs.
+// return-UDT pointer, which is what a std::string-by-value member needs.
+// Everything but a SPELL SCROLL returns the traits description straight
+// into the return slot. A scroll's description carries a `[...]`
+// placeholder, and the body walks it by hand: copy up to the '[', splice
+// in akSpellTraits[spell].name, skip to the ']' and append whatever
+// follows. The 136-byte spell stride and the +0x10 name are the ones
+// armygrp.h already models, indexed by the record's second dword.
+//
+// Residual (88.4%): a callee-saved role swap and the byte it costs.
+// Retail keeps `this` in ESI, homes it at [ebp-0x14] and holds the
+// scanned character in BL; our CL puts `this` in EDI, leaves it unhomed
+// and spills the character to [ebp-0xd], and it materialises the zero
+// operand as immediates where retail CSEs it into EDI (`push edi`).
+// Every block, branch and call agrees. Tried and rejected: dropping the
+// named `char c` in favour of `*cursor` in both the test and the append
+// (88.40, byte-flat).
 VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
-std::basic_string<char,std::char_traits<char>,std::allocator<char> type_artifact::get_description(__$ReturnUdt)
+std::string type_artifact::get_description()
 {
-    // @stub
+    if (artifactId != ARTIFACT_SPELL_SCROLL)
+        return akArtifactTraits[artifactId].description;
+
+    std::string result;
+    const char* cursor = akArtifactTraits[artifactId].description;
+    char c = *cursor;
+    while (c != 0 && c != '[') {
+        cursor++;
+        result += c;
+        c = *cursor;
+    }
+    if (*cursor == '[') {
+        result += akSpellTraits[extra].name;
+        while (*cursor != 0 && *cursor != ']')
+            cursor++;
+        if (*cursor == ']') {
+            cursor++;
+            result += cursor;
+        }
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2477
 // A `message*` dispatcher: switches on msg->field_8 over the 0x02..0x75

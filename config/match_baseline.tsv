@@ -1008,6 +1008,7 @@ hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54
 hero	?get_backpack_error@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
 hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe5400
+hero	?get_description@type_artifact@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	88.4025	88.4025	88.4025	0xdb3e0
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070
 hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90
@@ -1060,7 +1061,6 @@ hero	hero_load	0.0000	0.0000	0.0000	0xd7a20
 hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
 hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
 hero	mark_spells	0.0000	0.0000	0.0000	0xd9350
-hero	type_artifact_get_description	0.0000	0.0000	0.0000	0xdb3e0
 herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0
 herodefs	?InitializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10
