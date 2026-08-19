@@ -51,6 +51,7 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+#define HOMM3_ADVMGR_MONSTER_MOOD_DECLS
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_OBJ_DECLS
 #define HOMM3_ADVMGR_OPTIONS_DECLS
@@ -90,6 +91,10 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
+#include "quickherowindow.h"
+#include "quicktownwindow.h"
+#include "quickinfowindow.h"
+#include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_ADVMGR_OBJ_DECLS
@@ -105,6 +110,60 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X > _Y ? _X : _Y);
+}
+
+// E:\gamedcs\includes.h:124/134 - the reference-returning template and its
+// by-value wrapper, the same pair quicktownwindow and armygrp carry.
+template <class T>
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
+{
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
+}
+
+// The objectIndex short is the shared creature-id lane; the union bridge
+// (events.cpp precedent) keeps the TCreatureType conversion cast-free and
+// VC6 reduces it to the move it already was.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
+// townmgr.cpp's building-id twin of the creature bridge.
+inline type_building_id building_id_from_int(int value)
+{
+    union {
+        int value;
+        type_building_id building;
+    } storage;
+    storage.value = value;
+    return storage.building;
+}
+
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
+// selector - army::GetName (0x440100) is its out-of-line twin. 150 is one
+// past the akCreatureTypeTraits extent, exactly the bound the retail guard
+// tests (army.h names it ARMY_CREATURE_LAST inside class army, whose
+// header this TU does not pull).
+static inline const char* GetArmyName(int type, int count)
+{
+    if (type >= 0 && type <= 150) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    return "";
 }
 
 // E:\gamedcs\advmgr.cpp:336
@@ -2906,23 +2965,95 @@ void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
         (thisCell->flags_00_11 >> 5) & 1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:6573
 VA(0x00411f50, 0x15F)  // linkorder, dc 0x13c68
-void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY)
+void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX,
+                                 int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    if (!arrow)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    GetCell(point);
+
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    arrowTileset->DrawTileShadow(arrow - 1, tilex, tiley, tilew, tileh,
+                                 gpWindowManager->screenBitmap, baseX,
+                                 baseY + 8, 0, 0);
 }
 
 // E:\gamedcs\advmgr.cpp:6637
 VA(0x004120b0, 0x162)  // linkorder, dc 0x13e28
 void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    int arrow = routeArray[(z * gMapHeight + srcY) * gMapWidth + srcX];
+    if (!arrow)
+        return;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    GetCell(point);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    arrowTileset->DrawTile(arrow - 1, tilex, tiley, tilew, tileh,
+                           gpWindowManager->screenBitmap, baseX, baseY + 8,
+                           0, 0);
+}
 
 // E:\gamedcs\advmgr.cpp:6699
 // A zero cloud lookup shares the full-draw star tail; it does not skip the
@@ -3945,42 +4076,285 @@ unsigned char advManager::UpdBottomViewTown(unsigned char force_update)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9063
+// DC carries this free helper out of line (dc 0x19420, 0x9C); retail's
+// /Ob2 inlines the static into every quick-view caller and drops the body.
 DC_ONLY(0x19420, 0x9C)
-TSkillMastery get_identify_level(type_point point)
+static TSkillMastery get_identify_level(type_point point)
 {
-    // @stub
+    int identifyLevel = eMasteryInvalid;
+    playerData* player = &gpGame->players[gUnnamed69778c];
+
+    for (int i = 0; i < player->numHeroes; i++) {
+        hero* iHero = gpGame->GetHero(player->heroes[i]);
+        if (iHero->HeroFn_004E5DE0() > identifyLevel
+            && iHero->IsInIdentifyRange(&point))
+            identifyLevel = iHero->HeroFn_004E5DE0();
+    }
+    return (TSkillMastery)identifyLevel;
 }
 
 // E:\gamedcs\advmgr.cpp:9085
 VA(0x00416590, 0x210)  // anchor-callee, dc 0x194bc
-void advManager::HeroQuickView(int heroId, int x, int y, unsigned char display_drop_shadow)
+void advManager::HeroQuickView(int heroId, int x, int y,
+                               unsigned char display_drop_shadow)
 {
-    // @stub
+    hero* theHero = gpGame->GetHero(heroId);
+    type_point heroPoint(theHero->x, theHero->y, theHero->z);
+
+    int identifyLevel = get_identify_level(heroPoint);
+
+    TQuickHeroWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(theHero->owner, gpGame->GetLocalPlayerGamePos())
+        || identifyLevel >= eMasteryAdvanced || DebugViewAll)
+        level = TQuickHeroWindow::ViewAll;
+    else
+        level = TQuickHeroWindow::ViewSome;
+
+    TQuickHeroWindow window(theHero, level);
+    window.x = limit(window.width / 2, x,
+                     WINDOW_SCREEN_WIDTH - 1 - window.width / 2)
+               - window.width / 2;
+    window.y = limit(window.height / 2, y,
+                     WINDOW_SCREEN_HEIGHT - 1 - window.height / 2)
+               - window.height / 2;
+    if (!display_drop_shadow)
+        window.type &= ~WINDOW_FLAG_SHADOWED;
+    window.QuickWindowWait();
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
+// castle.obj's building-name reader, declared file locally (the
+// AI_approximate_strength precedent).
+const char* GetBuildingName(int townType, int buildingId);
+
 // E:\gamedcs\advmgr.cpp:9115
+// Residual (85.32%): whole-body callee-saved rotation (ours
+// townId=ESI/point=EDI/thisTown=EBX, retail EDI/EBX/ESI - one step), the
+// DrawAdvObj family's wall. why-reg v2: definition slots and order agree,
+// bindings permuted; its model-proposed edit (owner as long local) measured
+// +48 worse and it capped the pair as front-end handle state (params <
+// this < locals is parse-FIXED, handle-order.md). Declaration-order swap
+// of first/ownerPlayer measured flat. The base-only spill surplus is
+// downstream of the rotation, not a second wall.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
-void advManager::TownQuickView(int townId, int x, int y, unsigned char display_drop_shadow)
+void advManager::TownQuickView(int townId, int x, int y,
+                               unsigned char display_drop_shadow)
 {
-    // @stub
+    if (townId == -1)
+        return;
+
+    int localPos = gpGame->GetLocalPlayerGamePos();
+    town* thisTown = &gpGame->towns[townId];
+    type_point point(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
+
+    int identifyLevel = get_identify_level(point);
+
+    if (DebugViewAll && thisTown->owner != gNetLocalGamePos) {
+        std::string text;
+        playerData* ownerPlayer = &gpGame->players[thisTown->owner];
+        unsigned char first = 1;
+
+        text = thisTown->cName;
+        text += "\n\n";
+        if (thisTown->garrisonHeroId >= 0)
+            text += gpGame->GetHero(thisTown->garrisonHeroId)->name;
+
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            if (thisTown->get_army().armies[i] != -1) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += format_string(
+                    "%i %s", thisTown->get_army().numTroops[i],
+                    GetArmyName(thisTown->get_army().armies[i],
+                                thisTown->get_army().numTroops[i]));
+            }
+        }
+
+        if (!first)
+            text += "\n\n";
+        first = 1;
+        for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
+            if ((thisTown->built & bitNumber[building])
+                && thisTown->is_legal_building(
+                       building_id_from_int(building))) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += GetBuildingName(thisTown->type, building);
+            }
+        }
+
+        text += "\n\n";
+        for (int res = 0; res < 7; res++) {
+            if (res > 0)
+                text += ", ";
+            text += format_string("%i %s", ownerPlayer->resources[res],
+                                  gResourceNames[res]);
+        }
+
+        text += "\n\nIncome:\n";
+        gpGame->calculate_production();
+        first = 1;
+        for (int inc = 0; inc < 7; inc++) {
+            if (ownerPlayer->turnProductionResource[inc] > 0) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += format_string(
+                    "%i %s", ownerPlayer->turnProductionResource[inc],
+                    gResourceNames[inc]);
+            }
+        }
+
+        NormalDialog(text.c_str(), 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    TQuickTownWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(thisTown->owner, localPos)
+        || identifyLevel == eMasteryExpert)
+        level = TQuickTownWindow::ViewAll;
+    else if (gpGame->GetNumThievesGuilds(localPos) >= 2)
+        level = TQuickTownWindow::ViewArmySizes;
+    else
+        level = gpGame->GetNumThievesGuilds(localPos) >= 1
+                    ? TQuickTownWindow::ViewArmyTypes
+                    : TQuickTownWindow::ViewNone;
+
+    TQuickTownWindow window(thisTown, level);
+    window.x = limit(window.width / 2, x,
+                     WINDOW_SCREEN_WIDTH - 1 - window.width / 2)
+               - window.width / 2;
+    window.y = limit(window.height / 2, y,
+                     WINDOW_SCREEN_HEIGHT - 1 - window.height / 2)
+               - window.height / 2;
+    if (!display_drop_shadow)
+        window.type &= ~WINDOW_FLAG_SHADOWED;
+    window.QuickWindowWait();
 }
+
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9243
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrison_quick_view(int id, int x, int y)
 {
-    // @stub
+    if (id == -1)
+        return;
+
+    garrison* thisGarrison = &gpGame->garrisons[id];
+    type_point point(thisGarrison->mapX, thisGarrison->mapY,
+                     thisGarrison->mapZ);
+
+    int identifyLevel = get_identify_level(point);
+
+    // Residual (96.64%): one D8/D13 arm-placement flip - retail keeps the
+    // ViewAll constant arm inline after the condition chain (final term
+    // `jne` into the else chain), our CL uniformly jump-if-trues all three
+    // disjuncts and sinks the constant arm to the join. Tried and rejected:
+    // nested ternary (byte-identical), split `else if (identifyLevel ==
+    // eMasteryExpert)` (94.79 - the duplicated arm does not cross-jump),
+    // why-branch guided search (0 applicable mutations; flags the landing
+    // blocks as D3 jump-threading, not source-addressable).
+    TQuickTownWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(thisGarrison->playerOwner, gUnnamed69778c)
+        || DebugViewAll || identifyLevel == eMasteryExpert)
+        level = TQuickTownWindow::ViewAll;
+    else if (gpGame->GetNumThievesGuilds(gUnnamed69778c) >= 2)
+        level = TQuickTownWindow::ViewArmySizes;
+    else
+        level = gpGame->GetNumThievesGuilds(gUnnamed69778c) >= 1
+                    ? TQuickTownWindow::ViewArmyTypes
+                    : TQuickTownWindow::ViewNone;
+
+    TQuickTownWindow window(thisGarrison, level);
+    window.center(x, y);
+    window.QuickWindowWait();
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
+// The strength appraisal, declared file-locally (the events.cpp/townmgr.cpp
+// precedent for ai_combat.obj's address).
+long AI_approximate_strength(const hero* current_hero);
+
 // E:\gamedcs\advmgr.cpp:9284
+// Residual (99.96%): frame-slot coalescing only - retail parks the
+// type_point and the like modifier in one slot (-0x24), our CL gives the
+// point its own (-0x28); every instruction pairs masked. Tried and
+// rejected: closing the point's scope with a goto-identified restructure
+// (77.47 - the flow shape collapses). predict-inline's over-inline row is
+// the folded QuickWindowWait label, not a real wall.
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
-    // @stub
+    int count = cell->extraInfo & 0xfff;
+    TCreatureType type = creature_type_from_int(cell->objectIndex);
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    gpGame->GetLocalPlayerGamePos();
+
+    TQuickCreatureWindow* window;
+    hero* currHero = gpGame->GetHero(localPlayer->currHeroId);
+    if (currHero) {
+        type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
+                         radarOrigin.z);
+        if ((currHero->IsInIdentifyRange(&point)
+             && currHero->HeroFn_004E5DE0() != eMasteryInvalid)
+            || DebugViewAll) {
+            int like = get_like_modifier(currHero, type);
+            int diplomacy = currHero->skillLevel[eSecSkillDiplomacy];
+            float strength_ratio =
+                static_cast<float>(AI_approximate_strength(currHero))
+                / static_cast<float>(akCreatureTypeTraits[type].AI_value
+                                     * count);
+            int force = get_force_modifier(strength_ratio);
+            int disposition = static_cast<long>(cell->extraInfo << 15) >> 27;
+
+            TQuickCreatureWindow::TDisposition mood;
+            if (disposition > force + diplomacy + like)
+                mood = TQuickCreatureWindow::Attack;
+            else if (disposition <= diplomacy + like + 1)
+                mood = TQuickCreatureWindow::Join;
+            else if (disposition <= like + 2 * diplomacy + 1)
+                mood = TQuickCreatureWindow::JoinPrice;
+            else if ((cell->extraInfo & 0x20000)
+                     || disposition == force + diplomacy + like)
+                mood = TQuickCreatureWindow::Attack;
+            else
+                mood = TQuickCreatureWindow::Flee;
+
+            int cost = akCreatureTypeTraits[type].cost[6] * count;
+            window = new TQuickCreatureWindow(
+                TQuickCreatureWindow::ViewAll, type, count, mood, cost);
+            goto wait_and_close;
+        }
+    }
+    window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
+                                      count, TQuickCreatureWindow::Flee, 0);
+
+wait_and_close:
+    window->x = limit(window->width / 2, cellx * 32,
+                      WINDOW_SCREEN_WIDTH - 1 - window->width / 2)
+                - window->width / 2;
+    window->y = limit(window->height / 2, celly * 32,
+                      WINDOW_SCREEN_HEIGHT - 1 - window->height / 2)
+                - window->height / 2;
+    window->QuickWindowWait();
+    if (window)
+        delete window;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9349
 #endif  // @carcass
@@ -4066,12 +4440,58 @@ void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsi
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// Read by both mobilization draw gates before repainting the adventure
+// screen; role (an "adventure repaint suppressed" latch) is what the bytes
+// prove. No located writer yet - nearest consumer holds the declaration.
+DATA(0x006aac3c) extern int gUnnamed6aac3c;
+
 // E:\gamedcs\advmgr.cpp:9434
 VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520
-void advManager::DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char draw_changes)
+void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
+                                    unsigned char draw_changes)
 {
-    // @stub
+    if (!waitingPlayer && gpCurrentPlayer
+        && gpCurrentPlayer->currHeroId != -1 && inDialog) {
+        inDialog = 0;
+        hero* currHero;
+        if (gpCurrentPlayer->currHeroId != -1)
+            currHero = &gpGame->heroes[gpCurrentPlayer->currHeroId];
+        else
+            currHero = 0;
+        StopCursor(1);
+        currHero->obscure_cell(HERO, currHero->id);
+
+        type_point point;
+        point = type_point(currHero->x, currHero->y, currHero->z);
+        GetCell(point);
+
+        currHero->facing = cursorDirection;
+        drawCursor = 0;
+
+        if (!gUnnamed6aac3c && draw_changes && gCompleteDrawEnabled) {
+            CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+            gpWindowManager->UpdateScreen(0, 8, 608, 544);
+
+            unsigned long now = GameTime::Get();
+            if (static_cast<long>(
+                    now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                    >= 0
+                && !animCtrPaused) {
+                animFrame++;
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += _cpp_max(
+                    static_cast<long>(
+                        now
+                        - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
+                    180L);
+            }
+            Process1WindowsMessage();
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9476
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
@@ -4317,12 +4737,78 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The looping-sound resource names, one per e_looping_sound_id row.
+// Consumed by InsertSound's lazy loader; owner TU unlocated, so the
+// nearest consumer declares (name provisional, role byte-proven).
+DATA(0x0065f794) extern const char* const gLoopingSoundNames[LOOPING_SOUND_COUNT];
+
+// Per-priority playback volume for the adventure ambience. The row is
+// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
+// pattern).
+DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
+                                                        3,  2,  1,  0 };
+
 // E:\gamedcs\advmgr.cpp:10372
 VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
-void advManager::InsertSound(int x, int y, int z, int soundPriority, int soundsType)
+void advManager::InsertSound(int x, int y, int z, int soundPriority,
+                             int soundsType)
 {
-    // @stub
+    if (x < 0 || y < 0 || z < 0 || x >= gMapWidth || y >= gMapHeight)
+        return;
+
+    e_looping_sound_id id_num = GetSoundId(x, y, z);
+    if (id_num == LOOPING_SOUND_INVALID)
+        return;
+
+    int i;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId == id_num) {
+            if (soundArray[i].priority > soundPriority) {
+                soundArray[i].priority = soundPriority;
+                touchedSounds |= 1 << soundArray[i].soundId;
+            }
+            return;
+        }
+    }
+
+    if (soundsType == 1)
+        return;
+
+    int iBest = -1;
+    int bestPriority = soundPriority;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].priority > bestPriority) {
+            bestPriority = soundArray[i].priority;
+            iBest = i;
+        }
+    }
+    if (iBest == -1)
+        return;
+
+    if (soundArray[iBest].soundId != LOOPING_SOUND_INVALID)
+        gpSoundManager->StopSample(
+            loopedSample[soundArray[iBest].soundId]->field_1c);
+
+    soundArray[iBest].soundId = id_num;
+    soundArray[iBest].priority = soundPriority;
+
+    if (id_num > LOOPING_SOUND_INVALID && id_num < LOOPING_SOUND_COUNT
+        && !loopedSample[id_num]) {
+        TrimLoopingSounds(4);
+        loopedSample[id_num] = LoadSampleResource(
+            gLoopingSoundNames[id_num]);
+    }
+
+    loopedSample[id_num]->field_2c = akSoundVolumes[soundPriority];
+    loopedSample[id_num]->field_30 = 0;
+    loopedSample[id_num]->field_28 = 3;
+    gpSoundManager->MemorySample(loopedSample[id_num]);
+    touchedSounds ^= 1 << soundArray[iBest].soundId;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10436
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
@@ -4467,19 +4953,164 @@ void advManager::ForceNewHover()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The per-speed scroll step. Dreamcast advmgr.obj publishes the static
+// (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
+// three-int row.
+DATA(0x0063a66c) static const int akScrollSpeedInc[3] = { 1, 2, 3 };
+
+// Written on every scroll tick with the fresh GameTime::Get stamp; no
+// located reader yet. Nearest consumer holds the declaration (the
+// town.cpp gUnnamed69778c precedent); ownership stays open for the data
+// phase.
+DATA(0x00691674) extern unsigned long gUnnamed691674;
+
 // E:\gamedcs\advmgr.cpp:10624
+// Residual (97.82%): downstream scratch scheduling only - why-reg v2 finds
+// every first-definition binding agreeing (this=ESI, inc=EBX/EDI slots
+// identical) and the divergence past the B1 slice: retail folds the
+// gMapWidth-10 cap into its load register (add) where ours needs a fresh
+// lea, and retail re-extracts radarOrigin.y after the x compare where our
+// scheduler hoists both extractions. Tried and rejected: bound-first
+// comparison spelling (97.43). vc6 diagnose: register-homing (B13/B2).
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
 void advManager::ScreenScroll(int iDir, int bChangeMouse)
 {
-    // @stub
+    gUnnamed698758.windowScrollSpeed =
+        limit(0, gUnnamed698758.windowScrollSpeed, 2);
+
+    int x = radarOrigin.x;
+    int y = radarOrigin.y;
+    int inc = akScrollSpeedInc[gUnnamed698758.windowScrollSpeed];
+    gUnnamed691674 = GameTime::Get();
+
+    switch (iDir) {
+    case ADV_SCROLL_NORTH - ADV_SCROLL_POINTER:
+        y -= inc;
+        break;
+    case ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER:
+        x += inc;
+        y -= inc;
+        break;
+    case ADV_SCROLL_EAST - ADV_SCROLL_POINTER:
+        x += inc;
+        break;
+    case ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER:
+        x += inc;
+        y += inc;
+        break;
+    case ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER:
+        y += inc;
+        break;
+    case ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        y += inc;
+        break;
+    case ADV_SCROLL_WEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        break;
+    case ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        y -= inc;
+        break;
+    }
+
+    if (bChangeMouse)
+        gpMouseManager->SetPointer(iDir + ADV_SCROLL_POINTER,
+                                   mouseManager::ADVENTURE_SET);
+
+    if (x < -9)
+        x = -9;
+    if (x > gMapWidth - 10)
+        x = gMapWidth - 10;
+    if (y < -8)
+        y = -8;
+    if (y > gMapHeight - 9)
+        y = gMapHeight - 9;
+
+    if (x != radarOrigin.x || y != radarOrigin.y) {
+        DemobilizeCurrHero(0, 0);
+        radarOrigin.x = x;
+        radarOrigin.y = y;
+        UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        gpWindowManager->UpdateScreen(0, 8, 608, 544);
+
+        unsigned long now = GameTime::Get();
+        if (static_cast<long>(
+                now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+            && !animCtrPaused) {
+            animFrame++;
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += _cpp_max(
+                static_cast<long>(
+                    now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
+                180L);
+        }
+        Process1WindowsMessage();
+    }
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:10696
+// The DC carries MouseInScrollZone (dc 0x1ccf8) out of line; retail has no
+// body for it anywhere in the bracket, so the zone decision lives here.
 VA(0x00419820, 0x169)  // anchor-callee, dc 0x1cb08
 void advManager::CheckScreenScroll()
 {
-    // @stub
+    int x;
+    int y;
+    gpMouseManager->MouseCoords(&x, &y);
+
+    int iDir;
+    if (x < 0 || x >= WINDOW_SCREEN_WIDTH || y < 0
+        || y >= WINDOW_SCREEN_HEIGHT) {
+        gUnnamed691674 = GameTime::Get();
+        return;
+    }
+    if (x < 16) {
+        if (y < 16)
+            iDir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+        else
+            iDir = y <= WINDOW_SCREEN_HEIGHT - 16
+                       ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
+                       : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+    } else if (x > WINDOW_SCREEN_WIDTH - 16) {
+        if (y < 16)
+            iDir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+        else
+            iDir = y > WINDOW_SCREEN_HEIGHT - 16
+                       ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
+                       : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+    } else if (y < 16) {
+        iDir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
+    } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
+        iDir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
+    } else {
+        gUnnamed691674 = GameTime::Get();
+        return;
+    }
+
+    unsigned long now = GameTime::Get();
+    if (now - gUnnamed691674 < 70)
+        return;
+    gUnnamed691674 += 70;
+    if (now - gUnnamed691674 >= 70)
+        gUnnamed691674 = now - 70;
+
+    int origX = radarOrigin.x;
+    int origY = radarOrigin.y;
+    ScreenScroll(iDir, 1);
+    if (gpMouseManager->field_50 >= ADV_SCROLL_POINTER
+        && gpMouseManager->field_50 <= ADV_SCROLL_NORTHWEST
+        && origX == radarOrigin.x && origY == radarOrigin.y)
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10756
 DC_ONLY(0x1ccf8, 0x6E)
@@ -4857,12 +5488,76 @@ void advManager::DoAdvMenu()
     // @stub
 }
 
+#endif  // @carcass
+
+// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
+// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
+// consumer declares.
+DATA(0x006976d8) extern int gUnnamed6976d8;
+
+// This TU's own free saver (advmgr.cpp:9693, retail 0x418160), defined
+// further down; forward-declared for the option dispatch above it.
+unsigned char SaveGame(unsigned char bCampaignWinMode);
+
 // E:\gamedcs\advmgr.cpp:11362
 VA(0x0041ac00, 0x1AC)  // anchor-callee, dc 0x1e5e8
 unsigned char advManager::DoSystemOptions()
 {
-    // @stub
+    int result = -1;
+    TrimLoopingSounds(4);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+
+    unsigned char bSaveMobile = inDialog;
+    int walkSpeed = gUnnamed698758.walkSpeed;
+    DemobilizeCurrHero(0, 1);
+
+    {
+        TSystemOptionsWindow system_options_window;
+        system_options_window.DoModal();
+    }
+
+    switch (gpWindowManager->dialogReturn) {
+    case SYSOPT_QUIT:
+        result = gpWindowManager->dialogReturn;
+        NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            result = -1;
+        break;
+    case SYSOPT_COMMAND_102:
+    case SYSOPT_COMMAND_105:
+    case SYSOPT_COMMAND_108:
+        result = gpWindowManager->dialogReturn;
+        break;
+    case SYSOPT_SAVE_GAME:
+        SaveGame(0);
+        break;
+    }
+
+    if (bSaveMobile)
+        MobilizeCurrHero(0, 0, 1);
+
+    if (gUnnamed698758.walkSpeed != walkSpeed) {
+        int i;
+        for (i = 0; i < 10; i++)
+            heroSamples[i]->Dispose();
+        for (i = 0; i <= 10; i++) {
+            sprintf(gText, "horse%02d.wav", i);
+            heroSamples[i] = LoadSampleResource(gText);
+        }
+    }
+
+    if (bSaveMobile)
+        MobilizeCurrHero(0, 0, 1);
+
+    if (result != -1) {
+        gUnnamed6976d8 = result;
+        return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11444
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c

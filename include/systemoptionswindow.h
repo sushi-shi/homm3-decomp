@@ -10,6 +10,21 @@
 // Retail's DoModal/handler use a byte at +0x60 and a dword at +0x64 after
 // the byte-proven 0x60 CAdvPopup base. Dreamcast CodeView names both members;
 // retail DoModal independently proves their preference/Quick Combat roles.
+// The dialogReturn command band the window's buttons post (codeY) and
+// advManager::DoSystemOptions dispatches. 106 saves in place and 107 runs
+// the quit confirm (general text 68); the other values are forwarded whole
+// to the exit-command latch at 0x6976d8, so their labels stay ordinal
+// placeholders until that consumer names them.
+enum ESystemOptionsCommand {
+    SYSOPT_COMMAND_102 = 102,
+    SYSOPT_COMMAND_103 = 103,
+    SYSOPT_COMMAND_104 = 104,
+    SYSOPT_COMMAND_105 = 105,
+    SYSOPT_SAVE_GAME = 106,
+    SYSOPT_QUIT = 107,
+    SYSOPT_COMMAND_108 = 108
+};
+
 class TSystemOptionsWindow : public CAdvPopup {
 public:
     // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently
