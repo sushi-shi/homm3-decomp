@@ -4736,12 +4736,78 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The looping-sound resource names, one per e_looping_sound_id row.
+// Consumed by InsertSound's lazy loader; owner TU unlocated, so the
+// nearest consumer declares (name provisional, role byte-proven).
+DATA(0x0065f794) extern const char* const gLoopingSoundNames[LOOPING_SOUND_COUNT];
+
+// Per-priority playback volume for the adventure ambience. The row is
+// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
+// pattern).
+DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
+                                                        3,  2,  1,  0 };
+
 // E:\gamedcs\advmgr.cpp:10372
 VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
-void advManager::InsertSound(int x, int y, int z, int soundPriority, int soundsType)
+void advManager::InsertSound(int x, int y, int z, int soundPriority,
+                             int soundsType)
 {
-    // @stub
+    if (x < 0 || y < 0 || z < 0 || x >= gMapWidth || y >= gMapHeight)
+        return;
+
+    e_looping_sound_id id_num = GetSoundId(x, y, z);
+    if (id_num == LOOPING_SOUND_INVALID)
+        return;
+
+    int i;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId == id_num) {
+            if (soundArray[i].priority > soundPriority) {
+                soundArray[i].priority = soundPriority;
+                touchedSounds |= 1 << soundArray[i].soundId;
+            }
+            return;
+        }
+    }
+
+    if (soundsType == 1)
+        return;
+
+    int iBest = -1;
+    int bestPriority = soundPriority;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].priority > bestPriority) {
+            bestPriority = soundArray[i].priority;
+            iBest = i;
+        }
+    }
+    if (iBest == -1)
+        return;
+
+    if (soundArray[iBest].soundId != LOOPING_SOUND_INVALID)
+        gpSoundManager->StopSample(
+            loopedSample[soundArray[iBest].soundId]->field_1c);
+
+    soundArray[iBest].soundId = id_num;
+    soundArray[iBest].priority = soundPriority;
+
+    if (id_num > LOOPING_SOUND_INVALID && id_num < LOOPING_SOUND_COUNT
+        && !loopedSample[id_num]) {
+        TrimLoopingSounds(4);
+        loopedSample[id_num] = LoadSampleResource(
+            gLoopingSoundNames[id_num]);
+    }
+
+    loopedSample[id_num]->field_2c = akSoundVolumes[soundPriority];
+    loopedSample[id_num]->field_30 = 0;
+    loopedSample[id_num]->field_28 = 3;
+    gpSoundManager->MemorySample(loopedSample[id_num]);
+    touchedSounds ^= 1 << soundArray[iBest].soundId;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10436
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c

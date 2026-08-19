@@ -1001,6 +1001,23 @@ public:
     int bottomViewResourceQuantity;       // +0x3a4
     std::string bottomViewMessage;        // +0x3a8
 
+    advManager();
+    virtual int Open(int newPriority);
+    virtual void Close();
+    virtual int Main(message& msg);
+    NewmapCell* DoAdvCommand(type_point* trigger_point);
+    int ProcessKeyPress(const message* msg, unsigned char* exitFlag,
+                        type_point* trigger_point, NewmapCell** peventCell);
+    int ProcessSelect(const message* msg, type_point* trigger_point,
+                      NewmapCell** peventCell);
+    int ProcessDeSelect(const message* msg, unsigned char* exitFlag,
+                        type_point* trigger_point, NewmapCell** peventCell);
+    void ProcessRadarSelect(const message* msg);
+    void ProcessMapSelect(const message* msg, type_point* trigger_point,
+                          NewmapCell** peventCell);
+    void InsertSound(int x, int y, int z, int soundPriority, int soundsType);
+    void SetInitialMapOrigin();
+    unsigned char DoSystemOptions();
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
