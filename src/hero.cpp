@@ -1948,6 +1948,17 @@ void hero::HeroFn_004DC100(long slot)
 // where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
+//
+// Residual (85.7%, and 85.7% on the luck twin): /Ob2 budget inside the
+// Dinkumware string calls, nothing source-local. `predict-inline` pairs
+// 31 of the 49 out-of-line calls off by COUNT - retail names its
+// unclaimed basic_string callees with synth labels our side can never
+// emit, so those rows are naming and not divergence - and reports
+// exactly ONE real item: `_Xlen` out of line 5 times here against
+// retail's 3, i.e. retail expands two more of the `append` grow paths.
+// That is the A8/A9 budget class the doctrine says not to chase with
+// `_Grow`/`_Tidy` spellings. Tried and rejected: `morale += 500` /
+// `luck += 500` for the constant store (byte-flat on both twins).
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::get_morale_description() const
 {
