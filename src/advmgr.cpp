@@ -2380,11 +2380,34 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     mapObjects->objects[objCell->objectIndex].typeIndex];
                 CSprite* sprite = mapObjects->sprites[
                     mapObjects->objects[objCell->objectIndex].typeIndex];
-                signed char offsets = objCell->offsets;
-                signed char yOffset = offsets >> 4;
-                offsets <<= 4;
-                signed char xOffset = offsets >> 4;
-                int bit = 47 - yOffset * 8 - xOffset;
+                // THE OFFSETS ARE RE-DERIVED PER DRAW ARM, not hoisted
+                // (86.3772 -> 87.5901, 2026-08-19). Retail recomputes
+                // `movsx ecx,dl / sar ecx,4` and then `shl dl,4 / movsx /
+                // sar` at EVERY call site, which is why its body carried
+                // eight more sar and eight more movsx than a single hoisted
+                // pair can produce; with the four arms spelling their own,
+                // both counts match exactly. This copy survives only for the
+                // drawCells bit and is named for that.
+                //
+                // NOT a family rule - measured, not assumed. The same edit
+                // applied to DrawAdvObjShadow's three arms costs it 83.2068
+                // -> 82.4938, so it keeps the hoisted form. DrawUnderlay's
+                // arms already spell their own.
+                //
+                // Residual (87.5901%): a whole-function callee-saved
+                // permutation - retail holds `this` in ESI and this compile
+                // holds it in EDI, and every downstream binding follows.
+                // Schedule-aligned, flow-distance 2 of 125 blocks, and both
+                // sides emit the same two jump tables (checked directly: the
+                // diff's apparent table-only-on-our-side is an alignment
+                // artifact). No source knob reaches a `this` register
+                // choice; it is the B-family wall the campaign prices at
+                // ~0 closures.
+                signed char bitOffsets = objCell->offsets;
+                signed char bitY = bitOffsets >> 4;
+                bitOffsets <<= 4;
+                signed char bitX = bitOffsets >> 4;
+                int bit = 47 - bitY * 8 - bitX;
                 if (!objType->drawCells[bit] || objType->suppressDraw)
                     continue;
 
@@ -2441,6 +2464,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     default:                        continue;
                     }
 
+                    signed char offsets = objCell->offsets;
+                    signed char yOffset = offsets >> 4;
+                    offsets <<= 4;
+                    signed char xOffset = offsets >> 4;
                     int frame = (animFrame
                                  + mapObjects->objects[objCell->objectIndex]
                                        .animationOffset)
@@ -2468,6 +2495,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                         NewmapCell* triggerCell =
                             GetCell(type_point(triggerX, triggerY, z));
                         int owner = GetFlaggedObjectOwner(triggerCell);
+                        signed char offsets = objCell->offsets;
+                        signed char yOffset = offsets >> 4;
+                        offsets <<= 4;
+                        signed char xOffset = offsets >> 4;
                         int frame = (animFrame
                                      + mapObjects->objects[objCell->objectIndex]
                                            .animationOffset)
@@ -2483,6 +2514,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     }
                     default:
                         if (objCell->objectIndex == movingObjectIndex) {
+                            signed char offsets = objCell->offsets;
+                            signed char yOffset = offsets >> 4;
+                            offsets <<= 4;
+                            signed char xOffset = offsets >> 4;
                             movingObjectSprite->DrawAdvObj(
                                 movingObjectSequence * 2 + movingObjectFrame,
                                 tilex + (objType->width - xOffset - 1) * 32,
@@ -2490,6 +2525,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                                 tilew, tileh, gpWindowManager->screenBitmap,
                                 baseX, baseY + 8, false);
                         } else {
+                            signed char offsets = objCell->offsets;
+                            signed char yOffset = offsets >> 4;
+                            offsets <<= 4;
+                            signed char xOffset = offsets >> 4;
                             int frame = (animFrame
                                          + mapObjects
                                                ->objects[objCell->objectIndex]

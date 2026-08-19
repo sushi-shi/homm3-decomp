@@ -40,7 +40,7 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	86.3772	86.3772	86.3772	0x10c00
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.2068	83.2068	83.2068	0x11590
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
