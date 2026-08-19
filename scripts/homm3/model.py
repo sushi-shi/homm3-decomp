@@ -97,8 +97,10 @@ def main(argv=None) -> int:
 
     # 1. src claims (fragments in scan order). The dedup replays over RAW
     # declarator names - the monolith suffixed BEFORE its join, and its
-    # join keys stripped the suffix back off - then the joined base-obj
-    # spelling takes over where extraction bound one.
+    # join keys stripped the suffix back off - then the bound spelling
+    # takes over, from either binder: src-VA+ir (clang paired the
+    # annotation with the symbol, cl's obj confirmed the string) or
+    # src-VA+base (the lexical key join, for what IR cannot reach).
     src_claims = fragments.all_claims()
     _write_compgen(src_claims)
     seen_names = set()
@@ -107,7 +109,7 @@ def main(argv=None) -> int:
         if name in seen_names:
             name = f"{name}_{c.rva:x}"
         seen_names.add(name)
-        if c.channel == "src-VA+base":
+        if c.channel in ("src-VA+ir", "src-VA+base"):
             name = c.name
         put(c.rva, name, c.unit, c.size if c.size is not None else "",
             c.kind, c.channel)
