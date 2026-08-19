@@ -22,6 +22,9 @@ public:
     unsigned short FirstTime;
     unsigned short Interval;
 
+    // `ret 8`: the save version is a second argument, gating the
+    // apply-to-human flag at 28 exactly as LoadGarrisonPool does.
+    int Read(TAbstractFile* infile, int saveVersion);
     int Save(TAbstractFile* outfile);
     int Load(TAbstractFile* infile, int saveVersion);
 };
