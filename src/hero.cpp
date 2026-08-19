@@ -445,117 +445,89 @@ int hero::load(void* infile)
 // tests: VC6 rotated the loop and merged the peeled first-iteration
 // check with the back-edge condition, so ONE compare serves both and
 // _Xran sits above the loop body rather than inside it.
+// The three scalar writers hero::save funnels every field through.
+// They carry NO retail row of their own - each is expanded at all its
+// call sites - but they are not mere convenience: a BY-VALUE parameter
+// is what puts the serialised copy in a compiler TEMPORARY instead of a
+// named local, and retail's frame is only big enough for the six-byte
+// mask buffer (`sub esp,8`) with all three temps packed into the dead
+// incoming-parameter word - the byte at [ebp+0xb], the wider two at
+// [ebp+8], overlapping. Named locals do not get that arena.
+static void WriteByteField(TAbstractFile* outfile, unsigned char value)
+{
+    outfile->Write(&value, sizeof(value));
+}
+
+static void WriteWordField(TAbstractFile* outfile, short value)
+{
+    outfile->Write(&value, sizeof(value));
+}
+
+static void WriteDwordField(TAbstractFile* outfile, int value)
+{
+    outfile->Write(&value, sizeof(value));
+}
+
 VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
 int hero::save(TAbstractFile* outfile)
 {
     if (!type_obscuring_object::save(outfile))
         return -1;
 
-    unsigned char byte_buffer;
-    short word_buffer;
-    int dword_buffer;
 
-    byte_buffer = static_cast<unsigned char>(sex);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = hasCustomName;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    WriteByteField(outfile, sex);
+    WriteByteField(outfile, hasCustomName);
 
-    dword_buffer = customName.length();
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    WriteDwordField(outfile, customName.length());
     outfile->Write(customName.c_str(), customName.length());
 
-    byte_buffer = owner;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = patrolRadius;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = field_11a;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = field_11b;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = backpackCount;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(disguiseLevel);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(flightLevel);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(waterWalkLevel);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = dWalkSpellsCast;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(field_129);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(id);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = static_cast<unsigned char>(heroClass);
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = portrait;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = patrolX;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = patrolY;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = facing;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = formation;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = pad_08f[0];
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
-    byte_buffer = pad_08f[1];
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    WriteByteField(outfile, owner);
+    WriteByteField(outfile, patrolRadius);
+    WriteByteField(outfile, field_11a);
+    WriteByteField(outfile, field_11b);
+    WriteByteField(outfile, backpackCount);
+    WriteByteField(outfile, disguiseLevel);
+    WriteByteField(outfile, flightLevel);
+    WriteByteField(outfile, waterWalkLevel);
+    WriteByteField(outfile, dWalkSpellsCast);
+    WriteByteField(outfile, field_129);
+    WriteByteField(outfile, id);
+    WriteByteField(outfile, heroClass);
+    WriteByteField(outfile, portrait);
+    WriteByteField(outfile, patrolX);
+    WriteByteField(outfile, patrolY);
+    WriteByteField(outfile, facing);
+    WriteByteField(outfile, formation);
+    WriteByteField(outfile, pad_08f[0]);
+    WriteByteField(outfile, pad_08f[1]);
 
-    dword_buffer = pathTargetX;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = pathTargetY;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    word_buffer = pathTargetZ;
-    outfile->Write(&word_buffer, sizeof(word_buffer));
-    word_buffer = field_03f;
-    outfile->Write(&word_buffer, sizeof(word_buffer));
-    dword_buffer = maxMovePoints;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = movePoints;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = experience;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = skillCount;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    word_buffer = mana;
-    outfile->Write(&word_buffer, sizeof(word_buffer));
-    word_buffer = level;
-    outfile->Write(&word_buffer, sizeof(word_buffer));
-    word_buffer = field_041;
-    outfile->Write(&word_buffer, sizeof(word_buffer));
+    WriteDwordField(outfile, pathTargetX);
+    WriteDwordField(outfile, pathTargetY);
+    WriteWordField(outfile, pathTargetZ);
+    WriteWordField(outfile, field_03f);
+    WriteDwordField(outfile, maxMovePoints);
+    WriteDwordField(outfile, movePoints);
+    WriteDwordField(outfile, experience);
+    WriteDwordField(outfile, skillCount);
+    WriteWordField(outfile, mana);
+    WriteWordField(outfile, level);
+    WriteWordField(outfile, field_041);
 
-    dword_buffer = TrainingGroundsFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = DefenseTowerFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = GardenOfRevelationFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = MercCampFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = PowerSchoolFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = TreeOfKnowledgeFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = LibraryFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = ArenaFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = MagicSchoolFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = WarSchoolFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = UniversityFlags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = Shrine1Flags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = Shrine2Flags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = Shrine3Flags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
-    dword_buffer = flags;
-    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    WriteDwordField(outfile, TrainingGroundsFlags);
+    WriteDwordField(outfile, DefenseTowerFlags);
+    WriteDwordField(outfile, GardenOfRevelationFlags);
+    WriteDwordField(outfile, MercCampFlags);
+    WriteDwordField(outfile, PowerSchoolFlags);
+    WriteDwordField(outfile, TreeOfKnowledgeFlags);
+    WriteDwordField(outfile, LibraryFlags);
+    WriteDwordField(outfile, ArenaFlags);
+    WriteDwordField(outfile, MagicSchoolFlags);
+    WriteDwordField(outfile, WarSchoolFlags);
+    WriteDwordField(outfile, UniversityFlags);
+    WriteDwordField(outfile, Shrine1Flags);
+    WriteDwordField(outfile, Shrine2Flags);
+    WriteDwordField(outfile, Shrine3Flags);
+    WriteDwordField(outfile, flags);
 
     army.save(outfile);
 
@@ -569,12 +541,13 @@ int hero::save(TAbstractFile* outfile)
     outfile->Write(backpack, sizeof(backpack));
     outfile->Write(artifactSlotCounts, sizeof(artifactSlotCounts));
 
-    byte_buffer = field_11c;
-    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    WriteByteField(outfile, field_11c);
 
-    unsigned char granted_mask[6] = { 0 };
-    for (int i = 0; i < 48; ++i) {
-        if (TownSpecialGrantedMask.test(i))
+    const std::bitset<48>& granted = TownSpecialGrantedMask;
+    unsigned char granted_mask[6];
+    memset(granted_mask, 0, sizeof(granted_mask));
+    for (unsigned int i = 0; i < 48; ++i) {
+        if (granted.test(i))
             granted_mask[i >> 3] |= 1 << (i & 7);
     }
     outfile->Write(granted_mask, sizeof(granted_mask));
