@@ -42,6 +42,7 @@
 #include <va.h>
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
+#define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "cmbtmgr.h"
@@ -54,6 +55,7 @@
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
+#include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "prefs.h"  // the local quick-combat preference
@@ -176,28 +178,6 @@ void combatManager::Close()
 // extern declaration is include-set inert where a whole header is not.
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 
-// kb.cpp's shared text scratch buffer (kb.h), reached the same way.
-extern char gText[];
-
-// The obstacle table at .rdata 0x63c7c8, typed as its 20-byte rows.
-// cmbtmgr.h already owns the DATA claim for that rva under the shorts
-// name gObstacleTerrainMasks, so this alias carries no second claim -
-// the only delta it can produce is a reloc NAME.
-extern const type_obstacle_shape gObstacleShapes[];
-
-// The eighteen combat hero animations, keyed `2 * townType + sex`.
-// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
-// stride and only the .def name is read, so the trailing three dwords
-// keep ordinal names (their retail values are a plausible draw offset
-// pair plus a small count).
-struct TCombatHeroSprite {
-    const char* defName;
-    int field_04;
-    int field_08;
-    int field_0c;
-};
-DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
-
 // E:\gamedcs\cmbtmgr.cpp:902
 // EXACT 2026-08-20. Two source shapes are byte-forced here. The wall-row
 // base MUST be hoisted into a local: retail computes `akWallTraits +
@@ -222,8 +202,9 @@ void combatManager::LoadIcons()
         TWallTraits* traits = akWallTraits[defendingTown->type];
         for (int wall = 0; wall < 18; wall++) {
             for (int icon = 0; icon < 5; icon++) {
-                if ((gpGame->f_1f698 >= 2 || defendingTown->type != 6
-                        || wall != 2)
+                if ((gpGame->f_1f698 >= 2
+                        || defendingTown->type != TOWN_STRONGHOLD
+                        || wall != WALL_TRAITS_ROW_MOAT)
                         && traits[wall].filenames[icon] != 0)
                     combatIcons[wall][icon] = ResourceManager::GetBitmap816(
                         traits[wall].filenames[icon]);
@@ -1050,9 +1031,9 @@ next_hex:
         }
 
         if (gpGame->f_1f698 < 2 && field_132f4 >= 2
-                && defendingTown->type == 6) {
+                && defendingTown->type == TOWN_STRONGHOLD) {
             int wall_column = gCastleWallColumns[row];
-            if (wall_column == 0x60)
+            if (wall_column == COMBAT_HEX_GATE)
                 wall_column = 0x5d;
             if (shape->width + hex >= wall_column - 2)
                 goto next_hex;

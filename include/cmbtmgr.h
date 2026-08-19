@@ -181,6 +181,23 @@ enum ECombatMineType {
 // as `4 * (5 * id) + table` - and reads the two placement bounds at +4/+5
 // and the sprite name at +0x10 out of the same row it stores into
 // TObstacle::shape.
+#ifdef HOMM3_CMBTMGR_ICONS_VIEW
+// The eighteen combat hero animations, keyed `2 * townType + sex`.
+// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
+// stride and only the .def name is read, so the trailing three dwords
+// keep ordinal names (their retail values are a plausible draw offset
+// pair plus a small count). DC types the row combatManager::SCmbtHero
+// {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
+// where the Dreamcast's is 16.
+struct TCombatHeroSprite {
+    const char* defName;
+    int field_04;
+    int field_08;
+    int field_0c;
+};
+DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
+#endif
+
 struct type_obstacle_shape {
     char pad_00[0x4];
     // The lowest grid ROW this obstacle may be anchored in, and the
@@ -241,6 +258,18 @@ public:
         short pad_22;
     };
     static TWallTraits akWallTraits[9][18];
+#ifdef HOMM3_CMBTMGR_ICONS_VIEW
+    enum {
+        // The moat row of a town's eighteen wall records: LoadIcons
+        // (0x463370) suppresses exactly this row's five icons for
+        // Stronghold under the pre-expansion ruleset, and the static
+        // table's row 2 is the SgCsMoat.pcx group. Gated because an
+        // ungated enumerator counts toward the include-set threshold in
+        // every consumer - it moved command.obj's GetCommand when it was
+        // visible to that TU.
+        WALL_TRAITS_ROW_MOAT = 2
+    };
+#endif
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -1273,6 +1302,12 @@ extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 // referenced address independently; indexing by ten shorts preserves
 // the common 20-byte stride.
 DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+// The same 0x63c7c8 table, typed as its 20-byte rows. The DATA claim for
+// the rva is the shorts view above, so this alias carries none - the only
+// delta it can produce is a reloc NAME.
+extern const type_obstacle_shape gObstacleShapes[];
+#endif
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
 DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];
