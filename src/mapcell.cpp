@@ -1891,11 +1891,79 @@ int NewfullMap::saveObjectType(TAbstractFile* outfile,
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3752
+#endif  // @carcass
+
+// The read twin of saveObjectType, and the inverse of its bit packing:
+// where Save walks the mask asking test() and builds six bytes, Load reads
+// six bytes and walks them calling set(i, bit).  Dinkumware's set() carries
+// its own range check, which is why bitset<48>::_Xran sits INSIDE this
+// loop where Save's test() let VC6 hoist it to the top.
+//
+// The trailing byte is normalized (`test al,al / setne`), not copied, so it
+// is a bool crossing where width and height are plain assignments.  And
+// like Save, this returns 1 on success rather than 0.
 VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> helper (DC parallel); sole caller loadMapObjects 0x504b70, dc 0xf2784
-int NewfullMap::loadObjectType(void* infile, CObjectType* tempObjectType)
+int NewfullMap::loadObjectType(TAbstractFile* infile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    loadString(infile, &tempObjectType->ImageName);
+
+    char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->width = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->height = value;
+
+    unsigned char packed[6];
+    int i;
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->drawCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->passableCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->shadowCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->triggerCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    unsigned short typeValue;
+    if (infile->Read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
+        return -1;
+    tempObjectType->objectTypeValue = typeValue;
+
+    int extra;
+    if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+        return -1;
+    tempObjectType->extra = extra;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->suppressDraw = value != 0;
+    return 1;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
