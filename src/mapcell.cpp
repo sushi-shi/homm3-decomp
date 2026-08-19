@@ -3,6 +3,27 @@
 // 594 functions in link order; 24 compiler-generated $-thunks omitted.
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+// SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
+// claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
+// class, so the span has no missing attributions at the small end:
+//   0x4fd1c0 24 B   header-inline ctor COMDAT (char + three zeroed dwords)
+//   0x4fca60 62 B   Dinkumware string release: [eax-1] refcount then delete
+//   0x4fd460 88 B   `??_M` vector destructor iterator for NewmapCell
+//   0x504260 46 B / 0x504290 42 B
+//                   the static ctor/dtor pair for a file-scope 16-byte
+//                   string global at 0x699690, registered through _atexit -
+//                   the cinit class the match doctrine excludes
+// The four larger ones (0x4fd950, 0x4fe6c0, 0x500de0, 0x502b60) are real
+// game code with NO Dreamcast counterpart: the DC roster for mapcell.cpp is
+// exhausted (90 rows, every name present in this file bar two $E thunks),
+// and 0x502b60 in particular sits between readGarrisonData (dc line 3229)
+// and readObject (dc line 3290) where the roster has nothing at all. They
+// are retail-only and need body evidence, not an order-map. 0x502b60 walks a
+// 16-byte-element vector at NewfullMap+0xc0 (unmodelled, inside pad_0c0),
+// builds a `generator`, and resolves each entry to a town alignment either
+// by finding a matching record in gpGame's 136-byte-stride pool at +0x98 or
+// by calling pick_alignment - a random-dwelling resolution pass.
+//
 #include <va.h>
 #include "advmgr_objects.h"
 #include "advmgr.h"
