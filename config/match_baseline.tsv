@@ -84,6 +84,7 @@ advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	89.8242	89.8242	89.8242	0xb150
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
+advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	85.3187	85.3187	85.3187	0x167a0
 advmgr	?TrimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0
 advmgr	?UpdBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0
 advmgr	?UpdBottomViewEnemyTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15f20
@@ -132,7 +133,6 @@ advmgr	advManager_SetInitialMapOrigin	0.0000	0.0000	0.0000	0x19990
 advmgr	advManager_SetTownContext	0.0000	0.0000	0.0000	0x17830
 advmgr	advManager_ShowRoute	0.0000	0.0000	0.0000	0x18dd0
 advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
-advmgr	advManager_TownQuickView	0.0000	0.0000	0.0000	0x167a0
 advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
