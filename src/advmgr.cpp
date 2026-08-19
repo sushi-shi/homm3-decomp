@@ -2898,7 +2898,8 @@ void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     {
-        type_point point(srcX, srcY, z);
+        type_point point;
+        point = type_point(srcX, srcY, z);
         point.is_valid();
     }
 

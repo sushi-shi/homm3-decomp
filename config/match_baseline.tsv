@@ -51,7 +51,7 @@ advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1840	98.1
 advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80
 advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
-advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	91.2464	91.2464	91.2464	0x12220
+advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12220
 advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	92.7034	92.7034	92.7034	0x12470
 advmgr	?EnableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a3a0
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
