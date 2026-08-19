@@ -3408,6 +3408,37 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 0x006603bc, quickInfoNewLine, "\n");
             const char* visitFormat = DATA_COMPGEN(
                 0x006603c4, quickInfoVisitFormat, "\n\n%s");
+            const char* knownFormat = DATA_COMPGEN(
+                0x006603c0, quickInfoKnownFormat, "\n%s");
+
+// Retail's shape for every object that owns a GlobalInfoFlags row: the
+// "you know what this does" line is gated on the PLAYER's global info
+// flag, not on the cell, and it is emitted before the per-hero visited
+// line. Both live inside one `is_trigger` guard. The flag lands in the
+// third parameter `z`, which retail reuses as a scratch int once
+// mapPoint.z has been read out of it - that is what produces the byte
+// store into the parameter slot followed by the zero-extend in place.
+#define SET_KNOWN_VISITED_QUICKINFO(objectType, infoFlag, condition)     \
+            case objectType:                                             \
+                strcpy(gText, gAdventureObjectNames[objectType]);         \
+                if (cell->is_trigger) {                                   \
+                    z = gpGame->GetInfoFlag(infoFlag, iPlayer);           \
+                    if (z) {                                              \
+                        sprintf(tempText, knownFormat,                    \
+                                gGlobalInfoFlagNames[infoFlag]);          \
+                        strcat(gText, tempText);                          \
+                    }                                                     \
+                    if (currHero) {                                       \
+                        sprintf(tempText, visitFormat,                    \
+                            (condition)                                   \
+                                ? gpGeneralText->GetText(                \
+                                      GENERAL_TEXT_VISITED_OBJECT)       \
+                                : gpGeneralText->GetText(                \
+                                      GENERAL_TEXT_UNVISITED_OBJECT));   \
+                        strcat(gText, tempText);                          \
+                    }                                                     \
+                }                                                         \
+                break
 
 #define SET_VISITED_QUICKINFO(objectType, condition)                     \
             case objectType:                                             \
@@ -3484,30 +3515,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            case BUOY:
-                strcpy(gText, gAdventureObjectNames[BUOY]);
-                if (cell->is_trigger && currHero) {
-                    sprintf(tempText, visitFormat,
-                        currHero->flags & 0x4
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(gText, tempText);
-                }
-                break;
-            case CLOVER_FIELD:
-                strcpy(gText, gAdventureObjectNames[CLOVER_FIELD]);
-                if (cell->is_trigger && currHero) {
-                    sprintf(tempText, visitFormat,
-                        currHero->flags & 0x8
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(gText, tempText);
-                }
-                break;
+            SET_KNOWN_VISITED_QUICKINFO(BUOY, BuoyInfo,
+                currHero->flags & 0x4);
+            SET_KNOWN_VISITED_QUICKINFO(CLOVER_FIELD, CloverFieldInfo,
+                currHero->flags & 0x8);
             case CREATURE_BANK: {
                 union {
                     int value;
@@ -3556,7 +3567,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             SET_VISITED_QUICKINFO(DEAD_GUY,
                 player->DeadGuyFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(DEFENSE_TOWER,
+            SET_KNOWN_VISITED_QUICKINFO(DEFENSE_TOWER, DefenseTowerInfo,
                 currHero->DefenseTowerFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case DERELICT_SHIP:
@@ -3584,14 +3595,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     fullMap->QuestGuardList[cell->extraInfo]
                         .QuestGuardFn_00573040(gUnnamed69778c).c_str());
                 break;
-            SET_VISITED_QUICKINFO(FAERIE_RING,
+            SET_KNOWN_VISITED_QUICKINFO(FAERIE_RING, FaerieRingInfo,
                 currHero->flags & 0x2000);
             case FOUNTAIN_OF_FORTUNE:
                 strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
                 if (cell->is_trigger) {
                     if (cell->PlayerKnowsCell(gUnnamed69778c)) {
-                        sprintf(tempText, DATA_COMPGEN(
-                            0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        sprintf(tempText, knownFormat,
                             gGlobalInfoFlagNames[FountainOfFortuneInfo]);
                         strcat(gText, tempText);
                     }
@@ -3611,18 +3621,20 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     }
                 }
                 break;
-            SET_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH,
+            SET_KNOWN_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
                 currHero->flags & 0x4000);
-            SET_VISITED_QUICKINFO(GARDEN_OF_REVELATION,
+            SET_KNOWN_VISITED_QUICKINFO(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
                 currHero->GardenOfRevelationFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case HILL_FORT:
                 strcpy(gText, gAdventureObjectNames[HILL_FORT]);
-                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
-                    sprintf(tempText, DATA_COMPGEN(
-                        0x006603c0, quickInfoKnownFormat, "\n%s"),
-                        gGlobalInfoFlagNames[HillFortInfo]);
-                    strcat(gText, tempText);
+                if (cell->is_trigger) {
+                    z = gpGame->GetInfoFlag(HillFortInfo, iPlayer);
+                    if (z) {
+                        sprintf(tempText, knownFormat,
+                                gGlobalInfoFlagNames[HillFortInfo]);
+                        strcat(gText, tempText);
+                    }
                 }
                 break;
             case HERO: {
@@ -3633,12 +3645,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                         mapHero->name, mapHero->HeroFn_004D8F70());
                 break;
             }
-            SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
+            SET_KNOWN_VISITED_QUICKINFO(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
                 currHero->flags & (0x02000000UL | 0x10UL));
             SET_VISITED_QUICKINFO(LEAN_TO,
                 player->LeanToFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(LIBRARY,
+            SET_KNOWN_VISITED_QUICKINFO(LIBRARY, LibraryInfo,
                 currHero->LibraryFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case LIGHTHOUSE:
@@ -3653,19 +3665,19 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     }
                 }
                 break;
-            SET_VISITED_QUICKINFO(MAGIC_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SCHOOL, MagicSchoolInfo,
                 currHero->MagicSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(MAGIC_SPRING,
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SPRING, MagicSpringInfo,
                 (player->MagicSpringFlags
                     & (1UL << (cell->extraInfo & 0x1f)))
                     && !(cell->extraInfo & 0x40));
-            SET_VISITED_QUICKINFO(MAGIC_WELL,
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_WELL, MagicWellInfo,
                 currHero->flags & 0x1);
-            SET_VISITED_QUICKINFO(MERC_CAMP,
+            SET_KNOWN_VISITED_QUICKINFO(MERC_CAMP, MercCampInfo,
                 currHero->MercCampFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(MERMAID,
+            SET_KNOWN_VISITED_QUICKINFO(MERMAID, MermaidInfo,
                 currHero->flags & 0x8000);
             case MINE:
                 AdvmgrFn_0040D670(gText, cell, iPlayer, newLine, 1);
@@ -3685,7 +3697,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            SET_VISITED_QUICKINFO(OASIS,
+            SET_KNOWN_VISITED_QUICKINFO(OASIS, OasisInfo,
                 currHero->flags & 0x80);
             case OBELISK:
                 strcpy(gText, gAdventureObjectNames[OBELISK]);
@@ -3699,7 +3711,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            SET_VISITED_QUICKINFO(POWER_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(POWER_SCHOOL, PowerSchoolInfo,
                 currHero->PowerSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case PYRAMID:
@@ -3714,7 +3726,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                                   GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(RALLY_FLAG,
+            SET_KNOWN_VISITED_QUICKINFO(RALLY_FLAG, RallyFlagInfo,
                 currHero->flags & 0x10000);
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
@@ -3740,9 +3752,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 currHero->flags & 0x100000);
             SET_VISITED_QUICKINFO(STABLES,
                 currHero->flags & 0x2);
-            SET_VISITED_QUICKINFO(TEMPLE,
+            SET_KNOWN_VISITED_QUICKINFO(TEMPLE, TempleInfo,
                 currHero->flags & (0x04000000UL | 0x100UL));
-            SET_VISITED_QUICKINFO(TRAINING_GROUNDS,
+            SET_KNOWN_VISITED_QUICKINFO(TRAINING_GROUNDS, TrainingGroundsInfo,
                 currHero->TrainingGroundsFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case TREE_OF_KNOWLEDGE:
@@ -3751,11 +3763,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             case UNIVERSITY:
                 strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
-                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
-                    sprintf(tempText, DATA_COMPGEN(
-                        0x006603c0, quickInfoKnownFormat, "\n%s"),
-                        gGlobalInfoFlagNames[UniversityInfo]);
-                    strcat(gText, tempText);
+                if (cell->is_trigger) {
+                    z = gpGame->GetInfoFlag(UniversityInfo, iPlayer);
+                    if (z) {
+                        sprintf(tempText, knownFormat,
+                                gGlobalInfoFlagNames[UniversityInfo]);
+                        strcat(gText, tempText);
+                    }
                 }
                 break;
             case WAGON:
@@ -3770,7 +3784,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                                   GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(WAR_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(WAR_SCHOOL, WarSchoolInfo,
                 currHero->WarSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case WARRIOR_TOMB:
@@ -3796,7 +3810,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                               GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(WATERING_HOLE,
+            SET_KNOWN_VISITED_QUICKINFO(WATERING_HOLE, WateringHoleInfo,
                 currHero->flags & 0x40);
             case WINDMILL:
                 strcpy(gText, gAdventureObjectNames[WINDMILL]);
