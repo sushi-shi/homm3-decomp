@@ -400,11 +400,71 @@ int hero::save(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1208
+// The first half of the body is entirely implicit: the base and the
+// four constructed members run in declaration order and are all visible
+// in the bytes - type_obscuring_object::initialize() inlined at +0
+// (three -1 words, then valid / obscuredType / was_trigger /
+// extra_info), a CALL to armyGroup::armyGroup at +0x91, the bitset's
+// own descending two-word _Tidy at +0x121/+0x125, the nineteen and
+// sixty-four stride-8 type_artifact() loops at +0x12d / +0x1d4, and the
+// Dinkumware string at +0x3da (the `mov al,[ebp-1]` is the empty
+// allocator temp being copied, which is what identifies this as a
+// constructor and not a reset method).
+// The body then re-clears the identity band. Retail really does write
+// the two hero-SCREEN globals from here: 0x698a78 is the window pointer
+// HeroView news up and 0x697738 the selected army slot, and this is the
+// only reference to either outside the hero-screen block.
+//
+// Residual (71.0%): ONE /Ob2 OVER-INLINE and the register roles it drags
+// with it. `flow-distance 0` - the block shape, the store set and the
+// statement order are retail's exactly. Retail CALLS
+// `basic_string::_Tidy` out of the inlined default constructor at
+// +0x3da; our CL expands it, and because the expansion frees the
+// callee-saved pair, our zero pseudo lands in EBX (and spends BL on the
+// two `unsigned char` byte stores) where retail's lands in EDI and has
+// to use immediates - which is the whole rest of the diff.
+// THE BUDGET THRESHOLD IS MEASURED (2026-08-19). Adding N byte-inert
+// user-defined inline sites to the body (`_cpp_max(i, i);`, the
+// armygrp probe idiom) moves the row:
+//     N=0 -> 70.99    N=1..5 -> 89.28    N=6 -> 83.63    N=8 -> 68.00
+// i.e. ONE more inline candidate site denies `_Tidy` its nested share of
+// the /Ob2 budget (`budget / sites-remaining`, docs/vc6/inliner.md) and
+// the call comes back. So retail's body carries one to five candidate
+// sites this reconstruction does not, and the window is wide enough that
+// a single statement accounts for it. The DC call census CANNOT name it:
+// dc 0xcbdb8's callee list is exactly what is already written here -
+// type_obscuring_object::type_obscuring_object x1, armyGroup::armyGroup
+// x1, bitset<48>::bitset x1, bitset<48>::reset x1, type_artifact's
+// default-constructor closure x2 and the vector-constructor iterator x2 -
+// with NO std::string at all, because the DC record has no customName.
+// The member that creates this wall is precisely the one the Dreamcast
+// build does not have. Nothing is padded: the probe is an instrument and
+// the row is deliberately left at 70.99.
 VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
-void hero::hero()
+hero::hero()
 {
-    // @stub
+    x = 0;
+    y = 0;
+    heroClass = 0;
+    portrait = 0;
+    name[0] = 0;
+    id = -1;
+    owner = -1;
+
+    int i;
+    for (i = 0; i < 19; i++)
+        equipped[i] = type_artifact();
+    memset(artifactSlotCounts, 0, sizeof(artifactSlotCounts));
+    for (i = 0; i < 64; i++)
+        backpack[i] = type_artifact();
+    TownSpecialGrantedMask.reset();
+
+    gpHeroScreenWindow = 0;
+    gHeroScreenArmySlot = -1;
+    field_11c = 0;
 }
 
 // E:\gamedcs\hero.cpp:1233
@@ -415,7 +475,6 @@ void hero::hero()
 // packed coordinate words, 19 stride-8 equipped slots from +0x12d, 64
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
-#endif  // @carcass
 
 // Reconstructed through every retail store and branch. The 82.86% residual
 // is dominated by VC6 front-end/inliner state: retail leaves two Dinkumware
