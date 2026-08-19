@@ -26,11 +26,23 @@ Subcommands
         block + a warning when the synth-PDB inputs are newer than the PDB.
         --fast stops after the %% line (the inner matching loop).
 
+  labels [--unit U ...|--all]
+        Source-claim extraction (homm3.retail_labels.source): the lexical
+        VA/VA_COMPGEN/DATA/DATA_COMPGEN scan over src/*.c* + the base-obj
+        name-authority join -> per-TU claim fragments in build/gen/claims/
+        (content-idempotent cache; the macros in src/ are the storage).
+
+  model
+        The one label join (homm3.model - the only place labeling policy
+        lives): function census x provider tables x claim fragments ->
+        build/gen/symbol_names.csv (the synth-PDB inventory) +
+        build/gen/compgen_claims.tsv.
+
   delink
         The delink half (homm3.build.delink, explicit - build never
         RE-delinks; a fresh tree bootstraps the first one):
-        labels -> synth PDB -> data manifests -> vostok -> per-unit target
-        objs -> normalize -> objdiff.json.
+        labels -> model -> synth PDB -> data manifests -> vostok ->
+        per-unit target objs -> normalize -> objdiff.json.
 
   status [functions [FILTER...]|update [--accept-regressions]|check [--gate]]
         Scoreboard (homm3.match.status): per-unit table; `functions` shows
@@ -112,6 +124,17 @@ def cmd_build(args) -> int:
     return run_module("homm3.build.build", *extra, *(ninja_args or []))
 
 
+def cmd_labels(args) -> int:
+    forwarded = ["--all"] if args.all else []
+    for unit in args.unit or []:
+        forwarded += ["--unit", unit]
+    return run_module("homm3.retail_labels.source", *forwarded)
+
+
+def cmd_model(args) -> int:
+    return run_module("homm3.model")
+
+
 def cmd_delink(args) -> int:
     return run_module("homm3.build.delink")
 
@@ -186,8 +209,21 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("ninja_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_build)
 
-    p = sub.add_parser("delink", help="the delink loop: labels -> synth PDB "
-                       "-> vostok -> normalized targets (homm3.build.delink)")
+    p = sub.add_parser("labels", help="source macros -> per-TU claim "
+                       "fragments (homm3.retail_labels.source)")
+    p.add_argument("--unit", action="append",
+                   help="extract one unit (repeatable)")
+    p.add_argument("--all", action="store_true",
+                   help="extract every src/ unit")
+    p.set_defaults(fn=cmd_labels)
+
+    p = sub.add_parser("model", help="the one label join -> symbol_names.csv "
+                       "+ compgen_claims.tsv (homm3.model)")
+    p.set_defaults(fn=cmd_model)
+
+    p = sub.add_parser("delink", help="the delink loop: labels -> model -> "
+                       "synth PDB -> vostok -> normalized targets "
+                       "(homm3.build.delink)")
     p.set_defaults(fn=cmd_delink)
 
     p = sub.add_parser("status", help="objdiff scoreboard + cur/max/hist ratchet")
