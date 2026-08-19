@@ -11,6 +11,10 @@
 // instruction).
 #include <bitset>
 #define HOMM3_ARMYGRP_DESCRIPTION_API
+// get_luck_description's Rampart/Fountain-of-Fortune gate calls
+// town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
+// see town.h for why the inline's visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include "armygrp.h"
 #include "game.h"
 #include "hero.h"
@@ -54,6 +58,20 @@ static inline const T& t_limit(const T& minimum, const T& value,
 static inline int limit(int minimum, int value, int maximum)
 {
     return t_limit(minimum, value, maximum);
+}
+
+// The four-way base-elemental compare the magic-terrain gates share -
+// eight of them in this compiland, in both polarities. Byte-identical to
+// the longhand chain when expanded (viewarmywindow's own copy is the
+// byte-proven precedent, and the full-tree diff over all eight sites here
+// has ONE mover and no regressions: TSplitWindow 98.4605 -> 99.9895) and
+// free at cb <= 0x28, so it costs the /Ob2 allowance one candidate site
+// per use - which is the point, since three of this file's plateaued rows
+// are measured to be short of exactly that.
+inline bool is_base_elemental(int type)
+{
+    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
+        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
 }
 
 inline const char* armygrp_creature_plural_name(TCreatureType creature)
@@ -268,11 +286,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
 
     int creatureType = creature;
     int alignment;
-    if (!gpGame->f_1f698
-        && (creatureType == CREATURE_AIR_ELEMENTAL
-            || creatureType == CREATURE_EARTH_ELEMENTAL
-            || creatureType == CREATURE_FIRE_ELEMENTAL
-            || creatureType == CREATURE_WATER_ELEMENTAL))
+    if (!gpGame->f_1f698 && is_base_elemental(creatureType))
         alignment = -1;
     else
         alignment = akCreatureTypeTraits[creatureType].townType;
@@ -1016,11 +1030,7 @@ int armyGroup::GetAlignments(unsigned char* alignments)
         if (traits.attributes & CTA_SIEGE_WEAPON)
             continue;
         int alignment;
-        if (gpGame->f_1f698 == 0
-            && (armies[i] == CREATURE_AIR_ELEMENTAL
-                || armies[i] == CREATURE_EARTH_ELEMENTAL
-                || armies[i] == CREATURE_FIRE_ELEMENTAL
-                || armies[i] == CREATURE_WATER_ELEMENTAL))
+        if (gpGame->f_1f698 == 0 && is_base_elemental(armies[i]))
             alignment = -1;
         else
             alignment = traits.townType;
@@ -1298,10 +1308,10 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                    ->IsMember(CREATURE_GHOST_DRAGON)))
         morale--;
     if (ownerTown) {
-        if (ownerTown->built & bitNumber[TAVERN_ID])
+        if (ownerTown->HasBuilding(TAVERN_ID, 0))
             morale++;
         if (ownerTown->type == TOWN_CASTLE
-            && (ownerTown->active & bitNumber[EXTRA_1_ID]))
+            && ownerTown->HasBuilding(EXTRA_1_ID, 1))
             morale += 2;
     }
     // The by-value wrapper over the reference-returning template preserves
@@ -1342,11 +1352,7 @@ int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* owner
     int morale = GetMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
     if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = armies[index];
-        if (gpGame->f_1f698 != 0
-            || (type != CREATURE_AIR_ELEMENTAL
-                && type != CREATURE_EARTH_ELEMENTAL
-                && type != CREATURE_FIRE_ELEMENTAL
-                && type != CREATURE_WATER_ELEMENTAL)) {
+        if (gpGame->f_1f698 != 0 || !is_base_elemental(type)) {
             switch (akCreatureTypeTraits[type].townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1369,11 +1375,7 @@ holy_done:
     }
     if (mode == MAGIC_TERRAIN_EVIL_FOG) {
         int type = armies[index];
-        if (gpGame->f_1f698 != 0
-            || (type != CREATURE_AIR_ELEMENTAL
-                && type != CREATURE_EARTH_ELEMENTAL
-                && type != CREATURE_FIRE_ELEMENTAL
-                && type != CREATURE_WATER_ELEMENTAL)) {
+        if (gpGame->f_1f698 != 0 || !is_base_elemental(type)) {
             switch (akCreatureTypeTraits[type].townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1432,7 +1434,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
             || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
         luck--;
     if (ownerTown && ownerTown->type == TOWN_RAMPART
-        && (ownerTown->active & bitNumber[EXTRA_0_ID]))
+        && ownerTown->HasBuilding(EXTRA_0_ID, 1))
         luck += 2;
     if (apply_limits)
         return limit(-3, luck, 3);
@@ -1456,11 +1458,7 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     int luck = GetLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int creature = armies[index];
-        if (gpGame->f_1f698 != 0
-            || (creature != CREATURE_AIR_ELEMENTAL
-                && creature != CREATURE_EARTH_ELEMENTAL
-                && creature != CREATURE_FIRE_ELEMENTAL
-                && creature != CREATURE_WATER_ELEMENTAL)) {
+        if (gpGame->f_1f698 != 0 || !is_base_elemental(creature)) {
             switch (akCreatureTypeTraits[creature].townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
@@ -1767,6 +1765,15 @@ source_stack_merges:
 // `operator+=` x2 and no magic-terrain switch at all, against this body's x4 /
 // x4 and two nine-entry selector tables. The census measures the Dreamcast
 // source, and for this compiland the Dreamcast source is a different function.
+// THE TOWN GATES ARE town::HasBuilding CALLS (67.5649 -> 74.4820,
+// 2026-08-15). dc 0x4f708 lines 1415 and 1419 are `mov #5,r5 / mov #0,r6`
+// and `mov #22,r5 / mov #1,r6` on `?HasBuilding@town@@QBA_NH_N@Z` where
+// this body tested `built & bitNumber[TAVERN_ID]` and `active &
+// bitNumber[EXTRA_1_ID]` by hand. The expansion is the same instructions,
+// so what moved is the /Ob2 candidate-site count - the same lever that
+// took TBottomViewKingdom 94.06 -> 98.52 in the same round. GetMorale
+// carries the identical pair (dc 0x4f078 lines 1014/1017) and is
+// byte-flat on it.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1791,11 +1798,7 @@ std::string armyGroup::get_morale_description(
         result += ownerHero->get_morale_description();
 
     if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-        && (gpGame->f_1f698 != 0
-            || (creature != CREATURE_AIR_ELEMENTAL
-                && creature != CREATURE_EARTH_ELEMENTAL
-                && creature != CREATURE_FIRE_ELEMENTAL
-                && creature != CREATURE_WATER_ELEMENTAL))) {
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
         switch (creatureTraits.townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -1821,11 +1824,7 @@ std::string armyGroup::get_morale_description(
     }
 
     if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-        && (gpGame->f_1f698 != 0
-            || (creature != CREATURE_AIR_ELEMENTAL
-                && creature != CREATURE_EARTH_ELEMENTAL
-                && creature != CREATURE_FIRE_ELEMENTAL
-                && creature != CREATURE_WATER_ELEMENTAL))) {
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
         switch (creatureTraits.townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -1904,11 +1903,11 @@ after_magic_terrain:
     }
 
     if (ownerTown) {
-        if (ownerTown->built & bitNumber[TAVERN_ID])
+        if (ownerTown->HasBuilding(TAVERN_ID, 0))
             result += format_string(
                 "\n%s +1", GetBuildingName(ownerTown->type, TAVERN_ID));
         if (ownerTown->type == TOWN_CASTLE
-            && (ownerTown->active & bitNumber[EXTRA_1_ID]))
+            && ownerTown->HasBuilding(EXTRA_1_ID, 1))
             result += format_string(
                 "\n%s +2", GetBuildingName(TOWN_CASTLE, EXTRA_1_ID));
     }
@@ -2003,6 +2002,32 @@ after_magic_terrain:
 // `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h keeps the
 // declaration behind HOMM3_TOWN_OBJ_DECLS - and `std::string::operator+=`
 // x3 against our mixed `+=`/`append`.
+// THE SITE COUNT IS RE-MEASURED AND THE SEARCH IS NARROWED TO ONE BLOCK
+// (2026-08-15). The deficit is still exactly FOUR free candidate sites,
+// but the probe has to be a USER-DEFINED inline to register at all -
+// `armygrp_clamp(0, luck, 3);` steps 82.5689 flat through +3 and jumps to
+// 95.1557 at +4, while `result.size()` / `result.capacity()` (Dinkumware
+// members) are inert until they start doing harm. And POSITION decides it:
+//   clover arm  x4  -> 95.1557      halfling arm x4  -> 80.5000
+//   devil block x4  -> 95.1557      after the tail   x4  -> 80.5000
+//   any 1/3, 2/2 or 3/1 split across clover+halfling -> 80.5000
+// So the four sites are at or BEFORE the Rampart gate, which EXCLUDES the
+// halfling arm - half of what the line table's negative bound allowed -
+// and leaves the clover arm as the only post-Dreamcast block they can live
+// in. Two real sites are now landed inside that window (`is_base_elemental`
+// in the clover gate, `town::HasBuilding` in the Rampart gate); both are
+// byte-flat, which is expected on a threshold this sharp. Open: which four
+// statements the clover arm carries. Nothing is padded - the probe is an
+// instrument, and the baseline row is deliberately left at 82.5689.
+//
+// THE RAMPART GATE IS A town::HasBuilding CALL (byte-flat, 2026-08-15):
+// dc 0x4fab4 line 1499 is `mov #21,r5 / mov #1,r6 / jsr` on
+// `?HasBuilding@town@@QBA_NH_N@Z` where this body tested `active &
+// bitNumber[EXTRA_0_ID]`. It buys ONE candidate site, and this row is
+// short FOUR, so the score does not move - recorded because it is the
+// statement retail wrote and because it narrows the outstanding deficit
+// to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
+// gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -2028,11 +2053,7 @@ std::string armyGroup::get_luck_description(
         result = ourHero->get_luck_description();
 
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (gpGame->f_1f698 != 0
-            || (creature != CREATURE_AIR_ELEMENTAL
-                && creature != CREATURE_EARTH_ELEMENTAL
-                && creature != CREATURE_FIRE_ELEMENTAL
-                && creature != CREATURE_WATER_ELEMENTAL))) {
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
         switch (akCreatureTypeTraits[creature].townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -2067,7 +2088,7 @@ std::string armyGroup::get_luck_description(
     }
 
     if (ourTown && ourTown->type == TOWN_RAMPART
-        && (ourTown->active & bitNumber[EXTRA_0_ID])) {
+        && ourTown->HasBuilding(EXTRA_0_ID, 1)) {
         result += format_string("\n%s +2",
                                 GetBuildingName(TOWN_RAMPART, EXTRA_0_ID));
     }
@@ -2094,11 +2115,7 @@ TTerrainType armyGroup::GetNativeTerrain()
         if (armies[i] == CREATURE_NONE)
             continue;
         int alignment;
-        if (gpGame->f_1f698 == 0
-            && (armies[i] == CREATURE_AIR_ELEMENTAL
-                || armies[i] == CREATURE_EARTH_ELEMENTAL
-                || armies[i] == CREATURE_FIRE_ELEMENTAL
-                || armies[i] == CREATURE_WATER_ELEMENTAL))
+        if (gpGame->f_1f698 == 0 && is_base_elemental(armies[i]))
             alignment = -1;
         else
             alignment = akCreatureTypeTraits[armies[i]].townType;

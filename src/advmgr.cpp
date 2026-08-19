@@ -1332,6 +1332,26 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // and compares the same packed type_point as retail. Residual codegen
 // differences are concentrated in the Dinkumware result-vector erase
 // expansion and merged exit layout.
+//
+// THE `currHeroId` LOCAL WAS THE WALL, NOT THE ACCESSOR (74.7786 ->
+// 78.8021, 2026-08-15). dc 0xf3a8 line 4601 tests
+// `gpCurrentPlayer->currHeroId == -1` against the FIELD - there is no
+// local anywhere in its 125-line table - and retail agrees at byte level:
+// it loads gpCurrentPlayer once, reads `[edx+4]` as a DWORD into ECX and
+// then spends that one register on all three `cmp ecx,-1` tests (the
+// z-check's `!= -1`, GetHero's own, and the no-hero block's). Our copy
+// into an `int currHeroId` broke that chain. Reading the field at each
+// use restores it.
+//
+// AND THE DC's OWN ACCESSOR IS REFUSED HERE, which is the asymmetry rule
+// biting the other way. dc 0xf3a8 line 4642 is a call to
+// `game::GetCurrHero`, but landing it measures 74.7786 against 78.8021
+// for `GetHero(gpCurrentPlayer->currHeroId)` - a 4.02-point loss, with
+// and without the local. Retail's bytes say why: GetCurrHero re-reads the
+// id inside its taken arm and compares it at CHAR width (that re-read is
+// exactly what made it right in TBottomViewTown/TBottomViewHero), where
+// this body's three tests share ONE dword already in a register. The DC
+// is an older revision; retail's bytes outrank it.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -1369,8 +1389,7 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                != lastMapHover.z)
             goto normal_cursor_exit;
 
-        int currHeroId = gpCurrentPlayer->currHeroId;
-        if (currHeroId == -1) {
+        if (gpCurrentPlayer->currHeroId == -1) {
             if (currCell->type == TOWN) {
                 town* cTown = gpGame->GetTown(
                     currCell->get_trigger_cell()->get_map_extraInfo());
@@ -1401,7 +1420,7 @@ int advManager::ProcessHover(int mouseX, int mouseY)
             goto normal_cursor_exit;
         }
 
-        hero* currHero = gpGame->GetHero(currHeroId);
+        hero* currHero = gpGame->GetHero(gpCurrentPlayer->currHeroId);
         type_point heroPoint;
         heroPoint.x = currHero->x;
         heroPoint.y = currHero->y;

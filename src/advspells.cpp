@@ -23,10 +23,9 @@ void advManager::CheckCastSpell()
     UpdateScreen(0, 0);
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 
-    int currentHeroId = gpCurrentPlayer->currHeroId;
-    hero* currentHero = currentHeroId != -1
-        ? &gpGame->heroes[currentHeroId]
-        : 0;
+    // dc 0x2194c calls `game::GetCurrHero` here (byte-flat, 2026-08-15);
+    // this had been the four-line `heroes[currHeroId]` expansion.
+    hero* currentHero = gpGame->GetCurrHero();
     {
         TSpellbookWindow spellbook(currentHero, 0,
                                    TSpellbookWindow::eContextAdventure,
