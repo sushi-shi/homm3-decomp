@@ -1098,16 +1098,31 @@ int hero::GetExperienceIncrement(int level)
     return GetExperience(level + 1) - GetExperience(level);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1862
+// No retail row: the carve is gap-free from GetExperienceIncrement
+// straight into ApplyBattleWinTemps, and hero::GiveExperience carries
+// the whole body expanded. `inline` reproduces the absence, the
+// strip::DrawNumber precedent. Same table and same 1.2 extrapolation as
+// GetExperience above, walked forwards instead of indexed.
 DC_ONLY(0xccc8c, 0x110)
-int hero::GetLevel(int iExperience)
+inline int hero::GetLevel(int iExperience)
 {
-    // @stub
+    int heroLevel = 1;
+    const short* threshold = kExperienceForLevel;
+    for (; threshold <= &kExperienceForLevel[11]; threshold++, heroLevel++) {
+        if (iExperience < *threshold)
+            return heroLevel - 1;
+    }
+    int total = kExperienceForLevel[11];
+    int increment =
+        static_cast<int>((total - kExperienceForLevel[10]) * 1.2);
+    total += increment;
+    for (heroLevel = 13; iExperience >= total; heroLevel++) {
+        increment = static_cast<int>(increment * 1.2);
+        total += increment;
+    }
+    return heroLevel - 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:1886
 // Strips the temporary battle bonuses: clears the two bytes at
@@ -2478,14 +2493,56 @@ int hero::GiveRandomArtifact()
     // @stub
 }
 
-// E:\gamedcs\hero.cpp:5085
-VA(0x004e33b0, 0x24A)  // anchor-global, dc 0xd3e88
-int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_window)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\hero.cpp:5085
+// Two whole expansions ride in here: hero::GetExperience (the map's
+// level cap turned into an experience threshold) and hero::GetLevel,
+// which has no retail row at all. The cap arm returns 0 without
+// touching the level, and the ordinary arm returns the LEVELS GAINED -
+// retail keeps the entry level in a frame slot across the whole body
+// and subtracts it at the very end.
+// gpGame + 0x1f877 is mapHeader.maxHeroLevel: 0x1f86c is mapHeader and
+// +0xb is CMapHeaderData's own byte. Retail reads it into AL over the
+// still-live level word and then masks with `and eax,0xff`, which is
+// how one register carries both.
+//
+// Residual (99.7%): RELOCATION ADDENDS ONLY. Every instruction and every
+// immediate agrees; retail's carve names `kExperienceForLevel - 2`,
+// `+ 0x14` and `+ 0x16` as three separate data symbols where our
+// compile emits the array plus a displacement, and the frame push
+// carries the unwind-table addend. Nothing here is source-addressable.
+VA(0x004e33b0, 0x24A)  // anchor-global, dc 0xd3e88
+int hero::GiveExperience(int howMuch, int bCheckLevel,
+                         unsigned char show_cap_window)
+{
+    int entryLevel = level;
+    if (gpGame->mapHeader.maxHeroLevel > 0) {
+        int cap = GetExperience(gpGame->mapHeader.maxHeroLevel);
+        if (experience + howMuch > cap) {
+            if (experience < cap) {
+                experience = cap;
+                if (bCheckLevel)
+                    CheckLevel();
+            }
+            if (experience > cap)
+                experience = cap;
+            if (show_cap_window && gpGame->IsLocalHuman(owner)) {
+                std::string text =
+                    format_string(gpGeneralText->GetText(2), name);
+                NormalDialog(text.c_str(), 1, -1, -1, 0x11, 0, -1, 0, -1,
+                             0, -1, 0);
+            }
+            return 0;
+        }
+    }
+
+    experience += howMuch;
+    int newLevel = GetLevel(experience);
+    if (bCheckLevel)
+        CheckLevel();
+    return newLevel - entryLevel;
+}
 
 // E:\gamedcs\hero.cpp:5136
 VA(0x004e3600, 0xB2)  // anchor-global, dc 0xd3fb8
