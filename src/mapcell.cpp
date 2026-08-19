@@ -1367,12 +1367,151 @@ int NewfullMap::loadBlackBoxList(void* infile)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:1914
-VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
-int NewfullMap::loadBlackBox(void* infile, BlackBoxData* thisBox)
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:1362 in the DC roster, where it is a member of
+// NewfullMap. Retail inlines it at its only call site and /OPT:REF drops
+// the out-of-line copy, so there is no carve row to claim - spelled a
+// file-local static for the same reason loadMonsterData is.
+static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
 {
-    // @stub
+    loadString(infile, &thisTreasure->Message);
+
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisTreasure->HasCustomGuardians = value != 0;
+    if (thisTreasure->HasCustomGuardians)
+        thisTreasure->Guardians.load(infile);
+    return 0;
 }
+
+// E:\gamedcs\mapcell.cpp:1914
+// The load twin of saveBlackBox, field for field, plus the one thing Save
+// has no counterpart for: a save VERSION, which picks the creature id's
+// width in the army tail - one byte below version 25, two from 25 on.
+//
+// The two customization flags are NORMALIZED on the way in (`setne`), not
+// copied, where every other scalar is a straight assignment. The three
+// list counts arrive as single signed bytes and are widened before resize.
+//
+// The three lists do not read alike, and the asymmetry is retail's:
+// secondary skills and spells come in as SIGNED bytes through checked
+// reads, while each artifact is an UNCHECKED one-byte read into a dword
+// local that is then masked - the same asymmetric artifact crossing
+// loadMonsterList has.
+//
+// Residual (89.8635%): every read, every field and every list is retail's;
+// the divergence is ONE inline decision. Retail CALLS
+// vector<SecondarySkillData>::erase out of the first resize and inlines it
+// (as copy + _Destroy, then as a raw copy loop) for the two later int
+// lists; this compile inlines all three, so its /Ob2 budget is still above
+// the 8-byte element's erase cost where retail's has fallen below it.
+// diagnose routes it to predict-inline and reports exactly `1 over-inline`.
+// The budget follows the caller's front-end mass, and this caller is a
+// faithful transcription of a body the DC roster gives as one function with
+// three parameters and six locals - so there is no statement to remove.
+// Measured on the way: consolidating the locals from twelve to six bought
+// back retail's reclaimed parameter slot for the byte local (89.7740 ->
+// 89.8635) but did not move the inline decision.
+VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
+int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                             int saveVersion)
+{
+    signed char value;
+    int dwordValue;
+    int count;
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->HasCustomTreasure = value != 0;
+    if (thisBox->HasCustomTreasure) {
+        if (loadTreasureData(infile, thisBox) < 0)
+            return -1;
+    }
+
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ExperienceBonus = dwordValue;
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ManaBonus = dwordValue;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->MoraleBonus = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->LuckBonus = value;
+
+    for (i = 0; i < 7; ++i) {
+        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+            return -1;
+        thisBox->ResQty[i] = dwordValue;
+    }
+    for (i = 0; i < 4; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->PrimarySkillBonus[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->SecondarySkills.resize(count);
+    for (i = 0; i < count; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->SecondarySkills[i].type = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->SecondarySkills[i].level = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Artifacts.resize(count);
+    for (i = 0; i < count; ++i) {
+        int artifact;
+        infile->Read(&artifact, sizeof(unsigned char));
+        thisBox->Artifacts[i] = artifact & 0xff;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Spells.resize(count);
+    for (i = 0; i < count; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->Spells[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Creatures.Initialize();
+    for (i = 0; i < count; ++i) {
+        if (saveVersion < 25) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            thisBox->Creatures.armies[i] = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            thisBox->Creatures.armies[i] = wide;
+        }
+        short troops;
+        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+            return -1;
+        thisBox->Creatures.numTroops[i] = troops;
+    }
+    return 0;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2073
 VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor; called by readObject; EH-bearing, dc 0xef5dc
