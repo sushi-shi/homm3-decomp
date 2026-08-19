@@ -1358,6 +1358,7 @@ mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xf
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
 mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xfc1a0
+mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	88.6918	88.6918	88.6918	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
 mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
@@ -1403,7 +1404,6 @@ mapcell	NewfullMap_NewfullMap	0.0000	0.0000	0.0000	0xfd060
 mapcell	NewfullMap_NewfullMap_fd1e0	0.0000	0.0000	0.0000	0xfd1e0
 mapcell	NewfullMap_PlaceObject	0.0000	0.0000	0.0000	0x105b20
 mapcell	NewfullMap_Read	0.0000	0.0000	0.0000	0xfd690
-mapcell	NewfullMap_Save	0.0000	0.0000	0.0000	0xfdf40
 mapcell	NewfullMap_StampObject	0.0000	0.0000	0.0000	0x105230
 mapcell	NewfullMap_calc_cell_extra	0.0000	0.0000	0.0000	0x105610
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70

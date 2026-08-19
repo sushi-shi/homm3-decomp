@@ -595,12 +595,132 @@ int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:759
-VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
-int NewfullMap::Save(void* outfile, int size, unsigned char two_layers)
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
+// three are members of NewfullMap. Retail inlines each at its only call
+// site - Save - and /OPT:REF drops the out-of-line copies, so there are no
+// carve rows to claim; they are file-local statics for loadMonsterData's
+// reason.
+//
+// They are NOT a tidying of Save's body, they are why Save compiles the way
+// it does. Written longhand inside Save, the caller's front-end mass lifts
+// the /Ob2 budget far enough that VC6 goes on to inline saveTreasureData,
+// saveMonsterData and saveTimedEventList as well, where retail calls all
+// three (measured: 28.0548%).
+static int saveBlackBoxList(NewfullMap* map, TAbstractFile* outfile)
 {
-    // @stub
+    int count = map->blackBoxes.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->blackBoxes.size(); ++i) {
+        if (map->saveBlackBox(outfile, &map->blackBoxes[i]) < 0)
+            return -1;
+    }
+    return 0;
 }
+
+static int saveTreasureList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->customTreasure.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->customTreasure.size(); ++i) {
+        if (map->saveTreasureData(outfile, &map->customTreasure[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+static int saveMonsterList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->CustomMonsterList.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->CustomMonsterList.size(); ++i) {
+        if (map->saveMonsterData(outfile, &map->CustomMonsterList[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+// These last two have NO Dreamcast counterpart - the roster has no
+// saveSeerHutList or saveQuestGuardList - so the SPLIT is inferred, not
+// attested. What forces it is the byte evidence: with both blocks written
+// longhand inside Save, VC6 still had budget to inline saveTimedEventList
+// where retail calls it (50.7945%); splitting them out drops the budget
+// past that point and takes Save to 88.6918%. The names follow the three
+// attested list helpers above.
+static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->SeerHutList.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->SeerHutList.size(); ++i)
+        map->SeerHutList[i].save(outfile);
+    return 0;
+}
+
+static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->QuestGuardList.size();
+    outfile->Write(&count, 2);
+    for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
+        map->QuestGuardList[i].save(outfile);
+}
+
+// E:\gamedcs\mapcell.cpp:759
+// The save-game driver: two layers, the objects, then the five custom
+// record sets in the order their vectors sit in the class - black boxes,
+// treasure, monsters, seer huts, quest guards - and finally the two event
+// lists. Every list header is a two-byte count taken from size().
+//
+// The first three sets go through their own list helpers, which is what
+// keeps this body small enough for retail's inline decisions; the last two
+// are longhand here, and their size() is an out-of-line call by the time
+// the budget reaches them.
+//
+// Two asymmetries are retail's and are left alone: the quest-guard count's
+// Write carries no short-write gate where the other four do, and neither
+// seer huts nor quest guards check the per-record save's result.
+//
+// Residual (88.6918%): one inline decision, in the seer-hut helper. Retail
+// CALLS vector<TSeerHut>::size() there - twice, once before the loop and
+// once per iteration - where this compile still has budget to expand it.
+// predict-inline reports exactly that and nothing else. Every call, every
+// list and every gate is retail's; the remaining gap is how much /Ob2
+// budget is left by the time the fourth helper is expanded, and the two
+// levers that reached it are already pulled (28.0548 longhand -> 50.7945
+// with the three attested helpers -> 88.6918 with all five).
+VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
+int NewfullMap::Save(TAbstractFile* outfile, int size, unsigned char twoLayers)
+{
+    if (saveMapLayer(outfile, size, 0) < 0)
+        return -1;
+    if (twoLayers) {
+        if (saveMapLayer(outfile, size, 1) < 0)
+            return -1;
+    }
+    if (saveMapObjects(outfile) < 0)
+        return -1;
+
+    if (saveBlackBoxList(this, outfile) < 0)
+        return -1;
+    if (saveTreasureList(this, outfile) < 0)
+        return -1;
+    if (saveMonsterList(this, outfile) < 0)
+        return -1;
+
+    if (saveSeerHutList(this, outfile) < 0)
+        return -1;
+    saveQuestGuardList(this, outfile);
+
+    if (saveTimedEventList(outfile) < 0)
+        return -1;
+    return saveTownEventList(outfile) >= 0 ? 0 : -1;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
 
