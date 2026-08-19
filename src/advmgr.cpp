@@ -3366,6 +3366,25 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // map coordinates, sizing, screen-edge clamps and dialog invocation.
 // Retail proves the control flow, constants, field offsets and helper calls;
 // Dreamcast CodeView supplies only the function and local identities.
+//
+// The case SET and case ORDER are pinned by the retail tables themselves:
+// the 216-byte case->arm byte index at 0x00415C88 (fn+0x24C8, and
+// 0x24C8+0xD8 == the function size, so the extent is unambiguous) is now
+// byte-identical on both sides, and the 57-entry jump table at 0x00415BA4
+// agrees in length and target order. No arm is missing, extra or misplaced.
+//
+// Residual (90.20%): diagnose reports 373 vs 372 blocks and 197 vs 200
+// conditional branches - i.e. structurally converged, against 242 vs 372
+// and 131 vs 200 before this work - with ONE under-inline left. That one
+// is the std::string surface in the NOTHING/QUEST_GUARD arms: retail
+// open-codes both `append` overloads, `_Eos` and the dtor refcount
+// decrement where we still call them. It is /Ob2 budget, not spelling -
+// dropping the `#pragma inline_depth(0)` that used to wrap
+// cellDescription was worth +0.10 once the body had grown ~2.9 KB, and
+// the rest should follow the same way. Do NOT chase _Tidy/append
+// spellings. The remainder is tail-merge cosmetics: retail shares the
+// no-owner strcpy between CREATURE_GENERATOR_1 and the default arm where
+// we duplicate it, and narrows PlayerKnowsCell's compare to `test al, dl`.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -3475,9 +3494,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case ANCHOR_POINT:
             case EVENT:
             case HOLY_GRAIL: {
-#pragma inline_depth(0)
                 std::string cellDescription;
-#pragma inline_depth()
                 TAdventureObjectType specialTerrain =
                     cell->get_special_terrain();
                 if (specialTerrain == NOTHING)
