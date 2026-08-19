@@ -609,12 +609,82 @@ int NewfullMap::readMapLayer(void* infile, int size, int layer)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:908
+// The save-game layer writer, and the cleanest statement of NewmapCell's
+// serialized shape there is: the six signed 8-bit bitfields of the two
+// terrain units one byte at a time, then four words - the whole cellFlags
+// word, the object type narrowed to 16 bits, and the two object indices -
+// then the extraInfo dword, then the per-cell object vector as a count and
+// that many 4-byte records.
+//
+// The layer base is spelled as a flat index rather than through cell():
+// retail squares Size before multiplying by the layer, which is what
+// `Size * Size * layer` gives and what `(layer * Size + 0) * Size + 0`
+// does not.  The return value is the cell count, not a status.
 VA(0x004fe490, 0x22A)  // order-map: leaf; called x2 by Save 0xfdf40 in the layer slot, dc 0xed384
-int NewfullMap::saveMapLayer(void* outfile, int size, int layer)
+int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            char byteValue;
+            byteValue = static_cast<char>(thisCell->GroundSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->GroundIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RiverSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RiverIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RoadSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RoadIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+
+            short wordValue;
+            wordValue = static_cast<short>(thisCell->cellFlags);
+            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+                return -1;
+            wordValue = static_cast<short>(thisCell->type);
+            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+                return -1;
+            short indexValue;
+            indexValue = thisCell->objectIndex;
+            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
+                return -1;
+            indexValue = thisCell->object_type_index;
+            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
+                return -1;
+
+            unsigned long extra = thisCell->extraInfo;
+            if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+                return -1;
+
+            int count = thisCell->objects.size();
+            if (static_cast<unsigned>(outfile->Write(&count, 4)) < 4)
+                return -1;
+
+            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
+                if (static_cast<unsigned>(
+                        outfile->Write(&thisCell->objects[i], 4)) < 4)
+                    return -1;
+            }
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:995
 VA(0x004fe920, 0x2E5)  // order-map: called x2 by Load 0xfdbc0 in the layer slot; retail body delegates to helper 0xfe6c0 (retail-only, unclaimed), dc 0xed688
@@ -1315,20 +1385,22 @@ int NewfullMap::saveMonsterList(void* outfile)
 
 #endif  // @carcass
 
-// E:\gamedcs\mapcell.cpp:2717
-// The list count is a SHORT here, not the dword every other list header
-// uses, and it is sign-extended into resize.  loadMonsterData is inlined
-// whole - retail keeps no out-of-line copy, the carve has no row between
-// this body and saveMonsterData - and it is the exact mirror of
-// saveMonsterData (0x501980): an unchecked string, seven checked resource
-// dwords, then the artifact byte.
+// E:\gamedcs\mapcell.cpp:2768 - the DC roster carries this as a member of
+// NewfullMap, but retail's only call site inlines it and /OPT:REF then drops
+// the out-of-line copy, so no carve row exists to claim.  It is spelled as a
+// file-local static for that reason: an inlined single-call static leaves no
+// symbol behind, where an extern member would leave one retail has not got.
 //
-// The artifact crossing is the asymmetric one.  Save narrows the int to a
-// byte, so ARTIFACT_NONE goes out as 0xff; the load reads one byte into a
-// dword local and masks it, which is why the field is re-widened through
-// `& 0xff` and then mapped back onto ARTIFACT_NONE rather than sign-
-// extended.  That final read's short-read gate is absent in retail.
-VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
+// It must stay a separate function rather than being written longhand inside
+// loadMonsterList.  Longhand, the caller's front-end mass lifts the /Ob2
+// budget off its 1000 floor and VC6 inlines vector<MonsterData>::erase into
+// resize, where retail calls it.
+//
+// The artifact crossing is the asymmetric one.  saveMonsterData narrows the
+// int to a byte, so ARTIFACT_NONE goes out as 0xff; the load reads one byte
+// into a dword local and masks it, which is why the field is re-widened
+// through `& 0xff` and mapped back onto ARTIFACT_NONE rather than
+// sign-extended.  That final read carries no short-read gate in retail.
 static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
     loadString(infile, &thisMonster->Message);
@@ -1348,6 +1420,10 @@ static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
     return 0;
 }
 
+// E:\gamedcs\mapcell.cpp:2717
+// The list count is a SHORT here, not the dword every other list header
+// uses, and it is sign-extended into resize.
+VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
 int NewfullMap::loadMonsterList(TAbstractFile* infile)
 {
     short count;
