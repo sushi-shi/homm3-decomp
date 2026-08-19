@@ -51,6 +51,7 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+#define HOMM3_ADVMGR_MONSTER_MOOD_DECLS
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_OBJ_DECLS
 #define HOMM3_ADVMGR_OPTIONS_DECLS
@@ -92,6 +93,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "widget.h"
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
+#include "quickinfowindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_ADVMGR_OBJ_DECLS
@@ -122,6 +124,19 @@ static inline const T& t_limit(const T& minimum, const T& value,
 static inline int limit(int minimum, int value, int maximum)
 {
     return t_limit(minimum, value, maximum);
+}
+
+// The objectIndex short is the shared creature-id lane; the union bridge
+// (events.cpp precedent) keeps the TCreatureType conversion cast-free and
+// VC6 reduces it to the move it already was.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
 }
 
 // E:\gamedcs\advmgr.cpp:336
@@ -4131,12 +4146,80 @@ void advManager::garrison_quick_view(int id, int x, int y)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The strength appraisal, declared file-locally (the events.cpp/townmgr.cpp
+// precedent for ai_combat.obj's address).
+long AI_approximate_strength(const hero* current_hero);
+
 // E:\gamedcs\advmgr.cpp:9284
+// Residual (99.96%): frame-slot coalescing only - retail parks the
+// type_point and the like modifier in one slot (-0x24), our CL gives the
+// point its own (-0x28); every instruction pairs masked. Tried and
+// rejected: closing the point's scope with a goto-identified restructure
+// (77.47 - the flow shape collapses). predict-inline's over-inline row is
+// the folded QuickWindowWait label, not a real wall.
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
-    // @stub
+    int count = cell->extraInfo & 0xfff;
+    TCreatureType type = creature_type_from_int(cell->objectIndex);
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    gpGame->GetLocalPlayerGamePos();
+
+    TQuickCreatureWindow* window;
+    hero* currHero = gpGame->GetHero(localPlayer->currHeroId);
+    if (currHero) {
+        type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
+                         radarOrigin.z);
+        if ((currHero->IsInIdentifyRange(&point)
+             && currHero->HeroFn_004E5DE0() != eMasteryInvalid)
+            || DebugViewAll) {
+            int like = get_like_modifier(currHero, type);
+            int diplomacy = currHero->skillLevel[eSecSkillDiplomacy];
+            float strength_ratio =
+                static_cast<float>(AI_approximate_strength(currHero))
+                / static_cast<float>(akCreatureTypeTraits[type].AI_value
+                                     * count);
+            int force = get_force_modifier(strength_ratio);
+            int disposition = static_cast<long>(cell->extraInfo << 15) >> 27;
+
+            TQuickCreatureWindow::TDisposition mood;
+            if (disposition > force + diplomacy + like)
+                mood = TQuickCreatureWindow::Attack;
+            else if (disposition <= diplomacy + like + 1)
+                mood = TQuickCreatureWindow::Join;
+            else if (disposition <= like + 2 * diplomacy + 1)
+                mood = TQuickCreatureWindow::JoinPrice;
+            else if ((cell->extraInfo & 0x20000)
+                     || disposition == force + diplomacy + like)
+                mood = TQuickCreatureWindow::Attack;
+            else
+                mood = TQuickCreatureWindow::Flee;
+
+            int cost = akCreatureTypeTraits[type].cost[6] * count;
+            window = new TQuickCreatureWindow(
+                TQuickCreatureWindow::ViewAll, type, count, mood, cost);
+            goto wait_and_close;
+        }
+    }
+    window = new TQuickCreatureWindow(TQuickCreatureWindow::ViewNone, type,
+                                      count, TQuickCreatureWindow::Flee, 0);
+
+wait_and_close:
+    window->x = limit(window->width / 2, cellx * 32,
+                      WINDOW_SCREEN_WIDTH - 1 - window->width / 2)
+                - window->width / 2;
+    window->y = limit(window->height / 2, celly * 32,
+                      WINDOW_SCREEN_HEIGHT - 1 - window->height / 2)
+                - window->height / 2;
+    window->QuickWindowWait();
+    if (window)
+        delete window;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9349
 #endif  // @carcass
