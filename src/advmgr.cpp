@@ -3425,7 +3425,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
 
             switch (cell->type) {
             case NOTHING:
-            case ANCHOR_POINT: {
+            case ANCHOR_POINT:
+            case EVENT:
+            case HOLY_GRAIL: {
 #pragma inline_depth(0)
                 std::string cellDescription;
 #pragma inline_depth()
@@ -3460,6 +3462,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case BORDER_GUARD:
+            case BORDER_GATE:
                 sprintf(gText, DATA_COMPGEN(
                     0x00660344, rolloverBorderFormat, "%s %s"),
                     gBorderColorNames[cell->objectIndex],
@@ -3561,10 +3564,25 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     gText, cell, CREATURE_BANK_DERELICT,
                     gUnnamed69778c, separator, 1);
                 break;
+            case SEPULCHER:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SEPULCHER,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHIPWRECK:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SHIPWRECK,
+                    gUnnamed69778c, separator, 1);
+                break;
             case DRAGON_CITY:
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_DRAGON,
                     gUnnamed69778c, separator, 1);
+                break;
+            case QUEST_GUARD:
+                strcpy(gText,
+                    fullMap->QuestGuardList[cell->extraInfo]
+                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
                 break;
             SET_VISITED_QUICKINFO(FAERIE_RING,
                 currHero->flags & 0x2000);
@@ -3706,16 +3724,6 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     fullMap->SeerHutList[cell->extraInfo]
                         .SeerHutFn_005741B0(iPlayer).c_str());
                 break;
-            case SEPULCHER:
-                get_creature_bank_help_text(
-                    gText, cell, CREATURE_BANK_SEPULCHER,
-                    gUnnamed69778c, separator, 1);
-                break;
-            case SHIPWRECK:
-                get_creature_bank_help_text(
-                    gText, cell, CREATURE_BANK_SHIPWRECK,
-                    gUnnamed69778c, separator, 1);
-                break;
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
                                   newLine, separator);
@@ -3804,11 +3812,6 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
                                         newLine, separator);
-                break;
-            case QUEST_GUARD:
-                strcpy(gText,
-                    fullMap->QuestGuardList[cell->extraInfo]
-                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
                 break;
             default:
                 strcpy(gText, gAdventureObjectNames[cell->type]);
