@@ -935,12 +935,30 @@ void hero::UpdateArmies()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1709
-VA(0x004d9b30, 0x18D)  // dc-bracket forced, dc 0xcc708
-void hero::ViewStat(int whichStat, int isQuickView)
+// ARITY SETTLED FROM THE BYTES (2026-08-20), against the DC prototype
+// the block note above flags: retail is `ret 4` with ONE stack argument
+// and never touches ECX, and that argument is an ARTIFACT id - it goes
+// straight into a stack type_artifact whose get_description() opens the
+// text. So the DC name ViewStat does not describe this body and the
+// name below is an ORDINAL PLACEHOLDER. General text 734 is the
+// question; 733 is HeroFn_004DC100's assemble prompt, and 0x4dc070 is
+// the disassemble action this reply gates.
+VA(0x004d9b30, 0x18D)  // dc-bracket forced + settled arity, dc 0xcc708
+int hero::HeroFn_004D9B30(int artifact)
 {
-    // @stub
+    type_artifact record(artifact, -1);
+    std::string text = record.get_description();
+    text += "\n\n";
+    text += gpGeneralText->GetText(734);
+    NormalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0,
+                 -1, 0, -1, 0);
+    return gpWindowManager->dialogReturn;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1717
 VA(0x004d9cc0, 0x200)  // dc-bracket forced, dc 0xcc75c
