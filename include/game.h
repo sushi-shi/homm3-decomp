@@ -277,8 +277,28 @@ public:
 SIZE(HeroExtra, 0x334);
 #endif
 
+// The four secondary skills a university offers, in slot order. Retail's
+// own default constructor 0x5d2d80 - `mov eax,ecx` plus four dword stores
+// of 14, 15, 16, 17 and a bare `ret`, no frame - proves the shape and the
+// element width: the record IS four ints, and the four values are the
+// elemental magic schools (Fire, Air, Water, Earth), which is exactly the
+// set the Conflux town building teaches. townManager::DoUniversity
+// 0x5d2da0 expands that constructor inline over its own stack record and
+// hands its address to the university window; the map object's copy comes
+// out of ExtraInfoUnion::get_university instead. Sixteen bytes either way,
+// unchanged.
 struct type_university {
-    char fields[0x10];
+    int skills[4];
+
+    // DEFINED in townmgr.cpp, not here, and the retail image is what says
+    // so: the out-of-line copy at 0x5d2d80 sits inside townmgr.obj's link
+    // bracket, immediately ahead of townManager::DoUniversity, while the
+    // only three callers of it in the image are AI bodies at 0x5253d0 and
+    // 0x52b1e0 - objects that link EARLIER. A header-inline constructor
+    // would have had its COMDAT kept from the first object that used it,
+    // i.e. over there; a plain out-of-line member emitted by its own
+    // compiland lands exactly where this one does.
+    type_university();
 };
 SIZE(type_university, 0x10);
 
@@ -1374,6 +1394,33 @@ public:
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
     hero* GetCurrHero();
     town* GetCurrTown();
+#ifdef HOMM3_TOWNMGR_VIEWARMY_DECLS
+    // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
+    // town page opens over a troop slot; declared here for
+    // townManager::DoCommand's two call sites, not reconstructed. The
+    // Dreamcast declarator types the group as a REFERENCE and retail
+    // pushes the pointer, which is the same thing at this call.
+    void ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
+                  const town* this_town, int x, int y,
+                  unsigned char show_dismiss, unsigned char isQuickView);
+#endif
+#ifdef HOMM3_TOWNMGR_TOWN_NAME_DECLS
+    // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
+    // inline-only member: retail has no out-of-line row and
+    // townManager::SetupTown 0x5c68a4 expands it in place - the towns
+    // vector's _First out of +0x21614, the 360-byte stride, +0xc4 for
+    // cName and its own `_Ptr == 0 ? "" : _Ptr`. Note it does NOT go
+    // through GetTown: no `cmp id,-1` is emitted at that site.
+    //
+    // GATED, for the reason town::get_location's note gives: this
+    // header rides in initialize.cpp's closure, which carries the
+    // tree's include-set canary. Every consumer opens the macro for
+    // itself and re-measures.
+    const char* GetTownName(int townId) const
+    {
+        return towns[townId].cName.c_str();
+    }
+#endif
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.

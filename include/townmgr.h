@@ -99,6 +99,11 @@ public:
     Bitmap816* objHotspot;  // +0x28
     border* objBorder;      // +0x2c
 
+    // Retail 0x5c2ea0 (dc 0x16a0b0), townmgr.obj's FIRST carve row -
+    // the `%s.def` sprintf plus GetSprite body. Declared for SetupTown,
+    // which is the only site in the image that builds one; not
+    // reconstructed.
+    townObject(int townType, int objPos, const char* basename);
     // The DC roster gives it its own row (dc 0x16a1a4, 128 SH4 bytes)
     // and retail has NO out-of-line body for it: townmgr.obj's first
     // carve row is the constructor at 0x5c2ea0 (the `%s.def` sprintf +
@@ -113,6 +118,50 @@ public:
     void Draw(int incFrame, unsigned char drawHotspots);
 };
 SIZE(townObject, 0x30);
+
+// The command domain townManager::DoCommand 0x5d4c10 dispatches on, and
+// the one place in this compiland that needs names: retail's switch is a
+// DENSE ten-entry jump table at 0x5d5124 whose slot 6 points at the
+// default arm, so the value space is 0..9 with SIX unused. The Dreamcast
+// passes a bare int and declares no enum, so every NAME here is
+// provisional and describes what the arm does; the VALUES are the jump
+// table's own order.
+enum ETownCommand {
+    TOWN_COMMAND_SELECT_SLOT = 0,
+    TOWN_COMMAND_VIEW_ARMY = 1,
+    TOWN_COMMAND_MERGE_ARMY = 2,
+    TOWN_COMMAND_SWAP_ARMY = 3,
+    TOWN_COMMAND_VIEW_HERO = 4,
+    TOWN_COMMAND_SPLIT_ARMY = 5,
+    TOWN_COMMAND_SWAP_HEROES = 7,
+    TOWN_COMMAND_MOVE_HERO_FROM_GARRISON = 8,
+    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 9
+};
+
+// The panorama's four per-town-type tables, all in townmgr.obj's own
+// .rdata band and all read by SetupTown 0x5c6870. Names INVENTED (no DC
+// symbol covers them) and the extents come off SetupTown's own index
+// arithmetic; every one of them is declared under this file's narrowest
+// gate, the include-set reason gSystemPalette's note above gives. The
+// extents are spelled as literals rather than as town.h's
+// TOWN_TYPE_COUNT / MAX_BUILDING_TYPE because this header is parsed
+// BEFORE town.h in its one consumer's include order.
+//
+// gTownBuildOrder: `movsx esi,byte [i + type*44 + 0x642eb4]` - a signed
+// char [9][44] of type_building_id values in PANORAMA DRAW ORDER, each
+// row closed by -1 (Castle's is 26,23,7,8,9,0,... then six -1s).
+extern signed char gTownBuildOrder[9][44];
+// gTownBackgroundPrefix: the "%sBack.pcx" stem, one per faction -
+// TBCs, TBRm, TBTw, TBIn, TBNc, TBDn, TBSt, TBFr, TBEl.
+extern const char* gTownBackgroundPrefix[9];
+// gTownBuildingSprites: `[objId + type*44]` scaled by four - a
+// char*[9][44] of the .def stem per faction and building (Castle's row
+// starts TBCsmage, TBCsmag2, TBCsmag3, TBCsmag4, TBCsmag5, TBCstvrn).
+extern const char* gTownBuildingSprites[9][44];
+// gTownMusic: the town page's MP3 per faction - CstleTown, Rampart,
+// TowerTown, InfernoTown, necroTown, dungeon, StrongHold,
+// FortressTown, ElemTown.
+extern const char* gTownMusic[9];
 
 // The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
 // to the adventure handler's TRADE path with the same `this` - a direct,
@@ -658,12 +707,29 @@ public:
     // the garrison and rebuilds the two troop strips around the new
     // arrangement.
     void SwapHeroes();
+    // Retail 0x5d5220 (dc 0x176cf8), declared for DoCommand's arm 8 and
+    // not reconstructed. IDENTIFIED against its Dreamcast twin by its
+    // callee set: it is the row that calls town::remove_garrison_hero
+    // (0x5be390), i.e. the direction that takes the hero OUT of the
+    // garrison, and it is also the one that gates on the acting
+    // player's eight-hero count before doing so. DoCommand is its only
+    // caller in the whole image, and retail still emits it out of line.
+    void MoveHeroFromGarrison();
+    // Retail 0x5d4c10 (dc 0x176634). The town page's command dispatch.
+    void DoCommand(int inCommand, unsigned char isGarrison,
+                   type_garrison_base_window* garrisonWindow);
     // Retail 0x5d2950 (dc 0x174bfc). Runs the Portal of Summoning's
     // recruit dialog, rolling the generator first if the town has not
     // picked a creature yet.
     void DoPortalOfSummoning();
     // Retail 0x5d2f90 (dc 0x174d1c). Necropolis' creature converter.
     void DoSkeletonTransformer();
+    // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs
+    // straight from GetBuildingInfo to Main with nothing between them.
+    // Conflux's Magic University: the page's hero, then either the
+    // university window over the four elemental schools or the
+    // building's own description when there is no hero to teach.
+    void DoUniversity();
     // Retail 0x5d82b0 (dc 0x17b154). The town's own tavern: the shared
     // chooser, then the hire onto the town and the page rebuild.
     void DoTownTavern();
