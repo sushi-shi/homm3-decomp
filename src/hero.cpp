@@ -1513,6 +1513,25 @@ void hero::HeroFn_004DC070(long slot)
 // spelling one. `any()` is likewise a call here and inline there.
 // The owner index is taken WITHOUT the `owner < 0` guard get_player
 // carries; retail indexes gpGame->players directly.
+//
+// Residual (48.8%): THREE /Ob2 over-inlines, all budget. Retail leaves
+// bitset<12>::_Xran a CALL out of the two inlined set/test expansions -
+// our CL expands its whole _THROW(out_of_range, "invalid bitset<N>
+// position") body, a cold string temporary and a __CxxThrowException,
+// at each of the three sites - and it leaves bitset<144>::set(size_t,
+// bool) and bitset<144>::any() out of line where we expand both.
+// THE BUDGET THRESHOLD IS MEASURED (2026-08-20). Adding N byte-inert
+// user-defined inline sites to the body moves the row:
+//     N=0/2 -> 48.77   N=6 -> 57.92   N=12/20/30/45 -> 78.07
+// so retail's body carries about TWELVE more inline candidate sites than
+// this reconstruction, and at that ceiling the only residual left is the
+// esi/edi/ebx role permutation (plus the prologue's unwind-table addend,
+// which is a reloc addend and not a state count). Twelve is far more
+// than the one or two the sibling bodies are short of, so this is likely
+// a spelling that routes through several small accessors rather than one
+// missing statement - and the DC roster has NO row for this function at
+// all, so its call census cannot be consulted. Nothing is padded: the
+// row is deliberately left at 48.77.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC100(long slot)
 {
@@ -1548,7 +1567,7 @@ void hero::HeroFn_004DC100(long slot)
                                        akArtifactTraits[assembled].name);
     NormalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
                  -1, 0);
-    if (gpWindowManager->dialogReturn == 0x7805)
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
         HeroFn_004DBF30(targetCombo, slot);
 }
 
