@@ -9,6 +9,11 @@
 // hero.h is reached through more than one of them and its guard makes
 // only the first inclusion count; it widens this compiland's view of
 // type_artifact by exactly one member declarator and nothing else.
+// hero.h's HeroView declarator, for DoCommand's view-hero arm. Set here
+// with the artifact gate and for the same reason: hero.h is reached
+// through more than one include below and its guard makes only the
+// first inclusion count.
+#define HOMM3_TOWNMGR_HEROVIEW_DECLS
 #define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
 #define HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
@@ -51,9 +56,16 @@
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
 // on its own gate so no other consumer of that header widens.
 #define HOMM3_TOWNMGR_GRAIL_DECLS
+// game.h's GetTownName inline, for SetupTown's title line, and its
+// ViewArmy declarator, for DoCommand's two info panels. Same gate
+// discipline: this compiland opens them, nothing else does.
+#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
+#define HOMM3_TOWNMGR_VIEWARMY_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_TOWNMGR_VIEWARMY_DECLS
+#undef HOMM3_TOWNMGR_TOWN_NAME_DECLS
 #undef HOMM3_TOWNMGR_GRAIL_DECLS
 #include "hero.h"
 #include "iconwdgt.h"
@@ -72,6 +84,13 @@
 #include "textresource.h"
 #include "textwdgt.h"
 #include "towngatewindow.h"
+// Opens university_window.h's layout tail and constructor declarator for
+// DoUniversity, which puts one of these windows on the STACK and so needs
+// its real size and its implicit destructor. Gated so the two TUs that
+// already include that header keep the narrow view they are measured on.
+#define HOMM3_TOWNMGR_UNIVERSITY_DECLS
+#include "university_window.h"
+#undef HOMM3_TOWNMGR_UNIVERSITY_DECLS
 #include "widget.h"
 #include "winmgr.h"
 
@@ -919,6 +938,191 @@ inline townObject::~townObject()
         objOutline->Dispose();
     if (objHotspot)
         objHotspot->Dispose();
+}
+
+// Putting a town on the screen. The page's five text/icon widgets are
+// refreshed first, and then the body forks on ONE test - whether the
+// faction of the town being shown differs from the faction the page is
+// already built for. A different faction rebuilds the panorama from
+// scratch (old town unloaded, new background border, forty-four object
+// slots walked in the faction's own draw order); the same faction keeps
+// every object and only re-syncs its visibility and frame. Both arms
+// end in the same place, which is why the fade-in block appears twice
+// rather than once after the join.
+//
+// The fork is on `field_110`, the faction the page currently holds, and
+// the -1 in front of UnloadTown is the "nothing loaded yet" sentinel the
+// constructor seeds it with.
+//
+// GetLocalPlayer is called for its side effect and its result dropped -
+// retail's own dead call, one statement ahead of the palette broadcast
+// that uses GetLocalPlayerGamePos instead. Transcribed faithfully, the
+// dead-call rule.
+//
+// The two building masks are spelled straight off town.h's bitNumber
+// table rather than through town::HasBuilding, which is a Dreamcast
+// header inline with no retail body: the panorama arm tests `built`
+// (0x150) and the dwelling sweep tests `active` (0x158), which is
+// exactly what HasBuilding's `check_included` argument selects at the
+// two Dreamcast call sites. armygrp.h's GetMorale set the precedent.
+//
+// The last sweep is the fort page's seven creature pictures. Each row
+// shows the UPGRADED dwelling's creature when the town has that upgrade
+// built, which is what the +7 slot shift is, and the picture itself
+// comes from the creature-traits table's sprite name.
+//
+// Residual (98.09%): ONE five-instruction schedule permutation, in the
+// preheader between NewStrips and the dwelling sweep. Both sides emit
+// the identical instruction multiset and the seven member stores in
+// retail's own order; retail defines eax=-2, edi=&MonPix[0], edx=type
+// and ecx=0 all BEFORE the first store, where our CL interleaves them.
+// `predict-inline` reports 34 out-of-line calls on BOTH sides and every
+// listed divergence is a delinker symbol-name pair, so no inline
+// decision differs, and `diagnose` puts the whole distance at 20 with
+// flow-distance 0.
+// Tried and rejected: the -2 stores ahead of the faction store (98.38,
+// but the store order then contradicts retail's - a false win, banked
+// only as the note that VC6 emits this group in SOURCE order); the
+// three -2 stores as one chained assignment (98.09, byte-identical);
+// walking MonPix through a `CSprite**` local so its `lea` becomes a
+// source statement ahead of the block (96.61 - it also removes the
+// strength reduction retail keeps).
+
+// E:\gamedcs\townmgr.cpp:2897
+VA(0x005c6870, 0x59F)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx, dc 0x16bba4
+void townManager::SetupTown(unsigned char fade)
+{
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    gTurnDuration69d630.Pause();
+    townToView->update_shipyard();
+
+    sprintf(gText, gpGame->GetTownName(townToView->id));
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 149;
+    msg.extraText = gText;
+    TownWindow->BroadcastMessage(&msg);
+
+    strcpy(gText, gpGeneralText->GetText(51));
+    msg.codeY = 151;
+    msg.extraText = gText;
+    TownWindow->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 150;
+    msg.extra = townToView->GetPortraitFrame(false);
+    TownWindow->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.codeY = 154;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    TownWindow->BroadcastMessage(&msg);
+
+    gpGame->GetLocalPlayer();
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 148;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    TownWindow->BroadcastMessage(&msg);
+
+    if (!fade)
+        TownWindow->DrawWindow(0, 148, 150);
+
+    if (field_110 != townToView->type) {
+        if (field_110 != -1)
+            UnloadTown();
+
+        pResourceDisplay->Update(1, 0);
+        sprintf(gText, "%sBack.pcx", gTownBackgroundPrefix[townToView->type]);
+        field_3c = new bitmapBorder16(0, 0, 800, 374, 147, gText, 0x800);
+        TownObjectCount = 0;
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            int objId = gTownBuildOrder[townToView->type][i];
+            if (objId != -1) {
+                TownObjects[TownObjectCount] = new townObject(
+                    townToView->type, objId,
+                    gTownBuildingSprites[townToView->type][objId]);
+                if (!TownObjects[TownObjectCount])
+                    MemError();
+                if (TownObjects[TownObjectCount]->objBorder) {
+                    if (!(townToView->built & bitNumber[objId])) {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            &= ~widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 0;
+                    }
+                    TownWindow->AddWidget(
+                        TownObjects[TownObjectCount]->objBorder, -1);
+                }
+                TownObjectCount++;
+            }
+        }
+        if (fade && !gpWindowManager->isWaitingForFadeIn)
+            gpWindowManager->FadeScreen(1, 4, 1);
+        gpWindowManager->AddWindow(TownWindow, 0, 1);
+    } else {
+        TownObjectCount = 0;
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            int objId = gTownBuildOrder[townToView->type][i];
+            if (objId != -1) {
+                if (TownObjects[TownObjectCount]->objBorder) {
+                    if (!(townToView->built & bitNumber[objId])) {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            &= ~widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 0;
+                    } else {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            |= widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 1;
+                    }
+                }
+                TownObjects[TownObjectCount]->currFrame = 0;
+                TownObjectCount++;
+            }
+        }
+        if (fade && !gpWindowManager->isWaitingForFadeIn)
+            gpWindowManager->FadeScreen(1, 4, 1);
+        delete field_120;
+        field_120 = 0;
+        delete field_11c;
+        field_11c = 0;
+    }
+
+    static_cast<TTownScreenWindow*>(TownWindow)->UpdateTownLocators();
+    gpSoundManager->StartMP3(gTownMusic[townToView->type], 0, 1);
+    NewStrips();
+
+    field_134 = 0;
+    field_12c = 0;
+    selectedStrip = 0;
+    field_110 = townToView->type;
+    field_138 = -2;
+    field_130 = -2;
+    field_128 = -2;
+
+    for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+        if (townToView->active & bitNumber[DWELLING_0_UPG_ID + slot])
+            currentDwellingIDOff[slot] = slot + TOWN_DWELLING_COUNT;
+        else
+            currentDwellingIDOff[slot] = slot;
+        MonPix[slot] = ResourceManager::GetSprite(
+            akCreatureTypeTraits[gTownDwellingCreatures
+                                     [townToView->type * 2
+                                          * TOWN_DWELLING_COUNT
+                                      + currentDwellingIDOff[slot]]]
+                .m_sprite_name);
+    }
+
+    RedrawTownScreen();
+    if (fade)
+        gpWindowManager->FadeScreen(0, 4, 0);
+    gTurnDuration69d630.Resume();
 }
 
 // Dropping the town the manager is showing, without dropping the
@@ -2799,6 +3003,103 @@ void townManager::DoPortalOfSummoning()
     }
 }
 
+// Conflux's Magic University, and a RETAIL-ONLY row: the Dreamcast
+// townmgr.obj roster runs straight from GetBuildingInfo (dc 0x174f78) to
+// townManager::Main (dc 0x175160) with nothing in the gap, so this body
+// has no Dreamcast name and the one here is read off the bytes. Four
+// independent readings agree.
+//
+// The stack record it fills holds 14, 15, 16, 17 - Fire, Air, Water and
+// Earth Magic, exactly the four schools the Conflux building teaches -
+// and it fills it with the same four dword stores that retail's
+// out-of-line `type_university` default constructor at 0x5d2d80 makes
+// (`mov eax,ecx`, four stores, bare `ret`), expanded inline here. It
+// hands that record's ADDRESS to 0x5ef500, whose compiland is the one
+// that owns "univers1.pcx" and whose only other caller in the whole
+// image - the adventure map's university visit at 0x4aa526 - reaches it
+// through ExtraInfoUnion::get_university, which this tree already
+// declares as returning `type_university*`. The third argument is what
+// separates the two: the map object pushes 0 there, this page pushes 1,
+// and the constructor gates one extra widget on it. And the no-hero arm
+// describes building 21 - EXTRA_0_ID, the town-type-specific special
+// slot Conflux fills with the university - with the picture id
+// `townToView->type + 0x16`, the town-faction band of the dialog's
+// resource domain.
+//
+// The hero pick is the transformer's, twice over. Each of the two ids
+// keeps its own `>= 0` gate in FRONT of game::GetHero's own `== -1`
+// test, which is the two-compare asymmetry DoSkeletonTransformer
+// records; and the override underneath is the same one - when the
+// page's selected strip IS the town's own strip the garrison hero is
+// the one the page means. The garrison's `>= 0` belongs to that same
+// condition rather than to a nested if: retail's `jl` skips the
+// assignment and leaves the already-chosen hero standing.
+
+// The university record's default set, and this compiland owns the body.
+// Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
+// a bare `ret` - a frameless constructor returning `this` - and it sits at
+// 0x5d2d80, inside townmgr.obj's link bracket and immediately ahead of the
+// page below, while its only three call sites in the image are the AI
+// bodies at 0x5253d0 (twice) and 0x52b1e0, whose objects link EARLIER. A
+// header-inline constructor's COMDAT would have been kept from one of
+// those; a plain out-of-line member emitted by its own compiland lands
+// exactly here, in source order between GetBuildingInfo and DoUniversity.
+// DoUniversity is its only call site in this TU, so /Ob2 expands it there
+// as well as emitting this copy.
+//
+// Residual on the page below (89.77%): the two sides emit the SAME 164
+// instructions in the SAME order and differ in exactly two coupled ways.
+// Retail CALLS basic_string::_Tidy for the string constructor's `_Tidy()`
+// where our CL expands it to the three storage stores (9 bytes either
+// way, which is why the row sizes still agree) - and BOTH sides inline
+// the destructor's `_Tidy(true)`, so this is a per-site inline share and
+// not a depth or budget cap. The candidate-site count is what this TU is
+// short of: retail's GetBuildingInfo is a townmgr.cpp static with a body
+// and fourteen call sites, ours is a bodiless declaration and so is no
+// candidate at all. Coupled to it, the callee-save binding is permuted -
+// retail takes gpGame/0/this into esi/edi/ebx where we take
+// this/gpGame/0 - and because retail's zero lands in edi it dies at the
+// `repne scasb`, which is exactly why retail's NormalDialog zeros are
+// immediates and ours are `push ebx`.
+// Tried and rejected: default-construct then `operator=` (79.45);
+// uninitialised `hero* townHero;` with an explicit `else townHero = 0`
+// (87.48); naming gpGame in a local ahead of the lookup so its pseudo is
+// created first (87.48); copy-initialising the string (89.77, byte-
+// identical to the direct-init below). `homm3 vc6 why-reg`'s guided
+// search over the B-class catalog moved nothing.
+
+VA(0x005d2d80, 0x1E)  // anchor-bracket(between GetBuildingInfo 0x5d2a40 and DoUniversity 0x5d2da0) + body(the four elemental magic schools) + arity(bare ret, thiscall), retail-only
+type_university::type_university()
+{
+    skills[0] = 14;
+    skills[1] = 15;
+    skills[2] = 16;
+    skills[3] = 17;
+}
+
+VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
+void townManager::DoUniversity()
+{
+    hero* townHero = 0;
+    if (townToView->visitingHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->visitingHeroId);
+    else if (townToView->garrisonHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (field_12c && field_12c == field_11c && townToView->garrisonHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (!townHero) {
+        std::string info(GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
+        NormalDialog(info.c_str(), 1, -1, -1, townToView->type + 0x16,
+                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+    } else {
+        type_university townUniversity;
+        type_university_window universityWin(townHero, &townUniversity, 1);
+        universityWin.DoModal(0);
+    }
+}
+
 // The Skeleton Transformer, Necropolis' creature converter. The dialog
 // works on ONE army: the visiting hero's if the town has one, the town
 // garrison's otherwise - and the garrison's regardless when the page's
@@ -2930,6 +3231,187 @@ void townManager::handle_hall_click()
         }
     }
     DoHall();
+}
+
+// The town page's command dispatch, and a DENSE ten-entry jump table -
+// slot 6 points straight at the default arm, so the value space is 0..9
+// with six unused. Every arm ends in townManager::ResetStrips, which
+// retail EXPANDS here (it is 134 bytes and has other callers, so this is
+// an ordinary /Ob2 expansion, not the single-call-site rule), and VC6
+// then tail-merges the seven copies onto one. The selection arm is the
+// exception: it broadcasts and stops, and its else-branch broadcast is
+// the same statement ResetStrips ends on, which is why retail's `jne`
+// lands in the MIDDLE of the merged tail.
+//
+// `lastHover` is cleared after the switch on every path that reaches it,
+// including the arms that refuse on IsLocalHuman; the three arms that
+// find no strip at all `return` outright and skip even that.
+//
+// The move-to-garrison arm has NO out-of-line body in the image and its
+// second, redundant IsLocalHuman test is the evidence: the arm's own
+// guard is the first, the helper's own guard is the second, and VC6
+// emitted both because a call sits between them. It is spelled below as
+// a file static for the reason the MoveHero note gives - an
+// extern-linkage member would be emitted unconditionally and there is no
+// row for it - while its partner, MoveHeroFromGarrison, IS emitted at
+// 0x5d5220 and stays a call.
+//
+// The merge arm's `destGroup` local is load-bearing and is the last two
+// bytes of this row: written through `field_134->group` at both the
+// compare and the search, the row sits at 99.65 with the group load
+// scheduled AFTER the creature read and one register renamed; named
+// once ahead of the creature, retail's own schedule falls out and the
+// body goes exact. The armyGroup that is NOT named is the source one -
+// retail re-reads `field_12c->group` at every use, which is what the
+// four separate `mov edx,[eax+0x6c]` reloads in the merge tail are.
+
+// E:\gamedcs\townmgr.cpp:6792
+static void MoveHeroToGarrison(townManager* mgr)
+{
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    mgr->townToView->SwapHeroes();
+    delete mgr->field_120;
+    mgr->field_120 = 0;
+    delete mgr->field_11c;
+    mgr->field_11c = 0;
+    mgr->NewStrips();
+}
+
+// E:\gamedcs\townmgr.cpp:6598
+VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634
+void townManager::DoCommand(int inCommand, unsigned char isGarrison,
+                            type_garrison_base_window* garrisonWindow)
+{
+    switch (inCommand) {
+    case TOWN_COMMAND_SELECT_SLOT:
+        if (!selectedStrip)
+            return;
+        field_12c = selectedStrip;
+        field_130 = field_128;
+        field_11c->current = -2;
+        field_120->current = -2;
+        field_12c->current = field_130;
+        field_11c->Draw(CREATURE_NONE);
+        field_120->Draw(CREATURE_NONE);
+        if (field_12c->owner == gNetLocalGamePos && field_128 > -1)
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x9a,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        else
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x9a,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        break;
+
+    case TOWN_COMMAND_VIEW_ARMY:
+        if (!field_134)
+            return;
+        if (isGarrison) {
+            gpGame->ViewArmy(*field_134->group, field_138,
+                             field_134->thisHero, 0, 0x77, 0x14,
+                             !gUnnamed6aa9d8
+                                 && (field_134 != field_120
+                                     || field_134->group->GetNumArmies() > 1),
+                             0);
+        } else {
+            gpGame->ViewArmy(*field_134->group, field_138,
+                             field_134->thisHero, townToView, 0x77, 0x14,
+                             !gUnnamed6aa9d8
+                                 && (!field_134->thisHero
+                                     || field_134->group->GetNumArmies() > 1),
+                             0);
+            pResourceDisplay->Update(1, 1);
+        }
+        ResetStrips();
+        break;
+
+    case TOWN_COMMAND_MERGE_ARMY:
+        if (!field_12c)
+            return;
+        if (!field_134)
+            return;
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            if (field_134 != field_12c) {
+                armyGroup* destGroup = field_134->group;
+                int creature = field_12c->group->armies[field_130];
+                if (destGroup->armies[field_138] != creature) {
+                    int i;
+                    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+                        if (destGroup->armies[i] == creature)
+                            break;
+                    }
+                    if (i < armyGroup::ARMY_GROUP_SLOT_COUNT)
+                        field_138 = i;
+                }
+            }
+            field_134->group->numTroops[field_138]
+                += field_12c->group->numTroops[field_130];
+            field_12c->group->armies[field_130] = -1;
+            field_12c->group->numTroops[field_130] = 0;
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_SWAP_ARMY:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            field_12c->group->Swap(field_130, field_134->group, field_138);
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_VIEW_HERO:
+        if (isGarrison) {
+            HeroView(field_134->thisHero->id, 1, 0, 0);
+            gpAdvManager->RedrawAdvScreen(0, 0);
+            garrisonWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+                                       WINDOW_ALL_WIDGETS_HIGH);
+            gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                          WINDOW_SCREEN_HEIGHT);
+        } else if (!field_12c->pos) {
+            HeroView(townToView->garrisonHeroId, 1, 0, 0);
+        } else {
+            HeroView(townToView->visitingHeroId, 1, 0, 0);
+        }
+        ResetStrips();
+        break;
+
+    case TOWN_COMMAND_SPLIT_ARMY:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            field_1c4 = 0;
+            field_12c->group->SplitArmy(
+                field_130, field_134->group, field_138,
+                field_12c != field_11c
+                    || (townToView && townToView->garrisonHeroId != -1),
+                field_134 != field_11c
+                    || (townToView && townToView->garrisonHeroId != -1));
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_SWAP_HEROES:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            SwapHeroes();
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_MOVE_HERO_FROM_GARRISON:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            MoveHeroFromGarrison();
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            MoveHeroToGarrison(this);
+            ResetStrips();
+        }
+        break;
+    }
+    lastHover = -1;
 }
 
 // Moving the town's visiting hero into the garrison. Only the local
@@ -3846,6 +4328,58 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
     // @stub
 }
 
+// SURVEYED 2026-08-15 at retail 0x5c77a0 (carve 0x8DD, 2269 B - townmgr.h
+// has carried the address since DoTownGate needed the declarator) and NOT
+// reconstructed: the row is a four-level switch tree over TWO id domains
+// and wants a lane of its own. What the survey established, so the next
+// one starts from evidence:
+//
+// PREAMBLE. `code = msg->codeY`; when that is in 0..MAX_BUILDING_TYPE the
+// body REPLACES it with the town panorama's hotspot under the cursor -
+// `TTownScreenWindow::field_50[msg->mouseY * 800 + msg->mouseX]` read as a
+// 16-bit word, minus one - and re-checks the same range. On either
+// failure the .bss cell at 0x6aa9e8 takes -1; on success it takes the
+// hotspot and 0x4b69f0 is called with a string at 0x68c210 and 1. Then
+// `field_19c = -2` and the switch runs on `code`, which is the ORIGINAL
+// codeY on the failing paths and the hotspot id on the taken one - that
+// is why one switch carries both domains.
+//
+// THE SWITCH, from the four dispatch tables (all in townmgr.obj's own
+// .rdata, all read out of the image):
+//   0x5c7f4c  27 dwords, indexed `code + 1`, so code -1..0x19 - the
+//             low type_building_id band, plus code == 0x1a (HOLY_GRAIL)
+//             taken by a separate `je` ahead of the table;
+//   0x5c7fb8  9 dwords + a 125-byte index at 0x5c7fdc, indexed
+//             `code - 0x1e`, so code 0x1e..0x9a - the dwelling band
+//             0x1e..0x2b, then the strip WIDGET ids (0x64 owner frame,
+//             0x73..0x79 and 0x8c..0x92 the two selector runs, 0x7a..0x7d
+//             the two portrait/owner pairs, 0x9a the divide button);
+//   0x5c805c  + a 13-byte index at 0x5c8070, indexed `code - 0x9e`;
+//   plus bare compares for 0x9b..0x9d, 0xac..0xb2 and > 0xb2.
+//
+// THE ARMS. Most of the building band is three instructions - `edi =
+// <one .bss text pointer>` then the shared strcpy at 0x5c7eb8 into
+// `statusText` - over about twenty UNOWNED text cells in the 0x6a5da4..
+// 0x6a5df8 run, the same standing as the four this file already declares.
+// The dwelling and horde arms index gTownDwellingCreatures and
+// akCreatureTypeTraits and land in a shared creature-name formatter at
+// 0x5c7c3e; the hero arms inline game::GetTownName and the four
+// SetHeroCommand formats; three arms call SetHeroCommand 0x5c7250,
+// SetArmyCommand 0x5c7400 and select_army 0x5c8080.
+//
+// THE TAIL. Every arm converges on the strcpy at 0x5c7eb8 and then on
+// 0x5c7ed5, which is townManager::ShowText INLINED - a `message` local
+// carrying WIDGET_SET_TEXT/0x97/&statusText broadcast to TownWindow,
+// TownWindow->DrawWindow(0, 0x97, 0x97) and
+// gpWindowManager->UpdateScreen(7, 0x22b, 0x2de, 0x13). ShowText has no
+// retail row of its own anywhere in the carve, so it is another dropped
+// single-call-site static and has to be spelled as one here.
+//
+// COST, honestly: about twenty new DATA declarations for the text cells,
+// a named enum for the strip widget-id families (the `case <number>`
+// floor is at zero and these are not type_building_id values), and a
+// switch whose four-way tree has to come out of ONE source switch.
+
 // E:\gamedcs\townmgr.cpp:3383
 DC_ONLY(0x16c940, 0x572)
 void townManager::SetCommandAndText(message* msg)
@@ -4479,6 +5013,23 @@ void townManager::DoTownTavern()
 // fold needs the two tests to arrive from different inlining phases,
 // which a hand expansion cannot reproduce; locating MoveHero's retail
 // body and letting the compiler expand it is the honest fix.
+//
+// Six more spellings measured 2026-08-15 against the same five bytes,
+// none of them better, and between them they CLOSE the mechanism: the
+// guard is a load-and-compare only when the value is ALSO named, and
+// naming it is exactly what lets VC6 propagate the range through the
+// copy and delete GetTown's null arm. Hoisting `fromTown` out of the
+// arm (98.61, byte-identical), declaring the id uninitialised at
+// function scope and assigning it inside (98.61, byte-identical),
+// assigning townToView straight from GetTown and naming the result
+// after (98.61, byte-identical), naming the id ahead of the guard and
+// still guarding on the member (97.51 - the arm goes), naming it ahead
+// and guarding on the name (97.51, the same), and reordering the id and
+// fromTown declarations (98.13). The two outcomes are the only two the
+// compiler has: EITHER the copy survives and the second compare with
+// it, OR the range propagates and the null arm goes. Retail has
+// neither, which is what "different inlining phases" means here.
+// Withdraw the standing hope that a declaration order closes it.
 
 // E:\gamedcs\townmgr.cpp:8203
 VA(0x005d8480, 0x261)  // anchor-callee TTownGateWindow ctor/AddTown/DoModal + arity(bare ret), dc 0x17b318
