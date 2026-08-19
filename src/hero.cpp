@@ -2109,7 +2109,7 @@ slot_chosen:
     equipped[slot].artifactId = artifact->artifactId;
     equipped[slot].extra = artifact->extra;
 
-    if (artifact->artifactId == 0x87
+    if (artifact->artifactId == ARTIFACT_TITANS_THUNDER
         && equipped[17].artifactId == ARTIFACT_NONE) {
         type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
         equip_artifact(&spellbook, 17);
