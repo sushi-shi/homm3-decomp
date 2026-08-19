@@ -118,6 +118,10 @@ public:
     std::vector<int> Spells;                // +0x9c
     armyGroup Creatures;                    // +0xac
 
+    // loadBlackBoxList's resize temp proves the constructor: after the
+    // TreasureData base and the three vectors have run their own, the only
+    // remaining store is a zero into +0x4c.
+    BlackBoxData() : HasCustomTreasure(0) {}
     ~BlackBoxData();
 };
 SIZE(BlackBoxData, 0xe4);
@@ -157,7 +161,10 @@ public:
     // appends through it.  blackBoxes still rides in pad_050 because
     // BlackBoxData is only forward-declared in this closure.
     std::vector<MonsterData> CustomMonsterList;
-    char pad_050[0x10];
+    // +0x50, first at +0x54. Sliced out of the pad now that BlackBoxData is
+    // a complete type in this closure: Save walks it with a 228-byte stride
+    // and loadBlackBoxList resizes it.
+    std::vector<BlackBoxData> blackBoxes;
     std::vector<TSeerHut> SeerHutList;
     std::vector<TQuestGuard> QuestGuardList;
     std::vector<TTimedEvent> TimedEventList;
@@ -229,6 +236,7 @@ public:
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
     int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
+    int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
     int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                      int saveVersion);
     int loadMonsterList(TAbstractFile* infile);

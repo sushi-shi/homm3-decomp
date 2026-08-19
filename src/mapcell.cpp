@@ -1360,12 +1360,30 @@ int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:1891
+// The list header is a SHORT, as loadMonsterList's is, and the resize
+// default argument constructs a whole BlackBoxData on the frame - which is
+// where its constructor came from: after the TreasureData base and the
+// three vectors have run their own, the only remaining store is a zero
+// into HasCustomTreasure.
 VA(0x00500200, 0x222)  // order-map: calls loadBlackBox 0x500430; called by Load; EH-bearing, dc 0xef0a0
-int NewfullMap::loadBlackBoxList(void* infile)
+int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    blackBoxes.resize(count);
+    for (unsigned int i = 0; i < blackBoxes.size(); ++i) {
+        if (loadBlackBox(infile, &blackBoxes[i], saveVersion) < 0)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
 
