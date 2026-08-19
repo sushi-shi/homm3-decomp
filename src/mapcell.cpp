@@ -783,12 +783,90 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:995
+// The save-game layer reader, and the exact inverse of saveMapLayer field
+// for field.  FOUR arguments, not three: `ret 0x10` carries a save version
+// past the layer index, and it is spent in one place only - handing each
+// finished cell to the retail-only upgrade pass at 0x4fe6c0, which repacks
+// extraInfo for saves older than version 25.
+//
+// The two-byte object type widens into the four-byte enum field.  That is
+// the one crossing this body cannot spell without a cast: the stream
+// carries sixteen bits and TAdventureObjectType is a full int, so the
+// widening is a real domain crossing, not a modelling slip.
 VA(0x004fe920, 0x2E5)  // order-map: called x2 by Load 0xfdbc0 in the layer slot; retail body delegates to helper 0xfe6c0 (retail-only, unclaimed), dc 0xed688
-int NewfullMap::loadMapLayer(void* infile, int size, int layer)
+int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
+                             int saveVersion)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            signed char value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadIndex = value;
+
+            unsigned short wordValue;
+            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+                return -1;
+            thisCell->cellFlags = wordValue;
+            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+                return -1;
+            thisCell->type_value = wordValue;
+
+            unsigned short indexValue;
+            if (infile->Read(&indexValue, sizeof(indexValue))
+                < sizeof(indexValue))
+                return -1;
+            thisCell->objectIndex = indexValue;
+            if (infile->Read(&indexValue, sizeof(indexValue))
+                < sizeof(indexValue))
+                return -1;
+            thisCell->object_type_index = indexValue;
+
+            unsigned long extra;
+            if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+                return -1;
+            thisCell->extraInfo = extra;
+
+            int count;
+            if (infile->Read(&count, sizeof(count)) < sizeof(count))
+                return -1;
+            thisCell->objects.resize(count);
+
+            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
+                if (infile->Read(&thisCell->objects[i],
+                                 sizeof(thisCell->objects[i]))
+                    < sizeof(thisCell->objects[i]))
+                    return -1;
+            }
+
+            upgrade_cell_extra_info(thisCell, saveVersion);
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1095
 DC_ONLY(0xed984, 0x98)
