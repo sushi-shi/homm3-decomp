@@ -1040,7 +1040,7 @@ hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50
 hero	?restore_cell@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd76e0
 hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0
 hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
-hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	94.1448	94.1448	94.1448	0xd80c0
+hero	?save@hero@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xd80c0
 hero	?save@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd77b0
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
