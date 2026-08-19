@@ -602,12 +602,109 @@ int NewfullMap::Save(void* outfile, int size, unsigned char two_layers)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:809
+// The .h3m map-layer reader, and NOT the twin of saveMapLayer: the map
+// format carries seven bytes per cell where the save format carries the
+// whole record.  Six of them are the terrain/river/road set-index pairs;
+// the seventh is a flag byte whose low six bits are the mirror flags, one
+// bit each, and whose bit 6 marks a coastal square.
+//
+// Everything after that byte is derived, not read, which is why this body
+// writes flags the stream never mentions:
+//   - a coastal square on anything but water becomes an ANCHOR_POINT and
+//     loses its trigger bit;
+//   - rock is the one impassable ground;
+//   - shallow water (index below 20) is beach border;
+//   - water, lava, rivers and roads are the animated surfaces.
+// The flag byte's own bit 6 and the cell's Passable bit share a position
+// by coincidence of the DC bit roster, not by assignment - the byte is
+// tested with `& 0x40` and never stored whole.
+//
+// Residual (95.4717%): every read, every derived flag and every block of
+// the CFG is retail's; what differs is where the flag byte is materialized.
+// Retail promotes it straight out of memory (`movsx eax, byte`) for the
+// five shifted bits, then RELOADS the byte for bit 0 and the `& 0x40`
+// test, and folds bit 0 into the preserved high bits with the xor-form
+// insert; this compile loads the byte into cl first, promotes out of the
+// register, keeps cl live to the end, and uses the or-form.  Everything
+// after that is the same permutation carried downstream, which is why the
+// three flag blocks below diff as register renames on identical shapes.
+// Measured and rejected: ascending bit order with a plain char (86.9764),
+// descending with a plain char (82.5519), and a per-use
+// static_cast<unsigned int> in place of the named hoist (95.4717, byte-
+// identical to this).  The unsigned hoist is what buys the 32-bit shift
+// domain at all - without it VC6 narrows every extraction to 8 bits.
+// why-reg v2 reports the bindings agreeing at every first definition, so
+// the divergence is past the B1 minimum slice: a caller-independent
+// scheduling/homing cap, not a spelling.
 VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
-int NewfullMap::readMapLayer(void* infile, int size, int layer)
+int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            signed char value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadIndex = value;
+
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            unsigned int flags = value;
+            thisCell->RoadFlippedVertical = (flags >> 5) & 1;
+            thisCell->RoadFlippedHorizontal = (flags >> 4) & 1;
+            thisCell->RiverFlippedVertical = (flags >> 3) & 1;
+            thisCell->RiverFlippedHorizontal = (flags >> 2) & 1;
+            thisCell->GroundFlippedVertical = (flags >> 1) & 1;
+            thisCell->GroundFlippedHorizontal = value & 1;
+
+            if ((value & 0x40) && thisCell->GroundSet != eTerrainWater) {
+                thisCell->type = ANCHOR_POINT;
+                thisCell->is_trigger = 0;
+                thisCell->IsBeachBorder = 1;
+            }
+
+            thisCell->IsBlocked = 0;
+            thisCell->Passable = 1;
+            if (thisCell->GroundSet == eTerrainRock) {
+                thisCell->Passable = 0;
+                thisCell->IsBlocked = 1;
+            }
+
+            if (thisCell->GroundSet == eTerrainWater
+                && thisCell->GroundIndex < 20)
+                thisCell->IsBeachBorder = 1;
+
+            if (thisCell->GroundSet == eTerrainWater
+                || thisCell->GroundSet == eTerrainLava
+                || thisCell->RiverSet != 0 || thisCell->RoadSet != 0)
+                thisCell->Animated = 1;
+
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
 
