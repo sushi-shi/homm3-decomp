@@ -3,6 +3,237 @@
 # all-time high (survives `update --accept-regressions`). Retail RVA carries
 # history across source-label promotion and other same-body renames.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva
+# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
+# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
+# it is not re-opened: lane/townmgr-14 banked
+# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
+# member, lane/army-6 needed the `inline` keyword for
+# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
+# emitted no out-of-line body, so the merge kept the caller and lost
+# the row.
+# The two were never in tension. VC6 emits an `inline` function's
+# out-of-line copy exactly when the TU holds a use it DECLINES to
+# expand, and retail's army.obj holds one: the two rejected sites in
+# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
+# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
+# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
+# stands in for them until it lands. Full matrix in army.cpp above
+# can_shoot; the key negative is that with NO keyword the body is not
+# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
+# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
+# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
+# now hold together.
+# Retail-ordered switch bodies, the creature-record cursor, the direct
+# spell-table field_c access, and the byte-proven attrs 0x400 gate raised
+# this from 53.1589 to 88.5071 (2026-08-09).
+# GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
+# first batch of byte-proven field slices, and RECOVERED to 92.5714 later
+# the same day when a SECOND batch of slices (bloodlustRounds /
+# precisionRounds, slayerRounds, bloodlustAmount / precisionAmount,
+# slayerLevel, frenzyFactor) landed on the same header. Nothing in
+# command.cpp changed in either direction. Recorded because it is a clean
+# demonstration of the include-set-sensitivity class being NON-MONOTONIC
+# in the way the initialize_game_data notes describe: the whole delta in
+# the lowered state was TWO instructions swapping order (`mov ecx,
+# [ebp-4]` trading places with the `mov eax, [ebp+8]` in front of it,
+# twice), inside a region that matches retail in NEITHER state, and it
+# came back on its own as the header kept growing. Removing any ONE of
+# the four slice groups did not restore it while it was down, and adding
+# further evidenced slices (+0x28c, +0xd8) in either combination did not
+# either - only the later batch, as a whole, did.
+# game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
+# promoted source names in the same change. Two are renames rather
+# than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
+# ...QAE_NXZ (the DC mangling proves a `bool` return, and retail's
+# byte-only materialisation agrees), and playerData_SetName ->
+# ?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z (the claim at
+# 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
+# initialize_game_data hand-lowered 100.0000 -> 94.0741 (2026-08-07)
+# when town.h's __int64 building-mask model landed. initialize.cpp's
+# only project include is town.h, so that header is the trigger.
+# CAUSE NOT IDENTIFIED - and the originally-offered explanation was
+# tested and REJECTED: "the TU's declaration count grows" does NOT
+# reproduce. Appending 200 bare `extern int probe_dummy_N;` lines to an
+# otherwise untouched town.h leaves this function at 100.0000.
+# What is known: masked `homm3 sema diff 0x004eb730 --asm` shows the
+# delta dominated by reloc-NAME-only rows - our base names
+# ?bitNumber@@3PA_JA / ?gHierarchyMask@@3PAY0CM@_JA /
+# ?gTownEligibleBuildMask@@3PA_JA where the delinked target falls back
+# to bss_/data_<rva> - with the instruction text otherwise identical.
+# That suggests non-semantic, but is NOT proof of byte-identity: the
+# masked view hides immediates (the IDC_ARROW and 0x54cc precedents).
+# Adding a DATA anchor on bitNumber (0x0066cd98) does NOT restore it.
+# Lowered rather than reverting the town model, which is byte-proven
+# and bought 10 exact functions plus check_wall_archery_penalty.
+# NEEDS a dedicated investigation - unmasked disasm --base vs disasm.
+# ANSWERED 2026-08-07 by that unmasked comparison: the bytes DIFFER, so
+# this is NOT a symbolization artifact. Inline copy 0 of
+# create_requirement_masks is byte-identical; copies 1 and 2 are not.
+# Retail addresses the row directly - `mov [8*eax + gHierarchyMask+0x160],
+# ebx` (89 1c c5 ..) twice - where our CL hoists the row base into a
+# register first (`lea eax,[8*eax + gHierarchyMask+0x160]` then
+# `mov [eax],ebx` / `mov [eax+4],ebx`), and schedules two instructions
+# around it differently. Copy 0's base offset is 0, which is why it
+# survives.
+# MECHANISM (bisected the same day, probe reverted): the trigger is not
+# any array/type spelling in town.h - it is the COUNT OF USER-DEFINED
+# TYPE DEFINITIONS visible in the TU. With initialize.cpp on the
+# pre-town-lane town.h the function is 100.0000; injecting a single
+# unused `struct probe_t { int a; };` at the top of that header drops it
+# to 96.0880, and an unused `enum` does the same. Injecting 0..8 such
+# structs gives 100.0 / 96.09 / 96.09 / 26.18 / 97.04 / 94.07 / 100.0 /
+# 100.0 / 96.09 - NON-MONOTONIC, so this is VC6 optimizer state
+# (type/symbol-table population perturbing its CSE and addressing-mode
+# choices), not a semantic error in our model. Things that do NOT move
+# it: blank lines, comments, typedefs, `extern int` (which is why the
+# earlier 200-extern probe cleared the wrong hypothesis), and a bare
+# `struct probe_t;` forward declaration. town.h's new type_building_id /
+# EGameResource / type_horde_effect plus the armygrp.h->game.h chain
+# simply push this TU off the lucky point.
+# CONSEQUENCE: no local spelling change can fix this - the exact match
+# returns when the TU's include set matches retail's. Leave the row
+# lowered; re-measure whenever initialize.cpp's header closure changes.
+# RECOVERED to 100.0000 the same day, exactly as that prediction says:
+# breaking the armygrp.h -> game.h include edge (needed so game.h could
+# see the complete hero type) removed game.h/mapcell.h's types from
+# town.h's transitive closure, and this TU landed back on the lucky
+# point with no change to initialize.cpp at all. The row is a ratchet
+# raise, not a lowering; the analysis above is kept because the same
+# sensitivity will move this function again on the next header change.
+# DELIBERATE LOWER 100.0000 -> 26.1806 (2026-08-08, lane/split). The
+# 100 above was being held by an `#include <stdio.h>` placed ahead of
+# "town.h" in initialize.cpp purely as a closure lever - a header this
+# TU does not use and that no evidence puts in retail's include list.
+# That include has been removed; this row records what the honest
+# include list actually scores.
+# What was tried first, and rejected:
+#   * SPLITTING town.h so initialize.cpp stops inheriting its surface.
+#     NOT REALIZABLE. initialize.cpp names town::included_buildings and
+#     town::initialize_hordes, and the DC dump proves both are `class
+#     town` statics (?included_buildings@town@@2PAY0CM@_JA,
+#     ?initialize_hordes@town@@SIXXZ - the latter is also this tree's
+#     own claimed row and the target of initialize_game_data's tail
+#     jmp). Any header supplying them must DEFINE class town, and class
+#     town has an armyGroup by value at +0xe0, so armygrp.h and its
+#     closure come with it. A second, cut-down `class town` in a split
+#     header is an ODR violation and a false model.
+#     Measured anyway as a throwaway probe (reverted, nothing landed):
+#     with initialize.cpp on such a minimal header the function scores
+#     90.16, not 100, and reaching 100 needs its OWN unevidenced lever
+#     (<time.h> or <signal.h>). The split therefore trades one
+#     unevidenced include for another plus a false class model, and
+#     stabilises nothing on its own merits.
+#   * a fresh k = 0..10 dummy-declaration sweep of town.h across the six
+#     honest include orders and eighteen candidate lever headers. The
+#     honest list gives 26.18 at k=0 and at best three 100s in eleven
+#     points; <stdio.h>-first gives seven, the widest of anything tried.
+#     Every other candidate scores 2-4 of 11. There is no configuration
+#     of headers reachable from this tree that is BOTH honest and
+#     stable, which is what makes lowering the right call.
+#   * a source handle for the delta. There is none, and this is now
+#     settled rather than suspected: retail's own initialize_game_data
+#     hoists in inline copy 0 (`lea eax,[8*eax]`) and folds in copies 1
+#     and 2 (`mov [8*eax + gHierarchyMask+0x160], ebx`). One loop body,
+#     two different addressing decisions - no spelling can produce both.
+# THE REAL DEFECT IS NOW NAMED: retail's initialize.cpp includes
+# `E:\gamedcs\terrain.h`, which this tree does not model at all. The DC
+# CodeView corpus attributes twenty static-init funclets in
+# initialize.obj ($E439..$E467) to terrain.h:70-79 - ten file-scope
+# objects with dynamic initializers - and that is exactly the cinit tail
+# retail carries at 0x4ebcf0 (guard 0x6abaa0 + ten ~95B funclets), the
+# same tail iconwdgt.obj has at 0xeb340. terrain.h is attributed in 75
+# DC game compilands, so EVERY game TU here is short of retail's include
+# closure by it. Raise this row again by modelling terrain.h (a
+# deliberate, tree-wide change), not by re-adding a lever include.
+# FOOTNOTE, same day: the recorded max is no longer the 26.1806 this
+# block lowered it to - the town.h growth that the rest of this lane
+# landed (the population row, PlaceInMap / increase_population /
+# get_growth_rate declarations) walked the same lottery back up and the
+# ratchet raised the row monotonically, 26.1806 -> 90.1620 -> 94.0741.
+# Nothing was tuned for it and nothing should be: the number is a
+# by-product of the symbol-table population, so a LATER town.h edit can
+# just as easily push it back down, and when it does the honest move is
+# another dated lower here - not a lever include.
+# RESOLVED 2026-08-08: terrain.h is now modelled (include/terrain.h) and
+# initialize.cpp includes it. 94.0741 -> 100.0000 with NO lever header -
+# the honest include list plus the one header retail's bytes prove was
+# there. The ten funclets our CL emits for it are byte-identical to
+# retail's 0x4ebd10..0x4ec0de, and the eleventh (the shared
+# ctype<wchar_t>::id guard the <bitset> closure drags in) is
+# byte-identical to retail's 0x4ebcf0. This row is the FIRST raise this
+# lane that is a model fix rather than a lottery draw. The residual
+# class is not closed, though: a 0..10 unused-struct probe sweep on
+# town.h still moves the row (100/100/94.07/94.07/94.07/100/100/100/
+# 100/94.07/94.07), so the TU's type population is still not retail's -
+# terrain.h was one missing header, not the only one.
+# initialize_game_data hand-lowered 100.0000 -> 96.0880 (2026-08-08,
+# third movement of this row today). Cause is the documented include-set
+# sensitivity, not a modelling error: town.h gained `NewmapCell::terrain`
+# and an eTerrainWater enumerator so that town.cpp's `== 8` could be
+# spelled as a named domain compare and hold the cleanliness floor at 0.
+# initialize.cpp's only project include is town.h, so its type population
+# moved and this TU fell off the lucky point again. NO LOCAL SPELLING
+# FIXES IT - that was established when 16 were tried and the terrain.h
+# recovery closed only part of the gap (still 6 of 11 under the dummy
+# sweep). The alternatives were reverting a legitimate cleanliness fix or
+# carrying another unevidenced lever include, and both are worse than an
+# honest lower. Re-measure after any town.h edit; the row has read 26.18,
+# 94.07, 100.00 and now 96.09 today, all without a semantic change.
+# RAISED BACK to 100.0000 (2026-08-08, hero lane) with NO semantic
+# change anywhere near this TU - the same include-set sensitivity that
+# has moved this row five times, this time upward.
+# THE CAUSE WAS NOT ISOLATED, and the lane's own two measurements say
+# so. Four headers inside initialize.cpp's closure changed together
+# (hero.h field slices, armygrp.h, artifact.h enumerators, army.h), and
+# the one candidate that WAS A/B-measured alone - armygrp.h gaining the
+# spellschool.h include so SSpellTraits::school could be typed
+# TSpellSchool - came back NEUTRAL at 96.0880 (see the note at that
+# member). So the raise belongs to the change-set, not to any single
+# edit named here; an earlier draft of this note credited the
+# spellschool.h include and was wrong.
+# Counter-measurement from the same session, same header, opposite
+# sign: three ESpellId ENUMERATORS added to armygrp.h moved the row
+# 96.09 -> 90.16 and were withdrawn. The class is non-monotonic in both
+# directions - MEASURE, DO NOT REASON.
+# The row is now pinned at 100.0000, which makes it a constraint on
+# every other lane: any change to game.h / hero.h / mapcell.h /
+# struct.h / town.h / armygrp.h / artifact.h / army.h must re-measure
+# this row before it lands.
+# A SECOND LANE reached 100.0000 independently the same day, by a
+# different route, and its sweep is the best characterisation of the
+# class we have. Five states, every one a clean build (three earlier
+# readings taken against a BROKEN build were void and discarded):
+#     branch point, untouched                          96.0880
+#     + mapcell.h bitfield slice + a method decl       96.0880
+#     + CREATURE_NOMAD in armygrp.h ONLY               26.1806
+#     + 10-enumerator SoD block + CREATURE_NOMAD       97.0370
+#     + 8-enumerator SoD block + CREATURE_NOMAD       100.0000
+# Two things follow. Enumerator POSITION is irrelevant (tail vs middle
+# both read 97.0370) - it is the COUNT. And the sensitivity is to
+# MEMBER population, not only to the count of type definitions:
+# splitting mapcell.h's `flags_00_11 : 12` into three named bitfields,
+# no new type and no semantic change, reads 26.1806. That is why that
+# bitfield is deliberately NOT sliced.
+# LOWERED BY HAND to 94.0741 (2026-08-08, integration) - a deliberate
+# drop, not a regression anyone can fix by spelling.
+# BOTH change-sets above are now in this tree at once. Each reached
+# 100.0000 ALONE, in its own lane, by a different route; COMPOSED they
+# read 94.0741. That composition is the strongest evidence yet for what
+# this row actually is: not a property of any source text near
+# initialize.cpp, but a codegen artifact of the TU-wide type and member
+# population of its include closure - and one that does not add.
+# Chasing 100 back would mean adding or removing names in mapcell.h /
+# armygrp.h for score alone. Every name in both change-sets is
+# evidence-tight (the eight SoD ids are exactly what
+# NewmapCell::get_special_terrain can answer with; CREATURE_NOMAD is
+# pinned by GetTerrainCost). Carrying an unevidenced lever to hold a
+# number is worse than an honest lower - the same judgement recorded
+# above when this row read 96.09.
+# Values THIS row has shown, all without a semantic change:
+# 26.18, 90.16, 94.07, 96.09, 97.04, 100.00.
+# Do not treat any of them as a target. Re-measure after ANY change to
+# game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
+# artifact.h / army.h, and record what you saw.
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0
@@ -69,7 +300,7 @@ advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
-advmgr	?ProcessHover@advManager@@QAEHHH@Z	74.7786	74.7786	74.7786	0xe360
+advmgr	?ProcessHover@advManager@@QAEHHH@Z	78.8021	78.8021	78.8021	0xe360
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	80.9400	80.9400	80.9400	0xdeb0
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	59.3596	59.3596	59.3596	0x137c0
@@ -324,26 +555,6 @@ army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
-# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
-# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
-# it is not re-opened: lane/townmgr-14 banked
-# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
-# member, lane/army-6 needed the `inline` keyword for
-# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
-# emitted no out-of-line body, so the merge kept the caller and lost
-# the row.
-# The two were never in tension. VC6 emits an `inline` function's
-# out-of-line copy exactly when the TU holds a use it DECLINES to
-# expand, and retail's army.obj holds one: the two rejected sites in
-# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
-# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
-# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
-# stands in for them until it lands. Full matrix in army.cpp above
-# can_shoot; the key negative is that with NO keyword the body is not
-# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
-# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
-# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
-# now hold together.
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
@@ -400,10 +611,7 @@ armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	82.5689	82.5689	82.5689	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	67.5649	67.5649	67.5649	0x4b960
-# Retail-ordered switch bodies, the creature-record cursor, the direct
-# spell-table field_c access, and the byte-proven attrs 0x400 gate raised
-# this from 53.1589 to 88.5071 (2026-08-09).
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	74.4820	74.4820	74.4820	0x4b960
 armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	88.5071	88.5071	88.5071	0x4a4d0
 armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa40
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x4b820
@@ -455,11 +663,11 @@ border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	
 border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
 bottomviewsubwindow	??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x53250
 bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	97.7675	97.7675	97.7675	0x51ab0
-bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	94.0575	94.0575	94.0575	0x52b80
+bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.5213	98.5213	98.5213	0x52b80
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	97.3638	97.3638	97.3638	0x521f0
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	98.7476	98.7476	98.7476	0x521f0
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670
 bottomviewsubwindow	??1TBottomViewHero@@UAE@XZ	100.0000	100.0000	100.0000	0x52170
 bottomviewsubwindow	??1TBottomViewKingdom@@UAE@XZ	100.0000	100.0000	100.0000	0x531d0
@@ -598,21 +806,6 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
-# GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
-# first batch of byte-proven field slices, and RECOVERED to 92.5714 later
-# the same day when a SECOND batch of slices (bloodlustRounds /
-# precisionRounds, slayerRounds, bloodlustAmount / precisionAmount,
-# slayerLevel, frenzyFactor) landed on the same header. Nothing in
-# command.cpp changed in either direction. Recorded because it is a clean
-# demonstration of the include-set-sensitivity class being NON-MONOTONIC
-# in the way the initialize_game_data notes describe: the whole delta in
-# the lowered state was TWO instructions swapping order (`mov ecx,
-# [ebp-4]` trading places with the `mov eax, [ebp+8]` in front of it,
-# twice), inside a region that matches retail in NEITHER state, and it
-# came back on its own as the header kept growing. Removing any ONE of
-# the four slice groups did not restore it while it was down, and adding
-# further evidenced slices (+0x28c, +0xd8) in either combination did not
-# either - only the later batch, as a whole, did.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
@@ -845,13 +1038,6 @@ game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
 game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	99.7000	99.7000	99.7000	0xbbc20
 game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270
-# game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
-# promoted source names in the same change. Two are renames rather
-# than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
-# ...QAE_NXZ (the DC mangling proves a `bool` return, and retail's
-# byte-only materialisation agrees), and playerData_SetName ->
-# ?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z (the claim at
-# 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
 game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
 game	?SetRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
@@ -1087,192 +1273,6 @@ infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620
 initialize	?add_to_included_mask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10
 initialize	?create_included_mask@@YIXPBHPA_J@Z	93.8667	93.8667	93.8667	0xebb70
 initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0xebc50
-# initialize_game_data hand-lowered 100.0000 -> 94.0741 (2026-08-07)
-# when town.h's __int64 building-mask model landed. initialize.cpp's
-# only project include is town.h, so that header is the trigger.
-# CAUSE NOT IDENTIFIED - and the originally-offered explanation was
-# tested and REJECTED: "the TU's declaration count grows" does NOT
-# reproduce. Appending 200 bare `extern int probe_dummy_N;` lines to an
-# otherwise untouched town.h leaves this function at 100.0000.
-# What is known: masked `homm3 sema diff 0x004eb730 --asm` shows the
-# delta dominated by reloc-NAME-only rows - our base names
-# ?bitNumber@@3PA_JA / ?gHierarchyMask@@3PAY0CM@_JA /
-# ?gTownEligibleBuildMask@@3PA_JA where the delinked target falls back
-# to bss_/data_<rva> - with the instruction text otherwise identical.
-# That suggests non-semantic, but is NOT proof of byte-identity: the
-# masked view hides immediates (the IDC_ARROW and 0x54cc precedents).
-# Adding a DATA anchor on bitNumber (0x0066cd98) does NOT restore it.
-# Lowered rather than reverting the town model, which is byte-proven
-# and bought 10 exact functions plus check_wall_archery_penalty.
-# NEEDS a dedicated investigation - unmasked disasm --base vs disasm.
-# ANSWERED 2026-08-07 by that unmasked comparison: the bytes DIFFER, so
-# this is NOT a symbolization artifact. Inline copy 0 of
-# create_requirement_masks is byte-identical; copies 1 and 2 are not.
-# Retail addresses the row directly - `mov [8*eax + gHierarchyMask+0x160],
-# ebx` (89 1c c5 ..) twice - where our CL hoists the row base into a
-# register first (`lea eax,[8*eax + gHierarchyMask+0x160]` then
-# `mov [eax],ebx` / `mov [eax+4],ebx`), and schedules two instructions
-# around it differently. Copy 0's base offset is 0, which is why it
-# survives.
-# MECHANISM (bisected the same day, probe reverted): the trigger is not
-# any array/type spelling in town.h - it is the COUNT OF USER-DEFINED
-# TYPE DEFINITIONS visible in the TU. With initialize.cpp on the
-# pre-town-lane town.h the function is 100.0000; injecting a single
-# unused `struct probe_t { int a; };` at the top of that header drops it
-# to 96.0880, and an unused `enum` does the same. Injecting 0..8 such
-# structs gives 100.0 / 96.09 / 96.09 / 26.18 / 97.04 / 94.07 / 100.0 /
-# 100.0 / 96.09 - NON-MONOTONIC, so this is VC6 optimizer state
-# (type/symbol-table population perturbing its CSE and addressing-mode
-# choices), not a semantic error in our model. Things that do NOT move
-# it: blank lines, comments, typedefs, `extern int` (which is why the
-# earlier 200-extern probe cleared the wrong hypothesis), and a bare
-# `struct probe_t;` forward declaration. town.h's new type_building_id /
-# EGameResource / type_horde_effect plus the armygrp.h->game.h chain
-# simply push this TU off the lucky point.
-# CONSEQUENCE: no local spelling change can fix this - the exact match
-# returns when the TU's include set matches retail's. Leave the row
-# lowered; re-measure whenever initialize.cpp's header closure changes.
-# RECOVERED to 100.0000 the same day, exactly as that prediction says:
-# breaking the armygrp.h -> game.h include edge (needed so game.h could
-# see the complete hero type) removed game.h/mapcell.h's types from
-# town.h's transitive closure, and this TU landed back on the lucky
-# point with no change to initialize.cpp at all. The row is a ratchet
-# raise, not a lowering; the analysis above is kept because the same
-# sensitivity will move this function again on the next header change.
-# DELIBERATE LOWER 100.0000 -> 26.1806 (2026-08-08, lane/split). The
-# 100 above was being held by an `#include <stdio.h>` placed ahead of
-# "town.h" in initialize.cpp purely as a closure lever - a header this
-# TU does not use and that no evidence puts in retail's include list.
-# That include has been removed; this row records what the honest
-# include list actually scores.
-# What was tried first, and rejected:
-#   * SPLITTING town.h so initialize.cpp stops inheriting its surface.
-#     NOT REALIZABLE. initialize.cpp names town::included_buildings and
-#     town::initialize_hordes, and the DC dump proves both are `class
-#     town` statics (?included_buildings@town@@2PAY0CM@_JA,
-#     ?initialize_hordes@town@@SIXXZ - the latter is also this tree's
-#     own claimed row and the target of initialize_game_data's tail
-#     jmp). Any header supplying them must DEFINE class town, and class
-#     town has an armyGroup by value at +0xe0, so armygrp.h and its
-#     closure come with it. A second, cut-down `class town` in a split
-#     header is an ODR violation and a false model.
-#     Measured anyway as a throwaway probe (reverted, nothing landed):
-#     with initialize.cpp on such a minimal header the function scores
-#     90.16, not 100, and reaching 100 needs its OWN unevidenced lever
-#     (<time.h> or <signal.h>). The split therefore trades one
-#     unevidenced include for another plus a false class model, and
-#     stabilises nothing on its own merits.
-#   * a fresh k = 0..10 dummy-declaration sweep of town.h across the six
-#     honest include orders and eighteen candidate lever headers. The
-#     honest list gives 26.18 at k=0 and at best three 100s in eleven
-#     points; <stdio.h>-first gives seven, the widest of anything tried.
-#     Every other candidate scores 2-4 of 11. There is no configuration
-#     of headers reachable from this tree that is BOTH honest and
-#     stable, which is what makes lowering the right call.
-#   * a source handle for the delta. There is none, and this is now
-#     settled rather than suspected: retail's own initialize_game_data
-#     hoists in inline copy 0 (`lea eax,[8*eax]`) and folds in copies 1
-#     and 2 (`mov [8*eax + gHierarchyMask+0x160], ebx`). One loop body,
-#     two different addressing decisions - no spelling can produce both.
-# THE REAL DEFECT IS NOW NAMED: retail's initialize.cpp includes
-# `E:\gamedcs\terrain.h`, which this tree does not model at all. The DC
-# CodeView corpus attributes twenty static-init funclets in
-# initialize.obj ($E439..$E467) to terrain.h:70-79 - ten file-scope
-# objects with dynamic initializers - and that is exactly the cinit tail
-# retail carries at 0x4ebcf0 (guard 0x6abaa0 + ten ~95B funclets), the
-# same tail iconwdgt.obj has at 0xeb340. terrain.h is attributed in 75
-# DC game compilands, so EVERY game TU here is short of retail's include
-# closure by it. Raise this row again by modelling terrain.h (a
-# deliberate, tree-wide change), not by re-adding a lever include.
-# FOOTNOTE, same day: the recorded max is no longer the 26.1806 this
-# block lowered it to - the town.h growth that the rest of this lane
-# landed (the population row, PlaceInMap / increase_population /
-# get_growth_rate declarations) walked the same lottery back up and the
-# ratchet raised the row monotonically, 26.1806 -> 90.1620 -> 94.0741.
-# Nothing was tuned for it and nothing should be: the number is a
-# by-product of the symbol-table population, so a LATER town.h edit can
-# just as easily push it back down, and when it does the honest move is
-# another dated lower here - not a lever include.
-# RESOLVED 2026-08-08: terrain.h is now modelled (include/terrain.h) and
-# initialize.cpp includes it. 94.0741 -> 100.0000 with NO lever header -
-# the honest include list plus the one header retail's bytes prove was
-# there. The ten funclets our CL emits for it are byte-identical to
-# retail's 0x4ebd10..0x4ec0de, and the eleventh (the shared
-# ctype<wchar_t>::id guard the <bitset> closure drags in) is
-# byte-identical to retail's 0x4ebcf0. This row is the FIRST raise this
-# lane that is a model fix rather than a lottery draw. The residual
-# class is not closed, though: a 0..10 unused-struct probe sweep on
-# town.h still moves the row (100/100/94.07/94.07/94.07/100/100/100/
-# 100/94.07/94.07), so the TU's type population is still not retail's -
-# terrain.h was one missing header, not the only one.
-# initialize_game_data hand-lowered 100.0000 -> 96.0880 (2026-08-08,
-# third movement of this row today). Cause is the documented include-set
-# sensitivity, not a modelling error: town.h gained `NewmapCell::terrain`
-# and an eTerrainWater enumerator so that town.cpp's `== 8` could be
-# spelled as a named domain compare and hold the cleanliness floor at 0.
-# initialize.cpp's only project include is town.h, so its type population
-# moved and this TU fell off the lucky point again. NO LOCAL SPELLING
-# FIXES IT - that was established when 16 were tried and the terrain.h
-# recovery closed only part of the gap (still 6 of 11 under the dummy
-# sweep). The alternatives were reverting a legitimate cleanliness fix or
-# carrying another unevidenced lever include, and both are worse than an
-# honest lower. Re-measure after any town.h edit; the row has read 26.18,
-# 94.07, 100.00 and now 96.09 today, all without a semantic change.
-# RAISED BACK to 100.0000 (2026-08-08, hero lane) with NO semantic
-# change anywhere near this TU - the same include-set sensitivity that
-# has moved this row five times, this time upward.
-# THE CAUSE WAS NOT ISOLATED, and the lane's own two measurements say
-# so. Four headers inside initialize.cpp's closure changed together
-# (hero.h field slices, armygrp.h, artifact.h enumerators, army.h), and
-# the one candidate that WAS A/B-measured alone - armygrp.h gaining the
-# spellschool.h include so SSpellTraits::school could be typed
-# TSpellSchool - came back NEUTRAL at 96.0880 (see the note at that
-# member). So the raise belongs to the change-set, not to any single
-# edit named here; an earlier draft of this note credited the
-# spellschool.h include and was wrong.
-# Counter-measurement from the same session, same header, opposite
-# sign: three ESpellId ENUMERATORS added to armygrp.h moved the row
-# 96.09 -> 90.16 and were withdrawn. The class is non-monotonic in both
-# directions - MEASURE, DO NOT REASON.
-# The row is now pinned at 100.0000, which makes it a constraint on
-# every other lane: any change to game.h / hero.h / mapcell.h /
-# struct.h / town.h / armygrp.h / artifact.h / army.h must re-measure
-# this row before it lands.
-# A SECOND LANE reached 100.0000 independently the same day, by a
-# different route, and its sweep is the best characterisation of the
-# class we have. Five states, every one a clean build (three earlier
-# readings taken against a BROKEN build were void and discarded):
-#     branch point, untouched                          96.0880
-#     + mapcell.h bitfield slice + a method decl       96.0880
-#     + CREATURE_NOMAD in armygrp.h ONLY               26.1806
-#     + 10-enumerator SoD block + CREATURE_NOMAD       97.0370
-#     + 8-enumerator SoD block + CREATURE_NOMAD       100.0000
-# Two things follow. Enumerator POSITION is irrelevant (tail vs middle
-# both read 97.0370) - it is the COUNT. And the sensitivity is to
-# MEMBER population, not only to the count of type definitions:
-# splitting mapcell.h's `flags_00_11 : 12` into three named bitfields,
-# no new type and no semantic change, reads 26.1806. That is why that
-# bitfield is deliberately NOT sliced.
-# LOWERED BY HAND to 94.0741 (2026-08-08, integration) - a deliberate
-# drop, not a regression anyone can fix by spelling.
-# BOTH change-sets above are now in this tree at once. Each reached
-# 100.0000 ALONE, in its own lane, by a different route; COMPOSED they
-# read 94.0741. That composition is the strongest evidence yet for what
-# this row actually is: not a property of any source text near
-# initialize.cpp, but a codegen artifact of the TU-wide type and member
-# population of its include closure - and one that does not add.
-# Chasing 100 back would mean adding or removing names in mapcell.h /
-# armygrp.h for score alone. Every name in both change-sets is
-# evidence-tight (the eight SoD ids are exactly what
-# NewmapCell::get_special_terrain can answer with; CREATURE_NOMAD is
-# pinned by GetTerrainCost). Carrying an unevidenced lever to hold a
-# number is worse than an honest lower - the same judgement recorded
-# above when this row read 96.09.
-# Values THIS row has shown, all without a semantic change:
-# 26.18, 90.16, 94.07, 96.09, 97.04, 100.00.
-# Do not treat any of them as a target. Re-measure after ANY change to
-# game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
-# artifact.h / army.h, and record what you saw.
 initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0

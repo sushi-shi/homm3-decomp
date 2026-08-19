@@ -4,6 +4,10 @@
 #include <va.h>
 #include <crt_stdio.h>
 #include <strstream>
+// TBottomViewKingdom's hall census calls town::HasBuilding three times
+// (dc 0x563b8 lines 531/533/535), so this compiland gets the Town.h
+// inline; see town.h for why the visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include "bottomviewsubwindow.h"
 #include "border.h"
 #include "game.h"
@@ -972,6 +976,29 @@ static const int gTownArmyCoords[7][2] = {
 // S_REGREL32 record even names that buffer `quantity_text` - so the
 // ostrstream idiom is post-Dreamcast everywhere it appears.
 //
+// SIX OF THE SEVEN SITES ARE NOW REAL: town::HasBuilding (97.3638 ->
+// 98.7476, 2026-08-15). dc 0x55df4 spells the hall ladder (lines
+// 369/371/373, `mov #11/#12/#13,r5 / mov #0,r6`), the fort ladder
+// (382/384/386, r5 = 7/8/9, r6 = 0) and the silo gate (line 402, r5 =
+// 15, r6 = 1) as calls where this body tested `built`/`active &
+// bitNumber[...]` by hand; retail's 0x4305a0 proves the arms
+// (check_included == 0 reads [ecx+0x150] = built, != 0 reads
+// [ecx+0x158] = active) and the inlined expansion is byte-identical to
+// the ladders, so once again only the site count moves.
+//
+// THE SILO SITE IS REFUSED, on measurement and nothing else. The three
+// ladder subsets measure 97.3638 base / 96.8134 hall-only / 97.3638
+// fort-only / 97.1557 silo-only / 98.7476 hall+fort / 96.0953
+// hall+silo / 97.1960 fort+silo / 94.0054 all seven, so the DC's own
+// seventh call costs 4.74 points on top of the two ladders. Six sites
+// land on the +2 the probe wanted (98.7476 against the probe's 98.86);
+// seven overshoot it, exactly as the free-probe curve said (flat at
+// +3). The DC is an older revision and the retail bytes cannot
+// arbitrate here - the expansion and the mask test are the same
+// instructions - so the count is the only evidence there is, and it
+// says six. Landing all seven would be a deliberate 3.36-point
+// regression for a spelling no byte proves.
+//
 // The silo sweep's own shape is a memory-homed `i`: retail indexes
 // `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
 // every `slots[found++] = i` store, because that store may alias it,
@@ -1013,11 +1040,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         "smalfont.fnt", font::WHITE, 0x7d2, 0, 0, 8));
 
     int hallLevel = 0;
-    if (which->built & bitNumber[HALL_TOWN_ID])
+    if (which->HasBuilding(HALL_TOWN_ID, 0))
         hallLevel = 1;
-    else if (which->built & bitNumber[HALL_CITY_ID])
+    else if (which->HasBuilding(HALL_CITY_ID, 0))
         hallLevel = 2;
-    else if (which->built & bitNumber[HALL_CAPITOL_ID])
+    else if (which->HasBuilding(HALL_CAPITOL_ID, 0))
         hallLevel = 3;
 
     std::string town_size_name = gTownSizeNames[hallLevel];
@@ -1026,11 +1053,11 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
         hallLevel, 0, 0, 0, 0x10));
 
     int fortLevel;
-    if (which->built & bitNumber[CASTLE_FORT_ID])
+    if (which->HasBuilding(CASTLE_FORT_ID, 0))
         fortLevel = 0;
-    else if (which->built & bitNumber[CASTLE_CITADEL_ID])
+    else if (which->HasBuilding(CASTLE_CITADEL_ID, 0))
         fortLevel = 1;
-    else if (which->built & bitNumber[CASTLE_CASTLE_ID])
+    else if (which->HasBuilding(CASTLE_CASTLE_ID, 0))
         fortLevel = 2;
     else
         fortLevel = 3;
@@ -1113,56 +1140,50 @@ TBottomViewTown::~TBottomViewTown()
 // The kingdom-overview banner: a hall-level census of the acting player's
 // towns above a two-row flag strip splitting the other players into
 // allies and enemies.
-// Residual (94.06%): THE WALL IS THE INLINE-CANDIDATE SITE COUNT OF
-// THIS BODY, and it is now measured rather than inferred. Retail calls
-// vector<widget*>::size() out of line (0x423110) inside reserve() where
-// our CL expands its 19 bytes; capacity() is inlined on BOTH sides, so
-// retail's nested budget ran out between two 19-byte functions.
-// predict-inline agrees on the count: base emits 38 out-of-line calls,
-// retail 39, and 0x423110 is the only genuine row.
+// THE MISSING INLINE CANDIDATE WAS town::HasBuilding, AND IT IS LANDED
+// (94.0575 -> 98.5213, 2026-08-15). The hall census below calls it three
+// times where this body tested `active & bitNumber[HALL_*_ID]` by hand;
+// dc 0x563b8 lines 531/533/535 are `mov #13/#12/#11,r5 / mov #1,r6 /
+// jsr @r11` on `?HasBuilding@town@@QBA_NH_N@Z`, and retail's own
+// out-of-line copy at 0x4305a0 proves the arm: `check_included != 0`
+// reads [ecx+0x158] = active. The expansion is byte-identical to the
+// ladder that was here, so the bytes never arbitrated - only the /Ob2
+// candidate-site count did, and three real sites land exactly on the +1
+// number the probe had measured (98.5213 vs the probe's 98.52).
 //
-// The RE'd /Ob2 rule (docs/vc6/inliner.md section 2) hands a nested
-// expansion `budget / sites-remaining`, so that decision is controlled
-// by the NUMBER of inline-candidate call sites in this body, not by its
-// size. Adding ONE more free (cb <= 0x28) candidate site takes this
-// function 94.06 -> 98.52 and collapses the residual from ten divergent
-// blocks to two size-only ones. The callee does not matter -
-// Widgets.size(), capacity() and empty() all give exactly 98.52 - and
-// the POSITION semantics are the rule's own: the site is inert
-// everywhere BEFORE Widgets.reserve(8) (94.06, nine placements) and
-// worth the full 4.46 points everywhere at or after it (98.52, eight
-// placements), because only a site at or after reserve raises
-// `sites-remaining` at reserve's own index. Three such sites overshoot
-// (95.88) and eight give the same, so the deficit is exactly one.
-// Retail's source therefore carries one more inline candidate than this
-// reconstruction, at or after the reserve, and it contributes no bytes
-// of its own. No plausible statement with that signature has been
-// found, so the probe is deliberately NOT landed - a bare
-// `Widgets.size();` is a score, not a reconstruction.
+// What the probe had established, kept because it is what made the
+// landing legible: the wall was the INLINE-CANDIDATE SITE COUNT of this
+// body. Retail called vector<widget*>::size() out of line (0x423110)
+// inside reserve() where our CL expanded its 19 bytes; capacity() was
+// inlined on BOTH sides, so retail's nested budget ran out between two
+// 19-byte functions. The RE'd /Ob2 rule (docs/vc6/inliner.md section 2)
+// hands a nested expansion `budget / sites-remaining`, so that decision
+// is controlled by the NUMBER of inline-candidate call sites, not by
+// size: one more free (cb <= 0x28) site was worth 94.06 -> 98.52, the
+// callee did not matter (size/capacity/empty all gave 98.52), the site
+// was inert everywhere BEFORE Widgets.reserve(8) and worth the full
+// 4.46 everywhere at or after it, and three free probe sites overshot
+// (95.88). A bare `Widgets.size();` was deliberately never landed
+// because a probe is a score, not a reconstruction - the DC line table
+// then named the statement that carries the sites honestly.
 //
-// THE DREAMCAST LINE TABLE SAYS THIS BODY HAS NO POST-DC REGION AT ALL
-// (2026-08-14, `python3 -m homm3.analysis.dc_lines 0x563b8`). All 41 DC
-// statements account for retail's body one for one, which rules out the
-// direction that closed TViewArmyWindow - there is no later-edited block
-// for the site to hide in. It must therefore be a statement the Dreamcast
-// build SPELLS DIFFERENTLY, and the table names the only three:
-//   * line 524 is a `memset` where we write four assignments. REFUSED, and
-//     the refusal is the asymmetry rule working: retail's bytes disagree.
-//     VC6 under /O2 expands memset as the intrinsic (`mov ecx,N / rep
-//     stosd`, as armyGroup::armyGroup shows), not the four `mov [ebp-N],eax`
-//     stores retail emits here - and an intrinsic is not a candidate site
-//     anyway.
-//   * lines 531/533/535 call `town::HasBuilding(id, check_included)`, a
-//     Town.h inline (dc 0x1fe14, Town.h:324) whose `check_included == 0` arm
-//     is exactly this ladder's 64-bit mask test, so retail's bytes DO agree.
-//     That is the strongest candidate, but it is three sites where the
-//     measurement wants one, and `town::HasBuilding`'s declaration lives
-//     behind `#ifdef HOMM3_TOWN_OBJ_DECLS` in town.h - making it a visible
-//     header inline is a declaration-surface change for every TU that
-//     includes town.h and it re-decides town.cpp's own caller. Not attempted
-//     here; it needs its own gated round with the full-tree diff.
+// THE DREAMCAST LINE TABLE IS WHAT NAMED IT (2026-08-14/15,
+// `python3 -m homm3.analysis.dc_lines 0x563b8`). This body has NO
+// post-DC region at all - all 41 DC statements account for retail's
+// body one for one - which ruled out the direction that closed
+// TViewArmyWindow and forced the site to be a statement the Dreamcast
+// build SPELLS DIFFERENTLY. The table named exactly three candidates
+// and the round resolved all three:
+//   * line 524 is a `memset` where we write four assignments. REFUSED,
+//     and the refusal is the asymmetry rule working: retail's bytes
+//     disagree. VC6 under /O2 expands memset as the intrinsic (`mov
+//     ecx,N / rep stosd`, as armyGroup::armyGroup shows), not the four
+//     `mov [ebp-N],eax` stores retail emits here - and an intrinsic is
+//     not a candidate site anyway.
+//   * lines 531/533/535 call `town::HasBuilding` - LANDED, see above.
 //   * lines 554/557 call `TTextResource::operator[]` where we call
-//     `GetText`. Both are one header inline, so the count is unchanged.
+//     `GetText`. Both are one header inline, so the count is unchanged;
+//     untried, and no longer needed for the count.
 //
 // The remaining 1.48 is a SECOND, independent divergence: our CL CSEs
 // the constant zero into ESI across the whole prologue (`xor esi,esi`,
@@ -1206,11 +1227,11 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
     for (i = 0; i < gpCurrentPlayer->numTowns; i++) {
         town* which = gpGame->GetTown(gpCurrentPlayer->townIds[i]);
-        if (which->active & bitNumber[HALL_CAPITOL_ID])
+        if (which->HasBuilding(HALL_CAPITOL_ID, 1))
             town_count[3]++;
-        else if (which->active & bitNumber[HALL_CITY_ID])
+        else if (which->HasBuilding(HALL_CITY_ID, 1))
             town_count[2]++;
-        else if (which->active & bitNumber[HALL_TOWN_ID])
+        else if (which->HasBuilding(HALL_TOWN_ID, 1))
             town_count[1]++;
         else
             town_count[0]++;
