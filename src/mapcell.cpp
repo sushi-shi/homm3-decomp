@@ -732,7 +732,6 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 }
 
 // E:\gamedcs\mapcell.cpp:1421
-VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 // The scroll record is the artifact record plus a payload tail, and the
 // two share this file's custom-treasure preamble verbatim.
 //
@@ -761,6 +760,7 @@ VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 
 // permutation that follows from it - the same class DrawAdvObj plateaus on,
 // and no source knob reaches it.  readArtifactData gets the param slot for
 // free because its single Read leaves `infile` dead immediately.
+VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
     int treasureIndex = customTreasure.size();
@@ -789,21 +789,64 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     // this tail reports.
     if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
         return -1;
-    scrollObject->extraInfo = (scrollObject->extraInfo & 0xffffff00)
-        | char_buffer;
+    scrollObject->extraInfo ^= (scrollObject->extraInfo ^ char_buffer) & 0xff;
 
     unsigned char padding[3];
     return static_cast<unsigned>(infile->Read(padding, 3)) < 3 ? -1 : 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1470
+// The third of the custom-treasure readers, and the same shape as the
+// scroll's: preamble, optional TreasureData record, then a payload tail
+// with two more Reads.  Retail issues three virtual Reads here too.
+//
+// The payload is a DWORD amount folded into extraInfo's low NINETEEN bits
+// (`and edx,0x7ffff` - the complement of the 19..30 custom-record index the
+// preamble writes, so the two never collide), then four padding bytes whose
+// short count is the only failure the tail reports.
+//
+// Residual (76.9111%): BLOCK PLACEMENT, not statements.  Retail `jmp`s from
+// the treasure block to a tail it lays down AFTER both error epilogues; this
+// compile falls straight through and puts the tail inline, so every block
+// from there on is offset.  The scroll reader has the identical source shape
+// and does not do this (93.3240), so it is not the spelling of the tail -
+// the only structural difference between them is that the scroll's second
+// Read reuses the one-byte buffer while this one reads a fresh dword.
+// Hoisting `amount` and `padding` to the top of the function is byte-flat
+// (measured), so declaration position is not the lever either.
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
-int NewfullMap::readResourceData(void* infile, CObject* resourceObject)
+int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
-    // @stub
+    int treasureIndex = customTreasure.size();
+
+    unsigned char char_buffer;
+    resourceObject->extraInfo = 0;
+    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+        return -1;
+
+    if (char_buffer) {
+        TreasureData tempTreasure;
+        if (readTreasureData(infile, &tempTreasure) == 0) {
+            if (treasureIndex < 4000) {
+                customTreasure.push_back(tempTreasure);
+                resourceObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                    | (resourceObject->extraInfo & 0x7ffff);
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    int amount;
+    if (static_cast<unsigned>(infile->Read(&amount, 4)) < 4)
+        return -1;
+    resourceObject->extraInfo ^= (resourceObject->extraInfo ^ amount) & 0x7ffff;
+
+    unsigned char padding[4];
+    return static_cast<unsigned>(infile->Read(padding, 4)) < 4 ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1524
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
