@@ -465,6 +465,14 @@ public:
     // one-field return and preserves its float temporary before widening.
     float get_aggression() const { return field_47a; }
 
+    // 0x4d85f0, retail's own default constructor. The base and the four
+    // members that carry constructors run first (type_obscuring_object,
+    // army, TownSpecialGrantedMask, equipped/backpack, customName), then
+    // the body re-clears the identity band. The class ALREADY had a
+    // non-trivial implicit constructor - army, the bitset and the
+    // Dinkumware string each have one - so declaring this changes what
+    // that constructor does, not whether one exists.
+    hero();
     void initialize(short index);
 
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
@@ -944,6 +952,14 @@ public:
     virtual int ExitDialog(class message* msg);
 };
 SIZE(THeroScreenWindow, 0x68);
+
+// The live hero-screen window. HeroView (0x4e1800) stores its
+// `new THeroScreenWindow` result here (0x4e181c) before calling
+// SetupHeroView, and every hero-screen updater in this compiland
+// broadcasts through it - 49 retail references, all inside hero.obj's
+// hero-screen block plus hero::hero's clear. Spelling role-derived; no
+// public symbol survives for it.
+DATA(0x00698a78) extern THeroScreenWindow* gpHeroScreenWindow;
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);

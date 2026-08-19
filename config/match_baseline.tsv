@@ -928,6 +928,7 @@ gzio	@gzopen@8	100.0000	100.0000	100.0000	0x206220
 gzio	@gzread@12	100.0000	100.0000	100.0000	0x2066f0
 gzio	@gzwrite@12	100.0000	100.0000	100.0000	0x206930
 gzio	@putLong@8	100.0000	100.0000	100.0000	0x206b10
+hero	??0hero@@QAE@XZ	70.9892	70.9892	70.9892	0xd85f0
 hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470
 hero	??1THeroScreenWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe1550
 hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520
@@ -1055,7 +1056,6 @@ hero	hero_ViewStat	0.0000	0.0000	0.0000	0xd9b30
 hero	hero_equip_artifact	0.0000	0.0000	0.0000	0xe2a00
 hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
 hero	hero_get_morale_description	0.0000	0.0000	0.0000	0xdc320
-hero	hero_hero	0.0000	0.0000	0.0000	0xd85f0
 hero	hero_load	0.0000	0.0000	0.0000	0xd7a20
 hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
 hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
