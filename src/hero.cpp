@@ -3055,13 +3055,102 @@ void hero::TransferArtifacts(hero* src)
 // hero members, both `ret 8`, and both work the 32-byte-stride artifact
 // table at 0x660b68 against the 19 equipped slots. ORDINAL PLACEHOLDER
 // names, flagged unattested.
-VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
-unsigned char hero::HeroFn_004E2550(long a, long slot)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Can `artifact` be worn in `slot` (or, with slot -1, in ANY of the 19)?
+// NOT EH-bearing: retail leaves all four bitset::_Xran sites out of line,
+// so no throw is expanded and no /GX frame is needed.
+//
+// The redundant-looking DOUBLE capacity check in each block is real. The
+// empty-mask fold at +0x321 (`test eax,eax / je <continue>`) only exists
+// because a FIRST `worn >= capacity` test precedes the `capacity -
+// occupied` one; with capacity 0 VC6 folds it to always-taken. Do not
+// simplify it away. `worn` is UNSIGNED - retail compares it with `jbe`
+// and every later bound with `jae`, which is what bitset::count()'s
+// size_t return gives.
+VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
+unsigned char hero::HeroFn_004E2550(long artifact, long slot)
+{
+    if (gpGame->f_1f698 < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
+        return 0;
+
+    long remaining = 1;
+    if (slot == -1) {
+        slot = 0;
+        remaining = 19;
+    }
+
+    for (; remaining != 0; remaining--, slot++) {
+        if (equipped[slot].artifactId != ARTIFACT_NONE)
+            continue;
+        if (!aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask]
+                 .test(slot))
+            continue;
+
+        int slotClass = akArtifactSlotTraits[slot].type;
+        unsigned int worn = artifactSlotCounts[slotClass];
+        if (worn > 0) {
+            std::bitset<19> classSlots = aArtifactSlotMasks[slotClass];
+            size_t capacity = classSlots.count();
+            if (worn >= capacity)
+                continue;
+            int occupied = 0;
+            for (int i = 0; i < 19; i++) {
+                if (classSlots.test(i) &&
+                    equipped[i].artifactId != ARTIFACT_NONE)
+                    occupied++;
+            }
+            if (worn >= capacity - occupied)
+                continue;
+        }
+
+        int combination = akArtifactTraits[artifact].comboType;
+        if (combination != -1) {
+            int counts[15];
+            const unsigned char* src = artifactSlotCounts;
+            int* dst = counts;
+            for (; src != artifactSlotCounts + 15; ++dst, ++src)
+                *dst = *src;
+
+            const std::bitset<144>& components =
+                gCombinationArtifacts[combination].components;
+            bool kept_slot = false;
+            for (int component = 0; component < 144; component++) {
+                if (!components.test(component))
+                    continue;
+                int componentClass =
+                    akArtifactTraits[component].allowableSlotMask;
+                if (componentClass
+                        == akArtifactTraits[artifact].allowableSlotMask
+                    && !kept_slot) {
+                    kept_slot = true;
+                    continue;
+                }
+                std::bitset<19> classSlots =
+                    aArtifactSlotMasks[componentClass];
+                size_t capacity = classSlots.count();
+                if (counts[componentClass] >= capacity)
+                    goto next_slot;
+                {
+                    int occupied =
+                        (akArtifactTraits[artifact].allowableSlotMask
+                         == componentClass) ? 1 : 0;
+                    for (int i = 0; i < 19; i++) {
+                        if (classSlots.test(i) &&
+                            equipped[i].artifactId != ARTIFACT_NONE)
+                            occupied++;
+                    }
+                    if (counts[componentClass] >= capacity - occupied)
+                        goto next_slot;
+                }
+                counts[componentClass]++;
+            }
+        }
+        return 1;
+    next_slot:;
+    }
+    return 0;
+}
 
 // The wrapper: it validates the physical slot against the artifact's
 // allowable-slot class, then hands the real work to HeroFn_004E2550 -
