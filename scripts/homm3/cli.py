@@ -125,6 +125,8 @@ def cmd_build(args) -> int:
 
 
 def cmd_labels(args) -> int:
+    if args.selftest:
+        return run_module("homm3.retail_labels.source", "--selftest")
     forwarded = ["--all"] if args.all else []
     for unit in args.unit or []:
         forwarded += ["--unit", unit]
@@ -215,6 +217,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="extract one unit (repeatable)")
     p.add_argument("--all", action="store_true",
                    help="extract every src/ unit")
+    p.add_argument("--selftest", action="store_true",
+                   help="run the completeness gate's negative control")
     p.set_defaults(fn=cmd_labels)
 
     p = sub.add_parser("model", help="the one label join -> symbol_names.csv "

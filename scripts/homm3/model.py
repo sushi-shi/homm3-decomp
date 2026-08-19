@@ -43,12 +43,87 @@ from pathlib import Path
 
 from homm3.core import common
 from homm3.retail_labels import censuses, fragments, iat, providers
+from homm3.retail_labels import source as labels_source
 
 OUT = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 COMPGEN_OUT = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 
 BUCKET_SHIFT = 16
 VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
+
+#: Channels whose claims name a COMPILER-GENERATED POOLED datum. One such
+#: datum is a single image-wide allocation - the linker folds `""`,
+#: `"%s %s"`, `"\n"` to one address - so every TU that spells the literal
+#: claims the SAME rva, legitimately. Repeated claims therefore coalesce
+#: (the first unit in sorted-stem scan order names it) instead of firing
+#: the duplicate-rva gate, which exists to catch two different data
+#: fighting over one address.
+#:
+#: The coalesce is safe only because extraction PROVES the claims agree:
+#: the VALUE is the claim, and retail_labels.source's pooled-agreement
+#: check reports every site pair that pins one address to two different
+#: values. This module never sees the values, so it may not DECIDE
+#: agreement - it only acts on a fact extraction has already established.
+POOLED_CHANNELS = ("src-DATA_COMPGEN", "src-DATA_COMPGEN_GUARD")
+
+
+def header_data_problems(sites: dict, rows: dict) -> list[str]:
+    """The other half of the macro-site completeness oracle.
+
+    `DATA()` on a header extern is a DECLARATION-SITE annotation. The
+    datum is retail's and our source only REFERENCES it - not one of
+    those 100 externs has a definition anywhere in src/ - so there is no
+    storage for extraction to bind and no TU to own the claim.
+    `retail_labels.source` therefore excuses header DATA() sites from its
+    own sweep, and points here.
+
+    Excused is not unchecked. Their channel is THIS inventory, and the
+    claim is only worth writing if the address actually lands in it: a
+    header DATA() naming an address no channel carries is as lost as any
+    other silently dropped label. Measured 2026-08-20: 101 header DATA()
+    addresses, 101 carried (99 reloc-target, 1 reloc-alias, 1
+    src-DATA_COMPGEN) - so the floor is zero, not a tolerated backlog.
+
+    Pure in (sites, rows) so the negative control can drive it."""
+    problems = []
+    for rva, wheres in sorted(sites.get("DATA", {}).items()):
+        if not all(w.split(":")[0].endswith(".h") for w in wheres):
+            continue                  # a src site: extraction's sweep owns it
+        va = rva + common.IMAGE_BASE
+        row = rows.get(rva)
+        if row is None:
+            problems.append(
+                f"DATA(0x{va:08x}) at {wheres[0]} is a header extern whose "
+                f"address reaches NO inventory row - no channel carries it, "
+                f"so the claim names nothing")
+        elif row["kind"] != "data":
+            problems.append(
+                f"DATA(0x{va:08x}) at {wheres[0]} claims a datum, but the "
+                f"inventory carries {row['name']!r} there as {row['kind']}")
+    return problems
+
+
+def selftest() -> list[str]:
+    """Negative control for the header-DATA gate: synthetic defects that
+    MUST be detected plus a clean sample that MUST pass. Run before the
+    gate judges the tree."""
+    failures = []
+    sites = {"DATA": {0x1000: ["include/hero.h:9"]}}
+    if header_data_problems(sites, {0x1000: {"name": "const_1000",
+                                             "kind": "data"}}):
+        failures.append("clean sample did not pass")
+    if not header_data_problems(sites, {}):
+        failures.append("an uncarried header DATA() was not detected")
+    if not header_data_problems(sites, {0x1000: {"name": "fn_1000",
+                                                 "kind": "func"}}):
+        failures.append("a header DATA() landing on a func row was not "
+                        "detected")
+    if header_data_problems({"DATA": {0x2000: ["src/hero.cpp:9"]}}, {}):
+        failures.append("a src DATA() site was wrongly judged by this gate")
+    if header_data_problems({"DATA": {0x3000: ["include/a.h:1",
+                                               "src/a.cpp:2"]}}, {}):
+        failures.append("a site with a src twin was wrongly judged here")
+    return failures
 
 
 def _write_compgen(src_claims) -> None:
@@ -104,6 +179,7 @@ def main(argv=None) -> int:
     src_claims = fragments.all_claims()
     _write_compgen(src_claims)
     seen_names = set()
+    pooled: dict[int, str] = {}     # rva -> unit that first claimed it
     for c in src_claims:
         name = c.meta["raw"]
         if name in seen_names:
@@ -111,6 +187,10 @@ def main(argv=None) -> int:
         seen_names.add(name)
         if c.channel in ("src-VA+ir", "src-VA+base"):
             name = c.name
+        if c.channel in POOLED_CHANNELS:
+            if c.rva in pooled:
+                continue        # one pooled datum, many claiming TUs
+            pooled[c.rva] = c.unit
         put(c.rva, name, c.unit, c.size if c.size is not None else "",
             c.kind, c.channel)
 
@@ -191,6 +271,21 @@ def main(argv=None) -> int:
         for p in problems[:10]:
             print(f"[model] {p}", file=sys.stderr)
         common.die(f"{len(problems)} duplicate-rva claims")
+
+    # the header-DATA half of the completeness oracle - the gate proves
+    # it can still fail before it judges the tree
+    broken = selftest()
+    if broken:
+        for b in broken:
+            print(f"[model] header-data SELFTEST BROKEN: {b}",
+                  file=sys.stderr)
+        common.die("the header-DATA gate cannot prove it detects its defect")
+    header_lost = header_data_problems(labels_source.sweep_sites(), rows)
+    for p in header_lost:
+        print(f"[model] {p}", file=sys.stderr)
+    if header_lost:
+        common.die(f"{len(header_lost)} header DATA() claim(s) reach no "
+                   f"inventory row")
     # global name uniqueness: label-grade names (declarator/working) take
     # an rva suffix on collision; a colliding PROVEN symbol is a defect
     from collections import Counter
