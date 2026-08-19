@@ -4573,6 +4573,39 @@ bool advManager::monsters_join(hero* current_hero, NewmapCell* cell,
 // gold) tail is formatted into a 300-byte local and appended, which is
 // what the 0x13c frame is for. Both forms carry the price as an
 // iResType1 GOLD picture on the dialog.
+//
+// Residual (99.9517%, 2026-08-19): TWO INSTRUCTIONS, and they are the
+// include-set canary, not a spelling. After the inlined `strcat`'s
+// `rep movsb` retail reloads `esi` then `edi` from their frame slots and
+// this compile reloads `edi` then `esi` - same slots, same registers, and
+// `vc6 diagnose` prices it exactly that way ("callee-saved role swap,
+// schedule aligned: edi->esi x1, esi->edi x1").
+//
+// THE BODY IS NOT AT FAULT AND NEITHER PARENT WAS. This row was 100.0000 in
+// lane/events-8 AND in the integration base that lane merged onto; only the
+// merged closure is short. The measurement is the documented probe - K
+// unused `struct { int a; };` definitions added to this TU, scored on the
+// real oracle:
+//   K=0  99.9517      K=3  100.0000
+//   K=1 100.0000      K=4  100.0000
+//   K=2 100.0000      K=5  100.0000
+// One more visible type definition restores it and the curve is FLAT above,
+// so events.obj's include closure now sits one type-definition below the
+// count retail's compiland had. That is C1XX handle numbering, not codegen
+// reachable from this function (initialize_game_data precedent: blank
+// lines, comments, typedefs, `extern` and forward declarations do not move
+// it - only real definitions do).
+//
+// NOTHING IS LANDED FOR IT, deliberately. The change a probe struct implies
+// is a fabricated type. The honest alternative - widening this TU's
+// ExtraInfoUnion view toward the full union retail's single MapCell.h gave
+// its events.obj - collides today: advmgr.h defines `type_cell_visited_info`
+// twice, once under HOMM3_EVENTS_VIEW and once under
+// HOMM3_ADVMGR_QUICKINFO_VIEW, so the two views cannot both be open.
+// Unifying them is the real repair and it belongs with whoever models the
+// remaining bitfield arms (the DC publishes set_pyramid, pyramid_is_guarded,
+// TreasureIsArtifact, GetSeaChestReward and more). The ratchet row is
+// accepted DOWN; hist stays at 100.0000.
 VA(0x004a7250, 0x36F)  // linkorder + advevent.txt 88..90 + AI_bribe_monsters, dc 0x96eec
 bool advManager::monsters_sell_out(hero* current_hero, NewmapCell* cell,
                                    type_point point, bool want_to_fight,
