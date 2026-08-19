@@ -45,6 +45,7 @@
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
+#define HOMM3_CMBTMGR_SETUP_VIEW
 #include "cmbtmgr.h"
 #define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
@@ -283,12 +284,88 @@ void combatManager::FreeArmies()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1178
+// The seed expression is byte-forced: retail builds `x*0x1aed3` with one
+// imul and `y*0x28fb9` out of five lea/shl/sub steps, so both multipliers
+// and the 0x13ea1 addend come straight from the encoding, not a guess.
+// The three fortification tests are `built & bitNumber[7|8|9]` in exactly
+// that order - fort first, castle last - which is only coherent because
+// this game's `built` mask holds ONE of the three at a time (a Citadel
+// replaces the Fort bit rather than adding to it); the same three-way
+// walk in check_wall_archery_penalty (0x424790) reads the same way.
+// The moat expression's two exclusions are the game's own: Tower has no
+// moat, and Stronghold gained one only in Shadow of Death, which is what
+// the f_1f698 >= 2 gate says.
 VA(0x004639f0, 0x270)  // anchor-callee, dc 0x5e464
 void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int iSeed, unsigned char is_surrounded)
 {
-    // @stub
+    gCombatSeed66d840 = iSeed;
+    SRand(x * 0x1aed3 + y * 0x28fb9 + 0x13ea1);
+    mapPoint = point;
+    combatCell = gpAdvManager->GetCell(point);
+    field_1402f = 1;
+    if (leftHero)
+        playerIds[0] = leftHero->owner;
+    else
+        playerIds[0] = -1;
+    heroes[0] = leftHero;
+    playerIds[1] = right_player;
+    armyGroups[0] = leftArmyGroup;
+    heroes[1] = rightHero;
+    armyGroups[1] = rightArmyGroup;
+    for (int side = 0; side < 2; side++) {
+        if (playerIds[side] >= 0) {
+            sideIsAI[side] = gpGame->IsHuman(playerIds[side]);
+            sideIsLocalHuman[side] = gpGame->IsLocalHuman(playerIds[side]);
+            field_54b2[side] =
+                gpGame->players[playerIds[side]].hasGivenArtifact(0x81);
+        } else {
+            sideIsAI[side] = 0;
+            sideIsLocalHuman[side] = 0;
+            field_54b2[side] = 0;
+        }
+        field_54b0[side] = 1;
+        field_54b4[side] = 0;
+        field_132a0[side] = 30000;
+    }
+    if (rightTown) {
+        if (rightTown->built & bitNumber[CASTLE_FORT_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_FORT;
+            field_53a9 = 0;
+            field_53a8 = 0;
+        } else if (rightTown->built & bitNumber[CASTLE_CITADEL_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_CITADEL;
+            field_53a8 = rightTown->type != TOWN_TOWER
+                         && (rightTown->type != TOWN_STRONGHOLD
+                             || gpGame->f_1f698 >= 2);
+            field_53a9 = rightTown->type == TOWN_FORTRESS;
+        } else if (rightTown->built & bitNumber[CASTLE_CASTLE_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_CASTLE;
+            field_53a8 = rightTown->type != TOWN_TOWER
+                         && (rightTown->type != TOWN_STRONGHOLD
+                             || gpGame->f_1f698 >= 2);
+            field_53a9 = rightTown->type == TOWN_FORTRESS;
+        } else {
+            field_132f4 = COMBAT_FORTIFICATION_NONE;
+            field_53a9 = 0;
+            field_53a8 = 0;
+        }
+        drawbridgeState = DRAWBRIDGE_UP;
+        defendingTown = rightTown;
+    } else {
+        field_132f4 = COMBAT_FORTIFICATION_NONE;
+        field_53a9 = 0;
+        field_53a8 = 0;
+        defendingTown = 0;
+    }
+    DetermineCombatTerrain();
+    isSurrounded = is_surrounded;
+    backgroundName = GetBackgroundName();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1348
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690

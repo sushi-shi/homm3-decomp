@@ -445,7 +445,11 @@ public:
     // while the byte below is set. Both names await a writer.
     int field_53c0;                   // +0x53c0
     unsigned char field_53c4;         // +0x53c4
-    char pad_53c5[0x1];
+    // "This combat was started by surrounding the defender": SetupCombat
+    // parks its own is_surrounded parameter here, as its second-to-last
+    // act, and that parameter's name is the DC SetupCombat prototype's.
+    // Sliced out of the old pad by that writer; no reader is decoded yet.
+    unsigned char isSurrounded;       // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
     unsigned char field_53c6;         // +0x53c6
@@ -492,15 +496,31 @@ public:
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
     // parameters ctor 0x435ec0). Name provisional.
+    // WRITER FOUND 2026-08-20 (SetupCombat 0x4639f0): the pair is stamped
+    // with `gpGame->IsHuman(playerIds[side])`, and with 0 when the side
+    // has no player id at all - so the latch reads "this side is HUMAN"
+    // and the provisional name above is inverted. Recorded rather than
+    // renamed: seventeen readers across ai.cpp, ai_tactical.cpp,
+    // combatcontrolsubwindow.cpp and this TU would move with it, and this
+    // lane touches none of them (the field_54b4 precedent).
     unsigned char sideIsAI[2];        // +0x54a4
-    char pad_54a6[0x2];
+    // Per-side "this side is played on THIS machine": SetupCombat stamps
+    // it with `gpGame->IsLocalHuman(playerIds[side])` in the same loop
+    // that fills sideIsAI, and clears it for a side with no player id.
+    // Sliced out of the old pad by that writer; no reader is decoded yet,
+    // so the name states only what the writer proves.
+    unsigned char sideIsLocalHuman[2]; // +0x54a6
     // The adventure-map player ids behind the two combat sides. LowerDoor's
     // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
     // each value and reads that player's +0xe4 quickCombat preference;
     // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
     // the selected id is not -1.
     int playerIds[2];                 // +0x54a8
-    char pad_54b0[0x2];
+    // Per-side latch SetupCombat raises to 1 for BOTH sides unconditionally,
+    // outside the player-id test that guards the three bytes around it.
+    // Sliced out of the old pad by that writer; no reader is decoded yet
+    // and no roster row reaches the pair, so the name is an ordinal.
+    unsigned char field_54b0[2];      // +0x54b0
     // Passed as the final, byte-wide SetMorale input for every stack
     // controlled by the indexed side. Its meaning and public name are
     // not attested by the available symbols.
@@ -520,7 +540,32 @@ public:
     // post-combat raised stack into the selected group.
     armyGroup* armyGroups[2];         // +0x54c4
     army armies[2][21];               // +0x54cc
+    // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
+    // sides, in the same loop as playerIds and field_54b0 - retail reaches
+    // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
+    // and the pair. The magnitude reads like a millisecond budget but no
+    // reader is decoded, so the name stays an address ordinal.
+    // GATED, AND THAT IS A MEASUREMENT - the fourth firing of the
+    // include-set class from this header, and the first one that says
+    // WHICH edit shape fires it. Bisected 2026-08-20 against command.obj's
+    // GetCommand (92.5714 is that canary's ceiling), one edit at a time:
+    //   * slicing one pad declarator into three (this row), or adding any
+    //     further member declarator to the class          -> 92.5357;
+    //   * RETYPING a pad in place at the SAME declarator count,
+    //     `char pad_54a6[2]` -> `unsigned char sideIsLocalHuman[2]`,
+    //                                                     -> 92.5714,
+    //     unmoved. Three such renames landed un-gated and cost nothing.
+    // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
+    // from - not the member's name, its type, or the bytes it covers.
+    // Both arms below describe the same bytes and only the count differs,
+    // so no TU sees a different layout.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    char pad_1329c[0x4];
+    int field_132a0[2];               // +0x132a0
+    char pad_132a8[0x8];
+#else
     char pad_1329c[0x14];
+#endif
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -586,7 +631,17 @@ public:
     char pad_132f8[0x4];
     TCombatWindow* combatWindow;      // +0x132fc
     int field_13300;                  // +0x13300
+    // The battlefield background image name. SetupCombat caches
+    // GetBackgroundName()'s answer here as its very last act; the pointer
+    // is into the .rdata name tables that method selects from, so it is
+    // never owned or freed. Gated for the declarator-count reason spelled
+    // out at field_132a0; both arms are the same bytes.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    char pad_13304[0x160];
+    const char* backgroundName;       // +0x13464
+#else
     char pad_13304[0x164];
+#endif
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -679,6 +734,16 @@ public:
     unsigned char field_1402c;         // +0x1402c
     unsigned char field_1402d;         // +0x1402d
     unsigned char field_1402e;         // +0x1402e
+    // Raised to 1 by SetupCombat before it has touched anything else about
+    // the two sides, and by nothing else in the located span. Reads like a
+    // "combat is being set up / is live" latch, but no reader is decoded
+    // yet, so the name is an address ordinal. It is the last byte of the
+    // class either way - adding it does not move sizeof, which stays
+    // 0x14030 under the class's 4-byte alignment. Gated for the
+    // declarator-count reason spelled out at field_132a0.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    unsigned char field_1402f;         // +0x1402f
+#endif
 
     combatManager();
 
@@ -1266,6 +1331,28 @@ public:
     // from the sibling by the parameter it actually takes.
     void mark_hex_area_effect(long hex, long shape, long mastery,
                               std::vector<army*>& targets);      // 0x5a46f0
+    // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
+    // already had an out-of-class definition in cmbtmgr.cpp with only a
+    // CODEVIEW comment to declare it, which VC6 accepts on the definition
+    // line and then punishes with "undeclared identifier" on the members
+    // the body touches - so the bodies could not be written at all until
+    // these landed. Appended at the END of the class on purpose: C1XX
+    // numbers member handles in declaration order (docs/vc6/handle-order.md)
+    // and this header has already fired the include-set wall three times,
+    // so new rows go where they renumber nothing that is already exact.
+    // Behind a view because a bare member declarator on this header is
+    // that wall's own trigger shape; cmbtmgr.cpp is the only consumer.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
+    // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
+    // trailing _N is spelled `unsigned char` here, as everywhere else in
+    // this header, and retail reads it as one byte either way.
+    void SetupCombat(type_point point, hero* leftHero,
+                     armyGroup* leftArmyGroup, long right_player,
+                     town* rightTown, hero* rightHero,
+                     armyGroup* rightArmyGroup, int x, int y, int iSeed,
+                     unsigned char is_surrounded);
+#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
@@ -1281,6 +1368,26 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
+// parameter here and NOTHING in the image ever reads it back - the reloc
+// sweep over the whole image finds exactly one reference to the address,
+// that store. Declared extern rather than defined: an unclaimed data
+// extern still pairs (the DoDialog precedent) and a definition would add
+// a word to a .data section that already reads 100%. The name states what
+// its only writer calls the value.
+//
+// GATED, AND THAT IS A MEASUREMENT that CORRECTS THE DOCTRINE. The match
+// skill's include-set note records "`extern int` ... do NOT move it",
+// from the 200-extern probe that cleared the wrong hypothesis. On THIS
+// header that is false: adding this one file-scope `extern int`, with
+// every other edit of the lane held gated, costs command.obj's GetCommand
+// 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
+// bulk probe of externs added together evidently does not reproduce what
+// a single extern added to a header this widely included does.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+extern int gCombatSeed66d840;
+#endif
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
