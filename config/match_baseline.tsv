@@ -39,6 +39,7 @@ advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?ComputeAdvNetControl@@YIXXZ	100.0000	100.0000	100.0000	0x1a660
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
+advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00
@@ -115,7 +116,6 @@ advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
-advmgr	advManager_DemobilizeCurrHero	0.0000	0.0000	0.0000	0x17680
 advmgr	advManager_DoAdvCommand	0.0000	0.0000	0.0000	0x7b80
 advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10

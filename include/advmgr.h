@@ -1483,6 +1483,9 @@ public:
     // closure moves.
     static int get_like_modifier(class hero* current_hero,
                                  enum TCreatureType creature);
+    // cursor.obj's 0x47f7d0, the events-view declarator repeated for
+    // advmgr.cpp's own mobilization pair.
+    void StopCursor(unsigned char standEnd);
 #endif
 };
 

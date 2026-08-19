@@ -4439,12 +4439,58 @@ void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsi
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// Read by both mobilization draw gates before repainting the adventure
+// screen; role (an "adventure repaint suppressed" latch) is what the bytes
+// prove. No located writer yet - nearest consumer holds the declaration.
+DATA(0x006aac3c) extern int gUnnamed6aac3c;
+
 // E:\gamedcs\advmgr.cpp:9434
 VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520
-void advManager::DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char draw_changes)
+void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
+                                    unsigned char draw_changes)
 {
-    // @stub
+    if (!waitingPlayer && gpCurrentPlayer
+        && gpCurrentPlayer->currHeroId != -1 && inDialog) {
+        inDialog = 0;
+        hero* currHero;
+        if (gpCurrentPlayer->currHeroId != -1)
+            currHero = &gpGame->heroes[gpCurrentPlayer->currHeroId];
+        else
+            currHero = 0;
+        StopCursor(1);
+        currHero->obscure_cell(HERO, currHero->id);
+
+        type_point point;
+        point = type_point(currHero->x, currHero->y, currHero->z);
+        GetCell(point);
+
+        currHero->facing = cursorDirection;
+        drawCursor = 0;
+
+        if (!gUnnamed6aac3c && draw_changes && gCompleteDrawEnabled) {
+            CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+            gpWindowManager->UpdateScreen(0, 8, 608, 544);
+
+            unsigned long now = GameTime::Get();
+            if (static_cast<long>(
+                    now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                    >= 0
+                && !animCtrPaused) {
+                animFrame++;
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += _cpp_max(
+                    static_cast<long>(
+                        now
+                        - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
+                    180L);
+            }
+            Process1WindowsMessage();
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9476
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
