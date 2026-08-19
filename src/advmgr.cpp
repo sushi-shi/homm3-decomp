@@ -3429,27 +3429,37 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                         strcat(gText, tempText);                          \
                     }                                                     \
                     if (currHero) {                                       \
-                        sprintf(tempText, visitFormat,                    \
-                            (condition)                                   \
-                                ? gpGeneralText->GetText(                \
-                                      GENERAL_TEXT_VISITED_OBJECT)       \
-                                : gpGeneralText->GetText(                \
-                                      GENERAL_TEXT_UNVISITED_OBJECT));   \
+                        z = (condition);                                  \
+                        if (z)                                            \
+                            sprintf(tempText, visitFormat,                \
+                                    gpGeneralText->GetText(               \
+                                        GENERAL_TEXT_VISITED_OBJECT));    \
+                        else                                              \
+                            sprintf(tempText, visitFormat,                \
+                                    gpGeneralText->GetText(               \
+                                        GENERAL_TEXT_UNVISITED_OBJECT));  \
                         strcat(gText, tempText);                          \
                     }                                                     \
                 }                                                         \
                 break
 
+// The same visited/unvisited tail for objects with no info-flag row.
+// Retail does NOT use a ternary here: it emits two complete sprintf calls
+// and shares only the strcat tail, and it stores the tested flag into `z`
+// first rather than testing the field in place.
 #define SET_VISITED_QUICKINFO(objectType, condition)                     \
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
                 if (cell->is_trigger && currHero) {                       \
-                    sprintf(tempText, visitFormat,                        \
-                        (condition)                                       \
-                            ? gpGeneralText->GetText(                    \
-                                  GENERAL_TEXT_VISITED_OBJECT)           \
-                            : gpGeneralText->GetText(                    \
-                                  GENERAL_TEXT_UNVISITED_OBJECT));       \
+                    z = (condition);                                      \
+                    if (z)                                                \
+                        sprintf(tempText, visitFormat,                    \
+                                gpGeneralText->GetText(                   \
+                                    GENERAL_TEXT_VISITED_OBJECT));        \
+                    else                                                  \
+                        sprintf(tempText, visitFormat,                    \
+                                gpGeneralText->GetText(                   \
+                                    GENERAL_TEXT_UNVISITED_OBJECT));      \
                     strcat(gText, tempText);                              \
                 }                                                         \
                 break
