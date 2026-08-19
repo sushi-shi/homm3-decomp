@@ -210,6 +210,7 @@ public:
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
+    int loadMonsterList(TAbstractFile* infile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);

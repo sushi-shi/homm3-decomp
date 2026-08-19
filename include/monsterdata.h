@@ -31,6 +31,14 @@ public:
     // enum here would put a cast on every crossing.  ARTIFACT_NONE still
     // assigns.  The Dreamcast declarator's enum is preserved in the name.
     int Artifact;
+
+    // loadMonsterList's resize temp proves a header-inline constructor: the
+    // default argument `_Ty()` that Dinkumware's resize materializes stores
+    // -1 into Artifact right after the base string is tidied, and nothing in
+    // resize can be doing that.  readMonsterData's own temp shows the same
+    // single store, so the assignment it used to spell by hand is this
+    // constructor's and has been removed there.
+    MonsterData() { Artifact = ARTIFACT_NONE; }
 };
 SIZE(MonsterData, 0x30);
 

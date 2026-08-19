@@ -1245,8 +1245,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         return -1;
 
     if (hasCustomRecord) {
+        // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
-        tempMonster.Artifact = ARTIFACT_NONE;
         readMapString(infile, &tempMonster.Message);
 
         for (int i = 0; i < 7; ++i) {
@@ -1313,12 +1313,56 @@ int NewfullMap::saveMonsterList(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:2717
+// The list count is a SHORT here, not the dword every other list header
+// uses, and it is sign-extended into resize.  loadMonsterData is inlined
+// whole - retail keeps no out-of-line copy, the carve has no row between
+// this body and saveMonsterData - and it is the exact mirror of
+// saveMonsterData (0x501980): an unchecked string, seven checked resource
+// dwords, then the artifact byte.
+//
+// The artifact crossing is the asymmetric one.  Save narrows the int to a
+// byte, so ARTIFACT_NONE goes out as 0xff; the load reads one byte into a
+// dword local and masks it, which is why the field is re-widened through
+// `& 0xff` and then mapped back onto ARTIFACT_NONE rather than sign-
+// extended.  That final read's short-read gate is absent in retail.
 VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
-int NewfullMap::loadMonsterList(void* infile)
+static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
-    // @stub
+    loadString(infile, &thisMonster->Message);
+
+    for (int i = 0; i < 7; ++i) {
+        int value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisMonster->ResQty[i] = value;
+    }
+
+    int artifact;
+    infile->Read(&artifact, sizeof(unsigned char));
+    thisMonster->Artifact = artifact & 0xff;
+    if (thisMonster->Artifact == (ARTIFACT_NONE & 0xff))
+        thisMonster->Artifact = ARTIFACT_NONE;
+    return 0;
 }
+
+int NewfullMap::loadMonsterList(TAbstractFile* infile)
+{
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    CustomMonsterList.resize(count);
+    for (unsigned int i = 0; i < CustomMonsterList.size(); ++i) {
+        if (loadMonsterData(infile, &CustomMonsterList[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
 
