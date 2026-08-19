@@ -260,6 +260,82 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-20 — clang-IR extraction LANDED (lane/ir-extraction); the
+  2026-08-19 declination was wrong on both of its stated grounds.** That
+  entry declined the port because IR "would change names" and because
+  `verify_va_claims` "already owns" the completeness sweep. Measured, both
+  are false. Names: the IR channel binds 1396 function claims across 116
+  TUs and **every one is character-identical to the name the declarator
+  join already produced** — `build/gen/symbol_names.csv` comes out with 0
+  name changes, 0 rows added or removed, and identical unit/size/kind.
+  Completeness: `verify_va_claims` checks a VA site's uniqueness, census
+  reconciliation, universe class and file order, but never asks whether the
+  site reaches a fragment; the ported sweep finds **119 sites that reach no
+  fragment at all** (see the two findings below).
+
+  What the port buys, both defects reproduced first in a scratch tree:
+  * *Positional theft.* The declarator scan names a claim, then a lossy
+    demangle key (case-folded, `::`→`_`, template arguments dropped) matches
+    it against the base obj, falling back to EXACT-content-size pairing when
+    the group counts differ. A claim on `Widget::Value(int)` whose retail
+    size coincides with a HEADER-inline `Widget::Value()` bound to the
+    inline — `?Value@Widget@@QBEHXZ` in the label map, channel `src-VA+base`,
+    exit 0, no gate. 72 authority keys tree-wide carry more than one mangled
+    member and reach those paths. IR pairs the annotation with the symbol in
+    the compiler, so there is no key and no size heuristic to fool.
+  * *Stale artifact.* Change a claimed function's parameter type and do not
+    rebuild: `homm3 labels` reports "0 fragment(s) changed" and the label map
+    keeps answering with the old overload's mangling, a symbol the current
+    source can no longer produce. Now cl's obj only CONFIRMS the name clang
+    paired: a string the obj does not define is refused, reported, and the
+    claim keeps its raw declarator label rather than being handed to the
+    weaker key match against that same disputed object.
+
+  Cost, honestly: **no `core.msvc_names` equivalent was needed.** With `/Gr`
+  passed (without it 171 free functions mangle `@@YA` where cl writes
+  `@@YI`), clang's Microsoft mangler agreed with cl on 1396/1396 confirmable
+  claims, so the port VERIFIES against cl's spelling instead of deriving it
+  — and a future divergence surfaces as a loud unconfirmed claim, never as a
+  silently wrong name. The real cost is `build/gen/msvc-include`: a
+  generated lowercase symlink mirror of the 992 VC6 headers (they ship
+  UPPERCASE, so clang cannot open `<bitset>` on a case-sensitive
+  filesystem), with 7 of them carrying a conformance patch for a VC6-ism cl
+  accepts and clang rejects. Each patch is argued mangling-neutral in
+  `homm3.core.clang.PATCHES`, and the corpus-wide confirmation rate is that
+  argument's negative control, re-run on every extraction.
+
+  Residual, deliberately left on the declarator join and now COUNTED rather
+  than assumed sound: 166 rows — 98 `??_G` scalar-deleting-dtor claims (keyed
+  by owner class, no declarator involved), 9 hand-reviewed `#if 0
+  @carcass` claim-only stubs whose real body lives in a header or the STL
+  (mousemgr's `TCSLock`, textresource's `vector::erase`, hero's bitset/vector
+  COMDATs — each already carrying a written argument in the source), and
+  army.cpp's, the one manifest TU clang cannot parse (`_cpp_max` overload
+  resolution at army.cpp:1731). 116 of 117 manifest units parse clean.
+
+  Numbers: `homm3 build` exit 0 at 1421/1809 exact (78.6%), 71.90% fuzzy,
+  ratchet clean; `homm3 delink` exit 0 through model → synth PDB → vostok.
+  Extraction costs 7.3 s wall for the whole tree (116 clang probes, thread
+  pooled), and only on the `homm3 delink` path — `homm3 build` never runs it.
+
+- **2026-08-20 — FINDING, not fixed: 119 macro sites reach no fragment.**
+  Surfaced by the ported completeness sweep, three classes.
+  (1) **100 `DATA()` sites in `include/`** — extraction reads `src/*.c*`
+  only, so a header claim never becomes a row; they sit on `extern`
+  declarations, which `include/va.h` already forbids ("never on a header
+  extern"). (2) **1 `VA()` site in a header**: `include/game.h:722` claims
+  `SaveAbstractString` at 0x4bbb60, and that address carries the dense
+  working label `game_b9270_sub00_bbb60` in the label map instead. The IR
+  channel *finds* this one (it is the single claim clang names that cl's obj
+  does not define, because the header only declares it), which is how it was
+  confirmed. (3) **18 `DATA_COMPGEN`/`DATA_COMPGEN_GUARD` sites in `src/`**
+  that clang-format wrapped across lines — `scan_file` matches those macros
+  per LINE, so e.g. `src/advmgr.cpp:919` and `src/herodefs.cpp:78,133` are
+  dropped silently. gruntz already has the fix (balanced-paren, quote-aware
+  scanning; its docstring names this exact hazard). Not fixed here because
+  fixing it ADDS label-map rows, which is a separate change with its own
+  justification burden; this port holds at 0 label changes.
+
 - **2026-08-19 — the labeling monolith restructured into gruntz's modern
   `retail_labels/` + `model.py` shape (lane/gruntz-port), byte-identical.**
   Gruntz has evolved past the layout this plan describes (its 1411-line
@@ -283,7 +359,11 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   records (`symbol_names.csv` IS the binding file here; duplicate rva
   stays fatal), gruntz's derived-extent censuses (our functions census
   admits explicit sizes), and its completeness sweep (the
-  `verify_va_claims` build gate already owns that job). One quirk fixed
+  `verify_va_claims` build gate already owns that job).
+  **SUPERSEDED 2026-08-20 (see the head of this log): both declination
+  grounds were measured false - the IR channel changes 0 names, and
+  `verify_va_claims` never checks fragment coverage, which is how 119
+  uncovered macro sites went unnoticed. Both are now ported.** One quirk fixed
   in passing, behavior-equivalent by analysis: extraction-time join keys
   come from raw names rather than post-dedup suffix-stripped ones.
 

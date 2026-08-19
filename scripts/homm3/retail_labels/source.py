@@ -20,14 +20,32 @@ homm3.build.labels:
   DATA_COMPGEN(_GUARD) compiler-generated data pins, named
                       __h3cg$<unit>$...$<name>.
 
-THE JOIN (extraction's second, join-bearing concern - as in gruntz): a
-compiled unit's base obj carries the TRUE MSVC spellings, so uniquely
-joined claims adopt them (channel src-VA+base) and the delinked target
-pairs against the base by identical names. This is the interim P0.2
-binding; a clang-IR channel would land here, replacing the declarator
-join, never the model. The fragment keeps the RAW declarator name
-alongside the joined spelling because the model's scan-order dedup
-replays over raw names, exactly as the monolith did.
+THE NAME BINDING (extraction's second, join-bearing concern - as in
+gruntz). Two mechanisms, in strict precedence:
+
+  src-VA+ir    clang IR (homm3.core.clang). `@llvm.global.annotations`
+               pairs the VA() string DIRECTLY with the function's
+               MSVC-mangled symbol, so there is no positional join - an
+               inline header definition cannot steal a nearby address -
+               and no lossy demangle key, so two functions that normalize
+               to one spelling cannot swap names. The proposed name is
+               then CONFIRMED against cl's own base obj: the exact string
+               must be a defined symbol there. cl's object is therefore a
+               CONFIRMER, never an answerer - a stale artifact can no
+               longer supply a name the current source has stopped
+               producing; it can only fail to confirm, which is reported.
+
+  src-VA+base  the lexical declarator + base-obj key join, kept for the
+               claims IR structurally cannot reach: the `#if 0 //
+               @carcass` claim-only stubs whose real definition lives in
+               a header or in the STL (no compiler sees those bodies) and
+               any TU clang cannot parse. This is the mechanism the IR
+               channel exists to retire, so what it still binds is
+               counted and reported rather than assumed sound.
+
+The fragment keeps the RAW declarator name alongside the bound spelling
+because the model's scan-order dedup replays over raw names, exactly as
+the monolith did.
 
 Fragments (build/gen/claims/<unit>.tsv) are written atomically and
 content-idempotently; a stale fragment whose src file vanished is pruned
@@ -37,11 +55,12 @@ build (the `homm3 delink` chain does).
 
 from __future__ import annotations
 
+import os
 import re
 import struct
 import sys
 
-from homm3.core import common
+from homm3.core import clang, common
 from homm3.core.tsv import write as write_tsv
 from homm3.retail_labels.fragments import FRAGMENTS, HEADER, fragment_path
 
@@ -239,6 +258,71 @@ def scan_file(path, functions: set[int]) -> list[dict]:
     return rows
 
 
+# --- the IR channel ---------------------------------------------------
+# `@llvm.global.annotations` is an appending array of tuples whose first
+# two members are the annotated symbol and the annotation string; the
+# strings themselves are `@.str* = ... c"..."` constants above it.
+IR_STR_DEF_RE = re.compile(r'^(@[\w.$"]+)\s*=.*?\bc"((?:[^"\\]|\\.)*)"', re.M)
+IR_ANN_TUPLE_RE = re.compile(
+    r'\{\s*ptr\s+(@(?:"[^"]+"|[\w.$]+))\s*,\s*ptr\s+(@(?:"[^"]+"|[\w.$]+))\s*,')
+IR_VA_ANN_RE = re.compile(r"^va:(0x[0-9a-fA-F]+) size:(?:0x[0-9a-fA-F]+|\d+)$")
+
+
+def _unescape_ir_cstr(text: str) -> str:
+    out = bytearray()
+    i = 0
+    while i < len(text):
+        if (text[i] == "\\" and len(text) - i >= 3
+                and all(c in "0123456789abcdefABCDEF"
+                        for c in text[i + 1:i + 3])):
+            out.append(int(text[i + 1:i + 3], 16))
+            i += 3
+        else:
+            out.append(ord(text[i]))
+            i += 1
+    if out and out[-1] == 0:
+        out.pop()
+    return out.decode("utf-8", "replace")
+
+
+def _ir_symbol_name(ref: str) -> str:
+    """`@"?Value@Widget@@QBEHH@Z"` / `@_foo` -> the bare symbol. A `\\01`
+    prefix means clang already wrote the final object name."""
+    ref = ref[1:]
+    if ref.startswith('"') and ref.endswith('"'):
+        ref = ref[1:-1]
+    return ref[3:] if ref.startswith("\\01") else ref
+
+
+def ir_va_names(ir: str) -> dict:
+    """{rva: mangled name} from the TU's IR - each pair produced by the
+    compiler itself, never by a scan of the text around the macro."""
+    strings = {m.group(1): _unescape_ir_cstr(m.group(2))
+               for m in IR_STR_DEF_RE.finditer(ir)}
+    out = {}
+    for line in ir.splitlines():
+        if "@llvm.global.annotations" not in line:
+            continue
+        for sym_ref, str_ref in IR_ANN_TUPLE_RE.findall(line):
+            annotation = strings.get(str_ref)
+            if annotation is None:
+                continue
+            m = IR_VA_ANN_RE.match(annotation)
+            if m:
+                rva = int(m.group(1), 16) - common.IMAGE_BASE
+                out[rva] = _ir_symbol_name(sym_ref)
+    return out
+
+
+def unit_ir_names(path) -> dict | None:
+    """The unit's IR name map, or None when clang could not read the TU
+    (no toolchain, or a source construct cl accepts and clang does not).
+    None is always reported by the caller - a silent empty map would look
+    exactly like a TU with no claims."""
+    ir = clang.emit_ir(path)
+    return None if ir is None else ir_va_names(ir)
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -338,19 +422,104 @@ def _base_authority_names(unit: str) -> dict:
     return groups
 
 
-def join_unit(unit: str, rows: list[dict]) -> None:
+def ir_bind(unit: str, rows: list[dict], ir_names: dict,
+            problems: list[str]) -> set:
+    """Bind VA() claims to the mangled names clang paired them with, in
+    place; returns the mangled names taken (which the lexical join must
+    then leave alone).
+
+    cl's own obj CONFIRMS: the exact string clang proposed must be a
+    defined symbol there. Confirmation is what makes the mirror and the
+    two compilers' manglers self-checking - and it is one-directional, so
+    a stale obj can only fail to confirm, never answer with a name the
+    source has stopped producing."""
+    content = {name: size
+               for group in _base_authority_names(unit).values()
+               for name, size in group}
+    taken = set()
+    for row in rows:
+        if row["channel"] != "src-VA":
+            continue
+        mangled = ir_names.get(row["rva"])
+        if mangled is None:
+            continue          # not compiled here (a `#if 0` carcass stub)
+        if content and mangled not in content:
+            # The obj contradicts the compiler's own pairing, so it is the
+            # LAST thing that may name this claim: handing the row to the
+            # lexical key join would let that same disputed object answer
+            # by a weaker match. The claim keeps its raw declarator label
+            # and the disagreement is stated.
+            row["ir_unconfirmed"] = True
+            problems.append(
+                f"{unit}: VA(0x{row['rva'] + common.IMAGE_BASE:08x}) - clang "
+                f"names it {mangled!r}, which {unit}.obj does not define; "
+                f"the object may be stale, or the two manglers disagree. "
+                f"Claim left UNJOINED on its raw declarator label.")
+            continue
+        row["joined"] = mangled
+        row["channel"] = "src-VA+ir"
+        taken.add(mangled)
+        _report_size_mismatch(unit, row, mangled, content, problems)
+    return taken
+
+
+#: A claim whose retail extent dwarfs the compiled body of the symbol the
+#: annotation actually landed on. Measured spread over the 1396 bound
+#: claims: 1240 are size-EQUAL (the byte-exact ones) and the widest
+#: legitimate gap is 2.2x (`game::Save`, a reconstruction still short of
+#: retail). 4x is therefore comfortably outside the real distribution and
+#: far below a mis-binding: the mapcell incident of 2026-08-20 put a
+#: 0x1e3-byte claim on a small local helper, ~10x.
+SIZE_MISMATCH_RATIO = 4
+
+
+def _report_size_mismatch(unit, row, mangled, content, problems) -> None:
+    """The cross-check the IR channel makes possible at all.
+
+    Knowing WHICH symbol the annotation landed on lets us ask cl how big
+    that symbol's body is. It catches the one mis-binding IR cannot
+    prevent: a definition written BETWEEN the VA() line and the declarator
+    it was meant to annotate. A leading `__attribute__` binds to the next
+    declaration, so clang attaches the annotation to the intervening
+    definition exactly as the lexical follower scan does - the source
+    genuinely says the helper is annotated, and no reader can know
+    otherwise. The retail extent can: a claim sized for a real function
+    does not fit a helper."""
+    compiled = content.get(mangled)
+    if not compiled or not isinstance(row["size"], int):
+        return
+    if row["size"] < compiled * SIZE_MISMATCH_RATIO:
+        return
+    problems.append(
+        f"{unit}: VA(0x{row['rva'] + common.IMAGE_BASE:08x}) claims "
+        f"0x{row['size']:x} retail bytes but the symbol it annotates, "
+        f"{mangled!r}, compiles to only 0x{compiled:x} - "
+        f"{row['size'] / compiled:.0f}x. Check for a definition written "
+        f"between the VA() line and its intended declarator (the "
+        f"annotation binds to whatever declaration FOLLOWS it).")
+
+
+def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
     """The base-obj name-authority join, in place: a compiled unit's public
     symbols carry the TRUE MSVC spellings; uniquely-joined claims adopt
     them (channel src-VA+base). Keys are built from RAW names - equivalent
     to the monolith's post-dedup key stripping, since a `_<rva>` suffix
-    always stripped back to the raw spelling before keying."""
+    always stripped back to the raw spelling before keying.
+
+    Runs only over what the IR channel did not bind. `taken` names are
+    removed from the authority groups: a symbol clang already paired with
+    its own claim must not also be offered to a second, weaker key match."""
+    taken = taken or set()
     unit_rows = [r for r in rows
-                 if r["channel"] == "src-VA"
-                 or (r["channel"] == "src-VA_COMPGEN"
-                     and "$scalar_deleting_dtor$" in r["name"])]
+                 if not r.get("ir_unconfirmed")
+                 and (r["channel"] == "src-VA"
+                      or (r["channel"] == "src-VA_COMPGEN"
+                          and "$scalar_deleting_dtor$" in r["name"]))]
     if not unit_rows:
         return
-    authority = _base_authority_names(unit)
+    authority = {key: [(n, c) for n, c in group if n not in taken]
+                 for key, group in _base_authority_names(unit).items()}
+    authority = {key: group for key, group in authority.items() if group}
     if not authority:
         return
     dtor_rvas = {r["rva"] for r in rows if r.get("dtor")}
@@ -424,10 +593,29 @@ def src_files() -> list:
     return paths
 
 
-def run(only_units: list[str] | None = None) -> tuple[list[str], list[str]]:
-    """Extract fragments; returns (changed units, pruned fragments).
-    Fragment writes are content-idempotent so an unchanged TU never
-    dirties downstream freshness probes."""
+def _extract_one(path, functions: set, ir_names: dict | None,
+                 problems: list[str]) -> list[dict]:
+    """One unit's rows, IR-bound where clang reached the TU and lexically
+    joined for the rest."""
+    unit = path.stem
+    rows = scan_file(path, functions)
+    taken = set()
+    if ir_names is not None:
+        taken = ir_bind(unit, rows, ir_names, problems)
+    join_unit(unit, rows, taken)
+    return rows
+
+
+def run(only_units: list[str] | None = None,
+        jobs: int | None = None) -> tuple[list[str], list[str], list[str]]:
+    """Extract fragments; returns (changed units, pruned fragments,
+    problems). Fragment writes are content-idempotent so an unchanged TU
+    never dirties downstream freshness probes.
+
+    The clang probes are independent per TU and each costs about 0.4 s, so
+    they run in a thread pool; everything after them is per-unit local."""
+    from concurrent.futures import ThreadPoolExecutor
+
     paths = src_files()
     known = {p.stem for p in paths}
     if only_units is not None:
@@ -436,24 +624,95 @@ def run(only_units: list[str] | None = None) -> tuple[list[str], list[str]]:
                 raise SystemExit(f"[labels] unknown unit {name!r} - units "
                                  f"are src/ file stems, e.g. 'advmgr'")
     functions = {r["rva"] for r in _census_functions()}
-    changed, pruned = [], []
-    for path in paths:
-        unit = path.stem
-        if only_units is not None and unit not in only_units:
-            continue
-        rows = scan_file(path, functions)
-        join_unit(unit, rows)
-        banner = [f"# GENERATED claim fragment for unit {unit} - the macros "
-                  f"in src/{path.name} are the storage; do not edit."]
-        if write_tsv(fragment_path(unit), banner, HEADER,
+    todo = [p for p in paths
+            if only_units is None or p.stem in only_units]
+    changed, pruned, problems = [], [], []
+
+    if clang.clang_bin() is None:
+        problems.append("clang is not on PATH and $HOMM3_CLANG is unset - "
+                        "every claim falls back to the lexical declarator "
+                        "join; run inside `nix develop`")
+        ir_maps = [None] * len(todo)
+    else:
+        clang.mirror()          # once, before the pool shares it
+        workers = jobs or min(16, (os.cpu_count() or 4))
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            ir_maps = list(pool.map(unit_ir_names, todo))
+
+    no_ir = []
+    for path, ir_names in zip(todo, ir_maps):
+        if ir_names is None:
+            no_ir.append(path.stem)
+        rows = _extract_one(path, functions, ir_names, problems)
+        banner = [f"# GENERATED claim fragment for unit {path.stem} - the "
+                  f"macros in src/{path.name} are the storage; do not edit."]
+        if write_tsv(fragment_path(path.stem), banner, HEADER,
                      _fragment_rows(rows)):
-            changed.append(unit)
+            changed.append(path.stem)
+    if no_ir:
+        problems.append(
+            f"{len(no_ir)} TU(s) clang could not read, so their claims keep "
+            f"the lexical declarator join: {', '.join(sorted(no_ir))}")
     if only_units is None and FRAGMENTS.is_dir():
         for stale in sorted(FRAGMENTS.glob("*.tsv")):
             if stale.stem not in known:
                 stale.unlink()
                 pruned.append(stale.stem)
-    return changed, pruned
+    return changed, pruned, problems
+
+
+MACRO_SITE_RE = re.compile(
+    r"\b(VA_COMPGEN|DATA_COMPGEN_GUARD|DATA_COMPGEN|VA|DATA)"
+    r"\s*\(\s*(0x[0-9a-fA-F]+)")
+
+
+def sweep_sites() -> dict:
+    """Tree-wide macro-site census over src/ + include/ (comments blanked,
+    va.h's own #defines excluded): {macro: {rva: ['file:line', ...]}}."""
+    out: dict = {}
+    for base in ("src", "include"):
+        root = common.HOMM3_DIR / base
+        if not root.is_dir():
+            continue
+        for path in sorted(root.rglob("*")):
+            if path.suffix not in (".c", ".cpp", ".cxx", ".h") \
+                    or path.name == "va.h":
+                continue
+            text = mask_lexical_noise(path.read_text(errors="replace"))
+            for m in MACRO_SITE_RE.finditer(text):
+                lineno = text.count("\n", 0, m.start()) + 1
+                rva = int(m.group(2), 16) - common.IMAGE_BASE
+                out.setdefault(m.group(1), {}).setdefault(rva, []).append(
+                    f"{path.relative_to(common.HOMM3_DIR)}:{lineno}")
+    return out
+
+
+def check_completeness() -> list[str]:
+    """The oracle OVER extraction: every macro site in the tree is either
+    carried by a fragment or named here as lost.
+
+    The lexical scan reads src/*.c* only, so a claim written in a HEADER
+    reaches no fragment at all and its address silently keeps a dense
+    working label - the failure class gruntz's own sweep exists to catch,
+    and the one this tree still has (include/game.h). Reported, not fatal:
+    the fix is a source edit that moves the claim onto a definition."""
+    from homm3.retail_labels.fragments import all_claims
+    sites = sweep_sites()
+    have: dict = {}
+    for claim in all_claims():
+        have.setdefault(claim.kind, set()).add(claim.rva)
+    problems = []
+    for macro, kind in (("VA", "func"), ("VA_COMPGEN", "func"),
+                        ("DATA", "data"), ("DATA_COMPGEN", "data"),
+                        ("DATA_COMPGEN_GUARD", "data")):
+        for rva, wheres in sorted(sites.get(macro, {}).items()):
+            if rva in have.get(kind, set()):
+                continue
+            problems.append(
+                f"{macro}(0x{rva + common.IMAGE_BASE:08x}) at {wheres[0]} is "
+                f"in NO fragment - extraction reads src/*.c* only, so this "
+                f"claim is a silently lost label")
+    return problems
 
 
 def _census_functions():
@@ -470,10 +729,17 @@ def main(argv=None) -> int:
                     help="extract one unit (repeatable)")
     ap.add_argument("--all", action="store_true",
                     help="extract every src/ unit")
+    ap.add_argument("-j", "--jobs", type=int, default=None,
+                    help="clang probe parallelism (default: cpu count)")
     a = ap.parse_args(argv)
     if not a.unit and not a.all:
         ap.error("pick --unit U or --all")
-    changed, pruned = run(a.unit if not a.all else None)
+    changed, pruned, problems = run(a.unit if not a.all else None, a.jobs)
+    for problem in problems:
+        print(f"[labels] {problem}", file=sys.stderr)
+    if a.unit is None:
+        for problem in check_completeness():
+            print(f"[labels] {problem}", file=sys.stderr)
     print(f"[labels] {len(changed)} fragment(s) changed"
           + (f", {len(pruned)} pruned" if pruned else "")
           + f" -> {FRAGMENTS.relative_to(common.HOMM3_DIR)}")
