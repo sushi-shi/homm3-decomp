@@ -2859,21 +2859,30 @@ unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 // RECURSIVE call to this same body (retail's `call 0x4e2a00` is a
 // self-reference, not a sibling).
 //
-// Residual (85.3%): two loop-shape items, both downstream of VC6's
-// induction choice. (1) The empty-slot SEARCH: retail tests `cmp
-// slot,0x13` at the TOP and jumps back to it, our CL proves the first
-// iteration runs, drops the entry test and rotates the compare to the
-// bottom, which duplicates the return-0 epilogue. (2) The 144-row
-// component sweep: retail bounds the loop on the BONUSES pointer
-// (`cmp ebx, gArtifactPrimarySkillBonusesEnd`), our CL re-derives the
-// bound as the akArtifactTraits offset (`cmp ebx, 0x1200`), so the two
-// disagree on which of the three parallel inductions survives - the
-// same class remove_artifact's note already records for its own pair of
-// four-byte loops. Tried and rejected, one compile each: the search as
-// an explicit goto loop (85.25, byte-flat - VC6 rotates it anyway);
-// routing both failure paths through one shared `reject:` label (80.31);
-// and the inner four-byte loop as an INDEXED `for` instead of the twin's
-// pointer do-while (75.08).
+// Residual (93.2%): the empty-slot SEARCH loop shape. Retail tests
+// `cmp slot,0x13` at the TOP and jumps back to it; our CL proves the
+// first iteration runs, drops the entry test and rotates the compare to
+// the bottom, which duplicates the return-0 epilogue (3 rets against
+// retail's 2).
+//
+// The 144-row component sweep is CLOSED (2026-08-20, 85.25 -> 93.21):
+// both it AND its inner four-byte loop had to become signed-INDEX loops
+// in the SAME edit. That is why the earlier note here recorded indexing
+// the inner loop alone as a REGRESSION (75.08) - with the outer walk
+// still a pointer compare, VC6 re-derived the outer bound as the
+// akArtifactTraits offset (`cmp ebx,0x1200`) instead of collapsing it
+// onto gArtifactPrimarySkillBonusesEnd. Index both and the bound lands
+// on the bonuses pointer exactly as retail has it, with the signed `jl`
+// that a pointer relational compare (unsigned, `jb`) can never produce.
+// See remove_artifact's note for the general rule.
+//
+// Tried and rejected since, one compile each: routing both failure paths
+// through one shared merged `return 0` block (93.21, byte-flat - VC6
+// re-threads it); `slot < 0` instead of `slot == -1` for the entry test,
+// chasing retail's `jge` at branch #1 (87.78, WORSE - the equality
+// spelling is right despite the branch-kind report). Earlier: the search
+// as an explicit goto loop (85.25 baseline, byte-flat - VC6 rotates it
+// anyway); both failure paths through a shared `reject:` label (80.31).
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
 {
@@ -2904,18 +2913,14 @@ slot_chosen:
         const std::bitset<144>& components =
             gCombinationArtifacts[combination_index].components;
         bool kept_slot = false;
-        int component = 0;
-        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
-        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
-            component++, bonuses += 4) {
+        // Signed-INDEX loops, remove_artifact's mirror image - see the
+        // note there: a pointer relational compare is unsigned (`jb`)
+        // and can never reproduce retail's `jl`.
+        for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
-                signed char* skill = stats;
-                const signed char* bonus = bonuses;
-                do {
-                    *skill += *bonus;
-                    skill++;
-                    bonus++;
-                } while (skill < stats + 4);
+                for (int skill = 0; skill < 4; skill++)
+                    stats[skill] +=
+                        gArtifactPrimarySkillBonuses[component][skill];
                 update_spells = update_spells
                     || akArtifactTraits[component].givesSpells;
                 int component_slot =
