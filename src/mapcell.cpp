@@ -1294,12 +1294,104 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:2300
+// One stream byte picks WHICH of the three scholar lanes is live, a second
+// carries its value, and -1 in the first means "roll it".  Everything else
+// this body does is derived.
+//
+// The three payload lanes are reset before the switch, and not to a single
+// sentinel: primary goes to 3 while secondary and spell go to -1, which as
+// signed 7- and 10-bit fields is every bit set.  VC6 folds all three writes
+// into one `and al,0xdf / or eax,0x7fffd8`, and that pair of constants is
+// what pins the lane boundaries.
+//
+// The random arms differ by lane.  A primary skill is a flat Random(0, 3),
+// but a secondary skill or a spell is drawn from a CANDIDATE LIST built on
+// the spot - every skill the scenario has not disabled, or every spell that
+// both belongs to a school and is not disabled - and then indexed by one
+// Random over the list's length.  That list is a std::vector<int> built
+// with push_back, which is why this body carries an EH frame and a vector
+// teardown on both arms.
+//
+// Residual (95.6955%): every read, every lane write, both candidate loops
+// and all eleven blocks are retail's - the whole divergence is that retail
+// keeps `infile` live in EDI for the length of the body, rematerializing it
+// (`mov edi,[ebp+8]`) after each vector teardown, where this compile lets it
+// die and re-reads the parameter slot for the final Read. Everything else in
+// the diff follows from that one register being occupied: retail spells the
+// switch normalization `sub ecx,0` with an immediate because EDI is busy,
+// this compile materializes the zero in EDI instead. why-reg v2 reports the
+// bindings agreeing at every first definition (infile->EDI on both sides),
+// so the split is past the B1 minimum slice; the B6 decl-order knob the
+// diagnoser proposes was measured - hoisting the padding buffer's
+// declaration to the top - and moved nothing (95.6955 either way).
 VA(0x00500b30, 0x2AE)  // order-map: calls Random 0x50b230 (DC parallel), only read-slot row between readEventData and readMineData; readSeerData has no retail row (quest-guard rewrite); EH-bearing, dc 0xefbb8
-int NewfullMap::readScholarData(void* infile, CObject* scholarObject)
+int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 {
-    // @stub
+    signed char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    unsigned char isRandom = 0;
+    if (value == -1) {
+        scholarObject->scholar_info.award = Random(0, 2);
+        isRandom = 1;
+    } else {
+        scholarObject->scholar_info.award = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    scholarObject->scholar_info.primary = 3;
+    scholarObject->scholar_info.secondary = -1;
+    scholarObject->scholar_info.spell = -1;
+
+    switch (scholarObject->scholar_info.award) {
+    case const_scholar_primary_skill:
+        if (isRandom)
+            scholarObject->scholar_info.primary = Random(0, 3);
+        else
+            scholarObject->scholar_info.primary = value;
+        break;
+
+    case const_scholar_secondary_skill:
+        if (isRandom) {
+            std::vector<int> candidates;
+            for (int skill = 0; skill < 28; ++skill) {
+                if (!gpGame->field_4e658[skill])
+                    candidates.push_back(skill);
+            }
+            scholarObject->scholar_info.secondary =
+                candidates[Random(0, candidates.size() - 1)];
+        } else {
+            scholarObject->scholar_info.secondary = value;
+        }
+        break;
+
+    case const_scholar_spell:
+        if (isRandom) {
+            std::vector<int> candidates;
+            for (int spell = 0; spell < 70; ++spell) {
+                if (akSpellTraits[spell].schoolBits
+                    && !gpGame->spellDisabled[spell])
+                    candidates.push_back(spell);
+            }
+            scholarObject->scholar_info.spell =
+                candidates[Random(0, candidates.size() - 1)];
+        } else {
+            scholarObject->scholar_info.spell = value;
+        }
+        break;
+    }
+
+    unsigned char padding[6];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2383
 DC_ONLY(0xefe28, 0x1C2)

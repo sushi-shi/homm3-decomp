@@ -158,7 +158,18 @@ int __fastcall Random(int minimum, int maximum);
 
 class CObject {
 public:
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // readScholarData reaches the scholar lanes of this dword directly -
+    // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
+    // which no mask spelling over the plain dword produces. Only that one
+    // arm is carried here; the other five typed views stay events-only.
+    union {
+        unsigned long extraInfo;
+        ScholarInfo scholar_info;
+    };
+#else
     unsigned long extraInfo;
+#endif
     unsigned char x;
     unsigned char y;
     unsigned char z;
