@@ -537,6 +537,13 @@ public:
     // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
     // the arity-divergence note in hero.cpp).
     int HeroFn_004D9B30(int artifact);
+    // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
+    // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
+    // component's targetCombo, describes the ASSEMBLED artifact and asks
+    // general text 733 with the component's name formatted in. The DC
+    // row owning the slot is ViewArtifact (three parameters); ORDINAL
+    // PLACEHOLDER name, arity settled from the bytes.
+    int HeroFn_004D9CC0(int artifact);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
