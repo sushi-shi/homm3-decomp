@@ -928,12 +928,38 @@ void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1632
-VA(0x004d9a00, 0x128)  // dc-bracket forced, dc 0xcc540
-void hero::UpdateArmies()
+// ARITY SETTLED FROM THE BYTES (2026-08-20): `ret 8`, ECX never read,
+// and the first stack argument is a type_artifact RECORD - ECX is set
+// from it for the get_description call and its +4 dword becomes the
+// dialog's resource extra. So the DC UpdateArmies prototype does not
+// describe this body either; the name is an ORDINAL PLACEHOLDER.
+// The `neg / sbb / and 3 / inc` chain is the quick-view flag turned into
+// the same dialog-type pair HeroScreenUpdate uses (4 quick, 1 normal),
+// and the two arms carry SEPARATE string locals - retail homes them at
+// [ebp-0x1c] and [ebp-0x2c], which is what fixes the duplicated
+// description call rather than one shared temporary.
+VA(0x004d9a00, 0x128)  // dc-bracket forced + settled arity, dc 0xcc540
+void hero::HeroFn_004D9A00(type_artifact* artifact, int isQuickView)
 {
-    // @stub
+    if (artifact->artifactId == ARTIFACT_SPELL_SCROLL) {
+        NormalDialog(artifact->get_description().c_str(),
+                     isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                 : PRIMARY_STAT_DIALOG_TYPE,
+                     -1, PRIMARY_STAT_DIALOG_Y, 9, artifact->extra,
+                     -1, 0, -1, 0, -1, 0);
+    } else {
+        NormalDialog(artifact->get_description().c_str(),
+                     isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                 : PRIMARY_STAT_DIALOG_TYPE,
+                     -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0, -1, 0,
+                     -1, 0);
+    }
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

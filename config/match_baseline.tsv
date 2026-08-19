@@ -970,6 +970,7 @@ hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
 hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70
 hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0
+hero	?HeroFn_004D9A00@hero@@QAEXPAUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00
 hero	?HeroFn_004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30
 hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0
 hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80
@@ -1053,7 +1054,6 @@ hero	hero_GiveExperience	0.0000	0.0000	0.0000	0xe33b0
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004E2550	0.0000	0.0000	0.0000	0xe2550
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
-hero	hero_UpdateArmies	0.0000	0.0000	0.0000	0xd9a00
 hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
 hero	hero_get_morale_description	0.0000	0.0000	0.0000	0xdc320
 hero	hero_load	0.0000	0.0000	0.0000	0xd7a20

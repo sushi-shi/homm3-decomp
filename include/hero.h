@@ -544,6 +544,13 @@ public:
     // row owning the slot is ViewArtifact (three parameters); ORDINAL
     // PLACEHOLDER name, arity settled from the bytes.
     int HeroFn_004D9CC0(int artifact);
+    // 0x4d9a00, third member of the same arity-divergent block: `ret 8`,
+    // `this` unused, an artifact RECORD and the quick-view flag in. It
+    // pops the artifact's own description, adding the spell icon
+    // (resource type 9, extra = the scroll's spell) only for a spell
+    // scroll. The DC row owning the slot is UpdateArmies and takes one
+    // parameter; ORDINAL PLACEHOLDER name, arity settled from the bytes.
+    void HeroFn_004D9A00(type_artifact* artifact, int isQuickView);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
