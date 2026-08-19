@@ -94,6 +94,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
 #include "quickinfowindow.h"
+#include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_ADVMGR_OBJ_DECLS
@@ -5487,12 +5488,76 @@ void advManager::DoAdvMenu()
     // @stub
 }
 
+#endif  // @carcass
+
+// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
+// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
+// consumer declares.
+DATA(0x006976d8) extern int gUnnamed6976d8;
+
+// This TU's own free saver (advmgr.cpp:9693, retail 0x418160), defined
+// further down; forward-declared for the option dispatch above it.
+unsigned char SaveGame(unsigned char bCampaignWinMode);
+
 // E:\gamedcs\advmgr.cpp:11362
 VA(0x0041ac00, 0x1AC)  // anchor-callee, dc 0x1e5e8
 unsigned char advManager::DoSystemOptions()
 {
-    // @stub
+    int result = -1;
+    TrimLoopingSounds(4);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+
+    unsigned char bSaveMobile = inDialog;
+    int walkSpeed = gUnnamed698758.walkSpeed;
+    DemobilizeCurrHero(0, 1);
+
+    {
+        TSystemOptionsWindow system_options_window;
+        system_options_window.DoModal();
+    }
+
+    switch (gpWindowManager->dialogReturn) {
+    case SYSOPT_QUIT:
+        result = gpWindowManager->dialogReturn;
+        NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            result = -1;
+        break;
+    case SYSOPT_COMMAND_102:
+    case SYSOPT_COMMAND_105:
+    case SYSOPT_COMMAND_108:
+        result = gpWindowManager->dialogReturn;
+        break;
+    case SYSOPT_SAVE_GAME:
+        SaveGame(0);
+        break;
+    }
+
+    if (bSaveMobile)
+        MobilizeCurrHero(0, 0, 1);
+
+    if (gUnnamed698758.walkSpeed != walkSpeed) {
+        int i;
+        for (i = 0; i < 10; i++)
+            heroSamples[i]->Dispose();
+        for (i = 0; i <= 10; i++) {
+            sprintf(gText, "horse%02d.wav", i);
+            heroSamples[i] = LoadSampleResource(gText);
+        }
+    }
+
+    if (bSaveMobile)
+        MobilizeCurrHero(0, 0, 1);
+
+    if (result != -1) {
+        gUnnamed6976d8 = result;
+        return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11444
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
