@@ -4840,19 +4840,164 @@ void advManager::ForceNewHover()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The per-speed scroll step. Dreamcast advmgr.obj publishes the static
+// (S_LDATA32 akScrollSpeedInc); retail's ScreenScroll indexes the same
+// three-int row.
+DATA(0x0063a66c) static const int akScrollSpeedInc[3] = { 1, 2, 3 };
+
+// Written on every scroll tick with the fresh GameTime::Get stamp; no
+// located reader yet. Nearest consumer holds the declaration (the
+// town.cpp gUnnamed69778c precedent); ownership stays open for the data
+// phase.
+DATA(0x00691674) extern unsigned long gUnnamed691674;
+
 // E:\gamedcs\advmgr.cpp:10624
+// Residual (97.82%): downstream scratch scheduling only - why-reg v2 finds
+// every first-definition binding agreeing (this=ESI, inc=EBX/EDI slots
+// identical) and the divergence past the B1 slice: retail folds the
+// gMapWidth-10 cap into its load register (add) where ours needs a fresh
+// lea, and retail re-extracts radarOrigin.y after the x compare where our
+// scheduler hoists both extractions. Tried and rejected: bound-first
+// comparison spelling (97.43). vc6 diagnose: register-homing (B13/B2).
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
 void advManager::ScreenScroll(int iDir, int bChangeMouse)
 {
-    // @stub
+    gUnnamed698758.windowScrollSpeed =
+        limit(0, gUnnamed698758.windowScrollSpeed, 2);
+
+    int x = radarOrigin.x;
+    int y = radarOrigin.y;
+    int inc = akScrollSpeedInc[gUnnamed698758.windowScrollSpeed];
+    gUnnamed691674 = GameTime::Get();
+
+    switch (iDir) {
+    case ADV_SCROLL_NORTH - ADV_SCROLL_POINTER:
+        y -= inc;
+        break;
+    case ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER:
+        x += inc;
+        y -= inc;
+        break;
+    case ADV_SCROLL_EAST - ADV_SCROLL_POINTER:
+        x += inc;
+        break;
+    case ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER:
+        x += inc;
+        y += inc;
+        break;
+    case ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER:
+        y += inc;
+        break;
+    case ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        y += inc;
+        break;
+    case ADV_SCROLL_WEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        break;
+    case ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER:
+        x -= inc;
+        y -= inc;
+        break;
+    }
+
+    if (bChangeMouse)
+        gpMouseManager->SetPointer(iDir + ADV_SCROLL_POINTER,
+                                   mouseManager::ADVENTURE_SET);
+
+    if (x < -9)
+        x = -9;
+    if (x > gMapWidth - 10)
+        x = gMapWidth - 10;
+    if (y < -8)
+        y = -8;
+    if (y > gMapHeight - 9)
+        y = gMapHeight - 9;
+
+    if (x != radarOrigin.x || y != radarOrigin.y) {
+        DemobilizeCurrHero(0, 0);
+        radarOrigin.x = x;
+        radarOrigin.y = y;
+        UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        gpWindowManager->UpdateScreen(0, 8, 608, 544);
+
+        unsigned long now = GameTime::Get();
+        if (static_cast<long>(
+                now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+            && !animCtrPaused) {
+            animFrame++;
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += _cpp_max(
+                static_cast<long>(
+                    now - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]),
+                180L);
+        }
+        Process1WindowsMessage();
+    }
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:10696
+// The DC carries MouseInScrollZone (dc 0x1ccf8) out of line; retail has no
+// body for it anywhere in the bracket, so the zone decision lives here.
 VA(0x00419820, 0x169)  // anchor-callee, dc 0x1cb08
 void advManager::CheckScreenScroll()
 {
-    // @stub
+    int x;
+    int y;
+    gpMouseManager->MouseCoords(&x, &y);
+
+    int iDir;
+    if (x < 0 || x >= WINDOW_SCREEN_WIDTH || y < 0
+        || y >= WINDOW_SCREEN_HEIGHT) {
+        gUnnamed691674 = GameTime::Get();
+        return;
+    }
+    if (x < 16) {
+        if (y < 16)
+            iDir = ADV_SCROLL_NORTHWEST - ADV_SCROLL_POINTER;
+        else
+            iDir = y <= WINDOW_SCREEN_HEIGHT - 16
+                       ? ADV_SCROLL_WEST - ADV_SCROLL_POINTER
+                       : ADV_SCROLL_SOUTHWEST - ADV_SCROLL_POINTER;
+    } else if (x > WINDOW_SCREEN_WIDTH - 16) {
+        if (y < 16)
+            iDir = ADV_SCROLL_NORTHEAST - ADV_SCROLL_POINTER;
+        else
+            iDir = y > WINDOW_SCREEN_HEIGHT - 16
+                       ? ADV_SCROLL_SOUTHEAST - ADV_SCROLL_POINTER
+                       : ADV_SCROLL_EAST - ADV_SCROLL_POINTER;
+    } else if (y < 16) {
+        iDir = ADV_SCROLL_NORTH - ADV_SCROLL_POINTER;
+    } else if (y > WINDOW_SCREEN_HEIGHT - 16) {
+        iDir = ADV_SCROLL_SOUTH - ADV_SCROLL_POINTER;
+    } else {
+        gUnnamed691674 = GameTime::Get();
+        return;
+    }
+
+    unsigned long now = GameTime::Get();
+    if (now - gUnnamed691674 < 70)
+        return;
+    gUnnamed691674 += 70;
+    if (now - gUnnamed691674 >= 70)
+        gUnnamed691674 = now - 70;
+
+    int origX = radarOrigin.x;
+    int origY = radarOrigin.y;
+    ScreenScroll(iDir, 1);
+    if (gpMouseManager->field_50 >= ADV_SCROLL_POINTER
+        && gpMouseManager->field_50 <= ADV_SCROLL_NORTHWEST
+        && origX == radarOrigin.x && origY == radarOrigin.y)
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10756
 DC_ONLY(0x1ccf8, 0x6E)
