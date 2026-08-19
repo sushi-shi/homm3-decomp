@@ -15,19 +15,21 @@ from __future__ import annotations
 
 import json
 import struct
-import tomllib
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = next((p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()),
             SCRIPT_DIR)
 
+from homm3 import manifest as units_manifest
 from homm3.build import ninja_syntax
 
 
 def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
-    path = ROOT / "config/units.toml"
-    manifest = tomllib.loads(path.read_text())
+    """Parse via homm3.manifest, then apply the manifest GATES (this module
+    owns them: required keys, duplicate units, known flag profiles, existing
+    sources) before any graph is emitted."""
+    manifest = units_manifest.load(ROOT / "config/units.toml")
     build = manifest.get("build", {})
     profiles = manifest.get("flags", {})
     units = manifest.get("unit", [])
