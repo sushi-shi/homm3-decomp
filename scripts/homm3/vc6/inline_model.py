@@ -49,6 +49,74 @@ def _called(text: str) -> Counter:
     return out
 
 
+# THE NAME ARTIFACT THIS PAIRING EXISTS FOR (2026-08-19, measured: 77 of the
+# 135 plateaus that reported inline divergence were this and nothing else).
+# The multisets above are keyed by SYMBOL NAME, and the two sides do not name
+# the same function the same way. Retail's side is the delinked target, whose
+# callee names come from the synth PDB: a callee we have not claimed carries a
+# working label (`sub_f6570`, `game_a7250_sub00_127f60`) and a CRT callee
+# carries its runtime-map label (`exe_new` for `??2@YAPAXI@Z`). Our base side
+# emits the real mangled symbol. Compared by name, ONE call then books twice -
+# an under-inline on our side and an over-inline on retail's - and because
+# `_route` puts the inliner upstream of everything, the function's true
+# register or control-flow diagnosis never gets printed. monsters_sell_out is
+# the worked example: 8 under / 8 over, 47 calls against 47, and the real
+# residual an edi<->esi role swap.
+#
+# The rule below is deliberately conservative. A name is unresolvable only if
+# our side never emits it AT ALL; a name both sides emit is resolvable, so a
+# count difference on it stays a real divergence. Only min(base-only,
+# ref-only-synth) calls pair off, so a genuine surplus on either side still
+# reports.
+# The test is SYNTACTIC, not a provenance lookup, because the synth-PDB
+# provenance classes do not separate the two cases: `runtime-map` covers both
+# `?_Tidy@?$basic_string@...` (a real mangled name, comparable) and `exe_new`
+# (a label), and `src-VA` covers flat carcass names like `hero_load` for
+# functions whose real declarator our side calls `?load@hero@@QAEHPAV...`.
+# What actually separates them is that MSVC can only ever emit a symbol
+# starting with `?` (C++), `_` (C / compiler-generated) or `@` (fastcall).
+# A callee whose retail-side name begins with a letter is therefore a label
+# the compiled side cannot produce, whatever the PDB calls it.
+_EMITTABLE = re.compile(r"^[?_@]")
+
+
+def _unresolvable(sym: str) -> bool:
+    return not _EMITTABLE.match(sym)
+
+
+def divergence(base_calls: Counter, ref_calls: Counter):
+    """Real inline divergence: (under, over, name_paired).
+
+    `name_paired` counts calls present on BOTH sides that could only be matched
+    by count, because retail names the callee with a label the compiled side
+    cannot emit - they are not divergence and are excluded from under/over.
+    """
+    keys = set(base_calls) | set(ref_calls)
+    shared = [s for s in keys if base_calls[s] and ref_calls[s]]
+    under = sum(max(0, base_calls[s] - ref_calls[s]) for s in shared)
+    over = sum(max(0, ref_calls[s] - base_calls[s]) for s in shared)
+    base_only = sum(base_calls[s] for s in keys if not ref_calls[s])
+    ref_only_label = sum(ref_calls[s] for s in keys
+                         if not base_calls[s] and _unresolvable(s))
+    ref_only_named = sum(ref_calls[s] for s in keys
+                         if not base_calls[s] and not _unresolvable(s))
+    paired = min(base_only, ref_only_label)
+    return (under + base_only - paired,
+            over + ref_only_label - paired + ref_only_named,
+            paired)
+
+
+def divergence_note(base_calls: Counter, ref_calls: Counter):
+    """'N under-inline, M over-inline' once unresolvable names pair off, else None."""
+    under, over, paired = divergence(base_calls, ref_calls)
+    if not under and not over:
+        return None
+    note = ", ".join([f"{under} under-inline"] * bool(under)
+                     + [f"{over} over-inline"] * bool(over))
+    return note + (f" ({paired} name-unresolvable pair(s) discounted)"
+                   if paired else "")
+
+
 def run_predict(args) -> int:
     src = Path(args.src).resolve()
     if not src.is_file():
@@ -73,15 +141,23 @@ def run_predict(args) -> int:
     ref_text, ref_label = reg_model._reference_side(args)
 
     base_calls, ref_calls = _called(base_text), _called(ref_text)
-    over, under = [], []          # over/under-inline relative to retail
+    over, under, unresolved = [], [], []
     for sym in set(base_calls) | set(ref_calls):
         b, r = base_calls[sym], ref_calls[sym]
         if b == r:
             continue
         short = reg_model._resolve_symbol.__doc__ and sym  # keep full name
-        (under if b > r else over).append((short, b, r))
+        if b and r:                       # both sides name it - real signal
+            (under if b > r else over).append((short, b, r))
+        elif b:                           # only we name it - pairing candidate
+            unresolved.append((short, b, r))
+        elif _unresolvable(sym):          # only retail, under a synth label
+            unresolved.append((short, b, r))
+        else:                             # only retail, under a real name
+            over.append((short, b, r))
 
-    diverged = over or under
+    real_under, real_over, paired = divergence(base_calls, ref_calls)
+    diverged = bool(real_under or real_over)
     rc = 1 if diverged else 0
 
     if getattr(args, "json", False):
@@ -91,6 +167,10 @@ def run_predict(args) -> int:
                             for s, b, r in over],
             "under_inline": [{"callee": s, "base_calls": b, "retail_calls": r}
                              for s, b, r in under],
+            "name_unresolved": [{"callee": s, "retail_calls": r}
+                                for s, b, r in unresolved],
+            "name_paired": paired,
+            "under": real_under, "over": real_over,
             "rc": rc}, indent=2))
         return rc
 
@@ -98,6 +178,13 @@ def run_predict(args) -> int:
     print(f"[reference] {ref_label}")
     print(f"[calls] base emits {sum(base_calls.values())} out-of-line call(s); "
           f"retail {sum(ref_calls.values())}")
+    if unresolved:
+        print(f"[names] {paired} call(s) pair off by COUNT and are NOT "
+              "divergence - retail names an unclaimed callee with a synth "
+              "label our side can never emit:")
+        for s, b, r in sorted(unresolved, key=lambda x: -(x[1] + x[2])):
+            side = f"base x{b}" if b else f"retail x{r}"
+            print(f"    {s[:70]}  {side}")
     if not diverged:
         print("[inline] call multisets AGREE - inline structure matches; any "
               "residual is register/scheduling (-> why-reg).")

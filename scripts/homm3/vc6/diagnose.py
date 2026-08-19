@@ -52,13 +52,7 @@ def _inline_divergence(unit: str, fn: str):
             _asm.objdump(tgt, reg_model._resolve_symbol(tgt, fn), 0))
     except (Exception, SystemExit):
         return None
-    keys = set(bc) | set(rc)
-    under = sum(max(0, bc[s] - rc[s]) for s in keys)
-    over = sum(max(0, rc[s] - bc[s]) for s in keys)
-    if not under and not over:
-        return None
-    return ", ".join([f"{under} under-inline"] * bool(under)
-                     + [f"{over} over-inline"] * bool(over))
+    return inline_model.divergence_note(bc, rc)
 
 
 def run(args) -> int:

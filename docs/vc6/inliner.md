@@ -17,6 +17,29 @@ validated predictor, and what the model does NOT cover, in one place.
 
 ## 0. The headline: the STL-inline verdict
 
+> **CORRECTED 2026-08-19 — the ~65% figure below was a measuring artifact and
+> the `game::Load` example was backwards.** `predict-inline` compared the two
+> sides' call multisets BY SYMBOL NAME, and the sides do not name a callee the
+> same way: our obj emits the real mangled symbol, the delinked target carries
+> the synth-PDB label for anything unclaimed (`sub_f6570`,
+> `game_8a310_sub09_d4aa0`, `hero_load`, `exe_new`). Every such call booked
+> twice — an under-inline on our side and an over-inline on retail's — and
+> because `_route` puts the inliner upstream of registers and blocks, the
+> phantom buried the true diagnosis. With the names paired off
+> (`inline_model.divergence`, negative controls in `test_inline_names.py`) the
+> inliner class falls from **135 of 211 plateaus to 46**, and
+> **register-homing (108) is the dominant class**, not the inliner.
+>
+> `game::Load` measured again with names resolved: 92 out-of-line calls
+> against retail's 80, of which **30 pair off by name**. What actually
+> survives is three rows — `~NewSMapHeader` 2 vs 1, `IsLocalHuman` 0 vs 1, and
+> `_Tidy` **38 vs 39**. Retail calls `_Tidy` *more often than we do*; the
+> claim below that "retail inlines 37 `_Tidy` … our compile emits them all as
+> calls" is the opposite of what the objects say, and the 5 `vector::insert`
+> it cites are `game_8a310_sub09_d4aa0` under another name. The §E6 standalone
+> experiment is untouched by this — it never used the multiset comparison —
+> so the budget-dynamics mechanism stands; only its claimed REACH was inflated.
+
 The plateau diagnoser found ~65% of the residual walls are inline
 divergence dominated by STL (`game::Load`: retail inlines 37
 `basic_string::_Tidy`, 5 `vector::insert`, `size`/`erase` and small dtors —

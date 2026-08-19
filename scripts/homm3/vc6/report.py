@@ -54,16 +54,14 @@ def _plateaus(lo: float, unit_filter: str | None):
 
 
 def _inline_div(base_text, ref_text):
-    """'N under-inline, M over-inline' if out-of-line CALL multisets differ."""
+    """'N under-inline, M over-inline' if out-of-line CALL multisets differ.
+
+    Callee names retail spells with a synth label pair off by count first -
+    see inline_model.divergence for why comparing by name alone double-books
+    one call as both an under- and an over-inline."""
     from homm3.vc6 import inline_model
-    bc, rc = inline_model._called(base_text), inline_model._called(ref_text)
-    keys = set(bc) | set(rc)
-    under = sum(max(0, bc[s] - rc[s]) for s in keys)
-    over = sum(max(0, rc[s] - bc[s]) for s in keys)
-    if not under and not over:
-        return None
-    return ", ".join([f"{under} under-inline"] * bool(under)
-                     + [f"{over} over-inline"] * bool(over))
+    return inline_model.divergence_note(inline_model._called(base_text),
+                                        inline_model._called(ref_text))
 
 
 # combined wall class from the diagnoses -> the catalog knob to reach for
@@ -157,7 +155,15 @@ def main(argv=None) -> int:
         "why-branch = control-flow knobs; predict-inline = out-of-line CALL "
         "multiset divergence (a callee inlined on one side only - dominated by "
         "STL basic_string/vector ops + small dtors retail inlines and we do "
-        "not). MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = "
+        "not). CALIBRATION 2026-08-19: this column USED to be dominated by a "
+        "NAME artifact - retail's side names an unclaimed callee with a synth "
+        "working label our compiled side can never emit, so one call booked "
+        "as both an under- and an over-inline and the inliner route (which "
+        "sits upstream of registers and blocks) buried the true diagnosis. "
+        "inline_model.divergence now pairs those off by count: on the tree of "
+        "that date the inliner class fell from 135 rows to 46 of 211, and "
+        "register-homing (108) overtook it as the dominant plateau class. "
+        "MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = "
         "clamp(2*caller_cb,1000,35000) spent sequentially; our leaner "
         "reconstructions sit at the 1000 floor and STARVE, so retail inlines "
         "what we call. FIX = finish the caller's body (budget follows statement "
