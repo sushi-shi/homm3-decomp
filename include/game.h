@@ -1363,6 +1363,10 @@ public:
         return mapHeader.teamInfo[player1] == mapHeader.teamInfo[player2];
     }
     int GetTeam(int playerNum) const;
+    // 0x4cce30 (dc 0xb9a34): counts thieves guilds across the player's
+    // towns; the advmgr quick views gate their view level on its 1/2
+    // thresholds.
+    int GetNumThievesGuilds(int iWhichPlayer);
     // Dreamcast-attested member at retail 0x49da70. The adventure-options
     // constructor uses its byte result to enable the End Turn button.
     void play_recorded_events();

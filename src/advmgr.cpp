@@ -91,6 +91,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "window.h"
 #include "widget.h"
 #include "quickherowindow.h"
+#include "quicktownwindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_ADVMGR_OBJ_DECLS
@@ -4089,12 +4090,46 @@ void advManager::TownQuickView(int townId, int x, int y, unsigned char display_d
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:9243
 VA(0x00416f80, 0x1CD)  // anchor-callee, dc 0x19cdc
 void advManager::garrison_quick_view(int id, int x, int y)
 {
-    // @stub
+    if (id == -1)
+        return;
+
+    garrison* thisGarrison = &gpGame->garrisons[id];
+    type_point point(thisGarrison->mapX, thisGarrison->mapY,
+                     thisGarrison->mapZ);
+
+    int identifyLevel = get_identify_level(point);
+
+    // Residual (96.64%): one D8/D13 arm-placement flip - retail keeps the
+    // ViewAll constant arm inline after the condition chain (final term
+    // `jne` into the else chain), our CL uniformly jump-if-trues all three
+    // disjuncts and sinks the constant arm to the join. Tried and rejected:
+    // nested ternary (byte-identical), split `else if (identifyLevel ==
+    // eMasteryExpert)` (94.79 - the duplicated arm does not cross-jump),
+    // why-branch guided search (0 applicable mutations; flags the landing
+    // blocks as D3 jump-threading, not source-addressable).
+    TQuickTownWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(thisGarrison->playerOwner, gUnnamed69778c)
+        || DebugViewAll || identifyLevel == eMasteryExpert)
+        level = TQuickTownWindow::ViewAll;
+    else if (gpGame->GetNumThievesGuilds(gUnnamed69778c) >= 2)
+        level = TQuickTownWindow::ViewArmySizes;
+    else
+        level = gpGame->GetNumThievesGuilds(gUnnamed69778c) >= 1
+                    ? TQuickTownWindow::ViewArmyTypes
+                    : TQuickTownWindow::ViewNone;
+
+    TQuickTownWindow window(thisGarrison, level);
+    window.center(x, y);
+    window.QuickWindowWait();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9284
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
