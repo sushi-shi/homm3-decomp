@@ -49,19 +49,22 @@ def _behavioral() -> tuple[bool, str]:
 
 
 def _locator() -> tuple[bool, str]:
-    """Run the hermetic locator suite (positives + negative controls)."""
+    """Run the hermetic solver suites (positives + negative controls)."""
     import io
     import unittest
-    from homm3.vc6 import test_locator
-    suite = unittest.defaultTestLoader.loadTestsFromModule(test_locator)
+    from homm3.vc6 import test_inline_names, test_locator
+    suite = unittest.TestSuite(
+        unittest.defaultTestLoader.loadTestsFromModule(m)
+        for m in (test_locator, test_inline_names))
     buf = io.StringIO()
     res = unittest.TextTestRunner(stream=buf, verbosity=0).run(suite)
     bad = res.failures + res.errors
     if not bad:
-        return True, (f"{res.testsRun} definition shapes located / refused "
-                      "(carcass + declaration + call-site controls hold)")
+        return True, (f"{res.testsRun} definition shape / inline-name case(s) "
+                      "held (carcass + declaration + call-site + "
+                      "name-artifact controls)")
     names = ", ".join(t.id().split(".")[-1] for t, _ in bad[:4])
-    return False, f"{len(bad)}/{res.testsRun} locator case(s) FAILED: {names}"
+    return False, f"{len(bad)}/{res.testsRun} solver case(s) FAILED: {names}"
 
 
 def _tool_distance(unit: str, fn: str):
