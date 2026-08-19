@@ -10,10 +10,12 @@
 #include "advmgr.h"
 #include "cursor.h"
 #include "events.h"
+#include "exec.h"
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
 #include "philai.h"
+#include "recruit.h"
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
@@ -2175,6 +2177,55 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
     gUnnamed67f574 = savedFlag;
 }
 
+// E:\gamedcs\events.cpp:380.  The anchor point (jump-table arm 0x03): a
+// hero steps off his boat. The whole body is DoEventBoat run backwards -
+// the same 0x40000 sea bit, the same Boots-of-Levitation movement
+// recompute behind the same 0x1000000 gate, the same locator refresh and
+// the same five cursor cells - and the two are worth reading together.
+// Only three things differ: the bit is CLEARED instead of set, GetMobility
+// is asked for the LAND rate (0) instead of the sea one, and the cursor
+// parks in state 0x22 rather than 8.
+//
+// The Dreamcast body (dc 0x90658, 102 B) is SHORTER than retail's 348 and
+// the difference is two post-DC insertions: the whole IsWieldingArtifact
+// arm - the DC just zeroes movePoints - and the UpdateHeroLocator call.
+// The line table is what bounds the rest: FizzleCenter at line 401 and
+// CheckAdjacentMon at 404, with the fought-battle flag a local nobody
+// reads back.
+//
+// human_player is declared and never read. Retail keeps the parameter
+// (`ret 8`), so this does too.
+VA(0x0049e670, 0x15C)  // jump-table arm 0x03 + DoEventBoat's mirror, dc 0x90658
+void advManager::DoEventAnchor(hero* current_hero, bool human_player)
+{
+    if (current_hero->flags & 0x40000) {
+        current_hero->flags &= ~0x40000;
+        if (!(current_hero->flags & 0x1000000)) {
+            if (current_hero->IsWieldingArtifact(0x88)) {
+                int oldMaxMovePoints = current_hero->maxMovePoints;
+                int oldMovePoints = current_hero->movePoints;
+                int newMaxMovePoints = current_hero->GetMobility(0);
+                current_hero->maxMovePoints = newMaxMovePoints;
+                current_hero->movePoints =
+                    newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
+            } else {
+                current_hero->movePoints = 0;
+            }
+            advWindow->UpdateHeroLocator(-1, 1, 1);
+        }
+
+        current_hero->facing = cursorDirection;
+        cursorType = CURSOR_TYPE_34;
+        cursorBaseFrame = 0;
+        cursorSequence = current_hero->GetStandSequence();
+        drawCursor = 1;
+        FizzleCenter(FIZZLE_SOUND_KILL_FADE);
+
+        int bFoughtBattle;
+        CheckAdjacentMon(&bFoughtBattle);
+    }
+}
+
 // E:\gamedcs\events.cpp:421.  The Arena, jump-table arm 0x04 =
 // OBJECT_ARENA: +2 to Attack or +2 to Defense, once per hero, and the
 // choice is the human's. It is the war school's body with the price and
@@ -2231,6 +2282,53 @@ void advManager::DoEventArena(hero* current_hero, NewmapCell* cell,
     current_hero->SetVisitedArena(cell);
 }
 
+// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arms
+// of the corpse, the wagon, the tomb and every artifact hand-over run after picking an artifact up: it walks
+// the hero's backpack from get_last_backpack_index down and offers each
+// entry to 0x433e20 with request 0x13. Retail takes the hero in ECX and
+// pushes nothing, which under /Gr is exactly a one-pointer free function -
+// so it is spelled that way here rather than invented as a `hero` member.
+// The NAME is a Dreamcast line-table read: the statement at
+// E:\gamedcs\events.cpp:3555, inside DoEventWagon (dc 0x96784), calls
+// ?AI_equip_artifacts@@YAXPAVhero@@@Z and nothing else. That is evidence
+// for the name only - a call relocation's symbol name is not scored, the
+// identity of the callee belongs to whichever AI TU lands it, and this
+// declarator claims nothing.
+void AI_equip_artifacts(hero* current_hero);
+
+// E:\gamedcs\events.cpp:478.  The artifact hand-over every arm of
+// DoEventArtifact (0x49f7e0) ends on: fetch the cell back out of the map,
+// give the hero whatever artifact it names, and pick the object up.
+//
+// It takes the POINT, not the cell, and re-fetches through GetCell -
+// which is what its `push point / call GetCell` opening says and what
+// makes it usable from an arm that has already lost the cell pointer.
+//
+// The artifact record is built with BOTH fields at -1 before the id is
+// written over the first of them, and retail keeps that dead store: the
+// record's address is taken by GiveArtifact, so VC6 will not eliminate a
+// store into it. Spelled longhand here because type_artifact's default
+// constructor is behind a view this TU does not open - opening it would
+// put a {-1,-1} pair in front of every OTHER artifact record in this file
+// and cost the six rows that build one field at a time.
+VA(0x0049e8f0, 0x146)  // linkorder + GetCell/EraseAndFizzle pair, dc 0x90814
+void advManager::GiveArtifact(hero* current_hero, type_point point,
+                              bool human_player)
+{
+    NewmapCell* cell = GetCell(point);
+
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_NONE;
+    artifact.extra = -1;
+    artifact.artifactId = cell->objectIndex;
+    current_hero->GiveArtifact(&artifact, 1, 1);
+    if (!human_player)
+        AI_equip_artifacts(current_hero);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    current_hero->CheckLevel();
+}
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
@@ -2243,6 +2341,73 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
 {
     unsigned index = cell->value & 0x3ff;
     return &fullMap->blackBoxes[index];
+}
+
+// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
+// of the AI arm's decision at five call sites in this file. Retail's
+// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
+// on the STACK - type_point is a struct, so it cannot ride a register -
+// and returning long; its own body is a nine-instruction wrapper that
+// zeroes a local move-cost and forwards to the three-argument overload at
+// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
+// xref evidence is in the note above monsters_flee.
+long AI_value_of_event(const hero* current_hero, type_point point);
+
+// E:\gamedcs\events.cpp:1123.  Pandora's Box (jump-table arm 0x06): the
+// map-maker's own message, a yes/no prompt, the guardians it may carry,
+// and then whatever the record holds - all of which GiveBlackBoxReward
+// pays out, so this body is only the framing.
+//
+// The custom message is the ONE place in this file that reaches into a
+// std::string. `Message.c_str()` is expanded TWICE - once for the strlen
+// test and once for the dialog itself, exactly as the Dreamcast line table
+// splits them across lines 1128 and 1130 - and each expansion is
+// Dinkumware's `_Ptr == 0 ? &_Nul : _Ptr`, which is what retail's
+// `test edx,edx / mov ecx,<empty> / je / mov ecx,edx` pair is. strlen is
+// the intrinsic (repne scasb, then `not ecx / dec ecx`).
+//
+// The BlackBox pointer is HOMED on the frame because the guardians test
+// walks a working copy of it forward to the armyGroup at +0x14 and the
+// reward call needs the original back.
+VA(0x004a0c50, 0x277)  // jump-table arm 0x06 + advevent.txt 14..16, dc 0x91c18
+void advManager::DoEventBlackBox(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    BlackBoxData* BlackBox = cell->get_black_box();
+
+    if (human_player) {
+        if (strlen(BlackBox->Message.c_str()) != 0)
+            NormalDialog(BlackBox->Message.c_str(), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_BLACK_BOX_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    if (BlackBox->HasCustomGuardians && BlackBox->Guardians.GetNumArmies()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BLACK_BOX_GUARDED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &BlackBox->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+    }
+
+    if (!GiveBlackBoxReward(emptyRolloverText, current_hero, cell, point,
+                            human_player, BlackBox)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BLACK_BOX_NOTHING),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
 // E:\gamedcs\events.cpp:1219.  Boarding a boat, jump-table arm 0x08 =
@@ -2314,6 +2479,57 @@ void advManager::DoEventBoat(hero* current_hero, NewmapCell* cell)
         CompleteDraw(0);
         UpdateScreen(0, 0);
     }
+}
+
+// E:\gamedcs\events.cpp:1355.  The campfire (jump-table arm 0x0c): a
+// four-bit resource id and a count that pays out TWICE - the count itself
+// in that resource, and a hundred gold per unit of it - after which the
+// object is picked up and the map re-centres on the hero.
+//
+// The Dreamcast line table (dc 0x922e8) gives seven statements and no more:
+// two accessor reads, the human-only dialog, two GiveResource calls, the
+// EraseAndFizzle, and a human-only SetEnvironmentOrigin. `qty * 100` is
+// written at BOTH the sites that need it and retail computes the product
+// twice, once on each side of the dialog call.
+//
+// The two reads are in the DC's order, and that order is what the register
+// file confirms: `this`, then qty, then the hero take ESI/EDI/EBX in
+// creation order, which leaves the resource with no call-crossing register
+// and homes it on the frame - exactly retail's `mov [ebp-8], eax`.
+//
+// The count is held in an INT local even though GetCampfireSize returns
+// `short`. That is byte-forced, not taste: retail widens the field ONCE
+// (`shr ecx,4 / movsx edi,cx`) and then does int arithmetic on it, where a
+// short local keeps the narrow value in EDI and pays a fresh `movsx` at
+// every use - 89.35 against 100.0, with nothing else changed.
+//
+// EraseAndFizzle is INLINED here, as in monsters_fight, and FizzleCenter
+// inside it in turn; with the sound fixed at PICKUP the fizzle's switch
+// folds to the sprintf arm alone.
+//
+// The re-centre is `SetEnvironmentOrigin(hero location, 1)` - the DC calls
+// type_obscuring_object::get_location() and retail expands it, which is
+// what the three bitfield inserts into one frame temp are: x and y into
+// their own ten-bit lanes and z into the second unit's bits 10..13.
+VA(0x004a1120, 0x1C4)  // jump-table arm 0x0c + advevent.txt 23, dc 0x922e8
+void advManager::DoEventCampfire(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    int qty = cell->GetCampfireSize();
+    int resource = cell->GetCampfireResource();
+
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_CAMPFIRE),
+                     1, -1, -1, GOLD, qty * 100, resource, qty,
+                     -1, 0, -1, 0);
+    current_hero->GiveResource(GOLD, qty * 100);
+    current_hero->GiveResource(resource, qty);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    if (human_player)
+        SetEnvironmentOrigin(type_point(current_hero->x, current_hero->y,
+                                        current_hero->z),
+                             1);
 }
 
 // E:\gamedcs\events.cpp:1378.  The Idol of Fortune: +1 luck on an odd day
@@ -2430,16 +2646,6 @@ void advManager::DoEventDefenseTower(hero* current_hero, NewmapCell* cell,
     current_hero->DefenseTowerFlags |= 1 << cell->extraInfo;
 }
 
-// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
-// of the AI arm's decision at three call sites in this file. Retail's
-// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
-// on the STACK - type_point is a struct, so it cannot ride a register -
-// and returning long; its own body is a nine-instruction wrapper that
-// zeroes a local move-cost and forwards to the three-argument overload at
-// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
-// xref evidence is in the note above monsters_flee.
-long AI_value_of_event(const hero* current_hero, type_point point);
-
 // E:\gamedcs\events.cpp:1675.  The Dragon Utopia, jump-table arm 0x19 =
 // OBJECT_DRAGON_UTOPIA, and the only creature bank retail gives a handler
 // of its own instead of routing through DoEventCreatureBank (0x4a15a0).
@@ -2504,6 +2710,55 @@ void advManager::do_event_dragon_city(hero* current_hero, NewmapCell* cell,
 fight:
     CreatureBankEvent(current_hero, cell, emptyRolloverText, point,
                       human_player);
+}
+
+// E:\gamedcs\events.cpp:1731.  The flotsam (jump-table arm 0x1d): four
+// sizes in the cell's own extra-info dword, three of which pay, and the
+// object is picked up whatever the size was.
+//
+// The switch is retail's own - a dense UNSIGNED 0..3 range check and a
+// four-entry jump table whose default is the pick-up itself - and the two
+// payout arms are written out LONGHAND. Retail cross-jumps them into one
+// GiveResource pair: the wood-only arm jumps straight to the call with its
+// own arguments already pushed, and the wood-and-gold arm jumps one push
+// earlier. That merge is the compiler's, not the source's.
+VA(0x004a2230, 0x250)  // jump-table arm 0x1d + advevent.txt 51..54, dc 0x92fa8
+void advManager::DoEventFlotsam(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    switch (cell->extraInfo) {
+    case FLOTSAM_NOTHING:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_NOTHING),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case FLOTSAM_WOOD:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_WOOD),
+                         1, -1, -1, WOOD, 5, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 5);
+        break;
+    case FLOTSAM_WOOD_AND_GOLD:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_WOOD_AND_GOLD),
+                         1, -1, -1, WOOD, 5, GOLD, 200, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 5);
+        current_hero->GiveResource(GOLD, 200);
+        break;
+    case FLOTSAM_LARGE:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_LARGE),
+                         1, -1, -1, WOOD, 10, GOLD, 500, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 10);
+        current_hero->GiveResource(GOLD, 500);
+        break;
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
 // E:\gamedcs\events.cpp:1769.  The Fountain of Fortune, jump-table arm
@@ -2801,6 +3056,83 @@ void advManager::DoEventLibrary(hero* current_hero, NewmapCell* cell,
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
+// The philai.obj chooser the AI arm of the school of magic runs, named by
+// a Dreamcast line-table read: the statement at E:\gamedcs\events.cpp:2206,
+// inside DoEventMagicSchool (dc 0x93db0), calls
+// ?AI_ChooseMagicSkill@@YA?AW4TPrimarySkill@@PAVhero@@@Z and nothing else,
+// and philai.h already carries the same decoration as a CODEVIEW row
+// (philai.cpp:2579, dc 0x111808). Retail's 0x527cd0 is a /Gr one-pointer
+// fastcall returning the index in EAX. The primary-skill index is spelled
+// `int` here for the reason every other stats[] site in this file is -
+// TPrimarySkill has no modelled definition and an enum return is int-wide
+// under VC6 anyway. Declared file-locally; the row is not claimed here.
+int AI_ChooseMagicSkill(hero* current_hero);
+
+// E:\gamedcs\events.cpp:2158.  The School of Magic (jump-table arm 0x2f)
+// sells one point of Spell Power or Knowledge for 1000 gold, once per
+// school per hero - the war school's twin, down to the two-picture
+// iMBType 10 dialog and the decrement-chain switch over the reply, and it
+// differs only in taking the map point as well (the AI arm appraises the
+// tile) and in awarding through hero::AdjustPrimarySkill.
+//
+// The Dreamcast line table (dc 0x93db0) is what fixes the award: line 2210
+// is ONE AdjustPrimarySkill call, not a `stats[i]++` expression, and
+// retail's `mov bl,[skill + hero + 0x476] / inc bl / mov back` is the
+// inlined shape of it with the amount folded to a literal 1.
+//
+// `game* g = gpGame;` is spelled out for the war school's reason: it is
+// what puts the player position first in the SIB of the inlined
+// teamInfo[playerNum] load (`[pos + gpGame]`).
+VA(0x004a33e0, 0x1AD)  // jump-table arm 0x2f + globalInfoFlags[MagicSchoolInfo], dc 0x93db0
+void advManager::DoEventMagicSchool(hero* current_hero, NewmapCell* cell,
+                                    type_point point, bool human_player)
+{
+    if (current_hero->MagicSchoolFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_SCHOOL_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    game* g = gpGame;
+    g->SetInfoFlag(MagicSchoolInfo, gNetLocalGamePos);
+    if (gpCurrentPlayer->resources[GOLD] < 1000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_SCHOOL_NO_GOLD),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int skill = 2;
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_MAGIC_SCHOOL_CHOOSE),
+                     10, -1, -1, 0x21, 1, 0x22, 1, -1, 0, -1, 0);
+        switch (gpWindowManager->dialogReturn) {
+        case DIALOG_RETURN_CANCEL:
+            return;
+        case DIALOG_RETURN_CHOICE_1:
+            skill = 2;
+            break;
+        case DIALOG_RETURN_CHOICE_2:
+            skill = 3;
+            break;
+        }
+    } else {
+        if (AI_value_of_event(current_hero, point) <= 0)
+            return;
+        skill = AI_ChooseMagicSkill(current_hero);
+    }
+
+    current_hero->AdjustPrimarySkill(skill, 1);
+    current_hero->MagicSchoolFlags |= 1 << cell->extraInfo;
+    gpCurrentPlayer->resources[GOLD] -= 1000;
+}
+
 // E:\gamedcs\events.cpp:2220.  The magic spring: mana back to TWICE the
 // hero's cap, once per week per player, and the spring is spent whether
 // or not the hero had room for it. Its info flag is set BEFORE anything
@@ -2925,6 +3257,94 @@ void advManager::DoEventMercenaryCamp(hero* current_hero, NewmapCell* cell,
     current_hero->MercCampFlags |= 1 << cell->extraInfo;
 }
 
+// townmgr.obj's OTHER join report - the armyGroup overload of the pair
+// monsters_join already reaches. The Dreamcast decorates it with TWO
+// parameters (`?do_monster_join_dialog@@YAXPAVhero@@PAVarmyGroup@@@Z`);
+// retail takes THREE, the hero in ECX, the group in EDX and a literal 1 on
+// the stack, so the arity screen says the retail source gained an argument
+// after the port. Declared file-locally at its only consumer here.
+void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flag);
+
+// E:\gamedcs\events.cpp:2350.  The mine (jump-table arm 0x35): a
+// same-team visit only offers the garrison back, an unowned or enemy mine
+// is fought for if the hero accepts, and the tile is claimed either way
+// once nothing is left guarding it.
+//
+// The Dreamcast's body (dc 0x94314) is NOT this one - it goes straight to
+// CombatMonsterEvent and has no armyGroup join report, no HasCreatures
+// gate and no DoCombat - so the line table bounds the statement order and
+// nothing else; the shape below is retail's own bytes.
+//
+// Three things are worth naming. The guarded mine's prompt picks its text
+// row on the sign of playerOwner with EVERY OTHER argument shared, which
+// is the fountain's lever: retail's ten pushes all precede the branch and
+// only the text load is duplicated. An unowned mine guarded by exactly ONE
+// stack goes through CombatMonsterEvent with the count written back by
+// pointer, where every other case goes through the full DoCombat. And the
+// creature id reaches CombatMonsterEvent as a PLAIN int expression, not
+// through creature_type_from_int - see the declarator's note in advmgr.h
+// for what an inline call inside an argument list costs.
+VA(0x004a39a0, 0x21D)  // jump-table arm 0x35 + game::ClaimMine + advevent.txt 84/85/187, dc 0x94314
+void advManager::DoEventMine(NewmapCell* cell, hero* current_hero,
+                             type_point point, bool human)
+{
+    mine& current_mine = gpGame->mines[cell->extraInfo];
+    if (gpGame->OnSameTeam(current_mine.playerOwner, gNetLocalGamePos)) {
+        if (current_mine.playerOwner == gNetLocalGamePos && human)
+            do_monster_join_dialog(current_hero, &current_mine.guards, 1);
+        return;
+    }
+
+    if (current_mine.guards.HasCreatures()) {
+        if (human) {
+            OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+            UpdBottomView(0, 1, 1);
+            if (current_mine.playerOwner < 0)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_GUARDED),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            else
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_DEFENDED),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                return;
+        } else if (AI_value_of_event(current_hero, point) <= 0) {
+            return;
+        }
+
+        if (current_mine.playerOwner < 0
+            && current_mine.guards.GetNumArmies() == 1) {
+            int guard_count = current_mine.guards.numTroops[0];
+            if (CombatMonsterEvent(
+                    current_hero, current_mine.guards.armies[0],
+                    &guard_count, cell, point,
+                    creature_type_from_int(-1), 0, 0,
+                    creature_type_from_int(-1), 0, 0)) {
+                current_mine.guards.numTroops[0] = guard_count;
+                return;
+            }
+            current_mine.guards.Initialize();
+            if (human)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_CLEARED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else if (DoCombat(point, current_hero, &current_hero->army,
+                            current_mine.playerOwner, 0, 0,
+                            &current_mine.guards, -1, 1, 0)) {
+            return;
+        }
+        current_hero->restore_cell();
+    }
+
+    if (human)
+        NormalDialog(gMineEventText[current_mine.type], 1, -1, -1,
+                     current_mine.type,
+                     -gMineCharacteristics[current_mine.type],
+                     -1, 0, -1, 0, -1, 0);
+    gpGame->ClaimMine(cell->extraInfo, gNetLocalGamePos, const_normal_action);
+}
+
 // E:\gamedcs\events.cpp:2423.  The mystical garden: 500 gold or five of
 // anything else, once per week per player. The visit lands in the
 // player's own MysticalGardenFlags BEFORE anything is decided, so a
@@ -3008,6 +3428,85 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
     current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
 }
 
+// E:\gamedcs\events.cpp:2601.  The pyramid (jump-table arm 0x3f): a
+// yes/no prompt, two Golem stacks to beat, and then the spell it was
+// built around - which a hero may still fail to take home for want of a
+// spellbook or of Wisdom. An ALREADY-ROBBED pyramid is the other arm:
+// nothing to fight, nothing to learn, and -2 luck once per hero.
+//
+// Two shapes are worth naming. The spell arm builds ONE 500-byte buffer
+// and strcats a different tail onto it in each of the three outcomes,
+// then shows it with a single dialog - retail cross-jumps the three calls
+// into one, keeping only the picture pair distinct, which is what writing
+// the three arms longhand produces. And the combat is CombatMonsterEvent
+// with BOTH optional stacks filled: forty Gold Golems and twenty Diamond
+// Golems in two groups, the first count passed by pointer.
+//
+// The spell is written back BEFORE the hero is asked whether he can carry
+// it: set_pyramid clears the guarded bit and re-stamps the same spell in
+// one masked read-modify-write, and every later arm reads the local copy.
+VA(0x004a4230, 0x28A)  // jump-table arm 0x3f + advevent.txt 105..109, dc 0x949e0
+void advManager::do_event_pyramid(hero* current_hero, NewmapCell* cell,
+                                  type_point point, bool human_player)
+{
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_PYRAMID_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    if (!cell->pyramid_is_guarded()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_PYRAMID_ROBBED),
+                         1, -1, -1, 0xd, 0, 0xd, 0, -1, 0, -1, 0);
+        if (!(current_hero->flags & 0x1000)) {
+            current_hero->flags |= 0x1000;
+            current_hero->field_11b -= 2;
+        }
+        return;
+    }
+
+    int gold_golems = 40;
+    if (CombatMonsterEvent(current_hero, 116, &gold_golems, cell, point,
+                           creature_type_from_int(117), 20, 2,
+                           creature_type_from_int(-1), 0, 0))
+        return;
+    current_hero->CheckLevel();
+
+    int spell = cell->get_pyramid_spell();
+    char cText[500];
+    sprintf(cText, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
+            gpAdventureEventText->GetText(ADV_EVENT_TEXT_PYRAMID_SPELL),
+            akSpellTraits[spell].name);
+    cell->set_pyramid(0, spell);
+
+    if (!current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        if (human_player) {
+            strcat(cText, gpAdventureEventText->GetText(
+                              ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK));
+            NormalDialog(cText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2) {
+        if (human_player) {
+            strcat(cText, gpAdventureEventText->GetText(
+                              ADV_EVENT_TEXT_PYRAMID_NO_WISDOM));
+            NormalDialog(cText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else {
+        current_hero->AddSpell(spell);
+        if (human_player)
+            NormalDialog(cText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+    }
+}
+
 // E:\gamedcs\events.cpp:2677.  The Rally Flag: +1 morale, +1 luck and
 // +400 movement, once per hero. The locator refresh runs TWICE - once
 // unconditionally with both update flags clear, and again for a human
@@ -3040,6 +3539,364 @@ void advManager::DoEventRallyFlag(hero* current_hero, NewmapCell* cell,
     if (human_player)
         advWindow->UpdateHeroLocators(-1, 1, 1);
     UpdBottomView(1, 1, 1);
+}
+
+// The philai.obj appraisal the refugee camp's AI arm runs, named by the
+// Dreamcast xref graph: advManager::RecruitEvent's single philai callee is
+// AI_RecruitRefugees (dc 0x112208) and retail's 0x527e10 is a /Gr fastcall
+// taking the hero in ECX, the creature in EDX and the count BY POINTER on
+// the stack - the same short* the recruit dialog is handed on the other
+// arm. 0x527e10 has exactly ONE call site image-wide (measured by scanning
+// every `call rel32` in .text), which is what proves the refugee camp is
+// its only consumer and, with it, that RecruitEvent has no out-of-line
+// retail body at all - see the note on the handler.
+void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number);
+
+// The creature-name accessor is defined further down this file; the refugee
+// camp is the first of its expansion sites in address order, so it needs
+// the declarator here. VC6 inlines callees defined later in the same TU.
+static const char* GetArmyName(int type, int count);
+
+// E:\gamedcs\events.cpp:2709.  The refugee camp (jump-table arm 0x4e): a
+// stack of one creature type waiting to be hired, run through the ordinary
+// recruit dialog for a human and through philai for the AI.
+//
+// The Dreamcast line table (dc 0x94d84) gives the statement layout, and its
+// RecruitEvent call at line 2738 gives the tail its exact shape -
+// `cell->extraInfo = RecruitEvent(hero, creature, cell->extraInfo)` with a
+// SHORT round trip at both ends (the DC sign-extends going in and coming
+// out; retail's `mov dx,[esi]` / `movsx eax,word ptr [ebp+0x10]` pair says
+// the same).
+//
+// RecruitEvent ITSELF has no retail body. Its philai callee 0x527e10 has
+// exactly one call site in the whole image and that site is INSIDE this
+// function; an extern-linkage member would have been emitted out of line
+// unconditionally under /Ob2, so retail's events.cpp did not have one and
+// the Dreamcast port factored the block out. It is written in line here,
+// which is the only spelling that leaves events.obj with no unmatched
+// symbol.
+//
+// The two-arm shape is retail's own: the `!human_player` arm is the
+// FALL-THROUGH and the human arm sits behind a forward `jne`, which is what
+// `if (!human_player) {...} else {...}` produces and what the reversed
+// spelling does not.
+VA(0x004a4600, 0x17C)  // jump-table arm 0x4e + advevent.txt 44/112, dc 0x94d84
+void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell,
+                                    bool human_player)
+{
+    if (!human_player) {
+        if (cell->extraInfo == 0)
+            return;
+    } else {
+        if (cell->extraInfo == 0) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
+                    gAdventureObjectNames[cell->type]);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_REFUGEE_CAMP),
+                gAdventureObjectNames[cell->type],
+                GetArmyName(cell->objectIndex, 2));
+        NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    }
+
+    short available = cell->extraInfo;
+    TCreatureType creature = creature_type_from_int(cell->objectIndex);
+    if (current_hero->belongs_to_human()) {
+        recruitUnit dialog(&current_hero->army, 0, creature, &available,
+                           creature_type_from_int(-1), 0,
+                           creature_type_from_int(-1), 0,
+                           creature_type_from_int(-1), 0);
+        gpExecutive->DoDialog(&dialog);
+    } else {
+        AI_RecruitRefugees(current_hero, creature, &available);
+    }
+    cell->extraInfo = available;
+}
+
+// E:\gamedcs\events.cpp:2825.  The resource pile (jump-table arm 0x4f): a
+// customised cell goes straight to DoCustomResource, an ordinary one pays
+// the cell's own extra-info dword in the resource its objectIndex names -
+// times a HUNDRED when that resource is gold - and is then picked up.
+//
+// The Dreamcast line table (dc 0x9512c) is what fixes the two locals it
+// keeps: `type` and a 200-byte `prompt` buffer. The prompt exists because
+// the text row is a format taking the resource NAME with a lower-cased
+// first letter, so the name is copied out of gResourceNames before it can
+// be edited; retail expands the strcpy as the intrinsic (repne scasb, then
+// rep movsd/movsb) and merges tolower's stack cleanup into sprintf's.
+//
+// EraseAndFizzle is inlined here exactly as in the campfire, and runs
+// whether or not anyone was watching.
+VA(0x004a4be0, 0x1D9)  // jump-table arm 0x4f + advevent.txt 113, dc 0x9512c
+void advManager::DoEventResource(NewmapCell* cell, hero* current_hero,
+                                 type_point point, bool human_player)
+{
+    if (cell->IsCustomized()) {
+        DoCustomResource(cell, current_hero, point, human_player);
+        return;
+    }
+
+    int type = cell->objectIndex;
+    int amount;
+    if (type == GOLD)
+        amount = cell->extraInfo * 100;
+    else
+        amount = cell->extraInfo;
+    current_hero->GiveResource(type, amount);
+
+    if (human_player) {
+        char prompt[200];
+        strcpy(prompt, gResourceNames[type]);
+        prompt[0] = tolower(prompt[0]);
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                prompt);
+        BVResMsg(gText, type, amount);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
+// E:\gamedcs\events.cpp:2863.  The scholar (jump-table arm 0x51): one of
+// three awards, chosen by a three-bit selector in the cell's own dword,
+// and the object is picked up whether or not the hero could take it.
+//
+// The Dreamcast line table (dc 0x951f4) fixes both the ORDER of the three
+// tests - spell, then secondary skill, then primary, which is retail's
+// `cmp 2 / cmp 1 / test` chain and not a switch - and the shape of the
+// spell arm's guard: ONE statement carrying THREE branches (line 2875),
+// i.e. `not already known && level within wisdom+2 && carrying a
+// spellbook` as a single `if`.
+//
+// ONE text row serves all three arms; only the picture pair differs. The
+// secondary-skill arm's picture EXTRA is an icon index computed from the
+// skill and the level it just reached, which is why the mastery byte is
+// read back after GiveSS rather than before it.
+//
+// THE PRIMARY-SKILL ARM IS A FALL-THROUGH, NOT AN `else if`, and that is
+// what the whole shape turns on. All FOUR failure branches - the spell is
+// already known, its level is out of reach, the hero has no spellbook, and
+// GiveSS refused - land on the primary arm's first instruction, not on the
+// pick-up: a scholar whose intended award cannot be given hands out a
+// primary skill instead. Written as a plain three-way `else if` chain the
+// body is instruction-for-instruction identical and still only 88.79,
+// because those four branches go to the wrong block; `homm3 sema diff
+// --branches` is what says so, and the masked asm diff does not - it
+// prints the arms as matching. Ten spellings were measured against the
+// wrong shape (hero and payload locals hoisted, the award test inlined,
+// the guard reordered, nested ifs) and the best of them reached 89.01.
+//
+// The three `goto`s are retail's own: each is an unconditional jump that
+// SKIPS the remaining award tests, which is the merged-tail-by-goto
+// signature this file already records for the dragon city.
+VA(0x004a4dc0, 0x263)  // jump-table arm 0x51 + advevent.txt 115, dc 0x951f4
+void advManager::DoEventScholar(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    int award = cell->GetScholarAward();
+    if (award == const_scholar_spell) {
+        int spell = cell->GetScholarSpell();
+        if (!current_hero->in_spellbook[spell]
+            && akSpellTraits[spell].level <= current_hero->wisdomLevel + 2
+            && current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SCHOLAR),
+                             1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+            current_hero->AddSpell(spell);
+            goto pick_up;
+        }
+    } else if (award == const_scholar_secondary_skill) {
+        int skill = cell->GetScholarSecondarySkill();
+        if (current_hero->GiveSS(skill, 1)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SCHOLAR),
+                             1, -1, -1, 0x14,
+                             current_hero->skillLevel[skill] + skill * 3 + 2,
+                             -1, 0, -1, 0, -1, 0);
+            goto pick_up;
+        }
+    } else if (award != const_scholar_primary_skill) {
+        goto pick_up;
+    }
+
+    {
+        int primary = cell->GetScholarPrimarySkill();
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SCHOLAR),
+                         1, -1, -1, primary + 0x1f, 1, -1, 0, -1, 0, -1, 0);
+        current_hero->AdjustPrimarySkill(primary, 1);
+    }
+
+pick_up:
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
+// E:\gamedcs\events.cpp:2918.  The sea chest (jump-table arm 0x52):
+// nothing, 1500 gold, or an artifact with a thousand gold beside it.
+//
+// The artifact record is built EMPTY at the top, before the reward is even
+// looked at - the Dreamcast constructs it with ARTIFACT_NONE (line 2921)
+// and retail's `or eax,-1` feeding two stores is that constructor inlined,
+// with the two -1s sharing one register the way this file's other signed
+// stores do.
+//
+// A full backpack does not lose the chest: the artifact reward DOWNGRADES
+// to the gold one (`reward = const_sea_chest_gold`) before the switch,
+// which is why retail's `mov edi,1` sits between the backpack test and the
+// decrement chain.
+VA(0x004a5030, 0x26E)  // jump-table arm 0x52 + advevent.txt 116..118, dc 0x953cc
+void advManager::DoEventSeaChest(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_NONE;
+    artifact.extra = -1;
+
+    int reward = cell->GetSeaChestReward();
+    if (reward == const_sea_chest_artifact
+        && current_hero->get_number_in_backpack(1) >= 64)
+        reward = const_sea_chest_gold;
+
+    switch (reward) {
+    case const_sea_chest_nothing:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SEA_CHEST_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case const_sea_chest_gold:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SEA_CHEST_GOLD),
+                         1, -1, -1, GOLD, 1500, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(GOLD, 1500);
+        break;
+    case const_sea_chest_artifact:
+        artifact.artifactId = cell->GetSeaChestArtifact();
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT),
+                    akArtifactTraits[artifact.artifactId].name);
+            NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                         0x24, 1000, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        current_hero->GiveResource(GOLD, 1000);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+        break;
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
+// E:\gamedcs\events.cpp:2965.  The shipwreck survivor (jump-table arm
+// 0x56): one artifact, taken if the hero has a slot for it, and the object
+// is picked up either way.
+//
+// The Dreamcast line table (dc 0x95564) puts the type_artifact record
+// AFTER the dialog (line 2975 against 2971/2973), which is why both the
+// name lookup and the picture argument read the cell's dword directly
+// instead of going through the record - retail loads `[cell]` three
+// separate times and never keeps it in a local.
+//
+// The artifact id is the RAW extra-info dword here: `shl eax,5` indexes
+// the 32-byte trait row with no mask and no shift, so this cell has no
+// bitfield lanes at all.
+VA(0x004a52a0, 0x1DE)  // jump-table arm 0x56 + advevent.txt 125/126, dc 0x95564
+void advManager::DoEventSurvivor(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    if (current_hero->get_number_in_backpack(1) < 64) {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_SURVIVOR_ARTIFACT),
+                    akArtifactTraits[cell->extraInfo].name);
+            NormalDialog(gText, 1, -1, -1, 8, cell->extraInfo,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        type_artifact artifact;
+        artifact.artifactId = cell->extraInfo;
+        artifact.extra = -1;
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SURVIVOR_BACKPACK_FULL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
+// E:\gamedcs\events.cpp:2996.  The Corpse (jump-table arm 0x16, adventure
+// object 22): once per PLAYER, not once per hero - the flag band is
+// playerData::DeadGuyFlags, indexed by the cell's own five-bit item id -
+// and the reward is the buried artifact, or a thousand gold when the hero
+// has no room for it.
+//
+// The Dreamcast line table (dc 0x95650) fixes the nesting: the treasure
+// test, the backpack test inside it, the two payout arms, and ONE
+// SetSkeleton (line 3024) closing both of them. The flag write is the last
+// statement and runs on every path, including the nothing-here arm.
+//
+// The gold arm formats a general-text row with the pooled "%s." while the
+// artifact arm joins an advevent.txt fragment to the artifact name with
+// "%s %s" - two different resources in one body, which is what makes the
+// two text pointers different globals.
+VA(0x004a5480, 0x187)  // jump-table arm 0x16 + playerData::DeadGuyFlags, dc 0x95650
+void advManager::DoEventSkeleton(hero* current_hero, ExtraInfoUnion* cell,
+                                 bool human_player)
+{
+    if (cell->SkeletonHasTreasure()) {
+        if (current_hero->get_number_in_backpack(1) < 64) {
+            type_artifact artifact;
+            artifact.artifactId = cell->GetSkeletonArtifact();
+            artifact.extra = -1;
+            if (human_player) {
+                sprintf(gText,
+                        DATA_COMPGEN(0x00660344, twoWordFormat, "%s %s"),
+                        gpAdventureEventText->GetText(
+                            ADV_EVENT_TEXT_SKELETON_ARTIFACT),
+                        akArtifactTraits[artifact.artifactId].name);
+                NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                             -1, 0, -1, 0, -1, 0);
+            }
+            current_hero->GiveArtifact(&artifact, 1, 1);
+            if (!human_player)
+                AI_equip_artifacts(current_hero);
+        } else {
+            if (human_player) {
+                sprintf(gText,
+                        DATA_COMPGEN(0x00677758, sentenceFormat, "%s."),
+                        gpGeneralText->GetText(GENERAL_TEXT_SKELETON_GOLD));
+                NormalDialog(gText, 1, -1, -1, GOLD, 1000,
+                             -1, 0, -1, 0, -1, 0);
+            }
+            current_hero->GiveResource(GOLD, 1000);
+        }
+        cell->SetSkeleton(cell->GetItemId(), 0, -1);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SKELETON_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    gpCurrentPlayer->DeadGuyFlags |= 1 << cell->GetItemId();
 }
 
 // Declared inline in the original Game.h (DC line 865); this is the retail
@@ -3100,6 +3957,54 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
     current_hero->flags |= 0x100000;
+}
+
+// E:\gamedcs\events.cpp:3207.  The spell scroll (jump-table arm 0x5d): one
+// scroll, refused outright to a hero with all sixty-four backpack slots
+// full, and handed to DoCustomSpellScroll when the cell is customised.
+//
+// The scroll is not an artifact id at all - it is artifact 1 with the
+// SPELL in the record's second dword, which is why the dialog names it out
+// of akSpellTraits and shows it with picture class 9 instead of the 8 every
+// other artifact-bearing handler here uses. The Dreamcast builds it with a
+// dedicated `type_artifact(SpellID)` constructor (line 3222); retail's two
+// stores are that constructor inlined, id first.
+//
+// The customised test and the spell read share ONE load of the cell's
+// dword - retail's `mov edi,[eax] / mov edx,edi / shr edx,0x1f` - so the
+// spell local is written after the test, not before it.
+VA(0x004a5ea0, 0x1F9)  // jump-table arm 0x5d + advevent.txt 2/135, dc 0x95e14
+void advManager::DoEventSpellScroll(hero* current_hero, NewmapCell* cell,
+                                    type_point point, bool human_player)
+{
+    if (current_hero->get_number_in_backpack(1) >= 64) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BACKPACK_FULL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (cell->IsCustomized()) {
+        DoCustomSpellScroll(current_hero, cell, point, human_player);
+        return;
+    }
+
+    int spell = cell->extraInfo;
+    type_artifact scroll;
+    scroll.artifactId = ARTIFACT_SPELL_SCROLL;
+    scroll.extra = spell;
+    if (human_player) {
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_SPELL_SCROLL),
+                akSpellTraits[spell].name);
+        NormalDialog(gText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+    }
+    current_hero->GiveArtifact(&scroll, 1, 1);
+    if (!human_player)
+        AI_equip_artifacts(current_hero);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
 // E:\gamedcs\events.cpp:3246.  The Stables, jump-table arm 0x5e =
@@ -3249,6 +4154,220 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
     game* g = gpGame;
     g->SetInfoFlag(TrainingGroundsInfo, gNetLocalGamePos);
     current_hero->CheckLevel();
+}
+
+// E:\gamedcs\events.cpp:3414.  The treasure chest (jump-table arm 0x65):
+// either an artifact or a pile of gold, and the gold arm is also where an
+// artifact chest lands when the hero has no backpack slot left - as a flat
+// thousand, not as the chest's own amount.
+//
+// The Dreamcast line table (dc 0x963d8) puts the type_artifact record
+// BEFORE the dialog (line 3421 against 3426/3427), the opposite of the
+// shipwreck survivor's order, and retail agrees: the id is materialised
+// into the record and the dialog argument is read back out of it.
+//
+// The chest is the only object in this file that ends with CheckLevel -
+// DoTreasureDialog can pay experience instead of gold, so the hero may
+// have levelled by the time the fizzle is over.
+VA(0x004a6520, 0x1ED)  // jump-table arm 0x65 + advevent.txt 145, dc 0x963d8
+void advManager::DoEventTreasure(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    if (cell->TreasureIsArtifact()) {
+        if (current_hero->get_number_in_backpack(1) < 64) {
+            type_artifact artifact;
+            artifact.artifactId = cell->GetTreasureArtifact();
+            artifact.extra = -1;
+            if (human_player) {
+                sprintf(gText,
+                        gpAdventureEventText->GetText(
+                            ADV_EVENT_TEXT_TREASURE_ARTIFACT),
+                        akArtifactTraits[artifact.artifactId].name);
+                NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                             -1, 0, -1, 0, -1, 0);
+            }
+            current_hero->GiveArtifact(&artifact, 1, 1);
+            if (!human_player)
+                AI_equip_artifacts(current_hero);
+        } else {
+            DoTreasureDialog(current_hero, 1000, human_player);
+        }
+    } else {
+        DoTreasureDialog(current_hero, cell->GetTreasureSize(), human_player);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    current_hero->CheckLevel();
+}
+
+// A philai..puzzlewindow bracket helper (81 B at 0x527fe0) the AI arms of
+// the Tree of Knowledge and the war school run as their "is this worth
+// buying?" test: it scales the offered VALUE by the hero's
+// turnExperienceToRVRatio, scales the COST by that player's per-resource
+// weight (the double row at playerData+0x128) and reports whether the
+// weighted cost outweighs the weighted value - so a true answer means
+// DECLINE. Retail takes the hero in ECX and the resource in EDX with two
+// stack arguments, the /Gr shape again.
+//
+// The NAME is a Dreamcast line-table read: the statements at
+// E:\gamedcs\events.cpp:3495 and 3517, inside DoEventTreeOfKnowledge
+// (dc 0x964c4), call ?AI_choose_resource_or_experience@@YA_NPBVhero@@
+// W4EGameResource@@HH@Z and nothing else, and both are exactly this
+// object's two AI price arms. The return stays `unsigned char` where the
+// Dreamcast decorates it `_N`: retail tests AL and the war school is exact
+// with that spelling. The row is not claimed here.
+unsigned char AI_choose_resource_or_experience(hero* current_hero,
+                                               EGameResource resource,
+                                               int cost, int value);
+
+// E:\gamedcs\events.cpp:3454.  The Tree of Knowledge (jump-table arm
+// 0x66): one level's worth of experience, once per tree per hero, for
+// nothing, for 2000 gold or for ten gems - which of the three the tree
+// wants is a three-bit selector in its own dword.
+//
+// The two paid arms are the war school's shape twice over: a human is
+// asked with iMBType 2 and may decline, the AI runs the same
+// value-against-cost appraisal, and the price is only taken once the
+// answer is yes. Both arms then converge on ONE GiveExperience, so retail
+// carries the award and the visit write-back exactly once.
+//
+// The visit mask is materialised at the TOP - `1 << GetItemId()` into a
+// frame slot - and read back for the write-back after the award, which is
+// what one named local produces where two `1 << id` expressions would have
+// been recomputed.
+VA(0x004a6710, 0x29D)  // jump-table arm 0x66 + advevent.txt 147..152, dc 0x964c4
+void advManager::DoEventTreeOfKnowledge(hero* current_hero,
+                                        ExtraInfoUnion* cell,
+                                        bool human_player)
+{
+    unsigned long visited = 1 << cell->GetItemId();
+    if (current_hero->TreeOfKnowledgeFlags & visited) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    // The `game* g` spelling again, per-call-site as always: it is what
+    // puts the player position first in the SIB of the inlined
+    // teamInfo[playerNum] load (`[pos + gpGame]`), and a direct call
+    // through the global makes VC6 pick the other base.
+    game* g = gpGame;
+    g->SetInfoFlag(TreeOfKnowledgeInfo, gNetLocalGamePos);
+    int experience = hero::GetExperienceIncrement(current_hero->level);
+
+    switch (cell->GetTreePrice()) {
+    case const_tree_wants_nothing:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_FREE),
+                         1, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+        break;
+    case const_tree_wants_gold:
+        if (gpCurrentPlayer->resources[GOLD] < 2000) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_TREE_NO_GOLD),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_GOLD_PROMPT),
+                         2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+                return;
+        } else if (AI_choose_resource_or_experience(current_hero, GOLD, 2000,
+                                                    experience)) {
+            return;
+        }
+        gpCurrentPlayer->resources[GOLD] -= 2000;
+        break;
+    case const_tree_wants_gems:
+        if (gpCurrentPlayer->resources[GEMS] < 10) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_TREE_NO_GEMS),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_GEMS_PROMPT),
+                         2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+                return;
+        } else if (AI_choose_resource_or_experience(current_hero, GEMS, 10,
+                                                    experience)) {
+            return;
+        }
+        gpCurrentPlayer->resources[GEMS] -= 10;
+        break;
+    }
+
+    current_hero->GiveExperience(experience, 0, 1);
+    current_hero->TreeOfKnowledgeFlags |= visited;
+    current_hero->CheckLevel();
+}
+
+// E:\gamedcs\events.cpp:3533.  The wagon (jump-table arm 0x69): stamped
+// visited on arrival, then either the artifact it was carrying or the
+// resources, and emptied whichever it was.
+//
+// The Dreamcast line table (dc 0x96784) is what fixes the shape, and three
+// of its statements are load-bearing:
+//   * 3535..3539 are a self-contained early-out - the emptiness test, its
+//     human-only dialog and a `return` of their own;
+//   * 3543 is ONE statement carrying TWO branches (br=2), i.e.
+//     `WagonHasArtifact() && get_number_in_backpack(1) < 64` as a single
+//     `else if`, which is why both of retail's rejections land on the same
+//     resource block;
+//   * 3570 is a SINGLE EmptyWagon() closing both arms. Retail duplicates
+//     that tail into each arm rather than cross-jumping, so it stays one
+//     statement here and the duplication is left to the compiler.
+VA(0x004a69b0, 0x178)  // jump-table arm 0x69 + advevent.txt 154..156, dc 0x96784
+void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
+                              bool human_player)
+{
+    cell->SetCellVisited(current_hero->owner);
+    if (!cell->WagonIsFull()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAGON_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (cell->WagonHasArtifact()
+        && current_hero->get_number_in_backpack(1) < 64) {
+        type_artifact artifact;
+        artifact.artifactId = cell->GetWagonArtifact();
+        artifact.extra = -1;
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WAGON_ARTIFACT),
+                    akArtifactTraits[artifact.artifactId].name);
+            // iResType1 8 is the artifact picture class, exactly as the
+            // warrior's tomb passes it.
+            NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+    } else {
+        EGameResource resource = cell->GetWagonResource();
+        short amount = cell->GetWagonAmount();
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAGON_RESOURCE),
+                         1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(resource, amount);
+    }
+    cell->EmptyWagon();
 }
 
 // The two creaturetype.obj dwelling walks the modifier below calls. Both
@@ -3770,17 +4889,6 @@ void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero,
     movingObjectSequence = -1;
 }
 
-// A philai..puzzlewindow bracket helper (81 B at 0x527fe0) the AI arm of
-// the war school runs as its "is this worth buying?" test: it scales the
-// offered VALUE by the hero's turnExperienceToRVRatio, scales the COST by
-// that player's per-resource weight (the double row at playerData+0x128)
-// and reports whether the weighted cost outweighs the weighted value - so
-// a true answer means DECLINE. Retail takes the hero in ECX and the
-// resource in EDX with two stack arguments, the /Gr shape again; the name
-// is an ordinal placeholder and the row is not claimed here.
-unsigned char PhilAiFn_00527FE0(hero* current_hero, EGameResource resource,
-                                int cost, int value);
-
 // E:\gamedcs\events.cpp:3970.  The war school sells one point of Attack
 // or Defense for 1000 gold, once per school per hero. The per-INSTANCE
 // bookkeeping is the hero's own 32-bit WarSchoolFlags word indexed by the
@@ -3839,7 +4947,7 @@ void advManager::DoEventWarSchool(hero* current_hero, ExtraInfoUnion* cell,
             break;
         }
     } else {
-        if (PhilAiFn_00527FE0(current_hero, GOLD, 1000,
+        if (AI_choose_resource_or_experience(current_hero, GOLD, 1000,
                               hero::GetExperienceIncrement(current_hero->level)))
             return;
         if (current_hero->GetPrimarySkill(0) > current_hero->GetPrimarySkill(1))
@@ -3850,16 +4958,6 @@ void advManager::DoEventWarSchool(hero* current_hero, ExtraInfoUnion* cell,
     current_hero->WarSchoolFlags |= 1 << cell->value;
     gpCurrentPlayer->resources[GOLD] -= 1000;
 }
-
-// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arm
-// of the tomb runs after picking the artifact up: it walks the hero's
-// backpack from get_last_backpack_index down and offers each entry to
-// 0x433e20 with request 0x13. Retail takes the hero in ECX and pushes
-// nothing, which under /Gr is exactly a one-pointer free function - so it
-// is spelled that way here rather than invented as a `hero` member. The
-// call relocation's SYMBOL NAME is not scored; the identity of the callee
-// belongs to whichever AI TU lands it, and this declarator claims nothing.
-void AiFn_00433B40(hero* current_hero);
 
 // E:\gamedcs\events.cpp:4039.  The warrior's tomb: a yes/no prompt for a
 // human, a two-part "would this even help?" screen for the AI, and then
@@ -3908,7 +5006,7 @@ void advManager::do_event_warrior_tomb(hero* current_hero, ExtraInfoUnion* cell,
         }
         current_hero->GiveArtifact(&artifact, 1, 1);
         if (!human_player)
-            AiFn_00433B40(current_hero);
+            AI_equip_artifacts(current_hero);
         cell->empty_tomb();
     } else {
         if (human_player)

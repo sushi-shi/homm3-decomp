@@ -257,6 +257,78 @@ struct MonsterInfo {
     unsigned long custom : 1;
 };
 SIZE(MonsterInfo, 4);
+
+// The campfire's arm of the same dword. advManager::DoEventCampfire
+// (0x4a1120) fixes both lanes: a four-bit UNSIGNED resource id at bits
+// 0..3 (`and eax,0xf`, no sign extension - the lean-to's lane again) and
+// the count in EVERYTHING above it, read as `shr ecx,4 / movsx edi,cx`.
+// That pair is the signature of a WIDE unsigned field truncated by a
+// `short` return, not of a sixteen-bit signed bitfield, which would have
+// been `shl / sar`. GATED for MonsterInfo's reason.
+struct CampfireInfo {
+    unsigned long resource : 4;
+    unsigned long size : 28;
+};
+SIZE(CampfireInfo, 4);
+
+// The treasure chest's arm. advManager::DoEventTreasure (0x4a6520) fixes
+// three lanes: a SIGNED ten-bit artifact id at bits 0..9 (`shl eax,0x16 /
+// sar eax,0x16`), the "this chest holds an artifact" flag at bit 10 (`shr
+// ecx,0xa / test cl,1`) and a four-bit UNSIGNED gold count at bits 11..14
+// (`shr eax,0xb / and eax,0xf`) in units of 500. GATED for MonsterInfo's
+// reason.
+struct TreasureInfo {
+    signed long artifact : 10;
+    unsigned long has_artifact : 1;
+    unsigned long gold : 4;
+    unsigned long tail : 17;
+};
+SIZE(TreasureInfo, 4);
+
+// The scholar's arm - four lanes, one per award kind plus the selector.
+// advManager::DoEventScholar (0x4a4dc0) reads every one of them SIGNED:
+// the award at bits 0..2 (`shl ecx,0x1d / sar ecx,0x1d`), the primary
+// skill at bits 3..5 (`shl edi,0x1a / sar edi,0x1d`), the secondary skill
+// at bits 6..12 (`shl eax,0x13 / sar eax,0x19`) and the spell at bits
+// 13..22 (`shl eax,9 / sar eax,0x16`). Only ONE of the three payload lanes
+// is ever read on a given visit, which is what the award selects. GATED
+// for MonsterInfo's reason.
+struct ScholarInfo {
+    signed long award : 3;
+    signed long primary : 3;
+    signed long secondary : 7;
+    signed long spell : 10;
+    unsigned long tail : 9;
+};
+SIZE(ScholarInfo, 4);
+
+// The sea chest's arm. advManager::DoEventSeaChest (0x4a5030) reads a
+// SIGNED three-bit reward kind at bits 0..2 (`shl edi,0x1d / sar
+// edi,0x1d`) and a SIGNED ten-bit artifact at bits 3..12 (`shl eax,0x13 /
+// sar eax,0x16`) - the artifact lane starts one bit above the selector,
+// where the scholar's payload lanes start six and thirteen bits up.
+// GATED for MonsterInfo's reason.
+struct SeaChestInfo {
+    signed long reward : 3;
+    signed long artifact : 10;
+    unsigned long tail : 19;
+};
+SIZE(SeaChestInfo, 4);
+
+// The pyramid's arm. advManager::do_event_pyramid (0x4a4230) reads a
+// one-bit guarded flag at bit 0 - as a plain byte test (`test byte
+// ptr [cell],1`), which is what a bool-returning accessor over a bit-0
+// field folds to - and a SIGNED eight-bit spell at bits 13..20 (`shl
+// esi,0xb / sar esi,0x18`). Emptying it writes both at once: `and
+// edx,0xffe01ffe / or edx,(spell & 0xff) << 0xd`, and that mask names the
+// two lanes and nothing between them. GATED for MonsterInfo's reason.
+struct PyramidInfo {
+    unsigned long guarded : 1;
+    unsigned long unused : 12;
+    signed long spell : 8;
+    unsigned long tail : 11;
+};
+SIZE(PyramidInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -286,6 +358,11 @@ public:
     union {
         unsigned long extraInfo;
         MonsterInfo monster_info;
+        CampfireInfo campfire_info;
+        TreasureInfo treasure_info;
+        ScholarInfo scholar_info;
+        SeaChestInfo sea_chest_info;
+        PyramidInfo pyramid_info;
     };
 #else
     unsigned long extraInfo;
@@ -427,6 +504,76 @@ public:
     // also frees EDX, which is what pushed the whole entry block's
     // register assignment off retail's.
     bool IsCustomized() const { return monster_info.custom != 0; }
+
+    // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
+    // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
+    // the Dreamcast line table over DoEventCampfire (dc 0x922e8), scoped
+    // to NewmapCell for IsCustomized's reason - the handler needs the whole
+    // cell as well, because it hands it to EraseAndFizzle. The size return
+    // is `short` and the truncation it forces is the `movsx edi,cx` at
+    // 0x4a1136; the resource is spelled `int` for GetLeanToResource's
+    // reason - the field is read UNSIGNED and an enum bitfield
+    // sign-extends under VC6.
+    short GetCampfireSize() const { return campfire_info.size; }
+    int GetCampfireResource() const { return campfire_info.resource; }
+
+    // The treasure chest's trio, named and decorated by the Dreamcast line
+    // table over DoEventTreasure (dc 0x963d8): TreasureIsArtifact is `_N`,
+    // GetTreasureArtifact `?AW4TArtifact` and GetTreasureSize `F`. Scoped
+    // to NewmapCell for the campfire's reason - the handler hands the whole
+    // cell to EraseAndFizzle. The *500 lives INSIDE GetTreasureSize,
+    // exactly as it does in get_wheel_gold, which is why retail truncates
+    // the product with `movsx eax,dx` even though 15*500 provably fits in a
+    // short. The artifact getter is spelled `int` for get_tomb_artifact's
+    // reason.
+    bool TreasureIsArtifact() const { return treasure_info.has_artifact; }
+    int GetTreasureArtifact() const { return treasure_info.artifact; }
+    short GetTreasureSize() const { return treasure_info.gold * 500; }
+
+    // The scholar's four accessors, all published by the Dreamcast
+    // (MapCell.h:1063/1068/1073/1078) with their own enum return types -
+    // ScholarAwards, TPrimarySkill, TSecondarySkill and SpellID. All four
+    // are spelled `int` for get_tomb_artifact's reason: none of those
+    // domains has a modelled definition, an enum return is int-wide under
+    // VC6, and the WIDTH is what the bytes constrain. Scoped to NewmapCell
+    // for the campfire's reason - the handler hands the whole cell to
+    // EraseAndFizzle.
+    int GetScholarAward() const { return scholar_info.award; }
+    int GetScholarPrimarySkill() const { return scholar_info.primary; }
+    int GetScholarSecondarySkill() const { return scholar_info.secondary; }
+    int GetScholarSpell() const { return scholar_info.spell; }
+
+    // The sea chest's pair, both Dreamcast-published with their own enum
+    // returns (SeaChestRewardTypes and TArtifact) and both spelled `int`
+    // for get_tomb_artifact's reason.
+    int GetSeaChestReward() const { return sea_chest_info.reward; }
+    int GetSeaChestArtifact() const { return sea_chest_info.artifact; }
+
+    // The pyramid's trio, all three Dreamcast-published over
+    // do_event_pyramid (dc 0x949e0): pyramid_is_guarded is `_N`,
+    // get_pyramid_spell `?AW4SpellID` and set_pyramid
+    // `void (bool, SpellID)` - MapCell.h:1056, which this file's carcass
+    // already carried. The spell getter is spelled `int` for
+    // get_tomb_artifact's reason.
+    bool pyramid_is_guarded() const { return pyramid_info.guarded; }
+    int get_pyramid_spell() const { return pyramid_info.spell; }
+    void set_pyramid(bool guards, int new_spell)
+    {
+        pyramid_info.guarded = guards;
+        pyramid_info.spell = new_spell;
+    }
+
+    // `?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ` (0x405de0),
+    // re-declared on the derived side exactly as SetCellVisited below is
+    // and for the same reason - retail's DoEventBlackBox (0x4a0c50) hands
+    // the raw NewmapCell pointer to it as `this`, which is the DC's
+    // implicit upcast, and this tree cannot express that inheritance
+    // because ExtraInfoUnion is a union. DECLARED, NEVER DEFINED: the one
+    // definition belongs to advmgr.obj, and a call relocation's symbol
+    // name is not scored. Do NOT confuse it with advManager's
+    // same-named member (0x4a0c20, reconstructed in src/events.cpp), which
+    // takes the cell as an argument and indexes fullMap->blackBoxes.
+    class BlackBoxData* get_black_box() const;
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
