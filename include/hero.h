@@ -528,6 +528,15 @@ public:
     void CheckLevel();
 #endif
 #ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // hero.obj's own view of the same two. GiveExperience calls
+    // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
+    // DC row with NO retail body - GiveExperience carries it expanded.
+#  ifndef HOMM3_EVENTS_VIEW
+    void CheckLevel();
+#  endif
+    int GetLevel(int iExperience);
+#endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
