@@ -95,6 +95,7 @@ advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
+advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80
 advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	64.7279	64.7279	64.7279	0xabe0
 advmgr	?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0
 advmgr	?get_creature_bank@ExtraInfoUnion@@QBEAAUtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0
@@ -135,7 +136,6 @@ advmgr	advManager_TownQuickView	0.0000	0.0000	0.0000	0x167a0
 advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
-advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
@@ -901,6 +901,7 @@ game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
+game	game_GetNumThievesGuilds	0.0000	0.0000	0.0000	0xcce30
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0

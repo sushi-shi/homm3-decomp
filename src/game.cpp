@@ -3272,7 +3272,12 @@ int game::GetBoatsBuilt()
 }
 
 // E:\gamedcs\game.cpp:11188
-DC_ONLY(0xb9a34, 0xF0)
+// Promoted 2026-08-19: retail 0x4cce30 (184 B) sits directly before the
+// SetMapSize anchor exactly as dc 0xb9a34 precedes dc 0xb9b24; thiscall
+// with one stack arg matches the signature, and the body walks the
+// player's towns testing building masks - the thieves-guild count the
+// advmgr quick views threshold at 1/2.
+VA(0x004cce30, 0xB8)  // anchor-bracket + anchor-callee (quick views), dc 0xb9a34
 int game::GetNumThievesGuilds(int iWhichPlayer)
 {
     // @stub
