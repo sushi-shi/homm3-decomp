@@ -195,13 +195,26 @@ public:
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
     unsigned char portrait;
-    // BuildPath copies these three unaligned dwords into its packed target
-    // point. The retail load widths are narrowed by the destination
-    // bitfields, but their four-byte spacing proves the stored type.
+    // BuildPath copies this packed target point out of the record. The
+    // two leading coordinates are dwords - their four-byte spacing
+    // proves the stored type, and BuildPath's own load widths are
+    // narrowed only by the destination bitfields.
     int pathTargetX;                    // +0x35
     int pathTargetY;                    // +0x39
-    int pathTargetZ;                    // +0x3d
-    char pad_041[2];
+    // +0x3d..+0x42, three SHORTS - narrowed 2026-08-20 out of the old
+    // `int pathTargetZ; char pad_041[2];` by hero::save (0x4d80c0),
+    // which serialises this band as `mov cx, word [this+0x3d]` /
+    // `+0x3f` / `+0x41` into a 16-bit scratch and writes each with
+    // size 2. An int at +0x3d cannot produce those loads: assigning
+    // one to a short scratch would still be a 16-bit load, but there
+    // would be no lvalue at all at +0x3f, and retail reads one there.
+    // The narrowing is invisible to the only other consumer -
+    // searchArray::BuildPath (0x56a0d0) takes `mov dl, byte [eax+0x3d]`
+    // on BOTH sides because type_point's z is a four-bit bitfield.
+    // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
+    short pathTargetZ;                  // +0x3d
+    short field_03f;                    // +0x3f
+    short field_041;                    // +0x41
     unsigned char targetIsCritical;       // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
@@ -841,6 +854,7 @@ public:
     // owner, a type_point built from the town's map cell, and 0.
     void PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags);
     int load(TAbstractFile* infile, int saveVersion);
+    int save(TAbstractFile* outfile);
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
