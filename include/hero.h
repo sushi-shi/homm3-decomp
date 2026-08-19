@@ -527,6 +527,14 @@ public:
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames.
     void UpdateStats();
+    // 0x4e2840, RETAIL-ONLY (no DC row), `ret 8`: decides whether the
+    // artifact being dragged may drop into an equipment slot.
+    // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
+    // with both ids on the stack. It is NOT DC's artifactAllowedInSlot
+    // (dc 0x37d88, an artifact.h FREE inline of 44 B already
+    // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
+    // member. ORDINAL PLACEHOLDER name.
+    unsigned char HeroFn_004E2840(long artifact, long slot);
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads

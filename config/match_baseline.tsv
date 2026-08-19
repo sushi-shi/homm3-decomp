@@ -1028,13 +1028,13 @@ hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
 hero	?save@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd77b0
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
+hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_HeroMessageUpdate	0.0000	0.0000	0.0000	0xd97f0
 hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
 hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
-hero	THeroScreenWindow_update_slot	0.0000	0.0000	0.0000	0xdaf90
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
 hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
 hero	hero_Deallocate	0.0000	0.0000	0.0000	0xd9ec0
