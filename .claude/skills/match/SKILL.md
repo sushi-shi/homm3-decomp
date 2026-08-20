@@ -137,10 +137,18 @@ wall counts DECLARATORS, not edits, so two header additions that are each
 individually ratchet-clean are not jointly clean. Two lanes added declarators
 to `cmbtmgr.h`; each measured its own as neutral on its own branch, and the
 merged count regressed `command::GetCommand` 92.5714 -> 92.5357 exactly as
-one of them had predicted for a single bare declarator. Gate every new
-declarator behind a view macro even when it measures neutral — the
-measurement is only valid for the branch it was taken on. Re-measure the
+one of them had predicted for a single bare declarator. Re-measure the
 include-set-sensitive rows after every merge that touches a shared header.
+
+**BUT DO NOT OVER-GATE FOR IT.** The ledger tracks `cur`, `max` AND `hist`,
+and the ratchet compares against `max`: a perturbation lowers `cur` while
+`max` and `hist` keep the peak, and even `--accept-regressions` leaves `hist`
+intact (`status.py:321` says exactly that when it reports one). So an
+include-set perturbation costs a RE-MEASURE by a later lane, not the result.
+Gate a declarator when it is genuinely compile-required — a name collision, a
+type not every TU can see — not merely because it moves a score. 91 view
+macros guarding 238 gate sites accumulated on the unstated assumption that
+any perturbation is damage. It is not.
 
 **DECLARE-BUT-DO-NOT-DEFINE TO FORCE A SPECIAL MEMBER OUT OF LINE** (2026-08-20).
 The first lever that actually works against the OVER-inline family. If retail

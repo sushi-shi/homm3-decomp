@@ -2,95 +2,101 @@
 # recoverable = size * (1 - fuzzy/100), the fuzzy-weighted
 # bytes closing this function would add.
 class	recoverable	fuzzy	size	unit	fn	route	knob
-unclaimed (no source binding)	2006	0.0000	2006	advmgr	advManager_Open	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	1612	0.0000	1612	advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	2460	0.0000	2460	spells	combatManager_ShowSpellMessage	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1689	0.0000	1689	spells	combatManager_Armageddon	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1612	0.0000	1612	spells	combatManager_DrawBolt	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1612	85.9895	11504	townmgr	??0THallWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 13 under-inline, 12 over-inline (223 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1498	71.1024	5184	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 11 over-inline (21 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	1474	0.0000	1474	spells	combatManager_DoBolt	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1444	0.0000	1444	spells	combatManager_SpellCastWorkChance	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1420	0.0000	1420	command	combatManager_DoVictory	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1413	0.0000	1413	game	game_game	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1371	0.0000	1371	puzzlewindow	AI_attempt_puzzle_guess	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1294	35.5280	2007	viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (23 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	1278	0.0000	1278	victorylossconditions	VictoryConditionStruct_CheckForArtifactWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	1192	0.0000	1192	game	game_ClaimTown	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1196	0.0000	1196	spells	combatManager_ShowMassSpell	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1152	45.0980	2099	mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 26 under-inline (12 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	1069	71.7143	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 7 over-inline (23 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	1063	0.0000	1063	town	town_BuildBuilding	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1032	0.0000	1032	spells	combatManager_Earthquake	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1032	46.4584	1927	findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 3 over-inline (8 name-unresolvable pair(s) discounted)
-unclaimed (no source binding)	1020	0.0000	1020	ai_tactical	type_AI_spellcaster_consider_spell	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1029	0.0000	1029	spells	combatManager_MirrorImage	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	974	0.0000	974	town	initialize_buildings	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	968	0.0000	968	victorylossconditions	LossConditionStruct_CheckForDefeatedHeroLoss	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+inliner (predict-inline)	953	74.7663	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (27 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	949	52.7156	2006	advmgr	?Open@advManager@@UAEHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 19 under-inline (41 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	944	90.2004	9632	advmgr	?QuickInfo@advManager@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (11 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	931	57.4653	2189	findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 under-inline (19 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	882	90.0426	8860	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 5 over-inline (3 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	873	0.0000	873	town	town_give_event_reward	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	842	0.0000	842	spells	combatManager_ChainLightning	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	838	0.0000	838	game	game_game_ce5b0	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	816	0.0000	816	town	town_create_building	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	811	0.0000	811	ai_tactical	type_AI_spellcaster_get_fortune_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	796	0.0000	796	ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	776	0.0000	776	ai_tactical	type_AI_spellcaster_cast_spell	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	775	0.0000	775	advmgr	advManager_ViewPuzzle	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	768	0.0000	768	advmgr	advManager_StartLocalPlayerTurn	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	815	0.0000	815	spells	combatManager_Resurrect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	747	0.0000	747	game	game_ViewArmy	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	724	75.6482	2973	advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	723	68.0799	2266	townmgr	?BuyBuild@townManager@@QAEHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (19 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	723	0.0000	723	cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (9 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	714	73.7978	2725	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline (15 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	717	0.0000	717	spells	combatManager_ModifySpellDamage	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	708	0.0000	708	command	combatManager_show_eagle_eye	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	701	0.0000	701	spells	combatManager_SpellTargetMessage	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	698	77.1683	3056	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-unclaimed (no source binding)	686	0.0000	686	ai_tactical	type_AI_spellcaster_consider_resurrect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	657	0.0000	657	ai_tactical	type_AI_spellcaster_consider_single_enchantment	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	696	0.0000	696	spells	combatManager_mark_berserk_area_effect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	692	0.0000	692	spells	combatManager_ValidSpellTarget	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	692	0.0000	692	spells	combatManager_mark_area_effect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	666	0.0000	666	spells	combatManager_SummonElemental	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	625	0.0000	625	mapcell	NewfullMap_NewfullMap_fd1e0	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	624	0.0000	624	advmgr	SaveGame	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	623	0.0000	623	town	show_creature_rewards	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	615	0.0000	615	game	game_SaveGame	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	615	0.0000	615	victorylossconditions	VictoryConditionStruct_CheckForDefeatedMonsterWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	596	0.0000	596	ai_tactical	type_AI_spellcaster_get_enchantment_function	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	590	71.9069	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline (8 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	590	0.0000	590	town	town_initialize	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	555	0.0000	555	ai_tactical	type_AI_spellcaster_type_AI_spellcaster	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	548	0.0000	548	ai_tactical	type_AI_spellcaster_consider_earthquake	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	585	0.0000	585	spells	combatManager_AreaEffect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	546	74.4820	2140	armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 2 over-inline (34 name-unresolvable pair(s) discounted)
-inliner (predict-inline)	543	64.8103	1543	cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 12 over-inline (4 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	543	64.8103	1543	cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 12 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	542	80.0926	2725	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline (15 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	515	0.0000	515	victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	497	0.0000	497	game	game_CreateTownHeroes	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-inliner (predict-inline)	493	78.8021	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
-unclaimed (no source binding)	479	0.0000	479	advmgr	advManager_advManager	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	478	0.0000	478	victorylossconditions	VictoryConditionStruct_CheckForArtifactTransportWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	476	55.7402	1076	hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline (2 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	476	0.0000	476	spells	combatManager_ResetBoltAngle	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	474	0.0000	474	town	show_building_rewards	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	455	0.0000	455	advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+inliner (predict-inline)	470	79.7982	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (1 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	459	0.0000	459	spells	combatManager_demonic_resurrection	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	452	80.3043	2297	ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	447	0.0000	447	command	combatManager_show_looted_artifacts	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-inliner (predict-inline)	433	65.2654	1247	advmgr	?ShowRoute@advManager@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline
 unclaimed (no source binding)	420	0.0000	420	victorylossconditions	VictoryConditionStruct_CheckForUpgradedTown	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	405	95.5868	9170	townmgr	??0TTownScreenWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 6 over-inline (248 name-unresolvable pair(s) discounted)
-unclaimed (no source binding)	384	0.0000	384	ai_tactical	type_AI_spellcaster_get_caliph_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	381	0.0000	381	ai_tactical	type_AI_spellcaster_get_chain_lightning_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	364	0.0000	364	ai_tactical	type_AI_spellcaster_get_ogre_mage_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	387	0.0000	387	spells	combatManager_AddBolt	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	380	0.0000	380	spells	HandleGetTeleportDestination	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	373	0.0000	373	spells	combatManager_find_resurrection_target	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	369	0.0000	369	spells	combatManager_find_animate_dead_target	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	361	0.0000	361	victorylossconditions	VictoryConditionStruct_CheckForTotalCreatures	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	361	82.9093	2111	cmbtmgr	?Open@combatManager@@UAEHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	358	82.0785	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (7 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	355	0.0000	355	spells	combatManager_GetNextChainLightningTarget	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	350	76.8733	1512	artifact	?InitializeArtifactTraitsTable@@YIEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (6 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	348	0.0000	348	mapcell	NewfullMap_NewfullMap	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	347	57.8826	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline (10 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	343	65.1779	985	mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (7 name-unresolvable pair(s) discounted)
-unclaimed (no source binding)	336	0.0000	336	ai_tactical	type_AI_spellcaster_consider_enchantment	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	333	80.5192	1708	ai_player	?make_gift@type_AI_player@@QAEXJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline (14 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	327	79.6984	1613	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
+inliner (predict-inline)	326	73.8204	1247	advmgr	?ShowRoute@advManager@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	320	78.4070	1481	mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (36 name-unresolvable pair(s) discounted)
-unclaimed (no source binding)	309	0.0000	309	ai_tactical	type_AI_spellcaster_get_cancel_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	305	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	304	87.5901	2446	advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
 control-flow (why-branch)	297	89.0387	2708	findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	295	85.3187	2011	advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (22 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	294	82.5365	1682	campaignwindow	??0TCampaignWindow@@QAE@EH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 over-inline (19 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	287	85.7434	2016	hero	?get_luck_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline (33 name-unresolvable pair(s) discounted)
-control-flow (why-branch)	283	90.1844	2881	advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	277	85.7052	1939	hero	?get_morale_description@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (31 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	275	0.0000	275	spells	combatManager_mark_area_effect_1a46f0	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	274	48.7740	535	hero	?HeroFn_004DC100@hero@@QAEXJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (6 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	271	0.0000	271	spells	combatManager_mark_berserk_area_effect_1a4810	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+control-flow (why-branch)	269	90.6495	2881	advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+unclaimed (no source binding)	269	0.0000	269	spells	combatManager_find_demonic_resurrection_target	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	253	83.2068	1508	advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	249	83.4342	1501	hero	?CheckLevel@hero@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline
 inliner (predict-inline)	242	77.7273	1088	levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline (3 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	229	0.0000	229	spells	combatManager_SetMassSpellInfluence	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	229	86.3767	1678	ai_player	?calculate_demand@type_AI_player@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (7 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	227	44.9281	412	hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (1 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	217	96.3788	5997	combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (126 name-unresolvable pair(s) discounted)
@@ -102,6 +108,7 @@ inliner (predict-inline)	207	90.7834	2248	quickherowindow	??0TQuickHeroWindow@@Q
 inliner (predict-inline)	204	87.9412	1695	hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	199	77.3792	881	mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (24 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	198	89.9877	1973	viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline, 3 over-inline (26 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	197	0.0000	197	spells	combatManager_ModifySpellDamageForSpells	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	194	88.7021	1714	viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (21 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	190	67.1937	579	cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	186	80.9400	975	advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	why-reg	spill to dead-parameter slot (B4)
@@ -109,11 +116,11 @@ inliner (predict-inline)	186	75.0406	744	hero	?GetLuck@hero@@QAEHPBV1@EE@Z	predi
 control-flow (why-branch)	185	81.7645	1014	hero	?GetMobility@hero@@QAEHE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	178	82.8591	1040	hero	?initialize@hero@@QAEXF@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
 inliner (predict-inline)	169	82.5689	968	armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (13 name-unresolvable pair(s) discounted)
-register-homing (why-reg)	168	88.2360	1428	recruit	?Update@recruitUnit@@QAEXEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	165	88.1659	1395	game	?calculate_production@game@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	159	87.5102	1270	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (19 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	158	89.5008	1508	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	157	88.7511	1395	game	?calculate_production@game@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	155	85.9057	1102	fly	?Fly@army@@QAEHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+unclaimed (no source binding)	155	0.0000	155	spells	combatManager_HasValidSpellTarget	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	152	88.5071	1326	armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	148	91.0075	1646	ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	140	92.3601	1832	hero	?UpdateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -121,6 +128,8 @@ register-homing (why-reg)	139	80.2110	700	ai_tactical	?get_protection_value@type
 control-flow (why-branch)	137	72.0056	491	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	137	91.1006	1542	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 inliner (predict-inline)	134	72.9210	494	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (2 name-unresolvable pair(s) discounted)
+register-homing (why-reg)	131	90.8376	1428	recruit	?Update@recruitUnit@@QAEXEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	129	83.3125	775	advmgr	?ViewPuzzle@advManager@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	128	86.4031	943	cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	127	98.2932	7456	townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (203 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	127	91.9193	1566	systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -134,8 +143,10 @@ register-homing (why-reg)	114	81.6384	620	campaignwindow	?CampaignWindowHandler@
 register-homing (why-reg)	113	92.1925	1453	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	111	94.1675	1904	mousemgr	?Update@mouseManager@@QAEXE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	109	76.9111	474	mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	108	83.5240	657	ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	104	79.5363	510	armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	104	81.7000	570	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+unclaimed (no source binding)	104	0.0000	104	spells	combatManager_remove_corpse	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	100	91.1779	1130	cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	98	86.3656	721	advmgr	?Close@advManager@@UAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 register-homing (why-reg)	98	92.5714	1322	command	?GetCommand@combatManager@@QAEHH@Z	why-reg	spill to dead-parameter slot (B4)
@@ -193,6 +204,7 @@ inliner (predict-inline)	50	89.7683	488	townmgr	?DoUniversity@townManager@@QAEXX
 control-flow (why-branch)	50	86.0096	356	army	?GoBerserk@army@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	49	99.7219	17498	townmgr	??0TCastleWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 93 under-inline, 93 over-inline (399 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	47	88.4400	403	button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (3 name-unresolvable pair(s) discounted)
+register-homing (why-reg)	46	90.2973	479	advmgr	??0advManager@@QAE@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	46	95.7196	1084	cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	46	92.7131	626	hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (11 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	44	98.8241	3710	levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (85 name-unresolvable pair(s) discounted)
@@ -205,6 +217,7 @@ control-flow (why-branch)	41	81.7262	226	town	?get_legion_bonus@town@@QAEJJ@Z	wh
 register-homing (why-reg)	41	90.7482	446	townmgr	?DoBlacksmith@@YIXHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	39	94.7945	749	ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 register-homing (why-reg)	38	82.9333	224	mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	38	93.1850	555	ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	why-reg	spill to dead-parameter slot (B4)
 control-flow (why-branch)	38	94.1284	643	hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	38	84.7170	247	cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	38	84.1667	237	diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	why-reg	register-homing knob (B-family)
@@ -220,6 +233,7 @@ inliner (predict-inline)	35	96.4729	988	mapcell	?readMonsterData@NewfullMap@@QAE
 control-flow (why-branch)	33	93.8770	543	townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	33	89.6018	317	town	?can_build@town@@QBEEF@Z	why-reg	spill to dead-parameter slot (B4)
 register-homing (why-reg)	32	86.4111	237	iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	32	96.0616	811	ai_tactical	?get_fortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	32	93.3240	472	mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	31	84.4118	201	game	?ClaimGarrison@game@@QAEXHH@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	31	81.4912	169	town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -238,6 +252,8 @@ unclassified	27	91.5098	318	campaignbrief	??1NewSMapHeader@@QAE@XZ	why-reg	run w
 register-homing (why-reg)	27	93.5520	416	hero	?HeroFn_004D97F0@hero@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	27	95.7822	629	ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	26	90.9302	292	townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	26	97.4122	1020	ai_tactical	?consider_spell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	26	97.8269	1192	game	?ClaimTown@game@@QAEXHHEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	25	96.8312	803	cmbtmgr	?MakeCreaturesVanish@combatManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	25	92.8767	354	window	?CenterWindow@heroWindow@@QAEXHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	25	96.4286	706	viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (14 name-unresolvable pair(s) discounted)
@@ -254,6 +270,7 @@ unclassified	21	98.1840	1172	advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDra
 unclassified	21	98.1667	1156	advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	21	96.4326	593	game	??0SavedGameHeader@@QAE@XZ	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	20	96.8602	651	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	20	97.0996	686	ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	20	95.4601	438	cmbtmgr	?InLineOfSight@combatManager@@QBEEHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	20	92.0000	246	army	?can_shoot@army@@QBEEPBV1@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	19	98.8368	1661	quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -261,6 +278,7 @@ register-homing (why-reg)	19	95.8926	469	ai	?choose_creature_spell@combatManager
 register-homing (why-reg)	19	97.8099	874	game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	19	92.5679	253	victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	18	92.6804	242	font	?LineLength@font@@QAEHPBDH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	17	98.9292	1612	advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	17	95.7583	399	campaignbrief	??1TCampaignBrief@@UAE@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	17	93.6598	264	mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	16	93.3333	247	advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
@@ -288,13 +306,16 @@ register-homing (why-reg)	12	99.2746	1598	advmgr	?SetHeroContext@advManager@@QAE
 control-flow (why-branch)	11	97.7333	507	cmbtmgr	?CheckApplyBadMorale@combatManager@@QAEHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	11	94.7260	205	game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	11	96.4286	294	townmgr	?Recruit@TCastleWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+unclassified	10	89.6774	99	spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	10	98.0056	484	advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	10	98.5654	666	armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	9	98.7864	776	font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	9	99.5294	1979	hero	?SetupHeroView@THeroScreenWindow@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	9	98.5030	620	misc	?CheckConfigFile@@YIXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	9	95.9231	225	smackmgr	?VideoClose@@YIXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
+control-flow (why-branch)	9	91.2195	104	spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	9	93.6111	138	resourcemanager	?GetSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	9	98.8760	776	ai_tactical	?cast_spell@type_AI_spellcaster@@QAEEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	9	98.4598	558	font	?DrawStringExecute@font@@QAEXPBDHPAVBitmap16Bit@@HHHHHHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	9	86.6296	64	resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	8	98.6070	609	townmgr	?DoTownGate@townManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -304,6 +325,8 @@ control-flow (why-branch)	8	96.1585	208	mapcell	?is_diggable@NewmapCell@@QAEEXZ	
 register-homing (why-reg)	8	97.5194	316	army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	8	96.6265	228	remote	?KillOldChat@CChatManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	8	97.9658	374	hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	7	99.1018	796	ai_tactical	?check_adjacent_hexes@type_AI_attack_hex_chooser@@QAEXJJJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	7	98.6076	497	game	?CreateTownHeroes@game@@QAEXPAH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	7	97.0115	224	army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	7	98.9815	642	game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	6	99.3528	984	cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	why-reg	run why-reg / why-branch for the full search
