@@ -309,6 +309,18 @@ public:
     // provisional until a source identity is proven.
     void NewfullMapFn_00505F20(CObject* object, int objectType,
                                int objectIndex, int terrain);
+#endif
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+    // Retail-only helper at 0x505ea0, reached only by game::ConvertObject.
+    // It scans the per-object-type vector at this+0xdc+16*objectType
+    // BACKWARDS for the entry whose .extra matches and hands back its
+    // address. That per-type array is not modelled here - ConvertObject
+    // never touches it directly - so only the declarator is needed and no
+    // layout moves. No surviving symbol names it; the address-bearing
+    // spelling follows NewfullMapFn_00505F20's precedent above.
+    CObjectType* NewfullMapFn_00505EA0(int objectType, int extra);
+#endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     int PlaceObject(int objectIndex, unsigned char setExtraInfo);
     // The second parameter is the 8x6 byte grid the object's draw pass
     // stamps: retail zeroes exactly 48 bytes through it and walks it with a
@@ -1687,6 +1699,25 @@ public:
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* gpGame;
+
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+// The five .def-name tables game::ConvertObject (0x4c9990) rewrites a
+// converted object's CObjectType::ImageName from. Their sole reader in
+// the whole image is that body (config/retail-reloc-evidence.tsv rows
+// 0xc9a33 / 0xc9a42 / 0xc9b04 / 0xc9b50 / 0xc9b63), so they are declared
+// on game.obj's own gate. Contents read from the hash-verified image:
+// the resource row is avtwood0/avtmerc0/avtore0/avtsulf0/avtcrys0/
+// avtgems0/avtgold0.def in the seven-resource order the tree already
+// uses, and the three town rows are AVCcast0..AVChfor0 (village),
+// AVCcasx0..AVChforx (fort) and AVCcasz0..AVChforz (capitol), nine
+// entries each in TTownType order. Names are house placeholders - no DC
+// roster row covers any of the five.
+DATA(0x00677958) extern const char* gResourceObjectDefs[NUM_RESOURCES];
+DATA(0x00677974) extern const char* gArtifactObjectDefFormat;
+DATA(0x00677a0c) extern const char* gTownVillageObjectDefs[9];
+DATA(0x00677a30) extern const char* gTownFortObjectDefs[9];
+DATA(0x00677a54) extern const char* gTownCapitolObjectDefs[9];
+#endif
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
