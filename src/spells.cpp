@@ -8,7 +8,21 @@
 #define HOMM3_ARMYGRP_SACRIFICE_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// ModifySpellDamageForSpells reads the four Protection-from-<school>
+// round counters (+0x210..+0x21c) and their four damage factors
+// (+0x4a8..+0x4b4); army.h keeps both runs behind this view because each
+// half, sliced on its own, costs command.obj's GetCommand
+// 92.5714 -> 92.5357 (measured 2026-08-20).
+#define HOMM3_ARMY_PROTECTION_VIEW
+// SetMassSpellInfluence calls army::SetSpellInfluence, whose declarator
+// army.h keeps behind this view.
+#define HOMM3_ARMY_SPELLS_VIEW
+// GetNextChainLightningTarget measures screen distance with army::MidX /
+// army::MidY, which army.h keeps behind this declaration view.
+#define HOMM3_ARMY_MIDPOINT_DECL
 #include "army.h"
+#undef HOMM3_ARMY_MIDPOINT_DECL
+#undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
 #define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
@@ -17,13 +31,44 @@
 // bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
 // it is unconditional (measured 2026-08-20).
 #define HOMM3_CMBTMGR_AREA_VIEW
+// The spells.obj-only declaration block; see cmbtmgr.h.
+#define HOMM3_CMBTMGR_SPELLS_VIEW
+// find_demonic_resurrection_target, declared beside its army.cpp consumer.
+#define HOMM3_CMBTMGR_RESURRECT_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_RESURRECT_VIEW
+#undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
+#include <math.h>    // sqrt, for the chain-lightning bounce search
+
+// VC6's own <xutility> reference-returning max, declared file-locally
+// exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
+// mark_area_effect materialises BOTH operands into stack temps and then
+// selects between their ADDRESSES, which is the signature of this
+// by-value template and not of the <xutility> `const _Ty&` one; that
+// experiment was run and refuted on the AI TUs (see ai_combat.cpp).
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
+// The third of cmbtmgr.h's axial-coordinate helpers; the other two are
+// class-body inlines there and this one lives here for _cpp_max.
+inline long combatManager::get_distance(hex_point start, hex_point stop) const
+{
+    long dx = start.x - stop.x;
+    long dy = start.y - stop.y;
+    if ((dx < 0) == (dy < 0))
+        return _cpp_max(abs(dx), abs(dy));
+    return abs(dx) + abs(dy);
+}
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
@@ -175,24 +220,26 @@ int HandleGetTeleportDestination(message* msg)
 // shape for the sacrifice sites; this is the standalone five-parameter
 // body, and it adds the grid bound and the cells[hex] fallback.
 //
-// Residual (91.2%): the grid guard. Retail reaches ONE shared
-// `xor eax,eax / pop ebp / ret 0x14` from both tests and places it between
-// the guard and the switch; the split ifs below duplicate that block
-// instead. This is the skill's adjacent-early-out class, and the split is
-// still the closest spelling by a wide margin - tried and rejected:
-// `if (hex < 0 || hex >= 187) return 0;` and the positive
-// `if (hex >= 0 && hex < 187) { ... } return 0;`, which BOTH sink the
-// shared block to the very end of the function and score 56.3%. The split
-// also buys the block ORDER: at 56.3% the arms come out RES/DEF/ANIM, and
-// only the split form lays them out DEF/ANIM/RES as retail does.
+// THE GRID GUARD IS cmbtmgr.h's OWN ValidHex, NEGATED - and that is what
+// closed this body (91.2 -> 100.0, 2026-08-20). Retail reaches ONE shared
+// `xor eax,eax / pop ebp / ret 0x14` from both tests and places it
+// BETWEEN the guard and the switch, which is neither of the two shapes
+// tried before: `if (hex < 0 || hex >= 187) return 0;` and the positive
+// `if (hex >= 0 && hex < 187) { ... } return 0;` both sink the block to
+// the very end and score 56.3%, and the split `if (hex < 0) return 0; if
+// (hex >= 187) return 0;` places both inline but DUPLICATES the block,
+// 91.2%. `if (!ValidHex(hex)) return 0;` is the one spelling that emits
+// the pair of jumps into a single early-out block: the inline computes
+// `hex >= 0 && hex < 187`, the `!` turns its false arm into the return,
+// and VC6 lands that return right there. The three sibling finders below
+// use the same guard and all three reach it the same way. The split's
+// other win survives: the switch arms still come out DEF/ANIM/RES.
 VA(0x005a3950, 0x68)  // order-map+arity+anchor-callee, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex,
                                        unsigned char first_target,
                                        unsigned char creature_spell)
 {
-    if (hex < 0)
-        return 0;
-    if (hex >= 187)
+    if (!ValidHex(hex))
         return 0;
     switch (spell) {
     case SPELL_RESURRECTION:
@@ -239,33 +286,221 @@ unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:2781
+#endif  // @carcass
+
+// THE THREE CORPSE FINDERS, and they are one template written three
+// times. Each takes a side and a hex, guards the hex with ValidHex,
+// and then splits on whether the cell holds a LIVE stack or only
+// bodies:
+//   * a live stack is a target if it is the caster's own side, carries
+//     the right creature-attribute bit, and has lost creatures
+//     (numTroops < origNumTroops);
+//   * otherwise the cell's corpse list is walked BACKWARDS - retail
+//     starts at iBodiesInHex - 1 and counts down - and each body is
+//     accepted on the same attribute bit plus a two-hex clearance test.
+// The attribute bit is the ONLY semantic difference between the
+// resurrection pair and the animate-dead one: Is(4) for the living,
+// Is(18) for the undead, spelled through army.h's own Is() inline
+// (`shr <word>, n / test al, 1`) exactly as every other reader here.
+//
+// THE TWO-HEX CLEARANCE TEST IS WHAT DECODES hexcell::deadPartOfDouble.
+// Retail reads the byte and then addresses a NEIGHBOUR cell through the
+// same `this + hex*0x70` product it already has: +0x24c is
+// cells[hex + 1].armySide and +0x244 its attributes, +0x16c and +0x164
+// are cells[hex - 1]'s. So a body flagged 0 needs the cell to its RIGHT
+// free and a body flagged 1 the cell to its LEFT - which is exactly a
+// two-hex creature's other half, and it settles the field's role as
+// well as its width. The two tests are sequential ifs, not an
+// else-if: retail runs the `== 0` block and then falls into the `== 1`
+// compare rather than jumping over it.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
-army* combatManager::find_resurrection_target(int iArmyGroup, int targetIndex, unsigned char creature_spell)
+army* combatManager::find_resurrection_target(int side, int hex,
+                                              unsigned char creature_spell)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->armySide >= 0) {
+        army* target = cell->get_army();
+        if (target->combatSide != side)
+            return 0;
+        if (!(target->Is(4) & 1))
+            return 0;
+        if (target->numTroops >= target->origNumTroops)
+            return 0;
+        if (SpellCastWorkChance(SPELL_RESURRECTION, side, target, 0, 1,
+                                creature_spell) > 0.0)
+            return target;
+        return 0;
+    }
+    if (cell->field_10 & 2)
+        return 0;
+    int i = cell->iBodiesInHex - 1;
+    if (i < 0)
+        return 0;
+    for (;;) {
+        army* corpse = &armies[cell->deadArmySide[i]]
+                              [cell->deadArmySlot[i]];
+        if (cell->deadArmySide[i] != side)
+            goto next;
+        if (!(corpse->Is(4) & 1))
+            goto next;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                goto next;
+            if (cells[hex + 1].field_10 & 2)
+                goto next;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                goto next;
+            if (cells[hex - 1].field_10 & 2)
+                goto next;
+        }
+        if (SpellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
+                                creature_spell) > 0.0)
+            return corpse;
+    next:
+        i--;
+        if (i < 0)
+            return 0;
+    }
 }
 
-// E:\gamedcs\spells.cpp:2866
+// The Vampire Lord's drain, and the one of the three that rolls NO
+// chance: it has no SpellCastWorkChance call at all, and it refuses a
+// cell that holds a live stack outright rather than offering it as a
+// target.
 VA(0x005a3e40, 0x10D)  // order-map+arity, dc 0x1532f8
-army* combatManager::find_demonic_resurrection_target(int iArmyGroup, int targetIndex)
+army* combatManager::find_demonic_resurrection_target(int side, int hex)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->field_10 & 2)
+        return 0;
+    if (cell->armySide >= 0)
+        return 0;
+    for (int i = cell->iBodiesInHex - 1; i >= 0; i--) {
+        int dead_side = cell->deadArmySide[i];
+        int dead_slot = cell->deadArmySlot[i];
+        if (dead_side != side)
+            continue;
+        if (!(armies[dead_side][dead_slot].Is(4) & 1))
+            continue;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                continue;
+            if (cells[hex + 1].field_10 & 2)
+                continue;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                continue;
+            if (cells[hex - 1].field_10 & 2)
+                continue;
+        }
+        return &armies[dead_side][dead_slot];
+    }
+    return 0;
 }
 
-// E:\gamedcs\spells.cpp:2926
 VA(0x005a3f50, 0x171)  // order-map+arity, dc 0x153400
-army* combatManager::find_animate_dead_target(int iArmyGroup, int targetIndex)
+army* combatManager::find_animate_dead_target(int side, int hex)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->armySide >= 0) {
+        army* target = cell->get_army();
+        if (target->combatSide != side)
+            return 0;
+        if (!(target->Is(18) & 1))
+            return 0;
+        if (target->numTroops >= target->origNumTroops)
+            return 0;
+        if (SpellCastWorkChance(SPELL_ANIMATE_DEAD, side, target, 0, 1, 0)
+                > 0.0)
+            return target;
+        return 0;
+    }
+    if (cell->field_10 & 2)
+        return 0;
+    int i = cell->iBodiesInHex - 1;
+    if (i < 0)
+        return 0;
+    for (;;) {
+        army* corpse = &armies[cell->deadArmySide[i]]
+                              [cell->deadArmySlot[i]];
+        if (cell->deadArmySide[i] != side)
+            goto next;
+        if (!(corpse->Is(18) & 1))
+            goto next;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                goto next;
+            if (cells[hex + 1].field_10 & 2)
+                goto next;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                goto next;
+            if (cells[hex - 1].field_10 & 2)
+                goto next;
+        }
+        if (SpellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
+                > 0.0)
+            return corpse;
+    next:
+        i--;
+        if (i < 0)
+            return 0;
+    }
 }
 
-// E:\gamedcs\spells.cpp:3078
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
+#endif  // @carcass
+
+// The sweep in front of ValidSpellTarget: "is there ANY cell on the grid
+// this spell could be aimed at". It is also what fixes ValidSpellTarget's
+// parameter ORDER - the six pushes here are the caller's own five
+// parameters with the cell index spliced into slot 3, which is exactly
+// where the DC prototype (spells.cpp:2645) puts targetIndex.
+//
+// THE GRID GUARD IS cmbtmgr.h's OWN InInvisibleColumn, INLINED, and the
+// polarity is what identifies it. Retail jumps PAST the modulo when the
+// hex is out of range and skips the cell only when the column test
+// fires - i.e. out-of-range means "not an invisible column", which is
+// what that predicate's `if (!ValidHex(index)) return 0;` head does. A
+// plain bounds check would have to skip on the out-of-range arm. The
+// header already carried the inline (a DC header inline at
+// cmbtmgr.h:1525) for mark_teleport; this is its second retail witness,
+// and the expansion here is byte-for-byte the one recorded there.
+//
+// The Chain Lightning arm skips a cell already holding one of the
+// CASTER'S OWN stacks: the spell is the one that walks from target to
+// target, so a friendly occupant is not an aim point.
 VA(0x005a40d0, 0x9B)  // order-map+arity, dc 0x153580
-unsigned char combatManager::HasValidSpellTarget(SpellID spellId, TSkillMastery mastery, int casting_side, unsigned char first_target, unsigned char creature_spell)
+unsigned char combatManager::HasValidSpellTarget(SpellID spellId, long mastery,
+                                                 long casting_side,
+                                                 unsigned char first_target,
+                                                 unsigned char creature_spell)
 {
-    // @stub
+    for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (InInvisibleColumn(hex))
+            continue;
+        if (spellId == SPELL_CHAIN_LIGHTNING && cells[hex].armySide >= 0
+            && cells[hex].get_army()->combatSide == casting_side)
+            continue;
+        if (ValidSpellTarget(spellId, mastery, hex, casting_side, first_target,
+                             creature_spell))
+            return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3103
 DC_ONLY(0x153638, 0x54)
@@ -288,19 +523,94 @@ long combatManager::get_distance(tagPOINT start, tagPOINT stop)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3159
+#endif  // @carcass
+
+// THE HEX-COLLECTING HALF, and it is where the battlefield's AXIAL
+// COORDINATES live. The grid is 17 columns by 11 rows with every other
+// row offset half a hex, so a straight (row, column) box is the wrong
+// shape for a radius. Retail converts the centre into a skewed pair -
+//     x = col - (row + 1) / 2
+//     y = col + row / 2
+// - sweeps the square [x-r, x+r] x [y-r, y+r] in that space, and
+// converts each candidate back with the inverse
+//     col = (i + j + 1) / 2      row = j - i
+// which is what makes the SAME division constants appear twice, once
+// forward and once inverted.
+//
+// THE DISTANCE IS THE AXIAL-HEX METRIC, and its two arms are exactly
+// what the sign test picks between: when the two offsets have the SAME
+// sign the walk can move diagonally and the cost is max(|dx|, |dy|);
+// when they differ it has to zig-zag and the cost is |dx| + |dy|.
+// `_cpp_max` is the by-value <xutility> template this tree already
+// carries in three other TUs - retail copies BOTH operands into stack
+// slots and selects between their ADDRESSES, which only that signature
+// does.
+//
+// Retail lowers `hex % 17` with a real `idiv` and `hex / 17` with the
+// 0x78787879 magic multiply, one after the other, discarding the idiv's
+// own quotient - so the two are independent expressions in the source,
+// not one divmod.
+//
+// The whole of vector<long>::insert is expanded INLINE here where the
+// army-vector shells two rows down get an out-of-line call: the /Ob2
+// budget is 2 * caller size, and this caller is 692 bytes against their
+// 275.
 VA(0x005a4170, 0x2B4)  // order-map+arity, dc 0x153734
-void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<long,std::allocator<long>* result)
+void combatManager::mark_area_effect(long hex, long radius,
+                                     unsigned char include_center,
+                                     std::vector<long>& hexes)
 {
-    // @stub
+    hex_point center = hex_to_point(hex);
+    hex_point point;
+    for (point.x = center.x - radius; point.x <= center.x + radius; point.x++) {
+        for (point.y = center.y - radius; point.y <= center.y + radius;
+             point.y++) {
+            if (get_distance(center, point) > radius)
+                continue;
+            long marked = point_to_hex(point);
+            if (!ValidHex(marked))
+                continue;
+            if (!include_center && marked == hex)
+                continue;
+            hexes.push_back(marked);
+        }
+    }
 }
 
-// E:\gamedcs\spells.cpp:3185
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
+#endif  // @carcass
+
+// Berserk's own hex sweep, and the ONLY thing that separates it from the
+// generic collector above is where the radius comes from and that it
+// never spares the centre: the four-entry table below replaces the
+// `radius` parameter, and there is no include_center test at the tail.
+//
+// The table's values are the spell's own rule - none and Basic reach
+// only the target hex, Advanced one ring, Expert two.
+DATA(0x00642264) static const long kBerserkRadius[4] = { 0, 0, 1, 2 };
+
 VA(0x005a4430, 0x2B8)  // order-map+arity, dc 0x1537d8
-void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<long,std::allocator<long>* result)
+void combatManager::mark_berserk_area_effect(long hex, long mastery,
+                                             std::vector<long>& hexes)
 {
-    // @stub
+    hex_point center = hex_to_point(hex);
+    hex_point point;
+    for (point.x = center.x - kBerserkRadius[mastery];
+         point.x <= center.x + kBerserkRadius[mastery]; point.x++) {
+        for (point.y = center.y - kBerserkRadius[mastery];
+             point.y <= center.y + kBerserkRadius[mastery]; point.y++) {
+            if (get_distance(center, point) > kBerserkRadius[mastery])
+                continue;
+            long marked = point_to_hex(point);
+            if (!ValidHex(marked))
+                continue;
+            hexes.push_back(marked);
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3214
 DC_ONLY(0x153884, 0x80)
@@ -309,19 +619,74 @@ void combatManager::mark_wall_area_effect(long target_hex, TSkillMastery mastery
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3227
+#endif  // @carcass
+
+// THE TWO STACK COLLECTORS, and each is a thin shell over its own
+// hex-collecting overload: build a local std::vector<long>, let the
+// inner call fill it with cell indices, then map each cell to the stack
+// standing on it and hand the distinct ones to the caller.
+//
+// `effected` IS THE DE-DUPLICATOR, and that is a second, independent
+// witness for its [2][20] shape. A two-hex stack occupies two cells, so
+// the same army would otherwise be reported twice; retail zeroes the row
+// with the same ten-dword `rep stosd` ClearEffects uses and then indexes
+// it `combatSide * 20 + bitIndex`, which is exactly
+// SetMassSpellInfluence's `effected[side][slot]` read from the army's own
+// end.
+//
+// The hex list is walked BACKWARDS, and `hexes.size()` is the guarded
+// form the toolchain's own <vector> carries -
+// `_First == 0 ? 0 : _Last - _First` - which is why retail tests _First
+// against zero before taking the pointer difference. `Is(21)` is the
+// magic-immunity bit ai_tactical's get_damage_value screens on first.
 VA(0x005a46f0, 0x113)  // order-map+arity, dc 0x153904
-void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<army* result)
+void combatManager::mark_hex_area_effect(long hex, long radius,
+                                         unsigned char include_center,
+                                         std::vector<army*>& targets)
 {
-    // @stub
+    std::vector<long> hexes;
+    mark_area_effect(hex, radius, include_center, hexes);
+    memset(effected, 0, sizeof(effected));
+    int i = hexes.size();
+    while (i-- > 0) {
+        if (!ValidHex(hexes[i]))
+            continue;
+        army* target = cells[hexes[i]].get_army();
+        if (target == 0)
+            continue;
+        if (target->Is(21) & 1)
+            continue;
+        if (effected[target->combatSide][target->bitIndex])
+            continue;
+        effected[target->combatSide][target->bitIndex] = 1;
+        targets.push_back(target);
+    }
 }
 
-// E:\gamedcs\spells.cpp:3265
 VA(0x005a4810, 0x10F)  // order-map+arity, dc 0x1539fc
-void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<army* result)
+void combatManager::mark_berserk_area_effect(long hex, long mastery,
+                                             std::vector<army*>& targets)
 {
-    // @stub
+    std::vector<long> hexes;
+    mark_berserk_area_effect(hex, mastery, hexes);
+    memset(effected, 0, sizeof(effected));
+    int i = hexes.size();
+    while (i-- > 0) {
+        if (!ValidHex(hexes[i]))
+            continue;
+        army* target = cells[hexes[i]].get_army();
+        if (target == 0)
+            continue;
+        if (target->Is(21) & 1)
+            continue;
+        if (effected[target->combatSide][target->bitIndex])
+            continue;
+        effected[target->combatSide][target->bitIndex] = 1;
+        targets.push_back(target);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 #endif  // @carcass
 
@@ -393,12 +758,90 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iD
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4202
+#endif  // @carcass
+
+// Chain Lightning's bounce search: of every stack the `effected` row has
+// not already recorded, take the one nearest the stack the bolt just
+// left. The distance is a real EUCLIDEAN one on SCREEN midpoints -
+// `sqrt((double)(dx*dx + dy*dy))` truncated by __ftol - not the axial
+// hex metric the area sweeps use, which is why the bolt visibly jumps to
+// the closest stack on screen rather than the closest by hex.
+//
+// The two accessors are army::MidX (0x446660) and army::MidY (0x446630).
+// NOTE FOR THE NAME MAP: build/gen/symbol_names.csv carries 0x46660 as a
+// working label `army_PlayAnimation`, which is REFUTED here - this call
+// site passes no stack arguments and consumes the return value, while
+// army::PlayAnimation takes three and returns void, and its real body is
+// already claimed at 0x446940. army.h has had 0x446660 as MidX since the
+// KeepAttack lane.
+//
+// THE WORK-CHANCE TEST IS WRITTEN TWICE, once per arm, and retail HOISTS
+// THE SHARED ARGUMENT PUSHES above the branch: the six pushes appear
+// once and each arm has its own `call`. The two arms also leave by
+// different paths because only the random one clobbers `this`.
+//
+// The zero compare is a FLOAT (`fcomp dword`), where
+// ValidSpellTargetArmy's is a double (`fcomp qword`) - the same
+// predicate spelled against a differently-typed literal in two places.
+//
+// NAMING THE STACK POINTER IS LOAD-BEARING, AND SO IS DECLARING IT
+// BEFORE THE `effected` TEST (49.22 -> 74.18 -> 91.10). With
+// `armies[side][i]` written out at each of the four uses, VC6 keeps only
+// `21*side` as an induction variable and recomputes the `*0x548` product
+// inside the body, and the two work-chance arms each build their own
+// argument list; naming the pointer merges the two arms' pushes as
+// retail has them, and hoisting the declaration ABOVE the `effected`
+// early-out makes it unconditional, which is what lets VC6 strength-
+// reduce it to retail's `add edi, 0x548` on the back edge. A pointer
+// computed after a `continue` cannot become an induction variable.
+//
+// Residual (91.1%): a whole-body ESI/EDI role swap and nothing else -
+// retail binds `this` to ESI and `last_target` to EDI, we bind them the
+// other way round, and the schedule is otherwise instruction-for-
+// instruction identical. This is the catalog's B1 with the transposed
+// pair being `this` against a PARAMETER, which docs/vc6/regalloc.md
+// records as the C1 handle-state class: no statement-local spelling
+// reaches it. `homm3 vc6 why-reg` enumerated sixteen catalog mutations
+// here and every one measured neutral or worse (best: three at +0,
+// thirteen from +1 to +83).
 VA(0x005a61f0, 0x163)  // order-map+arity, dc 0x15547c
-int combatManager::GetNextChainLightningTarget(army* lastTargetArmy, int bUseSRandom)
+long combatManager::GetNextChainLightningTarget(const army* last_target,
+                                                long use_random)
 {
-    // @stub
+    long best = 999999;
+    long best_index = -1;
+    long from_x = last_target->MidX();
+    long from_y = last_target->MidY();
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            army* target = &armies[side][i];
+            if (effected[side][i])
+                continue;
+            if (use_random) {
+                int chance = SpellCastWorkChance(SPELL_CHAIN_LIGHTNING,
+                                                 1 - side, target, 0, 1, 0)
+                    * 100.0f;
+                if (Random(1, 100) > chance)
+                    continue;
+            } else if (SpellCastWorkChance(SPELL_CHAIN_LIGHTNING, 1 - side,
+                                           target, 0, 1, 0) <= 0.0f) {
+                continue;
+            }
+            long dx = target->MidX() - from_x;
+            long dy = target->MidY() - from_y;
+            long distance = static_cast<long>(
+                sqrt(static_cast<double>(abs(dy) * abs(dy)
+                                         + abs(dx) * abs(dx))));
+            if (distance < best) {
+                best = distance;
+                best_index = target->gridIndex;
+            }
+        }
+    }
+    return best_index;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4255
 VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
@@ -417,17 +860,73 @@ void combatManager::ChainLightning(int index, int level, int power)
 VA(0x005a66b0, 0x14)  // order-map+arity, dc 0x155a08
 void combatManager::ClearEffects()
 {
-    memset(chainLightningHit, 0, sizeof(chainLightningHit));
+    memset(effected, 0, sizeof(effected));
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:4399
+#endif  // @carcass
+
+// The mass-spell applier ClearEffects clears `effected` for, and the
+// body is what slices that row: it rolls the cast SEPARATELY per stack -
+// the same `Random(1, 100) <= chance * 100.0f` SpellCastWorks uses on a
+// single target - and records the ones that took it.
+//
+// Hypnotized stacks are skipped outright. The flag flips a stack's
+// effective side, so a mass spell aimed at one side would otherwise
+// reach it twice or not at all; retail tests it before rolling anything.
+//
+// THE NAMED-LOCAL LEVER RUNS BACKWARDS HERE, and it was the whole
+// residual: 80.14 -> 100.0. `int chance = SpellCastWorkChance(...) *
+// 100.0f; if (Random(1, 100) <= chance)` - the spelling SpellCastWorks
+// (0x5a8640) needs to be exact - mints a NAMED pseudo for the roll, and
+// C2 hands out ESI/EDI/EBX to call-crossing pseudos in creation order,
+// so `chance` takes EDI ahead of the loop index and the index falls to
+// the frame. Retail's order is armies-pointer/index/`this`, with the
+// roll sharing `this`'s EBX across its dead half. Leaving the roll an
+// unnamed temporary inside the `if` restores exactly that, and nothing
+// else in the body changed. Two sibling functions, opposite levers: the
+// local is load-bearing in one and disqualifying in the other, so the
+// question is never "is a named local better" but "how many
+// call-crossing pseudos does retail have, and in what order".
+//
+// THIS BODY IS WHERE THE creature_spell WIDTH FIRST SHOWED (+6.77 out of
+// the original residual, 73.37 -> 80.14) AND THE FIX MOVED. Retail
+// forwards the parameter into SpellCastWorkChance's slot 6 as a raw
+// `mov eax, dword ptr [ebp+0x1c]` with no widening, so caller and callee
+// have to agree. Retyping THIS slot to `long` produced those bytes and
+// was the first reading; find_resurrection_target (0x5a3cc0) then
+// refuted it by forwarding a genuinely char-sized parameter into the
+// same slot twice, also unwidened. The correction is on the CALLEE -
+// SpellCastWorkChance's slot 6 is `unsigned char`, exactly as the DC
+// prototype always said - and this parameter is back to the DC's
+// `unsigned char` too. A `long` here still pushes raw into a char slot,
+// which is why the wrong fix measured right.
 VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
-void combatManager::SetMassSpellInfluence(const hero* casting_hero, int spell, TSkillMastery level, int power, int casting_side, unsigned char creature_spell)
+void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
+                                          long level, long power,
+                                          long casting_side,
+                                          unsigned char creature_spell)
 {
-    // @stub
+    memset(effected, 0, sizeof(effected));
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            if (armies[side][i].hypnotizeFlag)
+                continue;
+            if (Random(1, 100)
+                <= static_cast<long>(SpellCastWorkChance(spell, casting_side,
+                                                         &armies[side][i], 0, 1,
+                                                         creature_spell)
+                                     * 100.0f)) {
+                armies[side][i].SetSpellInfluence(spell, power, level,
+                                                  casting_hero);
+                effected[side][i] = 1;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4424
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
@@ -457,12 +956,46 @@ void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4815
+#endif  // @carcass
+
+// The corpse-list compactor, and it is what proves hexcell's third dead
+// row: retail shifts +0x20, +0x2e AND +0x3c down together, one byte per
+// slot per pass, so the pad at +0x3c is a fourteen-entry parallel array
+// - the DC dump's deadPartOfDouble.
+//
+// TWO LOOPS OVER ONE INDEX, and retail's two bounds are spelled the same
+// way even though it compiles them differently: the SEARCH loop hoists
+// iBodiesInHex into a register because its body only reads, while the
+// SHIFT loop reloads it every pass because its body writes through the
+// same pointer and VC6 cannot prove no alias. One `hex->iBodiesInHex` in
+// both conditions gives exactly that pair; caching it into a local would
+// flatten the second one.
+//
+// The tail is transcribed as retail has it, INCLUDING the not-found
+// case: when the scan runs off the end, `i` is the count, and retail
+// still stamps -1 at [count] and decrements. Only the two sentinel rows
+// take the -1, and they take it from one register (`or dl,-1` then two
+// byte stores), which is the signed-char CSE - an unsigned row would
+// split the constant.
 VA(0x005a7320, 0x68)  // order-map+arity, RET-MISMATCH resolved, dc 0x1565e4
-void combatManager::remove_corpse(hexcell* hex, long group, long index)
+void combatManager::remove_corpse(hexcell* hex, long side, long slot)
 {
-    // @stub
+    int i;
+    for (i = 0; i < hex->iBodiesInHex; i++) {
+        if (hex->deadArmySide[i] == side && hex->deadArmySlot[i] == slot)
+            break;
+    }
+    for (; i < hex->iBodiesInHex; i++) {
+        hex->deadArmySide[i] = hex->deadArmySide[i + 1];
+        hex->deadArmySlot[i] = hex->deadArmySlot[i + 1];
+        hex->deadPartOfDouble[i] = hex->deadPartOfDouble[i + 1];
+    }
+    hex->deadArmySide[i] = -1;
+    hex->deadArmySlot[i] = -1;
+    hex->iBodiesInHex--;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4838
 DC_ONLY(0x15668c, 0x6A)
@@ -530,12 +1063,53 @@ int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:5134
+#endif  // @carcass
+
+// ModifySpellDamage's Protection-from-<school> tail, and the four-way
+// ladder is what fixes BOTH halves of army.h's protection run. Retail
+// tests the spell's schoolBits (akSpellTraits[spell] +0x1c) against
+// bit 8, then bit 1, then bit 2, then bit 4 - not ascending, so this is
+// an if-chain and that is its source order - and each arm gates on one
+// of +0x21c / +0x210 / +0x214 / +0x218 and scales by one of
+// +0x4b4 / +0x4a8 / +0x4ac / +0x4b0. spellschool.h's DC-verbatim bitmask
+// (Air 1, Fire 2, Water 4, Earth 8) and the DC member run
+// protectionFrom{Air,Fire,Water,Earth}Factor at 1156..1168 agree with
+// each other about which bit owns which float, so the counters they are
+// paired with here are the same four spells' entries in the round row.
+//
+// `this` is dead: retail clobbers ecx with the schoolBits load without
+// ever reading it. That is a source fact, not a calling-convention one -
+// see the declaration.
+//
+// The float cast is to `float`, not `double`: retail spills the
+// converted integer back through the parameter's OWN stack slot as a
+// 32-bit `fstp dword ptr [ebp+8]` before reloading it for the multiply.
 VA(0x005a7bb0, 0xC5)  // order-map+arity, dc 0x156dc4
-int combatManager::ModifySpellDamageForSpells(int damage, int iSpellType, const army* targetArmy)
+long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
+                                               const army* target)
 {
-    // @stub
+    if (!target)
+        return damage;
+    if ((akSpellTraits[spell].schoolBits & eSchoolEarth)
+        && target->protectionFromEarthRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromEarthFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolAir)
+        && target->protectionFromAirRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromAirFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolFire)
+        && target->protectionFromFireRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromFireFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolWater)
+        && target->protectionFromWaterRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromWaterFactor);
+    return damage;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:5164
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4

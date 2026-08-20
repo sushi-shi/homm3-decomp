@@ -605,17 +605,21 @@ public:
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
     TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
-    // Per-stack "this stack has already been hit by the chain" marks,
-    // indexed [combatSide][army::bitIndex]: ai_tactical's
-    // get_chain_lightning_value (0x437190) raises
-    // `[this + bitIndex + 20*combatSide + 0x547c]` before asking
-    // GetNextChainLightningTarget for the next hop, and ClearEffects
-    // (0x5a66b0) is what it calls to wipe the whole block first. The
-    // 20-wide row and the 40-byte extent are the pad's own, so this is
-    // a retype in place and no byte moves.
-    // Corroborated from the writer side: ClearEffects zeroes exactly this
-    // extent as ten dwords, a `rep stosd` with ecx=10 over [this+0x547c].
-    unsigned char chainLightningHit[2][20];  // +0x547c
+    // Per-stack "this stack has already been affected" marks, indexed
+    // [combatSide][army slot]. THREE independent readings agree on the
+    // shape, which is why it is sliced in place from the old pad_547c[0x28]
+    // with no byte moves and no change in declarator count:
+    //   * ClearEffects (0x5a66b0) wipes it as ten dwords - a `rep stosd`
+    //     with ecx=10 over [this+0x547c] - which bounds the extent.
+    //   * SetMassSpellInfluence (0x5a66d0) writes a 1 per stack that took
+    //     the spell, walking a row pointer that advances 0x14 per SIDE and
+    //     is indexed by the army slot - which gives the [2][20].
+    //   * ai_tactical's get_chain_lightning_value (0x437190) raises
+    //     [this + bitIndex + 20*combatSide + 0x547c] before asking
+    //     GetNextChainLightningTarget for the next hop - same indexing.
+    // Named generally rather than for chain lightning: the mass-spell
+    // writer and the chain-lightning writer both use it.
+    unsigned char effected[2][20];    // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -1495,6 +1499,120 @@ public:
                            const hero* casting_hero, const hero* target_hero,
                            const army* target,
                            unsigned char simulated);          // 0x5a78e0
+    // THE spells.obj-ONLY DECLARATION BLOCK. Everything in here is
+    // reached from src/spells.cpp and from nowhere else in the tree, and
+    // it is gated because this header's include-set class is live: three
+    // separate bare declarators added to it in the last two days each
+    // cost command.obj's GetCommand 92.5714 -> 92.5357, and each was
+    // returned by a view. Rather than pay a bisect per row, new
+    // spells-side declarations land here until a second consumer appears.
+#ifdef HOMM3_CMBTMGR_SPELLS_VIEW
+    // 0x5a7bb0, ModifySpellDamage's Protection-from-<school> tail. It
+    // takes NO `this` (retail never touches ecx) but is a member all the
+    // same - a static would be __fastcall under /Gr and would take its
+    // first two arguments in registers, where retail reads all three off
+    // the stack behind a thiscall `ret 0xc`. It reads the cast spell's
+    // schoolBits and, for the first school the target is protected
+    // against, scales the damage by that school's factor.
+    long ModifySpellDamageForSpells(long damage, SpellID spell,
+                                    const army* target);       // 0x5a7bb0
+    // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
+    // 187-cell grid and answers whether ANY cell passes ValidSpellTarget;
+    // the two share every parameter but the cell index, which is what
+    // fixes the parameter ORDER of the callee from the caller's push
+    // sequence. Both parameter lists are the DC roster's
+    // (spells.cpp:2645 / 3078); `mastery` is their TSkillMastery,
+    // spelled long here for the same reason mark_area_effect's is - the
+    // typedef lives in the header that includes this one.
+    unsigned char ValidSpellTarget(SpellID spellId, long mastery,
+                                   long targetIndex, long casting_side,
+                                   unsigned char first_target,
+                                   unsigned char creature_spell); // 0x5a39c0
+    unsigned char HasValidSpellTarget(SpellID spellId, long mastery,
+                                      long casting_side,
+                                      unsigned char first_target,
+                                      unsigned char creature_spell); // 0x5a40d0
+    // 0x5a7320, the hexcell-taking one of the DC roster's two
+    // remove_corpse overloads (spells.cpp:4815; the other, 4838, takes an
+    // army* and has no located retail body). Like
+    // ModifySpellDamageForSpells above it never touches `this` and is
+    // still a member - retail reads all three arguments off the stack
+    // behind a thiscall `ret 0xc`, where a static would be __fastcall.
+    void remove_corpse(hexcell* hex, long side, long slot);    // 0x5a7320
+    // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
+    // `effected` for. It rolls SpellCastWorkChance separately per stack
+    // on both sides and records which ones took the spell.
+    void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
+                               long level, long power,
+                               long casting_side,
+                               unsigned char creature_spell);  // 0x5a66d0
+    // The two spells.obj area collectors that fill a vector of HEXES -
+    // the inner halves of the two vector<army*> collectors declared far
+    // below, which call these and then map each hex to its stack. The
+    // element type is what separates the overloads; the DC roster names
+    // both pairs identically (spells.cpp:3159/3185 for these two,
+    // 3227/3265 for the army-vector pair).
+    void mark_area_effect(long hex, long radius,
+                          unsigned char include_center,
+                          std::vector<long>& hexes);           // 0x5a4170
+    void mark_berserk_area_effect(long hex, long mastery,
+                                  std::vector<long>& hexes);   // 0x5a4430
+    // THE BATTLEFIELD'S AXIAL COORDINATE AND ITS THREE HELPERS. The DC
+    // roster carries all three as combatManager members immediately in
+    // front of mark_area_effect - spells.cpp:3103 hex_to_point,
+    // 3121 point_to_hex, 3138 get_distance - and NONE of them has a
+    // retail body, which is the /Ob2 inline-away case: every call site
+    // expands them. mark_area_effect (0x5a4170) is the witness, and its
+    // frame is what identifies them: two ADJACENT x/y pairs at -0x2c/
+    // -0x28 and -0x24/-0x20, both memory-homed and both re-read on every
+    // pass, which is what a pair of by-value structs looks like and is
+    // also why VC6 never strength-reduces the inner loop's index.
+    //
+    // The DC prototypes spell the coordinate `tagPOINT` - the Win32
+    // POINT, two LONGs. This nested record is that same layout under a
+    // local name: spells.obj's include closure has no <windows.h> in it,
+    // and pulling one in to gain one two-field struct would move the
+    // whole TU's declarator count for no modelling gain. If a windows.h
+    // ever lands in this closure the typedef can be swapped in place.
+    struct hex_point {
+        long x;
+        long y;
+    };
+    // The grid is 17 columns by 11 rows with every other row offset half
+    // a hex, so a straight (row, column) box is the wrong shape for a
+    // radius; these two skew it into a space where the box is right.
+    hex_point hex_to_point(long hex) const
+    {
+        long col = hex % COMBAT_GRID_ROW_STRIDE;
+        long row = hex / COMBAT_GRID_ROW_STRIDE;
+        hex_point point;
+        point.x = col - (row + 1) / 2;
+        point.y = col + row / 2;
+        return point;
+    }
+    long point_to_hex(hex_point point) const
+    {
+        long col = (point.x + point.y + 1) / 2;
+        long row = point.y - point.x;
+        if (col > 0 && col < COMBAT_GRID_LAST_COLUMN && row >= 0
+                && row < COMBAT_GRID_CELLS / COMBAT_GRID_ROW_STRIDE)
+            return GetHexIndex(col, row);
+        return -1;
+    }
+    // The axial-hex metric: when the two offsets share a sign the walk
+    // can move diagonally and the cost is the larger of them; when they
+    // differ it has to zig-zag and the cost is their sum. Defined in
+    // src/spells.cpp rather than here because it needs that file's
+    // by-value _cpp_max, whose signature retail's operand-address select
+    // proves.
+    long get_distance(hex_point start, hex_point stop) const;
+    // 0x5a61f0, Chain Lightning's bounce search: the nearest stack, by
+    // straight-line screen distance from the stack the bolt just left,
+    // that the `effected` row has not already recorded. Answers a
+    // gridIndex, or -1 when nothing qualifies.
+    long GetNextChainLightningTarget(const army* last_target,
+                                     long use_random);         // 0x5a61f0
+#endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
     // pushing it, which a char-typed parameter would never need.
@@ -1513,7 +1631,7 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               unsigned char redirected,
                               unsigned char first_target,
-                              long creature_spell);            // 0x5a8090
+                              unsigned char creature_spell);   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -

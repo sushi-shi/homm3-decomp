@@ -39,10 +39,25 @@ public:
     // materialized constant, which retail's bytes rule out.
     signed char field_1a;
     unsigned char pad_1b;
-    int field_1c;
+    // DC hexcell.iBodiesInHex (members.csv hexcell@28), and
+    // combatManager::remove_corpse (0x5a7320) proves the role on retail
+    // bytes: it scans this many entries of the three parallel dead-army
+    // rows, shifts the tail down over the match, and decrements it.
+    int iBodiesInHex;             // +0x1c
     signed char deadArmySide[14]; // +0x20
     signed char deadArmySlot[14]; // +0x2e
-    char pad_3c[0xe];
+    // A THIRD parallel dead-army row, retyped in place from pad_3c on
+    // 2026-08-20: remove_corpse shifts +0x20, +0x2e and +0x3c together,
+    // one byte per slot per iteration, so the third one is 14 bytes wide
+    // and indexed by the same i. The DC dump names it - members.csv
+    // hexcell@60 deadPartOfDouble, right after deadArmyGroup@32 and
+    // deadArmyIndex@46, which are this class's own +0x20 / +0x2e. The
+    // whole DC record is unshifted against retail here (armyGroup@24 =
+    // +0x18, bValidMove@74 = +0x4a, cloudLimitData@96 = +0x60), so the
+    // three offsets corroborate each other. Only the first two rows take
+    // the -1 "empty" sentinel at the tail; this one is left as it lies,
+    // which is what a partOfDouble flag would want.
+    signed char deadPartOfDouble[14];  // +0x3c
     // "This cell is reachable / interesting for the combat search":
     // ai_tactical's get_hypnotize_value (0x43a500) skips any stack
     // whose gridIndex cell has it clear, right after seeding the
