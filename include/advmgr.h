@@ -1251,12 +1251,17 @@ public:
     int lastHoverY;                // +0xf0
     int mapOriginX;               // +0xf4, adventure viewport origin
     int mapOriginY;               // +0xf8
-    char pad_0fc[4];
+    // +0xfc, a dword the constructor zeroes alongside the map origin pair.
+    // Role unattested; the width is what the ctor's dword store proves.
+    int field_fc;
     int animFrame;                  // +0x100, sprite-frame modulo source
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
     // while this byte is set. Dreamcast supplies the surviving member name.
     unsigned char animCtrPaused;
-    char pad_105[7];
+    char pad_105[3];
+    // +0x108, a dword the constructor zeroes right after animFrame.
+    // Role unattested; the width is what the ctor's dword store proves.
+    int field_108;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
     CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
@@ -1277,7 +1282,11 @@ public:
     int cursorTurning;            // +0x204
     int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
-    char pad_20d[0xb];
+    char pad_20d[3];
+    // +0x210, a dword the constructor zeroes between inDialog and the
+    // moving-object pair. Role unattested; width per the ctor's store.
+    int field_210;
+    char pad_214[4];
     int movingObjectIndex;        // +0x218, transient object-pool index
     int movingObjectSequence;     // +0x21c
     int movingObjectFrame;        // +0x220
