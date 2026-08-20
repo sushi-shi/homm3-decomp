@@ -1596,9 +1596,22 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // 60 and 80 -> 99.66; with push_back, 0-15 -> 86.03, 20-35 -> 93.11,
 // 40-80 -> 99.4651, 90-120 -> 92.09, 150 -> 89.53, 200 -> 87.22. The
 // window is wide, it is NOT a knife edge, and no byte-inert real-source
-// construct that lands in it has been found in four lanes.
-
-// E:\gamedcs\townmgr.cpp:4302
+// construct that lands in it has been found in five lanes.
+//
+// FIFTH CANDIDATE, MEASURED AND REJECTED 2026-08-20:
+// `Widgets.insert(Widgets.end(), X)` in place of `Widgets.push_back(X)`.
+// It IS the definition of push_back - Dinkumware spells push_back as
+// `{insert(end(), _X); }` - so it is byte-inert in principle, and each
+// site adds a real `end()` expression node, exactly the expression-level
+// cb this note says is missing. All 49 sites of THIS body rewritten
+// measures **63.5287**, far past the far side of the window (worse than
+// the 200-probe reading), so one such rewrite is worth several probes
+// and the construct badly overshoots. A partial rewrite would land
+// inside the window but would be arbitrary source, the same objection
+// that keeps the dead-store titration out of the tree. What it does
+// settle: the cb currency is expression NODES, the direction is MORE,
+// and the dose needed is small - well under a tenth of what 49 end()
+// nodes buy.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
