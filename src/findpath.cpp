@@ -427,6 +427,24 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // The lever is DOSE-SENSITIVE, so do not just add more.  Lifting the
 // magic_forbidden block out as well - the same shape, the next block up -
 // measures 81.1401 -> 76.4357.
+// The second /Ob2 budget dose for PushPoint - see find_queue_slot below.
+// Worth 81.1401 -> 83.7018, and it is what brings visited_points.insert's
+// expansion into agreement with retail's ten calls.  No Dreamcast row; a
+// codegen device.
+static void fill_path_cell(pathCell* point, int direction, long cost,
+                           long adjusted, long barrier_value, long danger,
+                           int isTrigger, type_point monster)
+{
+    point->direction = direction;
+    point->cost = static_cast<unsigned short>(cost);
+    point->adjusted_cost = static_cast<unsigned short>(adjusted);
+    point->barrier_value = barrier_value;
+    point->danger_value = danger;
+    point->bIsTrigger = isTrigger;
+    point->monster = monster;
+    point->visited = 1;
+}
+
 static int find_queue_slot(searchArray* search, long key, long adjusted)
 {
     int last = search->queue.size();
@@ -494,8 +512,9 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // so retail really does expand that one - the pin is only correct where
 // retail keeps the whole callee out of line.
 //
-// Residual (81.1401%): 74.3805 -> 81.1401 on the caller-shrink lever, and the
-// residual is now ONE of the two insert expansions rather than both.
+// Residual (83.7018%): 74.3805 -> 81.1401 -> 83.7018 on the caller-shrink
+// lever, in two doses, and the CALL MULTISET NOW AGREES - 22 out-of-line calls
+// on each side.
 //
 // LOCALISED 2026-08-20 by aligning the two call sequences site by site. The
 // old note said the six callees we expand and retail calls were "all of them
@@ -510,18 +529,22 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 //   shrink we called _Construct at the two sites retail calls _Ufill
 //   (0x434c30) and _Ucopy (0x434bf0) at.
 //
-//   visited_points.insert's expansion is what is left. Retail emits TEN calls
-//   there - new +0x763, _Construct<pathCell*> +0x77d and +0x79a, _Ucopy
-//   +0x7aa, _Destroy +0x7b9, delete +0x7c2, size +0x7d8, _Ucopy +0x800,
-//   _Ufill +0x81e, _Ucopy +0x840 - and we emit SEVEN, with four _Constructs
-//   where retail has two plus a _Ucopy, and no _Destroy or size() at all.
+//   visited_points.insert's expansion took the SECOND dose (lifting the eight
+//   field stores into fill_path_cell, 81.1401 -> 83.7018) and now agrees to
+//   the call: new +0x74f/+0x763, _Construct<pathCell*> +0x769/+0x77d and
+//   +0x786/+0x79a, _Ucopy +0x796/+0x7aa, _Destroy +0x7a5/+0x7b9, delete
+//   +0x7ae/+0x7c2, size +0x7c4/+0x7d8, _Ucopy +0x7ec/+0x800, _Ufill
+//   +0x80a/+0x81e, _Ucopy +0x82c/+0x840.
 //
-// The shape is: retail expands `insert` and CALLS the helpers nested inside
-// it. `inline_depth(1..4)` is inert mid-function in VC6 and a statement pin
-// imposes at the OUTERMOST callee - which here is the insert retail expands -
-// so it is not spellable at the site. The BUDGET is what reaches it, which is
-// what the find_queue_slot lift proved; the next lane's move is another
-// caller-shrink of the right dose, not a pin.
+// WHAT IS LEFT is two things, both small. (1) One identity swap inside the
+// queue grow arm: at slots two and three we emit _Ucopy +0x583 and _Construct
+// +0x58f where retail emits _Construct +0x59f and _Ufill +0x5c3 - one more
+// notch of budget in either direction. (2) The out-of-line `insert` sits at
+// +0x6dc, AFTER the expansion, where retail's is at +0x4d2, before it.
+// Writing the test as `middle >= queue.size()` with the blocks swapped - what
+// retail's `cmp ecx,edx / jb <expanded arm>` looks like read literally - is
+// still worse, and has now been measured in BOTH inline structures:
+// 74.3805 -> 67.4717 before the shrink, 83.7018 -> 81.0180 after.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
                             int direction, int move_cost, int limit,
@@ -617,14 +640,8 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 
     int middle = find_queue_slot(this, key, adjusted);
 
-    point->direction = direction;
-    point->cost = static_cast<unsigned short>(cost);
-    point->adjusted_cost = static_cast<unsigned short>(adjusted);
-    point->barrier_value = barrier_value;
-    point->danger_value = danger;
-    point->bIsTrigger = isTrigger;
-    point->monster = monster;
-    point->visited = 1;
+    fill_path_cell(point, direction, cost, adjusted, barrier_value, danger,
+                   isTrigger, monster);
 
     if (middle < queue.size())
         queue.insert(queue.begin() + middle, 1, *point);
@@ -1703,11 +1720,62 @@ pathCell* searchArray::getCellData(long pos)
     return &cellData[pos];
 }
 
+// PushCombatPoint's second /Ob2 budget dose, and the one that closed its call
+// multiset: 78.5950 -> 90.2555.  No Dreamcast row; a codegen device.
+static void fill_combat_cell(pathCell* path_cell, int index, int direction,
+                             int cost, int flight_cost)
+{
+    path_cell->point.x = index;
+    path_cell->visited = 1;
+    path_cell->direction = direction;
+    path_cell->flight_cost = flight_cost;
+    path_cell->point.y = 0;
+    path_cell->cost = cost;
+}
+
+// PushCombatPoint's ordering-key search, lifted for the same /Ob2 budget
+// reason find_queue_slot above is - see that note.  No Dreamcast row here
+// either; it is a codegen device.
+static int find_combat_queue_slot(searchArray* search, int cost)
+{
+    int first = 0;
+    int last = search->queue.size();
+    int middle = last / 2;
+    while (last > first) {
+        if (cost < search->queue[middle].cost)
+            first = middle + 1;
+        else
+            last = middle;
+        middle = (first + last) / 2;
+    }
+    return middle;
+}
+
 // E:\gamedcs\findpath.cpp:1372
 // `ret 0x14` = five stack arguments over `this`, the DC count exactly,
 // and the body opens by bounds-checking its first argument against the
 // combat grid: `test ecx,ecx; jl out; cmp ecx,0xbb; jge out` - 187
 // again, so parameter one is the hex index.
+//
+// Residual (90.2555%): 75.7383 -> 90.2555, 2026-08-20, and THE CALL MULTISET
+// IS NOW EXACT - twelve out-of-line calls on each side, same identities, same
+// order, every one within eight bytes of retail's offset.  Two edits:
+//
+//   * TWO insert sites, not one.  Retail branches `cmp esi,edx / jae` on
+//     `middle` against `queue.size()` at +0x167 and CALLS
+//     vector<pathCell>::insert (0x4b3f70) at +0x183 on the fallthrough, then
+//     EXPANDS a second insert from +0x1f3 down.  This is PushPoint's shape
+//     with the arms the other way round: there the `begin()+middle` arm is
+//     expanded and the `end()` arm called, here the `begin()+middle` arm is
+//     CALLED.  Writing both arms and pinning the called one: 75.7383 ->
+//     77.0966.
+//   * the /Ob2 caller-shrink, in two doses - the ordering-key search into
+//     find_combat_queue_slot (77.0966 -> 78.5950) and the six field stores
+//     into fill_combat_cell (78.5950 -> 90.2555).  The second dose is what
+//     stops us expanding the `size()` retail calls at +0x1e0 and the first
+//     `_Ucopy` at +0x209.
+//
+// What is left is register and scheduling in the head, not the inliner.
 VA(0x004b3bb0, 0x35C)  // anchor-bracket, dc 0xa0f54
 void searchArray::PushCombatPoint(int index, int direction, int cost, int flight_cost, int limit)
 {
@@ -1720,26 +1788,19 @@ void searchArray::PushCombatPoint(int index, int direction, int cost, int flight
     if (queue.size() >= 500)
         return;
 
-    int first = 0;
-    int last = queue.size();
-    int middle = last / 2;
-    while (last > first) {
-        if (cost < queue[middle].cost)
-            first = middle + 1;
-        else
-            last = middle;
-        middle = (first + last) / 2;
-    }
+    int middle = find_combat_queue_slot(this, cost);
 
     pathCell path_cell;
-    path_cell.point.x = index;
-    path_cell.visited = 1;
-    path_cell.direction = direction;
-    path_cell.flight_cost = flight_cost;
-    path_cell.point.y = 0;
-    path_cell.cost = cost;
+    fill_combat_cell(&path_cell, index, direction, cost, flight_cost);
 
-    queue.insert(queue.begin() + middle, path_cell);
+    if (middle < queue.size()) {
+        pathCell* pos = queue.begin() + middle;
+#pragma inline_depth(0)
+        queue.insert(pos, 1, path_cell);
+#pragma inline_depth()
+    } else {
+        queue.insert(queue.end(), 1, path_cell);
+    }
     *pCell = path_cell;
 }
 
