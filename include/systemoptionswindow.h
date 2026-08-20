@@ -22,7 +22,15 @@ enum ESystemOptionsCommand {
     SYSOPT_COMMAND_105 = 105,
     SYSOPT_SAVE_GAME = 106,
     SYSOPT_QUIT = 107,
-    SYSOPT_COMMAND_108 = 108
+    SYSOPT_COMMAND_108 = 108,
+    // 111 is the ADVENTURE-options screen's reply in the same dialogReturn
+    // band, and its consumer proves the pairing: advManager::ProcessDeSelect
+    // tests for it immediately after DoAdventureOptions and then runs the
+    // byte-identical confirm DoSystemOptions runs for SYSOPT_QUIT - general
+    // text 68, iMBType 2, DIALOG_RETURN_ACCEPT - latching SYSOPT_QUIT itself
+    // into 0x6976d8 on accept. Its producer is unlocated, so the label stays
+    // an ordinal placeholder like its neighbours.
+    SYSOPT_COMMAND_111 = 111
 };
 
 class TSystemOptionsWindow : public CAdvPopup {

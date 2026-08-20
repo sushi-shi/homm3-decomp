@@ -545,6 +545,31 @@ DATA(0x00698774) extern int gUnnamed698774;
 //             calls, and UpdateRadar's own AI-shield paint.
 DATA(0x00699560) extern int gUnnamed699560;
 
+// Retail .bss, three more unattested slots the de-select dispatcher reads.
+// The first two are game::Overview's reply pair - ProcessDeSelect's
+// kingdom-overview arm calls Overview (0x51e8d0) and then reads them back
+// to back, and both are written inside that body (relocs at 0x11e8ff and
+// 0x11e904) - and the third gates the end-turn warning dialog.
+//   0x6985c0  the overview screen's exit action; see EOverviewExit.
+DATA(0x006985c0) extern int gUnnamed6985c0;
+//   0x69873c  the town the overview screen exited on, in game::GetTown's
+//             domain: ProcessDeSelect feeds it straight to the accessor
+//             and the -1 arm is emitted, so it carries the same "no town"
+//             sentinel townIds does.
+DATA(0x0069873c) extern int gUnnamed69873c;
+//   0x698778  third of the three gates on the "you still have heroes who
+//             can move" end-turn confirm, after game::field_1f69d and
+//             playerData::HasMobileHero.
+DATA(0x00698778) extern int gUnnamed698778;
+
+// gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
+// arm answers 2 by viewing gUnnamed69873c's town and suppressing the
+// screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
+// role. This enum exists so the compare is named rather than magic.
+enum EOverviewExit {
+    OVERVIEW_EXIT_TOWN = 2
+};
+
 // Retail .data 0x68c6b8, the view-world tile scale. DECLARATION ONLY - no
 // DATA claim, because viewwrld.obj owns the definition (its own writers,
 // plus the fsub at 0x5f73b0 and the fdiv at 0x5fc274, are what prove the
