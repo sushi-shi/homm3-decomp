@@ -16,6 +16,11 @@
 // reads combatManager's pending-order code back as a domain member.
 #define HOMM3_SPELL_TELEPORT_DECL
 #define HOMM3_CMBTMGR_AI_ORDER_DECL
+// The creature-spell pricers get_ogre_mage_value / get_caliph_value
+// switch on combatManager+0x53c0's spell-restriction code with a
+// jump table, so the five codes that raise a spell's mastery need
+// enumerators.
+#define HOMM3_CMBTMGR_SPELL_MASTERY_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -3316,14 +3321,59 @@ void type_AI_spellcaster::find_enemy_attacks()
     } }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3311
+// The Ogre Mage's own cast: it puts Bloodlust on a friendly stack, so
+// the pricing is Bloodlust's - and the whole body is
+// get_blood_lust_value INLINED behind a locally built choice, which is
+// why the `rep movsd` slices the type_spell_choice down to the
+// type_enchant_data that function's by-value parameter is.
+//
+// THE BATTLEFIELD MASTERY PREAMBLE (shared verbatim with
+// get_caliph_value below): a creature cast is priced at ADVANCED
+// unless the combat's spell-restriction code raises it. Code 1 raises
+// everything; codes 6/7/8/9 raise only the matching school, tested off
+// the spell's own school mask a bit at a time - which is why retail
+// tail-merges the four arms into one `and al,1 / test al,al / je /
+// mov edx,3` block and why the Air arm loads a BYTE where the other
+// three shift a dword first.
 VA(0x0043c330, 0x16C)  // anchor-callee, dc 0x423f4
 long type_AI_spellcaster::get_ogre_mage_value(const army* target)
 {
-    // @stub
+    if (target->bloodlustRounds)
+        return 0;
+    TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+    unsigned char expert = 0;
+    switch (gpCombatManager->field_53c0) {
+    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+        expert = 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 2) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 1) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 3) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits) & 1;
+        break;
+    }
+    if (expert)
+        mastery = SKILL_MASTERY_EXPERT;
+    type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
+    if (SpellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
+        return get_blood_lust_value(target, choice);
+    consider_enchantment(&choice, side);
+    return choice.value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3335
 VA(0x0043c4a0, 0x180)  // anchor-callee, dc 0x424c4
