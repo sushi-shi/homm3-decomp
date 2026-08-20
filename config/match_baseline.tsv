@@ -517,8 +517,8 @@ button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
-campaignbrief	??1NewSMapHeader@@QAE@XZ	91.5098	91.5098	91.5098	0x5ad00
-campaignbrief	??1TCampaignBrief@@UAE@XZ	95.7583	95.7583	95.7583	0x5afb0
+campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00
+campaignbrief	??1TCampaignBrief@@UAE@XZ	98.2083	98.2083	98.2083	0x5afb0
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
@@ -840,8 +840,8 @@ font	?_vslot2@font@@UBEIXZ	100.0000	100.0000	100.0000	0xb5250
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
-game	??0SavedGameHeader@@QAE@XZ	96.4326	96.4326	96.4326	0xbc0e0
-game	??0game@@QAE@XZ	84.2891	84.2891	84.2891	0xcdf20
+game	??0SavedGameHeader@@QAE@XZ	98.8764	98.8764	98.8764	0xbc0e0
+game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
