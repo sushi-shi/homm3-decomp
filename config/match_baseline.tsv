@@ -885,6 +885,7 @@ game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 # 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
 game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
 game	?SetRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730
+game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
@@ -918,7 +919,6 @@ game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
-game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
