@@ -626,10 +626,10 @@ command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0
+command	?show_eagle_eye@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0
 command	?show_looted_artifacts@combatManager@@QAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
 command	combatManager_DoVictory	0.0000	0.0000	0.0000	0x77470
-command	combatManager_show_eagle_eye	0.0000	0.0000	0.0000	0x76fe0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0

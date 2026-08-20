@@ -782,16 +782,81 @@ void combatManager::DoCommand(int command)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:2423
+// The Eagle Eye presentation: the spells the winning side observed and
+// may now learn, listed into one sentence and shown eight to a page with
+// the pickup jingle in front of each.
+//
+// The set is `eagleEyeData[winning_group].spells`, walked exactly as
+// LearnSpellFromEagleEye (0x469fe0) walks it - Dinkumware _Tree, node
+// value at +0xc, `end()` the tree's _Head at +4 on the record. Retail
+// keeps the ADDRESS of _Head live in a register and reloads its VALUE at
+// every use, which is what repeated `.end()` calls compile to.
+//
+// THE INCREMENT IS AT THE TOP OF THE BODY, not the bottom: retail reads
+// `*x` into esi and then calls _Inc immediately, because both the
+// separator choice and the flush test ask whether the iterator has
+// already run out. That is a `while` with the step written in the body,
+// not a `for` with a third clause.
+//
+// The separator ladder is the sibling of town.obj's show_building_rewards
+// / show_creature_rewards: " and " before the last entry, ", " otherwise.
+// Here "last" means last on the PAGE as well as last overall, which is
+// the `cmp eax,7` against a size taken BEFORE this row's push.
+//
+// `msg = format_string(...)` reaches the three-argument
+// basic_string::assign at 0x404860 (the chain operator= -> assign(_X) ->
+// assign(_X, 0, npos)); `msg += <const char*>` reaches append at
+// 0x41b340 through operator+=, with VC6 inlining the strlen as a
+// `repne scasb`. The two are DIFFERENT functions and the tree already
+// has the other one: ai_player's `warning.append(formatted, 0, npos)`
+// lands on 0x41b250, which is why this one can only be assign.
 VA(0x00476fe0, 0x2C4)  // linkorder, dc 0x6de24
 void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)
 {
-    // @stub
-}
+    hero* winner = heroes[winning_group];
+    if (!winner)
+        return;
 
-#endif  // @carcass
+    std::string msg;
+    std::vector<type_dialog_resource> rewards;
+    type_dialog_resource reward;
+
+    std::set<SpellID>::iterator x =
+        eagleEyeData[winning_group].spells.begin();
+    while (x != eagleEyeData[winning_group].spells.end()) {
+        SpellID spell = *x;
+        x++;
+        reward.resource = VICTORY_DIALOG_SPELL_ROW;
+        reward.qualifier = spell;
+        if (rewards.size() == 0) {
+            // General text 222 is the "<hero> learns <spell>" opener;
+            // the row has no enumerator in this tree yet.
+            msg = format_string(gpGeneralText->GetText(222), winner->name,
+                                akSpellTraits[spell].name);
+        } else {
+            if (x == eagleEyeData[winning_group].spells.end()
+                || rewards.size() == VICTORY_DIALOG_PAGE_SIZE - 1)
+                msg += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
+            else
+                msg += DATA_COMPGEN(0x0066032c, listSeparator, ", ");
+            msg += akSpellTraits[spell].name;
+        }
+        rewards.push_back(reward);
+        if (rewards.size() == VICTORY_DIALOG_PAGE_SIZE
+            || x == eagleEyeData[winning_group].spells.end()) {
+            msg += DATA_COMPGEN(0x006603ec, saveExtensionDot, ".");
+            launch_sample(
+                format_string(DATA_COMPGEN(0x00670268, pickupSampleFormat,
+                                           "pickup%02d.82M"),
+                              Random(1, 7))
+                    .c_str(),
+                -1, 3);
+            extended_dialog(msg.c_str(), rewards, -1, -1, dialog_timeout);
+            rewards.clear();
+        }
+    }
+}
 
 // E:\gamedcs\command.cpp:2475
 // The loot presentation: the artifacts LootDeadHero swept off the dead
@@ -823,14 +888,14 @@ void combatManager::show_looted_artifacts(
     type_dialog_resource reward;
 
     while (artifact != looted_artifacts.end()) {
-        reward.resource = LOOT_DIALOG_ARTIFACT_ROW;
+        reward.resource = VICTORY_DIALOG_ARTIFACT_ROW;
         reward.qualifier =
             (static_cast<unsigned short>(artifact->extra) << 16)
             | static_cast<unsigned short>(artifact->artifactId);
         rewards.push_back(reward);
         artifact++;
         if (artifact == looted_artifacts.end()
-            || rewards.size() == LOOT_DIALOG_PAGE_SIZE) {
+            || rewards.size() == VICTORY_DIALOG_PAGE_SIZE) {
             launch_sample(
                 format_string(DATA_COMPGEN(0x00670268, pickupSampleFormat,
                                            "pickup%02d.82M"),
