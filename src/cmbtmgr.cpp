@@ -1169,15 +1169,28 @@ void combatManager::ResetHitByCreature()
 //     48.28);
 //   * the obstacle row is a 20-byte type_obstacle_shape, proven by
 //     retail forming the base as `4 * (5 * id) + table`.
-// Residual (49.09%): register transposition plus stack-slot reuse, not
-// source-addressable from here. Retail carries `hex` in ECX and the row
-// in EBX where this compile swaps them, which cascades - with EBX free,
-// retail keeps the odd-row flag in BL where we home it to a byte slot -
-// and retail spills the shape pointer into the dead `obstacle_id`
-// PARAMETER slot while our CL takes a fresh local. Retail also emits the
-// picker's vector destructor out of line on the failure path where our
-// CL inlines the operator delete. Tried and rejected: break + re-test,
-// while-loop form, and an int (rather than byte) odd-row flag.
+// 49.09 -> 67.19% 2026-08-20, and the lever was an INLINER decision, not
+// any of the register noise the earlier residual note blamed. predict-
+// inline reads it in one line - `PlaceObstacle base x0 vs retail x1` -
+// so our /Ob2 was expanding 191 bytes of a callee that retail CALLS. The
+// scoped inline_depth(0) at that statement is the whole fix; the earlier
+// note's register story was downstream of it. Worth remembering: the
+// register-transposition reading was measured honestly and was still the
+// wrong root cause, because a 191-byte inline moves every allocation
+// after it.
+//
+// Residual (67.19%), and the three parts are now separately named:
+//   * OUR LOOP IS ROTATED AND RETAIL'S IS NOT. Retail has ONE Pick call,
+//     at the top, with every rejection jumping back to it; our CL emits a
+//     SECOND copy at the bottom (base x2 vs retail x1). The goto form is
+//     already what this body is written in, so VC6's "goto flow is not
+//     rotated" rule does not hold for a loop whose header is a call.
+//   * retail destroys the picker OUT OF LINE on the failure path (a call
+//     to 0x46a650) and inlines the operator delete only on the success
+//     path; our CL inlines it on both.
+//   * retail inlines TObstacleVector::size() where we emit a call.
+// Tried and rejected earlier: break + re-test, while-loop form, and an
+// int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
@@ -1233,7 +1246,15 @@ next_hex:
         obstacle.field_10 = 0;
         obstacle.field_14 = -1;
         obstacles.insert(obstacles.end, 1, obstacle);
+        // Retail CALLS PlaceObstacle here - predict-inline reads it as
+        // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
+        // inline and retail was not. Scoped to this one statement so that
+        // PlaceAllObstacles, which is already exact WITH the call, is not
+        // disturbed (the auto_inline(off)-around-the-callee form would
+        // have reached it too).
+#pragma inline_depth(0)
         PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+#pragma inline_depth()
         return 1;
     }
     goto next_hex;
