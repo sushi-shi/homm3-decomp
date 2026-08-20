@@ -12,6 +12,7 @@
 
 class BlackBoxData;
 class sample;
+class ds_memsample;
 class TreasureData;
 union ExtraInfoUnion;
 
@@ -502,6 +503,45 @@ DATA(0x006a5e20) extern const char* const gMineEventText[];
 // 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
 // unrelated float data.
 DATA(0x006782ac) extern const signed char gRouteArrowFrames[8][8];
+
+// advManager::advCommand's domain. The Dreamcast prints the member as a
+// plain T_INT4 (classes.csv list[171], offset 84) and no surviving symbol
+// names any of its values, so these are ORDINAL PLACEHOLDERS carrying
+// only the role each value's DoAdvCommand arm proves, corroborated by the
+// ProcessHover/ProcessMapSelect assignments already in this tree. The
+// member itself stays `int` - this enum exists so the dispatch labels and
+// the one `advCommand != WALK_ROUTE` compare are named rather than magic.
+// Gated to advmgr.obj's own view for the standing include-set reason.
+enum EAdvCommand {
+    ADV_COMMAND_NONE = -1,
+    // Retargets the current hero's path at lastMapHover, then FALLS
+    // THROUGH into WALK_ROUTE - the fallthrough is retail's own, proved
+    // by the jump table's 0x57 entry landing 0x43 bytes above 0x9a.
+    ADV_COMMAND_MOVE_HERO = 1,
+    ADV_COMMAND_VIEW_HERO = 2,
+    ADV_COMMAND_VIEW_TOWN = 3,
+    ADV_COMMAND_SELECT_HERO = 4,
+    ADV_COMMAND_SELECT_TOWN = 5,
+    // The hero is standing on the town it obscures; the arm views that
+    // town through type_obscuring_object::get_obscured_town.
+    ADV_COMMAND_VIEW_OBSCURED_TOWN = 6,
+    ADV_COMMAND_WALK_ROUTE = 7,
+    ADV_COMMAND_SHIPYARD = 8
+};
+
+// Retail .bss, all four unattested and reached only from the adventure
+// command surface. Roles are what the bytes prove:
+//   0x6968e0  the live walk-sample handle soundManager::MemorySample
+//             returns for the step the route walker is about to take.
+DATA(0x006968e0) extern ds_memsample* gUnnamed6968e0;
+//   0x69777c  breaks the route step loop when nonzero.
+DATA(0x0069777c) extern int gUnnamed69777c;
+//   0x698774  suppresses the route teardown and forces ShowRoute
+//             instead; eleven consumers image-wide, three of them here.
+DATA(0x00698774) extern int gUnnamed698774;
+//   0x699560  gates both of the hero-view arm's SetEnvironmentOrigin
+//             calls, and UpdateRadar's own AI-shield paint.
+DATA(0x00699560) extern int gUnnamed699560;
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
@@ -843,6 +883,13 @@ public:
     // stub body, so the hero parameter is retail's - matching both
     // UpdateSpellButton below and DC's real TAdvMenu::UpdateSleepButton.
     void UpdateSleepButton(const class hero* thisHero);
+    // Retail 0x403cc0 is `ret 4` over one stack argument, so the
+    // Dreamcast roster's zero-parameter TAdventureMapWindow spelling does
+    // not transfer - the same divergence UpdateSleepButton records just
+    // above. DC's TAdvMenu sibling (adventuremapwindow.cpp:2056, dc
+    // 0x2a74) carries the parameter and names it `image`, and
+    // DoAdvCommand's one call site passes the literal 0.
+    void SetSleepImage(int image);
     void UpdateSpellButton(const class hero* thisHero);
     void draw_bottom_view(unsigned char update);
     void animate_bottom_view(unsigned char in_background);
@@ -1331,7 +1378,15 @@ public:
                         int fizzleSound);
     void EraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
+// advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
+// hands the trigger cell straight to this dispatcher. The guard is SPLIT
+// around the one declarator rather than moved, so the preprocessed text
+// every events-view consumer sees is unchanged, line for line.
+#endif /* HOMM3_EVENTS_VIEW */
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void DoEvent(NewmapCell* eventCell, type_point point);
+#endif
+#ifdef HOMM3_EVENTS_VIEW
     // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
     // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
     // needs the declarator; the pair is (visitor, visited) in the DC's
@@ -1533,6 +1588,28 @@ public:
     // cursor.obj's 0x47f7d0, the events-view declarator repeated for
     // advmgr.cpp's own mobilization pair.
     void StopCursor(unsigned char standEnd);
+#endif
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // The two out-of-compiland members DoAdvCommand reaches, DECLARED
+    // and not defined here - each is defined in its own TU and a call
+    // relocation's symbol name is not scored.
+    //
+    // cursor.obj's 0x4805e0 (cursor.cpp:570, dc 0x7aa54). `ret 0x1c` =
+    // seven stack arguments over the thiscall `this`, which is the DC
+    // parameter count exactly, and the retail call site pushes them in
+    // that order: the direction is the cell's own high nibble, standEnd
+    // is `i == 0`, and both `int*` slots are read back immediately
+    // after the call as the no-move / fought-battle verdicts.
+    NewmapCell* MoveHero(int direction, unsigned char standEnd,
+                         type_point* trigger_point, int* bNoMove,
+                         unsigned char bComputerMove, int* bFoughtBattle,
+                         unsigned char bIsRemoteMove);
+    // events.obj's 0x49e2e0 (events.cpp:317, dc 0x903b4). `ret 0xc` =
+    // three stack arguments, matching the DC prototype; the shipyard arm
+    // hands it the trigger cell, a second copy of the map point and
+    // playerData::IsLocalHuman's bool result unwidened.
+    void DoEventShipyard(NewmapCell* cell, type_point point,
+                         unsigned char human_player);
 #endif
 };
 
