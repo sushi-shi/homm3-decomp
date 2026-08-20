@@ -1353,6 +1353,34 @@ public:
                      armyGroup* rightArmyGroup, int x, int y, int iSeed,
                      unsigned char is_surrounded);
 #endif
+#ifdef HOMM3_CMBTMGR_TURN_VIEW
+    // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
+    // spelled `unsigned char` as everywhere else in this header.
+    unsigned char NextArmy(unsigned char checking_for_bad_morale);
+    void SetNextArmy(int group, int index);
+    // THE TWO UNNAMED TURN-SCAN HELPERS, 0x464d40 (525 B) and 0x464f50
+    // (291 B). This file's locate sweep left both unclaimed and unnamed
+    // on purpose: neither has a counterpart anywhere in the DC
+    // cmbtmgr.obj roster, so a name would be invention. That decision
+    // stands - these are address ordinals, the town.h Unnamed526d20
+    // shape - but NextArmy's body now pins down what they ARE, which is
+    // what a later lane needs to promote them:
+    //   0x464d40 is a combatManager method taking the selected stack and
+    //     answering a byte. Its call site is nested in the SAME guard as
+    //     CheckApplyBadMorale, immediately after it, and a non-zero
+    //     answer restarts the whole turn scan - the stack loses its
+    //     turn. Retail's body reaches FEAR.WAV. Read together that is a
+    //     fear check, but the roster does not say so and this lane does
+    //     not name it.
+    //   0x464f50 is a combatManager method taking TWO stacks and
+    //     answering a byte, and retail's body calls only army::GetSpeed.
+    //     NextArmy asks it (best, candidate) and KEEPS the incumbent
+    //     when the answer is non-zero, so it orders two stacks - the
+    //     move-order comparator. Also left unnamed.
+    // Declared, not claimed: their bodies are outside this lane.
+    unsigned char Unnamed464d40(army* selected);
+    unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
+#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
