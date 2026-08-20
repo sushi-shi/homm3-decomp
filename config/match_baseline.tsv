@@ -337,7 +337,7 @@ army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?animate_missile@army@@QAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0
 army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
-army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	89.6998	89.6998	89.6998	0x45fd0
+army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?can_cast_spell@army@@QBEEJ@Z	99.0409	99.0409	99.0409	0x476c0
 army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
@@ -414,7 +414,7 @@ armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x4ab20
 armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x496a0
 armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x4ab00
 armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4ab80
-armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	79.5363	79.5363	79.5363	0x4b620
+armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	80.0168	80.0168	80.0168	0x4b620
 armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000	100.0000	100.0000	0x49e90
 armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x496c0
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60
@@ -422,8 +422,8 @@ armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	99.9170	99.9170	99.9170	
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
-armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	82.5689	82.5689	82.5689	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	79.1754	79.1754	79.1754	0x4b960
+armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	84.5060	84.5060	84.5060	0x4c1c0
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	91.3771	91.3771	91.3771	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
@@ -806,13 +806,13 @@ findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
 findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400
-findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	98.6032	98.6032	98.6032	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
 findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
-findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.4589	87.4589	87.4589	0xb1a70
+findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0
-findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	90.1238	90.1238	90.1238	0xb2300
+findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	98.7182	98.7182	98.7182	0xb2300
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20
 findpath	?is_valid@type_point@@QAEEXZ	100.0000	100.0000	100.0000	0xb1330
@@ -1253,7 +1253,7 @@ mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	82.8043	82.8043	82.8043	0x
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
 mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20
 mapcell	?Read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfd690
-mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xfc1a0
+mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	99.4737	99.4737	99.4737	0xfc1a0
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	91.8870	91.8870	91.8870	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90

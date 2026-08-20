@@ -745,6 +745,33 @@ retail re-reads `saved.version` at all eighteen uses.
 INDUCTION** — spell `LIMIT - i` inline; a named decrementing counter never
 produces them (`Armageddon` +2.89).
 
+**A MAP SUBSCRIPT WRITTEN LONGHAND IS A HAND-EXPANDED ACCESSOR.** Retail
+reloading `gpGame` three times and re-reading `worldMap.Size` through each
+fresh copy is not a register wall — it is exactly what `game.h`'s own
+`NewfullMap::cell(x,y,z)` emits per expansion. Writing the accessor instead of
+`worldMap.cellData[(z*Size + y)*Size + x]` paid **+10.58** and **+5.62**, and
+an EBX/EDI transposition three lanes had recorded as a register wall went with
+it. **DIRECTION-DEPENDENT**: on an UNDER-inlining body the accessor COSTS 6.6.
+Check `predict-inline`'s column first.
+
+**THE /Ob2 BUDGET HAS A NUMERATOR, AND IT IS EASY TO MISS.**
+`budget = clamp(2*caller_cb, 1000, 35000)`, and every recorded attempt on one
+function had moved the DIVISOR (candidate sites: +6.9, +4.7, −2.42, −2.89,
+−2.96) before concluding the site count is not monotone. True, and not the
+whole knob — lifting two blocks into a single-call-site static drops
+`caller_cb`, the budget falls, and the over-inlined Dinkumware goes back out
+of line: **+12.20 with no statement changed**, and +1.94 on its twin. The dose
+is a PEAK — three neighbouring lifts measured −12.6, −9.2, −2.1.
+
+**A `_Tidy` CENSUS SAYS HOW MANY SITES DISAGREE; ONLY THE ORDER SAYS WHICH.**
+`TTimedEvent::Read` carried "MEASURED AND REJECTED: `inline_depth(0)` on this
+return, 72.92 → 67.03". The census was exact (retail calls at three sites, we
+at two); the PLACEMENT was not. Reading the sites in order showed retail calls
+at the first two and expands at the third while we matched the first and
+third. One pragma on the right guard: **+26.55**. `inline_depth(1)` at the
+same site is byte-flat — a clean confirmation of "only N=0 bites" on a body
+where N=0 moves 26 points.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)

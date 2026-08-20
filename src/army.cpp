@@ -2362,6 +2362,18 @@ void army::do_fire_shield(long damage)
 // residual), and retail carries SIX returns against our five - the
 // merged-return / stale-CL-generation class. Branch counts 74 vs 71,
 // all inside those two deltas; every arm's calls pair.
+//
+// THE FRAME DELTA IS NOW READ OFF THE SLOT MAPS AND IT NAMES THE SAME FACT
+// (2026-08-20).  Our 0x78 against retail's 0x84 is not three scattered
+// locals: retail owns FOUR sixteen-byte string objects at [ebp-0x60],
+// [ebp-0x70], [ebp-0x80] and [ebp-0x90] where this compile owns THREE, at
+// [ebp-0x64], [ebp-0x74] and [ebp-0x84], plus one extra dword at [ebp-0x54]
+// that retail does not have.  -16 for the missing string +4 for the surplus
+// dword is exactly the 12.  The four `std::string text;` locals in the
+// vampire / gorgon / thunderbird / rust arms are mutually exclusive and VC6
+// overlapped one pair; retail did not.  So the lead is which of those four
+// declarations has the lifetime that stops the overlap - NOT the `_cpp_min`
+// operand, which was measured at -0.26 and does not move the frame at all.
 VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
 void army::do_post_attack(army* target, int iDamage, int iKilled,
                           int total_life)
@@ -5703,13 +5715,20 @@ void army::attack_wall(TWallTargetId wall,
 //     spellings reload gpCombatManager after every aliasing store,
 //     where retail materialises each group's base exactly once.
 //
-// Residual (89.70%): the register-homing family. Retail's frame is
+//   - the explosion bounds are computed BEFORE any of them is stored,
+//     and `bottom` is computed before `right` (89.6998 -> 91.4600).
+//     Retail's sequence is halfWidth / x / halfHeight / y / Height -
+//     halfHeight + targetY - 1 / Width - halfWidth + targetX - 1 and only
+//     then the four stores; with the last two written inline in the store
+//     statements VC6 interleaves compute and store and homes nothing.
+//     A note here recorded "precomputing right/bottom as named locals
+//     (89.47)" as rejected - it is the right edit in the wrong ORDER;
+//     `right` before `bottom` is what loses.
+//
+// Residual (91.46%): the register-homing family. Retail's frame is
 // 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
-// -0x14) and targetX carried to the explosion block in EBX; ours packs
-// the same lifetimes into 0x20 and reloads. Branch sequences AGREE
-// (25/25); tried and rejected: precomputing right/bottom as named
-// locals (89.47 - the compute/store interleave moves further off), and
-// the pre-fix longhand forms above.
+// -0x14) and targetX carried to the explosion block in EBX; ours is now
+// 0x24 and still reloads three of them. Branch sequences AGREE (25/25).
 VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
 void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -5801,12 +5820,14 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long x = targetX - halfWidth;
     long halfHeight = explosion->Height / 2;
     long y = targetY - halfHeight;
+    long bottom = explosion->Height - halfHeight + targetY - 1;
+    long right = explosion->Width - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
         bounds.values[0] = x;
         bounds.values[1] = y;
-        bounds.values[2] = explosion->Width - halfWidth + targetX - 1;
-        bounds.values[3] = explosion->Height - halfHeight + targetY - 1;
+        bounds.values[2] = right;
+        bounds.values[3] = bottom;
     }
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
