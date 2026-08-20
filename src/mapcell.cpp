@@ -2970,31 +2970,33 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// Residual (71.9069%): an INLINER wall, and the arithmetic identifies it
-// exactly. predict-inline reports base 21 out-of-line calls against retail's
-// 13, and the whole difference is `std::bitset<70>::_Xran`: retail CALLS it
-// once per range check - the body the unwind symbol
-// `game_invalid_bitset_n_positio_1021c0_unwind02` names - where our CL
-// expands the entire `throw out_of_range("invalid bitset<N> position")` in
-// place: assign(const char*,size_t), the exception constructor, _Tidy,
-// assign(const string&,size_t,size_t) and _CxxThrowException, five calls
-// apiece. Two sites, five-for-one, and 21 - 13 = 8 exactly.
+// 71.9069 -> 83.7667, 2026-08-20, ON ONE PIN - and the diagnosis this note
+// used to carry was WRONG, so read the correction before re-deriving it.
 //
-// It is NOT the bitset<48> case this same file already gets right -
-// readObjectType CALLS bitset<48>::_Xran (0x41b410) and is exact. The
-// instantiations differ, and retail's own readTownData is split down the
-// middle, one of its two bitset<70> checks a call and the other expanded,
-// which is what a per-caller /Ob2 budget spent SEQUENTIALLY looks like
-// rather than a per-callee decision.
+// The old text blamed `std::bitset<70>::_Xran` and concluded "no source
+// spelling reached the _Xran decision, and auto_inline(off) cannot reach it
+// either: the callee is a library template this TU never defines". Both
+// halves were true and the conclusion was not, because the residual was not
+// _Xran at all. It was `basic_string::assign(const basic_string&, size_t,
+// size_t)` at the hero-name store: retail CALLS it, our CL expanded it, and
+// the expansion is what dragged in _Grow x4, _Split x2, _Eos, memmove,
+// char_traits::assign, the free std::_Xran, the exception and logic_error
+// constructors and a string copy constructor - fifteen unmatched calls
+// against retail's eight, which is where the 21-vs-13 came from.
 //
-// Tried, and each kept for a fraction of a point without touching the wall:
-// spelling the name store as an explicit three-argument
-// `assign(temp, 0, npos)` through a named temporary (69.1834 -> 69.4400 -
-// and retail does CALL that same three-argument assign where we expand it,
-// a second site of this very class), and writing both spell-mask writes as
-// `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688). No source
-// spelling reached the _Xran decision, and `#pragma auto_inline(off)` cannot
-// reach it either: the callee is a library template this TU never defines.
+// The old note even names the evidence and then walks past it ("retail does
+// CALL that same three-argument assign where we expand it, a second site of
+// this very class"). What was missing was the lever, not the reading:
+// a STATEMENT-SCOPED `#pragma inline_depth(0)` on the assign. It is not a
+// source spelling, so "no spelling reaches it" never argued against it, and
+// unlike auto_inline it does not need the callee's definition to be in this
+// TU - it suppresses expansion at the CALL SITE. predict-inline now reads
+// 14 against 13.
+//
+// Kept from the old note because they still hold: writing both spell-mask
+// writes as `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688), and
+// readObjectType's exactness proving bitset<48>::_Xran (0x41b410) is CALLED
+// on both sides.
 //
 // Moving the mask loop into unpackSpellMask is worth another two points
 // (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
@@ -3209,7 +3211,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         if (customNameFlag) {
             hero_data->customName = 1;
             std::string heroName = ReadLengthPrefixedString(infile);
+#pragma inline_depth(0)
             hero_data->name.assign(heroName, 0, std::string::npos);
+#pragma inline_depth()
         }
 
         char sexByte;
