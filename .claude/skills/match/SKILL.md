@@ -613,6 +613,45 @@ pushing the quotient past a throw's cost at an earlier one (−7.76 pinned,
 −15.05 unpinned, −9.84 on a third). That is the pin's second side effect and
 it is why a locally-correct pin can measure negative.
 
+**SWEEP `sub esp` IN BOTH DIRECTIONS, WHOLE-UNIT, BEFORE ANY SOLVER.**
+`llvm-objdump` over `build/objdiff/normalized/{base/U.obj,target/U.c.obj}`
+gives every frame delta at once, and the SIGN names the missing fact:
+- **Frame too LARGE** — a mis-sized array (`char[12]` modelled as `char[8]`
+  reads as a ~15% score hole), a value that could not reach a dead parameter
+  home (**+8.57**), or a DEFAULTING DEFAULT CTOR whose `{-1,-1}` spills at
+  entry (**+0.75**; the lever is the local's declaration form, not the header).
+- **Frame too SMALL** — a MISSING NAMED LOCAL. `StampObject` 0x78 against
+  retail's 0x7c wanted one reference local,
+  `std::vector<TObjectCell>& objectList = thisCell->objects;` — **+5.48** and
+  the frame exact. Retail proved it by biasing `[ebp+8]` once and reading
+  `end()`, `begin()` and the insert's `_Last`/`_End` through that pointer.
+
+Companion sweep: **positive `[ebp+N]` slots retail writes and we never do** are
+the recycled-parameter sites, found mechanically. Validate the base
+instruction count first — llvm-objdump truncates EH-bearing base dumps.
+
+**A CALLER-SHRINK DOSE THAT IS TOO SMALL IS BYTE-FLAT, NOT FRACTIONAL.**
+Lifting one function's field stores into a helper moved the score by 0.0000.
+The /Ob2 threshold is a STEP, so a null result means "too small", not "wrong
+idea" — which is why dose titration reads as nothing-then-everything.
+
+**`DON'T CACHE WHAT RETAIL RELOADS` CAN BE ASYMMETRIC INSIDE ONE STATEMENT
+PAIR.** Retail named one value in a temp slot and recomputed its sibling with
+full addressing at both sites; dropping only the one local paid **+6.10**.
+
+**THE REVERSE-SCAN TELL.** Retail keeping `size` AND `size-1`
+(`mov edx,esi / dec esi`) with a back edge testing the PRE-decrement index
+means `for (i = size()-1; i >= 0; --i)` over `[i]`, not `size(); i > 0` over
+`[i-1]`. The wrong form lets VC6 fold `size()==0` into the guard and collapse
+the inlined `vector::size()` null-arm join — ten instructions on a 278 B body.
+
+**AN UNTESTED WARNING IS WORSE THAN NO NOTE.** `army::consider_attack` carried
+"it inlines GetSpeed four times and can_shoot once, and would destabilise four
+banked rows". Three lanes were told to leave it alone on that basis. There was
+no matrix: it closed at **100.0000 on the first spelling**, 623 B, and nothing
+else moved. If a note warns you off without showing a measurement, treat it as
+unexplored, not as closed.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
