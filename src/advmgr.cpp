@@ -6024,6 +6024,18 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 // the file in retail link order.
 #endif  // @carcass
 
+// MEASURED NEGATIVE, do not retry: `#pragma auto_inline(off)` around this
+// constructor. predict-inline reports ShowRoute as the one body where
+// retail CALLS the ctor and our CL expands it, and switching the pragma on
+// does move ShowRoute 65.27 -> 73.87 - but retail inlines this ctor
+// everywhere else in the compiland, so the same edit knocks THIRTEEN exact
+// functions off at once (DrawArrow, DrawArrowShadow, DrawGround,
+// DrawRiver, DrawRoad, DrawShroud, DrawBoatPart, DrawBoatPartShadow,
+// HeroQuickView, ScanForHeroOrBoat, SeedTo 100 -> 39.19, get_map_center
+// 100 -> 53.61, DemobilizeCurrHero) and takes the unit 70.08 -> 68.45.
+// VC6's inline decision is per-CALLEE, so the pragma cannot be aimed at
+// ShowRoute alone; whatever refuses the expansion there is a property of
+// that one call site.
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
 type_point::type_point(short new_x, short new_y, short new_z)
 {
