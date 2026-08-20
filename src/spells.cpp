@@ -28,7 +28,10 @@
 #define HOMM3_CMBTMGR_AREA_VIEW
 // The spells.obj-only declaration block; see cmbtmgr.h.
 #define HOMM3_CMBTMGR_SPELLS_VIEW
+// find_demonic_resurrection_target, declared beside its army.cpp consumer.
+#define HOMM3_CMBTMGR_RESURRECT_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_RESURRECT_VIEW
 #undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
@@ -511,19 +514,74 @@ void combatManager::mark_wall_area_effect(long target_hex, TSkillMastery mastery
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3227
+#endif  // @carcass
+
+// THE TWO STACK COLLECTORS, and each is a thin shell over its own
+// hex-collecting overload: build a local std::vector<long>, let the
+// inner call fill it with cell indices, then map each cell to the stack
+// standing on it and hand the distinct ones to the caller.
+//
+// `effected` IS THE DE-DUPLICATOR, and that is a second, independent
+// witness for its [2][20] shape. A two-hex stack occupies two cells, so
+// the same army would otherwise be reported twice; retail zeroes the row
+// with the same ten-dword `rep stosd` ClearEffects uses and then indexes
+// it `combatSide * 20 + bitIndex`, which is exactly
+// SetMassSpellInfluence's `effected[side][slot]` read from the army's own
+// end.
+//
+// The hex list is walked BACKWARDS, and `hexes.size()` is the guarded
+// form the toolchain's own <vector> carries -
+// `_First == 0 ? 0 : _Last - _First` - which is why retail tests _First
+// against zero before taking the pointer difference. `Is(21)` is the
+// magic-immunity bit ai_tactical's get_damage_value screens on first.
 VA(0x005a46f0, 0x113)  // order-map+arity, dc 0x153904
-void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<army* result)
+void combatManager::mark_hex_area_effect(long hex, long radius,
+                                         unsigned char include_center,
+                                         std::vector<army*>& targets)
 {
-    // @stub
+    std::vector<long> hexes;
+    mark_area_effect(hex, radius, include_center, hexes);
+    memset(effected, 0, sizeof(effected));
+    int i = hexes.size();
+    while (i-- > 0) {
+        if (!ValidHex(hexes[i]))
+            continue;
+        army* target = cells[hexes[i]].get_army();
+        if (target == 0)
+            continue;
+        if (target->Is(21) & 1)
+            continue;
+        if (effected[target->combatSide][target->bitIndex])
+            continue;
+        effected[target->combatSide][target->bitIndex] = 1;
+        targets.push_back(target);
+    }
 }
 
-// E:\gamedcs\spells.cpp:3265
 VA(0x005a4810, 0x10F)  // order-map+arity, dc 0x1539fc
-void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<army* result)
+void combatManager::mark_berserk_area_effect(long hex, long mastery,
+                                             std::vector<army*>& targets)
 {
-    // @stub
+    std::vector<long> hexes;
+    mark_berserk_area_effect(hex, mastery, hexes);
+    memset(effected, 0, sizeof(effected));
+    int i = hexes.size();
+    while (i-- > 0) {
+        if (!ValidHex(hexes[i]))
+            continue;
+        army* target = cells[hexes[i]].get_army();
+        if (target == 0)
+            continue;
+        if (target->Is(21) & 1)
+            continue;
+        if (effected[target->combatSide][target->bitIndex])
+            continue;
+        effected[target->combatSide][target->bitIndex] = 1;
+        targets.push_back(target);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 #endif  // @carcass
 
