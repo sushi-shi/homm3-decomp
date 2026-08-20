@@ -1974,6 +1974,12 @@ extern int gMapHeight;
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
 extern int gNetLocalGamePos;                // .bss 0x69cca8
+// 0x69ccc4: the acting player's bit (1 << gamePos), stamped by advmgr's
+// SaveGame around the local-player switch and by StartLocalPlayerTurn's
+// gosolo DECLINE arm's sibling at 0x69ccbc (gMapVisibilityBit). This is
+// the byte the WRONG 2026-08-20-corrected gMapVisibilityBit claim used
+// to sit on - a real, distinct cell. Name stays ordinal.
+extern unsigned char gUnnamed69ccc4;
 
 // Two game-band routines StartLocalPlayerTurn drives, spelled as /Gr free
 // functions (the game lands in ECX either way) so class game stays

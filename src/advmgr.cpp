@@ -99,6 +99,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "quickinfowindow.h"
 #include "questlogwindow.h"
 #include "puzzlewindow.h"
+#include "singleselectionwindow.h"
 #include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -7213,16 +7214,78 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9693
+// The save-game flow. The extension is picked before the dialog
+// (.CGM for campaigns, .GM<humans> otherwise - the human count walks
+// playerDisabled), the selection megawindow runs modally in its own
+// scope, and an empty filename afterwards means cancel. Networked
+// saves briefly impersonate the local player (gamePos/gpCurrentPlayer/
+// the 0x69ccc4 bit) around game::SaveGame and restore the acting seat
+// after. hourGlass.Stop() and ~CHourGlass land on one retail address -
+// identical bodies ICF-folded - which is why the EH state stays 1
+// across the explicit Stop() and only drops at the scope-end dtor.
 VA(0x00418160, 0x270)  // linkorder, dc 0x1ae38
 unsigned char SaveGame(unsigned char bCampaignWinMode)
 {
-    // @stub
-}
+    unsigned char result = 0;
+    int humanCount = 0;
+    if (!bCampaignWinMode) {
+        gpAdvManager->DisableButtons();
+        for (int i = 0; i < 8; i++) {
+            if (!gpGame->playerDisabled[i] && gpGame->IsHuman(i))
+                humanCount++;
+        }
+    }
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
 
-#endif  // @carcass
+    if (gUnnamed69774c)
+        sprintf(gUnnamed691268,
+                DATA_COMPGEN(0x006603f8, campaignSaveExtension, ".CGM"));
+    else
+        sprintf(gUnnamed691268,
+                DATA_COMPGEN(0x006603f0, saveExtensionFormat, ".GM%d"),
+                humanCount);
+
+    {
+        TSingleSelectionWindow selection(2);
+        selection.DoModal(0);
+    }
+
+    if (!bCampaignWinMode)
+        gpAdvManager->RedrawAdvScreen(1, 0);
+
+    if (strlen(gUnnamed69fc2c) != 0) {
+        strcat(gUnnamed69fc2c, gUnnamed691268);
+        gUnnamed697774 = 1;
+        int oldPos = gNetLocalGamePos;
+        if (bVideoPaused) {
+            int pos = gpGame->GetLocalPlayerGamePos();
+            gNetLocalGamePos = pos;
+            gpCurrentPlayer = &gpGame->players[pos];
+            gUnnamed69ccc4 = 1 << pos;
+        }
+        CHourGlass hourGlass(1);
+        result = gpGame->SaveGame(gUnnamed69fc2c, gpGame->field_1f69d,
+                                  bCampaignWinMode, 1, 0);
+        hourGlass.Stop();
+        if (bVideoPaused) {
+            gNetLocalGamePos = oldPos;
+            gpCurrentPlayer = &gpGame->players[oldPos];
+            gUnnamed69ccc4 = 1 << oldPos;
+        }
+        if (result) {
+            strtok(gUnnamed69fc2c,
+                   DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+            char text[100];
+            sprintf(text, gpGeneralText->GetText(351), gUnnamed69fc2c);
+            NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    }
+
+    if (!bCampaignWinMode)
+        gpAdvManager->EnableButtons();
+    return result;
+}
 
 // Per-priority playback volume for the adventure ambience. The row is
 // retail .rdata local to this TU (name provisional; the akScrollSpeedInc
