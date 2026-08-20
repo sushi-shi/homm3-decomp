@@ -7,6 +7,9 @@
 // narrower than HOMM3_MAPCELL_OBJECTS_VIEW: only this TU constructs a
 // CObjectType, and this header's include closure is measured.
 #define HOMM3_MAPCELL_TYPEMASK_VIEW
+#define HOMM3_MAPCELL_TOWNEXTRA_VIEW
+#define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_MAPCELL_HERO_SETUP_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
 // class, so the span has no missing attributions at the small end:
@@ -39,7 +42,12 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "monsterdata.h"
+#include "newgame.h"
 #include "resourcemanager.h"
+#include "smackmgr.h"
+#undef HOMM3_MAPCELL_HERO_SETUP_VIEW
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
+#undef HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -742,6 +750,27 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
     return 0;
 }
 
+// Load's seer-hut resize, factored out for the same reason readObject's
+// QUEST_GUARD arm is: the /Ob2 budget is per-CALLER and clamps at a floor,
+// so a function this small cannot afford to expand vector<TSeerHut>::resize
+// and keeps the CALL retail makes. Being a single-call-site static it is
+// then inlined back into Load whole, bringing that call with it, and
+// mapcell.obj still carries exactly 67 functions.
+//
+// Worth 72.8624 -> 77.3789. The note below had already identified the shape
+// ("character for character the divergence readObject's QUEST_GUARD arm
+// shows"); only its conclusion that no source spelling reached it was wrong.
+//
+// The lever is NARROW. Starving Load's OTHER divergence the same way - the
+// mapObjectData push_back in the loop below - scores 77.2574, slightly worse
+// than leaving it, and starving readMapObjects' objectTypes.resize costs an
+// exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
+// shares that instantiation. Both were measured and reverted.
+static void resizeSeerHutList(NewfullMap* map, int count)
+{
+    map->SeerHutList.resize(count);
+}
+
 // E:\gamedcs\mapcell.cpp:679
 // The savegame twin of Read, and the differences from it are the interesting
 // part.  It clears NINE map pools where Read clears eleven - the hero
@@ -756,7 +785,7 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // reloaded _First for the load call, and reloads _First AGAIN for the quest
 // test on the very next line.  Writing it as a subscript twice is what
 // produces that; hoisting a row pointer does not.
-// Residual (72.8624%): the same over-inline family readObject and Read hit,
+// Residual (77.3789%): the same over-inline family readObject and Read hit,
 // twice over.  Retail CALLS vector<TSeerHut>::resize (two arguments, the
 // count and the default-argument temporary); our CL expands it into its
 // size()/insert/size()/erase body, which is the whole of the branch-count
@@ -772,7 +801,15 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // AFTER eighteen inlined clear() expansions, which is the one thing Load has
 // that loadMonsterList does not - consistent with a per-caller /Ob2 budget
 // that retail had already spent by the time it reached the resize and ours
-// had not.  No source spelling reached it; recorded rather than ground on.
+// had not.
+//
+// That diagnosis was RIGHT and its conclusion - "no source spelling reached
+// it" - was WRONG. The budget being per-caller is exactly what makes it
+// reachable: move the resize into a function small enough to be starved of
+// budget and it stays a call, then let the single-call-site static inline
+// back. resizeSeerHutList above does that, 72.8624 -> 77.3789. What remains
+// is the mapObjectData half, which does NOT respond to the same treatment
+// (77.2574, measured).
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
@@ -820,7 +857,7 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     if (infile->Read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    SeerHutList.resize(count);
+    resizeSeerHutList(this, count);
     for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
         SeerHutList[i].load(infile, saveVersion);
         if (SeerHutList[i].quest)
@@ -2594,19 +2631,574 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:2798
-VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
-int NewfullMap::readTownData(void* infile, CObject* townObject)
+#endif  // @carcass
+
+// The nine-byte serialized spell set, unpacked a bit at a time.  Three sites
+// deserialize one - readTownData's two masks and readHeroData's - and all
+// three are written through this helper rather than longhand for the same
+// per-caller /Ob2 reason readQuestGuardArm and resizeSeerHutList exist: a
+// function this small cannot afford the register/scheduling mass the loop
+// costs its caller, and the caller comes out closer to retail without it.
+// Worth 69.8694 -> 71.9069 on readHeroData; on readTownData it is only
+// 82.0000 -> 82.0785, which is inside the noise and kept for uniformity
+// rather than for the score.
+//
+// It costs no symbol - mapcell.obj still carries exactly 67 functions -
+// because /Ob2 expands it at every one of the three sites.
+//
+// The `/ 8` and `% 8` are SIGNED: retail's `and ecx,0x80000007` with its
+// negative fixup, and the `cdq / and edx,7 / add / sar 3` pair, are what an
+// `int` counter produces and a shift-and-mask spelling would not.
+static void unpackSpellMask(std::bitset<70>* spells,
+                            const unsigned char* mask)
 {
-    // @stub
+    for (int i = 0; i < 70; ++i)
+        (*spells)[i] = (mask[i / 8] & (1 << (i % 8))) != 0;
+}
+
+// E:\gamedcs\mapcell.cpp:232 - TTownEvent::Read in the Dreamcast roster
+// (dc 0xebc90, locals `inBuf`, `padding`, `count`).  Retail's only call site
+// is readTownData, which inlines it, so it is spelled as a file-local static
+// for exactly the reason loadMonsterData above is: an inlined single-call
+// static leaves no symbol behind where an extern member would leave one
+// retail has not got.
+//
+// Its result is DISCARDED at the call site, and that is what explains the one
+// asymmetry in the bytes: the trailing four-byte read carries NO short-count
+// branch while the two reads above it do.  With the return value dead, both
+// arms of the last `return -1` converge on the same code and the optimizer
+// folds the test away; the two earlier ones survive because failing them
+// SKIPS a later read.
+static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
+                         int mapVersion)
+{
+    unsigned char inBuf[6];
+    char padding[4];
+
+    thisEvent->Read(infile, mapVersion);
+
+    if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+        return -1;
+    memcpy(&thisEvent->BuildBuildings, inBuf, sizeof(inBuf));
+
+    if (infile->Read(thisEvent->generatorBonuses,
+                     sizeof(thisEvent->generatorBonuses))
+        < sizeof(thisEvent->generatorBonuses))
+        return -1;
+
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
+}
+
+// E:\gamedcs\mapcell.cpp:2798
+// The h3m town record, and the fullest statement of this pool's layout there
+// is: every offset game.h's gated view models is written here, and the total
+// lands on the 136-byte stride the `imul 0x78787879 / sar 6` size() inline
+// divides by.
+//
+// The record index goes straight into the OBJECT rather than into a local the
+// way readArtifactData's does - it is taken BEFORE the push_back that will
+// create the entry, so it is the index the entry is about to get.
+//
+// THREE version tests, and they do not read the same source.  The leading
+// identifier dword and the obligatory-spell mask consult
+// gpGame->mapHeader.version; the creature field's WIDTH and the trailing
+// alignment byte consult the mapVersion PARAMETER.  That asymmetry is
+// retail's, the same one readGarrisonData and readBlackBox carry.
+//
+// The two spell masks are read into ONE nine-byte buffer, which is why the
+// oldest map format still memsets it before skipping the loop that would
+// read it: the second Read overwrites the whole thing regardless.  Each mask
+// is unpacked bit by bit, with `/ 8` and `% 8` SIGNED - the `and
+// ecx,0x80000007` negative fixup and the `cdq / and edx,7 / add / sar 3`
+// pair are what prove the loop counter is `int`; shifts and masks would not
+// produce those corrections.
+//
+// The tail resolves a RANDOM_TOWN's faction: the alignment byte's player slot
+// if that slot is playable at all, else the town's own owner, else a roll -
+// widened to nine alignments only when the scenario is expansion-era.
+VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
+int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
+                             int mapVersion)
+{
+    TScenarioTown tempTown;
+    char char_buffer;
+    short short_buffer;
+    int int_buffer;
+    int numTownEvents;
+    unsigned char inBuf[6];
+    unsigned char spellBuf[9];
+    char padding[3];
+    int x;
+    int count;
+
+    townObject->extraInfo = gpGame->scenarioTowns.size();
+    tempTown.townType = objectTypes[townObject->typeIndex].extra;
+
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        tempTown.castleId = 0;
+    } else {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        tempTown.castleId = int_buffer;
+    }
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.playerOwner = char_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomName = char_buffer;
+    if (tempTown.bCustomName)
+        readMapString(infile, &tempTown.name);
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomArmies = char_buffer;
+    if (tempTown.bCustomArmies) {
+        for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+            int creature;
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                creature = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                creature = wide;
+            }
+            tempTown.townArmy.armies[x] = creature;
+
+            if (infile->Read(&short_buffer, sizeof(short_buffer))
+                < sizeof(short_buffer))
+                return -1;
+            tempTown.townArmy.numTroops[x] = short_buffer;
+        }
+    }
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bIsGrouped = char_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomBuildings = char_buffer;
+
+    if (tempTown.bCustomBuildings) {
+        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+            return -1;
+        memcpy(&tempTown.BuildingBuiltMask, inBuf, sizeof(inBuf));
+        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+            return -1;
+        memcpy(&tempTown.BuildingDisabledMask, inBuf, sizeof(inBuf));
+    } else {
+        if (infile->Read(&char_buffer, sizeof(char_buffer))
+            < sizeof(char_buffer))
+            return -1;
+        tempTown.HasFort = char_buffer;
+    }
+
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        memset(spellBuf, 0, sizeof(spellBuf));
+    } else {
+        infile->Read(spellBuf, sizeof(spellBuf));
+        unpackSpellMask(&tempTown.fixedSpells, spellBuf);
+    }
+
+    if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+        return -1;
+    unpackSpellMask(&tempTown.spells, spellBuf);
+
+    if (infile->Read(&numTownEvents, sizeof(numTownEvents))
+        < sizeof(numTownEvents))
+        return -1;
+
+    for (count = 0; count < numTownEvents; ++count) {
+        TTownEvent thisEvent;
+        readTownEvent(infile, &thisEvent, mapVersion);
+        thisEvent.TownNum = gpGame->scenarioTowns.size();
+        TownEventList.push_back(thisEvent);
+    }
+
+    char alignment = -1;
+    if (mapVersion >= 28)
+        infile->Read(&alignment, sizeof(alignment));
+
+    if (objectTypes[townObject->typeIndex].objectType == RANDOM_TOWN) {
+        if (alignment != -1
+            && (gpGame->mapHeader.playerSlotAttributes[alignment].CanBeHuman
+                || gpGame->mapHeader.playerSlotAttributes[alignment]
+                       .CanBeComputer)) {
+            tempTown.townType = gpGame->setup.alignment[alignment];
+        } else if (tempTown.playerOwner != -1) {
+            tempTown.townType = gpGame->setup.alignment[tempTown.playerOwner];
+        } else {
+            // Eight town bits, widened to the ninth only for an
+            // expansion-era scenario in the two game states that allow it.
+            //
+            // The enumerator reads oddly here because smackmgr named this
+            // domain from its OWN use of it - the two values that force a
+            // video onto the bink arm - and that header says so: the names
+            // are provisional until the pointee's owning TU lands. It is
+            // the same global (0x69923c) and the same value 3, so the gate's
+            // rule applies. Two independent readings now constrain the
+            // domain: this one pairs 1 with 3, and PointToSpriteResource
+            // (0x55cf50) uses the very same double indirection to INDEX the
+            // 24-byte archive-set rows at 0x69e538 - so the pointee is a
+            // small game/resource-context ordinal, not a video flag.
+            int legalAlignments = 0xff;
+            if ((*gpVideoGameState == 1
+                 || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+                && gpGame->f_1f698 >= 1)
+                legalAlignments = 0x1ff;
+            tempTown.townType = pick_alignment(legalAlignments, 0);
+        }
+    }
+
+    gpGame->scenarioTowns.push_back(tempTown);
+
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:2951
+// The map file's hero record, and the widest one this compiland reads: it
+// fills a whole HeroExtra out of gpGame's 156-record setup pool at +0xa4 and
+// leaves the object's extraInfo holding the hero id.
+//
+// THREE version gates, and they do not read the same source.  The leading
+// quest identifier and the experience block test the mapVersion PARAMETER;
+// the armies width tests the parameter again out of its stack home;
+// everything from the artifacts on tests gpGame->mapHeader.version.  That is
+// readBlackBox's and readTownData's asymmetry again, not a slip.
+//
+// EXACTLY ONE READ IS CHECKED - the sixteen trailing padding bytes, whose
+// short count is the function's only -1.  Twenty-eight other Reads ignore
+// their result, including every one whose value reaches the record.
+//
+// The hero id is resolved in three steps: the stream byte through the
+// 0x4ba1c0 helper, then the per-player reservation at 0x69fb24 (CONSUMED on
+// use - the slot is stored -1 again), then GetStartingHeroId as the fallback.
+// Whichever answer wins is also latched into the setup screen's startingHero
+// slot if that is still -1.
+//
+// The two spell formats are exclusive and THE PRIMARY SKILLS RIDE WITH THE
+// SECOND: Armageddon's Blade carries one signed spell id (-2 = no record,
+// -1 = clear the set) and jumps straight to the padding, while every later
+// format carries a 70-bit mask in nine bytes and then the four primaries.
+//
+// The alignment reaching GetStartingHeroId is moved into its enum with
+// memcpy rather than a cast, which is this tree's own idiom for the
+// conversion - pick_alignment does exactly the same thing to its loop index,
+// and the cast-into-an-enum floor is why.
+//
+// Residual (71.9069%): an INLINER wall, and the arithmetic identifies it
+// exactly. predict-inline reports base 21 out-of-line calls against retail's
+// 13, and the whole difference is `std::bitset<70>::_Xran`: retail CALLS it
+// once per range check - the body the unwind symbol
+// `game_invalid_bitset_n_positio_1021c0_unwind02` names - where our CL
+// expands the entire `throw out_of_range("invalid bitset<N> position")` in
+// place: assign(const char*,size_t), the exception constructor, _Tidy,
+// assign(const string&,size_t,size_t) and _CxxThrowException, five calls
+// apiece. Two sites, five-for-one, and 21 - 13 = 8 exactly.
+//
+// It is NOT the bitset<48> case this same file already gets right -
+// readObjectType CALLS bitset<48>::_Xran (0x41b410) and is exact. The
+// instantiations differ, and retail's own readTownData is split down the
+// middle, one of its two bitset<70> checks a call and the other expanded,
+// which is what a per-caller /Ob2 budget spent SEQUENTIALLY looks like
+// rather than a per-callee decision.
+//
+// Tried, and each kept for a fraction of a point without touching the wall:
+// spelling the name store as an explicit three-argument
+// `assign(temp, 0, npos)` through a named temporary (69.1834 -> 69.4400 -
+// and retail does CALL that same three-argument assign where we expand it,
+// a second site of this very class), and writing both spell-mask writes as
+// `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688). No source
+// spelling reached the _Xran decision, and `#pragma auto_inline(off)` cannot
+// reach it either: the callee is a library template this TU never defines.
+//
+// Moving the mask loop into unpackSpellMask is worth another two points
+// (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
+// 21 against 13 afterwards, so the gain is layout and register assignment,
+// not the _Xran decision. The same treatment on the single-spell store
+// (`setHeroSpell(&spells, spell)`) goes the other way, 71.9069 -> 70.1832,
+// and was reverted: one bit is not enough mass for the helper to pay for
+// itself.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
-int NewfullMap::readHeroData(void* infile, CObject* heroObject)
+int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
+                             int mapVersion)
 {
-    // @stub
+    char tempText[100] = { 0 };
+    int int_buffer;
+
+    // The Shadow of Death quest identifier: absent on the oldest format, and
+    // it survives the whole body to reach HeroExtra::field_008.
+    int identifier;
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        identifier = 0;
+    } else {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        identifier = int_buffer;
+    }
+
+    char char_buffer;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    char Owner = char_buffer;
+
+    int HeroID = ReadHeroId(infile, mapVersion);
+    unsigned char isRandomHero = 0;
+    if (HeroID == -1)
+        isRandomHero = 1;
+
+    char nameFlag;
+    infile->Read(&nameFlag, sizeof(nameFlag));
+    char customName = nameFlag != 0;
+    if (customName) {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        infile->Read(tempText, int_buffer);
+        tempText[int_buffer] = 0;
+    }
+
+    // Restoration of Erathia and Armageddon's Blade always carry the
+    // experience dword; Shadow of Death gates it behind a flag byte.  In a
+    // campaign game a value below forty is treated as no custom experience at
+    // all, which is what the gbUnk69774c consult is doing on both arms.
+    int experience;
+    unsigned char bCustomExperience;
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
+        || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        experience = int_buffer;
+        if (experience != 0 && (!gbUnk69774c || experience >= 40))
+            bCustomExperience = 1;
+        else
+            bCustomExperience = 0;
+    } else {
+        char experienceFlag;
+        infile->Read(&experienceFlag, sizeof(experienceFlag));
+        bCustomExperience = experienceFlag != 0;
+        if (bCustomExperience) {
+            infile->Read(&experience, sizeof(experience));
+            if (gbUnk69774c && experience < 40)
+                bCustomExperience = 0;
+        } else {
+            experience = 0;
+        }
+    }
+
+    if (HeroID == -1) {
+        if (gUnnamed69fb24[char_buffer] != -1) {
+            HeroID = gUnnamed69fb24[char_buffer];
+            gUnnamed69fb24[char_buffer] = -1;
+        } else {
+            TTownType alignment;
+            memcpy(&alignment, &gpGame->setup.alignment[char_buffer],
+                   sizeof(alignment));
+            HeroID = gpGame->GetStartingHeroId(alignment, char_buffer,
+                                               experience);
+        }
+    }
+    if (gpGame->setup.startingHero[char_buffer] == -1)
+        gpGame->setup.startingHero[char_buffer] = HeroID;
+
+    HeroExtra* hero_data = &gpGame->heroSetup[HeroID];
+    hero_data->Owner = Owner;
+    hero_data->id = HeroID;
+    hero_data->field_008 = identifier;
+    heroObject->extraInfo = HeroID;
+
+    if (customName) {
+        hero_data->bCustomName = 1;
+        strcpy(hero_data->Name, tempText);
+    }
+
+    if (bCustomExperience) {
+        hero_data->bCustomExperience = 1;
+        hero_data->Experience = experience;
+    }
+
+    // A random hero keeps its rolled portrait unless the campaign engine is
+    // running, which is the only reader of the flag byte pair.
+    char portrait;
+    infile->Read(&portrait, sizeof(portrait));
+    if (portrait) {
+        infile->Read(&portrait, sizeof(portrait));
+        if (!isRandomHero || gbUnk69774c) {
+            hero_data->bCustomPortraitNumber = 1;
+            hero_data->PortraitNumber = portrait;
+        }
+    }
+
+    char skillsFlag;
+    infile->Read(&skillsFlag, sizeof(skillsFlag));
+    if (skillsFlag) {
+        hero_data->bCustomSecondarySkills = 1;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        hero_data->NumSecondarySkills = int_buffer;
+        for (int skill = 0; skill < hero_data->NumSecondarySkills; ++skill) {
+            char type;
+            infile->Read(&type, sizeof(type));
+            hero_data->secondarySkill[skill] = type;
+            char level;
+            infile->Read(&level, sizeof(level));
+            hero_data->secondarySkillLevel[skill] = level;
+        }
+    }
+
+    char armiesFlag;
+    infile->Read(&armiesFlag, sizeof(armiesFlag));
+    if (armiesFlag) {
+        hero_data->bCustomArmies = 1;
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            int creature;
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                creature = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                creature = wide;
+            }
+            hero_data->armies[slot] = creature;
+
+            short troops;
+            infile->Read(&troops, sizeof(troops));
+            hero_data->numTroops[slot] = troops;
+        }
+    }
+
+    char formation;
+    infile->Read(&formation, sizeof(formation));
+    hero_data->GroupFormation = formation != 0;
+
+    char artifactsFlag;
+    infile->Read(&artifactsFlag, sizeof(artifactsFlag));
+    if (artifactsFlag) {
+        hero_data->bCustomArtifacts = 1;
+
+        // Eighteen equipped positions before Shadow of Death, nineteen after.
+        int equippedCount = (gpGame->mapHeader.version
+                             == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
+        for (int equipped = 0; equipped < equippedCount; ++equipped) {
+            int artifact;
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                artifact = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                artifact = wide;
+            }
+            hero_data->artifacts[equipped].artifactId = artifact;
+        }
+
+        short short_buffer;
+        infile->Read(&short_buffer, sizeof(short_buffer));
+        hero_data->numInBackpack = static_cast<unsigned char>(short_buffer);
+        for (int carried = 0; carried < hero_data->numInBackpack; ++carried) {
+            int artifact;
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                artifact = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                artifact = wide;
+            }
+            hero_data->backpack[carried].artifactId = artifact;
+        }
+
+        // The fourth war-machine position is never serialized: every hero
+        // starts with the catapult in it.
+        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].artifactId
+            = ARTIFACT_CATAPULT;
+        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
+    }
+
+    char patrolRadius;
+    infile->Read(&patrolRadius, sizeof(patrolRadius));
+    hero_data->PatrolRadius = patrolRadius;
+
+    if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        char customNameFlag;
+        infile->Read(&customNameFlag, sizeof(customNameFlag));
+        if (customNameFlag) {
+            hero_data->customName = 1;
+            std::string heroName = ReadLengthPrefixedString(infile);
+            hero_data->name.assign(heroName, 0, std::string::npos);
+        }
+
+        char sexByte;
+        infile->Read(&sexByte, sizeof(sexByte));
+        int sex = sexByte;
+        if (sex != -1)
+            hero_data->sex = sex;
+
+        if (gpGame->mapHeader.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+            char spellByte;
+            infile->Read(&spellByte, sizeof(spellByte));
+            int spell = spellByte;
+            if (spell != -2) {
+                hero_data->customSpells = 1;
+                std::bitset<70> noSpells;
+                hero_data->spells = noSpells;
+                if (spell != -1)
+                    hero_data->spells[spell] = 1;
+            }
+        } else {
+            char spellsFlag;
+            infile->Read(&spellsFlag, sizeof(spellsFlag));
+            if (spellsFlag) {
+                hero_data->customSpells = 1;
+                unsigned char spellMask[9];
+                infile->Read(spellMask, sizeof(spellMask));
+                unpackSpellMask(&hero_data->spells, spellMask);
+            }
+
+            char primaryFlag;
+            infile->Read(&primaryFlag, sizeof(primaryFlag));
+            if (primaryFlag) {
+                hero_data->customPrimarySkills = 1;
+                for (int stat = 0; stat < 4; ++stat) {
+                    char value;
+                    infile->Read(&value, sizeof(value));
+                    hero_data->primarySkills[stat] = value;
+                }
+            }
+        }
+    }
+
+    char padding[16];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+
+    // A prison hero is not owned and not in any tavern pool.
+    if (objectTypes[heroObject->typeIndex].objectType == PRISON)
+        gpGame->heroAvailability[HeroID] = 0x41;
+    else
+        gpGame->heroAvailability[HeroID] = Owner;
+
+    int x;
+    int y;
+    heroObject->FindTrigger(&x, &y);
+
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = heroObject->z;
+    hero_data->location = point;
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3229
 #endif  // @carcass
@@ -2696,6 +3288,37 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
+// readObject's QUEST_GUARD arm, factored out for ONE reason: the /Ob2 budget
+// is per-CALLER and clamps at a floor, so a SMALL function gets a small
+// budget. Inside a helper this size there is not enough of it to expand
+// vector<TQuestGuard>::insert, so the insert stays a CALL - and the helper,
+// a static with a single call site, is then inlined back into readObject
+// whole and BRINGS THAT CALL WITH IT. That is retail's shape, and nothing
+// spelled inside readObject could reach it, because there the budget is
+// readObject's own and it is large enough to expand the insert.
+//
+// Worth 2.5 points on its own (42.6246 -> 45.0977), and it costs no symbol:
+// mapcell.obj still carries exactly 67 functions, because an inlined
+// single-call-site static leaves nothing behind.
+//
+// The same treatment does NOT transfer to its neighbours. On the
+// RANDOM_DWELLING_FACTION arm it scores 33.0580 - twelve points BELOW doing
+// nothing - because that arm's two siblings already come out at retail's
+// exact length and the three are costed together; and the SEER arm cannot be
+// written this way at all, since TSeerHut derives PRIVATELY from TQuestGuard
+// and friends only NewfullMap, so a free static cannot read tempHut.quest.
+static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
+                              CObject* tempObject)
+{
+    TQuestGuard tempGuard;
+    tempGuard.read(infile);
+    map->QuestGuardList.push_back(tempGuard);
+    tempObject->extraInfo = map->QuestGuardList.size() - 1;
+    if (tempGuard.quest)
+        map->mapObjectData.push_back(static_cast<CMapObjectData*>(
+            static_cast<void*>(tempGuard.quest)));
+}
+
 // E:\gamedcs\mapcell.cpp:3290
 // The h3m object dispatcher.  Five stream fields land in the object itself -
 // x, y, z, a FOUR-byte type index of which only the low word is kept, and
@@ -2716,7 +3339,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // abandoned arm into the lighthouse's `readMineData` call rather than
 // duplicating it, which is a compiler transform over two separate cases, not
 // a fallthrough in the source.
-// Residual (42.6246%): an INLINER wall, and a narrow one - twenty-one of the
+// Residual (45.0977%): an INLINER wall, and a narrow one - twenty-one of the
 // twenty-six arms already come out at retail's exact byte length, arm for
 // arm, off the same jump table and index table:
 //   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
@@ -2746,11 +3369,29 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // reads land in [ebp+0xb] and its arm reads in a different home - and it
 // moves the first read onto retail's own [ebp+0xb] (42.5589 -> 42.6246).
 // It does not reach the runaway.
-// Not tried, and the standing hypothesis: the other nine bodies of this
-// compiland are still stubs, and Load/readMapObjects/loadMapObjects add call
-// sites to these very instantiations - a multi-site inline function is
-// costed differently from a single-site one, so this arm order may only
-// settle once the TU is finished.
+//
+// THE STANDING HYPOTHESIS ABOVE IS DISPROVED (2026-08-20). It held that the
+// arm order would only settle once the TU was finished, because the other
+// bodies would add CALL SITES to these instantiations and a multi-site
+// inline function is costed differently from a single-site one. Measured
+// directly: a throwaway second growth site for vector<TQuestGuard> - a
+// resize plus a push_back in a second function of this TU - moved readObject
+// by exactly NOTHING, 42.6246 before and after. The /Ob2 budget is per
+// CALLER; how many other functions instantiate the same template does not
+// enter its decision. Do not re-derive it.
+//
+// What DID move it is the other half of that same budget rule, and it is
+// now applied: see readQuestGuardArm above. A helper small enough to be
+// budget-starved keeps the insert out of line, and being a single-call-site
+// static it is inlined back complete with that call. QUEST_GUARD alone is
+// worth 42.6246 -> 45.0977.
+//
+// Still open, and the whole of the remaining gap: id-218
+// (RANDOM_DWELLING_FACTION) at 574 bytes against retail's 149. The same
+// helper lever scores 33.0580 there - twelve points WORSE than leaving it -
+// because its two siblings at 155 and 140 already match and the three arms
+// are costed as a group. SEER (122 vs 120) cannot use the lever at all:
+// TSeerHut derives privately from TQuestGuard and friends only NewfullMap.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
@@ -3029,16 +3670,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
     }
 
-    case QUEST_GUARD: {
-        TQuestGuard tempGuard;
-        tempGuard.read(infile);
-        QuestGuardList.push_back(tempGuard);
-        tempObject->extraInfo = QuestGuardList.size() - 1;
-        if (tempGuard.quest)
-            mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(tempGuard.quest)));
+    case QUEST_GUARD:
+        readQuestGuardArm(this, infile, tempObject);
         break;
-    }
 
     case WITCH_HUT:
         if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
@@ -3105,17 +3739,150 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3514
-VA(0x00503780, 0x4C0)  // order-map: calls strrev + sprintf + ReadFromBitmapResource 0x55d0d0 (DC: strrev + sprite-resource reads); called by readMapObjects, dc 0xf1cd8
-int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
+// The h3m object-TYPE record, and the only reader in this compiland that
+// draws on TWO streams at once.  The map file carries the record, but the
+// PLACEMENT and SHADOW footprints come out of the object's own .msk
+// resource, and retail interleaves them: msk mask -> drawCells, stream mask
+// -> passableCells, msk mask -> shadowCells, stream mask -> triggerCells.
+// Only the stream's two are checked; the resource reads discard their
+// result, which is why the msk halves have no error path.
+//
+// The resource name is built from the image name IN PLACE, and the way it
+// is built is retail's: `_strrev`, overwrite the first three characters
+// with "ksm", `_strrev` back.  That replaces whatever extension the name
+// carried without ever measuring it.  The 100-byte buffer and its `= ""`
+// initializer are byte-proven - one explicit zero store followed by a
+// 99-byte rep stos.
+//
+// When the object's own mask is missing, "default.msk" stands in, the
+// player is told through a message box, and the function answers 100
+// instead of 1: the tail's `neg bl / sbb ebx,ebx / and 0x63 / inc` is that
+// ternary, and readMapObjects cases on it to collect the offending type
+// indices.  The caption is the SAME pooled "Error!" that readMapObjects
+// claims at 0x67fb08 - this is its first use in the TU, so the literal is
+// written bare here and the DATA_COMPGEN claim stays at the one site.
+//
+// The type word the stream carries is not the one that survives: retail
+// stores it, then RE-READS it out of the record and remaps it through the
+// 16-byte adventure-object trait rows at 0x660428, taking the DWORD at +8.
+// That is a second live field of that table - byte +0 and byte +1 are the
+// ones findpath/advmgr/hero already read - proven here by
+// `shl eax,4 / mov edx,[eax+ecx+8]`.  It is spelled as a four-byte copy
+// rather than a pointer cast on purpose: 0x660428 already carries its one
+// admitted extern as `unsigned char (*)[16]` and the single-view gate is
+// what keeps it that way, so refining the row into a struct is a change
+// that has to move findpath.cpp, hero.cpp and advmgr.cpp with it, not a
+// second view bolted on from here.  VC6 expands the copy to exactly
+// retail's `mov edx,[eax+ecx+8] / mov [edi+0x38],edx`.
+//
+// Four of the record's fields are read and thrown away - two 2-byte
+// landscape masks into one slot, and the object-group byte before the
+// overlay flag - and the record ends with sixteen discarded bytes.
+VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
+int NewfullMap::readObjectType(TAbstractFile* infile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    char imageName[100] = { 0 };
+    int value;
+    char byteValue;
+    unsigned char packed[6];
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    infile->Read(imageName, value);
+    tempObjectType->ImageName = imageName;
+
+    _strrev(imageName);
+    imageName[0] = 'k';
+    imageName[1] = 's';
+    imageName[2] = 'm';
+    _strrev(imageName);
+
+    unsigned char usedDefaultMask = 0;
+    LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);
+    if (maskFile == 0) {
+        usedDefaultMask = 1;
+        maskFile = ResourceManager::PointToSpriteResource(
+            DATA_COMPGEN(0x0067fb3c, readObjectTypeDefaultMask,
+                         "default.msk"));
+        if (maskFile == 0)
+            return -1;
+    }
+
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+                                            sizeof(byteValue));
+    tempObjectType->width = byteValue;
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+                                            sizeof(byteValue));
+    tempObjectType->height = byteValue;
+
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->drawCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->passableCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->shadowCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->triggerCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    short landscape;
+    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+        return -1;
+    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+        return -1;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->objectTypeValue = value;
+    if (usedDefaultMask) {
+        sprintf(gText,
+                DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
+                             "Could not load mask file for %s! - Type: %s"),
+                tempObjectType->ImageName.c_str(),
+                gAdventureObjectNames[value]);
+        MessageBoxA(hwndApp, gText, "Error!", 0);
+    }
+
+    memcpy(&tempObjectType->objectTypeValue,
+           &gAdventureObjectTraits[tempObjectType->objectTypeValue][8],
+           sizeof(tempObjectType->objectTypeValue));
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->extra = value;
+
+    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+        return -1;
+    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+        return -1;
+    tempObjectType->suppressDraw = byteValue != 0;
+
+    char unused[16];
+    if (infile->Read(unused, sizeof(unused)) < sizeof(unused))
+        return -1;
+    return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
 // E:\gamedcs\mapcell.cpp:3658
-#endif  // @carcass
 
 // The object-type record: the image name, the placement footprint, then the
 // FOUR 48-cell masks - the DC field list names them PlacementMask,
@@ -3578,7 +4345,7 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // it is worth keeping: the same experiment on csprite.h a function earlier
 // was also flat, so mapcell.obj tolerates both.
 //
-// Residual (61.5553%): the OVERLAP SCAN's loop shape, and it is a
+// Residual (65.1777%): the OVERLAP SCAN's loop shape, and it is a
 // strength-reduction difference rather than a spelling one.  Retail
 // recomputes `(z*Size + y)*Size + x` and its 38-byte scale on every inner
 // iteration, holding only Size and cellData in the inner loop's preheader;
@@ -3592,9 +4359,22 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // the way: computing `thisCell->objects.end()` BEFORE the GenerateHeightMap
 // call rather than after is worth 0.3 points (61.2480 -> 61.5553) and is
 // retail's order - it reclaims the first parameter slot for `&objects` the
-// way retail does.  NOT yet tried, and the next thing to try: giving the
-// scan its own `worldMap` reference so the geometry loads land where retail
-// puts them.
+// way retail does.
+//
+// The `worldMap` reference this note used to list as the next thing to try
+// IS worth it: 61.5553 -> 65.1777. But ONLY declared inside the INNERMOST
+// loop, which is this tree's don't-cache-what-retail-reloads rule stated in
+// reverse - a reference declared there is not a cache, it is a fresh reload
+// every iteration, and that is exactly what retail's
+// `mov esi,[edx+0x1fc44] / mov edx,[edx+0x1fc40]` per inner iteration is.
+// Lifting the SAME declaration one level out, to just above the x loop,
+// hands VC6 the hoist straight back and returns the row to 61.5553.
+// Measured both ways.
+//
+// What is left is the strength reduction itself and the exit count - base 30
+// branches / 3 rets against retail's 32 / 4 - and predict-inline now has the
+// inline structure agreeing to within one call, so it is no longer an
+// inliner question.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
@@ -3640,9 +4420,9 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
 
             for (int x = overlap.left; x < overlap.right; ++x) {
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
-                    NewmapCell* cell = &gpGame->worldMap.cellData[
-                        (newObject->z * gpGame->worldMap.Size + y)
-                            * gpGame->worldMap.Size
+                    NewfullMap& worldMap = gpGame->worldMap;
+                    NewmapCell* cell = &worldMap.cellData[
+                        (newObject->z * worldMap.Size + y) * worldMap.Size
                         + x];
                     std::vector<NewmapCell::TObjectCell>::iterator scan
                         = cell->objects.begin();

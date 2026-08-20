@@ -8,6 +8,7 @@
 class CSprite;
 class font;
 class resource;
+class LODFile;
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -35,6 +36,33 @@ TSpreadsheetResource* GetSpreadsheet(const char* name);
 // Retail body 0x5594b0; its 12-byte key copy, map insertion and reference
 // increment are repeated inline at the tail of GetSpreadsheet.
 void AddToCache(resource* value);
+
+// Retail body 0x55cf50, 131 B, fastcall under /Gr like its GetSprite
+// neighbours. It walks the archive list the 24-byte rows at 0x69e538
+// describe - count at +0, LODFile-index list at +4 - calling
+// LODFile::pointAt on each 400-byte element of the pool at 0x69d874, and
+// RETURNS the file positioned on the item, where the Dreamcast form
+// answers `unsigned char`.
+//
+// Sprite, not Bitmap: its 131-byte twin at 0x55cfe0 reads the SECOND slot
+// of the same row (+8/+0xc) and so does the already-named
+// GetBitmapResourceSize at 0x55d070, which is what separates the pair.
+// The Dreamcast xref graph corroborates by call COUNT - its
+// NewfullMap::readObjectType calls PointToSpriteResource exactly twice and
+// ReadFromSpriteResource exactly four times, and retail's readObjectType
+// calls this twice and the reader below four times.
+LODFile* PointToSpriteResource(const char* name);
+// Retail body 0x55d0d0, SEVENTEEN bytes - it passes ecx straight through
+// as LODFile::read's `this` and forwards the other two arguments.
+//
+// The Dreamcast splits this into TWO functions, ReadFromSpriteResource
+// (dc 0x12249c, reached from readObjectType) and ReadFromBitmapResource
+// (dc 0x1224cc, reached from ExtractCampaignMap). Retail has ONE body and
+// BOTH of those callers reach it - campaignbrief's header reader and
+// mapcell's readObjectType are both in its caller tree - so the two DC
+// names describe one retail function. The tree's already-admitted label
+// for the address is kept rather than re-titled from this lane.
+int ReadFromBitmapResource(LODFile* resource, void* data, int numBytes);
 
 // PROVEN retail cache ABI used by AddToCache/GetSpreadsheet. The global map
 // starts at 0x69e528; head is +4. A node holds its 13-byte key at +0xc and
