@@ -87,7 +87,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	79.7982	79.7982	79.7982	0xe360
-advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	75.6482	75.6482	75.6482	0x8c40
+advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	80.4012	80.4012	80.4012	0x8c40
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
@@ -517,8 +517,8 @@ button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x5
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
-campaignbrief	??1NewSMapHeader@@QAE@XZ	91.5098	91.5098	91.5098	0x5ad00
-campaignbrief	??1TCampaignBrief@@UAE@XZ	95.7583	95.7583	95.7583	0x5afb0
+campaignbrief	??1NewSMapHeader@@QAE@XZ	100.0000	100.0000	100.0000	0x5ad00
+campaignbrief	??1TCampaignBrief@@UAE@XZ	98.2083	98.2083	98.2083	0x5afb0
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
@@ -840,8 +840,8 @@ font	?_vslot2@font@@UBEIXZ	100.0000	100.0000	100.0000	0xb5250
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
-game	??0SavedGameHeader@@QAE@XZ	96.4326	96.4326	96.4326	0xbc0e0
-game	??0game@@QAE@XZ	84.2891	84.2891	84.2891	0xcdf20
+game	??0SavedGameHeader@@QAE@XZ	98.8764	98.8764	98.8764	0xbc0e0
+game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
@@ -891,7 +891,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	90.9797	90.9797	90.9797	0xbcda0
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	91.8624	91.8624	91.8624	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
@@ -904,7 +904,7 @@ game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
-game	?Save@game@@QAEHPAVTAbstractFile@@@Z	89.1864	89.1864	89.1864	0xbe3f0
+game	?Save@game@@QAEHPAVTAbstractFile@@@Z	93.5676	93.5676	93.5676	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGame@game@@QAEEPBDEEEE@Z	93.8148	93.8148	93.8148	0xbeea0
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0

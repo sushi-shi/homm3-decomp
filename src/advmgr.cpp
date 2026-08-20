@@ -1714,7 +1714,33 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 //     sinks to the end of the arm list, so the sink is unconditional and
 //     no arrangement of gotos can produce retail's layout.
 //   * Putting the label inside the ctrl-check's else scope: byte-inert.
-// What DID pay was removing the brace scope around the shared block's
+// 75.6482 -> 80.4012 (2026-08-20): HOISTING THE CTRL-SCROLL TEST INTO THE
+// SHARED BLOCK. The eight arms each carried their own
+// `if (ctrl) { ScreenScroll(n, 0); return 1; }` and VC6 emitted all eight
+// of those blocks BEFORE the sunk walk block (fn+0x246..0x359, with
+// ValidMove not reached until 0x3ad); retail reaches ScreenScroll at
+// 0x244 and ValidMove at 0x295. Setting walkDir first and testing the
+// qualifier once behind the label puts the first call and the whole walk
+// at retail's offsets and re-aligns everything downstream.
+//
+// BE HONEST ABOUT WHAT THIS IS: retail emits EIGHT ScreenScroll calls -
+// one at 0x244 and seven SUNK to 0x581..0x677, spaced 0x29 apart - so
+// retail's source keeps the per-arm test and this spelling does not.
+// It is a PLACEMENT DEVICE that is semantically identical (walkDir
+// already carries the same 0..7 the arm passed) and it wins because the
+// mis-placed blocks cost more than the seven missing calls do.
+// Retail's layout reads as the sunk-join shape - "KP_8's copy of the
+// walk block falls through, the other seven jump to a second copy" - so
+// WRITE IT TWICE is the obvious next lever, and it is ALREADY REFUTED
+// HERE by the eight-copy experiment recorded below: that run reported
+// VC6 merging NONE of the copies (952 -> 2208 instructions), and a
+// cross-jumper that declines eight identical tails will decline two.
+// The block is ~110 source lines, so an unmerged second copy is roughly
+// +250 instructions against retail's 948. Do not spend a round on it
+// without first finding a case where this body's cross-jumper merges
+// anything at all.
+//
+// What ALSO paid was removing the brace scope around the shared block's
 // locals - 71.36 -> 75.65, purely through register allocation inside the
 // body, with the layout unchanged.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
@@ -1790,12 +1816,12 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
     }
 
     case KEYCODE_KP_8:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(0, 0);
-            return 1;
-        }
         walkDir = 0;
     walk_hero:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(walkDir, 0);
+            return 1;
+        }
         if (waitingPlayer)
             break;
         if (gpCurrentPlayer->currHeroId == -1)
@@ -1898,58 +1924,30 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         }
 
     case KEYCODE_KP_9:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(1, 0);
-            return 1;
-        }
         walkDir = 1;
         goto walk_hero;
 
     case KEYCODE_KP_6:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(2, 0);
-            return 1;
-        }
         walkDir = 2;
         goto walk_hero;
 
     case KEYCODE_KP_3:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(3, 0);
-            return 1;
-        }
         walkDir = 3;
         goto walk_hero;
 
     case KEYCODE_KP_2:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(4, 0);
-            return 1;
-        }
         walkDir = 4;
         goto walk_hero;
 
     case KEYCODE_KP_1:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(5, 0);
-            return 1;
-        }
         walkDir = 5;
         goto walk_hero;
 
     case KEYCODE_KP_4:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(6, 0);
-            return 1;
-        }
         walkDir = 6;
         goto walk_hero;
 
     case KEYCODE_KP_7:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(7, 0);
-            return 1;
-        }
         walkDir = 7;
         goto walk_hero;
 
@@ -6325,6 +6323,26 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // spellings. The remainder is tail-merge cosmetics: retail shares the
 // no-owner strcpy between CREATURE_GENERATOR_1 and the default arm where
 // we duplicate it, and narrows PlayerKnowsCell's compare to `test al, dl`.
+//
+// AND THE QUEST-GUARD / SEER ARMS CALL DIFFERENT METHODS FROM
+// SetRolloverText'S (found 2026-08-20 by diffing the two bodies' call
+// streams IN ORDER - a census cannot see this, only the order can).
+// Both classes carry three string-returning text builders: TQuestGuard
+// at 0x572d60 (nullary), 0x572e40 and 0x573040; TSeerHut at 0x574070
+// (nullary), 0x5741b0 and 0x5743e0. The two advmgr bodies take
+// DIFFERENT ones:
+//   SetRolloverText -> 0x573040 and 0x5741b0   (what we call - correct)
+//   QuickInfo       -> 0x572e40 and 0x5743e0   (unclaimed; we call the
+//                                               SetRolloverText pair)
+// 0x572e40 is 511 B, thiscall, `ret 8`, returning std::string by value
+// on one argument - the same signature as 0x573040, so arity screening
+// cannot separate them and only the caller does. The shape around the
+// site moves with it: retail emits `sprintf` BEFORE the builder call and
+// no string-temp teardown, where we emit builder / _Tidy / sprintf. So
+// this arm's source statement is not the one written here, and the
+// `_Tidy base x3 vs retail x2` row is downstream of that rather than a
+// budget decision. Naming the two callees needs their bodies read; left
+// open, but do not re-price this arm as an inliner problem first.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
