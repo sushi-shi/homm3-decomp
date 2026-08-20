@@ -85,7 +85,23 @@ public:
     // retail body at 0x522910.
     TPalette16* operator=(const TPalette16* from);
     void Cycle(int begin, int end, int step);
+    // The four army::DrawToBuffer (0x43e140) needs for its tint arms -
+    // the clone's rolling hue (AdjustHSV over PaletteEffect), the
+    // petrify desaturation, the Stone-spell gray and the Bloodlust red.
+    // Prototypes are the DC roster's own (palette.cpp:189/496/412/571);
+    // the bodies stay palette's.
+    TPalette16(const palette* copy);
+    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
+                   float value_adjust);
+    void AdjustSaturation(float amount);
+    void Gray();
 };
+
+// The system palette pointer, re-declared here beside its type for
+// consumers that need no townmgr surface (army::DrawToBuffer reads the
+// highlight color out of it). The DATA claim stays on townmgr.h's
+// declaration - this one is declaration only.
+extern TPalette16* gSystemPalette;
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z
 // (retail body 0x55b3e0 takes just the name; called by button::Main).

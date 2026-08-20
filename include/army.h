@@ -609,7 +609,11 @@ public:
     // movsx'd shorts at +0x110..+0x11b. Sliced in the range arm only,
     // per the band's own "read the fields you need" rule.
     short frameInfoMissileOffset[6]; // +0x110 == sMonFrameInfo.iMissileOffset
-    char pad_11c[0x34];
+    char pad_11c[0x30];
+    // sMonFrameInfo.iExtraNumTroopsXOffset (+0x3c of the record):
+    // DrawToBuffer (0x43e140) shifts the troop-count box by it when the
+    // box's neighbour hex is free.
+    int frameInfoExtraNumTroopsXOffset; // +0x14c
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
     char pad_154[0x4];
 #elif defined(HOMM3_ARMY_POW_VIEW)

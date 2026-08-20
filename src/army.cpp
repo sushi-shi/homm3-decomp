@@ -68,6 +68,7 @@
 // the cost back out of cellData by hand; includes are TU-local and cost
 // nothing to the include-set canaries.
 #include "findpath.h"
+#include "font.h"   // gpTinyFont's DrawBoundedString, for the count box
 #include "game.h"   // gpGame->f_1f698, initialize's elemental-town gate
 #include "hero.h"
 #include "herospec.h"
@@ -75,6 +76,7 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "monframeinfo.h"   // gMonFrameInfo for LoadResources' traits copy
+#include "palette.h"        // TPalette16, for DrawToBuffer's tint arms
 #include "path.h"           // GetAdjacentCellIndexNoArmy for the splash loops
 #include "prefs.h"
 #include "resourcemanager.h"   // GetSprite for attack_wall's explosion
@@ -322,7 +324,8 @@ void army::initialize(int type, long number, const hero* owner,
             : akCreatureTypeTraits[type].townType;
     if (owner != 0)
         owner->HeroFn_004E6120(type, traits);
-    if (gpCombatManager->field_53c0 != 2
+    if (gpCombatManager->field_53c0
+            != COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS
         && akNativeTerrains[monInfoTownType]
                == gpCombatManager->terrainType)
         field_4d8 = 1;
@@ -832,14 +835,285 @@ evil_done:
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:596
+// One stack onto the combat buffer: the MirrorImage slide pair joins
+// the caller's point, a mid-step walk displacement (44/42 pixels per
+// full walk cycle, halved on the diagonals, the vertical half
+// published through giWalkingYMod), then - unless only the count box
+// is wanted - the highlight color (hover 0x70, last-moved 0x60, area
+// effect 0x70, read out of gSystemPalette), one of four palette tints
+// under the /GX frame (the clone's rolling AdjustHSV over
+// PaletteEffect, the petrify AdjustSaturation, the Stone-row Gray,
+// the Bloodlust red AdjustHSV), DrawCreature, and the palette restore.
+// The count box picks its side off facing and the neighbour hex's
+// occupancy, clips against combatGridBitmap, colorizes 28x9 (a plain
+// 0.75 hue, or the standing-spell AFFINITY hue - signed row sum over
+// absolute row sum of akSpellTraits field_0, mapped to (x+1)/6), and
+// prints the count in gpTinyFont. The pow overlay places powSprite by
+// the effect row's flags nibble and draws it with bit 8 as the alpha.
+//
+// Retail recycles the spent x parameter twice past the numbox (the
+// count ternary and the effect flags both home in [ebp+8]); count_text
+// is char[12] (the frame is 0x458, and the affinity temp overlays it).
+//
+// Residual (94.95%): register-homing mirror, all four sites cosmetic
+// renames of the same bytes - (a) drawX materializes Width into a
+// register before x (ours folds the deref into sub) and the stdIcon/
+// gpCombatManager push schedule shifts one slot; (b) numbox homes
+// step/scaled-index as esi/edx where retail uses eax/esi, so ours
+// recomputes 112*(gridIndex+step) at the third cell test; (c) the pow
+// switch mirrors ex/ey/cell-base esi<->edi throughout plus a 2-insn
+// shuffle on the flags load; (d) the affinity double temp anchors at
+// -0x28, retail -0x2c. Tried and rejected: index local n (83.3),
+// xoff/yoff reuse for the numbox coords (92.8), +-22 spelled if/else
+// (92.6 - the ternary already emits retail's sbb idiom), step/ex/ey
+// declaration reorders and &x two-step casts (all inert), cell-pointer
+// local (80.1 - longhand cells[gridIndex + step] is what retail
+// spells, and is kept).
 VA(0x0043e140, 0x8C0)  // anchor-global, dc 0x444a8
 void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
 {
-    // @stub
+    if (gpCombatManager->field_132f8 != 0)
+        return;
+    if (static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat())
+        return;
+
+    y += field_100;
+    x += field_104;
+    if (currFrameType == cs_walk && !(Is(1) & 1)) {
+        long frames = stdIcon->GetNumFrames(0);
+        long stepY = currFrameIndex * 42 / frames;
+        long stepX = currFrameIndex * 44 / frames;
+        switch (walkDirection) {
+        case COMBAT_DIRECTION_0:
+            x += stepX / 2;
+            y -= stepY;
+            giWalkingYMod = -stepY;
+            break;
+        case COMBAT_DIRECTION_1:
+            x += stepX;
+            break;
+        case COMBAT_DIRECTION_2:
+            x += stepX / 2;
+            y += stepY;
+            giWalkingYMod = stepY;
+            break;
+        case COMBAT_DIRECTION_3:
+            x -= stepX / 2;
+            y += stepY;
+            giWalkingYMod = stepY;
+            break;
+        case COMBAT_DIRECTION_4:
+            x -= stepX;
+            break;
+        case COMBAT_DIRECTION_5:
+            x -= stepX / 2;
+            y -= stepY;
+            giWalkingYMod = -stepY;
+            break;
+        case COMBAT_DIRECTION_WIDE_UPPER:
+            y -= stepY;
+            giWalkingYMod = -stepY;
+            break;
+        case COMBAT_DIRECTION_WIDE_LOWER:
+            y += stepY;
+            giWalkingYMod = stepY;
+            break;
+        }
+    }
+
+    if (bNumBoxOnly == 0) {
+        long highlight = 0;
+        if (gpCombatManager->field_132cc != 0
+            && gridIndex == gpCombatManager->field_132d0)
+            highlight = 0x70;
+        if (gpCombatManager->lastMovedArmy == this)
+            highlight = 0x60;
+        if (is_area_effect_target)
+            highlight = 0x70;
+
+        TPalette16 saved;
+        unsigned char bRestore = 0;
+        if (Is(29) & 1) {
+            memcpy(saved.data, stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(stdIcon->GetPalette());
+            tinted.AdjustHSV(0, PaletteEffect, PaletteEffect + 1.0f,
+                             PaletteEffect + 1.0f);
+            memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
+            bRestore = 1;
+        } else if (Is(30) & 1) {
+            memcpy(saved.data, stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(stdIcon->GetPalette());
+            tinted.AdjustSaturation(PaletteEffect);
+            memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
+            bRestore = 1;
+        } else if (spellInfluence[SPELL_STONE] > 0) {
+            memcpy(saved.data, stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(stdIcon->GetPalette());
+            tinted.Gray();
+            memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
+            bRestore = 1;
+        } else if (Is(23) & 1) {
+            memcpy(saved.data, stdIcon->GetPalette(), 0x200);
+            TPalette16 tinted(stdIcon->GetPalette());
+            tinted.AdjustHSV(0.67f, 1.0f, 2.0f, 2.0f);
+            memcpy(stdIcon->GetPalette(), tinted.data, 0x200);
+            bRestore = 1;
+        }
+
+        long drawX =
+            facing == 0 ? x - stdIcon->Width + 196 : x - 196;
+        long drawY = y - 267;
+        gpCombatManager->DrawCreature(
+            stdIcon, currFrameType, currFrameIndex, drawX, drawY, 0,
+            gridIndex, facing == 0, gSystemPalette->data[highlight]);
+
+        if (bRestore)
+            memcpy(stdIcon->GetPalette(), saved.data, 0x200);
+    }
+
+    if (gpCombatManager->field_13d34 != 0
+        || (!(Is(21) & 1) && !(Is(6) & 1) && !IsMoving
+            && (currFrameType == cs_wait
+                || currFrameType == cs_fidget))) {
+        long step = 1;
+        long xoff;
+        long yoff;
+        if (facing == 0) {
+            xoff = 0x34;
+            yoff = -0x1e;
+        } else {
+            xoff = 0x16;
+            yoff = -0xf;
+        }
+        if (creatureId & 1) {
+            xoff += 0x2c;
+            step = 2;
+        }
+        if (facing == 0)
+            step = -step;
+        if ((gpCombatManager->cells[gridIndex + step].armySide >= 0
+             && !gpCombatManager->cells[gridIndex + step]
+                     .get_army()
+                     ->IsMoving)
+            || (gpCombatManager->cells[gridIndex + step].field_10 & 2)) {
+            xoff -= 0x25;
+            yoff = -0xf;
+        } else {
+            xoff += frameInfoExtraNumTroopsXOffset;
+        }
+        if (facing == 0)
+            xoff = -xoff;
+        long numboxX = x + xoff;
+        long numboxY = y + yoff;
+        if (gpCombatManager->Unnamed4958E0(
+                gpCombatManager->combatGridBitmap, numboxX, numboxY)) {
+            if (numSpellInfluences == 0) {
+                gpWindowManager->screenBitmap->Colorize(
+                    numboxX + 1, numboxY + 1, 0x1c, 9, 0.75f, 0.8f);
+            } else {
+                long sum = 0;
+                long absSum = 0;
+                for (long i = 0; i < 0x51; i++) {
+                    if (spellInfluence[i] != 0) {
+                        sum += akSpellTraits[i].field_0;
+                        absSum += abs(akSpellTraits[i].field_0);
+                    }
+                }
+                double affinity;
+                if (absSum == 0)
+                    affinity = 0.0;
+                else
+                    affinity = sum / static_cast<double>(absSum);
+                gpWindowManager->screenBitmap->Colorize(
+                    numboxX + 1, numboxY + 1, 0x1c, 9,
+                    static_cast<float>((affinity + 1.0) * 0.1667f),
+                    0.8f);
+            }
+            char count_text[12];
+            // The count recycles the spent x parameter (retail homes
+            // the ternary's result in [ebp+8]).
+            x = numTroopsToShowOverride == -1 ? numTroops
+                                              : numTroopsToShowOverride;
+            sprintf(count_text,
+                    DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), x);
+            gpTinyFont->DrawBoundedString(
+                count_text, gpWindowManager->screenBitmap, numboxX,
+                numboxY, 0x1e, 0xf, 4, 1, -1);
+        }
+    }
+
+    if (bShowPowEffect != 0 && bNumBoxOnly == 0) {
+        if (gpCombatManager->powFrameIndex
+            < gpCombatManager->powSprite->GetNumFrames(0)) {
+            // The effect flags also recycle x ([ebp+8] again, this
+            // time read back unsigned for the >>8 below).
+            x = akSpellEffectTraits[gpCombatManager->powSpellEffect]
+                    .flags;
+            long ex;
+            long ey;
+            switch (x & 0xf) {
+            case SPELL_EFFECT_PLACE_OVERHEAD:
+                ex = gpCombatManager->cells[gridIndex].field_00;
+                if (creatureId & 1)
+                    ex += facing ? 22 : -22;
+                ex -= gpCombatManager->powSprite->Width / 2;
+                ey = gpCombatManager->cells[gridIndex].field_02
+                     - gpCombatManager->powSprite->Height;
+                break;
+            case SPELL_EFFECT_PLACE_CENTERED:
+                ex = gpCombatManager->cells[gridIndex].field_00;
+                if (creatureId & 1)
+                    ex += facing ? 22 : -22;
+                ex -= gpCombatManager->powSprite->Width / 2;
+                ey = gpCombatManager->cells[gridIndex].field_02
+                     - gpCombatManager->powSprite->Height / 2
+                     - image_height / 2;
+                break;
+            case SPELL_EFFECT_PLACE_ABOVE:
+                ex = gpCombatManager->cells[gridIndex].field_00;
+                if (creatureId & 1)
+                    ex += facing ? 22 : -22;
+                ex -= gpCombatManager->powSprite->Width / 2;
+                ey = gpCombatManager->cells[gridIndex].field_02
+                     - gpCombatManager->powSprite->Height
+                     - image_height;
+                break;
+            case SPELL_EFFECT_PLACE_FLANK: {
+                long edge = stdIcon->s[cs_wait]->f[0]->CroppedX
+                            + stdIcon->s[cs_wait]->f[0]->CroppedWidth
+                            - 196;
+                if (facing == 0)
+                    ex = gpCombatManager->cells[gridIndex].field_00
+                         - edge;
+                else
+                    ex = gpCombatManager->cells[gridIndex].field_00
+                         + edge;
+                if (facing == 0)
+                    ex -= gpCombatManager->powSprite->Width;
+                ey = gpCombatManager->cells[gridIndex].field_02
+                     - gpCombatManager->powSprite->Height / 2
+                     - image_height / 2;
+                break;
+            }
+            default:
+                // Faithful artifact: the fallback aims BOTH coordinates
+                // at the recycled x slot (retail reads [ebp+8] twice -
+                // the second read is not y).
+                ex = x;
+                ey = x;
+                break;
+            }
+            gpCombatManager->DrawSpellEffect(
+                gpCombatManager->powSprite,
+                gpCombatManager->powFrameIndex, ex, ey, facing == 0,
+                (static_cast<unsigned long>(x) >> 8) & 1);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:891
 DC_ONLY(0x44d50, 0xC2)
@@ -1483,7 +1757,7 @@ void army::range_attack(army* armyToAttack)
         long killedNow;
         for (long i = 0; i < 7; i++) {
             long hex;
-            if (i == 6)
+            if (i == COMBAT_DIRECTION_COUNT)
                 hex = pathTarget;
             else
                 hex = GetAdjacentCellIndexNoArmy(pathTarget, i);
@@ -1557,7 +1831,7 @@ void army::range_attack(army* armyToAttack)
         long killedNow;
         for (long i = 0; i < 7; i++) {
             long hex;
-            if (i == 6)
+            if (i == COMBAT_DIRECTION_COUNT)
                 hex = pathTarget;
             else
                 hex = GetAdjacentCellIndexNoArmy(pathTarget, i);
@@ -1569,7 +1843,7 @@ void army::range_attack(army* armyToAttack)
             long side = cell->armySide;
             long slot = cell->armySlot;
             army* a = cell->get_army();
-            if (i != 6 && !(a->Is(4) & 1))
+            if (i != COMBAT_DIRECTION_COUNT && !(a->Is(4) & 1))
                 continue;
             if (gpCombatManager->effected[side][slot] != 0)
                 continue;
@@ -5468,7 +5742,8 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     }
 
     for (long frame = 0; frame < explosion->GetNumFrames(0); frame++) {
-        if (frame == 5 && levelsDestroyed != 0)
+        if (frame == combatManager::WALL_EXPLOSION_HIT_FRAME
+            && levelsDestroyed != 0)
             gpCombatManager->DamageWall(wall, levelsDestroyed);
         gpCombatManager->DrawFrame(0, 0, 1, 100, 0, 1);
         explosion->Draw(0, frame, 0, 0,
