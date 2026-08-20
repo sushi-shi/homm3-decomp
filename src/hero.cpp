@@ -1019,6 +1019,29 @@ void hero::initialize(short index)
 // unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 //
+// The four artifact loops HeroFn_004D8B30 runs when the setup record
+// carries a custom loadout. One call site, so /Ob2 expands it and emits
+// no out-of-line body; splitting it out is the /Ob2 budget lever that
+// mark_spells and HeroFn_004E6120 both needed.
+static void apply_setup_artifacts(hero* who, const HeroExtra* setup)
+{
+    int i;
+    for (i = 0; i < 19; i++) {
+        if (who->equipped[i].artifactId != ARTIFACT_NONE)
+            who->remove_artifact(i);
+    }
+    for (i = 0; i < 19; i++) {
+        if (setup->artifacts[i].artifactId != ARTIFACT_NONE)
+            who->equip_artifact(&setup->artifacts[i], i);
+    }
+    for (i = 0; i < 64; i++)
+        who->backpack[i] = type_artifact();
+    for (i = 0; i < 64; i++) {
+        if (setup->backpack[i].artifactId != ARTIFACT_NONE)
+            who->add_to_backpack(&setup->backpack[i], -1);
+    }
+}
+
 // 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
 // hero. Its single caller is inside game.obj (0x4cae10), which walks 156
 // records with `add ebx, 0x334` - which is what closes the record's size.
@@ -1032,6 +1055,18 @@ void hero::initialize(short index)
 // +0x301 where retail puts it. The DC counterpart is the free function
 // initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
 // a member and moved it into hero.cpp.
+// Residual (55.74%): an A8/A12 inliner wall. Retail's census is ten calls
+// and exactly ONE is a string call, basic_string::assign; our CL inlines
+// assign as well and spills its internals (_Grow x2, _Split x2, _Eos,
+// memmove, operator delete) into this body, which is the whole remaining
+// branch gap (base 53 against retail's 37). Tried and rejected, both
+// no-ops at 55.74: `customName = setup->name` against
+// `customName.assign(setup->name, 0, std::string::npos)` - game.h's own
+// note already records that operator= collapses onto the same assign -
+// and `#pragma inline_depth(1)` around the body, which does not reach the
+// decision. Splitting apply_setup_artifacts out DID work (49.03 ->
+// 55.74), so the budget is the right lever; what is missing is one more
+// pre-inline caller reduction, not a spelling.
 VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
 void hero::HeroFn_004D8B30(const HeroExtra* setup)
 {
@@ -1093,30 +1128,15 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
         }
     }
 
-    if (setup->bCustomArtifacts) {
-        int i;
-        for (i = 0; i < 19; i++) {
-            if (equipped[i].artifactId != ARTIFACT_NONE)
-                remove_artifact(i);
-        }
-        for (i = 0; i < 19; i++) {
-            if (setup->artifacts[i].artifactId != ARTIFACT_NONE)
-                equip_artifact(&setup->artifacts[i], i);
-        }
-        for (i = 0; i < 64; i++)
-            backpack[i] = type_artifact();
-        for (i = 0; i < 64; i++) {
-            if (setup->backpack[i].artifactId != ARTIFACT_NONE)
-                add_to_backpack(&setup->backpack[i], -1);
-        }
-    }
+    if (setup->bCustomArtifacts)
+        apply_setup_artifacts(this, setup);
 
     if (setup->sex != -1)
         sex = setup->sex;
 
     if (setup->customName) {
         hasCustomName = 1;
-        customName.assign(setup->name, 0, std::string::npos);
+        customName = setup->name;
     }
 
     if (setup->bCustomExperience) {
