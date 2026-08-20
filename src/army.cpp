@@ -27,7 +27,18 @@
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #define HOMM3_ARMY_AI_VIEW
+// COMPILE-REQUIRED, not a score gate: InitClean's declarator is behind
+// this view (cmbtmgr.cpp defines it for LoadArmies' call site) and
+// army.cpp OWNS the body, so without it the definition below is a
+// member VC6 has never seen. The failure mode is worth knowing: a
+// carcass @stub compiles fine inside `#if 0`, and the moment it is
+// promoted VC6 reports the missing declarator as a CASCADE of
+// "undeclared identifier" on the body's own members - not as
+// "InitClean is not a member of army" - so the message points at the
+// last field you added rather than at the declarator.
+#define HOMM3_ARMY_COMBAT_INIT_DECL
 #include "army.h"
+#undef HOMM3_ARMY_COMBAT_INIT_DECL
 #undef HOMM3_ARMY_AI_VIEW
 #undef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #undef HOMM3_ARMY_MIDPOINT_DECL
@@ -138,22 +149,90 @@ void army::stop_sample(army::TSampleID id)
     }
 }
 
+// Put the stack back to its "loaded but not in a battle" state: drop
+// every sound and the sprite, wipe the standing-spell row and the
+// spell queue, and reset the seven scalars that mean "nothing here".
+//
+// The four slots between stop_sample and SetLuck pop 0 / 0x18 / 0x1c / 0
+// stack bytes, i.e. 0 / 6 / 7 / 0 arguments, and the six DC rows that could
+// occupy them take 1 / 0 / 6 / 7 / 0 / 0 - so InitClean, initialize, Init
+// and LoadResources fit in order and WaitSample (one argument) cannot.
+//
+// THREE THINGS THIS BODY DECIDES ABOUT THE CLASS, all recorded on the
+// fields themselves: +0x420 is a std::deque (the erase-with-two-16-byte
+// -iterators call), +0xfc is DC's iLastFidgetTime (the GameTime::Get
+// stamp) and +0x24/+0x28 are the iMirror* pair rather than pad - they
+// take -1 out of the same `or eax,-1` the other four resets share,
+// which is what makes them dword fields.
+//
+// The `for` counts UP in the source and DOWN in the bytes: nothing in
+// the loop reads `i` except the subscript, so C2 strength-reduces the
+// walk to a pointer and turns the index into a countdown. It is
+// memory-homed at [ebp-4] because the dispose call leaves no free
+// register - that slot is then reused for the two dead erase
+// iterators at the bottom.
+//
+// Residual (0.0000%): AN INLINER WALL, NOT A MODELLING ERROR, and the
+// whole rest of the body is already byte-shaped. Retail CALLS
+// deque<>::erase out of line (0x448db0, 766 B, the COMDAT the linker
+// parked just past this unit) and inlines everything INTO it; our CL
+// inlines erase into THIS body instead and is then starved, so the
+// eight things retail folded into erase - operator-, operator+,
+// operator++, pop_front, pop_back, copy, copy_backward - come back out
+// as calls. `homm3 vc6 diagnose` classifies it exactly that way:
+// "inliner (predict-inline), 8 under-inline". Everything from the
+// spellInfluence memset to the two trailing vector clears is
+// instruction-for-instruction identical modulo one register choice
+// (retail parks the shared ZERO in EBX and homes the loop counter;
+// ours parks the counter in EBX and re-materialises the zero).
+//
+// THE FIX IS THE SECOND CALL SITE, not a spelling. An E8 scan of
+// retail .text finds exactly TWO callers of 0x448db0: this body
+// (0x43d656) and CancelIndividualSpell (0x444896). VC6 inlines a
+// single-call-site function regardless of size - the rule this tree
+// already records for statics and one-site externs - so erase stays
+// out of line only once army.obj holds both sites. Tried and
+// rejected: the explicit `erase(begin(), end())` spelling in place of
+// `clear()` (identical bytes, erase still inlined), a second
+// `clear()` in this same body (changes the shape but does not stop
+// the expansion - the two sites must be in DIFFERENT callers), and
+// `#pragma inline_depth(1)` around the definition (no effect at all).
+// Do not re-grind this until CancelIndividualSpell (0x444510) lands.
+VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
+void army::InitClean()
+{
+    for (int i = 0; i < 8; i++) {
+        if (armySample[i])
+            armySample[i]->Dispose();
+        armySample[i] = 0;
+    }
+    iRoundsLeftBeforeVanish = -1;
+    numSpellInfluences = 0;
+    memset(spellInfluence, 0, sizeof(spellInfluence));
+    SpellInfluenceQueue.clear();
+    iLastFidgetTime = GameTime::Get();
+    if (stdIcon)
+        stdIcon->Dispose();
+    stdIcon = 0;
+    field_16c = 0;
+    bShowPowEffect = 0;
+    field_4f0 = 0;
+    iPostPowSpellToCast = -1;
+    iMirrorSourceIndex = -1;
+    iMirrorDestIndex = -1;
+    originalIndex = -1;
+    numTroopsToShowOverride = -1;
+    joustBonus = 0;
+    is_area_effect_target = 0;
+    aura_sources.clear();
+    aura_clients.clear();
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:109
 DC_ONLY(0x438a8, 0x3E)
 void army::WaitSample(army::TSampleID which)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:117
-// The four slots between stop_sample and SetLuck pop 0 / 0x18 / 0x1c / 0
-// stack bytes, i.e. 0 / 6 / 7 / 0 arguments, and the six DC rows that could
-// occupy them take 1 / 0 / 6 / 7 / 0 / 0 - so InitClean, initialize, Init
-// and LoadResources fit in order and WaitSample (one argument) cannot.
-VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
-void army::InitClean()
 {
     // @stub
 }

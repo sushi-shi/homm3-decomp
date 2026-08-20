@@ -311,6 +311,7 @@ army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?GoBerserk@army@@QAEXXZ	86.0096	86.0096	86.0096	0x456d0
+army	?InitClean@army@@QAEXXZ	0.0000	0.0000	0.0000	0x3d5c0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
@@ -392,7 +393,6 @@ army	army_Cure	0.0000	0.0000	0.0000	0x46500
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
 army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
 army	army_Init	0.0000	0.0000	0.0000	0x3d8b0
-army	army_InitClean	0.0000	0.0000	0.0000	0x3d5c0
 army	army_LoadResources	0.0000	0.0000	0.0000	0x3d9f0
 army	army_ProcessDeath	0.0000	0.0000	0.0000	0x44120
 army	army_SetSpellInfluence	0.0000	0.0000	0.0000	0x448f0

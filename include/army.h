@@ -7,6 +7,18 @@
 
 #include <va.h>
 #include <vector>
+// <deque> is admitted ONLY to the two views that declare
+// SpellInfluenceQueue (+0x420) below. It is not a score gate but a
+// COMPILE requirement in the strict sense: the member's type cannot be
+// named without it, and this header reaches most of the tree while
+// <deque> drags in a whole second container's worth of type
+// definitions - exactly the population this header's own measurements
+// (GetCommand 92.5714 -> 92.5357 for ONE declarator) show it is
+// sensitive to. Both arms of the member below still describe the same
+// 48 bytes, so the class layout is identical everywhere.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
+#include <deque>
+#endif
 
 class hero;
 class armyGroup;
@@ -252,7 +264,15 @@ public:
     // poison bites and counts the second down, sending the stack to
     // ProcessDeath the moment it reaches zero.
     unsigned char bShowPowEffect;  // +0x20
-    char pad_21[0xb];
+    char pad_21[0x3];
+    // DC army.iMirrorSourceIndex / army.iMirrorDestIndex (members.csv
+    // army@36 and @40, the same unshifted low run bShowPowEffect 32 and
+    // iRoundsLeftBeforeVanish 44 already pair). InitClean (0x43d5c0)
+    // resets both to -1 out of the same `or eax,-1` it uses for
+    // iPostPowSpellToCast, originalIndex and numTroopsToShowOverride,
+    // which is what fixes them as ints rather than the pad.
+    int iMirrorSourceIndex;        // +0x24
+    int iMirrorDestIndex;          // +0x28
     int iRoundsLeftBeforeVanish;   // +0x2c
 #elif defined(HOMM3_ARMY_POW_VIEW)
     // PowEffect needs only the first of that pair - it scans every stack
@@ -516,8 +536,12 @@ public:
     // walk is its only decoded reader: any stack whose value is not -1
     // gets that spell cast on its own hex, and the slot is reset to -1
     // straight after. Spelled int because SpellID's enum lives in a
-    // header this one does not include.
-#ifdef HOMM3_ARMY_POW_VIEW
+    // header this one does not include. The ROUND view is admitted to
+    // the same slice 2026-08-20: InitClean (0x43d5c0) resets it to -1
+    // out of the same shared `or eax,-1` it uses for originalIndex and
+    // the iMirror pair, which is a second and independent witness that
+    // +0xec is a dword field and not pad.
+#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_ROUND_VIEW)
     char pad_eb[0x1];
     int iPostPowSpellToCast;         // +0xec
 #else
@@ -560,7 +584,14 @@ public:
     // every other name this header scopes: the bytes are identical in
     // both arms, only the name is TU-local.
 #ifdef HOMM3_ARMY_RANGE_VIEW
-    char pad_fc[0x10];
+    // DC army.iLastFidgetTime (members.csv army@232, the flat +0x14
+    // this band carries from hitByCreature onward - the same shift that
+    // lands DC index 228 on combatSide's neighbour +0xf8). InitClean
+    // (0x43d5c0) stamps GameTime::Get() into it, and the name is
+    // independently corroborated by set_inside_area_effect (0x43efe0),
+    // whose whole animation arm is about the cs_fidget sequence.
+    unsigned long iLastFidgetTime; // +0xfc
+    char pad_100[0xc];
     char* yModify;                // +0x10c
     char pad_110[0x48];
 #elif defined(HOMM3_ARMY_POW_VIEW)
@@ -788,11 +819,44 @@ public:
     // dereference straight into a type_enchant_data's `mastery` field,
     // which is what names the row: the mastery the standing spell was
     // cast at.
+    // THE SPELL QUEUE, and it is a std::deque - not this header's
+    // guess but retail's own container arithmetic. InitClean (0x43d5c0)
+    // calls ONE function on the object at +0x420, handing it the two
+    // SIXTEEN-BYTE values at +0x424 and +0x434 BY VALUE and taking a
+    // sixteen-byte answer back through a hidden return pointer; that
+    // callee (0x448db0) opens by comparing the +0xc words of the two
+    // and, when they differ, computes `((a-b)>>2 + 0x3fffff) << 10`
+    // plus a second scaled difference. That is Dinkumware's
+    // `deque::erase(iterator, iterator)` with its map/block distance,
+    // over 4-byte elements and a 1024-entry block - so +0x424 is
+    // `_First`, +0x434 is `_Last`, and the whole record is
+    // allocator(4) + two 16-byte iterators + _Map + _Mapsize + _Size =
+    // 48 bytes, 0x420..0x44f. The call is `clear()`, which /Ob2 folds
+    // into `erase(begin(), end())` exactly as seen.
+    //
+    // DC names it (members.csv army@1028 SpellInfluenceQueue, nested
+    // type TSpellQueue) and the DC carcass tail in army.cpp lists its
+    // whole COMDAT set, `deque<enum SpellID, allocator<enum SpellID>,
+    // 0>`. THE OFFSET IS THE LAYOUT PROOF: DC 1028 -> retail 0x420 is a
+    // 28-byte shift while DC 1072 retaliationCount -> retail +0x454 is
+    // 36, and the difference is exactly the 8 bytes Dinkumware's deque
+    // is bigger than STLport's - the same "retail's preceding STL
+    // expansion shifts it" the armySample note records.
+    //
+    // Spelled `int` rather than SpellID for the reason
+    // iPostPowSpellToCast above already carries: that enum lives in a
+    // header this one does not include. Same 4-byte element, same
+    // codegen; only the mangled COMDAT name differs, and those are
+    // unclaimed rows whose reloc names are cosmetic anyway.
+    typedef std::deque<int> TSpellQueue;
 #ifdef HOMM3_ARMY_SPELL_ROW_VIEW
     int spell_level[81];          // +0x2dc .. +0x41f
-    char pad_420[0x34];
+    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
+    float PaletteEffect;          // +0x450 (DC army@1068)
 #else
-    char pad_2dc[0x178];
+    char pad_2dc[0x144];
+    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
+    float PaletteEffect;          // +0x450 (DC army@1068)
 #endif
 #else
     char pad_2c4[0x190];
