@@ -1486,14 +1486,157 @@ void advManager::ProcessRadarSelect(const message* msg)
     } while (event.id != MESSAGE_LEFT_BUTTON_UP);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:2434
+// The map widget's own click handler, split down the middle by the right
+// mouse button: a right click is a quick view of whatever the cursor is
+// over, a left click either retargets the current hero's path or selects
+// the object under the pointer.
+//
+// Both halves lean on accessors that retail CALLS rather than expands -
+// type_point::is_valid and advManager::GetCell are out-of-line members, so
+// the is_valid/cell pair is spelled longhand here exactly as DoAdvCommand's
+// arms already spell it eight hundred lines up. searchArray::get_cell IS a
+// header inline and does expand, flying = 0 folding `(z*2+0)*gMapHeight`
+// into the single `lea edi,[eax+2*edi]`.
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
+    int visibilityBit = 1 << gpGame->GetLocalPlayerGamePos();
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+
+    type_point hoverPoint = lastMapHover;
+    if (!hoverPoint.is_valid())
+        return;
+
+    lastHoverX = lastMapHover.x - radarOrigin.x;
+    lastHoverY = lastMapHover.y - radarOrigin.y;
+
+    unsigned char visible =
+        (GetMapExtra(hoverPoint.x, hoverPoint.y, hoverPoint.z)
+         & visibilityBit) != 0;
+
+    type_point cellPoint = hoverPoint;
+    NewmapCell* cell;
+    if (!cellPoint.is_valid())
+        cell = fullMap->cell(0, 0, 0);
+    else
+        cell = fullMap->cell(cellPoint);
+
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (!visible) {
+            QuickInfo(lastHoverX, lastHoverY, lastMapHover.z);
+            return;
+        }
+
+        TAdventureObjectType objType;
+        int objIndex;
+        if (gpCurrentPlayer == localPlayer && lastHoverX == HERO_VIEW_TILE_X
+            && lastHoverY == HERO_VIEW_TILE_Y
+            && gpCurrentPlayer->currHeroId != -1 && inDialog) {
+            objIndex = gpCurrentPlayer->currHeroId;
+            objType = HERO;
+        } else {
+            objType = cell->type;
+            objIndex = cell->extraInfo;
+        }
+
+        switch (objType) {
+        case HERO:
+            HeroQuickView(objIndex, lastHoverX * 32, lastHoverY * 32, 1);
+            return;
+        case GARRISON:
+            garrison_quick_view(objIndex, lastHoverX * 32, lastHoverY * 32);
+            return;
+        case TOWN:
+            TownQuickView(objIndex, lastHoverX * 32, lastHoverY * 32, 1);
+            return;
+        case MONSTER:
+            MonsterQuickView(cell, lastHoverX, lastHoverY);
+            return;
+        default:
+            QuickInfo(lastHoverX, lastHoverY, lastMapHover.z);
+            return;
+        }
+    }
+
+    if (!visible)
+        return;
+
+    int currHeroId = gpGame->GetLocalPlayer()->currHeroId;
+    if (currHeroId != -1) {
+        hero* currHero = gpGame->GetHero(currHeroId);
+        unsigned char heroMobile = currHero->IsMobile();
+        if (currHero && currHero->z == hoverPoint.z) {
+            if (currHero->x == hoverPoint.x && currHero->y == hoverPoint.y) {
+                advCommand = ADV_COMMAND_VIEW_HERO;
+                DoAdvCommand(trigger_point);
+                return;
+            }
+
+            pathCell* pathAt = gpSearchArray->get_cell(lastMapHover, 0);
+            if (gpCurrentPlayer->IsLocalHuman() && pathAt && pathAt->visited) {
+                if (!heroMobile
+                    || (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
+                    || (gUnnamed698774
+                        && (currHero->pathTargetX != hoverPoint.x
+                            || currHero->pathTargetY != hoverPoint.y))) {
+                    currHero->pathTargetX = hoverPoint.x;
+                    currHero->pathTargetY = hoverPoint.y;
+                    currHero->pathTargetZ = lastMapHover.z;
+                    ShowRoute(1, 1, 1);
+                    return;
+                }
+            }
+            *peventCell = DoAdvCommand(trigger_point);
+            return;
+        }
+    }
+
+    int myPos = gpGame->GetLocalPlayerGamePos();
+    TAdventureObjectType clickedType = cell->type;
+    int clickedIndex = cell->extraInfo;
+
+    switch (clickedType) {
+    case HERO:
+        if (clickedIndex == gpGame->GetLocalPlayer()->currHeroId) {
+            advCommand = ADV_COMMAND_VIEW_HERO;
+            DoAdvCommand(trigger_point);
+            return;
+        }
+        if (myPos != gpGame->GetHero(clickedIndex)->owner)
+            return;
+        SetHeroContext(clickedIndex, 0, !gpCurrentPlayer->IsLocalHuman(), 1);
+        return;
+
+    case TOWN: {
+        if (clickedIndex == gpGame->GetLocalPlayer()->currTownId) {
+            advCommand = ADV_COMMAND_VIEW_TOWN;
+            *peventCell = DoAdvCommand(trigger_point);
+            return;
+        }
+        if (clickedIndex == -1)
+            return;
+        town* clickedTown = &gpGame->towns[clickedIndex];
+        unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+        unsigned char sameTeam = 0;
+        if (gUnnamed69778c >= 0 && clickedTown->owner >= 0)
+            sameTeam = gpGame->GetTeam(gUnnamed69778c)
+                       == gpGame->GetTeam(clickedTown->owner);
+        if (sameTeam || DebugViewAll)
+            SetTownContext(clickedIndex, waitingPlayer, 1);
+        return;
+    }
+
+    case SHIPYARD:
+        *peventCell = DoAdvCommand(trigger_point);
+        return;
+
+    default:
+        return;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2624
 DC_ONLY(0xaf3c, 0x2CA)
