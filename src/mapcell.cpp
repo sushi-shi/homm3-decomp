@@ -320,13 +320,79 @@ CObject* NewmapCell::TObjectCell::get_object()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:361
+// Resolves a cell that merely OVERLAPS an object to the cell the object is
+// actually triggered from.  A cell that is itself a trigger answers with
+// itself; four object types never delegate (the empty type, the anchor point,
+// the event and the holy grail); everything else looks the owning object up in
+// the world map's object pool and asks it where its trigger sits.
+//
+// The two range guards are retail's own and they are not the same test: the
+// index is read as a SIGNED short and rejected when negative, then compared
+// against objects.size() as an UNSIGNED value (`movsx eax,di` then `jae`),
+// which is what an int-versus-size_type comparison compiles to.
+//
+// The trigger point is assembled into a type_point rather than three ints, and
+// the packing is legible in the bytes: `xor word ptr` for x's ten bits, then
+// one 16-bit read-modify-write carrying BOTH y (ten bits) and z (four) because
+// MSVC starts a fresh short allocation unit when y will not fit beside x.
+// That is also why `point.x = triggerX` compiles to a self-xor - VC6 overlays
+// the point on triggerX's now-dead stack slot, so the merge reads back the
+// value it is about to write.
+//
+// The tail is the packed-point cell() overload verbatim: z*Size + y, times
+// Size, plus x, scaled by the 38-byte NewmapCell stride.  No header change was
+// needed - that overload is already unguarded, and it extracts the three
+// bitfields in exactly retail's order.
+//
+// Residual (90.8763%): the CFG is exact - `sema diff --branches` reports nine
+// branches and two rets on both sides with mnemonics and targets agreeing, so
+// nothing structural is left.  What differs is one bitfield merge FORM.  Both
+// fields of the second short allocation unit are written from one word store
+// on both sides, but retail clears y and z together with a single
+// `and eax,0xffffc000` and then ORs each value in, where this compile emits
+// the generic xor-merge for y and a separate `and ch` for z - VC6 combined
+// two adjacent bitfield writes on retail's input and did not on ours.  The
+// two gpGame reloc rows are cosmetic (the delinked side spells it
+// `bss_2994e8` because the global is unclaimed - the DoDialog precedent).
+// Tried and rejected: assigning z before y, which un-combines the pair
+// further and costs 5 points (90.8763 -> 86.1134); hoisting `object->z` into
+// a local ahead of the point, which is byte-flat at 90.8763.
 VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
 NewmapCell* NewmapCell::get_trigger_cell()
 {
-    // @stub
+    if (is_trigger)
+        return this;
+
+    if (type == NOTHING || type == ANCHOR_POINT || type == EVENT
+        || type == HOLY_GRAIL)
+        return 0;
+
+    short index = object_type_index;
+    if (index < 0)
+        return 0;
+    if (index >= gpGame->worldMap.objects.size())
+        return 0;
+
+    CObject* object = &gpGame->worldMap.objects[index];
+
+    int triggerX;
+    int triggerY;
+    object->FindTrigger(&triggerX, &triggerY);
+
+    type_point point;
+    point.x = triggerX;
+    point.y = triggerY;
+    point.z = object->z;
+
+    if (point.x < 0)
+        return 0;
+    return gpGame->worldMap.cell(point);
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
 #endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:387
