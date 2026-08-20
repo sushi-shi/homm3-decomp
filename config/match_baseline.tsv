@@ -1527,7 +1527,7 @@ scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	10
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	86.3333	86.3333	86.3333	0x16a0d0
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580
-seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	70.0000	70.0000	100.0000	0x16f5a0
+seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560
 seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650
