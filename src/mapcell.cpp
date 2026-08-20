@@ -3070,6 +3070,17 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     return 0;
 }
 
+// readHeroData's /Ob2 BUDGET dose - see the residual note on that body.  No
+// Dreamcast row; a codegen device.
+static void readPrimarySkills(TAbstractFile* infile, HeroExtra* hero_data)
+{
+    for (int stat = 0; stat < 4; ++stat) {
+        char value;
+        infile->Read(&value, sizeof(value));
+        hero_data->primarySkills[stat] = value;
+    }
+}
+
 static void readHeroArmies(TAbstractFile* infile, HeroExtra* hero_data,
                            int mapVersion)
 {
@@ -3196,6 +3207,16 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 //     the caller-shrink that paid +12.20 on armygrp's get_morale_description
 //     the same round - costs 1.96 (-> 86.5417).  This body is not starved of
 //     budget the way that one was.
+// THE DOSE WAS THE WRONG SIZE, NOT THE WRONG LEVER (2026-08-20).  The
+// `if (0)` cb instrument settles the direction first: GROWING this caller is
+// 88.5042 -> 87.6139 (N=12) -> 86.3708 (N=28) -> 84.3778 (N=60), monotone
+// down, so shrink was always right and the artifacts block simply overshot.
+// The SMALLEST liftable block wins - the four-iteration primary-skills read,
+// `readPrimarySkills`, is worth +0.82 (88.5042 -> 89.3222) and brings
+// `logic_error(const string&)` OUT of line at both throw sites, which is
+// exactly the expansion this note names.  Titrated: the equipped-artifact
+// loop alone is 87.86, the backpack loop alone 87.86, and BOTH of them on
+// top of the primary-skills dose 86.54 - so one dose is the peak here.
 // Retail's own slot map also puts `noSpells` shallow (its three dwords at
 // [ebp-0x24]/[ebp-0x20]/[ebp-0x1c]) where ours sits deep at [ebp-0x60].
 //
@@ -3493,11 +3514,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             infile->Read(&primaryFlag, sizeof(primaryFlag));
             if (primaryFlag) {
                 hero_data->customPrimarySkills = 1;
-                for (int stat = 0; stat < 4; ++stat) {
-                    char value;
-                    infile->Read(&value, sizeof(value));
-                    hero_data->primarySkills[stat] = value;
-                }
+                readPrimarySkills(infile, hero_data);
             }
         }
     }
@@ -4477,8 +4494,34 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 //
 // The three sites are in source order and the budget is spent sequentially,
 // which is why retail expands the first `_Destroy` and calls the second.
-// Nothing byte-visible is missing from this body, so the mass has to come
-// from somewhere else; not found this round.
+//
+// FOUND 2026-08-20, AND THE DIRECTION WAS RIGHT: 87.2791 -> 94.8605 on ONE
+// WORD OF SCOPE.  The missing-mask scan's counter is declared IN THE `for`
+// INIT, not above the loop.  A function-scoped `unsigned int missing;`
+// carries its own live range across the whole object loop; block-scoped it
+// does not, the caller's pre-inline cb rises, and all three sites above flip
+// to retail's decision at once - `predict-inline` now pairs 46 out-of-line
+// calls against retail's 46.
+//
+// The dose was located with the `if (0)` cb instrument BEFORE any real edit
+// was tried, which is what made the one-word answer findable.  Wrapping N
+// dead statements at the top of the body:
+//   N=  0     4    5..9   10..20    28     60
+//     87.28 86.43  94.29   91.15   85.51  87.49
+// - a narrow plateau five to nine statements wide, worth +7.01.  The real
+// spelling BEATS the synthetic carrier (+7.58 against +7.01), and adding
+// further cb ON TOP of it drops back to the synthetic plateau (94.29 at
+// N=8), so this body is now at its /Ob2 optimum.
+// Measured and rejected in the same round: the aside-copy loop bounded by
+// `oldSprites.size()` instead of `sprites.size()` is 84.74.
+//
+// What is left is the frame: `sub esp, 0x74` against retail's 0x70.  Retail
+// puts the `allocator<char>` temp of the FIRST of the six `CObjectType()`
+// ctors in the dead TOP BYTE of the `infile` parameter home and reads it
+// uninitialised (`mov al, byte ptr [ebp+0xb]`), where we give it a slot of
+// its own at [ebp-0xd] - the same recycled-parameter-home mechanism
+// readHeroData's note describes, but on a COMPILER-GENERATED temp, so the
+// block-scope lever has nothing to bite on.
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
@@ -4537,8 +4580,8 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
         if (readObject(infile, &objects[i], mapVersion) < 0)
             return -1;
 
-        unsigned int missing;
-        for (missing = 0; missing < gMissingMaskTypes.size(); ++missing) {
+        for (unsigned int missing = 0; missing < gMissingMaskTypes.size();
+             ++missing) {
             if (objects[i].typeIndex == gMissingMaskTypes[missing]) {
                 sprintf(gText,
                         DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
