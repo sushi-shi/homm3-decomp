@@ -793,11 +793,18 @@ public:
     char pad_14028[0x4];
     // The three arrow-tower latches, keyed by the tower's grid index by
     // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
-    // +0x1402e. Declared as three bytes rather than an array because the
-    // hex order and the slot order do not agree. Names are ordinals.
-    unsigned char field_1402c;         // +0x1402c
-    unsigned char field_1402d;         // +0x1402d
-    unsigned char field_1402e;         // +0x1402e
+    // +0x1402e.
+    //
+    // AN ARRAY, corrected 2026-08-20. This used to be three scalars, on
+    // the reasoning that "the hex order and the slot order do not
+    // agree" - and KeepAttack (0x465ad0) refutes it outright, because it
+    // INDEXES the band: it maps the acting tower's gridIndex through the
+    // same three-way switch mark_tower_army uses, to 0xfe -> 0,
+    // 0xfb -> 1, 0xff -> 2, and then stores with
+    // `mov byte ptr [ecx + edi + 0x1402c], 1`. That index is exactly the
+    // scalar order 0x46a460 writes, so the two orders DO agree and the
+    // band is one array. Every existing reader keeps its byte offset.
+    unsigned char field_1402c[3];      // +0x1402c
     // Raised to 1 by SetupCombat before it has touched anything else about
     // the two sides, and by nothing else in the located span. Reads like a
     // "combat is being set up / is live" latch, but no reader is decoded

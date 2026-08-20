@@ -539,6 +539,7 @@ cmbtmgr	?InitializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
 cmbtmgr	?IsWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0
+cmbtmgr	?KeepAttack@combatManager@@QAEXH@Z	95.0344	95.0344	95.0344	0x65ad0
 cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	99.3528	99.3528	99.3528	0x63600
@@ -590,7 +591,6 @@ cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
 cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	67.1937	67.1937	67.1937	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
-cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
