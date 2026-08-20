@@ -216,6 +216,16 @@ static const int kFifthLevelSpell = 5;
 // bank SetWinText loads for this window.
 static const int kDialogReturnDismissHero = 0x81;
 static const int kHeroScreenWinText = 6;
+// HeroFn_004E6120's three source-private ids, kept out of the shared
+// headers for the same reason. 0x7f is the Vial of Dragon Blood (+5
+// attack and +5 defense to dragons, which is the identification); the
+// attribute bit is NH3API's CF_DRAGON; and hero 155 is the one hero whose
+// universal-creature specialty also grants +1 speed - NH3API names him
+// Xeron, and only that spelling is borrowed.
+static const int kArtifactVialOfDragonBlood = 0x7f;
+static const int kVialOfDragonBloodBonus = 5;
+static const unsigned int kCreatureAttrDragon = 0x80000000;
+static const int kHeroXeron = 0x9b;
 
 // window.obj's text setter, retail 0x5ffa30, a /Gr free function
 // (heroWindow* in ecx, the text id in edx). Same declaration townmgr.cpp
@@ -1363,6 +1373,25 @@ std::bitset<70> mark_spells(int artifactId)
 // best measured spelling; the transposition reads as guard polarity,
 // a D8 arm-order item the catalog has no lever for on a pointer-guarded
 // loop.
+//
+// CORRECTION 2026-08-20 - do NOT act on the paragraph above as if the
+// residual were scheduling-only. Retail's FRAME IS 20 BYTES LARGER THAN
+// OURS (`sub esp,0x5c` against our `sub esp,0x48`), so this body is
+// missing source elements, and the branch-kind transposition is a
+// downstream symptom. Two independent witnesses of the same gap, both
+// in the first grant arm:
+//  - retail loads `slot->extra` EAGERLY, before the ARTIFACT_NONE test
+//    (`mov edx,[eax] / mov eax,[eax+4] / cmp edx,-1`), where our CL sinks
+//    the load into the scroll arm because that is the only path using it.
+//    Something else in retail's source reads `extra` on another path.
+//  - retail's scroll store is `mov [ebx+eax+0x430], dl`, reusing the
+//    register still holding the artifact id (provably 1 there), where we
+//    materialize the immediate.
+// The locals we do not have are 16 bytes between the scalar band and the
+// first bitset temp plus one more dword at [ebp-0x4] (which retail uses
+// to memory-home the `dst` pointer). Find those 20 bytes before touching
+// loop spelling again; `predict-inline` says the call multisets AGREE, so
+// this is not the /Ob2 budget.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
@@ -6361,7 +6390,16 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass
+// The flat creature bonus kinds 4 and 7 both add. Two call sites, so
+// /Ob2 expands it into each and emits no out-of-line body.
+static void add_flat_creature_bonus(TCreatureTypeTraits* traits,
+                                    const THeroSpecificAbility& ability)
+{
+    traits->attackSkill += ability.creatureAttackBonus;
+    traits->defenseSkill += ability.creatureDefenseBonus;
+    traits->damageLowBound += ability.creatureDamageBonus;
+    traits->damageHighBound += ability.creatureDamageBonus;
+}
 
 // E:\gamedcs\hero.cpp:6493
 // IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right
@@ -6382,12 +6420,87 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 // exactly the three fields this body writes), and the member is const.
 // The carcass text had drifted to `(int, void*)` non-const, which would
 // not have compiled had the block ever been enabled.
+//
+// TYPE BLOCKER RETIRED 2026-08-20: the "creature-stat record" this row
+// was parked on needed NO new type - it is armygrp.h's existing
+// TCreatureTypeTraits, and the 116-byte stride is proven four
+// independent ways (three `lea` chains here that all reduce to 29n
+// dwords, plus the army.obj caller's `mov ecx,0x1d / rep movsd` into
+// army+0x74). Every field it touches was already named. What WAS missing
+// is three dwords inside THeroSpecificAbility's pad and two enumerators;
+// both now sit behind hero.obj's own herospec creature view.
+//
+// get_combat_speed_bonus (0x4e5aa0) and get_hit_point_bonus (0x4e5b80)
+// are real retail rows that /Ob2 expands INTO this body, which is why
+// this definition has to sit after them in link order.
+//
+// add_flat_creature_bonus above is BYTE-FORCED, not tidiness, and the
+// same lever mark_spells needed. Written longhand in both arms this body
+// carries enough /Ob2 budget to expand IsWieldingArtifact at BOTH of its
+// sites; retail expands only the first (the Vial of Dragon Blood scan)
+// and keeps a real call at the second, inside the inlined
+// get_combat_speed_bonus. Folding the duplicated four-statement bonus
+// into a two-call-site static shrinks the pre-inline caller, drops the
+// budget, and restores retail's call exactly: 93.41% -> 99.97%.
+// The last instruction was operand ORDER on the upgraded-creature test -
+// retail emits `cmp ecx,eax` with creature_type first, so that compare
+// is spelled `creature_type == GetUpgradedCreature(...)`. Flipping the
+// OTHER compare in the same condition instead makes it worse (99.93%);
+// the two are not interchangeable.
 VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
 void hero::HeroFn_004E6120(int creature_type,
                            TCreatureTypeTraits* traits) const
 {
-    // @stub
+    hero* self = const_cast<hero*>(this);
+
+    traits->attackSkill += GetPrimarySkill(0);
+    traits->defenseSkill += GetPrimarySkill(1);
+
+    const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+
+    if (self->IsWieldingArtifact(kArtifactVialOfDragonBlood)
+        && (traits->attributes & kCreatureAttrDragon)) {
+        int bonus = kVialOfDragonBloodBonus;
+        traits->attackSkill += bonus;
+        traits->defenseSkill += bonus;
+    }
+
+    switch (ability.type) {
+    case eHeroAbilityCreature:
+    case eHeroAbilityCreatureUniversal:
+        if (creature_type == ability.creature
+            || (ability.creature != CREATURE_BALLISTA
+                && creature_type == GetUpgradedCreature(ability.creature))) {
+            if (ability.type == eHeroAbilityCreature) {
+                double scale = level / (traits->level + 1) * 0.05;
+                traits->attackSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creature_type].attackSkill * scale)
+                    + traits->attackSkill);
+                traits->defenseSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creature_type].defenseSkill * scale)
+                    + traits->defenseSkill);
+                if (!(traits->attributes & CTA_SIEGE_WEAPON))
+                    traits->speed++;
+            } else {
+                add_flat_creature_bonus(traits, ability);
+                if (id == kHeroXeron)
+                    traits->speed++;
+            }
+        }
+        break;
+    case eHeroAbilityDragons:
+        if (akCreatureTypeTraits[creature_type].attributes
+            & kCreatureAttrDragon)
+            add_flat_creature_bonus(traits, ability);
+        break;
+    }
+
+    if (!(traits->attributes & CTA_SIEGE_WEAPON))
+        traits->speed += self->get_combat_speed_bonus();
+    traits->hitPoints += self->get_hit_point_bonus(creature_type);
 }
+
+#if 0  // @carcass
 
 // ===================================================================
 // hero.obj's COMDAT tail: 0x004e64c0..0x004e6770. SEVEN inherited claims

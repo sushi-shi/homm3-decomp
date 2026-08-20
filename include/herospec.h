@@ -113,6 +113,22 @@ enum THeroAbilityKind {
     // subject dword at all. Role unattested - ORDINAL PLACEHOLDER
     // spelling (the WIDGET_RETURN_32 precedent).
     eHeroAbilityKind5 = 5
+#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
+    ,
+    // Two more kinds, both byte-proven by hero::HeroFn_004E6120
+    // (0x4e6120), and both needed there as CASE LABELS - which is the
+    // only reason they exist. Kind 4 shares kind 1's creature-match path
+    // but takes the FLAT-bonus arm (+attack/+defense/+damage out of the
+    // record's +0x08/+0x0c/+0x10) where kind 1 takes the scaled one;
+    // kind 7 skips the creature match entirely and gates on the target's
+    // own dragon attribute bit. NH3API spells them
+    // SPECIALITY_CREATURE_UNIVERSAL and SPECIALITY_DRAGONS; only the
+    // SPELLINGS are borrowed - the values and the behaviour are retail's.
+    // Gated with the creature view because hero.obj is the only
+    // compiland that names either.
+    eHeroAbilityCreatureUniversal = 4,
+    eHeroAbilityDragons = 7
+#endif
 };
 
 struct THeroSpecificAbility {
@@ -128,10 +144,20 @@ struct THeroSpecificAbility {
         TSecondarySkill skill;  // +0x04 - valid for kind 0
         TCreatureType creature; // +0x04 - valid for kind 1
     };
+    // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
+    // Byte-proven by hero::HeroFn_004E6120, which reads them at exactly
+    // these displacements off the stride-40 row and adds the third to
+    // BOTH damage bounds. Sliced out of the pad only in this view, so
+    // findpath.cpp and game.cpp keep their declarator count unchanged;
+    // SIZE below is unaffected. NH3API supplies the spellings.
+    int creatureAttackBonus;    // +0x08
+    int creatureDefenseBonus;   // +0x0c
+    int creatureDamageBonus;    // +0x10
+    char pad_14[0x8];
 #else
     TSecondarySkill skill;      // +0x04 - valid for kind 0
-#endif
     char pad_08[0x14];
+#endif
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
     // and THeroScreenWindow::SetupHeroView sprintf's it into widget 0x8b,

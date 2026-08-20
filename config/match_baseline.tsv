@@ -992,6 +992,7 @@ hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	83.6009	83.6009	83.6009	0xe2550
 hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	44.9281	44.9281	44.9281	0xe2840
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0
+hero	?HeroFn_004E6120@hero@@QBEXHPAUTCreatureTypeTraits@@@Z	100.0000	100.0000	100.0000	0xe6120
 hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990
 hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10
@@ -1061,7 +1062,6 @@ hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
-hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
 herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0
 herodefs	?InitializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10
