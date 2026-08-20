@@ -542,6 +542,41 @@ DATA(0x00698774) extern int gUnnamed698774;
 //   0x699560  gates both of the hero-view arm's SetEnvironmentOrigin
 //             calls, and UpdateRadar's own AI-shield paint.
 DATA(0x00699560) extern int gUnnamed699560;
+
+// Retail .data 0x68c6b8, the view-world tile scale. DECLARATION ONLY - no
+// DATA claim, because viewwrld.obj owns the definition (its own writers,
+// plus the fsub at 0x5f73b0 and the fdiv at 0x5fc274, are what prove the
+// slot is a FLOAT and not the int at 0x68c6bc it is paired with). The only
+// three values UpdateRadar tests against are 16.0f, 11.84f and 7.68f -
+// 0x41800000, 0x413d70a4 and 0x40f5c28f exactly. No attested name.
+extern float gUnnamed68c6b8;
+
+// The four square map dimensions gMapWidth/gMapHeight take, named so
+// UpdateRadar's three `switch (gMapHeight)` bodies case on a domain rather
+// than on literals. The values are retail's own switch labels, decoded out
+// of the two 109-byte index tables at 0x4135e4 and 0x413714; the names are
+// HoMM3's published map sizes. advmgr.h already carried 144 as
+// ADVENTURE_XLARGE_MAP_WIDTH inside advManager's sound-extent enum - that
+// enumerator is left alone, this is the domain's own home.
+enum EMapDimension {
+    MAP_DIMENSION_SMALL = 36,
+    MAP_DIMENSION_MEDIUM = 72,
+    MAP_DIMENSION_LARGE = 108,
+    MAP_DIMENSION_EXTRA_LARGE = 144
+};
+
+// The only three values UpdateRadar tests gUnnamed68c6b8 against. Retail
+// compares the float's BIT PATTERN with integer `cmp` immediates
+// (0x41800000 / 0x413d70a4 / 0x40f5c28f) - VC6 folding an exact float
+// equality against a normal constant - and our CL folds a literal the same
+// way. MACROS, not `const float`: the const-object spelling was MEASURED
+// and it does NOT fold, VC6 emitting a memory load per compare and taking
+// UpdateRadar 90.18 -> 85.42. A float domain cannot be an enum, so this is
+// the only naming that clears the unnamed-domain-compare floor at zero
+// cost.
+#define VIEW_WORLD_TILE_SCALE_FULL 16.0f
+#define VIEW_WORLD_TILE_SCALE_MID 11.84f
+#define VIEW_WORLD_TILE_SCALE_FAR 7.68f
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;

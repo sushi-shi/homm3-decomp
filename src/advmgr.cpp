@@ -3738,6 +3738,14 @@ NewmapCell* advManager::GetCell(int x, int y, int z)
 // E:\gamedcs\advmgr.cpp:7026
 #endif  // @carcass
 
+// Read by both mobilization draw gates and by UpdateRadar's radar-icon
+// frame select before repainting the adventure screen; role (an "adventure
+// repaint suppressed" latch) is what the bytes prove. No located writer yet
+// - nearest consumer holds the declaration, and UpdateRadar below is now
+// the earliest of them, so the claim sits here rather than beside
+// DemobilizeCurrHero.
+DATA(0x006aac3c) extern int gUnnamed6aac3c;
+
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::GetCell(type_point point)
 {
@@ -3747,51 +3755,406 @@ NewmapCell* advManager::GetCell(type_point point)
                               * fullMap->Size + point.x];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:7037
-// DECODED, NOT YET RECONSTRUCTED. bPartialUpdate is DEAD in retail - zero
-// references in the body - and updateFlag is read exactly once, at the end.
-// Shape: four widget rect locals off advWindow->RadarWidget (+0x18/+0x1a/
-// +0x1c/+0x1e, which InMapArea already proves are x/y/width/height, the
-// vptr putting x at +0x18); the CompleteDraw guard chain; an AI-shield
-// paint; then a row loop over the map with THREE separate switches on
-// gMapHeight - one to advance the destination row (jump table 0x4135d0,
-// index 0x4135e4), one to write the pixel block (table 0x413700, index
-// 0x413714), and one for the sprite frame/scale. The 108 arms carry the
-// 4/3 stretch: advance 1,1,2 rows per 3 map rows, and 2,1,1 pixels wide.
-// The per-cell colour switch is a jump table at 0x413654 with a byte index
-// at 0x413670 over [0x11,0xa0] and six bodies - terrain decorations (21
-// values) taking groundTileset[GroundSet]->p->data[9], then TOWN, the
-// LIGHTHOUSE/MINE pair, the two CREATURE_GENERATORs, GARRISON and
-// SHIPYARD each taking playerColors indexed by their own owner byte.
-// Row-to-row advance uses the LIVE screenBitmap->Pitch while the writes
-// inside a block use a hardcoded 0x640-byte stride; that inconsistency is
-// retail's, not a misread.
+// RECONSTRUCTED from the decode the previous lane banked on this stub.
+// bPartialUpdate is DEAD in retail - zero references in the body - and
+// updateFlag is read exactly once, at the very end.
 //
-// Blocked on three declarations:
-//   gUnnamed6aac3c is declared WITH its DATA claim further down this file,
-//     below this function - the claim has to be hoisted above it.
-//   .data 0x68c6b8, the view-world tile scale (16.0f / 11.84f / 7.68f,
-//     paired with the int at 0x68c6bc). Proven FLOAT by its writers and by
-//     the fsub at 0x5f73b0 / fdiv at 0x5fc274; viewwrld.obj owns it, so a
-//     declaration only, no DATA claim. No attested name.
-//   game::GameFn_004CA780, retail 0x4ca780, 180 B - loads aishield.pcx,
-//     blits it over the radar rect, calls UpdateScreen and sets
-//     gpAdvManager->field_38c. Ordinal placeholder, GameFn_004CA410's
-//     convention.
+// All three of the decode's blockers are now declared: gUnnamed6aac3c's
+// DATA claim is hoisted above this function, the view-world tile scale at
+// .data 0x68c6b8 is declared (no claim - viewwrld.obj owns it), and
+// game::GameFn_004CA780 takes GameFn_004CA410's ordinal-placeholder
+// convention.
 //
-// Two annotation contradictions found while decoding, neither acted on:
-//   - advmgr.h:657 claims gMapVisibilityBit at DATA(0x0069ccc4), but this
-//     body AND the exact GetCloudLookup both relocate against 0x69ccbc.
+// The three switches the decode describes are all `switch (gMapHeight)`
+// with FOUR real labels - 36, 72, 108, 144 - and a default. What made them
+// look like 108-arm monsters is VC6's dense byte-index form: a 109-byte
+// map over gMapHeight-36 in front of a five-entry jump table, which is
+// what it emits for a sparse switch over a bounded range. Both index
+// tables were decoded out of the image (0x4135e4 and 0x413714) and agree
+// exactly: 36->arm0, 72->arm1, 108->arm2, 144->arm3, everything else
+// ->arm4. The per-cell colour switch at 0x413654/0x413670 decodes the same
+// way - SIX bodies over 28 real labels, and every one of the 28 lands on a
+// TAdventureObjectType enumerator this tree already carries.
+//
+// Two contradictions the decode flagged, both now settled:
+//   - gMapVisibilityBit's address was corrected in an earlier commit on
+//     this branch; this body relocates against the corrected 0x69ccbc and
+//     reads it as the BYTE advmgr.h declares.
 //   - soundmgr.h:191 says gbUnk691209 is read only as the second half of
-//     the sound-is-on guard; this body reads it twice as a radar/AI
+//     the sound-is-on guard. This body reads it twice as a radar/AI
 //     visibility gate, as do Main, SetHeroContext and StartLocalPlayerTurn.
+//     Left as an open annotation contradiction, not silently patched.
+//
+// Retail's own inconsistency, transcribed rather than tidied: the row
+// advance uses the LIVE screenBitmap->Pitch while the writes inside a
+// pixel block use a hardcoded 0x640-byte stride.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
-    // @stub
+    widget* radar = advWindow->RadarWidget;
+    int rectX = radar->x;
+    int rectY = radar->y;
+    int rectWidth = radar->width;
+    int rectHeight = radar->height;
+
+    if (gNetworkActive69954c && !gpCurrentPlayer->IsLocalHuman()) {
+        CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+        if (handler && handler->IsInPopup() && !gCompleteDrawMessageBypass
+            && !gUnnamed6aac3c)
+            return;
+    }
+
+    int lastColumn = gMapWidth - 1;
+    int lastRow = gMapHeight - 1;
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+
+    if (!gpCurrentPlayer->IsHuman() && field_38c == 0
+        && (!gNetworkActive69954c || gbUnk691209))
+        gpGame->GameFn_004CA780();
+
+    if (!gNetworkActive69954c && !gpCurrentPlayer->IsHuman()
+        && !gbUnk691209)
+        return;
+    if (field_38c && !gpCurrentPlayer->IsHuman())
+        return;
+    field_38c = 0;
+
+    // The acting player's live hero, and its map square, so the cell loop
+    // below can paint that one square in the owner's colour.
+    int heroX = -1;
+    int heroY = -1;
+    hero* currentHero = 0;
+    if (localPlayer->currHeroId != -1) {
+        currentHero = &gpGame->heroes[localPlayer->currHeroId];
+        if (currentHero && currentHero->z == origin.z) {
+            heroX = currentHero->x;
+            heroY = currentHero->y;
+        }
+    }
+
+    int rowPhase = 0;
+    int blockPhase = 0;
+    unsigned short* destRow;
+    switch (gMapHeight) {
+    case MAP_DIMENSION_SMALL:
+    case MAP_DIMENSION_MEDIUM:
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    case MAP_DIMENSION_LARGE:
+        rowPhase = 0;
+        blockPhase = 0;
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    default:
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    }
+
+    unsigned char visibilityBit = gMapVisibilityBit;
+    int z = origin.z;
+    for (int y = 0; y <= lastRow; y++) {
+        unsigned short* dest = destRow;
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            destRow += 4 * gpWindowManager->screenBitmap->Pitch;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            destRow += 2 * gpWindowManager->screenBitmap->Pitch;
+            break;
+        case MAP_DIMENSION_LARGE:
+            destRow += gpWindowManager->screenBitmap->Pitch;
+            if (++rowPhase > 2) {
+                rowPhase = 0;
+                destRow += gpWindowManager->screenBitmap->Pitch;
+            } else if (rowPhase == 0) {
+                destRow += gpWindowManager->screenBitmap->Pitch;
+            }
+            break;
+        case MAP_DIMENSION_EXTRA_LARGE:
+            destRow += gpWindowManager->screenBitmap->Pitch;
+            break;
+        }
+
+        for (int x = 0; x <= lastColumn; x++) {
+            NewmapCell* cell = &fullMap->cellData[
+                (z * fullMap->Size + y) * fullMap->Size + x];
+
+            unsigned char revealed = 0;
+            if (!gCompleteDrawAllCells
+                && (visibilityBit & GetMapExtra(x, y, z)) && x >= 0
+                && y >= 0 && x < gMapWidth && y < gMapHeight)
+                revealed = 1;
+            if (view_mines && cell->type == MINE)
+                revealed = 1;
+            if (view_heros && cell->type == HERO)
+                revealed = 1;
+
+            unsigned short colour;
+            if (!(view_towns && cell->type == TOWN) && !revealed) {
+                colour = 0;
+            } else {
+                colour = groundTileset[cell->GroundSet]->p->data[8];
+                if (x == heroX && y == heroY) {
+                    colour = gUnnamed6aacb0->playerColors[currentHero->owner];
+                } else if (cell->type == HERO
+                           && (cell->cellFlags & 0x1000)) {
+                    colour = gUnnamed6aacb0->playerColors[
+                        gpGame->heroAvailability[cell->extraInfo]];
+                } else {
+                    switch (cell->get_map_object()) {
+                    case TERRAIN_CACTUS:
+                    case TERRAIN_CRATER:
+                    case TERRAIN_DEAD_VEGETATION:
+                    case TERRAIN_FROZEN_LAKE:
+                    case TERRAIN_HILL:
+                    case TERRAIN_LAKE:
+                    case TERRAIN_LAVA_LAKE:
+                    case TERRAIN_MANDRAKE:
+                    case TERRAIN_MOUND:
+                    case TERRAIN_MOUNTAIN:
+                    case TERRAIN_OAK_TREE:
+                    case TERRAIN_PINE_TREE:
+                    case TERRAIN_SAND_DUNE:
+                    case TERRAIN_SAND_PIT:
+                    case TERRAIN_STALAGMITE:
+                    case TERRAIN_STUMP:
+                    case TERRAIN_TAR_PIT:
+                    case TERRAIN_TREE:
+                    case TERRAIN_VOLCANO:
+                    case TERRAIN_WILLOW_TREE:
+                    case TERRAIN_YUCCA_TREE:
+                        if (!(cell->cellFlags & 0x40))
+                            colour = groundTileset[cell->GroundSet]
+                                         ->p->data[9];
+                        break;
+                    case TOWN:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->towns[trigger
+                                        ->get_map_extraInfo()].owner];
+                        }
+                        break;
+                    case LIGHTHOUSE:
+                    case MINE:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->mines[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case CREATURE_GENERATOR_1:
+                    case CREATURE_GENERATOR_4:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->generators[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case GARRISON:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->garrisons[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case SHIPYARD:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    static_cast<signed char>(trigger
+                                        ->get_map_extraInfo())];
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // The write side of the 4/3 stretch. The 0x640 stride is
+            // retail's own hardcode; the row advance above uses the live
+            // Pitch instead.
+            switch (gMapHeight) {
+            case MAP_DIMENSION_SMALL:
+                dest[0] = colour;
+                dest[1] = colour;
+                dest[2] = colour;
+                dest[3] = colour;
+                dest[0x320] = colour;
+                dest[0x321] = colour;
+                dest[0x322] = colour;
+                dest[0x323] = colour;
+                dest[0x640] = colour;
+                dest[0x641] = colour;
+                dest[0x642] = colour;
+                dest[0x643] = colour;
+                dest[0x960] = colour;
+                dest[0x961] = colour;
+                dest[0x962] = colour;
+                dest[0x963] = colour;
+                dest += 4;
+                break;
+            case MAP_DIMENSION_MEDIUM:
+                dest[0] = colour;
+                dest[1] = colour;
+                dest[0x320] = colour;
+                dest[0x321] = colour;
+                dest += 2;
+                break;
+            case MAP_DIMENSION_LARGE:
+                if (blockPhase) {
+                    dest[0] = colour;
+                    if (rowPhase)
+                        dest += 1;
+                    else {
+                        dest[0x320] = colour;
+                        dest += 1;
+                    }
+                } else {
+                    dest[0] = colour;
+                    dest[1] = colour;
+                    if (!rowPhase) {
+                        dest[0x320] = colour;
+                        dest[0x321] = colour;
+                    }
+                    dest += 2;
+                }
+                if (++blockPhase > 2)
+                    blockPhase = 0;
+                break;
+            case MAP_DIMENSION_EXTRA_LARGE:
+                dest[0] = colour;
+                dest += 1;
+                break;
+            }
+        }
+    }
+
+    // Radar-icon frame and the origin-to-screen scale.
+    int radarFrame = -1;
+    int suppressIcon = 0;
+    float scale;
+    if (gUnnamed6aac3c) {
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            scale = 4.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 13;
+            else
+                suppressIcon = 1;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            scale = 2.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 11;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 12;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                suppressIcon = 1;
+            break;
+        case MAP_DIMENSION_LARGE:
+            scale = 1.33f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 10;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 9;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                radarFrame = 10;
+            break;
+        default:
+            scale = 1.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 5;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 6;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                radarFrame = 7;
+            break;
+        }
+    } else {
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            radarFrame = 4;
+            scale = 4.0f;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            radarFrame = 3;
+            scale = 2.0f;
+            break;
+        case MAP_DIMENSION_LARGE:
+            radarFrame = 2;
+            scale = 1.33f;
+            break;
+        default:
+            radarFrame = 1;
+            scale = 1.0f;
+            break;
+        }
+    }
+
+    int srcX;
+    if (origin.x < 0)
+        srcX = static_cast<long>(-scale * origin.x);
+    else
+        srcX = 0;
+    int srcY;
+    if (origin.y < 0)
+        srcY = static_cast<long>(-scale * origin.y);
+    else
+        srcY = 0;
+
+    CSprite* icons = radarIcons;
+    int drawWidth = icons->Width - srcX;
+    int drawHeight = icons->Height - srcY;
+
+    int destX;
+    if (origin.x < 0)
+        destX = static_cast<long>(static_cast<float>(rectX));
+    else
+        destX = static_cast<long>(rectX + origin.x * scale);
+    int destY;
+    if (origin.y < 0)
+        destY = static_cast<long>(static_cast<float>(rectY));
+    else
+        destY = static_cast<long>(rectY + origin.y * scale);
+
+    if (icons->Width + destX > rectX + rectWidth)
+        drawWidth += rectWidth - icons->Width - destX + rectX;
+    if (icons->Height + destY > rectY + rectHeight)
+        drawHeight += rectHeight - icons->Height - destY + rectY;
+    if (drawWidth < 0)
+        drawWidth = 0;
+    if (drawHeight < 0)
+        drawHeight = 0;
+
+    if (!suppressIcon)
+        icons->DrawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
+                             gpWindowManager->screenBitmap->map, destX,
+                             destY, gpWindowManager->screenBitmap->Width,
+                             gpWindowManager->screenBitmap->Height,
+                             gpWindowManager->screenBitmap->Pitch, 0);
+
+    if (updateFlag)
+        gpWindowManager->UpdateScreen(rectX, rectY, rectWidth, rectHeight);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7537
 #endif  // @carcass
@@ -4960,11 +5323,6 @@ void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsi
 #if 0  // @carcass
 
 #endif  // @carcass
-
-// Read by both mobilization draw gates before repainting the adventure
-// screen; role (an "adventure repaint suppressed" latch) is what the bytes
-// prove. No located writer yet - nearest consumer holds the declaration.
-DATA(0x006aac3c) extern int gUnnamed6aac3c;
 
 // E:\gamedcs\advmgr.cpp:9434
 VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520

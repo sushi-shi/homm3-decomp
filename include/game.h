@@ -1351,6 +1351,19 @@ public:
     // +0x1fc48) that advManager::EraseObj runs once the object is gone.
     // No surviving symbol names it; the row is not claimed here.
     void GameFn_004CA410();
+// advmgr.obj joins the gate for the one declarator below. The guard is
+// SPLIT around it rather than moved, so the preprocessed text every
+// events-view consumer sees is unchanged, line for line.
+#endif /* HOMM3_EVENTS_VIEW */
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
+    // Retail-only 0x4ca780, 180 B, an ordinal placeholder on
+    // GameFn_004CA410's convention. Loads aishield.pcx, blits it over the
+    // radar rect, calls UpdateScreen and latches gpAdvManager->field_38c;
+    // advManager::UpdateRadar is the caller that needs the declarator and
+    // the row is not claimed here.
+    void GameFn_004CA780();
+#endif
+#ifdef HOMM3_EVENTS_VIEW
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
