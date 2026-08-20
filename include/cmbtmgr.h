@@ -653,11 +653,26 @@ public:
     // is into the .rdata name tables that method selects from, so it is
     // never owned or freed. Gated for the declarator-count reason spelled
     // out at field_132a0; both arms are the same bytes.
+    // Per-army "this stack is leaving the field" latch, twenty bytes per
+    // side, tested by BOTH of MakeCreaturesVanish's walks - the first to
+    // raise the matching +0x14000 effect byte (or an arrow-tower latch),
+    // the second to clear the stack's hexcell occupancy. Twenty per side
+    // against armies[2][21] is retail's own asymmetry, not a mis-slice:
+    // the walk steps the byte arrays by 20 and the army index by 21 in
+    // the same loop, and ResetLimitCreature memsets exactly 2x20 at
+    // +0x14000. Name is an address ordinal - nothing decoded WRITES it
+    // yet. Sliced out of pad_13304 in place; both arms of the gate below
+    // gain the same two declarators so the include-set count stays equal
+    // between them, per field_132a0.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
-    char pad_13304[0x160];
+    char pad_13304[0x134];
+    unsigned char field_13438[2][20]; // +0x13438
+    char pad_13460[0x4];
     const char* backgroundName;       // +0x13464
 #else
-    char pad_13304[0x164];
+    char pad_13304[0x134];
+    unsigned char field_13438[2][20]; // +0x13438
+    char pad_13460[0x8];
 #endif
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
@@ -825,6 +840,7 @@ public:
     unsigned char check_obstacle_attacks(army* this_army,
                                          unsigned char is_walking);
     unsigned char should_lower_door(army* this_army, long hex) const;
+    void MakeCreaturesVanish();
     void LowerDoor();
     void RaiseDoor();
     bool IsQuickCombat() const;
