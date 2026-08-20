@@ -423,7 +423,7 @@ armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	82.5689	82.5689	82.5689	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	74.4820	74.4820	74.4820	0x4b960
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	79.1754	79.1754	79.1754	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
@@ -1716,7 +1716,7 @@ textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
 textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
-town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	78.5766	78.5766	99.3036	0x1bede0
+town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	99.3036	99.3036	99.3036	0x1bede0
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
 town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
@@ -1741,16 +1741,16 @@ town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0
 town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080
-town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
+town	?get_buildable_mask@town@@QBE_JXZ	89.5893	89.5893	89.5893	0x1c0f20
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
-town	?get_growth_rate@town@@QAEFF@Z	88.4737	88.4737	100.0000	0x1bfb60
+town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60
 town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
 town	?get_legion_bonus@town@@QAEJJ@Z	81.7262	81.7262	81.7262	0x1bf810
 town	?get_silo_income@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280
-town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	86.7098	86.7098	86.7098	0x1bfeb0
+town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	90.8287	90.8287	90.8287	0x1bfeb0
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0
 town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.0000	0x1bfdd0
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670
@@ -1905,12 +1905,12 @@ victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	92.
 victorylossconditions	?IsTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260
 victorylossconditions	?applies_to_player@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210
-viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7021	88.7021	88.7021	0x1f3b50
-viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9877	89.9877	89.9877	0x1f3360
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	90.4657	90.4657	90.4657	0x1f3b50
+viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.8074	90.8074	90.8074	0x1f3360
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	35.5280	35.5280	35.5280	0x1f4850
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	73.6288	73.6288	73.6288	0x1f4850
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	96.4286	96.4286	96.4286	0x1f5860
