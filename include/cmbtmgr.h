@@ -1468,12 +1468,14 @@ public:
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.
-    // `creature_spell` is a DWORD here and the DC prototype's
-    // `unsigned char` is CONTRADICTED by retail bytes - see the body.
     void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                long level, long power,
                                long casting_side,
-                               long creature_spell);           // 0x5a66d0
+                               unsigned char creature_spell);  // 0x5a66d0
+    // 0x5a3e40, the third corpse finder and the only one that rolls no
+    // chance - the Vampire Lord's drain. Same (side, hex) shape as
+    // find_animate_dead_target above.
+    army* find_demonic_resurrection_target(int side, int hex);  // 0x5a3e40
 #endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
@@ -1493,7 +1495,7 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               unsigned char redirected,
                               unsigned char first_target,
-                              long creature_spell);            // 0x5a8090
+                              unsigned char creature_spell);   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -

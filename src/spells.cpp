@@ -187,24 +187,26 @@ int HandleGetTeleportDestination(message* msg)
 // shape for the sacrifice sites; this is the standalone five-parameter
 // body, and it adds the grid bound and the cells[hex] fallback.
 //
-// Residual (91.2%): the grid guard. Retail reaches ONE shared
-// `xor eax,eax / pop ebp / ret 0x14` from both tests and places it between
-// the guard and the switch; the split ifs below duplicate that block
-// instead. This is the skill's adjacent-early-out class, and the split is
-// still the closest spelling by a wide margin - tried and rejected:
-// `if (hex < 0 || hex >= 187) return 0;` and the positive
-// `if (hex >= 0 && hex < 187) { ... } return 0;`, which BOTH sink the
-// shared block to the very end of the function and score 56.3%. The split
-// also buys the block ORDER: at 56.3% the arms come out RES/DEF/ANIM, and
-// only the split form lays them out DEF/ANIM/RES as retail does.
+// THE GRID GUARD IS cmbtmgr.h's OWN ValidHex, NEGATED - and that is what
+// closed this body (91.2 -> 100.0, 2026-08-20). Retail reaches ONE shared
+// `xor eax,eax / pop ebp / ret 0x14` from both tests and places it
+// BETWEEN the guard and the switch, which is neither of the two shapes
+// tried before: `if (hex < 0 || hex >= 187) return 0;` and the positive
+// `if (hex >= 0 && hex < 187) { ... } return 0;` both sink the block to
+// the very end and score 56.3%, and the split `if (hex < 0) return 0; if
+// (hex >= 187) return 0;` places both inline but DUPLICATES the block,
+// 91.2%. `if (!ValidHex(hex)) return 0;` is the one spelling that emits
+// the pair of jumps into a single early-out block: the inline computes
+// `hex >= 0 && hex < 187`, the `!` turns its false arm into the return,
+// and VC6 lands that return right there. The three sibling finders below
+// use the same guard and all three reach it the same way. The split's
+// other win survives: the switch arms still come out DEF/ANIM/RES.
 VA(0x005a3950, 0x68)  // order-map+arity+anchor-callee, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex,
                                        unsigned char first_target,
                                        unsigned char creature_spell)
 {
-    if (hex < 0)
-        return 0;
-    if (hex >= 187)
+    if (!ValidHex(hex))
         return 0;
     switch (spell) {
     case SPELL_RESURRECTION:
@@ -251,26 +253,179 @@ unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:2781
+#endif  // @carcass
+
+// THE THREE CORPSE FINDERS, and they are one template written three
+// times. Each takes a side and a hex, guards the hex with ValidHex,
+// and then splits on whether the cell holds a LIVE stack or only
+// bodies:
+//   * a live stack is a target if it is the caster's own side, carries
+//     the right creature-attribute bit, and has lost creatures
+//     (numTroops < origNumTroops);
+//   * otherwise the cell's corpse list is walked BACKWARDS - retail
+//     starts at iBodiesInHex - 1 and counts down - and each body is
+//     accepted on the same attribute bit plus a two-hex clearance test.
+// The attribute bit is the ONLY semantic difference between the
+// resurrection pair and the animate-dead one: Is(4) for the living,
+// Is(18) for the undead, spelled through army.h's own Is() inline
+// (`shr <word>, n / test al, 1`) exactly as every other reader here.
+//
+// THE TWO-HEX CLEARANCE TEST IS WHAT DECODES hexcell::deadPartOfDouble.
+// Retail reads the byte and then addresses a NEIGHBOUR cell through the
+// same `this + hex*0x70` product it already has: +0x24c is
+// cells[hex + 1].armySide and +0x244 its attributes, +0x16c and +0x164
+// are cells[hex - 1]'s. So a body flagged 0 needs the cell to its RIGHT
+// free and a body flagged 1 the cell to its LEFT - which is exactly a
+// two-hex creature's other half, and it settles the field's role as
+// well as its width. The two tests are sequential ifs, not an
+// else-if: retail runs the `== 0` block and then falls into the `== 1`
+// compare rather than jumping over it.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
-army* combatManager::find_resurrection_target(int iArmyGroup, int targetIndex, unsigned char creature_spell)
+army* combatManager::find_resurrection_target(int side, int hex,
+                                              unsigned char creature_spell)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->armySide >= 0) {
+        army* target = cell->get_army();
+        if (target->combatSide != side)
+            return 0;
+        if (!(target->Is(4) & 1))
+            return 0;
+        if (target->numTroops >= target->origNumTroops)
+            return 0;
+        if (SpellCastWorkChance(SPELL_RESURRECTION, side, target, 0, 1,
+                                creature_spell) > 0.0)
+            return target;
+        return 0;
+    }
+    if (cell->field_10 & 2)
+        return 0;
+    int i = cell->iBodiesInHex - 1;
+    if (i < 0)
+        return 0;
+    for (;;) {
+        army* corpse = &armies[cell->deadArmySide[i]]
+                              [cell->deadArmySlot[i]];
+        if (cell->deadArmySide[i] != side)
+            goto next;
+        if (!(corpse->Is(4) & 1))
+            goto next;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                goto next;
+            if (cells[hex + 1].field_10 & 2)
+                goto next;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                goto next;
+            if (cells[hex - 1].field_10 & 2)
+                goto next;
+        }
+        if (SpellCastWorkChance(SPELL_RESURRECTION, side, corpse, 0, 1,
+                                creature_spell) > 0.0)
+            return corpse;
+    next:
+        i--;
+        if (i < 0)
+            return 0;
+    }
 }
 
-// E:\gamedcs\spells.cpp:2866
+// The Vampire Lord's drain, and the one of the three that rolls NO
+// chance: it has no SpellCastWorkChance call at all, and it refuses a
+// cell that holds a live stack outright rather than offering it as a
+// target.
 VA(0x005a3e40, 0x10D)  // order-map+arity, dc 0x1532f8
-army* combatManager::find_demonic_resurrection_target(int iArmyGroup, int targetIndex)
+army* combatManager::find_demonic_resurrection_target(int side, int hex)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->field_10 & 2)
+        return 0;
+    if (cell->armySide >= 0)
+        return 0;
+    for (int i = cell->iBodiesInHex - 1; i >= 0; i--) {
+        int dead_side = cell->deadArmySide[i];
+        int dead_slot = cell->deadArmySlot[i];
+        if (dead_side != side)
+            continue;
+        if (!(armies[dead_side][dead_slot].Is(4) & 1))
+            continue;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                continue;
+            if (cells[hex + 1].field_10 & 2)
+                continue;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                continue;
+            if (cells[hex - 1].field_10 & 2)
+                continue;
+        }
+        return &armies[dead_side][dead_slot];
+    }
+    return 0;
 }
 
-// E:\gamedcs\spells.cpp:2926
 VA(0x005a3f50, 0x171)  // order-map+arity, dc 0x153400
-army* combatManager::find_animate_dead_target(int iArmyGroup, int targetIndex)
+army* combatManager::find_animate_dead_target(int side, int hex)
 {
-    // @stub
+    if (!ValidHex(hex))
+        return 0;
+    hexcell* cell = &cells[hex];
+    if (cell->armySide >= 0) {
+        army* target = cell->get_army();
+        if (target->combatSide != side)
+            return 0;
+        if (!(target->Is(18) & 1))
+            return 0;
+        if (target->numTroops >= target->origNumTroops)
+            return 0;
+        if (SpellCastWorkChance(SPELL_ANIMATE_DEAD, side, target, 0, 1, 0)
+                > 0.0)
+            return target;
+        return 0;
+    }
+    if (cell->field_10 & 2)
+        return 0;
+    int i = cell->iBodiesInHex - 1;
+    if (i < 0)
+        return 0;
+    for (;;) {
+        army* corpse = &armies[cell->deadArmySide[i]]
+                              [cell->deadArmySlot[i]];
+        if (cell->deadArmySide[i] != side)
+            goto next;
+        if (!(corpse->Is(18) & 1))
+            goto next;
+        if (cell->deadPartOfDouble[i] == 0) {
+            if (cells[hex + 1].armySide >= 0)
+                goto next;
+            if (cells[hex + 1].field_10 & 2)
+                goto next;
+        }
+        if (cell->deadPartOfDouble[i] == 1) {
+            if (cells[hex - 1].armySide >= 0)
+                goto next;
+            if (cells[hex - 1].field_10 & 2)
+                goto next;
+        }
+        if (SpellCastWorkChance(SPELL_ANIMATE_DEAD, side, corpse, 0, 1, 0)
+                > 0.0)
+            return corpse;
+    next:
+        i--;
+        if (i < 0)
+            return 0;
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 #endif  // @carcass
 
@@ -494,21 +649,23 @@ void combatManager::ClearEffects()
 // question is never "is a named local better" but "how many
 // call-crossing pseudos does retail have, and in what order".
 //
-// `creature_spell` IS A DWORD, NOT THE DC PROTOTYPE'S `unsigned char`
-// (73.37 -> 80.14 on the retype alone). Retail forwards it into
-// SpellCastWorkChance's slot 6 as a raw `mov eax, dword ptr [ebp+0x1c]`
-// with no widening, and that slot is settled dword-sized by
-// ai_tactical's get_damage_value (0x436e30), which materialises its own
-// argument for it as `xor eax,eax / test dl,dl / setne al` - while
-// pushing a genuinely char-sized argument to a DIFFERENT callee twelve
-// instructions later as a dirty `mov dl,[edi+0x28] / push edx`. One
-// function, both idioms, so the zeroing is deliberate. A char parameter
-// here would have to be widened on the way out and retail never is.
+// THIS BODY IS WHERE THE creature_spell WIDTH FIRST SHOWED (+6.77 out of
+// the original residual, 73.37 -> 80.14) AND THE FIX MOVED. Retail
+// forwards the parameter into SpellCastWorkChance's slot 6 as a raw
+// `mov eax, dword ptr [ebp+0x1c]` with no widening, so caller and callee
+// have to agree. Retyping THIS slot to `long` produced those bytes and
+// was the first reading; find_resurrection_target (0x5a3cc0) then
+// refuted it by forwarding a genuinely char-sized parameter into the
+// same slot twice, also unwidened. The correction is on the CALLEE -
+// SpellCastWorkChance's slot 6 is `unsigned char`, exactly as the DC
+// prototype always said - and this parameter is back to the DC's
+// `unsigned char` too. A `long` here still pushes raw into a char slot,
+// which is why the wrong fix measured right.
 VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
 void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                           long level, long power,
                                           long casting_side,
-                                          long creature_spell)
+                                          unsigned char creature_spell)
 {
     memset(effected, 0, sizeof(effected));
     for (int side = 0; side < 2; side++) {
