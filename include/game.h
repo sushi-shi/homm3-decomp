@@ -308,16 +308,55 @@ class town;
 // and a 70-bit spell set at +0x320. HeroFn_004D8B30 independently reaches
 // the tail flags and closes the total size. Names beyond those surviving in
 // the Dreamcast roster remain provisional.
+// PACKED. The head below is what forces it: `location` is a type_point
+// (short bitfields, align 2) and retail puts it at +0x301, immediately
+// after a single byte - natural alignment would slide it to +0x302 and
+// shift the whole tail. pack(1) is layout-NEUTRAL against the pads it
+// replaces (every offset and the 0x334 total are unchanged) and matches
+// the precedent in hero.h, mapcell.h, findpath.h and seerhut.h.
+#pragma pack(push, 1)
 class HeroExtra {
 public:
-    char pad_000[0x68];
+    // +0x00..+0x67 decoded by hero::HeroFn_004D8B30, which reads every
+    // field here. Names are the Dreamcast HeroExtra roster's: from DC
+    // offset 8 onward all sixteen of its members land on retail at
+    // DC + 4, in order and without exception, which is what identifies
+    // this record. The two fields the Dreamcast build has no counterpart
+    // for are the dword at +0x08 and the flag at +0x1a.
+    signed char Owner;              // +0x00
+    char pad_001[0x3];
+    int id;                         // +0x04
+    int field_008;                  // +0x08 - copied to hero::field_01e
+    unsigned char bCustomName;      // +0x0c
+    char Name[13];                  // +0x0d - strncpy'd 13 bytes
+    unsigned char bCustomExperience;// +0x1a
+    char pad_01b;
+    int Experience;                 // +0x1c
+    unsigned char bCustomPortraitNumber;  // +0x20
+    unsigned char PortraitNumber;         // +0x21
+    unsigned char bCustomSecondarySkills; // +0x22
+    char pad_023;
+    int NumSecondarySkills;         // +0x24 - signed, the loop bound
+    char secondarySkill[8];         // +0x28 - movsx, so plain char
+    char secondarySkillLevel[8];    // +0x30
+    unsigned char bCustomArmies;    // +0x38
+    char pad_039[0x3];
+    int armies[7];                  // +0x3c
+    short numTroops[7];             // +0x58 - movsx word
+    unsigned char GroupFormation;   // +0x66 - no retail body reads it
+    unsigned char bCustomArtifacts; // +0x67
     type_artifact artifacts[19];
     type_artifact backpack[64];
-    char pad_300[0x6];
+    unsigned char numInBackpack;    // +0x300 - no retail body reads it
+    type_point location;            // +0x301
+    signed char PatrolRadius;       // +0x305 - sign gates the patrol XY
     unsigned char customName;
     char pad_307;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
-    int experience;
+    // +0x318 is the hero's SEX, not experience: HeroFn_004D8B30 gates it
+    // on `!= -1` and stores it into hero::sex at +0x3d5. The real
+    // Experience is the dword at +0x1c above. Renamed 2026-08-20.
+    int sex;
     unsigned char customSpells;
     char pad_31d[0x3];
     std::bitset<70> spells;
@@ -327,6 +366,7 @@ public:
 
     HeroExtra();
 };
+#pragma pack(pop)
 SIZE(HeroExtra, 0x334);
 #endif
 
