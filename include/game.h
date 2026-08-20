@@ -1755,11 +1755,31 @@ public:
     // declarator; the row is claimed as a carcass stub in event_record.cpp.
     void ResetVisibility(int startX, int startY, int z,
                          int whichPlayer, int range);          // 0x49d3d0
-    // Retail-only 0x4c7c50, an ordinal placeholder. A no-argument sweep of all 156 hero records (stride 0x492)
+// advmgr.obj joins the gate for the declarator below (its Open calls the
+// sweep after SetInitialMapOrigin). Split guard, GameFn_004CA780's pattern.
+#endif /* HOMM3_EVENTS_VIEW */
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
+    // Retail-only 0x4c7c50, an ordinal placeholder. A no-argument sweep of
+    // all 156 hero records (stride 0x492)
     // that re-runs game::SetVisibility for every hero still on the map -
     // which is what has to happen after ResetVisibility blanks a disc.
     // No surviving symbol names it; the row is not claimed here.
     void GameFn_004C7C50();
+#endif
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // Retail-only 0x4cbd40, an ordinal placeholder: HandleNetMsg's
+    // game-transmit-init arm hands it the message's three leading
+    // payload dwords, a set flag and the trailing byte; nonzero answer
+    // lets the remote-load path run. Not claimed here.
+    int GameFn_004CBD40(int a, int b, int c, int d, unsigned char e);
+    // Retail-only 0x4ca5b0, an ordinal placeholder on GameFn_004CA410's
+    // convention. advManager::Open calls it when the incoming player is
+    // not the local human; the row is not claimed here.
+    void GameFn_004CA5B0();
+    // Retail-only 0x4ca840 (the body that plays newweek.wav). Open hands
+    // it the formatted turn banner and the acting game position when the
+    // protocol is hotseat; the row is not claimed here.
+    void GameFn_004CA840(char* text, int gamePos);
 #endif
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
@@ -2122,6 +2142,42 @@ extern int gMapHeight;
 // dword eight bytes ahead of gpCurrentPlayer, and range-checked
 // against [0,8) before use. Ordinal placeholder.
 extern int gNetLocalGamePos;                // .bss 0x69cca8
+// 0x69ccc4: the acting player's bit (1 << gamePos), stamped by advmgr's
+// SaveGame around the local-player switch and by StartLocalPlayerTurn's
+// gosolo DECLINE arm's sibling at 0x69ccbc (gMapVisibilityBit). This is
+// the byte the WRONG 2026-08-20-corrected gMapVisibilityBit claim used
+// to sit on - a real, distinct cell. Name stays ordinal.
+extern unsigned char gUnnamed69ccc4;
+
+#ifdef HOMM3_ADVMGR_TURN_DECLS
+// The two-hero-snapshot trade payload HandleNetMsg's RS_TRADE_REQUEST arm
+// copies into gpGame->heroes by each snapshot's own id field. The DC
+// gives its same-shape class the CTradeRequestMsg name ("embeds two hero
+// snapshots", see netmsg.h) - that tree name is currently on the compact
+// gift record, so this view keeps an ordinal spelling until the netmsg
+// attribution swap lands. Defined HERE (not netmsg.h) because it embeds
+// hero by value and game.h is where advmgr's include order has both
+// CNetMsg and hero complete.
+class CTradeHeroesMsg : public CNetMsg {
+public:
+    hero m_hero1;
+    hero m_hero2;
+};
+#endif
+
+// Two game-band routines StartLocalPlayerTurn drives, spelled as /Gr free
+// functions (the game lands in ECX either way) so class game stays
+// untouched. Names are address ordinals until game.cpp's roster maps them.
+//   0x4ca530: force-enables CompleteDraw, redraws the radar and re-enables
+//             the adventure window's turn widgets (8/7/6/0xc...).
+//   0x4cc7d0: the turn-start win/loss-condition sweep (reads gpCurrentPlayer
+//             isHuman/isLocal, walks LossConditionStruct).
+// Dreamcast E:\gamedcs\game.cpp:7577 supplies the name; retail 0x4c6f40
+// (claimed exact in game.cpp) is the body StartLocalPlayerTurn calls
+// between the two soundManager gate flips.
+void StartAITheme();
+void GameFn_004CA530(game* the_game);
+void GameFn_004CC7D0(game* the_game);
 // 0x699554: the same answer for every other protocol, handed back
 // unchecked. Ordinal placeholder.
 extern int gLocalGamePos;                   // .bss 0x699554

@@ -6,7 +6,37 @@
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
 #include "netplayer.h"
+#include "advmgr_popup.h"
 #include "va.h"
+
+// Bootstrap VIEW of the game-selection megawindow. DC reports size 2928
+// with SH4 STL; the retail extent below is frame-derived from advmgr's
+// SaveGame, whose window local spans ebp-0x19ec..ebp-0x7c around an
+// __alloca_probe frame. Layout unmodeled - the ctor (retail 0x579960,
+// DC gameMode int: 2 = the save flavor), the destructor (0x583b40) and
+// the modal runner (0x584bf0, DoModal's (unsigned char) shape) are all
+// advmgr's SaveGame needs. Its own TU will replace this view.
+class TSingleSelectionWindow : public CAdvPopup {
+public:
+    char pad_60[0x1970 - 0x60];
+
+    TSingleSelectionWindow(int gameMode);
+    virtual ~TSingleSelectionWindow();
+    virtual int DoModal(unsigned char fadeIn);
+};
+SIZE(TSingleSelectionWindow, 0x1970);
+
+// Four cross-TU cells advmgr's SaveGame drives; the selection window's
+// own TU is their natural owner, so they are declared here (the
+// gUnnamed69d808 precedent) until it lands.
+//   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
+//   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
+//   0x69774c  campaign-game byte: picks the .CGM extension
+//   0x697774  set to 1 the moment a save filename is committed
+extern char gUnnamed69fc2c[];
+extern char gUnnamed691268[];
+extern unsigned char gUnnamed69774c;
+extern int gUnnamed697774;
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
