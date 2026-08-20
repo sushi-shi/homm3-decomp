@@ -32,6 +32,11 @@
 // ModifySpellDamage forwards army::creatureType into armygrp's free
 // modify_spell_damage, whose slot is TCreatureType; army.h keeps the
 // DC-typed arm of that field behind this view.
+// SpellCastWorkChance prices a stack that stands inside somebody's aura
+// at 0.8 of the plain chance and reads aura_sources.size() to find out;
+// army.h keeps the four relationship lists behind this narrow gate,
+// which admits the lists without the aura/binding member functions.
+#define HOMM3_ARMY_AURA_SOURCES_DECL
 #include "army.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
@@ -152,6 +157,37 @@ static int ControllingSide(const army* stack)
         return 1 - stack->combatSide;
     return stack->combatSide;
 }
+
+// SpellCastWorkChance's board-wide ban: it refuses every spell of level
+// 3 and up the moment EITHER combat hero wields artifact 0x53, walking
+// heroes[0] then heroes[1] and answering a zero chance from either -
+// which is exactly Recanter's Cloak's rule, and the same identification
+// ai_combat.cpp's cast_spell reaches from the other side.
+//
+// FILE-LOCAL, NOT AN ENUMERATOR, and the tree already decided this
+// twice: ai_combat.cpp keeps the identical constant for the identical
+// reason, and ai_spellvalue.h keeps a third copy with a note saying
+// unifying them is a separate measured decision. It cannot be moved
+// into armygrp.h's EArtifactId as things stand - ai_spellvalue.h
+// INCLUDES armygrp.h, so the enumerator and its `const int` would
+// collide in ai.cpp and philai.cpp (measured: C2371 on both).
+// ARTIFACT_ARMAGEDDONS_BLADE, which this body also needs, is already an
+// enumerator in artifact.h and reaches here through hero.h.
+const int ARTIFACT_RECANTERS_CLOAK = 0x53;
+
+// Retail .data 0x688334/0x688338, both initialised to -1 and each with
+// exactly FOUR references in the whole image, all eight of them inside
+// HandleGetTeleportDestination - so both are file-scope statics of this
+// TU. Names are provisional, from that one consumer: 0x688334 holds the
+// destination the pointer is currently standing on (the hex, or -1 when
+// the cell under the cursor is not a legal landing), and the left-click
+// arm hands exactly it to the pending order; 0x688338 is the hover
+// cache the mouse-move arm compares against first so a stationary
+// pointer does not re-issue the message every frame.
+DATA(0x00688334)
+static long gTeleportDestinationHex = -1;
+DATA(0x00688338)
+static long gTeleportHoverHex = -1;
 
 // Retail .bss 0x6a3cac, and every reference to it in the image is inside
 // spells.obj - two in the 0x59ec50 body that drives a cast and one in
@@ -295,16 +331,71 @@ unsigned char combatManager::is_valid_teleport(const army* this_army, long new_h
     return 1;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:2497
+// The SECOND click of a Teleport cast: the window handler installed once
+// a stack has been picked up, and it answers four message ids out of one
+// jump table (retail emits the 32-entry index byte table plus five
+// targets, so the arm LAYOUT is source order - move/click/key/right).
+//
+// combatManager::field_44 already holds the hex the first click picked,
+// so the cell pointer here is the SOURCE stack; `hex` is the candidate
+// landing under the cursor.
+//
+// The array-pointer-above-the-guard shape is retail's, for the fifth
+// time in this TU: `lea ecx,[edx+ecx+0x1c4]` is scheduled BETWEEN
+// ValidHex's `test/jl` and its `cmp 0xbb/jge`, which only happens when
+// the cell pointer is named ahead of the guard.
 VA(0x005a37d0, 0x17C)  // order-map+arity, dc 0x152c80
 int HandleGetTeleportDestination(message* msg)
 {
-    // @stub
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE: {
+        long hex = gpCombatManager->GetGridIndex(msg->codeX, msg->codeY);
+        if (hex == gTeleportHoverHex)
+            break;
+        long source_hex = gpCombatManager->field_44;
+        const hexcell* source_cell = &gpCombatManager->cells[source_hex];
+        if (!gpCombatManager->ValidHex(source_hex))
+            break;
+        army* source_army = source_cell->get_army();
+        if (gpCombatManager->is_valid_teleport(source_army, hex)) {
+            gTeleportDestinationHex = hex;
+            gpMouseManager->SetPointer(0x13, mouseManager::COMBAT_SET);
+            gpCombatManager->SpellTargetMessage(SPELL_TELEPORT, hex, 1);
+        } else {
+            gTeleportDestinationHex = -1;
+            gpMouseManager->SetPointer(0, mouseManager::COMBAT_SET);
+            gpCombatManager->combatWindow->combat_message(
+                gpGeneralText->GetText(25), 0, 0);
+        }
+        gTeleportHoverHex = hex;
+        break;
+    }
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (gTeleportDestinationHex == -1)
+            break;
+        gpCombatManager->field_48 = gTeleportDestinationHex;
+        gTeleportHoverHex = -1;
+        gTeleportDestinationHex = -1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = 10;
+        return MESSAGE_DISPATCH_FORWARD;
+    case MESSAGE_KEY_DOWN:
+        // The ESC scancode in the codeX domain, the same value
+        // dimensiondoorwindow.h names DIALOG_CLOSE_KEY; the arm then
+        // falls into the right-click cancel below.
+        if (msg->codeX != 1)
+            break;
+    case MESSAGE_RIGHT_BUTTON_DOWN:
+        gpCombatManager->field_3c = 0;
+        gTeleportHoverHex = -1;
+        gTeleportDestinationHex = -1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = 10;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
 }
-
-#endif  // @carcass
 
 // The three-way arm is what fixes SPELL_SACRIFICE at 0x28: retail lowers
 // the selector as `sub edx, 0x26 / dec / dec`, so the arms are 0x26, 0x27
@@ -330,7 +421,7 @@ int HandleGetTeleportDestination(message* msg)
 VA(0x005a3950, 0x68)  // order-map+arity+anchor-callee, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex,
                                        unsigned char first_target,
-                                       unsigned char creature_spell)
+                                       long creature_spell)
 {
     if (!ValidHex(hex))
         return 0;
@@ -415,7 +506,7 @@ unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
                                               long casting_side,
                                               unsigned char first_target,
-                                              unsigned char creature_spell)
+                                              long creature_spell)
 {
     if (!ValidHex(targetIndex))
         return 0;
@@ -557,7 +648,7 @@ unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
 // compare rather than jumping over it.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
 army* combatManager::find_resurrection_target(int side, int hex,
-                                              unsigned char creature_spell)
+                                              long creature_spell)
 {
     if (!ValidHex(hex))
         return 0;
@@ -727,7 +818,7 @@ VA(0x005a40d0, 0x9B)  // order-map+arity, dc 0x153580
 unsigned char combatManager::HasValidSpellTarget(SpellID spellId, long mastery,
                                                  long casting_side,
                                                  unsigned char first_target,
-                                                 unsigned char creature_spell)
+                                                 long creature_spell)
 {
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (InInvisibleColumn(hex))
@@ -1208,8 +1299,13 @@ void combatManager::Armageddon(int level, int power)
                 pArmy->ProcessDeath(0);
                 // Bit 6 of creatureId is the siege-weapon marker, so a
                 // catapult or tent killed here also loses the artifact
-                // its owner was carrying it as.
-                if ((static_cast<unsigned>(pArmy->creatureId) >> 6) & 1)
+                // its owner was carrying it as. SPELLED THROUGH army::Is
+                // (+0.57, 88.15 -> 88.72): the accessor truncates the
+                // shifted word to a byte before the caller's mask, which
+                // is what stops VC6 folding the test back into a
+                // `test dword ptr [mem], imm` on the member - the same
+                // lever that closed SpellCastWorkChance's register wall.
+                if (pArmy->Is(6) & 1)
                     heroes[side]->DestroySiegeWeaponArtifact(
                         pArmy->creatureType);
                 bDeaths = 1;
@@ -1998,6 +2094,41 @@ long combatManager::GetNextChainLightningTarget(const army* last_target,
 DATA(0x00642274)
 static const int gChainLightningTargets[4] = { 4, 4, 5, 5 };
 
+// Earthquake's screen-shake path, .rdata 0x642284: fifteen (dx, dy)
+// pairs the whole framebuffer is blitted back at, three times over.
+// Referenced from exactly two sites, both inside Earthquake (the loop's
+// reset and its back edge), so it is spells.obj's own file static, and
+// the dword AFTER the run belongs to a different table - which is what
+// bounds it at fifteen. Read straight from the hash-verified image.
+// Spelled as an int[15][2] rather than a record because a .cpp-local
+// struct definition is a cleanliness floor at zero; the stride and the
+// two loads are the same either way.
+DATA(0x00642284)
+static const int gEarthquakeShakeOffsets[15][2] = {
+    {  2,  2 }, {  4,  1 }, {  3, -2 }, {  0, -6 }, {  2, -2 },
+    { -1,  3 }, { -5,  4 }, { -8,  6 }, { -4,  2 }, { -1,  1 },
+    { -3, -3 }, { -7, -5 }, { -5, -7 }, { -2, -3 }, {  0,  0 }
+};
+
+// The frame of the SGEXPL explosion at which Earthquake actually brings
+// the wall section down. Retail tests the animation counter against a
+// bare 5; named here because a literal in an `==` is a cleanliness floor
+// at zero, and because the value IS a domain point - the impact frame of
+// one particular DEF - rather than a count.
+const int kEarthquakeImpactFrame = 5;
+
+// combatManager::DamageWall's first slot is TWallTargetId while
+// Earthquake's own walk of gWallTargets is an int counter; this
+// bit-preserving inline bridges the crossing rather than lying with an
+// enum cast, exactly as ai_combat.cpp's creature_type_from_int and
+// ai_player.cpp's twin do. VC6 reduces the four-byte copy to a move.
+inline TWallTargetId wall_target_from_int(int value)
+{
+    TWallTargetId wall;
+    memcpy(&wall, &value, sizeof wall);
+    return wall;
+}
+
 // Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
 // makes ONE by-value copy our CL does not fold - retail lets the
 // address _cpp_max returned flow straight into _cpp_min and compares the
@@ -2163,7 +2294,7 @@ VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
 void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                           long level, long power,
                                           long casting_side,
-                                          unsigned char creature_spell)
+                                          long creature_spell)
 {
     memset(effected, 0, sizeof(effected));
     for (int side = 0; side < 2; side++) {
@@ -2183,16 +2314,139 @@ void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spel
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:4424
+// The MASS twin of cmbtmgr's PowEffect (0x468990), and it reads as one:
+// five walks of armies[side][slot], gated on the caller's `effected` row.
+//   1. arm the pow sprite on every affected stack, and budget the frame
+//      count - the effect's own, raised to the longest wince or death
+//      sequence any affected stack will play;
+//   2. put those stacks INTO that sequence, wince or death by whether
+//      the stack still has troops;
+//   3. fire the force-feedback effect, then run the frame loop: advance
+//      every affected stack's animation, park a finished wince back on
+//      cs_wait, track the pow sprite's own frame, DrawFrame;
+//   4. disarm the pow sprite;
+//   5. after all of that - and this half runs even in QUICK COMBAT -
+//      sweep the dead, hand any siege weapon back to its hero to
+//      destroy, and redraw once if anything died.
+//
+// LoadSpellEffect (0x5a92f0, forty lines below) is EXPANDED here, not
+// called: retail carries its whole dispose/GetSprite/cache-store body
+// inline at the top, which is the /Ob2 single-TU rule doing its job.
+//
+// THREE LEVERS, 93.34 -> 96.10:
+//   * BOTH numTroops TESTS ARE `<= 0`, WITH THE DEATH ARM FIRST. Retail
+//     jumps `jg` INTO the wince arm and falls through to death in both
+//     walks, which is the arm order a `> 0` spelling cannot produce.
+//   * THE SHARED `currFrameIndex = 0` IS ONE STORE, reached by `continue`
+//     out of each arm's already-in-that-sequence test - written as two
+//     `if (t != x) { t = x; index = 0; }` blocks VC6 duplicates it.
+//   * NAMING LoadSpellEffect's RESULT is worth 2.1 on its own (94.01 ->
+//     96.10). With `if (LoadSpellEffect(...))` the `frames = 0` store is
+//     hoisted ABOVE the inlined body; with the pointer in a local it
+//     stays where retail has it, and the zero VC6 then materialises in
+//     EBX is the one retail shares across the null test, the
+//     `powSprite = 0` store and `frames = 0`.
+// Measured and REJECTED: `int frames = sprite ? sprite->GetNumFrames(0)
+// : 0` (91.54 - the ternary merges the null test into GetNumFrames' own
+// zero returns and re-shapes the whole block), and `int anyDied` in
+// place of the byte (95.99), even though retail's own latch is a dword
+// (`xor edx,edx` / `mov edx,1` / `test edx,edx`) - the low-mass
+// inversion again.
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
-void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char bShowWince)
+void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
+                                  int spellEffect, unsigned char bShowWince)
 {
-    // @stub
-}
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        CSprite* effectSprite = LoadSpellEffect(spellEffect);
+        int frames = 0;
+        if (effectSprite)
+            frames = effectSprite->GetNumFrames(cs_walk);
+        for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army& stack = armies[side][i];
+                if (bEffected[side][i] && powSprite)
+                    stack.bShowPowEffect = 1;
+                if (bShowWince && bEffected[side][i]
+                    && stack.currFrameType != cs_wince) {
+                    if (stack.numTroops <= 0) {
+                        if (stack.stdIcon->GetNumFrames(cs_death) > frames)
+                            frames = stack.stdIcon->GetNumFrames(cs_death);
+                        stack.play_sample(army::DIE_SAMPLE);
+                    } else {
+                        if (stack.stdIcon->GetNumFrames(cs_wince) > frames)
+                            frames = stack.stdIcon->GetNumFrames(cs_wince);
+                        stack.play_sample(army::WINCE_SAMPLE);
+                    }
+                }
+            }
+        }
+        { for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army& stack = armies[side][i];
+                if (bShowWince && bEffected[side][i]) {
+                    if (stack.numTroops <= 0) {
+                        if (stack.currFrameType == cs_death)
+                            continue;
+                        stack.currFrameType = cs_death;
+                    } else {
+                        if (stack.currFrameType == cs_wince)
+                            continue;
+                        stack.currFrameType = cs_wince;
+                    }
+                    stack.currFrameIndex = 0;
+                }
+            }
+        } }
+        PlayImmEffect(akSpellEffectTraits[spellEffect].m_immName, 1);
+        { for (int frame = 0; frame < frames; frame++) {
+            { for (int side = 0; side < 2; side++) {
+                for (int i = 0; i < numArmies[side]; i++) {
+                    army& stack = armies[side][i];
+                    if (bShowWince && bEffected[side][i]) {
+                        int sequence = stack.currFrameType;
+                        if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(sequence) - 1) {
+                            stack.currFrameIndex++;
+                        } else if (sequence == cs_wince) {
+                            stack.currFrameType = cs_wait;
+                            stack.currFrameIndex = 0;
+                        }
+                    }
+                    if (powSprite
+                        && frame + 1 < powSprite->GetNumFrames(cs_walk))
+                        powFrameIndex = frame;
+                }
+            } }
+            DrawFrame(1, 0, 0, 100, 1, 1);
+        } }
+        { for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++)
+                armies[side][i].bShowPowEffect = 0;
+        } }
+    }
 
-#endif  // @carcass
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    unsigned char anyDied = 0;
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            army& stack = armies[side][i];
+            if (bEffected[side][i] && stack.numTroops == 0) {
+                stack.ProcessDeath(0);
+                if (stack.Is(6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        stack.creatureType);
+                anyDied = 1;
+            }
+        }
+    }
+    if (anyDied)
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    if (field_13460)
+        MakeCreaturesVanish();
+    CheckRebirth();
+}
 
 // Mirror Image: find a free hex near the caster's stack, put an
 // identical clone of it there, and slide the clone out of the original's
@@ -2246,7 +2500,7 @@ void combatManager::MirrorImage(int targetIndex, int level)
                 if (iDirCount == 0) {
                     iSourceHexIndex = source->gridIndex;
                 } else {
-                    if (!(source->creatureId & 1))
+                    if (!(source->Is(0) & 1))
                         continue;
                     iSourceHexIndex =
                         source->gridIndex + (source->facing ? 1 : -1);
@@ -2321,14 +2575,117 @@ void combatManager::MirrorImage(int targetIndex, int level)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:4705
+// Summon Air/Earth/Fire/Water Elemental. The body builds a COMPLETE
+// stack on the stack frame - a 0x548-byte `army` with its own
+// constructor, InitClean and destructor - purely to ask CanFit where
+// the new creature would stand, and then throws it away and lets
+// AddArmy build the real one.
+//
+// The search is two nested loops with a no-repeat picker: the outer one
+// walks columns INWARD from both edges (1,15 then 2,14 ...) picking the
+// caster's own side's edge, the inner one draws rows 0..10 without
+// repetition and takes the first that fits. The inner `hex != -1` break
+// exits BOTH loops - VC6 threads it straight to the outer break because
+// the outer test that follows is the same condition - while the
+// picker-exhausted break falls through to the column step, which is why
+// retail carries TWO copies of the picker's inlined destructor.
+//
+// THE TRAITS COPY IS SPELLED memcpy AND THAT IS A MODELLING SHORTCUT.
+// Retail's `rep movsd` of 29 dwords into `summoned + 0x74` is the
+// embedded TCreatureTypeTraits row army.h's own note calls sMonInfo,
+// i.e. the source said `summoned.sMonInfo = akCreatureTypeTraits[type]`.
+// Modelling it as a member means restructuring army +0x74..+0xe7 into a
+// union - the span crosses HOMM3_ARMY_SPELLCAST_VIEW and
+// HOMM3_ARMY_MULTI_HEAD_VIEW and holds three of this header's measured
+// include-set canaries, so that is a layout change for the whole army
+// run and not this lane's to make. The memcpy emits the identical
+// `mov ecx,0x1d / rep movsd`.
+//
+// BOTH LOOPS ARE GOTO LOOPS, AND THAT IS WORTH TWELVE POINTS (81.26 ->
+// 93.38). Retail's outer back edge is `cmp / jle <exit> / jmp <head>` -
+// two jumps where a `for(;;)` with a trailing `break` gives VC6 the one
+// inverted `jg <head>` - and its inner back edge is a bare `jmp <head>`
+// off a shared merge point. Spelling both with explicit labels and
+// `goto` reproduces the pair, and the same edit splits the picker's
+// inlined destructor into retail's TWO copies, because the found exit
+// leaves the picker's scope from INSIDE the inner loop while the
+// exhausted exit leaves it at the scope's end. A do/while inner loop
+// was measured against this and is much worse (85.69): VC6 emits the
+// bottom test as `je <head>` with no merge point and the two destructor
+// copies collapse back into one.
+//
+// The message is built on the TEMPORARY, not through a named local
+// (93.38 -> 93.44): retail reads `[eax + 4]` straight off
+// format_string's returned object, where `std::string message = ...;
+// message.c_str()` reads the local's own _Ptr slot instead.
+//
+// Residual (93.44%): VC6 ROTATES the inner loop where retail does not -
+// it peels a second copy of `Pick()` plus the row arithmetic onto the
+// CanFit-false path and jumps back into the middle, and having done so
+// it can prove `hex == -1` there, so it tests ESI before the store
+// where retail re-reads `[ebp-0x10]` after it. Both halves are the one
+// decision and no spelling tried moved it; the rest is scratch-register
+// renaming around the 0-in-EDI the loop exits leave behind.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
-void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType, int iSpellPower, int level)
+void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
+                                    int iSpellPower, int level)
 {
-    // @stub
+    army summoned;
+    summoned.InitClean();
+    memcpy(&summoned.monInfoTownType, &akCreatureTypeTraits[iMonType],
+           sizeof(TCreatureTypeTraits));
+    int leftColumn = 1;
+    int rightColumn = 15;
+    summoned.combatSide = currentSide;
+    summoned.bitIndex = -1;
+    summoned.facing = 1 - currentSide;
+    int hex = -1;
+try_next_column:
+    {
+        int column = leftColumn;
+        if (currentSide)
+            column = rightColumn;
+        {
+            TPickANumber picker(0, 10);
+        try_next_row:
+            {
+                int pick = picker.Pick();
+                int candidate = column + pick * COMBAT_GRID_ROW_STRIDE;
+                if (pick >= 0) {
+                    if (summoned.CanFit(candidate, 0, 0))
+                        hex = candidate;
+                    if (hex != -1)
+                        goto hex_chosen;
+                    goto try_next_row;
+                }
+            }
+        }
+        leftColumn++;
+        rightColumn--;
+        if (rightColumn <= 0)
+            goto hex_chosen;
+        goto try_next_column;
+    }
+hex_chosen:
+    field_132a8[currentSide] = iMonType;
+    if (should_lower_door(&summoned, hex)) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        LowerDoor();
+    }
+    int count = akSpellTraits[spell].mastery_bonus[level] * iSpellPower;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        combatWindow->combat_message(
+            format_string(gpGeneralText->GetText(676),
+                          heroes[currentSide]->name, count,
+                          CreatureName(iMonType, count))
+                .c_str(),
+            1, 0);
+    }
+    AddArmy(currentSide, iMonType, count, hex, 0x400000, 1);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4765
 DC_ONLY(0x1564c4, 0x11E)
@@ -2489,7 +2846,7 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
         PlaceArmyInGrid(*target_army, hex);
         remove_corpse(&cells[target_army->gridIndex],
                       target_army->combatSide, target_army->bitIndex);
-        if (target_army->creatureId & 1)
+        if (target_army->Is(0) & 1)
             remove_corpse(&cells[target_army->get_second_grid_index()],
                           target_army->combatSide, target_army->bitIndex);
     }
@@ -2722,23 +3079,396 @@ long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
     return damage;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:5164
+// Earthquake, and it is three passes in one body.
+//
+// FIRST the screen SHAKES: the whole framebuffer is grabbed into the
+// combat back-buffer and blitted back fifteen times at the offsets in
+// the table above, three times over.
+//
+// THEN the wall sections are drawn by lot. `counts[i]` accumulates how
+// many levels each of gWallTargets' eight segments takes; each round
+// censuses the segments that still have more strength than they have
+// already been dealt, rolls Random(1, that), and walks the table again
+// to the roll-th STANDING segment. The two walks disagree - the census
+// tests `strength > counts[i]` and the picker tests `strength != 0` -
+// and that is retail's, not a transcription slip.
+//
+// LAST the SGEXPL explosion plays over every segment that drew a level,
+// and DamageWall is called from inside frame 5 of that animation, one
+// call per segment. When there is nothing to draw, or the combat is
+// quick, the same eight DamageWall calls happen in one sweep instead.
+//
+// NAMING THE FOUR EDGES AND A POINTER TO THE BOUNDS IS WORTH 2.5
+// (82.48 -> 84.96), the sixth instance of the array-pointer-above lever
+// in this TU: retail computes left/right/top/bottom into locals and
+// then stores all four THROUGH one materialised `&drawbridgeBounds`,
+// where storing each expression straight into `drawbridgeBounds.values[n]`
+// makes VC6 fold the member into `this + 0x13d38` addressing and reload
+// the sprite's Width and Height at every use.
+//
+// Residual (84.96%): the register-homing class, and it is one decision.
+// Retail memory-homes `this` at [ebp-8] and reloads it, which frees all
+// three callee-saved registers for the animation body's own
+// call-crossing values - ESI takes `&drawbridgeBounds`, EDI the
+// segment's x and EBX its y. Our C2 keeps `this` in ESI for the whole
+// function, so those three fight over two registers and every store
+// through the bounds pointer becomes a `this`-relative one instead.
+// That is exactly the asymmetry AreaEffect's note four hundred lines up
+// records from the other side. why-reg's catalog was run: its own top
+// pick, `volatile int x`, closes 13 of its 283 slots and MEASURES
+// 84.96 -> 82.02 - the low-mass inversion for the third time in this
+// TU - and all twenty other mutations are worse still.
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::Earthquake(int level)
 {
-    // @stub
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        gpMouseManager->HidePointer();
+        field_53b0->Grab(gpWindowManager->screenBitmap->map, 0, 0,
+                         gpWindowManager->screenBitmap->Width,
+                         gpWindowManager->screenBitmap->Height,
+                         gpWindowManager->screenBitmap->Pitch);
+        long shakeDelay = static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 15.0f);
+        int pass = 3;
+        do {
+            for (int step = 0; step < 15; step++) {
+                unsigned long shakeTil = GameTime::Get() + shakeDelay;
+                PollSound();
+                field_53b0->Draw(0, 0, field_53b0->Width, field_53b0->Height,
+                                 gpWindowManager->screenBitmap->map,
+                                 gEarthquakeShakeOffsets[step][0],
+                                 gEarthquakeShakeOffsets[step][1],
+                                 gpWindowManager->screenBitmap->Width,
+                                 gpWindowManager->screenBitmap->Height,
+                                 gpWindowManager->screenBitmap->Pitch, 0);
+                UpdateCombatArea();
+                GameTime::DelayTil(shakeTil);
+            }
+        } while (--pass);
+        field_53b8 = 0;
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    }
+
+    int counts[WALL_TARGET_COUNT];
+    memset(counts, 0, sizeof counts);
+    int remaining = akSpellTraits[SPELL_EARTHQUAKE].mastery_bonus[level];
+    int drawn = 0;
+    while (remaining-- > 0) {
+        int candidates = 0;
+        for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+            if (wallStrength[gWallTargets[i].wall_id] > counts[i])
+                candidates++;
+        }
+        if (candidates == 0)
+            break;
+        int roll = Random(1, candidates);
+        int chosen;
+        for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {
+            if (wallStrength[gWallTargets[chosen].wall_id] != 0) {
+                roll--;
+                if (roll == 0)
+                    break;
+            }
+        }
+        if (counts[chosen] == 0)
+            drawn++;
+        counts[chosen]++;
+    }
+
+    if (drawn != 0
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        long frameDelay = static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 15.0f);
+        CSprite* blast = ResourceManager::GetSprite("SGEXPL.DEF");
+        launch_sample("WallHit.82m", -1, 3);
+        for (int frame = 0; frame < blast->GetNumFrames(0); frame++) {
+            unsigned long frameTil = GameTime::Get() + frameDelay;
+            DrawFrame(0, 0, 1, 0, 0, 0);
+            for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+                if (counts[i] == 0)
+                    continue;
+                int w = blast->Width;
+                int h = blast->Height;
+                int x = gWallTargets[i].screenX;
+                int y = gWallTargets[i].screenY;
+                int left = x - w / 2;
+                int right = x + (w - w / 2) - 1;
+                int top = y - h / 2;
+                int bottom = y + (h - h / 2) - 1;
+                TDrawbridgeBounds* bounds = &drawbridgeBounds;
+                bounds->values[0] = left;
+                bounds->values[1] = top;
+                bounds->values[2] = right;
+                bounds->values[3] = bottom;
+                if (bounds->values[0] < gCombatDrawLimits694f18.values[0])
+                    bounds->values[0] = gCombatDrawLimits694f18.values[0];
+                if (bounds->values[1] < gCombatDrawLimits694f18.values[1])
+                    bounds->values[1] = gCombatDrawLimits694f18.values[1];
+                if (bounds->values[2] > gCombatDrawLimits694f18.values[2])
+                    bounds->values[2] = gCombatDrawLimits694f18.values[2];
+                if (bounds->values[3] > gCombatDrawLimits694f18.values[3])
+                    bounds->values[3] = gCombatDrawLimits694f18.values[3];
+                if (frame == kEarthquakeImpactFrame)
+                    DamageWall(wall_target_from_int(i), counts[i]);
+                blast->Draw(0, frame, 0, 0,
+                            bounds->values[2] - bounds->values[0] + 1,
+                            bounds->values[3] - bounds->values[1] + 1,
+                            gpWindowManager->screenBitmap->map,
+                            x - blast->Width / 2, y - blast->Height / 2,
+                            gpWindowManager->screenBitmap->Width,
+                            gpWindowManager->screenBitmap->Height,
+                            gpWindowManager->screenBitmap->Pitch, 0, 1);
+                gpWindowManager->UpdateScreen(
+                    bounds->values[0], bounds->values[1],
+                    bounds->values[2] - bounds->values[0] + 1,
+                    bounds->values[3] - bounds->values[1] + 1);
+            }
+            GameTime::DelayTil(frameTil);
+        }
+        blast->Dispose();
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    } else {
+        for (int i = 0; i < WALL_TARGET_COUNT; i++)
+            DamageWall(wall_target_from_int(i), counts[i]);
+    }
+    gpMouseManager->ShowPointer(0);
 }
 
 // E:\gamedcs\spells.cpp:5419
+// "Would this cast do anything to this stack, and how likely is it to
+// stick." Everything above the switch is a REFUSAL LADDER answering a
+// flat 0.0, and the tail hands whatever survives to armygrp's
+// per-creature get_spell_work_chance - scaled by 0.8 when the stack
+// stands inside somebody's aura.
+//
+// The ladder is three shapes stacked in this order:
+//   * the two BOARD-WIDE bans (cursed ground caps the level at 1;
+//     Recanter's Cloak caps it at 2 for both sides at once),
+//   * an if-CHAIN on the two Dispel ids - retail compares 0x23 then
+//     0x4e with `cmp/jne`, and each arm ends in its own return, so
+//     neither is in the jump table below,
+//   * the per-stack bans (Anti-Magic, the magic-immunity creature bit,
+//     a wiped stack, Sacrifice's second click) and the benefit sign
+//     rule, which is TWO SEQUENTIAL ifs and not an if/else: retail's
+//     `jge` out of the harmful arm lands on the beneficial arm's own
+//     `jle`, reusing the same flags, and the harmful arm falls into a
+//     redundant re-test - the shape a compiler produces for two ifs
+//     over one value, never for an if/else.
+// Only then comes the real switch, and it IS a jump table (32-entry
+// byte index over spell-0x1a plus seven targets), so its ARM LAYOUT is
+// source order: Hypnotize, Armageddon, Anti-Magic, Clone, the
+// Resurrection/Animate Dead pair, Sacrifice.
+//
+// The three arms that price a spell against the stack all use the
+// SAME two-term formula - `spellPower[side] * power_factor +
+// mastery_bonus[mastery]`, then plus GetHeroSpellBonus of that running
+// total - and the two single-spell arms fold their own row address
+// (Hypnotize's `akSpellTraits + 0x2010` is 60*136 + 0x30), which is
+// what says they were written on the literal spell id and not on the
+// switch's own selector. The Resurrection/Animate Dead arm, shared by
+// two ids, indexes on `spell` and VC6 re-derives it from the 136*spell
+// the prologue already had live.
+//
+// THREE LEVERS TOOK IT 88.46 -> 97.10:
+//   * THE CREATURE-ATTRIBUTE TESTS ARE SHIFT-AND-MASK, NOT A MASK.
+//     Retail reads `[target + 0x84]` ONCE into EDX and then does
+//     `mov ecx,edx / shr ecx,0x15 / test cl,1` at each of the six
+//     sites, which is `(attributes >> N) & 1` over a NAMED local - a
+//     mask spelling emits `test dword ptr [mem], imm` and reloads the
+//     member every time. The shift is LOGICAL, so the local is
+//     unsigned.
+//   * ONE SHARED `return 0.0f` MEANS `||`, and there are three of them
+//     (Hypnotize's mirror/hit-point pair, Clone's clone-immune/mirror
+//     pair, Sacrifice's else arm). Retail's `jne` lands ON the return
+//     block the next test falls into; written as two separate ifs, VC6
+//     gives each its own seven-instruction epilogue. Those two levers
+//     together are 88.46 -> 94.35.
+//   * INVERTING THE MASTERY TEST SHARES THE `return 1.0f` (94.35 ->
+//     97.10). `if (mastery >= expert) return 1.0f; <loop>` emits an
+//     inline return-1 epilogue right there; `if (mastery < expert)
+//     { <loop> return 0.0f; } return 1.0f;` emits retail's `jge` to a
+//     trailing block, which the cross-jumper then merges with the
+//     Dispel-Helpful loop's own return-1. Same lever as
+//     ValidSpellTarget's "one shared return 1" four hundred lines up.
+//
+// AND THE ATTRIBUTE TESTS ARE `army::Is(n) & 1`, WHICH IS WORTH 2.7
+// (97.10 -> 99.77) AND CLOSES THE WHOLE REGISTER STORY WITH IT. The
+// header inline TRUNCATES the shifted word to a byte before the
+// caller's mask, and that truncation is what stops VC6 folding
+// `(attributes >> N) & 1` back into `test dword ptr [mem], imm`: with
+// `Is` the member is loaded ONCE into EDX and stays live across the
+// switch exactly as retail has it, `spell` falls back to its memory
+// home, and every scratch-register rename downstream disappears. A
+// hand-written `unsigned attributes = target->creatureId;` plus
+// `(attributes >> N) & 1` scores 97.10 and a named shifted local is
+// byte-identical to it - the difference is the byte truncation, not
+// the naming.
+//
+// AND IT CORRECTS A RECORDED IDENTIFICATION, measured three ways.
+// cmbtmgr.h used to say slot 6 is `unsigned char creature_spell`; THIS
+// body reads it `cmp dword ptr [ebp+0x1c], 1` while reading slot 5 as
+// `mov al, byte ptr [ebp+0x18]` - two different widths in one function,
+// which is as direct as callee-side width evidence gets. Widening ONLY
+// the callee costs find_resurrection_target 100 -> 98.40,
+// SetMassSpellInfluence 100 -> 98.77 and ValidSpellTarget 88.49 ->
+// 87.31, which is what the previous reading measured and why it
+// concluded `unsigned char`. Widening the WHOLE FAMILY - this slot,
+// find_spell_target's, ValidSpellTarget's, HasValidSpellTarget's,
+// find_resurrection_target's and SetMassSpellInfluence's - leaves every
+// one of those AT 100 and gains the dword compare here. So the callers
+// are width-BLIND (both spellings compile them exact) and only the
+// callee can see the width; `long` it is, and the earlier note's
+// "the callers outvote the callee" was an artifact of changing one end
+// of the family at a time.
+//
+// Residual (99.78%): two instructions. Retail keeps `sar edx, 2` for
+// `aura_sources.size()` where our CL proves the low two bits zero and
+// folds the shift into the test's mask (`.empty()` is byte-identical to
+// `size() != 0` here, measured), and the function's trailing alignment
+// NOP is `mov edi,edi` against our `lea ecx,[ecx]`. Neither is source-
+// addressable. `homm3 sema diff --branches` agrees 61/61 and 25/25.
 VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
-float combatManager::SpellCastWorkChance(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char first_target, unsigned char creature_spell)
+float combatManager::SpellCastWorkChance(SpellID spell, long side,
+                                         const army* target,
+                                         unsigned char redirected,
+                                         unsigned char first_target,
+                                         long creature_spell)
 {
-    // @stub
-}
+    hero* casting_hero = heroes[side];
+    hero* target_hero = target->get_controller();
+    TCreatureType creature = target->creatureType;
+    const SSpellTraits* traits = &akSpellTraits[spell];
 
-#endif  // @carcass
+    if (field_53c0 == MAGIC_TERRAIN_CURSED_GROUND && traits->level > 1)
+        return 0.0f;
+    if (traits->level > 2) {
+        if ((heroes[0]
+             && heroes[0]->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+            || (heroes[1]
+                && heroes[1]->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK)))
+            return 0.0f;
+    }
+    if (spell == SPELL_DISPEL) {
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
+            return 0.0f;
+        int mastery = casting_hero->get_spell_level(SPELL_DISPEL, field_53c0);
+        if (mastery < eMasteryAdvanced && target->combatSide != side)
+            return 0.0f;
+        if (mastery < eMasteryExpert) {
+            for (int i = 10; i < 81; i++) {
+                if (target->spellInfluence[i])
+                    return 1.0f;
+            }
+            return 0.0f;
+        }
+        return 1.0f;
+    }
+    if (spell == SPELL_DISPEL_HELPFUL) {
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
+            return 0.0f;
+        for (int i = 10; i < 81; i++) {
+            if (target->spellInfluence[i] && akSpellTraits[i].field_0 > 0)
+                return 1.0f;
+        }
+        return 0.0f;
+    }
+    if (target->spellInfluence[SPELL_ANTI_MAGIC]
+        && traits->level < target->antiMagicSpellLevel
+        && !(traits->field_c & 0x8))
+        return 0.0f;
+    if ((target->Is(21) & 1) && spell != SPELL_RESURRECTION
+        && spell != SPELL_ANIMATE_DEAD && spell != SPELL_SACRIFICE)
+        return 0.0f;
+    if (target->bAllUnitsKilled)
+        return 0.0f;
+    if (spell == SPELL_SACRIFICE && !first_target
+        && ControllingSide(target) != side)
+        return 0.0f;
+    int benefit = traits->field_0;
+    if (!redirected) {
+        if (benefit < 0 && target->combatSide == side
+            && spell != SPELL_BERSERK)
+            return 0.0f;
+        if (benefit > 0 && target->combatSide != side)
+            return 0.0f;
+    }
+
+    switch (spell) {
+    case SPELL_HYPNOTIZE: {
+        int mastery = casting_hero->get_spell_level(SPELL_HYPNOTIZE,
+                                                    field_53c0);
+        int value = spellPower[side]
+                * akSpellTraits[SPELL_HYPNOTIZE].power_factor
+            + akSpellTraits[SPELL_HYPNOTIZE].mastery_bonus[mastery];
+        value += casting_hero->GetHeroSpellBonus(SPELL_HYPNOTIZE,
+                                                 target->monInfoLevel, value);
+        if (target->magicMirrorRounds
+            || target->hitPoints * target->numTroops > value)
+            return 0.0f;
+        break;
+    }
+    case SPELL_ARMAGEDDON:
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
+            return 0.0f;
+        break;
+    case SPELL_ANTI_MAGIC:
+        if (target->Is(23) & 1)
+            return 0.0f;
+        break;
+    case SPELL_CLONE:
+        if ((target->Is(23) & 1) || target->iMirrorDestIndex != -1)
+            return 0.0f;
+        if (target->monInfoLevel + 1
+            > akSpellTraits[SPELL_CLONE].mastery_bonus[
+                  casting_hero->get_spell_level(SPELL_CLONE, field_53c0)])
+            return 0.0f;
+        break;
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD: {
+        int value;
+        if (creature_spell == 1) {
+            const army* caster = &armies[actingSide][actingSlot];
+            if (caster->creatureType == CREATURE_ARCHANGEL)
+                value = caster->numTroops * 100;
+            else
+                value = caster->numTroops * 50;
+        } else {
+            int mastery = casting_hero->get_spell_level(spell, field_53c0);
+            value = spellPower[side] * akSpellTraits[spell].power_factor
+                + akSpellTraits[spell].mastery_bonus[mastery];
+            value += casting_hero->GetHeroSpellBonus(spell,
+                                                     target->monInfoLevel,
+                                                     value);
+        }
+        if (target->numTroops >= target->origNumTroops
+            || target->hitPoints > value)
+            return 0.0f;
+        break;
+    }
+    case SPELL_SACRIFICE:
+        if (!(target->Is(4) & 1))
+            return 0.0f;
+        if (target->Is(22) & 1)
+            return 0.0f;
+        if (first_target) {
+            if (target->numTroops >= target->origNumTroops)
+                return 0.0f;
+        } else if ((target->Is(18) & 1) || target->numTroops <= 0) {
+            return 0.0f;
+        }
+        break;
+    }
+
+    if (benefit <= 0 && target->aura_sources.size() != 0)
+        return get_spell_work_chance(spell, creature, casting_hero,
+                                     target_hero)
+            * 0.8f;
+    return get_spell_work_chance(spell, creature, casting_hero, target_hero);
+}
 
 // THE REAL SpellCastWorks, AND cmbtmgr.h's `// 0x5a3c80` ON THE DECLARATION
 // IS WRONG. That address is ValidSpellTargetArmy, two rows below; the two

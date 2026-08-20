@@ -912,9 +912,17 @@ public:
     int curseAmount;              // +0x45c
     // DC army.antiMagicSpellLevel (members.csv army@1084, the slot
     // before bloodlustBonus 1088/+0x464 on the same +0x24 shift).
-    // Byte-proven by SetSpellInfluence (0x4448f0): its ANTI_MAGIC arm
-    // stores the per-mastery amount here and then cancels every
-    // standing spell whose traits level sits below it.
+    // PROVEN FROM BOTH SIDES, by two lanes independently:
+    //   * the WRITER - army::SetSpellInfluence (0x4448f0): its ANTI_MAGIC
+    //     arm stores the per-mastery amount here and then cancels every
+    //     standing spell whose traits level sits below it;
+    //   * the READER - combatManager::SpellCastWorkChance (0x5a8090): a
+    //     cast is refused outright while the stack's Anti-Magic round
+    //     counter (spellInfluence[34], +0x220) is up AND the cast spell's
+    //     own akSpellTraits level sits BELOW this dword.
+    // That is Anti-Magic's rule from each end, and the same rounds/amount
+    // pairing the Bless and Curse fields above already carry. Retyped IN
+    // PLACE out of the pad, so the declarator count does not move.
     int antiMagicSpellLevel;      // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
@@ -1107,7 +1115,14 @@ public:
     // include-set count stays equal between them; the whole block is
     // already behind the round/reset gate above, so nothing outside
     // those two views sees a new declarator.
-#ifdef HOMM3_ARMY_AURA_VIEW
+    //
+    // HOMM3_ARMY_AURA_SOURCES_DECL admits the four LISTS alone, without
+    // the aura/binding member functions the full view carries below:
+    // combatManager::SpellCastWorkChance (0x5a8090) prices a stack that
+    // stands in someone's aura at 0.8 of the plain chance and reads
+    // `aura_sources.size()` to find out, and needs nothing else from
+    // either block.
+#if defined(HOMM3_ARMY_AURA_VIEW) || defined(HOMM3_ARMY_AURA_SOURCES_DECL)
     unsigned char is_area_effect_target;  // +0x4f1
     char pad_4f2[0x2];
     std::vector<army*> bound_armies;   // +0x4f4

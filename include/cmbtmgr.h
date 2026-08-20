@@ -802,8 +802,15 @@ public:
     int field_132a0[2];               // +0x132a0
     // Two more dwords InitNonVisualVars sets to -1, alongside
     // field_132d4. Ordinals.
-    int field_132a8;                  // +0x132a8
-    int field_132ac;                  // +0x132ac
+    //
+    // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
+    // SummonElemental (0x5a7080), which stamps the summoned creature's
+    // type through `[this + 4*currentSide + 0x132a8]` - so the two
+    // dwords are one row indexed by SIDE, exactly like the six other
+    // per-side pairs this class already carries, and not two unrelated
+    // ordinals. The name stays an ordinal: no roster or string reaches
+    // the row.
+    int field_132a8[2];               // +0x132a8 .. +0x132af
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -1645,11 +1652,11 @@ public:
     unsigned char ValidSpellTarget(SpellID spellId, long mastery,
                                    long targetIndex, long casting_side,
                                    unsigned char first_target,
-                                   unsigned char creature_spell); // 0x5a39c0
+                                   long creature_spell); // 0x5a39c0
     unsigned char HasValidSpellTarget(SpellID spellId, long mastery,
                                       long casting_side,
                                       unsigned char first_target,
-                                      unsigned char creature_spell); // 0x5a40d0
+                                      long creature_spell); // 0x5a40d0
     // 0x5a7320, the hexcell-taking one of the DC roster's two
     // remove_corpse overloads (spells.cpp:4815; the other, 4838, takes an
     // army* and has no located retail body). Like
@@ -1702,7 +1709,7 @@ public:
     void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                long level, long power,
                                long casting_side,
-                               unsigned char creature_spell);  // 0x5a66d0
+                               long creature_spell);  // 0x5a66d0
     // The lightning-bolt animator, all four bodies. All take the SBolt
     // record declared above; the DC prototypes (spells.cpp:3572 / 3702 /
     // 3864 / 3940) supply every parameter name, and AddBolt's thirteen
@@ -1726,6 +1733,24 @@ public:
     // supplies both parameter names; `level` is what indexes the spell's
     // mastery_bonus row, i.e. it is the mastery the cast landed at.
     void Armageddon(int level, int power);                     // 0x5a4bc0
+    // The last three spells.obj bodies this header had no declarator for.
+    // Every parameter name is the DC prototype's (spells.cpp:4424 / 4705
+    // / 5164); the three types the DC roster leaves open are read off the
+    // retail bodies:
+    //   * ShowMassSpell's first slot is the `effected` row itself - a
+    //     [2][20] byte array indexed `[side][slot]` with a 0x14 stride,
+    //     which is why it is spelled as a pointer to the row rather than
+    //     the DC's bare `[]*`.
+    //   * SummonElemental's iMonType goes straight into a 116-byte
+    //     akCreatureTypeTraits copy and into AddArmy, so it is the
+    //     creature domain.
+    //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
+    //     for the number of wall sections to bring down.
+    void ShowMassSpell(const unsigned char (*bEffected)[20], int spellEffect,
+                       unsigned char bShowWince);              // 0x5a67c0
+    void SummonElemental(SpellID spell, TCreatureType iMonType,
+                         int iSpellPower, int level);          // 0x5a7080
+    void Earthquake(int level);                                // 0x5a7c80
     void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
     void DrawBolt(SBolt* psBolt, int iDrawLength);             // 0x5a5440
     void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,
@@ -1841,7 +1866,7 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               unsigned char redirected,
                               unsigned char first_target,
-                              unsigned char creature_spell);   // 0x5a8090
+                              long creature_spell);   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -
@@ -1870,7 +1895,7 @@ public:
                                        unsigned char firstTarget,
                                        long creatureSpell);    // 0x5a3c80
     army* find_resurrection_target(int armyGroup, int targetIndex,
-                                   unsigned char creatureSpell);
+                                   long creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
     // 0x5a3950, the selector in front of the two rows above: it bounds the
     // hex against the 187-cell grid, routes Resurrection and the gated
@@ -1880,7 +1905,7 @@ public:
     // class because this run of spells.obj leaves is already unconditional.
     army* find_spell_target(SpellID spell, long side, long hex,
                             unsigned char first_target,
-                            unsigned char creature_spell);   // 0x5a3950
+                            long creature_spell);   // 0x5a3950
     // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
     // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
     // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
@@ -2342,7 +2367,19 @@ struct type_wall_target {
     // three -1 rows are the two towers and the upper keep, the five
     // real ones are the wall segments the AI cares about.
     short blocked_column;             // +0x2
-    char pad_04[0x4];
+    // The segment's sprite ANCHOR in screen coordinates, sliced
+    // 2026-08-20 by combatManager::Earthquake (0x5a7c80): it walks the
+    // table with a pointer 2 bytes into each row and `movsx`-loads
+    // BOTH words (`movsx edi, word [p-2]` / `movsx ebx, word [p]`),
+    // then centres the SGEXPL explosion sprite on the pair - x minus
+    // half the sprite width, y minus half its height - before clipping
+    // against the combat viewport. The retail values run
+    // (586,48) (564,128) (520,212) (498,296) (520,380) (586,506)
+    // (630,506) (762,212), which is the castle wall read top to bottom
+    // with the keep last, on an 800x600 field. Retyped IN PLACE out of
+    // the pad; both words are SIGNED (movsx, not movzx).
+    short screenX;                    // +0x4
+    short screenY;                    // +0x6
     // ID into combatManager::wallStrength / wallStanding. Retail rows are
     // {5,6,8,9,10,12,13,14}.
     int wall_id;                       // +0x8

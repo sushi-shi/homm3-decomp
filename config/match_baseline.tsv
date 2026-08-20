@@ -622,6 +622,21 @@ combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 command	?DoVictory@combatManager@@QAEXH@Z	99.4634	99.4634	99.4634	0x77470
+# GetCommand ACCEPTED 92.5714 -> 92.5357 (2026-08-20, spells lane).
+# THE TRADE: cmbtmgr.h gained the three member declarators the class was
+# missing for spells.obj's last three bodies - ShowMassSpell (0x5a67c0),
+# SummonElemental (0x5a7080) and Earthquake (0x5a7c80). Without them the
+# definitions do not compile at all: VC6 reports a member function never
+# declared in its class as C2673 "global functions do not have 'this'
+# pointers" plus a cascade of C2065 on every this-relative member.
+# WHAT IT BOUGHT: 2.9 KB of spells.obj, and with it the unit's last
+# unreconstructed bodies. WHAT IT COST: this row alone, and it is the
+# documented include-set class at its documented value - the exact
+# 0.0357 a single cmbtmgr.h declarator has cost GetCommand four times
+# before (see cmbtmgr.h's own notes at its simulate_combat and
+# numSpellCasts declarations). No semantic change reaches command.obj:
+# the delta is one addressing-mode choice and command.cpp's own source
+# and include set did not move. hist stays at 92.5714.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
@@ -1610,31 +1625,36 @@ spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970
-spells	?Armageddon@combatManager@@QAEXHH@Z	88.1546	88.1546	88.1546	0x1a4bc0
+spells	?Armageddon@combatManager@@QAEXHH@Z	88.7244	88.7244	88.7244	0x1a4bc0
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
 spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	98.2205	98.2205	98.2205	0x1a5c20
 spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	76.8992	76.8992	76.8992	0x1a5440
+spells	?Earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
-spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
+spells	?HandleGetTeleportDestination@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0
+spells	?HasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	100.0000	100.0000	100.0000	0x1a40d0
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0
 spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
 spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.2924	97.2924	97.2924	0x1a5260
 spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	90.5846	90.5846	90.5846	0x1a7560
-spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJE@Z	100.0000	100.0000	100.0000	0x1a66d0
+spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0
+spells	?ShowMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	96.0966	96.0966	96.0966	0x1a67c0
 spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	98.7602	0x1a8950
+spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	99.7765	99.7765	99.7765	0x1a8090
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690
-spells	?ValidSpellTarget@combatManager@@QAEEHJJJEE@Z	88.4937	88.4937	88.4937	0x1a39c0
+spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	93.4375	93.4375	93.4375	0x1a7080
+spells	?ValidSpellTarget@combatManager@@QAEEHJJJEJ@Z	88.4937	88.4937	88.4937	0x1a39c0
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80
 spells	?demonic_resurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390
 spells	?find_animate_dead_target@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3f50
 spells	?find_demonic_resurrection_target@combatManager@@QAEPAVarmy@@HH@Z	100.0000	100.0000	100.0000	0x1a3e40
-spells	?find_resurrection_target@combatManager@@QAEPAVarmy@@HHE@Z	100.0000	100.0000	100.0000	0x1a3cc0
-spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEE@Z	100.0000	100.0000	100.0000	0x1a3950
+spells	?find_resurrection_target@combatManager@@QAEPAVarmy@@HHJ@Z	100.0000	100.0000	100.0000	0x1a3cc0
+spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEJ@Z	100.0000	100.0000	100.0000	0x1a3950
 spells	?get_elemental_type@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360
 spells	?is_valid_teleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700
 spells	?mark_area_effect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920
@@ -1643,11 +1663,6 @@ spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@
 spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810
 spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
-spells	HandleGetTeleportDestination	0.0000	0.0000	0.0000	0x1a37d0
-spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
-spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
-spells	combatManager_SpellCastWorkChance	0.0000	0.0000	0.0000	0x1a8090
-spells	combatManager_SummonElemental	0.0000	0.0000	0.0000	0x1a7080
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0
