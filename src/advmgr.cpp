@@ -95,6 +95,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
 #include "quickinfowindow.h"
+#include "questlogwindow.h"
 #include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -1073,14 +1074,217 @@ void advManager::ProcessAdvMenu(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
+// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
+// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
+// consumer declares - and that is now ProcessDeSelect below, which latches
+// SYSOPT_QUIT into it from the adventure-options arm.
+DATA(0x006976d8) extern int gUnnamed6976d8;
+
 // E:\gamedcs\advmgr.cpp:2152
+// ProcessSelect's twin: the same dispatcher for the buttons that act on
+// RELEASE rather than on press. Its fourteen arms are written in the order
+// retail's jump table lays them out, which is NOT id order - the byte-index
+// table at +0x624 sends ids 3..31 through a fifteen-entry dword table whose
+// targets rise quest-log, hero up/down, town up/down, sleep, move,
+// adventure options, system options, end turn, next hero, kingdom overview,
+// cast spell, elevation toggle. Reading the arm order as a source-order
+// fact is what ProcessSelect proved one function up.
+//
+// Three shapes are transcribed exactly as retail has them:
+//   * The sleep arm calls gpGame->GetHero(currHeroId) TWICE. The second
+//     call's null arm falls into the SetSleepImage load unguarded
+//     (`xor eax,eax` then `mov dl,[eax+0x11c]`), which is retail's own
+//     latent null deref - reusing the first pointer removes the second
+//     inlined `cmp ecx,-1` and the whole arm moves.
+//   * The kingdom-overview arm's type_point local is DELIBERATELY left
+//     uninitialised. Both writers assign x/y/z only, and the second one's
+//     `and eax,0xffffc000` preserving the field's two pad bits is what
+//     proves nothing ever zeroed it - a `= { 0, 0, 0 }` adds stores that
+//     retail does not have.
+//   * The fade flag lives in EDI, the register that held localPlayer:
+//     retail materialises the 1 before the `== 2` test so the same
+//     register feeds DemobilizeCurrHero's update flag, ShowPointer's
+//     restore and SetPointer's set. localPlayer is genuinely dead from
+//     that point in this arm.
 VA(0x00409a70, 0x641)  // anchor-callee, dc 0x9a94
 int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
-}
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+    type_point viewPoint;
 
-#endif  // @carcass
+    switch (msg->codeY) {
+    case TAdventureMapWindow::QUEST_LOG_ID:
+        DoQuestLog(gpGame->GetLocalPlayerGamePos());
+        break;
+
+    case TAdventureMapWindow::HERO_UP_ID:
+        advWindow->DoHeroKnob(1);
+        break;
+
+    case TAdventureMapWindow::HERO_DOWN_ID:
+        advWindow->DoHeroKnob(0);
+        break;
+
+    case TAdventureMapWindow::TOWN_UP_ID:
+        advWindow->DoTownKnob(1);
+        break;
+
+    case TAdventureMapWindow::TOWN_DOWN_ID:
+        advWindow->DoTownKnob(0);
+        break;
+
+    case TAdventureMapWindow::SLEEP_ID: {
+        hero* sleeper = gpGame->GetHero(localPlayer->currHeroId);
+        if (sleeper) {
+            sleeper->field_11c = !sleeper->field_11c;
+            if (sleeper->field_11c) {
+                if (!waitingPlayer) {
+                    if (gpCurrentPlayer->IsLocalHuman()
+                        || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                        gpWindowManager->BroadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                            TAdventureMapWindow::MOVE_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        if (bShowRoute) {
+                            bShowRoute = 0;
+                            CompleteDraw(radarOrigin.x, radarOrigin.y,
+                                         radarOrigin.z, 0, 1);
+                            UpdateScreen(0, 0);
+                        }
+                    }
+                }
+                SetHeroContext(localPlayer->NextHero(), 0, waitingPlayer, 1);
+            }
+            advWindow->SetSleepImage(
+                gpGame->GetHero(localPlayer->currHeroId)->field_11c);
+            if (gpCurrentPlayer->IsLocalHuman()
+                && gpCurrentPlayer->HasMobileHero())
+                advWindow->WidgetClearStatus(
+                    TAdventureMapWindow::NEXT_HERO_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            else
+                advWindow->WidgetSetStatus(
+                    TAdventureMapWindow::NEXT_HERO_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::MOVE_ID:
+        advCommand = ADV_COMMAND_WALK_ROUTE;
+        *peventCell = DoAdvCommand(trigger_point);
+        break;
+
+    case TAdventureMapWindow::ADVENTURE_OPTIONS_ID:
+        DoAdventureOptions();
+        if (gpWindowManager->dialogReturn == SYSOPT_COMMAND_111) {
+            NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+                gUnnamed6976d8 = SYSOPT_QUIT;
+                *exitFlag = 1;
+            }
+        }
+        break;
+
+    case TAdventureMapWindow::SYSTEM_OPTIONS_ID:
+        *exitFlag = DoSystemOptions();
+        break;
+
+    case TAdventureMapWindow::END_TURN_ID:
+        if (!gpGame->field_1f69d && gpCurrentPlayer->HasMobileHero()
+            && gUnnamed698778) {
+            // Row 56 of the general text, the "you still have heroes who
+            // can move" confirm. No surviving symbol names the row.
+            NormalDialog(gpGeneralText->GetText(56), 2, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                break;
+        }
+        gpGame->NextPlayer();
+        break;
+
+    case TAdventureMapWindow::NEXT_HERO_ID:
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    UpdateScreen(0, 0);
+                }
+            }
+        }
+        SetHeroContext(gpCurrentPlayer->NextHero(), 0, waitingPlayer, 1);
+        break;
+
+    case TAdventureMapWindow::KINGDOM_OVERVIEW_ID: {
+        if (gUnnamed699560) {
+            viewPoint.x = -1;
+            viewPoint.y = -1;
+            viewPoint.z = 0;
+            SetEnvironmentOrigin(viewPoint, 1);
+        }
+        TrimLoopingSounds(0);
+        gpGame->Overview();
+
+        int bFadeOut = 1;
+        if (gUnnamed6985c0 == OVERVIEW_EXIT_TOWN) {
+            DemobilizeCurrHero(0, 1);
+            gpMouseManager->ShowPointer(1);
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpGame->GetTown(gUnnamed69873c)->View(1);
+            bFadeOut = 0;
+        } else if (gUnnamed699560) {
+            viewPoint.x = radarOrigin.x + 9;
+            viewPoint.y = radarOrigin.y + 8;
+            viewPoint.z = radarOrigin.z;
+            SetEnvironmentOrigin(viewPoint, 1);
+        }
+        RedrawAdvScreen(1, 0);
+        if (bFadeOut)
+            gpWindowManager->FadeScreen(0, 4, 0);
+        break;
+    }
+
+    case TAdventureMapWindow::CAST_SPELL_ID:
+        CheckCastSpell();
+        break;
+
+    case TAdventureMapWindow::ELEVATION_TOGGLE_ID:
+        if (gpGame->worldMap.GetNumLevels() > 1) {
+            DemobilizeCurrHero(0, 1);
+            radarOrigin.z = 1 - radarOrigin.z;
+            advWindow->SetElevationToggleImage(radarOrigin.z);
+            RedrawAdvScreen(1, 0);
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (msg->codeY >= ADV_HELP_ID_FIRST && msg->codeY <= ADV_HELP_ID_LAST) {
+        if (bottomViewOverride == BOTTOM_VIEW_2) {
+            bottomViewOverride = BOTTOM_VIEW_1;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        } else if (bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
+            bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+        } else if (bottomViewType == BOTTOM_VIEW_2) {
+            bottomViewOverride = BOTTOM_VIEW_1;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        } else {
+            bottomViewOverride = BOTTOM_VIEW_2;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        }
+        UpdBottomView(1, 1, 1);
+    }
+    return 1;
+}
 
 // E:\gamedcs\advmgr.cpp:2307
 // The radar drag. A right-click is answered with one general-text row and
@@ -7211,11 +7415,6 @@ void advManager::DoAdvMenu()
 }
 
 #endif  // @carcass
-
-// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
-// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
-// consumer declares.
-DATA(0x006976d8) extern int gUnnamed6976d8;
 
 // This TU's own free saver (advmgr.cpp:9693, retail 0x418160), defined
 // further down; forward-declared for the option dispatch above it.
