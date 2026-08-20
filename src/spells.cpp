@@ -1299,8 +1299,13 @@ void combatManager::Armageddon(int level, int power)
                 pArmy->ProcessDeath(0);
                 // Bit 6 of creatureId is the siege-weapon marker, so a
                 // catapult or tent killed here also loses the artifact
-                // its owner was carrying it as.
-                if ((static_cast<unsigned>(pArmy->creatureId) >> 6) & 1)
+                // its owner was carrying it as. SPELLED THROUGH army::Is
+                // (+0.57, 88.15 -> 88.72): the accessor truncates the
+                // shifted word to a byte before the caller's mask, which
+                // is what stops VC6 folding the test back into a
+                // `test dword ptr [mem], imm` on the member - the same
+                // lever that closed SpellCastWorkChance's register wall.
+                if (pArmy->Is(6) & 1)
                     heroes[side]->DestroySiegeWeaponArtifact(
                         pArmy->creatureType);
                 bDeaths = 1;
@@ -2495,7 +2500,7 @@ void combatManager::MirrorImage(int targetIndex, int level)
                 if (iDirCount == 0) {
                     iSourceHexIndex = source->gridIndex;
                 } else {
-                    if (!(source->creatureId & 1))
+                    if (!(source->Is(0) & 1))
                         continue;
                     iSourceHexIndex =
                         source->gridIndex + (source->facing ? 1 : -1);
@@ -2841,7 +2846,7 @@ void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
         PlaceArmyInGrid(*target_army, hex);
         remove_corpse(&cells[target_army->gridIndex],
                       target_army->combatSide, target_army->bitIndex);
-        if (target_army->creatureId & 1)
+        if (target_army->Is(0) & 1)
             remove_corpse(&cells[target_army->get_second_grid_index()],
                           target_army->combatSide, target_army->bitIndex);
     }
