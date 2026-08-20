@@ -610,6 +610,13 @@ enum EMapFormatVersion {
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
 enum EVictoryConditionType {
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1`; the value
+    // agrees with the map-format victory-condition ordinal (0 artifact,
+    // 1 creatures, 2 resources, ...). Gated: enumerators count against
+    // the include-set declarator wall for every consumer of this header.
+    VICTORY_CONDITION_TOTAL_CREATURES = 1,
+#endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
     VICTORY_CONDITION_CAPTURE_TOWN = 6,
@@ -644,7 +651,22 @@ public:
     signed char Type;
     signed char AllowNormalVictory;
     signed char AppliesToComputer;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
+    // CreatureType, NumCreatures between AppliesToComputer and
+    // ResourceType; retail widens the trailing pair to ints.
+    // CheckForTotalCreatures (0x5f1b10) pushes the dword at +0x8
+    // straight into armyGroup::get_creature_total(TCreatureType) and
+    // compares the summed total against the dword at +0xc, fixing both
+    // offsets. ArtifactNum's exact retail slot within +3..+7 is still
+    // unproven, so that band stays a pad. Gated: member declarators
+    // count against the include-set wall for every consumer.
+    char pad_03[5];
+    TCreatureType CreatureType;
+    int NumCreatures;
+#else
     char pad_03[0xd];
+#endif
     int ResourceType;
     int ResourceAmount;
     int TownX;
@@ -662,13 +684,14 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
-#ifdef HOMM3_EVENTS_VIEW
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_VLC_CHECKS_VIEW)
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
     // CheckEndGame(0). Gated purely to keep the declarator out of the
     // other twenty-odd consumers of this header until one of them needs
-    // it.
+    // it. VLC_CHECKS_VIEW joins the gate for the owning TU's own
+    // reconstruction of the trio (2026-08-20).
     unsigned char CheckForTotalCreatures();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
