@@ -834,6 +834,7 @@ game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20
 game	?GetName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0
 game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0
 game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
+game	?GetNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30
 game	?GetPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60
 game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0
 game	?GetRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0
@@ -867,7 +868,7 @@ game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
-game	?Save@game@@QAEHPAVTAbstractFile@@@Z	27.9354	27.9354	27.9354	0xbe3f0
+game	?Save@game@@QAEHPAVTAbstractFile@@@Z	42.2290	42.2290	42.2290	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
@@ -891,16 +892,18 @@ game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
-game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	70.6923	70.6923	70.6923	0xcde40
+game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0
+game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	97.2014	97.2014	97.2014	0xba260
 game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
+game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
+game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
-game	game_GetNumThievesGuilds	0.0000	0.0000	0.0000	0xcce30
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
@@ -910,8 +913,6 @@ game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
 game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
-game	playerData_load	0.0000	0.0000	0.0000	0xba260
-game	playerData_save	0.0000	0.0000	0.0000	0xba670
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860

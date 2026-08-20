@@ -82,7 +82,22 @@ inline TArtifact artifact_from_int(int value)
     return converted.artifact;
 }
 
+// Defined at the foot of this file, where retail emits it (0x4d2ac0):
+// declared here so game::Save's pool writes call it out of line.
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_point>* src_vector);
+
 const int SAVED_CREATURE_NONE = 0xff;
+// The on-disk hero-id domain playerData::load reads. 0xff is the "no
+// hero" sentinel the roster stores as -1. Saves older than version 25
+// spell two heroes 0x80/0x81 where the shipped roster carries them at
+// 0x92/0x9c, so the reader rewrites them on the way in - the retail
+// bytes prove the remap, not the two heroes' identities.
+const int SAVED_HERO_NONE = 0xff;
+const int SAVED_HERO_PRE25_FIRST = 0x80;
+const int SAVED_HERO_PRE25_SECOND = 0x81;
+const int HERO_PRE25_FIRST_REMAP = 0x92;
+const int HERO_PRE25_SECOND_REMAP = 0x9c;
 const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
@@ -955,13 +970,14 @@ int game::SaveObeliskPool(void* outfile)
 #endif  // @carcass
 
 // E:\gamedcs\game.cpp:1278
-// The whole body is one store; everything else is the implicit
-// construction of the shipyards vector (empty-allocator copy at +0x8c,
-// then the zeroed _First/_Last/_End triple).
+// The body is EMPTY: every store is implicit member construction -
+// the shipyards vector (empty-allocator copy at +0x8c, then the zeroed
+// _First/_Last/_End triple) and then assembledCombinations at +0xe8.
+// The +0xe8 store landing AFTER the vector's triple is what proves it
+// is the bitset's constructor and not a body statement.
 VA(0x004b9df0, 0x2D)  // anchor-bracket, dc 0xa4cc8
 playerData::playerData()
 {
-    aiField_e8 = 0;
 }
 
 // E:\gamedcs\game.cpp:1283
@@ -1000,7 +1016,7 @@ void playerData::Init()
     isHuman = 0;
     quickCombat = 0;
     placement_help_enabled = 1;
-    aiField_e8 = 0;
+    assembledCombinations.reset();
     strcpy(cName, gpGeneralText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     dpid = 0;
     isHuman = 0;
@@ -1096,21 +1112,233 @@ void playerData::ClearNetInfo()
     isLocal = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1409
+// The hero-id slots carry a save-version remap that no other reader in
+// this file has: 0xff means "none" (-1), and saves older than 25 spell
+// two of the campaign heroes 0x80/0x81 where the shipped tables have
+// 0x92/0x9c. It is inlined at all three sites (currHeroId, the roster
+// loop, the tavern pair) - the roster and recruit reads DISCARD the
+// Read result, which is why only the scalar reads carry a `< size`
+// guard.
 VA(0x004ba260, 0x401)  // anchor-global, dc 0xa51b0
-int playerData::load(void* infile)
+int playerData::load(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    color = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    numHeroes = value;
+
+    int heroId;
+    infile->Read(&heroId, sizeof(unsigned char));
+    heroId &= 0xff;
+    if (heroId == SAVED_HERO_NONE) {
+        heroId = -1;
+    } else if (saveVersion < 25) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            heroId = HERO_PRE25_FIRST_REMAP;
+        else if (heroId == SAVED_HERO_PRE25_SECOND)
+            heroId = HERO_PRE25_SECOND_REMAP;
+    }
+    currHeroId = heroId;
+
+    int i;
+    for (i = 0; i < 8; i++) {
+        int id;
+        infile->Read(&id, sizeof(unsigned char));
+        id &= 0xff;
+        if (id == SAVED_HERO_NONE) {
+            id = -1;
+        } else if (saveVersion < 25) {
+            if (id == SAVED_HERO_PRE25_FIRST)
+                id = HERO_PRE25_FIRST_REMAP;
+            else if (id == SAVED_HERO_PRE25_SECOND)
+                id = HERO_PRE25_SECOND_REMAP;
+        }
+        heroes[i] = id;
+    }
+
+    for (i = 0; i < 2; i++) {
+        int id;
+        infile->Read(&id, sizeof(unsigned char));
+        id &= 0xff;
+        if (id == SAVED_HERO_NONE) {
+            id = -1;
+        } else if (saveVersion < 25) {
+            if (id == SAVED_HERO_PRE25_FIRST)
+                id = HERO_PRE25_FIRST_REMAP;
+            else if (id == SAVED_HERO_PRE25_SECOND)
+                id = HERO_PRE25_SECOND_REMAP;
+        }
+        recruits[i] = id;
+    }
+
+    unsigned char flag;
+    if (infile->Read(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+    startingNumHeroes = flag;
+
+    int number;
+    if (infile->Read(&number, sizeof(number)) < sizeof(number))
+        return -1;
+    personality = number;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    extraPuzzlePieces = value;
+
+    if (infile->Read(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+        return -1;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    iDeathCountDown = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    numTowns = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    currTownId = value;
+
+    for (i = 0; i < 0x48; i++) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        townIds[i] = value;
+    }
+
+    for (i = 0; i < 7; i++) {
+        if (infile->Read(&number, sizeof(number)) < sizeof(number))
+            return -1;
+        resources[i] = number;
+    }
+
+    unsigned long flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    MysticalGardenFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    MagicSpringFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    DeadGuyFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    LeanToFlags = flags;
+
+    if (infile->Read(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+    placement_help_enabled = flag != 0;
+
+    if (saveVersion >= 37) {
+        unsigned char bits[2];
+        infile->Read(bits, sizeof(bits));
+        std::bitset<12> combos;
+        for (unsigned int bit = 0; bit < 12; bit++)
+            combos.set(bit, (bits[bit >> 3] & (1 << (bit & 7))) != 0);
+        assembledCombinations = combos;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:1548
+// The write side of load, minus the version remap: a saver only ever
+// emits the current format. The tavern pair is written longhand here
+// where load loops over it, and the trailing combination-artifact word
+// is unconditional.
 VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
-int playerData::save(void* outfile)
+int playerData::save(TAbstractFile* outfile)
 {
-    // @stub
+    char value = color;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = numHeroes;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = static_cast<char>(currHeroId);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    int i;
+    for (i = 0; i < 8; i++) {
+        value = static_cast<char>(heroes[i]);
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+    }
+
+    value = static_cast<char>(recruits[0]);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = static_cast<char>(recruits[1]);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    unsigned char flag = startingNumHeroes;
+    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+
+    int number = personality;
+    if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+        return -1;
+
+    value = extraPuzzlePieces;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    if (outfile->Write(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+        return -1;
+
+    value = iDeathCountDown;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = numTowns;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = currTownId;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    for (i = 0; i < 0x48; i++) {
+        value = townIds[i];
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+    }
+
+    for (i = 0; i < 7; i++) {
+        number = resources[i];
+        if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+            return -1;
+    }
+
+    unsigned long flags = MysticalGardenFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = MagicSpringFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = DeadGuyFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = LeanToFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+
+    flag = placement_help_enabled;
+    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+
+    unsigned char bits[2] = {0, 0};
+    for (unsigned int bit = 0; bit < 12; bit++) {
+        if (assembledCombinations.test(bit))
+            bits[bit >> 3] |= static_cast<unsigned char>(1 << (bit & 7));
+    }
+    outfile->Write(bits, sizeof(bits));
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1668
 DC_ONLY(0xa5998, 0x54)
@@ -2223,7 +2451,34 @@ int game::Load(TAbstractFile* infile)
 }
 
 // E:\gamedcs\game.cpp:3311
-// PARTIAL: retail header/payload prefix through the eight player records.
+// PARTIAL: retail prefix through the town / hero / hero-pool block and
+// the five type_point pool writes. Still absent after them, in retail's
+// order: twelve guarded scalar writes (0x1f4d4, 0x1f634, then
+// 0x1f690/0x1f692 as shorts and 0x1f694, 0x1f695, 0x1f696, 0x1f698,
+// 0x1f69c as bytes, then 0x1f63e/0x1f640/0x1f642 as shorts), six array
+// writes (0x1f644 asking 0x20 but accepting 8, 0x1f664 0x1c,
+// globalInfoFlags 0x20, borderTentVisitFlags 8, cartographerMask 6,
+// cartographerFlags 3), a four-byte literal zero, a gMapExtra payload
+// of 2*(worldMap.HasTwoLevels+1)*gMapWidth*gMapHeight bytes, then
+// universities via save_vector<type_university> (0x4d2b20),
+// creatureBanks via save_object_vector (0x4d2b80) and
+// game::save_recorded_events (0x49dc60).
+//
+// MEASURED, and the reason they are not written yet: adding them
+// LOWERS the score. 42.23 with the block above; 40.62 with the twelve
+// scalar and six array writes added; 37.18 with the zero and gMapExtra
+// writes on top. The cause is the FRAME, not the statements - retail
+// is `sub esp,0x5c0` and ours is `sub esp,0x5e4`, with every named
+// local shifted by 8 (saved at [ebp-0x5cc] vs [ebp-0x5d4], the
+// fileName string at [ebp-0x6c] vs [ebp-0x74]). Every frame-relative
+// displacement in all 800+ instructions therefore differs, so each
+// correct statement added only lengthens a stream that cannot align.
+// The _Tidy census is the sharp instrument here: retail destroys the
+// SavedGameHeader::fileName string 36 times on the failure ladder and
+// ours does it 39 times with the extra writes in, so the guarded-write
+// count is very close - it is the eight bytes of frame that have to be
+// found FIRST. Do not re-add the statements before then.
+// Residual (42.2312%): missing tail above, gated on the frame delta.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
@@ -2287,6 +2542,49 @@ int game::Save(TAbstractFile* outfile)
         if (players[i].save(outfile) < 0)
             return -1;
     }
+
+    char_buffer = towns.size();
+    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+        sizeof(char_buffer)) {
+        return -1;
+    }
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].save(outfile) < 0)
+            return -1;
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        if (heroes[i].save(outfile) < 0)
+            return -1;
+    }
+
+    if (outfile->Write(heroAvailability, sizeof(heroAvailability)) <
+        sizeof(heroAvailability)) {
+        return -1;
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        unsigned char poolBits = 0;
+        unsigned int player;
+        for (player = 0; player < 8; ++player) {
+            if (heroPoolMap[i].test(player))
+                poolBits |= 1 << player;
+        }
+        outfile->Write(&poolBits, sizeof(poolBits));
+    }
+
+    for (i = 0; i < 8; ++i) {
+        if (!save_vector(outfile, &lithPools[i]))
+            return -1;
+    }
+    for (i = 0; i < 8; ++i) {
+        if (!save_vector(outfile, &lithExitPools[i]))
+            return -1;
+    }
+
+    save_vector(outfile, &whirlpools);
+    save_vector(outfile, &undergroundGateExits);
+    save_vector(outfile, &undergroundGatePairs);
 
     return 0;
 }
@@ -3277,11 +3575,32 @@ int game::GetBoatsBuilt()
 // with one stack arg matches the signature, and the body walks the
 // player's towns testing building masks - the thieves-guild count the
 // advmgr quick views threshold at 1/2.
+#endif  // @carcass
+
+// The building test is the Tavern, plus - for a Castle only - the
+// Brotherhood of the Sword, which is the Castle's upgraded Tavern.
+// Retail loads the 64-bit `built` mask ONCE and ands it against both
+// bitNumber rows, so this is the direct field test and not two
+// HasBuilding calls. The roster comes off `this` but the towns come
+// off the gpGame singleton - retail reads 0x6994e8 rather than reusing
+// ecx, which is what fixes the two spellings apart.
 VA(0x004cce30, 0xB8)  // anchor-bracket + anchor-callee (quick views), dc 0xb9a34
 int game::GetNumThievesGuilds(int iWhichPlayer)
 {
-    // @stub
+    int count = 0;
+    for (int i = 0; i < players[iWhichPlayer].numTowns; i++) {
+        town* currentTown =
+            &gpGame->towns[players[iWhichPlayer].townIds[i]];
+        if ((currentTown->built & bitNumber[TAVERN_ID]) ||
+            (currentTown->type == TOWN_CASTLE &&
+             (currentTown->built & bitNumber[EXTRA_1_ID]))) {
+            count++;
+        }
+    }
+    return count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11205
 // Whole body: stores the two arguments into the map-extent globals
@@ -3429,12 +3748,30 @@ unsigned char game::get_random_whirlpool(long excluded, type_point* result)
 // selects a gate-pair index, which selects the destination point. A hero is
 // accepted at the destination only while it is itself the trigger object;
 // an exposed underground gate is accepted directly.
-// Residual (70.6923%): the shared result local raises the prior split-local
-// form slightly and matches retail's frame home. Retail nevertheless retains
-// unfused load/mask/or/store bitfield assignments for the invalid point and
-// reverses the equivalent final gate branch. Direct constructor returns and
-// assignment from a constructor temporary both fold back to the 70.6154%
-// hidden-return-object form, so the shared direct assignments remain best.
+// The invalid point is 255, NOT -1, and that is what the old "unfused
+// load/mask/or/store" note was really seeing. type_point is
+// `short x:10, y:10, z:4`; assigning -1 saturates every bit of each
+// field, so VC6 folds the whole thing to `or word,0x3ff` / `or
+// word,0x3fff` with no masking. Retail instead emits `and ah,-4` +
+// `or eax,0x3cff` - it CLEARS bits 8..9 of the 10-bit fields and sets
+// bits 0..7, i.e. it stores 0x0ff into x and y and 0xf into z. That is
+// an unsigned-char -1 widened into the bitfields, and writing 0xff
+// reproduces the first invalid block byte for byte.
+// The gate test then needs its condition NEGATED with the stores
+// inside it: `!(A || B)` gives retail's branch senses exactly
+// (jne / jne to the shared exit, then je to it) and leaves the invalid
+// block as the fall-through. The invalid block keeps its OWN `return`
+// - retail tail-duplicates the epilogue and has THREE rets, and
+// merging the last two costs 3.35.
+// Residual (81.4103%): register allocation only. Retail carries the
+// point in edi and the map stride in esi and needs two callee-saved
+// registers; our CL keeps the high word live across the index
+// computation, spends a third register (ebx) on a copy it does not
+// need, and register-homes the invalid stores where retail re-reads
+// them from the frame. Known register-homing class - no spelling
+// tried moved it. Measured: -1 stores + shared exit 70.69; 0xff stores
+// 68.86 (the register churn masks the gain); 0xff + negated gate
+// 78.06; + own return in the invalid block 81.41.
 VA(0x004cde40, 0xE0)  // anchor-global, dc 0xbb490
 type_point game::get_underground_gate_exit(const NewmapCell* cell)
 {
@@ -3443,22 +3780,22 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
     memcpy(&exitIndex, &undergroundGatePairs[cell->extraInfo],
            sizeof(exitIndex));
     if (exitIndex < 0) {
-        result.x = -1;
-        result.y = -1;
-        result.z = -1;
+        result.x = 0xff;
+        result.y = 0xff;
+        result.z = 0xff;
         return result;
     }
 
     result = undergroundGateExits[exitIndex];
     NewmapCell* exitCell = &worldMap.cellData[
         (result.z * worldMap.Size + result.y) * worldMap.Size + result.x];
-    if ((exitCell->type == HERO && exitCell->is_trigger)
-        || exitCell->type == UNDERGROUND_GATE)
+    if (!((exitCell->type == HERO && exitCell->is_trigger)
+          || exitCell->type == UNDERGROUND_GATE)) {
+        result.x = 0xff;
+        result.y = 0xff;
+        result.z = 0xff;
         return result;
-
-    result.x = -1;
-    result.y = -1;
-    result.z = -1;
+    }
     return result;
 }
 
@@ -3692,6 +4029,33 @@ bool game::IsMultiplayer() const
     if (bVideoPaused || iMPNetProtocol == MP_HOTSEAT)
         return true;
     return false;
+}
+
+// E:\gamedcs\game.cpp:2716
+// The pool writer game::Save uses five times over its type_point
+// vectors (the eight lithPools, the eight lithExitPools, then
+// whirlpools / undergroundGateExits / undergroundGatePairs).
+// A free function, so /Gr makes it fastcall: outfile in ecx, the
+// vector in edx, no stack args.
+// Two details the bytes fix. The count is an INT local written with
+// sizeof(short) - the same "wide local, narrow write" idiom
+// LoadGarrisonPool uses on the read side - and the payload length is
+// the SHORT re-read of that same slot, computed twice rather than
+// CSE'd (retail emits `movsx word [ebp-4]` then `shl eax,2` on both
+// sides of the compare). Dinkumware's size() supplies the leading
+// `_First == 0 ? 0 : _Last - _First` null test.
+VA(0x004d2ac0, 0x60)  // anchor-callee (game::Save pool writes), dc 0xc1dd4
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_point>* src_vector)
+{
+    int count = src_vector->size();
+    if (outfile->Write(&count, sizeof(short)) < sizeof(short))
+        return 0;
+    unsigned char written = outfile->Write(
+        src_vector->begin(),
+        static_cast<short>(count) * sizeof(type_point))
+        >= static_cast<short>(count) * sizeof(type_point);
+    return written;
 }
 
 #if 0  // @carcass
