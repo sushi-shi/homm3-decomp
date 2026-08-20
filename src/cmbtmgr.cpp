@@ -1914,16 +1914,130 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
 // file-scope extern on cmbtmgr.h fires the include-set wall by itself
 // (measured at gCombatSeed66d840), so all of them must be gated.
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3640
+// RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
+// names again (ARROW_TRAVEL_DIST, MISSILE_PERIOD, nframes, flatness,
+// saved, deltaX, deltaY, next_frame_time, update_area). DC has NO
+// `flipped` row for this one and retail pushes a literal 0 for hflip,
+// which agrees: a ballistic missile is never mirrored, and it needs no
+// angle search or DrawFrame at all - the trajectory is arithmetic.
+//
+// DC's variable list turned out to be a MATCHING LEVER here, not just a
+// naming source. ARROW_TRAVEL_DIST is listed for this body and for
+// neither of the other two, and that asymmetry is real: naming the
+// pre-division distance is worth 79.99 -> 81.72 here, while the same
+// edit costs ShootMissile 91.74 -> 90.43. Where DC names a local, name
+// it; where DC does not, fold it.
+//
+// The trajectory, for the next reader. `travelX` accumulates deltaX and
+// `remaining` counts nframes down to zero, so
+//   x = startX + travelX / nframes
+//   y = startY + step * (deltaY - remaining * flatness) / nframes
+// with flatness = 2*abs(deltaX)/nframes. Both endpoints are exact
+// (step 0 gives the start, step nframes gives the destination, since
+// remaining is 0 there) and the deviation peaks at abs(deltaX)/2
+// halfway - the arc is half the horizontal span, which is what makes
+// `flatness` the right name for the coefficient rather than a height.
+//
+// Residual (86.4031%): register binding and one homing choice. 318
+// instructions against retail's 320, branch sequences identical, and
+// the frame is 16 bytes smaller because retail spills the loop's
+// `bottom` to [ebp-0x64] where our CL keeps it in a register. The
+// inlined IsQuickCombat shows the same LEA-instead-of-fold schedule the
+// other two animators show, from the same source inline.
+// Tried and rejected, all re-measured on fuzzy: `deltaY` declared
+// before `deltaX` (84.48 -> 81.72 backwards; retail forms deltaX
+// first), the union's edges recomputed inline instead of named (84.48),
+// `bottom` volatile, and `right`/`bottom` swapped.
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
-void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int destY, const CSprite* missile)
+void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
+                                          int destY, const CSprite* missile)
 {
-    // @stub
-}
+    if (IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    int ARROW_TRAVEL_DIST = static_cast<int>(sqrt(static_cast<double>(
+        deltaY * deltaY + deltaX * deltaX)));
+    int nframes = (ARROW_TRAVEL_DIST + 10) / 20;
+    // The arc: half the horizontal span, spread over the flight. The
+    // trajectory below subtracts flatness*(nframes - step) from deltaY,
+    // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
+    double flatness = 2.0 * abs(deltaX) / static_cast<double>(nframes);
+
+    int width = missile->Width;
+    int height = missile->Height;
+    startX -= width / 2;
+    startY -= height / 2;
+    int x = startX;
+    int y = startY;
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    int MISSILE_PERIOD = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 100.0f);
+
+    int frame = 0;
+    int travelX = 0;
+    int remaining = nframes;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + MISSILE_PERIOD;
+        if (step != 0) {
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = x + width - 1;
+            update_area.values[3] = y + height - 1;
+            x = startX + travelX / nframes;
+            y = static_cast<int>(
+                (deltaY - remaining * flatness) * step
+                / static_cast<double>(nframes) + startY);
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        const_cast<CSprite*>(missile)->Draw(
+            0, frame, 0, 0, width, height,
+            gpWindowManager->screenBitmap->map, x, y,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0, 1);
+        int right = x + width - 1;
+        int bottom = y + height - 1;
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(
+            update_area.values[0], update_area.values[1],
+            update_area.values[2] - update_area.values[0] + 1,
+            update_area.values[3] - update_area.values[1] + 1);
+        saved.Draw(0, 0, width, height,
+                   gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch, false);
+        ++frame;
+        if (frame >= missile->GetNumFrames(0))
+            frame = 0;
+        GameTime::DelayTil(next_frame_time);
+        travelX += deltaX;
+        --remaining;
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3749
 // RECONSTRUCTED 2026-08-20, from ShootMissile's shape. DC local names
