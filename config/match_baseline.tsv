@@ -1403,6 +1403,7 @@ mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
+mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	69.1833	69.1833	69.1833	0x1021c0
 mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220
 mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	78.4070	78.4070	78.4070	0x104470
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
@@ -1427,7 +1428,6 @@ mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.000
 mapcell	?saveTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfef10
 mapcell	NewfullMap_NewfullMap	0.0000	0.0000	0.0000	0xfd060
 mapcell	NewfullMap_NewfullMap_fd1e0	0.0000	0.0000	0.0000	0xfd1e0
-mapcell	NewfullMap_readHeroData	0.0000	0.0000	0.0000	0x1021c0
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0
 misc	?CheckConfigFile@@YIXXZ	98.5030	98.5030	98.5030	0x10b260
 misc	?FileSize@@YIJPAD@Z	100.0000	100.0000	100.0000	0x10c5a0
