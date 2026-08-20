@@ -991,8 +991,12 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
 # any header hero.cpp includes. The delta is real codegen, not reloc
 # naming. Cause not isolated; 0.09 on a body that is itself an incomplete
 # reconstruction at 58% is below the resolution worth a lane's time.
-# FIRST cross-lane interference regression of the campaign - if this
-# recurs, stop accepting and bisect the combined header set properly.
+# CAUSE IDENTIFIED LATER, 2026-08-20: almost certainly the same
+# delink-generation effect proven on recruit::Update below - new
+# claims in another TU change the synth PDB, so vostok delinks THIS
+# unit's reference differently and the comparison moves with our
+# object unchanged. The header audit above found nothing because
+# there was nothing in the headers to find.
 hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.8826	57.8826	57.8826	0xe3070
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
@@ -1538,7 +1542,21 @@ recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
-recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
+# DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
+# cause is PROVEN rather than guessed: recruit.cpp and every header it
+# sees are byte-identical to the pre-merge tree, yet this row moved
+# 90.8376 -> 88.2360. The REFERENCE moved, not our object. Reverting
+# only mapcell.cpp's two new VA claims and re-delinking returns it to
+# exactly 90.83756; restoring them returns it to 88.23604.
+#
+# MECHANISM: new claims rename symbols in the synth PDB, vostok
+# delinks every unit against that PDB, so recruit.c.obj - the TARGET
+# half of the comparison - changes when an unrelated TU gains claims.
+# A recorded max is therefore only comparable WITHIN a delink
+# generation, and the newer, more-claimed reference is the more
+# accurate one. 88.24 is the honest number against today's target;
+# 90.84 was measured against a coarser one.
+recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
