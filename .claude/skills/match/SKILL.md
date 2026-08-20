@@ -491,13 +491,36 @@ notes were written in good faith by lanes that had measured something real:
 Read the note for its EVIDENCE and re-derive its conclusion. Cite the bytes,
 not the prose.
 
-**A SUNK JOIN BLOCK CANNOT BE MOVED — WRITE IT TWICE.** VC6 sinks any
-multi-predecessor join to the end of the function regardless of source order:
-four single-copy spellings, including the exact idiom another window uses,
-produced the identical object. Duplicating the block leaves the first copy
-with ONE predecessor, so nothing sinks it, and the cross-jumper then merges
-the shared tail behind a `goto` — which is retail's one-tail shape.
-`TViewArmyWindow::WindowHandler` **35.53 -> 73.63**.
+**A SUNK JOIN BLOCK — TWO SHAPES, AND THEY WANT OPPOSITE THINGS.** VC6 sinks a
+multi-predecessor join to the end of the function, but whether source order
+can move it depends on how the predecessors reach it.
+
+- **Both predecessors are JUMPS -> write the block TWICE.** Four single-copy
+  spellings, including the exact idiom another window uses, produced the
+  identical object. Duplicating leaves the first copy with ONE predecessor, so
+  nothing sinks it, and the cross-jumper then merges the shared tail behind a
+  `goto` — retail's one-tail shape.
+  `TViewArmyWindow::WindowHandler` **35.53 -> 73.63**.
+- **One predecessor FALLS THROUGH -> a `goto` into the surviving arm merges it
+  in place**, and SOURCE ORDER DOES MOVE IT. Which arm carries the label is
+  readable from the bytes: retail's teardown as the fall-through successor of
+  the second test (`jb <teardown>` … `jae <skip>`) means the label goes in the
+  SECOND guard and the first `goto`s forward into it; two jump predecessors
+  mean the label goes in the count-write's own `if` and the loop `goto`s
+  backward. Writing the loop case the other way round (loop inside an `if`,
+  `return -1` in a trailing `else`) merges the site but SINKS the block —
+  0.02 lower and the wrong layout.
+
+**Count the `[ebp-4]` cleanup sites to tell whether a merge exists at all.**
+Retail emits 37 numbered sites in `game::Save` against our 39, and 39 in
+`game::Load` against our 43; every surplus is one `return -1` reached by two
+conditions. That census is what turns "not a spelling" into an edit.
+
+**And these knobs rank NON-MONOTONICALLY in combination** — goto+narrow 84.31,
+`||`+wide 84.34, goto+wide 84.20, `||`+narrow 82.96. Measure the PAIR, not
+each knob. A banked "`||`-with-comma MEASURED AND REJECTED, −2.5" was
+rejecting the wrong thing: the merge is real, the `||` just lowers it as a
+two-jump join that sinks.
 
 **A STATEMENT PIN IS A DROP-IN REPLACEMENT FOR A VIEW GATE** that existed only
 to keep a body out of a TU, and it costs no declarator anywhere:
