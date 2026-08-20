@@ -120,6 +120,19 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
 #ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
+    // The wraith's mana-drain line, in its two counts. Both are folded
+    // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
+    // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
+    // fed (the draining stack's name, the drained hero's name).
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE = 374,
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY = 375,
+    // The attacker NAME combatManager::KeepAttack (0x465ad0) hands to
+    // damage_message for an arrow tower's shot - a folded
+    // [Text._First + 0x5e0], and the only load of that row in the image.
+    // It is passed with a count of 1, so it is a singular noun rather
+    // than a format. The index is byte-proven; the name describes the
+    // one consumer, since the TXT resources are not in the image.
+    GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER = 376,
     // The four rows combatManager::damage_message (0x469a90) builds its
     // line out of, every index a folded [Text._First + N] load in that
     // one body: 0x5e4/0x5e8 are the damage clause, selected on
@@ -127,12 +140,6 @@ enum EGeneralTextIndex {
     // the one-death clause, fed the dying stack's name alone, and 0x5f0
     // the many-death clause, fed (deaths, name). Gated for the reason
     // GENERAL_TEXT_GOOD_MORALE above is.
-    // The wraith's mana-drain line, in its two counts. Both are folded
-    // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
-    // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
-    // fed (the draining stack's name, the drained hero's name).
-    GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE = 374,
-    GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY = 375,
     GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER = 377,
     GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS = 378,
     GENERAL_TEXT_COMBAT_ONE_DEATH = 379,

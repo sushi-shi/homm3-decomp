@@ -1384,6 +1384,20 @@ public:
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the
     // roster spells it, and can_shoot pass its own const this.
+    // 0x446660 / 0x446630, the two screen-midpoint accessors, both const
+    // on the DC roster (army.cpp:4790 / 4773). combatManager::KeepAttack
+    // (0x465ad0) is the decoded consumer and it proves both roles: the
+    // MidX result is compared against the firing archer's own x to form
+    // the horizontal flip, and both are handed to
+    // GetMissileStartingPosition as the destination. Retail's bodies
+    // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
+    // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
+    // still carries both as DC_ONLY carcasses. Behind a view for this
+    // header's usual measured reason.
+#ifdef HOMM3_ARMY_MIDPOINT_DECL
+    int MidX() const;                        // 0x446660
+    int MidY() const;                        // 0x446630
+#endif
     unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a

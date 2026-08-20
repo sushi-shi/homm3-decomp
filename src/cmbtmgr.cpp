@@ -43,6 +43,7 @@
 #define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
 #define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
 #define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
+#define HOMM3_ARMY_MIDPOINT_DECL     // army::MidX / MidY, for KeepAttack
 // The three start-of-turn creature ids and their two army.obj bodies,
 // and the two auto-cast combination artifacts - all five reached from
 // SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
@@ -67,6 +68,7 @@
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
+#define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #define HOMM3_CMBTMGR_SETUP_VIEW
@@ -86,6 +88,7 @@
 #include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
+#include "monframeinfo.h" // gMonFrameInfo, the shot table KeepAttack times from
 #include "prefs.h"  // the local quick-combat preference
 #include "mapcell.h"
 #include "resourcemanager.h"
@@ -1445,38 +1448,145 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
         wallStanding[wall_id] = 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2603
-// SURVEYED 2026-08-20 (head only, +0x00..+0x15f of 0x443), and the
-// survey starts with a PROTOTYPE CORRECTION. The DC roster calls the
-// parameter `combatManager::TArcherID iTowerPos`; retail uses it as a
-// FLAT ARMY ORDINAL. It is scaled by 169 and added to +0x54cc, i.e.
-// `&armies[0][0] + param * sizeof(army)`, so its domain is 0..41 over
-// the flattened armies[2][21] run and not the three-valued archer id.
+// One arrow-tower shot, and the survey it replaces got the PROTOTYPE
+// right and two of its four callee readings wrong.
 //
-// The archer id is derived instead, and from a different army: the body
-// reads the ACTING pair (+0x132b8, +0x132bc) that SetNextArmy stored,
-// forms `&armies[group][index]`, and maps that stack's gridIndex through
-// the same three-way switch mark_tower_army uses - but to an INDEX
-// rather than a latch, 0xfb -> 1, 0xfe -> 0, 0xff -> 2. That index then
-// selects a 36-byte record in the array at +0x13d78, which is where the
-// archers[3] this header already models must live.
+// The parameter is NOT combatManager::TArcherID. It is scaled by 169 and
+// added to +0x54cc, i.e. `&armies[0][0] + p * sizeof(army)`, with no
+// side term at all - retail hardcodes group 0 because an arrow tower is
+// always the defender and only ever shoots side 0. The single caller
+// (army::range_attack, 0x4401c3) pushes `this->slot`, so the domain is
+// 0..20 and the value names the VICTIM, not the tower. The acting tower
+// is read separately, from the (actingSide, actingSlot) pair.
 //
-// One more thing decoded: the record's first dword indexes a table with
-// an 84-BYTE STRIDE reached through the stored pointer at .data
-// 0x67ff24. Identify that table before writing the body - the stride is
-// what will name it.
+// The two corrections:
+//   * 0x446660 / 0x446630 are army::MidX / army::MidY, not
+//     army::PlayAnimation. The real PlayAnimation is 0x446940 and takes
+//     three arguments where these take none; the `army_PlayAnimation`
+//     label on 0x446660 is a stale delinker working label, and the DC
+//     xref graph lists MidX and MidY among this body's callees and no
+//     PlayAnimation at all.
+//   * the 84-byte-stride table behind .data 0x67ff24 is gMonFrameInfo,
+//     already fully modelled in monframeinfo.h - the cell holds
+//     0x6998e0, which is monframeinfo.cpp's own sMonFrameInfoTable.
+//     cmbtmgr.h's TMissileStartInfo is a SECOND model of that same
+//     object and cannot serve here: +0x40 and +0x4c fall inside its
+//     `float angles[18]`.
 //
-// After the inlined IsQuickCombat guard the body calls
-// army::PlayAnimation, then 0x446630, then GetMissileStartingPosition
-// with four out-parameter addresses, which is the shape the missile
-// trio's callers all have.
+// The three-way gridIndex switch has NO default arm - retail leaves the
+// archer index uninitialised for any other hex - and its 0xfe -> 0 /
+// 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
+//
+// Residual (95.0344%): FLOW-DISTANCE 0 and the call multisets agree
+// exactly, 17 against 17, so nothing structural is left. What remains
+// is register binding with the schedule already aligned - eax->ebx x11,
+// ecx->eax x8 - which is the register-homing family damage_message's
+// note also lands in. why-reg's B6/B14 naming knobs are the only route
+// the catalog offers and neither is source-addressable here.
+//
+// Two shapes the bytes forced and that are worth not re-litigating:
+// the damage accumulator is a DOWN-counted loop over a copy of
+// numTroops (retail spills the count and steps it with dec/jne, which
+// an up-counted `for (i = 0; i < n; i++)` does not produce), and
+// `damage * ComputeDefenderDamageReduction(1)` is in THAT operand
+// order - retail materialises and spills the int-to-double conversion
+// BEFORE the call, which is the left-operand-first shape.
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
-void combatManager::KeepAttack(combatManager::TArcherID iTowerPos)
+void combatManager::KeepAttack(int iTowerPos)
 {
-    // @stub
+    army* tower = &armies[actingSide][actingSlot];
+    int archerIndex;
+    switch (tower->gridIndex) {
+    case COMBAT_HEX_KEEP:
+        archerIndex = 0;
+        break;
+    case COMBAT_HEX_LOWER_TOWER:
+        archerIndex = 1;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        archerIndex = 2;
+        break;
+    }
+    TArcher* archer = &archers[archerIndex];
+    const SMonFrameInfo* info = &gMonFrameInfo[archer->creatureType];
+    army* target = &armies[0][iTowerPos];
+
+    SAMPLE2 sample;
+    int army_dir;
+    int delay;
+    int start_x;
+    int start_y;
+    int missile_frame;
+
+    if (!IsQuickCombat()) {
+        int dest_x = target->MidX();
+        int dest_y = target->MidY();
+        archer->field_14 = dest_x >= archer->x;
+        GetMissileStartingPosition(archer->creatureType, archer->x,
+                                   archer->y, archer->field_14, dest_x,
+                                   dest_y, archer->shadowSprite,
+                                   &start_x, &start_y, &army_dir,
+                                   &missile_frame);
+        sprintf(gText,
+                DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
+                             "%sshot.82m"),
+                akCreatureTypeTraits[archer->creatureType].cSamplePrefix);
+        sample = LoadPlaySample(gText);
+
+        int frames = info->iAttackFrames;
+        if (frames <= 0)
+            frames = archer->sprite->GetNumFrames(army_dir);
+        archer->field_18 = army_dir;
+        delay = info->iAttackStartCycleTime / frames;
+
+        ResetLimitCreature();
+        field_1402c[archerIndex] = 1;
+        for (archer->field_1c = 0; archer->field_1c < frames;
+                archer->field_1c++)
+            DrawFrame(1, 1, 0, delay, 1, 1);
+        if (archer->field_1c > 0)
+            archer->field_1c--;
+
+        ShootMissile(start_x, start_y, dest_x, dest_y, info->fArrowAngle,
+                     archer->shadowSprite);
+    }
+
+    // The accumulator is a DOWN-counted loop over a copy of numTroops:
+    // retail spills the count and steps it with `dec / jne`, which an
+    // up-counted `for (i = 0; i < n; i++)` does not produce.
+    int damage = 0;
+    for (int shot = tower->numTroops; shot > 0; shot--)
+        damage += Random(2, 4);
+    damage = static_cast<int>(
+        damage * target->ComputeDefenderDamageReduction(1));
+    if (damage <= 0)
+        damage = 1;
+
+    int killed = target->Damage(damage);
+    damage_message(
+        gpGeneralText->GetText(GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER),
+        1, damage, target, killed);
+    target->CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
+    PowEffect(-1, 1);
+
+    if (!IsQuickCombat()) {
+        while (archer->field_1c
+                < archer->sprite->GetNumFrames(army_dir) - 1) {
+            archer->field_1c++;
+            DrawFrame(1, 1, 0, delay, 1, 1);
+        }
+    }
+    archer->field_14 = 0;
+    archer->field_18 = cs_wait;
+    archer->field_1c = 0;
+    DrawFrame(1, 0, 0, 0, 1, 0);
+
+    if (!IsQuickCombat())
+        WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2727
 DC_ONLY(0x6021c, 0x4)
@@ -2044,13 +2154,13 @@ void combatManager::MakeCreaturesVanish()
                         == army::ARMY_CREATURE_ARROW_TOWER) {
                     switch (armies[side][index].gridIndex) {
                     case COMBAT_HEX_LOWER_TOWER:
-                        field_1402d = 1;
+                        field_1402c[1] = 1;
                         break;
                     case COMBAT_HEX_KEEP:
-                        field_1402c = 1;
+                        field_1402c[0] = 1;
                         break;
                     case COMBAT_HEX_UPPER_TOWER:
-                        field_1402e = 1;
+                        field_1402c[2] = 1;
                         break;
                     }
                 } else {
@@ -3057,13 +3167,13 @@ void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
                 if (stack.creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
                     switch (stack.gridIndex) {
                     case COMBAT_HEX_LOWER_TOWER:
-                        field_1402d = 1;
+                        field_1402c[1] = 1;
                         break;
                     case COMBAT_HEX_KEEP:
-                        field_1402c = 1;
+                        field_1402c[0] = 1;
                         break;
                     case COMBAT_HEX_UPPER_TOWER:
-                        field_1402e = 1;
+                        field_1402c[2] = 1;
                         break;
                     }
                 } else {
