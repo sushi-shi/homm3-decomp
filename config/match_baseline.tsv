@@ -841,8 +841,10 @@ font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
 game	??0SavedGameHeader@@QAE@XZ	96.4326	96.4326	96.4326	0xbc0e0
+game	??0game@@QAE@XZ	84.2891	84.2891	84.2891	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
@@ -950,8 +952,6 @@ game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
-game	game_game	0.0000	0.0000	0.0000	0xcdf20
-game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860
@@ -1377,10 +1377,10 @@ puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	98.8426	98.8426	98.8426	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0
 puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12c570
+puzzlewindow	?AI_attempt_puzzle_guess@@YI?AUtype_point@@J@Z	97.1621	97.1621	97.1621	0x12c9b0
 puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x12c6c0
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0
-puzzlewindow	AI_attempt_puzzle_guess	0.0000	0.0000	0.0000	0x12c9b0
 questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0
 questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0
 questlogwindow	?UpdateQuestLocator@TQuestLogWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x12e270

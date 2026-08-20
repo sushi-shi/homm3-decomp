@@ -29,6 +29,7 @@
 // two groups above.
 #include "advmgr_objects.h"
 #include "advmgr.h"
+#include "initialize.h"
 #include "terrain.h"
 #include <stdio.h>
 #include <string.h>
@@ -5490,14 +5491,80 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
     return result;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:11684
+// The mirror of ~game below: retail's body is almost entirely the
+// compiler-generated MEMBER CONSTRUCTION, in declaration order, and this
+// class's declaration order is already right - an EMPTY body scores
+// 74.6490% on its own. What lands verbatim from the header alone:
+// scenarioTowns' inline vector constructor, the `eh vector constructor
+// iterator' over heroSetup[156] with HeroExtra's 0x334 stride and the
+// 0x4ce4b0/0x4ce520 ctor/dtor pair, SCampaign, the load-event vector,
+// SGameSetupOptions' whole loop body (difficulty 0, turnDuration 10,
+// memset(filename,0,251) at +0x39 and memset(path,0,100) at +0x134, the
+// three bytes at +0x1a0..+0x1a2), NewSMapHeader with its three strings,
+// NewfullMap, players[8], towns, heroes[156] on the 0x492 stride, the
+// five object pools, rumours and both eight-element teleport-pool
+// arrays.
+//
+// Residual (74.6490%): the EXPLICIT statements are not written yet, and
+// so are the members only they touch. Retail interleaves, in cleanup-
+// state order: a 156-iteration loop at +0x4dfb4 calling a one-argument
+// constructor on a four-byte element (0x4cff30, no matching teardown in
+// ~game, so the element is trivially destructible); zeroing sweeps over
+// the POD bands at +0x1f4d5, +0x4df18, +0x4dfb4, +0x4e224, +0x4e2b4,
+// +0x4e344, +0x4e3e9, +0x4e419 and +0x4e546; and a call to
+// initialize_game_data (0x4eb730) near the end. Each needs its member
+// modelled first; none of it is layout-neutral, so it is left rather
+// than guessed.
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
-void game::game()
+game::game()
 {
-    // @stub
+    difficultyRating = 0;
+    field_1f4d4 = 0;
+    memset(saveFileName, 0, sizeof(saveFileName));
+    memset(&setup, 0, sizeof(setup));
+    memset(playerDisabled, 0, sizeof(playerDisabled));
+    field_1f63e = 0;
+    field_1f640 = 0;
+    field_1f642 = 0;
+    memset(heroAvailability, -1, sizeof(heroAvailability));
+    // MISSING STATEMENT, LEFT OUT DELIBERATELY AND NOT SILENTLY. Retail
+    // fills heroPoolMap here - `mov ecx,0x9c / mov eax,0xff /
+    // lea edi,[esi+0x4dfb4] / rep stosd`, i.e. 156 dwords of 0x000000ff,
+    // which is `heroPoolMap[i].set()` over the whole array. Our CL will
+    // not lower a fill over an array of CLASS type into `rep stos`: it
+    // strength-reduces to a pointer walk (`mov [eax],0xff / add eax,4 /
+    // dec ecx / jne`), and the extra conditional branch takes the branch
+    // count to 3 against retail's 2, which cascades through the scorer -
+    // `heroPoolMap[i].set()` measures 28.2094 and `heroPoolMap[i] = 0xff`
+    // (which also builds a bitset temporary) 6.8614, against 84.2891
+    // with the statement absent. Restoring it needs a spelling that
+    // reaches `rep stosd`, not a re-measurement of these two.
+    memset(artifactUsed, 0, sizeof(artifactUsed));
+    memset(artifactDisabled, 0, sizeof(artifactDisabled));
+    memset(obeliskFlags, 0, sizeof(obeliskFlags));
+    ultimateArtifactX = -1;
+    ultimateArtifactY = -1;
+    ultimateArtifactZ = -1;
+    field_1f695 = 0x7f;
+    ultimateArtifactPresent = 0;
+    f_1f698 = 0;
+    field_1f69c = 0;
+    memset(currentRumour, 0, sizeof(currentRumour));
+    field_4e3e8 = 0;
+    memset(globalInfoFlags, 0, sizeof(globalInfoFlags));
+    memset(borderTentVisitFlags, 0, sizeof(borderTentVisitFlags));
+    cartographerMask[0] = 0x100;
+    cartographerMask[1] = 0xbf;
+    cartographerMask[2] = 0x40;
+    memset(cartographerFlags, 0, sizeof(cartographerFlags));
+    initialize_game_data();
+    memset(rumourState, 0, sizeof(rumourState));
+    field_1f69d = 0;
+    field_90 = 0;
 }
+
+#if 0  // @carcass
 
 // ---------------------------------------------------------------------
 // BRACKET game::game (0x4cdf20) .. game::~game (0x4ce5b0) - three carve
@@ -5551,16 +5618,34 @@ playerData::~playerData()
 {
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:11749
+// ONE user statement and the compiler-generated member teardown. Retail's
+// body is `mov [ebp-4],0x17 / call game::clear_event_records` and then
+// twenty-three numbered cleanup sites walking the members from the
+// highest offset down - the vector at +0x4e7bc, eventRecords, the three
+// teleport pools, both eight-element pool ARRAYS through the `vector
+// destructor iterator', rumours, the five object pools, heroes[156],
+// towns, players[8], worldMap, mapHeader, the load-event vector,
+// campaign, heroSetup[156] and scenarioTowns - which is exactly what
+// this class's declaration order emits.
+// Residual (78.8428%): retail CALLS the empty `_Destroy(_First,_Last)`
+// COMDAT at seven of the twenty-four sites - 0x404140 is literally
+// `ret 8`, the whole-image ICF fold of every trivially-destructible
+// element's destroy loop - and our /Ob2 expands it to nothing. That is
+// the only class of difference; base 211 instructions against retail's
+// 229 and the residual is those seven call sequences plus the cleanup
+// states they carry. The depth knob does NOT reach it, measured both
+// ways: `#pragma inline_depth(1)` around this definition is BYTE-FLAT
+// at 78.8428 (so `_Destroy` is expanded at whatever depth the implicit
+// teardown puts it), while `#pragma inline_depth(0)` DOES reach the
+// teardown - it de-inlines `~vector()` itself and costs 36.8 points
+// (-> 42.0349) - which proves the pragma is applied and the boundary
+// simply is not depth.
 VA(0x004ce5b0, 0x346)  // anchor-global, dc 0xbbd28
-void game::~game()
+game::~game()
 {
-    // @stub
+    clear_event_records();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:11754
 // Iterator walk over the third object pool. It closes boat's layout

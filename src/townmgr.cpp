@@ -1629,6 +1629,29 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // pin does. Measured byte-flat: 85.9895 to the digit. Depth is not the
 // limiter; the `budget / (n - k)` quotient is, exactly as this note
 // says.
+//
+// SEVENTH CANDIDATE, ELIMINATED 2026-08-20 WITHOUT A COMPILE - the
+// FIELD-STORE dose. The lever that paid +11.66 and +2.56 on two other
+// bodies (retail sets x/y/width/height after the base constructor even
+// though the base already took them, as TPuzzleWindow's exact ctor does)
+// DOES NOT APPLY HERE. Retail's prologue goes straight from
+// `call CAdvPopup::CAdvPopup` and the vptr store at 0x5c9c1a to the
+// slotX/slotY/hallX/hallY initializers at 0x5c9c3c - there is no member
+// store of any kind in between. Adding them would be inventing
+// instructions retail does not emit, not recovering a missing statement.
+//
+// AND THE CALL MULTISET IS NOW PRICED EXACTLY (predict-inline, same
+// date): base emits 290 out-of-line calls against retail's 289, and the
+// whole difference is TWO SITES IN OPPOSITE DIRECTIONS - one
+// `vector<widget*>::push_back` we expand and retail calls (base x8 vs
+// retail x9; the tool prints retail's side as `vector<int>::push_back`
+// because the retail link ICF-folded the two identical COMDATs, and
+// begin/end pair 1:1 across the same fold), and this `_Construct` we
+// call and retail expands. So the body is one over-inline and one
+// under-inline away from the call multiset being identical, and the
+// fourteen points are the 8-byte frame delta the under-inline forces -
+// the two `_Ucopy` iterator temps homed in memory - shifting every deep
+// local, the ~15%-score-hole shape.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
