@@ -153,6 +153,20 @@ static int ControllingSide(const army* stack)
     return stack->combatSide;
 }
 
+// Retail .data 0x688334/0x688338, both initialised to -1 and each with
+// exactly FOUR references in the whole image, all eight of them inside
+// HandleGetTeleportDestination - so both are file-scope statics of this
+// TU. Names are provisional, from that one consumer: 0x688334 holds the
+// destination the pointer is currently standing on (the hex, or -1 when
+// the cell under the cursor is not a legal landing), and the left-click
+// arm hands exactly it to the pending order; 0x688338 is the hover
+// cache the mouse-move arm compares against first so a stationary
+// pointer does not re-issue the message every frame.
+DATA(0x00688334)
+static long gTeleportDestinationHex = -1;
+DATA(0x00688338)
+static long gTeleportHoverHex = -1;
+
 // Retail .bss 0x6a3cac, and every reference to it in the image is inside
 // spells.obj - two in the 0x59ec50 body that drives a cast and one in
 // SpellTargetMessage - so it is a file-scope static of this TU. Name
@@ -295,16 +309,71 @@ unsigned char combatManager::is_valid_teleport(const army* this_army, long new_h
     return 1;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:2497
+// The SECOND click of a Teleport cast: the window handler installed once
+// a stack has been picked up, and it answers four message ids out of one
+// jump table (retail emits the 32-entry index byte table plus five
+// targets, so the arm LAYOUT is source order - move/click/key/right).
+//
+// combatManager::field_44 already holds the hex the first click picked,
+// so the cell pointer here is the SOURCE stack; `hex` is the candidate
+// landing under the cursor.
+//
+// The array-pointer-above-the-guard shape is retail's, for the fifth
+// time in this TU: `lea ecx,[edx+ecx+0x1c4]` is scheduled BETWEEN
+// ValidHex's `test/jl` and its `cmp 0xbb/jge`, which only happens when
+// the cell pointer is named ahead of the guard.
 VA(0x005a37d0, 0x17C)  // order-map+arity, dc 0x152c80
 int HandleGetTeleportDestination(message* msg)
 {
-    // @stub
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE: {
+        long hex = gpCombatManager->GetGridIndex(msg->codeX, msg->codeY);
+        if (hex == gTeleportHoverHex)
+            break;
+        long source_hex = gpCombatManager->field_44;
+        const hexcell* source_cell = &gpCombatManager->cells[source_hex];
+        if (!gpCombatManager->ValidHex(source_hex))
+            break;
+        army* source_army = source_cell->get_army();
+        if (gpCombatManager->is_valid_teleport(source_army, hex)) {
+            gTeleportDestinationHex = hex;
+            gpMouseManager->SetPointer(0x13, mouseManager::COMBAT_SET);
+            gpCombatManager->SpellTargetMessage(SPELL_TELEPORT, hex, 1);
+        } else {
+            gTeleportDestinationHex = -1;
+            gpMouseManager->SetPointer(0, mouseManager::COMBAT_SET);
+            gpCombatManager->combatWindow->combat_message(
+                gpGeneralText->GetText(25), 0, 0);
+        }
+        gTeleportHoverHex = hex;
+        break;
+    }
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (gTeleportDestinationHex == -1)
+            break;
+        gpCombatManager->field_48 = gTeleportDestinationHex;
+        gTeleportHoverHex = -1;
+        gTeleportDestinationHex = -1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = 10;
+        return MESSAGE_DISPATCH_FORWARD;
+    case MESSAGE_KEY_DOWN:
+        // The ESC scancode in the codeX domain, the same value
+        // dimensiondoorwindow.h names DIALOG_CLOSE_KEY; the arm then
+        // falls into the right-click cancel below.
+        if (msg->codeX != 1)
+            break;
+    case MESSAGE_RIGHT_BUTTON_DOWN:
+        gpCombatManager->field_3c = 0;
+        gTeleportHoverHex = -1;
+        gTeleportDestinationHex = -1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = 10;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
 }
-
-#endif  // @carcass
 
 // The three-way arm is what fixes SPELL_SACRIFICE at 0x28: retail lowers
 // the selector as `sub edx, 0x26 / dec / dec`, so the arms are 0x26, 0x27
