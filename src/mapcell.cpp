@@ -7,6 +7,7 @@
 // narrower than HOMM3_MAPCELL_OBJECTS_VIEW: only this TU constructs a
 // CObjectType, and this header's include closure is measured.
 #define HOMM3_MAPCELL_TYPEMASK_VIEW
+#define HOMM3_MAPCELL_TOWNEXTRA_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
 // class, so the span has no missing attributions at the small end:
@@ -39,7 +40,10 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "monsterdata.h"
+#include "newgame.h"
 #include "resourcemanager.h"
+#include "smackmgr.h"
+#undef HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -2594,12 +2598,218 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:2798
-VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
-int NewfullMap::readTownData(void* infile, CObject* townObject)
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:232 - TTownEvent::Read in the Dreamcast roster
+// (dc 0xebc90, locals `inBuf`, `padding`, `count`).  Retail's only call site
+// is readTownData, which inlines it, so it is spelled as a file-local static
+// for exactly the reason loadMonsterData above is: an inlined single-call
+// static leaves no symbol behind where an extern member would leave one
+// retail has not got.
+//
+// Its result is DISCARDED at the call site, and that is what explains the one
+// asymmetry in the bytes: the trailing four-byte read carries NO short-count
+// branch while the two reads above it do.  With the return value dead, both
+// arms of the last `return -1` converge on the same code and the optimizer
+// folds the test away; the two earlier ones survive because failing them
+// SKIPS a later read.
+static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
+                         int mapVersion)
 {
-    // @stub
+    unsigned char inBuf[6];
+    char padding[4];
+
+    thisEvent->Read(infile, mapVersion);
+
+    if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+        return -1;
+    memcpy(&thisEvent->BuildBuildings, inBuf, sizeof(inBuf));
+
+    if (infile->Read(thisEvent->generatorBonuses,
+                     sizeof(thisEvent->generatorBonuses))
+        < sizeof(thisEvent->generatorBonuses))
+        return -1;
+
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
+
+// E:\gamedcs\mapcell.cpp:2798
+// The h3m town record, and the fullest statement of this pool's layout there
+// is: every offset game.h's gated view models is written here, and the total
+// lands on the 136-byte stride the `imul 0x78787879 / sar 6` size() inline
+// divides by.
+//
+// The record index goes straight into the OBJECT rather than into a local the
+// way readArtifactData's does - it is taken BEFORE the push_back that will
+// create the entry, so it is the index the entry is about to get.
+//
+// THREE version tests, and they do not read the same source.  The leading
+// identifier dword and the obligatory-spell mask consult
+// gpGame->mapHeader.version; the creature field's WIDTH and the trailing
+// alignment byte consult the mapVersion PARAMETER.  That asymmetry is
+// retail's, the same one readGarrisonData and readBlackBox carry.
+//
+// The two spell masks are read into ONE nine-byte buffer, which is why the
+// oldest map format still memsets it before skipping the loop that would
+// read it: the second Read overwrites the whole thing regardless.  Each mask
+// is unpacked bit by bit, with `/ 8` and `% 8` SIGNED - the `and
+// ecx,0x80000007` negative fixup and the `cdq / and edx,7 / add / sar 3`
+// pair are what prove the loop counter is `int`; shifts and masks would not
+// produce those corrections.
+//
+// The tail resolves a RANDOM_TOWN's faction: the alignment byte's player slot
+// if that slot is playable at all, else the town's own owner, else a roll -
+// widened to nine alignments only when the scenario is expansion-era.
+VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
+int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
+                             int mapVersion)
+{
+    TScenarioTown tempTown;
+    char char_buffer;
+    short short_buffer;
+    int int_buffer;
+    int numTownEvents;
+    unsigned char inBuf[6];
+    unsigned char spellBuf[9];
+    char padding[3];
+    int x;
+    int count;
+
+    townObject->extraInfo = gpGame->scenarioTowns.size();
+    tempTown.townType = objectTypes[townObject->typeIndex].extra;
+
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        tempTown.castleId = 0;
+    } else {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        tempTown.castleId = int_buffer;
+    }
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.playerOwner = char_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomName = char_buffer;
+    if (tempTown.bCustomName)
+        readMapString(infile, &tempTown.name);
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomArmies = char_buffer;
+    if (tempTown.bCustomArmies) {
+        for (x = 0; x < armyGroup::ARMY_GROUP_SLOT_COUNT; ++x) {
+            int creature;
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                creature = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                creature = wide;
+            }
+            tempTown.townArmy.armies[x] = creature;
+
+            if (infile->Read(&short_buffer, sizeof(short_buffer))
+                < sizeof(short_buffer))
+                return -1;
+            tempTown.townArmy.numTroops[x] = short_buffer;
+        }
+    }
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bIsGrouped = char_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    tempTown.bCustomBuildings = char_buffer;
+
+    if (tempTown.bCustomBuildings) {
+        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+            return -1;
+        memcpy(&tempTown.BuildingBuiltMask, inBuf, sizeof(inBuf));
+        if (infile->Read(inBuf, sizeof(inBuf)) < sizeof(inBuf))
+            return -1;
+        memcpy(&tempTown.BuildingDisabledMask, inBuf, sizeof(inBuf));
+    } else {
+        if (infile->Read(&char_buffer, sizeof(char_buffer))
+            < sizeof(char_buffer))
+            return -1;
+        tempTown.HasFort = char_buffer;
+    }
+
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        memset(spellBuf, 0, sizeof(spellBuf));
+    } else {
+        infile->Read(spellBuf, sizeof(spellBuf));
+        for (x = 0; x < 70; ++x)
+            tempTown.fixedSpells[x] = (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    }
+
+    if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
+        return -1;
+    for (x = 0; x < 70; ++x)
+        tempTown.spells[x] = (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+
+    if (infile->Read(&numTownEvents, sizeof(numTownEvents))
+        < sizeof(numTownEvents))
+        return -1;
+
+    for (count = 0; count < numTownEvents; ++count) {
+        TTownEvent thisEvent;
+        readTownEvent(infile, &thisEvent, mapVersion);
+        thisEvent.TownNum = gpGame->scenarioTowns.size();
+        TownEventList.push_back(thisEvent);
+    }
+
+    char alignment = -1;
+    if (mapVersion >= 28)
+        infile->Read(&alignment, sizeof(alignment));
+
+    if (objectTypes[townObject->typeIndex].objectType == RANDOM_TOWN) {
+        if (alignment != -1
+            && (gpGame->mapHeader.playerSlotAttributes[alignment].CanBeHuman
+                || gpGame->mapHeader.playerSlotAttributes[alignment]
+                       .CanBeComputer)) {
+            tempTown.townType = gpGame->setup.alignment[alignment];
+        } else if (tempTown.playerOwner != -1) {
+            tempTown.townType = gpGame->setup.alignment[tempTown.playerOwner];
+        } else {
+            // Eight town bits, widened to the ninth only for an
+            // expansion-era scenario in the two game states that allow it.
+            //
+            // The enumerator reads oddly here because smackmgr named this
+            // domain from its OWN use of it - the two values that force a
+            // video onto the bink arm - and that header says so: the names
+            // are provisional until the pointee's owning TU lands. It is
+            // the same global (0x69923c) and the same value 3, so the gate's
+            // rule applies. Two independent readings now constrain the
+            // domain: this one pairs 1 with 3, and PointToSpriteResource
+            // (0x55cf50) uses the very same double indirection to INDEX the
+            // 24-byte archive-set rows at 0x69e538 - so the pointee is a
+            // small game/resource-context ordinal, not a video flag.
+            int legalAlignments = 0xff;
+            if ((*gpVideoGameState == 1
+                 || *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_HIGH)
+                && gpGame->f_1f698 >= 1)
+                legalAlignments = 0x1ff;
+            tempTown.townType = pick_alignment(legalAlignments, 0);
+        }
+    }
+
+    gpGame->scenarioTowns.push_back(tempTown);
+
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2951
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
