@@ -3,6 +3,10 @@
 // 594 functions in link order; 24 compiler-generated $-thunks omitted.
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+// The ten-bit mask CObjectType carries at +0x34. Its own gate, deliberately
+// narrower than HOMM3_MAPCELL_OBJECTS_VIEW: only this TU constructs a
+// CObjectType, and this header's include closure is measured.
+#define HOMM3_MAPCELL_TYPEMASK_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
 // class, so the span has no missing attributions at the small end:
@@ -33,6 +37,8 @@
 #include "kb.h"
 #include "misc.h"
 #include "monsterdata.h"
+#include "resourcemanager.h"
+#undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 
@@ -3293,16 +3299,77 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3962
+// The save twin of readMapObjects, and the only serializer here that
+// REPLACES a live sprite table rather than filling an empty one: the old
+// CSprite pointers are copied aside, `sprites` is refilled from the freshly
+// loaded type records, and only then is each old sprite Disposed.  That
+// aside-vector is the function's one EH object.
+//
+// Neither list read has the `count == 0 -> clear()` arm readTimedEventList
+// needs: both go straight into resize, which is loadBlackBox's shape.
+//
+// objectTypes.size() is spelled five times and objects.size() once, and the
+// Dreamcast xref graph counts exactly five and one for the same body.  Every
+// subscript is re-taken - objects[i] twice inside the object loop,
+// objectTypes[i] twice across the two type loops - because retail keeps only
+// a byte offset live and reloads _First each pass.
+//
+// The two progress ticks inside the sprite loop fire at size()/3 and at
+// size()/3*2, in that order and with the division FIRST: retail's
+// `mul 0xaaaaaaab / shr edx,1` then `shl edx,1` is (n/3)*2, not 2*n/3.
 VA(0x00504b70, 0x4E9)  // order-map: calls loadObject 0x5036d0 + loadObjectType 0x503f00 + GetSprite 0x55c7b0; called by Load; EH-bearing, dc 0xf318c
-int NewfullMap::loadMapObjects(void* infile)
+int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
-    // @stub
-}
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
 
-#endif  // @carcass
+    objectTypes.resize(count);
+
+    unsigned int i;
+    for (i = 0; i < objectTypes.size(); ++i) {
+        if (loadObjectType(infile, &objectTypes[i]) < 0)
+            return -1;
+    }
+
+    IncProgressBar(1);
+    NewfullMapFn_005042C0();
+
+    std::vector<CSprite*> oldSprites;
+    oldSprites.resize(sprites.size());
+    for (i = 0; i < sprites.size(); ++i)
+        oldSprites[i] = sprites[i];
+
+    sprites.resize(objectTypes.size());
+    for (i = 0; i < objectTypes.size(); ++i) {
+        sprites[i] =
+            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
+        if (i == objectTypes.size() / 3)
+            IncProgressBar(1);
+        if (i == objectTypes.size() / 3 * 2)
+            IncProgressBar(1);
+    }
+
+    for (i = 0; i < oldSprites.size(); ++i)
+        oldSprites[i]->Dispose();
+    oldSprites.clear();
+
+    IncProgressBar(1);
+
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objects.resize(count);
+    for (i = 0; i < objects.size(); ++i) {
+        if (loadObject(infile, &objects[i]) < 0)
+            return -1;
+        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 // E:\gamedcs\mapcell.cpp:4018
 // Builds the per-cell stacking depth an object's sprite occupies, as an 8x6

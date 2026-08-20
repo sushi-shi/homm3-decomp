@@ -152,7 +152,11 @@ DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
 
 class CObjectType;
 
-#ifdef HOMM3_GAME_OBJ_DECLS
+// The gate is widened with CObject's constructor below, whose body names
+// Random: an in-class member body's non-dependent names are looked up at the
+// closing brace of the class, and mapcell.cpp reaches misc.h only later in
+// its include list.
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 int __fastcall Random(int minimum, int maximum);
 #endif
 
@@ -188,12 +192,21 @@ public:
     unsigned char animationOffset;
     unsigned char pad_0b;
 
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
     // dword, and each dynamic object receives a random animation phase.
-    CObject(unsigned char newX, unsigned char newY, unsigned char newZ,
-            unsigned short newType, unsigned long newExtraInfo)
+    //
+    // The DEFAULT ARGUMENTS are byte-proven from the other end, by
+    // loadMapObjects' `objects.resize(count)`: the `_Ty()` temporary
+    // Dinkumware's resize materialises at the call site stores 0xff into
+    // each coordinate, 0xffff into typeIndex and 0xffffffff into extraInfo,
+    // then rolls the animation phase - this body verbatim, in this order,
+    // with those five values. game::InsertObject's explicit five-argument
+    // call is unaffected.
+    CObject(unsigned char newX = 0xff, unsigned char newY = 0xff,
+            unsigned char newZ = 0xff, unsigned short newType = 0xffff,
+            unsigned long newExtraInfo = 0xffffffff)
     {
         x = newX;
         y = newY;
@@ -231,7 +244,28 @@ public:
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
     std::bitset<48> triggerCells;
+    // +0x34, FOUR bytes and unchanged in layout, but not padding: the
+    // default constructor CObjectType's `resize` temporary runs calls SIX
+    // sub-constructors, and the sixth targets this slot through
+    // std::bitset<10>::_Tidy at 0x506880 (`and eax,0x3ff` - _Trim with
+    // 10 % 32 = 10), where the four masks above go through the
+    // bitset<48> _Tidy at 0x4e66c0. `char pad_34[4]` emits five and cannot
+    // produce the sixth. It also resolves the Dreamcast offset arithmetic:
+    // DC's Type at 48 maps to retail 52 = 0x34, yet saveObjectType
+    // byte-proves objectType at 0x38 - retail inserted one 4-byte member
+    // the DC record does not have, and this is it.
+    //
+    // The mask's MEANING is unproven and its name is deliberately ordinal:
+    // no serializer in this compiland reads or writes it, readObjectType
+    // included. GATED to the single TU that needs the constructor shape,
+    // not to HOMM3_MAPCELL_OBJECTS_VIEW, which advmgr/game/puzzlewindow
+    // also define - this header's own objectType note records what an
+    // ungated extra declarator cost events.obj.
+#ifdef HOMM3_MAPCELL_TYPEMASK_VIEW
+    std::bitset<10> mask_34;
+#else
     char pad_34[4];
+#endif
     // loadObjectType stores the serialized type as a FULL DWORD - the
     // stream carries two bytes and retail widens them into all four of
     // +0x38..+0x3b. Overlaid rather than cast, exactly as NewmapCell's own

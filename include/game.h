@@ -298,6 +298,14 @@ public:
     // span audit already flags as having no Dreamcast counterpart; Load
     // reaches it, and only when the save version is at least 25.
     void NewfullMapFn_004FD950(TAbstractFile* infile, int saveVersion);
+    // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
+    // right after the object-type list is deserialized. It rebuilds the
+    // per-class object-type index: the 232-entry array of vectors at
+    // NewfullMap+0xdc that this tree does not model yet. Named for its
+    // address on NewfullMapFn_00505F20's precedent - the Dreamcast mapcell
+    // roster runs loadObjectType -> $E482..$E485 -> readMapObjects with
+    // nothing between, so no surviving symbol names it.
+    void NewfullMapFn_005042C0();
     // Two retail-only members with no Dreamcast counterpart, both reached
     // only from Read's tail and named for their addresses on this tree's
     // NewfullMapFn_00505F20 precedent.
