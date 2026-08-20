@@ -218,7 +218,18 @@ def _anchors(dc, x86, claims, anchor_log=False):
         label = claims.get(x["rva"])
         if not label:
             continue
-        names = set(tok.findall(label))
+        # A MANGLED label names its method FIRST - `?Method@Class@@...` -
+        # so read it there rather than tokenizing the whole decoration.
+        # Tokenizing makes every `army::X` label answer to BOTH `X` and
+        # the class token `army`, which the roster's own `army::army`
+        # constructor row also answers to; the one-to-one test below then
+        # throws the anchor away. Measured on army 2026-08-20: 53 valid
+        # anchors collapsed to 2, and the verdict with them (79% MIXED
+        # against a hand-anchored map that agrees with every claim).
+        # Any TU whose constructor is in its own roster has this.
+        m = re.match(r"\?([A-Za-z_][A-Za-z_0-9]*)@", label)
+        names = ({m.group(1)} if m and m.group(1) in by_name
+                 else set(tok.findall(label)))
         hits = [(n, idxs) for n, idxs in by_name.items() if n in names]
         if len(hits) != 1:
             continue           # names nothing, or names several DC rows
