@@ -167,25 +167,25 @@ unsigned char VictoryConditionStruct::CheckForUpgradedTown()
         return 0;
 
     switch (HallLevel) {
-    case 0:
+    case VICTORY_HALL_TOWN:
         hall_ok = (checkedTown->active & bitNumber[HALL_TOWN_ID]) != 0;
         break;
-    case 1:
+    case VICTORY_HALL_CITY:
         hall_ok = (checkedTown->active & bitNumber[HALL_CITY_ID]) != 0;
         break;
-    case 2:
+    case VICTORY_HALL_CAPITOL:
         hall_ok = (checkedTown->active & bitNumber[HALL_CAPITOL_ID]) != 0;
         break;
     }
     switch (CastleLevel) {
-    case 0:
+    case VICTORY_CASTLE_FORT:
         castle_ok = (checkedTown->active & bitNumber[CASTLE_FORT_ID]) != 0;
         break;
-    case 1:
+    case VICTORY_CASTLE_CITADEL:
         castle_ok =
             (checkedTown->active & bitNumber[CASTLE_CITADEL_ID]) != 0;
         break;
-    case 2:
+    case VICTORY_CASTLE_CASTLE:
         castle_ok =
             (checkedTown->active & bitNumber[CASTLE_CASTLE_ID]) != 0;
         break;
