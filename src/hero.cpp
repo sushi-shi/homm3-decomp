@@ -45,7 +45,15 @@
 #include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
+// The creature arm of THeroSpecificAbility's +0x04 union: hero::GetMobility
+// reads the specialty subject as a TCreatureType. hero.h above already
+// pulled armygrp.h, so TCreatureType is in scope by the time this is read.
+#define HOMM3_HEROSPEC_CREATURE_VIEW
 #include "herospec.h"
+#undef HOMM3_HEROSPEC_CREATURE_VIEW
+// UpgradedCreatureType - GetMobility's creature-specialty check asks for
+// the specialty stack's upgrade; the cmbtmgr / hillfortwindow precedent.
+#include "creaturetype.h"
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
@@ -5357,16 +5365,131 @@ float hero::GetFirstAidFactor()
     return factor + 1.0f;
 }
 
-#if 0  // @carcass
+// Logistics' land-movement factor by mastery (retail .rdata 0x63ea68,
+// the same four-float band as the specialty rows above).
+static const float kLogisticsFactors[kNumMasteries] =
+    { 0.0f, 0.1f, 0.2f, 0.3f };
+
+// movement.txt, parsed at 0x4d7240 into six .bss cells this TU is the
+// modeled consumer of. The land row is bounded by the parser's own
+// `cmp edi,0x698ae8 / jle` - 21 entries, one per creature speed 0..20 -
+// and the sea row by `cmp edi,0x18 / jl`, one per Navigation mastery.
+// NAMES ARE ROLE-INFERRED from their readers here (no public symbol
+// survives), but each role is byte-fixed by the artifact GetMobility
+// pairs it with: 0x46 Equestrian's Gloves, 0x62 Boots of Speed, 0x47
+// Necklace of Ocean Guidance, 0x7b Sea Captain's Hat. 0x698b0c is the
+// SAME cell the owned-Lighthouse count and the Castle Lighthouse
+// building multiply, which is what makes it the lighthouse bonus rather
+// than a fourth artifact's.
+DATA(0x00698a98) extern int gLandMovement[21];
+DATA(0x00698aec) extern int gSeaMovement[kNumMasteries];
+DATA(0x00698afc) extern int gEquestriansGlovesMovementBonus;
+DATA(0x00698b00) extern int gBootsOfSpeedMovementBonus;
+DATA(0x00698b04) extern int gOceanGuidanceMovementBonus;
+DATA(0x00698b0c) extern int gLighthouseMovementBonus;
+
+// The elemental gate the creature specialty applies before every upgrade
+// query - the twin of hillfortwindow.obj's own copy. No out-of-line row
+// exists; /Ob2 expands it at the single call site below.
+static TCreatureType GetUpgradedCreature(TCreatureType type)
+{
+    if (gpGame->f_1f698 == 0 &&
+        (type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL ||
+         type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL))
+        return CREATURE_NONE;
+    return UpgradedCreatureType(type);
+}
 
 // E:\gamedcs\hero.cpp:5833
+// The movement allowance. Two disjoint halves joined by one AI tail: the
+// SEA half prices Navigation (plus its specialty), owned Lighthouses, the
+// Sea Captain's Hat, every Castle-type town holding its Lighthouse, and
+// the Necklace of Ocean Guidance; the LAND half finds the army's slowest
+// stack (raised by one for a creature specialty), scales the movement.txt
+// row by Logistics (plus its specialty), then adds the Boots of Speed,
+// the Equestrian's Gloves and the Stables grant.
+//
+// The Castle-Lighthouse loop really does NOT check the town's owner -
+// retail tests only `type == TOWN_CASTLE` and the built mask, so EVERY
+// such town in the scenario raises THIS hero's sea movement. Transcribed
+// as retail emits it; treat it as a retail quirk, not a decode gap.
+// The `owner < 6` cap on the AI bonus is likewise anomalous (players run
+// to 8 everywhere else) and is likewise literal.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {
-    // @stub
-}
+    if (flags & 0x1000000)
+        return 1000000;
 
-#endif  // @carcass
+    int mobility;
+    if (sea_movement) {
+        mobility = gSeaMovement[skillLevel[eSecSkillNavigation]];
+        if (skillLevel[eSecSkillNavigation] > 0 &&
+            akHeroSpecificAbilities[id].type == eHeroAbilitySecondarySkill &&
+            akHeroSpecificAbilities[id].skill == eSecSkillNavigation)
+            mobility += level * gSeaMovement[0] / 10;
+
+        if (owner != -1)
+            mobility += gpGame->MineTypesOwned(owner, 100) *
+                        gLighthouseMovementBonus;
+
+        if (IsWieldingArtifact(0x7b))
+            mobility += gLighthouseMovementBonus;
+
+        for (unsigned int t = 0; t < gpGame->towns.size(); t++) {
+            town& thisTown = gpGame->towns[t];
+            if (thisTown.type == TOWN_CASTLE &&
+                thisTown.HasBuilding(SPECIAL_BUILDING_ID, 0))
+                mobility += gLighthouseMovementBonus;
+        }
+
+        if (IsWieldingArtifact(0x47))
+            mobility += gOceanGuidanceMovementBonus;
+    } else {
+        int slowest = 20;
+        for (int slot = 0; slot < 7; slot++) {
+            int creature = army.armies[slot];
+            if (creature != CREATURE_NONE) {
+                int speed = akCreatureTypeTraits[creature].speed;
+                if (akHeroSpecificAbilities[id].type == eHeroAbilityCreature) {
+                    if (creature == akHeroSpecificAbilities[id].creature)
+                        speed++;
+                    else if (akHeroSpecificAbilities[id].creature !=
+                                 CREATURE_BALLISTA &&
+                             creature == GetUpgradedCreature(
+                                 akHeroSpecificAbilities[id].creature))
+                        speed++;
+                }
+                if (speed < slowest)
+                    slowest = speed;
+            }
+        }
+
+        float movementFactor =
+            kLogisticsFactors[skillLevel[eSecSkillLogistics]];
+        if (skillLevel[eSecSkillLogistics] > 0 &&
+            akHeroSpecificAbilities[id].type == eHeroAbilitySecondarySkill &&
+            akHeroSpecificAbilities[id].skill == eSecSkillLogistics)
+            movementFactor = (level * 0.05f + 1.0f) * movementFactor;
+        mobility = static_cast<int>(
+            (movementFactor + 1.0f) * gLandMovement[slowest]);
+
+        if (IsWieldingArtifact(0x62))
+            mobility += gBootsOfSpeedMovementBonus;
+        if (IsWieldingArtifact(0x46))
+            mobility += gEquestriansGlovesMovementBonus;
+        if (flags & 2)
+            mobility += gStablesMovementBonus;
+    }
+
+    if (owner >= 0 && owner < 6 && !gpGame->IsHuman(owner) &&
+        gpGame->setup.difficulty > 2) {
+        mobility += 75;
+        if (gpGame->players[owner].personality == AI_PERSONALITY_AGGRESSIVE)
+            mobility += 50;
+    }
+    return mobility;
+}
 
 // E:\gamedcs\hero.cpp:5932
 VA(0x004e4d90, 0x12)  // corroborates, dc 0xd4d60

@@ -958,6 +958,7 @@ hero	?GetLuck@hero@@QAEHPBV1@EE@Z	75.0406	75.0406	75.0406	0xe36c0
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380
+hero	?GetMobility@hero@@QAEHE@Z	81.7645	81.7645	81.7645	0xe4990
 hero	?GetMobility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4d90
 hero	?GetMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330
 hero	?GetMorale@hero@@QAEHPBV1@EE@Z	94.7974	94.7974	94.7974	0xe39b0
@@ -1058,7 +1059,6 @@ hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
-hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
 hero	mark_spells	0.0000	0.0000	0.0000	0xd9350
