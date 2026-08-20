@@ -646,6 +646,9 @@ enum EVictoryConditionType {
     // map-format defeat-monster ordinal, 11 the engine's
     // every-monster-dead sweep of the same routine.
     VICTORY_CONDITION_DEFEAT_MONSTER = 7,
+    // 0x5f2860 CheckForArtifactTransportWin gates on `cmp Type,0xa`,
+    // the map-format transport-artifact ordinal.
+    VICTORY_CONDITION_TRANSPORT_ARTIFACT = 10,
     VICTORY_CONDITION_DEFEAT_ALL_MONSTERS = 11,
 #endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
@@ -692,7 +695,11 @@ public:
     // offsets. ArtifactNum's exact retail slot within +3..+7 is still
     // unproven, so that band stays a pad. Gated: member declarators
     // count against the include-set wall for every consumer.
-    char pad_03[5];
+    char pad_03;
+    // CheckForArtifactTransportWin (0x5f2860) hands the dword at +0x4
+    // to hero::HasArtifact and scales it by the 32-byte
+    // TArtifactTraits stride - the DC ArtifactNum, int-widened.
+    int ArtifactNum;
     TCreatureType CreatureType;
     int NumCreatures;
 #else

@@ -2002,6 +2002,7 @@ u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_trai
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180
 university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0
+victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860
 victorylossconditions	?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390
 victorylossconditions	?CheckForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40
 victorylossconditions	?CheckForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600
@@ -2018,7 +2019,6 @@ victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	92.
 victorylossconditions	?IsTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260
 victorylossconditions	?applies_to_player@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0
 victorylossconditions	LossConditionStruct_CheckForDefeatedHeroLoss	0.0000	0.0000	0.0000	0x1f2a40
-victorylossconditions	VictoryConditionStruct_CheckForArtifactTransportWin	0.0000	0.0000	0.0000	0x1f2860
 victorylossconditions	VictoryConditionStruct_CheckForArtifactWin	0.0000	0.0000	0.0000	0x1f1610
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210
 viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7021	88.7021	88.7021	0x1f3b50

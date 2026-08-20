@@ -441,14 +441,68 @@ eligible:
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
+// The transport victory: the visiting hero must stand on the target
+// town cell holding the artifact - either directly, or by wearing every
+// component of its combination (the bitset count()/test() pair inline
+// as Dinkumware's nibble-table popcount and the _Xran-guarded probe).
+// The direct win credits the hero's owner; the combination win credits
+// the local player. HasArtifact is const in the Dreamcast build
+// (?HasArtifact@hero@@QBAHH@Z) but non-const in this tree's banked
+// model, so the const hero* parameter goes through one const_cast
+// local rather than a renaming header edit.
 // E:\gamedcs\victorylossconditions.cpp:434
 VA(0x005f2860, 0x1DE)  // anchor-global, dc 0x190620
-unsigned char VictoryConditionStruct::CheckForArtifactTransportWin(const hero* thisHero, type_point town_loc)
+unsigned char VictoryConditionStruct::CheckForArtifactTransportWin(
+    const hero* thisHero, type_point town_loc)
 {
-    // @stub
+    if (Type != VICTORY_CONDITION_TRANSPORT_ARTIFACT
+        || !gpCurrentPlayer
+        || gpGame->playerDisabled[gNetLocalGamePos])
+        return 0;
+
+    int team = get_team(gpGame, gNetLocalGamePos);
+    if (team >= 0) {
+        int player = 0;
+        signed char* teams = gpGame->mapHeader.teamInfo;
+        for (; player < 8; ++player) {
+            if (teams[player] == team && gpGame->IsHuman(player))
+                goto eligible;
+        }
+    }
+    if (AppliesToComputer) {
+eligible:
+        type_point target(TownX, TownY, TownZ);
+        if (!target.operator==(&town_loc))
+            return 0;
+
+        if (const_cast<hero*>(thisHero)->HasArtifact(ArtifactNum)) {
+            playerWinner = thisHero->owner;
+            GameWon = 1;
+            return 1;
+        }
+        int comboIdx = akArtifactTraits[ArtifactNum].comboType;
+        if (comboIdx == -1)
+            return 0;
+
+        const std::bitset<144>& components =
+            gCombinationArtifacts[comboIdx].components;
+        int remaining = components.count();
+        for (int i = 0;; ++i) {
+            if (components.test(i)) {
+                if (!const_cast<hero*>(thisHero)->HasArtifact(i))
+                    return 0;
+                if (--remaining == 0) {
+                    playerWinner = static_cast<signed char>(gNetLocalGamePos);
+                    GameWon = 1;
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
