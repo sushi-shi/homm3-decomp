@@ -867,6 +867,7 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
+game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
 game	?Save@game@@QAEHPAVTAbstractFile@@@Z	42.2290	42.2290	42.2290	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
@@ -916,7 +917,6 @@ game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
-game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
 game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50

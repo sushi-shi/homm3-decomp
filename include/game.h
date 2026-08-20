@@ -1498,11 +1498,22 @@ public:
 #endif
     void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
+        || defined(HOMM3_GAME_RANDOM_OBJECTS_DECLS)
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
     // retail-sensitive game member population in the other compilands.
+    // game.obj joins on its own gate for ProcessRandomObjects, which
+    // calls it once per random-object case.
     void ConvertObject(NewmapCell* tempCell);
+#endif
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+    // The random-object pass and the monster roll it drives. Both bodies
+    // are claimed in game.cpp; the declarators are held on this gate
+    // rather than on HOMM3_GAME_OBJ_DECLS so townmgr.obj - the other
+    // consumer of that macro - gains no member.
+    TCreatureType GetRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
+    void ProcessRandomObjects();                                 // 0x4c9dd0
 #endif
 #ifdef HOMM3_HERO_OBJ_DECLS
     void record_show_hero(hero* who, signed char player, type_point point,

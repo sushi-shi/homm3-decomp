@@ -14,6 +14,11 @@
 // gate so neither townmgr.obj (the other HOMM3_GAME_OBJ_DECLS consumer)
 // nor any town.h/hero.h reader widens its include closure.
 #define HOMM3_GAME_GARRISON_HERO_DECLS
+// game::ProcessRandomObjects (0x4c9dd0) needs its own declarator, the
+// GetRandomMonster it rolls each monster case with, and ConvertObject -
+// which town.obj already declares behind its own gate. Held together
+// here so townmgr.obj gains no member of class game.
+#define HOMM3_GAME_RANDOM_OBJECTS_DECLS
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "terrain.h"
@@ -3424,12 +3429,137 @@ void game::ConvertObject(NewmapCell* tempCell)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:9320
+// The random-object pass: walk every cell of every level and turn each
+// RANDOM_* trigger into a concrete object, then hand the cell to
+// ConvertObject. The dispatch is a real jump table (retail carries a
+// 15-entry table at 0x4c9fa0 and a 100-byte `type - 65` index table at
+// 0x4c9fdc, both inside this function's extent), so the arms are a
+// SWITCH and their physical order is the source order below.
+// RANDOM_HERO and RANDOM_TOWN fall through to the default - this pass
+// does not handle them.
+//
+// The three loop bounds are all RE-READ every iteration in retail:
+// `worldMap.HasTwoLevels + 1` is recomputed with movzx/inc at the z
+// increment, gMapHeight is reloaded at the y increment and gMapWidth at
+// the x increment. None of the three may be hoisted into a local, and
+// the level count is spelled inline rather than through
+// NewfullMap::GetNumLevels (no call is emitted).
+//
+// Every arm ends with its own ConvertObject call: the Dreamcast xref
+// graph records FOURTEEN call sites into ConvertObject from this body,
+// one per case, and retail cross-jump-merges all fourteen tails - the
+// objectIndex store included - onto the single block at 0x4c9f4c.
+//
+// The artifact arguments are artraits.txt class bits: 2 treasure,
+// 4 minor, 8 major, 16 relic, and RANDOM_ARTIFACT's 14 is
+// treasure|minor|major, i.e. every class except relics.
 VA(0x004c9dd0, 0x270)  // linkorder, dc 0xb5910
 void game::ProcessRandomObjects()
 {
-    // @stub
+    int y, z, x;
+    NewmapCell* tempCell;
+
+    for (z = 0; z < worldMap.HasTwoLevels + 1; ++z) {
+        for (y = 0; y < gMapHeight; ++y) {
+            for (x = 0; x < gMapWidth; ++x) {
+                tempCell = worldMap.cell(x, y, z);
+                if (!tempCell->is_trigger)
+                    continue;
+
+                switch (tempCell->type) {
+                case RANDOM_MONSTER:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(0, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_1:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(0, 0));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_2:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(1, 1));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_3:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(2, 2));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_4:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(3, 3));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_5:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(4, 4));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_6:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(5, 5));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_7:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(6, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_RESOURCE:
+                    tempCell->type = RESOURCE;
+                    tempCell->objectIndex = static_cast<short>(Random(0, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(14));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_1:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(2));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_2:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(4));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_3:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(8));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_4:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(16));
+                    ConvertObject(tempCell);
+                    break;
+                }
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9455
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
