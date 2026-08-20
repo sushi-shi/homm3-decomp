@@ -3568,6 +3568,28 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7461
+// Residual (77.4860%): TWO branches short, 13 against retail's 15, and
+// the missing pair is KNOWN - retail RE-EVALUATES shipyards.size()
+// before the erase and guards it (`_First == 0`, then `index >= size`),
+// i.e. `if (index < oldPlayer->shipyards.size()) erase(begin() + index)`.
+// Writing that guard makes the branch sequences agree 15/15 and drops
+// fuzzy to 72.0950 - so the guard is right and something around it is
+// still wrong. Banked here rather than kept, since MAX is the ledger.
+// Tried and rejected, each measured against 77.4860:
+//   * `gpGame->GetHero(cell->extraInfo)` instead of `GetHero(...)` -
+//     76.5363, even though retail DOES load gpGame for the heroes base
+//     (`mov eax,[gpGame] / lea ecx,[eax+2*edx+0x21620]` against our
+//     `lea ecx,[ebx+2*eax+0x21620]`). The base is right; the cost is
+//     elsewhere.
+//   * re-subscripting `players[oldPlayerOwner]` instead of the cached
+//     `oldPlayer` pointer - 77.2011. The do-not-cache lever does NOT pay
+//     here, unlike ClaimTown, where the same change was worth 6.4.
+//   * `shipyards[index] == &location` through type_point::operator==
+//     (with HOMM3_TYPE_POINT_EQUALITY defined for this TU) - 58.4525,
+//     and it cost the whole unit 0.3 points as well. Retail's
+//     XOR-and-mask chain (`xor bx,[eax] / and ebx,0x3ff`) is what VC6
+//     emits for the three short:10 / short:4 BITFIELD compares written
+//     out longhand, not for the operator.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
