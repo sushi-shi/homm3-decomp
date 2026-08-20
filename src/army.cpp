@@ -2338,6 +2338,25 @@ void army::do_fire_shield(long damage)
         WaitEndSample(sample, -1);
 }
 
+// do_post_attack's /Ob2 BUDGET dose - see the residual note below.  No
+// Dreamcast row; a codegen device.
+static long drain_amount(int hitPoints, int origNumTroops, int numTroops,
+                         int topCreatureDamage, int iDamage, int total_life)
+{
+    return _cpp_min(hitPoints * (origNumTroops - numTroops) + topCreatureDamage,
+                    _cpp_min(iDamage, total_life));
+}
+
+static int roll_death_stares(int numTroops)
+{
+    int stares = 0;
+    for (long i = 0; i < numTroops; i++) {
+        if (Random(1, 100) <= 10)
+            stares++;
+    }
+    return stares;
+}
+
 // E:\gamedcs\army.cpp:1896
 // The blow has landed; now the attacker's aftermath, one arm per
 // special: the Vampire Lord drains min(damage, victim life, missing
@@ -2356,12 +2375,26 @@ void army::do_fire_shield(long damage)
 // The case bodies are in SOURCE order per the EH-state finding
 // (vampire 0..3, gorgon 4..6, thunderbird 7..8, rust 9); the
 // dispatch tables were decoded from the image.
-// Residual (92.6414%): the two documented hard classes together. The
-// string-teardown budget inlines one destructor retail calls (_Tidy 5
-// vs 6, operator delete 4 vs 3 - compute_attacker_bonus's exact
-// residual), and retail carries SIX returns against our five - the
-// merged-return / stale-CL-generation class. Branch counts 74 vs 71,
-// all inside those two deltas; every arm's calls pair.
+// Residual (96.0724%): 92.6414 -> 95.6821 -> 96.0724 on the /Ob2 CALLER-
+// SHRINK lever, in two doses, and THE CALL MULTISET NOW AGREES - the
+// string-teardown budget the old note called a hard class was the caller
+// being too big, nothing more.  It read "_Tidy 5 vs 6, operator delete 4 vs
+// 3", i.e. we EXPANDED one destructor retail calls, which is the OVER-inline
+// direction, and the fix is to shrink `caller_cb` so the budget stops
+// reaching it.  Confirmed with the `if (0)` cb instrument before spending
+// anything: growing the caller is 92.6414 at N=12 (flat), 83.7421 at N=28
+// and 77.5011 at N=60, so the direction was never in doubt.
+//   dose 1, the Gorgon's stare roll -> roll_death_stares  +3.04
+//   dose 2, the Vampire's drain min -> drain_amount       +0.39
+// Titrated, and the neighbours are recorded so they are not re-spent:
+// folding the `dead` clamp into dose 1 as well is 94.16 (worse than the
+// loop alone); lifting the resurrection quotient is byte-flat both as a
+// second and as a third dose; lifting the Rust Dragon's acid roll is 94.88
+// alone and 95.39 as a third dose.  Both remaining helpers are codegen
+// devices with no Dreamcast row, in the same class as findpath's three.
+//
+// What is left is the merged-return / stale-CL-generation class: retail
+// carries SIX returns against our five.
 //
 // THE FRAME DELTA IS NOW READ OFF THE SLOT MAPS AND IT NAMES THE SAME FACT
 // (2026-08-20).  Our 0x78 against retail's 0x84 is not three scattered
@@ -2374,6 +2407,14 @@ void army::do_fire_shield(long damage)
 // overlapped one pair; retail did not.  So the lead is which of those four
 // declarations has the lifetime that stops the overlap - NOT the `_cpp_min`
 // operand, which was measured at -0.26 and does not move the frame at all.
+// THAT LEAD IS NOW CLOSED AS A DEAD END (2026-08-20).  Hoisting each of the
+// four `std::string text;` declarations one scope outwards, one at a time,
+// leaves `sub esp, 0x78` UNCHANGED in all four compiles and costs points
+// every time - vampire 88.75, gorgon 91.15, thunderbird 91.63, rust 88.88
+// against the 92.64 baseline.  Neither did the two caller-shrink doses that
+// closed the call multiset move it.  So the fourth slot is not a source
+// lifetime and the frame is not the lever here; do not re-spend the scope
+// sweep.
 VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
 void army::do_post_attack(army* target, int iDamage, int iKilled,
                           int total_life)
@@ -2382,10 +2423,8 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
     case CREATURE_VAMPIRE_LORD:
         if (target->Is(4) & 1) {
             long resurrected = 0;
-            long heal =
-                _cpp_min(hitPoints * (origNumTroops - numTroops)
-                             + topCreatureDamage,
-                         _cpp_min(iDamage, total_life));
+            long heal = drain_amount(hitPoints, origNumTroops, numTroops,
+                                     topCreatureDamage, iDamage, total_life);
             topCreatureDamage -= heal;
             if (topCreatureDamage < 0) {
                 resurrected =
@@ -2431,11 +2470,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 
     case CREATURE_MIGHTY_GORGON:
         if (target->Is(4) & 1) {
-            int stares = 0;
-            for (long i = 0; i < numTroops; i++) {
-                if (Random(1, 100) <= 10)
-                    stares++;
-            }
+            int stares = roll_death_stares(numTroops);
             long dead = _cpp_min((numTroops + 9) / 10,
                                  _cpp_min(stares, target->numTroops));
             if (dead > 0) {

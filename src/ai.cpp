@@ -1937,27 +1937,41 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     gCastleWallColumns by the mover's row (gridIndex / 17), then scan
 //     DOWN from that hex for the first one that is both reachable and
 //     out of the moat, pricing BOTH cells of a two-hex stack.
-// Residual (80.30%): ONE register binding, and everything else follows
-// from it. Retail parks `estimate` in EBX for the whole prologue and the
-// enemy walk and re-reads `current_army` from its parameter slot; this
-// compile parks `current_army` in EBX and re-reads `estimate`. The CFG
-// is otherwise identical - 118 branches and 10 rets on both sides, with
-// two `test/jcc` polarity flips left, both inside the cellData accessor
-// and both a consequence of which scratch register holds the base rather
-// than of how the accessor is spelled. The same pressure is what makes
-// our hex scaling come out as `imul r,r,0x1e` where retail has the
-// three-lea chain: the lea form needs two free temporaries and this
-// allocation does not have them. `why-reg --model` confirms the three
-// first-def bindings (EBX/ESI/EDI at the same instructions) already
-// agree and places the divergence past the B1 minimum slice.
+// Residual (82.20%): ONE register binding, and everything else follows
+// from it. Retail parks `estimate` in EBX for the whole enemy walk and
+// re-reads `current_army` from its parameter slot [ebp+8] at every use;
+// this compile does the reverse, reloading `estimate` from [ebp+0x14].
+// That is also why retail can RECYCLE the estimate parameter home as a
+// scratch slot for `max_ref`'s first operand at the tail
+// (`mov [ebp+0x14],eax / lea eax,[ebp+0x14]`) and we cannot. The CFG is
+// otherwise identical - 118 branches and 10 rets on both sides -
+// and `predict-inline` reports the call multisets AGREE (29 vs 29), so
+// there is no inliner lever here at all.
+// Two knock-on effects of the same binding, neither separately fixable:
+//   * our `enemy` pointer is BIASED +0x38 (`lea [ecx+8*eax+0x5504]`,
+//     then `[edi-0x4]`/`[edi+0x4c]`/`lea ecx,[edi-0x38]` for the call)
+//     where retail leas the unbiased `[esi+8*eax+0x54cc]` and reads the
+//     Is(21) word through the index expression instead;
+//   * retail expands the incapacitated triple SIX times (0x290 at t+78,
+//     197, 264, 373, 383, 391) and we expand it FIVE - VC6 CSE'd the
+//     enemy/best_enemy pair that retail re-tests.
 //
-// Four spellings ARE byte-load-bearing and were measured one at a time:
-//   * `long budget = 127;` must be declared NEXT TO ITS USE, after the
-//     four marking passes, not with the other initialisers. Declared up
-//     top it lives across all four calls, takes a callee-saved register
-//     out of the pool, and pushes `this` out of ESI entirely - which
-//     also costs the frame its 0x350th byte (78.30 -> 78.54, and the
-//     frame size matches retail's again).
+// Three spellings ARE byte-load-bearing and were measured one at a time:
+//   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said
+//     `long budget = 127;` must be declared NEXT TO ITS USE, "declared
+//     up top it costs the frame its 0x350th byte (78.30 -> 78.54)".
+//     Retail stores it IN THE PROLOGUE - `mov [ebp-0x30], 0x7f` at
+//     +0x2d, before the mark_firewalls call - and reuses that same slot
+//     for the enemy loop counter afterwards. The refutation only holds
+//     when it is paired with moving the `memset` BELOW the whole
+//     initialiser run, which is what retail's zero-store order proves
+//     (six `mov [ebp-N],eax` stores THEN `rep stosd`): the two together
+//     are +1.89 (80.3043 -> 82.1977), while the memset move ALONE is
+//     -0.35. Doses are not independent; do not re-split this pair.
+//     Residual on this pair: budget still lands in ESI (frame 0x34c)
+//     where retail memory-homes it at [ebp-0x30] and keeps `this` in
+//     ESI - that 4-byte frame deficit is the register wall above, not a
+//     missing local.
 //   * the disabled-precedence guard tests BEST_ENEMY first and the
 //     candidate second - `!(best_disabled && !enemy_disabled)`. Written
 //     with the operands the other way round it is the same predicate but
@@ -1971,6 +1985,12 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     literal 0 - findpath.h's get_cell spells its own null arm exactly
 //     that way (`if (!cellData) return cellData;`), and the literal
 //     forces VC6 to materialise a fresh zero and duplicate the load.
+//     SCOPE, measured 2026-08-20: that is true of the ONE site it was
+//     measured at (the get_simple_attack_effect distance). Rewriting the
+//     other FIVE null arms in this body the same way is byte-flat to the
+//     digit - VC6 folds `? 0` and `? cellData` identically where the
+//     result is not feeding a pseudo created before the load. Do not
+//     spend a lane re-applying it "to the sites the note missed".
 // E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate)
@@ -1979,7 +1999,6 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
 
     long side = estimate->side;
     long enemy_side = estimate->enemy_side;
-    memset(enemy_attacks, 0, sizeof(enemy_attacks));
     const army* best_enemy = 0;
     long best_value = 0;
     long best_troops = 0;
@@ -1987,6 +2006,8 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
     unsigned char best_flag = 0;
     long dangerous_enemies = 0;
     long best_hex = -1;
+    long budget = 127;
+    memset(enemy_attacks, 0, sizeof(enemy_attacks));
 
     mark_firewalls(current_army, enemy_attacks, estimate);
     if (gpGame->f_1f698 >= 2)
@@ -1998,7 +2019,6 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
         mark_friendly_armies(current_army, enemy_attacks, dangerous_enemies,
                              estimate);
 
-    long budget = 127;
     budget = (current_army->disabled_290 || current_army->disabled_2b0
               || current_army->disabled_2c0)
             ? 0
