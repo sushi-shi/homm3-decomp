@@ -937,7 +937,7 @@ hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520
 hero	?AddSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330
 hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510
-hero	?CheckLevel@hero@@QAEXXZ	46.2763	46.2763	46.2763	0xda720
+hero	?CheckLevel@hero@@QAEXXZ	83.4342	83.4342	83.4342	0xda720
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340
 hero	?Deallocate@hero@@QAEXEE@Z	93.0529	93.0529	93.0529	0xd9ec0
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260
