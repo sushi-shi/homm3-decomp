@@ -2541,11 +2541,12 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // abandoned arm into the lighthouse's `readMineData` call rather than
 // duplicating it, which is a compiler transform over two separate cases, not
 // a fallthrough in the source.
-// Residual (42.5589%): an INLINER wall, and a narrow one - twenty-one of the
+// Residual (42.6246%): an INLINER wall, and a narrow one - twenty-one of the
 // twenty-six arms already come out at retail's exact byte length, arm for
 // arm, off the same jump table and index table:
 //   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
-//   equal, SEER 122 vs 120, 74/23/31/23/23/27/155 equal, id-217 146 vs 140.
+//   equal, SEER 122 vs 120, then 74/23/31/23/23/27/155/140 and the default's
+//   14 all equal too.
 // It breaks in the last two heavy arms: id-218 emits 574 bytes where retail
 // emits 149 and QUEST_GUARD 1048 where retail emits 91, because our CL
 // expands `vector<T>::insert(iterator, size_type, const T&)` INLINE there -
@@ -2565,6 +2566,11 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 //
 // Tried and rejected: `#pragma inline_depth(2)` and `(1)` around the body -
 // both are ignored under /O2 /Ob2, byte-identical output at 42.5589.
+// Tried and KEPT: giving each arm its own stream-read local instead of
+// reusing one function-scope byte.  That is what retail does - its header
+// reads land in [ebp+0xb] and its arm reads in a different home - and it
+// moves the first read onto retail's own [ebp+0xb] (42.5589 -> 42.6246).
+// It does not reach the runaway.
 // Not tried, and the standing hypothesis: the other nine bodies of this
 // compiland are still stubs, and Load/readMapObjects/loadMapObjects add call
 // sites to these very instantiations - a multi-site inline function is
@@ -2648,16 +2654,19 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         HeroPlaceholderData placeholder;
         placeholder.object = tempObject;
 
-        infile->Read(&value, sizeof(value));
-        placeholder.owner = value;
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        placeholder.owner = owner;
 
-        infile->Read(&value, sizeof(value));
-        placeholder.heroId = value;
+        unsigned char heroId;
+        infile->Read(&heroId, sizeof(heroId));
+        placeholder.heroId = heroId;
         if (placeholder.heroId
                 == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
             placeholder.heroId = -1;
-            infile->Read(&value, sizeof(value));
-            placeholder.powerRating = value;
+            unsigned char powerRating;
+            infile->Read(&powerRating, sizeof(powerRating));
+            placeholder.powerRating = powerRating;
         }
 
         heroPlaceholders.push_back(placeholder);
@@ -2689,12 +2698,13 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case HOLY_GRAIL: {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        unsigned char radius;
+        if (infile->Read(&radius, sizeof(radius)) < sizeof(radius))
             break;
         gpGame->ultimateArtifactX = tempObject->x;
         gpGame->ultimateArtifactY = tempObject->y;
         gpGame->ultimateArtifactZ = tempObject->z;
-        gpGame->field_1f695 = value;
+        gpGame->field_1f695 = radius;
 
         char grailPadding[3];
         infile->Read(grailPadding, sizeof(grailPadding));
@@ -2761,8 +2771,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
 
         char dwellingPadding[3];
         infile->Read(dwellingPadding, sizeof(dwellingPadding));
@@ -2776,10 +2787,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
             dwelling.factionMask = factionMask;
         }
 
-        infile->Read(&value, sizeof(value));
-        dwelling.minLevel = value;
-        infile->Read(&value, sizeof(value));
-        dwelling.maxLevel = value;
+        unsigned char minLevel;
+        infile->Read(&minLevel, sizeof(minLevel));
+        dwelling.minLevel = minLevel;
+        unsigned char maxLevel;
+        infile->Read(&maxLevel, sizeof(maxLevel));
+        dwelling.maxLevel = maxLevel;
 
         dwelling.object = tempObject;
         randomDwellings.push_back(dwelling);
@@ -2789,8 +2802,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING_LVL: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
 
         char dwellingPadding[3];
         infile->Read(dwellingPadding, sizeof(dwellingPadding));
@@ -2817,8 +2831,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING_FACTION: {
         RandomDwellingData dwelling;
 
-        infile->Read(&value, sizeof(value));
-        dwelling.owner = value;
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
 
         char dwellingPadding[3];
         infile->Read(dwellingPadding, sizeof(dwellingPadding));
@@ -2827,10 +2842,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         dwelling.factionMask = static_cast<unsigned short>(
             1 << objectTypes[tempObject->typeIndex].extra);
 
-        infile->Read(&value, sizeof(value));
-        dwelling.minLevel = value;
-        infile->Read(&value, sizeof(value));
-        dwelling.maxLevel = value;
+        unsigned char minLevel;
+        infile->Read(&minLevel, sizeof(minLevel));
+        dwelling.minLevel = minLevel;
+        unsigned char maxLevel;
+        infile->Read(&maxLevel, sizeof(maxLevel));
+        dwelling.maxLevel = maxLevel;
 
         dwelling.object = tempObject;
         randomDwellings.push_back(dwelling);
