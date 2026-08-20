@@ -80,7 +80,7 @@ advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	99.0975	99.0975	99.0975	0x1adb0
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
-advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	93.7865	93.7865	93.7865	0x9a70
+advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	78.8021	78.8021	78.8021	0xe360
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
