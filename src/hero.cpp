@@ -6064,9 +6064,25 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // (fn+0x9c5 and fn+0xa51, both `cmp ,0xc` followed by an inline
 // out_of_range construction), so those two deliberately stay `.set(...)`.
 //
-// Residual (75.1%): basic_string::_Tidy at base x3 vs retail x2 - budget
-// starvation, i.e. this caller's body is still leaner than retail's
-// (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the unwind map).
+// Residual (75.1%), RE-DERIVED FROM TODAY'S BYTES (2026-08-20): the
+// remaining structural row is the FIRST bitset<12> site itself - base
+// EXPANDS the `invalid bitset<N> position` throw at fn+0x104..0x13d
+// (string ctor + logic_error ctor + CxxThrow, one extra EH state, the
+// 27-vs-23 branch surplus) where retail emits `cmp ebx,0xc /
+// lea esi,[edi+0xe8] / jb / mov ecx,esi / call bitset<12>::_Xran`
+// (fn+0xffff..0x10e). Retail expands sites 2 and 3 exactly as we do.
+// The depth ladder is EXHAUSTED here: the site already reads through
+// operator[] (the note above), retail's shape needs _Xran-ONLY out of
+// line (test stays inline), the statement pin takes test and
+// GetLocalPlayerGamePos with it (measured 59.86), and <bitset> has no
+// deeper rung. READ THE QUOTIENT: retail REFUSES the early site and
+// accepts the two later ones - the A9 `budget / sites-remaining`
+// shape - and our two `inline_depth(0)` pins above this site REMOVE
+// candidate sites from that denominator, raising our quotient at site 1
+// past the throw's cost. The pins bought +6.75 and cannot be traded
+// back; the site is priced as bounded until a knob exists that imposes
+// a call WITHOUT shrinking the candidate set. basic_string::_Tidy x3
+// vs x2 is the same story's tail.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
