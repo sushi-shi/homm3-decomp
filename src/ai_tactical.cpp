@@ -3472,14 +3472,69 @@ long type_AI_spellcaster::get_ogre_mage_value(const army* target)
     return choice.value;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3335
+// The Master Genie's cast: it has no spell of its own, so the value is
+// the AVERAGE over every spell it may legally cast on this stack -
+// hence the running total, the running count and the closing `idiv`
+// behind a zero guard. `is_valid_caliph_spell` is the filter; the
+// mastery preamble is get_ogre_mage_value's, verbatim, only reading
+// the CURRENT spell's school mask instead of Bloodlust's constant row.
+//
+// The per-spell value comes back through the enchantment dispatch's
+// pointer-to-member, which is also why the choice is sliced by-value
+// onto the stack (`sub esp,0x14 / rep movsd`) rather than passed as a
+// reference: the family's parameter is a type_enchant_data BY VALUE.
 VA(0x0043c4a0, 0x180)  // anchor-callee, dc 0x424c4
 long type_AI_spellcaster::get_caliph_value(const army* target)
 {
-    // @stub
+    long total = 0;
+    long count = 0;
+    for (long spell = 10; spell < 70; spell++) {
+        if (!is_valid_caliph_spell(spell, target))
+            continue;
+        TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+        unsigned char expert = 0;
+        switch (gpCombatManager->field_53c0) {
+        case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+            expert = 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 2) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 1) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 3) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits) & 1;
+            break;
+        }
+        if (expert)
+            mastery = SKILL_MASTERY_EXPERT;
+        count++;
+        TEnchantValue value_of = get_enchantment_function(spell);
+        if (value_of != 0) {
+            type_spell_choice choice(spell, mastery, 6, 6);
+            if (SpellTargetsASingleArmy(spell, mastery)) {
+                total += (this->*value_of)(target, choice);
+            } else {
+                consider_enchantment(&choice, side);
+                total += choice.value;
+            }
+        }
+    }
+    if (count == 0)
+        return 0;
+    return total / count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3377
 DC_ONLY(0x425a8, 0x68)
