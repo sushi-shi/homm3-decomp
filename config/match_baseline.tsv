@@ -1288,7 +1288,7 @@ mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.
 mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	78.4070	78.4070	78.4070	0x104470
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0
-mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	45.0980	45.0980	45.0980	0x102e00
+mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	96.9833	96.9833	96.9833	0x102e00
 mapcell	?readObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100.0000	100.0000	100.0000	0x103780
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	76.9111	76.9111	76.9111	0xff4d0
 mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	95.6955	95.6955	95.6955	0x100b30
