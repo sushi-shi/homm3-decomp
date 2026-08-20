@@ -1759,8 +1759,8 @@ town	?initialize_hordes@town@@SIXXZ	99.7778	99.7778	99.7778	0x1bdf60
 town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	89.8561	89.8561	89.8561	0x1be600
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
-town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	92.6954	92.6954	92.6954	0x1c0220
-town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	93.2294	93.2294	93.2294	0x1c0400
+town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220
+town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	99.0596	99.0596	99.0596	0x1c0400
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340
