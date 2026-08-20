@@ -904,7 +904,7 @@ game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
-game	?Save@game@@QAEHPAVTAbstractFile@@@Z	89.1864	89.1864	89.1864	0xbe3f0
+game	?Save@game@@QAEHPAVTAbstractFile@@@Z	93.5676	93.5676	93.5676	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGame@game@@QAEEPBDEEEE@Z	93.8148	93.8148	93.8148	0xbeea0
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0

@@ -3238,16 +3238,23 @@ int game::Save(TAbstractFile* outfile)
     // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
     // function: inline_depth(0) is statement-granular in VC6, and
     // SaveMinePool immediately below is expanded on BOTH sides.
-    // NARROWING THE PIN TO THE CALL ALONE WAS MEASURED AND IS WORSE
-    // (82.6492 -> 82.4641). With the whole `if` inside the pin, this
-    // exit's ~SavedGameHeader also goes out of line and grows its own
-    // epilogue where retail emits `_Tidy / jmp shared-tail`; landing the
-    // result in an `int signPoolResult` local first fixes that and costs
-    // more than it buys, because the local takes a frame slot.
+    // THE PIN IS CONDITION-ONLY, and that is worth 89.1864 -> 93.5676
+    // (2026-08-20). The note that stood here read "NARROWING THE PIN TO
+    // THE CALL ALONE WAS MEASURED AND IS WORSE (82.6492 -> 82.4641)" -
+    // true of the narrowing it measured, which landed the result in a
+    // local first and paid for a frame slot. Closing the pin between the
+    // `if (...)` and its `return -1;` needs no local: pragma state is
+    // per-site at collection, so SaveSignPool stays out of line while
+    // this exit's ~SavedGameHeader goes back to being EXPANDED.
+    // THE CENSUS WAS ALREADY RIGHT AND THE PLACEMENT WAS NOT: both sides
+    // emit three out-of-line ~SavedGameHeader calls, but retail's are all
+    // in the tail (fn+0x9fb, +0xa70, +0xa8b) and ours put one at fn+0x247
+    // - this exit - and only two in the tail. Read the sites IN ORDER,
+    // not as a count.
 #pragma inline_depth(0)
     if (SaveSignPool(outfile) < 0)
-        return -1;
 #pragma inline_depth()
+        return -1;
     if (SaveMinePool(outfile) < 0)
         return -1;
 
