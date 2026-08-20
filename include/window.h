@@ -174,6 +174,7 @@ public:
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText);
 
+    virtual int handle_message(message& msg);                         // slot 3, 0x405680
     virtual int WindowHandler(message* msg);                            // slot 9
     virtual unsigned char ProcessHover(int mouseX, int mouseY);         // slot 10
     virtual unsigned char ProcessRightSelect(int id);                   // slot 11

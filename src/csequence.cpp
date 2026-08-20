@@ -26,14 +26,15 @@ CSequence::CSequence(const int num)
         f[i] = 0;
 }
 
-#if 0  // @carcass: overloads inlined or absent from retail
-
 // E:\gamedcs\csequence.cpp:50
-DC_ONLY(0x71f60, 0x18)
-void CSequence::~CSequence()
+VA(0x0047b890, 0x0F)  // anchor-bracket + dc destructor identity, dc 0x71f60
+CSequence::~CSequence()
 {
-    // @stub
+    if (f)
+        delete[] f;
 }
+
+#if 0  // @carcass: overloads inlined or absent from retail
 
 // E:\gamedcs\csequence.cpp:68
 DC_ONLY(0x71f78, 0x4E)

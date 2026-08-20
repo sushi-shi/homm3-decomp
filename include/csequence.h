@@ -22,6 +22,7 @@ public:
 private:
     friend class CSprite;
     CSequence(int num);
+    ~CSequence();
     int AddFrame(CSpriteFrame* frame);
 };
 SIZE(CSequence, 0x0c);
