@@ -560,15 +560,54 @@ void army::remove_binding()
     binders.clear();
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:1034
+// Raise or lower the area-effect latch and re-pose the stack. The
+// answer is "did the latch actually change", which is why the
+// no-op arm returns 0 before touching anything else.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x45164, forward read): 1034
+// the no-op test, 1035 its return, 1036 the store, then 1038/1039 the
+// mark, 1042 the latch test, 1044/1045 the sequence test and its two
+// stores, 1047/1049/1050 the else arm and 1053 the final return.
+//
+// TWO THINGS THE BYTES DECIDE:
+//   - the latch is RELOADED from +0x4f1 for the animation test rather
+//     than reused out of the argument register, so the source reads
+//     the MEMBER there, not `arg`.
+//   - the "already posed" arm of the first test falls into the SECOND
+//     pose, it does not skip out: `currFrameType == cs_fidget` and
+//     `numSequences <= cs_fidget` reach the same block. That is an
+//     `else if` chain over one `&&` condition, not two independent
+//     ifs. Retail hoists the literal 1 into ECX and reuses it for all
+//     three of the sequence bound, the pose test and the `return 1`,
+//     which is what makes the shared tail visible.
+//
+// MarkCreatureEffect expands here for the second time in this TU (the
+// first is do_multi_head_attack's) and carries the same arrow-tower
+// arm, with `combatSide` on the 21-wide army stride and the 20-wide
+// byte row.
 VA(0x0043efe0, 0xCF)  // anchor-bracket (the EndWalk note below proves
                       // this slot) + arity ret 4, dc 0x45164
 unsigned char army::set_inside_area_effect(unsigned char arg)
 {
-    // @stub
+    if (is_area_effect_target == arg)
+        return 0;
+    is_area_effect_target = arg;
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    if (is_area_effect_target) {
+        if (stdIcon->numSequences > cs_fidget
+            && stdIcon->validSeqMask[cs_fidget] != 0
+            && currFrameType != cs_fidget) {
+            currFrameType = cs_fidget;
+            currFrameIndex = 0;
+        } else if (currFrameType != cs_wait) {
+            currFrameType = cs_wait;
+            currFrameIndex = 0;
+        }
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1062
 // NO RETAIL BODY, AND THE BRACKET PROVES IT. The carve has exactly ONE

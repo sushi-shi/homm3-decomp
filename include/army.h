@@ -970,17 +970,27 @@ public:
     // teardowns: remove_binding walks +0x4f4 erasing `this` from each
     // element's +0x504, and remove_aura walks +0x524 erasing `this`
     // from each element's +0x514, each pair being the exact inverse of
-    // the other. (+0x4f1 is the DC's is_area_effect_target byte, left
-    // in the pad until a body reads it; the +0x4f0 latch above is the
-    // DC's reset_this_round.)
+    // the other. (The +0x4f0 latch above is the DC's reset_this_round.)
+    //
+    // +0x4f1 is the DC's is_area_effect_target, sliced out of the pad
+    // 2026-08-20 when set_inside_area_effect (0x43efe0) was
+    // reconstructed: that body compares it against its own byte
+    // argument, stores the argument into it, and then RELOADS it from
+    // the member for the animation test - which is what fixes the
+    // offset and the byte width. Both arms take the declarator so the
+    // include-set count stays equal between them; the whole block is
+    // already behind the round/reset gate above, so nothing outside
+    // those two views sees a new declarator.
 #ifdef HOMM3_ARMY_AURA_VIEW
-    char pad_4f1[0x3];
+    unsigned char is_area_effect_target;  // +0x4f1
+    char pad_4f2[0x2];
     std::vector<army*> bound_armies;   // +0x4f4
     std::vector<army*> binders;        // +0x504
     std::vector<army*> aura_clients;   // +0x514
     std::vector<army*> aura_sources;   // +0x524
 #else
-    char pad_4f1[0x43];
+    unsigned char is_area_effect_target;  // +0x4f1
+    char pad_4f2[0x42];
 #endif
 #else
     char pad_4f0[0x44];
@@ -1107,6 +1117,13 @@ public:
     void add_aura();                         // 0x43ea70
     void remove_aura();                      // 0x43ec50
     void remove_binding();                   // 0x43ee10
+    // Raise or lower the "this stack is standing in an area effect"
+    // latch and re-pose it: the retail body (0x43efe0) returns 0 when
+    // the latch is already the requested value, so callers use the
+    // answer as "did anything change". `_N_N` on the DC public
+    // (?set_inside_area_effect@army@@QAA_N_N@Z) is both the byte
+    // argument and the byte return.
+    unsigned char set_inside_area_effect(unsigned char arg);  // 0x43efe0
     void play_sample(TSampleID id);          // 0x43d540
     void stop_sample(TSampleID id);          // 0x43d580
     // simple_move is PRIVATE on its own public
