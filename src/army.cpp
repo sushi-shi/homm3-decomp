@@ -1876,7 +1876,13 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
 // the inliner stands between it and exact. Full matrix in can_shoot's
 // note above. RETIRING 0x447a80's reconstruction retires the pragma
 // and makes 0x442e60 claimable in the same change.
-#pragma inline_depth(0)
+//
+// SCAFFOLD RETIRED 2026-08-20: spell_is_valid_on_target (0x447a80) is
+// reconstructed and its two loop arms carry the statement-scoped
+// can_shoot pins - the same two rejected sites retail's object has -
+// so can_shoot's out-of-line copy no longer needs this body's
+// inline_depth(0) to exist, and this body compiles in its expanded
+// form exactly as the paragraph above predicted.
 VA(0x00442e60, 0x169)  // anchor-global, dc 0x48168
 long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
@@ -1890,7 +1896,6 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
     return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
                              * value / hitPoints);
 }
-#pragma inline_depth()
 
 #if 0  // @carcass
 

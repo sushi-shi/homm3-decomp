@@ -356,7 +356,7 @@ army	?get_multi_head_directions@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0
 army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
 army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
-army	?get_total_combat_value@army@@QBEJJJ@Z	46.9138	46.9138	46.9138	0x42e60
+army	?get_total_combat_value@army@@QBEJJJ@Z	94.7414	94.7414	94.7414	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?is_adjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
