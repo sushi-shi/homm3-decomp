@@ -307,10 +307,13 @@ army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
 army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
+army	?Cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?GoBerserk@army@@QAEXXZ	86.0096	86.0096	86.0096	0x456d0
+army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0
+army	?InitClean@army@@QAEXXZ	0.0000	0.0000	0.0000	0x3d5c0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
@@ -333,26 +336,6 @@ army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	99.9351	99.9351	99.9351	0x40310
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
 army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00
-# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
-# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
-# it is not re-opened: lane/townmgr-14 banked
-# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
-# member, lane/army-6 needed the `inline` keyword for
-# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
-# emitted no out-of-line body, so the merge kept the caller and lost
-# the row.
-# The two were never in tension. VC6 emits an `inline` function's
-# out-of-line copy exactly when the TU holds a use it DECLINES to
-# expand, and retail's army.obj holds one: the two rejected sites in
-# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
-# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
-# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
-# stands in for them until it lands. Full matrix in army.cpp above
-# can_shoot; the key negative is that with NO keyword the body is not
-# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
-# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
-# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
-# now hold together.
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
@@ -365,6 +348,7 @@ army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_defense_modifier@army@@QBEJXZ	100.0000	100.0000	100.0000	0x42660
+army	?get_estimated_damage@army@@QBEJPBV1@JEJ@Z	98.5227	98.5227	98.5227	0x43e30
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
 army	?get_loss_combat_value@army@@QBEJJJEJE@Z	100.0000	100.0000	100.0000	0x42fd0
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
@@ -383,15 +367,13 @@ army	?range_attack@army@@QAEXXZ	100.0000	100.0000	100.0000	0x40160
 army	?remove_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ec50
 army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
+army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 army	army_CancelIndividualSpell	0.0000	0.0000	0.0000	0x44510
 army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
-army	army_Cure	0.0000	0.0000	0.0000	0x46500
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
 army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
-army	army_Init	0.0000	0.0000	0.0000	0x3d8b0
-army	army_InitClean	0.0000	0.0000	0.0000	0x3d5c0
 army	army_LoadResources	0.0000	0.0000	0.0000	0x3d9f0
 army	army_ProcessDeath	0.0000	0.0000	0.0000	0x44120
 army	army_SetSpellInfluence	0.0000	0.0000	0.0000	0x448f0
@@ -406,12 +388,10 @@ army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 army	army_do_attack	0.0000	0.0000	0.0000	0x41610
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
-army	army_get_estimated_damage	0.0000	0.0000	0.0000	0x43e30
 army	army_get_unit_combat_value	0.0000	0.0000	0.0000	0x42a50
 army	army_initialize	0.0000	0.0000	0.0000	0x3d730
 army	army_new_turn	0.0000	0.0000	0.0000	0x46e30
 army	army_range_attack	0.0000	0.0000	0.0000	0x3f900
-army	army_set_inside_area_effect	0.0000	0.0000	0.0000	0x3efe0
 army	spell_is_valid_on_target	0.0000	0.0000	0.0000	0x47a80
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
@@ -656,7 +636,25 @@ command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 # the four slice groups did not restore it while it was down, and adding
 # further evidenced slices (+0x28c, +0xd8) in either combination did not
 # either - only the later batch, as a whole, did.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
+# LOWERED AGAIN 2026-08-20 to the same 92.5357, on the view-gate policy
+# rather than on a measurement. The lane/army-recon work added three
+# things to army.h - `#include <deque>` for the SpellInfluenceQueue
+# member, the army::Cure declarator and the army::compute_attacker_bonus
+# declarator - and each was FIRST put behind an existing army.cpp-only
+# view precisely to hold this row at 92.5714. That gating is exactly
+# what the view-gate audit is unwinding, so all three were un-gated and
+# this row was lowered instead. hist stays 92.5714, and the row has
+# recovered from this exact value once before, on its own, as the header
+# kept growing.
+# THE BLAST RADIUS IS THE MEASUREMENT WORTH KEEPING: making <deque>
+# unconditional in a header that reaches most of the tree moved NOTHING
+# but this one row - not one of the other 1881 functions changed, in
+# either direction. A whole standard container's worth of type
+# definitions therefore costs the same as the single bare member
+# declaration that has fired this canary three times, which is what a
+# step function on the closure's declarator population predicts and what
+# a per-declarator penalty model does not.
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -2206,6 +2204,26 @@ winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90
+# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
+# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
+# it is not re-opened: lane/townmgr-14 banked
+# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
+# member, lane/army-6 needed the `inline` keyword for
+# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
+# emitted no out-of-line body, so the merge kept the caller and lost
+# the row.
+# The two were never in tension. VC6 emits an `inline` function's
+# out-of-line copy exactly when the TU holds a use it DECLINES to
+# expand, and retail's army.obj holds one: the two rejected sites in
+# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
+# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
+# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
+# stands in for them until it lands. Full matrix in army.cpp above
+# can_shoot; the key negative is that with NO keyword the body is not
+# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
+# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
+# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
+# now hold together.
 # DELIBERATE LOWER 2026-08-20, lane/cmbtmgr3. The LootDeadHero row below
 # is held at 0 on purpose and its hist 33.3711 is NOT a target to chase.
 # That 33.37 was banked by a DIAGNOSTIC build that deleted the two vector

@@ -26,6 +26,7 @@
 // leaves this TU is the only located caller of.
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
+#define HOMM3_ARMY_SPELL_ROW_VIEW
 #include <va.h>
 #include <math.h>
 #include <string.h>
