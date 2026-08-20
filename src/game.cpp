@@ -643,7 +643,14 @@ void game::calculate_production()
                 production[i] += siloIncome[i];
         }
 
-        if (const_cast<armyGroup&>(currentTown->get_army()).get_creature_total(
+        // OVERLOAD, NOT A CAST. `currentTown` is `town*`, so
+        // `currentTown->get_army()` picks the NON-const overload and the
+        // const_cast in front of it is a no-op; retail's relocation names
+        // ?get_army@town@@QBEABVarmyGroup@@XZ, the CONST one. The
+        // static_cast on the receiver is what selects it.
+        if (const_cast<armyGroup&>(
+                static_cast<const town*>(currentTown)->get_army())
+                .get_creature_total(
                 creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)
             crystalDragonIncome[currentTown->owner] = 1;
 
@@ -1174,8 +1181,8 @@ unsigned char playerData::add_garrison_hero(town* our_town)
         return 0;
 
     hero* visitingHero = gpGame->GetHero(our_town->visitingHeroId);
-    if (!visitingHero->army.Merge(
-            const_cast<armyGroup*>(&our_town->get_army())))
+    if (!visitingHero->army.Merge(const_cast<armyGroup*>(
+            &static_cast<const town*>(our_town)->get_army())))
         return 0;
 
     gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
@@ -2644,6 +2651,11 @@ int game::Load(TAbstractFile* infile)
     if (LoadBoatPool(infile) < 0)
         return -1;
 
+    // MEASURED AND REJECTED (86.7504 -> 84.2222): folding these two guards
+    // into one `||` with a comma so they share ONE cleanup site, which is
+    // what retail has (state 0x16 at 0x41ec, entered by `jb` and by the
+    // fall-through). The shared site is real and the `||` does not produce
+    // it - this is the merged-return class, not a spelling.
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
     field_4e3e8 = char_buffer;
@@ -3729,7 +3741,8 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
     // spell it in this TU: /OPT:ICF folded the DC's const and non-const
     // get_army onto one row, so the const mangling is what the target
     // side names and the codegen is identical either way.
-    const_cast<armyGroup&>(whichTown->get_army()).Initialize();
+    const_cast<armyGroup&>(
+        static_cast<const town*>(whichTown)->get_army()).Initialize();
     if (whichTown->owner != -1) {
         players[newPlayerOwner].townIds[players[newPlayerOwner].numTowns] =
             static_cast<char>(townId);
