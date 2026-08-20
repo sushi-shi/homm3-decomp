@@ -175,18 +175,28 @@ unsigned char combatManager::LoadWallTraitsTable()
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
 //
-// Residual (82.9093%): predict-inline reports the call multisets EQUAL,
-// 45 against 45, and the branch COUNTS equal at 60 - so nothing is
-// missing and nothing extra is expanded. The 18 branch-shape
-// disagreements are dominated by ONE divergence repeated across all six
-// inlined IsQuickCombat expansions: retail forms both player-record
-// addresses with `lea` and holds zero in EDI to compare memory against,
-// where our CL folds +0xe4 into the load and picks a different zero
-// register. That is the same shape damage_message's note argues is
-// context rather than spelling - retail's own LowerDoor expands the
-// identical source into the FOLDED form - so the shared inline must not
-// be retuned for it here either. why-branch's three guided candidates
-// (D13 on the two tactics locals and the side flag) all measure +0.
+// 82.9093 -> 97.0819 -> 99.4306 (2026-08-20), and the first step
+// REFUTES what stood here. The old note read the repeated divergence in
+// the six inlined IsQuickCombat expansions correctly - retail forms both
+// player-record addresses with `lea` where we fold +0xe4 into the load -
+// and then argued the shared inline must not be retuned because
+// "retail's own LowerDoor expands the identical source into the FOLDED
+// form". It does not: naming the two records as `const playerData&`
+// references in IsQuickCombat's body (see there) hoists both `lea`
+// chains ahead of the short-circuit exactly as retail does, and
+// LowerDoor stayed at 100.0000 through the change. Six cmbtmgr rows rose
+// on that one edit.
+//
+// The second step is the combat-window arm order. Retail lays the `new
+// TCombatWindow` block out AHEAD of the inlined predicate's last arm and
+// falls through into `combatWindow = 0` (`setne al / test al,al / je`);
+// this body had the arms the other way round and got `jne`. Writing the
+// quick-combat case as the IF arm and the window construction as the
+// ELSE arm reproduces retail's layout: +2.35.
+//
+// Residual (99.4306%): one scheduling slot - retail sinks
+// `mov dword ptr [ebx+13de4h], 0` one instruction later, past the
+// `lea edx,[ebx+...]` that feeds the following call.
 //
 // TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
 // of the flat `&&`, which is how the branch graph first reads. Measured
@@ -246,13 +256,13 @@ int combatManager::Open(int newPriority)
     chatMan.PauseTimeOuts();
     field_13300 = 1;
 
-    if (!IsQuickCombat()) {
+    if (IsQuickCombat()) {
+        combatWindow = 0;
+    } else {
         combatWindow = new TCombatWindow(bCreaturePlacement);
         if (!combatWindow)
             MemError();
         gpWindowManager->AddWindow(combatWindow, -1, 1);
-    } else {
-        combatWindow = 0;
     }
 
     UpdateArmyLuckAndMorale();
@@ -1215,13 +1225,32 @@ void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
 // Dreamcast lists this as a cmbtmgr.h inline with no retail body.
 // LowerDoor's inlined branch graph proves all four inputs and the exact
 // distinction between network-side quick combat and the global mode.
+//
+// THE TWO PLAYER RECORDS ARE NAMED REFERENCES, AND THAT IS WORTH SIX
+// FUNCTIONS (2026-08-20). Retail computes BOTH `lea` chains -
+// `lea edx,[ecx+8*edx+K]` and `lea eax,[ecx+8*eax+K]` - ahead of the
+// short-circuit and then tests `mov ecx,[edx+0e4h] / cmp ecx,edi` and
+// `cmp [eax+0e4h],edi`. Spelled as two `gpGame->players[...].quickCombat`
+// subscripts joined by `&&`, VC6 folds +0xe4 into each load and defers
+// the second address chain past the first branch, which is one extra
+// branch-shape divergence in EVERY expansion of this body. Naming the
+// records first hoists the addresses and leaves the loads at the tests,
+// which is exactly retail's shape. Measured on the same build:
+// Open 82.9093 -> 97.0819, damage_message 89.6402 -> 98.8371,
+// ShootBallisticMissile 86.4031 -> 89.3406, ShootMissile 91.7404 ->
+// 93.9760, ShootAnimatedMissile 91.1779 -> 93.5088, SetNextArmy
+// 87.5102 -> 89.9086, and LowerDoor - the body a standing note in Open
+// cited as proof that the folded form was retail's - held at 100.0000
+// throughout.
 inline unsigned char combatManager::IsQuickCombat()
 {
     if (gpGame->field_1f69d)
         return 0;
-    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
-        return gpGame->players[playerIds[0]].quickCombat
-            && gpGame->players[playerIds[1]].quickCombat;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1]) {
+        const playerData& left = gpGame->players[playerIds[0]];
+        const playerData& right = gpGame->players[playerIds[1]];
+        return left.quickCombat && right.quickCombat;
+    }
     return gCombatQuickMode69877c != 0;
 }
 
