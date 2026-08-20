@@ -1545,6 +1545,10 @@ seerhut	?LoadFromMap@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	10
 seerhut	?LoadFromMap@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171bb0
 seerhut	?LoadFromMap@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16de90
 seerhut	?NotifyHeroDefeated@type_defeat_hero_quest@@UAEXHH@Z	100.0000	100.0000	100.0000	0x16e550
+seerhut	?QuestGuardFn_00572E40@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x172e40
+seerhut	?QuestGuardFn_00573040@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x173040
+seerhut	?SeerHutFn_005741B0@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1741b0
+seerhut	?SeerHutFn_005743E0@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x1743e0
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860
 seerhut	?TakePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0
 seerhut	?is_satisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800
