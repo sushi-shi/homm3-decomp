@@ -31,17 +31,24 @@
 #define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
 #undef HOMM3_HERO_DESCRIPTION_DEFS
-#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
+// HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
+// to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
+// HeroExtra, and that class lives behind this same gate in game.h.
 #define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_HERO_OBJ_DECLS
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
+// advManager::FizzleCenter - HeroView's dismiss path calls it. The one
+// declarator, not the whole events view; advmgr.h's own note records why.
+#define HOMM3_HERO_FIZZLE_API
 #include "advmgr.h"
+#undef HOMM3_HERO_FIZZLE_API
 #include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
@@ -74,6 +81,16 @@
 // level-up dialog hero::CheckLevel raises. levelupwindow.h only adds
 // advmgr_popup.h on top of what hero.h already pulls.
 #include "levelupwindow.h"
+// The two windows THeroScreenWindow::WindowHandler constructs on the
+// stack: the spellbook on the artifact slot 17 arm and the quick-hero
+// popup on the locator right-click arm.
+#include "spellbookwindow.h"
+#include "quickherowindow.h"
+// DoQuestLog - the quest-log button arm.
+#include "questlogwindow.h"
+// gpInputManager - the two SHIFT arms force a mouse-move so the
+// rollover text re-evaluates under the new modifier.
+#include "inputmgr.h"
 // gTurnDuration69d630 - CheckLevel shortens the multiplayer dialog
 // deadline once the turn timer has expired.
 #include "remote.h"
@@ -199,6 +216,62 @@ static const int kSlayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
 static const SpellID kSpellFireWall = 0xd;
 static const SpellID kSpellMagicArrow = 0xf;
 static const SpellID kSpellHaste = 0x35;
+// Source-private for the same reason: mark_spells' Sea Captain's Hat arm
+// grants spells 0 and 1, and its Spellbinder's Hat arm sweeps akSpellTraits
+// for level 5. SPELL_SUMMON_BOAT is already named in armygrp.h; its partner
+// and the level are not, and nothing else in the image wants either.
+static const SpellID kSpellScuttleBoat = 0x1;
+static const int kFifthLevelSpell = 5;
+// HeroView's two remaining bare numbers. 0x81 is the hero screen's
+// "dismiss" result, the only dialogReturn that reaches hero::Deallocate;
+// winmgr.h's DIALOG_RETURN_* band is 0x78xx and does not carry it, and
+// that header's own note measures what growing it costs. 6 is the text
+// bank SetWinText loads for this window.
+static const int kDialogReturnDismissHero = 0x81;
+static const int kHeroScreenWinText = 6;
+// HeroFn_004E6120's three source-private ids, kept out of the shared
+// headers for the same reason. 0x7f is the Vial of Dragon Blood (+5
+// attack and +5 defense to dragons, which is the identification); the
+// attribute bit is NH3API's CF_DRAGON; and hero 155 is the one hero whose
+// universal-creature specialty also grants +1 speed - NH3API names him
+// Xeron, and only that spelling is borrowed.
+// hero::get_backpack_error takes a TArtifact and WindowHandler has the
+// dragged artifact's id as a plain int. Overlay, not a cast: the
+// casts-to-enum-types floor is at zero, and this is game.cpp:75's idiom
+// verbatim (its own copy is .cpp-local for the same reason).
+inline TArtifact artifact_from_int(int value)
+{
+    union {
+        int integer;
+        TArtifact artifact;
+    } converted;
+    converted.integer = value;
+    return converted.artifact;
+}
+
+// WindowHandler re-evaluates the rollover whenever either SHIFT changes.
+// These are PS/2 scan codes in message::codeX; inputmgr.h's own note
+// measures what adding ungated enumerators there costs, so they stay here.
+// HeroFn_004D8B30's start-level override: one campaign/scenario pair
+// whose hero starts at another scenario hero's level plus five. The
+// displacements are exact (gpGame + 0x4c893 IS heroes[151].level), but
+// the campaign's identity is inference, so the names stay role-based.
+static const int kStartLevelCampaign = 8;
+static const int kStartLevelScenario = 3;
+static const int kStartLevelHeroId = 151;
+static const int kStartLevelBonus = 5;
+static const int kKeyCodeLeftShift = 0x2a;
+static const int kKeyCodeRightShift = 0x36;
+static const int kArtifactVialOfDragonBlood = 0x7f;
+static const int kVialOfDragonBloodBonus = 5;
+static const unsigned int kCreatureAttrDragon = 0x80000000;
+static const int kHeroXeron = 0x9b;
+
+// window.obj's text setter, retail 0x5ffa30, a /Gr free function
+// (heroWindow* in ecx, the text id in edx). Same declaration townmgr.cpp
+// already carries; hero.obj is the second claimed consumer, and the pair
+// moves to window.h when a third arrives.
+void SetWinText(heroWindow* win, int which);
 
 // Experience needed to REACH each level, levels 1..12. Retail keeps it
 // in .DATA at 0x679c88 (not .rdata - hence no `const`), immediately
@@ -937,8 +1010,6 @@ void hero::initialize(short index)
     field_11b = 0;
 }
 
-#if 0  // @carcass
-
 // RETAIL-ONLY x3. The DC roster runs hero::initialize (0xcbe80)
 // straight into belongs_to_human (0xcc0bc) with nothing between them,
 // but retail carves THREE bodies into that gap. All three are hero
@@ -948,19 +1019,173 @@ void hero::initialize(short index)
 // unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 //
-// 0x004d8b30 `ret 4`: copies a ~0x330-byte source record into the hero -
-// the packed 10-bit x/y/z out of src+0x301..0x303 into the three
-// coordinate words, src+0 into the owner byte at +0x22, src+4 into the
-// id at +0x1a, akHeroTraits[id].field_8 into +0x30, a 13-byte strncpy
-// of src+0xd into the name at +0x23, and a run into the +0x476 stats
-// band. Its single caller is inside game.obj (0x4cae10).
-VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
-void hero::HeroFn_004D8B30(const void* setup)
+// The four artifact loops HeroFn_004D8B30 runs when the setup record
+// carries a custom loadout. One call site, so /Ob2 expands it and emits
+// no out-of-line body; splitting it out is the /Ob2 budget lever that
+// mark_spells and HeroFn_004E6120 both needed.
+static void apply_setup_artifacts(hero* who, const HeroExtra* setup)
 {
-    // @stub
+    int i;
+    for (i = 0; i < 19; i++) {
+        if (who->equipped[i].artifactId != ARTIFACT_NONE)
+            who->remove_artifact(i);
+    }
+    for (i = 0; i < 19; i++) {
+        if (setup->artifacts[i].artifactId != ARTIFACT_NONE)
+            who->equip_artifact(&setup->artifacts[i], i);
+    }
+    for (i = 0; i < 64; i++)
+        who->backpack[i] = type_artifact();
+    for (i = 0; i < 64; i++) {
+        if (setup->backpack[i].artifactId != ARTIFACT_NONE)
+            who->add_to_backpack(&setup->backpack[i], -1);
+    }
 }
 
-#endif  // @carcass
+// 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
+// hero. Its single caller is inside game.obj (0x4cae10), which walks 156
+// records with `add ebx, 0x334` - which is what closes the record's size.
+//
+// TYPE BLOCKER RETIRED 2026-08-20: this needed no new type either. The
+// record is game.h's existing HeroExtra, and the identification is
+// conclusive rather than plausible - from Dreamcast offset 8 onward all
+// sixteen of its members land on retail at DC + 4, in order, without a
+// single exception. What was missing is only the head band, which this
+// body reads field by field, plus the pack(1) that keeps `location` at
+// +0x301 where retail puts it. The DC counterpart is the free function
+// initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
+// a member and moved it into hero.cpp.
+// Residual (55.74%): an A8/A12 inliner wall. Retail's census is ten calls
+// and exactly ONE is a string call, basic_string::assign; our CL inlines
+// assign as well and spills its internals (_Grow x2, _Split x2, _Eos,
+// memmove, operator delete) into this body, which is the whole remaining
+// branch gap (base 53 against retail's 37). Tried and rejected, both
+// no-ops at 55.74: `customName = setup->name` against
+// `customName.assign(setup->name, 0, std::string::npos)` - game.h's own
+// note already records that operator= collapses onto the same assign -
+// and `#pragma inline_depth(1)` around the body, which does not reach the
+// decision. Splitting apply_setup_artifacts out DID work (49.03 ->
+// 55.74), so the budget is the right lever; what is missing is one more
+// pre-inline caller reduction, not a spelling.
+VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
+void hero::HeroFn_004D8B30(const HeroExtra* setup)
+{
+    field_01e = setup->field_008;
+    x = setup->location.x;
+    y = setup->location.y;
+    z = setup->location.z;
+    owner = setup->Owner;
+    id = setup->id;
+    heroClass = akHeroTraits[setup->id].heroClass;
+
+    patrolRadius = setup->PatrolRadius;
+    if (setup->PatrolRadius >= 0) {
+        patrolX = x;
+        patrolY = y;
+    } else {
+        patrolX = kPatrolNone;
+        patrolY = kPatrolNone;
+    }
+
+    if (setup->bCustomName) {
+        strncpy(name, setup->Name, sizeof(name));
+        name[sizeof(name) - 1] = 0;
+    }
+    if (setup->bCustomPortraitNumber)
+        portrait = setup->PortraitNumber;
+
+    if (setup->customPrimarySkills) {
+        for (int i = 0; i < 4; i++)
+            stats[i] = setup->primarySkills[i];
+    }
+
+    if (setup->bCustomSecondarySkills) {
+        memset(skillLevel, 0, sizeof(skillLevel));
+        memset(skillOrder, 0, sizeof(skillOrder));
+        skillCount = 0;
+        for (int i = 0; i < setup->NumSecondarySkills; i++)
+            GiveSS(setup->secondarySkill[i], setup->secondarySkillLevel[i]);
+    }
+
+    if (setup->bCustomArmies) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            army.numTroops[i] = setup->numTroops[i];
+            if (setup->numTroops[i] > 0)
+                army.armies[i] = setup->armies[i];
+            else
+                army.armies[i] = CREATURE_NONE;
+        }
+    }
+
+    if (setup->customSpells) {
+        memset(in_spellbook, 0, sizeof(in_spellbook));
+        memset(available_spells, 0, sizeof(available_spells));
+        for (int i = 0; i < NUM_SPELLS; i++) {
+            if (setup->spells.test(i)) {
+                in_spellbook[i] = 1;
+                available_spells[i] = 1;
+            }
+        }
+    }
+
+    if (setup->bCustomArtifacts)
+        apply_setup_artifacts(this, setup);
+
+    if (setup->sex != -1)
+        sex = setup->sex;
+
+    if (setup->customName) {
+        hasCustomName = 1;
+        customName = setup->name;
+    }
+
+    if (setup->bCustomExperience) {
+        experience = 0;
+        int amount = setup->Experience;
+        // The one campaign that starts its hero at a level derived from
+        // another scenario's hero. GetExperience (0x4da3a0) is EMITTED
+        // AFTER this body, so VC6 cannot inline it here - yet its ladder
+        // is expanded in place at 0x4d999b, induction rewrite and all.
+        // The only consistent reading is that retail's source repeats the
+        // statements rather than calling it.
+        if (gCampaignMode
+            && gpGame->campaign.currentCampaign == kStartLevelCampaign
+            && gpGame->campaign.currentMap == kStartLevelScenario) {
+            int iLevel = gpGame->heroes[kStartLevelHeroId].level
+                       + kStartLevelBonus;
+            if (iLevel <= 12) {
+                amount = kExperienceForLevel[iLevel - 1];
+            } else {
+                amount = kExperienceForLevel[11];
+                int increment = static_cast<int>(
+                    (amount - kExperienceForLevel[10]) * 1.2);
+                amount += increment;
+                for (int i = 13; i < iLevel; i++) {
+                    increment = static_cast<int>(increment * 1.2);
+                    amount += increment;
+                }
+            }
+        }
+        GiveExperience(amount, 1, 0);
+        CheckLevel();
+    }
+
+    int knowledge = GetPrimarySkill(3);
+    float intelligence =
+        kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
+    if (skillLevel[eSecSkillIntelligence] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillIntelligence)
+            intelligence = (level * 0.05f + 1.0f) * intelligence;
+    }
+    float baseMana = static_cast<float>(knowledge * 10);
+    mana = static_cast<short>(
+        static_cast<long>((intelligence + 1.0f) * baseMana));
+    maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
+}
+
+
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
 // (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
@@ -1206,60 +1431,115 @@ void hero::AddSpell(int whichSpell)
     available_spells[whichSpell] = 1;
 }
 
-#if 0  // @carcass
+// Every spell of one magic school, the body the four Tome arms of
+// mark_spells share. A file-static with four call sites: /Ob2 expands it
+// into each arm, which is why no retail row exists for it.
+static std::bitset<70> spells_of_school(TSpellSchool school)
+{
+    std::bitset<70> granted(0);
+    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (akSpellTraits[spell].schoolBits & school)
+            granted[spell] = true;
+    }
+    return granted;
+}
+
+// The Spellbinder's Hat sweep. One call site, so /Ob2 expands it
+// unconditionally and no retail row exists for it.
+static void mark_spells_of_level(std::bitset<70>& target, int level)
+{
+    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (akSpellTraits[spell].level == level)
+            target.set(spell, true);
+    }
+}
 
 // E:\gamedcs\hero.cpp:1527
-// DECODED 2026-08-20 but NOT landed - recorded here so the next lane does
-// not repeat the extraction. Shape:
+// The artifact -> granted-spells map, and NOT the DC row's
+// `(unsigned char*, TSpellSchool)`: it is a /Gr FREE function returning
+// bitset<70> BY VALUE - the hidden return pointer arrives in ECX and the
+// artifact id in EDX (`lea ecx,[ebp-0x50] / mov edx,<id> / call`), and
+// each caller copies exactly three dwords out of the result, which is
+// bitset<70>'s whole storage. Two call sites image-wide, so /Ob2's
+// single-call-site rule never threatened it.
 //
-//   std::bitset<70> result(0);
-//   switch (artifactId) { ... }          // see the table below
-//   if (artifactId == 0x87) { ... }      // a second, post-switch arm
-//   return result;
+// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default` over a
+// 50-byte index table at +0x240 selecting a nine-entry dword jump table
+// at +0x21c. Read out of the image the 50 index bytes collapse to EIGHT
+// real cases; every other id in 0x56..0x87 falls to the bare epilogue.
+// The arm order below is the EMITTED order, hence source order.
 //
-// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default`, a byte
-// index table at +0x240 and a nine-entry dword jump table at +0x21c. Read
-// straight out of the image, the 50 index bytes collapse to EIGHT real
-// cases; every other id in 0x56..0x87 falls to the default (case 8, the
-// bare epilogue):
-//   0x56 -> school mask 2      0x57 -> school mask 1
-//   0x58 -> school mask 4      0x59 -> school mask 8
-//   0x7b -> set(0) and set(1)  0x7c -> every spell whose level == 5
-//   0x80 -> set(0x1a)          0x87 -> set(0x39)
+// Two shape facts are in the bytes rather than inferred. First, the four
+// Tome arms build a SEPARATE bitset at [ebp-0x28] and copy-assign all
+// three dwords into the result, while the level arm and the four literal
+// arms write the result in place at [ebp-0x1c] - the asymmetry is in the
+// addressing, not in inlining. Second, `granted[spell] = true` is
+// bitset::operator[] plus reference::operator=(bool), and the first
+// three Tome arms inline operator[] where the fourth calls it out of
+// line: that is purely the /Ob2 budget running out mid-switch, so all
+// four arms are written identically here.
 //
-// The four school-mask cases each build a SEPARATE bitset temporary at
-// [ebp-0x28], fill it with `tmp[i] = true` over the 70-entry
-// akSpellTraits table (stride 0x88, bound 0x2530, flag byte at +0x1c),
-// and then copy all three dwords into the result - they do NOT write the
-// result directly. The level case and the four set() cases DO write the
-// result in place through bitset<70>::set(size_t,bool). That asymmetry is
-// in the bytes, not an artifact of inlining: the mask cases address
-// [ebp-0x28] and the others [ebp-0x1c].
+// The TWO HELPERS above are byte-forced, not tidiness. Retail's callee
+// census is _Tidy x5 / reference::operator= x5 / operator[] x2 / set x3,
+// i.e. retail inlines almost no STL here at all - and with the four Tome
+// loops and the level loop written out longhand in this function our CL
+// has enough /Ob2 budget to inline ALL of it (84.29%). Moving them into
+// file-statics shrinks the pre-inline caller, drops the budget, and each
+// step bought back exactly the calls the census predicts: the school
+// helper (four call sites) restored operator= x5 and operator[] x2 and
+// took it to 88.79%, and the level helper (one call site, so expanded
+// unconditionally) restored the level arm instruction-for-instruction at
+// 92.71%.
 //
-// Blockers before this can land, both cheap but neither done here:
-//  - the eight case labels are raw artifact ids and WILL trip the
-//    magic-case-label floor; they need named enumerators (artifact.h
-//    already carries the ARTIFACT_* domain, so extend it there);
-//  - the spell ids 0, 1, 0x1a and 0x39 want SpellID names for the same
-//    reason.
+// Residual (92.71%): the FIRST TWO constant-index sets - Armageddon's
+// Blade and the Sea Captain's set(SPELL_SUMMON_BOAT) - still fold to
+// `or dword ptr [result], imm` where retail calls set; the two constant
+// sets AFTER them (Scuttle Boat, Titan's Lightning Bolt) already come
+// out as retail's calls, so the budget is running out two decisions too
+// late and nothing later in the function is left to drain it. Everything
+// else - both loops, the jump tables, the tail-merged set chain, the
+// `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
+// registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
+// is what retail's `_Tidy` calls actually prove the source used, but
+// which frees enough budget to lose the operator[] pair (90.49%, and
+// 84.86% before the level helper); its call shape is identical to the
+// `(0)` ctor's at all five sites, so no byte is given up by spelling it
+// this way.
 VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
 std::bitset<70> mark_spells(int artifactId)
 {
-    // @stub
+    std::bitset<70> result(0);
+    switch (artifactId) {
+    case ARTIFACT_TOME_OF_AIR_MAGIC:
+        result = spells_of_school(eSchoolAir);
+        break;
+    case ARTIFACT_TOME_OF_FIRE_MAGIC:
+        result = spells_of_school(eSchoolFire);
+        break;
+    case ARTIFACT_TOME_OF_WATER_MAGIC:
+        result = spells_of_school(eSchoolWater);
+        break;
+    case ARTIFACT_TOME_OF_EARTH_MAGIC:
+        result = spells_of_school(eSchoolEarth);
+        break;
+    case ARTIFACT_SPELLBINDERS_HAT:
+        mark_spells_of_level(result, kFifthLevelSpell);
+        break;
+    case ARTIFACT_ARMAGEDDONS_BLADE:
+        result.set(SPELL_ARMAGEDDON, true);
+        break;
+    case ARTIFACT_SEA_CAPTAINS_HAT:
+        result.set(SPELL_SUMMON_BOAT, true);
+        result.set(kSpellScuttleBoat, true);
+        break;
+    case ARTIFACT_TITANS_THUNDER:
+        result.set(SPELL_TITANS_LIGHTNING_BOLT, true);
+        break;
+    }
+    if (artifactId != ARTIFACT_TITANS_THUNDER)
+        result[SPELL_TITANS_LIGHTNING_BOLT] = false;
+    return result;
 }
-
-#endif  // @carcass
-
-// 0x004d9350, still unwritten, but its SIGNATURE is settled from the
-// retail call sites and is NOT the DC row's `(unsigned char*,
-// TSpellSchool)`: it is a /Gr free function returning a bitset<70> BY
-// VALUE (hidden return pointer in ECX, artifact id pushed out to EDX -
-// `lea ecx,[ebp-0x50] / mov edx,<artifact id> / call`), and the caller
-// copies exactly three dwords out of the result, which is bitset<70>'s
-// storage. Declared here so update_spell_list emits the CALL retail
-// emits; mark_spells has two call sites image-wide, so /Ob2's
-// single-call-site rule does not threaten it.
-std::bitset<70> mark_spells(int artifactId);
 
 // E:\gamedcs\hero.cpp:1542
 // Rebuilds available_spells from the spellbook plus every spell-granting
@@ -1285,6 +1565,25 @@ std::bitset<70> mark_spells(int artifactId);
 // best measured spelling; the transposition reads as guard polarity,
 // a D8 arm-order item the catalog has no lever for on a pointer-guarded
 // loop.
+//
+// CORRECTION 2026-08-20 - do NOT act on the paragraph above as if the
+// residual were scheduling-only. Retail's FRAME IS 20 BYTES LARGER THAN
+// OURS (`sub esp,0x5c` against our `sub esp,0x48`), so this body is
+// missing source elements, and the branch-kind transposition is a
+// downstream symptom. Two independent witnesses of the same gap, both
+// in the first grant arm:
+//  - retail loads `slot->extra` EAGERLY, before the ARTIFACT_NONE test
+//    (`mov edx,[eax] / mov eax,[eax+4] / cmp edx,-1`), where our CL sinks
+//    the load into the scroll arm because that is the only path using it.
+//    Something else in retail's source reads `extra` on another path.
+//  - retail's scroll store is `mov [ebx+eax+0x430], dl`, reusing the
+//    register still holding the artifact id (provably 1 there), where we
+//    materialize the immediate.
+// The locals we do not have are 16 bytes between the scalar band and the
+// first bitset temp plus one more dword at [ebp-0x4] (which retail uses
+// to memory-home the `dst` pointer). Find those 20 bytes before touching
+// loop spelling again; `predict-inline` says the call multisets AGREE, so
+// this is not the /Ob2 budget.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
@@ -1441,8 +1740,8 @@ void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 {
     unsigned short statValue = GetPrimarySkill(whichStat);
     NormalDialog(gPrimaryStatNames[whichStat],
-                 isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
-                             : PRIMARY_STAT_DIALOG_TYPE,
+                 isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                             : hero::PRIMARY_STAT_DIALOG_TYPE,
                  -1, PRIMARY_STAT_DIALOG_Y,
                  whichStat + PRIMARY_STAT_RESOURCE_FIRST,
                  statValue | PRIMARY_STAT_RESOURCE_QUANTITY,
@@ -1469,14 +1768,14 @@ void hero::HeroFn_004D9A00(type_artifact* artifact, int isQuickView)
 {
     if (artifact->artifactId == ARTIFACT_SPELL_SCROLL) {
         NormalDialog(artifact->get_description().c_str(),
-                     isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                 : PRIMARY_STAT_DIALOG_TYPE,
+                     isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                      -1, PRIMARY_STAT_DIALOG_Y, 9, artifact->extra,
                      -1, 0, -1, 0, -1, 0);
     } else {
         NormalDialog(artifact->get_description().c_str(),
-                     isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                 : PRIMARY_STAT_DIALOG_TYPE,
+                     isQuickView ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                 : hero::PRIMARY_STAT_DIALOG_TYPE,
                      -1, PRIMARY_STAT_DIALOG_Y, -1, 0, -1, 0, -1, 0,
                      -1, 0);
     }
@@ -2274,6 +2573,13 @@ void THeroScreenWindow::update_slot(long slot)
 }
 
 // E:\gamedcs\hero.cpp:2383
+// NOT PINNED, and the attempt is recorded so it is not repeated: retail
+// CALLS this three times from WindowHandler's artifact and backpack arms
+// while our CL expands it (23 bytes of loop is under any budget), but
+// `#pragma auto_inline(off)` here is too blunt - it also stops the
+// expansion in SetupHeroView, which retail DOES inline, and the ratchet
+// caught the cost (WindowHandler 71.10 -> 72.89 but SetupHeroView 99.53
+// -> 98.69). A per-call-site lever would be needed; VC6 has none.
 VA(0x004db1d0, 0x17)  // anchor-callee (update_slot), dc 0xcd740
 void THeroScreenWindow::update_all_slots()
 {
@@ -2440,6 +2746,21 @@ DATA(0x006a8074) extern const char* gHeroScreenText24;                // row 24
 DATA(0x006a8078) extern const char* gHeroScreenFormationGroupedText;  // row 25
 DATA(0x006a807c) extern const char* gHeroScreenFormationSpreadText;   // row 26
 DATA(0x006a8080) extern const char* gHeroScreenText27;                // row 27
+// Rows 28..32 continue the same stride-4 run. WindowHandler's six
+// right-click help arms are what pin them: each hands one of these
+// straight to NormalDialog with dialog type 4, so the role is "help text
+// for widget N" and the names follow the widget they answer for.
+DATA(0x006a8084) extern const char* gHeroScreenHeroNameHelp;          // row 28
+DATA(0x006a8088) extern const char* gHeroScreenWidget7aHelp;          // row 29
+DATA(0x006a808c) extern const char* gHeroScreenWidget7cHelp;          // row 30
+DATA(0x006a8090) extern const char* gHeroScreenFormationHelp;         // row 31
+DATA(0x006a8094) extern const char* gHeroScreenMixedArmyHelp;         // row 32
+// The quest-log button's help text, and the ONE oddity in the set: it is
+// NOT in the 0x6a8014 run and has exactly one reference image-wide, this
+// call site. Provenance genuinely undetermined - 0x6a5704 is 0x6a56e0 +
+// 0x24, which would make it a cell of townmgr's stride-8 table, but
+// nothing in the bytes decides that. ORDINAL PLACEHOLDER spelling.
+DATA(0x006a5704) extern const char* gUnnamed6a5704;
 
 // E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
 // selector - army::GetName (0x440100) is its out-of-line twin, and this
@@ -3215,18 +3536,602 @@ void THeroScreenWindow::show_skills()
     // @stub
 }
 
+#endif  // @carcass
+
+// The three bodies the Dreamcast build keeps as their own functions and
+// retail expands into WindowHandler: handle_artifact_click (dc 0xcdf30),
+// handle_backpack_click (dc 0xcea3c) and show_skills (dc 0xcf3ac). None
+// has a retail row, so each is a file-static with ONE call site, which
+// /Ob2 expands unconditionally and emits no out-of-line copy for.
+//
+// They are BYTE-FORCED, not tidiness. Written longhand inside
+// WindowHandler the caller carries so much /Ob2 budget that it also
+// expands update_all_slots, HeroFn_004D9A00, HeroFn_004E2840 and
+// bitset<144>::any(), every one of which retail CALLS. Moving these three
+// arms back out is what restores retail's own inline census.
+//
+// The two click handlers keep the Dreamcast names and their `(long code,
+// unsigned char right_mouse)` arity. show_skills does NOT: the DC row is
+// zero-argument and this body needs the widget id, the same arity
+// divergence the block note above already records for five other
+// hero-screen rows, so it takes a descriptive local name instead.
+static void handle_artifact_click(long code, unsigned char right_mouse)
+{
+    long slot = code;
+    type_artifact record = gpCurrentHero->equipped[slot];
+
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
+        if (right_mouse)
+            return;
+        if (!gpCurrentHero->HeroFn_004E2840(
+                gHeroScreenDraggedArtifact.artifactId, slot))
+            return;
+        if (record.artifactId != ARTIFACT_NONE) {
+            gpCurrentHero->remove_artifact(slot);
+            gpCurrentHero->equip_artifact(
+                &gHeroScreenDraggedArtifact, slot);
+            if (gpGame->f_1f698 >= 2)
+                gpCurrentHero->HeroFn_004DC100(slot);
+            gpCurrentHero->UpdateStats();
+            gHeroScreenDraggedArtifact = record;
+            gpHeroScreenWindow->update_all_slots();
+            gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            gpMouseManager->SetPointer(
+                gHeroScreenDraggedArtifact.artifactId,
+                mouseManager::ARTIFACT_SET);
+        } else {
+            gpCurrentHero->equip_artifact(
+                &gHeroScreenDraggedArtifact, slot);
+            if (gpGame->f_1f698 >= 2)
+                gpCurrentHero->HeroFn_004DC100(slot);
+            gpCurrentHero->UpdateStats();
+            gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+            gpHeroScreenWindow->update_all_slots();
+            gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            gpMouseManager->SetPointer(0,
+                                       mouseManager::DEFAULT_SET);
+        }
+        return;
+    }
+
+    if (record.artifactId == ARTIFACT_NONE)
+        return;
+
+    if (right_mouse) {
+        if (gpGame->f_1f698 >= 2) {
+            if (akArtifactTraits[record.artifactId].comboType
+                != -1) {
+                if (gpCurrentHero->HeroFn_004D9B30(
+                        record.artifactId)
+                    == DIALOG_RETURN_ACCEPT) {
+                    gpCurrentHero->HeroFn_004DC070(slot);
+                    gpCurrentHero->UpdateStats();
+                    for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+                         i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+                        gpHeroScreenWindow->update_slot(i);
+                    gpHeroScreenWindow->DrawWindow(1, 0xffff0001,
+                                                   0xffff);
+                }
+                return;
+            }
+            int targetCombo =
+                akArtifactTraits[record.artifactId].targetCombo;
+            if (targetCombo != -1) {
+                std::bitset<144> missing =
+                    gCombinationArtifacts[targetCombo].components;
+                for (int k = 0; k < 19; k++) {
+                    int worn =
+                        gpCurrentHero->equipped[k].artifactId;
+                    if (worn != ARTIFACT_NONE)
+                        missing[worn] = false;
+                }
+                if (!missing.any()) {
+                    if (gpCurrentHero->HeroFn_004D9CC0(
+                            record.artifactId)
+                        == DIALOG_RETURN_ACCEPT) {
+                        gpCurrentHero->HeroFn_004DBF30(targetCombo,
+                                                       slot);
+                        gpCurrentHero->UpdateStats();
+                        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+                             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+                            gpHeroScreenWindow->update_slot(i);
+                        gpHeroScreenWindow->DrawWindow(
+                            1, 0xffff0001, 0xffff);
+                    }
+                    return;
+                }
+            }
+        }
+        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        return;
+    }
+
+    if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
+        TSpellbookWindow spellbook(
+            gpCurrentHero, 0, TSpellbookWindow::eContextNeither,
+            gpCurrentHero->get_special_terrain());
+        spellbook.DoModal(0);
+        return;
+    }
+    if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
+        NormalDialog(gpGeneralText->GetText(313), 1, -1, -1, 8, 3,
+                     -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+    gHeroScreenDraggedArtifact = record;
+    gpCurrentHero->remove_artifact(slot);
+    gpCurrentHero->UpdateStats();
+    gpHeroScreenWindow->update_all_slots();
+    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    gpMouseManager->SetPointer(
+        gHeroScreenDraggedArtifact.artifactId,
+        mouseManager::ARTIFACT_SET);
+}
+
+static void handle_backpack_click(long code, unsigned char right_mouse)
+{
+    long index = code;
+    type_artifact record = gpCurrentHero->backpack[index];
+
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
+        if (right_mouse)
+            return;
+        if (!gpCurrentHero->add_to_backpack(
+                &gHeroScreenDraggedArtifact, index)) {
+            NormalDialog(
+                gpCurrentHero
+                    ->get_backpack_error(artifact_from_int(
+                        gHeroScreenDraggedArtifact.artifactId))
+                    .c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        UpdateBackpack();
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+            gpHeroScreenWindow->update_slot(i);
+        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+        return;
+    }
+
+    if (record.artifactId == ARTIFACT_NONE)
+        return;
+
+    if (right_mouse) {
+        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        return;
+    }
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+    gHeroScreenDraggedArtifact = record;
+    short i = static_cast<short>(index);
+    if (gpCurrentHero->backpack[i].artifactId != ARTIFACT_NONE) {
+        long last = gpCurrentHero->get_last_backpack_index();
+        for (; i < last; i++)
+            gpCurrentHero->backpack[i] =
+                gpCurrentHero->backpack[i + 1];
+        gpCurrentHero->backpack[i].artifactId = ARTIFACT_NONE;
+        gpCurrentHero->backpackCount--;
+    }
+    UpdateBackpack();
+    for (long j = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+         j < THeroScreenWindow::ARTIFACT_SLOT_COUNT; j++)
+        gpHeroScreenWindow->update_slot(j);
+    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    gpMouseManager->SetPointer(
+        gHeroScreenDraggedArtifact.artifactId,
+        mouseManager::ARTIFACT_SET);
+}
+
+static void show_hero_skills(int code, unsigned char right_mouse)
+{
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+        return;
+    int nth;
+    if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
+        && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
+        nth = code - THeroScreenWindow::SKILL_ICON_FIRST_ID;
+    else if (code >= THeroScreenWindow::SKILL_NAME_FIRST_ID
+             && code <= THeroScreenWindow::SKILL_NAME_LAST_ID)
+        nth = code - THeroScreenWindow::SKILL_NAME_FIRST_ID;
+    else if (code < THeroScreenWindow::SKILL_LEVEL_FIRST_ID
+             || code > THeroScreenWindow::SKILL_LEVEL_LAST_ID)
+        return;
+    else
+        nth = code - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
+    if (nth >= gpCurrentHero->skillCount)
+        return;
+    int skill = gpCurrentHero->GetNthSS(nth);
+    strcpy(gText,
+           akSSkillTraits[skill]
+               .levelNames[gpCurrentHero->skillLevel[skill] - 1]);
+    NormalDialog(gText,
+                 right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                             : hero::PRIMARY_STAT_DIALOG_TYPE,
+                 -1, -1, 0x14,
+                 3 * skill + gpCurrentHero->skillLevel[skill] + 2,
+                 -1, 0, -1, 0, -1, 0);
+}
+
 // E:\gamedcs\hero.cpp:3486
 // The hero screen's message pump, 5182 B against DC's 3128: the two
 // free click handlers (handle_artifact_click 526 B, handle_backpack_click
 // 420 B) and show_skills (416 B) have no retail rows of their own and
 // are inlined here.
+//
+// Shape, all read off the bytes rather than assumed: a prologue chain of
+// msg->id tests, then a three-arm dec-chain switch on msg->codeX, then
+// TWO byte-indexed jump-table switches on msg->codeY - one under
+// WIDGET_DESELECT (index table 0x4de604, pointers 0x4de5e0) and one
+// shared by WIDGET_SELECT and WIDGET_RIGHT_SELECT (index table 0x4de684,
+// pointers 0x4de63c). Both tables were decoded byte for byte; the arm
+// ORDER below is retail's emitted block order, i.e. source order.
+//
+// The three id TRIPLETS hero.h had to leave as ordinal placeholders are
+// resolved by this body, and they group by STAT rather than by
+// icon/label/value: {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77}
+// experience, {0x6d,0x71,0x78} spell points. SetupHeroView corroborates
+// each one independently.
+// Residual (71.10%): an A12 INLINER wall, not spelling. `predict-inline`
+// now agrees on most of the census, and what is left is four callees our
+// CL still expands where retail keeps a call - update_all_slots (x1 vs
+// x3, and the two extra update_slot calls that follow from it),
+// HeroFn_004E2840, get_last_backpack_index and TQuickHeroWindow::
+// QuickWindowWait - plus HeroFn_004D97F0 at x3 vs x4. The knob the solver
+// names is `#pragma auto_inline(off)` on the callee; for update_all_slots
+// that was MEASURED and REJECTED (see its own note above): it buys
+// WindowHandler 71.10 -> 72.89 but costs SetupHeroView 99.53 -> 98.69,
+// and SetupHeroView's own residual is a single data-phase reloc addend,
+// i.e. that function is otherwise finished. The ratchet's max for this
+// row was accepted back down to 71.10 with hist kept at 72.89.
+// One more open item, NOT yet explained: retail emits 15 NormalDialog
+// call instructions where we emit 6. The source has ~14 sites, so our CL
+// is cross-jumping the identical right-click help arms and retail is not.
+// Read that before assuming any arm is missing.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
 
-#endif  // @carcass
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char right_mouse = (msg->qualifier & MESSAGE_MODIFIER_RIGHT) != 0;
+
+    if (msg->id == MESSAGE_MOUSE_MOVE) {
+        gpWindowManager->ConvertToHover(*msg);
+        if (gpWindowManager->lastHover != msg->codeY) {
+            gpWindowManager->lastHover = msg->codeY;
+            UpdateHeroScreenStatusBar(msg);
+        }
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg->id == MESSAGE_KEY_UP
+        && (msg->codeX == kKeyCodeLeftShift
+            || msg->codeX == kKeyCodeRightShift)) {
+        gpWindowManager->lastHover = -1;
+        gpInputManager->ForceMouseMove();
+    }
+    if (msg->id == MESSAGE_KEY_DOWN
+        && (msg->codeX == kKeyCodeLeftShift
+            || msg->codeX == kKeyCodeRightShift)) {
+        gpWindowManager->lastHover = -1;
+        gpInputManager->ForceMouseMove();
+    }
+    if (msg->id != MESSAGE_WIDGET)
+        return MESSAGE_DISPATCH_CONSUME;
+
+    gpWindowManager->lastHover = -1;
+
+    switch (msg->codeX) {
+    case widget::WIDGET_DESELECT:
+        if (right_mouse)
+            break;
+        switch (msg->codeY) {
+        case HERO_NAME_ID:
+            NormalDialog(gpGeneralText->GetText(23), 2, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+                gpWindowManager->dialogReturn = msg->codeY;
+                msg->codeY = 10;
+                msg->codeX = 10;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
+            break;
+        case BACKPACK_SCROLL_LEFT_ID:
+            gpCurrentHero->rotate_backpack_left();
+            UpdateBackpack();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case BACKPACK_SCROLL_RIGHT_ID:
+            gpCurrentHero->rotate_backpack_right();
+            UpdateBackpack();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case MIXED_ARMY_ID:
+            gHeroScreenArmyStripLive = 1;
+            gpCurrentHero->HeroFn_004D97F0();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case WIDGET_7A_ID:
+            gpCurrentHero->formation &= ~HERO_FORMATION_TIGHT;
+            SetupHeroView();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case WIDGET_7C_ID:
+            gpCurrentHero->formation |= HERO_FORMATION_TIGHT;
+            SetupHeroView();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case FORMATION_ID:
+            gpCurrentHero->formation ^= HERO_FORMATION_GROUPED;
+            SetupHeroView();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+        case WIDGET_80_ID:
+            DoQuestLog(gpCurrentHero->owner);
+            break;
+        }
+        break;
+
+    case widget::WIDGET_SELECT:
+    case widget::WIDGET_RIGHT_SELECT:
+        switch (msg->codeY) {
+        case PRIMARY_SKILL_0_ID:
+        case PRIMARY_SKILL_1_ID:
+        case PRIMARY_SKILL_2_ID:
+        case PRIMARY_SKILL_3_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            gpCurrentHero->HeroScreenUpdate(msg->codeY - PRIMARY_SKILL_0_ID,
+                                            right_mouse);
+            break;
+
+        case PORTRAIT_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            NormalDialog(gpCurrentHero->HeroFn_004D8FB0(),
+                         right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                     : hero::PRIMARY_STAT_DIALOG_TYPE,
+                         -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+
+        case MORALE_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            gpGame->ShowMoraleInfo(gpCurrentHero,
+                                   right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                               : hero::PRIMARY_STAT_DIALOG_TYPE);
+            break;
+
+        case LUCK_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            gpGame->ShowLuckInfo(gpCurrentHero,
+                                 right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                             : hero::PRIMARY_STAT_DIALOG_TYPE);
+            break;
+
+        case WIDGET_6B_ID:
+        case WIDGET_76_ID:
+        case WIDGET_8B_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            strcpy(gText, akHeroSpecificAbilities[gpCurrentHero->id].longText);
+            NormalDialog(gText,
+                         right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                     : hero::PRIMARY_STAT_DIALOG_TYPE,
+                         -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+
+        case WIDGET_6D_ID:
+        case WIDGET_71_ID:
+        case WIDGET_78_ID:
+            {
+                if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                    break;
+                int knowledge = gpCurrentHero->GetPrimarySkill(3);
+                float intelligence =
+                    kIntelligenceFactors[
+                        gpCurrentHero->skillLevel[eSecSkillIntelligence]];
+                if (gpCurrentHero->skillLevel[eSecSkillIntelligence] > 0) {
+                    const THeroSpecificAbility& ability =
+                        akHeroSpecificAbilities[gpCurrentHero->id];
+                    if (ability.type == eHeroAbilitySecondarySkill &&
+                        ability.skill == eSecSkillIntelligence)
+                        intelligence =
+                            (gpCurrentHero->level * 0.05f + 1.0f) * intelligence;
+                }
+                float baseMana = static_cast<float>(knowledge * 10);
+                sprintf(gText, gpGeneralText->GetText(206),
+                        gpCurrentHero->name, gpCurrentHero->mana,
+                        static_cast<long>((intelligence + 1.0f) * baseMana));
+                NormalDialog(gText,
+                             right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                         : hero::PRIMARY_STAT_DIALOG_TYPE,
+                             -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            }
+            break;
+
+        case WIDGET_6C_ID:
+        case WIDGET_70_ID:
+        case WIDGET_77_ID:
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            sprintf(gText, gpGeneralText->GetText(3),
+                    gpCurrentHero->level,
+                    hero::GetExperience(gpCurrentHero->level + 1),
+                    gpCurrentHero->experience);
+            NormalDialog(gText,
+                         right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                                     : hero::PRIMARY_STAT_DIALOG_TYPE,
+                         -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+
+        case ARMY_SLOT_0_ID:
+        case ARMY_SLOT_1_ID:
+        case ARMY_SLOT_2_ID:
+        case ARMY_SLOT_3_ID:
+        case ARMY_SLOT_4_ID:
+        case ARMY_SLOT_5_ID:
+        case ARMY_SLOT_6_ID:
+            {
+                long slot = msg->codeY - ARMY_SLOT_0_ID;
+                if (!right_mouse
+                    && gHeroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
+                    if (gpCurrentHero->army.armies[slot] != CREATURE_NONE) {
+                        gHeroScreenArmySlot = slot;
+                        gpCurrentHero->HeroFn_004D97F0();
+                        gpWindowManager->BroadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                            MIXED_ARMY_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                    }
+                } else if (right_mouse
+                               ? gpCurrentHero->army.armies[slot]
+                                     != CREATURE_NONE
+                               : gHeroScreenArmySlot == slot) {
+                    gHeroScreenArmyStripLive = 0;
+                    int show_dismiss = 0;
+                    if (!gUnnamed6aa9d8
+                        && gpCurrentHero->army.GetNumArmies() > 1)
+                        show_dismiss = 1;
+                    gpGame->ViewArmy(gpCurrentHero->army, slot, gpCurrentHero,
+                                     0, 0x77, 0x14, show_dismiss, right_mouse);
+                    if (!right_mouse)
+                        gHeroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
+                    SetupHeroView();
+                    DrawWindow(1, 0xffff0001, 0xffff);
+                } else if (!right_mouse) {
+                    if ((gHeroScreenArmyStripLive
+                         || (msg->qualifier & MESSAGE_MODIFIER_SHIFT))
+                        && (gpCurrentHero->army.armies[slot] == CREATURE_NONE
+                            || gpCurrentHero->army.armies[slot]
+                                   == gpCurrentHero->army
+                                          .armies[gHeroScreenArmySlot])) {
+                        gHeroScreenArmyStripLive = 0;
+                        gpCurrentHero->army.SplitArmy(
+                            gHeroScreenArmySlot, &gpCurrentHero->army, slot,
+                            0, 0);
+                    } else if (gpCurrentHero->army.armies[slot]
+                               == gpCurrentHero->army
+                                      .armies[gHeroScreenArmySlot]) {
+                        gpCurrentHero->army.numTroops[slot] +=
+                            gpCurrentHero->army.numTroops[gHeroScreenArmySlot];
+                        gpCurrentHero->army.numTroops[gHeroScreenArmySlot] = 0;
+                        gpCurrentHero->army.armies[gHeroScreenArmySlot] =
+                            CREATURE_NONE;
+                    } else {
+                        gpCurrentHero->army.Swap(slot, &gpCurrentHero->army,
+                                                 gHeroScreenArmySlot);
+                    }
+                    gHeroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
+                    gpCurrentHero->HeroFn_004D97F0();
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                        MIXED_ARMY_ID,
+                        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                }
+                gpWindowManager->lastHover = -1;
+                UpdateHeroScreenStatusBar(msg);
+            }
+            break;
+
+        case ARTIFACT_SLOT_0_ID:  case ARTIFACT_SLOT_1_ID:
+        case ARTIFACT_SLOT_2_ID:  case ARTIFACT_SLOT_3_ID:
+        case ARTIFACT_SLOT_4_ID:  case ARTIFACT_SLOT_5_ID:
+        case ARTIFACT_SLOT_6_ID:  case ARTIFACT_SLOT_7_ID:
+        case ARTIFACT_SLOT_8_ID:  case ARTIFACT_SLOT_9_ID:
+        case ARTIFACT_SLOT_10_ID: case ARTIFACT_SLOT_11_ID:
+        case ARTIFACT_SLOT_12_ID: case ARTIFACT_SLOT_13_ID:
+        case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
+        case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
+        case ARTIFACT_SLOT_18_ID:
+            handle_artifact_click(msg->codeY - ARTIFACT_SLOT_0_ID,
+                                  right_mouse);
+            break;
+
+        case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
+        case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
+        case BACKPACK_SLOT_4_ID:
+            handle_backpack_click(msg->codeY - BACKPACK_SLOT_0_ID,
+                                  right_mouse);
+            break;
+
+        case HERO_LOCATOR_0_ID: case HERO_LOCATOR_1_ID:
+        case HERO_LOCATOR_2_ID: case HERO_LOCATOR_3_ID:
+        case HERO_LOCATOR_4_ID: case HERO_LOCATOR_5_ID:
+        case HERO_LOCATOR_6_ID: case HERO_LOCATOR_7_ID:
+            if (right_mouse) {
+                TQuickHeroWindow quick(
+                    gpGame->GetHero(localPlayer->heroes[
+                        topHero + msg->codeY - HERO_LOCATOR_0_ID]),
+                    TQuickHeroWindow::ViewAll);
+                quick.x = 0x1a4;
+                quick.y = 0x172;
+                quick.QuickWindowWait();
+                break;
+            }
+            if (gHeroScreenArmySlot != HERO_SCREEN_NO_ARMY_SLOT)
+                break;
+            if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+                break;
+            gHeroScreenHeroPosition =
+                topHero + msg->codeY - HERO_LOCATOR_0_ID;
+            gpCurrentHero =
+                gpGame->GetHero(localPlayer->heroes[gHeroScreenHeroPosition]);
+            SetupHeroView();
+            DrawWindow(1, 0xffff0001, 0xffff);
+            break;
+
+        case WIDGET_80_ID:
+            if (right_mouse)
+                NormalDialog(gUnnamed6a5704, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+        case HERO_NAME_ID:
+            if (right_mouse)
+                NormalDialog(gHeroScreenHeroNameHelp, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+        case WIDGET_7A_ID:
+            if (right_mouse)
+                NormalDialog(gHeroScreenWidget7aHelp, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+        case WIDGET_7C_ID:
+            if (right_mouse)
+                NormalDialog(gHeroScreenWidget7cHelp, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+        case FORMATION_ID:
+            if (right_mouse)
+                NormalDialog(gHeroScreenFormationHelp, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+        case MIXED_ARMY_ID:
+            if (right_mouse)
+                NormalDialog(gHeroScreenMixedArmyHelp, 4, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            break;
+
+        default:
+            show_hero_skills(msg->codeY, right_mouse);
+            break;
+        }
+        break;
+    }
+
+    return MESSAGE_DISPATCH_CONSUME;
+}
 
 // E:\gamedcs\hero.cpp:3964
 // The 11,346-byte body, 1.05x DC's 10,852 - by far the largest row in
@@ -3813,20 +4718,85 @@ void hero::UpdateStats()
     gpHeroScreenWindow->BroadcastMessage(&msg);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4273
 // /Gr FREE function - it reads ecx AND edx and stashes them into the
 // hero-view globals (0x698a50 = iHeroID, 0x698a90 = second argument)
 // before calling advManager::TrimLoopingSounds; a member would leave edx
 // alone. That arity is HeroView's, not any THeroScreenWindow method's.
+//
+// The whole hero screen, open to close. Four decoding notes, all byte-forced:
+//  - `gpGame->GetHero(iHeroID)` is the game.h INLINE accessor, not an
+//    open-coded index: retail's own `cmp esi,-1 / null` arm in front of
+//    the 1170-byte stride IS that accessor's -1 test expanded here.
+//  - the three position stores are FIELD assignments into an uninitialized
+//    type_point, not its (x,y,z) constructor - retail XORs against the
+//    slot's existing contents, which is MSVC's bitfield read-modify-write,
+//    and it merges y and z into ONE word RMW because they share the second
+//    short (y bits 0..9, z bits 10..13).
+//  - the mobility store is GetMobility()'s no-argument wrapper EXPANDED,
+//    which is why the shifted flag bit is written out here; hero.cpp:1715
+//    already open-codes the same idiom for the same reason.
+//  - slot 6 of the window vtable is heroWindow::DoModal and slot 0 the
+//    scalar deleting destructor, so the tail `push 1 / call [eax]` is a
+//    plain `delete`.
+// `localPlayer` is a NAMED TEMPORARY on purpose and is the last 3.6%:
+// written as the one-liner `gpGame->GetLocalPlayer()->FindHero(...)` VC6
+// pushes the argument first and calls GetLocalPlayer second (96.43%),
+// where retail evaluates the object expression first. Splitting the
+// call out forces retail's order and takes it to 100%.
 VA(0x004e1800, 0x24F)  // arity (/Gr, 2 register args) + order-map, dc 0xd2e80
 int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView)
 {
-    // @stub
-}
+    gHeroScreenNoDismiss = bNoDismiss;
+    gHeroScreenHeroId = iHeroID;
+    gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+    gHeroScreenArmyStripLive = 0;
+    gpAdvManager->TrimLoopingSounds(4);
 
-#endif  // @carcass
+    gpCurrentHero = gpGame->GetHero(iHeroID);
+
+    gpHeroScreenWindow = new THeroScreenWindow();
+    if (!gpHeroScreenWindow)
+        MemError();
+    SetWinText(gpHeroScreenWindow, kHeroScreenWinText);
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gpCurrentPlayer->currHeroId == gpCurrentHero->id) {
+        type_point position;
+        position.x = gpCurrentHero->x;
+        position.y = gpCurrentHero->y;
+        position.z = gpCurrentHero->z;
+        NewmapCell* cell = gpAdvManager->GetCell(position);
+        if (cell->type != HERO || !cell->is_trigger)
+            gpAdvManager->DemobilizeCurrHero(0, 0);
+    }
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    gHeroScreenHeroPosition = localPlayer->FindHero(gpCurrentHero->id);
+    gpHeroScreenWindow->SetupHeroView();
+
+    if (bQuickView) {
+        gpWindowManager->DoQuickView(gpHeroScreenWindow);
+    } else {
+        gpHeroScreenWindow->DoModal(0);
+        gpAdvManager->Reseed(0, 0);
+    }
+    delete gpHeroScreenWindow;
+
+    if (gpWindowManager->dialogReturn == kDialogReturnDismissHero) {
+        gpCurrentHero->Deallocate(1, 0);
+        if (!bAlreadyFaded) {
+            gpAdvManager->FizzleCenter(0);
+            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+            gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        }
+        return 1;
+    }
+    gpCurrentHero->maxMovePoints =
+        gpCurrentHero->GetMobility((gpCurrentHero->flags >> 18) & 1);
+    gpCurrentHero = 0;
+    return 0;
+}
 
 // E:\gamedcs\hero.cpp:4349
 // Repaints the whole hero screen from gpCurrentHero. thiscall, no
@@ -6218,7 +7188,16 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass
+// The flat creature bonus kinds 4 and 7 both add. Two call sites, so
+// /Ob2 expands it into each and emits no out-of-line body.
+static void add_flat_creature_bonus(TCreatureTypeTraits* traits,
+                                    const THeroSpecificAbility& ability)
+{
+    traits->attackSkill += ability.creatureAttackBonus;
+    traits->defenseSkill += ability.creatureDefenseBonus;
+    traits->damageLowBound += ability.creatureDamageBonus;
+    traits->damageHighBound += ability.creatureDamageBonus;
+}
 
 // E:\gamedcs\hero.cpp:6493
 // IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right
@@ -6239,12 +7218,87 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 // exactly the three fields this body writes), and the member is const.
 // The carcass text had drifted to `(int, void*)` non-const, which would
 // not have compiled had the block ever been enabled.
+//
+// TYPE BLOCKER RETIRED 2026-08-20: the "creature-stat record" this row
+// was parked on needed NO new type - it is armygrp.h's existing
+// TCreatureTypeTraits, and the 116-byte stride is proven four
+// independent ways (three `lea` chains here that all reduce to 29n
+// dwords, plus the army.obj caller's `mov ecx,0x1d / rep movsd` into
+// army+0x74). Every field it touches was already named. What WAS missing
+// is three dwords inside THeroSpecificAbility's pad and two enumerators;
+// both now sit behind hero.obj's own herospec creature view.
+//
+// get_combat_speed_bonus (0x4e5aa0) and get_hit_point_bonus (0x4e5b80)
+// are real retail rows that /Ob2 expands INTO this body, which is why
+// this definition has to sit after them in link order.
+//
+// add_flat_creature_bonus above is BYTE-FORCED, not tidiness, and the
+// same lever mark_spells needed. Written longhand in both arms this body
+// carries enough /Ob2 budget to expand IsWieldingArtifact at BOTH of its
+// sites; retail expands only the first (the Vial of Dragon Blood scan)
+// and keeps a real call at the second, inside the inlined
+// get_combat_speed_bonus. Folding the duplicated four-statement bonus
+// into a two-call-site static shrinks the pre-inline caller, drops the
+// budget, and restores retail's call exactly: 93.41% -> 99.97%.
+// The last instruction was operand ORDER on the upgraded-creature test -
+// retail emits `cmp ecx,eax` with creature_type first, so that compare
+// is spelled `creature_type == GetUpgradedCreature(...)`. Flipping the
+// OTHER compare in the same condition instead makes it worse (99.93%);
+// the two are not interchangeable.
 VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
 void hero::HeroFn_004E6120(int creature_type,
                            TCreatureTypeTraits* traits) const
 {
-    // @stub
+    hero* self = const_cast<hero*>(this);
+
+    traits->attackSkill += GetPrimarySkill(0);
+    traits->defenseSkill += GetPrimarySkill(1);
+
+    const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+
+    if (self->IsWieldingArtifact(kArtifactVialOfDragonBlood)
+        && (traits->attributes & kCreatureAttrDragon)) {
+        int bonus = kVialOfDragonBloodBonus;
+        traits->attackSkill += bonus;
+        traits->defenseSkill += bonus;
+    }
+
+    switch (ability.type) {
+    case eHeroAbilityCreature:
+    case eHeroAbilityCreatureUniversal:
+        if (creature_type == ability.creature
+            || (ability.creature != CREATURE_BALLISTA
+                && creature_type == GetUpgradedCreature(ability.creature))) {
+            if (ability.type == eHeroAbilityCreature) {
+                double scale = level / (traits->level + 1) * 0.05;
+                traits->attackSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creature_type].attackSkill * scale)
+                    + traits->attackSkill);
+                traits->defenseSkill = static_cast<int>(
+                    ceil(akCreatureTypeTraits[creature_type].defenseSkill * scale)
+                    + traits->defenseSkill);
+                if (!(traits->attributes & CTA_SIEGE_WEAPON))
+                    traits->speed++;
+            } else {
+                add_flat_creature_bonus(traits, ability);
+                if (id == kHeroXeron)
+                    traits->speed++;
+            }
+        }
+        break;
+    case eHeroAbilityDragons:
+        if (akCreatureTypeTraits[creature_type].attributes
+            & kCreatureAttrDragon)
+            add_flat_creature_bonus(traits, ability);
+        break;
+    }
+
+    if (!(traits->attributes & CTA_SIEGE_WEAPON))
+        traits->speed += self->get_combat_speed_bonus();
+    traits->hitPoints += self->get_hit_point_bonus(creature_type);
 }
+
+#if 0  // @carcass
 
 // ===================================================================
 // hero.obj's COMDAT tail: 0x004e64c0..0x004e6770. SEVEN inherited claims

@@ -226,6 +226,15 @@ public:
     // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
     // unrelated TU), and no other compiland needs the name.
     enum { EQUIPPED_SLOT_SOD_MISC = 18 };
+    // Two more equipped positions WindowHandler special-cases by INDEX
+    // (`if (slot == 0x11)` opens the spellbook, `if (slot == 0x10)`
+    // refuses the fourth war-machine position with general text 313).
+    // The spellings are the Dreamcast TArtifactSlot roster's; the values
+    // are retail's own compares. Same gate and same reason as above.
+    enum {
+        EQUIPPED_SLOT_WAR_MACHINE_4 = 16,
+        EQUIPPED_SLOT_SPELLBOOK = 17
+    };
     // hero::Deallocate's domain, same gate and same reason. The
     // availability byte's 0x40 rung is the "sits in a tavern recruit
     // pool" sentinel game::Load memsets the whole array with; the two
@@ -274,7 +283,15 @@ public:
     // and feed it straight back into the 1170-stride heroes index, and
     // town::View (0x5be3fa) pushes it to advManager::SetHeroContext.
     int id;                         // +0x1a
-    char pad_01e[0x4];
+    // +0x1e. HeroFn_004D8B30 copies the setup record's +0x08 dword
+    // straight in here, which is the only retail body that touches these
+    // four bytes at all - hence a full DWORD and hence a member rather
+    // than a pad. No name survives and nothing else reads it, so the
+    // spelling stays ORDINAL. (The h3m Shadow of Death hero record's
+    // leading questIdentifier is the obvious candidate and is exactly
+    // the field retail's HeroExtra has that the Dreamcast's lacks, but
+    // that is inference, not evidence.)
+    int field_01e;                  // +0x1e
     // Owning player. SIGNED char: town::View widens it with
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
@@ -679,6 +696,13 @@ public:
     // owning the slot is THeroScreenWindow::HeroMessageUpdate(char*);
     // ORDINAL PLACEHOLDER name, arity settled from the bytes.
     void HeroFn_004D97F0();
+    // 0x4d8b30, `ret 4`, a hero MEMBER: it copies one map/scenario setup
+    // record into this hero. The Dreamcast keeps the counterpart as the
+    // free function initialize_hero(hero*, const HeroExtra*)
+    // (E:\gamedcs\game.cpp:9912, dc 0xb6c84); retail moved it into
+    // hero.cpp as a member, so the name stays an ORDINAL PLACEHOLDER.
+    // Gated with HeroExtra itself, which is what the parameter is.
+    void HeroFn_004D8B30(const class HeroExtra* setup);
     int HeroFn_004D9B30(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
@@ -1156,6 +1180,10 @@ DATA(0x00698a84) extern int gHeroScreenHeroPosition;
 // stays dead" latch, a full DWORD. The name is role-derived from
 // HeroView's own parameter and is PROVISIONAL.
 DATA(0x00698a90) extern int gHeroScreenNoDismiss;
+// HeroView's FIRST argument, stashed on entry beside the one above
+// (0x4e1805 stores ECX straight into this cell). Role-derived from that
+// parameter and PROVISIONAL for the same reason.
+DATA(0x00698a50) extern int gHeroScreenHeroId;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot
@@ -1195,6 +1223,10 @@ public:
         PRIMARY_SKILL_3_ID,
         ARMY_SLOT_0_ID = 0x44, ARMY_SLOT_1_ID, ARMY_SLOT_2_ID,
         ARMY_SLOT_3_ID, ARMY_SLOT_4_ID, ARMY_SLOT_5_ID, ARMY_SLOT_6_ID,
+        // The two backpack pagers, byte-proven by WindowHandler: its
+        // WIDGET_DESELECT arms for these two ids expand
+        // rotate_backpack_left / rotate_backpack_right respectively.
+        BACKPACK_SCROLL_LEFT_ID = 0x4d, BACKPACK_SCROLL_RIGHT_ID = 0x4e,
         SKILL_ICON_FIRST_ID  = 0x4f, SKILL_ICON_LAST_ID  = 0x56,
         SKILL_NAME_FIRST_ID  = 0x57, SKILL_NAME_LAST_ID  = 0x5e,
         SKILL_LEVEL_FIRST_ID = 0x5f, SKILL_LEVEL_LAST_ID = 0x66,
@@ -1211,6 +1243,13 @@ public:
         WIDGET_80_ID = 0x80,
         HERO_NAME_ID = 0x81,
         WIDGET_8B_ID = 0x8b,
+        // The eight hero locators down the right edge. WindowHandler's
+        // second jump table routes exactly 0x82..0x89 to one arm that
+        // indexes the local player's hero list by `topHero + (codeY -
+        // 0x82)`, and SetupHeroView's own locator loop runs 0..7.
+        HERO_LOCATOR_0_ID = 0x82, HERO_LOCATOR_1_ID, HERO_LOCATOR_2_ID,
+        HERO_LOCATOR_3_ID, HERO_LOCATOR_4_ID, HERO_LOCATOR_5_ID,
+        HERO_LOCATOR_6_ID, HERO_LOCATOR_7_ID,
         WIDGET_7800_ID = 0x7800
     };
     // The "no army slot selected" sentinel gHeroScreenArmySlot carries.
@@ -1219,6 +1258,11 @@ public:
     // [hero+0x48],2`). Bit 1 for a nominally 0/1 field is unexplained;
     // transcribed as retail emits it.
     enum { HERO_FORMATION_GROUPED = 2 };
+    // Bit 0 of the same field. WindowHandler's WIDGET_DESELECT arms clear
+    // it for widget 0x7a and set it for 0x7c - the tight/loose pair -
+    // where FORMATION_ID (0x7e) toggles GROUPED above. SetupHeroView
+    // already reads this bit, with a bare literal.
+    enum { HERO_FORMATION_TIGHT = 1 };
 
     // Constructor-initialized hero-list scroll origin. Locator i displays
     // localPlayer->heroes[topHero + i].
