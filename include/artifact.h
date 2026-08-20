@@ -54,6 +54,22 @@ enum TArtifact {
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
     ARTIFACT_FIRST_AID_TENT = 6,
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // The two campaign combination-quest triples CheckForArtifactWin
+    // (0x5f1610) collects into its piece vector: the Armor of the
+    // Damned components on campaign 7 map 1, and the two Angelic
+    // Alliance triples on campaign 18 maps 8/9. Ids are the canonical
+    // artifact ordinals; gated with the rest of the VLC view.
+    ARTIFACT_SWORD_OF_HELLFIRE = 0xb,
+    ARTIFACT_SHIELD_OF_THE_DAMNED = 0x11,
+    ARTIFACT_BREASTPLATE_OF_BRIMSTONE = 0x1d,
+    ARTIFACT_ARMOR_OF_WONDER = 0x1f,
+    ARTIFACT_SANDALS_OF_THE_SAINT = 0x20,
+    ARTIFACT_CELESTIAL_NECKLACE_OF_BLISS = 0x21,
+    ARTIFACT_LIONS_SHIELD_OF_COURAGE = 0x22,
+    ARTIFACT_SWORD_OF_JUDGEMENT = 0x23,
+    ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT = 0x24,
+#endif
     // hero::GetVisibility (0x4e4070) adds one tile of scouting radius
     // for each of 0x34/0x35; DC 52/53 are eArtifactSpeculum and
     // eArtifactSpyglass, HoMM3's two scouting artifacts.

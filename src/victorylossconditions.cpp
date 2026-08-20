@@ -58,16 +58,134 @@ int VictoryConditionStruct::applies_to_player(long playerId) const
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// The two campaign runs whose special victory assembles a combination
+// from carried pieces. The ordinals are the engine campaign ids; the
+// titles are provisional readings of the piece sets (7/1 collects the
+// Armor of the Damned triple, 18/8 and 18/9 the two Angelic Alliance
+// triples). File-scope named constants per the hero.cpp
+// kStartLevelCampaign precedent.
+static const int kArmorOfTheDamnedCampaign = 7;
+static const int kAngelicAllianceCampaign = 18;
+static const int kAngelicAllianceFirstMap = 8;
+static const int kAngelicAllianceSecondMap = 9;
 
+// Two arms. The campaign-quest arm builds a vector<int> of piece ids
+// (reserve(3), three push_backs per branch), sweeps every hero of the
+// local player erasing the pieces they carry, and wins when the vector
+// empties. The main arm is the acquire-artifact victory: the
+// team-eligibility idiom, a direct HasArtifact pass over the heroes,
+// then the combination fallback - per hero, bitset count()/test() over
+// the combo's components exactly as CheckForArtifactTransportWin, but
+// a missing piece merely advances to the next hero.
+// Residual (91.5981%): retail keeps the 2-arg vector::_Destroy CALL in
+// the inlined erase (copy loop inline, then call, then sub _Last,4)
+// where our compile proves the one-trip destroy loop empty and elides
+// it; the register echoes downstream are that call's shadow. Tried and
+// rejected: erase(it,it+1) with and without using the return (two-
+// pointer copy shape, destroy still elided, 90.37), inline_depth(1)
+// around the statement and around the loop (no byte change), plain
+// member reads instead of the campaign reference (87.40). No depth
+// value can inline copy while calling _Destroy - the split is the
+// sequential /Ob2 budget dying between the two, which no local edit
+// reaches. EraseObj (events, exact) proves the elision itself is
+// ordinary VC6, so the divergence is budget state, not the header.
 // E:\gamedcs\victorylossconditions.cpp:31
 VA(0x005f1610, 0x4FE)  // anchor-global, dc 0x18fdf8
 unsigned char VictoryConditionStruct::CheckForArtifactWin()
 {
-    // @stub
-}
+    int& currCampaign = gpGame->campaign.currentCampaign;
+    signed char& currMap = gpGame->campaign.currentMap;
+    if ((currCampaign == kArmorOfTheDamnedCampaign && currMap == 1)
+        || (currCampaign == kAngelicAllianceCampaign
+            && (currMap == kAngelicAllianceFirstMap
+                || currMap == kAngelicAllianceSecondMap))) {
+        if (!gpCurrentPlayer->IsHuman())
+            return 0;
 
-#endif  // @carcass
+        std::vector<int> pieces;
+        pieces.reserve(3);
+        if (currCampaign == kArmorOfTheDamnedCampaign) {
+            pieces.push_back(ARTIFACT_SWORD_OF_HELLFIRE);
+            pieces.push_back(ARTIFACT_SHIELD_OF_THE_DAMNED);
+            pieces.push_back(ARTIFACT_BREASTPLATE_OF_BRIMSTONE);
+        } else if (currMap == kAngelicAllianceFirstMap) {
+            pieces.push_back(ARTIFACT_CELESTIAL_NECKLACE_OF_BLISS);
+            pieces.push_back(ARTIFACT_SANDALS_OF_THE_SAINT);
+            pieces.push_back(ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT);
+        } else {
+            pieces.push_back(ARTIFACT_SWORD_OF_JUDGEMENT);
+            pieces.push_back(ARTIFACT_ARMOR_OF_WONDER);
+            pieces.push_back(ARTIFACT_LIONS_SHIELD_OF_COURAGE);
+        }
+
+        for (int i = 0; i < gpCurrentPlayer->numHeroes; ++i) {
+            hero* h = gpGame->GetHero(gpCurrentPlayer->heroes[i]);
+            for (std::vector<int>::iterator it = pieces.begin();
+                 it != pieces.end();) {
+                if (h->HasArtifact(*it))
+                    it = pieces.erase(it);
+                else
+                    ++it;
+            }
+            if (pieces.empty()) {
+                playerWinner = static_cast<signed char>(gNetLocalGamePos);
+                GameWon = 1;
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    if (Type != VICTORY_CONDITION_ARTIFACT
+        || !gpCurrentPlayer
+        || gpGame->playerDisabled[gNetLocalGamePos])
+        return 0;
+
+    int team = get_team(gpGame, gNetLocalGamePos);
+    if (team >= 0) {
+        int player = 0;
+        signed char* teams = gpGame->mapHeader.teamInfo;
+        for (; player < 8; ++player) {
+            if (teams[player] == team && gpGame->IsHuman(player))
+                goto eligible;
+        }
+    }
+    if (AppliesToComputer) {
+eligible:
+        int j;
+        for (j = 0; j < gpCurrentPlayer->numHeroes; ++j) {
+            if (gpGame->GetHero(gpCurrentPlayer->heroes[j])
+                    ->HasArtifact(ArtifactNum)) {
+                GameWon = 1;
+                playerWinner = static_cast<signed char>(gNetLocalGamePos);
+                return 1;
+            }
+        }
+        int comboIdx = akArtifactTraits[ArtifactNum].comboType;
+        if (comboIdx == -1)
+            return 0;
+
+        const std::bitset<144>& components =
+            gCombinationArtifacts[comboIdx].components;
+        for (j = 0; j < gpCurrentPlayer->numHeroes; ++j) {
+            int remaining = components.count();
+            hero* h = gpGame->GetHero(gpCurrentPlayer->heroes[j]);
+            for (int i = 0;; ++i) {
+                if (components.test(i)) {
+                    if (!h->HasArtifact(i))
+                        break;
+                    if (--remaining == 0) {
+                        playerWinner =
+                            static_cast<signed char>(gNetLocalGamePos);
+                        GameWon = 1;
+                        return 1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
 
 // The two summing loops walk the local player's heroes and towns and
 // total get_creature_total(CreatureType) across their army groups. Both
