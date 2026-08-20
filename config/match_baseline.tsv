@@ -545,19 +545,6 @@ cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	99.3528	99.3528	99.3528	0x63600
 cmbtmgr	?LoadIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63370
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
-# DELIBERATE LOWER 2026-08-20, lane/cmbtmgr3. The LootDeadHero row below
-# is held at 0 on purpose and its hist 33.3711 is NOT a target to chase.
-# That 33.37 was banked by a DIAGNOSTIC build that deleted the two vector
-# appends from the body - i.e. by shipping a semantic defect - and it
-# scores only because deleting them stops this object emitting the
-# std::vector<type_artifact> template COMDATs. objdiff refuses to diff
-# LootDeadHero once those COMDATs are present (report.json carries the
-# entry with no fuzzy_match_percent at all), so the COMPLETE body cannot
-# be measured yet. Ruled out as causes: symbol-name mismatch (base and
-# target strings are byte-identical raw and normalized), name length (a
-# 180-char template name scores 100 in textresource), the mnemonic set,
-# and pointer-vs-reference in the signature. Restore the appends, not
-# the number: when the diff tool learns this case the row banks itself.
 cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	0.0000	0.0000	33.3711	0x6a070
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?MakeCreaturesVanish@combatManager@@QAEXXZ	96.8312	96.8312	96.8312	0x66e00
@@ -1378,18 +1365,23 @@ mapcell	??1BlackBoxData@@QAE@XZ	100.0000	100.0000	100.0000	0xffdf0
 mapcell	??1NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd4c0
 mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	93.6598	93.6598	93.6598	0x105a10
 mapcell	?FindTrigger@CObject@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0xfec30
+mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
+mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20
 mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xfc1a0
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	88.6918	88.6918	88.6918	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
+mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	61.5553	61.5553	61.5553	0x105230
+mapcell	?calc_cell_extra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105610
 mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
 mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4848	93.4848	0xfcbd0
 mapcell	?get_object_type_ptr@CObject@@QAEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
 mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.0935	79.0935	79.0935	0xfce20
+mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
 mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	89.8635	89.8635	89.8635	0x100430
 mapcell	?loadBlackBoxList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x100200
@@ -1402,6 +1394,9 @@ mapcell	?loadTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.00
 mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120
+mapcell	?readBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	93.0057	93.0057	93.0057	0xff6b0
+mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0xffbf0
+mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
 mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220
@@ -1422,24 +1417,16 @@ mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100
 mapcell	?saveTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc390
 mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc770
 mapcell	?saveTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfef10
-mapcell	NewfullMap_GenerateHeightMap	0.0000	0.0000	0.0000	0x105060
 mapcell	NewfullMap_Load	0.0000	0.0000	0.0000	0xfdbc0
 mapcell	NewfullMap_NewfullMap	0.0000	0.0000	0.0000	0xfd060
 mapcell	NewfullMap_NewfullMap_fd1e0	0.0000	0.0000	0.0000	0xfd1e0
-mapcell	NewfullMap_PlaceObject	0.0000	0.0000	0.0000	0x105b20
 mapcell	NewfullMap_Read	0.0000	0.0000	0.0000	0xfd690
-mapcell	NewfullMap_StampObject	0.0000	0.0000	0.0000	0x105230
-mapcell	NewfullMap_calc_cell_extra	0.0000	0.0000	0.0000	0x105610
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70
-mapcell	NewfullMap_readBlackBox	0.0000	0.0000	0.0000	0xff6b0
-mapcell	NewfullMap_readBlackBoxData	0.0000	0.0000	0.0000	0xffbf0
-mapcell	NewfullMap_readEventData	0.0000	0.0000	0.0000	0x1008b0
 mapcell	NewfullMap_readHeroData	0.0000	0.0000	0.0000	0x1021c0
 mapcell	NewfullMap_readMapObjects	0.0000	0.0000	0.0000	0x104470
 mapcell	NewfullMap_readObject	0.0000	0.0000	0.0000	0x102e00
 mapcell	NewfullMap_readObjectType	0.0000	0.0000	0.0000	0x103780
 mapcell	NewfullMap_readTownData	0.0000	0.0000	0.0000	0x1019f0
-mapcell	NewmapCell_get_trigger_cell	0.0000	0.0000	0.0000	0xfcaa0
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0
 misc	?CheckConfigFile@@YIXXZ	98.5030	98.5030	98.5030	0x10b260
 misc	?FileSize@@YIJPAD@Z	100.0000	100.0000	100.0000	0x10c5a0
@@ -2067,3 +2054,16 @@ winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90
+# DELIBERATE LOWER 2026-08-20, lane/cmbtmgr3. The LootDeadHero row below
+# is held at 0 on purpose and its hist 33.3711 is NOT a target to chase.
+# That 33.37 was banked by a DIAGNOSTIC build that deleted the two vector
+# appends from the body - i.e. by shipping a semantic defect - and it
+# scores only because deleting them stops this object emitting the
+# std::vector<type_artifact> template COMDATs. objdiff refuses to diff
+# LootDeadHero once those COMDATs are present (report.json carries the
+# entry with no fuzzy_match_percent at all), so the COMPLETE body cannot
+# be measured yet. Ruled out as causes: symbol-name mismatch (base and
+# target strings are byte-identical raw and normalized), name length (a
+# 180-char template name scores 100 in textresource), the mnemonic set,
+# and pointer-vs-reference in the signature. Restore the appends, not
+# the number: when the diff tool learns this case the row banks itself.

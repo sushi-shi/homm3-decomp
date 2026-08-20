@@ -158,8 +158,7 @@ public:
     std::vector<TreasureData> customTreasure;
     // +0x40, the same member the events view names, sliced out of the pad
     // for readMonsterData: it indexes the list with a 48-byte stride and
-    // appends through it.  blackBoxes still rides in pad_050 because
-    // BlackBoxData is only forward-declared in this closure.
+    // appends through it.
     std::vector<MonsterData> CustomMonsterList;
     // +0x50, first at +0x54. Sliced out of the pad now that BlackBoxData is
     // a complete type in this closure: Save walks it with a 228-byte stride
@@ -250,9 +249,15 @@ public:
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
     int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
     int readResourceData(TAbstractFile* infile, CObject* resourceObject);
-    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox);
-    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject);
-    int readEventData(TAbstractFile* infile, CObject* eventObject);
+    // Three arguments, readGarrisonData's divergence again: retail's `ret 0xc`
+    // against the Dreamcast's two, and mapVersion again picks the creature
+    // field's width. readBlackBoxData carries it only to pass it through.
+    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                     int mapVersion);
+    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
+                         int mapVersion);
+    int readEventData(TAbstractFile* infile, CObject* eventObject,
+                      int mapVersion);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readTownData(TAbstractFile* infile, CObject* townObject);
@@ -295,6 +300,13 @@ public:
     void NewfullMapFn_00505F20(CObject* object, int objectType,
                                int objectIndex, int terrain);
     int PlaceObject(int objectIndex, unsigned char setExtraInfo);
+    // The second parameter is the 8x6 byte grid the object's draw pass
+    // stamps: retail zeroes exactly 48 bytes through it and walks it with a
+    // row stride of six, so the width index is the OUTER one.
+    void GenerateHeightMap(const CObject* object, signed char heightMap[8][6]);
+#ifdef HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
+    void StampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+#endif
 #endif
 };
 
