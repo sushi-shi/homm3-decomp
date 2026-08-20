@@ -8343,7 +8343,27 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen,
 // retail refuses the site. advManager::Open's two vector::insert sites,
 // the other member of this family, went 52.72 -> 97.80 the same way.
 //
-// Residual (79.97%): the register/slot cascade downstream of that call.
+// 79.97 -> 82.85 (2026-08-20) on two source facts the frame/flow sweep
+// found: (1) the path-length gate compares size() SIGNED - retail emits
+// `sub edx,ecx / test edx,0xfffffffc / jle` (the /4 quotient folded into a
+// masked test), ours was `sar edx,2 / je`, so the source casts:
+// `static_cast<int>(result.size()) <= 0`. (2) the walk start is a COPY of
+// a separately-built hero point (`mov ecx,[ebp-0x1c] / mov [ebp-0x1c],ecx`
+// - a self-store, i.e. a type_point copy VC6 coalesced onto one slot, the
+// same shape ProcessKeyPress's SPACE arm carries), so the source builds
+// heroPos.x/y/z and then `type_point step = heroPos;`. Our copy picks a
+// SEPARATE slot (edi via [ebp-0x20]) where retail coalesces; brace-scoping
+// the copy is byte-inert, so the coalesce is allocator state, not scope.
+//
+// Residual (82.85%): flow-distance 0; the mass is ONE whole-body ESI/EBX
+// role swap (this/currentHero in esi on retail, ebx on ours; ~20 slots
+// each way) plus the un-coalesced copy slot and the frame (0x28 vs 0x1c).
+// why-reg --model calls the swap C2-side handle STATE, not handle order -
+// its proposed heroPos.y-first store order measures 82.85 -> 79.65 and
+// delaying routeAffordable's `= 0` below the IsLocalHuman early-out
+// measures 82.85 -> 81.23, so the creation-order lever is spent both ways
+// and the swap is not source-reachable.
+//
 // The earlier over-inline reading of this function was wrong twice over:
 // the "missing" CompleteDraw/UpdateScreen calls were VC6 cross-jumping
 // copy 1's tail into copy 2's (identical bytes), not inlining, and copy
@@ -8389,7 +8409,8 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
     SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
-    if (gpSearchArray->result.size() <= 0 || pathLength <= 0) {
+    if (static_cast<int>(gpSearchArray->result.size()) <= 0
+        || pathLength <= 0) {
         clear_adventure_route(this, bUpdateScreen, 1);
     } else {
         memset(routeArray, 0,
@@ -8398,10 +8419,11 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         bShowRoute = 1;
 
         int movePoints = currentHero->movePoints;
-        type_point step;
-        step.x = currentHero->x;
-        step.y = currentHero->y;
-        step.z = currentHero->z;
+        type_point heroPos;
+        heroPos.x = currentHero->x;
+        heroPos.y = currentHero->y;
+        heroPos.z = currentHero->z;
+        type_point step = heroPos;
 
         currentHero->army.GetNativeTerrain();
 
