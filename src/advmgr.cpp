@@ -100,6 +100,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "questlogwindow.h"
 #include "puzzlewindow.h"
 #include "singleselectionwindow.h"
+#include "netgame.h"
 #include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -423,14 +424,238 @@ advManager::advManager()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// The adventure managers's resource-name tables, retail .data local to
+// this TU. Declared like gLoopingSoundNames below: extern rows with the
+// DATA claims, values left to the data phase (read from the verified
+// image 2026-08-20: dirttl..rocktl, clrrvr/icyrvr/mudrvr/lavrvr,
+// dirtrd/gravrd/cobbrd, ah00_..ah17_, af00..af07, ab01_..ab03_,
+// abm01_..abm03_, abf01l..abf03k, and the 38-entry cached-graphics list
+// diboxbck.pcx..HALLFORT.def whose entry 26 re-points at pskill.def).
+DATA(0x0065f4c4) extern const char* const kAdvCachedGraphicNames[38];
+DATA(0x0065f55c) extern const char* const kGroundTilesetNames[10];
+DATA(0x0065f588) extern const char* const kRiverTilesetNames[4];
+DATA(0x0065f59c) extern const char* const kRoadTilesetNames[3];
+DATA(0x0065f5a8) extern const char* const kCursorIconNames[18];
+DATA(0x0065f5f0) extern const char* const kFlagIconNames[8];
+DATA(0x0065f610) extern const char* const kBoatFlagIconNames[3][8];
+DATA(0x0065f670) extern const char* const kBoatIconNames[3];
+DATA(0x0065f67c) extern const char* const kBoatFrothIconNames[3];
+
 // E:\gamedcs\advmgr.cpp:837
+//
+// Residual (52.72%): ONE inliner refusal, twice, and its cascade - and
+// it is the strongest counterexample the RE'd budget model has. Retail
+// CALLS ?insert@vector<resource*>@ at both push_back sites; our CL
+// expands the whole grow path (capacity test, new, _Ucopy/_Ufill/
+// _Destroy, delete) at each, which is most of our 59-vs-36 branch
+// excess. The budget rule cannot produce retail's refusal: budget =
+// 2*cb(Open) with cb(Open) ~= 255 source lines is far above cb(insert),
+// the only prior charged site is the (inlined, matching) reserve, and
+// rejections do not charge - so a compliant SP3 C2 must accept these
+// sites. Measured and rejected: the direct 3-arg insert spelling
+// (42.12), #pragma auto_inline(off) around an explicit member
+// instantiation (no effect - candidacy comes from the saved template
+// body), dead-store doses of 100/200/300 statements (48.7/47.5/42.7,
+// non-monotonic nested-share churn, insert never flips), and the RTM
+// C2 A/B (byte-identical to SP3 - NOT a generation wall). Same family
+// as ShowRoute's type_point ctor call: a site-local refusal outside
+// both the budget model and the C2 generation; suspected front-end
+// (C1XX) site state. The rest of the body is structurally aligned.
+// The adventure screen setup. Retail's grouping is preserved: the route
+// array and the map window are allocated lazily with MemError guards,
+// the cached-graphics list reverses each name and picks GetSprite for
+// .def rows ("fed" after _strrev) with the push_back duplicated per arm,
+// the tileset batches are separated by IncProgressBar ticks (index 19 of
+// the cached list, index 9 of the cursor list get mid-batch ticks), the
+// sound slots write touchedSounds = 0 INSIDE the four-step loop, and the
+// hotseat (MP_HOTSEAT) turn banner runs between the two same-condition
+// ifs - retail re-tests iMPNetProtocol rather than folding the arms.
 VA(0x00406fd0, 0x7D6)  // anchor-vtable, dc 0x6b24
 int advManager::Open(int newPriority)
 {
-    // @stub
-}
+    bottomViewType = BOTTOM_VIEW_DEFAULT;
+    field_38c = 0;
+    gCompleteDrawEnabled = 0;
 
-#endif  // @carcass
+    if (routeArray == 0) {
+        routeArray = new unsigned short[(gpGame->worldMap.HasTwoLevels + 1)
+                                        * gMapHeight * gMapWidth];
+        memset(routeArray, 0,
+               (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
+                   * sizeof(unsigned short));
+        if (routeArray == 0)
+            MemError();
+    }
+
+    bShowRoute = 0;
+    fullySeeded = 0;
+    seedingValid = 0;
+    animCtrPaused = 0;
+
+    if (advWindow == 0) {
+        advWindow = new TAdventureMapWindow();
+        if (advWindow == 0)
+            MemError();
+    }
+    gpWindowManager->AddWindow(advWindow, 0, 1);
+    if (gpGame->worldMap.HasTwoLevels + 1 < 2)
+        advWindow->WidgetSetStatus(4, 8);
+
+    CachedGraphics.reserve(38);
+    for (int cached = 0; cached < 38; cached++) {
+        char reversed[16];
+        strcpy(reversed, kAdvCachedGraphicNames[cached]);
+        _strrev(reversed);
+        if (_strnicmp(reversed,
+                      DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
+                      3) == 0) {
+            resource* graphic = ResourceManager::GetSprite(kAdvCachedGraphicNames[cached]);
+            CachedGraphics.push_back(graphic);
+        } else {
+            resource* graphic = ResourceManager::GetBitmap816(kAdvCachedGraphicNames[cached]);
+            CachedGraphics.push_back(graphic);
+        }
+        if (cached == CACHED_GRAPHIC_TICK)
+            IncProgressBar(1);
+    }
+    IncProgressBar(1);
+
+    movingObjectSprite =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660318, movingObjectSpriteName,
+                               "avwattak.def"));
+    for (int ground = 0; ground < 10; ground++)
+        groundTileset[ground] = ResourceManager::GetSprite(kGroundTilesetNames[ground]);
+    IncProgressBar(1);
+    for (int river = 0; river < 4; river++)
+        riverTileset[river + 1] = ResourceManager::GetSprite(kRiverTilesetNames[river]);
+    IncProgressBar(1);
+    for (int road = 0; road < 3; road++)
+        roadTileset[road + 1] = ResourceManager::GetSprite(kRoadTilesetNames[road]);
+    IncProgressBar(1);
+    borderTileset =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660310, borderTilesetName, "edg.def"));
+    arrowTileset =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x00660304, arrowTilesetName, "adag.def"));
+    gemIcons[0] =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602f8, gemIconName0, "agemul.def"));
+    gemIcons[1] =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602ec, gemIconName1, "agemur.def"));
+    gemIcons[2] =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602e0, gemIconName2, "agemll.def"));
+    gemIcons[3] =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602d4, gemIconName3, "agemlr.def"));
+    starTileset =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602c8, starTilesetName, "tshrc.def"));
+    cloudIcons =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602bc, cloudIconsName, "tshre.def"));
+    IncProgressBar(1);
+    for (int cursor = 0; cursor < 18; cursor++) {
+        cursorIcons[cursor] = ResourceManager::GetSprite(kCursorIconNames[cursor]);
+        if (cursor == CURSOR_ICON_TICK)
+            IncProgressBar(1);
+    }
+    IncProgressBar(1);
+    for (int boat = 0; boat < 3; boat++) {
+        boatIcons[boat] = ResourceManager::GetSprite(kBoatIconNames[boat]);
+        boatFrothIcons[boat] = ResourceManager::GetSprite(kBoatFrothIconNames[boat]);
+        for (int boatOwner = 0; boatOwner < 8; boatOwner++)
+            boatFlagIcons[boat][boatOwner] =
+                ResourceManager::GetSprite(kBoatFlagIconNames[boat][boatOwner]);
+    }
+    IncProgressBar(1);
+    for (int owner = 0; owner < 8; owner++)
+        flagIcons[owner] = ResourceManager::GetSprite(kFlagIconNames[owner]);
+    radarIcons =
+        ResourceManager::GetSprite(DATA_COMPGEN(0x006602b0, radarIconsName, "radar.def"));
+
+    memset(loopedSample, 0, sizeof(loopedSample));
+    for (int slot = 0; slot < ADVENTURE_ACTIVE_SOUND_COUNT; slot++) {
+        soundArray[slot].soundId = LOOPING_SOUND_INVALID;
+        soundArray[slot].priority = 0x7f;
+        touchedSounds = 0;
+    }
+    for (int horse = 0; horse <= 10; horse++) {
+        sprintf(gText,
+                DATA_COMPGEN(0x006602a0, heroSampleFormat, "horse%02d.wav"),
+                horse);
+        heroSamples[horse] = LoadSampleResource(gText);
+    }
+
+    if (!gpCurrentPlayer->IsLocalHuman()) {
+        gpGame->TurnOnAIMusic();
+        SetNoDialogMenus(0);
+    } else {
+        SetNoDialogMenus(1);
+    }
+    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+        GameTime::Get() + ADVENTURE_ANIMATION_MAX_ELAPSED;
+    gCompleteDrawEnabled = gpCurrentPlayer->IsLocalHuman();
+    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+    ShowProgressBar();
+    gpWindowManager->FadeScreen(1, 4, 1);
+
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        int mouseX;
+        int mouseY;
+        gpMouseManager->MouseCoords(&mouseX, &mouseY);
+        lastHoverX = -1;
+        ProcessHover(mouseX, mouseY);
+    }
+    if (!gpCurrentPlayer->IsLocalHuman())
+        gpGame->GameFn_004CA5B0();
+
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        gUnnamed6993dc = 1;
+        gCompleteDrawEnabled = 1;
+    }
+    bottomViewType = BOTTOM_VIEW_DEFAULT;
+    bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+    gpSoundManager->AdjustSoundVolumes();
+    gpGame->GameFn_004C7C50();
+    SetInitialMapOrigin();
+    RedrawAdvScreen(1, 0);
+
+    if (gpGame->IsMultiplayer()) {
+        dfltMenu = LoadMenuA(ghInstance, MAKEINTRESOURCE(0x6e));
+        gameMenu = LoadMenuA(ghInstance, MAKEINTRESOURCE(0x70));
+    } else if (gUnnamed698a34 != 0) {
+        dfltMenu = LoadMenuA(ghInstance, MAKEINTRESOURCE(0x6f));
+        gameMenu = LoadMenuA(ghInstance, MAKEINTRESOURCE(0x71));
+    }
+    KBChangeMenu(dfltMenu);
+
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        gUnnamed6993dc = 1;
+        gCompleteDrawEnabled = gpCurrentPlayer->IsLocalHuman();
+        char text[172];
+        sprintf(text, gpGeneralText->GetText(14), gpCurrentPlayer->GetName());
+        gpWindowManager->isWaitingForFadeIn = 0;
+        gpGame->GameFn_004CA840(text, gNetLocalGamePos);
+        RedrawAdvScreen(1, 0);
+        bottomViewOverride = BOTTOM_VIEW_1;
+        bottomViewDeadline = GameTime::Get() + 3000;
+    }
+    if (iMPNetProtocol != MP_HOTSEAT)
+        gpWindowManager->FadeScreen(0, 4, 0);
+
+    advWindow->UpdateResourceDisplay(1, 1);
+    status = STATUS_ACTIVE;
+    priority = newPriority;
+    id = 0x400;
+    strcpy(cMgrName,
+           DATA_COMPGEN(0x00660294, advManagerMgrName, "advManager"));
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+
+    if (pDPlay) {
+        pNetMsgHandler = new CAdvMgrNetMsgHandler();
+        pDPlay->SetNetMsgHandler(pNetMsgHandler);
+    }
+    if (gpCurrentPlayer->heroes[0] != -1)
+        SetHeroContext(gpCurrentPlayer->heroes[0], 0, 0, 1);
+    return 0;
+}
 
 // The admitted retail vtable inventory bounds advManager at exactly three
 // slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.

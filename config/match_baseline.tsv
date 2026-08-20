@@ -81,6 +81,7 @@ advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.9576	0x17150
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	99.0975	99.0975	99.0975	0x1adb0
+advmgr	?Open@advManager@@UAEHH@Z	52.7156	52.7156	52.7156	0x6fd0
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
@@ -134,7 +135,6 @@ advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.00
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98.0056	98.0056	0xdcc0
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
-advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
