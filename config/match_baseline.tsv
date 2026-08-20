@@ -1012,6 +1012,7 @@ hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
 hero	?UseSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0
 hero	?VisitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0
 hero	?WalkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0
+hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	56.5422	56.5422	56.5422	0xdd2d0
 hero	?add_to_backpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2f90
 hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
@@ -1060,7 +1061,6 @@ hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
-hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6920
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0
