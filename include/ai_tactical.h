@@ -298,7 +298,18 @@ struct type_AI_spellcaster {
     TEnchantValue get_enchantment_function(SpellID spell);
     void consider_single_enchantment(type_spell_choice* choice, long group);
     void consider_enchantment(type_spell_choice* choice, long group);
+    // Four pricers with NO retail body of their own: /Ob2 folds each
+    // into consider_spell (0x43bb20), which is their only call site,
+    // and the carve cuts no row for any of them. Defined `inline` in
+    // ai_tactical.cpp for that reason.
+    long get_group_damage_value(SpellID spell, long base_damage, long group,
+                                hero* target_hero);
+    void consider_area_effect(type_spell_choice* choice);
+    void consider_mass_damage(type_spell_choice* choice);
+    void consider_summon(type_spell_choice* choice);
     void consider_earthquake(type_spell_choice* choice);
+    void consider_resurrect(type_spell_choice* choice);
+    void consider_spell(type_spell_choice* choice);
     void consider_teleport(type_spell_choice* choice);
     void consider_sacrifice(type_spell_choice& choice,
                             const army* healedArmy, long targetHex) const;

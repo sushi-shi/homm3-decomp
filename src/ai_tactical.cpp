@@ -36,6 +36,9 @@
 #include "ai_tactical.h"
 #include "findpath.h"
 #include "game.h"
+// consider_spell's summon arm asks get_elemental_type which creature
+// the spell would put on the field.
+#include "spells.h"
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -1016,16 +1019,29 @@ long type_AI_spellcaster::get_damage_spell_value(const army* enemy, type_enchant
     return get_damage_value(caster.spell, base_damage, enemy_hero, enemy);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:965
+// The per-GROUP half of every mass-damage pricer: sum get_damage_value
+// over one side's stacks, walking BACKWARDS. No retail body - the
+// carve cuts nothing between get_damage_spell_value (0x436f60, 69 B)
+// and get_mass_damage_effect (0x436fb0) - so it is `inline`, and its
+// two PARAMETERS are what let VC6 hoist the group index and the hero
+// out of the loop: consider_spell's mass arm homes them at [ebp+8] and
+// [ebp-0x10] before the walk and strength-reduces the army address
+// into a single decrementing byte offset. Spelling the same two loops
+// out in the caller instead re-reads `this->enemy_side` every
+// iteration and re-derives the whole 1352-byte stride each time, which
+// is what capped consider_spell at 79.84.
 DC_ONLY(0x3dabc, 0x6E)
-long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage, long group, hero* target_hero)
+inline long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage,
+                                                        long group, hero* target_hero)
 {
-    // @stub
+    long total = 0;
+    long count = gpCombatManager->numArmies[group];
+    while (count--)
+        total += get_damage_value(spell, base_damage, target_hero,
+                                  &gpCombatManager->armies[group][count]);
+    return total;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:986
 VA(0x00436fb0, 0x8A)  // anchor-global, dc 0x3db2c
@@ -1083,16 +1099,35 @@ long type_AI_spellcaster::get_area_effect_value(SpellID spell, long base_damage,
     return get_mass_damage_effect(enemy_damage, friendly_damage);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1035
+// The area-effect sweep, inlined into consider_spell and carrying no
+// retail body of its own. It tries every hex on the field and keeps
+// the best get_area_effect_value, skipping only the two off-field
+// margin columns - and it re-tests the 0..187 range in front of that
+// column test, which is why retail emits a range guard the loop bound
+// already guarantees.
 DC_ONLY(0x3dc50, 0x72)
-void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
+inline void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
 {
-    // @stub
+    long base_damage = akSpellTraits[choice->spell].power_factor * choice->power
+                       + akSpellTraits[choice->spell].mastery_bonus[choice->mastery];
+    for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (hex >= 0 && hex < COMBAT_GRID_CELLS) {
+            long column = hex % COMBAT_GRID_ROW_STRIDE;
+            if (column == 0)
+                continue;
+            if (column == COMBAT_GRID_LAST_COLUMN)
+                continue;
+        }
+        long value = get_area_effect_value(choice->spell, base_damage,
+                                           choice->mastery, hex);
+        if (value > choice->value) {
+            choice->target = hex;
+            choice->value = value;
+            choice->field_20 = 1;
+        }
+    }
 }
-
-#endif  // @carcass
 
 #if 0  // @carcass
 
@@ -1138,6 +1173,10 @@ void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1126
+// NOT REACHABLE AS A FUNCTION: consider_spell's mass-damage arm is
+// this body, but VC6 refuses to inline it at that one call site even
+// marked `inline` (measured: the arm becomes a CALL and consider_spell
+// falls 79.84 -> 56.93), so it stays written out in the caller.
 DC_ONLY(0x3de90, 0x98)
 void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
 {
@@ -3595,20 +3634,124 @@ long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data cas
 }
 
 // E:\gamedcs\ai_tactical.cpp:3093
+// Same case as consider_mass_damage above: consider_spell's summon arm
+// is this body, VC6 will not fold it in even marked `inline`, so it
+// stays written out at the one call site.
 DC_ONLY(0x41e5c, 0x78)
 void type_AI_spellcaster::consider_summon(type_spell_choice* choice)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:3114
+// The pricing dispatch: every spell the caster might cast lands here
+// and is routed by id. Retail lowers it as a two-level jump table over
+// `spell - 14` (56 byte entries, ten dword targets), so ARM ORDER IS
+// SOURCE ORDER again - and note that the Dispel arm is the only one
+// that BREAKS instead of returning, which is why retail emits the
+// after-the-switch tail physically between the Dispel arm and the
+// Earthquake arm.
+//
+// Three arms carry real bodies of their own:
+//   - the MASS-DAMAGE arm walks both sides BACKWARDS, summing
+//     get_damage_value per stack, and closes on get_mass_damage_effect
+//     exactly as get_area_effect_value does;
+//   - the AREA arm sweeps all 187 hexes and keeps the best
+//     get_area_effect_value, skipping only the two off-field margin
+//     columns (the `hex % 17` test), with the redundant 0..187 range
+//     guard retail carries in front of it;
+//   - the SUMMON arm prices the elemental it would put on the field:
+//     a kills-only estimate is worth a flat 1000 per power point, and
+//     otherwise the summoned creature's own AI_value scales it.
 VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
 void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
 {
-    // @stub
+    switch (choice->spell) {
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+        consider_resurrect(choice);
+        return;
+    case SPELL_CHAIN_LIGHTNING:
+        consider_chain_lightning(choice);
+        return;
+    case SPELL_DEATH_RIPPLE:
+    case SPELL_DESTROY_UNDEAD:
+    case SPELL_ARMAGEDDON: {
+        long base_damage =
+            akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
+            + akSpellTraits[choice->spell].power_factor * choice->power;
+        long enemy_damage = get_group_damage_value(choice->spell, base_damage,
+                                                   enemy_side, enemy_hero);
+        long friendly_damage = get_group_damage_value(choice->spell, base_damage,
+                                                      side, our_hero);
+        // Retail CALLS the effect leaf here where get_area_effect_value
+        // (0x437040) inlines it; our CL inlines it in both, and the
+        // expansion is the whole fild/fdiv/fcompp block plus its four
+        // duplicated epilogues (62.72 -> 79.84 on the pin alone).
+        // Pinned at the SITE, not the function.
+#pragma inline_depth(0)
+        choice->value = get_mass_damage_effect(enemy_damage, friendly_damage);
+#pragma inline_depth()
+        choice->field_20 = 1;
+        return;
+    }
+    case SPELL_DISPEL: {
+        consider_enchantment(choice, side);
+        if (choice->mastery == SKILL_MASTERY_ADVANCED)
+            consider_enchantment(choice, enemy_side);
+        if (choice->mastery == SKILL_MASTERY_EXPERT) {
+            type_spell_choice mirror = *choice;
+            consider_enchantment(&mirror, enemy_side);
+            choice->value += mirror.value;
+        }
+        break;
+    }
+    case SPELL_EARTHQUAKE:
+        consider_earthquake(choice);
+        return;
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+        consider_area_effect(choice);
+        return;
+    case SPELL_SACRIFICE:
+        consider_sacrifice(*choice);
+        return;
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+    case SPELL_SUMMON_AIR_ELEMENTAL: {
+        if (field_1c)
+            return;
+        if (!gpCombatManager->AbleToSummonElemental(choice->spell, side))
+            return;
+        long power = akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
+                     * choice->power;
+        if (params.kills_only) {
+            choice->field_20 = 1;
+            choice->value = power * 1000;
+            return;
+        }
+        TCreatureType summoned = get_elemental_type(choice->spell);
+        choice->field_20 = 1;
+        choice->value = akCreatureTypeTraits[summoned].AI_value * power;
+        return;
+    }
+    case SPELL_TELEPORT:
+        consider_teleport(choice);
+        return;
+    }
+    const SSpellTraits* traits = &akSpellTraits[choice->spell];
+    if ((traits->field_c & 0x70) == 0)
+        return;
+    if (traits->field_0 >= 0)
+        consider_enchantment(choice, side);
+    if (traits->field_0 <= 0)
+        consider_enchantment(choice, enemy_side);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3191
 // Residual (95.3%): register assignment inside the census loop -

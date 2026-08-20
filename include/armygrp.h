@@ -387,6 +387,10 @@ enum ESpellId {
 #ifdef HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
     ,
     SPELL_MAGIC_ARROW = 0xf,
+    // 40, byte-proven by consider_spell's own dispatch: its 56-entry
+    // byte table sends `spell - 14 == 26` to the arm that calls
+    // type_AI_spellcaster::consider_sacrifice and nothing else.
+    SPELL_SACRIFICE = 0x28,
     SPELL_IMPLOSION = 0x12,
     SPELL_HASTE = 0x35,
     SPELL_FRENZY = 0x38,
