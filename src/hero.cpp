@@ -3915,6 +3915,19 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // is cross-jumping the identical right-click help arms and retail is not.
 // Read that before assuming any arm is missing - it is the same
 // cross-jumping defect as the three counts above, at a larger scale.
+//
+// ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
+// MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
+// the status code as the constant the arm already knows: both emit
+// `mov [gHeroScreenArmySlot],edi / call HeroFn_004D97F0 / mov
+// eax,[gHeroScreenArmySlot] / cmp eax,-1 / jne push 6 / push 5` in front
+// of ONE heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
+// fn+0x6e8 and fn+0x7dc - i.e. it RE-READS the global after the call and
+// selects WIDGET_CLEAR_STATUS(6) / WIDGET_SET_STATUS(5) at run time. The
+// values our two arms pass as constants agree with what that select
+// produces, so this is a spelling and not a polarity error. Writing it as
+// the ternary in both arms costs 74.4733 -> 74.2419, so the select alone
+// does not pay: the rest of those two blocks has to converge with it.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
