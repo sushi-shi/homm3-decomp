@@ -48,6 +48,7 @@
 // army::Fly does; drawing.h is where this tree parks that unowned table.
 #include "drawing.h"           // gCombatSpeedFactors
 #include "resourcemanager.h"   // ResourceManager::GetSprite
+#include "game.h"     // PlayImmEffect, Resurrect's force-feedback cue
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
 #include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
@@ -2423,14 +2424,118 @@ void combatManager::demonic_resurrection(const army* caster, army* target)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:4888
+// Resurrect: turn a pile of hit points back into whole creatures, put
+// the stack back on the grid if it was dead, and play its death
+// sequence BACKWARDS while the resurrection effect runs over it.
+//
+// Parameter and local names are the Dreamcast roster's own
+// (variables.csv, dc 0x156840): target_army, hit_points_resurrected,
+// temporary and the one local `hex`.
+//
+// THE COUNT ROUNDS UP AND THE REMAINDER BECOMES DAMAGE:
+// `(hitPoints + total - 1) / hitPoints` creatures, and whatever the top
+// one is short of full health lands in topCreatureDamage - which is why
+// a resurrection that does not quite pay for the last creature still
+// raises it, wounded. origNumTroops caps both.
+//
+// THE HIT-POINT BASE IS THE STACK'S OWN NUMTROOPS WHEN IT IS ZERO:
+// retail tests numTroops, skips get_total_hit_points when it is dead
+// and lets the already-loaded zero flow into the sum, which is the
+// value-propagation form of a plain `long total = 0;` guard.
+//
+// THE DEATH SEQUENCE RUNS BACKWARDS: the frame index counts DOWN from
+// its last frame for as long as the death sequence lasts, and the stack
+// drops to cs_wait once the (possibly longer) effect sprite outlives it.
+//
+// Residual (90.6%): scheduling only, no shape difference. Retail forms
+// `raised` and tests it against 1 BEFORE loading creatureType for the
+// name lookup where our CL loads the type first, and the arithmetic
+// block's three scratch registers are rotated (ecx/edi/eax against
+// edi/ecx/eax). Every instruction, immediate and call pairs.
 VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
-void combatManager::Resurrect(army* target_army, long hit_points_resurrected, unsigned char temporary)
+void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
+                              unsigned char temporary)
 {
-    // @stub
+    long hex = target_army->gridIndex;
+    long old_count = target_army->numTroops;
+    // SEEDED FROM THE COUNT, not from a literal zero: retail loads
+    // numTroops once, keeps it as `old_count`, and lets that same
+    // register be the sum's starting value on the dead-stack path -
+    // which is only correct because the path is the one where it IS
+    // zero, and is what a literal 0 does not produce.
+    long total = old_count;
+    if (old_count)
+        total = target_army->get_total_hit_points(0);
+    total += hit_points_resurrected;
+    target_army->numTroops =
+        (target_army->hitPoints + total - 1) / target_army->hitPoints;
+    target_army->topCreatureDamage =
+        target_army->numTroops * target_army->hitPoints - total;
+    if (target_army->numTroops > target_army->origNumTroops) {
+        target_army->numTroops = target_army->origNumTroops;
+        target_army->topCreatureDamage = 0;
+    }
+
+    if (temporary) {
+        target_army->numTroopsBattleResurrected +=
+            target_army->numTroops - old_count;
+        target_army->numTroopsBattleResurrected =
+            _cpp_min(target_army->numTroopsBattleResurrected,
+                     target_army->origNumTroops);
+    }
+
+    if (old_count <= 0) {
+        target_army->add_aura();
+        PlaceArmyInGrid(*target_army, hex);
+        remove_corpse(&cells[target_army->gridIndex],
+                      target_army->combatSide, target_army->bitIndex);
+        if (target_army->creatureId & 1)
+            remove_corpse(&cells[target_army->get_second_grid_index()],
+                          target_army->combatSide, target_army->bitIndex);
+    }
+    if (target_army->facing != 1 - target_army->combatSide)
+        target_army->Turn(0);
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        long raised = target_army->numTroops - old_count;
+        if (raised != 1)
+            sprintf(gText, gpGeneralText->GetText(117), raised,
+                    CreatureName(target_army->creatureType, raised));
+        else
+            sprintf(gText, gpGeneralText->GetText(118), raised,
+                    CreatureName(target_army->creatureType, raised));
+        combatWindow->combat_message(gText, 1, 0);
+
+        int effect = akSpellTraits[SPELL_RESURRECTION].m_effect;
+        LoadSpellEffect(effect);
+        long pow_frames = powSprite ? powSprite->GetNumFrames(0) : 0;
+        long death_frames =
+            target_army->stdIcon->GetNumFrames(cs_death);
+        long frames = _cpp_max(pow_frames, death_frames);
+        target_army->bShowPowEffect = 1;
+        PlayImmEffect(akSpellEffectTraits[effect].m_immName, 1);
+        long back = death_frames - 1;
+        { for (long i = 0; i < frames; i++) {
+            powFrameIndex = i;
+            if (target_army->currFrameType == cs_death) {
+                if (i < death_frames) {
+                    target_army->currFrameIndex = back;
+                } else {
+                    target_army->currFrameType = cs_wait;
+                    target_army->currFrameIndex = 0;
+                }
+            }
+            DrawFrame(1, 0, 0, 100, 1, 1);
+            back--;
+        } }
+    }
+
+    target_army->creatureId &= ~0x00200000;
+    target_army->bShowPowEffect = 0;
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4984
 DC_ONLY(0x156a68, 0x84)
