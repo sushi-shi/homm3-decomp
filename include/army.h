@@ -1332,6 +1332,9 @@ public:
 #ifdef HOMM3_ARMY_RANGE_VIEW
     void range_attack();
     void range_attack(army* armyToAttack);
+    // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
+    // volley worker above calls it once per shot.
+    void animate_missile(army* armyToAttack);
 #endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack

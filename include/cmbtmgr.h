@@ -1212,6 +1212,12 @@ public:
                    unsigned char bLimitDraw, int iDelay,
                    unsigned char bRefreshBackground,
                    unsigned char bDoDelayTil);
+    // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
+    // dc 0x85d00). Declared here, unclaimed, for army::range_attack's
+    // two splash-effect loops, which call it once per frame with
+    // (sprite, frame, x, y, 0, 0); the body stays drawing's.
+    int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
+                        unsigned char isFlipped, unsigned char isAlpha);
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
