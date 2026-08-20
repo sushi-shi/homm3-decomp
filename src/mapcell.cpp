@@ -2633,6 +2633,29 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 
 #endif  // @carcass
 
+// The nine-byte serialized spell set, unpacked a bit at a time.  Three sites
+// deserialize one - readTownData's two masks and readHeroData's - and all
+// three are written through this helper rather than longhand for the same
+// per-caller /Ob2 reason readQuestGuardArm and resizeSeerHutList exist: a
+// function this small cannot afford the register/scheduling mass the loop
+// costs its caller, and the caller comes out closer to retail without it.
+// Worth 69.8694 -> 71.9069 on readHeroData; on readTownData it is only
+// 82.0000 -> 82.0785, which is inside the noise and kept for uniformity
+// rather than for the score.
+//
+// It costs no symbol - mapcell.obj still carries exactly 67 functions -
+// because /Ob2 expands it at every one of the three sites.
+//
+// The `/ 8` and `% 8` are SIGNED: retail's `and ecx,0x80000007` with its
+// negative fixup, and the `cdq / and edx,7 / add / sar 3` pair, are what an
+// `int` counter produces and a shift-and-mask spelling would not.
+static void unpackSpellMask(std::bitset<70>* spells,
+                            const unsigned char* mask)
+{
+    for (int i = 0; i < 70; ++i)
+        (*spells)[i] = (mask[i / 8] & (1 << (i % 8))) != 0;
+}
+
 // E:\gamedcs\mapcell.cpp:232 - TTownEvent::Read in the Dreamcast roster
 // (dc 0xebc90, locals `inBuf`, `padding`, `count`).  Retail's only call site
 // is readTownData, which inlines it, so it is spelled as a file-local static
@@ -2780,14 +2803,12 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->Read(spellBuf, sizeof(spellBuf));
-        for (x = 0; x < 70; ++x)
-            tempTown.fixedSpells[x] = (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+        unpackSpellMask(&tempTown.fixedSpells, spellBuf);
     }
 
     if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    for (x = 0; x < 70; ++x)
-        tempTown.spells[x] = (spellBuf[x / 8] & (1 << (x % 8))) != 0;
+    unpackSpellMask(&tempTown.spells, spellBuf);
 
     if (infile->Read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
@@ -2873,7 +2894,7 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// Residual (69.8688%): an INLINER wall, and the arithmetic identifies it
+// Residual (71.9069%): an INLINER wall, and the arithmetic identifies it
 // exactly. predict-inline reports base 21 out-of-line calls against retail's
 // 13, and the whole difference is `std::bitset<70>::_Xran`: retail CALLS it
 // once per range check - the body the unwind symbol
@@ -2898,6 +2919,14 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688). No source
 // spelling reached the _Xran decision, and `#pragma auto_inline(off)` cannot
 // reach it either: the callee is a library template this TU never defines.
+//
+// Moving the mask loop into unpackSpellMask is worth another two points
+// (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
+// 21 against 13 afterwards, so the gain is layout and register assignment,
+// not the _Xran decision. The same treatment on the single-spell store
+// (`setHeroSpell(&spells, spell)`) goes the other way, 71.9069 -> 70.1832,
+// and was reverted: one bit is not enough mass for the helper to pay for
+// itself.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
@@ -3131,10 +3160,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 hero_data->customSpells = 1;
                 unsigned char spellMask[9];
                 infile->Read(spellMask, sizeof(spellMask));
-                for (int i = 0; i < 70; ++i) {
-                    hero_data->spells[i] =
-                        (spellMask[i / 8] & (1 << (i % 8))) != 0;
-                }
+                unpackSpellMask(&hero_data->spells, spellMask);
             }
 
             char primaryFlag;
