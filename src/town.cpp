@@ -485,17 +485,83 @@ void town::set_spells_available()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1226
-// ORs the 64-bit building bit for the argument out of the pair table at
-// 0x66cd98 into the town's built mask at +0x150/+0x154, then walks the
-// dependent-building fixups - `create_building` exactly.
+// ORs the building's 64-bit bit into `built` and strips the buildings
+// its included_buildings row supersedes, then walks the four horde
+// columns: building a horde over an upgraded dwelling (or upgrading the
+// dwelling under a built horde) swaps the argument for the next slot's
+// upgraded horde. A base dwelling seeds its population column from the
+// creature's growth rate; an upgraded dwelling moves the base count
+// into the upgraded column. Rampart/Necropolis/Conflux hall tiers
+// recursively raise their EXTRA building.
+// Residual (85.9771%): the CFG agrees 14/14; retail memory-homes the
+// mutated `building` argument in its param slot (storing every swap
+// back to [ebp+8]) and keeps both table cursors in frame slots, while
+// our CL enregisters building in ESI - the whole delta is that homing
+// choice rippling. why-reg v2 classifies the pair as front-end handle
+// state (C1); an int-for-enum signature A/B measured byte-identical,
+// and direct subscripts beat an effect-cursor local 85.98 vs 81.55.
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::create_building(type_building_id building)
 {
-    // @stub
-}
+    built |= bitNumber[building];
+    built &= ~included_buildings[type][building];
 
-#endif  // @carcass
+    for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
+        short dw = const_horde_effects[type][slot].dwelling;
+        if (building == gHordeBuildings[slot]) {
+            built &= ~bitNumber[DWELLING_0_ID + dw];
+            if (dw < TOWN_DWELLING_COUNT
+                && (built & bitNumber[DWELLING_0_UPG_ID + dw])) {
+                built &= ~bitNumber[building];
+                built &= ~bitNumber[DWELLING_0_UPG_ID + dw];
+                building = gHordeBuildings[slot + 1];
+                built |= bitNumber[building];
+            }
+        }
+        if (built & bitNumber[gHordeBuildings[slot]]) {
+            if (building == DWELLING_0_UPG_ID + dw) {
+                built &= ~bitNumber[building];
+                built &= ~bitNumber[gHordeBuildings[slot]];
+                building = gHordeBuildings[slot + 1];
+                built |= bitNumber[building];
+            }
+        }
+    }
+
+    if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
+        short slot = building - DWELLING_0_ID;
+        population[slot] = akCreatureTypeTraits[gTownDwellingCreatures[
+            type * (2 * TOWN_DWELLING_COUNT) + slot]].growthRate;
+    }
+    if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
+        short slot = building - DWELLING_0_UPG_ID;
+        short upgraded = building - DWELLING_0_ID;
+        population[upgraded] = population[slot];
+        population[slot] = 0;
+    }
+
+    if (type == TOWN_RAMPART || type == TOWN_NECROPOLIS
+        || type == TOWN_CONFLUX) {
+        switch (building) {
+        case HALL_VILLAGE_ID:
+            create_building(EXTRA_2_ID);
+            break;
+        case HALL_TOWN_ID:
+            create_building(EXTRA_3_ID);
+            break;
+        case HALL_CITY_ID:
+            create_building(EXTRA_4_ID);
+            break;
+        case HALL_CAPITOL_ID:
+            create_building(EXTRA_5_ID);
+            break;
+        }
+    }
+    return building;
+}
 
 // E:\gamedcs\town.cpp:1313
 // Masks the same +0x150/+0x154 built mask against the capitol pair at

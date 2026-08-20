@@ -1850,6 +1850,7 @@ town	?can_build@town@@QBEEF@Z	89.6018	89.6018	89.6018	0x1c0d20
 town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90
+town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	85.9771	85.9771	85.9771	0x1be930
 town	?destroy_extra_capitol@town@@QAEXXZ	96.4595	96.4595	96.4595	0x1bec60
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180
@@ -1875,7 +1876,6 @@ town	initialize_buildings	0.0000	0.0000	0.0000	0x1c08c0
 town	show_building_rewards	0.0000	0.0000	0.0000	0x1c0220
 town	show_creature_rewards	0.0000	0.0000	0.0000	0x1c0400
 town	town_BuildBuilding	0.0000	0.0000	0.0000	0x1bede0
-town	town_create_building	0.0000	0.0000	0.0000	0x1be930
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
