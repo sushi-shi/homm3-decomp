@@ -1884,13 +1884,31 @@ TThievesGuildWindow::~TThievesGuildWindow()
 //     second button::button, the 45th push_back, del_Spr_from_Cache)
 //     cannot be retail's missing mass under ANY spelling - as #ifdef
 //     it prices 0, as if(0) it measures backward - and the missing
-//     retail cb is CALL-FREE dead statement mass, ~40-80 simple
-//     statements' worth, for which no real-source counterpart is
-//     recoverable from the DC dump (its line table's tail hole,
+//     retail cb is dead statement mass, for which no exact source
+//     statements are recoverable from the DC dump (its line table's tail hole,
 //     4448-4454, is comment-sized, and exact siblings carry 11-, 41-
 //     and 101-line holes that are provably comments). Per the
 //     do_general_melee precedent the scaffolding stays out of the
 //     tree; the row holds at 85.9895 until an honest carrier appears.
+//
+// A RELEASE-ELIDED DIAGNOSTIC IS NOW THE LEADING HONEST-CARRIER
+// HYPOTHESIS (2026-08-20), prompted by the TRACE/assert possibility and
+// measured with the compiler rather than inferred. The byte-inert statement
+// used for the probe was
+//
+//   1 ? (void)0 : (void)printf("THallWindow(%d)\n", which);
+//
+// One such statement is flat at 85.9895; seven and nine both reach
+// 93.212166; ten reaches the established 99.6605 plateau. A SINGLE call
+// expression with ten `which` arguments is flat at 85.9895, so the priced
+// quantity is statement/call-site structure, not argument nodes. The DC
+// image independently contains both `dreamprintf` and OutputDebugStringW,
+// proving that this codebase had diagnostic infrastructure. Retail's base
+// xdata still has exactly 50 states, so any lost diagnostics introduced no
+// additional destructible temporaries; scalar TRACE-style expressions remain
+// compatible with that frame. Count, placement, macro and format text are not
+// attested, however. No diagnostic call is landed and no probe remains in the
+// compiled body; this is the next source-history lead, not permission to pad.
 //
 // AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
 // after the orchestrator reopened the sizing): respelling k of the 49

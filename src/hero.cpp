@@ -26,6 +26,7 @@
 // hero.obj owns get_morale_description / get_luck_description, so the
 // owning compiland joins their gate rather than defining armygrp's
 // wider HOMM3_ARMYGRP_DESCRIPTION_API.
+#define HOMM3_HERO_OBJ_VIEW
 #include "hero.h"
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -996,18 +997,7 @@ void hero::initialize(short index)
     pathTargetX = -1;
     level = 1;
 
-    int knowledge = GetPrimarySkill(3);
-    float intelligence = kIntelligenceFactors[
-        skillLevel[eSecSkillIntelligence]];
-    if (skillLevel[eSecSkillIntelligence] > 0) {
-        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
-        if (ability.type == eHeroAbilitySecondarySkill &&
-            ability.skill == eSecSkillIntelligence)
-            intelligence *= 1.05f;
-    }
-    float baseMana = static_cast<float>(knowledge * 10);
-    mana = static_cast<short>(static_cast<long>(
-        baseMana * (intelligence + 1.0f)));
+    mana = static_cast<short>(GetMaxMana());
 
     maxMovePoints = 0;
     movePoints = 0;
@@ -1224,18 +1214,7 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
         CheckLevel();
     }
 
-    int knowledge = GetPrimarySkill(3);
-    float intelligence =
-        kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
-    if (skillLevel[eSecSkillIntelligence] > 0) {
-        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
-        if (ability.type == eHeroAbilitySecondarySkill &&
-            ability.skill == eSecSkillIntelligence)
-            intelligence = (level * 0.05f + 1.0f) * intelligence;
-    }
-    float baseMana = static_cast<float>(knowledge * 10);
-    mana = static_cast<short>(
-        static_cast<long>((intelligence + 1.0f) * baseMana));
+    mana = static_cast<short>(GetMaxMana());
     maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
 }
 
@@ -2010,18 +1989,7 @@ void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
     pathTargetY = -1;
     pathTargetX = -1;
     if (!(flags & 0x20000)) {
-        int knowledge = GetPrimarySkill(3);
-        float intelligence =
-            kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
-        if (skillLevel[eSecSkillIntelligence] > 0) {
-            const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
-            if (ability.type == eHeroAbilitySecondarySkill &&
-                ability.skill == eSecSkillIntelligence)
-                intelligence = (level * 0.05f + 1.0f) * intelligence;
-        }
-        float baseMana = static_cast<float>(knowledge * 10);
-        mana = static_cast<short>(
-            static_cast<long>((intelligence + 1.0f) * baseMana));
+        mana = static_cast<short>(GetMaxMana());
         maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
     }
 
@@ -4022,14 +3990,15 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // statement granularity cuts both ways - it also de-inlines the bitset
 // machinery the test is built from. See the anchored note at that site.
 //
-// Residual (74.47%): the census still shows update_all_slots x2 vs x3,
-// SetPointer x4 vs x5 and BroadcastMessage x1 vs x2 - all three are the
-// SAME defect and it is NOT the inliner: SetPointer and BroadcastMessage
-// are cross-TU and can never be /Ob2 candidates, so our CL is CROSS-JUMPING
+// Residual (75.4051%): the census still shows update_all_slots x2 vs x3
+// and SetPointer x4 vs x5 - the SAME defect and it is NOT the inliner:
+// SetPointer is cross-TU and can never be an /Ob2 candidate, so our CL is
+// CROSS-JUMPING
 // the two arms of handle_artifact_click's dragged-artifact if/else, whose
 // `update_all_slots(); DrawWindow(1,0xffff0001,0xffff);` prefixes are
-// identical. Retail does not merge them. Plus HeroFn_004D97F0 at x3 vs x4
-// (we have three source sites, retail emits four). The TQuickTownWindow::
+// identical. Retail does not merge them. HeroFn_004D97F0 and
+// BroadcastMessage now agree after restoring the proven source arm below.
+// The TQuickTownWindow::
 // QuickWindowWait x0 vs x1 row against our TQuickHeroWindow:: x1 is NOT a
 // wall and not a class-resolution error: all three Quick*Window classes
 // have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
@@ -4056,14 +4025,13 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // `gpWindowManager->lastHover = -1; UpdateHeroScreenStatusBar(msg);`
 // once for two source sites while we emit it twice.
 //
-// Every one of this row's call-count gaps is that defect: 9 NormalDialog
-// + 1 QuickWindowWait + 1 bitset<144>::any + 1 update_all_slots + 1
-// BroadcastMessage + 1 HeroFn_004D97F0 + 1 SetPointer - 1
-// UpdateHeroScreenStatusBar = exactly the 14 that separate base's 85
-// out-of-line calls from retail's 99. Nothing is missing from the source.
-// docs/vc6/optimization-scope.md puts cross-jumping in the WHOLE-FUNCTION
-// CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
-// source spelling of an arm can reach a decision made over all of them.
+// The remaining cross-jump counts account for all twelve calls between
+// base's 87 and retail's 99: 9 NormalDialog + 1 QuickWindowWait + 1
+// bitset<144>::any + 1 update_all_slots + 1 SetPointer - 1
+// UpdateHeroScreenStatusBar. docs/vc6/optimization-scope.md puts
+// cross-jumping in the WHOLE-FUNCTION CFG family and
+// docs/vc6/control-flow.md lists A17 as an open class; no source spelling
+// local to the other arms can choose the whole function's merge set.
 //
 // THE NUMERATOR IS NOW SWEPT HERE TOO, AND IT CONFIRMS SHRINK
 // (2026-08-20). The `if (0)` instrument at 1/2/3/4 statements is byte-flat
@@ -4088,18 +4056,41 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // as the one unexplored generation lever - staged, hash-recorded, NOT
 // admitted; running it is a separate decision, not a lane action.
 //
-// ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
-// MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
-// the status code as the constant the arm already knows: both emit
+// THE FOURTH HeroFn_004D97F0 CALL IS NOW EXPLAINED (2026-08-20), and this
+// corrects the earlier "nothing missing" diagnosis. In the selected-army
+// path, retail tests gUnnamed6aa9d8 before split/merge/swap. When that latch
+// is set, clicking an occupied different slot merely selects that slot,
+// refreshes the seven army widgets, broadcasts the mixed-army status and
+// redraws; an empty slot does nothing. The target block is fn+0x7bc..0x8e1:
+// `test gUnnamed6aa9d8 / je <split path> / cmp army[slot],-1 / je <tail> /
+// mov [gHeroScreenArmySlot],edi / call HeroFn_004D97F0`. It is semantic,
+// not padding. A direct same-level else-if initially cost 74.4733 ->
+// 70.1594 by crossing a VC6 whole-function threshold. Restoring the
+// independently attested Hero.h:634 GetMaxMana inline at its five hero.obj
+// sites is byte-flat at every site alone but changes that threshold honestly:
+// with both source corrections present this function reaches 75.4051 and
+// emits all four HeroFn_004D97F0 calls plus both BroadcastMessage calls.
+// That is the landed form. The qualifier test in the split path is also
+// corrected from MESSAGE_MODIFIER_SHIFT (0x1) to
+// MESSAGE_MODIFIER_SHIFT_KEYS (0x3), exactly retail's `test byte ptr [...],3`;
+// the matcher masks that immediate class, so the semantic correction is
+// score-neutral.
+//
+// Retail's three army refresh arms also do NOT pass the status code as the
+// constant the arm already knows: each emits
 // `mov [gHeroScreenArmySlot],edi / call HeroFn_004D97F0 / mov
 // eax,[gHeroScreenArmySlot] / cmp eax,-1 / jne push 6 / push 5` in front
-// of ONE heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
-// fn+0x6e8 and fn+0x7dc - i.e. it RE-READS the global after the call and
+// of heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
+// fn+0x6c5, fn+0x7e0 and fn+0x8bb - i.e. it RE-READS the global after
+// the call and
 // selects WIDGET_CLEAR_STATUS(6) / WIDGET_SET_STATUS(5) at run time. The
-// values our two arms pass as constants agree with what that select
+// values our three compiled arms pass as constants agree with what that select
 // produces, so this is a spelling and not a polarity error. Writing it as
 // the ternary in both arms costs 74.4733 -> 74.2419, so the select alone
 // does not pay: the rest of those two blocks has to converge with it.
+// why-branch's current `right_mouse`-as-int suggestion is also rejected:
+// it costs 75.4051 -> 71.9404, and retail homes the normalized flag as a
+// byte, agreeing with the unsigned-char source and the DC helper arities.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -4243,22 +4234,9 @@ int THeroScreenWindow::WindowHandler(message* msg)
             {
                 if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
                     break;
-                int knowledge = gpCurrentHero->GetPrimarySkill(3);
-                float intelligence =
-                    kIntelligenceFactors[
-                        gpCurrentHero->skillLevel[eSecSkillIntelligence]];
-                if (gpCurrentHero->skillLevel[eSecSkillIntelligence] > 0) {
-                    const THeroSpecificAbility& ability =
-                        akHeroSpecificAbilities[gpCurrentHero->id];
-                    if (ability.type == eHeroAbilitySecondarySkill &&
-                        ability.skill == eSecSkillIntelligence)
-                        intelligence =
-                            (gpCurrentHero->level * 0.05f + 1.0f) * intelligence;
-                }
-                float baseMana = static_cast<float>(knowledge * 10);
                 sprintf(gText, gpGeneralText->GetText(206),
                         gpCurrentHero->name, gpCurrentHero->mana,
-                        static_cast<long>((intelligence + 1.0f) * baseMana));
+                        gpCurrentHero->GetMaxMana());
                 NormalDialog(gText,
                              right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
                                          : hero::PRIMARY_STAT_DIALOG_TYPE,
@@ -4316,9 +4294,19 @@ int THeroScreenWindow::WindowHandler(message* msg)
                         gHeroScreenArmySlot = HERO_SCREEN_NO_ARMY_SLOT;
                     SetupHeroView();
                     DrawWindow(1, 0xffff0001, 0xffff);
+                } else if (!right_mouse && gUnnamed6aa9d8) {
+                    if (gpCurrentHero->army.armies[slot] != CREATURE_NONE) {
+                        gHeroScreenArmySlot = slot;
+                        gpCurrentHero->HeroFn_004D97F0();
+                        gpWindowManager->BroadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                            MIXED_ARMY_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+                    }
                 } else if (!right_mouse) {
                     if ((gHeroScreenArmyStripLive
-                         || (msg->qualifier & MESSAGE_MODIFIER_SHIFT))
+                         || (msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS))
                         && (gpCurrentHero->army.armies[slot] == CREATURE_NONE
                             || gpCurrentHero->army.armies[slot]
                                    == gpCurrentHero->army
@@ -5259,19 +5247,8 @@ void THeroScreenWindow::SetupHeroView()
                          widget::WIDGET_HIGHLIGHTED);
     }
 
-    int knowledge = gpCurrentHero->GetPrimarySkill(3);
-    float intelligence =
-        kIntelligenceFactors[gpCurrentHero->skillLevel[eSecSkillIntelligence]];
-    if (gpCurrentHero->skillLevel[eSecSkillIntelligence] > 0) {
-        const THeroSpecificAbility& ability =
-            akHeroSpecificAbilities[gpCurrentHero->id];
-        if (ability.type == eHeroAbilitySecondarySkill &&
-            ability.skill == eSecSkillIntelligence)
-            intelligence = (gpCurrentHero->level * 0.05f + 1.0f) * intelligence;
-    }
-    float baseMana = static_cast<float>(knowledge * 10);
     sprintf(gText, "%d/%d", gpCurrentHero->mana,
-            static_cast<long>((intelligence + 1.0f) * baseMana));
+            gpCurrentHero->GetMaxMana());
     msg.codeX = widget::WIDGET_SET_TEXT;
     msg.codeY = 0x71;
     msg.extraText = gText;
