@@ -41,7 +41,7 @@ advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
 advmgr	?DemobilizeCurrHero@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17680
 advmgr	?DisableButtons@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a2e0
-advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	69.2004	69.2004	69.2004	0x7b80
+advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	77.1041	77.1041	77.1041	0x7b80
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00
@@ -94,7 +94,7 @@ advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.0426	90.0426	90.0
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTownContext@advManager@@QAEXHEE@Z	88.1312	88.1312	88.1312	0x17830
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
-advmgr	?ShowRoute@advManager@@QAEXHHH@Z	52.0241	52.0241	52.0241	0x18dd0
+advmgr	?ShowRoute@advManager@@QAEXHHH@Z	65.2654	65.2654	65.2654	0x18dd0
 advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	85.3187	85.3187	85.3187	0x167a0
 advmgr	?TrimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0
 advmgr	?UpdBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0
