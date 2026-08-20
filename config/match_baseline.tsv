@@ -1369,7 +1369,7 @@ mapcell	?FindTrigger@CObject@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0xfec30
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0
-mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	72.8624	72.8624	72.8624	0xfdbc0
+mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	77.3792	77.3792	77.3792	0xfdbc0
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
 mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20
 mapcell	?Read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	93.7029	93.7029	93.7029	0xfd690

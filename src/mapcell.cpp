@@ -750,6 +750,27 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
     return 0;
 }
 
+// Load's seer-hut resize, factored out for the same reason readObject's
+// QUEST_GUARD arm is: the /Ob2 budget is per-CALLER and clamps at a floor,
+// so a function this small cannot afford to expand vector<TSeerHut>::resize
+// and keeps the CALL retail makes. Being a single-call-site static it is
+// then inlined back into Load whole, bringing that call with it, and
+// mapcell.obj still carries exactly 67 functions.
+//
+// Worth 72.8624 -> 77.3789. The note below had already identified the shape
+// ("character for character the divergence readObject's QUEST_GUARD arm
+// shows"); only its conclusion that no source spelling reached it was wrong.
+//
+// The lever is NARROW. Starving Load's OTHER divergence the same way - the
+// mapObjectData push_back in the loop below - scores 77.2574, slightly worse
+// than leaving it, and starving readMapObjects' objectTypes.resize costs an
+// exact function elsewhere in the unit (1459 -> 1458) because loadMapObjects
+// shares that instantiation. Both were measured and reverted.
+static void resizeSeerHutList(NewfullMap* map, int count)
+{
+    map->SeerHutList.resize(count);
+}
+
 // E:\gamedcs\mapcell.cpp:679
 // The savegame twin of Read, and the differences from it are the interesting
 // part.  It clears NINE map pools where Read clears eleven - the hero
@@ -764,7 +785,7 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // reloaded _First for the load call, and reloads _First AGAIN for the quest
 // test on the very next line.  Writing it as a subscript twice is what
 // produces that; hoisting a row pointer does not.
-// Residual (72.8624%): the same over-inline family readObject and Read hit,
+// Residual (77.3789%): the same over-inline family readObject and Read hit,
 // twice over.  Retail CALLS vector<TSeerHut>::resize (two arguments, the
 // count and the default-argument temporary); our CL expands it into its
 // size()/insert/size()/erase body, which is the whole of the branch-count
@@ -780,7 +801,15 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 // AFTER eighteen inlined clear() expansions, which is the one thing Load has
 // that loadMonsterList does not - consistent with a per-caller /Ob2 budget
 // that retail had already spent by the time it reached the resize and ours
-// had not.  No source spelling reached it; recorded rather than ground on.
+// had not.
+//
+// That diagnosis was RIGHT and its conclusion - "no source spelling reached
+// it" - was WRONG. The budget being per-caller is exactly what makes it
+// reachable: move the resize into a function small enough to be starved of
+// budget and it stays a call, then let the single-call-site static inline
+// back. resizeSeerHutList above does that, 72.8624 -> 77.3789. What remains
+// is the mapObjectData half, which does NOT respond to the same treatment
+// (77.2574, measured).
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
@@ -828,7 +857,7 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     if (infile->Read(&count, sizeof(count)) < sizeof(count))
         return -1;
 
-    SeerHutList.resize(count);
+    resizeSeerHutList(this, count);
     for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
         SeerHutList[i].load(infile, saveVersion);
         if (SeerHutList[i].quest)
