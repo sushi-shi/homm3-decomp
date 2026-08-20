@@ -46,6 +46,14 @@ def _targets():
     return out
 
 
+#: functions the router cannot see. NOT a diagnosis failure to shrug at: a
+#: carve-name-only function has no source claim, so there is no symbol in the
+#: base object to compare against. They are pure unreconstructed mass and they
+#: are HALF of what is left, so dropping them from the ranking would
+#: under-report the campaign by a factor of two.
+UNCLAIMED = "unclaimed (no source binding)"
+
+
 def run(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
     rows, failed = [], []
@@ -55,16 +63,21 @@ def run(args) -> int:
             continue
         if not args.quiet and i % 25 == 0:
             print(f"[queue] {i}/{len(targets)}", flush=True)
+        err = None
         try:
             routed = diagnose.route(unit, fn)
         except (ValueError, SystemExit) as e:
-            failed.append((unit, fn, str(e)))
-            continue
+            routed, err = None, str(e) or "diagnosis failed"
         except Exception as e:  # a solver blowing up must not kill the sweep
-            failed.append((unit, fn, f"{type(e).__name__}: {e}"))
-            continue
+            routed, err = None, f"{type(e).__name__}: {e}"
         if routed is None:
-            failed.append((unit, fn, "no built objects"))
+            failed.append((unit, fn, err or "no built objects"))
+            rows.append({
+                "class": UNCLAIMED, "recoverable": size * (1 - pct / 100),
+                "fuzzy": pct, "size": size, "unit": unit, "fn": fn,
+                "route": "reconstruct", "knob": "no source claim owns this "
+                "address - carve a VA() claim and reconstruct the body",
+            })
             continue
         d, _eh_div, _inl, routes = routed
         primary = next((s for s, _ in routes if s), "(none)")
@@ -97,8 +110,9 @@ def run(args) -> int:
     print(f"\n[queue] {len(rows)} unmatched function(s), "
           f"{sum(r['recoverable'] for r in rows) / 1024:.1f} KB recoverable")
     if failed:
-        print(f"[queue] {len(failed)} could not be diagnosed "
-              "(carve-name-only stubs and unresolved symbols)")
+        print(f"[queue] {len(failed)} of those have no source claim, so the "
+              f"router cannot see them; they are counted as {UNCLAIMED!r} "
+              "rather than dropped")
     print("\nby wall class:")
     for cls, v in sorted(by_class.items(),
                          key=lambda x: -sum(r["recoverable"] for r in x[1])):

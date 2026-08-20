@@ -2,36 +2,83 @@
 # recoverable = size * (1 - fuzzy/100), the fuzzy-weighted
 # bytes closing this function would add.
 class	recoverable	fuzzy	size	unit	fn	route	knob
+unclaimed (no source binding)	2006	0.0000	2006	advmgr	advManager_Open	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1612	0.0000	1612	advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1612	85.9895	11504	townmgr	??0THallWindow@@QAE@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 13 under-inline, 12 over-inline (223 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1498	71.1024	5184	hero	?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 11 over-inline (21 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	1420	0.0000	1420	command	combatManager_DoVictory	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1413	0.0000	1413	game	game_game	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1371	0.0000	1371	puzzlewindow	AI_attempt_puzzle_guess	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1294	35.5280	2007	viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (23 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	1278	0.0000	1278	victorylossconditions	VictoryConditionStruct_CheckForArtifactWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	1192	0.0000	1192	game	game_ClaimTown	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1152	45.0980	2099	mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 26 under-inline (12 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	1069	71.7143	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 7 over-inline (23 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	1063	0.0000	1063	town	town_BuildBuilding	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	1032	46.4584	1927	findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline, 3 over-inline (8 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	1020	0.0000	1020	ai_tactical	type_AI_spellcaster_consider_spell	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	974	0.0000	974	town	initialize_buildings	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	968	0.0000	968	victorylossconditions	LossConditionStruct_CheckForDefeatedHeroLoss	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	944	90.2004	9632	advmgr	?QuickInfo@advManager@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (11 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	931	57.4653	2189	findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 9 under-inline (19 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	882	90.0426	8860	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 5 over-inline (3 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	873	0.0000	873	town	town_give_event_reward	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	838	0.0000	838	game	game_game_ce5b0	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	816	0.0000	816	town	town_create_building	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	811	0.0000	811	ai_tactical	type_AI_spellcaster_get_fortune_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	796	0.0000	796	ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	776	0.0000	776	ai_tactical	type_AI_spellcaster_cast_spell	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	775	0.0000	775	advmgr	advManager_ViewPuzzle	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	768	0.0000	768	advmgr	advManager_StartLocalPlayerTurn	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	747	0.0000	747	game	game_ViewArmy	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	724	75.6482	2973	advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	723	68.0799	2266	townmgr	?BuyBuild@townManager@@QAEHHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (19 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	723	0.0000	723	cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (9 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	714	73.7978	2725	game	?Save@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 1 over-inline (15 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	708	0.0000	708	command	combatManager_show_eagle_eye	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	698	77.1683	3056	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+unclaimed (no source binding)	686	0.0000	686	ai_tactical	type_AI_spellcaster_consider_resurrect	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	657	0.0000	657	ai_tactical	type_AI_spellcaster_consider_single_enchantment	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	625	0.0000	625	mapcell	NewfullMap_NewfullMap_fd1e0	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	624	0.0000	624	advmgr	SaveGame	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	623	0.0000	623	town	show_creature_rewards	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	615	0.0000	615	game	game_SaveGame	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	615	0.0000	615	victorylossconditions	VictoryConditionStruct_CheckForDefeatedMonsterWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	596	0.0000	596	ai_tactical	type_AI_spellcaster_get_enchantment_function	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	590	71.9069	2101	mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 8 under-inline (8 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	590	0.0000	590	town	town_initialize	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	555	0.0000	555	ai_tactical	type_AI_spellcaster_type_AI_spellcaster	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	548	0.0000	548	ai_tactical	type_AI_spellcaster_consider_earthquake	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	546	74.4820	2140	armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline, 2 over-inline (34 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	543	64.8103	1543	cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 12 over-inline (4 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	515	0.0000	515	victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	497	0.0000	497	game	game_CreateTownHeroes	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	493	78.8021	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	479	0.0000	479	advmgr	advManager_advManager	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	478	0.0000	478	victorylossconditions	VictoryConditionStruct_CheckForArtifactTransportWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	476	55.7402	1076	hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 7 under-inline (2 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	474	0.0000	474	town	show_building_rewards	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	455	0.0000	455	advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	452	80.3043	2297	ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+unclaimed (no source binding)	447	0.0000	447	command	combatManager_show_looted_artifacts	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	433	65.2654	1247	advmgr	?ShowRoute@advManager@@QAEXHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline
+unclaimed (no source binding)	420	0.0000	420	victorylossconditions	VictoryConditionStruct_CheckForUpgradedTown	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	405	95.5868	9170	townmgr	??0TTownScreenWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 6 over-inline (248 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	384	0.0000	384	ai_tactical	type_AI_spellcaster_get_caliph_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	381	0.0000	381	ai_tactical	type_AI_spellcaster_get_chain_lightning_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	364	0.0000	364	ai_tactical	type_AI_spellcaster_get_ogre_mage_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
+unclaimed (no source binding)	361	0.0000	361	victorylossconditions	VictoryConditionStruct_CheckForTotalCreatures	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	361	82.9093	2111	cmbtmgr	?Open@combatManager@@UAEHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	358	82.0785	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (7 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	350	76.8733	1512	artifact	?InitializeArtifactTraitsTable@@YIEXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (6 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	348	0.0000	348	mapcell	NewfullMap_NewfullMap	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	347	57.8826	825	hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline (10 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	343	65.1779	985	mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (7 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	336	0.0000	336	ai_tactical	type_AI_spellcaster_consider_enchantment	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	333	80.5192	1708	ai_player	?make_gift@type_AI_player@@QAEXJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 1 over-inline (14 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	327	79.6984	1613	hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	320	78.4070	1481	mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (36 name-unresolvable pair(s) discounted)
+unclaimed (no source binding)	309	0.0000	309	ai_tactical	type_AI_spellcaster_get_cancel_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	305	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	304	87.5901	2446	advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
 control-flow (why-branch)	297	89.0387	2708	findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
