@@ -245,6 +245,38 @@ inline void TViewArmyWindow::create_rollover_widget()
 // Tried and rejected: writing all five helper rows longhand in the body
 // (61.42% - the budget then reaches _Tidy AND the [-3, 3] selector at
 // both icon rows), and a defined `_cpp_clamp` template (87.11%).
+//
+// 2026-08-20, TWO CORRECTIONS FROM RETAIL'S OWN RELOCATION SEQUENCE.
+// Reading `sema disasm --verbose | grep IMAGE_REL_I386_REL32` off both
+// sides and normalising the synth names gives the ordered call list, and
+// it settles two things the prose above got wrong:
+//   * THE OWNER/CONTROLLER ASSIGNMENT WAS INVERTED at all three sites.
+//     Retail's sequence is get_controller -> bitmapBorder (the plate),
+//     get_controller -> create_damage_widget, and get_owner ->
+//     get_morale_description. This body had get_owner on the first two
+//     and get_controller on the third, and the comment above the plate
+//     asserted the opposite of the bytes. Byte-flat (both are extern
+//     thiscall `hero*(void) const`, so only the relocation NAME moves,
+//     which objdiff does not score) - but it is what retail wrote, it is
+//     what `predict-inline` reads, and leaving it inverted was costing
+//     every future diagnosis of this row a phantom
+//     `get_controller base x1 vs retail x2`.
+//   * `creature_type_from_int` INSIDE A PINNED STATEMENT IS A CALL.
+//     The two describer set-ups sit under `#pragma inline_depth(0)`, and
+//     the pin de-inlines the enum bridge along with the describer -
+//     retail has no such call at all. Hoisting it into a local union
+//     ahead of the pin (the idiom WindowHandler already uses, and the
+//     standing "hoist what retail keeps inline out of the pinned
+//     statement" rule) is worth 89.9877 -> 90.8074 here and
+//     88.7021 -> 90.4657 on the armyGroup ctor below.
+// What the same reading leaves OPEN, both still budget: retail calls
+// `vector::size()` inside the inlined reserve where we expand it, and at
+// `morale_help = <temp>` retail expands one level MORE than the pin
+// allows - it calls `assign(const&, uint, uint)` and `_Tidy(bool)` where
+// the pin makes us call `operator=` and `~basic_string`. Removing the
+// pin does not fix that (it over-inlines instead): measured on the
+// armyGroup ctor, 90.4657 with the pin against 89.9195 without, so the
+// pin stays as the closest reachable point.
 // E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
 TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
@@ -273,9 +305,11 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
 
     Widgets.reserve(NWIDGETS);
 
-    // The plate is recoloured for the stack's OWNER (not its current
-    // controller), falling back to the local player when it has no hero.
-    create_background_widget(this_army->get_owner());
+    // The plate is recoloured for the stack's CONTROLLER, falling back to
+    // the local player when it has no hero - retail's relocation order is
+    // `call get_controller` immediately ahead of the bitmapBorder ctor.
+    // (The note that stood here said OWNER; see the correction above.)
+    create_background_widget(this_army->get_controller());
 
     // The singular/plural pair comes off the TABLE row - retail
     // rematerialises the 0x6747b0 base here instead of reusing the
@@ -297,7 +331,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_defense_widget(type_traits->defenseSkill, defense);
     create_shots_widget(stack_traits, type_traits->numShots,
                         stack_traits->numShots);
-    create_damage_widget(stack_traits, this_army->get_owner());
+    create_damage_widget(stack_traits, this_army->get_controller());
     create_hitpoints_widget(type_traits->hitPoints, stack_traits->hitPoints);
     create_hitpoints_left_widget(stack_traits->hitPoints
                                  - this_army->topCreatureDamage);
@@ -307,7 +341,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_morale_widget(morale);
 
     int side = this_army->combatSide;
-    const hero* our_hero = this_army->get_controller();
+    const hero* our_hero = this_army->get_owner();
     const town* our_town = 0;
     armyGroup* our_group = gpCombatManager->armyGroups[side];
     const hero* enemy_hero = gpCombatManager->heroes[1 - side];
@@ -321,9 +355,14 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     // statement pin is ai_player.cpp's idiom for exactly this (the
     // `warning.append` site) and it is worth 87.11 -> 89.62 here,
     // closing the branch count to retail's 31 on the nose.
+    union {
+        int value;
+        TCreatureType creature;
+    } shown_type;
+    shown_type.value = ArmyType;
 #pragma inline_depth(0)
     morale_help = our_group->get_morale_description(
-        creature_type_from_int(ArmyType), morale, our_hero, our_town,
+        shown_type.creature, morale, our_hero, our_town,
         enemy_hero, enemy_group, gpCombatManager->field_53c0,
         group_alignments);
 #pragma inline_depth()
@@ -332,7 +371,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_luck_widget(luck);
 #pragma inline_depth(0)
     luck_help = our_group->get_luck_description(
-        creature_type_from_int(ArmyType), luck, our_hero, our_town,
+        shown_type.creature, luck, our_hero, our_town,
         enemy_hero, enemy_group, gpCombatManager->field_53c0);
 #pragma inline_depth()
 
@@ -469,9 +508,14 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     morale = group->GetArmyMorale(iarmy, this_hero, this_town, -1,
                                   group_alignments, 0);
     create_morale_widget(morale);
+    union {
+        int value;
+        TCreatureType creature;
+    } shown_type;
+    shown_type.value = ArmyType;
 #pragma inline_depth(0)
     morale_help = group->get_morale_description(
-        creature_type_from_int(ArmyType), morale, this_hero, this_town,
+        shown_type.creature, morale, this_hero, this_town,
         0, 0, -1, group_alignments);
 #pragma inline_depth()
 
