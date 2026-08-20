@@ -50,7 +50,10 @@
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
-#include "kb.h"      // gText, the shared combat-message scratch buffer
+#include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
+// MirrorImage walks outward from the caster through path.obj's
+// GetAdjacentCellIndexNoArmy looking for a hex to clone into.
+#include "path.h"
 // DoBolt paces its draw loop with GameTime::DelayTil + the NextFrameTime
 // header inline, the same pair army::Fly's flight loop uses.
 #include "kbwin.h"   // GameTime
@@ -2188,12 +2191,136 @@ void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char 
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4576
+#endif  // @carcass
+
+// Mirror Image: find a free hex near the caster's stack, put an
+// identical clone of it there, and slide the clone out of the original's
+// hex into its own over sixteen frames.
+//
+// Local names are the Dreamcast roster's own (variables.csv, dc
+// 0x155f0c): iHexCount, iDirCount, iSourceHexIndex and iSourceHexCount
+// are attested rows, and the parameters are targetIndex and level.
+//
+// `level` IS DEAD - no instruction in the 1029 bytes reads [ebp+0xc] -
+// and that is retail's own shape, not a mis-read arity: `ret 8` fixes
+// two arguments and the DC roster names both.
+//
+// THE SEARCH IS THREE NESTED LOOPS, widening: for each RING distance 1
+// to 10, for each of the source stack's two hexes, for each of the six
+// directions, walk that many steps and take the first hex the stack
+// fits in. The two off-field margin columns (0 and 16) are refused
+// explicitly on top of whatever CanFit says.
+//
+// SIX HAND-WRITTEN EXCLUSIONS sit in front of the walk, and they are
+// spelled as six separate `continue`s rather than one disjunction:
+// retail re-tests `facing` at the head of each and our CL folds the
+// first three into one `jne` past the whole facing==1 group, which is
+// exactly what a run of separate ifs on a common first term produces.
+// What they encode is that a wide stack may not clone into the hex its
+// own second half occupies.
+//
+// THE CLONE IS RE-READ, NOT CAPTURED: retail throws AddArmy's return
+// value away and asks cells[hex].get_army() for the stack it just
+// placed.
+//
+// Residual (82.3%): one class with one knock-on. Retail keeps the
+// direction counter in MEMORY and pairs it with a separate DOWNCOUNTER
+// (5 down to -1) where our CL keeps it in EBX and compares against 6 -
+// the trip-count transform VC6 applies only when the induction variable
+// is already frame-homed, which is a register decision, not a loop form.
+// That is the whole one-branch difference why-branch reports (41 vs 42),
+// and it drags the placement-block bindings with it (`ebx`/`edi` swapped
+// for the source stack and the clone's cell base). Tried and rejected:
+// all eight of why-branch's D10 induction mutations - the best,
+// reversing the direction order, is worth two masked slots and would
+// change which hex the clone lands in.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {
-    // @stub
+    if (targetIndex >= 0 && targetIndex < COMBAT_GRID_CELLS) {
+        army* source = cells[targetIndex].get_army();
+        { for (int iHexCount = 1; iHexCount < 11; iHexCount++) {
+            { for (int iDirCount = 0; iDirCount < 2; iDirCount++) {
+                long iSourceHexIndex;
+                if (iDirCount == 0) {
+                    iSourceHexIndex = source->gridIndex;
+                } else {
+                    if (!(source->creatureId & 1))
+                        continue;
+                    iSourceHexIndex =
+                        source->gridIndex + (source->facing ? 1 : -1);
+                }
+                { for (int iDir = 0; iDir < COMBAT_DIRECTION_COUNT; iDir++) {
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_1 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_4 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_4 && iDirCount == 1
+                        && iHexCount <= 2)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_4 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_1 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_1 && iDirCount == 1
+                        && iHexCount <= 2)
+                        continue;
+                    long hex = iSourceHexIndex;
+                    { for (int step = 0; step < iHexCount; step++) {
+                        hex = GetAdjacentCellIndexNoArmy(hex, iDir);
+                        if (hex >= 0 && hex < COMBAT_GRID_CELLS
+                            && hex % COMBAT_GRID_ROW_STRIDE != 0
+                            && hex % COMBAT_GRID_ROW_STRIDE
+                                   != COMBAT_GRID_LAST_COLUMN
+                            && source->CanFit(hex, 0, 0)) {
+                            AddArmy(currentSide, source->creatureType,
+                                    source->numTroops, hex, 0x800000, 0);
+                            army* mirror = cells[hex].get_army();
+                            mirror->creatureId |= 0x400000;
+                            mirror->iRoundsLeftBeforeVanish =
+                                heroes[currentSide]->GetSpellDurationBonus()
+                                + spellPower[currentSide];
+                            source->iMirrorDestIndex = mirror->bitIndex;
+                            mirror->iMirrorSourceIndex = source->bitIndex;
+                            long dx = cells[source->gridIndex].field_00
+                                - cells[mirror->gridIndex].field_00;
+                            long dy = cells[source->gridIndex].field_02
+                                - cells[mirror->gridIndex].field_02;
+                            ResetLimitCreature();
+                            MarkCreatureEffect(cells[hex].armySide,
+                                               cells[hex].armySlot);
+                            MarkCreatureEffect(cells[targetIndex].armySide,
+                                               cells[targetIndex].armySlot);
+                            ComputeMaxExtent();
+                            long xoff = dx * 16;
+                            long yoff = dy * 16;
+                            { for (int frame = 0; frame < 16; frame++) {
+                                mirror->field_104 = xoff / 16;
+                                mirror->field_100 = yoff / 16;
+                                DrawFrame(1, 1, 0, 50, 1, 1);
+                                xoff -= dx;
+                                yoff -= dy;
+                            } }
+                            mirror->field_104 = 0;
+                            mirror->field_100 = 0;
+                            UpdateGrid(0, 1);
+                            DrawFrame(1, 0, 0, 0, 1, 0);
+                            return;
+                        }
+                    } }
+                } }
+            } }
+        } }
+        NormalDialog(gpGeneralText->GetText(189), 1, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4705
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
