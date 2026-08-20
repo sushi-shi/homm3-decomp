@@ -2950,10 +2950,20 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 #pragma inline_depth()
     }
     {
-        army** first = aura_sources.begin();
-        army** end = aura_sources.end();
+        // Retail reads _First and _Last through the VECTOR'S OWN ADDRESS -
+        // `mov eax,[ebx+8] / mov ecx,[ebx+4]`, the same EBX it then hands the
+        // erase as `this` - where `aura_sources.begin()` makes VC6 fold the
+        // member offset into each load off `this` (`[esi+0x52c]` and
+        // `[esi+0x528]`) and form EBX only for the call. Naming the vector as
+        // a reference is what puts the base in a register first:
+        // 89.7721 -> 89.8063. NARROW, and measured: naming BOTH vectors at
+        // the top of the remove_aura block instead puts the row back at
+        // exactly 89.7721, so this is per-site, not a style to spread.
+        std::vector<army*>& sources = aura_sources;
+        army** first = sources.begin();
+        army** end = sources.end();
 #pragma inline_depth(0)
-        aura_sources.erase(first, end);
+        sources.erase(first, end);
 #pragma inline_depth()
     }
 #pragma inline_depth(0)

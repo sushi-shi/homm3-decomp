@@ -950,6 +950,26 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // points in readObject's QUEST_GUARD arm on the identical instantiation -
 // costs 82.8043 -> 82.4190 here. Also still true from the old note: the
 // budget-starved-helper treatment on the same site scores 77.2574.
+//
+// SWEPT 2026-08-20 for the DUP-EXIT `sema diff --branches` reports (10 rets
+// against retail's 9) and for the #7 polarity flip, and both are ONE FACT:
+// retail's `Read(&count)` failure does not get its own epilogue, it jumps
+// FORWARD (`jb`) into the block the loadTownEventList failure already owns,
+// while ours emits `jae` over a local `return -1`. Underneath that sits the
+// same binding story readResourceData has - retail parks `two_layers` in EBX
+// from the prologue (`mov ebx,[ebp+0x10]` before the esi/edi pushes, then
+// `test bl,bl` at the second-layer test) and RELOADS `infile` from [ebp+0x8]
+// at every use, loading it into EDI only once `size` is dead; we cache
+// `infile` in EBX and re-read `two_layers` as a byte. Every recycled-slot
+// difference downstream is that swap - retail lands `count` in [ebp+0xa] and
+// the seer-hut index in [ebp+0xc], we use [ebp+0xe] and [ebp+0x8].
+// One thing that is NOT the binding and is worth a look: of the nineteen
+// clear() sites, seventeen match instruction for instruction and exactly two
+// do not - the gpGame members at +0x4e3a8 and +0x4e3c8. At those two retail
+// expands further than we do, calling a destroy helper and then storing
+// `_Last = _First` back (`mov [edi+8],eax`), where we stop at the erase
+// wrapper. Their neighbours at +0x4e3b8 and +0x4e3d8 are byte-identical, so
+// this is per-instantiation, not per-caller.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
@@ -1750,6 +1770,21 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 // (#8 jae->je, #11 je->jae).  Both are documented open D classes that are
 // often not source-addressable.  The D8 ternary unfold that closed
 // readGarrisonData is already applied here and is byte-flat.
+// MECHANISM FOUND 2026-08-20 - the D3 verdict is right about the shape and
+// the cause is ONE REGISTER BINDING, so re-read this before spending on
+// spellings. Retail keeps `infile` in EDI for the whole body and puts
+// `&customTreasure` (this+0x30) in EBX; this compile does the reverse - EBX
+// holds `resourceObject` and EDI holds &customTreasure. Everything the note
+// above calls jump-threading follows: because retail's EBX is spent on the
+// container it must RELOAD `resourceObject` with `mov ebx,[ebp+0xc]` on three
+// separate paths, and two of those reloads are the one-instruction blocks
+// that give the payload tail TWO JUMP predecessors instead of one - which is
+// exactly what makes VC6 sink it past both error epilogues. We have no such
+// reload, one predecessor falls through, and the tail stays inline. The
+// polarity pair is the same fact at the Read guard.
+// Second, smaller: the two byte locals occupy the OPPOSITE dead parameter
+// homes. Retail reads `char_buffer` at [ebp+0xb] and the uninitialised
+// TreasureData first byte at [ebp+0xf]; we have them the other way round.
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
@@ -4891,6 +4926,45 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // from inside the inlined insert's capacity path, is unchanged by all of
 // this; the rest of the insert expansion - operator new, three `_Construct`s,
 // both `_Ucopy`s and the `_Ufill` - still lines up one for one.
+//
+// TITRATED 2026-08-20, and it QUANTIFIES the A8 direction the paragraph above
+// only named. An `if (0)` carrier of N statements (dead loads/adds/stores over
+// heightMap - no call sites, so it carries full caller_cb byte-inertly) gives:
+//
+//   N   0      1        2        3       4       5       6..8    10      20+
+//   %   84.22  90.1105  90.1105  84.43   84.43   84.43   82.96   79.65  <=72.9
+//
+// So the dose is a NARROW PEAK at ONE TO TWO STATEMENTS, +5.89, and monotone
+// DOWN from three statements on. That refutes the reading that the lever is
+// "mass from somewhere else": a helper split, an early-site pin or any of the
+// usual bulk knobs OVERSHOOT this peak by an order of magnitude. At N=1 the
+// branch count goes 30 -> 31 against retail's 32 and the fourth `ret`
+// appears, so the mass does buy part of the size() expansion.
+//
+// THREE UNRELATED REAL ONE-STATEMENT CONSTRUCTS REACH THE SAME 90.1105 TO THE
+// DIGIT - an index local split out of `&objects[objectCell->objectIndex]`, a
+// named `int` for IntersectRect's return, and hoisting `objectList.begin()`
+// into a local for the while condition - which says the plateau is pure mass
+// and none of the three is evidence for itself. None makes the frame exact
+// (0x78 against retail's 0x7c) and none buys the 32nd branch, so the real
+// statement is still unidentified and NOTHING SPECULATIVE IS SHIPPED here.
+// What retail does with its extra dword is SPILL `newObject`
+// (`push edi / mov [ebp-0x14], edi` at the GenerateHeightMap call) while also
+// keeping it in EDI - a higher-pressure allocation than ours, consistent with
+// the same missing mass.
+//
+// Measured and rejected while titrating, do not retry:
+//   * re-spelling the inner subscript AT THE NEW PLATEAU (the low-mass
+//     inversion check) - `heights[objectY - y]` 90.1105 is the best of the
+//     four; dropping objectY 80.1698, dropping heights 76.8517, dropping both
+//     for the plain 2-D subscript 73.7386. The two named locals are real, and
+//     the DC line table agrees: dc 0xf36b0's pairs put EXACTLY TWO statements
+//     (4119, 4120) between the x `for` at 4117 and the y `for` at 4123.
+//   * `NewmapCell::TObjectCell value = *objectCell;` before the insert -
+//     84.6631, and it does not move the frame either.
+//   * `if (!IntersectRect(...)) break;` - this DOES close the branch count
+//     (32 against 32) and costs 5.46 (78.7655), so the missing branch is not
+//     an intersection test.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
