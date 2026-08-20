@@ -12,9 +12,10 @@
 // literal 0x36 into SpellCastWorkChance - so it needs the enumerator
 // armygrp.h already carries behind this view for cmbtmgr.cpp.
 #define HOMM3_SPELL_SLOW_DECL
-// consider_teleport pushes the literal 0x3f into ValidSpellTargetArmy, and
-// reads combatManager's pending-order code back as a domain member.
-#define HOMM3_SPELL_TELEPORT_DECL
+// consider_teleport reads combatManager's pending-order code back as a
+// domain member. (Its SPELL_TELEPORT define retired 2026-08-20 when
+// armygrp.h stopped gating that enumerator; byte-inert, since the
+// enumerator is now visible either way.)
 #define HOMM3_CMBTMGR_AI_ORDER_DECL
 // The creature-spell pricers get_ogre_mage_value / get_caliph_value
 // switch on combatManager+0x53c0's spell-restriction code with a

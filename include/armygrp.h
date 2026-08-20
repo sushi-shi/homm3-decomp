@@ -396,11 +396,26 @@ enum ESpellId {
     SPELL_BLIND = 0x3e,
     // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
     // which pushes the literal 0x3f into SpellCastWorks as the spell it
-    // is pricing. Behind a view for this header's usual measured
-    // reason, as SPELL_SLOW above.
-#ifdef HOMM3_SPELL_TELEPORT_DECL
+    // is pricing, and again by combatManager::SpellTargetMessage
+    // (0x5a8690), whose 53-entry byte table gives 0x3f its own arm.
+    // UNGATED 2026-08-20: the view it used to sit behind bought nothing
+    // the ledger keeps - see SPELL_REMOVE_OBSTACLE below.
     SPELL_TELEPORT = 0x3f,
-#endif
+    // 64, byte-proven by combatManager::SpellTargetMessage (0x5a8690).
+    // Its jump table covers exactly 0xc..0x40 and the TOP entry, 0x40,
+    // gets an arm of its own: `strcpy(gText, <the row two above the two
+    // target-naming rows the sacrifice arms use>)` and nothing else -
+    // a fixed line with no target to name, which is what a spell that
+    // removes a battlefield obstacle prints. It sits one above
+    // SPELL_TELEPORT 0x3f and one below SPELL_CLONE 0x41, both already
+    // proven, so no other value fits.
+    //
+    // UNGATED DELIBERATELY. armygrp.h reaches initialize.cpp's include
+    // closure and a new enumerator is an input to the include-set class
+    // recorded on SSpellTraits below; the trade was authorised, is
+    // recorded above initialize_game_data's baseline row, and the
+    // ratchet keeps the peak in `hist` for a later lane to re-measure.
+    SPELL_REMOVE_OBSTACLE = 0x40,
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
     // Dreamcast CodeView supplies the enumerator spellings.
