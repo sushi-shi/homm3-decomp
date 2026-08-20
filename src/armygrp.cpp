@@ -2115,6 +2115,42 @@ std::string armyGroup::get_morale_description(
 // statement retail wrote and because it narrows the outstanding deficit
 // to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
 // gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
+//
+// THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
+// 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
+// `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
+// lifting the clover arm into `apply_luck_magic_terrain` below pushes it the
+// same direction with real code instead of padding.  Same lever, same round,
+// +12.20 on get_morale_description.  Two further doses measured on top of
+// this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
+// devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
+// body, like its twin, wants exactly one lift and it is the magic-terrain
+// arm.  The +4-site probe above is NOT re-measured against this baseline.
+static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
+                                     int& currentLuck, std::string& result)
+{
+    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
+        switch (akCreatureTypeTraits[creature].townType) {
+        case TOWN_CASTLE:
+        case TOWN_RAMPART:
+        case TOWN_TOWER:
+        case TOWN_INFERNO:
+        case TOWN_NECROPOLIS:
+        case TOWN_DUNGEON:
+            return;
+        case TOWN_STRONGHOLD:
+        case TOWN_FORTRESS:
+        case TOWN_CONFLUX:
+            break;
+        default:
+            return;
+        }
+        currentLuck -= 2;
+        result.append(gCloverFieldLuckText);
+    }
+}
+
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -2139,28 +2175,7 @@ std::string armyGroup::get_luck_description(
     if (ourHero)
         result = ourHero->get_luck_description();
 
-    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
-        switch (akCreatureTypeTraits[creature].townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto no_clover_bonus;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto apply_clover_bonus;
-        default:
-            goto no_clover_bonus;
-        }
-    apply_clover_bonus:
-        currentLuck -= 2;
-        result.append(gCloverFieldLuckText);
-    no_clover_bonus:;
-    }
+    apply_luck_magic_terrain(magicTerrain, creature, currentLuck, result);
 
     if (enemyGroup) {
         TCreatureType devilType = CREATURE_NONE;
