@@ -291,6 +291,24 @@ void combatManager::FreeIcons()
 //     prove from the other end.
 // The deployment tables' bounds come from adjacency, not from guessing a
 // stride: see their declaration in the header.
+//
+// TWO SPELLINGS HERE ARE BYTE-FORCED AND LOOK REDUNDANT IN SOURCE; both
+// were measured, and both are retail's:
+//   * `group` is a local for GetNumArmies and for Init's two arguments,
+//     but the loop's empty-slot test re-reads `armyGroups[side]` from the
+//     member. Using the local for the test too costs 99.35 -> 95.90 -
+//     retail really does load the pointer once into a frame slot AND
+//     re-read the member at the top of each iteration.
+//   * the hex lookup is hoisted out of the tight/loose arms into a
+//     separate `ordinal`, because retail forms the `7*side` index ONCE
+//     after the two arms rejoin; writing the two-level index inside each
+//     arm duplicates it and costs 95.90 -> 94.18.
+//
+// Residual (99.3528%): one comparison. Retail tests the combat hero with
+// `cmp eax, esi` against the register still holding the zero it has just
+// stored into numArmies[side], where our CL emits `test eax, eax`.
+// Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
+// to force the two zeroes to share, which is byte-identical.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {
@@ -311,17 +329,19 @@ void combatManager::LoadArmies(unsigned char is_surrounded)
             tight_formation = 0;
         int last = group->GetNumArmies() - 1;
         for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
-            if (group->armies[i] == CREATURE_NONE)
+            if (armyGroups[side]->armies[i] == CREATURE_NONE)
                 continue;
             int hex;
-            if (is_surrounded)
+            if (is_surrounded) {
                 hex = gCombatDeploySurroundedHexes63d0e0[side][placed];
-            else if (tight_formation)
-                hex = gCombatDeployHexes63d0a8[side]
-                          [gCombatDeploySlots63d1dc[last][placed]];
-            else
-                hex = gCombatDeployHexes63d0a8[side]
-                          [gCombatDeploySlots63d118[last][placed]];
+            } else {
+                int ordinal;
+                if (tight_formation)
+                    ordinal = gCombatDeploySlots63d1dc[last][placed];
+                else
+                    ordinal = gCombatDeploySlots63d118[last][placed];
+                hex = gCombatDeployHexes63d0a8[side][ordinal];
+            }
             armies[side][placed].Init(group->armies[i], group->numTroops[i],
                                       combat_hero, side, placed, hex, i);
             armies[side][placed].LoadResources();
