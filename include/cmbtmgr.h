@@ -1359,6 +1359,10 @@ public:
                      town* rightTown, hero* rightHero,
                      armyGroup* rightArmyGroup, int x, int y, int iSeed,
                      unsigned char is_surrounded);
+    // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
+    // (`A` access), which costs nothing here and is recorded rather than
+    // acted on: this header keeps one public block.
+    void LoadArmies(unsigned char is_surrounded);
 #endif
 #ifdef HOMM3_CMBTMGR_TURN_VIEW
     // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
@@ -1422,6 +1426,24 @@ DATA(0x00697744) extern unsigned char gCombatFlag697744;
 // a single extern added to a header this widely included does.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
 extern int gCombatSeed66d840;
+
+// THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
+// BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
+// + 2*7*4 = 0x63d118, + 7*7*4 = 0x63d1dc, + 7*7*4 = 0x63d2a0, which is
+// exactly where gTownCombatBackgrounds already starts. Four tables, no
+// slack, and every stride matches the indexing LoadArmies performs.
+//
+// LoadArmies uses them as a two-stage lookup: the SLOT tables are indexed
+// [numArmies-1][nth stack placed] and yield a position ordinal, which then
+// indexes the HEX table [side][ordinal]. The surrounded table skips the
+// indirection and gives the hex directly. Which of the two slot tables is
+// chosen turns on the defending hero's formation byte, so the pair is the
+// game's tight/loose deployment split - but no roster row or string
+// reaches any of the four, so the names carry their addresses.
+extern const int gCombatDeployHexes63d0a8[2][7];
+extern const int gCombatDeploySurroundedHexes63d0e0[2][7];
+extern const int gCombatDeploySlots63d118[7][7];
+extern const int gCombatDeploySlots63d1dc[7][7];
 #endif
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,

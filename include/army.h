@@ -1543,6 +1543,18 @@ public:
 #ifdef HOMM3_ARMY_NEW_TURN_DECL
     void new_turn();
 #endif
+    // 0x43d5c0 (358 B) <- army::InitClean (dc 0x438e8, 200 B, 1 param =
+    // `this` only; SH4->x86 ratio 1.79, in band). LoadArmies (0x463600)
+    // calls it on each of the twenty slots it has just blanked, and the
+    // DC order InitClean < Init < LoadResources holds in retail too -
+    // 0x43d5c0 < 0x43d8b0 < 0x43d9f0 - which is what corroborates the
+    // arity match. The Init/LoadResources pair above was located
+    // independently from AddArmy and needs no gate; this row is gated
+    // only because it is a NEW declarator on a header this widely
+    // included. Declared, not claimed - army.cpp owns the body.
+#ifdef HOMM3_ARMY_COMBAT_INIT_DECL
+    void InitClean();
+#endif
 };
 SIZE(army, 0x548);
 
