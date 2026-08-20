@@ -2214,6 +2214,7 @@ int advManager::ProcessSearch(int x, int y, int z)
 
 // E:\gamedcs\advmgr.cpp:4983
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
+#pragma auto_inline(off)
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
     gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
@@ -2233,6 +2234,7 @@ void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
     }
     Process1WindowsMessage();
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
@@ -2373,11 +2375,13 @@ void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bFo
 
 // E:\gamedcs\advmgr.cpp:5223
 VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
+#pragma auto_inline(off)
 void advManager::CompleteDraw(unsigned char bForceDraw)
 {
     CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
                  bForceDraw, true);
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
@@ -5699,6 +5703,7 @@ void advManager::CheckDimHero()
 
 // E:\gamedcs\advmgr.cpp:10571
 VA(0x00419450, 0x43)  // linkorder, dc 0x1c5ec
+#pragma auto_inline(off)
 void advManager::CheckDimNextHeroBut()
 {
     if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->HasMobileHero())
@@ -5706,6 +5711,7 @@ void advManager::CheckDimNextHeroBut()
     else
         advWindow->WidgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:10579
 // A local human's current hero seeds a normal route search from the hero's
