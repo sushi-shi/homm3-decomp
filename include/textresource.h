@@ -172,6 +172,21 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
+#ifdef HOMM3_TEXT_SPELL_DAMAGE_VIEW
+    // The four rows combatManager::ModifySpellDamage (0x5a78e0) prints
+    // when a hero bonus, a creature trait or a Protection-from-<school>
+    // counter has moved a spell's damage off its table value. The four
+    // folded loads are [Text._First + 0x884 .. + 0x890] and the ladder
+    // that picks between them is (damage < base) x (numTroops == 1), in
+    // that order, each arm formatting the stack's name and the ABSOLUTE
+    // difference. Gated for the reason GENERAL_TEXT_GOOD_MORALE above
+    // is - an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE = 545,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY = 548,
+#endif
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell
     // icons print, all folded [Text._First + N] loads in its
