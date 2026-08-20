@@ -158,8 +158,7 @@ public:
     std::vector<TreasureData> customTreasure;
     // +0x40, the same member the events view names, sliced out of the pad
     // for readMonsterData: it indexes the list with a 48-byte stride and
-    // appends through it.  blackBoxes still rides in pad_050 because
-    // BlackBoxData is only forward-declared in this closure.
+    // appends through it.
     std::vector<MonsterData> CustomMonsterList;
     // +0x50, first at +0x54. Sliced out of the pad now that BlackBoxData is
     // a complete type in this closure: Save walks it with a 228-byte stride

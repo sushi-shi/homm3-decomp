@@ -1514,15 +1514,48 @@ int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1708
+// The custom-record wrapper around readBlackBox, and the same three-part shape
+// readSpellScrollData and readResourceData have: take the list's current size
+// as the record index, zero the object's extraInfo, fill a stack temporary,
+// then publish it only if the pool has room.
+//
+// The cap here is 400, not the 4000 the treasure readers use, and the index
+// lands in extraInfo's LOW TEN BITS rather than the 19..30 custom-record field
+// - `xor / and 0x3ff / xor` is the read-modify-write of a 10-bit lane.
+//
+// `BlackBoxData tempBox;` is the whole preamble: retail expands the
+// constructor inline as the string's ctor, the HasCustomGuardians zero, the
+// Guardians armyGroup, the HasCustomTreasure zero, three vector ctors (two
+// written out as four stores each, the third called) and the Creatures
+// armyGroup.  The destructor is likewise inlined at BOTH exits, which is why
+// the -1 epilogue is a full copy of the success one rather than a jump into
+// it.  The out-of-line ~BlackBoxData at 0x4ffdf0 survives for the vector
+// machinery, not for this frame.
+//
+// mapVersion is carried purely to hand to readBlackBox - this body never
+// inspects it, which is why the third parameter looks unused here.
 VA(0x004ffbf0, 0x1F5)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor (BlackBoxData ctor inlined); called by readObject; EH-bearing, dc 0xeea60
-int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject,
+int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
                                  int mapVersion)
 {
-    // @stub
+    int boxIndex = blackBoxes.size();
+
+    blackboxObject->extraInfo = 0;
+
+    BlackBoxData tempBox;
+    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+        return -1;
+
+    if (boxIndex < 400) {
+        blackBoxes.push_back(tempBox);
+        blackboxObject->extraInfo ^= (blackboxObject->extraInfo ^ boxIndex)
+            & 0x3ff;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1729
 DC_ONLY(0xeeb3c, 0xA0)
