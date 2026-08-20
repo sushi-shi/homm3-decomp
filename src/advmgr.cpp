@@ -6325,6 +6325,26 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // spellings. The remainder is tail-merge cosmetics: retail shares the
 // no-owner strcpy between CREATURE_GENERATOR_1 and the default arm where
 // we duplicate it, and narrows PlayerKnowsCell's compare to `test al, dl`.
+//
+// AND THE QUEST-GUARD / SEER ARMS CALL DIFFERENT METHODS FROM
+// SetRolloverText'S (found 2026-08-20 by diffing the two bodies' call
+// streams IN ORDER - a census cannot see this, only the order can).
+// Both classes carry three string-returning text builders: TQuestGuard
+// at 0x572d60 (nullary), 0x572e40 and 0x573040; TSeerHut at 0x574070
+// (nullary), 0x5741b0 and 0x5743e0. The two advmgr bodies take
+// DIFFERENT ones:
+//   SetRolloverText -> 0x573040 and 0x5741b0   (what we call - correct)
+//   QuickInfo       -> 0x572e40 and 0x5743e0   (unclaimed; we call the
+//                                               SetRolloverText pair)
+// 0x572e40 is 511 B, thiscall, `ret 8`, returning std::string by value
+// on one argument - the same signature as 0x573040, so arity screening
+// cannot separate them and only the caller does. The shape around the
+// site moves with it: retail emits `sprintf` BEFORE the builder call and
+// no string-temp teardown, where we emit builder / _Tidy / sprintf. So
+// this arm's source statement is not the one written here, and the
+// `_Tidy base x3 vs retail x2` row is downstream of that rather than a
+// budget decision. Naming the two callees needs their bodies read; left
+// open, but do not re-price this arm as an inliner problem first.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
