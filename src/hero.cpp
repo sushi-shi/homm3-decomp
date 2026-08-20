@@ -1456,7 +1456,16 @@ void hero::UseSpell(int cost)
     mana = remainingMana;
     if (gpAdvManager->status == baseManager::STATUS_ACTIVE &&
         gpCurrentPlayer->IsLocalHuman())
-        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        // SINGULAR, and this is the only site in the compiland that is:
+        // retail's relocation here - both in this body (fn+0x53) and in
+        // hero::Fly, which inlines it (fn+0xea) - names
+        // ?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z, while
+        // hero::Deallocate and HeroView both name the PLURAL overload.
+        // `which == -1` is the singular form's "the current hero". Byte-
+        // flat (objdiff does not gate on a relocation's symbol name); it
+        // retires a false OVER-inline row that would otherwise send the
+        // next lane after an inliner knob in Fly.
+        gpAdvManager->advWindow->UpdateHeroLocator(-1, 1, 1);
 }
 // E:\gamedcs\hero.cpp:1515
 VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348
@@ -5428,6 +5437,33 @@ void hero::TransferArtifacts(hero* src)
 // simplify it away. `worn` is UNSIGNED - retail compares it with `jbe`
 // and every later bound with `jae`, which is what bitset::count()'s
 // size_t return gives.
+//
+// 83.5960 -> 92.9185 (2026-08-20) ON THE COMPONENT LOOP'S SHAPE, and the
+// evidence that found it is a MISSING RELOCATION, not a branch report.
+// `predict-inline` said base 3 out-of-line calls against retail's 4: we
+// emit bitset<19>::_Xran three times and retail emits it three times PLUS
+// one bitset<144>::_Xran (0x4346d0) that we did not emit at all. That
+// fourth call is `components.test(component)`'s bounds check, and the two
+// compiles disagree about it because they disagree about the LOOP FORM:
+//   retail  fn+0x1f3: `cmp esi,0x1200 / jb <body> / mov ecx,ebx /
+//                      call bitset<144>::_Xran`  - an UNSIGNED guard at
+//           the top of the body, with the loop's own exit test at the
+//           BOTTOM (rotated), so the guard survives as its own branch.
+//   base    fn+0x1a4: `cmp esi,0x1200 / jge <exit>` - one SIGNED test
+//           doing both jobs. VC6 had merged _Xran's `144 <= component`
+//           into the top-tested `for`'s exit test and folded the throw
+//           away entirely.
+// 0x1200 is 144*32 on both sides: the guard is strength-reduced onto the
+// akArtifactTraits byte offset that the body already needs.
+// Spelling the loop `int component = 0; do { ... } while (++component <
+// 144);` forces the bottom test, and the guard comes back with retail's
+// register assignment and its jb.
+//
+// MEASURED BYTE-FLAT, do not re-spend: the same do/while on the OTHER
+// three `component < 144` loops in this file (update_spell_list,
+// equip_artifact, remove_artifact) changes nothing - VC6 already rotates
+// those, so their guards were never folded. This lever only pays where
+// the loop came out top-tested.
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 {
@@ -5475,7 +5511,8 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
             const std::bitset<144>& components =
                 gCombinationArtifacts[combination].components;
             bool kept_slot = false;
-            for (int component = 0; component < 144; component++) {
+            int component = 0;
+            do {
                 if (!components.test(component))
                     continue;
                 int componentClass =
@@ -5504,7 +5541,7 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
                         goto next_slot;
                 }
                 counts[componentClass]++;
-            }
+            } while (++component < 144);
         }
         return 1;
     next_slot:;
