@@ -682,9 +682,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 
 #define APPEND_VISIT_TEXT(isVisited)                                      \
     visited = (isVisited);                                                \
-    sprintf(tempText, visitedFormat,                                     \
-        visited ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)     \
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT)); \
+    if (visited)                                                          \
+        sprintf(tempText, visitedFormat,                                  \
+                gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));     \
+    else                                                                  \
+        sprintf(tempText, visitedFormat,                                  \
+                gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));   \
     strcat(gText, tempText)
 
 #define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \

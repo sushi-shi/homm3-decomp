@@ -89,7 +89,7 @@ advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	92.1202	92.1202	92.1202	0x19990
-advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	89.8242	89.8242	89.8242	0xb150
+advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.0426	90.0426	90.0426	0xb150
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
 advmgr	?ShowRoute@advManager@@QAEXHHH@Z	52.0241	52.0241	52.0241	0x18dd0
