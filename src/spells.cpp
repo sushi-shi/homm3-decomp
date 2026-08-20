@@ -6,6 +6,7 @@
 #include "army.h"
 #include "cmbtmgr.h"
 #include "hero.h"
+#include "misc.h"    // Random, for SpellCastWorks' dice roll
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
@@ -142,56 +143,72 @@ unsigned char combatManager::is_valid_teleport(const army* this_army, long new_h
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:2497
-DC_ONLY(0x152c80, 0x16C)
+VA(0x005a37d0, 0x17C)  // order-map+arity, dc 0x152c80
 int HandleGetTeleportDestination(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2604
-DC_ONLY(0x152dec, 0xEE)
+VA(0x005a3950, 0x68)  // order-map+arity, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex, unsigned char first_target, unsigned char creature_spell)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2645
-DC_ONLY(0x152edc, 0x228)
+VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::ValidSpellTarget(SpellID spellId, TSkillMastery mastery, int targetIndex, int casting_side, unsigned char first_target, unsigned char creature_spell)
 {
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:2768
-DC_ONLY(0x153104, 0x54)
-unsigned char combatManager::ValidSpellTargetArmy(int spellId, int casting_side, const army* targetArmy, unsigned char first_target, unsigned char creature_spell)
+#endif  // @carcass
+
+// The address cmbtmgr.h used to hand SpellCastWorks. It is the AI's
+// targeting predicate: eleven retail callers, all of them the
+// consider_*/get_*_value family, and the body is one forward into
+// SpellCastWorkChance with `redirected` pinned to 0 - the mirror image of
+// SpellCastWorks (0x5a8640), which pins `first_target` to 1 instead and
+// then rolls dice against the result. The comparison is against a QWORD
+// 0.0 at 0x63ac38, so the literal is a double and the float return widens
+// into it; a float literal would emit `fcomp dword ptr` instead.
+VA(0x005a3c80, 0x3A)  // order-map+arity+caller-set, dc 0x153104
+unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
+                                                  int casting_side,
+                                                  const army* targetArmy,
+                                                  unsigned char first_target,
+                                                  long creature_spell)
 {
-    // @stub
+    return SpellCastWorkChance(spellId, casting_side, targetArmy, 0,
+                               first_target, creature_spell) > 0.0;
 }
 
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
 // E:\gamedcs\spells.cpp:2781
-DC_ONLY(0x153158, 0x1A0)
+VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
 army* combatManager::find_resurrection_target(int iArmyGroup, int targetIndex, unsigned char creature_spell)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2866
-DC_ONLY(0x1532f8, 0x108)
+VA(0x005a3e40, 0x10D)  // order-map+arity, dc 0x1532f8
 army* combatManager::find_demonic_resurrection_target(int iArmyGroup, int targetIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:2926
-DC_ONLY(0x153400, 0x180)
+VA(0x005a3f50, 0x171)  // order-map+arity, dc 0x153400
 army* combatManager::find_animate_dead_target(int iArmyGroup, int targetIndex)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3078
-DC_ONLY(0x153580, 0xB8)
+VA(0x005a40d0, 0x9B)  // order-map+arity, dc 0x153580
 unsigned char combatManager::HasValidSpellTarget(SpellID spellId, TSkillMastery mastery, int casting_side, unsigned char first_target, unsigned char creature_spell)
 {
     // @stub
@@ -219,14 +236,14 @@ long combatManager::get_distance(tagPOINT start, tagPOINT stop)
 }
 
 // E:\gamedcs\spells.cpp:3159
-DC_ONLY(0x153734, 0xA4)
+VA(0x005a4170, 0x2B4)  // order-map+arity, dc 0x153734
 void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<long,std::allocator<long>* result)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3185
-DC_ONLY(0x1537d8, 0xAC)
+VA(0x005a4430, 0x2B8)  // order-map+arity, dc 0x1537d8
 void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<long,std::allocator<long>* result)
 {
     // @stub
@@ -240,77 +257,77 @@ void combatManager::mark_wall_area_effect(long target_hex, TSkillMastery mastery
 }
 
 // E:\gamedcs\spells.cpp:3227
-DC_ONLY(0x153904, 0xF8)
+VA(0x005a46f0, 0x113)  // order-map+arity, dc 0x153904
 void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<army* result)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3265
-DC_ONLY(0x1539fc, 0xEE)
+VA(0x005a4810, 0x10F)  // order-map+arity, dc 0x1539fc
 void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<army* result)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3303
-DC_ONLY(0x153aec, 0x72)
+VA(0x005a4920, 0x42)  // order-map+arity, dc 0x153aec
 void combatManager::mark_area_effect(SpellID spell, long target_hex, TSkillMastery mastery, std::vector<army* result)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3324
-DC_ONLY(0x153b60, 0x1CC)
+VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
 void combatManager::AreaEffect(int targetCell, int iSpellType, TSkillMastery mastery, int power)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3389
-DC_ONLY(0x153d2c, 0x588)
+VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::Armageddon(int level, int power)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3572
-DC_ONLY(0x1542b4, 0x3CA)
+VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3702
-DC_ONLY(0x154680, 0x440)
+VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
 void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3864
-DC_ONLY(0x154ac0, 0x190)
+VA(0x005a5a90, 0x183)  // order-map+arity, dc 0x154ac0
 void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int bDistortAlways)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:3940
-DC_ONLY(0x154c50, 0x82C)
+VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4202
-DC_ONLY(0x15547c, 0x1E8)
+VA(0x005a61f0, 0x163)  // order-map+arity, dc 0x15547c
 int combatManager::GetNextChainLightningTarget(army* lastTargetArmy, int bUseSRandom)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4255
-DC_ONLY(0x155664, 0x3A4)
+VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
 void combatManager::ChainLightning(int index, int level, int power)
 {
     // @stub
@@ -332,28 +349,28 @@ void combatManager::ClearEffects()
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4399
-DC_ONLY(0x155a20, 0x108)
+VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
 void combatManager::SetMassSpellInfluence(const hero* casting_hero, int spell, TSkillMastery level, int power, int casting_side, unsigned char creature_spell)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4424
-DC_ONLY(0x155b28, 0x3E2)
+VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
 void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char bShowWince)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4576
-DC_ONLY(0x155f0c, 0x370)
+VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4705
-DC_ONLY(0x15627c, 0x248)
+VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType, int iSpellPower, int level)
 {
     // @stub
@@ -367,7 +384,7 @@ void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
 }
 
 // E:\gamedcs\spells.cpp:4815
-DC_ONLY(0x1565e4, 0xA8)
+VA(0x005a7320, 0x68)  // order-map+arity, RET-MISMATCH resolved, dc 0x1565e4
 void combatManager::remove_corpse(hexcell* hex, long group, long index)
 {
     // @stub
@@ -381,14 +398,14 @@ void combatManager::remove_corpse(army* corpse)
 }
 
 // E:\gamedcs\spells.cpp:4850
-DC_ONLY(0x1566f8, 0x148)
+VA(0x005a7390, 0x1CB)  // order-map+arity, dc 0x1566f8
 void combatManager::demonic_resurrection(const army* caster, army* target)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:4888
-DC_ONLY(0x156840, 0x228)
+VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
 void combatManager::Resurrect(army* target_army, long hit_points_resurrected, unsigned char temporary)
 {
     // @stub
@@ -408,64 +425,106 @@ void combatManager::ShowSpellCastFailure(army* targetArmy, int spellId)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:5065
-DC_ONLY(0x156b94, 0x9C)
-int combatManager::ComputeSpellDamage(SpellID id, int power, int spell_level, const hero* casting_hero, const hero* affected_hero, const army* target_army, unsigned char print_result)
+#endif  // @carcass
+
+// The order-map's first RET-MISMATCH, RESOLVED HERE. The aligner paired
+// 0x5a7890 with the six-parameter Resurrect (spells.cpp:4984) and the
+// epilogue refused it: `ret 0x1c` pops seven stack slots, not five. The
+// row whose arity fits is ComputeSpellDamage (spells.cpp:5065, eight DC
+// parameters = this + seven), and the body confirms it twice over - it
+// reads akSpellTraits' per-mastery damage row and tail-calls
+// ModifySpellDamage at 0x5a78e0, which the very next source line (5086)
+// names. `this` is never touched; ecx is dead on entry, which is why the
+// pairing could not be read off the calling convention alone.
+VA(0x005a7890, 0x4D)  // anchor-callee+arity, RET-MISMATCH resolved, dc 0x156b94
+long combatManager::ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
+                                       hero* casting_hero, hero* target_hero,
+                                       const army* target, unsigned char simulated)
 {
-    // @stub
+    long damage = akSpellTraits[spell].mastery_bonus[mastery]
+        + akSpellTraits[spell].power_factor * spell_power;
+    return ModifySpellDamage(damage, spell, casting_hero, target_hero, target,
+                             simulated);
 }
 
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
 // E:\gamedcs\spells.cpp:5086
-DC_ONLY(0x156c30, 0x192)
+VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
 int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero* castingHero, const hero* affectedHero, const army* targetArmy, unsigned char print_result)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:5134
-DC_ONLY(0x156dc4, 0xFE)
+VA(0x005a7bb0, 0xC5)  // order-map+arity, dc 0x156dc4
 int combatManager::ModifySpellDamageForSpells(int damage, int iSpellType, const army* targetArmy)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:5164
-DC_ONLY(0x156ec4, 0x490)
+VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::Earthquake(int level)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:5419
-DC_ONLY(0x157354, 0x4D2)
+VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
 float combatManager::SpellCastWorkChance(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char first_target, unsigned char creature_spell)
 {
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:5660
-DC_ONLY(0x157828, 0x8C)
-unsigned char combatManager::SpellCastWorks(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char creature_spell)
+#endif  // @carcass
+
+// THE REAL SpellCastWorks, AND cmbtmgr.h's `// 0x5a3c80` ON THE DECLARATION
+// IS WRONG. That address is ValidSpellTargetArmy, two rows below; the two
+// have identical arity (`ret 0x14`), which is why the earlier attribution
+// survived an arity check. Three independent things separate them:
+//   * SEMANTICS. Only this body rolls dice - `Random(1, 100) <= chance*100`
+//     is what "does the cast work" means. 0x5a3c80 merely asks whether the
+//     chance is above zero, which is what "is this a valid target" means.
+//   * THE DC PARAMETER NAMES OF THE SHARED CALLEE. SpellCastWorkChance is
+//     (spellId, casting_side, target_army, redirected, first_target,
+//     creature_spell). This body pins slot 5, first_target, to 1 and passes
+//     its own `redirected` into slot 4; 0x5a3c80 pins slot 4, redirected, to
+//     0 and passes its own `first_target` into slot 5. Each caller's DC
+//     parameter list supplies exactly the slots the other one pins, in order.
+//   * THE CALLER SETS. All eleven retail callers of 0x5a3c80 are the AI's
+//     "may I aim here" family (consider_teleport, consider_sacrifice,
+//     consider_enchantment, get_protection_value, ...); this address is
+//     called only from the two combat-resolution bodies at 0x40500/0x40bc0.
+VA(0x005a8640, 0x49)  // order-map+arity+caller-set, dc 0x157828
+unsigned char combatManager::SpellCastWorks(SpellID spell, long side,
+                                            const army* target,
+                                            unsigned char redirected,
+                                            long creature_spell)
 {
-    // @stub
+    int chance = SpellCastWorkChance(spell, side, target, redirected, 1,
+                                     creature_spell) * 100.0f;
+    return Random(1, 100) <= chance;
 }
 
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
 // E:\gamedcs\spells.cpp:5674
-DC_ONLY(0x1578b4, 0x22E)
+VA(0x005a8690, 0x2BD)  // order-map+arity, dc 0x1578b4
 void combatManager::SpellTargetMessage(int spellId, int targetIndex, unsigned char first_target)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:5749
-DC_ONLY(0x157ae4, 0x548)
+VA(0x005a8950, 0x999)  // order-map+arity, dc 0x157ae4
 void combatManager::ShowSpellMessage(int bIsMonsterSpell, int spellId, army* targetArmy)
 {
     // @stub
 }
 
 // E:\gamedcs\spells.cpp:5858
-DC_ONLY(0x15802c, 0x64)
+VA(0x005a92f0, 0x63)  // order-map+arity, dc 0x15802c
 CSprite* combatManager::LoadSpellEffect(int effect)
 {
     // @stub
