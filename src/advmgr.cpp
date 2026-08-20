@@ -515,23 +515,14 @@ std::string get_army_help_text(const armyGroup* source,
             result += armyGroup::GetArmySizeName(
                 consolidated_army.numTroops[i], 2);
             result += " ";
-            int creature = consolidated_army.armies[i];
-            const char* creature_name;
-            if (creature >= 0 && creature <= 150)
-                creature_name = akCreatureTypeTraits[creature].m_plural_name;
-            else
-                creature_name = "";
-            result += creature_name;
+            result += GetArmyName(consolidated_army.armies[i],
+                                  consolidated_army.numTroops[i]);
         }
     } else {
         int amount = consolidated_army.get_creature_total();
         const char* army_name;
         if (consolidated_army.armies[1] == CREATURE_NONE) {
-            int creature = consolidated_army.armies[0];
-            if (creature >= 0 && creature <= 150)
-                army_name = akCreatureTypeTraits[creature].m_plural_name;
-            else
-                army_name = "";
+            army_name = GetArmyName(consolidated_army.armies[0], amount);
         } else {
             army_name = gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
         }
