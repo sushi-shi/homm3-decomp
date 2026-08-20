@@ -92,13 +92,29 @@ enum ECombatGrid {
     // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
     // full CASTLE, which is the tier that builds the central keep and
     // the tier that builds the two side towers respectively. So 0xfe is
-    // the KEEP and 0xff is one of the two side towers, the other being
-    // row 6's ordinary hex 183. Which of the two side towers 0xff is
-    // (upper or lower) is the one half of this naming NOT proven;
-    // GetCommand (0x476490) tests it first, ahead of the keep, and the
-    // four GetGridIndex hit rectangles are tested 252, 253, 254, 255.
+    // the KEEP and 0xff is one of the two side towers.
+    // CORRECTION 2026-08-20: this comment used to finish "the other being
+    // row 6's ordinary hex 183", and that was wrong. LoadArmies
+    // (0x463600) installs THREE arrow-tower stacks, at 0xfe, 0xff and
+    // 0xfb - never at 183 - and the field_1402c/d/e note further down
+    // this header had already recorded 0x46a460 keying the same three
+    // pseudo-hexes 254/251/255. So 0xfb is the third member of this
+    // domain, and it is added below rather than left as a literal.
+    // Which side tower is which (upper vs lower) remains the one half of
+    // the naming NOT proven; GetCommand (0x476490) tests 0xff first,
+    // ahead of the keep, and the four GetGridIndex hit rectangles are
+    // tested 252, 253, 254, 255.
+    // GATED, AND MEASURED: adding this one enumerator un-gated costs
+    // command.obj's GetCommand 92.5714 -> 92.5357, the same include-set
+    // firing an enumerator produced for the previous lane on this header.
+    // It joins the declarator-count evidence recorded at field_132a0 - an
+    // enumerator counts too - and only cmbtmgr.cpp names the value.
     COMBAT_HEX_KEEP = 0xfe,
     COMBAT_HEX_UPPER_TOWER = 0xff
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    ,
+    COMBAT_HEX_LOWER_TOWER = 0xfb
+#endif
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor

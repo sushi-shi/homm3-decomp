@@ -383,17 +383,20 @@ void combatManager::LoadArmies(unsigned char is_surrounded)
             int archerLevel;
             defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
             armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
-                                   combat_hero, side, placed, 0xfe, -1);
+                                   combat_hero, side, placed,
+                                   COMBAT_HEX_KEEP, -1);
             archers[0].armySlot = placed;
             placed++;
             if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
                 numArchers = (numArchers + 1) / 2;
                 armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
-                                       combat_hero, side, placed, 0xff, -1);
+                                       combat_hero, side, placed,
+                                       COMBAT_HEX_UPPER_TOWER, -1);
                 archers[2].armySlot = placed;
                 placed++;
                 armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
-                                       combat_hero, side, placed, 0xfb, -1);
+                                       combat_hero, side, placed,
+                                       COMBAT_HEX_LOWER_TOWER, -1);
                 archers[1].armySlot = placed;
                 placed++;
             }
