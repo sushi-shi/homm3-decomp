@@ -5457,7 +5457,14 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 // unattested (WIDGET_RETURN_32 precedent); `reset_artifacts` returns to
 // the DC_ONLY roster below.
 VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
-void hero::HeroFn_004E6120(int creatureType, void* creatureStats)
+// Signature aligned with the header declarator 2026-08-20: the second
+// argument is a caller-owned TCreatureTypeTraits row (army embeds one at
+// +0x74, where hitPoints/attackSkill/defenseSkill are +0x4c/+0x54/+0x58 -
+// exactly the three fields this body writes), and the member is const.
+// The carcass text had drifted to `(int, void*)` non-const, which would
+// not have compiled had the block ever been enabled.
+void hero::HeroFn_004E6120(int creature_type,
+                           TCreatureTypeTraits* traits) const
 {
     // @stub
 }
