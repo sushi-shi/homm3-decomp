@@ -2052,6 +2052,15 @@ void combatManager::ResetHitByCreature()
 // (0x46a650) on the member; our pin forces ~TPickANumber itself out
 // of line with the base receiver. The exact split needs depth 1
 // inlined + depth 2 called, which no pragma spells (only N=0 bites).
+// RE-OPENED 2026-08-20 against the numerator lever and STRENGTHENED,
+// two measurements: lifting the eight obstacle-record stores into a
+// single-call-site static (the BuyBuild caller-shrink, the only
+// goto-free liftable block in this body) is BYTE-FLAT at 75.5550 with
+// the return-0 pin kept, and 69.9215 with the pin dropped - the
+// caller-cb dose does not produce the natural depth-2 refusal, and the
+// imposed one remains strictly better than none. The duplicated Pick
+// site and the dtor receiver are not numerator-reachable; every other
+// block is glued to the loop by `goto next_hex` exits and cannot lift.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
