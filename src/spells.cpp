@@ -1035,12 +1035,128 @@ void combatManager::Armageddon(int level, int power)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3572
+#endif  // @carcass
+
+// The per-step recompute of one bolt segment: how far it still has to
+// travel, how thick it should be at that point, which way it is pointing
+// and how far off that heading this step should wander. AddBolt calls it
+// once to seed a fresh bolt and DoBolt once per drawn step.
+//
+// The RECORD IS THE EVIDENCE HERE - see cmbtmgr.h's SBolt note. Nothing
+// in the Dreamcast dump describes this type; every field this body reads
+// is either one AddBolt stored a named parameter into or one this body
+// is the only writer of.
+//
+// TWO CASTS TO `float`, NOT double, in the progress division: retail
+// spills BOTH operands back through 32-bit slots (`fild / fstp dword /
+// fld dword`) before the divide, which is what an explicit (float) on
+// each side produces and what a plain integer division promoted to
+// double does not. The same rule runs through the whole tail: every
+// float-typed intermediate retail rounds through a dword slot is a
+// named float LOCAL here (`travelled`, `distortAvg`, `wobble`,
+// `scaled`, `step`), and writing any of them as one long expression
+// instead leaves the value in the x87 stack at extended precision,
+// which is a different instruction at every step. That single reading
+// is worth 82.30 -> 94.82.
+//
+// atan2's ARGUMENT ORDER IS (dx, dy), which is NOT the usual (y, x), and
+// the stack says so with no ambiguity: retail pushes the dy double
+// FIRST, so it lands at [esp+8] and dx at [esp+0]. The callee is atan2 -
+// 0x61a0f0 is `mov edx, 0x690460 / jmp __ctrandisp2`, the CRT's
+// two-argument transcendental dispatcher. Transcribed as retail has it;
+// DrawBolt reads the heading back with the matching convention.
+//
+// TWO LOCALS ARE COMPUTED IN REVERSE DECLARATION ORDER by this CL, and
+// that is a lever, not noise: `toX` is declared first so that `toY` is
+// the delta retail computes first. Declaring them the other way round
+// measured 88.19 against 94.82.
+//
+// THE SEGMENT TEST IS SPELLED `remaining > segment * 1.5`, NOT the other
+// way round: whichever side is written LEFT has its (double) conversion
+// emitted first, and retail converts `remaining` first. Worth 94.82 ->
+// 97.29 on the operand order alone.
+//
+// Residual (97.29%): TWO sites, ~9 instructions.
+//   * The sqrt's two deltas come out in the opposite order (retail does
+//     x then y, we do y then x). The `+` operand order does NOT reach
+//     it - both spellings measure exactly 97.2924, because VC6
+//     canonicalises the commutative sum - and hoisting the deltas into
+//     locals is worse in both declaration orders (93.98 / 88.19).
+//   * The progress divide uses two temp slots where retail reuses one:
+//     retail loads the numerator to st0 BEFORE materialising the
+//     denominator, so the numerator's slot is free again. Making the
+//     numerator a named float local (`travelled`) was needed for the
+//     rest of the shape but does not move this.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {
-    // @stub
+    if (psBolt->bDone)
+        return;
+
+    long remaining = static_cast<long>(
+        sqrt(static_cast<double>(
+            abs(psBolt->iDestY - psBolt->iY) * abs(psBolt->iDestY - psBolt->iY)
+            + abs(psBolt->iDestX - psBolt->iX)
+                * abs(psBolt->iDestX - psBolt->iX))));
+    if (remaining > psBolt->iTotalLength) {
+        psBolt->fProgress = 0;
+    } else {
+        float travelled =
+            static_cast<float>(psBolt->iTotalLength - remaining);
+        psBolt->fProgress = travelled
+            / static_cast<float>(psBolt->iTotalLength);
+    }
+
+    if (psBolt->iStartThickness != psBolt->iEndThickness) {
+        // The +-1 nudge is retail's: it biases the interpolation away
+        // from zero so a taper of one pixel still moves.
+        long span = psBolt->iEndThickness - psBolt->iStartThickness;
+        if (span > 0)
+            span++;
+        else
+            span--;
+        long thickness = static_cast<long>(static_cast<float>(span)
+                                           * psBolt->fProgress)
+            + psBolt->iStartThickness;
+        if (thickness < 1)
+            thickness = 1;
+        psBolt->iThickness = thickness;
+    }
+
+    psBolt->iSpanFirst = -(psBolt->iThickness >> 1);
+    psBolt->iSpanLast = psBolt->iSpanFirst + psBolt->iThickness - 1;
+
+    long toX = psBolt->iDestX - psBolt->iX;
+    long toY = psBolt->iDestY - psBolt->iY;
+    float angle = static_cast<float>(atan2(static_cast<double>(toX),
+                                           static_cast<double>(toY)));
+    psBolt->fAngle = angle;
+    float distortAvg = static_cast<float>((psBolt->iAngleDistortMin
+                                           + psBolt->iAngleDistortMax) / 200);
+    float wobble = (2.5 - psBolt->fProgress) / 2.0 * distortAvg;
+    psBolt->fDistortedAngle = angle + wobble;
+
+    if (psBolt->iAngleDistortMin != 0 || psBolt->iAngleDistortMax != 0) {
+        // A bolt only wanders once it has further to go than one and a
+        // half segments - unless it was asked to wander always.
+        if (static_cast<double>(remaining)
+                > static_cast<double>(psBolt->iSegmentLength) * 1.5
+            || psBolt->bDistortAlways) {
+            float distortion;
+            if (psBolt->iAngleDistortMin == psBolt->iAngleDistortMax)
+                distortion = static_cast<float>(psBolt->iAngleDistortMin);
+            else
+                distortion = static_cast<float>(
+                    Random(psBolt->iAngleDistortMin,
+                           psBolt->iAngleDistortMax));
+            float scaled = distortion / 100.0f;
+            float step = (2.0f - psBolt->fProgress) / 1.5 * scaled;
+            psBolt->fAngle = step + psBolt->fAngle;
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3702
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
@@ -1049,12 +1165,91 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3864
+#endif  // @carcass
+
+// The bolt constructor: clamp both endpoints into the screen, stamp the
+// whole record from the thirteen parameters, decide whether the run is
+// drawn along x or along y, measure it, and hand it to ResetBoltAngle
+// for the first heading. Its parameter list is what NAMES most of
+// SBolt - twenty-four field writes, thirteen of them a parameter going
+// straight into a slot.
+//
+// The clamps are 800x556, written as `if (v < 0) v = 0; else if
+// (v > MAX) v = MAX;` over the PARAMETER itself: retail merges the two
+// arms onto one store back to the parameter slot and skips the store
+// entirely when neither fires, which is what the else-if gives and what
+// two separate ifs do not.
+//
+// THE TWO SPECIAL COLOURS DECIDE THE ORIENTATION DIFFERENTLY. An
+// ordinary bolt is drawn along whichever axis it runs further on
+// (`abs(dx) > abs(dy)`); BOLT_COLOR_0 and BOLT_COLOR_3 instead ask
+// whether the source x is strictly inside the screen, i.e. they are the
+// two that are drawn as screen-edge flashes.
 VA(0x005a5a90, 0x183)  // order-map+arity, dc 0x154ac0
-void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int bDistortAlways)
+void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
+                            int iDestX, int iDestY, int iSplitFrequency,
+                            int iStartThickness, int iEndThickness,
+                            int iColor, int iAngleDistortMin,
+                            int iAngleDistortMax, int iSegmentLength,
+                            int bDistortAlways)
 {
-    // @stub
+    if (iSourceX < 0)
+        iSourceX = 0;
+    else if (iSourceX > 799)
+        iSourceX = 799;
+    if (iSourceY < 0)
+        iSourceY = 0;
+    else if (iSourceY > 555)
+        iSourceY = 555;
+    if (iDestX < 0)
+        iDestX = 0;
+    else if (iDestX > 799)
+        iDestX = 799;
+    if (iDestY < 0)
+        iDestY = 0;
+    else if (iDestY > 555)
+        iDestY = 555;
+
+    psBolt->iSourceX = iSourceX;
+    psBolt->iSourceY = iSourceY;
+    psBolt->iDestX = iDestX;
+    psBolt->iDestY = iDestY;
+    psBolt->iSplitFrequency = iSplitFrequency;
+    psBolt->iThickness = iStartThickness;
+    psBolt->iStartThickness = iStartThickness;
+    psBolt->iEndThickness = iEndThickness;
+    psBolt->iColor = iColor;
+    psBolt->iAngleDistortMin = iAngleDistortMin;
+    psBolt->iAngleDistortMax = iAngleDistortMax;
+    psBolt->iSegmentLength = iSegmentLength;
+    psBolt->fX = static_cast<float>(iSourceX);
+    psBolt->fY = static_cast<float>(iSourceY);
+    psBolt->iX = iSourceX;
+    psBolt->iY = iSourceY;
+    psBolt->iStartX = iSourceX;
+    psBolt->iStartY = iSourceY;
+    psBolt->field_40 = 0;
+    psBolt->bDone = 0;
+    psBolt->fProgress = 0;
+    psBolt->bDistortAlways = bDistortAlways;
+
+    if (iColor == BOLT_COLOR_0 || iColor == BOLT_COLOR_3) {
+        if (iSourceX > 0 && iSourceX < 799)
+            psBolt->bShallow = 0;
+        else
+            psBolt->bShallow = 1;
+    } else {
+        psBolt->bShallow = abs(iDestX - iSourceX) > abs(iDestY - iSourceY);
+    }
+
+    psBolt->iTotalLength = static_cast<long>(
+        sqrt(static_cast<double>(
+            abs(iDestY - iSourceY) * abs(iDestY - iSourceY)
+            + abs(iDestX - iSourceX) * abs(iDestX - iSourceX))));
+    ResetBoltAngle(psBolt);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3940
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
