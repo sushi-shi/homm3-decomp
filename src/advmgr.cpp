@@ -4591,9 +4591,16 @@ void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
 // Makes a town the adventure view's subject: drop any mobile hero, clear
 // the current-hero slot, centre the radar on the town and repoint the
 // locator strip, the spell/sleep buttons and the ambient music at it.
-// Retail asks `waitingPlayer ? GetLocalPlayer() : gpCurrentPlayer` TWICE
-// and caches neither, and it reaches RedrawAdvScreen through the
-// gpAdvManager global rather than through `this`.
+// Retail resolves the acting player TWICE and caches neither, but spells
+// the two differently, which the bytes insist on: the first is a ternary,
+// the second an if-assignment over a gpCurrentPlayer default, re-reading
+// the parameter off the stack (85.39 -> 88.13 for that one line). It also
+// reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
+//
+// Residual (88.13%): instruction selection only - branch sequences agree
+// mnemonic-for-mnemonic (14 branches, 1 return) and the call multisets are
+// identical; what is left is the register choice in the GetTown index
+// chain and reloc-name-only rows on data.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
@@ -4603,8 +4610,9 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
                                           : gpCurrentPlayer;
     heroOwner->currHeroId = -1;
 
-    playerData* player = waitingPlayer ? gpGame->GetLocalPlayer()
-                                       : gpCurrentPlayer;
+    playerData* player = gpCurrentPlayer;
+    if (waitingPlayer)
+        player = gpGame->GetLocalPlayer();
     player->currTownId = townId;
 
     town* currTown = gpGame->GetTown(player->currTownId);
