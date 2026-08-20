@@ -1839,7 +1839,7 @@ town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
 town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x1c1440
 town	?GetPortraitFrame@town@@QBEH_N@Z	100.0000	100.0000	100.0000	0x1bd700
 town	?GetTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450
-town	?GiveSpells@town@@QAEXPAVhero@@@Z	95.0327	95.0327	95.0327	0x1be030
+town	?GiveSpells@town@@QAEXPAVhero@@@Z	95.4379	95.4379	95.4379	0x1be030
 town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
 town	?SwapHeroes@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be450
