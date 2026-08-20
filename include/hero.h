@@ -165,6 +165,34 @@ class boat;
 // not otherwise need.
 extern unsigned char gCombatFlag6985a3;
 extern unsigned char gCombatFlag697744;
+
+// 0x485d90, a /Gr free helper in a compiland this tree has not admitted
+// yet: it reads a length-prefixed string off the stream and returns it BY
+// VALUE, so the hidden return pointer takes ECX and pushes `infile` out
+// to EDX - exactly the `lea ecx,[ebp-0x40] / mov edx,esi` pair
+// hero::load emits before the call. NAME INVENTED from the role; the row
+// is unclaimed and no DC or NH3API symbol covers it.
+std::string ReadLengthPrefixedString(TAbstractFile* infile);
+
+// hero::CheckLevel's three outside names. DECLARATIONS ONLY - the DATA
+// claims on 0x6a7570 and 0x69954c belong to levelupwindow.cpp and
+// kbwin.cpp, and a second claim on one RVA is a fatal duplicate at
+// delink (the gCombatFlag pair above is the same case). They live here
+// rather than in a .cpp because a line-initial `extern` in a .cpp is a
+// cleanliness-floor violation, and here rather than by including
+// kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
+extern const char* gSkillMasteryNames[3];
+extern int bVideoPaused;
+// 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
+// and a second claim on one RVA is a fatal duplicate at delink. hero.obj
+// reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
+// SetupHeroView treats it as the "hero list is suppressed" latch.
+extern int gUnnamed6aa9d8;
+// movement.txt row 6 column 5, DECLARATION ONLY - include/events.h:439
+// owns the DATA claim on 0x698a94, and a second claim on one RVA is a
+// fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
+// arm, the third reader that fixes its role.
+extern int gStablesMovementBonus;
 #endif
 
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
@@ -212,6 +240,28 @@ public:
         DEALLOCATE_KEPT_PORTRAIT = 0x9e,
         DEALLOCATE_KEPT_HERO_ID = 150
     };
+    // hero::CheckLevel's domain, same gate and same reason. The
+    // class-traits row carries TWO primary-skill chance columns and the
+    // level-up takes the second from level 10 up (retail `cmp cx,9 / jg`,
+    // a 16-bit signed test on the already-incremented level). The
+    // campaign/hero pair is the one scenario that swaps in the Barbarian
+    // class row instead of the hero's own, and re-rolls against that
+    // row's first two chances rather than a percentile. Note that
+    // LEVEL_UP_CAMPAIGN_OVERRIDE's 14 collides in VALUE with
+    // eSecSkillSchoolOfAirMagic - different domains, which is exactly
+    // why both want names.
+    enum {
+        LEVEL_UP_LOW_LEVEL_LAST = 9,
+        LEVEL_UP_CAMPAIGN_OVERRIDE = 14,
+        LEVEL_UP_OVERRIDE_HERO_ID = 45,
+        LEVEL_UP_SKILL_CHOICES = 2
+    };
+    // playerData::personality (+0x34) as hero::GetMobility reads it: an
+    // AI player above the difficulty threshold gets +75 movement, and +50
+    // more when its h3m AI tactic is the aggressive one. The VALUE is
+    // retail-proven; the spelling follows the h3m roster (0 pacifist,
+    // 1 friendly, 2 aggressive, 3 explorer) and is PROVISIONAL.
+    enum { AI_PERSONALITY_AGGRESSIVE = 2 };
 #endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
@@ -257,7 +307,10 @@ public:
     // on BOTH sides because type_point's z is a four-bit bitfield.
     // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
     short pathTargetZ;                  // +0x3d
-    short field_03f;                    // +0x3f
+    // +0x3f, DC-attested (`hero,66,T_SHORT,last_magic_school_level`,
+    // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
+    // new `level` here whenever the level-up offers a magic school.
+    short last_magic_school_level;      // +0x3f
     short field_041;                    // +0x41
     unsigned char targetIsCritical;       // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
@@ -340,7 +393,21 @@ public:
     unsigned long Shrine1Flags;             // +0x83
     unsigned long Shrine2Flags;             // +0x87
     unsigned long Shrine3Flags;             // +0x8b
-    char pad_08f[0x2];
+    // +0x8f / +0x90, DC-attested (evidence/dreamcast/members.csv rows
+    // `hero,148,iLevelSeed` and `hero,149,lastWisdom` - the same uniform
+    // -5 repack the flag band above already answers to, and the two rows
+    // sit between Shrine3Flags (DC 144, retail +0x8b) and heroArmy
+    // (DC 152, retail +0x91), so the pair fills this pad exactly).
+    // RETAIL BYTE-PROOF, both from hero::CheckLevel (0x4da720): it seeds
+    // the level-up RNG with
+    //   SRand(level*214013 + iLevelSeed*156823 + 153567)
+    // reading +0x8f ZERO-extended (`xor ecx,ecx / mov cl,[ebx+0x8f]`,
+    // which is what types it unsigned), and it stores the new level's LOW
+    // BYTE into +0x90 (`mov dl,[ebx+0x55] / mov [ebx+0x90],dl`) whenever
+    // the level-up offers Wisdom - the "guaranteed Wisdom within N
+    // levels" bookkeeping, which is what makes the DC name fit.
+    unsigned char iLevelSeed;           // +0x8f
+    unsigned char lastWisdom;           // +0x90
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
@@ -1083,6 +1150,11 @@ DATA(0x00698b20) extern hero* gpCurrentHero;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
 DATA(0x00698a84) extern int gHeroScreenHeroPosition;
+// HeroView's second argument, stashed on entry (0x4e1809 stores EDX
+// straight into this cell). SetupHeroView reads it as the "dismiss button
+// stays dead" latch, a full DWORD. The name is role-derived from
+// HeroView's own parameter and is PROVISIONAL.
+DATA(0x00698a90) extern int gHeroScreenNoDismiss;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot
@@ -1095,6 +1167,57 @@ public:
         ARTIFACT_SLOT_FIRST = 0,
         ARTIFACT_SLOT_COUNT = 19
     };
+
+    // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
+    // surfaces them in message::codeY. Decoded from the three dispatch
+    // nodes at 0x4db682 / 0x4dba4f / 0x4dbbb0 and their byte-index and
+    // jump tables at 0x4dbce4 / 0x4dbcbc / 0x4dbd58. Enumerated
+    // exhaustively even across consecutive runs, the
+    // TCombatOptionsWindow::*_ID precedent - and required, because raw
+    // hex `case` labels trip the magic-case-label cleanliness floor.
+    // Ids with no attested role keep an ORDINAL PLACEHOLDER spelling: the
+    // three id-triplets below are structurally "three widgets share one
+    // rollover row" (icon/label/value), but nothing in the bytes says
+    // which triplet is which.
+    enum EHeroScreenWidgetId {
+        ARTIFACT_SLOT_0_ID = 0x02,  ARTIFACT_SLOT_1_ID,  ARTIFACT_SLOT_2_ID,
+        ARTIFACT_SLOT_3_ID,  ARTIFACT_SLOT_4_ID,  ARTIFACT_SLOT_5_ID,
+        ARTIFACT_SLOT_6_ID,  ARTIFACT_SLOT_7_ID,  ARTIFACT_SLOT_8_ID,
+        ARTIFACT_SLOT_9_ID,  ARTIFACT_SLOT_10_ID, ARTIFACT_SLOT_11_ID,
+        ARTIFACT_SLOT_12_ID, ARTIFACT_SLOT_13_ID, ARTIFACT_SLOT_14_ID,
+        ARTIFACT_SLOT_15_ID, ARTIFACT_SLOT_16_ID, ARTIFACT_SLOT_17_ID,
+        ARTIFACT_SLOT_18_ID,
+        BACKPACK_SLOT_0_ID = 0x28, BACKPACK_SLOT_1_ID, BACKPACK_SLOT_2_ID,
+        BACKPACK_SLOT_3_ID, BACKPACK_SLOT_4_ID,
+        PORTRAIT_ID = 0x2d,
+        PRIMARY_SKILL_0_ID = 0x32, PRIMARY_SKILL_1_ID, PRIMARY_SKILL_2_ID,
+        PRIMARY_SKILL_3_ID,
+        ARMY_SLOT_0_ID = 0x44, ARMY_SLOT_1_ID, ARMY_SLOT_2_ID,
+        ARMY_SLOT_3_ID, ARMY_SLOT_4_ID, ARMY_SLOT_5_ID, ARMY_SLOT_6_ID,
+        SKILL_ICON_FIRST_ID  = 0x4f, SKILL_ICON_LAST_ID  = 0x56,
+        SKILL_NAME_FIRST_ID  = 0x57, SKILL_NAME_LAST_ID  = 0x5e,
+        SKILL_LEVEL_FIRST_ID = 0x5f, SKILL_LEVEL_LAST_ID = 0x66,
+        WIDGET_6B_ID = 0x6b, WIDGET_6C_ID = 0x6c, WIDGET_6D_ID = 0x6d,
+        WIDGET_70_ID = 0x70, WIDGET_71_ID = 0x71,
+        STATUS_BAR_BORDER_ID = 0x72,
+        STATUS_BAR_ID = 0x73,
+        MORALE_ID = 0x74,
+        LUCK_ID = 0x75,
+        WIDGET_76_ID = 0x76, WIDGET_77_ID = 0x77, WIDGET_78_ID = 0x78,
+        WIDGET_7A_ID = 0x7a, WIDGET_7C_ID = 0x7c,
+        FORMATION_ID = 0x7e,
+        MIXED_ARMY_ID = 0x7f,
+        WIDGET_80_ID = 0x80,
+        HERO_NAME_ID = 0x81,
+        WIDGET_8B_ID = 0x8b,
+        WIDGET_7800_ID = 0x7800
+    };
+    // The "no army slot selected" sentinel gHeroScreenArmySlot carries.
+    enum { HERO_SCREEN_NO_ARMY_SLOT = -1 };
+    // The hero::formation bit the status bar tests (`test byte
+    // [hero+0x48],2`). Bit 1 for a nominally 0/1 field is unexplained;
+    // transcribed as retail emits it.
+    enum { HERO_FORMATION_GROUPED = 2 };
 
     // Constructor-initialized hero-list scroll origin. Locator i displays
     // localPlayer->heroes[topHero + i].
@@ -1109,7 +1232,17 @@ public:
     virtual int WindowHandler(class message* msg);
     void update_slot(long slot);
     void update_all_slots();
+    // 0x4db660, `ret 4`. The hero screen's rollover text. The DC dump
+    // mangles it private and taking a message REFERENCE; codegen is
+    // identical for `*` and `&`, and the pointer form matches
+    // WindowHandler's declarator beside it.
+    void UpdateHeroScreenStatusBar(class message* msg);
     void UpdateHeroLocator(int iWhich);
+    // 0x4e1a50, thiscall with no arguments and NOT virtual (absent from
+    // vtable 0x63eae8). It dereferences no THeroScreenWindow member at
+    // all - `this` only ever feeds member calls - so the layout above
+    // needs nothing for it.
+    void SetupHeroView();
     virtual int ExitDialog(class message* msg);
 };
 SIZE(THeroScreenWindow, 0x68);
