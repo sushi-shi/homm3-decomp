@@ -3554,8 +3554,16 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
     if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
         if (right_mouse)
             return;
+        // Pinned per SITE, not per function: `predict-inline` reports
+        // HeroFn_004E2840 base x0 vs retail x1 inside WindowHandler, i.e.
+        // retail CALLS 0x4e2840 here where our CL expands it (this helper
+        // is itself a single-call-site static that /Ob2 folds into
+        // WindowHandler, so the budget reaches through). The sibling site
+        // in update_slot already carries the same pin.
+#pragma inline_depth(0)
         if (!gpCurrentHero->HeroFn_004E2840(
                 gHeroScreenDraggedArtifact.artifactId, slot))
+#pragma inline_depth()
             return;
         if (record.artifactId != ARTIFACT_NONE) {
             gpCurrentHero->remove_artifact(slot);
@@ -3565,7 +3573,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                 gpCurrentHero->HeroFn_004DC100(slot);
             gpCurrentHero->UpdateStats();
             gHeroScreenDraggedArtifact = record;
+#pragma inline_depth(0)
             gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
             gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
             gpMouseManager->SetPointer(
                 gHeroScreenDraggedArtifact.artifactId,
@@ -3577,7 +3587,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                 gpCurrentHero->HeroFn_004DC100(slot);
             gpCurrentHero->UpdateStats();
             gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+#pragma inline_depth(0)
             gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
             gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
             gpMouseManager->SetPointer(0,
                                        mouseManager::DEFAULT_SET);
@@ -3616,6 +3628,12 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                     if (worn != ARTIFACT_NONE)
                         missing[worn] = false;
                 }
+                // MEASURED NEGATIVE, do not retry: `#pragma
+                // inline_depth(0)` on this test to chase retail's
+                // out-of-line bitset<144>::any() (base x0 vs retail x1)
+                // costs WindowHandler 74.47 -> 70.80 - the pin is
+                // statement-granular, so it also de-inlines the bitset
+                // machinery the test is built from.
                 if (!missing.any()) {
                     if (gpCurrentHero->HeroFn_004D9CC0(
                             record.artifactId)
@@ -3654,7 +3672,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
     gHeroScreenDraggedArtifact = record;
     gpCurrentHero->remove_artifact(slot);
     gpCurrentHero->UpdateStats();
+#pragma inline_depth(0)
     gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
     gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
     gpMouseManager->SetPointer(
         gHeroScreenDraggedArtifact.artifactId,
@@ -3702,7 +3722,12 @@ static void handle_backpack_click(long code, unsigned char right_mouse)
     gHeroScreenDraggedArtifact = record;
     short i = static_cast<short>(index);
     if (gpCurrentHero->backpack[i].artifactId != ARTIFACT_NONE) {
+        // Same site-granular pin: retail CALLS get_last_backpack_index
+        // from WindowHandler (base x0 vs retail x1) where our CL expands
+        // its descending walk inline.
+#pragma inline_depth(0)
         long last = gpCurrentHero->get_last_backpack_index();
+#pragma inline_depth()
         for (; i < last; i++)
             gpCurrentHero->backpack[i] =
                 gpCurrentHero->backpack[i + 1];
@@ -3768,22 +3793,44 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // icon/label/value: {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77}
 // experience, {0x6d,0x71,0x78} spell points. SetupHeroView corroborates
 // each one independently.
-// Residual (71.10%): an A12 INLINER wall, not spelling. `predict-inline`
-// now agrees on most of the census, and what is left is four callees our
-// CL still expands where retail keeps a call - update_all_slots (x1 vs
-// x3, and the two extra update_slot calls that follow from it),
-// HeroFn_004E2840, get_last_backpack_index and TQuickHeroWindow::
-// QuickWindowWait - plus HeroFn_004D97F0 at x3 vs x4. The knob the solver
-// names is `#pragma auto_inline(off)` on the callee; for update_all_slots
-// that was MEASURED and REJECTED (see its own note above): it buys
-// WindowHandler 71.10 -> 72.89 but costs SetupHeroView 99.53 -> 98.69,
-// and SetupHeroView's own residual is a single data-phase reloc addend,
-// i.e. that function is otherwise finished. The ratchet's max for this
-// row was accepted back down to 71.10 with hist kept at 72.89.
+// 71.10 -> 74.47 (2026-08-20) BY PINNING THE SITE, NOT THE FUNCTION, and
+// that CORRECTS the note this entry used to carry. The old text recorded
+// `#pragma auto_inline(off)` on update_all_slots as MEASURED AND REJECTED
+// - it bought WindowHandler 71.10 -> 72.89 but cost SetupHeroView
+// 99.53 -> 98.69, so the max was accepted back down. That trade is an
+// artefact of the KNOB, not of the diagnosis: `auto_inline(off)` marks the
+// callee non-inlinable for the whole compiland, so SetupHeroView loses an
+// expansion retail keeps. `#pragma inline_depth(0)` is STATEMENT-granular,
+// so wrapping the individual call sites here reaches the same four callees
+// with ZERO collateral - SetupHeroView held at exactly 99.5294 across both
+// edits. Applied, each measured:
+//   * HeroFn_004E2840 in handle_artifact_click + get_last_backpack_index
+//     in handle_backpack_click (both base x0 vs retail x1): +2.06.
+//   * the three update_all_slots sites in the two click helpers
+//     (base x1 vs retail x3): +1.31, and it also closed the
+//     update_slot / remove_artifact / equip_artifact count divergences
+//     that followed from those expansions.
+// MEASURED NEGATIVE at the same time: the same pin on `missing.any()`
+// (bitset<144>::any, base x0 vs retail x1) costs 74.47 -> 70.80, because
+// statement granularity cuts both ways - it also de-inlines the bitset
+// machinery the test is built from. See the anchored note at that site.
+//
+// Residual (74.47%): the census still shows update_all_slots x2 vs x3,
+// SetPointer x4 vs x5 and BroadcastMessage x1 vs x2 - all three are the
+// SAME defect and it is NOT the inliner: SetPointer and BroadcastMessage
+// are cross-TU and can never be /Ob2 candidates, so our CL is CROSS-JUMPING
+// the two arms of handle_artifact_click's dragged-artifact if/else, whose
+// `update_all_slots(); DrawWindow(1,0xffff0001,0xffff);` prefixes are
+// identical. Retail does not merge them. Plus HeroFn_004D97F0 at x3 vs x4
+// (we have three source sites, retail emits four) and TQuickTownWindow::
+// QuickWindowWait x0 vs x1 against our TQuickHeroWindow:: x1 - a class
+// resolution difference, i.e. retail's TQuickHeroWindow does NOT override
+// QuickWindowWait and inherits the TQuickTownWindow body.
 // One more open item, NOT yet explained: retail emits 15 NormalDialog
 // call instructions where we emit 6. The source has ~14 sites, so our CL
 // is cross-jumping the identical right-click help arms and retail is not.
-// Read that before assuming any arm is missing.
+// Read that before assuming any arm is missing - it is the same
+// cross-jumping defect as the three counts above, at a larger scale.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
