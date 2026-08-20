@@ -50,6 +50,7 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
+#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
 #define HOMM3_ADVMGR_MONSTER_MOOD_DECLS
 #define HOMM3_MAPCELL_OBJECTS_VIEW

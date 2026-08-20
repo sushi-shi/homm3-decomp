@@ -8,7 +8,6 @@
 // CObjectType, and this header's include closure is measured.
 #define HOMM3_MAPCELL_TYPEMASK_VIEW
 #define HOMM3_MAPCELL_TOWNEXTRA_VIEW
-#define HOMM3_GAME_HERO_EXTRA_VIEW
 #define HOMM3_MAPCELL_HERO_SETUP_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
@@ -46,7 +45,6 @@
 #include "resourcemanager.h"
 #include "smackmgr.h"
 #undef HOMM3_MAPCELL_HERO_SETUP_VIEW
-#undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW

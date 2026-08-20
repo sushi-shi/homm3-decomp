@@ -174,14 +174,12 @@ enum TCreatureType {
     // include-set canary's own signature value, and neither TU mentions a
     // creature id: this is the documented type/symbol-table population
     // class, not a modelling error. game.obj opens them for itself.
-#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
     CREATURE_PIXIE = 0x76,
     CREATURE_SPRITE = 0x77,
     CREATURE_PSYCHIC_ELEMENTAL = 0x78,
     CREATURE_FIREBIRD = 0x82,
     CREATURE_PHOENIX = 0x83,
     CREATURE_RUST_DRAGON = 0x87,
-#endif
     // hero::GetManaCost (0x4e5240) crosses two pairs: 0x14/0x15 in the
     // ENEMY group add 2 to the cost, 0x22/0x23 in the caster's own
     // group take 2 off. The second pair is the Mage/Arch Mage above -

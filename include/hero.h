@@ -105,11 +105,9 @@ struct type_artifact {
     int artifactId;
     int extra;
 
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     type_artifact() : artifactId(-1), extra(-1) {}
     type_artifact(int id, int extraValue)
         : artifactId(id), extra(extraValue) {}
-#endif
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
 // copy of the war machine's artifact record, so that compiland needs the
@@ -119,12 +117,8 @@ struct type_artifact {
 // (the initialize_game_data precedent).
 // hero.obj owns the DEFINITION (0x4db3e0) and its own consumers need
 // the declarator too, so the compiland's view joins the gate.
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) \
-    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS) \
-    || defined(HOMM3_GAME_HERO_EXTRA_VIEW)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
-#endif
     void get_rollover_text(char* buffer);
 };
 
@@ -156,7 +150,6 @@ SIZE(type_obscuring_object, 0x18);
 
 class boat;
 
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
 // The two combat latches hero::Deallocate consults before dismissing the
 // army and before re-rolling the garrison. DECLARATION ONLY - cmbtmgr.h
 // owns the DATA claims on 0x6985a3 / 0x697744, and a second claim on the
@@ -193,7 +186,6 @@ extern int gUnnamed6aa9d8;
 // fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
 // arm, the third reader that fixes its role.
 extern int gStablesMovementBonus;
-#endif
 
 // The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
@@ -225,7 +217,6 @@ public:
         PRIMARY_STAT_RESOURCE_FIRST = 31,
         PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // The nineteenth equipped position - the one Shadow of Death added on
     // top of the Dreamcast TArtifactSlot roster's eighteen.
     // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
@@ -279,7 +270,6 @@ public:
     // retail-proven; the spelling follows the h3m roster (0 pacifist,
     // 1 friendly, 2 aggressive, 3 explorer) and is PROVISIONAL.
     enum { AI_PERSONALITY_AGGRESSIVE = 2 };
-#endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -676,7 +666,6 @@ public:
     // the row is not claimed from here.
     void CheckLevel();
 #endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // hero.obj's own view of the same two. GiveExperience calls
     // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
     // DC row with NO retail body - GiveExperience carries it expanded.
@@ -689,8 +678,6 @@ public:
     void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
 #  endif
     int GetLevel(int iExperience);
-#endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
@@ -729,8 +716,6 @@ public:
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
-#endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // Gated to hero.obj's own view: these five are used only inside
     // hero.cpp, and declaring them unconditionally moved an UNRELATED
     // compiland's score (recruitUnit::Update 90.84 -> 88.24) through the
@@ -747,7 +732,6 @@ public:
     // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
     // member. ORDINAL PLACEHOLDER name.
     unsigned char HeroFn_004E2840(long artifact, long slot);
-#endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
@@ -994,7 +978,6 @@ public:
     TCreatureType GetNecromancyCreature();
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // Same gate and same reason as the equip pair above.
     // 0x4dbf30, the two-argument member of the combination family:
     // strips every worn component of `combination` (plus whatever sits
@@ -1006,7 +989,6 @@ public:
     // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
     // ORDINAL PLACEHOLDER.
     void HeroFn_004DC100(long slot);
-#endif
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
