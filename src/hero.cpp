@@ -5751,16 +5751,25 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
 // block, not at the end of the NormalDialog full-expression.
 //
-// Residual (57.9%): the EH CLEANUP TRANSCRIPT, and it is /Ob2 budget
-// rather than spelling. `vc6 diagnose` reads our unwind states as
-// [1,0,reg,-1,3,4] against retail's [0,-1,1,2] - two cleanup regions
-// retail does not open - and pairs that with 5 under- and 1 over-inline.
-// Retail leaves `bitset<12>::test` an out-of-line CALL and inlines only
-// TWO of its three bitset bounds throws; each throw our CL expands
-// instead builds its own `invalid bitset<N> position` string temporary,
-// and each such temporary is one more cleanup region. Nothing local
-// reaches that - the lever is caller statement mass (docs/vc6/inliner.md,
-// and docs/vc6/eh-cleanup.md for the unwind map). Left at 57.88.
+// 57.88 -> 64.63 (2026-08-20), the same two site pins that took the
+// HeroFn_004DC100 twin 48.77 -> 65.97: `#pragma inline_depth(0)` on
+// `missing.set(artifactId, false)` and on `if (!missing.any())`, because
+// retail keeps bitset<144>::set(size_t, bool) and bitset<144>::any() OUT
+// OF LINE where our CL expanded both. That CORRECTS this note's old
+// verdict, which read the divergence as caller statement mass ("nothing
+// local reaches that") and left the row at 57.88: the extra EH cleanup
+// regions it blamed are DOWNSTREAM of those expansions - each inlined
+// bounds throw builds its own `invalid bitset<N> position` string
+// temporary - so removing the expansions removes the regions.
+// The old note's other claim did NOT survive measurement: it said retail
+// leaves `bitset<12>::test` an out-of-line CALL, and pinning that site
+// costs 64.63 -> 59.86. See the anchored note at the site itself.
+//
+// Residual (64.63%): `predict-inline` now shows NO over-inline at all and
+// exactly one under-inline, basic_string::_Tidy at base x3 vs retail x2 -
+// budget starvation, i.e. this caller's body is still leaner than
+// retail's (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the
+// unwind map).
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
@@ -5776,11 +5785,20 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                 for (int i = 0; i < 19; i++) {
                     int artifactId = equipped[i].artifactId;
                     if (artifactId != ARTIFACT_NONE)
+#pragma inline_depth(0)
                         missing.set(artifactId, false);
+#pragma inline_depth()
                 }
+#pragma inline_depth(0)
                 if (!missing.any()) {
+#pragma inline_depth()
                     playerData& player = gpGame->players[owner];
                     if (bAnnounce) {
+                        // MEASURED NEGATIVE, do not retry: pinning this
+                        // test to chase the out-of-line bitset<12>::test
+                        // the old note claimed retail keeps costs
+                        // 64.63 -> 59.86 - the statement pin also
+                        // de-inlines GetLocalPlayerGamePos beside it.
                         if (owner == gpGame->GetLocalPlayerGamePos() &&
                             !player.assembledCombinations.test(targetCombo)) {
                             int assembled =
