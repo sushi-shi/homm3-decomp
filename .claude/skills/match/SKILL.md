@@ -120,6 +120,16 @@ MISSING forever.
   Definition order is NOT the lever: VC6 inlines functions defined LATER in
   the TU, so moving a definition does not control expansion (measured, and it
   refutes a note previously banked in advmgr.cpp).
+  **The same wall has a second fix, and on big bodies it is the better one:
+  SHRINK THE CALLER.** Our pre-inline caller being larger than retail's is
+  what pushes the budget past retail's decisions, so splitting the caller into
+  helpers restores them without pinning anything. The hero lane closed four
+  plateaus this way in one round — mark_spells 84.29 -> 92.71,
+  HeroFn_004E6120 93.41 -> 99.97, WindowHandler 56.54 -> 71.10,
+  HeroFn_004D8B30 49.03 -> 55.74 — and for WindowHandler the tree's own
+  carcass already named the three helpers to split out
+  (`handle_artifact_click`, `handle_backpack_click`, `show_skills`). Check
+  the carcass for helper names before inventing your own.
 - **/Ob2 single-call-site inlining**: statics AND extern functions with one
   call site inline REGARDLESS OF SIZE (AppInit→WinMain ~300B; AppCommand→
   AppWndProc is our uncracked over-inline residual). Unconditional out-of-line
