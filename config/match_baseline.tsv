@@ -1364,6 +1364,7 @@ mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xf
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	88.6918	88.6918	88.6918	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
+mapcell	?calc_cell_extra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105610
 mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
 mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4848	93.4848	0xfcbd0
@@ -1410,7 +1411,6 @@ mapcell	NewfullMap_NewfullMap	0.0000	0.0000	0.0000	0xfd060
 mapcell	NewfullMap_NewfullMap_fd1e0	0.0000	0.0000	0.0000	0xfd1e0
 mapcell	NewfullMap_Read	0.0000	0.0000	0.0000	0xfd690
 mapcell	NewfullMap_StampObject	0.0000	0.0000	0.0000	0x105230
-mapcell	NewfullMap_calc_cell_extra	0.0000	0.0000	0.0000	0x105610
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70
 mapcell	NewfullMap_readHeroData	0.0000	0.0000	0.0000	0x1021c0
 mapcell	NewfullMap_readMapObjects	0.0000	0.0000	0.0000	0x104470
