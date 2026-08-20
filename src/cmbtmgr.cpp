@@ -2004,6 +2004,30 @@ void combatManager::ResetHitByCreature()
 // hypothesis: on the failure path retail destroys the picker through
 // `lea ecx,[ebp-0x48]` while we pass `lea ecx,[ebp-0x50]`, the object's
 // own base - an eight-byte sub-object offset no spelling here produced.
+// 74.8377 -> 75.5550, 2026-08-20 (second pass): why-branch's D13 route.
+// `cell_index` is an UNSIGNED CHAR (+0.38 - the /17 and %17 lower
+// unsigned, and a combat hex index fits a byte), and with that landed
+// the previously-rejected INT odd-row flag GAINED (+0.34) - the
+// context-dependence rule again; the byte flag was only right while
+// cell_index was an int. Also measured this pass:
+//   * the dead trailing `goto next_hex` after the always-returning
+//     block is canonicalised away - removing it is byte-flat;
+//   * the while-with-Pick-in-the-condition form
+//     (`while ((hex = picker.Pick()) >= 0x12)` with `next_hex:;` at
+//     the body end) is BYTE-FLAT at 74.8377 too - every loop keyword
+//     form canonicalises to the same object, so retail's one-header
+//     shape (entry `jmp` over a 3-byte edi reload stub into a single
+//     Pick site; ours duplicates the header and homes hex in ESI where
+//     retail keeps it in ECX) is NOT reachable through loop spelling.
+//   * removing the return-0 pin re-measures at -1.15 exactly; it is a
+//     straight win, not the cause of the duplication.
+// The [ebp-0x48] lead is now DECODED, not mysterious: both sides
+// construct the picker at [ebp-0x50]; -0x48 is picker.marks, the
+// vector<unsigned char> member at +8. Retail's failure path INLINES
+// the empty ~TPickANumber and CALLS the shared vector-dtor COMDAT
+// (0x46a650) on the member; our pin forces ~TPickANumber itself out
+// of line with the base receiver. The exact split needs depth 1
+// inlined + depth 2 called, which no pragma spells (only N=0 bites).
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
@@ -2027,9 +2051,9 @@ next_hex:
             goto next_hex;
         if (cells[hex].field_10 & 0x3f)
             goto next_hex;
-        unsigned char row_is_odd = static_cast<unsigned char>(row & 1);
+        int row_is_odd = row & 1;
         for (int i = 0; i < shape->extra_hex_count; i++) {
-            int cell_index = shape->extra_hex_offsets[i] + hex;
+            unsigned char cell_index = shape->extra_hex_offsets[i] + hex;
             if (row_is_odd
                     && ((cell_index / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
                 cell_index--;
