@@ -468,6 +468,17 @@ public:
     int HasGarrison();
     town();
     int load(TAbstractFile* infile, int saveVersion);
+#ifdef HOMM3_GAME_OBJ_DECLS
+    // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
+    // town-pool loop is the only consumer here: it calls it on towns[i]
+    // with edi striding 0x168 == sizeof(town). Retail's body writes the
+    // class field for field and ends with the three __int64 masks at
+    // +0x150/+0x158/+0x160, i.e. exactly through sizeof(town), which is
+    // what identifies it. Gated rather than added outright - a bare
+    // member declarator on a class this widely included is the
+    // include-set wall's own trigger shape.
+    int save(TAbstractFile* outfile);
+#endif
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff, and advManager::TownEvent closes every
