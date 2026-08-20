@@ -105,6 +105,13 @@ Reconcile per function, preferring the header - it is modelled from bytes.
    Model real types in the owner header (`include/<tu>.h`), pads sliced only
    where bytes prove a field; SIZE() asserts are clang-arm only — VC6 does NOT
    check them, so re-verify stride arithmetic by hand (the 187*0x70 incident).
+**NEVER CHAIN THE BOOTSTRAP WITH `&&`.** `homm3 build && homm3 delink &&
+homm3 build` SHORT-CIRCUITS: if the first build exits 1 - which it does
+whenever inherited rows are sitting under flat carve names - delink never
+runs, the second build never runs, and the numbers you read are a lie about
+a stale tree. Use `;` between them. A lane lost its whole baseline to this
+and diagnosed twelve phantom regressions before noticing.
+
 4. **Build + score.** `homm3 build --fast` for the inner loop. After ANY new
    claim or DATA lands, run `homm3 delink` ONCE (the target side must relearn
    names), then `--fast` again. Scores: filter `build/objdiff/report.json` by
