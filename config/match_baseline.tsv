@@ -806,13 +806,13 @@ findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
 findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400
-findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	98.6032	98.6032	98.6032	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
 findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
-findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.4589	87.4589	87.4589	0xb1a70
+findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.5488	87.5488	87.5488	0xb1a70
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0
-findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	90.1238	90.1238	90.1238	0xb2300
+findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	98.7182	98.7182	98.7182	0xb2300
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20
 findpath	?is_valid@type_point@@QAEEXZ	100.0000	100.0000	100.0000	0xb1330
