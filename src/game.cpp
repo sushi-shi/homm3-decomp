@@ -5551,16 +5551,34 @@ playerData::~playerData()
 {
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:11749
+// ONE user statement and the compiler-generated member teardown. Retail's
+// body is `mov [ebp-4],0x17 / call game::clear_event_records` and then
+// twenty-three numbered cleanup sites walking the members from the
+// highest offset down - the vector at +0x4e7bc, eventRecords, the three
+// teleport pools, both eight-element pool ARRAYS through the `vector
+// destructor iterator', rumours, the five object pools, heroes[156],
+// towns, players[8], worldMap, mapHeader, the load-event vector,
+// campaign, heroSetup[156] and scenarioTowns - which is exactly what
+// this class's declaration order emits.
+// Residual (78.8428%): retail CALLS the empty `_Destroy(_First,_Last)`
+// COMDAT at seven of the twenty-four sites - 0x404140 is literally
+// `ret 8`, the whole-image ICF fold of every trivially-destructible
+// element's destroy loop - and our /Ob2 expands it to nothing. That is
+// the only class of difference; base 211 instructions against retail's
+// 229 and the residual is those seven call sequences plus the cleanup
+// states they carry. The depth knob does NOT reach it, measured both
+// ways: `#pragma inline_depth(1)` around this definition is BYTE-FLAT
+// at 78.8428 (so `_Destroy` is expanded at whatever depth the implicit
+// teardown puts it), while `#pragma inline_depth(0)` DOES reach the
+// teardown - it de-inlines `~vector()` itself and costs 36.8 points
+// (-> 42.0349) - which proves the pragma is applied and the boundary
+// simply is not depth.
 VA(0x004ce5b0, 0x346)  // anchor-global, dc 0xbbd28
-void game::~game()
+game::~game()
 {
-    // @stub
+    clear_event_records();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:11754
 // Iterator walk over the third object pool. It closes boat's layout

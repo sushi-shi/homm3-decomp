@@ -1831,7 +1831,12 @@ source_stack_merges:
 // bitset<N> position" are both in our call list and neither is in retail's,
 // and that inlined throw path is the ONE extra eh state (base 20 against
 // retail 19). Pinning `.test()` is the wrong lever by the standing rule -
-// retail keeps only the nested CHILD out of line.
+// retail keeps only the nested CHILD out of line. The DEPTH lever does not
+// reach it either, MEASURED 2026-08-20: `ArmyGrpFn_0044A460()[alignment]`
+// puts `_Xran` at depth three instead of two (VC6's `operator[] const`
+// forwards to `test`), which is the shape that bought +21.30 and +10.47
+// elsewhere, and here it COSTS 2.96 (79.1754 -> 76.2182). Do not re-run
+// it; the over-inline that is left is a budget fact, not a depth one.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,

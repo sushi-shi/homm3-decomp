@@ -1995,6 +1995,15 @@ void combatManager::ResetHitByCreature()
 // SetupAndLoadObstacles' reject loop needs TWO Pick sites and gained
 // 1.64 when it got them. Tried and rejected earlier: break + re-test,
 // while-loop form, and an int (rather than byte) odd-row flag.
+// RE-MEASURED 2026-08-20 under the "a rejected knob is context-dependent,
+// re-try it after any earlier inline decision changes" rule, i.e. after
+// all three pins above landed: wrapping this exact body in
+// `for (;;) { ... next_hex:; }` is BYTE-FLAT at 74.8377. The loop keyword
+// is canonicalised away here, so the rotation is not reachable through
+// it. One unexplained byte-level lead for the next reader, NOT yet a
+// hypothesis: on the failure path retail destroys the picker through
+// `lea ecx,[ebp-0x48]` while we pass `lea ecx,[ebp-0x50]`, the object's
+// own base - an eight-byte sub-object offset no spelling here produced.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {

@@ -1604,6 +1604,19 @@ public:
     // Recorded adventure actions. Retail clear/replay/load/save methods
     // prove the Dinkumware pointer-vector at +0x4e7ac.
     std::vector<type_event_record*> eventRecords;
+    // +0x4e7bc, and it is the LAST member: game::~game (0x4ce5b0) opens
+    // its teardown here, at the highest offset it touches, with the bare
+    // `operator delete(_First)` plus the three-word zeroing that a
+    // Dinkumware vector of a trivially destructible element emits - no
+    // `_Destroy` loop at all. The element pair is what
+    // record_monster_identifier (0x4ced40) appends; the eight-byte width
+    // is the note on that declarator's, and the destructor is width-blind,
+    // so the widths are hypothesis while the MEMBER is byte-proven.
+    struct MonsterIdentifier {
+        int identifier;
+        type_point point;
+    };
+    std::vector<MonsterIdentifier> monsterIdentifiers;
 
     NewfullMap* GetWorldMapData();
     int get_new_boat_id();                    // 0x4bb170
