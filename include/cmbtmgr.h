@@ -1683,6 +1683,10 @@ public:
     // bFlashLighten) are DEAD in the retail body - no instruction in the
     // 1474 bytes reads either slot - and are kept because the arity is
     // what the call sites push.
+    // 0x5a6360, the bouncing bolt. The DC prototype (spells.cpp:4255)
+    // supplies all three parameter names; `level` indexes both the
+    // spell's mastery_bonus row and the per-mastery bounce table.
+    void ChainLightning(int index, int level, int power);       // 0x5a6360
     // 0x5a4bc0, the field-wide burn. The DC prototype (spells.cpp:3389)
     // supplies both parameter names; `level` is what indexes the spell's
     // mastery_bonus row, i.e. it is the mastery the cast landed at.
