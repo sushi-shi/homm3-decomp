@@ -168,9 +168,7 @@ enum EReadObjectTypeResult {
 // Random: an in-class member body's non-dependent names are looked up at the
 // closing brace of the class, and mapcell.cpp reaches misc.h only later in
 // its include list.
-#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 int __fastcall Random(int minimum, int maximum);
-#endif
 
 class CObject {
 public:
@@ -204,7 +202,6 @@ public:
     unsigned char animationOffset;
     unsigned char pad_0b;
 
-#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
     // dword, and each dynamic object receives a random animation phase.
@@ -227,7 +224,6 @@ public:
         extraInfo = newExtraInfo;
         animationOffset = static_cast<unsigned char>(Random(0, 255));
     }
-#endif
 
     CObjectType* get_object_type_ptr();
     void FindTrigger(int* resultX, int* resultY);

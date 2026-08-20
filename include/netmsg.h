@@ -40,9 +40,7 @@ enum eRS_Messages {
     // same way. The VALUE is fixed by hero::Deallocate (0x4d9ec0), whose
     // inlined CMCDeadHero constructor stores 0x423 as the record subtype -
     // the rung directly below RS_TELEPORT_HERO.
-#ifdef HOMM3_HERO_OBJ_DECLS
     RS_DEAD_HERO = 0x423,
-#endif
     RS_TELEPORT_HERO = 0x424,
     RS_HIDE_HERO = 0x426,
 #ifdef HOMM3_ADVMGR_TURN_DECLS
@@ -267,7 +265,6 @@ public:
 SIZE(CResetVisibilityMsg, 0x20);
 #endif
 
-#ifdef HOMM3_HERO_OBJ_DECLS
 class CMCTeleportHero : public CMapChange {
 public:
     int heroId;
@@ -290,7 +287,6 @@ public:
     CMCDeadHero(int id, type_point location);
 };
 SIZE(CMCDeadHero, 0x1c);
-#endif
 
 // game.obj opens this on its own narrow gate: playerData::add_garrison_hero
 // (0x4b9fc0) broadcasts the same record town::SwapHeroes does.

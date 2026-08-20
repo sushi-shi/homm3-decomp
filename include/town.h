@@ -442,7 +442,6 @@ public:
     int HasGarrison();
     town();
     int load(TAbstractFile* infile, int saveVersion);
-#ifdef HOMM3_GAME_OBJ_DECLS
     // 0x5bd2f0 (body in town.obj, not yet reconstructed). game::Save's
     // town-pool loop is the only consumer here: it calls it on towns[i]
     // with edi striding 0x168 == sizeof(town). Retail's body writes the
@@ -452,7 +451,6 @@ public:
     // member declarator on a class this widely included is the
     // include-set wall's own trigger shape.
     int save(TAbstractFile* outfile);
-#endif
 // game.obj joins the gate for GiveSpells alone: CreateTownHeroes
 // (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
 // after PlaceInMap. Widening the existing guard rather than adding a

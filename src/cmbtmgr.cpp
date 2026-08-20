@@ -51,7 +51,6 @@
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
-#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
                                      // it in InitNonVisualVars' siege arms
