@@ -651,10 +651,20 @@ DATA(0x00660428) extern unsigned char (*gAdventureObjectTraits)[16];
 // surrounding-cell bits.
 extern unsigned char giCloudType[256];
 
-// Retail .bss 0x69ccc4. GetCloudLookup tests this byte against the low byte
+// Retail .bss 0x69ccbc. GetCloudLookup tests this byte against the low byte
 // of every GetMapExtra result. Its role is proved by those xrefs; no public
 // retail name survives, so the spelling remains provisional.
-DATA(0x0069ccc4) extern unsigned char gMapVisibilityBit;
+//
+// ADDRESS CORRECTED 2026-08-20, and the old one was refuted by this note's
+// own witness. The claim read 0x0069ccc4 for as long as it has existed, but
+// GetCloudLookup (0x40f8c0, exact) relocates DIR32 against 0x69ccbc SIX
+// times and never references 0x69ccc4 at all; advManager::UpdateRadar
+// relocates the same address independently. Eight bytes high, caught while
+// decoding UpdateRadar. The reloc-name-only rule is why nothing scored
+// differently for it - an unclaimed data extern still pairs, so a wrong
+// data address is invisible to the ratchet and shows up only when someone
+// reads the relocations.
+DATA(0x0069ccbc) extern unsigned char gMapVisibilityBit;
 
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,

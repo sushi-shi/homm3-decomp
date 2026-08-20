@@ -601,7 +601,7 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 // (0x56a360) and hero::HeroFn_00431160 (0x431160).
 //
 // THE FOG GATE is `GetMapExtra(x, y, z) & gMapVisibilityBit` (the byte at
-// 0x69ccc4, advmgr.h's name), tested twice. Retail's shape is NOT the
+// 0x69ccbc, advmgr.h's name), tested twice. Retail's shape is NOT the
 // earlier note's: an unseen candidate outside the enemy search blocks the
 // square whenever the acting player is HUMAN (`jne` straight into the
 // latch block), and only for a computer player does it go on to require
