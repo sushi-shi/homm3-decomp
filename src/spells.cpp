@@ -12,7 +12,12 @@
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
+// mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
+// bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
+// it is unconditional (measured 2026-08-20).
+#define HOMM3_CMBTMGR_AREA_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
@@ -317,12 +322,33 @@ void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mast
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3303
-VA(0x005a4920, 0x42)  // order-map+arity, dc 0x153aec
-void combatManager::mark_area_effect(SpellID spell, long target_hex, TSkillMastery mastery, std::vector<army* result)
+#endif  // @carcass
+
+// The SpellID-taking one of the DC roster's three mark_area_effect rows,
+// and the only one that switches: Berserk gets its own collector, and
+// everything else becomes a radius and a centre flag for the hex-taking
+// sibling. Both arms are order-map pairings the call graph confirms.
+//
+// The two derived arguments read exactly as the DC parameter names for
+// 0x5a46f0 say they should - Inferno is the radius-2 spell, and Frost Ring
+// is the one spell that spares its own centre hex:
+//     radius         = (spell == SPELL_INFERNO) + 1
+//     include_center = spell != SPELL_FROST_RING
+// `(x == k) + 1` is the spelling, not a ternary: it is what produces
+// retail's `xor edx,edx / cmp / sete dl / inc edx`.
+VA(0x005a4920, 0x42)  // order-map+arity+anchor-callee, dc 0x153aec
+void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
+                                     std::vector<army*>& targets)
 {
-    // @stub
+    if (spell == SPELL_BERSERK) {
+        mark_berserk_area_effect(hex, mastery, targets);
+        return;
+    }
+    mark_hex_area_effect(hex, (spell == SPELL_INFERNO) + 1,
+                         spell != SPELL_FROST_RING, targets);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3324
 VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
