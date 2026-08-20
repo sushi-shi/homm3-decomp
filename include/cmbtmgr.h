@@ -22,6 +22,7 @@ class NewmapCell;
 class searchArray;
 class town;
 struct type_AI_combat_parameters;
+struct type_artifact;
 
 // Four integer drawing bounds copied as one value before a drawbridge
 // animation. Retail's assignment establishes the 16-byte extent; the
@@ -828,6 +829,11 @@ public:
     void RaiseDoor();
     bool IsQuickCombat() const;
     void CalculateGainedExperience(int side, int* experience_gained);
+    // The winner's post-combat sweep of the loser's artifacts. The vector
+    // is the REAL Dinkumware one: <vector> is already in this header's
+    // closure through army.h, so no include-set edge moves for it.
+    void LootDeadHero(int side,
+                      std::vector<type_artifact>& looted_artifacts);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
     // body dereferences it at +0x288, +0xf4 and +0x34), and the return
