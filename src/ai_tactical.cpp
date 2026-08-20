@@ -2283,17 +2283,64 @@ double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_tu
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2136
-// Blocked on the enchantment dispatch: the loop calls through the
-// member pointer that get_enchantment_function (0x43b690) returns,
-// walking akSpellTraits by 0x88 from 0x550 to 0x2b08 (spells 10..81).
+// What it is worth to strip the spells standing on `current_army` -
+// and it CANCELS THEM AS IT GOES, on the caller's copy, which is why
+// every member of the family builds a real army copy on the stack
+// first (see get_dispel_value below).
+//
+// Each standing spell is re-priced through the enchantment dispatch
+// with a type_enchant_data rebuilt from the two parallel rows: the
+// duration out of +0x198 and the mastery it was cast at out of the
+// +0x2dc twin. Retail walks ONE pointer over the second row and reads
+// the first through it at a constant -0x144, which is what fixes the
+// two rows as adjacent 81-dword bands.
+//
+// The sign is the interesting half: the value is ADDED through the
+// DEPUTY caster when the spell's alignment matches the stack's side
+// (a bad spell on ours, a good spell on theirs - both worth removing)
+// and SUBTRACTED through this caster otherwise. Both flags are int
+// locals, not the byte the field is: retail zeroes EAX/EDX and does
+// `sete al` / `setl dl` then a DWORD `cmp edx,eax`, and the order of
+// the two setcc's is the order the locals are declared in.
+//
+// The `field_10 = 0` after the constructor is real: the two ctors seed
+// it to 1 and this call site clears it, so the pricers' work-chance
+// arm (get_sorrow_value's `if (caster.field_10)`) is skipped for an
+// already-standing spell. VC6 drops the dead 1 store.
 VA(0x00439a80, 0x135)  // anchor-global, dc 0x40248
 long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad_spells_only)
 {
-    // @stub
+    long value = 0;
+    for (long spell = 10; spell < 81; spell++) {
+        long duration = current_army->spellInfluence[spell];
+        if (duration == 0)
+            continue;
+        if (bad_spells_only) {
+            if (akSpellTraits[spell].field_0 >= 0)
+                continue;
+        } else {
+            if (spell == SPELL_POISON)
+                continue;
+        }
+        TEnchantValue value_of = get_enchantment_function(spell);
+        if (value_of == 0)
+            continue;
+        type_enchant_data caster(spell, current_army->spell_level[spell],
+                                 duration, duration);
+        caster.field_10 = 0;
+        current_army->CancelIndividualSpell(spell);
+        long ours = current_army->combatSide == side;
+        long bad = akSpellTraits[spell].field_0 < 0;
+        if (bad == ours)
+            value += (deputy->*value_of)(current_army, caster);
+        else
+            value -= (this->*value_of)(current_army, caster);
+    }
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2180
 // THE SPELL-VALUE FAMILY'S SHAPE (2026-08-07): "what would this stack
