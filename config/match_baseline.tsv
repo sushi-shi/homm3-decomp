@@ -1825,6 +1825,8 @@ townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
+townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220
+townmgr	?NewStrips@townManager@@QAEXXZ	54.0837	54.0837	54.0837	0x1c6e10
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
@@ -1834,6 +1836,7 @@ townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000
 townmgr	?SetRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60
 townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	97.7688	97.7688	97.7688	0x1dcbf0
 townmgr	?SetRolloverText@TMageGuildWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ce1c0
+townmgr	?SetRolloverText@TTavernWindow@@QAEXH@Z	81.4136	81.4136	81.4136	0x1d7920
 townmgr	?SetupExtraStuff@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c33f0
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	99.9275	99.9275	99.9275	0x1d6ef0
 townmgr	?SetupTown@townManager@@QAEXE@Z	98.0945	98.0945	98.0945	0x1c6870
@@ -1841,12 +1844,14 @@ townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
 townmgr	?SwapHeroes@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5150
 townmgr	?UnloadTown@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c70b0
+townmgr	?UpdateTownInfo@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c66d0
 townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
 townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c5aa0
 townmgr	?WindowHandler@TBlacksmithWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810
 townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80
 townmgr	?WindowHandler@TShipWindow@@UAEHPAVmessage@@@Z	99.9841	99.9841	99.9841	0x1d25a0
+townmgr	?WindowHandler@TTavernWindow@@UAEHPAVmessage@@@Z	89.7235	89.7235	89.7235	0x1d7b30
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0

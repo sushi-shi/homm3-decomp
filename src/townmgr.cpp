@@ -354,6 +354,26 @@ DATA(0x006aa9b0) static TShipWindow* gpShipWindow;
 // trio, so this compiland owns the cell.
 DATA(0x006aa620) static TBlacksmithWindow* gpBlacksmithWindow;
 
+// The thieves' guild page the tavern puts up, on the same evidence
+// again: every image-wide reference to 0x6aa62c is one of the four this
+// compiland's tavern handler makes (new / MemError / DoModal / delete),
+// so the cell is this compiland's file-static and the name follows the
+// same gp<Type> convention.
+DATA(0x006aa62c) static TThievesGuildWindow* gpThievesGuildWindow;
+
+// The tavern page's eight text lines, DC public `?cTavernInfo@@3PAPBDA`
+// (a `const char*` row). The extent is fixed from the reader side: the
+// tavern's SetRolloverText is the only body in the image that touches
+// the run and it reaches every one of 0x6a5e40..0x6a5e5c, which is
+// exactly eight slots, with 0x6a5e3c closing gMineEventText below it.
+// Nothing in the admitted surface writes it - InitializeTavernText does,
+// and that TU is not located - so it is declared rather than claimed.
+// Slots in the order the body uses them: 0 not enough gold, 1 the
+// eight-hero cap (takes the cap as a vararg), 2 the town square is
+// occupied, 3 the selected recruit's name and class, 4 a portrait's
+// name, 5 the thieves' guild button, 6 the rumour panel, 7 cancel.
+DATA(0x006a5e40) extern const char* cTavernInfo[8];
+
 
 // The line DoPortalOfSummoning prints when the map has nothing left for
 // the portal to summon. ONE image-wide reference and no writer in the
@@ -912,6 +932,69 @@ void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
     pResourceDisplay->Update(1, 1);
 }
 
+// The town page's bottom info row: the hall icon, the fort icon and the
+// gold line, broadcast one after another through the SAME message
+// record, and then the faction-bonus panel the page's own window owns.
+//
+// Both icon frames come off the same `built` qword - retail loads
+// 0x150/0x154 into a register pair once per chain and ANDs each
+// bitNumber row against that pair - and both chains are ELSE-ifs, the
+// jump out of each taken arm being retail's own. That makes the hall
+// chain order-sensitive in a way get_gold_income's sequential ifs are
+// not, and the fort chain runs the other way round, from 3 down to 0.
+// Both are transcribed as the bytes have them.
+//
+// The status buffer is kb's shared gText, not a frame local: the
+// sprintf writes the absolute .bss address and the broadcast passes the
+// same one.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005c66d0, 0x199)  // anchor-caller(RedrawTownScreen 0x5d5410, its only caller image-wide) + order-map + arity(bare ret), dc 0x16ba90
+void townManager::UpdateTownInfo()
+{
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    int frame = 0;
+    if (townToView->built & bitNumber[HALL_TOWN_ID])
+        frame = 1;
+    else if (townToView->built & bitNumber[HALL_CITY_ID])
+        frame = 2;
+    else if (townToView->built & bitNumber[HALL_CAPITOL_ID])
+        frame = 3;
+    msg.extra = frame;
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 0x9e;
+    TownWindow->BroadcastMessage(&msg);
+
+    frame = 3;
+    if (townToView->built & bitNumber[CASTLE_FORT_ID])
+        frame = 0;
+    else if (townToView->built & bitNumber[CASTLE_CITADEL_ID])
+        frame = 1;
+    else if (townToView->built & bitNumber[CASTLE_CASTLE_ID])
+        frame = 2;
+    msg.extra = frame;
+    msg.codeY = 0x9f;
+    TownWindow->BroadcastMessage(&msg);
+
+    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+            townToView->get_gold_income(1));
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xa0;
+    msg.extraText = gText;
+    TownWindow->BroadcastMessage(&msg);
+
+    static_cast<TTownScreenWindow*>(TownWindow)->set_bonus_display(townToView);
+}
+
 // The panorama object's destructor, INLINE: retail emits no out-of-line
 // body for it anywhere in the image (townmgr.obj's first carve row is
 // the constructor at 0x5c2ea0), and its one expansion is the `delete`
@@ -1121,6 +1204,77 @@ void townManager::SetupTown(unsigned char fade)
     if (fade)
         gpWindowManager->FadeScreen(0, 4, 0);
     gTurnDuration69d630.Resume();
+}
+
+// The town page's two troop strips, rebuilt from scratch. The top strip
+// belongs to the GARRISON slot (town +0xc) and the bottom one to the
+// VISITING hero (town +0x10); each is built one of two ways depending on
+// whether that slot holds a hero, which is why four `new strip` sites
+// sit here and why the compiland's four `push 0x78 / call exe_new` pairs
+// are what identify this row against the Dreamcast roster's NewStrips.
+//
+// Every hero-bearing arm reads its hero through game::GetHero TWICE -
+// once for the `!= -1` test the if already made and once for the
+// argument - and the null arm of the second expansion is left
+// unreachable behind it. That dead `xor edi,edi / jmp` is retail's own
+// and is what the inline getter costs; writing the hero into a local
+// removes it and the shape with it.
+//
+// The garrison strip's icon set is 0xa1 when nobody is standing in the
+// slot and 0xa2 when somebody is, and the icon FRAME is the town's
+// owner in the first case and the hero's portrait in the second - the
+// two arms differ in exactly those two arguments plus the group they
+// draw. The visiting strip's ids start at 0x7c rather than 0x64, and
+// its empty arm draws no group at all.
+//
+// The mage-guild refresh between the two visiting arms is retail's:
+// only the hero-bearing arm reaches it, and it passes a NULL hero.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005c6e10, 0x29B)  // anchor-callee(strip ctor x4 + town::get_army/GiveSpells) + anchor-caller(SwapHeroes/MoveHeroFromGarrison tails) + arity(bare ret), dc 0x16c0e4
+void townManager::NewStrips()
+{
+    if (townToView->garrisonHeroId != -1) {
+        field_11c = new strip(
+            0xf1, 0x183, 0, 0xa2,
+            gpGame->GetHero(townToView->garrisonHeroId)->portrait,
+            townToView->owner,
+            gpGame->GetHero(townToView->garrisonHeroId),
+            &gpGame->GetHero(townToView->garrisonHeroId)->army,
+            0x64, 0, TownWindow);
+    } else {
+        field_11c = new strip(
+            0xf1, 0x183, 0, 0xa1,
+            townToView->owner, townToView->owner, 0,
+            &townToView->get_army(), 0x64, 0, TownWindow);
+    }
+    if (!field_11c)
+        MemError();
+
+    if (townToView->visitingHeroId != -1) {
+        field_120 = new strip(
+            0xf1, 0x1e3, 1, 0xa2,
+            gpGame->GetHero(townToView->visitingHeroId)->portrait,
+            gpGame->GetHero(townToView->visitingHeroId)->owner,
+            gpGame->GetHero(townToView->visitingHeroId),
+            &gpGame->GetHero(townToView->visitingHeroId)->army,
+            0x7c, 0, TownWindow);
+        if (!field_120)
+            MemError();
+        if (townToView->active & bitNumber[MAGE_GUILD_ID])
+            townToView->GiveSpells(0);
+    } else {
+        field_120 = new strip(
+            0xf1, 0x1e3, 1, 0xa2, -1,
+            gpGame->GetLocalPlayerGamePos(), 0, 0, -1, 0, TownWindow);
+        if (!field_120)
+            MemError();
+    }
+
+    field_134 = 0;
+    field_12c = 0;
+    field_138 = -1;
+    field_130 = -1;
 }
 
 // Dropping the town the manager is showing, without dropping the
@@ -3583,6 +3737,54 @@ void townManager::SwapHeroes()
     NewStrips();
 }
 
+// SwapHeroes' mirror image, and the row DoCommand's arm 8 reaches: the
+// garrison hero comes OUT onto the town square. It refuses twice - the
+// acting player is already at the eight-hero cap, or the garrison would
+// be left with no troops at all - and only then calls
+// town::remove_garrison_hero and rebuilds the two strips.
+//
+// The first refusal is the one that names the row against its Dreamcast
+// twin: it FORMATS the cap into its line (general text 19 through
+// misc's format_string, which is why this body carries a /GX frame and
+// a std::string teardown SwapHeroes does not), where the second copies
+// general text 20 straight. The cap itself is read back out of the
+// player record rather than written as 8.
+//
+// The player pointer is computed BEFORE the IsLocalHuman gate, retail's
+// own order, and the empty-garrison test goes through the town's own
+// army group - the CONST get_army overload, which /OPT:ICF has folded
+// with the non-const one at 0x5c1460.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005d5220, 0x1E7)  // anchor-caller(DoCommand 0x5d4c10, its only caller image-wide) + anchor-callee(town::remove_garrison_hero 0x5be390) + arity(bare ret), dc 0x176cf8
+void townManager::MoveHeroFromGarrison()
+{
+    playerData* player = &gpGame->players[townToView->owner];
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    if (player->numHeroes >= playerData::HERO_SLOT_COUNT) {
+        std::string text;
+        text = format_string(gpGeneralText->GetText(19), player->numHeroes);
+        NormalDialog(text.c_str(), 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (townToView->get_army().GetNumArmies() == 0) {
+        NormalDialog(gpGeneralText->GetText(20), 1, -1, -1, -1, 0,
+                     -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    townToView->remove_garrison_hero();
+    delete field_120;
+    field_120 = 0;
+    delete field_11c;
+    field_11c = 0;
+    NewStrips();
+}
+
 // The town page repaint. It clears the window's own 800x600 16-bit
 // buffer, paints the panorama, then walks every town object drawing it
 // with hotspots and polling sound between each - which is what the
@@ -4400,6 +4602,201 @@ TTavernWindow::~TTavernWindow()
         if (*it)
             delete *it;
     }
+}
+
+// The tavern's status line. Six widget ids answer - the two recruit
+// portraits (5, 6), the thieves' guild button (11), the hire button
+// (12), the rumour panel (15) and the cancel button (0x7800) - and
+// everything else gets the shared empty line. The dispatch is a
+// BINARY-SEARCH lowering (cmp/jg then cmp/je, not the dense dec/je
+// chain), which is what a sparse `switch` compiles to on this CL.
+//
+// The hire button is the only arm that reasons: it refuses in the order
+// the bytes have it - not enough gold, the cap of eight heroes already
+// reached, the town's own square already occupied - and only then
+// describes the hero the page has selected. Every one of those refusals
+// reads gpCurrentPlayer, while the hero lookup reads the LOCAL player,
+// which is why both pointers are live in the frame at once.
+//
+// The empty answer is a bare `gText[0] = 0`, not a strcpy of the empty
+// string: retail stores a single zero byte at the absolute address.
+//
+// The five copies of the line are five `strcpy` intrinsics; VC6
+// cross-jumps two of them onto a shared expansion and leaves the tail
+// (`and ecx,3 / rep movsb`) shared by all of them. That merge is the
+// compiler's, not a source shape.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005d7920, 0x20A)  // anchor-caller(TTavernWindow::WindowHandler 0x5d7b30 hover arm) + anchor-callee(rolloverText slot 13) + arity(ret 4), dc 0x17a7a0
+void TTavernWindow::SetRolloverText(int id)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+
+    switch (id) {
+    case RECRUIT_0_ID:
+    case RECRUIT_1_ID:
+        if (player->recruits[id - RECRUIT_0_ID] == -1)
+            gText[0] = 0;
+        else
+            sprintf(gText, cTavernInfo[4],
+                    gpGame->heroes[player->recruits[id - RECRUIT_0_ID]].name);
+        break;
+
+    case THIEVES_GUILD_BUTTON_ID:
+        strcpy(gText, cTavernInfo[5]);
+        break;
+
+    case HIRE_BUTTON_ID:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            if (gpCurrentPlayer->resources[GOLD] < gHeroGoldCost) {
+                strcpy(gText, cTavernInfo[0]);
+            } else if (gpCurrentPlayer->numHeroes
+                       == playerData::HERO_SLOT_COUNT) {
+                sprintf(gText, cTavernInfo[1], playerData::HERO_SLOT_COUNT);
+            } else if (!gMapTavern
+                       && gpTownManager->townToView->visitingHeroId != -1) {
+                strcpy(gText, cTavernInfo[2]);
+            } else if (player->recruits[field_60] == -1) {
+                gText[0] = 0;
+            } else {
+                hero* recruit = &gpGame->heroes[player->recruits[field_60]];
+                sprintf(gText, cTavernInfo[3], recruit->name,
+                        recruit->HeroFn_004D8F70());
+            }
+        }
+        break;
+
+    case RUMOR_PANEL_ID:
+        strcpy(gText, cTavernInfo[6]);
+        break;
+
+    case CANCEL_BUTTON_ID:
+        strcpy(gText, cTavernInfo[7]);
+        break;
+
+    default:
+        strcpy(gText, emptyRolloverText);
+        break;
+    }
+
+    rolloverText->SetText(gText);
+    DrawWindow(0, 13, 14);
+}
+
+// The tavern's handler. Three jobs, in the compiland's usual order:
+// forward to CAdvPopup, dispatch the widget traffic, and keep the
+// background video alive on every message that reaches the bottom.
+//
+// The DESELECT arm is where the dialog ends. Ids 12 (hire) and 0x7800
+// (cancel) SHARE one arm - the id itself is what goes into the window
+// manager's dialogReturn, which is why the two cases can be written
+// together - and the message is rewritten into an END_DIALOG for the
+// caller to see. Id 11 puts the thieves' guild page up modally over the
+// tavern, and the -1 it passes that constructor is the whole-map form
+// of the report.
+//
+// SELECT and RIGHT_SELECT also share an arm: choosing a portrait sets
+// the page's selection, lights that portrait's frame and clears the
+// other one (the ids are `slot + 8` and `9 - slot`, a two-entry family
+// written as arithmetic), then writes the recruit's biography line. The
+// artifact count is the sum of the two hero getters and its ONLY use
+// past the sprintf is the singular fixup, which rewrites the last two
+// bytes of the formatted line in place rather than choosing a different
+// format.
+//
+// The right-click qualifier on the same arm opens the full hero view
+// over the video, and the video is reopened at the tavern's own rect
+// afterwards whenever it stopped.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005d7b30, 0x2E1)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
+int TTavernWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    playerData* player = gpGame->GetLocalPlayer();
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != lastHover || msg->qualifier != lastQualifier) {
+            lastHover = msg->codeY;
+            lastQualifier = msg->qualifier;
+            SetRolloverText(msg->codeY);
+        }
+        break;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case THIEVES_GUILD_BUTTON_ID:
+                gpThievesGuildWindow = new TThievesGuildWindow(-1);
+                if (!gpThievesGuildWindow)
+                    MemError();
+                VideoPause();
+                gpThievesGuildWindow->DoModal(0);
+                VideoResume();
+                delete gpThievesGuildWindow;
+                break;
+
+            case HIRE_BUTTON_ID:
+            case CANCEL_BUTTON_ID:
+                gpWindowManager->dialogReturn = msg->codeY;
+                msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
+            break;
+
+        case widget::WIDGET_SELECT:
+        case widget::WIDGET_RIGHT_SELECT:
+            if (msg->codeY >= RECRUIT_0_ID && msg->codeY <= RECRUIT_1_ID) {
+                field_60 = msg->codeY - RECRUIT_0_ID;
+                if (player->recruits[field_60] != -1) {
+                    msg->codeX = widget::WIDGET_SET_STATUS;
+                    msg->codeY = field_60 + 8;
+                    msg->extra = widget::WIDGET_DRAWN;
+                    BroadcastMessage(msg);
+
+                    msg->codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg->codeY = 9 - field_60;
+                    BroadcastMessage(msg);
+
+                    gTavernHero = &gpGame->heroes[player->recruits[field_60]];
+                    long artifacts = gTavernHero->get_number_in_backpack(0)
+                                     + gTavernHero->get_equipped_artifacts(0);
+                    sprintf(gText, gpGeneralText->GetText(216),
+                            gTavernHero->name, gTavernHero->level,
+                            gTavernHero->HeroFn_004D8F70(), artifacts);
+                    if (artifacts == 1) {
+                        int end = strlen(gText);
+                        gText[end - 2] = '.';
+                        gText[end - 1] = 0;
+                    }
+
+                    msg->codeX = widget::WIDGET_SET_TEXT;
+                    msg->codeY = 7;
+                    msg->extraText = gText;
+                    BroadcastMessage(msg);
+
+                    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+                        VideoPause();
+                        HeroView(player->recruits[field_60], 1, 0, 1);
+                        VideoResume();
+                    }
+                }
+                if (!VideoPlaying())
+                    VideoOpen(6, 0x110, 0x68, 0, 0, 1, 1, 1);
+                DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                           WINDOW_ALL_WIDGETS_HIGH);
+            }
+            break;
+        }
+        break;
+    }
+    return 1;
 }
 
 #if 0  // @carcass
