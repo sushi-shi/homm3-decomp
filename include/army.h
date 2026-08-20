@@ -821,7 +821,20 @@ public:
     int forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
     float slowFactor;             // +0x4c8
-    char pad_4cc[0x14];
+    char pad_4cc[0xc];
+    // +0x4d8. combatManager::InitNonVisualVars (0x463c60) is the one
+    // decoded reader: its closing walk scans each side's stacks and
+    // raises the per-side latch at combatManager+0x1329c the moment it
+    // finds a stack whose byte here is non-zero, so the byte is a
+    // per-stack "this side has one of these" marker whose meaning that
+    // latch does not name either. Behind the pow view, which the same
+    // TU already defines.
+#ifdef HOMM3_ARMY_POW_VIEW
+    unsigned char field_4d8;      // +0x4d8
+    char pad_4d9[0x7];
+#else
+    char pad_4d8[0x8];
+#endif
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep

@@ -503,7 +503,14 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0x6];
+    // Three more per-side byte pairs, all cleared together by
+    // InitNonVisualVars (0x463c60) in the order (0x53e0, 0x53e1),
+    // (0x53e2, 0x53e3), (0x53dc, 0x53dd), (0x53de, 0x53df) - each pair
+    // written HIGH slot first, which is the `x[0] = x[1] = 0` chained
+    // form. No reader is decoded for any of them.
+    unsigned char field_53de[2];      // +0x53de
+    unsigned char field_53e0[2];      // +0x53e0
+    unsigned char field_53e2[2];      // +0x53e2
     // Two per-side dword pairs LoadIcons (0x463370) clears alongside the
     // two sprite pointers, at full int width (`mov [esi + 4*edi + 0x53e4],
     // edx` with edx held at zero). No reader is decoded yet, so both
@@ -513,7 +520,11 @@ public:
     char pad_53f4[0x10];
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
-    char pad_5414[0x48];
+    // Two scalars InitNonVisualVars sets to 0 and 3 respectively, the 3
+    // shared with field_13d48 out of one register. Both ordinals.
+    int field_5414;                    // +0x5414
+    int field_5418;                    // +0x5418
+    char pad_541c[0x40];
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
@@ -587,9 +598,16 @@ public:
     // Both arms below describe the same bytes and only the count differs,
     // so no TU sees a different layout.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
-    char pad_1329c[0x4];
+    // The per-side pair InitNonVisualVars' closing walk raises when a
+    // side owns at least one stack with army::field_4d8 set. Byte-wide
+    // and indexed by side.
+    unsigned char field_1329c[2];     // +0x1329c
+    char pad_1329e[0x2];
     int field_132a0[2];               // +0x132a0
-    char pad_132a8[0x8];
+    // Two more dwords InitNonVisualVars sets to -1, alongside
+    // field_132d4. Ordinals.
+    int field_132a8;                  // +0x132a8
+    int field_132ac;                  // +0x132ac
 #else
     char pad_1329c[0x14];
 #endif
@@ -647,14 +665,17 @@ public:
     // into field_40, which is the same (where I go, what I hit) pair
     // field_40/field_44 already carry. Name is an address ordinal.
     int field_132d8;                  // +0x132d8
-    char pad_132dc[0x4];
+    // Set to -99 by InitNonVisualVars and by nothing else decoded.
+    int field_132dc;                  // +0x132dc
     int field_132e0;                  // +0x132e0
     // Sliced in place 2026-08-20 (a retype, not new declarators) off two
     // bodies that agree field for field: LoadSpellEffect (0x5a92f0)
     // disposes powSprite, refills it from akSpellEffectTraits and stores
     // the effect id it cached, and PowEffect (0x468990) asks powSprite
     // for its frame count and drives powFrameIndex across the animation.
-    char pad_132e4[0x4];
+    // Cleared by InitNonVisualVars a byte wide. Ordinal.
+    unsigned char field_132e4;        // +0x132e4
+    char pad_132e5[0x3];
     CSprite* powSprite;               // +0x132e8
     int powSpellEffect;               // +0x132ec
     int powFrameIndex;                // +0x132f0
@@ -663,7 +684,8 @@ public:
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
     ECombatFortification field_132f4; // +0x132f4
-    char pad_132f8[0x4];
+    // Cleared by InitNonVisualVars at full width. Ordinal.
+    int field_132f8;                  // +0x132f8
     TCombatWindow* combatWindow;      // +0x132fc
     int field_13300;                  // +0x13300
     // The battlefield background image name. SetupCombat caches
@@ -707,7 +729,9 @@ public:
     // every drawbridge animation. The role of each coordinate awaits a
     // decoded drawing reader, so the member stays an ordinal array.
     TDrawbridgeBounds drawbridgeBounds; // +0x13d38
-    char pad_13d48[0x4];
+    // Set to 3 by InitNonVisualVars, out of the same register as
+    // field_5418. Ordinal.
+    int field_13d48;                  // +0x13d48
     // Pending post-combat raised stack. RaiseSkeletons first attempts
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
@@ -734,7 +758,11 @@ public:
     // reads as a "casting restriction lifted" latch. Name is an address
     // ordinal - nothing else decoded reaches it.
     unsigned char field_13d74;        // +0x13d74
-    char pad_13d75[0x3];
+    // Its two neighbours, cleared with it in one run by
+    // InitNonVisualVars. Ordinals.
+    unsigned char field_13d75;        // +0x13d75
+    unsigned char field_13d76;        // +0x13d76
+    char pad_13d77[0x1];
     TArcher archers[3];               // +0x13d78; armySlot at +0x20
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
@@ -747,7 +775,16 @@ public:
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
     unsigned char field_13de4;        // +0x13de4
-    char pad_13de5[0x13];
+    char pad_13de5[0x3];
+    // The DEFENDING hero's combat snapshot, taken by InitNonVisualVars
+    // before the town's own bonuses are applied: stats[0] and stats[1]
+    // clamped to [0, 99], stats[2] clamped to [1, 99] - spell power is
+    // never zero - and the mana word widened. All four are zeroed when
+    // there is no defending hero.
+    int field_13de8;                  // +0x13de8
+    int field_13dec;                  // +0x13dec
+    int field_13df0;                  // +0x13df0
+    int field_13df4;                  // +0x13df4
     Bitmap816* combatIcons[18][5];    // +0x13df8
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
     // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
@@ -821,6 +858,9 @@ public:
     // the object.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
     unsigned char field_1402f;         // +0x1402f
+    // +0x14030, cleared by InitNonVisualVars - the byte that proves the
+    // class runs past everything modelled above. Ordinal.
+    unsigned char field_14030;         // +0x14030
 #endif
 
     combatManager();
@@ -924,6 +964,10 @@ public:
     // place_obstacle and PlaceObstacle are all ungated declarators
     // here already, and gating this one alone would put it out of the
     // declarator order C1XX numbers the group from.
+    // 0x463c60, DC cmbtmgr.cpp:1348. Ungated for the same reason
+    // SetupAndLoadObstacles above is: Open calls both back to back and
+    // both are defined in this compiland.
+    void InitNonVisualVars();
     void SetupAndLoadObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();

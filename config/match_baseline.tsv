@@ -535,6 +535,7 @@ cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
 cmbtmgr	?HexIsBlocked@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
 cmbtmgr	?InLineOfSight@combatManager@@QBEEHH@Z	95.4601	95.4601	95.4601	0x67840
+cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	95.7196	95.7196	95.7196	0x63c60
 cmbtmgr	?InitializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66c50
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
@@ -590,7 +591,6 @@ cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
 cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	67.1937	67.1937	67.1937	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
-cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
