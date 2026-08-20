@@ -88,6 +88,27 @@ MISSING forever.
   retail source used `goto`; while/for(;;)+break get rotated (duplicated
   condition) AND win the import an LICM hoist
   (kbwin::Process1WindowsMessage). VC6 does not rotate or LICM goto flow.
+- **DO NOT CACHE WHAT RETAIL RELOADS — this is worth more than it sounds**
+  (mapcell GenerateHeightMap, 2026-08-20: caching a `CObjectType*` across the
+  loop measured **68.17 against 96.75 for re-subscripting every iteration**,
+  a 29-point penalty, and hoisting the whole subscript above the `memset`
+  went further backwards to 64.89). Retail frequently keeps only a byte
+  OFFSET live and reloads the container's `_First` each pass. The instinct to
+  hoist an invariant load is usually wrong here: read what retail keeps live
+  across the back edge and spell that, even when it looks redundant. Related
+  smaller instances: `get_trigger_cell` loses 5 points assigning `z` before
+  `y`; `calc_cell_extra` needs `is_trigger = 1` AFTER `type_value`, not
+  before; `PlaceObject` needs `(col & 0xf) | (row << 4)` and not the operands
+  reversed — with `|`, operand ORDER decides which half accumulates (96.80
+  vs 100.0).
+- **A sibling function is the cleanest control for "source or codegen?"**
+  readBlackBox's three lists each need an explicit `if (count == 0) clear();
+  else { resize(count); <loop> }` — plain `resize(count)` scores 54.65 and
+  leaves the CFG one branch short, the guarded form 93.01 with branches
+  agreeing 55/55. What PROVED it is source rather than a codegen quirk:
+  retail's own `loadBlackBox` reaches the same resize with NO zero test, and
+  our plain `resize(count)` reproduces that shape exactly. When two retail
+  functions differ, the difference is in their sources.
 - **SWITCH ARM ORDER IS SOURCE ORDER** (byte-proven 2026-08-20,
   advManager::ProcessSelect 84.02 -> 100.0 on this edit alone). The physical
   layout of a switch's arms in retail is the order the source wrote the
