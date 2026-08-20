@@ -124,7 +124,6 @@ advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.00
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98.0056	98.0056	0xdcc0
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
-advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0

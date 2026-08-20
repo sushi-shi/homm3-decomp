@@ -221,13 +221,53 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 }
 
 // E:\gamedcs\advmgr.cpp:651
-VA(0x00406480, 0x59F)  // dc-bracket forced, dc 0x5fc8
+// CLAIM WITHDRAWN 2026-08-20: 0x00406480 is NOT this method, and the row
+// goes back to unowned. Four independent checks agree and none of them
+// needs the DC:
+//   1. Size band. The DC body is 0x204 = 516 B (0x61cc - 0x5fc8) against
+//      retail's 0x59F = 1439 B. That is 2.79x, outside the 0.3-2.5 SH4
+//      -> x86 band this repo requires of every pairing, and it is the
+//      only row in the bracket that breaks it.
+//   2. The body is a COPY, not a handler. It opens `mov ebx,ecx / mov
+//      esi,[ebp+8] / mov ecx,6 / rep movsd` and then copies field after
+//      field at unaligned offsets (+0x18 word, +0x1a dword, +0x22 byte,
+//      +0x23 ...) with basic_string::_Copy/_Tidy/_Xlen and
+//      _Xran(invalid_string_position) along the way. It writes through
+//      ECX - and ECX here is the DESTINATION, so a CAdvMgrNetMsgHandler
+//      method would be writing 0x91+ bytes into a 12-byte object.
+//   3. It touches no message state at all: no gpGame, no IsHuman, no
+//      format_string, no extended_dialog, no general-text row - nothing
+//      the other three handlers in this bracket all share.
+//   4. Its two call sites in HandleNetMsg settle it. Both pass a
+//      computed 90-byte-stride record inside gpGame as ECX
+//      (`lea ecx,[ecx + 2*eax + 0x21620]`) and a message field as the
+//      source, i.e. `record = <field>`, which is an assignment operator
+//      for some 90-byte string-bearing record and not a handler call.
+// Leaving the address unowned until that record type is admitted.
+DC_ONLY(0x5fc8, 0x204)
 void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:677
+// OPEN ATTRIBUTION, deliberately NOT acted on by this lane. Withdrawing
+// the row above shortens the bracket by one, and the two surviving
+// handler bodies then read as the OTHER member of the pair each is
+// currently claimed as:
+//   * 0x00406a20 (this row) reads exactly CGiftRequestMsg - m_greedyGuy
+//     at +0x14 and m_resource at +0x18, no quantity anywhere - and
+//     formats general-text row 360, GENERAL_TEXT_AI_SINGLE_RESOURCE_
+//     REQUEST. That is the REQUEST handler.
+//   * 0x00406bf0, claimed and byte-exact as HandleTradeRequestMsg, reads
+//     CGiftMsg's full triple (+0x14/+0x18/+0x1c), formats row 359
+//     GENERAL_TEXT_AI_GIFT_RECEIVED and CREDITS the local player's
+//     resource. That is the GIFT handler.
+// Both sizes land in band under the swap (455/516 = 0.88 and 506/604 =
+// 0.84) where the current mapping needs the 2.79x row above. Acting on
+// it renames a function that is currently EXACT and rewrites its
+// baseline row, so it belongs to whoever owns the netmsg attribution -
+// recorded here rather than done here.
 VA(0x00406a20, 0x1C7)  // dc-bracket forced, dc 0x61cc
 void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 {
