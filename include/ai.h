@@ -88,7 +88,16 @@ enum EAreaAttackCreature {
     // unconditionally: WIGHT 0x3c, WRAITH 0x3d and this one - 0x90 is
     // the Troll, the one regenerating neutral, bracketed by the proven
     // ROGUE 0x8f and CATAPULT 0x91 in armygrp.h's roster.
-    CREATURE_TROLL = 0x90
+    CREATURE_TROLL = 0x90,
+    // army::compute_attacker_bonus (0x443320) proves the four: the
+    // jousting bonus (CAVALIER/CHAMPION) is void against 0 and 1 - the
+    // Castle root pair, Pikeman and Halberdier - and the hate ladder
+    // pairs the plain Genie 0x24 and plain Efreeti 0x34 with the
+    // MASTER_GENIE 0x25 / EFREET_SULTAN 0x35 armygrp.h already proves.
+    CREATURE_PIKEMAN = 0x0,
+    CREATURE_HALBERDIER = 0x1,
+    CREATURE_GENIE = 0x24,
+    CREATURE_EFREETI = 0x34
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
