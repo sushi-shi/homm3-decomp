@@ -504,6 +504,13 @@ public:
     // NewfullMap - which game.h declares - takes a pointer to it, and not
     // every TU that sees game.h has been through this branch (puzzlewindow
     // includes mapcell.h before it defines the view).
+    // RELAY, restored 2026-08-20: game.h gates StampObject and the objects
+    // vector on this, because those declarations name TObjectCell and it is
+    // defined HERE. The view audit removed it along with the macros it
+    // resembled, but it is not a view - it is a "this type exists" signal
+    // between two headers, and game.h will not compile for mapcell.obj
+    // without it.
+#define HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
     struct TObjectCell {
         unsigned short objectIndex;
         unsigned char offsets;

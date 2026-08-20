@@ -61,6 +61,7 @@
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
                       // missile animators
+#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor

@@ -129,7 +129,10 @@ struct type_dialog_resource {
     // Retail only proves a four-byte resource index in the dialog vector;
     // the DC enum name is semantic evidence, not an x86 layout requirement.
     int resource;
-    long qualifier;
+    // UNSIGNED, retyped in place 2026-08-20: show_creature_rewards
+    // splits the packed count|creature dword with `shr 16`, which a
+    // signed long cannot produce.
+    unsigned long qualifier;
 };
 SIZE(type_dialog_resource, 8);
 
@@ -147,7 +150,26 @@ SIZE(type_horde_effect, 8);
 // first 70-bit set into the town and uses the second as forced guild picks.
 class TownExtra {
 public:
-    char pad_000[0x70];
+    char pad_000[4];
+    // +0x04, the ClaimTown player argument town::initialize widens
+    // with movsx.
+    signed char owner;
+    // +0x05, the has-custom-buildings byte; +0x08/+0x10 the two h3m
+    // building qwords (built, then disabled - initialize_buildings
+    // proves the order: the +0x10 mask feeds the availability NOT, the
+    // +0x08 mask drives the create_building walk).
+    unsigned char hasCustomBuildings;
+    char pad_006[2];
+    __int64 builtMask;
+    __int64 disabledMask;
+    unsigned char hasFort;             // +0x18
+    unsigned char hasCustomGarrison;   // +0x19
+    char pad_01a[2];
+    int garrisonTypes[7];              // +0x1c
+    int garrisonCounts[7];             // +0x38
+    char pad_054[0x14];
+    signed char type;                  // +0x68
+    char pad_069[7];
     std::bitset<70> spells;
     std::bitset<70> fixedSpells;
 };
@@ -171,6 +193,12 @@ SIZE(TownExtra, 0x88);
 //                  get_buildable_mask) widens it with movsx;
 //   +0x08 dockSite, +0x0c/+0x10 the two hero slots, +0xe0 garrison,
 //   +0x150/+0x158/+0x160 the three building masks.
+// For give_event_reward's parameter below; gated with it so no other
+// view of this header gains the type name (the initialize_game_data
+// include-set canary measured exactly this forward declaration at
+// 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
+class TTownEvent;
+
 class town {
 public:
     // Index of this town in gpGame->towns (byte, sign-extended).
@@ -208,7 +236,10 @@ public:
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
     int visitingHeroId;
-    unsigned char field_14;
+    // Mage guild level. SIGNED char, retyped in place 2026-08-20:
+    // BuildBuilding re-reads it with movsx at both spell-count loops
+    // and guards them with `cmp cl,1 / jl`.
+    signed char field_14;
     char pad_15[0x1];
     // +0x16, fourteen shorts - the accumulated population of each
     // dwelling slot, base then upgrade, the same 14-wide slot space
@@ -306,10 +337,11 @@ public:
     // buffer. Retail has no out-of-line body: /Ob2 expands it at every
     // call site.
     //
-    // Include-set measurement (2026-08): declared to every consumer this
-    // declarator took initialize_game_data 100.0 -> 96.09 and
-    // recruitUnit::Update 90.84 -> 88.24 with no semantic change
-    // anywhere (max/hist hold the peaks).
+    // GATED, and it has to be: added ungated this declarator took
+    // initialize_game_data 100.0 -> 96.09 and recruitUnit::Update
+    // 90.84 -> 88.24 with no semantic change anywhere - the tree's two
+    // standing include-set canaries, both at once. Every consumer opens
+    // HOMM3_TOWN_LOCATION_DECLS for itself and re-measures.
     //
     // MEASURED 2026-08-14 against the one caller this tree can already
     // score, and the result is NEGATIVE: rewriting ai_player.cpp's
@@ -339,17 +371,23 @@ public:
     //   check_included == 0 -> `[ecx+0x150]` = built
     // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
     // tree's readers had been spelling by hand. Body below, after
-    // bitNumber's declaration.
+    // bitNumber's declaration, under HOMM3_TOWN_HASBUILDING_API.
     //
-    // Include-set measurements (2026-08-15, re-landed by the view
-    // audit; max/hist hold the peaks):
-    //   * declared to every consumer it costs initialize_game_data
-    //     100.0 -> 90.16 - one more town.h declarator renumbering
-    //     C1XX's handles in initialize.obj with no semantic change;
-    //   * with the BODY visible, town.obj's own get_growth_rate takes
-    //     100.0 -> 88.4737: retail emits `push 0 / push 8 / call
-    //     town_HasBuilding` for its Citadel arm where /Ob2 expands the
-    //     inline instead (predict-inline `base x0 vs retail x1`).
+    // THE VISIBILITY IS SCOPED, and both halves of the scoping are
+    // measured (2026-08-15):
+    //   * declaring it unconditionally costs `initialize_game_data`
+    //     100.0 -> 90.1620 - the include-set canary, one more town.h
+    //     declarator renumbering C1XX's handles in initialize.obj with
+    //     no semantic change anywhere. Includes are TU-local, so only
+    //     the compilands that expand it are given the declarator, the
+    //     same device as destroy_extra_capitol below;
+    //   * town.obj must NOT see the BODY: retail's own get_growth_rate
+    //     emits `push 0 / push 8 / call town_HasBuilding` for its
+    //     Citadel arm, and this compile's /Ob2 budget expands the
+    //     inline there instead (100.0 -> 88.4737, predict-inline
+    //     `town_HasBuilding base x0 vs retail x1`). HOMM3_TOWN_OBJ_DECLS
+    //     therefore buys the declaration only, which is what keeps
+    //     retail's call.
     // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
     // const), and retail's thiscall is identical either way.
     unsigned char HasBuilding(int buildingId,
@@ -421,6 +459,11 @@ public:
     // retail reads [ebp+8] as a full dword for both band compares and
     // for the inlined get_build_cost_array row arithmetic.
     unsigned char buy_building(type_building_id building);
+    // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
+    // in the owning TU; gated so no other view of this class gains the
+    // declarators.
+    void give_event_reward(const TTownEvent* thisEvent);
+    void initialize(const TownExtra* town_setup);
     unsigned char can_ever_build(int building_id) const;
     __int64 get_buildable_mask() const;
     int* get_build_cost_array(type_building_id building) const;
@@ -489,15 +532,22 @@ public:
     // and only ONE retail row exists for the two - /OPT:ICF folded the
     // identical bodies.
     const class armyGroup& get_army() const;
-    // The NON-const half of that DC pair. Its RETURN TYPE follows the
-    // DC mangled name (?get_army@town@@QAAAAVarmyGroup@@XZ - AAV, a
-    // REFERENCE), not the dump's C prototype printer, which rendered it
-    // `armyGroup*` and briefly had this row spelled as a pointer while
-    // the two spellings lived in separate views (view audit 2026-08-20).
-    // Retail's `call 0x5c1460 / push eax` at the summoning-portal row is
-    // this overload's return with `&` applied at the call site. Never
-    // defined: /OPT:ICF folded the two bodies onto the one row the
-    // const half already claims.
+    // The NON-const half of that DC pair, declared 2026-08-14 for
+    // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
+    // hands the town's garrison straight to a `recruitUnit`, whose first
+    // parameter is a plain `armyGroup*`, and retail's `call 0x5c1460 /
+    // push eax` is that overload's return used as a pointer - which is
+    // also the shape the DC declares (`armyGroup* town::get_army()`).
+    // Never defined: /OPT:ICF folded the two bodies onto the one row the
+    // const half already claims. UNGATED 2026-08-20 by the view audit.
+    //
+    // RETURNS A REFERENCE, not a pointer. The DC mangled name settles it:
+    // ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a reference return,
+    // where a pointer would be `QAAPAV`. The pointer spelling came from the
+    // dump's C prototype printer and contradicted every call site: townmgr's
+    // summoning-portal rows write `&townToView->get_army()`, which is
+    // `'&' requires l-value` against a pointer return and correct against a
+    // reference.
     class armyGroup& get_army();
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
@@ -582,6 +632,25 @@ inline unsigned char town::HasBuilding(int buildingId,
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.
 extern const char* gTownSizeNames[4];
 
+// The three int[4] columns behind town::initialize's random starting
+// garrison (retail .data 0x688e84/0x688e94/0x688ea4): per dwelling
+// tier 0..3, a percent chance and the low/high Random bounds. Names
+// INVENTED (no DC symbols); owner TU unlocated - extern only, gated:
+// town.obj is the only consumer.
+extern const int gTownInitArmyChance[4];
+extern const int gTownInitArmyLow[4];
+extern const int gTownInitArmyHigh[4];
+
+// The h3m editor's 41-slot building column order, one row per town
+// type (retail .data 0x6888c0, nine 41-int rows): row content maps the
+// map-format event building index to this faction's engine
+// type_building_id (row 0 opens 11,12,13,7,8,9,5,16,... - town hall,
+// city hall, capitol, fort, citadel, castle, tavern, blacksmith).
+// give_event_reward translates TTownEvent::BuildBuildings through it.
+// Name INVENTED (no DC symbol); owner TU unlocated - extern only.
+// Gated: town.obj is the only consumer.
+extern const int gEventBuildingIds[9][41];
+
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
 // 0x6976f0, nine qwords). Owner TU unlocated - extern only.
@@ -663,8 +732,12 @@ extern const signed char gMageGuildBaseSpellCounts[5];
 // {HORDE_ID, HORDE_UPG_ID, HORDE_2_ID, HORDE_2_UPG_ID} -
 // get_horde_effect's scan turns a building id into the
 // const_horde_effects column. Name INVENTED (no DC symbol); the four
-// values are read from the pinned image.
-extern const int gHordeBuildings[4];
+// values are read from the pinned image. Retyped in place 2026-08-20
+// (int -> type_building_id, an identical 4-byte load): create_building
+// assigns a row entry back into its type_building_id argument, which
+// the enum element type carries without a cast, while every int reader
+// (get_horde's return, the bitNumber indexes) narrows implicitly.
+extern const type_building_id gHordeBuildings[4];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

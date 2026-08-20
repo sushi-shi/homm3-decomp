@@ -25,7 +25,9 @@ enum EGeneralTextIndex {
     // The two combat morale lines, both "%s" formats over the affected
     // stack's name: combatManager::CheckApplyGoodMorale (0x464920) folds
     // [Text._First + 0x88] and CheckApplyBadMorale (0x464b40)
-    // [Text._First + 0x8c].
+    // [Text._First + 0x8c]. Gated for the reason GENERAL_TEXT_SKELETON_
+    // GOLD below is - an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
     GENERAL_TEXT_GOOD_MORALE = 34,
     GENERAL_TEXT_BAD_MORALE = 35,
     // The singular partner of GENERAL_TEXT_MIXED_ARMY below, and the one
@@ -33,6 +35,9 @@ enum EGeneralTextIndex {
     // damage_message (0x469a90) picks between the folded
     // [Text._First + 0xac] and [Text._First + 0xb0] on `deaths == 1`
     // when the dying stack has no army record to name itself from.
+    // Gated for the reason GENERAL_TEXT_GOOD_MORALE above is - an
+    // ungated enumerator counts toward the include-set threshold in
+    // every consumer.
     GENERAL_TEXT_MIXED_ARMY_ONE = 43,
     GENERAL_TEXT_MIXED_ARMY = 44,
     // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
@@ -45,6 +50,15 @@ enum EGeneralTextIndex {
     // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
+    // town.obj's three event-reward rows: the " and " list separator
+    // (folded [Text._First + 0x238] in both show_* helpers), and the
+    // two town-event dialog formats give_event_reward's helpers wrap
+    // around the reward list ([+0x92c] buildings, [+0x930] creatures).
+    // Gated: an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
+    GENERAL_TEXT_LIST_AND = 142,
+    GENERAL_TEXT_EVENT_BUILDINGS = 587,
+    GENERAL_TEXT_EVENT_CREATURES = 588,
     GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
     GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
     GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
@@ -157,19 +171,6 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
-    // The four rows combatManager::ModifySpellDamage (0x5a78e0) prints
-    // when a hero bonus, a creature trait or a Protection-from-<school>
-    // counter has moved a spell's damage off its table value. The four
-    // folded loads are [Text._First + 0x884 .. + 0x890] and the ladder
-    // that picks between them is (damage < base) x (numTroops == 1), in
-    // that order, each arm formatting the stack's name and the ABSOLUTE
-    // difference. Gated for the reason GENERAL_TEXT_GOOD_MORALE above
-    // is - an ungated enumerator counts toward the include-set
-    // threshold in every consumer.
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE = 545,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,
-    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY = 548,
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell
     // icons print, all folded [Text._First + N] loads in its
@@ -183,8 +184,15 @@ enum EGeneralTextIndex {
     // when the defending stack carries creatureId bit 6 - the same bit
     // SideIsWipedOut (0x465830) and IsWinner (0x4658b0) read as "this
     // stack is out of the fight" - and it takes the stack's name alone,
-    // with no count.
+    // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE is.
     GENERAL_TEXT_COMBAT_STACK_WIPED_OUT = 668,
+    // ModifySpellDamage's four message arms (spells.cpp, 0x5a78e0). Restored
+    // 2026-08-20: these were lost resolving a header conflict, then put back
+    // UNGATED - the view they used to sit behind is gone.
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE = 545,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,
+    GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY = 548,
     GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
     GENERAL_TEXT_ARMY_SPELL_BIND = 681,
     GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,

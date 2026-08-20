@@ -31,6 +31,11 @@
 #include "advmgr_objects.h"
 #include "csprite.h"
 #include "advmgr.h"
+#define HOMM3_ADVMGR_QUICKINFO_VIEW
+#define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_MAPCELL_HERO_SETUP_VIEW
+#define HOMM3_MAPCELL_OBJECTS_VIEW
+#define HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #include "game.h"
 #include "kb.h"
 #include "kbwin.h"

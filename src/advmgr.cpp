@@ -65,6 +65,9 @@
 #include "bottomviewsubwindow.h"
 #include "button.h"
 #include "csprite.h"
+#define HOMM3_ADVMGR_OBJ_DECLS
+#define HOMM3_ADVMGR_QUICKINFO_VIEW
+#define HOMM3_MAPCELL_OBJECTS_VIEW
 #include "game.h"
 #include "creature_bank.h"
 #include "exec.h"

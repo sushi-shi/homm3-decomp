@@ -36,6 +36,8 @@
 // HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
 // to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
 // HeroExtra, and that class lives behind this same gate in game.h.
+#define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
 // declarator, not the whole events view; advmgr.h's own note records why.

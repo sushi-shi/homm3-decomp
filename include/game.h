@@ -258,12 +258,15 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
+
     // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
     // this class - and retail keeps no out-of-line row for it either.
     // advManager::ProcessDeSelect's elevation-toggle arm expands it in
     // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
-    // zero-extended flag plus one, tested against one. Gated to the one
-    // compilation personality whose call site proves the expansion.
+    // zero-extended flag plus one, tested against one. Gated to the
+    // compilation personalities whose call sites prove the expansion
+    // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
+    // the same movzx/inc shape, 2026-08-20).
     int GetNumLevels() { return HasTwoLevels + 1; }
 
     // Header inlines in the original map class (DC MapCell.h:895/906).
@@ -279,6 +282,13 @@ public:
     NewmapCell* cell(int x, int y, int z);
     NewmapCell* cell(type_point point);
 #else
+    // Header inline in the original map class. InsertObject expands this
+    // three-dimensional row-major lookup, and so does advManager::EraseObj
+    // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
+    // compilation personalities retain the out-of-line declaration until
+    // their own call sites prove that expansion.
+    // victorylossconditions joins for CheckForDefeatedMonsterWin's map
+    // sweep (2026-08-20).
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
@@ -540,7 +550,55 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
+#ifdef HOMM3_VLC_CHECKS_VIEW
+// hero.cpp owns the DATA claim (0x69774c); this view only needs the
+// name for CheckForDefeatedHeroLoss's campaign-mode gate.
+extern unsigned char gCampaignMode;
+
+// The upgrade-town victory's two level domains (map-format ordinals).
+// CheckForUpgradedTown (0x5f1d40) maps each to the matching
+// type_building_id bit: town/city/capitol halls, fort/citadel/castle.
+// Gated with the rest of the VLC view.
+enum EVictoryHallLevel {
+    VICTORY_HALL_TOWN = 0,
+    VICTORY_HALL_CITY = 1,
+    VICTORY_HALL_CAPITOL = 2
+};
+enum EVictoryCastleLevel {
+    VICTORY_CASTLE_FORT = 0,
+    VICTORY_CASTLE_CITADEL = 1,
+    VICTORY_CASTLE_CASTLE = 2
+};
+#endif
+
 enum EVictoryConditionType {
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
+    // the map-format acquire-artifact ordinal.
+    VICTORY_CONDITION_ARTIFACT = 0,
+    // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
+    // 0x5f1d40 CheckForUpgradedTown on `cmp Type,3`; the values agree
+    // with the map-format victory-condition ordinal (0 artifact,
+    // 1 creatures, 2 resources, 3 upgrade town, ...). Gated:
+    // enumerators count against the include-set declarator wall for
+    // every consumer of this header.
+    VICTORY_CONDITION_TOTAL_CREATURES = 1,
+    VICTORY_CONDITION_UPGRADE_TOWN = 3,
+#endif
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
+    // town.obj joins for initialize_buildings' Grail-slot gate.
+    VICTORY_CONDITION_BUILD_GRAIL = 4,
+#endif
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // 0x5f2390 CheckForDefeatedMonsterWin dispatches on both: 7 is the
+    // map-format defeat-monster ordinal, 11 the engine's
+    // every-monster-dead sweep of the same routine.
+    VICTORY_CONDITION_DEFEAT_MONSTER = 7,
+    // 0x5f2860 CheckForArtifactTransportWin gates on `cmp Type,0xa`,
+    // the map-format transport-artifact ordinal.
+    VICTORY_CONDITION_TRANSPORT_ARTIFACT = 10,
+    VICTORY_CONDITION_DEFEAT_ALL_MONSTERS = 11,
+#endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
     VICTORY_CONDITION_CAPTURE_TOWN = 6,
@@ -575,15 +633,54 @@ public:
     signed char Type;
     signed char AllowNormalVictory;
     signed char AppliesToComputer;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // The Dreamcast field list (dump 0x3e34) orders ArtifactNum,
+    // CreatureType, NumCreatures between AppliesToComputer and
+    // ResourceType; retail widens the trailing pair to ints.
+    // CheckForTotalCreatures (0x5f1b10) pushes the dword at +0x8
+    // straight into armyGroup::get_creature_total(TCreatureType) and
+    // compares the summed total against the dword at +0xc, fixing both
+    // offsets. ArtifactNum's exact retail slot within +3..+7 is still
+    // unproven, so that band stays a pad. Gated: member declarators
+    // count against the include-set wall for every consumer.
+    char pad_03;
+    // CheckForArtifactTransportWin (0x5f2860) hands the dword at +0x4
+    // to hero::HasArtifact and scales it by the 32-byte
+    // TArtifactTraits stride - the DC ArtifactNum, int-widened.
+    int ArtifactNum;
+    TCreatureType CreatureType;
+    int NumCreatures;
+#else
     char pad_03[0xd];
+#endif
     int ResourceType;
     int ResourceAmount;
     int TownX;
     int TownY;
     int TownZ;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
+    // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
+    // HallLevel/CastleLevel char-sized where it widened the neighbours.
+    // Gated like the pad_03 slice above.
+    signed char HallLevel;
+    signed char CastleLevel;
+    char pad_26[0xe];
+#else
     char pad_24[0x10];
+#endif
     int HeroID;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
+    // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
+    // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
+    int MonsterX;
+    int MonsterY;
+    int MonsterZ;
+    char pad_44[4];
+#else
     char pad_38[0x10];
+#endif
     unsigned char GameWon;
     signed char playerWinner;
     char pad_4a[2];
@@ -593,12 +690,17 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
+    // 0x5f1d40 (dc 0x190038), reconstructed in the owning TU. Kept out
+    // of the EVENTS view so events.obj's declarator count is untouched;
+    // town.obj joins for BuildBuilding's post-build check (2026-08-20).
+    unsigned char CheckForUpgradedTown();
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same
     // `gpGame->mapHeader.victoryCondition`, each followed by its own
     // CheckEndGame(0). Gated purely to keep the declarator out of the
     // other twenty-odd consumers of this header until one of them needs
-    // it.
+    // it. VLC_CHECKS_VIEW joins the gate for the owning TU's own
+    // reconstruction of the trio (2026-08-20).
     unsigned char CheckForTotalCreatures();
     // 0x5f2390. The Dreamcast decoration
     // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
@@ -626,6 +728,7 @@ public:
     // Behind a gate of its own because townmgr.cpp is the only consumer
     // in the admitted surface and this header's declarator count is
     // load-bearing for every unit that includes it.
+
     unsigned char CheckForGrailBuildingWin();
     // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
     // hero::GiveArtifact asks it as
@@ -634,6 +737,7 @@ public:
     // calls CheckEndGame(0) when it answers yes. Gated for exactly the
     // reason that one is: this header's declarator count is load-bearing
     // for every unit that includes it.
+
     unsigned char CheckForArtifactWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
@@ -1557,6 +1661,7 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+
     // record_claim_mine's sibling, and the same ~500-byte shape: retail
     // inlines the whole `new type_record_claim_*` / push_back /
     // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is

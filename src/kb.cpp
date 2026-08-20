@@ -4,6 +4,7 @@
 #include <va.h>
 #include <stdio.h>
 #include "kb.h"
+#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "textresource.h"
 #include "advmgr.h"
