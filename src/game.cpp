@@ -114,6 +114,13 @@ const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
 const int CAMPAIGN_ARMY_OVERRIDE_TRAITS = 96;
+// game::GetRandomMonster gates the Conflux strike-out on
+// `campaign.currentCampaign >= 13`. Thirteen is where TCampaignWindow's
+// page seeds put the Shadow of Death set - page 0 covers rows 0-6 (Restoration
+// of Erathia), page 1 rows 7-12 (Armageddon's Blade), page 2 rows 13-19.
+// campaignwindow.h is not in this TU's closure, so the value lives here as a
+// local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
+const int FIRST_SHADOW_OF_DEATH_CAMPAIGN = 13;
 
 const int PRODUCTION_ARTIFACT_CRYSTAL = 0x6d;
 const int PRODUCTION_ARTIFACT_GEMS = 0x6e;
@@ -3259,12 +3266,109 @@ void game::PerMonth()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:8707
+// Roll a creature id whose level falls in [minLevel, maxLevel], out of a
+// bitset that starts all-ones and is punched down by the expansion and
+// campaign filters.
+//
+// The width is 145, and retail proves it twice: bitset<145>::_Tidy writes
+// five words and trims the last with 0x1ffff == (1<<17)-1, which is
+// 145 % 32 == 17, and the traits sweep runs to 0x41b4 == 145 * 0x74 ==
+// 145 * sizeof(TCreatureTypeTraits). CREATURE_CATAPULT is exactly 145:
+// the traits table holds 150 rows but the last five are war machines, so
+// the roll domain is every id BELOW the first of them.
+//
+// f_1f698 == 0 is the no-expansion map - everything from CREATURE_PIXIE
+// up is struck out. On an expansion map only the six Armageddon's Blade
+// neutral specials go, plus, in a Shadow of Death campaign, the ten
+// Conflux-exclusive creatures.
+//
+// Every strike is spelled `monsterOk[id] = false;` UNIFORMLY. Retail
+// shows three different shapes for it - a bare call to bitset::set, an
+// inlined operator[] with an out-of-line reference::operator=, and both
+// out of line - but that is /Ob2 budget decay across one source
+// spelling, not three spellings. Do not write .set() for some of them.
+//
+// The final scan has NO bound and no `count() == 0` guard: on an empty
+// bitset retail rolls Random(0, -1) and walks off the end. Transcribed
+// faithfully.
+//
+// Residual (86.7929%): ONE block, the no-expansion clear loop. Every
+// other instruction pairs off - the thirteen strike-out calls, the
+// traits sweep, count/Random and the final scan all match, and the
+// remaining rows are cosmetic reloc names (the STL COMDATs and
+// gbUnk69774c have no name on the target side yet). Retail's loop
+// variable there is an EIGHT-BYTE object {bitset<145>*, size_t}: it
+// calls a nullary const member that returns a copy of both words by
+// value (0x4d4ca0) and then reference::operator= on the temporary, and
+// its exit test compares BOTH fields against {&monsterOk, 145}. That is
+// a bitset ITERATOR - `for (it = begin() + CREATURE_PIXIE; it != end();
+// ++it) *it = false;` - and VC6's std::bitset has none, so the type came
+// from the game's own source. 0x4d4ca0 has exactly one caller in the
+// whole image, so nothing else can pin it, and no name for it exists in
+// this tree. An index loop is the closest spelling available; binding
+// each element to a named bitset<145>::reference first was measured and
+// changes nothing (86.7929 either way) because VC6 folds operator[] plus
+// reference::operator= straight back into bitset::set.
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
 TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
 {
-    // @stub
+    int i;
+    int TotalInClass;
+    int curCount;
+    int x;
+
+    std::bitset<CREATURE_CATAPULT> monsterOk;
+    monsterOk.set();
+
+    if (!f_1f698) {
+        for (i = CREATURE_PIXIE; i < CREATURE_CATAPULT; ++i)
+            monsterOk[i] = false;
+    } else {
+        monsterOk[CREATURE_AZURE_DRAGON] = false;
+        monsterOk[CREATURE_CRYSTAL_DRAGON] = false;
+        monsterOk[CREATURE_FAERIE_DRAGON] = false;
+        monsterOk[CREATURE_RUST_DRAGON] = false;
+        monsterOk[CREATURE_ENCHANTER] = false;
+        monsterOk[CREATURE_SHARPSHOOTER] = false;
+        if (gbUnk69774c
+            && campaign.currentCampaign >= FIRST_SHADOW_OF_DEATH_CAMPAIGN) {
+            monsterOk[CREATURE_PIXIE] = false;
+            monsterOk[CREATURE_SPRITE] = false;
+            monsterOk[CREATURE_PSYCHIC_ELEMENTAL] = false;
+            monsterOk[CREATURE_MAGIC_ELEMENTAL] = false;
+            monsterOk[CREATURE_ICE_ELEMENTAL] = false;
+            monsterOk[CREATURE_MAGMA_ELEMENTAL] = false;
+            monsterOk[CREATURE_STORM_ELEMENTAL] = false;
+            monsterOk[CREATURE_ENERGY_ELEMENTAL] = false;
+            monsterOk[CREATURE_FIREBIRD] = false;
+            monsterOk[CREATURE_PHOENIX] = false;
+        }
+    }
+
+    for (i = 0; i < CREATURE_CATAPULT; ++i) {
+        if (akCreatureTypeTraits[i].level < minLevel
+            || akCreatureTypeTraits[i].level > maxLevel)
+            monsterOk[i] = false;
+    }
+
+    TotalInClass = monsterOk.count();
+    curCount = Random(0, TotalInClass - 1);
+    x = 0;
+    for (;;) {
+        if (monsterOk[x]) {
+            if (curCount == 0)
+                break;
+            --curCount;
+        }
+        ++x;
+    }
+    return creature_type_from_int(x);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:8749
 #endif  // @carcass
