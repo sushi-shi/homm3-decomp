@@ -52,8 +52,6 @@
 // artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
 // hero.h -> artifact.h) and a view define has to precede its header.
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_SPELL_SLOW_DECL
-#define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
 #define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast

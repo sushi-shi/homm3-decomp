@@ -5,7 +5,6 @@
 // find_spell_target's third arm needs SPELL_SACRIFICE, which armygrp.h
 // keeps behind this view: declaring it unconditionally costs initialize's
 // initialize_game_data 100.0000 -> 96.0880 (measured 2026-08-20).
-#define HOMM3_ARMYGRP_SACRIFICE_VIEW
 #include "armygrp.h"
 #include "spells.h"
 #include "army.h"

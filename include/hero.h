@@ -195,14 +195,12 @@ extern int gUnnamed6aa9d8;
 extern int gStablesMovementBonus;
 #endif
 
-#ifdef HOMM3_HERO_DESCRIPTION_DEFS
 // The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
 // viewarmywindow.cpp owns the DATA claims on 0x6a57bc / 0x6a532c, and a
 // second claim on the same RVA is a fatal duplicate at delink time.
 extern const char* gMoraleTexts[42];
 extern const char* gLuckTexts[25];
-#endif
 
 class hero : public type_obscuring_object {
 public:
@@ -899,19 +897,11 @@ public:
     // the stack); the Dreamcast port exposes the same logic as a file-local
     // two-argument helper instead.
     int ValueOfSpell(SpellID spell) const;
-// hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0), so the compiland's
-// own view joins the gate - the type_artifact::get_description precedent
-// above. A narrow macro, NOT HOMM3_ARMYGRP_DESCRIPTION_API: that one also
-// widens armygrp.h (std forward decls, akCreatureBackgrounds and the two
-// armyGroup declarators), and armygrp.h's own note measures what that
-// costs an unrelated TU.
-#if defined(HOMM3_ARMYGRP_DESCRIPTION_API) \
-    || defined(HOMM3_HERO_DESCRIPTION_DEFS)
+// hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description() const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_luck_description() const;
-#endif
     int GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                 unsigned char apply_limits);
     // Claimed in src/hero.cpp (0x4e39b0); declared here because

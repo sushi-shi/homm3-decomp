@@ -10,7 +10,6 @@
 // GetMorale's four helper calls are Dinkumware bitset members to the
 // instruction).
 #include <bitset>
-#define HOMM3_ARMYGRP_DESCRIPTION_API
 // get_luck_description's Rampart/Fountain-of-Fortune gate calls
 // town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
 // see town.h for why the inline's visibility is scoped.
