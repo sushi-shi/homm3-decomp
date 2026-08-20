@@ -2549,21 +2549,26 @@ void combatManager::PlaceAllObstacles()
 // The mirror of PlaceObstacle: same shape walk and same odd-row
 // correction, clearing the low six attribute bits off every extra hex
 // and bit 0 off the anchor, then disposing the obstacle's sprite.
-// Residual (87.3%): one register-allocation decision, nothing else -
-// retail keeps obstacles_begin in EAX across the three guards, so it
-// touches neither EBX nor EDI until after the bound check and has to
-// RE-LOAD the pointer for the indexing; our CL coalesces that value
-// into EDI, pushes EDI in the prologue and keeps it, which flips the
-// push/pop order and reschedules the loop preamble. Tried and
-// rejected: the split-if guard trio (87.3%, identical bytes), routing
-// the body through the DC header inline GetObstacle (87.3%, VC6 CSEs
-// the second load away). Register-homing family.
+// EXACT 2026-08-20 (87.29 -> 100.0000), and the close is one spelling:
+// the bound guard reads `obstacles.size()` - the null-guarded accessor -
+// instead of hand-folding `begin == 0` and `end - begin`. The old note
+// diagnosed the codegen correctly (retail keeps begin in EAX across the
+// guards and RE-LOADS it for the indexing, ours coalesced it into EDI
+// and pushed early) but filed it as an unreachable register-allocation
+// decision; it was a source fact. The accessor's expansion consumes its
+// begin load producing size, so nothing holds the pointer across the
+// guard and VC6 re-reads it for GetObstacle exactly as retail does -
+// the pushes sink past the guards and the pop order follows. Same tell
+// as SetupAndLoadObstacles' grow arm: when retail re-reads a member an
+// accessor already reads once, write the accessor. (The old rejects
+// stand: split-if trio byte-identical, GetObstacle routing CSE'd away -
+// the guard, not the body, was the load-bearing site.)
 VA(0x00466b30, 0x11F)  // anchor-global, dc 0x60b20
 void combatManager::RemoveObstacle(int index)
 {
-    if (index < 0 || obstacles.begin == 0
+    if (index < 0
             || static_cast<unsigned>(index)
-               >= static_cast<unsigned>(obstacles.end - obstacles.begin))
+               >= static_cast<unsigned>(obstacles.size()))
         return;
     TObstacle* obstacle = &GetObstacle(index);
     const type_obstacle_shape* shape = obstacle->shape;

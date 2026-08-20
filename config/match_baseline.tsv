@@ -571,7 +571,7 @@ cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2232	96.2232	96.2232	0x68990
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
-cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
+cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	89.9086	89.9086	89.9086	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
