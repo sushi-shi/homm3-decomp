@@ -97,7 +97,16 @@ enum EAreaAttackCreature {
     CREATURE_PIKEMAN = 0x0,
     CREATURE_HALBERDIER = 0x1,
     CREATURE_GENIE = 0x24,
-    CREATURE_EFREETI = 0x34
+    CREATURE_EFREETI = 0x34,
+    // army::do_post_attack's dispatch (0x440bc0) proves the four: the
+    // Thunderbird's 20% lightning at 0x5d (Stronghold's upgraded Roc),
+    // the Mighty Gorgon's death stare at 0x67, and the Serpent/Dragon
+    // Fly dispel pair at 0x68/0x69 (only 0x69 adds the Weakness cast),
+    // each id bracketed by the proven runs around it.
+    CREATURE_THUNDERBIRD = 0x5d,
+    CREATURE_MIGHTY_GORGON = 0x67,
+    CREATURE_SERPENT_FLY = 0x68,
+    CREATURE_DRAGON_FLY = 0x69
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort

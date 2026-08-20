@@ -2034,17 +2034,217 @@ void army::do_fire_shield(long damage)
         WaitEndSample(sample, -1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:1896
+// The blow has landed; now the attacker's aftermath, one arm per
+// special: the Vampire Lord drains min(damage, victim life, missing
+// life) back into its own stack and resurrects a Lord per full
+// hit-point block; the Mighty Gorgon death-stares up to
+// (numTroops+9)/10 victims dead at 10% a head; the Thunderbird lands
+// a 20% Lightning Bolt at 10 damage a bird; the Serpent/Dragon Fly
+// dispels (the Dragon Fly adding advanced Weakness); and the Rust
+// Dragon's 20% acid breath burns half a damage roll per head. Every
+// arm reads the bytes' own quick-combat asymmetries faithfully -
+// the Gorgon and Rust Dragon copy UNINITIALIZED SAMPLE2 slots on the
+// quick path (guarded again before WaitEndSample), and the Rust arm
+// constructs a std::string it never uses (its dtor constant-folds
+// away over the known-null _Ptr; only the EH state betrays it).
+//
+// The case bodies are in SOURCE order per the EH-state finding
+// (vampire 0..3, gorgon 4..6, thunderbird 7..8, rust 9); the
+// dispatch tables were decoded from the image.
+// Residual (92.6414%): the two documented hard classes together. The
+// string-teardown budget inlines one destructor retail calls (_Tidy 5
+// vs 6, operator delete 4 vs 3 - compute_attacker_bonus's exact
+// residual), and retail carries SIX returns against our five - the
+// merged-return / stale-CL-generation class. Branch counts 74 vs 71,
+// all inside those two deltas; every arm's calls pair.
 VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
-void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life)
+void army::do_post_attack(army* target, int iDamage, int iKilled,
+                          int total_life)
 {
-    // @stub
-}
+    switch (creatureType) {
+    case CREATURE_VAMPIRE_LORD:
+        if (target->Is(4) & 1) {
+            long resurrected = 0;
+            long heal =
+                _cpp_min(hitPoints * (origNumTroops - numTroops)
+                             + topCreatureDamage,
+                         _cpp_min(iDamage, total_life));
+            topCreatureDamage -= heal;
+            if (topCreatureDamage < 0) {
+                resurrected =
+                    (hitPoints - topCreatureDamage - 1) / hitPoints;
+                topCreatureDamage += hitPoints * resurrected;
+                numTroops += resurrected;
+            }
+            if (heal > 0) {
+                std::string text;
+                const char* target_name =
+                    GetName(target->creatureType,
+                            target->numTroops + iKilled);
+                if (numTroops - resurrected == 1)
+                    text = format_string(gpGeneralText->GetText(362),
+                                         GetName(creatureType,
+                                                 numTroops - resurrected),
+                                         heal, target_name);
+                else
+                    text = format_string(gpGeneralText->GetText(363),
+                                         GetName(creatureType,
+                                                 numTroops - resurrected),
+                                         heal, target_name);
+                if (resurrected > 0) {
+                    if (resurrected == 1)
+                        text += gpGeneralText->GetText(364);
+                    else
+                        text += format_string(gpGeneralText->GetText(365),
+                                              resurrected);
+                }
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    gpCombatManager->combatWindow->combat_message(
+                        text.c_str(), 1, 0);
+                    SAMPLE2 sample = LoadPlaySample(
+                        DATA_COMPGEN(0x00660a40, drainLifeSampleName,
+                                     "DrainLif.wav"));
+                    gpCombatManager->SpellEffect(74, this, 100, 0);
+                    WaitEndSample(sample, -1);
+                }
+            }
+        }
+        break;
 
-// E:\gamedcs\army.cpp:2358
-#endif  // @carcass
+    case CREATURE_MIGHTY_GORGON:
+        if (target->Is(4) & 1) {
+            int stares = 0;
+            for (long i = 0; i < numTroops; i++) {
+                if (Random(1, 100) <= 10)
+                    stares++;
+            }
+            long dead = _cpp_min((numTroops + 9) / 10,
+                                 _cpp_min(stares, target->numTroops));
+            if (dead > 0) {
+                long damage =
+                    target->hitPoints * dead - target->topCreatureDamage;
+                std::string text;
+                if (dead == 1)
+                    text = format_string(gpGeneralText->GetText(119),
+                                         GetName(target->creatureType,
+                                                 dead),
+                                         GetName(creatureType,
+                                                 numTroops));
+                else
+                    text = format_string(gpGeneralText->GetText(120),
+                                         dead,
+                                         GetName(target->creatureType,
+                                                 dead),
+                                         GetName(creatureType,
+                                                 numTroops));
+                SAMPLE2 sample;
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    gpCombatManager->combatWindow->combat_message(
+                        text.c_str(), 1, 0);
+                    sample = LoadPlaySample(
+                        akSpellTraits[SPELL_DEATH_STARE].m_sample);
+                    gpCombatManager->SpellEffect(80, target, 100, 0);
+                }
+                target->Damage(damage);
+                gpCombatManager->PowEffect(-1, 1);
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat())
+                    WaitEndSample(sample, -1);
+            }
+        }
+        break;
+
+    case CREATURE_THUNDERBIRD:
+        if (target->numTroops > 0 && Random(1, 100) <= 20) {
+            if (gpCombatManager->SpellCastWorks(SPELL_LIGHTNING_BOLT,
+                                                get_controlling_side(),
+                                                target, 1, 1)) {
+                long damage = gpCombatManager->ModifySpellDamage(
+                    numTroops * 10, SPELL_LIGHTNING_BOLT, 0, 0, target,
+                    0);
+                if (damage > 0) {
+                    std::string text;
+                    SAMPLE2 sample;
+                    if (!static_cast<const combatManager*>(
+                             gpCombatManager)
+                             ->IsQuickCombat()) {
+                        text = format_string(
+                            gpGeneralText->GetText(368),
+                            GetName(target->creatureType,
+                                    target->numTroops));
+                        gpCombatManager->combatWindow->combat_message(
+                            text.c_str(), 1, 0);
+                        sample = LoadPlaySample(
+                            DATA_COMPGEN(0x00660a30,
+                                         lightningBoltSampleName,
+                                         "LightBlt.wav"));
+                        gpCombatManager->SpellEffect(1, target, 10, 0);
+                    }
+                    long killed = target->Damage(damage);
+                    gpCombatManager->damage_message(
+                        akSpellTraits[SPELL_LIGHTNING_BOLT].name, 1,
+                        damage, target, killed);
+                    target->bShowPowEffect = 1;
+                    gpCombatManager->PowEffect(49, 1);
+                    if (!static_cast<const combatManager*>(
+                             gpCombatManager)
+                             ->IsQuickCombat())
+                        WaitEndSample(sample, -1);
+                }
+            }
+        }
+        break;
+
+    case CREATURE_SERPENT_FLY:
+    case CREATURE_DRAGON_FLY:
+        if (target->numTroops > 0) {
+            if (gpCombatManager->SpellCastWorks(SPELL_DISPEL_HELPFUL,
+                                                get_controlling_side(),
+                                                target, 1, 1))
+                gpCombatManager->CastSpell(SPELL_DISPEL_HELPFUL,
+                                           target->gridIndex, 1, -1, 0,
+                                           3);
+            if (creatureType == CREATURE_DRAGON_FLY
+                && target->spellInfluence[SPELL_WEAKNESS] == 0) {
+                if (gpCombatManager->SpellCastWorks(
+                        SPELL_WEAKNESS, get_controlling_side(), target,
+                        1, 1))
+                    gpCombatManager->CastSpell(SPELL_WEAKNESS,
+                                               target->gridIndex, 1, -1,
+                                               2, 3);
+            }
+        }
+        break;
+
+    case CREATURE_RUST_DRAGON:
+        if (target->numTroops > 0 && Random(1, 100) <= 20) {
+            long damage = Random(minDamage, maxDamage) * numTroops / 2;
+            if (damage > 0) {
+                std::string text;
+                SAMPLE2 sample;
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat())
+                    sample = LoadPlaySample(
+                        akSpellTraits[SPELL_ACID_BREATH_DEFENSE]
+                            .m_sample);
+                long killed = target->Damage(damage);
+                gpCombatManager->damage_message(
+                    akSpellTraits[SPELL_ACID_BREATH_DEFENSE].name, 1,
+                    damage, target, killed);
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    gpCombatManager->SpellEffect(81, target, 100, 0);
+                    WaitEndSample(sample, -1);
+                }
+                gpCombatManager->PowEffect(-1, 1);
+            }
+        }
+        break;
+    }
+}
 
 // E:\gamedcs\army.cpp:2044
 // One swing, fully resolved: mark who gets hit (the hydra's whole
