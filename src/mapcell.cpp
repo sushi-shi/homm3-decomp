@@ -4754,7 +4754,35 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // and +0.70 after them (76.1294 without it) - re-measure a low-mass knob at
 // each new plateau.
 //
-// Residual (76.8302%): ONE register permutation and everything downstream of
+// Fourth, and it is what actually makes the walk happen: `newObject->y` IS
+// NAMED IN THE X-LOOP BODY (2026-08-20).  With the subscript written
+// `heights[newObject->y - y]` VC6 re-loads the member on every inner
+// iteration, and a memory re-read inside the loop blocks the strength
+// reduction, so the index is rebuilt as `sub edx,ecx / cmp al,[edx+ebx]`
+// every pass.  Naming it once per x-iteration -
+// `int objectY = newObject->y;` - gives retail's shape exactly:
+// `lea edi,[ebp+ebx-0x74]` in the preheader, `dec edi` on the back edge and
+// `movsx eax,byte ptr [edi]` at the test, with the byte compare widening to
+// retail's `movsx/movsx/cmp` pair for free.  76.8302 -> 84.0539, and
+// declaring it BEFORE `heights` rather than after is worth 0.17 more.
+// SCOPE IS LOAD-BEARING: hoisted one level further out, above the x loop, it
+// makes the frame EXACT at 0x7c and costs 12.6 (84.2237 -> 71.6604).  The
+// frame is not the objective.
+//
+// Residual (84.2237%): the tail's `vector<TObjectCell>::size()`, plus the
+// register permutation below.  Retail EXPANDS that size() inside the inlined
+// insert's capacity path - `mov ecx,[edi+4] / test ecx,ecx / jne` with the
+// null arm folded - where we keep the call; that one under-inline is both of
+// the two branches we are short (base 30 against retail's 32) and the whole
+// of the remaining flow distance.  It is the A8 direction that wants a BIGGER
+// caller, and nothing is missing from this body's source, so the lever is
+// either mass from somewhere else or an early-site pin to enlarge the
+// remaining budget.  The frame is now 0x78 against retail's 0x7c, i.e. one
+// named local short - and note that the one edit which DID make it exact
+// (hoisting objectY above the x loop) cost 12.6 points, so do not chase the
+// frame here.
+//
+// Under that: ONE register permutation and everything downstream of
 // it.  Retail binds this->ESI, newObject->EDI, position->EBX; this compile
 // binds position->ESI, this->EDI, newObject->EBX, i.e. retail's earliest
 // call-crossing pseudo is `this` and ours is `position`.  Every later
@@ -4826,6 +4854,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 overlap.bottom = gMapHeight;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
+                int objectY = newObject->y;
                 signed char* heights = heightMap[newObject->x - x];
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
                     NewfullMap& worldMap = gpGame->worldMap;
@@ -4836,7 +4865,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                         = cell->objects.begin();
                     while (scan->objectIndex != (position - 1)->objectIndex)
                         ++scan;
-                    if (scan->layer > heights[newObject->y - y])
+                    if (scan->layer > heights[objectY - y])
                         goto sinkPast;
                 }
             }
