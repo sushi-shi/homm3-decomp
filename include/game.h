@@ -300,6 +300,10 @@ public:
     void NewfullMapFn_00505F20(CObject* object, int objectType,
                                int objectIndex, int terrain);
     int PlaceObject(int objectIndex, unsigned char setExtraInfo);
+    // The second parameter is the 8x6 byte grid the object's draw pass
+    // stamps: retail zeroes exactly 48 bytes through it and walks it with a
+    // row stride of six, so the width index is the OUTER one.
+    void GenerateHeightMap(const CObject* object, signed char heightMap[8][6]);
 #endif
 };
 
