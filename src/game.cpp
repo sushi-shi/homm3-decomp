@@ -2494,16 +2494,23 @@ int game::Load(TAbstractFile* infile)
     if (saved.Load(infile))
         return -1;
 
+    // Every store in this block goes through gpGame, RELOADED from the
+    // global for each one, not through the implicit `this` retail
+    // already has in a register: `mov ecx,[gpGame] / mov [ecx+0x1f698],
+    // edx`, then `mov ecx,[gpGame]` again for mapHeader, again for
+    // setup, again for campaign, again for the filename. Do not cache
+    // what retail reloads.
     int saveVersion = saved.version;
-    f_1f698 = saved.gameVersion;
-    mapHeader = saved.mapHeader;
-    setup = saved.mapSetup;
+    gpGame->f_1f698 = saved.gameVersion;
+    gpGame->mapHeader = saved.mapHeader;
+    gpGame->setup = saved.mapSetup;
     gbUnk69774c = saved.campaignGame;
-    campaign = saved.campaign;
-    strcpy(pad_1f4d5, saved.fileName.c_str());
-    difficultyRating = saved.difficultyRating;
-    field_1f635 = saved.numDeadPlayers;
-    memcpy(playerDisabled, saved.deadPlayer, sizeof(playerDisabled));
+    gpGame->campaign = saved.campaign;
+    strcpy(gpGame->pad_1f4d5, saved.fileName.c_str());
+    gpGame->difficultyRating = saved.difficultyRating;
+    gpGame->field_1f635 = saved.numDeadPlayers;
+    memcpy(gpGame->playerDisabled, saved.deadPlayer,
+           sizeof(gpGame->playerDisabled));
 
     char char_buffer;
     short short_buffer;
