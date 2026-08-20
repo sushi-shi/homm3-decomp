@@ -28,6 +28,7 @@
 // by finding a matching record in gpGame's 136-byte-stride pool at +0x98 or
 // by calling pick_alignment - a random-dwelling resolution pass.
 //
+#include <stdio.h>
 #include <va.h>
 #include <windows.h>
 #include "advmgr_objects.h"
@@ -35,6 +36,7 @@
 #include "advmgr.h"
 #include "game.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
 #include "monsterdata.h"
 #include "resourcemanager.h"
@@ -3263,17 +3265,116 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// The h3m object-table reader, loadMapObjects' twin - same resize/refill/
+// dispose shape for the sprite table, same re-taken subscripts - plus the
+// missing-mask reporting the save path has no need of.
+//
+// readObjectType answers 100, not 1, when an object's own .msk was missing
+// and default.msk stood in.  Every such TYPE index is collected here, and
+// then every OBJECT that turns out to reference one is reported by name and
+// position.  That is what the file-scope vector below is for, and why it is
+// CLEARED on entry rather than merely constructed empty.
+//
+// It also corrects this compiland's span audit: the static ctor/dtor pair at
+// 0x504260/0x504290 was recorded as belonging to a 16-byte STRING global at
+// 0x699690.  It is this vector - the reads at 0x699694/0x699698 are _First
+// and _Last, and the entry clear passes exactly that pair to
+// vector<int>::erase.
+//
+// Note the two helpers at the end of the type loop run in the OPPOSITE order
+// from loadMapObjects': the index rebuild first, then the progress tick.
+// That is retail's order in each body, not a transcription slip.
+//
+// Residual (78.4070%): ONE branch over retail (base 35, target 34), and it is
+// not in the shared half - every construct this body has in common with the
+// now-exact loadMapObjects reproduces, including the CObjectType temp's six
+// sub-constructors (four bitset<48>::_Tidy plus the bitset<10> one), both
+// inlined resizes, the sprite save/refill/dispose, and the two-argument
+// vector<int>::insert the missing-mask collection reaches.  The extra branch
+// is somewhere in the reporting pass that loadMapObjects does not have -
+// either the missing-mask scan's shape or the sprintf/MessageBoxA block.
+// Not chased further this lane; the twin is the control to diff against.
+DATA(0x00699690)
+static std::vector<int> gMissingMaskTypes;
 
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
-int NewfullMap::readMapObjects(void* infile)
+int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    // @stub
-}
+    gMissingMaskTypes.clear();
 
-// E:\gamedcs\mapcell.cpp:3924
-#endif  // @carcass
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objectTypes.resize(count);
+
+    unsigned int i;
+    for (i = 0; i < objectTypes.size(); ++i) {
+        int status = readObjectType(infile, &objectTypes[i]);
+        if (status < 0)
+            return -1;
+        if (i == objectTypes.size() / 2)
+            IncProgressBar(1);
+        if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
+            gMissingMaskTypes.push_back(i);
+    }
+
+    NewfullMapFn_005042C0();
+    IncProgressBar(1);
+
+    std::vector<CSprite*> oldSprites;
+    oldSprites.resize(sprites.size());
+    for (i = 0; i < sprites.size(); ++i)
+        oldSprites[i] = sprites[i];
+
+    sprites.resize(objectTypes.size());
+    for (i = 0; i < objectTypes.size(); ++i) {
+        sprites[i] =
+            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
+        if (i == objectTypes.size() / 3)
+            IncProgressBar(1);
+        if (i == objectTypes.size() / 3 * 2)
+            IncProgressBar(1);
+    }
+
+    for (i = 0; i < oldSprites.size(); ++i)
+        oldSprites[i]->Dispose();
+    oldSprites.clear();
+
+    IncProgressBar(1);
+
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objects.resize(count);
+    for (i = 0; i < objects.size(); ++i) {
+        if (readObject(infile, &objects[i], mapVersion) < 0)
+            return -1;
+
+        unsigned int missing;
+        for (missing = 0; missing < gMissingMaskTypes.size(); ++missing) {
+            if (objects[i].typeIndex == gMissingMaskTypes[missing]) {
+                sprintf(gText,
+                        DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
+                                     "Invalid Object Referenced!\n\n"
+                                     "x: %d y: %d z: %d - Type: %s"),
+                        objects[i].x, objects[i].y, objects[i].z,
+                        gAdventureObjectNames[
+                            objectTypes[objects[i].typeIndex].objectType]);
+                MessageBoxA(hwndApp, gText,
+                            DATA_COMPGEN(0x0067fb08,
+                                         readMapObjectsErrorCaption, "Error!"),
+                            0);
+            }
+        }
+
+        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 VA(0x00504a40, 0x127)  // order-map: calls saveObject 0x503640 + saveObjectType 0x503c40 (exact DC callee pair); called by Save, dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
