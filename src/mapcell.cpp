@@ -823,7 +823,14 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 
     NewfullMapFn_00502B60();
 
-    for (unsigned int i = 0; i < objects.size(); ++i)
+    // Retail CALLS vector<CObject>::size in this loop's CONDITION, at
+    // Read+0x285 (entry) and +0x29b (back edge) - the two calls that sit
+    // between 0x502b60 and 0x500de0 in its relocation sequence and that we
+    // had inlined. Same lexical placement as Load's seer-hut loop.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < objects.size(); ++i)
+#pragma inline_depth()
         PlaceObject(i, 1);
 
     NewfullMapFn_00500DE0();
@@ -1039,14 +1046,27 @@ static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
     int count = map->SeerHutList.size();
     if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
         return -1;
-    for (unsigned int i = 0; i < map->SeerHutList.size(); ++i)
+    // Retail CALLS vector<TSeerHut>::size in this loop's CONDITION, at
+    // Save+0x224 (entry) and +0x246 (back edge), and inlines the count
+    // read above it. The pin is lexical, so it covers the `for` header
+    // only; the index has to leave the init for that to be legal.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < map->SeerHutList.size(); ++i)
+#pragma inline_depth()
         map->SeerHutList[i].save(outfile);
     return 0;
 }
 
 static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
 {
+    // The mirror of the seer-hut helper, one call further: retail calls
+    // vector<TQuestGuard>::size THREE times (Save+0x254 for this count,
+    // +0x26e and +0x297 for the loop) where our CL only left the loop's
+    // two out of line.
+#pragma inline_depth(0)
     int count = map->QuestGuardList.size();
+#pragma inline_depth()
     outfile->Write(&count, 2);
     for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
         map->QuestGuardList[i].save(outfile);
