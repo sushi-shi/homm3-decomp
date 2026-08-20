@@ -574,6 +574,10 @@ public:
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
     TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
+    // ClearEffects (0x5a66b0) zeroes exactly this pad as ten dwords - a
+    // `rep stosd` with ecx=10 over [this+0x547c]. That proves the extent and
+    // the dword granularity; it does not name the elements, so the pad stays
+    // a pad until a reader slices it.
     char pad_547c[0x28];
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
@@ -1406,6 +1410,9 @@ public:
     // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
     // same eight - and its source line 5065 sits just before
     // ModifySpellDamage's 5086, which is the retail order exactly.
+    // spells.cpp:4387, dc 0x155a08 - clears pad_547c.
+    void ClearEffects();
+
     long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
                             hero* casting_hero, hero* target_hero,
                             const army* target,

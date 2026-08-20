@@ -316,12 +316,20 @@ void combatManager::ChainLightning(int index, int level, int power)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\spells.cpp:4387
-DC_ONLY(0x155a08, 0x18)
+// Located by the order-map (homm3.analysis.ordermap spells): this row is the
+// 23rd of a 40-row monotonic alignment anchored on is_valid_teleport and
+// get_elemental_type, and its predicted `ret 0` (one argument, `this`, so
+// nothing to pop) is what the retail epilogue does.
+VA(0x005a66b0, 0x14)  // order-map+arity, dc 0x155a08
 void combatManager::ClearEffects()
 {
-    // @stub
+    memset(pad_547c, 0, sizeof(pad_547c));
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4399
 DC_ONLY(0x155a20, 0x108)
