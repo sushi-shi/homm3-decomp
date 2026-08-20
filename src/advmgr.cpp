@@ -381,7 +381,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
     }
     case RS_COMBAT_TYPE: {
         CCombatTypeMsg* pMsg = static_cast<CCombatTypeMsg*>(pNetMsg);
-        gpGame->players[pMsg->field_00].quickCombat = pMsg->m_combatType;
+        gpGame->players[pMsg->field_00].quickCombat = pMsg->m_quick;
         break;
     }
     case RS_TRADE_REQUEST: {

@@ -52,7 +52,6 @@
 // artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
 // hero.h -> artifact.h) and a view define has to precede its header.
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
 #define HOMM3_SPELL_SLOW_DECL
 #define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
 #define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
@@ -62,7 +61,6 @@
 // csprite.h and the Immersion hook from game.h.
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #define HOMM3_ARMY_POW_VIEW
-#define HOMM3_CSPRITE_DEATH_SEQ_DECL
 #define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
@@ -77,9 +75,7 @@
 #define HOMM3_CMBTMGR_SETUP_VIEW
 #define HOMM3_CMBTMGR_TURN_VIEW
 #include "cmbtmgr.h"
-#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
-#undef HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
@@ -100,11 +96,7 @@
 #include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "remote.h"
 #include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
-#define HOMM3_TEXT_COMBAT_MORALE_VIEW
-#define HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #include "textresource.h"
-#undef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
-#undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
 #include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
