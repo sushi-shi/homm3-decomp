@@ -3337,6 +3337,18 @@ void hero::HeroFn_004DC100(long slot)
 #pragma inline_depth()
         return;
 
+    // THE ONE SITE OF THE THREE THAT STILL EXPANDS (residual 87.27%), and
+    // it is the budget being handed downstream, not a wrong spelling.
+    // Retail emits `cmp edi,0xc / jb / call bitset<12>::_Xran` at fn+0x12e;
+    // we still build the `invalid bitset<N> position` string at [ebp-0x40]
+    // and the out_of_range at [ebp-0x70] here, which is the whole 44-byte
+    // frame surplus (`sub esp,0x64` against retail's 0x38). Fixing the two
+    // EARLIER sites is what freed the budget this one then spends - the
+    // A9 sequential-charge behaviour, observed from the receiving end.
+    // <bitset> offers no rung deeper than `operator[] -> operator= ->
+    // set -> _Xran` to push it back out: `reset(_P)` and `flip(_P)` sit at
+    // the same depth, and `at(_P)` emits TWO bounds checks where retail
+    // has one.
     player.assembledCombinations[targetCombo] = true;
 
     int assembled = gCombinationArtifacts[targetCombo].artifactId;
