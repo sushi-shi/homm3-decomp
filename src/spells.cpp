@@ -8,6 +8,12 @@
 #define HOMM3_ARMYGRP_SACRIFICE_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// ModifySpellDamageForSpells reads the four Protection-from-<school>
+// round counters (+0x210..+0x21c) and their four damage factors
+// (+0x4a8..+0x4b4); army.h keeps both runs behind this view because each
+// half, sliced on its own, costs command.obj's GetCommand
+// 92.5714 -> 92.5357 (measured 2026-08-20).
+#define HOMM3_ARMY_PROTECTION_VIEW
 #include "army.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
@@ -16,7 +22,10 @@
 // bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
 // it is unconditional (measured 2026-08-20).
 #define HOMM3_CMBTMGR_AREA_VIEW
+// The spells.obj-only declaration block; see cmbtmgr.h.
+#define HOMM3_CMBTMGR_SPELLS_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
@@ -529,12 +538,53 @@ int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:5134
+#endif  // @carcass
+
+// ModifySpellDamage's Protection-from-<school> tail, and the four-way
+// ladder is what fixes BOTH halves of army.h's protection run. Retail
+// tests the spell's schoolBits (akSpellTraits[spell] +0x1c) against
+// bit 8, then bit 1, then bit 2, then bit 4 - not ascending, so this is
+// an if-chain and that is its source order - and each arm gates on one
+// of +0x21c / +0x210 / +0x214 / +0x218 and scales by one of
+// +0x4b4 / +0x4a8 / +0x4ac / +0x4b0. spellschool.h's DC-verbatim bitmask
+// (Air 1, Fire 2, Water 4, Earth 8) and the DC member run
+// protectionFrom{Air,Fire,Water,Earth}Factor at 1156..1168 agree with
+// each other about which bit owns which float, so the counters they are
+// paired with here are the same four spells' entries in the round row.
+//
+// `this` is dead: retail clobbers ecx with the schoolBits load without
+// ever reading it. That is a source fact, not a calling-convention one -
+// see the declaration.
+//
+// The float cast is to `float`, not `double`: retail spills the
+// converted integer back through the parameter's OWN stack slot as a
+// 32-bit `fstp dword ptr [ebp+8]` before reloading it for the multiply.
 VA(0x005a7bb0, 0xC5)  // order-map+arity, dc 0x156dc4
-int combatManager::ModifySpellDamageForSpells(int damage, int iSpellType, const army* targetArmy)
+long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
+                                               const army* target)
 {
-    // @stub
+    if (!target)
+        return damage;
+    if ((akSpellTraits[spell].schoolBits & eSchoolEarth)
+        && target->protectionFromEarthRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromEarthFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolAir)
+        && target->protectionFromAirRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromAirFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolFire)
+        && target->protectionFromFireRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromFireFactor);
+    if ((akSpellTraits[spell].schoolBits & eSchoolWater)
+        && target->protectionFromWaterRounds)
+        return static_cast<long>(static_cast<float>(damage)
+                                 * target->protectionFromWaterFactor);
+    return damage;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:5164
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4

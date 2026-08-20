@@ -1421,6 +1421,24 @@ public:
                            const hero* casting_hero, const hero* target_hero,
                            const army* target,
                            unsigned char simulated);          // 0x5a78e0
+    // THE spells.obj-ONLY DECLARATION BLOCK. Everything in here is
+    // reached from src/spells.cpp and from nowhere else in the tree, and
+    // it is gated because this header's include-set class is live: three
+    // separate bare declarators added to it in the last two days each
+    // cost command.obj's GetCommand 92.5714 -> 92.5357, and each was
+    // returned by a view. Rather than pay a bisect per row, new
+    // spells-side declarations land here until a second consumer appears.
+#ifdef HOMM3_CMBTMGR_SPELLS_VIEW
+    // 0x5a7bb0, ModifySpellDamage's Protection-from-<school> tail. It
+    // takes NO `this` (retail never touches ecx) but is a member all the
+    // same - a static would be __fastcall under /Gr and would take its
+    // first two arguments in registers, where retail reads all three off
+    // the stack behind a thiscall `ret 0xc`. It reads the cast spell's
+    // schoolBits and, for the first school the target is protected
+    // against, scales the damage by that school's factor.
+    long ModifySpellDamageForSpells(long damage, SpellID spell,
+                                    const army* target);       // 0x5a7bb0
+#endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
     // pushing it, which a char-typed parameter would never need.
