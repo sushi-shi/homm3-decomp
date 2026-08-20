@@ -57,6 +57,8 @@
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
+                      // missile animators
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
@@ -1105,6 +1107,29 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2364
+// SURVEYED 2026-08-20 (head only, +0x00..+0x155 of 0x4F6). What is
+// byte-verified: the first three stores are field_132b8 = group and
+// field_132bc = index - the acting (side, slot) pair KeepAttack reads
+// back - and then field_132c0 = the side the turn EFFECTS apply to,
+// formed as `armies[group][index].field_288 ? 1 - .field_f4 : .field_f4`.
+// The whole remainder is skipped when the byte at +0x13d68 is set (one
+// `jne` straight to the epilogue), so that byte is the "no per-turn
+// effects" latch and wants slicing before anyone opens this.
+//
+// The body after that is one repeated four-statement idiom, which is
+// what makes it worth its 1270 bytes: for each of a run of artifact ids
+// (0x81 and 0x84 decoded so far) test hero::IsWieldingArtifact on
+// heroes[field_132c0], then call 0x5a40d0 with (spell, 3, side, 1, 2),
+// and if that returns true call 0x59fe30 with (spell, -1, 2, -1, 3,
+// delay). Spell ids 0x30, 0x36 and 0x2a appear in the decoded head with
+// delays 0xa, 0x32 and 0x32. NEITHER CALLEE IS DECLARED YET: 0x5a40d0
+// and 0x59fe30 are spells.obj leaves in the same family cmbtmgr.h
+// already parks ComputeSpellDamage and ModifySpellDamage in, and both
+// need naming before this compiles.
+//
+// COST TO OPEN: four pad slices (+0x132b8, +0x132bc, +0x132c0, +0x13d68)
+// plus those two declarations. field_54b0[2] is already modelled and is
+// the per-side gate the effect chain sits behind.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::SetNextArmy(int group, int index)
 {
@@ -1273,6 +1298,30 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2603
+// SURVEYED 2026-08-20 (head only, +0x00..+0x15f of 0x443), and the
+// survey starts with a PROTOTYPE CORRECTION. The DC roster calls the
+// parameter `combatManager::TArcherID iTowerPos`; retail uses it as a
+// FLAT ARMY ORDINAL. It is scaled by 169 and added to +0x54cc, i.e.
+// `&armies[0][0] + param * sizeof(army)`, so its domain is 0..41 over
+// the flattened armies[2][21] run and not the three-valued archer id.
+//
+// The archer id is derived instead, and from a different army: the body
+// reads the ACTING pair (+0x132b8, +0x132bc) that SetNextArmy stored,
+// forms `&armies[group][index]`, and maps that stack's gridIndex through
+// the same three-way switch mark_tower_army uses - but to an INDEX
+// rather than a latch, 0xfb -> 1, 0xfe -> 0, 0xff -> 2. That index then
+// selects a 36-byte record in the array at +0x13d78, which is where the
+// archers[3] this header already models must live.
+//
+// One more thing decoded: the record's first dword indexes a table with
+// an 84-BYTE STRIDE reached through the stored pointer at .data
+// 0x67ff24. Identify that table before writing the body - the stride is
+// what will name it.
+//
+// After the inlined IsQuickCombat guard the body calls
+// army::PlayAnimation, then 0x446630, then GetMissileStartingPosition
+// with four out-parameter addresses, which is the shape the missile
+// trio's callers all have.
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
 void combatManager::KeepAttack(combatManager::TArcherID iTowerPos)
 {
@@ -1618,16 +1667,99 @@ void combatManager::InitializeArchers()
     archers[2].field_1c = 0;
 }
 
-#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3299
+// RECONSTRUCTED 2026-08-20. Two walks over the same +0x13438 latch: the
+// first raises each marked stack's drawing-effect byte (or, for an arrow
+// tower, the one of three keep/tower latches its grid index selects),
+// the second clears the stack's hexcell occupancy. Only the drawing half
+// is quick-combat gated - the occupancy clear runs either way, which is
+// what makes the two IsQuickCombat expansions straddle it.
+//
+// The tower branch is written out here rather than routed through
+// mark_tower_army (0x46a460), which is the same three-way switch: retail
+// EXPANDS it at this site and keeps the out-of-line body for LoadArmies,
+// the /Ob2 asymmetry this TU shows twice more. Calling it from here
+// would emit a CALL retail does not have, because nothing in this tree
+// defines a body for VC6 to expand.
+//
+// The 20-per-side byte arrays against armies[2][21] are retail's own
+// asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
+// the army index by 21, and ResetLimitCreature memsets exactly 2x20.
+//
+// Residual (96.8312%): one CSE asymmetry in the extent capture. Retail
+// loads drawbridgeBounds.values[1] TWICE - once for `top` and again for
+// the height subtraction - while CSE-ing values[0] between `left` and
+// the width subtraction; our CL does the mirror image, CSE-ing values[1]
+// and reloading values[0], for four loads against retail's five.
+// Spelling the width subtraction as `values[2] - left + 1` to force the
+// first CSE explicitly emits byte-identical code (96.8312 either way),
+// so the asymmetry is the optimiser's own and not reachable from the
+// source side.
 VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0
 void combatManager::MakeCreaturesVanish()
 {
-    // @stub
+    int left;
+    int top;
+    int width;
+    int height;
+    int side;
+    int index;
+    if (!IsQuickCombat()) {
+        ResetLimitCreature();
+        for (side = 0; side < 2; side++) {
+            for (index = 0; index < numArmies[side]; index++) {
+                if (!field_13438[side][index])
+                    continue;
+                if (armies[side][index].creatureType
+                        == army::ARMY_CREATURE_ARROW_TOWER) {
+                    switch (armies[side][index].gridIndex) {
+                    case COMBAT_HEX_LOWER_TOWER:
+                        field_1402d = 1;
+                        break;
+                    case COMBAT_HEX_KEEP:
+                        field_1402c = 1;
+                        break;
+                    case COMBAT_HEX_UPPER_TOWER:
+                        field_1402e = 1;
+                        break;
+                    }
+                } else {
+                    field_14000[side][index] = 1;
+                }
+            }
+        }
+        ComputeMaxExtent();
+        left = drawbridgeBounds.values[0];
+        top = drawbridgeBounds.values[1];
+        width = drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1;
+        height = drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1;
+    }
+
+    for (side = 0; side < 2; side++) {
+        for (index = 0; index < numArmies[side]; index++) {
+            if (!field_13438[side][index])
+                continue;
+            const army& stack = armies[side][index];
+            cells[stack.gridIndex].armySide = -1;
+            cells[stack.gridIndex].armySlot = -1;
+            if (stack.Is(0) & 1) {
+                cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySide = -1;
+                cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySlot = -1;
+            }
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        gpWindowManager->SaveFizzleSourceX(left, top, width, height);
+        DrawFrame(0, 0, 1, 0, 1, 0);
+        gpWindowManager->FizzleForwardX(
+            left, top, width, height,
+            static_cast<int>(
+                gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
+    }
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3351
 // The opening test is army::is_enemy's own effective-side idiom spelled
@@ -1912,30 +2044,450 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
 // file-scope extern on cmbtmgr.h fires the include-set wall by itself
 // (measured at gCombatSeed66d840), so all of them must be gated.
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3640
+// RECONSTRUCTED 2026-08-20, the parabolic member of the trio. DC local
+// names again (ARROW_TRAVEL_DIST, MISSILE_PERIOD, nframes, flatness,
+// saved, deltaX, deltaY, next_frame_time, update_area). DC has NO
+// `flipped` row for this one and retail pushes a literal 0 for hflip,
+// which agrees: a ballistic missile is never mirrored, and it needs no
+// angle search or DrawFrame at all - the trajectory is arithmetic.
+//
+// DC's variable list turned out to be a MATCHING LEVER here, not just a
+// naming source. ARROW_TRAVEL_DIST is listed for this body and for
+// neither of the other two, and that asymmetry is real: naming the
+// pre-division distance is worth 79.99 -> 81.72 here, while the same
+// edit costs ShootMissile 91.74 -> 90.43. Where DC names a local, name
+// it; where DC does not, fold it.
+//
+// The trajectory, for the next reader. `travelX` accumulates deltaX and
+// `remaining` counts nframes down to zero, so
+//   x = startX + travelX / nframes
+//   y = startY + step * (deltaY - remaining * flatness) / nframes
+// with flatness = 2*abs(deltaX)/nframes. Both endpoints are exact
+// (step 0 gives the start, step nframes gives the destination, since
+// remaining is 0 there) and the deviation peaks at abs(deltaX)/2
+// halfway - the arc is half the horizontal span, which is what makes
+// `flatness` the right name for the coefficient rather than a height.
+//
+// Residual (86.4031%): register binding and one homing choice. 318
+// instructions against retail's 320, branch sequences identical, and
+// the frame is 16 bytes smaller because retail spills the loop's
+// `bottom` to [ebp-0x64] where our CL keeps it in a register. The
+// inlined IsQuickCombat shows the same LEA-instead-of-fold schedule the
+// other two animators show, from the same source inline.
+// Tried and rejected, all re-measured on fuzzy: `deltaY` declared
+// before `deltaX` (84.48 -> 81.72 backwards; retail forms deltaX
+// first), the union's edges recomputed inline instead of named (84.48),
+// `bottom` volatile, and `right`/`bottom` swapped.
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
-void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int destY, const CSprite* missile)
+void combatManager::ShootBallisticMissile(int startX, int startY, int destX,
+                                          int destY, const CSprite* missile)
 {
-    // @stub
+    if (IsQuickCombat())
+        return;
+
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    int ARROW_TRAVEL_DIST = static_cast<int>(sqrt(static_cast<double>(
+        deltaY * deltaY + deltaX * deltaX)));
+    int nframes = (ARROW_TRAVEL_DIST + 10) / 20;
+    // The arc: half the horizontal span, spread over the flight. The
+    // trajectory below subtracts flatness*(nframes - step) from deltaY,
+    // so the peak deviation is nframes/4 * flatness = abs(deltaX)/2.
+    double flatness = 2.0 * abs(deltaX) / static_cast<double>(nframes);
+
+    int width = missile->Width;
+    int height = missile->Height;
+    startX -= width / 2;
+    startY -= height / 2;
+    int x = startX;
+    int y = startY;
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    int MISSILE_PERIOD = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 100.0f);
+
+    int frame = 0;
+    int travelX = 0;
+    int remaining = nframes;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + MISSILE_PERIOD;
+        if (step != 0) {
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = x + width - 1;
+            update_area.values[3] = y + height - 1;
+            x = startX + travelX / nframes;
+            y = static_cast<int>(
+                (deltaY - remaining * flatness) * step
+                / static_cast<double>(nframes) + startY);
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        const_cast<CSprite*>(missile)->Draw(
+            0, frame, 0, 0, width, height,
+            gpWindowManager->screenBitmap->map, x, y,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0, 1);
+        int right = x + width - 1;
+        int bottom = y + height - 1;
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(
+            update_area.values[0], update_area.values[1],
+            update_area.values[2] - update_area.values[0] + 1,
+            update_area.values[3] - update_area.values[1] + 1);
+        saved.Draw(0, 0, width, height,
+                   gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch, false);
+        ++frame;
+        if (frame >= missile->GetNumFrames(0))
+            frame = 0;
+        GameTime::DelayTil(next_frame_time);
+        travelX += deltaX;
+        --remaining;
+    }
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3749
+// RECONSTRUCTED 2026-08-20, from ShootMissile's shape. DC local names
+// again (deltaX, addX/addY, nframes, flipped, saved, missile,
+// next_frame_time, ARROW_DELAY, update_area) - `missile` is a LOCAL
+// here, not a parameter: this is the animator that owns its sprite,
+// loading it by name and Disposing it through virtual slot 1 at the end.
+//
+// Its step divisor settles what ShootMissile's alone could not. Retail
+// divides by 31 with the add-back magic 0x84210843 after `lea
+// ecx,[eax+0xf]`, and ShootMissile divides by 40 after `+20`: both are
+// the rounding idiom `(distance + D/2) / D`, so the addend is D/2
+// folded, not an independent constant.
+//
+// The frame-search loop is ROTATED here and un-rotated in ShootMissile,
+// from one source `while`. The difference is the bound: `nsprites` is a
+// plain parameter VC6 can hoist, whereas ShootMissile's bound re-expands
+// CSprite::GetNumFrames on every test and VC6 will not duplicate that.
+// So rotation here is NOT the goto-loop signature - that test only reads
+// that way when the loop condition is hoistable in the first place.
+//
+// Residual (91.1780%): the same three classes as ShootMissile, and the
+// two shared ones are shared for the same reason. The inlined
+// IsQuickCombat takes both player-record addresses with LEA instead of
+// folding +0xe4 into the load (LowerDoor and the out-of-line const twin
+// both fold, so this is schedule, not spelling); the `+15` ahead of the
+// magic divide comes out `mov`+`add` where retail has one `lea`, in both
+// animators identically; and retail's `right`/`bottom` seed sits in the
+// loop preheader where ours straddles the entry guard. The rest is
+// scratch-register preference (edx->ecx x10, eax->edx x6).
+// Tried and rejected, all re-measured on fuzzy rather than on the
+// solver's distance: `frame` declared last in its block (the solver's
+// own top pick - 20 slots of register distance BETTER but 90.71 fuzzy,
+// the two metrics ranking it opposite ways), `frame` hoisted above the
+// Bitmap16Bit (90.17), and `right`/`bottom` ahead of ARROW_DELAY (90.59).
 VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
-void combatManager::ShootAnimatedMissile(int startX, int startY, int destX, int destY, int nsprites, const float* angles, const char** file_names)
+void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
+                                         int destY, int nsprites,
+                                         const float* angles,
+                                         const char* const* file_names)
 {
-    // @stub
+    if (IsQuickCombat())
+        return;
+
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    unsigned char flipped = deltaX < 0;
+    int nframes = (static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX))) + 15) / 31;
+    int addX;
+    int addY;
+    if (nframes > 0) {
+        addX = deltaX / nframes;
+        addY = deltaY / nframes;
+    } else {
+        addX = deltaX;
+        addY = deltaY;
+    }
+
+    int sprite_index;
+    if (deltaX == 0) {
+        if (deltaY > 0)
+            sprite_index = nsprites - 1;
+        else
+            sprite_index = 0;
+    } else {
+        float angle;
+        double degrees;
+        if (flipped)
+            degrees = atan(static_cast<double>(deltaY) / deltaX)
+                      * 57.2957763671875;
+        else
+            degrees = atan(static_cast<double>(deltaY) / -deltaX)
+                      * 57.2957763671875;
+        angle = static_cast<float>(degrees);
+        int index = 1;
+        while (index < nsprites
+                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
+            ++index;
+        if (index < nsprites)
+            sprite_index = index - 1;
+        else
+            sprite_index = nsprites - 1;
+    }
+
+    CSprite* missile = ResourceManager::GetSprite(file_names[sprite_index]);
+    int width = missile->Width;
+    int height = missile->Height;
+    int x = startX - width / 2;
+    int y = startY - height / 2;
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    DrawFrame(0, 0, 0, 0, 1, 0);
+    int ARROW_DELAY = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
+
+    int frame = 0;
+    int right = x + width - 1;
+    int bottom = y + height - 1;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
+        if (step != 0) {
+            saved.Draw(0, 0, width, height,
+                       gpWindowManager->screenBitmap->map, x, y,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch, false);
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = right;
+            update_area.values[3] = bottom;
+            x += addX;
+            right += addX;
+            y += addY;
+            bottom += addY;
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        missile->Draw(0, frame, 0, 0, width, height,
+                      gpWindowManager->screenBitmap->map, x, y,
+                      gpWindowManager->screenBitmap->Width,
+                      gpWindowManager->screenBitmap->Height,
+                      gpWindowManager->screenBitmap->Pitch, flipped, 1);
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(
+            update_area.values[0], update_area.values[1],
+            update_area.values[2] - update_area.values[0] + 1,
+            update_area.values[3] - update_area.values[1] + 1);
+        ++frame;
+        if (frame >= missile->GetNumFrames(0))
+            frame = 0;
+        GameTime::DelayTil(next_frame_time);
+    }
+
+    saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map, x, y,
+               gpWindowManager->screenBitmap->Width,
+               gpWindowManager->screenBitmap->Height,
+               gpWindowManager->screenBitmap->Pitch, false);
+    gpWindowManager->UpdateScreen(x, y, width, height);
+    missile->Dispose();
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3902
+// RECONSTRUCTED 2026-08-20. Local names are DC's own
+// (evidence/dreamcast/variables.csv): deltaX/deltaY, addX/addY,
+// nframes, flipped, saved, frame, next_frame_time, ARROW_DELAY, and
+// update_area for the four running limits - which is why update_area is
+// spelled as ONE four-int aggregate rather than four scalars: the
+// aggregate is worth half a point here (91.22 -> 91.74) because it
+// colours the four limits into one slot run the way retail does.
+//
+// Two shapes were forced by retail rather than chosen. `angle` is
+// assigned from a NAMED DOUBLE, not from a cast expression: retail
+// rounds the atan product to double and reloads it before narrowing to
+// the float (`fstp qword / fld qword / fstp dword`), and neither
+// `angle = expr` nor `angle = (float)expr` emits that middle pair -
+// only a real double lvalue does (90.68 -> 91.18). And the multiplier
+// is 0x63b8f0, whose stored double is 57.2957763671875 - the FLOAT
+// rounding of 180/PI, not the 57.29577951308232 that
+// GetMissileStartingPosition multiplies by further down this same TU.
+// Two constants, two spellings, both retail's.
+//
+// Residual (91.7404%): register binding only - 416 instructions against
+// retail's 416, an identical frame-slot set, and branch/call/ret
+// mnemonic sequences that compare identical end to end. What is left is
+// a permutation (edx->ecx x11, eax->edx x4, ecx->eax x3, edx->ebx x3)
+// of which register carries which limit, plus two placement effects
+// that follow from it: retail frees EBX as push scratch across the
+// three blit calls where we keep it live, and retail's `right`/`bottom`
+// seed sits in the loop preheader where ours straddles the entry guard.
+// The inlined IsQuickCombat also takes both player-record addresses
+// with LEA here while folding the +0xe4 into the load in LowerDoor and
+// in the out-of-line const twin at 0x46a4a0 - one source inline, three
+// schedules, so that shape is not ours to spell.
+// Tried and rejected, each re-measured at the plateau: `(20 + d) / 40`
+// (identical bytes), a named `distance` local before the divide
+// (90.43), four scalar limits instead of the aggregate (91.22),
+// `right` before `bottom` (91.22), and an explicit (float) cast on the
+// angle expression (90.68).
 VA(0x00468220, 0x48F)  // anchor-global, dc 0x61e60
-void combatManager::ShootMissile(int startX, int startY, int destX, int destY, const float* angles, const CSprite* missile)
+void combatManager::ShootMissile(int startX, int startY, int destX, int destY,
+                                 const float* angles, const CSprite* missile)
 {
-    // @stub
-}
+    if (IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    unsigned char flipped = deltaX < 0;
+    int nframes = (static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
+    int addX;
+    int addY;
+    if (nframes > 0) {
+        addX = deltaX / nframes;
+        addY = deltaY / nframes;
+    } else {
+        addX = deltaX;
+        addY = deltaY;
+    }
+
+    int width = missile->Width;
+    int height = missile->Height;
+    int x = startX - width / 2;
+    int y = startY - height / 2;
+
+    int frame;
+    if (deltaX == 0) {
+        if (deltaY > 0)
+            frame = missile->GetNumFrames(0) - 1;
+        else
+            frame = 0;
+    } else {
+        float angle;
+        // The double result is stored, reloaded and only then narrowed
+        // to the float: that round-trip is /Op's, and an explicit
+        // (float) cast on the expression suppresses it.
+        double degrees;
+        if (flipped)
+            degrees = atan(static_cast<double>(deltaY) / deltaX)
+                    * DATA_COMPGEN(0x0063b8f0, missileRadiansToDegrees,
+                                   57.2957763671875);
+        else
+            degrees = atan(static_cast<double>(deltaY) / -deltaX)
+                    * 57.2957763671875;
+        angle = static_cast<float>(degrees);
+        int index = 1;
+        while (index < missile->GetNumFrames(0)
+                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
+            ++index;
+        if (index < missile->GetNumFrames(0))
+            frame = index - 1;
+        else
+            frame = missile->GetNumFrames(0) - 1;
+    }
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    DrawFrame(0, 0, 0, 0, 1, 0);
+    int ARROW_DELAY = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
+
+    int bottom = y + height - 1;
+    int right = x + width - 1;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
+        if (step != 0) {
+            saved.Draw(0, 0, width, height,
+                       gpWindowManager->screenBitmap->map, x, y,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch, false);
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = right;
+            update_area.values[3] = bottom;
+            x += addX;
+            right += addX;
+            y += addY;
+            bottom += addY;
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        // DC's own mangling makes `missile` a `const CSprite*`
+        // (PBVCSprite) while CSprite::Draw is non-const on both builds,
+        // so the cast is retail's, not ours.
+        const_cast<CSprite*>(missile)->Draw(
+            0, frame, 0, 0, width, height,
+            gpWindowManager->screenBitmap->map, x, y,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, flipped, 1);
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(update_area.values[0], update_area.values[1],
+                                      update_area.values[2] - update_area.values[0] + 1,
+                                      update_area.values[3] - update_area.values[1] + 1);
+        GameTime::DelayTil(next_frame_time);
+    }
+
+    saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map, x, y,
+               gpWindowManager->screenBitmap->Width,
+               gpWindowManager->screenBitmap->Height,
+               gpWindowManager->screenBitmap->Pitch, false);
+    gpWindowManager->UpdateScreen(x, y, width, height);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4041
 // RECONSTRUCTED 2026-08-09. Retail's 0x50-byte stack object and its
@@ -2368,13 +2920,96 @@ void combatManager::LearnSpellFromEagleEye(int side)
 //     roster carries the push_back row) or the insert directly depends on
 //     how the STL surface is modelled here; place_obstacle's own
 //     TObstacleVector uses the explicit insert spelling.
-VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
-void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\cmbtmgr.cpp:4886
+// RECONSTRUCTED 2026-08-20. The previous lane's survey named two
+// blockers; both are gone. hero::GiveArtifact already returns
+// `unsigned char` in hero.h and hero.cpp (a sibling lane landed that
+// retype), so no coordination was needed, and the STL question answers
+// itself - <vector> is already in cmbtmgr.h's closure through army.h,
+// so the real Dinkumware std::vector<type_artifact> costs no include
+// edge and its own headers decide where insert expands. They decide it
+// the way retail did: the first loop's append becomes an out-of-line
+// call and the second loop's expands inline, which is why our 243
+// instructions sit against retail's 256 rather than 243 against ~600.
+//
+// The parameter is a REFERENCE. The DC roster text renders it
+// `std::vector<...>* looted_artifacts`, but the S_PUB32 mangling is
+// ?LootDeadHero@combatManager@@QAAXHAAV?$vector@...@Z - `AAV`, not
+// `PAV` - so this is the roster's documented reference-as-pointer
+// rendering and not a pointer parameter. Codegen is identical either
+// way; the mangling is the only witness, and it is unambiguous.
+//
+// UNSCORED, AND NOT BECAUSE OF THIS BODY. objdiff declines to diff this
+// function at all - report.json carries the entry with its size and
+// demangled name but no fuzzy_match_percent, which sema/context.py
+// documents as "absent = not diffed, NOT 100". Ruled out by
+// measurement, not by argument: the base and target symbol name strings
+// are byte-identical in both the raw and the normalized objects; the
+// mnemonic sets are identical; name length is not it (a 180-character
+// template name in textresource scores 100); and switching the
+// parameter from pointer to reference did not move it. The NEGATIVE
+// CONTROL is exact - delete only the two `insert` calls, changing
+// nothing else, and the same function scores 33.3711%. So the trigger
+// is this object emitting the std::vector<type_artifact> template
+// COMDATs (?insert@, ?size@, ?_Ucopy@, ?_Ufill@), which appear in the
+// base and have no counterpart in the delinked target.
+//
+// The body is kept complete rather than trimmed to the 33% that scores:
+// dropping the append would be a semantic defect banked for a number.
+// When the diff tool learns this case, the row banks on its own.
+//
+// The body is hero::TransferArtifacts with GiveArtifact swapped in for
+// add_to_backpack and the append added. The seven-way refusal chain is
+// literally TransferArtifacts' source order - NONE, HOLY_GRAIL,
+// SPELLBOOK, CATAPULT, BALLISTA, AMMO_CART, FIRST_AID_TENT - and
+// artifact.h's values reproduce retail's compare order (-1, 2, 0, 3, 4,
+// 5, 6) with no reordering, which is the corroboration that the two
+// bodies really are one source shape written twice.
+VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
+void combatManager::LootDeadHero(int side,
+                                 std::vector<type_artifact>& looted_artifacts)
+{
+    if (gCombatFlag6985a3)
+        return;
+    if (gCombatFlag697744)
+        return;
+    hero* dead = heroes[1 - side];
+    if (!dead)
+        return;
+    hero* winner = heroes[side];
+    for (int slot = 0; slot < 19; slot++) {
+        type_artifact artifact = dead->equipped[slot];
+        if (artifact.artifactId == ARTIFACT_NONE ||
+            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
+            artifact.artifactId == ARTIFACT_SPELLBOOK ||
+            artifact.artifactId == ARTIFACT_CATAPULT ||
+            artifact.artifactId == ARTIFACT_BALLISTA ||
+            artifact.artifactId == ARTIFACT_AMMO_CART ||
+            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!winner->GiveArtifact(&artifact, 1, 0))
+            return;
+        dead->remove_artifact(slot);
+        looted_artifacts.insert(looted_artifacts.end(), 1, artifact);
+    }
+    for (int index = 63; index >= 0; index--) {
+        type_artifact artifact = dead->backpack[index];
+        if (artifact.artifactId == ARTIFACT_NONE ||
+            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
+            artifact.artifactId == ARTIFACT_SPELLBOOK ||
+            artifact.artifactId == ARTIFACT_CATAPULT ||
+            artifact.artifactId == ARTIFACT_BALLISTA ||
+            artifact.artifactId == ARTIFACT_AMMO_CART ||
+            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!winner->GiveArtifact(&artifact, 1, 0))
+            return;
+        dead->remove_backpack_artifact(index);
+        looted_artifacts.insert(looted_artifacts.end(), 1, artifact);
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4948
 // The award is priced in CREATURES DESTROYED, not damage: the walk

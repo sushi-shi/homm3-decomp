@@ -22,6 +22,7 @@ class NewmapCell;
 class searchArray;
 class town;
 struct type_AI_combat_parameters;
+struct type_artifact;
 
 // Four integer drawing bounds copied as one value before a drawbridge
 // animation. Retail's assignment establishes the 16-byte extent; the
@@ -652,11 +653,26 @@ public:
     // is into the .rdata name tables that method selects from, so it is
     // never owned or freed. Gated for the declarator-count reason spelled
     // out at field_132a0; both arms are the same bytes.
+    // Per-army "this stack is leaving the field" latch, twenty bytes per
+    // side, tested by BOTH of MakeCreaturesVanish's walks - the first to
+    // raise the matching +0x14000 effect byte (or an arrow-tower latch),
+    // the second to clear the stack's hexcell occupancy. Twenty per side
+    // against armies[2][21] is retail's own asymmetry, not a mis-slice:
+    // the walk steps the byte arrays by 20 and the army index by 21 in
+    // the same loop, and ResetLimitCreature memsets exactly 2x20 at
+    // +0x14000. Name is an address ordinal - nothing decoded WRITES it
+    // yet. Sliced out of pad_13304 in place; both arms of the gate below
+    // gain the same two declarators so the include-set count stays equal
+    // between them, per field_132a0.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
-    char pad_13304[0x160];
+    char pad_13304[0x134];
+    unsigned char field_13438[2][20]; // +0x13438
+    char pad_13460[0x4];
     const char* backgroundName;       // +0x13464
 #else
-    char pad_13304[0x164];
+    char pad_13304[0x134];
+    unsigned char field_13438[2][20]; // +0x13438
+    char pad_13460[0x8];
 #endif
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
@@ -824,10 +840,16 @@ public:
     unsigned char check_obstacle_attacks(army* this_army,
                                          unsigned char is_walking);
     unsigned char should_lower_door(army* this_army, long hex) const;
+    void MakeCreaturesVanish();
     void LowerDoor();
     void RaiseDoor();
     bool IsQuickCombat() const;
     void CalculateGainedExperience(int side, int* experience_gained);
+    // The winner's post-combat sweep of the loser's artifacts. The vector
+    // is the REAL Dinkumware one: <vector> is already in this header's
+    // closure through army.h, so no include-set edge moves for it.
+    void LootDeadHero(int side,
+                      std::vector<type_artifact>& looted_artifacts);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
     // body dereferences it at +0x288, +0xf4 and +0x34), and the return
@@ -878,6 +900,18 @@ public:
                    unsigned char bLimitDraw, int iDelay,
                    unsigned char bRefreshBackground,
                    unsigned char bDoDelayTil);
+    // The three missile animators. Every pointer parameter's constness
+    // is read off the DC S_PUB32 mangling rather than guessed:
+    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
+    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
+    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
+    void ShootBallisticMissile(int startX, int startY, int destX, int destY,
+                               const CSprite* missile);
+    void ShootAnimatedMissile(int startX, int startY, int destX, int destY,
+                              int nsprites, const float* angles,
+                              const char* const* file_names);
+    void ShootMissile(int startX, int startY, int destX, int destY,
+                      const float* angles, const CSprite* missile);
     // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
     // own guards just tested; routing the call through this inline does
@@ -1468,6 +1502,21 @@ extern const int gCombatDeploySlots63d1dc[7][7];
 // separate symbols; source keeps the retail-proven aggregate shape.
 DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
 
+// The clip rectangle every combat-drawing pass intersects its dirty
+// region with before handing it to heroWindowManager::UpdateScreen.
+// Sixteen readers image-wide (DrawFrame twice, UpdateCombatArea,
+// ComputeMaxExtent, DrawObstacleAt, DrawWallAt, army::animate_missile
+// and all three missile animators). It is .bss seeded by the
+// initializer at 0x462610, which writes exactly {0, 0, 0x31f, 0x22b} -
+// i.e. left 0, top 0, right 799, bottom 555 - so this is the combat
+// viewport in screen coordinates, not a hex-space bound. Spelled as
+// the same four-int aggregate as the drawbridge bounds because the
+// readers take its four dwords one at a time; the reloc addend that
+// choice produces is masked (ResetLimitCreature is exact through the
+// identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
+// carries its address - no roster row, string or DC global reaches it.
+DATA(0x00694f18) extern TDrawbridgeBounds gCombatDrawLimits694f18;
+
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
 // zero is null), and the last by combatTerrain*3 + MoreTreesNear(mapPoint).
@@ -1506,14 +1555,19 @@ extern int gCombatActive698a18;
 // quadruple - the read order is left, RIGHT, top, BOTTOM, which is the
 // natural `l <= x && x <= r && t <= y && y <= b` bounding-box test and
 // is what fixes right at +8 rather than +4.
-// SPELLED AS SIXTEEN SEPARATE INTS ON PURPOSE. A four-int struct
-// produces byte-identical IMAGE code (`cmp eax, [0x694eb0]` either
-// way), but in the OBJECT it becomes one reloc against the base symbol
-// with an in-instruction displacement of 8, where the delinked target
-// carries a distinct symbol per referenced address and a displacement
-// of ZERO - and the displacement is part of the scored bytes. So this
-// is a representation choice forced by the delinker's per-address
-// symbol split, NOT evidence that retail's source lacked a struct.
+// SPELLED AS SIXTEEN SEPARATE INTS, but NOT because a struct would
+// cost bytes. CORRECTED 2026-08-20: an earlier note here claimed the
+// in-instruction displacement a four-int struct produces (one reloc
+// against the base symbol, addend 8) is scored against the delinked
+// target's per-address symbols (addend 0). It is not - objdiff masks
+// the whole reloc'd field, addend included. The negative control is
+// drawing.obj's ResetLimitCreature, which copies gCombatAreaLimits
+// through addends 4/8/0xc against a target whose addends are all 0 and
+// scores 100.0000%. The missile animators then USED that: spelling the
+// four running limits as one aggregate is what took ShootMissile from
+// 91.22 to 91.74. So a struct is available whenever retail's source
+// plausibly had one; sixteen ints here is a naming choice (no roster
+// row reaches any of the four rectangles), not a scoring workaround.
 // NAMES ARE BOOTSTRAP INVENTIONS - no roster, string or DC global
 // reaches any of them, so each keeps an address ordinal.
 DATA(0x00694ea8) extern int gCombatHexLeft694ea8;
