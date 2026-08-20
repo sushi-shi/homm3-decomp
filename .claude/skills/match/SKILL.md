@@ -27,8 +27,12 @@ sit at the lower number and nothing in the ledger remembers. `game::Load`'s
 five `type_point emptyPoint;` declarations had drifted back INSIDE their pins;
 `max` and `hist` both read 90.98, and the only surviving record was its own
 residual note, which quoted 91.8624 — exactly where re-hoisting them landed.
-**So a note quoting a number higher than the row's `max` is itself a lost-peak
-report.** Grep the notes for figures the ledger cannot account for.
+**So a note quoting a number higher than the row's own `max` is itself a
+lost-peak report** — but read it, do not grep it. A mechanical scan over 1900
+quoted percentages produced 144 hits and the top ones were all false: notes
+routinely cite OTHER functions' scores ("costs SetupHeroView 99.53"), and a
+note sitting between two claims attaches to the row that FOLLOWS it. The
+precise check is `hist > max`, which `homm3 vc6 queue` already reports.
 
 **CHECK `hist` AGAINST `max` — THE RATCHET CANNOT SEE A LOST PEAK.** It
 compares against `max`, so once a max has been accepted downward the row sits
