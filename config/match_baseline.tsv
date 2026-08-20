@@ -318,6 +318,7 @@ army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
+army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
@@ -383,7 +384,6 @@ army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
 army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
 army	army_LoadResources	0.0000	0.0000	0.0000	0x3d9f0
-army	army_ProcessDeath	0.0000	0.0000	0.0000	0x44120
 army	army_Unnamed447fe0	0.0000	0.0000	0.0000	0x47fe0
 army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
 army	army_attack_wall_45fd0	0.0000	0.0000	0.0000	0x45fd0

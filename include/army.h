@@ -1610,6 +1610,20 @@ public:
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
     }
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // The DC roster's army::LeavesNoBody (Army.h:875, dc 0x4ca60) - a
+    // class-body inline; retail carries no out-of-line copy anywhere.
+    // ProcessDeath (0x444120) is the decoded consumer and its bytes fix
+    // the SHAPE as one mask test (`test dword, 0x10400000`), not two
+    // Is() shifts; the call site is also load-bearing for ProcessDeath's
+    // inline budget (a free candidate site in C2's sites-remaining
+    // divisor - measured there). Behind the round view with the rest of
+    // ProcessDeath's surface.
+    unsigned char LeavesNoBody()
+    {
+        return (creatureId & 0x10400000) != 0;
+    }
+#endif
     // The DC roster's army::get_owning_side (Army.h:795, dc 0x27d3c,
     // 8 B) - a CLASS-BODY inline, which is why retail has no
     // out-of-line copy of it anywhere while its neighbour

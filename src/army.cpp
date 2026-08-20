@@ -2868,6 +2868,8 @@ unsigned long army::Strength()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:3492
 // LOCATED 2026-08-14, and ResetRound's own tail is the proof: it ends
 // `push 1 / mov ecx,esi / call 0x444120`, a thiscall with exactly ONE
@@ -2885,13 +2887,12 @@ unsigned long army::Strength()
 // set (remove_binding, remove_aura, CancelAllSpells, LeavesNoBody,
 // hexcell::HasArmy, Random) is the same body one build removed.
 // The carve size 0x3A6 against the DC row's 0x2F4 is 1.24x, inside the
-// SH4 -> x86 band. The BODY is not reconstructed here; only the
-// declaration ResetRound needs is live.
+// SH4 -> x86 band.
 //
-// STRUCTURE FULLY DERIVED 2026-08-15 and left here for the lane that
-// lands it - the reconstruction was NOT started because every one of
-// its five prerequisites is a new SHARED-HEADER surface that wants its
-// own include-set measurement, and half a row is worse than none.
+// STRUCTURE FULLY DERIVED 2026-08-15; RECONSTRUCTED 2026-08-20 once all
+// five header prerequisites had landed from other lanes' work (the
+// mirror pair, hexcell's third dead row, cmbtmgr's field_53de/13438
+// band, Random). No new header surface was needed by this promotion.
 //
 // THE DC LINE MAP (dc 0x493a0, forward read), retail agreeing at every
 // point checked:
@@ -2956,25 +2957,129 @@ unsigned long army::Strength()
 //   access at all. It is a dead parameter, transcribed faithfully, and
 //   that is also why C2 could turn the recursion into the loop.
 //
-// THE FIVE PREREQUISITES, none of them landed here:
-//   - hexcell: a HasArmy() class-body inline and pad_3c sliced into the
-//     third fourteen-entry dead row (hexcell.h has no view mechanism
-//     yet, so one has to be added).
-//   - cmbtmgr: field_53de beside field_53dc, and pad_13304[0x164] cut
-//     into field_13438[2][20] + field_13460 (the pad runs 0x13304 ..
-//     0x13467 and adjacentCells starts at 0x13468).
-//   - army: pad_21 cut for iMirrorSourceIndex/iMirrorDestIndex, and a
-//     LeavesNoBody class-body inline.
-//   - CancelAllSpells written at this call site, EndWalk-style.
-//   - Random(1,100) is misc.h's 0x50b230, already declared.
+// CancelAllSpells (dc 0x499ac, army.cpp:3802): DC's out-of-line copy
+// has NO retail slot, so on this build it is fully inlined into its one
+// caller. A static helper (not the at-site loop) so that ProcessDeath's
+// PRE-INLINE size - which sets its /Ob2 budget - matches a source that
+// wrote a call here, and so the helper vanishes per the
+// inlined-single-call-static emission rule.
+static void CancelAllSpells_(army* that)
+{
+    for (int i = 0; i < 81; i++) {
+        if (that->spellInfluence[i] > 0)
+            that->CancelIndividualSpell(i);
+    }
+}
+
+// SPELLING NOTES the bytes force:
+//   - The dead-row SOURCES are spelled LONGHAND through
+//     gpCombatManager->cells[...] while the DESTS go through the pCell
+//     locals: retail recomputes the source base with a fresh
+//     gpCombatManager load after each aliasing byte store (a pointer
+//     local would have kept its register), and the guards CSE onto the
+//     same longhand expression, which is what shares the one `mov cl`
+//     between the test and the first store.
+//   - The two LATE two-hex guards re-read `Is(0) & 1` from the object
+//     (`test byte [esi+0x84], 1`) where the dead-list condition reads
+//     the byte local back from [ebp-1]: the local covers only the
+//     declaration, the pCell2 assignment arm and the 3562 condition.
+//   - The THREE header-inline call sites are load-bearing for the
+//     INLINER, not just the shape: with LeavesNoBody()/HasArmy() x2
+//     open-coded, C2's sites-remaining divisor hands remove_aura's
+//     expansion a budget large enough to also expand erase_item#1,
+//     which retail keeps as a call (76.27 -> 94.38 from restoring the
+//     three free candidate sites; docs/vc6/inliner.md section 5.9 is
+//     the mechanism). CancelAllSpells_ as a helper CALL (not the
+//     at-site loop) sizes the pre-inline caller the same way.
+//   - The two mirror-army blocks each name a POINTER LOCAL: spelled
+//     longhand twice, VC6 CSEs the whole folded address (+0x54f4 /
+//     +0x5518) where retail keeps a base register and small member
+//     offsets (94.38 -> 100.00).
 VA(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
 void army::ProcessDeath(int bFadeElementals)
 {
-    // @stub
+    if (Is(21) & 1)
+        return;
+
+    remove_aura();
+    remove_binding();
+
+    if (!hypnotizeFlag) {
+        if (Random(1, 100) < 60)
+            gpCombatManager->field_53dc[get_owning_side()] = 1;
+        else if (Random(1, 100) < 80)
+            gpCombatManager->field_53de[1 - get_owning_side()] = 1;
+    }
+
+    // CancelAllSpells (dc 0x499ac): no retail slot - fully inlined
+    // here (the EndWalk situation). Spelled as the TU-local helper
+    // above rather than at the site because the CALL is what sizes
+    // ProcessDeath's own /Ob2 budget the way retail's source did.
+    CancelAllSpells_(this);
+
+    creatureId |= 0x200000;
+    bAllUnitsKilled = 0;
+
+    if (gpCombatManager->ValidHex(gridIndex)) {
+        hexcell* pCell = &gpCombatManager->cells[gridIndex];
+        unsigned char twoHex = Is(0) & 1;
+        hexcell* pCell2;
+        int iGI2;
+        if (twoHex) {
+            iGI2 = gridIndex + OffsetToFront(-1);
+            pCell2 = &gpCombatManager->cells[iGI2];
+        }
+        if (LeavesNoBody()) {
+            gpCombatManager->field_13438[combatSide][bitIndex] = 1;
+            gpCombatManager->field_13460 = 1;
+        } else {
+            if (pCell->iBodiesInHex < 14
+                && (!twoHex || pCell2->iBodiesInHex < 14)) {
+                if (gpCombatManager->cells[gridIndex].HasArmy()) {
+                    pCell->deadArmySide[pCell->iBodiesInHex] =
+                        gpCombatManager->cells[gridIndex].armySide;
+                    pCell->deadArmySlot[pCell->iBodiesInHex] =
+                        gpCombatManager->cells[gridIndex].armySlot;
+                    pCell->deadPartOfDouble[pCell->iBodiesInHex] =
+                        gpCombatManager->cells[gridIndex].field_1a;
+                    pCell->iBodiesInHex++;
+                }
+                if (Is(0) & 1) {
+                    if (gpCombatManager->cells[iGI2].HasArmy()) {
+                        pCell2->deadArmySide[pCell2->iBodiesInHex] =
+                            gpCombatManager->cells[iGI2].armySide;
+                        pCell2->deadArmySlot[pCell2->iBodiesInHex] =
+                            gpCombatManager->cells[iGI2].armySlot;
+                        pCell2->deadPartOfDouble[pCell2->iBodiesInHex] =
+                            gpCombatManager->cells[iGI2].field_1a;
+                        pCell2->iBodiesInHex++;
+                    }
+                }
+            }
+            gpCombatManager->field_132cc = 0;
+            pCell->armySide = -1;
+            pCell->armySlot = -1;
+            if (Is(0) & 1) {
+                pCell2->armySide = -1;
+                pCell2->armySlot = -1;
+            }
+        }
+        if (iMirrorSourceIndex != -1) {
+            army* mirror =
+                &gpCombatManager->armies[combatSide][iMirrorSourceIndex];
+            if (mirror->iMirrorDestIndex == bitIndex)
+                mirror->iMirrorDestIndex = -1;
+        }
+        if (iMirrorDestIndex != -1) {
+            army* clone =
+                &gpCombatManager->armies[combatSide][iMirrorDestIndex];
+            clone->numTroops = 0;
+            clone->ProcessDeath(bFadeElementals);
+        }
+    }
 }
 
 // E:\gamedcs\army.cpp:3631
-#endif  // @carcass
 
 VA(0x004444d0, 0x3B)  // decorated identity + CancelIndividualSpell edges
 void army::CancelSpellType(int iSpellType)
