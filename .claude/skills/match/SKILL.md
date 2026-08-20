@@ -202,9 +202,16 @@ MISSING forever.
   the identical diagnosis that paid +18.10 on place_obstacle, and the
   identical pragma LOST 5.89 there (64.81 -> 58.92) because it also
   de-inlined the `obstacles.size()` in the same statement; hoisting `size()`
-  out first recovers part and is still worse (61.59). Scope the pragma as
-  tightly as you can, and measure — this is the second case in this tree of a
-  CORRECT diagnosis whose documented fix ranks the wrong way.
+  out first recovers part and is still worse (61.59). **THE MECHANISM IS NOW
+  KNOWN AND IT IS A FEATURE: `#pragma inline_depth(0)` IS STATEMENT-GRANULAR
+  IN VC6, not function-granular** (game lane, 2026-08-20). So you can place
+  it per call site, and that is how the two biggest serializers in the tree
+  were broken open: retail keeps every `vector::resize` OUT of line while
+  inlining insert/erase INTO it, and we did the exact inverse — pinning the
+  eight `resize` sites took `game::Load` **50.46 -> 71.71**, and the same
+  lever twice on `game::Save` (`bitset::test`, whose inlined `_Xran` throw
+  path drags a `std::out_of_range` onto the frame, plus seven `save_vector`
+  sites) took it **42.23 -> 73.80**. Pin the SITE, not the function.
 - **/Ob2 single-call-site inlining**: statics AND extern functions with one
   call site inline REGARDLESS OF SIZE (AppInit→WinMain ~300B; AppCommand→
   AppWndProc is our uncracked over-inline residual). Unconditional out-of-line
