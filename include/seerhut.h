@@ -102,8 +102,8 @@ public:
     // with 0x5741b0 taking " " (SetRolloverText) and 0x5743e0 taking "\n\n"
     // (QuickInfo). Same carve-name evidence: `game_b150_sub08_1741b0`
     // against `game_137c0_sub01_1743e0`.
-    std::string SeerHutFn_005741B0(unsigned char player);
-    std::string SeerHutFn_005743E0(unsigned char player);
+    std::string SeerHutFn_005741B0(int player);
+    std::string SeerHutFn_005743E0(int player);
     // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of
     // TQuestGuard::QuestGuardFn_00572D60 and reached from the same
     // quest-log body, on the other arm of its SeerHutList/QuestGuardList
