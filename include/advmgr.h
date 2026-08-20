@@ -595,6 +595,9 @@ DATA(0x00682a38) extern unsigned char gUnnamed682a38;
 //   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
 //             cleared right after - a draw-pass mode latch by role.
 DATA(0x006989f4) extern int gUnnamed6989f4;
+//   0x6993dc  set to 1 on Open's two hotseat arms alongside the
+//             gCompleteDrawEnabled refresh.
+DATA(0x006993dc) extern int gUnnamed6993dc;
 //   0x691209  lets a NON-human acting player through that same gate
 //             without the IsLastHuman probe.
 DATA(0x00691209) extern unsigned char gUnnamed691209;
@@ -1040,6 +1043,7 @@ public:
     class type_bottom_view_window* bottomView;
     char pad_09c[4];
 
+    TAdventureMapWindow();
     ~TAdventureMapWindow();
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
@@ -1192,6 +1196,13 @@ public:
     enum EAdventureSoundExtent {
         ADVENTURE_ACTIVE_SOUND_COUNT = 4,
         ADVENTURE_XLARGE_MAP_WIDTH = 144
+    };
+
+    // Open's load-bar pacing: the two mid-batch IncProgressBar ticks fire
+    // at the halfway index of the cached-graphics and cursor-icon loops.
+    enum EAdventureOpenProgress {
+        CACHED_GRAPHIC_TICK = 19,
+        CURSOR_ICON_TICK = 9
     };
 
     // +0x38, the townManager::netMsgHandler counterpart. Retail proves the

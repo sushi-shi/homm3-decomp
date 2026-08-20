@@ -1653,12 +1653,26 @@ public:
     // declarator; the row is claimed as a carcass stub in event_record.cpp.
     void ResetVisibility(int startX, int startY, int z,
                          int whichPlayer, int range);          // 0x49d3d0
+// advmgr.obj joins the gate for the declarator below (its Open calls the
+// sweep after SetInitialMapOrigin). Split guard, GameFn_004CA780's pattern.
+#endif /* HOMM3_EVENTS_VIEW */
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     // Retail-only 0x4c7c50, an ordinal placeholder like GameFn_004CA410
     // above. A no-argument sweep of all 156 hero records (stride 0x492)
     // that re-runs game::SetVisibility for every hero still on the map -
     // which is what has to happen after ResetVisibility blanks a disc.
     // No surviving symbol names it; the row is not claimed here.
     void GameFn_004C7C50();
+#endif
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // Retail-only 0x4ca5b0, an ordinal placeholder on GameFn_004CA410's
+    // convention. advManager::Open calls it when the incoming player is
+    // not the local human; the row is not claimed here.
+    void GameFn_004CA5B0();
+    // Retail-only 0x4ca840 (the body that plays newweek.wav). Open hands
+    // it the formatted turn banner and the acting game position when the
+    // protocol is hotseat; the row is not claimed here.
+    void GameFn_004CA840(char* text, int gamePos);
 #endif
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,

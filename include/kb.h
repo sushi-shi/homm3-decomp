@@ -119,7 +119,14 @@ extern unsigned char bForegroundApp;
 // not attributed, and kb.cpp's own claims start at 0x4f42c0, so promoting
 // its DC_ONLY row in src/kb.cpp to a VA claim is left to a kb lane.
 void IncProgressBar(unsigned char bUpdate);
-// CODEVIEW(E:\gamedcs\kb.cpp:269, dc 0xdf228) void ShowProgressBar();
+// PROMOTED to a live declarator 2026-08-20 for advmgr.obj's Open, which
+// calls it once after the last resource batch. Retail body 0x4ed350,
+// 243 B, directly after IncProgressBar exactly where the DC kb.cpp
+// roster puts it: first call loads loadbar.pcx/the frame bitmap and
+// zeroes the twenty-step counter at 0x699574, every call repaints.
+// DECLARED, NOT CLAIMED for the same link-order-gap reason as
+// IncProgressBar above.
+void ShowProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
 // CODEVIEW(E:\gamedcs\kb.cpp:431, dc 0xdf4e4) void InitMainClasses();
