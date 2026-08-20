@@ -6,6 +6,9 @@
 // keeps behind this view: declaring it unconditionally costs initialize's
 // initialize_game_data 100.0000 -> 96.0880 (measured 2026-08-20).
 #define HOMM3_ARMYGRP_SACRIFICE_VIEW
+// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
+// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
+#define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
@@ -33,10 +36,17 @@
 #define HOMM3_CMBTMGR_AREA_VIEW
 // The spells.obj-only declaration block; see cmbtmgr.h.
 #define HOMM3_CMBTMGR_SPELLS_VIEW
+// AreaEffect's tail: damage_message, PowEffect and CheckRebirth.
+#define HOMM3_CMBTMGR_MESSAGE_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
+#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
 // find_demonic_resurrection_target, declared beside its army.cpp consumer.
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
 #include "cmbtmgr.h"
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
+#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
+#undef HOMM3_CMBTMGR_ROUND_VIEW
+#undef HOMM3_CMBTMGR_MESSAGE_VIEW
 #undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
@@ -753,12 +763,102 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:3324
+#endif  // @carcass
+
+// EVERY AREA DAMAGE SPELL'S BODY. The sprite effect goes over the centre
+// hex first, the collector two rows above fills the stack list, and then
+// each stack is rolled SEPARATELY - a failed roll clears that stack's
+// `effected` byte again, which is how the caller's animation pass learns
+// the spell missed it.
+//
+// THE `victim` / `several` PAIR IS THE MESSAGE SELECTOR. Retail keeps
+// the FIRST stack it damaged and a byte saying whether there was more
+// than one, and the two arms of the tail differ in exactly two
+// arguments: with one victim the message names that stack and reports
+// the damage the loop last computed, with several it names none and
+// recomputes the damage with NO target hero and NO target - i.e. the
+// unmodified figure, since ModifySpellDamage's hero and creature
+// adjustments both need a target.
+//
+// ComputeSpellDamage (0x5a7890) is EXPANDED at both sites: the mastery
+// row and the power product appear inline and only ModifySpellDamage
+// survives as a call, which is the /Ob2 same-TU case. THE RECOMPUTED
+// FIGURE GOES THROUGH `damage` FIRST (94.06 -> 99.86): written as a
+// nested argument, VC6 pushes damage_message's own slots 5 and 4 BEFORE
+// the inner call's six, where retail finishes the inner call and only
+// then starts the outer argument list - i.e. the inner result was a
+// temporary in source, not a subexpression.
+//
+// THE ROLL IS AN UNNAMED TEMPORARY, and that is worth 10 points
+// (84.23 -> 94.06) in the direction OPPOSITE to SpellCastWorks
+// (0x5a8640), which needs `int chance = ...`. With the local named, C2
+// gives it a frame slot and `this` keeps EBX; unnamed, the roll takes
+// EBX for its one call-crossing interval and `this` is memory-homed at
+// [ebp-0x18] and reloaded at each of its four uses, which is what
+// retail does. Same lever, opposite sign, two functions apart.
+//
+// THE LOOP IS `while (i--)`, NOT `while (i-- > 0)` (+1.07 and both
+// branch kinds): retail tests the pre-decrement value with `test/je`
+// and `test/jne`, where the `> 0` form emits the signed `jle`/`jg` pair
+// its siblings two rows up genuinely have. The declaration ORDER of the
+// four accumulators is worth another 3.9 - deaths and victim are
+// initialised BEFORE casting_hero is loaded, and `damage` is never
+// initialised at all.
+//
+// Residual (99.86%): a three-register rotation (eax->edx, ecx->eax,
+// edx->ecx) across the five instructions that clear
+// `effected[side][slot]` on a failed roll, instruction-for-instruction
+// identical otherwise - retail computes `side*5` in place
+// (`lea eax,[eax+4*eax]`) where our CL takes a fresh scratch. Catalog
+// B10/B14; `homm3 vc6 why-reg` enumerated ten mutations, four neutral
+// and six worse. Tried and rejected: naming the side, naming the slot,
+// and an if/else in place of the `continue` (all exactly neutral).
 VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
-void combatManager::AreaEffect(int targetCell, int iSpellType, TSkillMastery mastery, int power)
+void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
+                               long mastery, long power)
 {
-    // @stub
+    SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);
+    std::vector<army*> targets;
+    mark_area_effect(iSpellType, targetCell, mastery, targets);
+    long deaths = 0;
+    army* victim = 0;
+    hero* casting_hero = heroes[currentSide];
+    unsigned char several = 0;
+    long damage;
+    int i = targets.size();
+    while (i--) {
+        army* target = targets[i];
+        if (Random(1, 100)
+            > static_cast<long>(SpellCastWorkChance(iSpellType, currentSide,
+                                                    target, 0, 1, 0)
+                                * 100.0f)) {
+            effected[target->combatSide][target->bitIndex] = 0;
+            continue;
+        }
+        damage = ComputeSpellDamage(iSpellType, power, mastery, casting_hero,
+                                    target->get_controller(), target, 0);
+        deaths += target->Damage(damage);
+        if (!victim)
+            victim = target;
+        else
+            several = 1;
+    }
+    if (victim) {
+        if (several) {
+            damage = ComputeSpellDamage(iSpellType, power, mastery,
+                                        casting_hero, 0, 0, 0);
+            damage_message(akSpellTraits[iSpellType].name, 1, damage, 0,
+                           deaths);
+        } else {
+            damage_message(akSpellTraits[iSpellType].name, 1, damage, victim,
+                           deaths);
+        }
+        PowEffect(-1, 1);
+        CheckRebirth();
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3389
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
