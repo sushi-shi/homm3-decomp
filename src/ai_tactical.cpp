@@ -752,8 +752,8 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
 DC_ONLY(0x425a8, 0x68)
 inline void type_AI_spellcaster::check_simulation()
 {
-    long count = gpCombatManager->numArmies[enemy_side];
     const army* enemy = gpCombatManager->armies[enemy_side];
+    long count = gpCombatManager->numArmies[enemy_side];
     for (; count-- > 0; ++enemy) {
         unsigned char immune = static_cast<unsigned char>(
             static_cast<unsigned>(enemy->creatureId) >> 21);
@@ -3494,18 +3494,102 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function
     return &type_AI_spellcaster::unimplemented;
 }
 
+// E:\gamedcs\ai_tactical.cpp:3016
+// Earthquake is priced ENTIRELY as a siege tool, so the body opens
+// with three refusals: the DEFENDER never wants it (side 1 owns the
+// castle), a decided fight does not want it, and an unwalled field has
+// nothing to bring down.
+//
+// The value is then "what would our shooters be worth if the wall were
+// not in the way", and it is proportional: `damage / (3 * total)` of
+// each blocked shooter's combat value, where `total` is the whole
+// castle's remaining strength summed over gWallTargets and `damage` is
+// what one cast takes off, capped at that total. A shooter with NO
+// target at all counts its FULL value instead, but only while some
+// segment is already at zero strength - which is what the running
+// minimum is for.
+//
+// The gWallTargets walk is an INT INDEX, not a pointer walk: retail
+// ends it on `cmp ecx,<end> / jl`, and a pointer relational compare is
+// unsigned and could only produce `jb`. VC6 strength-reduced the index
+// into a pointer biased by +8 so `wall_id` sits at displacement zero.
+VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
+void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
+{
+    if (side == 1)
+        return;
+    if (field_1c)
+        return;
+    if (gpCombatManager->field_132f4 == COMBAT_FORTIFICATION_NONE)
+        return;
+    long lowest = 0x7fff;
+    long total = 0;
+    for (long i = 0; i < WALL_TARGET_COUNT; i++) {
+        long strength = gpCombatManager->wallStrength[gWallTargets[i].wall_id];
+        total += strength;
+        lowest = _cpp_min(lowest, strength);
+    }
+    if (total == 0)
+        return;
+    const army* enemy = gpCombatManager->armies[enemy_side];
+    long count = gpCombatManager->numArmies[enemy_side];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (InCastle(enemy->gridIndex))
+            break;
+    }
+    if (count < 0)
+        return;
+    long value = 0;
+    const army* our_army = gpCombatManager->armies[side];
+    long damage = _cpp_min<long>(
+        akSpellTraits[choice->spell].mastery_bonus[choice->mastery], total);
+    long remaining = gpCombatManager->numArmies[side];
+    for (; remaining-- > 0; ++our_army) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(our_army->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (our_army->disabled_290)
+            continue;
+        if (our_army->disabled_2b0)
+            continue;
+        if (our_army->disabled_2c0)
+            continue;
+        if (our_army->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (our_army->creatureType == CREATURE_AMMO_CART)
+            continue;
+        const army* target = our_army->AI_target;
+        if (target == 0) {
+            if (lowest > 0)
+                value += our_army->get_total_combat_value(params.lowest_attack,
+                                                          params.lowest_defense);
+            continue;
+        }
+        if (!our_army->can_shoot(0))
+            continue;
+        if (!gpCombatManager->ShotIsThroughWall(our_army, our_army->gridIndex,
+                                                target->gridIndex))
+            continue;
+        value += our_army->get_total_combat_value(params.lowest_attack,
+                                                  params.lowest_defense)
+                 * damage / (total * 3);
+    }
+    choice->value = value;
+    choice->field_20 = 1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2876
 DC_ONLY(0x41a74, 0x8)
 long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data caster)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:3016
-VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
-void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
 {
     // @stub
 }

@@ -217,7 +217,7 @@ ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
-ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	92.0000	92.0000	92.0000	0x369c0
+ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0
 ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000	100.0000	100.0000	0x36980
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950
 ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30
@@ -226,6 +226,7 @@ ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000
 ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000	100.0000	100.0000	0x35960
 ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000	100.0000	100.0000	0x35830
 ai_tactical	?consider_chain_lightning@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x37310
+ai_tactical	?consider_earthquake@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b8f0
 ai_tactical	?consider_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a910
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b1e0
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	89.0901	89.0901	89.0901	0x3af50
@@ -296,7 +297,6 @@ ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	1
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
 ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000	0.0000	0.0000	0x36300
 ai_tactical	type_AI_spellcaster_cast_spell	0.0000	0.0000	0.0000	0x3c800
-ai_tactical	type_AI_spellcaster_consider_earthquake	0.0000	0.0000	0.0000	0x3b8f0
 ai_tactical	type_AI_spellcaster_consider_resurrect	0.0000	0.0000	0.0000	0x3aca0
 ai_tactical	type_AI_spellcaster_consider_spell	0.0000	0.0000	0.0000	0x3bb20
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
