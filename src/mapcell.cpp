@@ -3308,6 +3308,42 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // (`setHeroSpell(&spells, spell)`) goes the other way, 71.9069 -> 70.1832,
 // and was reverted: one bit is not enough mass for the helper to pay for
 // itself.
+//
+// SWEPT THE FRAME 2026-08-20 and it names the rest of the residual precisely.
+// We are `sub esp, 0xf4` against retail's `sub esp, 0xc4` - FORTY-EIGHT bytes
+// too large, which on the SKILL's own scale (a 4-byte delta reads as a ~15%
+// hole) is most of what is left. The 100-byte tempText matches exactly on
+// both sides (`mov ecx,0x18 / rep stosd / stosw / stosb` plus the leading
+// byte store), and so does every scalar; the whole excess is in the throw
+// region between the array and the scalars - retail spends 0x2c there
+// (a 16-byte string at [ebp-0x6c] and a 28-byte out_of_range at [ebp-0x5c]),
+// we spend 0x5c.
+//
+// AND IT IS NOT AN EXTRA OBJECT AT SOURCE LEVEL - it is the SAME TWO OBJECTS
+// FAILING TO SHARE SLOTS. Both sides expand the out_of_range throw twice, as
+// the paragraph above establishes; retail reuses one string/out_of_range pair
+// for both expansions, while our two expansions get their own pairs
+// ([ebp-0x4c] + [ebp-0x70] for the single-spell store, [ebp-0x64] +
+// [ebp-0x8c] for the sunk one) and each carries its own unwind state
+// (`mov [ebp-0x4], 0x1` and `mov [ebp-0x4], 0x2` immediately before the
+// out_of_range ctor). So the question to answer next is why our two throw
+// paths are in DISTINCT EH states where retail's share one, not which
+// spelling of the bit store to use - that half is settled above.
+// Both expansions build the message string from a literal completely inline
+// (`repne scasb` for the length, then `rep movsd`/`rep movsb`), i.e. the
+// basic_string(const char*) ctor is expanded too.
+//
+// Measured and rejected 2026-08-20, do not retry:
+//   * a second budget-starved single-call-site static over the whole
+//     `mapHeader.version != RESTORATION` tail, which contains BOTH throw
+//     sites - the block is too big to be inlined back, so it stays a real
+//     out-of-line function and the frame goes to 0xa8: 89.3222 -> 54.6514.
+//   * the same treatment on just the ARMAGEDDONS_BLADE spell arm
+//     (readCampaignSpell): 88.8320, and it is a loss for the same reason in
+//     miniature.
+//   * `hero_data->spells.reset()` in place of the `bitset<70> noSpells`
+//     temp - 84.4847, and it does not move the frame at all, so the 12-byte
+//     bitset temp is not part of the excess.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
