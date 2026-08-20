@@ -1590,7 +1590,12 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // Residual (79.5363%): retail keeps distinct type/troop walkers and one more
 // stack slot (0x8c frame versus 0x88 here), while this VC6 compile coalesces
 // the walkers and colors the processed count differently. Its dedup loop
-// retains one extra top-of-loop progress test. Artificial volatile qualifiers,
+// retains one extra top-of-loop progress test.
+// That extra test is a LOOP-ROTATION difference and the goto lever does not
+// reach it (measured 2026-08-20): respelling the `!progress && a < 7` scan as
+// an explicit `dedup_scan:` label with `++a; goto dedup_scan;` at the foot -
+// the un-rotated top-tested form retail emits - is BYTE-FLAT at 79.5363. VC6
+// rotates it back. The frame slot is the live lead, not the loop form. Artificial volatile qualifiers,
 // alternate outer-loop indices and goto rewrites worsened the comparison and
 // were reverted.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc

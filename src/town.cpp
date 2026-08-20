@@ -951,6 +951,10 @@ long town::get_horde_bonus(long dwelling) const
 // `growth` did NOT coalesce there and ours do; that is an allocator
 // tie-break, not a statement-order question.
 VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), dc 0x1675d4
+// Measured and rejected 2026-08-20: rewriting the two guards as early
+// `return 0;`s and the tail as `return bonus / 2;` - aimed at retail's FOUR
+// exits against our three, the tail-duplication direction - costs 18.1
+// (81.7262 -> 63.6309). Retail's fourth exit is not a source-level return.
 long town::get_legion_bonus(long dwelling)
 {
     long bonus = 0;
@@ -1645,6 +1649,10 @@ void town::update_full_building_mask()
 // CSEs it back), and calling is_legal_building (short -> type_building_id
 // needs an explicit cast).
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
+// Measured and rejected 2026-08-20: the named `__int64 activeMask = active;`
+// local that took get_buildable_mask 81.21 -> 89.59 costs THIS row 1.92
+// (89.6018 -> 87.6852). The lever is positional - it works where retail's
+// prologue loads `active` FIRST and ours does not, and here it already does.
 unsigned char town::can_build(short building_id) const
 {
     if (!gpGame->towns[id].field_02) {
