@@ -25,6 +25,7 @@
 #define HOMM3_ARMY_ROUND_VIEW
 #define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_WALL_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <algorithm>
 #include <stdlib.h>
 

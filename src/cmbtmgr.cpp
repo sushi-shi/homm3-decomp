@@ -41,17 +41,20 @@
 #define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <math.h>
 #include <stdlib.h>
 
 #include <va.h>
 // The three start-of-turn creature ids and their two army.obj bodies,
-// and the two auto-cast combination artifacts - all five reached from
-// SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
-// because the Armor of the Damned's chain opens with it. All four
-// defines sit here, ahead of every header, because armygrp.h and
-// artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
-// hero.h -> artifact.h) and a view define has to precede its header.
+// reached from SetNextArmy and nowhere else in this tree. The define
+// sits here, ahead of every header, because army.h arrives transitively
+// and a view define has to precede its header. (The spell and artifact
+// defines that used to keep it company retired 2026-08-20, when
+// armygrp.h and artifact.h stopped gating those enumerators; byte-inert,
+// since each is visible either way now.)
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from

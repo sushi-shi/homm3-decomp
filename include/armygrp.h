@@ -255,7 +255,6 @@ enum ESpellId {
     // battlefield-obstacle run this enum already anchors at both ends
     // (LAND_MINE 0xb above, EARTHQUAKE 0xe below), which is what fixes
     // WHICH is which: 0xc is one below Fire Wall, i.e. Force Field.
-    // UNGATED 2026-08-20 by the view audit.
     SPELL_FORCE_FIELD = 0xc,
     SPELL_FIRE_WALL = 0xd,
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
@@ -307,12 +306,11 @@ enum ESpellId {
     // that arm is the one gated on `first_target` before it reaches
     // find_resurrection_target - the sacrifice beneficiary lookup.
     //
-    // Include-set measurement, 2026-08-08 and again by the view audit:
-    // declared unconditionally this ONE enumerator costs initialize.obj's
-    // initialize_game_data 100.0000 -> 96.0880 (max/hist hold the peak).
-    // Corroborated a second time by consider_spell's dispatch: its
+    // Corroborated independently by ai_tactical's consider_spell, whose
     // 56-entry byte table sends `spell - 14 == 26` to the arm that calls
-    // type_AI_spellcaster::consider_sacrifice and nothing else.
+    // type_AI_spellcaster::consider_sacrifice and nothing else, and a
+    // third time by combatManager::SpellTargetMessage (0x5a8690), whose
+    // 0x28 arm is the one gated on `first_target`.
     SPELL_SACRIFICE = 0x28,
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
@@ -349,6 +347,10 @@ enum ESpellId {
     // the four spells the Armor of the Damned auto-casts - Slow, Curse,
     // Weakness, Misfortune - which is also what corroborates it, since
     // the other three are already byte-proven enumerators above.
+    // Corroborated a third time by combatManager::ShowSpellMessage
+    // (0x5a8950): its artifact arm groups exactly 0x36 with CURSE 0x2a,
+    // WEAKNESS 0x2d and MISFORTUNE 0x34 onto one Armor-of-the-Damned
+    // line, which is the same four-spell set from the other side.
     SPELL_SLOW = 0x36,
     SPELL_SLAYER = 0x37,
     SPELL_TITANS_LIGHTNING_BOLT = 0x39,
@@ -356,9 +358,6 @@ enum ESpellId {
     // (0x439e80), which folds the row into the displacement as
     // `[akSpellTraits + 4*mastery + 0x1f04]` = 58*136 + 0x34 - the
     // constant form, so the enumerator is what the source names.
-    // ResetRound (0x447120) corroborates from the round side: the 0x3a
-    // influence row adds army::counterstrokeBonus to the round's
-    // retaliation allowance - Counterstrike's rule and nothing else.
     SPELL_COUNTERSTRIKE = 0x3a,
     SPELL_BERSERK = 0x3b,
     SPELL_HYPNOTIZE = 0x3c,
@@ -366,8 +365,26 @@ enum ESpellId {
     SPELL_BLIND = 0x3e,
     // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
     // which pushes the literal 0x3f into SpellCastWorks as the spell it
-    // is pricing.
+    // is pricing, and again by combatManager::SpellTargetMessage
+    // (0x5a8690), whose 53-entry byte table gives 0x3f its own arm.
+    // UNGATED 2026-08-20: the view it used to sit behind bought nothing
+    // the ledger keeps - see SPELL_REMOVE_OBSTACLE below.
     SPELL_TELEPORT = 0x3f,
+    // 64, byte-proven by combatManager::SpellTargetMessage (0x5a8690).
+    // Its jump table covers exactly 0xc..0x40 and the TOP entry, 0x40,
+    // gets an arm of its own: `strcpy(gText, <the row two above the two
+    // target-naming rows the sacrifice arms use>)` and nothing else -
+    // a fixed line with no target to name, which is what a spell that
+    // removes a battlefield obstacle prints. It sits one above
+    // SPELL_TELEPORT 0x3f and one below SPELL_CLONE 0x41, both already
+    // proven, so no other value fits.
+    //
+    // UNGATED DELIBERATELY. armygrp.h reaches initialize.cpp's include
+    // closure and a new enumerator is an input to the include-set class
+    // recorded on SSpellTraits below; the trade was authorised, is
+    // recorded above initialize_game_data's baseline row, and the
+    // ratchet keeps the peak in `hist` for a later lane to re-measure.
+    SPELL_REMOVE_OBSTACLE = 0x40,
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
     // Dreamcast CodeView supplies the enumerator spellings.
@@ -395,7 +412,8 @@ enum ESpellId {
     // Four of the nine are independently corroborated by army.h's
     // +0x198 spell-influence row, which already fixes FRENZY 0x38,
     // BIND 0x48 and AGE 0x4b from the round-counter side and puts
-    // PARALYZE on 74.
+    // PARALYZE on 74. (SPELL_SACRIFICE 0x28 belongs to this set too and
+    // is declared once, in value order, above.)
     SPELL_MAGIC_ARROW = 0xf,
     SPELL_IMPLOSION = 0x12,
     SPELL_HASTE = 0x35,
@@ -412,9 +430,15 @@ enum ESpellId {
     SPELL_BIND = 0x48,
     SPELL_DISEASE = 0x49,
     SPELL_PARALYZE = 0x4a,
-    // Round-side corroboration: the 0x4b row HALVES the stack's
-    // recomputed maximum hit points in ResetRound - Aging's rule.
-    SPELL_AGE = 0x4b
+    SPELL_AGE = 0x4b,
+    // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
+    // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
+    // 0x4e is the TOP entry, with an arm of its own that prints one
+    // text row over the affected stack's name and nothing else - the
+    // shape every other creature-ability arm in that table has. The
+    // value is fixed at both ends by the same table: 0x4b AGE is the
+    // last already-proven rung below it, and the window closes at 0x4e.
+    SPELL_DISPEL_HELPFUL = 0x4e
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
