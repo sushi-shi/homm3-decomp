@@ -109,6 +109,20 @@ MISSING forever.
   retail's own `loadBlackBox` reaches the same resize with NO zero test, and
   our plain `resize(count)` reproduces that shape exactly. When two retail
   functions differ, the difference is in their sources.
+- **...AND SOMETIMES IT IS NOT A SWITCH AT ALL.** If retail's compares appear
+  in an order that is NOT ascending by case value, the source wrote an
+  IF-CHAIN, not a `switch` — VC6 sorts a switch's tests ascending and will
+  relocate whole arms to do it. advManager::ProcessMapSelect went **77.76 ->
+  90.90** on that change alone: retail compares HERO(34), TOWN(98),
+  SHIPYARD(87) in that order, which no `switch` can produce. Read the compare
+  ORDER before assuming the construct.
+- **SCOPED LOCALS SHRINK THE FRAME** (SetHeroContext 90.56 -> 99.27). Retail
+  writing three values through ONE stack slot does not mean one variable — it
+  can be three separate BLOCK-SCOPED locals whose lifetimes do not overlap.
+  A single function-scope local keeps the slot live across an inlined region,
+  so that region's own values need fresh slots and the spill cascades. When
+  the frame is bigger than retail's, look for values whose scope should end
+  early.
 - **SWITCH ARM ORDER IS SOURCE ORDER** (byte-proven 2026-08-20,
   advManager::ProcessSelect 84.02 -> 100.0 on this edit alone). The physical
   layout of a switch's arms in retail is the order the source wrote the
