@@ -32,6 +32,13 @@ public:
     // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
     // bytes against 54).
     void ClearCombatMessages();
+    // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
+    // is the one constructor site in the tree and pushes a single byte,
+    // the placement flag it has just computed. Behind the same view its
+    // only consumer already defines.
+#ifdef HOMM3_COMBATWINDOW_MESSAGE_VIEW
+    TCombatWindow(unsigned char do_placement);
+#endif
 #ifdef HOMM3_COMBATWINDOW_MESSAGE_VIEW
     // Retail 0x472e90, the message line ClearCombatMessages forwards to
     // and the one combatManager's morale/damage bodies print through.
