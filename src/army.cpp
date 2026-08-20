@@ -2270,14 +2270,150 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
 
 #if 0  // @carcass
 
-// E:\gamedcs\army.cpp:2820
-VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
-double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded) const
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// The Artillery multipliers get_unit_combat_value's ballista arm
+// indexes by the controller's skill level, at .rdata 0x63b7f0 -
+// {1.0, 1.5, 1.5, 2.0} read from the hash-verified image. Name is a
+// source-facing invention; no roster row reaches the table.
+DATA(0x0063b7f0)
+static const double kArtilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
+
+// E:\gamedcs\army.cpp:2820
+// What ONE creature of this stack is worth to the AI: the attack and
+// defense edges over the battlefield floor at 5% a point, the shield/
+// air-shield and petrification factors, the enemy hero's defense
+// factor, the ranged-viability re-check (the army::enemy_is_adjacent
+// WRAPPER's second real call site - the pragma on 0x4429f0 predicted
+// it), the ballista's artillery scaling, the bless/curse re-average,
+// the double-damage bit, then sqrt(attack * defense) times the
+// creature's baseFightValue - and for the two flag classes in
+// 0x400040, scaled by this stack's share of its own side's living
+// mass (0.1 outright for a dead stack).
+//
+// get_controlling_side is a CALL at the ranged re-check (pinned - our
+// CL expands it) and INLINE (three separate hypnotize-ternary
+// expansions) in the ballista arm's three heroes[] reads - transcribed
+// as three full accessor calls, do-not-cache.
+//
+// SPELLING LEDGER (0 -> 86.87 -> 89.95 -> 92.16): the pin bought 3.1,
+// and naming the two adjusted-stat call results (`adjusted_attack` /
+// `adjusted_defense`) another 2.2 - without the locals our C2 parks
+// each result in ECX and runs the traits subtraction in EAX, the
+// mirror of retail. The artillery read goes through hero::skillLevel's
+// ARRAY arm (eSecSkillBattlefieldBallistics): slicing a named +0xdd
+// field instead costs events' monsters_sell_out 100.0000 -> 99.9517
+// tree-wide (include-set class, measured and reverted).
+//
+// Residual (92.1581%): the register-mirror family end to end - the
+// remaining rows differ only in which of EAX/ECX (and EBX/EDI in the
+// own-side mass loop) each side homes, with every operation, constant
+// and call paired. Same B1 handle-state class as WalkTo's note.
+VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
+double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
+                                   unsigned char ranged,
+                                   const army* excluded) const
+{
+    long adjusted_attack = get_adjusted_attack(0, ranged);
+    long attack_diff = adjusted_attack
+                       - akCreatureTypeTraits[creatureType].attackSkill
+                       - lowest_attack;
+    long adjusted_defense = get_adjusted_defense(0, 1);
+    long defense_diff = adjusted_defense
+                        - akCreatureTypeTraits[creatureType].defenseSkill
+                        - lowest_defense;
+    double factor = 1.0;
+    if (ranged) {
+        if (airShieldRounds)
+            factor = airShieldFactor;
+    } else {
+        if (shieldRounds)
+            factor = shieldFactor;
+    }
+    if (disabled_2b0)
+        factor = factor * 0.5;
+    hero* controller = get_controller();
+    if (controller)
+        factor = controller->GetDefenseFactor() * factor;
+    double defense_value = (defense_diff * 0.05 + 1.0) * factor;
+    if (ranged) {
+        if (creatureType != ARMY_CREATURE_BALLISTA
+            && creatureType != ARMY_CREATURE_ARROW_TOWER) {
+            if (!(Is(2) & 1) || shotsLeft <= 0) {
+                ranged = 0;
+            } else {
+#pragma inline_depth(0)
+                long shooter_side = get_controlling_side();
+#pragma inline_depth()
+                hero* h = gpCombatManager->heroes[shooter_side];
+                if (!(h
+                      && h->IsWieldingArtifact(
+                             ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
+                    && enemy_is_adjacent(0))
+                    ranged = 0;
+                else if (forgetfulnessRounds && forgetfulnessLevel >= 2)
+                    ranged = 0;
+            }
+        }
+    }
+    double attack_value = attack_diff * 0.05 + 1.0;
+    if (!ranged && (Is(2) & 1))
+        attack_value = attack_value * 0.5;
+    if (creatureType == ARMY_CREATURE_BALLISTA) {
+        if (gpCombatManager->heroes[get_controlling_side()]) {
+            if (gpCombatManager->heroes[get_controlling_side()]
+                    ->skillLevel[eSecSkillBattlefieldBallistics] > 1)
+                attack_value = attack_value + attack_value;
+            attack_value =
+                attack_value
+                * kArtilleryFactors[gpCombatManager
+                                        ->heroes[get_controlling_side()]
+                                        ->skillLevel
+                                            [eSecSkillBattlefieldBallistics]];
+        }
+    }
+    if (blessRounds || curseRounds) {
+        long damage_range = minDamage + maxDamage;
+        double base_average = damage_range / 2.0;
+        double average = base_average;
+        if (blessRounds)
+            average = blessAmount + maxDamage;
+        else if (curseRounds)
+            average = _cpp_max(minDamage - curseAmount, 1);
+        else
+            average = base_average;
+        attack_value = average / base_average * attack_value;
+    }
+    if (ranged && (Is(15) & 1))
+        attack_value = attack_value + attack_value;
+    double value = sqrt(attack_value * defense_value)
+                   * akCreatureTypeTraits[creatureType].baseFightValue;
+    if (creatureId & 0x400040) {
+        long total;
+        if (Is(23) & 1)
+            total = 1;
+        else
+            total = hitPoints * numTroops - topCreatureDamage;
+        long sum = 0;
+        for (long i = 0; i < gpCombatManager->numArmies[combatSide]; i++) {
+            if (!(gpCombatManager->armies[combatSide][i].creatureId
+                  & 0x1d0)) {
+                if (gpCombatManager->armies[combatSide][i].Is(23) & 1)
+                    sum += 1;
+                else
+                    sum += gpCombatManager->armies[combatSide][i].hitPoints
+                               * gpCombatManager->armies[combatSide][i]
+                                     .numTroops
+                           - gpCombatManager->armies[combatSide][i]
+                                 .topCreatureDamage;
+            }
+        }
+        if (total == 0)
+            return 0.1;
+        value = sum * value / (total + sum);
+    }
+    return value;
+}
 
 // E:\gamedcs\army.cpp:2910
 // RECONSTRUCTED AND WITHDRAWN 2026-08-14 with can_shoot; UN-CARCASSED
