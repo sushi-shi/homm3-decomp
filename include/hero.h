@@ -283,7 +283,15 @@ public:
     // and feed it straight back into the 1170-stride heroes index, and
     // town::View (0x5be3fa) pushes it to advManager::SetHeroContext.
     int id;                         // +0x1a
-    char pad_01e[0x4];
+    // +0x1e. HeroFn_004D8B30 copies the setup record's +0x08 dword
+    // straight in here, which is the only retail body that touches these
+    // four bytes at all - hence a full DWORD and hence a member rather
+    // than a pad. No name survives and nothing else reads it, so the
+    // spelling stays ORDINAL. (The h3m Shadow of Death hero record's
+    // leading questIdentifier is the obvious candidate and is exactly
+    // the field retail's HeroExtra has that the Dreamcast's lacks, but
+    // that is inference, not evidence.)
+    int field_01e;                  // +0x1e
     // Owning player. SIGNED char: town::View widens it with
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
@@ -688,6 +696,13 @@ public:
     // owning the slot is THeroScreenWindow::HeroMessageUpdate(char*);
     // ORDINAL PLACEHOLDER name, arity settled from the bytes.
     void HeroFn_004D97F0();
+    // 0x4d8b30, `ret 4`, a hero MEMBER: it copies one map/scenario setup
+    // record into this hero. The Dreamcast keeps the counterpart as the
+    // free function initialize_hero(hero*, const HeroExtra*)
+    // (E:\gamedcs\game.cpp:9912, dc 0xb6c84); retail moved it into
+    // hero.cpp as a member, so the name stays an ORDINAL PLACEHOLDER.
+    // Gated with HeroExtra itself, which is what the parameter is.
+    void HeroFn_004D8B30(const class HeroExtra* setup);
     int HeroFn_004D9B30(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the

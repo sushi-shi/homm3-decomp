@@ -31,16 +31,19 @@
 #define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
 #undef HOMM3_HERO_DESCRIPTION_DEFS
-#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
+// HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
+// to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
+// HeroExtra, and that class lives behind this same gate in game.h.
 #define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_HERO_OBJ_DECLS
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
 // declarator, not the whole events view; advmgr.h's own note records why.
 #define HOMM3_HERO_FIZZLE_API
@@ -249,6 +252,14 @@ inline TArtifact artifact_from_int(int value)
 // WindowHandler re-evaluates the rollover whenever either SHIFT changes.
 // These are PS/2 scan codes in message::codeX; inputmgr.h's own note
 // measures what adding ungated enumerators there costs, so they stay here.
+// HeroFn_004D8B30's start-level override: one campaign/scenario pair
+// whose hero starts at another scenario hero's level plus five. The
+// displacements are exact (gpGame + 0x4c893 IS heroes[151].level), but
+// the campaign's identity is inference, so the names stay role-based.
+static const int kStartLevelCampaign = 8;
+static const int kStartLevelScenario = 3;
+static const int kStartLevelHeroId = 151;
+static const int kStartLevelBonus = 5;
 static const int kKeyCodeLeftShift = 0x2a;
 static const int kKeyCodeRightShift = 0x36;
 static const int kArtifactVialOfDragonBlood = 0x7f;
@@ -999,8 +1010,6 @@ void hero::initialize(short index)
     field_11b = 0;
 }
 
-#if 0  // @carcass
-
 // RETAIL-ONLY x3. The DC roster runs hero::initialize (0xcbe80)
 // straight into belongs_to_human (0xcc0bc) with nothing between them,
 // but retail carves THREE bodies into that gap. All three are hero
@@ -1010,19 +1019,153 @@ void hero::initialize(short index)
 // unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
 // crossbuild map has no row for any of them either.
 //
-// 0x004d8b30 `ret 4`: copies a ~0x330-byte source record into the hero -
-// the packed 10-bit x/y/z out of src+0x301..0x303 into the three
-// coordinate words, src+0 into the owner byte at +0x22, src+4 into the
-// id at +0x1a, akHeroTraits[id].field_8 into +0x30, a 13-byte strncpy
-// of src+0xd into the name at +0x23, and a run into the +0x476 stats
-// band. Its single caller is inside game.obj (0x4cae10).
+// 0x004d8b30 `ret 4`: copies one map/scenario setup record into the
+// hero. Its single caller is inside game.obj (0x4cae10), which walks 156
+// records with `add ebx, 0x334` - which is what closes the record's size.
+//
+// TYPE BLOCKER RETIRED 2026-08-20: this needed no new type either. The
+// record is game.h's existing HeroExtra, and the identification is
+// conclusive rather than plausible - from Dreamcast offset 8 onward all
+// sixteen of its members land on retail at DC + 4, in order, without a
+// single exception. What was missing is only the head band, which this
+// body reads field by field, plus the pack(1) that keeps `location` at
+// +0x301 where retail puts it. The DC counterpart is the free function
+// initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
+// a member and moved it into hero.cpp.
 VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
-void hero::HeroFn_004D8B30(const void* setup)
+void hero::HeroFn_004D8B30(const HeroExtra* setup)
 {
-    // @stub
+    field_01e = setup->field_008;
+    x = setup->location.x;
+    y = setup->location.y;
+    z = setup->location.z;
+    owner = setup->Owner;
+    id = setup->id;
+    heroClass = akHeroTraits[setup->id].heroClass;
+
+    patrolRadius = setup->PatrolRadius;
+    if (setup->PatrolRadius >= 0) {
+        patrolX = x;
+        patrolY = y;
+    } else {
+        patrolX = kPatrolNone;
+        patrolY = kPatrolNone;
+    }
+
+    if (setup->bCustomName) {
+        strncpy(name, setup->Name, sizeof(name));
+        name[sizeof(name) - 1] = 0;
+    }
+    if (setup->bCustomPortraitNumber)
+        portrait = setup->PortraitNumber;
+
+    if (setup->customPrimarySkills) {
+        for (int i = 0; i < 4; i++)
+            stats[i] = setup->primarySkills[i];
+    }
+
+    if (setup->bCustomSecondarySkills) {
+        memset(skillLevel, 0, sizeof(skillLevel));
+        memset(skillOrder, 0, sizeof(skillOrder));
+        skillCount = 0;
+        for (int i = 0; i < setup->NumSecondarySkills; i++)
+            GiveSS(setup->secondarySkill[i], setup->secondarySkillLevel[i]);
+    }
+
+    if (setup->bCustomArmies) {
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            army.numTroops[i] = setup->numTroops[i];
+            if (setup->numTroops[i] > 0)
+                army.armies[i] = setup->armies[i];
+            else
+                army.armies[i] = CREATURE_NONE;
+        }
+    }
+
+    if (setup->customSpells) {
+        memset(in_spellbook, 0, sizeof(in_spellbook));
+        memset(available_spells, 0, sizeof(available_spells));
+        for (int i = 0; i < NUM_SPELLS; i++) {
+            if (setup->spells.test(i)) {
+                in_spellbook[i] = 1;
+                available_spells[i] = 1;
+            }
+        }
+    }
+
+    if (setup->bCustomArtifacts) {
+        int i;
+        for (i = 0; i < 19; i++) {
+            if (equipped[i].artifactId != ARTIFACT_NONE)
+                remove_artifact(i);
+        }
+        for (i = 0; i < 19; i++) {
+            if (setup->artifacts[i].artifactId != ARTIFACT_NONE)
+                equip_artifact(&setup->artifacts[i], i);
+        }
+        for (i = 0; i < 64; i++)
+            backpack[i] = type_artifact();
+        for (i = 0; i < 64; i++) {
+            if (setup->backpack[i].artifactId != ARTIFACT_NONE)
+                add_to_backpack(&setup->backpack[i], -1);
+        }
+    }
+
+    if (setup->sex != -1)
+        sex = setup->sex;
+
+    if (setup->customName) {
+        hasCustomName = 1;
+        customName.assign(setup->name, 0, std::string::npos);
+    }
+
+    if (setup->bCustomExperience) {
+        experience = 0;
+        int amount = setup->Experience;
+        // The one campaign that starts its hero at a level derived from
+        // another scenario's hero. GetExperience (0x4da3a0) is EMITTED
+        // AFTER this body, so VC6 cannot inline it here - yet its ladder
+        // is expanded in place at 0x4d999b, induction rewrite and all.
+        // The only consistent reading is that retail's source repeats the
+        // statements rather than calling it.
+        if (gCampaignMode
+            && gpGame->campaign.currentCampaign == kStartLevelCampaign
+            && gpGame->campaign.currentMap == kStartLevelScenario) {
+            int iLevel = gpGame->heroes[kStartLevelHeroId].level
+                       + kStartLevelBonus;
+            if (iLevel <= 12) {
+                amount = kExperienceForLevel[iLevel - 1];
+            } else {
+                amount = kExperienceForLevel[11];
+                int increment = static_cast<int>(
+                    (amount - kExperienceForLevel[10]) * 1.2);
+                amount += increment;
+                for (int i = 13; i < iLevel; i++) {
+                    increment = static_cast<int>(increment * 1.2);
+                    amount += increment;
+                }
+            }
+        }
+        GiveExperience(amount, 1, 0);
+        CheckLevel();
+    }
+
+    int knowledge = GetPrimarySkill(3);
+    float intelligence =
+        kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
+    if (skillLevel[eSecSkillIntelligence] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillIntelligence)
+            intelligence = (level * 0.05f + 1.0f) * intelligence;
+    }
+    float baseMana = static_cast<float>(knowledge * 10);
+    mana = static_cast<short>(
+        static_cast<long>((intelligence + 1.0f) * baseMana));
+    maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
 }
 
-#endif  // @carcass
+
 
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
 // (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
