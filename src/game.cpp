@@ -2535,17 +2535,49 @@ int game::Load(TAbstractFile* infile)
 // MEASURED, and the reason they are not written yet: adding them
 // LOWERS the score. 42.23 with the block above; 40.62 with the twelve
 // scalar and six array writes added; 37.18 with the zero and gMapExtra
-// writes on top. The cause is the FRAME, not the statements - retail
-// is `sub esp,0x5c0` and ours is `sub esp,0x5e4`, with every named
-// local shifted by 8 (saved at [ebp-0x5cc] vs [ebp-0x5d4], the
-// fileName string at [ebp-0x6c] vs [ebp-0x74]). Every frame-relative
-// displacement in all 800+ instructions therefore differs, so each
-// correct statement added only lengthens a stream that cannot align.
-// The _Tidy census is the sharp instrument here: retail destroys the
-// SavedGameHeader::fileName string 36 times on the failure ladder and
-// ours does it 39 times with the extra writes in, so the guarded-write
-// count is very close - it is the eight bytes of frame that have to be
-// found FIRST. Do not re-add the statements before then.
+// writes on top. The cause is the FRAME, not the statements.
+//
+// FRAME DIAGNOSIS CORRECTED 2026-08-20 (the earlier note here said
+// "eight bytes, every named local shifted by 8" and was measured with
+// the tail statements IN; with them out the shift is a uniform TWELVE,
+// and the whole delta is now localised):
+//   * retail is `sub esp,0x5c0`, ours `sub esp,0x5b4`, and every named
+//     local sits exactly 0xc closer to ebp on our side (the fileName
+//     string at [ebp-0x60] vs [ebp-0x6c], the header at [ebp-0x5c0] vs
+//     [ebp-0x5cc], and the -0xdc/-0x2ac/-0x5b0 triple against retail's
+//     -0xe8/-0x2b8/-0x5bc);
+//   * the BIG locals are already byte-for-byte the right size. Subtract
+//     the small-slot region from each frame and both sides give exactly
+//     0x5a4. The entire 0xc is the COUNT of 4-byte slots in the region
+//     between ebp-0xc and the fileName string: retail has SEVEN, we
+//     have FOUR;
+//   * retail's seven are -0x10 (a byte temp at -0xd), -0x14 (the loop
+//     counter i), -0x18 (a second byte temp at -0x15), -0x1c and -0x20
+//     (two dword temps), -0x24 (the 0x9c length constant) and -0x28
+//     (the four-byte literal zero). ALL FIVE of -0x10/-0x18/-0x1c/
+//     -0x20/-0x28 belong to the missing tail;
+//   * retail's NON-tail locals need only TWO real slots, because it
+//     packs char_buffer and short_buffer into the incoming parameter's
+//     home slot - `mov byte [ebp+0xb],dl / lea eax,[ebp+0xb]` for the
+//     byte and `mov [ebp+0x8],edx / cmp word [ebp+0x8],di` for the
+//     short, byte 3 and bytes 0-1 of the same dword, coalesced with the
+//     dead `allocator<char>()` temporary the string construction leaves
+//     at [ebp+0xb]. We spend two real slots (-0x10, -0x18) on the same
+//     two variables and use [ebp+0x8] only as an int loop counter.
+// So the arithmetic is exact: 2 retail non-tail slots + 5 tail slots =
+// 7 = 0x5c0. Ours is 4 non-tail + 5 tail = 9 = 0x5c8, and the two
+// surplus slots ARE char_buffer and short_buffer failing to colour into
+// the parameter home. That is the thing to move, and it is a lifetime
+// question, not a statement-order one. Do not re-add the tail before
+// the slot count is 2.
+//
+// The tail's own temps, for whoever writes it: the twelve scalar writes
+// use exactly FIVE temps in retail, in this grouping - byte temp at
+// -0xd for writes 1,2 then again for 7,8,9; a dword temp at -0x20 for
+// the two shorts 3,4; a SECOND byte temp at -0x15 for writes 5,6; and
+// a dword temp at -0x1c for the last three shorts. The byte temp
+// switching away to -0x15 for two writes and back is the signature of
+// a second, separately scoped char local - not of one reused variable.
 // Residual (42.2312%): missing tail above, gated on the frame delta.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
