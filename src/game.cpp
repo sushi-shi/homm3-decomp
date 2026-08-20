@@ -965,13 +965,14 @@ int game::SaveObeliskPool(void* outfile)
 #endif  // @carcass
 
 // E:\gamedcs\game.cpp:1278
-// The whole body is one store; everything else is the implicit
-// construction of the shipyards vector (empty-allocator copy at +0x8c,
-// then the zeroed _First/_Last/_End triple).
+// The body is EMPTY: every store is implicit member construction -
+// the shipyards vector (empty-allocator copy at +0x8c, then the zeroed
+// _First/_Last/_End triple) and then assembledCombinations at +0xe8.
+// The +0xe8 store landing AFTER the vector's triple is what proves it
+// is the bitset's constructor and not a body statement.
 VA(0x004b9df0, 0x2D)  // anchor-bracket, dc 0xa4cc8
 playerData::playerData()
 {
-    aiField_e8 = 0;
 }
 
 // E:\gamedcs\game.cpp:1283
@@ -1010,7 +1011,7 @@ void playerData::Init()
     isHuman = 0;
     quickCombat = 0;
     placement_help_enabled = 1;
-    aiField_e8 = 0;
+    assembledCombinations.reset();
     strcpy(cName, gpGeneralText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
     dpid = 0;
     isHuman = 0;
@@ -1229,14 +1230,10 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
     if (saveVersion >= 37) {
         unsigned char bits[2];
         infile->Read(bits, sizeof(bits));
-        int combos = 0;
-        for (unsigned int bit = 0; bit < 12; bit++) {
-            if ((bits[bit >> 3] & (1 << (bit & 7))) != 0)
-                combos |= 1 << bit;
-            else
-                combos &= ~(1 << bit);
-        }
-        aiField_e8 = combos;
+        std::bitset<12> combos;
+        for (unsigned int bit = 0; bit < 12; bit++)
+            combos.set(bit, (bits[bit >> 3] & (1 << (bit & 7))) != 0);
+        assembledCombinations = combos;
     }
     return 0;
 }
@@ -1329,7 +1326,7 @@ int playerData::save(TAbstractFile* outfile)
 
     unsigned char bits[2] = {0, 0};
     for (unsigned int bit = 0; bit < 12; bit++) {
-        if ((aiField_e8 & (1 << bit)) != 0)
+        if (assembledCombinations.test(bit))
             bits[bit >> 3] |= static_cast<unsigned char>(1 << (bit & 7));
     }
     outfile->Write(bits, sizeof(bits));

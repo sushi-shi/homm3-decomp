@@ -1056,8 +1056,16 @@ public:
     // row at +0x108: it pairs each entry with resources[i] while
     // deciding whether a resource trade is needed. The 0x20-byte lead
     // is the VC6-width form of the DC AI record's first two containers.
-#ifdef HOMM3_HERO_OBJ_DECLS
-    // hero.obj's NARROW VIEW of the same four bytes. Retail's
+#if defined(HOMM3_HERO_OBJ_DECLS) || defined(HOMM3_GAME_OBJ_DECLS)
+    // hero.obj's and game.obj's NARROW VIEW of the same four bytes.
+    // game.obj earns the view from its own side: playerData::save
+    // reads the word with the same `[base + 4*(_P>>5)]` form behind
+    // the same bitset<12>::_Xran bounds check, playerData::load builds
+    // a local bitset and assigns it, and playerData::playerData stores
+    // +0xe8 AFTER the shipyards vector triple - member-construction
+    // order, i.e. that store IS the implicit bitset constructor and
+    // the constructor body is empty.
+    // Retail's
     // hero::HeroFn_004DC100 (0x4dc100) walks this dword as a
     // std::bitset<12> - one bit per combination artifact, "this player
     // has already been offered / has assembled it" - and emits both the
