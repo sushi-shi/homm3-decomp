@@ -3233,6 +3233,37 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
+// readObject's QUEST_GUARD arm, factored out for ONE reason: the /Ob2 budget
+// is per-CALLER and clamps at a floor, so a SMALL function gets a small
+// budget. Inside a helper this size there is not enough of it to expand
+// vector<TQuestGuard>::insert, so the insert stays a CALL - and the helper,
+// a static with a single call site, is then inlined back into readObject
+// whole and BRINGS THAT CALL WITH IT. That is retail's shape, and nothing
+// spelled inside readObject could reach it, because there the budget is
+// readObject's own and it is large enough to expand the insert.
+//
+// Worth 2.5 points on its own (42.6246 -> 45.0977), and it costs no symbol:
+// mapcell.obj still carries exactly 67 functions, because an inlined
+// single-call-site static leaves nothing behind.
+//
+// The same treatment does NOT transfer to its neighbours. On the
+// RANDOM_DWELLING_FACTION arm it scores 33.0580 - twelve points BELOW doing
+// nothing - because that arm's two siblings already come out at retail's
+// exact length and the three are costed together; and the SEER arm cannot be
+// written this way at all, since TSeerHut derives PRIVATELY from TQuestGuard
+// and friends only NewfullMap, so a free static cannot read tempHut.quest.
+static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
+                              CObject* tempObject)
+{
+    TQuestGuard tempGuard;
+    tempGuard.read(infile);
+    map->QuestGuardList.push_back(tempGuard);
+    tempObject->extraInfo = map->QuestGuardList.size() - 1;
+    if (tempGuard.quest)
+        map->mapObjectData.push_back(static_cast<CMapObjectData*>(
+            static_cast<void*>(tempGuard.quest)));
+}
+
 // E:\gamedcs\mapcell.cpp:3290
 // The h3m object dispatcher.  Five stream fields land in the object itself -
 // x, y, z, a FOUR-byte type index of which only the low word is kept, and
@@ -3253,7 +3284,7 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // abandoned arm into the lighthouse's `readMineData` call rather than
 // duplicating it, which is a compiler transform over two separate cases, not
 // a fallthrough in the source.
-// Residual (42.6246%): an INLINER wall, and a narrow one - twenty-one of the
+// Residual (45.0977%): an INLINER wall, and a narrow one - twenty-one of the
 // twenty-six arms already come out at retail's exact byte length, arm for
 // arm, off the same jump table and index table:
 //   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
@@ -3283,11 +3314,29 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
 // reads land in [ebp+0xb] and its arm reads in a different home - and it
 // moves the first read onto retail's own [ebp+0xb] (42.5589 -> 42.6246).
 // It does not reach the runaway.
-// Not tried, and the standing hypothesis: the other nine bodies of this
-// compiland are still stubs, and Load/readMapObjects/loadMapObjects add call
-// sites to these very instantiations - a multi-site inline function is
-// costed differently from a single-site one, so this arm order may only
-// settle once the TU is finished.
+//
+// THE STANDING HYPOTHESIS ABOVE IS DISPROVED (2026-08-20). It held that the
+// arm order would only settle once the TU was finished, because the other
+// bodies would add CALL SITES to these instantiations and a multi-site
+// inline function is costed differently from a single-site one. Measured
+// directly: a throwaway second growth site for vector<TQuestGuard> - a
+// resize plus a push_back in a second function of this TU - moved readObject
+// by exactly NOTHING, 42.6246 before and after. The /Ob2 budget is per
+// CALLER; how many other functions instantiate the same template does not
+// enter its decision. Do not re-derive it.
+//
+// What DID move it is the other half of that same budget rule, and it is
+// now applied: see readQuestGuardArm above. A helper small enough to be
+// budget-starved keeps the insert out of line, and being a single-call-site
+// static it is inlined back complete with that call. QUEST_GUARD alone is
+// worth 42.6246 -> 45.0977.
+//
+// Still open, and the whole of the remaining gap: id-218
+// (RANDOM_DWELLING_FACTION) at 574 bytes against retail's 149. The same
+// helper lever scores 33.0580 there - twelve points WORSE than leaving it -
+// because its two siblings at 155 and 140 already match and the three arms
+// are costed as a group. SEER (122 vs 120) cannot use the lever at all:
+// TSeerHut derives privately from TQuestGuard and friends only NewfullMap.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
@@ -3566,16 +3615,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
     }
 
-    case QUEST_GUARD: {
-        TQuestGuard tempGuard;
-        tempGuard.read(infile);
-        QuestGuardList.push_back(tempGuard);
-        tempObject->extraInfo = QuestGuardList.size() - 1;
-        if (tempGuard.quest)
-            mapObjectData.push_back(static_cast<CMapObjectData*>(
-                static_cast<void*>(tempGuard.quest)));
+    case QUEST_GUARD:
+        readQuestGuardArm(this, infile, tempObject);
         break;
-    }
 
     case WITCH_HUT:
         if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
