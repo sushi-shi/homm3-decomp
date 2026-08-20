@@ -106,6 +106,20 @@ MISSING forever.
   restored both callers. `--fast` does not surface this; only the per-function
   scores of the CALLERS do. After any size-changing edit to a callee, check
   its callers' scores, not just its own. The prettier spelling is often wrong.
+- **OVER-INLINE: pin the callee retail CALLS. The single highest-yield
+  repeated lever found so far** (three functions, two lanes, 2026-08-20).
+  When `predict-inline` reports `<callee> base x0 vs retail x1` — we expand
+  it, retail calls it — put `#pragma auto_inline(off)` around that callee (or
+  a statement-scoped `#pragma inline_depth(0)` at the call). Measured:
+  `auto_inline(off)` on three advManager members our CL inlined
+  (UpdateScreen, CompleteDraw(uchar), CheckDimNextHeroBut) paid **+7.90 on
+  DoAdvCommand and +13.24 on ShowRoute**; `inline_depth(0)` on a 191-byte
+  callee took cmbtmgr's place_obstacle **49.09 -> 67.19**. In all three the
+  standing residual had blamed registers, and the register story was
+  downstream — ROUTE THE INLINER FIRST on any low-scoring function.
+  Definition order is NOT the lever: VC6 inlines functions defined LATER in
+  the TU, so moving a definition does not control expansion (measured, and it
+  refutes a note previously banked in advmgr.cpp).
 - **/Ob2 single-call-site inlining**: statics AND extern functions with one
   call site inline REGARDLESS OF SIZE (AppInit→WinMain ~300B; AppCommand→
   AppWndProc is our uncracked over-inline residual). Unconditional out-of-line
