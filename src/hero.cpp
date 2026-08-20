@@ -1183,6 +1183,39 @@ void hero::AddSpell(int whichSpell)
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1527
+// DECODED 2026-08-20 but NOT landed - recorded here so the next lane does
+// not repeat the extraction. Shape:
+//
+//   std::bitset<70> result(0);
+//   switch (artifactId) { ... }          // see the table below
+//   if (artifactId == 0x87) { ... }      // a second, post-switch arm
+//   return result;
+//
+// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default`, a byte
+// index table at +0x240 and a nine-entry dword jump table at +0x21c. Read
+// straight out of the image, the 50 index bytes collapse to EIGHT real
+// cases; every other id in 0x56..0x87 falls to the default (case 8, the
+// bare epilogue):
+//   0x56 -> school mask 2      0x57 -> school mask 1
+//   0x58 -> school mask 4      0x59 -> school mask 8
+//   0x7b -> set(0) and set(1)  0x7c -> every spell whose level == 5
+//   0x80 -> set(0x1a)          0x87 -> set(0x39)
+//
+// The four school-mask cases each build a SEPARATE bitset temporary at
+// [ebp-0x28], fill it with `tmp[i] = true` over the 70-entry
+// akSpellTraits table (stride 0x88, bound 0x2530, flag byte at +0x1c),
+// and then copy all three dwords into the result - they do NOT write the
+// result directly. The level case and the four set() cases DO write the
+// result in place through bitset<70>::set(size_t,bool). That asymmetry is
+// in the bytes, not an artifact of inlining: the mask cases address
+// [ebp-0x28] and the others [ebp-0x1c].
+//
+// Blockers before this can land, both cheap but neither done here:
+//  - the eight case labels are raw artifact ids and WILL trip the
+//    magic-case-label floor; they need named enumerators (artifact.h
+//    already carries the ARTIFACT_* domain, so extend it there);
+//  - the spell ids 0, 1, 0x1a and 0x39 want SpellID names for the same
+//    reason.
 VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
 std::bitset<70> mark_spells(int artifactId)
 {
