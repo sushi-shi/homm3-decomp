@@ -1337,6 +1337,52 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
     return hex == destination;
 }
 
+// E:\gamedcs\findpath.cpp:1136 - the THIRD of the DC roster's three
+// inlined-away helpers, and the one the carcass above still stubs.  Its DC
+// signature is `unsigned char searchArray::build_combat_path(const army*, int
+// start_hex, int end_hex, int destination)` (dc 0xa0970, 212 B), which is
+// exactly FindCombatPath's epilogue read back: given the hex the search
+// reached, walk the recorded directions back to start_hex and fill `result`.
+//
+// It is spelled here rather than left inside FindCombatPath's body for the
+// /Ob2 BUDGET, not for tidiness: the budget is `clamp(2 * caller_cb, ...)`,
+// so our pre-inline body being larger than retail's is what makes our CL
+// expand callees retail keeps out of line.  Moving this block out shrinks
+// caller_cb and hands the decisions back - FindCombatPath 73.5149 ->
+// 78.9419, with no other change.  File-local rather than a member because a
+// declarator in findpath.h reaches seventeen TUs, and every member it needs
+// (`result`, `getCellData`) is already public.
+static unsigned char build_combat_path(searchArray* search,
+                                      const army* current_army,
+                                      int start_hex, int end_hex,
+                                      int destination)
+{
+    if (destination < 0 || destination >= COMBAT_GRID_CELLS)
+        return 0;
+    if (current_army->side == -1) {
+        if (end_hex != destination)
+            return 0;
+    } else if (search->result.size() == 0) {
+        return 0;
+    }
+
+    while (end_hex != start_hex) {
+        pathCell* step_cell = search->getCellData(end_hex);
+        // OVER-INLINE, pinned. Retail calls vector<pathCell*>::insert
+        // (0x54d120) at BOTH push sites - +0x672 and +0x734 - and the /Ob2
+        // budget simply ran out between them on our side, exactly as it does
+        // between PushPoint's two queue.insert arms. `end()` is hoisted out of
+        // the pinned statement first because retail keeps it inline.
+        pathCell** tail = search->result.end();
+#pragma inline_depth(0)
+        search->result.insert(tail, 1, step_cell);
+#pragma inline_depth()
+        end_hex = current_army->GetAdjacentCellIndex(
+            end_hex, OppositeDirection(step_cell->direction));
+    }
+    return search->result.size() > 0;
+}
+
 // E:\gamedcs\findpath.cpp:1218
 // `ret 0x18` = six stack arguments over `this`, and the DC roster's
 // seven-parameter count matches exactly.
@@ -1353,20 +1399,23 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // invisible in the bytes on the path where the first comparison has just
 // set the flag, which is exactly the retail branch layout.
 //
-// THE THREE INLINED-AWAY DC HELPERS. mark_enemy and check_enemy_armies
-// are spelled out of line above and expand here. The third,
-// build_combat_path, is the block reached by `goto found`: retail has ONE
-// copy of it and enters it from BOTH check_enemy_armies results, so a
-// goto is the shape - a `break` plus a flag would need a frame slot the
-// retail frame does not have, and `adjacent`/`direction` have to outlive
-// the direction loop for the block to read them.
+// THE THREE INLINED-AWAY DC HELPERS are all spelled out of line above and
+// expand here: mark_enemy (as two copies - see mark_enemy_searched),
+// check_enemy_armies, and build_combat_path, which is this body's EPILOGUE
+// and not, as an earlier note had it, the block reached by `goto found`.
+// The `goto` is still the shape for that block: retail has ONE copy of it and
+// enters it from BOTH check_enemy_armies results, and a `break` plus a flag
+// would need a frame slot the retail frame does not have, while
+// `adjacent`/`direction` have to outlive the direction loop for the block to
+// read them.
 //
 // bIsMoatSlowed is reached through is_moat(short) throughout; see
 // findpath.h for why that parameter width is proven rather than chosen.
 //
-// Residual (73.5149%): 46.4584 -> 47.8289 -> 73.5149, and the whole 25.7
-// points came from RE-READING THE FOUR getCellData CALLS, which the note this
-// replaces had placed at the wrong sites.
+// Residual (78.9419%): 46.4584 -> 47.8289 -> 73.5149 -> 78.9419, and the
+// whole 32.5 points came from RE-READING THE FOUR getCellData CALLS, which
+// the note this replaces had placed at the wrong sites, and then from
+// SHRINKING THE CALLER.
 //
 // The retail call sequence settles it. FindCombatPath calls getCellData
 // (0x4b3b90) at +0x42f, +0x481, +0x53e and +0x590 - each one immediately after
@@ -1377,7 +1426,7 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // the accessor there. The pins the old note put on those two were therefore
 // backwards, and removing them is worth +0.69 on top of everything below.
 //
-// THE THREE EDITS, each measured on its own:
+// THE FOUR EDITS, each measured on its own:
 //   * the tail walk's `result.push_back` written as `insert(tail, 1, x)` with
 //     `end()` hoisted and PINNED - retail calls vector<pathCell*>::insert
 //     (0x54d120) TWICE, at +0x672 and +0x734, and we expanded the second one.
@@ -1387,6 +1436,11 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 //     queue.insert, same hoist-then-pin recipe.
 //   * mark_enemy's getCellData pinned - 63.3297 -> 72.8289, +9.50.
 //   * the two body-level getCellData pins removed - 72.8289 -> 73.5149.
+//   * the epilogue moved into the DC roster's own build_combat_path helper.
+//     Per the RE'd /Ob2 rule the budget is `clamp(2 * caller_cb, 1000,
+//     35000)`, so a caller larger than retail's buys expansions retail did
+//     not make; shrinking caller_cb hands the decisions back without pinning
+//     anything. 73.5149 -> 78.9419, +5.43.
 //
 // AND THE mark_enemy PIN IS NO LONGER A TRADE. It was banked as a per-callee
 // knob that cost mark_teleport 100.0000 -> 82.7826, and it still does when
@@ -1419,6 +1473,17 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // pop as explicit erases 73.5149 -> 69.5447, and `queue.erase(queue.end()-1)`
 // for the pop alone 73.5149 -> 72.1272. `pop_back()` and `clear()` are the
 // right spellings; what is missing is a way to keep their copy out of line.
+//
+// AND THE BUDGET REACHES THEM, WHICH IS WORTH KNOWING FOR THE NEXT LANE.
+// Splitting the siege-pressure preamble into a helper as well DOES put two of
+// the three out of line - `copy<pathCell*>` at fn+0x15b and `copy<pathCell>`
+// at fn+0x17d, against retail's +0x160 and +0x182 - so this is a budget
+// question and not an unreachable one. It just does not pay: that shape
+// scores 76.2936 against 78.9419 for build_combat_path alone, and adding the
+// preamble helper ON TOP of build_combat_path is byte-flat (78.9419 both),
+// with the two copies back inline. The remaining sites' `budget /
+// sites-remaining` divisor moves when the epilogue leaves, which is why the
+// two levers do not add. Measured all four combinations.
 //
 // KEPT FROM THE OLD NOTE, still true: the preamble, the 187-cell clear, the
 // placement branch, the 5610-byte cellData wipe, the seed PushCombatPoint,
@@ -1587,30 +1652,8 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
         }
     }
 
-    if (destination < 0 || destination >= COMBAT_GRID_CELLS)
-        return 0;
-    if (current_army->side == -1) {
-        if (best_hex != destination)
-            return 0;
-    } else if (result.size() == 0) {
-        return 0;
-    }
-
-    while (best_hex != start_hex) {
-        pathCell* step_cell = getCellData(best_hex);
-        // OVER-INLINE, pinned. Retail calls vector<pathCell*>::insert
-        // (0x54d120) at BOTH push sites - +0x672 and +0x734 - and the /Ob2
-        // budget simply ran out between them on our side, exactly as it does
-        // between PushPoint's two queue.insert arms. `end()` is hoisted out of
-        // the pinned statement first because retail keeps it inline.
-        pathCell** tail = result.end();
-#pragma inline_depth(0)
-        result.insert(tail, 1, step_cell);
-#pragma inline_depth()
-        best_hex = current_army->GetAdjacentCellIndex(
-            best_hex, OppositeDirection(step_cell->direction));
-    }
-    return result.size() > 0;
+    return build_combat_path(this, current_army, start_hex, best_hex,
+                             destination);
 }
 
 // THE ONE RETAIL ROW WITH NO DREAMCAST TWIN. 0x4b3b90 sits between
