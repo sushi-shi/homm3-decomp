@@ -1831,6 +1831,7 @@ townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
+townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	93.1310	93.1310	93.1310	0x1d05f0
 townmgr	?SetHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250
 townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0
 townmgr	?SetRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60
@@ -1850,11 +1851,14 @@ townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000
 townmgr	?WindowHandler@TBlacksmithWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810
 townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80
+townmgr	?WindowHandler@TMageGuildWindow@@UAEHPAVmessage@@@Z	97.3865	97.3865	97.3865	0x1ce370
 townmgr	?WindowHandler@TShipWindow@@UAEHPAVmessage@@@Z	99.9841	99.9841	99.9841	0x1d25a0
 townmgr	?WindowHandler@TTavernWindow@@UAEHPAVmessage@@@Z	89.7235	89.7235	89.7235	0x1d7b30
+townmgr	?WindowHandler@type_garrison_base_window@@UAEHPAVmessage@@@Z	95.6600	95.6600	95.6600	0x1d0910
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
+townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4709	97.4709	97.4709	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0
 tradpost	??1TGiveResourceWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e36c0
