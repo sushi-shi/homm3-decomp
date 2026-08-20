@@ -1838,6 +1838,23 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
 
 #if 0  // @carcass
 
+// RETAIL-ONLY, no roster row anywhere: the numeric half of
+// ComputeAttackerDamageBonuses (0x443840, immediately below), carrying the
+// SAME five arguments - offense/archery factors, the hero spell bonus and
+// the get_adjusted_attack / get_adjusted_defense pair. The DC build has all
+// of this INSIDE its single 1410-byte ComputeAttackerDamageBonuses; retail
+// split it out because get_estimated_damage (0x443e30) needs the number
+// without the combat message and sound the wrapper adds. NAME IS A
+// BOOTSTRAP INVENTION, same class as get_estimated_damage below.
+VA(0x00443320, 0x514)  // anchor-callee (0x443840 and 0x443e30 are its only
+                       // callers) + arity ret 0x14, retail-only slot
+int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
+                                 army* defender, unsigned char simulate_only,
+                                 long distance) const
+{
+    // @stub
+}
+
 // E:\gamedcs\army.cpp:3076
 // CONFIRMED against 0x443320, which has the SAME arity (ret 0x14) and a
 // better size ratio, and which an order-map alone picks instead. The DC
@@ -1948,6 +1965,28 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
         reduction *= casting_hero->GetDefenseFactor();
     return reduction;
 }
+
+#if 0  // @carcass
+
+// RETAIL-ONLY: UNNAMED in the DC dump, the HD name map and IDA alike, and
+// its two callers are both in ai_tactical - get_attack_skill_value
+// (0x437800) and get_defense_skill_value (0x438910), each asking what a
+// hypothetical stack of ours would do to a target. Four stack arguments
+// (ret 0x10); it runs compute_attacker_bonus, then
+// ComputeAttackerDamageReduction, then the defender's own shield /
+// petrify / hero-defense-factor chain, and floors the answer at 1. It is
+// NOT DamageEnemy: that row takes (army*, int*, int*, bool) on the DC
+// roster and calls ComputeBaseDamage / adjust_damage / Damage, none of
+// which appear here. Name declared in army.h as a bootstrap invention.
+VA(0x00443e30, 0x101)  // anchor-callee (ai_tactical's two skill-value
+                       // functions) + arity ret 0x10, retail-only slot
+long army::get_estimated_damage(const army* target, long amount,
+                                unsigned char ranged, long distance) const
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\army.cpp:3356
 // The whole damage pipeline between one stack's raw swing and what the
@@ -3311,6 +3350,20 @@ unsigned char army::can_cast_resurrect(long hex) const
 
 #if 0  // @carcass
 
+// RETAIL-ONLY, no DC row in this run: a member with NO arguments (bare
+// `ret`), which none of the three DC rows left in the bracket
+// (can_cast_spell / cast_resurrect / cast_demonic_resurrect, one argument
+// each) can be. combatManager::SetNextArmy (0x465330) calls it and
+// 0x447fe0 at the top of a stack's turn; it walks the +0xdc spell list
+// against the table at 0x63b850 and picks one with `rand`. Name is
+// army.h's, provisional.
+VA(0x00447510, 0x1A8)  // anchor-callee (SetNextArmy 0x46553e) + arity
+                       // ret 0, retail-only slot
+void army::FaerieDragonSpell()
+{
+    // @stub
+}
+
 // E:\gamedcs\army.cpp:5359
 // A PREDICATE, not a caster: every callee is a validity test
 // (combatManager::can_cast_spells, ValidSpellTargetArmy,
@@ -3320,6 +3373,19 @@ unsigned char army::can_cast_resurrect(long hex) const
 // combatManager::GetCommand.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
+{
+    // @stub
+}
+
+// RETAIL-ONLY: the shared spell-validity worker army.h describes -
+// is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
+// calls it, and Unnamed447fe0 calls it twice. Two fastcall register
+// arguments and a bare `ret`, so it is a free function, which rules out
+// the three one-argument group_has_* statics the DC roster has left in
+// this bracket. Name is army.h's, a bootstrap invention.
+VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
+                       // tail-jump from 0x447eb0), retail-only slot
+unsigned char spell_is_valid_on_target(int spell, const army* target)
 {
     // @stub
 }
@@ -3431,6 +3497,19 @@ void army::cast_caliph_spell(long hex)
 }
 
 #if 0  // @carcass
+
+// RETAIL-ONLY: the second of SetNextArmy's two turn-start abilities (it
+// calls this at 0x465519 and FaerieDragonSpell at 0x46553e). A member
+// with no arguments answering a byte; it gates on
+// combatManager::can_cast_spells, picks through spell_is_valid_on_target
+// twice, and ends in PowEffect + a sample. No roster names it, so the
+// address ordinal stands as army.h records.
+VA(0x00447fe0, 0x27E)  // anchor-callee (SetNextArmy 0x465519) + arity
+                       // ret 0, retail-only slot
+unsigned char army::Unnamed447fe0()
+{
+    // @stub
+}
 
 // E:\gamedcs\army.cpp:5601
 VA(0x00448260, 0x582)  // anchor-global, dc 0x4c468
