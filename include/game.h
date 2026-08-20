@@ -609,6 +609,23 @@ enum EMapFormatVersion {
 // Only the fields reached by reconstructed consumers are exposed. The
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
+#ifdef HOMM3_VLC_CHECKS_VIEW
+// The upgrade-town victory's two level domains (map-format ordinals).
+// CheckForUpgradedTown (0x5f1d40) maps each to the matching
+// type_building_id bit: town/city/capitol halls, fort/citadel/castle.
+// Gated with the rest of the VLC view.
+enum EVictoryHallLevel {
+    VICTORY_HALL_TOWN = 0,
+    VICTORY_HALL_CITY = 1,
+    VICTORY_HALL_CAPITOL = 2
+};
+enum EVictoryCastleLevel {
+    VICTORY_CASTLE_FORT = 0,
+    VICTORY_CASTLE_CITADEL = 1,
+    VICTORY_CASTLE_CASTLE = 2
+};
+#endif
+
 enum EVictoryConditionType {
 #ifdef HOMM3_VLC_CHECKS_VIEW
     // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
