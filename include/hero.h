@@ -165,6 +165,14 @@ class boat;
 // not otherwise need.
 extern unsigned char gCombatFlag6985a3;
 extern unsigned char gCombatFlag697744;
+
+// 0x485d90, a /Gr free helper in a compiland this tree has not admitted
+// yet: it reads a length-prefixed string off the stream and returns it BY
+// VALUE, so the hidden return pointer takes ECX and pushes `infile` out
+// to EDX - exactly the `lea ecx,[ebp-0x40] / mov edx,esi` pair
+// hero::load emits before the call. NAME INVENTED from the role; the row
+// is unclaimed and no DC or NH3API symbol covers it.
+std::string ReadLengthPrefixedString(TAbstractFile* infile);
 #endif
 
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
