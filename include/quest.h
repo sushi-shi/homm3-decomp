@@ -34,6 +34,19 @@
 
 class hero;
 
+// The two adventure-object names the TQuestGuard / TSeerHut text builders
+// read directly. Both are elements of advmgr.h's gAdventureObjectNames -
+// 0x6a79ec + 4*215 == 0x6a7d48 for QUEST_GUARD and 0x6a79ec + 4*83 ==
+// 0x6a7b38 for SEER - and retail loads each with a bare
+// `mov reg, dword ptr [abs]`, which a constant subscript and a scalar
+// extern spell identically. They are declared HERE, in the header only
+// seerhut.cpp includes, rather than in seerhut.h (which game.h pulls into
+// most of the tree) or by including advmgr.h; the two existing declarators
+// of exactly this shape - gTreeOfKnowledgeName at index 102 and
+// gWitchHutName at index 113 - are the precedent.
+DATA(0x006a7d48) extern const char* gQuestGuardName;
+DATA(0x006a7b38) extern const char* gSeerName;
+
 // The packed map position the defeat-monster quest carries at +0x44 and
 // compares field by field in slot 10. The three widths are read straight off
 // that body: it xors the low word against the argument's and masks 0x3ff,
@@ -52,6 +65,32 @@ class type_quest {
 public:
     unsigned char pad_4[0x3c];
 
+    // THE VTABLE IS NOW MODELLED AT ITS REAL WIDTH (2026-08-20). The ten
+    // tables each hold FIFTEEN slots, and every declaration below sits at
+    // the index its own comment names, so a virtual call through this class
+    // emits retail's `call dword ptr [edx + 4*slot]`. The previous model
+    // declared only the nine attested methods back to back, which put every
+    // one of them at the wrong offset; that was invisible while nothing in
+    // the tree dispatched on a `type_quest*`, and stopped being invisible
+    // when the four TQuestGuard / TSeerHut text builders turned out to call
+    // slot 7. The layout is read straight off the ten tables:
+    //
+    //   0x64174c 0056cbe0 004ec560 00617d9a 00485d80 00617d9a 00617d9a
+    //            00617d9a 00617d9a 00617d9a 005bc7e0 005bc7e0 0056cd00
+    //            0056ce50 0056cf70 00617d9a
+    //
+    // 0x617d9a is `__purecall` (`push 0x19 / call __amsg_exit`), so every
+    // slot holding it is PURE in the base; the four slots that are not
+    // (1, 3, 9, 10) are the four whose base bodies the file header already
+    // priced. Slots 4, 5, 13 and 14 are overridden by all ten leaves and
+    // nothing in this tree reaches them yet, so they are placeholders whose
+    // only job is to hold the offsets - do NOT invent semantics for them.
+
+    // Slot 0: the destructor. Retail's slot-0 bodies are scalar deleting
+    // dtors - 0x571530 is `call <base dtor> / test [ebp+8],1 / call
+    // operator delete / mov eax,esi`, the standard `??_G` shape - so the
+    // source declared `virtual ~type_quest()`.
+    virtual ~type_quest();
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
     virtual int GetAIValue(int player);
@@ -64,6 +103,22 @@ public:
     // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
     // and the resource leaf debits the player's treasury. Provisional name.
     virtual void TakePayment(hero* current_hero);
+    // Slots 4 and 5: pure in the base, overridden by all ten leaves
+    // (0x56d4b0.. and 0x56d550..). Unattested - placeholders only.
+    virtual void quest_slot_04();
+    virtual void quest_slot_05();
+    // Slot 6. Pure in the base and overridden everywhere.
+    virtual std::string GetRequirementText();
+    // Slot 7: the second string-returning virtual, and the one the four
+    // TQuestGuard / TSeerHut quick-info and rollover builders call on
+    // `TQuestGuard::quest` (0x572e40, 0x573040, 0x5741b0 and 0x5743e0 all
+    // reach it as `mov edx,[esi] / call dword ptr [edx+0x1c]` with a hidden
+    // std::string return buffer and no argument). The belong-to-player leaf
+    // at 0x572670 is 413 B against its 32-byte slot-6 sibling, and it
+    // indexes the player-name table at 0x6a7df8 with the quest's own
+    // `required_owner`, so slot 7 is the long, player-facing description
+    // where slot 6 is the short requirement line. The NAME is provisional.
+    virtual std::string GetQuestDescription();
     // Slot 8: the quest-type discriminator. Retail's leaf bodies return a
     // bare constant; see the enumeration proof in the file header.
     virtual int quest_type();
@@ -71,7 +126,6 @@ public:
     // default to the shared `ret 8` stub at 0x5bc7e0, so both take two dword
     // arguments and return nothing. The NAMES are provisional inventions -
     // only the argument shape and the two overriding bodies are attested.
-    virtual std::string GetRequirementText();
     virtual void NotifyHeroDefeated(int hero_id, int player);
     // Slot 10's monster override (0x56ed40) is decoded but NOT claimed - see
     // the residual note in seerhut.cpp.
@@ -86,6 +140,10 @@ public:
     // not. `Load` / `LoadFromMap` are provisional names for that split.
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
+    // Slots 13 and 14: 0x56cf70 in the base for 13, pure for 14. Every leaf
+    // overrides both. Unattested - placeholders only.
+    virtual void quest_slot_13();
+    virtual void quest_slot_14();
 };
 
 class type_experience_quest : public type_quest {

@@ -30,6 +30,16 @@ public:
     // unclaimed carve row outside this compiland.
     int read(TAbstractFile* infile);
 
+    // TWO TEXT BUILDERS, NOT ONE (2026-08-20). 0x572e40 and 0x573040 are
+    // 511 B each and byte-identical apart from ONE relocation - the
+    // separator literal they append, "\n\n" (0x6603b0) against " "
+    // (0x660330). advManager::QuickInfo calls the FIRST and
+    // advManager::SetRolloverText the second; the carve's own caller-derived
+    // names say so (`game_137c0_sub00_172e40` against
+    // `game_b150_sub07_173040`, 0x137c0 being QuickInfo and 0xb150
+    // SetRolloverText) and both bodies confirm it by their separator. The
+    // TSeerHut pair below splits the same way, crosswise.
+    std::string QuestGuardFn_00572E40(int player);
     std::string QuestGuardFn_00573040(int player);
     // 0x572d60, 224 B, carved and unclaimed. NULLARY where the pair above
     // takes a player: TQuestLogWindow::UpdateQuestLocator pushes only the
@@ -87,7 +97,13 @@ public:
     // every element of the list it has just resized.
     int load(TAbstractFile* infile, int saveVersion);
 
+    // The TQuestGuard pair's twin, and it splits CROSSWISE: 0x5741b0 and
+    // 0x5743e0 are 556 B each and differ only in the separator relocation,
+    // with 0x5741b0 taking " " (SetRolloverText) and 0x5743e0 taking "\n\n"
+    // (QuickInfo). Same carve-name evidence: `game_b150_sub08_1741b0`
+    // against `game_137c0_sub01_1743e0`.
     std::string SeerHutFn_005741B0(unsigned char player);
+    std::string SeerHutFn_005743E0(unsigned char player);
     // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of
     // TQuestGuard::QuestGuardFn_00572D60 and reached from the same
     // quest-log body, on the other arm of its SeerHutList/QuestGuardList

@@ -599,6 +599,52 @@ void type_belong_to_player_quest::Load(TAbstractFile* file, int version)
     type_quest::Load(file, version);
 }
 
+// THE QUEST-GUARD TEXT BUILDERS, AND WHY THERE ARE TWO OF THEM.
+// 0x572e40 and 0x573040 are 511 B each and byte-identical apart from a
+// single relocation - the separator literal, "\n\n" at 0x6603b0 against
+// " " at 0x660330. Everything else, including the EH scope table and every
+// branch displacement relative to the entry, lines up instruction for
+// instruction. advManager::QuickInfo reaches the first and
+// advManager::SetRolloverText the second; the carve's caller-derived names
+// (`game_137c0_sub00_172e40` against `game_b150_sub07_173040`) say the same
+// thing from the other side.
+//
+// The body itself: the object name always, and the quest's own description
+// appended behind the separator once this player has visited the guard and
+// the guard actually carries a quest. `visitedPlayers` is the +4 byte,
+// `quest` the +0 pointer, and the description comes through vtable slot 7
+// (`mov edx,[esi] / call dword ptr [edx+0x1c]`), which is what forced
+// quest.h's vtable model out to its real fifteen slots.
+// E:\gamedcs\seerhut.cpp
+VA(0x00572e40, 0x1FF)  // anchor-callee QuickInfo 0x4137c0, retail-only
+std::string TQuestGuard::QuestGuardFn_00572E40(int player)
+{
+    std::string text;
+    text = gQuestGuardName;
+
+    if ((visitedPlayers & (1 << player)) && quest) {
+        text += DATA_COMPGEN(0x006603b0, questGuardQuickInfoSeparator, "\n\n");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00573040, 0x1FF)  // anchor-callee SetRolloverText 0x40b150, retail-only
+std::string TQuestGuard::QuestGuardFn_00573040(int player)
+{
+    std::string text;
+    text = gQuestGuardName;
+
+    if ((visitedPlayers & (1 << player)) && quest) {
+        text += DATA_COMPGEN(0x00660330, questGuardRolloverSeparator, " ");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
+}
+
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
 // E:\gamedcs\seerhut.cpp

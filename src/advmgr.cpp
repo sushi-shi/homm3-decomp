@@ -6597,7 +6597,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case QUEST_GUARD:
                 strcpy(gText,
                     fullMap->QuestGuardList[cell->extraInfo]
-                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
+                        .QuestGuardFn_00572E40(gUnnamed69778c).c_str());
                 break;
             SET_KNOWN_VISITED_QUICKINFO(FAERIE_RING, FaerieRingInfo,
                 currHero->flags & 0x2000);
@@ -6755,7 +6755,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case SEER:
                 strcpy(gText,
                     fullMap->SeerHutList[cell->extraInfo]
-                        .SeerHutFn_005741B0(iPlayer).c_str());
+                        .SeerHutFn_005743E0(iPlayer).c_str());
                 break;
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
