@@ -1417,6 +1417,7 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
+    game();
     ~game();
     game& __fastcall operator=(const game& that);
 
