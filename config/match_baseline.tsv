@@ -74,6 +74,7 @@ advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?InsertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10
 advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100
+advmgr	?Main@advManager@@UAEHAAVmessage@@@Z	93.2341	93.2341	93.2341	0x87b0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.9576	0x17150
@@ -82,6 +83,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	78.8021	78.8021	78.8021	0xe360
+advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	75.6482	75.6482	75.6482	0x8c40
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
@@ -129,9 +131,7 @@ advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
-advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
 advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
-advmgr	advManager_ProcessKeyPress	0.0000	0.0000	0.0000	0x8c40
 advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
