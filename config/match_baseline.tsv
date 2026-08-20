@@ -203,7 +203,7 @@ ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.0075	91
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
-ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
+ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0
@@ -571,11 +571,11 @@ cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2232	96.2232	96.2232	0x68990
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
-cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
+cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	89.9086	89.9086	89.9086	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
-cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	91.5113	91.5113	91.5113	0x66290
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1361	98.1361	98.1361	0x66290
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00
@@ -1803,7 +1803,7 @@ townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c58b0
 townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0550
 townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0d60
 townmgr	?BuildObj@townManager@@QAEXH@Z	98.8365	98.8365	98.8365	0x1d6a80
-townmgr	?BuyBuild@townManager@@QAEHHHH@Z	68.0799	68.0799	68.0799	0x1d5f30
+townmgr	?BuyBuild@townManager@@QAEHHHH@Z	95.1207	95.1207	95.1207	0x1d5f30
 townmgr	?Close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70
 townmgr	?Close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0
 townmgr	?CycleOutline@townManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1d6910
@@ -1817,7 +1817,7 @@ townmgr	?DoShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720
 townmgr	?DoSkeletonTransformer@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2f90
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0
-townmgr	?DoUniversity@townManager@@QAEXXZ	89.7683	89.7683	89.7683	0x1d2da0
+townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0

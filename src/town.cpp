@@ -405,6 +405,12 @@ static inline void set_town_spell_bit(std::bitset<70>& bits,
 // as `spell < NUM_SPELLS` instead of `!=` keeps 32 branches but scores 82.47%.
 // The remaining one-block layout delta begins at that sentinel/bitset range
 // check; the weighted picker and the guild-level/count tail remain complete.
+// Re-swept 2026-08-20 against the diagnose signed/unsigned twin (#12 je->jb,
+// #13 jb->jl): a shared `goto assign` tail (no post-loop sentinel) 85.77,
+// the in-loop duplicated arm re-measured 83.25 (unchanged), and `unsigned
+// spell` - the jb tell, which the D10 sweep never tries - 87.67. All three
+// lose; the twin is downstream of the sentinel/bitset layout block, not a
+// source type. The 89.8561 shape stands.
 VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
 void town::initialize_spells(const TownExtra* town_setup)
 {
@@ -503,6 +509,11 @@ void town::set_spells_available()
 // choice rippling. why-reg v2 classifies the pair as front-end handle
 // state (C1); an int-for-enum signature A/B measured byte-identical,
 // and direct subscripts beat an effect-cursor local 85.98 vs 81.55.
+// A tail-local live-range split (`type_building_id result = building;`
+// after the horde loop, tail reads result) measured byte-flat to the
+// digit 2026-08-20 - VC6 copy-propagates the plain copy, so the
+// two-pseudo shape behind retail's EDX-then-EDI homing has no plain-
+// assignment spelling either. The C1 verdict stands.
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::create_building(type_building_id building)
 {

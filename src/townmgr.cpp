@@ -3098,6 +3098,19 @@ void townManager::DoHall()
 // fort page's summoning row: the generic recruit dialog over the town's
 // own garrison, with the portal's creature and its stock as slot one.
 
+// The no-hero info dialog, lifted for the /Ob2 BUDGET (2026-08-20) -
+// findpath find_queue_slot's class, a codegen device, not a source
+// claim. One _Tidy over-inline was the whole inliner residual (we
+// expanded the info string's destructor helper where retail calls it);
+// shrinking caller_cb and nesting the expansion puts it back out of
+// line. Single call site, inlined straight back, no new symbol.
+static void university_info_dialog(town* current_town)
+{
+    std::string info(GetBuildingInfo(current_town, EXTRA_0_ID, 1, 1));
+    NormalDialog(info.c_str(), 1, -1, -1, current_town->type + 0x16,
+                 EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+}
+
 // E:\gamedcs\townmgr.cpp:5685
 VA(0x005d2950, 0xEF)  // anchor-callee(SetSummoningGenerator 0x5bd750 + recruitUnit ctor) + arity, dc 0x174bfc
 void townManager::DoPortalOfSummoning()
@@ -3207,9 +3220,7 @@ void townManager::DoUniversity()
         townHero = gpGame->GetHero(townToView->garrisonHeroId);
 
     if (!townHero) {
-        std::string info(GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
-        NormalDialog(info.c_str(), 1, -1, -1, townToView->type + 0x16,
-                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+        university_info_dialog(townToView);
     } else {
         type_university townUniversity;
         type_university_window universityWin(townHero, &townUniversity, 1);
@@ -3783,25 +3794,67 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // gain under it is only the /Ob2 accounting moving, and confirms the
 // direction below rather than the header.
 //
-// Residual (68.08%): the prologue, both tables, the message block, the
-// whole quick-view/dialog tail, the resource debit and both epilogues are
-// retail's instruction for instruction. The ONE divergence is the /Ob2
-// expansion DEPTH of the two `Widgets.push_back` sites. Retail expands
-// `insert` and CALLS its helpers - _Ucopy x6, _Ufill x3, _Destroy x2,
-// size x2, _Construct x3; we go one level further and expand those
-// helpers' loops, leaving _Construct x10 and one call each of _Ucopy and
-// _Ufill. Both sides inline `insert` itself, so this is budget, not a
-// modelling gap: with two sites the nested budget is 2*cb(caller)/2, and
-// ours is over the knife edge. DIRECTION MEASURED so the next lane need
-// not re-derive it - a reverted +20 dead-statement probe took 68.08 ->
-// 67.65, i.e. this body carries MORE front-end mass than retail's and
-// wants a LEANER spelling, the opposite of THallWindow below. Nothing
-// byte-inert is spelled here to remove: every statement is emitted and
-// the Dreamcast call census matches term for term, so the surplus is
-// expression-level cb rather than a statement. The register rotation the
-// body carries (retail edi=0 / ebx=rows / esi=the window against our
-// ebx=0 / esi=rows / edi=the window) and the single 4-byte frame slot we
-// are short both sit downstream of that one decision.
+// 68.08 -> 95.12 2026-08-20: THE CALLER-SHRINK CLOSED THE KNIFE EDGE the
+// old note had measured but had no lever for. The note's own probe (+20
+// dead statements -> 67.65) proved this body carries MORE front-end mass
+// than retail's; findpath's numerator device is that lever run backward,
+// and two doses paid +27.04: lifting the palette message block into
+// set_buybuild_palette above (+7.33: _Construct x10 -> x9), then the
+// quick-view broadcasts into clear_buybuild_buttons (+19.71). After the
+// second dose the call multisets AGREE 43 = 43 - _Ucopy x7, _Ufill x4,
+// size x2, _Destroy x2, _Construct x1 against retail's synth labels -
+// where before we were four calls short. Neither dose moved any other
+// townmgr row (THallWindow 85.99, TTownScreenWindow 95.59 both pinned).
+//
+// Residual (95.12%): the multiset matches but the per-site DEPTH
+// alternates - at one insert site retail expands _Ucopy's loop and CALLS
+// _Construct per element (the cmp/je loop around 0x404dc0) where we call
+// _Ucopy whole; at another the roles reverse. That is the /Ob2
+// POSITIONAL class THallWindow documents below - a site boundary no
+// pragma can move - plus the register rotation (retail edi=0 / ebx=rows
+// / esi=window against our ebx=0 / esi=rows / edi=window) downstream of
+// the same decisions. A third dose is NOT titrated; findpath measured
+// both its extra doses losing, so stop unless the boundary moves.
+
+// BuyBuild's palette message, lifted out of the body for the /Ob2 BUDGET
+// (2026-08-20) - findpath find_queue_slot's class: a codegen device that
+// shrinks caller_cb, NOT a claim about retail's source. The residual note
+// below had already measured the direction (a +20 dead-statement probe
+// LOWERED the score, so this body carries more front-end mass than
+// retail's and wants a leaner spelling); this is the numerator lever
+// applied in that direction. Single call site, so /Ob2 inlines it back
+// and townmgr.obj defines no extra symbol.
+static void set_buybuild_palette(TBuyBuildWindow* window, message& msg)
+{
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 1;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    window->BroadcastMessage(&msg);
+}
+
+// Second dose of the same device: the quick-view button-clearing
+// broadcasts, single call site.
+static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
+{
+    msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+    msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+    window->BroadcastMessage(&msg);
+    msg.codeY = 8;
+    window->BroadcastMessage(&msg);
+    msg.codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
+    window->BroadcastMessage(&msg);
+    msg.codeY = 9;
+    window->BroadcastMessage(&msg);
+    msg.codeY = 0;
+    window->BroadcastMessage(&msg);
+}
 
 // E:\gamedcs\townmgr.cpp:7354
 VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
@@ -3837,16 +3890,7 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
     if (window == 0)
         MemError();
 
-    msg.qualifier = 0;
-    msg.mouseX = 0;
-    msg.mouseY = 0;
-    msg.extra = 0;
-    msg.window = 0;
-    msg.id = MESSAGE_WIDGET;
-    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
-    msg.codeY = 1;
-    msg.extra = gpGame->GetLocalPlayerGamePos();
-    window->BroadcastMessage(&msg);
+    set_buybuild_palette(window, msg);
 
     CSprite* icons = ResourceManager::GetSprite("Resource.def");
     int iconWidth = icons->Width;
@@ -3874,18 +3918,7 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
 
     field_1b8 = -1;
     if (bQuickView) {
-        msg.codeX = widget::WIDGET_CLEAR_STATUS;
-        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
-        msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
-        window->BroadcastMessage(&msg);
-        msg.codeY = 8;
-        window->BroadcastMessage(&msg);
-        msg.codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
-        window->BroadcastMessage(&msg);
-        msg.codeY = 9;
-        window->BroadcastMessage(&msg);
-        msg.codeY = 0;
-        window->BroadcastMessage(&msg);
+        clear_buybuild_buttons(window, msg);
         gpWindowManager->DoQuickView(window);
     } else {
         if (infoOnly) {

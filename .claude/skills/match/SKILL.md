@@ -837,6 +837,42 @@ slot for a later loop counter. It only pays PAIRED with moving the `memset`
 below the initialiser run — retail emits six zero-stores then `rep stosd` —
 and the memset move alone is −0.35. Two knobs, neither of which works alone.
 
+**A "LOCAL MAXIMUM" VERDICT EXPIRES WHEN A NEW LEVER LANDS.** `BuyBuild` was
+banked as one — both directions measured worse, including a +20-statement
+probe — and I repeated that in three briefs. The note was sound and simply
+PREDATED the numerator lever: two single-call-site lifts took it
+**68.08 → 95.12** (+7.33 and +19.71) and the call multisets now agree 43 = 43.
+**When a new lever lands, re-open every row whose verdict was reached without
+it** — a directional measurement only bounds the knobs that existed when it
+was taken.
+
+**THE NUMERATOR HAS A TITRATABLE THRESHOLD.** `calculate_demand` flips at
+exactly SIX inert statements — 5 gives 93.40, 6 gives **97.43**. And
+self-assignments of a spent local are the only measured-inert mass carrier
+(four counter-measurements banked). Caller-shrink moves up to ~20 points per
+dose and is titratable against the `predict-inline` census.
+
+**SPLIT THE STATEMENT TO SPLIT THE PIN.** A statement-granular
+`inline_depth(0)` cannot separate two uses of the same accessor in ONE
+statement — but two statements can: unpinned
+`tail = (count < size() ? size() : count)` then pinned `grown = size() + tail`
+reproduced retail's one CSE'd expansion plus one call (**+3.79**, census
+exact). A note claiming the pragma made a call count "the floor" was reading a
+statement boundary as a compiler limit.
+
+**IN-LOOP `return` vs `break`** — a `return` inside a loop is a second
+scope-exit destructor path the cross-jumper cannot fully merge; `break` to a
+single exit collapses two cross-jumped `operator delete` heads into retail's
+one block (**+1.00**).
+
+**MIRROR REAL DINKUMWARE HELPER SIGNATURES** — by-value bounds parameters on
+`fill`/`copy_backward` are byte-load-bearing (**+0.87**), and a named
+`shifted = end - count` reproduces the spilled CSE (**+0.47**).
+
+**A BY-VALUE RECORD COPY IN A LOOP IS A SOURCE FACT.** A three-dword copy
+reads the discriminant once and strength-reduces the walks into a count-down;
+`const&` re-reads it per iteration and pins an indexed up-count (**+7.03**).
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)

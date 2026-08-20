@@ -835,7 +835,11 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // Left: that extra head (3 of the 6 surplus branches, base 61 against
 // retail's 55) - retail has ONE head with six predecessors and no
 // spelling reaches that without re-creating the sink - plus the
-// cross-jump item below.
+// cross-jump item below. Re-verified the hard way 2026-08-20: labelling
+// the bottom copy `animate_check:` and making the right-click arm
+// `goto animate_check;` - the goto-flow shape VC6 normally leaves alone
+// - measures 36.1680, a 38-point collapse, so the duplicated source
+// block stays. The banked verdict holds.
 //
 // (The original note, all of it still measured and still true:)
 // The CALL MULTISET IS EXACT - all 50 calls agree in order and target
