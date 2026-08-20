@@ -1333,14 +1333,162 @@ unsigned char army::check_obstacle_attacks(unsigned char is_walking)
     return gpCombatManager->check_obstacle_attacks(this, is_walking);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2386
+// The whole walk: path to the destination, tear the stack out of the
+// aura and bind graphs, then step the path cell by cell - lowering the
+// drawbridge when the next cell asks for it, stopping dead (result 0)
+// on a moat-slowed cell or a hidden trap it reveals, charging up the
+// Champion's joustBonus with the step count - and re-wire auras and
+// facing at the end.
+//
+// WHAT IS INLINE AND WHAT IS NOT, read off the bytes: GetSpeed expands
+// at both of its sites (the slowRounds float re-time with its floor at
+// 1), remove_aura expands whole (both teardown loops with erase_item
+// CALLS kept), remove_binding stays a call, play_sample(POST_WALK)
+// expands with its own IsQuickCombat re-test under the outer one, and
+// the WALK_SAMPLE stop is written straight through gpSoundManager -
+// stop_sample's inline would re-test IsQuickCombat a third time and
+// retail has exactly two. Walk's direction argument re-reads the path
+// cell's bitfield rather than the `direction` local the two adjacency
+// calls share - do not cache what retail reloads.
+//
+// `stop` doubles as the loop bound: a moat or trap RAISES it to the
+// current index so the walk ends on this step. The explicit-else
+// spelling and the `(stop = ...) < 0` condition-assignment measure
+// IDENTICALLY (89.7721) - both give retail's shared zero-store block -
+// and the `long stop = 0;` pre-initialized form is 1.0 WORSE
+// (88.7607); the init store must not exist ahead of the branch.
+//
+// Residual (89.7721%): the register-mirror family. Retail homes
+// gpSearchArray in EBX and the counts in EDI for the whole body; our
+// C2 picks the mirror image at the first definition and every
+// downstream pairing follows, plus the `stop` slot takes its zero from
+// an immediate store where ours routes a zeroed register. Same B1
+// handle-state class as attack_hex's direction-search note. Calls,
+// call order, and every block pair off (24/24 calls after the
+// remove_aura longhand below).
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 {
-    // @stub
+    side = slot = -1;
+    if (!FindPath(destIndex, GetSpeed(), 0, 0))
+        return 0;
+    long original_facing = facing;
+    // remove_aura()'s body, spelled through so the two erase_item
+    // sites can carry the pins retail's own expansion decisions need:
+    // both stay CALLS here (our CL otherwise inlines one), the first
+    // size() and clear() expand, the second size() and clear() stay
+    // out of line.
+    long source_count = aura_sources.size();
+    while (source_count-- > 0) {
+        army* source = aura_sources[source_count];
+#pragma inline_depth(0)
+        erase_item(source->aura_clients, this);
+#pragma inline_depth()
+    }
+    {
+        army** first = aura_sources.begin();
+        army** end = aura_sources.end();
+#pragma inline_depth(0)
+        aura_sources.erase(first, end);
+#pragma inline_depth()
+    }
+#pragma inline_depth(0)
+    long client_count = aura_clients.size();
+#pragma inline_depth()
+    while (client_count-- > 0) {
+        army* client = aura_clients[client_count];
+#pragma inline_depth(0)
+        erase_item(client->aura_sources, this);
+#pragma inline_depth()
+    }
+#pragma inline_depth(0)
+    aura_clients.clear();
+#pragma inline_depth()
+    remove_binding();
+    unsigned char succeeded = 1;
+    long stop;
+    if (!gpCombatManager->bCreaturePlacement) {
+        stop = gpSearchArray->result.size() - GetSpeed();
+        if (stop < 0)
+            stop = 0;
+    } else {
+        stop = 0;
+    }
+    long last = gpSearchArray->result.size() - 1;
+    unsigned char at_rest = 1;
+    IsMoving = 1;
+    joustBonus = last - stop + 1;
+    for (long i = last; i >= stop; i--) {
+        long direction = gpSearchArray->result[i]->direction;
+        long next_hex = GetAdjacentCellIndex(gridIndex, direction);
+        if (gpCombatManager->should_lower_door(this, next_hex)) {
+            if (!at_rest) {
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    play_sample(POST_WALK_SAMPLE);
+                    if (armySample[WALK_SAMPLE])
+                        gpSoundManager->StopSample(
+                            armySample[WALK_SAMPLE]->field_1c);
+                    PlayAnimation(cs_postwalk, -1, 0);
+                    PlayAnimation(cs_wait, 1, 0);
+                }
+                currFrameType = cs_wait;
+                currFrameIndex = 0;
+                gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+            }
+            gpCombatManager->LowerDoor();
+            gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+            at_rest = 1;
+        }
+        if (gpSearchArray->bIsMoatSlowed[static_cast<short>(next_hex)]) {
+            stop = i;
+            succeeded = 0;
+        } else if (gpCombatManager->cells[next_hex].field_10 & 4) {
+            gpCombatManager->obstacles
+                .begin[gpCombatManager->cells[next_hex].field_14]
+                .field_0a = 1;
+            stop = i;
+            succeeded = 0;
+        }
+        if (creatureId & 1) {
+            long second_hex = GetAdjacentCellIndex(gridIndex, direction)
+                              + (facing ? 1 : -1);
+            if (gpSearchArray
+                    ->bIsMoatSlowed[static_cast<short>(second_hex)]) {
+                stop = i;
+                succeeded = 0;
+            } else if (gpCombatManager->cells[second_hex].field_10 & 4) {
+                gpCombatManager->obstacles
+                    .begin[gpCombatManager->cells[second_hex].field_14]
+                    .field_0a = 1;
+                stop = i;
+                succeeded = 0;
+            }
+        }
+        Walk(gpSearchArray->result[i]->direction, i == stop, at_rest);
+        at_rest = 0;
+        if (creatureType != ARMY_CREATURE_ARROW_TOWER)
+            gpCombatManager->check_obstacle_attacks(this, i != stop);
+        if (numTroops <= 0) {
+            succeeded = 0;
+            break;
+        }
+    }
+    if (numTroops > 0) {
+        if (facing != original_facing && restore_facing)
+            Turn(1);
+        add_aura();
+        currFrameType = cs_wait;
+        currFrameIndex = 0;
+    }
+    IsMoving = 0;
+    gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+    gpCombatManager->RaiseDoor();
+    return succeeded;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2528
 DC_ONLY(0x475ec, 0xA4)
