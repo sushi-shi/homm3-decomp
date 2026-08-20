@@ -389,6 +389,28 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1348
+// SURVEYED 2026-08-20, not reconstructed, and the survey is worth more
+// than a bare @stub because this body is the cheapest-looking of the
+// remaining stubs and is NOT: 1084 bytes with only six relocations, so it
+// reads as pure member initialisation, but the work is elsewhere.
+//   * It is a 6-way JUMP TABLE on `defendingTown->type - 2` (the table is
+//     the six DIR32 rows the carve counts inside this function's 0x43C),
+//     each arm a `built`/`active` & bitNumber[21|22|26] test that bumps
+//     one of hero+0x476/+0x477/+0x478.
+//   * It needs roughly fifteen pad slices in this header - 0x132a8,
+//     0x132dc, 0x132e4, 0x132f8, 0x13d48, 0x5414, 0x53de..0x53e3,
+//     0x13de8..0x13df4, 0x13d75/0x13d76, 0x1329c - plus three hero bytes
+//     (+0x476/+0x477/+0x478), a hero short (+0x18) and an army byte
+//     (+0x4d8). All of the cmbtmgr ones sit behind the SETUP view, so
+//     they are cheap; the hero and army ones are not.
+//   * THE REAL BLOCKER is in the middle: it clears both eagle-eye sets
+//     through a three-argument __cdecl call, `f(&ret, *root, root)`, which
+//     is a Dinkumware set::erase(first, last) returning an iterator by
+//     value. Reproducing that byte-for-byte needs TCombatEagleEyeSide's
+//     set modelled properly, which is a bigger piece of work than the
+//     rest of this function put together.
+//   * It also proves the class runs to at least +0x14030 (a byte store),
+//     past everything this header models.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::InitNonVisualVars()
 {
