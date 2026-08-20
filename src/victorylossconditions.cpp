@@ -329,16 +329,49 @@ eligible:
     return 1;
 }
 
+// Two arms on one routine. Type 11 sweeps the whole map with a packed
+// type_point as the loop-counter triple - each bound stays in its
+// condition (the call-free bodies let VC6 hoist all three reads, the
+// GrailBuildingWin mechanism), each cell is the worldMap.cell() inline,
+// and any live monster cell away from monster_loc refuses the win; a
+// clean sweep sets GameWon without a winner. Type 7 packs the
+// MonsterX/Y/Z record and awards the win to the visiting hero's owner.
 // E:\gamedcs\victorylossconditions.cpp:352
-#if 0  // @carcass -- located/reconstruction-pending bodies
 VA(0x005f2390, 0x267)  // anchor-global, dc 0x19040c
-unsigned char VictoryConditionStruct::CheckForDefeatedMonsterWin(const hero* thisHero, type_point monster_loc)
+bool VictoryConditionStruct::CheckForDefeatedMonsterWin(
+    const hero* thisHero, type_point monster_loc)
 {
-    // @stub
+    if (Type == VICTORY_CONDITION_DEFEAT_ALL_MONSTERS) {
+        type_point pos;
+        for (pos.z = 0; pos.z < gpGame->worldMap.GetNumLevels(); ++pos.z) {
+            for (pos.y = 0; pos.y < gMapHeight; ++pos.y) {
+                for (pos.x = 0; pos.x < gMapWidth; ++pos.x) {
+                    NewmapCell* cell =
+                        gpGame->worldMap.cell(pos.x, pos.y, pos.z);
+                    if (cell->is_trigger && cell->type == MONSTER) {
+                        if (!pos.operator==(&monster_loc))
+                            return 0;
+                    }
+                }
+            }
+        }
+        GameWon = 1;
+        return 1;
+    }
+    if (Type == VICTORY_CONDITION_DEFEAT_MONSTER
+        && gpCurrentPlayer
+        && !gpGame->playerDisabled[gNetLocalGamePos]) {
+        type_point pos(MonsterX, MonsterY, MonsterZ);
+        if (monster_loc.operator==(&pos)) {
+            playerWinner = thisHero->owner;
+            GameWon = 1;
+            return 1;
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\victorylossconditions.cpp:376
-#endif  // @carcass
 
 // All map generators must be owned by the local player's team. The same
 // applicability rule as the mine condition first admits a same-team human,

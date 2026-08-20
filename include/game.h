@@ -308,22 +308,27 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
+#if defined(HOMM3_ADVMGR_OBJ_DECLS) || defined(HOMM3_VLC_CHECKS_VIEW)
     // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
     // this class - and retail keeps no out-of-line row for it either.
     // advManager::ProcessDeSelect's elevation-toggle arm expands it in
     // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
-    // zero-extended flag plus one, tested against one. Gated to the one
-    // compilation personality whose call site proves the expansion.
+    // zero-extended flag plus one, tested against one. Gated to the
+    // compilation personalities whose call sites prove the expansion
+    // (victorylossconditions' z bound in CheckForDefeatedMonsterWin is
+    // the same movzx/inc shape, 2026-08-20).
     int GetNumLevels() { return HasTwoLevels + 1; }
 #endif
 
-#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
+    || defined(HOMM3_VLC_CHECKS_VIEW)
     // Header inline in the original map class. InsertObject expands this
     // three-dimensional row-major lookup, and so does advManager::EraseObj
     // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
     // compilation personalities retain the out-of-line declaration until
     // their own call sites prove that expansion.
+    // victorylossconditions joins for CheckForDefeatedMonsterWin's map
+    // sweep (2026-08-20).
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
@@ -637,6 +642,11 @@ enum EVictoryConditionType {
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
     VICTORY_CONDITION_BUILD_GRAIL = 4,
+    // 0x5f2390 CheckForDefeatedMonsterWin dispatches on both: 7 is the
+    // map-format defeat-monster ordinal, 11 the engine's
+    // every-monster-dead sweep of the same routine.
+    VICTORY_CONDITION_DEFEAT_MONSTER = 7,
+    VICTORY_CONDITION_DEFEAT_ALL_MONSTERS = 11,
 #endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
@@ -705,7 +715,17 @@ public:
     char pad_24[0x10];
 #endif
     int HeroID;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // CheckForDefeatedMonsterWin (0x5f2390) packs the words at
+    // +0x38/+0x3c and the byte at +0x40 into a type_point - the DC
+    // MonsterX/MonsterY/MonsterZ trio, int-widened like the town trio.
+    int MonsterX;
+    int MonsterY;
+    int MonsterZ;
+    char pad_44[4];
+#else
     char pad_38[0x10];
+#endif
     unsigned char GameWon;
     signed char playerWinner;
     char pad_4a[2];
