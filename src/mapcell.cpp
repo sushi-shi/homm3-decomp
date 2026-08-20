@@ -4667,6 +4667,13 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // lines up one for one, which also confirms that retail EXPANDS this insert
 // exactly as we do: the readObject site-pin lever does not apply here.
 //
+// AND THE DIRECTION IS NOW FIXED (2026-08-20).  That unpaired `size()` is an
+// UNDER-inline - our caller is already LEANER than retail's - so the /Ob2
+// caller-shrink that moved five rows elsewhere this round is the wrong lever
+// here, and it is expensive: lifting the two RECT builds plus IntersectRect
+// and the four clamps into a file-local helper costs 65.1777 -> 53.8086.
+// Anything that reaches this row has to make the caller BIGGER, not smaller.
+//
 // TWO MORE MEASURED NEGATIVES, 2026-08-20, both aimed at exactly that:
 //   * `insert(position, 1, *objectCell)` - the three-argument form, which
 //     lifts the capacity path's `size()` one level shallower and is the lever
