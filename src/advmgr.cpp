@@ -221,13 +221,53 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 }
 
 // E:\gamedcs\advmgr.cpp:651
-VA(0x00406480, 0x59F)  // dc-bracket forced, dc 0x5fc8
+// CLAIM WITHDRAWN 2026-08-20: 0x00406480 is NOT this method, and the row
+// goes back to unowned. Four independent checks agree and none of them
+// needs the DC:
+//   1. Size band. The DC body is 0x204 = 516 B (0x61cc - 0x5fc8) against
+//      retail's 0x59F = 1439 B. That is 2.79x, outside the 0.3-2.5 SH4
+//      -> x86 band this repo requires of every pairing, and it is the
+//      only row in the bracket that breaks it.
+//   2. The body is a COPY, not a handler. It opens `mov ebx,ecx / mov
+//      esi,[ebp+8] / mov ecx,6 / rep movsd` and then copies field after
+//      field at unaligned offsets (+0x18 word, +0x1a dword, +0x22 byte,
+//      +0x23 ...) with basic_string::_Copy/_Tidy/_Xlen and
+//      _Xran(invalid_string_position) along the way. It writes through
+//      ECX - and ECX here is the DESTINATION, so a CAdvMgrNetMsgHandler
+//      method would be writing 0x91+ bytes into a 12-byte object.
+//   3. It touches no message state at all: no gpGame, no IsHuman, no
+//      format_string, no extended_dialog, no general-text row - nothing
+//      the other three handlers in this bracket all share.
+//   4. Its two call sites in HandleNetMsg settle it. Both pass a
+//      computed 90-byte-stride record inside gpGame as ECX
+//      (`lea ecx,[ecx + 2*eax + 0x21620]`) and a message field as the
+//      source, i.e. `record = <field>`, which is an assignment operator
+//      for some 90-byte string-bearing record and not a handler call.
+// Leaving the address unowned until that record type is admitted.
+DC_ONLY(0x5fc8, 0x204)
 void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:677
+// OPEN ATTRIBUTION, deliberately NOT acted on by this lane. Withdrawing
+// the row above shortens the bracket by one, and the two surviving
+// handler bodies then read as the OTHER member of the pair each is
+// currently claimed as:
+//   * 0x00406a20 (this row) reads exactly CGiftRequestMsg - m_greedyGuy
+//     at +0x14 and m_resource at +0x18, no quantity anywhere - and
+//     formats general-text row 360, GENERAL_TEXT_AI_SINGLE_RESOURCE_
+//     REQUEST. That is the REQUEST handler.
+//   * 0x00406bf0, claimed and byte-exact as HandleTradeRequestMsg, reads
+//     CGiftMsg's full triple (+0x14/+0x18/+0x1c), formats row 359
+//     GENERAL_TEXT_AI_GIFT_RECEIVED and CREDITS the local player's
+//     resource. That is the GIFT handler.
+// Both sizes land in band under the swap (455/516 = 0.88 and 506/604 =
+// 0.84) where the current mapping needs the 2.79x row above. Acting on
+// it renames a function that is currently EXACT and rewrites its
+// baseline row, so it belongs to whoever owns the netmsg attribution -
+// recorded here rather than done here.
 VA(0x00406a20, 0x1C7)  // dc-bracket forced, dc 0x61cc
 void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 {
@@ -283,6 +323,8 @@ int advManager::Open(int newPriority)
     // @stub
 }
 
+#endif  // @carcass
+
 // The admitted retail vtable inventory bounds advManager at exactly three
 // slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.
 // The old generated-dtor claim at 0x4077b0 was false. That address is the
@@ -291,14 +333,126 @@ int advManager::Open(int newPriority)
 // Keep it unclaimed until that network-handler class is admitted.
 
 // E:\gamedcs\advmgr.cpp:1092
+// The sprite teardown, gated on the town-nesting depth. Retail's own
+// grouping is preserved statement for statement: the two river and road
+// tilesets start at index 1 (slot 0 is the "no river"/"no road" entry that
+// is never loaded), the ground tileset and the hero sample run share ONE
+// counted loop - the bytes walk both off a single induction pointer at
+// +0x360 with a -0x300 displacement - and the four gem icons are four
+// statements rather than a loop, which is why their null stores sink past
+// the following Dispose calls into one batch.
+//
+// Residual (86.37%): ONE over-inline, and the whole rest of the delta is
+// its cascade. predict-inline reports exactly one divergence - retail
+// emits an out-of-line call to the Dinkumware destroy-range helper that
+// clear() -> erase(begin(), end()) reaches (`mov ecx,ebx; push [ebx+8];
+// push edi; call`, the ICF-folded empty pointer-destroy body the delinked
+// object labels sample_vslot03), where this compile elides it entirely.
+// That call is what pins retail's EBX to `lea ebx,[esi+0xd0]`, which in
+// turn evicts the element counter into [ebp-4], frees EDI to walk
+// boatFlagIcons (so retail spells the movingObjectSprite null store as an
+// immediate where ours reuses the EDI zero), and flips the EAX/EDX scratch
+// parity for every `mov <scratch>,[ecx]; call [<scratch>+4]` pair after
+// it. Our body is eight bytes shorter than retail's, which is that one
+// call plus its argument setup. Same family as mainmenu's TMainMenu ctor
+// and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
+// knob is caller body mass, not a vector spelling.
+//
+// Tried and rejected: `erase(begin(), end())` spelled longhand instead of
+// clear() (83.93392 - byte-identical to clear(), the forwarder inlines
+// away and the budget accounting does not move); binding a
+// `std::vector<resource*>&` local to CachedGraphics so the address is
+// materialised once the way retail's does (83.80 - it does buy the pinned
+// register but costs more than it pays, because operator[] then indexes
+// through the reference where retail keeps indexing off ESI at +0xd4).
 VA(0x004077e0, 0x2D1)  // anchor-vtable, dc 0x74ec
 void advManager::Close()
 {
-    // @stub
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_DEFAULT;
+    if (gUnnamed6aa5f0 == 0) {
+        gpSoundManager->SwitchAmbientMusic(-1);
+        gpSoundManager->StopAllSamples(1);
+    } else {
+        gpSoundManager->StopAllSamples(0);
+    }
+
+    if (gUnnamed699548 <= 0) {
+        radarIcons->Dispose();
+        radarIcons = 0;
+        cloudIcons->Dispose();
+        cloudIcons = 0;
+        for (int cursor = 0; cursor < 18; cursor++) {
+            cursorIcons[cursor]->Dispose();
+            cursorIcons[cursor] = 0;
+        }
+        for (unsigned int cached = 0; cached < CachedGraphics.size(); cached++)
+            CachedGraphics[cached]->Dispose();
+        CachedGraphics.clear();
+        movingObjectSprite->Dispose();
+        movingObjectSprite = 0;
+        for (int boat = 0; boat < 3; boat++) {
+            boatIcons[boat]->Dispose();
+            boatIcons[boat] = 0;
+            boatFrothIcons[boat]->Dispose();
+            boatFrothIcons[boat] = 0;
+            for (int boatOwner = 0; boatOwner < 8; boatOwner++) {
+                boatFlagIcons[boat][boatOwner]->Dispose();
+                boatFlagIcons[boat][boatOwner] = 0;
+            }
+        }
+        for (int owner = 0; owner < 8; owner++) {
+            flagIcons[owner]->Dispose();
+            flagIcons[owner] = 0;
+        }
+    }
+
+    for (int looping = 0; looping < LOOPING_SOUND_COUNT; looping++) {
+        if (loopedSample[looping]) {
+            loopedSample[looping]->Dispose();
+            loopedSample[looping] = 0;
+        }
+    }
+    for (int river = 1; river < 5; river++) {
+        riverTileset[river]->Dispose();
+        riverTileset[river] = 0;
+    }
+    for (int road = 1; road < 4; road++) {
+        roadTileset[road]->Dispose();
+        roadTileset[road] = 0;
+    }
+    borderTileset->Dispose();
+    borderTileset = 0;
+    arrowTileset->Dispose();
+    arrowTileset = 0;
+    gemIcons[0]->Dispose();
+    gemIcons[1]->Dispose();
+    gemIcons[2]->Dispose();
+    gemIcons[3]->Dispose();
+    gemIcons[0] = 0;
+    gemIcons[1] = 0;
+    gemIcons[2] = 0;
+    gemIcons[3] = 0;
+    for (int ground = 0; ground < 10; ground++) {
+        groundTileset[ground]->Dispose();
+        groundTileset[ground] = 0;
+        heroSamples[ground]->Dispose();
+        heroSamples[ground] = 0;
+    }
+
+    gpWindowManager->RemoveWindow(advWindow);
+    delete advWindow;
+    advWindow = 0;
+    delete routeArray;
+    routeArray = 0;
+    status = 0;
+    if (pNetMsgHandler) {
+        delete pNetMsgHandler;
+        pNetMsgHandler = 0;
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:1217
-#endif  // @carcass
 
 VA(0x00407ac0, 0x44)  // anchor-global, dc 0x793c
 int advManager::InMapArea(int x, int y)
@@ -770,12 +924,147 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:1939
+// The left-select dispatcher. Retail switches on msg->codeY - not
+// msg->id - over a dense 0..CHAT_EDIT_ID+5 domain, which VC6 lowers to a
+// byte index table at fn+0x264 into five targets at fn+0x250. The
+// index table is the whole widget-id map: MAP_ID and CHAT_TEXT_ID share
+// the map arm, RADAR_ID takes the radar arm, the two hero-id blocks
+// (HERO_0..HERO_4 and HERO_LOCATOR_0..HERO_LOCATOR_4) share one arm that
+// normalises whichever block the id came from down to a 0..4 slot, and
+// TOWN_0..TOWN_4 take the town arm. Everything else in range, and every
+// id past the last case, falls through to the shared tail.
+//
+// The tail runs on EVERY path, including the ones that dispatched: a
+// right-click (MESSAGE_MODIFIER_RIGHT in the qualifier) on any id in the
+// help band pops the general-text row through kb's NormalDialog. The
+// function always returns 1.
+//
+// Both hero paths take the acting player TWICE, exactly as SetTownContext
+// four functions down does: once at the top for the waitingPlayer byte
+// this passes on to SetHeroContext/SetTownContext, and once more inside
+// the town arm's guard, uncached.
+//
+// CASE ORDER IS THE WHOLE MATCH HERE (84.02 -> 100.0 on that edit alone).
+// VC6 emits switch arms in SOURCE order, and retail's physical layout is
+// hero (fn+0x49), town (fn+0x9d), map (fn+0x1e0), radar (fn+0x1f2) - the
+// two locator blocks are written FIRST and the map and radar arms last,
+// the reverse of the widget-id order the enum reads in. Writing the cases
+// in id order costs the whole arm layout and, with it, the msg/index
+// register pair: retail parks msg in EDX and the jump-table index in EBX,
+// and id order swaps the two. Nothing inside any arm had to change. Read
+// a differing arm ORDER as a source-order fact before re-spelling
+// anything inside an arm.
 VA(0x004097e0, 0x290)  // anchor-callee, dc 0x9330
 int advManager::ProcessSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+
+    switch (msg->codeY) {
+    case TAdventureMapWindow::HERO_0_ID:
+    case TAdventureMapWindow::HERO_1_ID:
+    case TAdventureMapWindow::HERO_2_ID:
+    case TAdventureMapWindow::HERO_3_ID:
+    case TAdventureMapWindow::HERO_4_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_0_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_1_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_2_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_3_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_4_ID: {
+        int heroSlot = msg->codeY - TAdventureMapWindow::HERO_0_ID;
+        if (heroSlot > TAdventureMapWindow::NUM_HERO_BUTTONS - 1)
+            heroSlot = msg->codeY - TAdventureMapWindow::HERO_LOCATOR_0_ID;
+        int heroId = localPlayer->heroes[advWindow->topHero + heroSlot];
+        if (heroSlot < localPlayer->numHeroes) {
+            if (heroId == localPlayer->currHeroId) {
+                advCommand = ADV_COMMAND_VIEW_HERO;
+                DoAdvCommand(trigger_point);
+            } else {
+                SetHeroContext(heroId, 0, waitingPlayer, 1);
+            }
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::TOWN_0_ID:
+    case TAdventureMapWindow::TOWN_1_ID:
+    case TAdventureMapWindow::TOWN_2_ID:
+    case TAdventureMapWindow::TOWN_3_ID:
+    case TAdventureMapWindow::TOWN_4_ID: {
+        int townSlot = msg->codeY - TAdventureMapWindow::TOWN_0_ID;
+        int townId = localPlayer->townIds[advWindow->topTown + townSlot];
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                                  ADVENTURE_SCREEN_Y,
+                                                  ADVENTURE_SCREEN_WIDTH,
+                                                  ADVENTURE_SCREEN_HEIGHT);
+
+                    unsigned long curTime = GameTime::Get();
+                    if (static_cast<long>(
+                            curTime
+                            - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                            >= 0
+                        && !animCtrPaused) {
+                        ++animFrame;
+                        long elapsedTime =
+                            curTime
+                            - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                            _cpp_max(elapsedTime,
+                                     static_cast<long>(
+                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
+                    }
+                    Process1WindowsMessage();
+                }
+            }
+        }
+        if (townId == localPlayer->currTownId) {
+            advCommand = ADV_COMMAND_VIEW_TOWN;
+            *peventCell = DoAdvCommand(trigger_point);
+        } else {
+            SetTownContext(townId, waitingPlayer, 1);
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::MAP_ID:
+    case TAdventureMapWindow::CHAT_TEXT_ID:
+        ProcessMapSelect(msg, trigger_point, peventCell);
+        break;
+
+    case TAdventureMapWindow::RADAR_ID:
+        ProcessRadarSelect(msg);
+        break;
+
+    default:
+        break;
+    }
+
+    if ((msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+        && msg->codeY >= ADV_HELP_ID_FIRST && msg->codeY <= ADV_HELP_ID_LAST) {
+        // Row 110 of the general text, the only help string the whole
+        // adventure-button band answers with. No surviving symbol names
+        // the row, so the index stays a literal.
+        NormalDialog(gpGeneralText->GetText(110), 4, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2031
 DC_ONLY(0x9614, 0x47E)
@@ -791,12 +1080,177 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:2307
+// The radar drag. A right-click is answered with one general-text row and
+// nothing else; a left-click recentres the view on the radar pixel under
+// the pointer and then holds a modal pump until the button comes back up,
+// recentring again on every mouse move.
+//
+// The radar-to-world scale is picked off the map's own extent. Retail's
+// third constant is 0x3faaa993, which is NOT 4/3 (0x3faaaaab) and not any
+// ratio of the four extents - it is the literal `1.3333f` exactly, so the
+// original source hand-rounded it and the three siblings 4.0f/2.0f/1.0f
+// keep it company. Spell it as the literal or the constant moves.
+//
+// Two retail quirks are transcribed as found, both harmless because the
+// radar and the world are square: the vertical pointer clamp compares
+// against the radar's height but assigns from its WIDTH, and both world
+// clamps in the drag body bound against gMapWidth - 1, the y one
+// included. VC6 CSEs the second gMapWidth load away, which is what makes
+// the single `dec eax` serve both.
+//
+// Three spellings carried this from 92.17 to exact, all of them worth
+// reusing:
+//   * The message local's zero-init must ENUMERATE every member.
+//     `= { 0 }` compiles to `mov [slot],0` plus `rep stosd` of the other
+//     seven, and memset() to a bare `rep stosd`; only the full
+//     `{ 0, 0, 0, 0, 0, 0, 0, 0 }` gives retail's eight individual
+//     stores - and only that form lets the zero live in a REGISTER, which
+//     is what unifies it with the `push esi` that feeds UpdateRadar's
+//     three trailing flags, CompleteDraw's bForceDraw and UpdateScreen's
+//     x. That one edit was 97.42 -> 100.0.
+//   * The clamped drag coordinates need NAMED int locals before the
+//     bitfield store. Assigning `_cpp_min(...) - 9` straight into
+//     radarOrigin.x lets VC6 narrow the whole chain to 16 bits
+//     (`mov cx,[..]; sub cx,9`) where retail keeps it 32-bit; the local
+//     forces the dword read. 92.17 -> 97.42 with the init fix.
+//   * `_cpp_max(0, v)` and not `_cpp_max(v, 0)`. The template tests
+//     `_X > _Y`, so argument order picks the branch polarity, and retail
+//     yields the zero on `jl` here. MoreTreesNear four hundred lines down
+//     is byte-proven to want the OTHER order - the two really did differ
+//     in the original source, so measure per site.
 VA(0x0040a0c0, 0x50D)  // anchor-callee, dc 0xa168
 void advManager::ProcessRadarSelect(const message* msg)
 {
-    // @stub
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        NormalDialog(gpGeneralText->GetText(55), 4, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        return;
+    }
+
+    DemobilizeCurrHero(0, 1);
+
+    float radarScale;
+    switch (gMapHeight) {
+    case MAP_DIMENSION_SMALL:
+        radarScale = 4.0f;
+        break;
+    case MAP_DIMENSION_MEDIUM:
+        radarScale = 2.0f;
+        break;
+    case MAP_DIMENSION_LARGE:
+        radarScale = 1.3333f;
+        break;
+    default:
+        radarScale = 1.0f;
+        break;
+    }
+
+    int mapY = static_cast<int>(
+        (msg->mouseY - advWindow->RadarWidget->y) / radarScale);
+    int mapX = static_cast<int>(
+        (msg->mouseX - advWindow->RadarWidget->x) / radarScale);
+    radarOrigin.x = mapX - 9;
+    radarOrigin.y = mapY - 8;
+
+    if (radarOrigin.x < -9)
+        radarOrigin.x = -9;
+    if (radarOrigin.y < -8)
+        radarOrigin.y = -8;
+    if (radarOrigin.x > gMapWidth - 10)
+        radarOrigin.x = gMapWidth - 10;
+    if (radarOrigin.y > gMapHeight - 9)
+        radarOrigin.y = gMapHeight - 9;
+
+    UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
+                                  ADVENTURE_SCREEN_WIDTH,
+                                  ADVENTURE_SCREEN_HEIGHT);
+
+    unsigned long curTime = GameTime::Get();
+    if (static_cast<long>(
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+        && !animCtrPaused) {
+        ++animFrame;
+        long elapsedTime =
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(elapsedTime,
+                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+    }
+    Process1WindowsMessage();
+
+    message dragMsg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message event;
+    do {
+        Process1WindowsMessage();
+        event = gpInputManager->GetEvent();
+        dragMsg = event;
+        while (event.id != MESSAGE_LEFT_BUTTON_UP) {
+            if (!event.id)
+                break;
+            if (event.id == MESSAGE_MOUSE_MOVE)
+                dragMsg = event;
+            Process1WindowsMessage();
+            event = gpInputManager->GetEvent();
+        }
+
+        if (dragMsg.id == MESSAGE_MOUSE_MOVE) {
+            if (dragMsg.codeX < advWindow->RadarWidget->x)
+                dragMsg.codeX = advWindow->RadarWidget->x;
+            if (dragMsg.codeX >= advWindow->RadarWidget->x
+                                    + advWindow->RadarWidget->width)
+                dragMsg.codeX = advWindow->RadarWidget->x
+                                + advWindow->RadarWidget->width - 1;
+            if (dragMsg.codeY < advWindow->RadarWidget->y)
+                dragMsg.codeY = advWindow->RadarWidget->y;
+            if (dragMsg.codeY >= advWindow->RadarWidget->y
+                                    + advWindow->RadarWidget->height)
+                dragMsg.codeY = advWindow->RadarWidget->y
+                                + advWindow->RadarWidget->width - 1;
+
+            gpMouseManager->Main(dragMsg);
+
+            int dragY = static_cast<int>(
+                (dragMsg.codeY - advWindow->RadarWidget->y) / radarScale);
+            int dragX = static_cast<int>(
+                (dragMsg.codeX - advWindow->RadarWidget->x) / radarScale);
+            int newX = _cpp_min(_cpp_max(0, dragX), gMapWidth - 1);
+            int newY = _cpp_min(_cpp_max(0, dragY), gMapWidth - 1);
+            radarOrigin.x = newX - 9;
+            radarOrigin.y = newY - 8;
+
+            UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+            CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+            gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                          ADVENTURE_SCREEN_Y,
+                                          ADVENTURE_SCREEN_WIDTH,
+                                          ADVENTURE_SCREEN_HEIGHT);
+
+            unsigned long dragTime = GameTime::Get();
+            if (static_cast<long>(
+                    dragTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+                && !animCtrPaused) {
+                ++animFrame;
+                long dragElapsed =
+                    dragTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                    _cpp_max(dragElapsed,
+                             static_cast<long>(
+                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
+            }
+            Process1WindowsMessage();
+            dragMsg.id = 0;
+        }
+    } while (event.id != MESSAGE_LEFT_BUTTON_UP);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2434
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
