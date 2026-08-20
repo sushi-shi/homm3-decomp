@@ -73,6 +73,20 @@ enum TCreatureType {
     // group subtract 1 (0x44afd1) - exactly the Angel/Archangel and
     // Bone/Ghost Dragon morale rules, at the Complete ids those rules
     // belong to (NH3API spellings).
+    // The two JOUSTERS, byte-proven by ai_tactical's
+    // check_adjacent_hexes (0x436300): when the attacker's creatureType
+    // is 10 or 11 AND the side is being played by the AI, a tie between
+    // two candidate hexes is broken toward the one that costs MORE to
+    // reach, and toward the cheaper one for every other creature. That
+    // is the Champion's per-hex charge bonus and nothing else's - the
+    // same joustBonus army.h already carries at +0x490 - and 10/11 is
+    // where the Castle dwelling order puts the pair, immediately below
+    // the Angel/Archangel 0xc/0xd this enum already proves.
+    // Behind a view for this header's usual measured reason.
+#ifdef HOMM3_CREATURE_JOUST_DECL
+    CREATURE_CAVALIER = 0xa,
+    CREATURE_CHAMPION = 0xb,
+#endif
     CREATURE_ANGEL = 0xc,
     CREATURE_ARCHANGEL = 0xd,
     CREATURE_BONE_DRAGON = 0x44,
