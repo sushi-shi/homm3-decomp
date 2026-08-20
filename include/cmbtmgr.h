@@ -1102,6 +1102,19 @@ public:
     // closure through army.h, so no include-set edge moves for it.
     void LootDeadHero(int side,
                       std::vector<type_artifact>& looted_artifacts);
+    // The three victory-sequence bodies at the tail of command.obj. The
+    // Dreamcast S_PUB32 manglings fix all three signatures exactly -
+    // ?show_eagle_eye@combatManager@@AAAXHH@Z (two ints),
+    // ?DoVictory@combatManager@@QAAXH@Z (one int) and
+    // ?show_looted_artifacts@combatManager@@AAAXAAV?$vector@Utype_artifact@@...@Z,
+    // whose `AAV` is a REFERENCE, the same roster rendering LootDeadHero
+    // above already documents. show_eagle_eye and show_looted_artifacts
+    // are `private` on the Dreamcast; the access specifier is not
+    // codegen, and this class body is public throughout.
+    void show_eagle_eye(int winning_group, int dialog_timeout);
+    void show_looted_artifacts(std::vector<type_artifact>& looted_artifacts,
+                               int dialog_timeout);
+    void DoVictory(int winningGroup);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
     // body dereferences it at +0x288, +0xf4 and +0x34), and the return
