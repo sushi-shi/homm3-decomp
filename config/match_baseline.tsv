@@ -1741,6 +1741,7 @@ spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
+spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	89.6774	89.6774	89.6774	0x1a92f0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
@@ -1767,7 +1768,6 @@ spells	combatManager_ChainLightning	0.0000	0.0000	0.0000	0x1a6360
 spells	combatManager_DoBolt	0.0000	0.0000	0.0000	0x1a5c20
 spells	combatManager_DrawBolt	0.0000	0.0000	0.0000	0x1a5440
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
-spells	combatManager_GetNextChainLightningTarget	0.0000	0.0000	0.0000	0x1a61f0
 spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
 spells	combatManager_ModifySpellDamage	0.0000	0.0000	0.0000	0x1a78e0
 spells	combatManager_ResetBoltAngle	0.0000	0.0000	0.0000	0x1a5260
