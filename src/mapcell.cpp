@@ -3145,7 +3145,21 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // this note used to carry was WRONG, so read the correction before
 // re-deriving it.
 //
-// Residual (86.7264%): the two inlined bitset<70>::_Xran throw paths, and
+// Residual (88.5042%): the frame is still 0xe4 against retail's 0xc4, which
+// says 32 bytes of locals retail does not have - the sign the frame sweep
+// calls "a value that could not reach a dead parameter home".  Two of the
+// four have been paid off (2026-08-20): block-scoping the three scratch reads
+// put `int_buffer` in retail's own [ebp+8] and the name flag in [ebp+0xb]
+// (+0.11), and binding ReadLengthPrefixedString's return by const reference
+// instead of copying it into a named local removed a whole 16-byte string
+// object (+1.67, frame 0xf4 -> 0xe4).  What is left sits between `padding`
+// (ours [ebp-0x8c], retail [ebp-0x6c] - the deepest non-tempText local on
+// both sides) and the shallow byte locals, where retail uses [ebp-0x5c] for
+// TWO objects our compile gives separate slots.  Find those 32 bytes before
+// spending anything on the throw paths below - a frame delta shifts every
+// deep local and reads as a score hole on its own.
+//
+// Under that: the two inlined bitset<70>::_Xran throw paths, and
 // specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
 // retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
 // still expand it.  Everything else in the call sequence pairs off site for
@@ -3202,8 +3216,15 @@ VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
 {
+    // THE SCRATCH READS ARE BLOCK-SCOPED, and that is a source fact the frame
+    // publishes.  Retail recycles the dead parameter homes as its temp pool -
+    // `infile` goes to EBX at entry and its home [ebp+8] then carries the
+    // dword `int_buffer` at three sites, with [ebp+0xb] carrying the
+    // name-flag byte - and VC6 will only put a local there if the local's
+    // lifetime is confined to its own block.  A function-scoped
+    // `int int_buffer;` gets a slot of its own below EBP and the parameter
+    // home stays unused, which is what this body used to do.
     char tempText[100] = { 0 };
-    int int_buffer;
 
     // The Shadow of Death quest identifier: absent on the oldest format, and
     // it survives the whole body to reach HeroExtra::field_008.
@@ -3211,6 +3232,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         identifier = int_buffer;
     }
@@ -3224,10 +3246,14 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (HeroID == -1)
         isRandomHero = 1;
 
-    char nameFlag;
-    infile->Read(&nameFlag, sizeof(nameFlag));
-    char customName = nameFlag != 0;
+    char customName;
+    {
+        char nameFlag;
+        infile->Read(&nameFlag, sizeof(nameFlag));
+        customName = nameFlag != 0;
+    }
     if (customName) {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         infile->Read(tempText, int_buffer);
         tempText[int_buffer] = 0;
@@ -3241,6 +3267,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     unsigned char bCustomExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         experience = int_buffer;
         if (experience != 0 && (!gbUnk69774c || experience >= 40))
@@ -3303,19 +3330,25 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
-    char skillsFlag;
-    infile->Read(&skillsFlag, sizeof(skillsFlag));
-    if (skillsFlag)
-        readHeroSecondarySkills(infile, hero_data);
+    {
+        char skillsFlag;
+        infile->Read(&skillsFlag, sizeof(skillsFlag));
+        if (skillsFlag)
+            readHeroSecondarySkills(infile, hero_data);
+    }
 
-    char armiesFlag;
-    infile->Read(&armiesFlag, sizeof(armiesFlag));
-    if (armiesFlag)
-        readHeroArmies(infile, hero_data, mapVersion);
+    {
+        char armiesFlag;
+        infile->Read(&armiesFlag, sizeof(armiesFlag));
+        if (armiesFlag)
+            readHeroArmies(infile, hero_data, mapVersion);
+    }
 
-    char formation;
-    infile->Read(&formation, sizeof(formation));
-    hero_data->GroupFormation = formation != 0;
+    {
+        char formation;
+        infile->Read(&formation, sizeof(formation));
+        hero_data->GroupFormation = formation != 0;
+    }
 
     char artifactsFlag;
     infile->Read(&artifactsFlag, sizeof(artifactsFlag));
@@ -3365,16 +3398,25 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
     }
 
-    char patrolRadius;
-    infile->Read(&patrolRadius, sizeof(patrolRadius));
-    hero_data->PatrolRadius = patrolRadius;
+    {
+        char patrolRadius;
+        infile->Read(&patrolRadius, sizeof(patrolRadius));
+        hero_data->PatrolRadius = patrolRadius;
+    }
 
     if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         char customNameFlag;
         infile->Read(&customNameFlag, sizeof(customNameFlag));
         if (customNameFlag) {
             hero_data->customName = 1;
-            std::string heroName = ReadLengthPrefixedString(infile);
+            // BOUND BY const REFERENCE, not copied.  ReadLengthPrefixedString
+            // returns by value and VC6 does not elide the copy into a named
+            // `std::string` local, so that spelling puts TWO 16-byte string
+            // objects on the frame where retail has one - worth 1.67 and 16
+            // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
+            // lifetime to the reference's scope, which is exactly the block
+            // the assign sits in.
+            const std::string& heroName = ReadLengthPrefixedString(infile);
 #pragma inline_depth(0)
             hero_data->name.assign(heroName, 0, std::string::npos);
 #pragma inline_depth()
