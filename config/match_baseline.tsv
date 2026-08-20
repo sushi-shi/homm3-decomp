@@ -337,7 +337,7 @@ army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
-army	?do_attack@army@@QAEEPAV1@H@Z	95.5202	95.5202	95.5202	0x41610
+army	?do_attack@army@@QAEEPAV1@H@Z	95.5585	95.5585	95.5585	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	99.9351	99.9351	99.9351	0x40310
@@ -575,7 +575,7 @@ cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	87.5102	87.5102	87.5102	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
-cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	64.8103	64.8103	64.8103	0x66290
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	91.5113	91.5113	91.5113	0x66290
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	91.1779	91.1779	91.1779	0x67db0
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	86.4031	86.4031	86.4031	0x67a00
