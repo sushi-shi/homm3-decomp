@@ -281,7 +281,7 @@ ai_tactical	?get_traitor_value@type_AI_spellcaster@@QAEJPBVarmy@@0@Z	100.0000	10
 ai_tactical	?get_water_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a40
 ai_tactical	?get_weakness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ed0
 ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	95.2778	95.2778	95.2778	0x3bf20
-ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	85.5822	85.5822	85.5822	0x36c60
+ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6781	86.6781	0x36c60
 ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
 ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000	0.0000	0.0000	0x36300
