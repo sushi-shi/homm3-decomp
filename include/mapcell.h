@@ -208,6 +208,13 @@ enum TAdventureObjectType {
     HERO_PLACEHOLDER           = 212,
     RANDOM_DWELLING_LEVEL      = 215,
 #endif
+    // 214, from the same public list, and pinned by the two neighbours
+    // above: PlaceObject skips it alongside HERO, RANDOM_HERO, BOAT and
+    // HOLY_GRAIL - the five classes something else is responsible for
+    // placing. GATED so the enum's population is unchanged elsewhere.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    RANDOM_DWELLING            = 214,
+#endif
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
@@ -510,6 +517,13 @@ public:
     // erasing and then splices it out - `_First` at +0x12, `_Last` at
     // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
     // all in that one body.
+    // Marker for headers that need to name this nested type in a
+    // declaration. It is not a declarator and costs no include-set
+    // population; it exists because the type is view-gated while
+    // NewfullMap - which game.h declares - takes a pointer to it, and not
+    // every TU that sees game.h has been through this branch (puzzlewindow
+    // includes mapcell.h before it defines the view).
+#define HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
     struct TObjectCell {
         unsigned short objectIndex;
         unsigned char offsets;
