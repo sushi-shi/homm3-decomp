@@ -210,7 +210,10 @@ public:
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
     int visitingHeroId;
-    unsigned char field_14;
+    // Mage guild level. SIGNED char, retyped in place 2026-08-20:
+    // BuildBuilding re-reads it with movsx at both spell-count loops
+    // and guards them with `cmp cl,1 / jl`.
+    signed char field_14;
     char pad_15[0x1];
     // +0x16, fourteen shorts - the accumulated population of each
     // dwelling slot, base then upgrade, the same 14-wide slot space
@@ -397,7 +400,7 @@ public:
     // see a new declarator.
     void SetSummoningGenerator();
 #endif
-#ifdef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
+#if defined(HOMM3_TOWNMGR_TOWN_VISIT_DECLS) || defined(HOMM3_TOWN_OBJ_DECLS)
     // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
     // (dc 0x165da4) and town::town (dc 0x166408) is
     // ApplySpecialBuildingEffect, and the retail bracket has exactly one
