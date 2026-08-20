@@ -590,13 +590,32 @@ static int ReadDwordField(TAbstractFile* infile)
 // source-local. `predict-inline` pairs 5 of the 13 out-of-line calls off
 // by COUNT (retail names its unclaimed basic_string callees, and the
 // 0x485d90 reader itself, with synth labels our side can never emit) and
-// leaves ONE real item: `_Tidy` out of line 4 times here against
-// retail's 1. Instruction counts nearly agree (654 vs 629) while blocks
-// do not (33 vs 21), which is what an inlining decision looks like from
-// the CFG side rather than a missing statement. `why-branch` finds no
-// catalog lever, and its four induction mutations on the bitset loop all
-// measure WORSE (+2 each), which independently confirms the unsigned
-// counter is right. Same class the two describers carry.
+// leaves ONE real item, which it reports as `_Tidy` out of line 4 times
+// here against retail's 1.
+//
+// READ THAT ROW THE OTHER WAY ROUND (2026-08-20, bytes). It is an
+// OVER-inline of basic_string::_Grow on OUR side, not an under-inline of
+// _Tidy. Both compiles inline std::bitset<48>::set AND its whole _Xran
+// throw at the granted-mask loop - our fn+0x652 and retail's fn+0x5e3
+// both carry the `invalid bitset<N> position` string construction inline.
+// Inside it, `assign(const char*, size_type)` calls `_Grow(_N, true)`,
+// and THAT is where the two diverge: retail leaves _Grow a CALL
+// (`push 1 / push ebx / lea ecx,[ebp-0x30] / call 0x4a90`), while our CL
+// expands _Grow and so exposes the `_Tidy` and `_Copy` calls that live
+// inside it. Same for the customName temporary at the head, where both
+// sides are already identical (`call assign(const basic_string&,
+// size_type, size_type)` then one `_Tidy`).
+// No statement in this body reaches _Grow - it is three levels down
+// inside an expansion both compiles agree to make - so the pin lever does
+// not apply and the depth lever (spelling the site one wrapper deeper)
+// has no shallower or deeper form to choose from here.
+//
+// Instruction counts nearly agree (654 vs 629) while blocks do not
+// (33 vs 21), which is what that one expansion looks like from the CFG
+// side rather than a missing statement. `why-branch` finds no catalog
+// lever, and its four induction mutations on the bitset loop all measure
+// WORSE (+2 each), which independently confirms the unsigned counter is
+// right. Same class the two describers carry.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
@@ -3958,11 +3977,35 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
 // 0x117b8c) and retail folded the identical COMDATs onto one label - the
 // same row advmgr.cpp's MonsterQuickView note already discounts.
-// One more open item, NOT yet explained: retail emits 15 NormalDialog
-// call instructions where we emit 6. The source has ~14 sites, so our CL
-// is cross-jumping the identical right-click help arms and retail is not.
-// Read that before assuming any arm is missing - it is the same
-// cross-jumping defect as the three counts above, at a larger scale.
+// One more open item, NOW READ OFF THE BYTES (2026-08-20) and confirmed
+// A17/D7, not a missing arm: retail emits 15 NormalDialog call
+// instructions where we emit 6, and OUR SIX HELP ARMS ARE BYTE-IDENTICAL
+// TO RETAIL'S up to and including `mov edx,4`. Compare our $L70222 at
+// base+0x1047 with retail fn+0x10e: eleven pushes in the same order, the
+// same `mov ecx,[<help text>]` in the same position, the same
+// `test bl,bl / je <return 1>` guard. The ONLY difference is the last
+// five bytes: retail ends each arm `call NormalDialog / jmp <return 1>`
+// and ours ends `jmp <shared call+jmp>`. Our C2 cross-jumped the two-
+// instruction tail of all six arms (plus three more sites) into one
+// block; retail's did not, even though the tails are identical there too.
+//
+// The reverse also happens in this same body, which is why "our
+// cross-jumper is more aggressive" is the wrong summary - the two
+// compiles pick different merge SETS. UpdateHeroScreenStatusBar is base
+// x2 vs retail x1 because RETAIL merges: its mouse-move arm at fn+0x26e
+// (`mov [ecx+0x3c],eax / push esi / call UpdateHeroScreenStatusBar`) is
+// jumped into by the army-slot arm with eax already -1, so retail spells
+// `gpWindowManager->lastHover = -1; UpdateHeroScreenStatusBar(msg);`
+// once for two source sites while we emit it twice.
+//
+// Every one of this row's call-count gaps is that defect: 9 NormalDialog
+// + 1 QuickWindowWait + 1 bitset<144>::any + 1 update_all_slots + 1
+// BroadcastMessage + 1 HeroFn_004D97F0 + 1 SetPointer - 1
+// UpdateHeroScreenStatusBar = exactly the 14 that separate base's 85
+// out-of-line calls from retail's 99. Nothing is missing from the source.
+// docs/vc6/optimization-scope.md puts cross-jumping in the WHOLE-FUNCTION
+// CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
+// source spelling of an arm can reach a decision made over all of them.
 //
 // ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
 // MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
@@ -5593,6 +5636,16 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // would have opened up. It does not: the divisor counts call SITES
 // whether or not they are pinned. Site pins are the lever for an
 // OVER-inline only - they cannot buy an under-inline back.
+// FOURTH, and it closes the search over the DEPTH lever that took
+// HeroFn_004DC100 65.97 -> 87.27 and GiveArtifact 64.63 -> 75.10 the same
+// day. That lever works by spelling a bitset access one wrapper LEVEL
+// DEEPER (`b[i]` reaches test through `operator[]`), which pushes _Xran
+// out of line. Here the divergence points the OTHER way - retail expands
+// _Xran and we call it - so it would need a SHALLOWER spelling, and
+// <bitset> has none: `test(_P)` already calls `_Xran` directly, and the
+// only other bounds-checked accessor, `at(_P)`, checks TWICE (once itself
+// and once through the `test` it forwards to) where retail checks once.
+// The depth ladder has no rung below `test`.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {

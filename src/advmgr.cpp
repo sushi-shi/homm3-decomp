@@ -5228,6 +5228,23 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
             mapObjects->objects[objCell->objectIndex].typeIndex];
 
         signed char offsets = objCell->offsets;
+        // MEASURED NEGATIVE (2026-08-20), and the evidence is worth more
+        // than the verdict, so do not re-derive it. Retail keeps BOTH of
+        // these shifts 8-BIT and widens at USE - at fn+0x21b it emits
+        // `mov dl,al / sar dl,4 / movsx edx,dl` for y and `shl al,4 /
+        // sar al,4 / movsx eax,al` for x - which is the `signed char`
+        // spelling, not this one; the int spelling promotes first and
+        // shifts 32-bit. Writing both as `signed char` reproduces retail's
+        // byte shifts AND takes the frame from `sub esp,0x100` to retail's
+        // exact `sub esp,0xfc`, i.e. it removes the one extra dword local
+        // that shifts every slot in this body by 4. It still costs
+        // 83.2095 -> 78.7790, because the slot COLOURING then re-permutes
+        // (retail's two type_points land at -0x28/-0x34, ours at
+        // -0x24/-0x3c) and the body grows five instructions. Respelling
+        // the sum as retail's `neg / shl 3 / sub / add 0x2f` order
+        // (`-yOffset * 8 - xOffset + 47`) is byte-flat on top of that.
+        // The next lever here is decl-order/slot-colouring (B5/B6), not
+        // the operand types.
         int yOffset = offsets >> 4;
         offsets <<= 4;
         int xOffset = offsets >> 4;
