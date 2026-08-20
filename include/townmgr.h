@@ -213,6 +213,10 @@ public:
     virtual ~TTownScreenWindow();
     void UpdateTownLocator(int i);
     void UpdateTownLocators();
+    // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
+    // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
+    // only caller in the image and hands it the town being shown.
+    void set_bonus_display(town* pTown);
 };
 
 class TThievesGuildWindow : public CAdvPopup {
@@ -266,6 +270,7 @@ public:
     virtual ~TMageGuildWindow();
     // Retail 0x5ce1c0 (dc 0x171020). The page's rollover line.
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5ce370
 };
 
 class type_garrison_base_window : public CAdvPopup {
@@ -273,7 +278,19 @@ public:
     enum {
         BACKGROUND_ID = 148,
         DIVIDE_BUTTON_ID = 154,
-        OK_BUTTON_ID = 0x7802
+        OK_BUTTON_ID = 0x7802,
+        // The two seven-slot troop runs, the bottom strip's owner cell
+        // and the dialog's cancel id - the four families the page's own
+        // SetCommandAndText 0x5d05f0 and WindowHandler 0x5d0910 dispatch
+        // on. Both runs are consecutive because both bodies index them
+        // with `codeY - <base>`, and both bases are the strip `firstId`
+        // townManager::NewStrips 0x5c6e10 hands the two strips (0x64 and
+        // 0x7c) plus the strip's own selector offset. NAMES provisional,
+        // VALUES retail's own jump-table bounds.
+        TOP_SLOT_FIRST_ID = 0x73,
+        BOTTOM_OWNER_ID = 0x7c,
+        BOTTOM_SLOT_FIRST_ID = 0x8c,
+        CANCEL_BUTTON_ID = 0x7800
     };
 
     // Sixteen bytes of its own past CAdvPopup's 0x60, and nothing in a
@@ -285,9 +302,17 @@ public:
     // +0x60: the constructor's first parameter, stored straight after
     // the vptr and read by no reconstructed body.
     hero* field_60;
-    char pad_64[8];
+    // +0x64 / +0x68, NAMED 2026-08-21 by the page's own handler
+    // 0x5d0910: the hover pair the whole compiland's dialog family
+    // carries, tested together and refreshed together before the status
+    // line is rewritten - the same shape TTavernWindow's pair has. The
+    // handler reaches them through msg->window, not through `this`.
+    int lastHover;      // +0x64
+    int lastQualifier;  // +0x68
     // +0x6c: a byte the base constructor clears and
-    // type_monster_join_window's sets to 1; nothing else attested.
+    // type_monster_join_window's sets to 1; SetCommandAndText 0x5d05f0
+    // rides it through both troop runs as select_army's third argument
+    // and SetArmyCommand's second.
     unsigned char field_6c;
     char pad_6d[3];
 
@@ -297,6 +322,10 @@ public:
     type_garrison_base_window(hero* inHero, int garrison_owner,
                               armyGroup* garrison_army);
     virtual ~type_garrison_base_window();
+    // Retail 0x5d05f0 (dc 0x172af0). The dialog's status line, and the
+    // town page's pending command with it.
+    void SetCommandAndText(message* msg);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d0910
 };
 
 // The two derived garrison windows have EMPTY destructors: retail inlines
@@ -401,18 +430,46 @@ public:
 // bracket the dialog with the tavern's background video.
 class TTavernWindow : public CAdvPopup {
 public:
+    // The page's widget ids, all of them proven by the two bodies below:
+    // SetRolloverText 0x5d7920 dispatches on exactly this set and
+    // WindowHandler 0x5d7b30 acts on three of them. The two portraits are
+    // consecutive because both bodies index playerData::recruits with
+    // `id - RECRUIT_0_ID`, and the lit/dim pair the handler broadcasts
+    // (`slot + 8` and `9 - slot`) is the same two-wide family one band up.
+    // NAMES provisional - no roster covers this dialog's ids - VALUES
+    // retail's own.
     enum {
+        RECRUIT_0_ID = 5,
+        RECRUIT_1_ID = 6,
+        THIEVES_GUILD_BUTTON_ID = 11,
+        HIRE_BUTTON_ID = 12,
+        RUMOR_PANEL_ID = 15,
         CANCEL_BUTTON_ID = 0x7800
     };
 
+    // +0x60, the recruit slot the page has selected - 0 or 1, the index
+    // of the portrait that was clicked. The constructor clears it and
+    // both bodies below read it as the index into playerData::recruits.
     int field_60;              // +0x60  cleared by the constructor
-    char pad_64[8];            // +0x64  unattested
+    // +0x64 / +0x68, NAMED 2026-08-21 by WindowHandler 0x5d7b30: the
+    // hover pair the whole compiland's dialog family carries, tested
+    // together and refreshed together before the rollover line is
+    // rewritten. Same shape as TBlacksmithWindow's lastHover, with the
+    // qualifier alongside it because this page's rollover changes on a
+    // right-click as well as on a move.
+    int lastHover;             // +0x64
+    int lastQualifier;         // +0x68
     textWidget* rolloverText;  // +0x6c
 
     TTavernWindow(int x2, int y2);
     virtual ~TTavernWindow();
+    // Retail 0x5d7920 (dc 0x17a7a0). NOT virtual - the Dreamcast
+    // mangling is QAA and the page's own handler reaches it with a
+    // direct call.
+    void SetRolloverText(int id);
     virtual int Open(int zOrder, unsigned char update);  // slot 1
     virtual void Close(unsigned char update);            // slot 2
+    virtual int WindowHandler(message* msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 
 // The fort page: one row per creature dwelling - a separator strip, a
@@ -667,6 +724,9 @@ public:
     // Same gate, same measured reason, as SetupExtraStuff above.
     void SetupTown(unsigned char fade);
     void SetCommandAndText(message* msg);
+    // Retail 0x5c7400 (dc 0x16c6a8), declared for the garrison dialog's
+    // two troop runs; not reconstructed.
+    void SetArmyCommand(int splitEnabled, unsigned char join_dialog);
     // Retail 0x5d8480 (dc 0x17b318). Inferno's Castle Gate.
     void DoTownGate();
     // Retail 0x5d6a80. Commits a purchase to the town: builds it,
@@ -721,6 +781,9 @@ public:
     // Retail 0x5d30d0 (dc 0x174da0). The town hall button, and the
     // Grail offer that stands in front of it.
     void handle_hall_click();
+    // Retail 0x5ce560 (dc 0x171320). The mage guild button, and the
+    // spellbook the page sells the standing hero in front of it.
+    void handle_mage_guild_click();
     // Retail 0x5c7250 (dc 0x16c518). Writes the status line and the
     // command for a hero-to-hero drag between the page's two strips.
     void SetHeroCommand();

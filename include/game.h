@@ -1256,6 +1256,16 @@ SIZE(generator, 0x5c);
 // that belongs to a deliberate tree-wide decision, not to this slice.
 class playerData {
 public:
+    // The width of the `heroes` row below, and the cap the game enforces
+    // on it. Byte-proven twice: playerData::Init (0x4b9e20) fills the row
+    // with `mov ecx,8 / rep stosd`, and the tavern's rollover
+    // (TTavernWindow::SetRolloverText 0x5d7920) both COMPARES numHeroes
+    // against the literal 8 and prints the same 8 as the refusal's one
+    // vararg.
+    enum {
+        HERO_SLOT_COUNT = 8
+    };
+
     // +0x00. playerData::GetName indexes the colour-name table at
     // .bss 0x6a7df8 with `movsx` of this byte.
     signed char color;
