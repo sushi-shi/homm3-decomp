@@ -141,12 +141,22 @@ SIZE(SBolt, 0x78);
 
 // SBolt::iColor's SPECIAL values. DrawBolt (0x5a5440) proves both the
 // domain and its extent: it lowers `iColor - 0x12c` against 6 into a
-// jump table, gives each of the six values its own gradient table, and
-// for anything else writes the value straight into the framebuffer as a
-// raw 16-bit pixel. Only one member can be named from a caller -
-// ChainLightning (0x5a6360) pushes the literal 0x131 into DoBolt - so
-// the other five stay ORDINAL, exactly as army.h's gWallTargets rows do
-// where no roster names the individual segments.
+// jump table and for anything outside that window writes the value
+// straight into the framebuffer as a raw 16-bit pixel. Only one member
+// can be named from a caller - ChainLightning (0x5a6360) pushes the
+// literal 0x131 into DoBolt - so the other five stay ORDINAL, exactly
+// as army.h's gWallTargets rows do where no roster names the individual
+// segments.
+//
+// CORRECTION 2026-08-20, on reconstructing DrawBolt: this note used to
+// say each of the SIX values gets its own gradient table. It does not.
+// The jump table's SECOND entry - BOLT_COLOR_1 - points AT the default
+// block, so 0x12d has no case of its own and is drawn as a raw pixel
+// like any unrecognised colour. Of the remaining five, BOLT_COLOR_2 and
+// BOLT_COLOR_4 have a five-row rim-indexed ramp each, BOLT_COLOR_0 and
+// BOLT_COLOR_3 SHARE one fifteen-row ramp read in opposite directions,
+// and BOLT_COLOR_CHAIN_LIGHTNING has no table at all - its six shades
+// are spelled out one by one in the body.
 enum EBoltColor {
     BOLT_COLOR_0 = 0x12c,
     BOLT_COLOR_1 = 0x12d,
@@ -889,7 +899,15 @@ public:
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
     // needs running. A retype, not a new declarator.
-    int field_13460;                  // +0x13460
+    //
+    // A BYTE, not the int this line used to carry (byte-proven
+    // 2026-08-20 by Armageddon, 0x5a4bc0): it clears the field with
+    // `mov byte ptr [ebx+0x13460], al` out of the same `xor eax,eax`
+    // that seeds the field_13438 memset, and asks it with
+    // `mov al, [ebx+0x13460] / test al,al`. A dword field gives
+    // `mov dword ptr [...],0` and `cmp dword ptr [...],0` in both places.
+    unsigned char field_13460;        // +0x13460
+    char pad_13461[0x3];
     const char* backgroundName;       // +0x13464
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
@@ -1183,6 +1201,12 @@ public:
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
     void ResetLimitCreature();
     int DrawCreatureAndHeroSubwindows();
+    // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
+    // the one of its four UpdateCombatArea overloads that takes no
+    // extent. Declared here, unclaimed, because Armageddon calls it once
+    // per animation frame; drawing.cpp still carries the @carcass stub
+    // and the body stays that TU's to reconstruct.
+    void UpdateCombatArea();                                  // 0x493780
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
                    unsigned char bLimitDraw, int iDelay,
@@ -1674,16 +1698,45 @@ public:
                                long level, long power,
                                long casting_side,
                                unsigned char creature_spell);  // 0x5a66d0
-    // The lightning-bolt animator, two of its four bodies. Both take the
-    // SBolt record declared above; the DC prototypes (spells.cpp:3572 /
-    // 3864) supply every parameter name, and AddBolt's thirteen
-    // arguments are what name most of the record's fields.
+    // The lightning-bolt animator, all four bodies. All take the SBolt
+    // record declared above; the DC prototypes (spells.cpp:3572 / 3702 /
+    // 3864 / 3940) supply every parameter name, and AddBolt's thirteen
+    // arguments are what name most of the record's fields. DoBolt's
+    // seventeen ints are the DC roster's own order, and its `ret 0x44`
+    // corroborates the count exactly; two of them (iDrawsPerSegment and
+    // bFlashLighten) are DEAD in the retail body - no instruction in the
+    // 1474 bytes reads either slot - and are kept because the arity is
+    // what the call sites push.
+    // 0x5a7560, the resurrection worker the spell arms funnel into. The
+    // DC prototype (spells.cpp:4888) supplies all three parameter names.
+    void Resurrect(army* target_army, long hit_points_resurrected,
+                   unsigned char temporary);                    // 0x5a7560
+    // 0x5a6c70, the clone. The DC prototype (spells.cpp:4576) supplies
+    // both parameter names; `level` is DEAD in the retail body, which
+    // reads neither its slot nor anything derived from it.
+    void MirrorImage(int targetIndex, int level);               // 0x5a6c70
+    // 0x5a6360, the bouncing bolt. The DC prototype (spells.cpp:4255)
+    // supplies all three parameter names; `level` indexes both the
+    // spell's mastery_bonus row and the per-mastery bounce table.
+    void ChainLightning(int index, int level, int power);       // 0x5a6360
+    // 0x5a4bc0, the field-wide burn. The DC prototype (spells.cpp:3389)
+    // supplies both parameter names; `level` is what indexes the spell's
+    // mastery_bonus row, i.e. it is the mastery the cast landed at.
+    void Armageddon(int level, int power);                     // 0x5a4bc0
     void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
+    void DrawBolt(SBolt* psBolt, int iDrawLength);             // 0x5a5440
     void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,
                  int iDestY, int iSplitFrequency, int iStartThickness,
                  int iEndThickness, int iColor, int iAngleDistortMin,
                  int iAngleDistortMax, int iSegmentLength,
                  int bDistortAlways);                          // 0x5a5a90
+    void DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX,
+                int iDestY, int iSplitFrequency, int iMaxSplitLength,
+                int iStartThickness, int iEndThickness, int iColor,
+                int iAngleDistortMin, int iAngleDistortMax,
+                int iSegmentLength, int iDrawsPerSegment,
+                int bDistortAlways, int iDelay,
+                int bFlashLighten);                            // 0x5a5c20
     // 0x5a8690 (701 B), the ROLLOVER line the spell cursor writes while
     // a target is being picked - it is the one spells.obj body that
     // never resolves anything, only names what the aimed hex would hit.

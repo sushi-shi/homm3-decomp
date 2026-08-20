@@ -11,6 +11,11 @@
 #define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// DrawBolt writes 16-bit pixels straight into the screen bitmap, so
+// it needs the Bitmap16Bit layout; the channel masks its RGBto16
+// packs them with are declared in spells.h, for a measured reason
+// recorded there.
+#include "bitmap16.h"
 // ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
 // poisonPenalty multiplier (+0x4a4) to price the hit points the stack
 // just lost; army.h keeps both behind the round view.
@@ -39,17 +44,31 @@
 #include "cmbtmgr.h"
 #include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
+// DoBolt scales its inter-frame delay by gCombatSpeedFactors, exactly as
+// army::Fly does; drawing.h is where this tree parks that unowned table.
+#include "drawing.h"           // gCombatSpeedFactors
 #include "resourcemanager.h"   // ResourceManager::GetSprite
+#include "game.h"     // PlayImmEffect, Resurrect's force-feedback cue
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
-#include "kb.h"      // gText, the shared combat-message scratch buffer
+#include "kb.h"      // gText, and NormalDialog for MirrorImage's failure line
+// MirrorImage walks outward from the caster through path.obj's
+// GetAdjacentCellIndexNoArmy looking for a hex to clone into.
+#include "path.h"
+// DoBolt paces its draw loop with GameTime::DelayTil + the NextFrameTime
+// header inline, the same pair army::Fly's flight loop uses.
+#include "kbwin.h"   // GameTime
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include "mousemgr.h"  // gpMouseManager, DoBolt's pointer hide/show
+#include "prefs.h"     // gUnnamed698758.combatSpeed, DoBolt's speed index
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
 #include "textresource.h"  // gpGeneralText
+#include "winmgr.h"  // gpWindowManager, DoBolt's per-pass UpdateScreen
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
-#include <math.h>    // sqrt, for the chain-lightning bounce search
+#include <math.h>    // sqrt for the chain-lightning bounce search;
+                     // sin/cos for DoBolt's fork heading
 
 // VC6's own <xutility> reference-returning max, declared file-locally
 // exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
@@ -61,6 +80,17 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X < _Y ? _Y : _X);
+}
+
+// VC6's own <xutility> reference-returning min, declared file-locally
+// for exactly the reason _cpp_max above is: ChainLightning's segment
+// clamp selects between the operands' ADDRESSES with two LEAs, which no
+// value-returning spelling produces. combatresultswindow.cpp,
+// ai_combat.cpp and ai_tactical.cpp already carry the same copy.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
 }
 
 // The third of cmbtmgr.h's axial-coordinate helpers; the other two are
@@ -91,6 +121,23 @@ static const char* CreatureName(int type, long count)
     // literal; the linker folds our COMDAT onto it, so the only delta is
     // a reloc NAME (masked).
     return "";
+}
+
+// WinGraph.h:55's RGBto16 (dc 0xff780) as retail's spells.cpp saw it -
+// a header inline with no retail out-of-line body, which DrawBolt
+// expands SIX times. Spelled file-locally for exactly the reason
+// CreatureName below is; mousemgr.cpp already carries its own
+// hand-spelled two-term copy of the same expansion.
+//
+// The `x * mask / 255 & mask` term is byte-exact in both: the divide is
+// the unsigned 0x80808081 reciprocal (`mul` then `shr edx, 7`), which
+// is what fixes the product as UNSIGNED - i.e. the mask, not the
+// component, decides the expression's type.
+static unsigned RGBto16(int r, int g, int b)
+{
+    return ((r * gColorMask68c860 / 255) & gColorMask68c860)
+        | ((g * gColorMask68c864 / 255) & gColorMask68c864)
+        | ((b * gColorMask68c868 / 255) & gColorMask68c868);
 }
 
 // army::get_controlling_side (0x440140) as retail's spells.cpp saw it.
@@ -1006,16 +1053,182 @@ void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:3389
+// Armageddon: roll the spell against EVERY stack on the field, damage
+// the ones it lands on, play the whole burning-field animation over the
+// combat screen, and then bury whatever it killed.
+//
+// The local names are the Dreamcast roster's own (variables.csv, dc
+// 0x153d2c): bDamageDone, spell_traits, iMaxFrames, twidth, theight,
+// xtiles, ytiles, sh and dy are all attested rows, and the parameters
+// are `level` and `power` - `level` is what indexes the spell's
+// mastery_bonus row, i.e. it is the mastery.
+//
+// FOUR SEPARATE 2x21 SWEEPS, each `for (side) for (i < numArmies[side])`
+// and each strength-reduced by our CL and by retail alike into three
+// parallel induction variables (armies by 0x6ee8, `effected` by 0x14,
+// numArmies by 4). They are not merged in retail and they are not
+// merged here: roll+damage, then set up each hit stack's wince/death
+// animation, then the frame loop, then the death sweep.
+//
+// THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
+// its `mastery_bonus[level] + power_factor * power` body appears twice,
+// once per stack and once for the message line, exactly as the /Ob2
+// rules predict for an extern helper with a live out-of-line copy.
+//
+// LoadSpellEffect's return is DISCARDED and powSprite re-read: retail
+// loads [this+0x132e8] again straight after the inlined call rather
+// than reusing the returned register, which is what a statement-call
+// followed by member uses produces and a captured local does not.
+//
+// THE SPRITE IS TILED over the whole 800x556 combat screen -
+// `(twidth + 799) / twidth` by `(theight + 599) / theight` copies, each
+// clipped against what is left of the row or column. The 599 against a
+// 556-pixel clip is retail's own inconsistency; transcribed.
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::Armageddon(int level, int power)
 {
-    // @stub
-}
+    const SSpellTraits* spell_traits = &akSpellTraits[SPELL_ARMAGEDDON];
+    unsigned char bDamageDone = 0;
+    memset(effected, 0, sizeof(effected));
 
-#endif  // @carcass
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++) {
+            if (Random(1, 100)
+                <= static_cast<long>(
+                       SpellCastWorkChance(SPELL_ARMAGEDDON, currentSide,
+                                           &armies[side][i], 0, 1, 0)
+                       * 100.0f)) {
+                armies[side][i].Damage(ComputeSpellDamage(
+                    SPELL_ARMAGEDDON, power, level, heroes[currentSide],
+                    armies[side][i].get_controller(), &armies[side][i], 0));
+                bDamageDone = 1;
+                effected[side][i] = 1;
+            }
+        } }
+    } }
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        LoadSpellEffect(spell_traits->m_effect);
+        long iMaxFrames = powSprite ? powSprite->GetNumFrames(0) : 0;
+
+        // Every stack the spell landed on drops into its wince or its
+        // death sequence, and the animation runs for however many frames
+        // the LONGEST of them needs - the fire sheet included.
+        { for (int side = 0; side < 2; side++) {
+            { for (int i = 0; i < numArmies[side]; i++) {
+                army* pArmy = &armies[side][i];
+                if (effected[side][i]) {
+                    if (pArmy->numTroops <= 0) {
+                        if (pArmy->stdIcon->GetNumFrames(cs_death)
+                            > iMaxFrames)
+                            iMaxFrames =
+                                pArmy->stdIcon->GetNumFrames(cs_death);
+                        pArmy->currFrameType = cs_death;
+                        pArmy->play_sample(army::DIE_SAMPLE);
+                    } else {
+                        if (pArmy->stdIcon->GetNumFrames(cs_wince)
+                            > iMaxFrames)
+                            iMaxFrames =
+                                pArmy->stdIcon->GetNumFrames(cs_wince);
+                        pArmy->currFrameType = cs_wince;
+                        pArmy->play_sample(army::WINCE_SAMPLE);
+                    }
+                    pArmy->currFrameIndex = 0;
+                }
+            } }
+        } }
+
+        long twidth = powSprite->Width;
+        long theight = powSprite->Height;
+        long xtiles = (twidth + 799) / twidth;
+        long ytiles = (theight + 599) / theight;
+        { for (int frame = 0; frame < iMaxFrames; frame++) {
+            { for (int side = 0; side < 2; side++) {
+                { for (int i = 0; i < numArmies[side]; i++) {
+                    army* pArmy = &armies[side][i];
+                    if (effected[side][i]) {
+                        // A wincing stack falls back to cs_wait once its
+                        // sequence runs out; a dying one holds its last
+                        // frame, which is why only cs_wince is reset.
+                        if (pArmy->currFrameIndex
+                            < pArmy->stdIcon->GetNumFrames(
+                                  pArmy->currFrameType) - 1) {
+                            pArmy->currFrameIndex++;
+                        } else if (pArmy->currFrameType == cs_wince) {
+                            pArmy->currFrameType = cs_wait;
+                            pArmy->currFrameIndex = 0;
+                        }
+                    }
+                } }
+            } }
+            DrawFrame(0, 0, 0, 100, 1, 1);
+            if (powSprite && frame < powSprite->GetNumFrames(0)) {
+                long dy = 0;
+                long remainingY = 556;
+                { for (int ty = 0; ty < ytiles; ty++) {
+                    long sh = theight;
+                    if (sh > remainingY)
+                        sh = remainingY;
+                    long dx = 0;
+                    long remainingX = 800;
+                    { for (int tx = 0; tx < xtiles; tx++) {
+                        long sw = twidth;
+                        if (sw > remainingX)
+                            sw = remainingX;
+                        powSprite->Draw(0, frame, 0, 0, sw, sh,
+                                        gpWindowManager->screenBitmap->map,
+                                        dx, dy,
+                                        gpWindowManager->screenBitmap->Width,
+                                        gpWindowManager->screenBitmap->Height,
+                                        gpWindowManager->screenBitmap->Pitch,
+                                        0, 0);
+                        dx += twidth;
+                        remainingX -= twidth;
+                    } }
+                    dy += theight;
+                    remainingY -= theight;
+                } }
+            }
+            UpdateCombatArea();
+        } }
+    }
+
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++)
+            armies[side][i].bShowPowEffect = 0; }
+    } }
+
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    unsigned char bDeaths = 0;
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++) {
+            army* pArmy = &armies[side][i];
+            if (effected[side][i] && pArmy->numTroops == 0) {
+                pArmy->ProcessDeath(0);
+                // Bit 6 of creatureId is the siege-weapon marker, so a
+                // catapult or tent killed here also loses the artifact
+                // its owner was carrying it as.
+                if ((static_cast<unsigned>(pArmy->creatureId) >> 6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        pArmy->creatureType);
+                bDeaths = 1;
+            }
+        } }
+    } }
+    if (bDeaths)
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    if (field_13460)
+        MakeCreaturesVanish();
+    if (bDamageDone
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        sprintf(gText, gpGeneralText->GetText(89),
+                ComputeSpellDamage(SPELL_ARMAGEDDON, power, level, 0, 0, 0,
+                                   0));
+        combatWindow->combat_message(gText, 1, 0);
+    }
+    CheckRebirth();
+}
 
 // The per-step recompute of one bolt segment: how far it still has to
 // travel, how thick it should be at that point, which way it is pointing
@@ -1136,16 +1349,232 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+// DrawBolt's three span-colour ramps, .data 0x68833c / 0x68834c /
+// 0x68835c, read straight from the hash-verified image. Each row is one
+// (R, G, B) byte triple - the channel order is byte-proven in
+// bitmap16.h's note on the 0x68c86x mask triple - and DrawBolt is the
+// only function in the image that references any of the three, which is
+// what makes them spells.obj's own file statics.
+//
+// The two FIVE-row tables are indexed by the DISTANCE FROM THE NEARER
+// EDGE of the drawn span, so row 0 paints both rims and the last row
+// the middle. The FIFTEEN-row one is indexed by the span position
+// itself, forwards for BOLT_COLOR_0 and backwards from row 14 for
+// BOLT_COLOR_3 - the same ramp read in both directions, which is what
+// the two colours are FOR.
+DATA(0x0068833c)
+static unsigned char gBoltGreenSpanColors[5][3] = {
+    { 0x98, 0xbc, 0x18 }, { 0x7c, 0xd8, 0x7c }, { 0x24, 0xb4, 0x24 },
+    { 0x0c, 0x84, 0x0c }, { 0x00, 0x60, 0x00 }
+};
 
-// E:\gamedcs\spells.cpp:3702
+DATA(0x0068834c)
+static unsigned char gBoltWhiteSpanColors[5][3] = {
+    { 0xc0, 0xc0, 0xc0 }, { 0xd0, 0xd0, 0xd0 }, { 0xe0, 0xe0, 0xe0 },
+    { 0xf0, 0xf0, 0xf0 }, { 0xff, 0xff, 0xff }
+};
+
+DATA(0x0068835c)
+static unsigned char gBoltSpectrumColors[15][3] = {
+    { 0xb4, 0x24, 0x24 }, { 0xbc, 0x38, 0x38 }, { 0xe0, 0x84, 0x2c },
+    { 0xec, 0xb8, 0x60 }, { 0xf4, 0xd0, 0x7c }, { 0xf0, 0xdc, 0x6c },
+    { 0xe8, 0xcc, 0x34 }, { 0xe0, 0xc4, 0x00 }, { 0xa4, 0xd0, 0x00 },
+    { 0x68, 0xb0, 0x5c }, { 0x70, 0xb0, 0xbc }, { 0x40, 0x4c, 0xb4 },
+    { 0x20, 0x30, 0x98 }, { 0x70, 0x44, 0x94 }, { 0x5c, 0x30, 0x80 }
+};
+
+// The bolt RASTERISER: step the pen one pixel along the bolt's current
+// heading iDrawLength times and, at every position it actually moved
+// to, paint a thickness-wide span straight into the screen bitmap.
+//
+// `this` IS NEVER TOUCHED - ecx is dead from the first instruction -
+// which is why every screen access here goes through gpWindowManager
+// rather than through the combat manager's own back buffer, and why the
+// row stride is the literal 800 rather than screenBitmap->Pitch.
+//
+// FIVE COLOUR ARMS, NOT SIX. The switch lowers `iColor - 0x12c` against
+// 6, and its jump table's SECOND entry - the one for BOLT_COLOR_1 -
+// points at the default block, so 0x12d has no case of its own.
+// cmbtmgr.h's EBoltColor note is corrected there. The arms are written
+// in retail's own emission order (0x130, 0x12e, 0x12c, 0x12f, 0x131,
+// default), which is what the arm addresses give.
+//
+// iUseThicknessStopOffset IS DEAD, and it is retail's own dead store:
+// `Random(7, 12)` is called once before the loop and its result is
+// never read by any of the 1612 bytes. The DC roster names the local
+// (variables.csv, dc 0x154680), so the call is transcribed with it.
+//
+// THE PEN AND THE PIXEL are separate: fX/fY carry the fractional
+// position and iX/iY the rounded one, and BOTH are clamped when the
+// rounded one leaves the screen - the float being reset to the clamp
+// value is what stops the pen walking away off-screen and never coming
+// back. The four clamps are SEPARATE ifs, not else-ifs: retail re-reads
+// iX from the record between the `< 0` and `> 799` tests, which an
+// else-if chain would not do.
+//
+// THE ARRIVAL LATCH is two-stage and reads off the last block. bDone is
+// raised the first time the remaining manhattan distance drops under
+// 15, and field_48 then tracks the CLOSEST approach; once the bolt is
+// either within 2 pixels or has started moving AWAY again (further than
+// field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
+//
+// RGBto16's THREE TERMS ARE EMITTED RIGHT-TO-LEFT, and that reading is
+// worth 71.63 -> 76.90 on its own: `(r) | (g) | (b)` in source order
+// puts the BLUE term's mask load FIRST in the object, which is retail's
+// order in all six expansions. Writing the return the other way round
+// reverses every one of them.
+//
+// Residual (76.9%): ONE class, the B1 whole-body binding swap
+// (`esi->ebx x36` and its knock-ons). Retail keeps psBolt in EBX for
+// the whole body and has ESI and EDI free for the two pixel
+// coordinates; our CL binds psBolt->ESI, which pushes the y coordinate
+// into the caller-saved ECX and forces a reload of psBolt from [ebp+8]
+// in every arm. Under the RE'd first-fit rule (docs/vc6/regalloc.md)
+// EBX is the THIRD call-crossing pseudo, so retail created two values
+// before the parameter - which the model calls unreachable from a local
+// spelling. Tried and rejected: unnaming iSpanFirst (why-reg's own top
+// pick at -71 masked slots, and it MEASURED 76.90 -> 75.80 - the
+// low-mass inversion); hoisting iX/iY to function scope in either
+// order (byte-flat); declaring `i` at function scope between iLastX and
+// iLastY the way the DC slot order has it (byte-flat, kept for its
+// provenance); all thirteen of why-branch's D-class mutations.
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
 void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 {
-    // @stub
-}
+    long iLastX = static_cast<long>(psBolt->fX);
+    long i;
+    long iLastY = static_cast<long>(psBolt->fY);
+    long iSpanLast = psBolt->iSpanLast;
+    long iSpanFirst = psBolt->iSpanFirst;
+    long iUseThicknessStopOffset = Random(7, 12);
 
-#endif  // @carcass
+    { for (i = 0; i < iDrawLength; i++) {
+        psBolt->fX = static_cast<float>(
+            cos(static_cast<double>(psBolt->fAngle)) + psBolt->fX);
+        psBolt->fY = static_cast<float>(
+            sin(static_cast<double>(psBolt->fAngle)) + psBolt->fY);
+        psBolt->iX = static_cast<long>(psBolt->fX);
+        psBolt->iY = static_cast<long>(psBolt->fY);
+        if (psBolt->iX < 0) {
+            psBolt->iX = 0;
+            psBolt->fX = 0;
+        }
+        if (psBolt->iX > 799) {
+            psBolt->iX = 799;
+            psBolt->fX = 799;
+        }
+        if (psBolt->iY < 0) {
+            psBolt->iY = 0;
+            psBolt->fY = 0;
+        }
+        if (psBolt->iY > 555) {
+            psBolt->iY = 555;
+            psBolt->fY = 555;
+        }
+
+        long iX = psBolt->iX;
+        long iY = psBolt->iY;
+        if (iX == iLastX && iY == iLastY)
+            continue;
+        iLastX = iX;
+        iLastY = iY;
+
+        { for (long k = iSpanFirst; k <= iSpanLast; k++) {
+            if (psBolt->bShallow)
+                iY = psBolt->iY + k;
+            else
+                iX = psBolt->iX + k;
+            if (iX >= 0 && iX < 800 && iY >= 0 && iY < 556) {
+                long iFromEdge;
+                if (k < 0)
+                    iFromEdge = k - iSpanFirst;
+                else
+                    iFromEdge = iSpanLast - k;
+
+                switch (psBolt->iColor) {
+                case BOLT_COLOR_4:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(
+                            RGBto16(gBoltWhiteSpanColors[iFromEdge][0],
+                                    gBoltWhiteSpanColors[iFromEdge][1],
+                                    gBoltWhiteSpanColors[iFromEdge][2]));
+                    break;
+                case BOLT_COLOR_2:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(
+                            RGBto16(gBoltGreenSpanColors[iFromEdge][0],
+                                    gBoltGreenSpanColors[iFromEdge][1],
+                                    gBoltGreenSpanColors[iFromEdge][2]));
+                    break;
+                case BOLT_COLOR_0:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(RGBto16(
+                            gBoltSpectrumColors[k - iSpanFirst][0],
+                            gBoltSpectrumColors[k - iSpanFirst][1],
+                            gBoltSpectrumColors[k - iSpanFirst][2]));
+                    break;
+                case BOLT_COLOR_3:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(RGBto16(
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][0],
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][1],
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][2]));
+                    break;
+                case BOLT_COLOR_CHAIN_LIGHTNING:
+                    // Six hand-written shades rather than a table, and
+                    // retail spells all six: each arm expands RGBto16
+                    // in full and only the last channel term is
+                    // tail-merged between them.
+                    if (iFromEdge == BOLT_SPAN_DEPTH_0)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(255, 255, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_1)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(240, 240, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_2)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(224, 224, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_3)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(216, 216, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_4)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(200, 200, 255));
+                    else
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(192, 192, 255));
+                    break;
+                default:
+                    // Anything outside the six special values is a raw
+                    // 16-bit pixel, written straight through.
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(psBolt->iColor);
+                    break;
+                }
+            }
+        } }
+
+        long iRemaining = abs(psBolt->iDestY - psBolt->iY)
+            + abs(psBolt->iDestX - psBolt->iX);
+        if (psBolt->bDone) {
+            if (iRemaining > psBolt->field_48 + 1 || iRemaining <= 2) {
+                psBolt->bAtDestination = 1;
+                return;
+            }
+            if (iRemaining < psBolt->field_48)
+                psBolt->field_48 = iRemaining;
+        } else if (iRemaining < 15) {
+            psBolt->bDone = 1;
+            psBolt->field_48 = iRemaining;
+        }
+    } }
+}
 
 // The bolt constructor: clamp both endpoints into the screen, stamp the
 // whole record from the thirteen parameters, decide whether the run is
@@ -1229,45 +1658,255 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
     ResetBoltAngle(psBolt);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:3940
-// DECODED BUT NOT WRITTEN (2026-08-20). What its bytes already prove,
-// banked here so the next lane does not redo the reading:
-//   * It allocates the working set with `new SBolt[25]` - `push 0xbb8 /
-//     operator new`, no array cookie because SBolt has no destructor -
-//     and frees it with a plain `operator delete`. That is the second
-//     proof of the 0x78 stride.
-//   * `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
-//     padding, and it is spelled with THIS FILE'S by-value _cpp_max:
-//     retail writes both operands back into their own parameter slots
-//     and then selects between their ADDRESSES, which is that template
-//     and not the <xutility> reference one.
-//   * The shape is `do { for (pass) { draw; UpdateScreen; if (every
-//     bolt bAtDestination) break; split; } for (each) ResetBoltAngle;
-//     } while (!allDone)`, with the pass count computed as
-//     `(iSegmentLength - 1) / iSegmentLength + 1` - which is 1 for every
-//     positive segment length, i.e. a latent retail bug, transcribe it.
-//   * The fork rule: a bolt forks when it is not at its destination,
-//     fewer than 25 bolts exist, its remaining manhattan distance is
-//     more than twice the segment length, `Random(0, iSplitFrequency *
-//     100 / iSegmentLength) < 100`, and it has travelled at least
-//     `iSplitFrequency * 0.75` from its last fork. The fork's heading is
-//     the parent's fDistortedAngle plus `+-Random(50, 80) / 100.0f`
-//     (the sign from `Random(0, 1)`), its length `min(Random(maxSplit /
-//     2, maxSplit), remaining / 2)`, and its distortion band is widened
-//     to `min * 0.66 - 20` .. `max * 0.66 + 20`.
-//   * Its two CRT helpers are 0x61a124 and 0x61a1d4 (sin / cos through
-//     __ctrandisp1), and the delay is scaled by a float table at
-//     0x63cf7c indexed by the int global at 0x6987ec - the combat-speed
-//     setting, which no header in this tree models yet.
+// The bolt ANIMATOR: seed one bolt from the thirteen shape parameters,
+// then repeatedly draw every live bolt, push the union of what moved to
+// the screen, fork the bolts that still have room, and re-aim them all,
+// until every one of them has reached its destination.
+//
+// EVERY LOCAL NAME HERE IS THE DREAMCAST ROSTER'S OWN
+// (evidence/dreamcast/variables.csv, the ten `combatManager::DoBolt`
+// local rows, dc 0x154c50): iMaxBolt, bComplete, j, iDelayTil,
+// iHalfThickness, iDrawsPerSeg, iMaxBoltForThisCycle,
+// iSplitChanceTimes100, iAbsDist, iDrawLength and iUpdBRY are all
+// attested there. iUpdBRY is what fixes the dirty-rect reading: the
+// four extremes are an UPDATE RECTANGLE in top-left/bottom-right terms,
+// so its three siblings are spelled iUpdTLX/iUpdTLY/iUpdBRX. The three
+// fork values SH4 kept in registers (fOffset, fAngle, the split's x/y
+// and thickness) have no roster row and are named from their use.
+//
+// THE PASS COUNT IS A LATENT RETAIL BUG, transcribed as written:
+// `(iSegmentLength - 1) / iSegmentLength + 1` is 1 for every positive
+// segment length, so the inner loop always runs exactly once. The
+// codegen is unambiguous - `lea eax,[esi-1] / cdq / idiv esi / inc eax`
+// on the segment length itself, not on any other quantity.
+//
+// TWO PARAMETERS ARE DEAD (iDrawsPerSegment at [ebp+0x3c] and
+// bFlashLighten at [ebp+0x48]): no instruction in the 1474 bytes touches
+// either slot. That is retail's own shape, not a mis-read arity - the
+// `ret 0x44` fixes seventeen arguments and the DC roster names all
+// seventeen in this order.
+//
+// THE WORKING SET is `new SBolt[25]` - `push 0xbb8` into operator new,
+// no array cookie because SBolt has no destructor - and it is the second
+// independent proof of the 0x78 stride (the first is the five separate
+// `add r32,0x78` walks below).
+//
+// `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
+// padding, and it is THIS FILE'S by-value _cpp_max: retail writes both
+// operands back into their own parameter slots and then selects between
+// their ADDRESSES, which is that template and not the <xutility>
+// reference one.
+//
+// THE PACING PAIR is GameTime::DelayTil followed by kbwin.h's
+// NextFrameTime inline - the identical two-line shape army::Fly's
+// flight loop uses, and the `cmp interval, lag; jle` clamp inside it is
+// exactly what appears here at [ebp+0x44] against the elapsed time.
+//
+// atan2's (dx, dy) convention next door does NOT carry into the fork:
+// the split's x offset comes from COS and its y offset from SIN, read
+// straight off which product is added to iX and which to iY.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
-void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
+void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
+                           int iDestX, int iDestY, int iSplitFrequency,
+                           int iMaxSplitLength, int iStartThickness,
+                           int iEndThickness, int iColor,
+                           int iAngleDistortMin, int iAngleDistortMax,
+                           int iSegmentLength, int iDrawsPerSegment,
+                           int bDistortAlways, int iDelay, int bFlashLighten)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    if (bHandleResets)
+        gpMouseManager->HidePointer();
+
+    int bComplete = 0;
+    long iDrawsPerSeg = (iSegmentLength - 1) / iSegmentLength + 1;
+    long iSplitChanceTimes100 = iSplitFrequency * 100 / iSegmentLength;
+
+    // A bolt fired leftwards wanders the other way, and the band is
+    // normalised so the Random() below always gets a low-high pair.
+    if (iSourceX > iDestX) {
+        iAngleDistortMin = -iAngleDistortMin;
+        iAngleDistortMax = -iAngleDistortMax;
+    }
+    if (iAngleDistortMin > iAngleDistortMax) {
+        int iSwap = iAngleDistortMax;
+        iAngleDistortMax = iAngleDistortMin;
+        iAngleDistortMin = iSwap;
+    }
+
+    SBolt* psBolts = new SBolt[25];
+    long iHalfThickness = _cpp_max(iStartThickness, iEndThickness) >> 1;
+
+    AddBolt(psBolts, iSourceX, iSourceY, iDestX, iDestY, iSplitFrequency,
+            iStartThickness, iEndThickness, iColor, iAngleDistortMin,
+            iAngleDistortMax, iSegmentLength, bDistortAlways);
+
+    iDelay = static_cast<long>(
+        static_cast<float>(iDelay)
+        * gCombatSpeedFactors[gUnnamed698758.combatSpeed]);
+    long iMaxBolt = 1;
+    unsigned long iDelayTil = GameTime::Get() + iDelay;
+
+    long i;
+    do {
+        { for (long j = 0; j < iDrawsPerSeg; j++) {
+            long iUpdTLX = 9999;
+            long iUpdTLY = 9999;
+            long iUpdBRX = -1;
+            long iUpdBRY = -1;
+            bComplete = 1;
+
+            // The extremes are taken BOTH SIDES of the draw because
+            // DrawBolt advances the pen: the segment just drawn runs
+            // from where the bolt was to where it now is, so both ends
+            // have to enter the union.
+            for (i = 0; i < iMaxBolt; i++) {
+                if (!psBolts[i].bAtDestination) {
+                    if (psBolts[i].iX > iUpdBRX)
+                        iUpdBRX = psBolts[i].iX;
+                    if (psBolts[i].iX < iUpdTLX)
+                        iUpdTLX = psBolts[i].iX;
+                    if (psBolts[i].iY > iUpdBRY)
+                        iUpdBRY = psBolts[i].iY;
+                    if (psBolts[i].iY < iUpdTLY)
+                        iUpdTLY = psBolts[i].iY;
+                    DrawBolt(&psBolts[i], iSegmentLength);
+                    if (psBolts[i].iX > iUpdBRX)
+                        iUpdBRX = psBolts[i].iX;
+                    if (psBolts[i].iX < iUpdTLX)
+                        iUpdTLX = psBolts[i].iX;
+                    if (psBolts[i].iY > iUpdBRY)
+                        iUpdBRY = psBolts[i].iY;
+                    if (psBolts[i].iY < iUpdTLY)
+                        iUpdTLY = psBolts[i].iY;
+                }
+            }
+
+            iUpdTLX -= iHalfThickness;
+            iUpdTLY -= iHalfThickness;
+            iUpdBRX += iHalfThickness;
+            iUpdBRY += iHalfThickness;
+            if (iUpdTLX < 0)
+                iUpdTLX = 0;
+            if (iUpdTLY < 0)
+                iUpdTLY = 0;
+            if (iUpdBRX > 799)
+                iUpdBRX = 799;
+            if (iUpdBRY > 555)
+                iUpdBRY = 555;
+
+            GameTime::DelayTil(iDelayTil);
+            iDelayTil = GameTime::NextFrameTime(iDelayTil, iDelay);
+            gpWindowManager->UpdateScreen(iUpdTLX, iUpdTLY,
+                                          iUpdBRX - iUpdTLX + 1,
+                                          iUpdBRY - iUpdTLY + 1);
+
+            for (i = 0; i < iMaxBolt; i++)
+                if (!psBolts[i].bAtDestination)
+                    bComplete = 0;
+            if (bComplete)
+                goto done;
+
+            if (iSplitFrequency) {
+                // The bound is SNAPSHOT and the cap is LIVE: the sweep
+                // visits only the bolts that existed when it started,
+                // while the 25-bolt ceiling is tested against the count
+                // this very sweep is growing.
+                long iMaxBoltForThisCycle = iMaxBolt;
+                for (i = 0; i < iMaxBoltForThisCycle; i++) {
+                    if (!psBolts[i].bAtDestination) {
+                        long iAbsDist = abs(psBolts[i].iDestX - psBolts[i].iX)
+                            + abs(psBolts[i].iDestY - psBolts[i].iY);
+                        if (iMaxBolt < 25 && iAbsDist > iSegmentLength * 2
+                            && Random(0, iSplitChanceTimes100) < 100) {
+                            // iStartX is the last fork's position, so the
+                            // second test throttles how often one bolt can
+                            // fork; a bolt that has never forked from the
+                            // screen's left edge skips it outright.
+                            if (psBolts[i].iStartX == 0
+                                || abs(psBolts[i].iStartY - psBolts[i].iY)
+                                        + abs(psBolts[i].iStartX
+                                              - psBolts[i].iX)
+                                    >= iSplitFrequency * 0.75) {
+                                psBolts[i].iStartX = psBolts[i].iX;
+                                psBolts[i].iStartY = psBolts[i].iY;
+                                float fOffset =
+                                    static_cast<float>(Random(50, 80))
+                                    / 100.0f;
+                                if (Random(0, 1))
+                                    fOffset = -fOffset;
+                                float fAngle = psBolts[i].fDistortedAngle;
+                                fAngle += fOffset;
+                                long iDrawLength = Random(iMaxSplitLength >> 1,
+                                                          iMaxSplitLength);
+                                if (iDrawLength > (iAbsDist >> 1))
+                                    iDrawLength = iAbsDist >> 1;
+                                long iSplitX = static_cast<long>(
+                                    cos(static_cast<double>(fAngle))
+                                        * iDrawLength
+                                    + psBolts[i].iX);
+                                long iSplitY = static_cast<long>(
+                                    sin(static_cast<double>(fAngle))
+                                        * iDrawLength
+                                    + psBolts[i].iY);
+                                long iSplitThickness = psBolts[i].iThickness;
+                                if (psBolts[i].iEndThickness
+                                    < psBolts[i].iStartThickness)
+                                    iSplitThickness--;
+                                AddBolt(&psBolts[iMaxBolt], psBolts[i].iX,
+                                        psBolts[i].iY, iSplitX, iSplitY,
+                                        iSplitFrequency, iSplitThickness, 1,
+                                        iColor,
+                                        static_cast<long>(
+                                            iAngleDistortMin * 0.66 - 20),
+                                        static_cast<long>(
+                                            iAngleDistortMax * 0.66 + 20),
+                                        iSegmentLength,
+                                        psBolts[i].bDistortAlways);
+                                iMaxBolt++;
+                            }
+                        }
+                    }
+                }
+            }
+        } }
+
+        for (i = 0; i < iMaxBolt; i++)
+            if (!psBolts[i].bAtDestination)
+                ResetBoltAngle(&psBolts[i]);
+    } while (!bComplete);
+
+done:
+    delete [] psBolts;
+
+    if (bHandleResets) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        // The caster's own attack animation is flushed to its last
+        // frame before the pointer comes back, so the stack is not
+        // left frozen mid-swing behind the bolt.
+        army* pArmy = get_current_army();
+        if (pArmy->frameInfoAttackFrames) {
+            long iFrames = pArmy->stdIcon->GetNumFrames(pArmy->currFrameType);
+            long iFrameDelay = pArmy->frameInfoAttackStartCycleTime / iFrames;
+            while (pArmy->currFrameIndex < iFrames) {
+                // Written as two calls, not as a ternary argument: retail
+                // BRANCHES over the one differing push and shares the other
+                // five, where a ternary gives our CL a setne (why-branch
+                // D8/D13, the TPickANumber clamp shape).
+                if (pArmy->currFrameIndex == iFrames - 1)
+                    DrawFrame(0, 1, 0, iFrameDelay, 1, 1);
+                else
+                    DrawFrame(1, 1, 0, iFrameDelay, 1, 1);
+                pArmy->currFrameIndex++;
+            }
+            pArmy->currFrameIndex =
+                pArmy->stdIcon->GetNumFrames(pArmy->currFrameType) - 1;
+        }
+        gpMouseManager->ShowPointer(false);
+    }
+}
 
 // Chain Lightning's bounce search: of every stack the `effected` row has
 // not already recorded, take the one nearest the stack the bolt just
@@ -1350,16 +1989,125 @@ long combatManager::GetNextChainLightningTarget(const army* last_target,
     return best_index;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+// How many stacks Chain Lightning reaches, by mastery: .rdata 0x642274,
+// read straight from the hash-verified image and referenced from exactly
+// two sites, both inside ChainLightning (the loop's entry test and its
+// back edge), which is what makes it spells.obj's own file static. The
+// bound is FOUR because the next dword, 0x642284, belongs to Earthquake
+// (0x5a7cef reaches it and nothing reaches it from here).
+DATA(0x00642274)
+static const int gChainLightningTargets[4] = { 4, 4, 5, 5 };
 
-// E:\gamedcs\spells.cpp:4255
+// Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
+// makes ONE by-value copy our CL does not fold - retail lets the
+// address _cpp_max returned flow straight into _cpp_min and compares the
+// raw distance in both tests, where we dereference and re-copy between
+// them. A reference-taking _cpp_min was tried for exactly that and
+// MEASURED 96.19 -> 95.62, so the by-value template stays. The rest is
+// the `&cells[index]` scratch register and reloc names on the three
+// callees this TU has not reconstructed.
+//
+// Chain Lightning: hit the aimed stack, then bounce to the nearest stack
+// not yet hit, halving the damage each time, for as many stacks as the
+// caster's mastery buys. Every jump after the first is drawn as a real
+// animated bolt.
+//
+// Local names are the Dreamcast roster's own (variables.csv, dc
+// 0x155664): the parameters are index/level/power and total_killed,
+// current_damage, iCurX, iCurY, dest_x and iSegmentLength are attested
+// rows. The base damage kept for the closing message has no roster row
+// (SH4 held it in a register), so it is named from its one use.
+//
+// THE BOLT IS SHAPED BY THE DISTANCE IT HAS TO COVER:
+// `_cpp_min(_cpp_max(distance / 10, 8), 30)` sets the segment length and
+// a bolt longer than twenty segments is drawn with three passes instead
+// of two. Both clamps are the by-value templates this file already
+// carries - retail selects between the operands' ADDRESSES, which is
+// that spelling and not a value-returning min/max.
+//
+// THE PEN CARRIES FORWARD: iCurX/iCurY start at the first stack's screen
+// midpoint and are re-stamped to each stack as the chain moves, so every
+// bolt is drawn from the stack just hit to the next one. The parameter
+// slots for `index` and `power` are what retail reuses for them.
+//
+// `effected` IS COPIED OUT to every stack's bShowPowEffect at the end
+// rather than being read there, which is how the single PowEffect call
+// that follows knows which stacks to flash.
 VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
 void combatManager::ChainLightning(int index, int level, int power)
 {
-    // @stub
-}
+    memset(effected, 0, sizeof(effected));
+    gpMouseManager->HidePointer();
 
-#endif  // @carcass
+    long base_damage = ModifySpellDamage(
+        akSpellTraits[SPELL_CHAIN_LIGHTNING].mastery_bonus[level]
+            + akSpellTraits[SPELL_CHAIN_LIGHTNING].power_factor * power,
+        SPELL_CHAIN_LIGHTNING, 0, 0, 0, 0);
+    long current_damage = base_damage;
+    long total_killed = 0;
+    // NOT initialised, and that is retail's own shape: the pen is only
+    // ever read on an iteration after the one that stamps it, so the two
+    // stores a `= 0` adds do not exist in the 842 bytes.
+    long iCurX;
+    long iCurY;
+
+    { for (int i = 0; i < gChainLightningTargets[level]; i++) {
+        if (index >= 0 && index < COMBAT_GRID_CELLS) {
+            army* target = cells[index].get_army();
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+                if (i == 0) {
+                    SpellEffect(37, target, 0, 0);
+                    iCurX = target->MidX();
+                    iCurY = target->MidY();
+                } else {
+                    long dest_x = target->MidX();
+                    long dest_y = target->MidY();
+                    long distance = static_cast<long>(
+                        sqrt(static_cast<double>(
+                            (dest_y - iCurY) * (dest_y - iCurY)
+                            + (dest_x - iCurX) * (dest_x - iCurX))))
+                        / 10;
+                    long iSegmentLength =
+                        _cpp_min(_cpp_max(distance, 8L), 30L);
+                    DoBolt(0, iCurX, iCurY, dest_x, dest_y, 0, 80, 9, 2,
+                           BOLT_COLOR_CHAIN_LIGHTNING, 10, 80,
+                           iSegmentLength, (iSegmentLength > 20) + 2, 0, 0,
+                           0);
+                    iCurX = dest_x;
+                    iCurY = dest_y;
+                    GameTime::Delay(static_cast<long>(
+                        gCombatSpeedFactors[gUnnamed698758.combatSpeed]
+                        * 100.0f));
+                    DrawFrame(1, 0, 0, 0, 1, 0);
+                }
+                if (i <= 2 && target->combatSide == currentSide)
+                    field_53dc[currentSide] = 1;
+            }
+            total_killed += target->Damage(ModifySpellDamage(
+                current_damage, SPELL_CHAIN_LIGHTNING, heroes[currentSide],
+                target->get_controller(), target, 0));
+            effected[target->combatSide][target->bitIndex] = 1;
+            index = GetNextChainLightningTarget(target, 1);
+            if (index == -1)
+                break;
+            current_damage /= 2;
+        }
+    } }
+
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++)
+            armies[side][i].bShowPowEffect = effected[side][i]; }
+    } }
+
+    long shown_damage = ModifySpellDamage(
+        base_damage, SPELL_CHAIN_LIGHTNING, heroes[currentSide],
+        heroes[1 - currentSide], 0, 0);
+    PowEffect(akSpellTraits[SPELL_CHAIN_LIGHTNING].m_effect, 1);
+    damage_message(akSpellTraits[SPELL_CHAIN_LIGHTNING].name, 1,
+                   shown_damage, 0, total_killed);
+    DrawFrame(1, 0, 0, 0, 1, 0);
+    gpMouseManager->ShowPointer(false);
+}
 
 // E:\gamedcs\spells.cpp:4387
 // Located by the order-map (homm3.analysis.ordermap spells): this row is the
@@ -1444,12 +2192,136 @@ void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char 
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4576
+#endif  // @carcass
+
+// Mirror Image: find a free hex near the caster's stack, put an
+// identical clone of it there, and slide the clone out of the original's
+// hex into its own over sixteen frames.
+//
+// Local names are the Dreamcast roster's own (variables.csv, dc
+// 0x155f0c): iHexCount, iDirCount, iSourceHexIndex and iSourceHexCount
+// are attested rows, and the parameters are targetIndex and level.
+//
+// `level` IS DEAD - no instruction in the 1029 bytes reads [ebp+0xc] -
+// and that is retail's own shape, not a mis-read arity: `ret 8` fixes
+// two arguments and the DC roster names both.
+//
+// THE SEARCH IS THREE NESTED LOOPS, widening: for each RING distance 1
+// to 10, for each of the source stack's two hexes, for each of the six
+// directions, walk that many steps and take the first hex the stack
+// fits in. The two off-field margin columns (0 and 16) are refused
+// explicitly on top of whatever CanFit says.
+//
+// SIX HAND-WRITTEN EXCLUSIONS sit in front of the walk, and they are
+// spelled as six separate `continue`s rather than one disjunction:
+// retail re-tests `facing` at the head of each and our CL folds the
+// first three into one `jne` past the whole facing==1 group, which is
+// exactly what a run of separate ifs on a common first term produces.
+// What they encode is that a wide stack may not clone into the hex its
+// own second half occupies.
+//
+// THE CLONE IS RE-READ, NOT CAPTURED: retail throws AddArmy's return
+// value away and asks cells[hex].get_army() for the stack it just
+// placed.
+//
+// Residual (82.3%): one class with one knock-on. Retail keeps the
+// direction counter in MEMORY and pairs it with a separate DOWNCOUNTER
+// (5 down to -1) where our CL keeps it in EBX and compares against 6 -
+// the trip-count transform VC6 applies only when the induction variable
+// is already frame-homed, which is a register decision, not a loop form.
+// That is the whole one-branch difference why-branch reports (41 vs 42),
+// and it drags the placement-block bindings with it (`ebx`/`edi` swapped
+// for the source stack and the clone's cell base). Tried and rejected:
+// all eight of why-branch's D10 induction mutations - the best,
+// reversing the direction order, is worth two masked slots and would
+// change which hex the clone lands in.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {
-    // @stub
+    if (targetIndex >= 0 && targetIndex < COMBAT_GRID_CELLS) {
+        army* source = cells[targetIndex].get_army();
+        { for (int iHexCount = 1; iHexCount < 11; iHexCount++) {
+            { for (int iDirCount = 0; iDirCount < 2; iDirCount++) {
+                long iSourceHexIndex;
+                if (iDirCount == 0) {
+                    iSourceHexIndex = source->gridIndex;
+                } else {
+                    if (!(source->creatureId & 1))
+                        continue;
+                    iSourceHexIndex =
+                        source->gridIndex + (source->facing ? 1 : -1);
+                }
+                { for (int iDir = 0; iDir < COMBAT_DIRECTION_COUNT; iDir++) {
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_1 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_4 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 1 && iDir == COMBAT_DIRECTION_4 && iDirCount == 1
+                        && iHexCount <= 2)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_4 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_1 && iDirCount == 0
+                        && iHexCount == 1)
+                        continue;
+                    if (source->facing == 0 && iDir == COMBAT_DIRECTION_1 && iDirCount == 1
+                        && iHexCount <= 2)
+                        continue;
+                    long hex = iSourceHexIndex;
+                    { for (int step = 0; step < iHexCount; step++) {
+                        hex = GetAdjacentCellIndexNoArmy(hex, iDir);
+                        if (hex >= 0 && hex < COMBAT_GRID_CELLS
+                            && hex % COMBAT_GRID_ROW_STRIDE != 0
+                            && hex % COMBAT_GRID_ROW_STRIDE
+                                   != COMBAT_GRID_LAST_COLUMN
+                            && source->CanFit(hex, 0, 0)) {
+                            AddArmy(currentSide, source->creatureType,
+                                    source->numTroops, hex, 0x800000, 0);
+                            army* mirror = cells[hex].get_army();
+                            mirror->creatureId |= 0x400000;
+                            mirror->iRoundsLeftBeforeVanish =
+                                heroes[currentSide]->GetSpellDurationBonus()
+                                + spellPower[currentSide];
+                            source->iMirrorDestIndex = mirror->bitIndex;
+                            mirror->iMirrorSourceIndex = source->bitIndex;
+                            long dx = cells[source->gridIndex].field_00
+                                - cells[mirror->gridIndex].field_00;
+                            long dy = cells[source->gridIndex].field_02
+                                - cells[mirror->gridIndex].field_02;
+                            ResetLimitCreature();
+                            MarkCreatureEffect(cells[hex].armySide,
+                                               cells[hex].armySlot);
+                            MarkCreatureEffect(cells[targetIndex].armySide,
+                                               cells[targetIndex].armySlot);
+                            ComputeMaxExtent();
+                            long xoff = dx * 16;
+                            long yoff = dy * 16;
+                            { for (int frame = 0; frame < 16; frame++) {
+                                mirror->field_104 = xoff / 16;
+                                mirror->field_100 = yoff / 16;
+                                DrawFrame(1, 1, 0, 50, 1, 1);
+                                xoff -= dx;
+                                yoff -= dy;
+                            } }
+                            mirror->field_104 = 0;
+                            mirror->field_100 = 0;
+                            UpdateGrid(0, 1);
+                            DrawFrame(1, 0, 0, 0, 1, 0);
+                            return;
+                        }
+                    } }
+                } }
+            } }
+        } }
+        NormalDialog(gpGeneralText->GetText(189), 1, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4705
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
@@ -1552,14 +2424,118 @@ void combatManager::demonic_resurrection(const army* caster, army* target)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:4888
+// Resurrect: turn a pile of hit points back into whole creatures, put
+// the stack back on the grid if it was dead, and play its death
+// sequence BACKWARDS while the resurrection effect runs over it.
+//
+// Parameter and local names are the Dreamcast roster's own
+// (variables.csv, dc 0x156840): target_army, hit_points_resurrected,
+// temporary and the one local `hex`.
+//
+// THE COUNT ROUNDS UP AND THE REMAINDER BECOMES DAMAGE:
+// `(hitPoints + total - 1) / hitPoints` creatures, and whatever the top
+// one is short of full health lands in topCreatureDamage - which is why
+// a resurrection that does not quite pay for the last creature still
+// raises it, wounded. origNumTroops caps both.
+//
+// THE HIT-POINT BASE IS THE STACK'S OWN NUMTROOPS WHEN IT IS ZERO:
+// retail tests numTroops, skips get_total_hit_points when it is dead
+// and lets the already-loaded zero flow into the sum, which is the
+// value-propagation form of a plain `long total = 0;` guard.
+//
+// THE DEATH SEQUENCE RUNS BACKWARDS: the frame index counts DOWN from
+// its last frame for as long as the death sequence lasts, and the stack
+// drops to cs_wait once the (possibly longer) effect sprite outlives it.
+//
+// Residual (90.6%): scheduling only, no shape difference. Retail forms
+// `raised` and tests it against 1 BEFORE loading creatureType for the
+// name lookup where our CL loads the type first, and the arithmetic
+// block's three scratch registers are rotated (ecx/edi/eax against
+// edi/ecx/eax). Every instruction, immediate and call pairs.
 VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
-void combatManager::Resurrect(army* target_army, long hit_points_resurrected, unsigned char temporary)
+void combatManager::Resurrect(army* target_army, long hit_points_resurrected,
+                              unsigned char temporary)
 {
-    // @stub
+    long hex = target_army->gridIndex;
+    long old_count = target_army->numTroops;
+    // SEEDED FROM THE COUNT, not from a literal zero: retail loads
+    // numTroops once, keeps it as `old_count`, and lets that same
+    // register be the sum's starting value on the dead-stack path -
+    // which is only correct because the path is the one where it IS
+    // zero, and is what a literal 0 does not produce.
+    long total = old_count;
+    if (old_count)
+        total = target_army->get_total_hit_points(0);
+    total += hit_points_resurrected;
+    target_army->numTroops =
+        (target_army->hitPoints + total - 1) / target_army->hitPoints;
+    target_army->topCreatureDamage =
+        target_army->numTroops * target_army->hitPoints - total;
+    if (target_army->numTroops > target_army->origNumTroops) {
+        target_army->numTroops = target_army->origNumTroops;
+        target_army->topCreatureDamage = 0;
+    }
+
+    if (temporary) {
+        target_army->numTroopsBattleResurrected +=
+            target_army->numTroops - old_count;
+        target_army->numTroopsBattleResurrected =
+            _cpp_min(target_army->numTroopsBattleResurrected,
+                     target_army->origNumTroops);
+    }
+
+    if (old_count <= 0) {
+        target_army->add_aura();
+        PlaceArmyInGrid(*target_army, hex);
+        remove_corpse(&cells[target_army->gridIndex],
+                      target_army->combatSide, target_army->bitIndex);
+        if (target_army->creatureId & 1)
+            remove_corpse(&cells[target_army->get_second_grid_index()],
+                          target_army->combatSide, target_army->bitIndex);
+    }
+    if (target_army->facing != 1 - target_army->combatSide)
+        target_army->Turn(0);
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        long raised = target_army->numTroops - old_count;
+        if (raised != 1)
+            sprintf(gText, gpGeneralText->GetText(117), raised,
+                    CreatureName(target_army->creatureType, raised));
+        else
+            sprintf(gText, gpGeneralText->GetText(118), raised,
+                    CreatureName(target_army->creatureType, raised));
+        combatWindow->combat_message(gText, 1, 0);
+
+        int effect = akSpellTraits[SPELL_RESURRECTION].m_effect;
+        LoadSpellEffect(effect);
+        long pow_frames = powSprite ? powSprite->GetNumFrames(0) : 0;
+        long death_frames =
+            target_army->stdIcon->GetNumFrames(cs_death);
+        long frames = _cpp_max(pow_frames, death_frames);
+        target_army->bShowPowEffect = 1;
+        PlayImmEffect(akSpellEffectTraits[effect].m_immName, 1);
+        long back = death_frames - 1;
+        { for (long i = 0; i < frames; i++) {
+            powFrameIndex = i;
+            if (target_army->currFrameType == cs_death) {
+                if (i < death_frames) {
+                    target_army->currFrameIndex = back;
+                } else {
+                    target_army->currFrameType = cs_wait;
+                    target_army->currFrameIndex = 0;
+                }
+            }
+            DrawFrame(1, 0, 0, 100, 1, 1);
+            back--;
+        } }
+    }
+
+    target_army->creatureId &= ~0x00200000;
+    target_army->bShowPowEffect = 0;
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4984
 DC_ONLY(0x156a68, 0x84)
@@ -2078,12 +3054,11 @@ CSprite* combatManager::LoadSpellEffect(int effect)
     if (powSpellEffect != effect) {
         if (powSprite)
             powSprite->Dispose();
-        if (effect != -1) {
-            powSpellEffect = effect;
-            return powSprite = ResourceManager::GetSprite(
+        if (effect != -1)
+            powSprite = ResourceManager::GetSprite(
                 akSpellEffectTraits[effect].m_name);
-        }
-        powSprite = 0;
+        else
+            powSprite = 0;
         powSpellEffect = effect;
     }
     return powSprite;

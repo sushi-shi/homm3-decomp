@@ -580,28 +580,68 @@ public:
     // independently corroborated by set_inside_area_effect (0x43efe0),
     // whose whole animation arm is about the cs_fidget sequence.
     unsigned long iLastFidgetTime; // +0xfc
-    char pad_100[0xc];
+    // The per-frame DRAW OFFSET a stack is currently displaced by,
+    // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
+    // difference between the source hex's and the clone's own hexcell
+    // screen coordinates (+0x1c4 / +0x1c6), divides both by 16, counts
+    // them down over sixteen DrawFrame steps and zeroes them at the end
+    // - i.e. the clone slides out of the caster's hex into its own.
+    // +0x100 carries the Y difference and +0x104 the X one. Names stay
+    // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
+    // for either, and nothing else decoded reads them yet.
+    int field_100;                 // +0x100
+    int field_104;                 // +0x104
+    char pad_108[0x4];
     char* yModify;                // +0x10c
-    char pad_110[0x48];
+    char pad_110[0x40];
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #elif defined(HOMM3_ARMY_POW_VIEW)
     // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
     // flat +0x14 the band above carries). PowEffect clears it for every
     // stack before the animation loop and raises it the frame a stack
     // falls back to cs_wait, which is what stops that stack advancing
     // for the rest of the sequence.
-    char pad_fc[0xc];
+    char pad_fc[0x4];
+    int field_100;                       // +0x100
+    int field_104;                       // +0x104
     // An INT, not the byte the name suggests (byte-proven 2026-08-20):
     // PowEffect both TESTS and STORES it a dword wide -
     // `mov eax,[esi+0x108] / test eax,eax` and
     // `mov dword ptr [esi+0x108],1` - where a char field would emit
     // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
     int bPowSequenceComplete;            // +0x108
-    char pad_10c[0x4c];
+    char pad_10c[0x44];
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #else
-    char pad_fc[0x5c];
+    char pad_fc[0x4];
+    // The per-frame DRAW OFFSET a stack is currently displaced by,
+    // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
+    // difference between the source hex's and the clone's own hexcell
+    // screen coordinates (+0x1c4 / +0x1c6), divides both by 16, counts
+    // them down over sixteen DrawFrame steps and zeroes them at the end
+    // - i.e. the clone slides out of the caster's hex into its own.
+    // +0x100 carries the Y difference and +0x104 the X one. Names stay
+    // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
+    // for either, and nothing else decoded reads them yet.
+    int field_100;                // +0x100
+    int field_104;                // +0x104
+    char pad_108[0x48];
+    // Two more fields sliced out of the embedded animation-traits row,
+    // both byte-proven by DoBolt (0x5a5c20): its reset tail guards the
+    // whole attack-animation flush on +0x150 and divides +0x15c by the
+    // sequence's frame count for the per-frame delay, which is exactly
+    // SMonFrameInfo's iAttackFrames (+0x40 of the row) and
+    // iAttackStartCycleTime (+0x4c). The pair is sliced the same way
+    // army::Fly's two already are, and in the same band comment's terms:
+    // read the fields you need, do not model the record.
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
-    char pad_15c[0x4];
+    int frameInfoAttackStartCycleTime;
+                                  // +0x15c == sMonFrameInfo.iAttackStartCycleTime
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which

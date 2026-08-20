@@ -10,6 +10,10 @@
 // a CODEVIEW comment) because findpath.obj's FindCombatPath walks the
 // recovered path back through it.
 int OppositeDirection(int direction);
+// 0x523e80, claimed in src/path.cpp. Declared here for the same reason:
+// spells.obj's MirrorImage walks outward from the source stack through
+// it, one direction at a time, looking for a free hex to clone into.
+int GetAdjacentCellIndexNoArmy(int currIndex, int direction);
 
 // CODEVIEW(E:\gamedcs\path.cpp:278, dc 0x10ccdc) int GetAdjacentCellIndexNoArmy(int currIndex, int direction);
 // CODEVIEW(E:\gamedcs\path.cpp:469, dc 0x10cd28) int OppositeDirection(int direction);
