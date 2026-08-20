@@ -14,27 +14,8 @@
 // those ENUMERATORS to every consumer costs the same 0.0357 on the same
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
-#define HOMM3_ARMY_MULTI_HEAD_VIEW
-#define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
-#define HOMM3_ARMY_MOVE_VIEW
-#define HOMM3_ARMY_SPELLCAST_VIEW
-#define HOMM3_ARMY_BERSERK_VIEW
-#define HOMM3_ARMY_WALL_VIEW
-#define HOMM3_ARMY_ROUND_VIEW
-#define HOMM3_ARMY_CALIPH_VIEW
-#define HOMM3_ARMY_RANGE_VIEW
-#define HOMM3_ARMY_AURA_VIEW
+#define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
 #include "army.h"
-#undef HOMM3_ARMY_AURA_VIEW
-#undef HOMM3_ARMY_RANGE_VIEW
-#undef HOMM3_ARMY_CALIPH_VIEW
-#undef HOMM3_ARMY_ROUND_VIEW
-#undef HOMM3_ARMY_WALL_VIEW
-#undef HOMM3_ARMY_BERSERK_VIEW
-#undef HOMM3_ARMY_SPELLCAST_VIEW
-#undef HOMM3_ARMY_MOVE_VIEW
-#undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
-#undef HOMM3_ARMY_MULTI_HEAD_VIEW
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"

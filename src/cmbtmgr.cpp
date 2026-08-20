@@ -40,10 +40,6 @@
 #include <stdlib.h>
 
 #include <va.h>
-#define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
-#define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
-#define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
-#define HOMM3_ARMY_MIDPOINT_DECL     // army::MidX / MidY, for KeepAttack
 // The three start-of-turn creature ids and their two army.obj bodies,
 // and the two auto-cast combination artifacts - all five reached from
 // SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
@@ -51,14 +47,12 @@
 // defines sit here, ahead of every header, because armygrp.h and
 // artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
 // hero.h -> artifact.h) and a view define has to precede its header.
-#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
 #define HOMM3_CMBTMGR_ROUND_VIEW
-#define HOMM3_ARMY_POW_VIEW
 #define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
