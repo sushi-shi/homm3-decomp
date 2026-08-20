@@ -1803,7 +1803,7 @@ townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c58b0
 townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0550
 townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0d60
 townmgr	?BuildObj@townManager@@QAEXH@Z	98.8365	98.8365	98.8365	0x1d6a80
-townmgr	?BuyBuild@townManager@@QAEHHHH@Z	68.0799	68.0799	68.0799	0x1d5f30
+townmgr	?BuyBuild@townManager@@QAEHHHH@Z	95.1207	95.1207	95.1207	0x1d5f30
 townmgr	?Close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70
 townmgr	?Close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0
 townmgr	?CycleOutline@townManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x1d6910
