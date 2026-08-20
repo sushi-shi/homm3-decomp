@@ -1439,7 +1439,9 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
     if (creatureType != CREATURE_HYDRA && creatureType != CREATURE_CHAOS_HYDRA
         && !static_cast<const combatManager*>(gpCombatManager)
                 ->IsQuickCombat()) {
-        if (direction == 6 || direction == 5 || direction == 0) {
+        if (direction == COMBAT_DIRECTION_WIDE_UPPER
+            || direction == COMBAT_DIRECTION_5
+            || direction == COMBAT_DIRECTION_0) {
             if (behind && stdIcon->numSequences > cs_special_ur
                 && stdIcon->validSeqMask[cs_special_ur] != 0)
                 iShowAttackFrameType = cs_special_ur;
@@ -1447,7 +1449,8 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
                 iShowAttackFrameType = cs_range_ur;
             else
                 iShowAttackFrameType = cs_attack_ur;
-        } else if (direction == 1 || direction == 4) {
+        } else if (direction == COMBAT_DIRECTION_1
+                   || direction == COMBAT_DIRECTION_4) {
             if (behind && stdIcon->numSequences > cs_special_r
                 && stdIcon->validSeqMask[cs_special_r] != 0) {
                 iShowAttackFrameType = cs_special_r;
