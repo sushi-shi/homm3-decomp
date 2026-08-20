@@ -5784,7 +5784,7 @@ NewmapCell* advManager::GetCell(type_point point)
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
 //
-// Residual (90.18%): why-branch reports 164 vs 167 blocks and 94 vs 95
+// Residual (90.65%): why-branch reports 164 vs 167 blocks and 94 vs 95
 // conditional branches - one compare site and three blocks short on a
 // 2881-byte body, i.e. structurally converged. Its D6 "reference has MORE
 // exits (2 rets vs 1)" line is an ARTIFACT, not a lever: both sides have
@@ -5792,11 +5792,13 @@ NewmapCell* advManager::GetCell(type_point point)
 // trailing jump-table data being decoded as instructions. The guided
 // search moved fifteen catalogued D9/D10/D13 mutations (case-block order,
 // induction-variable width, rect-local width) and NONE changed the
-// distance; five made it worse. The most likely remaining element is the
-// destRow preamble: retail reaches it as an if/else chain whose 36/72 arm
-// FALLS THROUGH into the shared tail while the 108 arm duplicates that
-// tail to zero the two phase counters, where this body spells one switch
-// with three arms. Not yet tried.
+// distance; five made it worse. The destRow-preamble hypothesis recorded
+// here was TRIED 2026-08-20 and half-paid: the preamble as an if/else
+// chain (36/72 first, the 108 arm re-zeroing the phase counters over a
+// duplicated tail) measured 90.18 -> 90.65 and is kept below; the SAME
+// chain spelling for the in-loop row-advance measured 78.75 - that one
+// really is a switch - and is reverted. One compare site and ~3 blocks
+// remain, plus the jump-table-data ret artifact.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
@@ -5844,22 +5846,18 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
     int rowPhase = 0;
     int blockPhase = 0;
     unsigned short* destRow;
-    switch (gMapHeight) {
-    case MAP_DIMENSION_SMALL:
-    case MAP_DIMENSION_MEDIUM:
+    if (gMapHeight == MAP_DIMENSION_SMALL
+        || gMapHeight == MAP_DIMENSION_MEDIUM) {
         destRow = gpWindowManager->screenBitmap->map
                   + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
-        break;
-    case MAP_DIMENSION_LARGE:
+    } else if (gMapHeight == MAP_DIMENSION_LARGE) {
         rowPhase = 0;
         blockPhase = 0;
         destRow = gpWindowManager->screenBitmap->map
                   + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
-        break;
-    default:
+    } else {
         destRow = gpWindowManager->screenBitmap->map
                   + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
-        break;
     }
 
     unsigned char visibilityBit = gMapVisibilityBit;
