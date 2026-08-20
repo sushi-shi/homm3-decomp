@@ -6335,9 +6335,23 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
 //     the whole `GetMapExtra` + 3x3 neighbour double loop is expanded in
 //     place, and its out-of-line body still exists because the callee has
 //     extern linkage.
-//   * ONE type_point local is reused for all three points: the hero's own
-//     square, the route target and the recentred view origin. Retail
-//     writes it three times through the same [ebp-0x20] slot.
+//   * The three points are THREE SEPARATE block-scoped type_points, even
+//     though retail writes all of them through the same [ebp-0x20] slot.
+//     One function-scope point keeps that slot live across the visibility
+//     scan, so the scan's loop bound needs a slot of its own (frame 0x2c
+//     against retail's 0x28) and the spill cascades from there: heroSlot
+//     loses EBX to the parameter slot and the scan's x loses its register
+//     too. Scoping the three lets VC6 coalesce them onto one slot AND
+//     overlap the loop bound on it, exactly as retail does. 90.56 -> 99.27.
+//
+// Residual (99.27%): two instructions in the route-target write. Retail
+// copies the point's old word into CX and XORs the target in from MEMORY
+// (`mov cx,ax / xor cx,[edi+0x35]`); our CL materialises pathTargetX first
+// and XORs the other way (`mov cx,[edi+0x35] / xor cx,ax`). Commutative,
+// identical in effect. Tried and rejected: named int locals for the three
+// coordinates (96.14), the same as shorts (99.27, no change), a y/x/z
+// assignment order (96.89), an explicit short cast (99.27), and sharing one
+// point between the route target and the view centre (99.27).
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
 {
@@ -6377,17 +6391,19 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     player->currHeroId = heroId;
 
     hero* newHero = &gpGame->heroes[heroId];
-    type_point heroPoint;
-    heroPoint.x = newHero->x;
-    heroPoint.y = newHero->y;
-    heroPoint.z = newHero->z;
-
-    type_point cellPoint = heroPoint;
     NewmapCell* heroCell;
-    if (!cellPoint.is_valid())
-        heroCell = fullMap->cellData;
-    else
-        heroCell = fullMap->cell(cellPoint);
+    {
+        type_point heroPoint;
+        heroPoint.x = newHero->x;
+        heroPoint.y = newHero->y;
+        heroPoint.z = newHero->z;
+
+        type_point cellPoint = heroPoint;
+        if (!cellPoint.is_valid())
+            heroCell = fullMap->cellData;
+        else
+            heroCell = fullMap->cell(cellPoint);
+    }
 
     if (!waitingPlayer) {
         cursorType = (newHero->flags & 0x40000) ? CURSOR_TYPE_8
@@ -6441,10 +6457,11 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         && (status == STATUS_ACTIVE || gpCurrentPlayer->IsLocalHuman())) {
         seedingValid = 0;
         if (newHero->pathTargetX >= 0) {
-            heroPoint.x = newHero->pathTargetX;
-            heroPoint.y = newHero->pathTargetY;
-            heroPoint.z = newHero->pathTargetZ;
-            SeedTo(heroPoint);
+            type_point routeTarget;
+            routeTarget.x = newHero->pathTargetX;
+            routeTarget.y = newHero->pathTargetY;
+            routeTarget.z = newHero->pathTargetZ;
+            SeedTo(routeTarget);
         }
         ShowRoute(0, 0, 1);
     }
@@ -6466,13 +6483,14 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     // needs: both values have to be in hand before the first bitfield
     // write or VC6 emits two read-modify-write inserts instead of one
     // masked store.
+    type_point viewCentre;
     int centreX = radarOrigin.x + 9;
     int centreY = radarOrigin.y + 8;
     int centreZ = radarOrigin.z;
-    heroPoint.x = centreX;
-    heroPoint.y = centreY;
-    heroPoint.z = centreZ;
-    SetEnvironmentOrigin(heroPoint, 1);
+    viewCentre.x = centreX;
+    viewCentre.y = centreY;
+    viewCentre.z = centreZ;
+    SetEnvironmentOrigin(viewCentre, 1);
 
     if (heroCell->GroundSet != field_58 && draw_changes) {
         field_58 = heroCell->GroundSet;
