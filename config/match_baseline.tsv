@@ -374,6 +374,7 @@ army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
 army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
+army	?range_attack@army@@QAEXPAV1@@Z	88.9058	88.9058	88.9058	0x3f900
 army	?range_attack@army@@QAEXXZ	100.0000	100.0000	100.0000	0x40160
 army	?remove_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ec50
 army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
@@ -392,7 +393,6 @@ army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
 army	army_initialize	0.0000	0.0000	0.0000	0x3d730
 army	army_new_turn	0.0000	0.0000	0.0000	0x46e30
-army	army_range_attack	0.0000	0.0000	0.0000	0x3f900
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80

@@ -472,6 +472,13 @@ enum ESpellId {
     SPELL_DISEASE = 0x49,
     SPELL_PARALYZE = 0x4a,
     SPELL_AGE = 0x4b,
+    // The Lich shot's pseudo-spell row: army::range_attack (0x43f900)
+    // reads akSpellTraits[0x4c].m_sample/m_effect for the death-cloud
+    // animation over the target hex. NH3API's SPELL_DEATH_CLOUD at the
+    // same value; the neighbours 0x4a/0x4b above and 0x4e below bracket
+    // it. Canaries measured on admission (the ESpellId class is
+    // non-monotonic - see the SSpellTraits school note).
+    SPELL_DEATH_CLOUD = 0x4c,
     // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
     // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
     // 0x4e is the TOP entry, with an arm of its own that prints one
