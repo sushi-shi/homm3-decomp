@@ -49,9 +49,20 @@ inline const T& _cpp_max(T left, T right)
 // off an out-of-line body.
 // DECLARED, NOT DEFINED - the same treatment textWidget::SetText and
 // combatManager::mark_moat get. Retail's copy is a COMDAT the linker
-// parked at 0x4e6750, i.e. this TU never saw a body to expand; giving
-// our CL one makes it inline the selector at both icon rows where
-// retail calls it.
+// parked at 0x4e6750. The old reading here ("this TU never saw a body")
+// is contradicted by the ten-arg constructor's luck-site inline AND by
+// measurement (2026-08-20): DEFINING the body moves the ten-arg ctor
+// 90.4657 -> 91.2431 (its luck inline appears, exactly note-442's
+// retail shape) but costs the one-army ctor 90.8074 -> 89.7735 (its
+// two sites inline where retail calls both), a ratchet-blocked trade.
+// The asymmetry is NOT hittable from a shared body: the defined
+// selector prices FREE-tier (<=0x28) up to four filler statements -
+// both ctors inline both sites - and one statement more refuses BOTH
+// of the ten-arg ctor's sites at once (91.24 -> 89.71); no leaf cb
+// lands between the two sites' quotients, so retail's call-morale/
+// inline-luck split needs a cb window our statement quantization jumps
+// over. Declared-only remains the ratchet optimum; if the one-army
+// ctor's plateau ever moves, re-measure the define WITH it.
 const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
 
 // Two representation bridges in game.cpp's/ai_combat.cpp's shape - a
@@ -242,6 +253,13 @@ inline void TViewArmyWindow::create_rollover_widget()
 //     expansion itself).
 //   * the argument-slot permutation in the two describer set-ups, which
 //     follows from the extra live values the two inlined `_Tidy`s cost.
+// RE-OPENED 2026-08-20 against the numerator lever and STRENGTHENED in
+// three directions: a dead minimal charge (if(0) Widgets.size()) is
+// byte-flat at dose 1 and BACKWARD at dose 20 (90.33); lifting the
+// whole action-slot block into a single-call-site static (the largest
+// goto-free block, the BuyBuild caller-shrink) measures 89.30; and the
+// site-count axis is what the doses moved, not the mem-init fold. The
+// budget knobs do not reach the mem-init _Tidy sites from this body.
 // Tried and rejected: writing all five helper rows longhand in the body
 // (61.42% - the budget then reaches _Tidy AND the [-3, 3] selector at
 // both icon rows), and a defined `_cpp_clamp` template (87.11%).
@@ -1177,6 +1195,18 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
 // depth 0 does anything, which would cost the push_back itself), and
 // the Dreamcast's own `const TCreatureTypeTraits&` parameter, which is
 // byte-identical here and only renames the row.
+// RE-OPENED 2026-08-20 with the if(0) instrument, and the deficit is
+// now QUANTIFIED: one dead `Widgets.size();` site ahead of the last
+// push_back measures 100.0000 EXACT - the whole residual is precisely
+// one minimal /Ob2 candidate charge our source lacks before that site.
+// No shippable carrier found: insert(end(), x) buys the site but
+// rewrites the push_back's own expansion (95.4595, below the plateau),
+// and a self-assignment dose carries caller cb, the wrong axis (this
+// row needs a CHARGE, i.e. our budget run DOWN). Same conclusion as
+// type_garrison_base_window's "one <=0x28 inline call after widget 42":
+// the honest source difference is a small inline call retail's compile
+// priced here that our headers do not present. The dead block stays
+// out of the tree.
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
@@ -1410,6 +1440,25 @@ void TViewArmyWindow::create_ok_widget()
 // remains the one observation that separates 98.66 from 88.11, and it is
 // not reproducible here without emitting a second hotkey call retail
 // does not have.
+// RE-OPENED 2026-08-20 with the if(0) instrument, three measurements:
+//   * a dead TRAILING candidate site (if(0) push_back after the last
+//     real one) halves the last site's nested budget and collapses the
+//     row to 35.19 - the trailing-site direction is emphatically wrong;
+//   * a dead SECOND set_hotkey between the real one and the last
+//     push_back - the charge the create_ok_widget observation names -
+//     measures 92.3644, and a dead minimal Widgets.size() charge
+//     measures 92.3644 TO THE DIGIT: the dose quantizes. Both flip
+//     _Destroy to retail's call but push size() out with it (branch
+//     shape still 14/2 vs 15/3);
+//   * so the window between "reject _Destroy" and "keep size()" is
+//     NARROWER than the smallest chargeable callee (~41 cb), and no
+//     dead-site dose can land in it. What separates retail is a few
+//     expression NODES of caller cb (any charge >= 41 overshoots),
+//     i.e. our source is a hair too heavy in a way no spelling probe
+//     has found. The `button_set_hotkey` label predict-inline prints
+//     on retail's side is 0x404200 - the DISPROVEN set_hotkey mapping,
+//     really the three-argument int insert - so that pair is cosmetic,
+//     not an out-of-line set_hotkey.
 // E:\gamedcs\viewarmywindow.cpp:889
 VA(0x005f6ae0, 0x265)  // ctor call set + literals + arity, dc 0x192ad8
 void TViewArmyWindow::create_upgrade_widget()
