@@ -842,13 +842,17 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // through the string destructor, including which of the four `text +=`
 // sites retail inlines and which it calls - and the first 0x4af bytes
 // are instruction-for-instruction identical.
-// One secondary item, same class: retail cross-jumps the dismiss and
+// One secondary item, same class - CLOSED 2026-08-20 (cold-combatpath
+// lane), 73.6288 -> 74.4096: retail cross-jumps the dismiss and
 // upgrade arms' shared tail (`call NormalDialog` + the
-// DIALOG_RETURN_ACCEPT test) into one block and jumps into it from the
-// dismiss arm; our CL emits both copies, which is the one extra
-// conditional branch (base 56 against retail's 55). The two blocks are
-// identical instruction-for-instruction with identical successors, and
-// swapping the two case arms' source order is byte-inert.
+// DIALOG_RETURN_ACCEPT test) and jumps into it from the dismiss arm.
+// The sunk-join doctrine's second shape spells it: the tail lives in
+// the UPGRADE arm (whose path falls through into it) behind a
+// `check_accept:` label, and the dismiss arm ends `goto check_accept`
+// after its own NormalDialog. `int amount;` had to split from its
+// initializer so the goto crosses no initialization. (+0.78; the old
+// observation that swapping the case arms' source order is byte-inert
+// still stands.)
 // Tried and rejected elsewhere: `_cpp_max(elapsed, VIEW_ARMY_DELAY)`
 // spelled by hand for the frame pacer (it homes both operands where
 // retail folds the clamp into registers - GameTime::NextFrameTime is the
@@ -949,7 +953,8 @@ int TViewArmyWindow::WindowHandler(message* msg)
             switch (msg->codeY) {
             case UPGRADE_ID: {
                 int cost[7];
-                int amount = 0;
+                int amount;
+                amount = 0;
                 union {
                     int value;
                     TCreatureType creature;
@@ -969,6 +974,7 @@ int TViewArmyWindow::WindowHandler(message* msg)
                                  GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
                              2, -1, -1, 6, cost[6], resource, amount,
                              -1, 0, -1, 0);
+            check_accept:
                 if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
                     break;
                 goto accepted;
@@ -977,9 +983,7 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 NormalDialog(gpGeneralText->GetText(
                                  GENERAL_TEXT_DISMISS_ARMY_PROMPT),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
-                    break;
-                goto accepted;
+                goto check_accept;
             case ACCEPT_ID:
             accepted:
                 msg->id = MESSAGE_WIDGET;

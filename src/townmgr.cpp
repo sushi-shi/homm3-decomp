@@ -582,6 +582,32 @@ void townManager::SetupExtraStuff()
 // one and call a later one. Equal counts, one site of shift. The frame
 // slot for the temp moves with it ([ebp-0x24] against our [ebp-0x1c]),
 // which is what smears the rest. Nothing here is unreconstructed.
+//
+// RE-DERIVED 2026-08-20 (cold-combatpath lane), and it CORRECTS two
+// standing claims:
+//   * "our CL calls the reserve's _Construct once, retail zero times"
+//     is WRONG. Retail's 0x404dc0 IS std::_Construct(widget**,...)
+//     (test ecx,ecx / je / mov eax,[edx] / mov [ecx],eax / ret) and
+//     retail CALLS it here exactly as we do - the whole call multiset
+//     of this constructor is IDENTICAL, so this row shares NOTHING
+//     with THallWindow's under-inline.
+//   * The residual is not positional either. sub esp is 0x14 against
+//     retail's 0x18, and the reserve expansions are INSTRUCTION-FOR-
+//     INSTRUCTION identical with only the temp SLOTS assigned
+//     differently: retail homes (new-buffer, limit) at (-0x18, -0x1c)
+//     where we swap them, and retail allocates a FRESH -0x24 dword for
+//     the old-_First-before-delete temp (then reuses it for all 71
+//     widget temporaries) where we reuse the dead copy-cursor slot
+//     -0x14 (then home the widget temps in the dead buffer slot
+//     -0x1c). Semantics identical; C2 temp-slot allocation state only.
+//   * The budget axis is closed at BOTH ends now: 4/8/16 self-assign
+//     probes are byte-flat at 95.5868 to the digit, 40 was 95.54 and
+//     70 was 93.20 (the old titration), so no positive dose shifts the
+//     one-site insert phase boundary the earlier note found, and the
+//     slot divergence begins at the RESERVE, before any widget site -
+//     upstream of the phase shift, not downstream of it. No local body
+//     knob reaches a C2 temp-allocator tie; this row waits on TU-state
+//     convergence, not on a spelling.
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
@@ -1652,6 +1678,72 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // fourteen points are the 8-byte frame delta the under-inline forces -
 // the two `_Ucopy` iterator temps homed in memory - shifting every deep
 // local, the ~15%-score-hole shape.
+//
+// EIGHTH ROUND, 2026-08-20 - the wall is now SITE-RESOLVED and the pin
+// family is eliminated. The 49 push_back sites decide in three phases:
+// retail expands push_back one level and CALLS insert at sites 1-29,
+// expands insert fully (size/_Ucopy/_Ufill/_Destroy census) at sites
+// 30-40, and CALLS push_back outright at 41-49 (the Conflux arm + the
+// tail); ours is 1-30 / 31-41 / 42-49 - both boundaries exactly one
+// site late (site 30 = Dungeon's TPTHChk icon, site 41 = Conflux's
+// background). The tail-loop `begin base x0 vs retail x1` / `end x0 vs
+// x2` rows are retail's RUNNING CAP crossing before the tail - the
+// free-tier (<=0x28) exemption stops binding - which is why raising cb
+// fixes them along with everything else. Measured against that
+// structure:
+//   * inline_depth(0) on the Conflux background (site 41) imposes
+//     retail's call there, but the freed charge re-expands site 42 -
+//     multiset unchanged at 30/11/8, +0.157 incidental (86.1468).
+//   * Pinning the WHOLE retail-depth-0 region (Conflux arm + tail +
+//     the AddWidget for) drops the depth-2 census to 10 against
+//     retail's 11 and measures 85.1629. Geometry conservation: until
+//     site 30 expands - which needs MORE inlining, unpinnable - every
+//     imposed tail call is a new deficit elsewhere. Both reverted.
+// So no pin subset can reach retail's structure; the budget dose is
+// the only lever, exactly as the titration said.
+//
+// AND THE CURRENCY IS NOW PINNED DOWN, three measurements:
+//   * Constant-FOLDED expression nodes carry ZERO cb: a single dead
+//     store of a 300-node `0|0|...|0` chain measures 85.9895 to the
+//     digit. C1XX folds before it prices. The whole folded-constant
+//     respelling family (named flag ORs, spelled-out arithmetic) is
+//     dead as a carrier.
+//   * Statements under `if (0)` carry FULL cb and are byte-inert:
+//     sixty plain `i = 0;` stores wrapped in `if (0) {}` measure
+//     99.6605 - identical to the naked 60-probe plateau, re-anchored
+//     at this integration head. C1XX prices the dead tree; C2 deletes
+//     it with no EH or byte residue. A compile-time-disabled feature
+//     block IS a byte-inert cb carrier in this compiler.
+//   * But an if(0) block containing CANDIDATE CALL SITES moves the row
+//     BACKWARD: a dead tail button+push_back measures 84.4622, a whole
+//     dead case arm 79.9089. Dead sites still enter the collector and
+//     enlarge the site denominators. So the Dreamcast-only block (the
+//     second button::button, the 45th push_back, del_Spr_from_Cache)
+//     cannot be retail's missing mass under ANY spelling - as #ifdef
+//     it prices 0, as if(0) it measures backward - and the missing
+//     retail cb is CALL-FREE dead statement mass, ~40-80 simple
+//     statements' worth, for which no real-source counterpart is
+//     recoverable from the DC dump (its line table's tail hole,
+//     4448-4454, is comment-sized, and exact siblings carry 11-, 41-
+//     and 101-line holes that are provably comments). Per the
+//     do_general_melee precedent the scaffolding stays out of the
+//     tree; the row holds at 85.9895 until an honest carrier appears.
+//
+// AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
+// after the orchestrator reopened the sizing): respelling k of the 49
+// push_back sites measures 85.60 (k=5, arm 1), 89.59 (k=10, arms 1-2),
+// 88.60 (k=10, arms 4-5), 87.81 (k=15, arms 1-3) - a sharp peak near
+// k=10 that sits TEN POINTS BELOW the pure-statement plateau. The
+// construct is not the same currency as call-free mass: each respelled
+// site also adds an end() candidate SITE, and the denominator effect
+// caps the lever. Two constraints bound any future attempt: the
+// respelled sites must be EXPANDED-phase sites (at the nine
+// called-phase sites - Conflux arm + tail - an insert spelling would
+// emit `call insert` against retail's `call push_back`, a hard reloc
+// mismatch), and no uniform site family lands in the window (the
+// backgrounds and the tail singles both straddle the phase boundary).
+// So the partial dose is real but capped ~89.6, and it is non-uniform
+// source; not banked, same verdict as the naked titration.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
