@@ -363,33 +363,30 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left,
 // re-measurement of the whole closure for a comment's worth of
 // readability.
 //
-// Residual (88.0%): the register-homing family. Every structural
-// element matches - both cell computations, the three bitfield stores
-// into an uninitialised type_point (retail's `xor`/`and 0x3ff`/`xor
-// word` read-modify-write triple), the two artifact overrides, the
-// chained `water_walking = flying = -1` and the nine-argument tail
-// call. What differs is rematerialisation: retail RELOADS the gpGame
+// THE NOTE THAT SAT HERE NAMED ITS OWN ANSWER AND WALKED PAST IT
+// (88.0238 -> 98.6032, 2026-08-20).  It read: "retail RELOADS the gpGame
 // global three times (0x4b18c6, 0x4b18fa, 0x4b1920) and re-reads
-// worldMap.Size through each fresh copy, because the first copy's
-// register is needed for the z extraction; our CL has one register
-// more in hand at that point and caches gpGame plus cellData in a
-// stack slot instead. Tried and rejected, both no change at all
-// (88.0238): hoisting each cell index into its own named local, and
-// moving the `to` declaration above the first cell computation. The
-// underlying cause is that our CalcTerrainCost call site does not
-// spend the register retail's does; no local spelling reaches it.
+// worldMap.Size through each fresh copy ... our CL caches gpGame plus
+// cellData in a stack slot instead ... no local spelling reaches it."
+// Every clause of that is true, and the conclusion was wrong: the two
+// spellings it tried (a named local per cell index, and moving `to`'s
+// declaration up) were both trying to make the LONGHAND SUBSCRIPT
+// rematerialise.  Retail's re-reads are not a register accident - they are
+// what game.h's own `NewfullMap::cell(x, y, z)` header inline emits, once
+// per expansion.  Two calls to the accessor in place of two hand-written
+// `cellData[(z*Size + y)*Size + x]` chains reproduce them exactly, and the
+// whole register-homing residual the note described goes with them.
+// The same edit is worth 93.0950 -> 98.7182 on TestPossibleDirections.
+// Residual (98.6032%): scheduling around the nine-argument tail call.
 VA(0x004b18c0, 0x1A2)  // anchor-callee, dc 0x9f184
 int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left)
 {
-    NewmapCell* from = &gpGame->worldMap.cellData[
-        (start.z * gpGame->worldMap.Size + start.y) * gpGame->worldMap.Size
-        + start.x];
+    NewmapCell* from = gpGame->worldMap.cell(start.x, start.y, start.z);
     type_point to;
     to.x = start.x + gStepDeltaX[4 * direction];
     to.y = start.y + gStepDeltaY[4 * direction];
     to.z = start.z;
-    NewmapCell* dest = &gpGame->worldMap.cellData[
-        (to.z * gpGame->worldMap.Size + to.y) * gpGame->worldMap.Size + to.x];
+    NewmapCell* dest = gpGame->worldMap.cell(to.x, to.y, to.z);
     long flying = current_hero->flightLevel;
     long water_walking = current_hero->waterWalkLevel;
     if (current_hero->IsWieldingArtifact(0x48))
@@ -410,10 +407,8 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 static unsigned char terrain_forbids_magic(type_point where)
 {
     TAdventureObjectType special =
-        gpGame->worldMap.cellData[
-            (where.z * gpGame->worldMap.Size + where.y)
-                * gpGame->worldMap.Size
-            + where.x].get_special_terrain();
+        gpGame->worldMap.cell(where.x, where.y, where.z)
+            ->get_special_terrain();
     return special == CURSED_GROUND || special == GARRISON;
 }
 
@@ -755,13 +750,52 @@ static int GetMapExtra(type_point point)
 // obscuredType SANCTUARY, a different owner - which is exactly the square
 // a path may not end on.
 //
-// Residual (see the score comment at the end of this TU's notes): the
-// two arms of the entry terrain dispatch share one CalcTerrainCost call
-// in retail (a tail-merge of the two argument-push runs) where our CL
-// emits two, and the `!(can_summon_boat && !magic_forbidden)` re-test
-// inside the boat block is spelled as retail spells it rather than
-// hoisted into a local, because a local costs a frame slot the retail
-// frame does not have.
+// THE WATER-CROSSING PAIR READS THE MAP THROUGH `NewfullMap::cell`, AND
+// THAT IS WORTH 93.0950 -> 98.7182 (2026-08-20).  Retail reloads BOTH
+// `worldMap.Size` and `worldMap.cellData` for each of the two subscripts -
+// `mov edx,[edi+0x1fc44]` twice and `mov ecx,[edi+0x1fc40]` twice - while
+// keeping the `gpGame` load ITSELF in EDI across the whole block and on into
+// the hero scan below.  Written longhand as
+// `gpGame->worldMap.cellData[(z*Size + y)*Size + x]` our CL does the exact
+// inverse: it hoists the two MEMBERS into edx/edi and rematerialises the
+// GLOBAL at each block.  Spelling both subscripts as game.h's own
+// `worldMap.cell(x, y, z)` header inline gives retail's shape, and the whole
+// EBX/EDI transposition that the standing note called a register wall falls
+// in behind it - the register story was downstream of the accessor.
+// Same edit, same round: `GetTerrainCost` 88.0238 -> 98.6032, and
+// `terrain_forbids_magic` (PushPoint's helper) +0.09.
+//
+// AND THE READ-BACK IS PART OF THE SAME DOSE.  `across_x.x = across_x.x +
+// gStepDeltaX[...]` rather than a second read of `source->point.x` is worth
+// 0.17 on its own and 4.75 once the accessor lands (93.9702 against
+// 98.7182, measured both ways).  Retail extracts each coordinate from the
+// dword it has JUST stored into the copy - `mov ebx,eax / shl ebx,6 / sar
+// ebx,6` on across_x and `mov eax,[ebp-0x2e]` on across_y - where re-reading
+// the member gives a 16-bit `mov bx,ax / shl bx,6` off its own word
+// container.  Note the FIRST candidate at the top of the loop is the
+// opposite: retail reads `source->point` there as a word (`mov dx,word ptr
+// [ebx]`) and that spelling is already exact, so this is not a blanket rule.
+//
+// TWO CHEAPER SHAPE FACTS, both measured on the way (90.1238 -> 93.0950):
+//   * the anchor test is `if (type == ANCHOR_POINT) { ... } else { latch }`,
+//     not `if (type != ANCHOR_POINT) { latch } else if (...)`.  Retail's
+//     `cmp/jne` into a latch it SHARES with the water arm's dimension-door
+//     copy - a backward cross-jump - only appears with the equality form;
+//     the inequality form emits a THIRD full copy of the latch.  +2.28, and
+//     it is the "one extra fall-through copy" the standing note described
+//     from the wrong side.
+//   * `cost = 0` is the FIRST statement of the rock and dimension-door arms,
+//     not the last: retail's `xor esi,esi` precedes the `add word ptr` on
+//     adjusted_cost in both. +0.52.
+//
+// Residual (98.7182%): one register transposition and its knock-ons.  After
+// the second GetCell retail reloads `source` into EDI and takes the call
+// result into EBX; we do the opposite, and `reg_model` reports the two
+// sides' FIRST definitions agreeing (ebx@4, esi@30, edi@31), so this is
+// past the B1 minimum slice and no declaration order reaches it.  Also
+// still open: the two arms of the entry terrain dispatch share one
+// CalcTerrainCost call in retail (a tail-merge of the two argument-push
+// runs) where our CL emits two.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
 void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                                          long turn_mobility, long maxMobility,
@@ -802,13 +836,13 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
 
         long cost;
         if (destGround == eTerrainRock) {
+            cost = 0;
             candidate.last_can_stop = 0;
             candidate.adjusted_cost += 100;
             impassable = 1;
-            cost = 0;
         } else if (candidate.dimension_door) {
-            candidate.adjusted_cost += 100;
             cost = 0;
+            candidate.adjusted_cost += 100;
         } else if (source->in_boat) {
             cost = CalcTerrainCost(srcCell, direction, turn_mobility,
                                    iPathfinding, 0, -1, -1, -1, hasNomad);
@@ -873,18 +907,22 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                 if (srcGround == eTerrainWater
                         && gStepDeltaX[4 * direction] != 0
                         && gStepDeltaY[4 * direction] != 0) {
+                    // READ-BACK, not a re-read of `source`. Retail extracts
+                    // both coordinates from the dword it has just stored into
+                    // the copy (`mov ebx,eax / shl ebx,6` on across_x, `mov
+                    // eax,[ebp-0x2e]` on across_y), where reading
+                    // `source->point.x` again gives a 16-bit `mov bx,ax /
+                    // shl bx,6` off the member's own word container.
                     type_point across_x = source->point;
                     type_point across_y = source->point;
-                    across_x.x = source->point.x + gStepDeltaX[4 * direction];
-                    across_y.y = source->point.y + gStepDeltaY[4 * direction];
-                    if (gpGame->worldMap.cellData[
-                                (across_x.z * gpGame->worldMap.Size
-                                 + across_x.y) * gpGame->worldMap.Size
-                                + across_x.x].GroundSet != eTerrainWater
-                            || gpGame->worldMap.cellData[
-                                (across_y.z * gpGame->worldMap.Size
-                                 + across_y.y) * gpGame->worldMap.Size
-                                + across_y.x].GroundSet != eTerrainWater)
+                    across_x.x = across_x.x + gStepDeltaX[4 * direction];
+                    across_y.y = across_y.y + gStepDeltaY[4 * direction];
+                    if (gpGame->worldMap.cell(across_x.x, across_x.y,
+                                              across_x.z)->GroundSet
+                                != eTerrainWater
+                            || gpGame->worldMap.cell(across_y.x, across_y.y,
+                                                     across_y.z)->GroundSet
+                                != eTerrainWater)
                         impassable = 1;
                 }
             } else {
@@ -907,19 +945,21 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                 impassable = 1;
                 candidate.last_can_stop = 0;
             }
-            if (destCell->type != ANCHOR_POINT) {
+            if (destCell->type == ANCHOR_POINT) {
+                if (candidate.last_can_stop
+                        && search_type >= const_AI_search) {
+                    if (source->move_left < cost)
+                        cost = source->move_left + sea_movement;
+                    else
+                        cost = source->move_left;
+                    candidate.move_left = land_movement;
+                    candidate.in_boat = 0;
+                    candidate.flying = 0;
+                    candidate.water_walking = 0;
+                }
+            } else {
                 impassable = 1;
                 candidate.last_can_stop = 0;
-            } else if (candidate.last_can_stop
-                       && search_type >= const_AI_search) {
-                if (source->move_left < cost)
-                    cost = source->move_left + sea_movement;
-                else
-                    cost = source->move_left;
-                candidate.move_left = land_movement;
-                candidate.in_boat = 0;
-                candidate.flying = 0;
-                candidate.water_walking = 0;
             }
         }
 
