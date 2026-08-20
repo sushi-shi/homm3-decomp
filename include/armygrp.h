@@ -264,6 +264,20 @@ enum ESpellId {
 #ifdef HOMM3_SPELL_LAND_MINE_DECL
     SPELL_LAND_MINE = 0xb,
 #endif
+    // The two WALL spells, byte-proven by combatManager::ValidSpellTarget
+    // (0x5a39c0): its tail tests the spell against 0xc and then 0xd and
+    // gives each one its own placement rule - 0xc walks the two spell
+    // obstacle-shape rows cmbtmgr.h declares (whose sprites are the
+    // C15spE pair) and 0xd walks a hard-coded two-or-three cell column
+    // at -17 / -34 with a row-parity nudge. Both sit inside the
+    // battlefield-obstacle run this enum already anchors at both ends
+    // (LAND_MINE 0xb above, EARTHQUAKE 0xe below), which is what fixes
+    // WHICH is which: 0xc is one below Fire Wall, i.e. Force Field.
+    // Behind a view for this header's usual measured reason.
+#ifdef HOMM3_SPELL_WALL_DECL
+    SPELL_FORCE_FIELD = 0xc,
+    SPELL_FIRE_WALL = 0xd,
+#endif
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
     // corresponding 0x88-byte traits row's per-mastery mana-cost band.
     SPELL_FLY = 0x6,

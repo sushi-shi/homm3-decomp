@@ -9,6 +9,9 @@
 // AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
 #define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
+// ValidSpellTarget's tail gives Force Field and Fire Wall one placement
+// rule each; armygrp.h keeps both ids behind this view.
+#define HOMM3_SPELL_WALL_DECL
 #include "armygrp.h"
 #include "spells.h"
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
@@ -60,6 +63,7 @@
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
+#include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
 #include "kb.h"      // gText, the shared combat-message scratch buffer
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
@@ -309,16 +313,165 @@ army* combatManager::find_spell_target(SpellID spell, long side, long hex,
     return cells[hex].get_army();
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:2645
+// "Could this spell be aimed at this cell", and the body is three
+// independent rules stacked on one shared pair of exits.
+//
+// THE FIRST is the stack-targeting family: akSpellTraits' flag word
+// carries bits 4/5/6 and 17 for the spells that need a live or a dead
+// stack, and for those the answer is the finder plus a non-zero work
+// chance - the same `> 0.0` against a QWORD literal ValidSpellTargetArmy
+// uses, spelled here on the caller's own first_target / creature_spell.
+//
+// THE SECOND is the obstacle family (flag bit 8), and its mastery ladder
+// is a real switch - retail emits the four-entry jump table, with
+// none/basic sharing one arm, advanced its own, and expert accepting
+// unconditionally. The advanced arm loads the cell's flag word ONCE and
+// tests two different bits out of it.
+//
+// THE THIRD is the two WALL spells, one rule each, and both walk their
+// cells through the SAME five-test screen: in range, in neither
+// invisible column, no obstacle already on the cell, and nobody standing
+// there. Force Field takes its cells from the spell obstacle-shape rows
+// in .rdata (basic/expert picked by ADDRESS, two absolute immediates
+// twenty bytes apart); Fire Wall has them hard-coded as a column at -17
+// and -34, with a row-parity nudge that keeps the wall straight across
+// the half-offset rows.
+//
+// FOUR LEVERS, 57.43 -> 88.49, and three of them are about WHERE THE
+// EXITS LIVE:
+//   * The finder four rows above is CALLED, not expanded (57.43 ->
+//     65.22) - the /Ob2 budget asymmetry cmbtmgr.cpp's mana-drain pair
+//     records, pinned the same way.
+//   * ONE SHARED `return 1` (65.22 -> 68.34). Retail's tail is a single
+//     `mov al,1` epilogue every accepting arm BREAKS to, and the three
+//     rules are an if / else-if / else-if chain over it. Written as
+//     three independent blocks each ending in its own `return 1`, VC6
+//     if-converts the mastery arms into `sete` and the whole exit
+//     structure diverges.
+//   * NESTING the two early-outs instead of laddering them (68.34 ->
+//     71.72 -> 74.50, and it is what took the exit count from 8 to
+//     retail's 6). `if (target) return ...; return 0;` and
+//     `if (field_14 >= 0) { ... } else return 0;` reach the SHARED
+//     return-0 block; the `if (!x) return 0;` ladder duplicates an
+//     epilogue at each rung. This is the skill's "one shared return 0
+//     means a nested body" rule measured twice in one function.
+//   * NAMING THE CELL POINTER ABOVE THE GUARDS IS WORTH 14 (74.50 ->
+//     88.49). Retail computes `&cells[hex]` BEFORE the range and column
+//     tests in both wall loops and keeps it in ESI across all five;
+//     written as `cells[hex].field_10` at the point of use, VC6 sinks
+//     the whole address computation past the guards and rebuilds it
+//     twice. Same shape as the army-pointer hoist in
+//     GetNextChainLightningTarget, one loop level down.
+//
+// Residual (88.49%): `targetIndex` is memory-resident in retail (EDX at
+// the guard, re-read from [ebp+0x10] at each later use) and a
+// callee-saved pseudo for us (EDI), which shifts every register in the
+// two wall loops and spills the loop index and bound that retail keeps
+// in registers. Our CL classifies the parameter as call-crossing
+// because its interval spans the finder call, even though the branch
+// that makes the call always returns; retail's does not. That is the
+// C1 interval/handle class, and the one branch-polarity flip left (the
+// none/basic mastery arm, where retail duplicates `return 1` and we
+// duplicate `return 0`) is downstream of it - flipping the test's sense
+// measures exactly neutral, and spelling the arm `return 0; return 1;`
+// instead of `return 0; break;` costs 2.3.
 VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
-unsigned char combatManager::ValidSpellTarget(SpellID spellId, TSkillMastery mastery, int targetIndex, int casting_side, unsigned char first_target, unsigned char creature_spell)
+unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
+                                              long targetIndex,
+                                              long casting_side,
+                                              unsigned char first_target,
+                                              unsigned char creature_spell)
 {
-    // @stub
+    if (!ValidHex(targetIndex))
+        return 0;
+    if (akSpellTraits[spellId].field_c & 0x20070) {
+        // Retail CALLS the finder four rows above where our /Ob2 expands
+        // it - the same budget asymmetry cmbtmgr.cpp's mana-drain pair
+        // records, and the same fix.
+#pragma inline_depth(0)
+        army* target = find_spell_target(spellId, casting_side, targetIndex,
+                                         first_target, creature_spell);
+#pragma inline_depth()
+        if (target)
+            return SpellCastWorkChance(spellId, casting_side, target, 0,
+                                       first_target, creature_spell) > 0.0;
+        return 0;
+    }
+    if (akSpellTraits[spellId].field_c & 0x100) {
+        if (cells[targetIndex].field_14 >= 0) {
+            switch (mastery) {
+            case eMasteryNone:
+            case eMasteryBasic:
+                if (cells[targetIndex].field_10 & 0x3c)
+                    return 0;
+                break;
+            case eMasteryAdvanced:
+                if (!(cells[targetIndex].field_10 & 0x3c))
+                    break;
+                if (cells[targetIndex].field_10 & 0x10)
+                    break;
+                return 0;
+            case eMasteryExpert:
+                break;
+            default:
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (spellId == SPELL_FIRE_WALL) {
+        long wall_cells = (mastery >= eMasteryAdvanced) + 2;
+        for (long i = 0; i < wall_cells; i++) {
+            long hex = targetIndex;
+            if (i == WALL_CELL_NEAR) {
+                hex = targetIndex - COMBAT_GRID_ROW_STRIDE;
+                if ((targetIndex / COMBAT_GRID_ROW_STRIDE) & 1) {
+                    if (currentSide == 1)
+                        hex--;
+                } else if (currentSide == 0) {
+                    hex++;
+                }
+            } else if (i == WALL_CELL_FAR) {
+                hex = targetIndex - 2 * COMBAT_GRID_ROW_STRIDE;
+            }
+            const hexcell* cell = &cells[hex];
+            if (!ValidHex(hex))
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
+                return 0;
+            if (cell->field_10 & 0x3f)
+                return 0;
+            if (cell->armySide >= 0)
+                return 0;
+        }
+    } else if (spellId == SPELL_FORCE_FIELD) {
+        const type_obstacle_shape* shape = &kSpellObstacleShapes[0];
+        if (mastery >= eMasteryAdvanced)
+            shape = &kSpellObstacleShapes[1];
+        long odd_row = (targetIndex / COMBAT_GRID_ROW_STRIDE) & 1;
+        long wall_cells = shape->extra_hex_count;
+        for (long i = 0; i < wall_cells; i++) {
+            long hex = targetIndex + shape->extra_hex_offsets[i];
+            if (odd_row && !((hex / COMBAT_GRID_ROW_STRIDE) & 1))
+                hex--;
+            const hexcell* cell = &cells[hex];
+            if (!ValidHex(hex))
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
+                return 0;
+            if (cell->field_10 & 0x3f)
+                return 0;
+            if (cell->armySide >= 0)
+                return 0;
+        }
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // The address cmbtmgr.h used to hand SpellCastWorks. It is the AI's
 // targeting predicate: eleven retail callers, all of them the
