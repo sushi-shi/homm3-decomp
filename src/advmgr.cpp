@@ -3800,17 +3800,16 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // this body's three tests share ONE dword already in a register. The DC
 // is an older revision; retail's bytes outrank it.
 //
-// Residual (78.80%): an INLINER decision, not a source shape. Both sides
-// emit 29 out-of-line calls and the CFGs are close - 134 blocks against
-// retail's 137 - and predict-inline narrows the whole divergence to one
-// callee: SetPointer, which we call EIGHT times and retail seven, so
-// retail expands one of those sites. Per the /Ob2 rule that wants a
-// fuller caller rather than a respelling, and confirmed by two rejected
-// attempts to make two call sites share one: routing both SetPointer(3)
-// arms through a common `town_cursor_exit` label with advCommand set
-// before the goto measured 78.32, and routing the scroll-zone arm into
-// normal_cursor_exit measured 78.02. Neither is a missing source element;
-// the extra call is simply where our budget ran out.
+// Residual (79.80%): register-homing (a whole-region eax/edi parity in
+// the inlined InMapArea walk) plus one DUP-EXIT (9 rets vs retail's 8).
+// The old over-call reading is RETIRED: SetPointer is mousemgr's - a
+// cross-TU body is never an /Ob2 candidate, so no budget ever explained
+// the 8-vs-7 call counts (dead-store doses of 16 and 64 statements
+// measured and moved nothing). The eighth call was OUR tail duplication:
+// VC6 pulled the shared SetPointer(new_cursor) join into both arms of
+// the boat-frame if/else; the ternary spelling of that increment keeps
+// the join and merged the sites, 78.80 -> 79.80 (the goto respellings
+// recorded earlier attacked the wrong pair).
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -4000,11 +3999,10 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         }
 
         int iMouseOffset = iTurns * 6;
-        if (cursorType == CURSOR_TYPE_8
-            && new_cursor == ADV_BOAT_EVENT_POINTER)
-            new_cursor += iTurns;
-        else
-            new_cursor += iMouseOffset;
+        new_cursor += (cursorType == CURSOR_TYPE_8
+                       && new_cursor == ADV_BOAT_EVENT_POINTER)
+                          ? iTurns
+                          : iMouseOffset;
         gpMouseManager->SetPointer(new_cursor,
                                    mouseManager::ADVENTURE_SET);
         return 1;
