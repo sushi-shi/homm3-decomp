@@ -113,6 +113,12 @@ enum EGeneralTextIndex {
     // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
     // byte-proven; the NAME describes the two arguments retail feeds it.
     GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT = 343,
+    // The seer hut's display line: a folded [Text._First + 0x570] fed the
+    // hut's own name out of seerhut.obj's name list. Three consumers, all
+    // in seerhut.obj - the two TSeerHut text builders (0x5741b0 and
+    // 0x5743e0) and the nullary 0x574070. The INDEX is byte-proven; the
+    // NAME describes the one argument retail feeds it.
+    GENERAL_TEXT_SEER_HUT_NAME_FORMAT = 348,
     GENERAL_TEXT_VISITED_OBJECT = 353,
     GENERAL_TEXT_UNVISITED_OBJECT = 354,
     GENERAL_TEXT_KNOWN_SHRINE_SPELL = 355,

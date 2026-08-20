@@ -5,6 +5,7 @@
 #include "seerhut.h"
 #include "hero.h"
 #include "quest.h"
+#include "textresource.h"
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
 
@@ -599,6 +600,66 @@ void type_belong_to_player_quest::Load(TAbstractFile* file, int version)
     type_quest::Load(file, version);
 }
 
+// THE QUEST-GUARD TEXT BUILDERS, AND WHY THERE ARE TWO OF THEM.
+// 0x572e40 and 0x573040 are 511 B each and byte-identical apart from a
+// single relocation - the separator literal, "\n\n" at 0x6603b0 against
+// " " at 0x660330. Everything else, including the EH scope table and every
+// branch displacement relative to the entry, lines up instruction for
+// instruction. advManager::QuickInfo reaches the first and
+// advManager::SetRolloverText the second; the carve's caller-derived names
+// (`game_137c0_sub00_172e40` against `game_b150_sub07_173040`) say the same
+// thing from the other side.
+//
+// THE SHIFT COUNT IS BYTE-TYPED, AND IT IS WORTH THE WHOLE RESIDUAL.
+// Retail loads it with `mov cl, byte ptr [ebp+0xc]` where a plain
+// `1 << player` on an int parameter gives `mov ecx, dword ptr [ebp+0xc]`.
+// The parameter really is an int - retail takes its empty-allocator temp
+// byte from the DEAD RETURN POINTER at [ebp+0xb] and recycles [ebp+8] as
+// scratch, which it only does when [ebp+0xc..0xf] is a full-width
+// parameter with no padding to raid - so the narrowing is in the shift
+// expression, not the declarator. Naming it with the cast took all four
+// builders to EXACT: 96.4869 -> 100 on this pair and 88.1594 -> 100 on
+// the TSeerHut pair, and the whole register cascade in the two inlined
+// appends (which operand of `npos - _Len` gets hoisted above the strlen,
+// eax against ecx for the npos load, and the `test` operand order) went
+// with it. Every one of those had read as an independent allocator wall.
+//
+// The body itself: the object name always, and the quest's own description
+// appended behind the separator once this player has visited the guard and
+// the guard actually carries a quest. `visitedPlayers` is the +4 byte,
+// `quest` the +0 pointer, and the description comes through vtable slot 7
+// (`mov edx,[esi] / call dword ptr [edx+0x1c]`), which is what forced
+// quest.h's vtable model out to its real fifteen slots.
+// E:\gamedcs\seerhut.cpp
+VA(0x00572e40, 0x1FF)  // anchor-callee QuickInfo 0x4137c0, retail-only
+std::string TQuestGuard::QuestGuardFn_00572E40(int player)
+{
+    std::string text;
+    text = gQuestGuardName;
+
+    if ((visitedPlayers & (1 << static_cast<unsigned char>(player))) && quest) {
+        text += DATA_COMPGEN(0x006603b0, questGuardQuickInfoSeparator, "\n\n");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00573040, 0x1FF)  // anchor-callee SetRolloverText 0x40b150, retail-only
+std::string TQuestGuard::QuestGuardFn_00573040(int player)
+{
+    std::string text;
+    text = gQuestGuardName;
+
+    if ((visitedPlayers & (1 << static_cast<unsigned char>(player))) && quest) {
+        text += DATA_COMPGEN(0x00660330, questGuardRolloverSeparator, " ");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
+}
+
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
 // E:\gamedcs\seerhut.cpp
@@ -610,4 +671,55 @@ TSeerHut::TSeerHut()
     visitedPlayers = 0;
     NameIndex = 0;
     field_12 = 0;
+}
+
+// The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0
+// takes " " and is SetRolloverText's, 0x5743e0 takes "\n\n" and is
+// QuickInfo's. 556 B each and, again, byte-identical apart from that one
+// separator relocation.
+//
+// The unvisited arm returns the bare object name; the visited arm formats
+// the hut's own name out of seerhut.obj's name list at 0x69fab8 - a
+// std::vector<std::string>* whose element c_str() falls back to
+// basic_string's _Nullstr static - through general text 348, and then
+// appends the quest description behind the separator exactly as the
+// quest-guard pair does.
+// E:\gamedcs\seerhut.cpp
+VA(0x005741b0, 0x22C)  // anchor-callee SetRolloverText 0x40b150, retail-only
+std::string TSeerHut::SeerHutFn_005741B0(int player)
+{
+    if (!(visitedPlayers & (1 << static_cast<unsigned char>(player))))
+        return gSeerName;
+
+    std::string text;
+    text = format_string(
+        gpGeneralText->GetText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
+        (*gpSeerHutNames)[NameIndex].c_str());
+
+    if (quest) {
+        text += DATA_COMPGEN(0x00660330, seerHutRolloverSeparator, " ");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x005743e0, 0x22C)  // anchor-callee QuickInfo 0x4137c0, retail-only
+std::string TSeerHut::SeerHutFn_005743E0(int player)
+{
+    if (!(visitedPlayers & (1 << static_cast<unsigned char>(player))))
+        return gSeerName;
+
+    std::string text;
+    text = format_string(
+        gpGeneralText->GetText(GENERAL_TEXT_SEER_HUT_NAME_FORMAT),
+        (*gpSeerHutNames)[NameIndex].c_str());
+
+    if (quest) {
+        text += DATA_COMPGEN(0x006603b0, seerHutQuickInfoSeparator, "\n\n");
+        text += quest->GetQuestDescription();
+    }
+
+    return text;
 }

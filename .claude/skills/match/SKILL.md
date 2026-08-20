@@ -873,6 +873,31 @@ one block (**+1.00**).
 reads the discriminant once and strength-reduces the walks into a count-down;
 `const&` re-reads it per iteration and pins an indexed up-count (**+7.03**).
 
+**`std::string s; s = X;` IS NOT `std::string s = X;`** — the initialiser form
+lets VC6 build directly into the destination (inline `_Tidy`, called
+`assign`); default-ctor-then-assign gives retail's CALLED `_Tidy` plus INLINED
+`assign`. **+37.02** on one pair of functions and **+20.38** on another. The
+single largest spelling delta recorded.
+
+**A BYTE-TYPED SHIFT COUNT.** `1 << static_cast<unsigned char>(player)` against
+`1 << player` on an `int` parameter: **+3.51 and +11.84, taking four functions
+to 100.0000** — and it dissolved four separate-looking register walls at once
+(which operand of `npos − _Len` hoists above the inline strlen, `eax` vs `ecx`
+for the npos load and therefore the `A1` vs `8B 0D` encoding and the whole
+size drift, and the `test` operand order). By contrast `((1<<p) & v)` vs
+`(v & (1<<p))` is **byte-flat** — VC6 canonicalises `&` operand order.
+
+**THE EMPTY-ALLOCATOR TEMP SLOT TELLS AN `int` PARAMETER FROM A `char` ONE.**
+VC6 raids parameter PADDING when there is any (`[ebp+0xf]`, scratch home
+`[ebp+0xc]`), and the DEAD HIDDEN-RETURN-POINTER slot when the parameter is
+full width (`[ebp+0xb]`, scratch `[ebp+8]`). Two independent frame facts for
+`int`.
+
+**IDENTICAL TWINS ARE A FREE IN-COMPILE A/B CONTROL.** Retail's near-duplicate
+function pairs differ only in a literal, so spelling A in one and B in the
+other measures both in ONE build at identical caller-cb. Four levers were
+isolated that way in a single lane.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
