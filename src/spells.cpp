@@ -78,6 +78,17 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
+// VC6's own <xutility> reference-returning min, declared file-locally
+// for exactly the reason _cpp_max above is: ChainLightning's segment
+// clamp selects between the operands' ADDRESSES with two LEAs, which no
+// value-returning spelling produces. combatresultswindow.cpp,
+// ai_combat.cpp and ai_tactical.cpp already carry the same copy.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
 // The third of cmbtmgr.h's axial-coordinate helpers; the other two are
 // class-body inlines there and this one lives here for _cpp_max.
 inline long combatManager::get_distance(hex_point start, hex_point stop) const
@@ -1974,16 +1985,125 @@ long combatManager::GetNextChainLightningTarget(const army* last_target,
     return best_index;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+// How many stacks Chain Lightning reaches, by mastery: .rdata 0x642274,
+// read straight from the hash-verified image and referenced from exactly
+// two sites, both inside ChainLightning (the loop's entry test and its
+// back edge), which is what makes it spells.obj's own file static. The
+// bound is FOUR because the next dword, 0x642284, belongs to Earthquake
+// (0x5a7cef reaches it and nothing reaches it from here).
+DATA(0x00642274)
+static const int gChainLightningTargets[4] = { 4, 4, 5, 5 };
 
-// E:\gamedcs\spells.cpp:4255
+// Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
+// makes ONE by-value copy our CL does not fold - retail lets the
+// address _cpp_max returned flow straight into _cpp_min and compares the
+// raw distance in both tests, where we dereference and re-copy between
+// them. A reference-taking _cpp_min was tried for exactly that and
+// MEASURED 96.19 -> 95.62, so the by-value template stays. The rest is
+// the `&cells[index]` scratch register and reloc names on the three
+// callees this TU has not reconstructed.
+//
+// Chain Lightning: hit the aimed stack, then bounce to the nearest stack
+// not yet hit, halving the damage each time, for as many stacks as the
+// caster's mastery buys. Every jump after the first is drawn as a real
+// animated bolt.
+//
+// Local names are the Dreamcast roster's own (variables.csv, dc
+// 0x155664): the parameters are index/level/power and total_killed,
+// current_damage, iCurX, iCurY, dest_x and iSegmentLength are attested
+// rows. The base damage kept for the closing message has no roster row
+// (SH4 held it in a register), so it is named from its one use.
+//
+// THE BOLT IS SHAPED BY THE DISTANCE IT HAS TO COVER:
+// `_cpp_min(_cpp_max(distance / 10, 8), 30)` sets the segment length and
+// a bolt longer than twenty segments is drawn with three passes instead
+// of two. Both clamps are the by-value templates this file already
+// carries - retail selects between the operands' ADDRESSES, which is
+// that spelling and not a value-returning min/max.
+//
+// THE PEN CARRIES FORWARD: iCurX/iCurY start at the first stack's screen
+// midpoint and are re-stamped to each stack as the chain moves, so every
+// bolt is drawn from the stack just hit to the next one. The parameter
+// slots for `index` and `power` are what retail reuses for them.
+//
+// `effected` IS COPIED OUT to every stack's bShowPowEffect at the end
+// rather than being read there, which is how the single PowEffect call
+// that follows knows which stacks to flash.
 VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664
 void combatManager::ChainLightning(int index, int level, int power)
 {
-    // @stub
-}
+    memset(effected, 0, sizeof(effected));
+    gpMouseManager->HidePointer();
 
-#endif  // @carcass
+    long base_damage = ModifySpellDamage(
+        akSpellTraits[SPELL_CHAIN_LIGHTNING].mastery_bonus[level]
+            + akSpellTraits[SPELL_CHAIN_LIGHTNING].power_factor * power,
+        SPELL_CHAIN_LIGHTNING, 0, 0, 0, 0);
+    long current_damage = base_damage;
+    long total_killed = 0;
+    // NOT initialised, and that is retail's own shape: the pen is only
+    // ever read on an iteration after the one that stamps it, so the two
+    // stores a `= 0` adds do not exist in the 842 bytes.
+    long iCurX;
+    long iCurY;
+
+    { for (int i = 0; i < gChainLightningTargets[level]; i++) {
+        if (index >= 0 && index < COMBAT_GRID_CELLS) {
+            army* target = cells[index].get_army();
+            if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+                if (i == 0) {
+                    SpellEffect(37, target, 0, 0);
+                    iCurX = target->MidX();
+                    iCurY = target->MidY();
+                } else {
+                    long dest_x = target->MidX();
+                    long dest_y = target->MidY();
+                    long distance = static_cast<long>(
+                        sqrt(static_cast<double>(
+                            (dest_y - iCurY) * (dest_y - iCurY)
+                            + (dest_x - iCurX) * (dest_x - iCurX))))
+                        / 10;
+                    long iSegmentLength =
+                        _cpp_min(_cpp_max(distance, 8L), 30L);
+                    DoBolt(0, iCurX, iCurY, dest_x, dest_y, 0, 80, 9, 2,
+                           BOLT_COLOR_CHAIN_LIGHTNING, 10, 80,
+                           iSegmentLength, (iSegmentLength > 20) + 2, 0, 0,
+                           0);
+                    iCurX = dest_x;
+                    iCurY = dest_y;
+                    GameTime::Delay(static_cast<long>(
+                        gCombatSpeedFactors[gUnnamed698758.combatSpeed]
+                        * 100.0f));
+                    DrawFrame(1, 0, 0, 0, 1, 0);
+                }
+                if (i <= 2 && target->combatSide == currentSide)
+                    field_53dc[currentSide] = 1;
+            }
+            total_killed += target->Damage(ModifySpellDamage(
+                current_damage, SPELL_CHAIN_LIGHTNING, heroes[currentSide],
+                target->get_controller(), target, 0));
+            effected[target->combatSide][target->bitIndex] = 1;
+            index = GetNextChainLightningTarget(target, 1);
+            if (index == -1)
+                break;
+            current_damage /= 2;
+        }
+    } }
+
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++)
+            armies[side][i].bShowPowEffect = effected[side][i]; }
+    } }
+
+    long shown_damage = ModifySpellDamage(
+        base_damage, SPELL_CHAIN_LIGHTNING, heroes[currentSide],
+        heroes[1 - currentSide], 0, 0);
+    PowEffect(akSpellTraits[SPELL_CHAIN_LIGHTNING].m_effect, 1);
+    damage_message(akSpellTraits[SPELL_CHAIN_LIGHTNING].name, 1,
+                   shown_damage, 0, total_killed);
+    DrawFrame(1, 0, 0, 0, 1, 0);
+    gpMouseManager->ShowPointer(false);
+}
 
 // E:\gamedcs\spells.cpp:4387
 // Located by the order-map (homm3.analysis.ordermap spells): this row is the
