@@ -148,6 +148,10 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
     unsigned char padding[16];
     if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
+    // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
+    // predict-inline says retail calls basic_string::_Tidy at THREE cleanup
+    // sites and we call it at two, so the game::Load return-pin looks like
+    // the right lever - it is not here, 72.9210 -> 67.0263.
     return 0;
 }
 
@@ -568,21 +572,104 @@ TAdventureObjectType NewmapCell::get_special_terrain() const
     return NOTHING;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:524
+// RECONSTRUCTED 2026-08-20. Fourteen default member constructions and one
+// null pointer - the whole body is `cellData = 0`, and the interesting part
+// is where retail puts it.
+//
+// The thirteen leading vectors come out as thirteen copies of the identical
+// four-store block (`mov al,[ebp-0xd]` for the allocator byte, then three
+// null pointers), and the fourteenth member is the +0xdc array: retail
+// hands `this+0xdc`, stride 0x10 and count 0xe8 to the `vector constructor
+// iterator' with the element constructor at 0x4fd1c0. That call is what
+// proves the array is a member of THIS class rather than the pad `game`
+// carried after worldMap.
+//
+// `cellData(0)` MUST be an initialiser-list entry, not the first body
+// statement: retail stores the null at +0xd0 BEFORE the array's iterator
+// call, and VC6 runs the list in DECLARATION order, where cellData sits
+// between randomDwellings and the array. Written as a body statement it
+// schedules after every member construction and lands on the wrong side of
+// that call.
 VA(0x004fd060, 0x15C)  // anchor-global, dc 0xec4fc
-void NewfullMap::NewfullMap()
+NewfullMap::NewfullMap()
+    : cellData(0)
 {
-    // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:530
+// RECONSTRUCTED 2026-08-20. This is NewfullMap::Close's body inlined ahead
+// of the fourteen member destructions, which is what the note under Close
+// below already predicted.
+//
+// Three things, in retail's order:
+//   * the cell array, freed through NewmapCell's `vector deleting
+//     destructor' at 0x4fd460 with flags 3 and then nulled;
+//   * every mapObjectData entry deleted through virtual slot zero (`push 1
+//     / call [edx]`, the scalar deleting destructor - the null test in
+//     front of it is `delete p`'s own, not a source guard), then the vector
+//     cleared through the out-of-line vector<CMapObjectData*>::clear COMDAT
+//     at 0x48b4a0 that Init already reaches;
+//   * every sprite disposed through virtual slot ONE - CSprite::Dispose,
+//     `call [edx+4]` with no argument, NOT a delete - then that vector
+//     cleared too. This one expands to `erase(begin(), end())` (0x54cdb0)
+//     rather than an out-of-line clear, which is VC6's own choice per
+//     instantiation and not a spelling difference.
+// Both loops re-read `size()` across the back edge, complete with
+// Dinkumware's `_First == 0` guard, exactly as Init's already-exact
+// mapObjectData sweep does. Do not hoist either bound.
+//
+// Residual (95.8833%): ONE block, the `delete[]`. Retail emits
+// `push 3 / call ??_ENewmapCell` - the compiler-generated vector deleting
+// destructor at 0x4fd460 - and our CL expands it in place (array cookie,
+// `vector destructor iterator', operator delete). Every other row of the
+// diff is a reloc NAME on an unclaimed COMDAT, including two the retail
+// link FOLDED: ~vector<CSprite*> and ~vector<CObject*> both resolve to
+// 0x46a650, so one synth label answers for two of our symbols.
+//
+// AND IT IS A BUDGET SEE-SAW, NOT A MISSING SPELLING - three ways measured,
+// all worse than leaving it:
+//   * `#pragma inline_depth(0)` on the `delete[]` statement DOES produce
+//     retail's `call ??_ENewmapCell` exactly, and still scores 89.2893,
+//     because the budget it frees is then spent over-inlining
+//     ~vector<BlackBoxData> (0x506350), which retail CALLS. predict-inline
+//     confirms the trade: 23 out-of-line calls on both sides, ours carrying
+//     one extra `operator delete`. Pinning an EARLY site enlarges
+//     budget/sites-remaining for the later ones - the documented rule that
+//     a LATER pin cannot shrink an earlier site's divisor does not run
+//     backwards.
+//   * a pin before the closing brace, to reach the fourteen implicit member
+//     destructions, de-inlines all fourteen: 46.6142.
+//   * writing the body as a single-call-site `closeMap(this)` helper - the
+//     readQuestGuardArm lever, and the shape NewfullMap::Close's note below
+//     predicts - scores 87.7157.
 VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
-void NewfullMap::~NewfullMap()
+NewfullMap::~NewfullMap()
 {
-    // @stub
+    if (cellData) {
+        delete[] cellData;
+        cellData = 0;
+    }
+
+    unsigned int i;
+    for (i = 0; i < mapObjectData.size(); ++i)
+        delete mapObjectData[i];
+    // OVER-INLINE PIN, +2.34 (93.5482 -> 95.8833). Retail calls the
+    // out-of-line vector<CMapObjectData*>::clear COMDAT at 0x48b4a0 here;
+    // unpinned our CL expands clear() into erase(begin(), end()) and calls
+    // erase instead. The sprites clear() below is retail's OWN expansion of
+    // the same member into erase (0x54cdb0) and must stay unpinned - the
+    // two instantiations really do diverge in retail.
+#pragma inline_depth(0)
+    mapObjectData.clear();
+#pragma inline_depth()
+
+    for (i = 0; i < sprites.size(); ++i)
+        sprites[i]->Dispose();
+    sprites.clear();
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:537
 // NO RETAIL SLOT. The old VA claim at 0x4fd460 was false: retail takes a
@@ -2476,6 +2563,11 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         MonsterData tempMonster;
         readMapString(infile, &tempMonster.Message);
 
+        // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
+        // predict-inline says retail CALLS basic_string::_Tidy once here and
+        // we expand it, which is game::Load's return-pin shape exactly - but
+        // the local whose scope this exits is BLOCK-scoped, not
+        // function-scoped, and the pin costs 96.4729 -> 90.0370.
         for (int i = 0; i < 7; ++i) {
             int quantityRead;
             if (infile->Read(&quantityRead, sizeof(quantityRead))
@@ -2796,6 +2888,10 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->Read(spellBuf, sizeof(spellBuf));
+        // MEASURED AND REJECTED: writing this first mask longhand so that one
+        // of the two bitset<70> range checks inlines - predict-inline says
+        // retail CALLS bitset<70>::_Xran (0x4d1c80) exactly once here and we
+        // never do, so the split looks right. 82.0785 -> 79.9793.
         unpackSpellMask(&tempTown.fixedSpells, spellBuf);
     }
 
@@ -2887,31 +2983,33 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// Residual (71.9069%): an INLINER wall, and the arithmetic identifies it
-// exactly. predict-inline reports base 21 out-of-line calls against retail's
-// 13, and the whole difference is `std::bitset<70>::_Xran`: retail CALLS it
-// once per range check - the body the unwind symbol
-// `game_invalid_bitset_n_positio_1021c0_unwind02` names - where our CL
-// expands the entire `throw out_of_range("invalid bitset<N> position")` in
-// place: assign(const char*,size_t), the exception constructor, _Tidy,
-// assign(const string&,size_t,size_t) and _CxxThrowException, five calls
-// apiece. Two sites, five-for-one, and 21 - 13 = 8 exactly.
+// 71.9069 -> 83.7667, 2026-08-20, ON ONE PIN - and the diagnosis this note
+// used to carry was WRONG, so read the correction before re-deriving it.
 //
-// It is NOT the bitset<48> case this same file already gets right -
-// readObjectType CALLS bitset<48>::_Xran (0x41b410) and is exact. The
-// instantiations differ, and retail's own readTownData is split down the
-// middle, one of its two bitset<70> checks a call and the other expanded,
-// which is what a per-caller /Ob2 budget spent SEQUENTIALLY looks like
-// rather than a per-callee decision.
+// The old text blamed `std::bitset<70>::_Xran` and concluded "no source
+// spelling reached the _Xran decision, and auto_inline(off) cannot reach it
+// either: the callee is a library template this TU never defines". Both
+// halves were true and the conclusion was not, because the residual was not
+// _Xran at all. It was `basic_string::assign(const basic_string&, size_t,
+// size_t)` at the hero-name store: retail CALLS it, our CL expanded it, and
+// the expansion is what dragged in _Grow x4, _Split x2, _Eos, memmove,
+// char_traits::assign, the free std::_Xran, the exception and logic_error
+// constructors and a string copy constructor - fifteen unmatched calls
+// against retail's eight, which is where the 21-vs-13 came from.
 //
-// Tried, and each kept for a fraction of a point without touching the wall:
-// spelling the name store as an explicit three-argument
-// `assign(temp, 0, npos)` through a named temporary (69.1834 -> 69.4400 -
-// and retail does CALL that same three-argument assign where we expand it,
-// a second site of this very class), and writing both spell-mask writes as
-// `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688). No source
-// spelling reached the _Xran decision, and `#pragma auto_inline(off)` cannot
-// reach it either: the callee is a library template this TU never defines.
+// The old note even names the evidence and then walks past it ("retail does
+// CALL that same three-argument assign where we expand it, a second site of
+// this very class"). What was missing was the lever, not the reading:
+// a STATEMENT-SCOPED `#pragma inline_depth(0)` on the assign. It is not a
+// source spelling, so "no spelling reaches it" never argued against it, and
+// unlike auto_inline it does not need the callee's definition to be in this
+// TU - it suppresses expansion at the CALL SITE. predict-inline now reads
+// 14 against 13.
+//
+// Kept from the old note because they still hold: writing both spell-mask
+// writes as `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688), and
+// readObjectType's exactness proving bitset<48>::_Xran (0x41b410) is CALLED
+// on both sides.
 //
 // Moving the mask loop into unpackSpellMask is worth another two points
 // (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
@@ -3126,7 +3224,9 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         if (customNameFlag) {
             hero_data->customName = 1;
             std::string heroName = ReadLengthPrefixedString(infile);
+#pragma inline_depth(0)
             hero_data->name.assign(heroName, 0, std::string::npos);
+#pragma inline_depth()
         }
 
         char sexByte;
