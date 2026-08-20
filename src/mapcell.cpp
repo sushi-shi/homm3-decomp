@@ -696,7 +696,7 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
             return -1;
     }
 
-    AdvanceLoadingBarFn_004ED2A0(1);
+    IncProgressBar(1);
 
     objectTypes.clear();
     objects.clear();
@@ -778,7 +778,7 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
             return -1;
     }
 
-    AdvanceLoadingBarFn_004ED2A0(1);
+    IncProgressBar(1);
 
     objectTypes.clear();
     objects.clear();
@@ -828,7 +828,7 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     if (loadTownEventList(infile, saveVersion) < 0)
         return -1;
 
-    AdvanceLoadingBarFn_004ED2A0(1);
+    IncProgressBar(1);
     return 0;
 }
 

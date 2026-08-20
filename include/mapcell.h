@@ -336,18 +336,6 @@ SIZE(ScholarInfo, 4);
 #endif
 
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
-// 0x4ed2a0, a FREE __fastcall helper (/Gr - its one argument arrives in cl,
-// and every call site passes a literal 1, which is why it cannot be a
-// thiscall member). NewfullMap::Read, ::Load and ::readMapObjects all reach
-// it. It bumps a counter at .bss 0x699574, clamps it to twenty, and repaints
-// through the object held at 0x699570 - the map-loading progress bar.
-//
-// OWNERSHIP UNPROVEN: 0x4ed2a0 is outside mapcell.obj's span and no
-// surviving symbol names it, so both the home and the spelling are
-// provisional and address-bearing, on NewfullMapFn_00505F20's precedent.
-// Move it to its own compiland's header once that compiland is identified.
-void AdvanceLoadingBarFn_004ED2A0(unsigned char steps);
-
 // The shrine's arm, and the only lane of it any retail body writes.
 // readObject's (0x502e00) SHRINE1/2/3 arm sign-extends the stream byte
 // (`movsx ecx, byte`), masks it to ten bits and shifts it thirteen up,
