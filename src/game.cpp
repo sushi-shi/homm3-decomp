@@ -31,6 +31,10 @@
 // and generator::remove_bonus. Held on its own gate for the same reason
 // the town-heroes group is - townmgr.obj shares HOMM3_GAME_OBJ_DECLS.
 #define HOMM3_GAME_CLAIM_TOWN_DECLS
+// game::Load's tail needs load_recorded_events and setup_shipyards, and
+// neither is reached by any other body here. Same gate discipline as the
+// two groups above.
+#define HOMM3_GAME_LOAD_TAIL_DECLS
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "terrain.h"
@@ -43,6 +47,7 @@
 #undef HOMM3_GAME_OBJ_DECLS
 #undef HOMM3_GAME_TOWN_HEROES_DECLS
 #undef HOMM3_GAME_CLAIM_TOWN_DECLS
+#undef HOMM3_GAME_LOAD_TAIL_DECLS
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -121,6 +126,10 @@ unsigned char save_vector(TAbstractFile* outfile,
                           std::vector<type_university>* src_vector);
 unsigned char save_object_vector(TAbstractFile* outfile,
                                  std::vector<type_creature_bank>* src_vector);
+// The Load mirror of save_object_vector (retail 0x4d2870), reached only
+// by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
+unsigned char load_object_vector(TAbstractFile* infile,
+                                 std::vector<type_creature_bank>* dest_vector);
 
 const int SAVED_CREATURE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
@@ -2723,6 +2732,37 @@ int game::Load(TAbstractFile* infile)
         infile->Read(undergroundGatePairs.begin(),
                      short_buffer * sizeof(type_point));
     }
+
+    // The tail, mirroring game::Save's: universities as a plain block
+    // read, creatureBanks element by element, then the event log.
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+        sizeof(short_buffer)) {
+        type_university emptyUniversity;
+#pragma inline_depth(0)
+        universities.resize(short_buffer, emptyUniversity);
+#pragma inline_depth()
+        infile->Read(universities.begin(),
+                     short_buffer * sizeof(type_university));
+    }
+    load_object_vector(infile, &creatureBanks);
+
+    if (!load_recorded_events(infile, saveVersion))
+        return -1;
+
+    gpAdvManager->inDialog = 0;
+    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+    gUnnamed69ccc4 = 1 << gNetLocalGamePos;
+    if (!gNetworkActive69954c)
+        gUnnamed69778c = gNetLocalGamePos;
+    setup_shipyards();
+    gMapVisibilityBit = 1 << gUnnamed69778c;
+    // predict-inline: IsLocalHuman base x0 vs retail x1. Pinned at the
+    // site - retail emits `push eax / mov ecx,[gpGame] / call`.
+#pragma inline_depth(0)
+    gCompleteDrawEnabled = gpGame->IsLocalHuman(gNetLocalGamePos);
+#pragma inline_depth()
+    SetupAdjacentMons();
+    AI_examine_map();
 
     return 0;
 }
