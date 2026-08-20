@@ -822,6 +822,7 @@ game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0x
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
+game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
@@ -837,6 +838,7 @@ game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
 game	?GetNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30
 game	?GetPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60
 game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0
+game	?GetRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	86.7929	86.7929	86.7929	0xc92c0
 game	?GetRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0
 game	?GetStartingHeroId@game@@QAEHW4TTownType@@HH@Z	100.0000	100.0000	100.0000	0xbb400
 game	?GetTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870
@@ -856,7 +858,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	50.4577	50.4577	50.4577	0xbcda0
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	71.7143	71.7143	71.7143	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
@@ -867,8 +869,9 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
+game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
-game	?Save@game@@QAEHPAVTAbstractFile@@@Z	42.2290	42.2290	42.2290	0xbe3f0
+game	?Save@game@@QAEHPAVTAbstractFile@@@Z	73.7978	73.7978	73.7978	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
@@ -883,13 +886,25 @@ game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 # 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
 game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
 game	?SetRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730
+game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
+# DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
+# reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
+# inline the one CMCHideHero constructor and they disagree on where its
+# member store lands. Base-first spellings make this row exact and take
+# SwapHeroes 100.00 -> 97.77; the member-first spelling in netmsg.h keeps
+# SwapHeroes exact and caps this row at 98.9923 (one instruction, the
+# member store, emitted before the five base stores instead of after).
+# Measured both ways; the larger exact body wins. See the A/B recorded on
+# CMCHideHero in include/netmsg.h and above the body in src/game.cpp.
+game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
 game	?calculate_production@game@@QAEXXZ	88.1659	88.1659	88.1659	0xb8af0
 game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
+game	?get_random_lith@game@@QAEEPBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@PAUtype_point@@JJ@Z	99.8756	99.8756	99.8756	0xcdb80
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40
@@ -902,17 +917,11 @@ game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
-game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
-game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
-game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
-game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
-game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
-game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860

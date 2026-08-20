@@ -418,6 +418,18 @@ public:
     // provisional until a source identity is proven.
     void NewfullMapFn_00505F20(CObject* object, int objectType,
                                int objectIndex, int terrain);
+#endif
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+    // Retail-only helper at 0x505ea0, reached only by game::ConvertObject.
+    // It scans the per-object-type vector at this+0xdc+16*objectType
+    // BACKWARDS for the entry whose .extra matches and hands back its
+    // address. That per-type array is not modelled here - ConvertObject
+    // never touches it directly - so only the declarator is needed and no
+    // layout moves. No surviving symbol names it; the address-bearing
+    // spelling follows NewfullMapFn_00505F20's precedent above.
+    CObjectType* NewfullMapFn_00505EA0(int objectType, int extra);
+#endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     int PlaceObject(int objectIndex, unsigned char setExtraInfo);
     // The second parameter is the 8x6 byte grid the object's draw pass
     // stamps: retail zeroes exactly 48 bytes through it and walks it with a
@@ -1421,7 +1433,16 @@ public:
     std::vector<boat> boats;             // +0x4e3b8
     std::vector<type_university> universities;      // +0x4e3c8
     std::vector<type_creature_bank> creatureBanks; // +0x4e3d8
-    unsigned char field_4e3e8;
+    // +0x4e3e8, the map's obelisk count. RETYPED unsigned -> plain (i.e.
+    // signed) char 2026-08-20: SetupPuzzlePieces (0x4baf00) reads it with
+    // `mov al,[this+0x4e3e8]` followed by `movsx ebx,al`, which an
+    // unsigned char cannot produce, and it does so at three sites - the
+    // 48 - x, the float divisor and the == x compare. The Dreamcast dump
+    // types the same member T_RCHAR and names it `numObelisks`, and the
+    // DC body loads it with the sign-extending mov.b. The rename is
+    // available on the same evidence but is left as a separate decision;
+    // the only two other users are plain byte copies in Load/Save.
+    char field_4e3e8;
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.
@@ -1509,6 +1530,9 @@ public:
     bool IsLocalHuman(int gamePos) const;        // 0x4ce970
     boat* GetHeroBoat(int id, unsigned char occupied);       // 0x4ce900
     int MineTypesOwned(int iWhichPlayer, int iMineType);     // 0x4bae70
+    // 0x4baf00, its link-order neighbour. countOnly stops at the piece
+    // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
+    int SetupPuzzlePieces(int whichPlayer, int countOnly);
     int GetTownId(int x, int y, int z);                      // 0x4bb870
     int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
     void GiveArmy(armyGroup* thisMonInfo, int iMonType,
@@ -1616,11 +1640,22 @@ public:
 #endif
     void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
+        || defined(HOMM3_GAME_RANDOM_OBJECTS_DECLS)
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
     // retail-sensitive game member population in the other compilands.
+    // game.obj joins on its own gate for ProcessRandomObjects, which
+    // calls it once per random-object case.
     void ConvertObject(NewmapCell* tempCell);
+#endif
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+    // The random-object pass and the monster roll it drives. Both bodies
+    // are claimed in game.cpp; the declarators are held on this gate
+    // rather than on HOMM3_GAME_OBJ_DECLS so townmgr.obj - the other
+    // consumer of that macro - gains no member.
+    TCreatureType GetRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
+    void ProcessRandomObjects();                                 // 0x4c9dd0
 #endif
 #ifdef HOMM3_HERO_OBJ_DECLS
     void record_show_hero(hero* who, signed char player, type_point point,
@@ -1635,11 +1670,13 @@ public:
     void ShowMoraleInfo(const hero* who, int dialogType);
     void ShowLuckInfo(const hero* who, int dialogType);
 #endif
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
-    // Retail-only 0x49c720. SwapHeroes and hero::Deallocate (0x4d9ec0)
-    // both prove this three-argument member queues a hero-state record;
-    // no surviving name covers it, so the declaration stays ordinal and
-    // gated to the two compilands that reach it.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
+        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
+    // Retail-only 0x49c720. SwapHeroes, hero::Deallocate (0x4d9ec0) and
+    // playerData::add_garrison_hero (0x4b9fc0) all prove this
+    // three-argument member queues a hero-state record; no surviving name
+    // covers it, so the declaration stays ordinal and gated to the three
+    // compilands that reach it.
     void GameFn_0049C720(hero* who, signed char owner,
                          unsigned char state);
 #endif
@@ -1662,6 +1699,11 @@ public:
     // constructor uses its byte result to enable the End Turn button.
     void play_recorded_events();
     unsigned char replay_available() const;
+    // 0x49dc60 (dc 0x8ebc4, event_record.cpp:1426). game::Save's last
+    // operation and the only guarded one in its tail: it writes the
+    // eventRecords count as a dword and then each record through the
+    // vtable. Body belongs to event_record.obj.
+    unsigned char save_recorded_events(TAbstractFile* outfile);
     void ShowScenInfo();
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
@@ -1775,6 +1817,25 @@ public:
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* gpGame;
+
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+// The five .def-name tables game::ConvertObject (0x4c9990) rewrites a
+// converted object's CObjectType::ImageName from. Their sole reader in
+// the whole image is that body (config/retail-reloc-evidence.tsv rows
+// 0xc9a33 / 0xc9a42 / 0xc9b04 / 0xc9b50 / 0xc9b63), so they are declared
+// on game.obj's own gate. Contents read from the hash-verified image:
+// the resource row is avtwood0/avtmerc0/avtore0/avtsulf0/avtcrys0/
+// avtgems0/avtgold0.def in the seven-resource order the tree already
+// uses, and the three town rows are AVCcast0..AVChfor0 (village),
+// AVCcasx0..AVChforx (fort) and AVCcasz0..AVChforz (capitol), nine
+// entries each in TTownType order. Names are house placeholders - no DC
+// roster row covers any of the five.
+DATA(0x00677958) extern const char* gResourceObjectDefs[NUM_RESOURCES];
+DATA(0x00677974) extern const char* gArtifactObjectDefFormat;
+DATA(0x00677a0c) extern const char* gTownVillageObjectDefs[9];
+DATA(0x00677a30) extern const char* gTownFortObjectDefs[9];
+DATA(0x00677a54) extern const char* gTownCapitolObjectDefs[9];
+#endif
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
