@@ -13,6 +13,7 @@
 #include "struct.h"
 
 class Bitmap16Bit;
+class CNetMsgHandlerPause;
 class Bitmap816;
 class CSprite;
 class hero;
@@ -406,7 +407,11 @@ public:
     // (0x5994b0) independently reads its status member at +0x34 while
     // combat music is active; the retail ctor's baseManager call and
     // combatManager vptr store prove the inheritance directly.
-    CCombatOwnedObject* field_38;
+    // A CNetMsgHandlerPause, not a CCombatOwnedObject (retyped in place
+    // 2026-08-20, a rename): Open (0x462a20) assigns
+    // `new CNetMsgHandlerPause()` here off an operator new(0x10), which
+    // is SIZE(CNetMsgHandlerPause, 0x10) exactly, and Close deletes it.
+    CNetMsgHandlerPause* field_38;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -427,7 +432,16 @@ public:
     // reason its two neighbours are.
     int field_40;                     // +0x40
     int field_44;                     // +0x44
-    char pad_0048[0x17c];
+    char pad_0048[0x4];
+    // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
+    // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
+    // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
+    // 0x4c + 0xbb == 0x107 and 0x107 + 0xbb == 0x1c2 closes the band
+    // exactly against `cells`. Same shape as the 187-byte row at
+    // +0x14031. No reader is decoded for either, so both stay ordinals.
+    unsigned char field_004c[COMBAT_GRID_CELLS];   // +0x4c
+    unsigned char field_0107[COMBAT_GRID_CELLS];   // +0x107
+    char pad_01c2[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
@@ -454,14 +468,19 @@ public:
     // always nested inside the field_53a8 test above. Name provisional.
     unsigned char field_53a9;         // +0x53a9
     char pad_53aa[0x2];
-    CCombatOwnedObject* field_53ac;
+    // A Bitmap16Bit, not a CCombatOwnedObject (retyped in place
+    // 2026-08-20, a rename): Open constructs all THREE of these with
+    // Bitmap16Bit::Bitmap16Bit(w, h) at 0x44df70 off an
+    // `operator new(0x38)`, which is sizeof(Bitmap16Bit), and field_53b0
+    // between them was already spelled that way.
+    Bitmap16Bit* field_53ac;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
     // battlefield back over the previous frame's extent - so it is the
     // combat back-buffer, not a bare polymorphic object. Close still
     // deletes it through the same slot-0 virtual destructor either way.
     Bitmap16Bit* field_53b0;
-    CCombatOwnedObject* field_53b4;
+    Bitmap16Bit* field_53b4;
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
@@ -748,7 +767,9 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x7];
+    char pad_13d69[0x3];
+    // Cleared by Open just before the acting pair is stamped. Ordinal.
+    int field_13d6c;                  // +0x13d6c
     // Placement inset measured in combat-grid columns. command.obj's
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
     // two side limits as 2*n+1 and 2*n+15 respectively.
@@ -967,6 +988,10 @@ public:
     // 0x463c60, DC cmbtmgr.cpp:1348. Ungated for the same reason
     // SetupAndLoadObstacles above is: Open calls both back to back and
     // both are defined in this compiland.
+    // 0x462a20, DC cmbtmgr.cpp:594 - baseManager's virtual Open, the
+    // slot the vtable anchor names. Ungated beside Close, which it
+    // mirrors and which is already ungated here.
+    int Open(int newPriority);
     void InitNonVisualVars();
     void SetupAndLoadObstacles();
     void RemoveObstacle(int index);
@@ -1568,6 +1593,18 @@ public:
     unsigned char Unnamed5a40d0(SpellID spell, long mastery, long side,
                                 long arg4, long arg5);
     void Unnamed4782d0();
+    // TWO MORE, both command.obj bodies Open calls back to back with no
+    // arguments, and both left as address ordinals for the reason above.
+    //   0x479f30 (139 B) takes one GameTime::Get(), stores it to
+    //     +0x53fc and +0x5400, then walks both sides' stacks and seeds
+    //     army+0xfc with `now + 2*Random(1,50) - army+0x154` for every
+    //     stack whose +0x154 exceeds 0x33 - a per-stack animation-phase
+    //     seeder.
+    //   0x478890 (110 B) returns at once under IsQuickCombat; otherwise
+    //     it either clears the combat message line and forces a mouse
+    //     move, or re-arms the combat pointer.
+    void Unnamed479f30();
+    void Unnamed478890();
 #endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
@@ -1582,6 +1619,17 @@ extern combatManager* gpCombatManager;
 // UNATTESTED - no DC global, roster or string reaches either byte, so
 // both keep an address-ordinal placeholder rather than a guess at the
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
+// Two GameTime stamps Open takes on its way in, both shared with other
+// compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
+// and with command.obj's combatManager::Main frame pacer, 0x6989b8 with
+// Main and CycleCombatScreen. Behind a view because a single file-scope
+// extern added to this header is its own measured include-set trigger
+// (the field_132a0 bisection), and cmbtmgr.obj is the only consumer
+// that needs them today.
+#ifdef HOMM3_CMBTMGR_OPEN_VIEW
+DATA(0x00698998) extern unsigned long gCombatStamp698998;
+DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
+#endif
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
 

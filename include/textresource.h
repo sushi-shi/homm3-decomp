@@ -120,6 +120,13 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
 #ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
+    // The tactics-phase help dialog combatManager::Open (0x462a20)
+    // raises once per player, behind that player's own
+    // placement_help_enabled flag which it then clears - a folded
+    // [Text._First + 0x5d4] and the only load of that row in the image.
+    // The index is byte-proven; the name describes the one consumer,
+    // since the TXT resources are not in this tree.
+    GENERAL_TEXT_COMBAT_PLACEMENT_HELP = 373,
     // The wraith's mana-drain line, in its two counts. Both are folded
     // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
     // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
