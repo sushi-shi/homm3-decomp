@@ -1652,6 +1652,56 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // fourteen points are the 8-byte frame delta the under-inline forces -
 // the two `_Ucopy` iterator temps homed in memory - shifting every deep
 // local, the ~15%-score-hole shape.
+//
+// EIGHTH ROUND, 2026-08-20 - the wall is now SITE-RESOLVED and the pin
+// family is eliminated. The 49 push_back sites decide in three phases:
+// retail expands push_back one level and CALLS insert at sites 1-29,
+// expands insert fully (size/_Ucopy/_Ufill/_Destroy census) at sites
+// 30-40, and CALLS push_back outright at 41-49 (the Conflux arm + the
+// tail); ours is 1-30 / 31-41 / 42-49 - both boundaries exactly one
+// site late (site 30 = Dungeon's TPTHChk icon, site 41 = Conflux's
+// background). The tail-loop `begin base x0 vs retail x1` / `end x0 vs
+// x2` rows are retail's RUNNING CAP crossing before the tail - the
+// free-tier (<=0x28) exemption stops binding - which is why raising cb
+// fixes them along with everything else. Measured against that
+// structure:
+//   * inline_depth(0) on the Conflux background (site 41) imposes
+//     retail's call there, but the freed charge re-expands site 42 -
+//     multiset unchanged at 30/11/8, +0.157 incidental (86.1468).
+//   * Pinning the WHOLE retail-depth-0 region (Conflux arm + tail +
+//     the AddWidget for) drops the depth-2 census to 10 against
+//     retail's 11 and measures 85.1629. Geometry conservation: until
+//     site 30 expands - which needs MORE inlining, unpinnable - every
+//     imposed tail call is a new deficit elsewhere. Both reverted.
+// So no pin subset can reach retail's structure; the budget dose is
+// the only lever, exactly as the titration said.
+//
+// AND THE CURRENCY IS NOW PINNED DOWN, three measurements:
+//   * Constant-FOLDED expression nodes carry ZERO cb: a single dead
+//     store of a 300-node `0|0|...|0` chain measures 85.9895 to the
+//     digit. C1XX folds before it prices. The whole folded-constant
+//     respelling family (named flag ORs, spelled-out arithmetic) is
+//     dead as a carrier.
+//   * Statements under `if (0)` carry FULL cb and are byte-inert:
+//     sixty plain `i = 0;` stores wrapped in `if (0) {}` measure
+//     99.6605 - identical to the naked 60-probe plateau, re-anchored
+//     at this integration head. C1XX prices the dead tree; C2 deletes
+//     it with no EH or byte residue. A compile-time-disabled feature
+//     block IS a byte-inert cb carrier in this compiler.
+//   * But an if(0) block containing CANDIDATE CALL SITES moves the row
+//     BACKWARD: a dead tail button+push_back measures 84.4622, a whole
+//     dead case arm 79.9089. Dead sites still enter the collector and
+//     enlarge the site denominators. So the Dreamcast-only block (the
+//     second button::button, the 45th push_back, del_Spr_from_Cache)
+//     cannot be retail's missing mass under ANY spelling - as #ifdef
+//     it prices 0, as if(0) it measures backward - and the missing
+//     retail cb is CALL-FREE dead statement mass, ~40-80 simple
+//     statements' worth, for which no real-source counterpart is
+//     recoverable from the DC dump (its line table's tail hole,
+//     4448-4454, is comment-sized, and exact siblings carry 11-, 41-
+//     and 101-line holes that are provably comments). Per the
+//     do_general_melee precedent the scaffolding stays out of the
+//     tree; the row holds at 85.9895 until an honest carrier appears.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
