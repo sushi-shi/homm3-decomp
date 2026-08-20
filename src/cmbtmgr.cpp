@@ -953,17 +953,48 @@ void combatManager::UpdateArmyGroup(int whichSide)
 // E:\gamedcs\cmbtmgr.cpp:1653
 // RECONSTRUCTED 2026-08-09 from retail's 11x17 cell initializer. All eight
 // short coordinate fields, five empty sentinels and three cleared state
-// fields are written in retail order. Residual (58.8421%): the five-block
-// loop flow agrees, but retail spills y and three row expressions while this
-// compile retains/strength-reduces y. Cached/repeated GetCell spellings,
-// function/block y lifetimes and the nested GetHexIndex boundary converge.
+// fields are written in retail order.
+//
+// CORRECTED 2026-08-20, and the correction is semantic, not cosmetic. The
+// odd-row shift on the LOWER pair was inverted. Retail computes it as
+// `neg cl / sbb ecx,ecx / and ecx,-16h / add ecx,16h`, which is
+// `odd ? 0 : 22`; the upper pair's `and al,-16h / add eax,2Ch` is
+// `odd ? 22 : 44`. This body had both as `odd ? 22 : <else>`, so every odd
+// row's field_04/field_08 sat 22 too far right.
+//
+// The three derived coordinates are READ BACK OUT OF THE JUST-STORED
+// MEMBER, not recomputed and not cached in a named local. Retail spells
+// field_0a/field_0c as `lea ecx,[edi+2Ah]` / `[edi+34h]` off the field_06
+// value and field_08 as `add esi,2Ch` off the field_04 value. Written as
+// `y*42+128` / `y*42+138` / `x*44+lower+14+44` they constant-fold into
+// three independent expressions VC6 never re-associates back together;
+// landing them in named locals is WORSE still, because `int top = y*42+86`
+// is an affine function of the outer counter and VC6 strength-reduces it
+// onto its own induction variable (`mov edi,56h` ... `add edi,2Ah` /
+// `cmp edi,224h`) where retail recomputes `y*42` from y every outer
+// iteration. Measured: 58.8421 (folded) -> 54.4868 (named locals) ->
+// 60.3026 (member read-back).
+//
+// Residual (60.3026%): ONE allocation decision. Retail hoists `or ebx,-1`
+// into the outer preheader and feeds all five sentinels from it (`mov
+// [eax+14h],bl` x3, `mov [eax+10h],ebx`), which costs it EBX and pushes y
+// AND the cell pointer into frame slots ([ebp-4], [ebp-8], frame 14h);
+// this compile keeps y in EBX and the pointer in EAX (frame 0Ch) and pays
+// with five -1 immediates. The choice is C2's and the source cannot reach
+// it - tried and rejected, all BYTE-IDENTICAL to the plain form at
+// 60.3026: `cell->field_1a = cell->armySlot = cell->armySide = -1;`
+// (chained, which also yields retail's left-to-right store order), a
+// hoisted `int empty = -1;` fed through `static_cast<signed char>`, and
+// both together; the constant folds back every time. Downstream of the
+// same decision: our base pointer lands at cells+18h against retail's
+// cells+4, which is what pushes four stores onto disp32 encodings.
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
 void combatManager::GenerateMap()
 {
     int y;
     for (y = 0; y < 11; y++) {
         int upper_offset = RowIsOdd(y) ? 22 : 44;
-        int lower_offset = RowIsOdd(y) ? 22 : 0;
+        int lower_offset = RowIsOdd(y) ? 0 : 22;
 
         for (int x = 0; x < 17; x++) {
             hexcell* cell = &GetCell(x, y);
@@ -976,12 +1007,11 @@ void combatManager::GenerateMap()
             cell->field_00 = static_cast<short>(
                 x * 44 + upper_offset + 14);
             cell->field_02 = static_cast<short>(y * 42 + 128);
-            cell->field_0a = static_cast<short>(y * 42 + 128);
+            cell->field_0a = static_cast<short>(cell->field_06 + 42);
             cell->field_04 = static_cast<short>(
                 x * 44 + lower_offset + 14);
-            cell->field_0c = static_cast<short>(y * 42 + 138);
-            cell->field_08 = static_cast<short>(
-                x * 44 + lower_offset + 14 + 44);
+            cell->field_0c = static_cast<short>(cell->field_06 + 52);
+            cell->field_08 = static_cast<short>(cell->field_04 + 44);
             cell->field_10 = 0;
             cell->iBodiesInHex = 0;
             cell->field_4c = 0;
