@@ -33,6 +33,9 @@
 // get_chain_lightning_value drives the chain through two spells.obj
 // leaves this TU is the only located caller of.
 #define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
+// check_adjacent_hexes breaks a tie toward the LONGER approach for the
+// two jousters.
+#define HOMM3_CREATURE_JOUST_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -574,19 +577,149 @@ long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:575
+// How many turns this stack needs to reach the hex `cell` describes.
+// No retail body - the carve cuts nothing between the chooser's
+// constructor at 0x4360c0 and check_adjacent_hexes at 0x436300 - so it
+// is `inline`, and the RETURN is what the caller's shape needs: retail
+// leaves the answer in EAX across all four exits and stores it ONCE,
+// where the same statements written out in the caller store to the
+// slot at every assignment.
 DC_ONLY(0x3d154, 0x8E)
-long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
+inline long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
 {
-    // @stub
+    if (speed == 0)
+        return 0 < cell->cost ? 100 : 1;
+    long turns = (cell->cost + speed - 1) / speed;
+    if (search_data->bIsMoatSlowed[cell->point.x])
+        turns++;
+    if (turns < 1)
+        turns = 1;
+    return turns;
 }
 
 // E:\gamedcs\ai_tactical.cpp:599
+// The hex chooser's inner sweep: try the enemy's neighbouring hexes
+// over one direction range and keep the best place to attack from.
+//
+// The per-hex time is get_attack_time (dc 0x3d154) INLINED - a stack
+// with no speed at all is charged a flat 100 turns for any hex that
+// costs anything, everyone else pays `ceil(cost / speed)` plus one for
+// a moat hex, floored at 1 - and a hex that takes MORE turns than the
+// standing best is refused outright.
+//
+// The two seven-parameter statics below are added for the attacker's
+// own multi-head and breath sweeps and SUBTRACTED for the enemy's
+// retaliation, but only while the side is actually being played by the
+// computer or the difficulty is above the lowest rung. The same gate
+// guards the tie-break, where a JOUSTER (creatureType 10 or 11) breaks
+// a tie toward the hex that costs MORE to reach - its charge bonus
+// grows with distance - and everything else toward the cheaper hex.
+//
+// A double-wide attacker scores BOTH of its hexes: the second is one
+// step in the direction it faces, its attack value is added, and the
+// enemy threat taken is the SMALLER of the two hexes'.
 VA(0x00436300, 0x31C)  // anchor-global, dc 0x3d1e4
 void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)
 {
-    // @stub
+    for (long direction = start_direction; direction < stop_direction; direction++) {
+        long hex = gpCombatManager->adjacentCells[enemy_hex][direction];
+        if (hex < 0)
+            continue;
+        if (hex >= COMBAT_GRID_CELLS)
+            continue;
+        const pathCell* cell;
+        if (search_data->cellData == 0)
+            cell = 0;
+        else
+            cell = &search_data->cellData[hex];
+        if (!cell->visited)
+            continue;
+        if (cell->flight_cost > 0)
+            continue;
+        long turns = get_attack_time(cell);
+        if (best_hex >= 0) {
+            if (field_24 < turns)
+                continue;
+        }
+        long checked = 0;
+        long value = get_hex_attack_value(hex, &checked);
+        if (gpGame->setup.difficulty > 0
+                || gpCombatManager->sideIsAI[data->side]) {
+            unsigned char heads = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 19);
+            if (heads & 1)
+                value += get_multi_head_bonus(gpCombatManager->currentSide,
+                                              attack_army, hex, our_troops,
+                                              enemy_army, enemy_army->gridIndex,
+                                              data);
+            unsigned char breath = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 3);
+            if (breath & 1)
+                value += get_breath_bonus(gpCombatManager->currentSide,
+                                          attack_army, hex, our_troops,
+                                          enemy_army, enemy_army->gridIndex,
+                                          data);
+            unsigned char no_retaliation = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 16);
+            if (!(no_retaliation & 1) && !enemy_army->disabled_2b0
+                    && enemy_army->retaliationCount > 0) {
+                unsigned char enemy_heads = static_cast<unsigned char>(
+                    static_cast<unsigned>(enemy_army->creatureId) >> 19);
+                if (enemy_heads & 1)
+                    value -= get_multi_head_bonus(enemy_army->combatSide,
+                                                  enemy_army,
+                                                  enemy_army->gridIndex,
+                                                  enemy_troops_left,
+                                                  attack_army, hex, data);
+                unsigned char enemy_breath = static_cast<unsigned char>(
+                    static_cast<unsigned>(enemy_army->creatureId) >> 3);
+                if (enemy_breath & 1)
+                    value -= get_breath_bonus(enemy_army->combatSide,
+                                              enemy_army,
+                                              enemy_army->gridIndex,
+                                              enemy_troops_left,
+                                              attack_army, hex, data);
+            }
+        }
+        long threat = enemy_attack_array[hex];
+        if (attack_army->creatureId & 1) {
+            long other_hex = hex + (attack_army->facing ? 1 : -1);
+            value += get_hex_attack_value(other_hex, &checked);
+            threat = _cpp_min(enemy_attack_array[other_hex], threat);
+        }
+        value += threat;
+        if (best_hex >= 0 && turns == field_24) {
+            if (value < best_value)
+                continue;
+            if (value == best_value) {
+                const pathCell* best_cell;
+                if (search_data->cellData == 0)
+                    best_cell = 0;
+                else
+                    best_cell = &search_data->cellData[best_hex];
+                long difference = cell->cost - best_cell->cost;
+                if ((attack_army->creatureType == CREATURE_CAVALIER
+                            || attack_army->creatureType == CREATURE_CHAMPION)
+                        && (gpGame->setup.difficulty > 0
+                            || gpCombatManager->sideIsAI[data->side])) {
+                    if (difference <= 0)
+                        continue;
+                } else {
+                    if (difference >= 0)
+                        continue;
+                }
+            }
+        }
+        best_value = value;
+        best_hex = hex;
+        field_24 = turns;
+    }
 }
+
+#if 0  // @carcass
 
 // THE TWO SEVEN-PARAMETER STATICS, moved here from their DC line
 // positions (109 and 155). Retail emits them immediately after

@@ -14,6 +14,9 @@
 
 class hero;
 class searchArray;
+// findpath.h's cell record; get_attack_time takes one by pointer and
+// this header does not need the definition.
+struct pathCell;
 
 // PROVEN (2026-08-07) by set_melee_enemies (0x43bf20): a 16-byte record
 // written as {army*, damage, 1, damage} at this+0x50 + i*0x10, with the
@@ -146,6 +149,9 @@ struct type_AI_attack_hex_chooser {
                                const long* attack_array, searchArray* search,
                                const type_AI_combat_parameters* combat_data);
     long get_hex_attack_value(long hex, long* checked);
+    // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
+    // retail body of its own.
+    long get_attack_time(const pathCell* cell);
     void check_adjacent_hexes(long enemy_hex, long start_direction,
                               long stop_direction);
     unsigned char find_attack_hex();
@@ -349,8 +355,18 @@ double AI_value_of_luck(long luck, long change);
 long AI_get_attack_damage(const army* current_army, long our_hits,
                           const army* enemy, unsigned char ranged,
                           long distance);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:109, dc 0x3c608) long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:155, dc 0x3c708) long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
+// The two seven-parameter statics. DECLARED rather than left as
+// CODEVIEW rows because check_adjacent_hexes (0x436300) calls both and
+// retail emits them AFTER their caller - the static-after-caller
+// inversion recorded above their definitions - so the call sites need
+// a prototype the definitions cannot supply.
+// dc 0x3c608 (ai_tactical.cpp:109) / dc 0x3c708 (ai_tactical.cpp:155).
+long get_multi_head_bonus(long our_group, const army* our_army, long our_hex,
+                          long troop_count, const army* enemy, long enemy_hex,
+                          const type_AI_combat_parameters* estimate);
+long get_breath_bonus(long our_group, const army* our_army, long our_hex,
+                      long troop_count, const army* enemy, long enemy_hex,
+                      const type_AI_combat_parameters* estimate);
 
 // --- army ---
 // CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);

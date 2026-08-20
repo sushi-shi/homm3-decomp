@@ -226,6 +226,7 @@ ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000
 ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000	100.0000	100.0000	0x35960
 ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000	100.0000	100.0000	0x35830
 ai_tactical	?cast_spell@type_AI_spellcaster@@QAEEE@Z	98.8760	98.8760	98.8760	0x3c800
+ai_tactical	?check_adjacent_hexes@type_AI_attack_hex_chooser@@QAEXJJJ@Z	99.1018	99.1018	99.1018	0x36300
 ai_tactical	?consider_chain_lightning@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x37310
 ai_tactical	?consider_earthquake@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b8f0
 ai_tactical	?consider_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a910
@@ -300,7 +301,6 @@ ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	95.2778	95.2778	95.27
 ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6781	86.6781	0x36c60
 ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
-ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000	0.0000	0.0000	0x36300
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
