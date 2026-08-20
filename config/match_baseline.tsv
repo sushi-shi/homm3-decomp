@@ -329,7 +329,7 @@ army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194
 army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	94.6999	94.6999	94.6999	0x448f0
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
-army	?Unnamed447fe0@army@@QAEEXZ	66.9952	66.9952	66.9952	0x47fe0
+army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0
 army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0
 army	?WalkTo@army@@QAEEHE@Z	89.7721	89.7721	89.7721	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
