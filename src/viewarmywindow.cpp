@@ -801,26 +801,47 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// Residual (35.5280%): the CALL MULTISET IS EXACT - all 50 calls agree in
-// order and target through the string destructor, including which of the
-// four `text +=` sites retail inlines and which it calls - and the first
-// 0x4af bytes are instruction-for-instruction identical. What is left is
-// ONE BLOCK PLACEMENT: retail emits the animation head (the ten
-// instructions from the glTimers load to `jmp` past the siege branch) as
-// the FALL-THROUGH of the string destructor's `operator delete` tail at
-// 0x5f4cff, so its widget and rollover arms reach it by BACKWARD jumps;
-// our CL emits the same block once, at the end, and the two arms fall
-// into it. The move is what the score is paying for: displaced branch
-// targets across the whole second half.
-// It is not source-addressable from here (D3 topology). Measured and
-// rejected, all three byte-identical to each other: the plain
-// if/else-if chain; `animate:` placed textually between the first arm and
-// the other two with `goto animate` from both (the adventureoptionswindow
-// idiom, whose own handler has this exact join at 99.94%); and the same
-// with an `else goto dispatch;` so every arm-to-tail edge is a backward
-// jump in SOURCE order too. VC6's placement here follows the flow graph,
-// not the statement order - all three spellings produce the identical
-// object.
+// THE JOIN BLOCK IS PLACED BY DUPLICATING IT, NOT BY MOVING IT
+// (35.5280 -> 73.6288, 2026-08-20 - and it OVERTURNS the "not
+// source-addressable" verdict below, which is kept because its
+// measurements are all still true).
+//
+// The diagnosis was right: the whole residual was ONE BLOCK PLACEMENT.
+// Retail emits the animation head (glTimers load .. the siege branch) as
+// the FALL-THROUGH of the right-click arm's `operator delete` tail at
+// 0x5f4cff and lets the widget and rollover arms reach it by BACKWARD
+// jumps; we emitted the same block once, at the end, with every arm
+// falling forward into it, and the displaced branch targets across the
+// whole second half were the entire 64 points.
+//
+// What was wrong was the conclusion. Four single-copy spellings were
+// measured and all four produce the identical object (the plain
+// if/else-if chain; `animate:` between the first arm and the other two
+// with `goto animate` from both; the same with `else goto dispatch;`;
+// and, added this round, the adventureoptionswindow idiom exactly -
+// `animate:` INSIDE the first arm's braces with `goto animate` from the
+// others, 35.5040). That is not "VC6 follows the flow graph": it is VC6
+// SINKING a multi-predecessor join to the end, unconditionally, whatever
+// the source order. You cannot move such a block. You CAN stop it being
+// one: WRITE THE BLOCK TWICE. With a copy at the end of the right-click
+// arm and a copy at the tail, the first copy has a single predecessor,
+// nothing sinks it, and it lands exactly where retail's is - +38.1
+// points, and the second half's branch targets come back with it.
+// The cross-jumper then merges what it can: spelling the shared
+// DrawWindow/NextFrameTime tail once behind `goto animate_tail` (rather
+// than duplicating that too) is honoured - 671 instructions -> 648
+// against retail's 626 - so the landed shape is retail's ONE tail with
+// one extra copy of the ~14-instruction head.
+// Left: that extra head (3 of the 6 surplus branches, base 61 against
+// retail's 55) - retail has ONE head with six predecessors and no
+// spelling reaches that without re-creating the sink - plus the
+// cross-jump item below.
+//
+// (The original note, all of it still measured and still true:)
+// The CALL MULTISET IS EXACT - all 50 calls agree in order and target
+// through the string destructor, including which of the four `text +=`
+// sites retail inlines and which it calls - and the first 0x4af bytes
+// are instruction-for-instruction identical.
 // One secondary item, same class: retail cross-jumps the dismiss and
 // upgrade arms' shared tail (`call NormalDialog` + the
 // DIALOG_RETURN_ACCEPT test) into one block and jumps into it from the
@@ -906,6 +927,23 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 NormalDialog(text.c_str(), 4, -1, -1, iResType, 0, -1, 0,
                              -1, 0, -1, 0);
         }
+        {
+            unsigned long lastFrame =
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+            if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+                union {
+                    int value;
+                    TCreatureType creature;
+                } shown_type;
+                shown_type.value = ArmyType;
+                if (IsSiegeWeapon(shown_type.creature))
+                    SpriteWidget->NextRandomSiegeEngineFrame();
+                else
+                    SpriteWidget->NextRandomFrame();
+                goto animate_tail;
+            }
+        }
+        return MESSAGE_DISPATCH_CONSUME;
     } else if (msg->id == MESSAGE_WIDGET) {
         if (msg->codeX == widget::WIDGET_DESELECT) {
             switch (msg->codeY) {
@@ -1008,25 +1046,29 @@ int TViewArmyWindow::WindowHandler(message* msg)
         }
     }
 
-    // The creature sprite steps its own animation on every message the
-    // popup sees, on the shared adventure-animation clock.
-    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-    if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
-        union {
-            int value;
-            TCreatureType creature;
-        } shown_type;
-        shown_type.value = ArmyType;
-        if (IsSiegeWeapon(shown_type.creature))
-            SpriteWidget->NextRandomSiegeEngineFrame();
-        else
-            SpriteWidget->NextRandomFrame();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
-            GameTime::NextFrameTime(
-                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
-                VIEW_ARMY_DELAY);
+    {
+        unsigned long lastFrame =
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+            union {
+                int value;
+                TCreatureType creature;
+            } shown_type;
+            shown_type.value = ArmyType;
+            if (IsSiegeWeapon(shown_type.creature))
+                SpriteWidget->NextRandomSiegeEngineFrame();
+            else
+                SpriteWidget->NextRandomFrame();
+            goto animate_tail;
+        }
     }
+    return MESSAGE_DISPATCH_CONSUME;
+animate_tail:
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+        GameTime::NextFrameTime(
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
+            VIEW_ARMY_DELAY);
     return MESSAGE_DISPATCH_CONSUME;
 }
 
