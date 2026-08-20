@@ -6352,14 +6352,21 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
 //     too. Scoping the three lets VC6 coalesce them onto one slot AND
 //     overlap the loop bound on it, exactly as retail does. 90.56 -> 99.27.
 //
-// Residual (99.27%): two instructions in the route-target write. Retail
-// copies the point's old word into CX and XORs the target in from MEMORY
-// (`mov cx,ax / xor cx,[edi+0x35]`); our CL materialises pathTargetX first
-// and XORs the other way (`mov cx,[edi+0x35] / xor cx,ax`). Commutative,
-// identical in effect. Tried and rejected: named int locals for the three
-// coordinates (96.14), the same as shorts (99.27, no change), a y/x/z
-// assignment order (96.89), an explicit short cast (99.27), and sharing one
-// point between the route target and the view centre (99.27).
+// Residual (99.27%): two instructions in the route-target write, and the
+// cause is a CSE our CL makes and retail does not. Both sides load
+// pathTargetX as a DWORD for the `>= 0` guard. Retail then loads the
+// point's old word into AX first, clobbering that register, so the x
+// insert has to re-read pathTargetX from memory
+// (`mov ax,[ebp-0x20] / ... / mov cx,ax / xor cx,[edi+0x35]`); our CL
+// schedules `mov cx,ax` first and keeps the guard's value, then loads the
+// old word (`mov cx,ax / mov ax,[ebp-0x20] / xor cx,ax`). Commutative and
+// identical in effect - it is the SCHEDULE, not the operand order, that
+// differs. Nine spellings measured and rejected: named int locals for the
+// three coordinates (96.14), the same as shorts (99.27), y/x/z order
+// (96.89), z/y/x order (96.73), an explicit short cast (99.27), sharing one
+// point between the route target and the view centre (99.27), a `!= -1`
+// guard (99.02), a `!(x < 0)` guard (99.27), and hoisting the point's
+// declaration above the guard (99.27).
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
 {
