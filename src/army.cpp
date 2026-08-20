@@ -6839,15 +6839,43 @@ static int gEnchanterSpells[] = {
 // so each scan really asks numArmies[side] times about slot 0; and the
 // lottery loop leaves `spell` holding whatever pair it stopped on, so
 // an exhausted table (roll never below zero) casts the LAST row.
-// Residual (66.9952%): a whole-body register ROTATION - branch
-// sequences agree 26/26 after the `while (n-- != 0)` spelling (the
-// count-copy guard emits je/jne; `> 0` emitted jle/jg), but ours binds
-// p->EDI/spell->ESI where retail binds p->ESI/spell->EBX and homes
-// `this` one slot higher, and every line downstream renames with it.
-// why-reg's sweep tops out at volatile hacks (206 -> 184 slots, not
-// exact, not faithful); the class is the register-homing family and
-// the score is alignment-noisy (the structurally-worse `> 0` spelling
-// scored 68.12 - the low-mass inversion memory applies).
+// EXACT 2026-08-20, 66.9952 -> 100.0000, and the "whole-body register
+// ROTATION" the old note recorded was a SYMPTOM.  The rotation - ours binding
+// p->EDI/spell->ESI/n->EBX where retail binds p->ESI/spell->EBX/n->EDI, with
+// `this` homed one slot lower - was downstream of three source facts, and it
+// fell out on its own once they were spelled.  Four edits, each measured:
+//
+//   * `army* targets = gpCombatManager->armies[side];` before each of the two
+//     spell loops' inner scan.  Retail computes that address ONCE, parks it in
+//     the frame at [ebp-0xc] and hands the SAME pointer to every
+//     spell_is_valid_on_target call; we re-derived the whole 1183*side scale
+//     chain plus a fresh gpCombatManager load inside the loop.  This is the
+//     don't-cache-what-retail-reloads rule running the other way: read what
+//     retail keeps live across the back edge, even when it is a cache.
+//     66.9952 -> 82.4450.
+//   * ONE function-scoped `spell`, declared after `p`, used by both loops
+//     instead of a fresh one inside the first.  82.4450 -> 85.7416, and it is
+//     what puts spell in EBX and p in ESI.
+//   * the IsQuickCombat loop's `gpCombatManager->armies[side][i]`, written
+//     eight times, hoisted to a base pointer.  Retail loads it once into EAX
+//     (`lea eax,[esi+8*ecx+0x54cc]`) and walks it with `add eax,0x548` while
+//     RE-READING the bound `numArmies[side]` in the loop tail every
+//     iteration - so the base is hoisted and the bound is not.  As a
+//     subscript `stacks[i]` it is 93.9713; as an explicit `stack++` walk
+//     95.5981, which is what stops VC6 biasing the base by +0x290 and folding
+//     the first spellInfluence test into `cmp [eax],0` where retail loads and
+//     `test`s.
+//   * and the last 4.40 is the DECLARATION ORDER of those two locals:
+//     `targets` BEFORE `n`, not after.  Same statements, same reads, but it
+//     schedules the `n--` copy ahead of the address chain and drops the
+//     `test`/`lea` pair into retail's interleave.  95.5981 -> 100.0000.
+//
+// Kept from the old note: `while (n-- != 0)` is the count-copy guard's
+// spelling (it emits je/jne; `> 0` emits jle/jg).  Retired: the claim that
+// this row was register-homing with no lever, and the `p += 2` / `p[1]`
+// rewrite of the first loop, which the bytes refute - retail's
+// `mov ebx,[esi] / add esi,4` is `spell = *p++` exactly, and the trailing
+// `mov eax,[esi+4] / add esi,4` is the `total += *p; p++` pair.
 VA(0x00447fe0, 0x27E)  // anchor-callee (SetNextArmy 0x465519) + arity
                        // ret 0, retail-only slot
 unsigned char army::Unnamed447fe0()
@@ -6858,16 +6886,16 @@ unsigned char army::Unnamed447fe0()
 
     long total = 0;
     const int* p = gEnchanterSpells;
+    long spell;
     while (*p >= 0) {
-        long spell = *p++;
+        spell = *p++;
         long side = gpCombatManager->currentSide;
         if (akSpellTraits[spell].field_0 < 0)
             side = 1 - side;
+        army* targets = gpCombatManager->armies[side];
         long n = gpCombatManager->numArmies[side];
         while (n-- != 0) {
-            if (spell_is_valid_on_target(spell,
-                                         gpCombatManager
-                                             ->armies[side])) {
+            if (spell_is_valid_on_target(spell, targets)) {
                 total += *p;
                 break;
             }
@@ -6878,17 +6906,15 @@ unsigned char army::Unnamed447fe0()
         return 0;
 
     long roll = rand() % total;
-    long spell;
     for (p = gEnchanterSpells; *p >= 0; p += 2) {
         spell = *p;
         long side = gpCombatManager->currentSide;
         if (akSpellTraits[spell].field_0 < 0)
             side = 1 - side;
+        army* targets = gpCombatManager->armies[side];
         long n = gpCombatManager->numArmies[side];
         while (n-- != 0) {
-            if (spell_is_valid_on_target(spell,
-                                         gpCombatManager
-                                             ->armies[side])) {
+            if (spell_is_valid_on_target(spell, targets)) {
                 roll -= p[1];
                 break;
             }
@@ -6900,22 +6926,15 @@ unsigned char army::Unnamed447fe0()
     if (!static_cast<const combatManager*>(gpCombatManager)
              ->IsQuickCombat()) {
         long side = get_controlling_side();
-        for (long i = 0; i < gpCombatManager->numArmies[side]; i++) {
-            if (gpCombatManager->armies[side][i].creatureType
-                    == ARMY_CREATURE_ENCHANTER
-                && gpCombatManager->armies[side][i]
-                           .spellInfluence[SPELL_BLIND]
-                       == 0
-                && gpCombatManager->armies[side][i]
-                           .spellInfluence[SPELL_STONE]
-                       == 0
-                && gpCombatManager->armies[side][i]
-                           .spellInfluence[SPELL_PARALYZE]
-                       == 0
-                && !(gpCombatManager->armies[side][i].Is(21) & 1)) {
-                gpCombatManager->armies[side][i].bShowAttackFrames = 1;
-                gpCombatManager->armies[side][i].iShowAttackFrameType =
-                    cs_range_r;
+        army* stack = gpCombatManager->armies[side];
+        for (long i = 0; i < gpCombatManager->numArmies[side]; i++, stack++) {
+            if (stack->creatureType == ARMY_CREATURE_ENCHANTER
+                && stack->spellInfluence[SPELL_BLIND] == 0
+                && stack->spellInfluence[SPELL_STONE] == 0
+                && stack->spellInfluence[SPELL_PARALYZE] == 0
+                && !(stack->Is(21) & 1)) {
+                stack->bShowAttackFrames = 1;
+                stack->iShowAttackFrameType = cs_range_r;
             }
         }
         play_sample(SHOOT_SAMPLE);

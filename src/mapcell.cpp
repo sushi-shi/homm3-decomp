@@ -2763,7 +2763,7 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 
 // The nine-byte serialized spell set, unpacked a bit at a time.  Three sites
 // deserialize one - readTownData's two masks and readHeroData's - and all
-// three are written through this helper rather than longhand for the same
+// three are written through a helper rather than longhand for the same
 // per-caller /Ob2 reason readQuestGuardArm and resizeSeerHutList exist: a
 // function this small cannot afford the register/scheduling mass the loop
 // costs its caller, and the caller comes out closer to retail without it.
@@ -2771,17 +2771,47 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 // 82.0000 -> 82.0785, which is inside the noise and kept for uniformity
 // rather than for the score.
 //
-// It costs no symbol - mapcell.obj still carries exactly 67 functions -
-// because /Ob2 expands it at every one of the three sites.
+// They cost no symbol - mapcell.obj still carries exactly 67 functions -
+// because /Ob2 expands them at every one of the three sites.
 //
 // The `/ 8` and `% 8` are SIGNED: retail's `and ecx,0x80000007` with its
 // negative fixup, and the `cdq / and edx,7 / add / sar 3` pair, are what an
 // `int` counter produces and a shift-and-mask spelling would not.
+//
+// THE TWO CALLERS SPELL THE BIT STORE DIFFERENTLY, AND THE BYTES SAY SO
+// (2026-08-20).  A bitset<70> bit store reaches `_Xran` one level down through
+// `set(pos, val)` and two levels further through `operator[]` ->
+// `reference::operator=` -> `set`, and that DEPTH is what decides whether VC6
+// leaves `_Xran` as a call or expands its whole throw path inline.  Retail
+// readTownData CALLS bitset<70>::_Xran (0x4d1c80) exactly ONCE - one call
+// covering two mask loops, the cross-jumper having merged the two
+// argument-less throw blocks - and never reaches __CxxThrowException itself.
+// Retail readHeroData is the exact mirror: no _Xran call at all, and
+// __CxxThrowException@8 (0x617547) TWICE - one expansion for its mask loop and
+// one for the single-spell store in the Armageddon's Blade arm.  So the two
+// functions were written against different spellings and cannot share one
+// helper:
+//   readTownData   `set(i, v)`      82.0785 -> 94.3896  (+12.31)
+//   readHeroData   `(*spells)[i]=v` 83.7667; `set(i, v)` costs it 83.7528,
+//                  and `spells.set(spell, 1)` on the single-spell store costs
+//                  2.26 more (83.7528 -> 81.4958).
+// This RETIRES the "MEASURED AND REJECTED" probe readTownData used to carry:
+// that one wrote a single mask longhand to split the two range checks apart,
+// which is not what retail did - retail keeps both loops the same shape and
+// moves the whole throw out of line by LOWERING THE STORE'S DEPTH.
 static void unpackSpellMask(std::bitset<70>* spells,
                             const unsigned char* mask)
 {
     for (int i = 0; i < 70; ++i)
         (*spells)[i] = (mask[i / 8] & (1 << (i % 8))) != 0;
+}
+
+// readTownData's spelling: `set` one level down, so `_Xran` stays a CALL.
+static void unpackTownSpellMask(std::bitset<70>* spells,
+                                const unsigned char* mask)
+{
+    for (int i = 0; i < 70; ++i)
+        spells->set(i, (mask[i / 8] & (1 << (i % 8))) != 0);
 }
 
 // E:\gamedcs\mapcell.cpp:232 - TTownEvent::Read in the Dreamcast roster
@@ -2846,6 +2876,13 @@ static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
 // The tail resolves a RANDOM_TOWN's faction: the alignment byte's player slot
 // if that slot is playable at all, else the town's own owner, else a roll -
 // widened to nine alignments only when the scenario is expansion-era.
+//
+// Residual (94.3896%): 82.0785 -> 94.3896 on the bit-store depth, 2026-08-20
+// (unpackTownSpellMask's note has the derivation).  What is left is NOT the
+// inliner any more - predict-inline reports the call multisets AGREE, 24
+// against 24, where before the edit it read 23 against 24 with retail's lone
+// bitset<70>::_Xran unaccounted for.  The rest is register/scheduling:
+// why-branch still has base 50 vs retail 54 conditional branches.
 VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2931,16 +2968,16 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->Read(spellBuf, sizeof(spellBuf));
-        // MEASURED AND REJECTED: writing this first mask longhand so that one
-        // of the two bitset<70> range checks inlines - predict-inline says
-        // retail CALLS bitset<70>::_Xran (0x4d1c80) exactly once here and we
-        // never do, so the split looks right. 82.0785 -> 79.9793.
-        unpackSpellMask(&tempTown.fixedSpells, spellBuf);
+        // The single retail `call bitset<70>::_Xran` at 0x501dbb covers BOTH
+        // mask loops - see unpackTownSpellMask's note.  (An older probe wrote
+        // this first mask longhand to split the two range checks apart and
+        // measured 82.0785 -> 79.9793; the split was the wrong reading.)
+        unpackTownSpellMask(&tempTown.fixedSpells, spellBuf);
     }
 
     if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    unpackSpellMask(&tempTown.spells, spellBuf);
+    unpackTownSpellMask(&tempTown.spells, spellBuf);
 
     if (infile->Read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
@@ -2995,6 +3032,63 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     return 0;
 }
 
+static void readHeroArmies(TAbstractFile* infile, HeroExtra* hero_data,
+                           int mapVersion)
+{
+    hero_data->bCustomArmies = 1;
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        int creature;
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            creature = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            creature = wide;
+        }
+        hero_data->armies[slot] = creature;
+
+        short troops;
+        infile->Read(&troops, sizeof(troops));
+        hero_data->numTroops[slot] = troops;
+    }
+}
+
+// TWO /Ob2 BUDGET DEVICES FOR readHeroData, not Dreamcast rows (2026-08-20).
+// The DC roster runs mapcell.cpp:2951 (readHeroData) to the next function with
+// nothing between, and it does list helpers a build inlined away, so these two
+// are codegen devices in the same class as the statement pin further down and
+// NOT a claim about retail's source.
+//
+// What they buy: retail CALLS `logic_error::logic_error(const string&)`
+// (0x4c3090) inside BOTH of its inlined bitset<70>::_Xran throw paths - at
+// fn+0x5c3 and fn+0x773 - and we expanded it, which is where the extra
+// `basic_string::assign` / `exception` / `_Grow` / `char_traits::assign`
+// calls in the unmatched column come from.  That is an over-inline, so the
+// budget - `clamp(2 * caller_cb, 1000, 35000)` - is too large, and shrinking
+// caller_cb is what reaches it.  Measured in doses:
+//   secondary skills out   83.7667 -> 86.2472
+//   armies out             86.2472 -> 86.7264
+//   artifacts out as well  86.7264 -> 86.4333, so THREE is past the peak and
+//                          the block stays in the body.
+static void readHeroSecondarySkills(TAbstractFile* infile,
+                                    HeroExtra* hero_data)
+{
+    int int_buffer;
+    hero_data->bCustomSecondarySkills = 1;
+    infile->Read(&int_buffer, sizeof(int_buffer));
+    hero_data->NumSecondarySkills = int_buffer;
+    for (int skill = 0; skill < hero_data->NumSecondarySkills; ++skill) {
+        char type;
+        infile->Read(&type, sizeof(type));
+        hero_data->secondarySkill[skill] = type;
+        char level;
+        infile->Read(&level, sizeof(level));
+        hero_data->secondarySkillLevel[skill] = level;
+    }
+}
+
 // E:\gamedcs\mapcell.cpp:2951
 // The map file's hero record, and the widest one this compiland reads: it
 // fills a whole HeroExtra out of gpGame's 156-record setup pool at +0xa4 and
@@ -3026,8 +3120,22 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// 71.9069 -> 83.7667, 2026-08-20, ON ONE PIN - and the diagnosis this note
-// used to carry was WRONG, so read the correction before re-deriving it.
+// 71.9069 -> 83.7667 -> 86.7264, 2026-08-20: one pin and then two doses of
+// the /Ob2 caller-shrink (see readHeroSecondarySkills above).  The diagnosis
+// this note used to carry was WRONG, so read the correction before
+// re-deriving it.
+//
+// Residual (86.7264%): the two inlined bitset<70>::_Xran throw paths, and
+// specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
+// retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
+// still expand it.  Everything else in the call sequence pairs off site for
+// site: ReadHeroId +0x7b, GetStartingHeroId +0x18c/+0x192,
+// ReadLengthPrefixedString +0x4ad/+0x4af, the pinned three-argument assign
+// +0x4cc/+0x4cb, operator delete +0x4f4/+0x4f3, _Tidy and __CxxThrowException
+// in both throw paths, FindTrigger at the tail.  Note the two throws are NOT
+// identical in retail either - the first reaches 0x404150 and the second
+// 0x404a90 plus 0x404a70 - which is the string being built from two different
+// shapes, and is worth reading before assuming one fix covers both.
 //
 // The old text blamed `std::bitset<70>::_Xran` and concluded "no source
 // spelling reached the _Xran decision, and auto_inline(off) cannot reach it
@@ -3053,6 +3161,15 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // writes as `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688), and
 // readObjectType's exactness proving bitset<48>::_Xran (0x41b410) is CALLED
 // on both sides.
+//
+// AND THAT FIRST ONE NOW HAS ITS CAUSE (2026-08-20).  It is not a preference:
+// retail readHeroData reaches __CxxThrowException@8 TWICE and never calls
+// bitset<70>::_Xran, so BOTH of its bit stores expand the throw inline, which
+// is what `operator[]` -> `reference::operator=` -> `set` produces and what
+// `set(pos, val)` does not.  readTownData is the mirror and needs `set` -
+// hence the two helpers.  Re-measured here: `set` in the mask helper costs
+// 83.7667 -> 83.7528, and `spells.set(spell, 1)` on the single-spell store
+// costs 83.7528 -> 81.4958.
 //
 // Moving the mask loop into unpackSpellMask is worth another two points
 // (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
@@ -3168,42 +3285,13 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
 
     char skillsFlag;
     infile->Read(&skillsFlag, sizeof(skillsFlag));
-    if (skillsFlag) {
-        hero_data->bCustomSecondarySkills = 1;
-        infile->Read(&int_buffer, sizeof(int_buffer));
-        hero_data->NumSecondarySkills = int_buffer;
-        for (int skill = 0; skill < hero_data->NumSecondarySkills; ++skill) {
-            char type;
-            infile->Read(&type, sizeof(type));
-            hero_data->secondarySkill[skill] = type;
-            char level;
-            infile->Read(&level, sizeof(level));
-            hero_data->secondarySkillLevel[skill] = level;
-        }
-    }
+    if (skillsFlag)
+        readHeroSecondarySkills(infile, hero_data);
 
     char armiesFlag;
     infile->Read(&armiesFlag, sizeof(armiesFlag));
-    if (armiesFlag) {
-        hero_data->bCustomArmies = 1;
-        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
-            int creature;
-            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
-                signed char narrow;
-                infile->Read(&narrow, sizeof(narrow));
-                creature = narrow;
-            } else {
-                short wide;
-                infile->Read(&wide, sizeof(wide));
-                creature = wide;
-            }
-            hero_data->armies[slot] = creature;
-
-            short troops;
-            infile->Read(&troops, sizeof(troops));
-            hero_data->numTroops[slot] = troops;
-        }
-    }
+    if (armiesFlag)
+        readHeroArmies(infile, hero_data, mapVersion);
 
     char formation;
     infile->Read(&formation, sizeof(formation));
@@ -4578,6 +4666,27 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // operator new, the three `_Construct`s, both `_Ucopy`s and the `_Ufill` -
 // lines up one for one, which also confirms that retail EXPANDS this insert
 // exactly as we do: the readObject site-pin lever does not apply here.
+//
+// AND THE DIRECTION IS NOW FIXED (2026-08-20).  That unpaired `size()` is an
+// UNDER-inline - our caller is already LEANER than retail's - so the /Ob2
+// caller-shrink that moved five rows elsewhere this round is the wrong lever
+// here, and it is expensive: lifting the two RECT builds plus IntersectRect
+// and the four clamps into a file-local helper costs 65.1777 -> 53.8086.
+// Anything that reaches this row has to make the caller BIGGER, not smaller.
+//
+// TWO MORE MEASURED NEGATIVES, 2026-08-20, both aimed at exactly that:
+//   * `insert(position, 1, *objectCell)` - the three-argument form, which
+//     lifts the capacity path's `size()` one level shallower and is the lever
+//     that opened readTownData - measures 65.1777 -> 61.3531.  The two-
+//     argument `insert(position, *objectCell)` is retail's spelling.
+//   * `short y` for the inner induction variable, which is `why-branch`'s own
+//     top D10 pick here (45 disagreements -> 43), measures 65.1777 ->
+//     63.3235.  The eighth instance of the low-mass inversion; confirm every
+//     solver pick against the real score.
+// The remaining exit delta (base 3 rets, retail 4) is INSIDE the insert
+// expansion - retail's four returns are its three arms plus the empty-vector
+// path (blocks B41/B42/B46/B51), and the whole scan above it, B0..B25, has
+// one exit on both sides.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)

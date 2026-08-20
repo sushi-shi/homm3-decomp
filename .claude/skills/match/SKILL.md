@@ -557,6 +557,34 @@ does not do. 58.84 -> 54.49 (named local) -> **60.30** (read-back).
 BYTE-FLAT — 85.9895 to the digit. The `budget/(n-k)` quotient is the limiter,
 not the depth.
 
+**THE CALLER'S SIZE IS THE OTHER HALF OF THE INLINER, AND ITS DIRECTION IS
+READABLE.** `budget = clamp(2*caller_cb, 1000, 35000)`, so the caller's mass
+decides what its callees do — and `predict-inline`'s column tells you which way
+to push:
+
+- **OVER-inline (we expand, retail calls) -> SHRINK THE CALLER.** Split a
+  helper out and the nested STL calls a pin cannot reach come back out of
+  line. `FindCombatPath` +5.43, `PushPoint` +9.32 (two doses),
+  `PushCombatPoint` +11.66, `readHeroData` +2.96.
+- **UNDER-inline (we call, retail expands) -> GROW THE CALLER.** That is
+  `THallWindow`'s direction and `StampObject`'s (the shrink lever costs
+  StampObject 11.4).
+
+**Check the DC roster for the helper's name before inventing one** — several
+are already stubbed in the carcass (`build_combat_path` was). **The second
+dose is usually the plain FIELD STORES, not the loop** (+11.66, +2.56). **And
+the dose is a PEAK, not a ramp**: a third helper cost 4.70 and 0.29.
+
+**A SHARED INLINE HELPER SERVING TWO CALLERS WITH DIFFERENT RETAIL DECISIONS
+MUST BE DUPLICATED.** This retires the "a pin inside a shared inline is a
+per-callee knob and therefore a dead end" bound: duplicating the helper turned
+a −42 B trade into **+9.50** with the sibling row back at 100.0000.
+
+**A BITSET STORE'S DEPTH DECIDES WHETHER `_Xran` IS CALLED OR EXPANDED** —
+`set(i,v)` gives a call, `[i]=v` gives an expansion. `readTownData` **+12.31**,
+against a note predicting −2.10 from a "split the range check" fix that was
+the wrong mechanism entirely.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
