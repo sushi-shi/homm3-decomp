@@ -459,7 +459,7 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         currHero->field_11c = 0;
         advWindow->SetSleepImage(0);
 
-        if (gpSearchArray->result.size() <= 0)
+        if (static_cast<int>(gpSearchArray->result.size()) <= 0)
             break;
 
         int savedShowRoute = bShowRoute;
