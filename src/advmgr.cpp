@@ -958,6 +958,11 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         SetShrineHelpText(gText, currentHero, cell, Shrine3Info,
                           separator, separator);
         break;
+    // These two invoke APPEND_VISIT_TEXT under an UNBRACED `if`, so only
+    // the `visited = ...` assignment is guarded and the sprintf/strcat run
+    // unconditionally. That reads like a bug and is NOT one to fix: retail
+    // really does emit those two calls outside the guard here, and bracing
+    // both arms was measured at 89.28 against the unbraced 89.82.
     case SIREN:
         strcpy(gText, gAdventureObjectNames[SIREN]);
         if (cell->is_trigger && currentHero)
