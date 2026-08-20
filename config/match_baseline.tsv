@@ -228,6 +228,7 @@ ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000	100.0000	100.0000	0x35830
 ai_tactical	?consider_chain_lightning@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x37310
 ai_tactical	?consider_earthquake@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b8f0
 ai_tactical	?consider_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	100.0000	100.0000	100.0000	0x3a910
+ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	97.0996	97.0996	97.0996	0x3aca0
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@@Z	100.0000	100.0000	100.0000	0x3b1e0
 ai_tactical	?consider_sacrifice@type_AI_spellcaster@@QBEXAAUtype_spell_choice@@PBVarmy@@J@Z	89.0901	89.0901	89.0901	0x3af50
 ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	83.5240	83.5240	83.5240	0x3a670
@@ -298,7 +299,6 @@ ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	1
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
 ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000	0.0000	0.0000	0x36300
 ai_tactical	type_AI_spellcaster_cast_spell	0.0000	0.0000	0.0000	0x3c800
-ai_tactical	type_AI_spellcaster_consider_resurrect	0.0000	0.0000	0.0000	0x3aca0
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30

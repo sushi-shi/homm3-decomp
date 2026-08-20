@@ -849,16 +849,39 @@ type_AI_spellcaster::~type_AI_spellcaster()
         delete deputy;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:837
+// "Is this the last stack on our side that can still act this round?"
+// No retail body - the carve cuts nothing between the destructor at
+// 0x436c30 and should_attack_now at 0x436c60 - so it is `inline`, and
+// its three callers all reach it the same way: compute the acting
+// stack once, and ask only when the stack being priced is not itself
+// the acting one. VC6 CSEs the two `armies[actingSide][actingSlot]`
+// computations back into one.
 DC_ONLY(0x3d7b0, 0x86)
-unsigned char type_AI_spellcaster::is_last_action()
+inline unsigned char type_AI_spellcaster::is_last_action()
 {
-    // @stub
+    const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                  [gpCombatManager->actingSlot];
+    long total = gpCombatManager->numArmies[side];
+    for (long j = 0; j < total; j++) {
+        const army* other = &gpCombatManager->armies[side][j];
+        if (other->creatureId & 0x200040)
+            continue;
+        if (other->disabled_290)
+            continue;
+        if (other->disabled_2b0)
+            continue;
+        if (other->disabled_2c0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(other->creatureId) >> 26);
+        if (idle & 1)
+            continue;
+        if (other != current)
+            return 0;
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:862
 // Residual (85.6%): retail MEMORY-HOMES the first loop's counter
@@ -3069,6 +3092,10 @@ void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long g
 // still homed). A shared static helper would give retail's
 // two-paths-merge-in-EAX shape, but the two call sites test different
 // conditions, so there is no single helper to write.
+// RE-TESTED 2026-08-20 with the is_last_action() helper this TU now
+// carries (it is what takes consider_resurrect 94.46 -> 97.10): here
+// it costs 10.7 points, 95.5486 -> 84.8629, so retail's teleport arm
+// really does spell the walk out. Two call sites, two shapes.
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
 {
@@ -3134,16 +3161,79 @@ void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:2608
+// Resurrection and Animate Dead share one pricer: for each of our own
+// stacks the spell would land on, how many creatures come back and
+// what are they worth. The two lookups are cmbtmgr.h's own
+// find_resurrection_target SELECTOR inlined - the header already
+// records that retail expands it rather than emitting it - and the
+// second one exists because a DOUBLE-WIDE stack (creature bit 0)
+// occupies two hexes and the lookup may name the other one.
+//
+// Two refusals shaped by the AI's own caution: a stack that has lost
+// less than three quarters of its troops is not worth healing unless
+// the fight is already decided, and BASIC Resurrection is refused
+// outright in a decided fight. A won fight (our live value ahead and
+// the odds ladder at its bottom rung) doubles the value.
+//
+// The trailing choice->field_20 is consider_teleport's inlined
+// is_last_action once more, here with `field_1c` standing in for the
+// disabled triple.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
 {
-    // @stub
+    const army* our_army = gpCombatManager->armies[side];
+    long count = gpCombatManager->numArmies[side];
+    for (; count-- > 0; ++our_army) {
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->SpellCastWorks(choice->spell, side, our_army, 1,
+                                             creature_cast))
+            continue;
+        long hex = our_army->gridIndex;
+        if (gpCombatManager->find_resurrection_target(choice->spell, side, hex, 0)
+                != our_army) {
+            if ((our_army->creatureId & 1) == 0)
+                continue;
+            hex = our_army->get_second_grid_index();
+            if (gpCombatManager->find_resurrection_target(choice->spell, side, hex, 0)
+                    != our_army)
+                continue;
+        }
+        long healable = (akSpellTraits[choice->spell].power_factor * choice->power
+                         + akSpellTraits[choice->spell].mastery_bonus[choice->mastery])
+                        / our_army->hitPoints;
+        long dead = our_army->origNumTroops - our_army->numTroops;
+        if (healable > dead) {
+            if (dead < our_army->origNumTroops * 3 / 4) {
+                if (!field_1c)
+                    continue;
+            }
+        }
+        long healed = _cpp_min(healable, dead);
+        if (healed < 1)
+            continue;
+        if (choice->spell == SPELL_RESURRECTION
+                && choice->mastery < SKILL_MASTERY_ADVANCED && field_1c)
+            continue;
+        long value = static_cast<long>(
+            our_army->get_unit_combat_value(params.lowest_attack,
+                                            params.lowest_defense,
+                                            our_army->can_shoot(0), 0)
+            * healed);
+        if (params.our_live_value > params.enemy_live_value && params.odds <= 1)
+            value += value;
+        if (value <= choice->value)
+            continue;
+        choice->value = value;
+        choice->target = hex;
+        unsigned char last = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (our_army != current && !field_1c)
+            last = is_last_action();
+        choice->field_20 = last;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2685
 // The three-argument Sacrifice pricer: given ONE stack to heal and the

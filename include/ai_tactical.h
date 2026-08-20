@@ -213,6 +213,10 @@ struct type_AI_spellcaster {
     // fight?" - the answer lands in field_1c and it is what the two
     // constructors both end on. Inlined into both in retail.
     void check_simulation();
+    // dc 0x3d7b0. "Is this the last stack on our side that can still
+    // act?" - inlined into consider_teleport, consider_resurrect and
+    // consider_single_enchantment, with no retail body of its own.
+    unsigned char is_last_action();
 
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
