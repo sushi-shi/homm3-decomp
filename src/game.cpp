@@ -608,6 +608,35 @@ static long get_day_bonus(int resource, long weekBonus, long day)
 }
 
 // E:\gamedcs\game.cpp:643
+// 88.7511 -> 92.0874, 2026-08-20, and the whole route was the BRANCH-KIND
+// sequence rather than a score: 44 branches on retail's side against 42 on
+// ours, and after the two edits below the two sequences agree kind for
+// kind at 44/44 with exactly two disagreements left.
+//   * THE DIFFICULTY LOOP READS `isHuman` THROUGH A RANGE-CLAMPED INDEX,
+//     and that is the pair of missing branches. Retail emits `mov ecx,eax
+//     / cmp eax,8 / jge L / test eax,eax / jge M / L: xor ecx,ecx / M:
+//     lea ecx,[ecx+4*ecx] / lea ecx,[ecx+8*ecx] / mov dl,[ebx+8*ecx+
+//     0x20bb2]` - i.e. `players[(i >= 8 || i < 0) ? 0 : i].isHuman`, with
+//     the `>= 8` test FIRST - while the `playerDisabled[i]` beside it and
+//     the `production` walk both use the raw index. No other players[]
+//     access in this body carries the guard, so it is one accessor at one
+//     site, not a global rule. +2.24.
+//   * `town::field_34` IS UNSIGNED. Retail's special-building arm is `mov
+//     al,[esi+0x34] / test al,al / jbe` and widens with `and eax,0xff`; a
+//     signed `char` gives `jle` and `movsx`. Retyped IN PLACE in town.h
+//     (no new declarator, no include-set cost, townmgr unmoved). +1.09.
+//
+// Residual (92.0874%): two branch kinds and one addressing form.
+//   * the inner resource loop of the difficulty bonus. Retail keeps an
+//     INT COUNTER in memory and ends on `cmp edi,6 / jl` while walking
+//     the production pointer separately; our CL strength-reduces the
+//     index away entirely and ends on `dec eax / jne`, a countdown.
+//     Hoisting `resource` to function scope and sharing it with the
+//     handicap loop below is byte-flat, so whatever keeps retail's index
+//     live is not its scope.
+//   * the special-building store is a memory read-modify-write in retail
+//     (`lea edi,[edi+4*ecx] / add [edi],eax`) and a load/add/store on our
+//     side.
 VA(0x004b8af0, 0x573)
 void game::calculate_production()
 {
@@ -709,7 +738,10 @@ void game::calculate_production()
     if (setup.difficulty > 2) {
         for (playerId = 0; playerId < 8; ++playerId) {
             playerData* currentPlayer = &players[playerId];
-            if (currentPlayer->isHuman || playerDisabled[playerId])
+            int humanId = playerId;
+            if (humanId >= 8 || humanId < 0)
+                humanId = 0;
+            if (players[humanId].isHuman || playerDisabled[playerId])
                 continue;
             long* production = currentPlayer->turnProductionResource;
             production[WOOD] += get_day_bonus(
