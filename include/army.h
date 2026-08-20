@@ -589,7 +589,19 @@ public:
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
     CSprite* stdIcon;             // +0x164
+    // MidY (0x446630) subtracts HALF of +0x16c from the hexcell's own y,
+    // and LoadResources (0x43dd62) writes it as `0x10b - <stdIcon frame
+    // metric>` - the stack's own vertical span on the combat field.
+    // InitClean zeroes it. Sliced behind a view because this header is
+    // included tree-wide and the slice adds a declarator (see the
+    // include-set note at the top of army.cpp); army.cpp is the only
+    // consumer.
+#ifdef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+    int field_168;                // +0x168
+    int field_16c;                // +0x16c
+#else
     char pad_168[0x8];
+#endif
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
     sample* armySample[8];        // +0x170
