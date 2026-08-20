@@ -1253,7 +1253,7 @@ mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	82.8043	82.8043	82.8043	0x
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
 mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20
 mapcell	?Read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	100.0000	100.0000	100.0000	0xfd690
-mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xfc1a0
+mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	99.4737	99.4737	99.4737	0xfc1a0
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	91.8870	91.8870	91.8870	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
