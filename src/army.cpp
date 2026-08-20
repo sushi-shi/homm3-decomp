@@ -27,18 +27,7 @@
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #define HOMM3_ARMY_AI_VIEW
-// COMPILE-REQUIRED, not a score gate: InitClean's declarator is behind
-// this view (cmbtmgr.cpp defines it for LoadArmies' call site) and
-// army.cpp OWNS the body, so without it the definition below is a
-// member VC6 has never seen. The failure mode is worth knowing: a
-// carcass @stub compiles fine inside `#if 0`, and the moment it is
-// promoted VC6 reports the missing declarator as a CASCADE of
-// "undeclared identifier" on the body's own members - not as
-// "InitClean is not a member of army" - so the message points at the
-// last field you added rather than at the declarator.
-#define HOMM3_ARMY_COMBAT_INIT_DECL
 #include "army.h"
-#undef HOMM3_ARMY_COMBAT_INIT_DECL
 #undef HOMM3_ARMY_AI_VIEW
 #undef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #undef HOMM3_ARMY_MIDPOINT_DECL
@@ -157,6 +146,17 @@ void army::stop_sample(army::TSampleID id)
 // stack bytes, i.e. 0 / 6 / 7 / 0 arguments, and the six DC rows that could
 // occupy them take 1 / 0 / 6 / 7 / 0 / 0 - so InitClean, initialize, Init
 // and LoadResources fit in order and WaitSample (one argument) cannot.
+//
+// A TRAP THIS BODY COST AN HOUR ON, worth knowing before promoting any
+// other carcass: InitClean had NO declarator in army.h at all. A
+// carcass @stub compiles fine inside `#if 0`, and the moment it is
+// promoted VC6 reports the missing declarator as a CASCADE of
+// "undeclared identifier" on the body's OWN MEMBERS - the "InitClean is
+// not a member of army" line does not appear in the full-file compile
+// at all - so the message points at whichever field you added last
+// instead of at the declarator. Bisect it by moving one member access
+// to the TOP of the body: if it still errors there, it is the
+// declarator, not the field.
 //
 // THREE THINGS THIS BODY DECIDES ABOUT THE CLASS, all recorded on the
 // fields themselves: +0x420 is a std::deque (the erase-with-two-16-byte

@@ -656,7 +656,25 @@ command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 # the four slice groups did not restore it while it was down, and adding
 # further evidenced slices (+0x28c, +0xd8) in either combination did not
 # either - only the later batch, as a whole, did.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+# LOWERED AGAIN 2026-08-20 to the same 92.5357, on the view-gate policy
+# rather than on a measurement. The lane/army-recon work added three
+# things to army.h - `#include <deque>` for the SpellInfluenceQueue
+# member, the army::Cure declarator and the army::compute_attacker_bonus
+# declarator - and each was FIRST put behind an existing army.cpp-only
+# view precisely to hold this row at 92.5714. That gating is exactly
+# what the view-gate audit is unwinding, so all three were un-gated and
+# this row was lowered instead. hist stays 92.5714, and the row has
+# recovered from this exact value once before, on its own, as the header
+# kept growing.
+# THE BLAST RADIUS IS THE MEASUREMENT WORTH KEEPING: making <deque>
+# unconditional in a header that reaches most of the tree moved NOTHING
+# but this one row - not one of the other 1881 functions changed, in
+# either direction. A whole standard container's worth of type
+# definitions therefore costs the same as the single bare member
+# declaration that has fired this canary three times, which is what a
+# step function on the closure's declarator population predicts and what
+# a per-declarator penalty model does not.
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0

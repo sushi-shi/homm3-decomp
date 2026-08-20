@@ -1312,18 +1312,7 @@ public:
     // fourteen negative influences one by one and heal the remainder.
     // The DC prototype (army.cpp:4739) names the three parameters and
     // retail's `ret 0xc` agrees.
-    //
-    // BEHIND THE ROUND VIEW, AND THAT IS A MEASUREMENT: declared
-    // unconditionally this ONE declarator costs command.obj's
-    // GetCommand 92.5714 -> 92.5357, the same value and the same
-    // function as the get_clockwise / get_counter_clockwise pair
-    // recorded further down - this header's own include-set canary. The
-    // round view is where it belongs anyway: every field the body
-    // touches (spellInfluence, origHitPoints, poisonPenalty) is already
-    // scoped to it, and army.cpp is the only consumer.
-#ifdef HOMM3_ARMY_ROUND_VIEW
     void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
-#endif
     // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
     // address is not claimed here, only the declaration. spells.obj's
     // SetMassSpellInfluence (0x5a66d0) is the located caller and its
@@ -1701,18 +1690,9 @@ public:
     // same reason adjust_damage's does - the const caller casts, the
     // declaration does not drop it. Declared, not claimed here;
     // army.cpp owns the body.
-    //
-    // BEHIND THE ELEMENTAL-RULE VIEW - which is this family's own view,
-    // named for ComputeAttackerDamageReduction's creature ids - because
-    // ungated this ONE declarator costs command.obj's GetCommand
-    // 92.5714 -> 92.5357, the third time today the same canary has
-    // fired at the same value for a single new declarator on this
-    // header. army.cpp is the only consumer.
-#ifdef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
     int compute_attacker_bonus(int base_damage, unsigned char is_shooting,
                                army* defender, unsigned char simulate_only,
                                long distance) const;
-#endif
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const
@@ -1929,12 +1909,11 @@ public:
     // DC order InitClean < Init < LoadResources holds in retail too -
     // 0x43d5c0 < 0x43d8b0 < 0x43d9f0 - which is what corroborates the
     // arity match. The Init/LoadResources pair above was located
-    // independently from AddArmy and needs no gate; this row is gated
-    // only because it is a NEW declarator on a header this widely
-    // included. Declared, not claimed - army.cpp owns the body.
-#ifdef HOMM3_ARMY_COMBAT_INIT_DECL
+    // independently from AddArmy and needs no gate, and neither does
+    // this one any more: the gate it carried was a declarator-count
+    // gate, which is the class the view-gate audit is unwinding.
+    // Declared, not claimed - army.cpp owns the body.
     void InitClean();
-#endif
 };
 SIZE(army, 0x548);
 
