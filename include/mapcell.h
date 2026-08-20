@@ -5,9 +5,7 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
-#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
 #include <vector>
-#endif
 
 // The adventure-map object domain, the type of NewmapCell::type.
 // Transcribed COMPLETE from the Dreamcast CodeView enum (163
@@ -199,31 +197,11 @@ enum TAdventureObjectType {
     // CLOVER_FIELD (14) is named above; none of the eight collides
     // with armygrp.h's separate MAGIC_TERRAIN_* mode enum.
     // The two map-EDITOR placeholder types advManager::EventSound has to
-    // name: retail's 214-entry object-sound index runs to 215 and puts
-    // both of these on the border-guard arm. Neither is in the Dreamcast
-    // enum, so the names come from the same public object-type list the
-    // 222..231 block above was taken from - GATED to the events view so
-    // this enum's population is unchanged for its other consumers.
-#ifdef HOMM3_EVENTS_VIEW
-    // NAMES CORRECTED 2026-08-20 - the values are unchanged and were never
-    // in doubt; only the spellings were, and they contradicted advmgr.h's
-    // byte-proven EAdvmgrRetailObjectType (212 BORDER_GATE, 214
-    // HERO_PLACEHOLDER, 215 QUEST_GUARD). Those come from readObject's
-    // (0x502e00) jump table, where each arm's payload identifies its own
-    // type; these two came from an external public object-type list. The
-    // note right below already said both land on the BORDER-GUARD arm,
-    // which is what 212 is. Two enumerators cannot carry one name at two
-    // values, so the proven spellings win.
-    BORDER_GATE                = 212,
-    QUEST_GUARD                = 215,
-#endif
-    // 214 used to be spelled RANDOM_DWELLING here, gated to the mapcell
-    // view. readObject's (0x502e00) jump table disproved that in
-    // 2026-08-20: its 214 arm reads a hero id with an 0xff sentinel and a
-    // power rating, and the three RANDOM_DWELLING arms are 216..218. The id
-    // now lives in advmgr.h's EAdvmgrRetailObjectType as HERO_PLACEHOLDER,
-    // beside the BORDER_GATE and QUEST_GUARD of the same post-Dreamcast
-    // block, which is also where its 216..218 siblings went.
+    // 212 BORDER_GATE, 214 HERO_PLACEHOLDER and 215 QUEST_GUARD are NOT
+    // spelled here: none is in the Dreamcast enum, and the whole
+    // byte-proven post-Dreamcast block (readObject's 0x502e00 jump
+    // table) lives in advmgr.h's EAdvmgrRetailObjectType, the one copy
+    // (view audit 2026-08-20 folded this enum's former duplicates in).
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
@@ -246,7 +224,6 @@ struct ShipyardInfo {
 };
 SIZE(ShipyardInfo, 4);
 
-#ifdef HOMM3_EVENTS_VIEW
 // The wandering-monster arm of the cell's extra-info dword. The Dreamcast
 // publishes the arm (`ExtraInfoUnion::MonsterInfo monster_info`) and all
 // six member names - qty, disposition, never_flee, dont_grow, index,
@@ -309,7 +286,6 @@ SIZE(TreasureInfo, 4);
 // 13..22 (`shl eax,9 / sar eax,0x16`). Only ONE of the three payload lanes
 // is ever read on a given visit, which is what the award selects. GATED
 // for MonsterInfo's reason.
-#endif  // HOMM3_EVENTS_VIEW (ScholarInfo steps outside it, just below)
 
 // ScholarInfo is the one arm mapcell.obj needs as well as events.obj:
 // readScholarData (0x500b30) writes all four lanes and then switches on a
@@ -318,21 +294,16 @@ SIZE(TreasureInfo, 4);
 // which would put SIX type definitions into the mapcell view's closure
 // instead of one - the include-set sensitivity class charges by type
 // population, so the narrow gate is the cheap one.
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 // The award selector's own domain, DC-attested: enums.csv carries
-// ScholarAwards with exactly these three enumerators and values, and
-// events.h already carries the canonical copy for DoEventScholar.
-// readScholarData needs the same names to case on, and events.h is
-// included by exactly one TU (events.cpp), so this mirror is gated OUT of
-// that TU: events.obj keeps its enum where it always was, at its original
-// position in its own symbol order, and nothing there moves.
-#if !defined(HOMM3_EVENTS_VIEW)
+// ScholarAwards with exactly these three enumerators and values.
+// readScholarData (mapcell.obj) cases on the names and DoEventScholar
+// (events.obj) compares them; this is the one copy (view audit
+// 2026-08-20 folded events.h's former duplicate into it).
 enum ScholarAwards {
     const_scholar_primary_skill = 0,
     const_scholar_secondary_skill = 1,
     const_scholar_spell = 2
 };
-#endif
 
 struct ScholarInfo {
     signed long award : 3;
@@ -342,9 +313,7 @@ struct ScholarInfo {
     unsigned long tail : 9;
 };
 SIZE(ScholarInfo, 4);
-#endif
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
 // The shrine's arm, and the only lane of it any retail body writes.
 // readObject's (0x502e00) SHRINE1/2/3 arm sign-extends the stream byte
 // (`movsx ecx, byte`), masks it to ten bits and shifts it thirteen up,
@@ -359,9 +328,7 @@ struct ShrineInfo {
     unsigned long tail : 9;
 };
 SIZE(ShrineInfo, 4);
-#endif
 
-#ifdef HOMM3_EVENTS_VIEW
 
 // The sea chest's arm. advManager::DoEventSeaChest (0x4a5030) reads a
 // SIGNED three-bit reward kind at bits 0..2 (`shl edi,0x1d / sar
@@ -390,7 +357,6 @@ struct PyramidInfo {
     unsigned long tail : 11;
 };
 SIZE(PyramidInfo, 4);
-#endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
 // address math. A 38-byte record cannot be 4-aligned, which is also how
@@ -410,7 +376,6 @@ public:
     // only: the twenty typed views are twenty type DEFINITIONS, and
     // this header rides in initialize.cpp's include closure (see the
     // cellFlags note below for what that costs).
-#ifdef HOMM3_EVENTS_VIEW
     // events.obj is the one personality that reads a TYPED arm of the
     // dword off a NewmapCell rather than off an ExtraInfoUnion, because
     // DoWanderingMonsterResult needs the monster fields AND objectIndex
@@ -425,9 +390,6 @@ public:
         SeaChestInfo sea_chest_info;
         PyramidInfo pyramid_info;
     };
-#else
-    unsigned long extraInfo;
-#endif
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
     // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
     // terrain; char pad_05[7]` pair. findpath's CalcTerrainCost
@@ -488,7 +450,6 @@ public:
     // the same 96.09 that class produces for a bare probe struct). The
     // word view is taken locally in town.cpp instead - see
     // cell_flags_word there.
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // mapcell.obj also needs the whole-word spelling used by retail's
     // get_special_terrain (`test word ptr [cell+0xc], 0x1000`). Keep it as
     // the canonical overlay of the same proven flag word, not a cast/view.
@@ -527,12 +488,6 @@ public:
         };
         unsigned short cellFlags;
     };
-#else
-    unsigned short flags_00_11 : 12;
-    unsigned short is_trigger : 1;
-    unsigned short flags_13_15 : 3;
-#endif
-#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
     // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
     // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
     // pointers are the three dwords at +0x12/+0x16/+0x1a. The four-byte
@@ -549,17 +504,12 @@ public:
     // NewfullMap - which game.h declares - takes a pointer to it, and not
     // every TU that sees game.h has been through this branch (puzzlewindow
     // includes mapcell.h before it defines the view).
-#define HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
     struct TObjectCell {
         unsigned short objectIndex;
         unsigned char offsets;
         signed char layer;
     };
     std::vector<TObjectCell> objects;
-#else
-    char pad_0e[0x10];
-#endif
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // loadMapLayer stores the serialized object type as a FULL DWORD: the
     // stream carries two bytes and retail widens them into all four of
     // +0x1e..+0x21 (`mov ecx, dword; and ecx, 0xffff; mov dword [cell+0x1e],
@@ -571,17 +521,12 @@ public:
         TAdventureObjectType type;  // +0x1e
         unsigned long type_value;
     };
-#else
-    TAdventureObjectType type;  // +0x1e
-#endif
     short objectIndex;          // +0x22
     short object_type_index;    // +0x24
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     NewmapCell();
     ~NewmapCell();
     const unsigned char HasTriggerableEvent();
-#endif
 
     // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
     // because findpath's CalcTerrainCost calls it with the cell in ECX.
@@ -591,15 +536,12 @@ public:
     unsigned long get_map_extraInfo();
     unsigned char cell_is_trigger();
     unsigned char is_diggable();
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned char PlayerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)
             return 0;
         return ((extraInfo >> 5) & (1UL << player)) != 0;
     }
-#endif
-#ifdef HOMM3_EVENTS_VIEW
     // MapCell.h:923 in the DC roster, `?IsCustomized@ExtraInfoUnion@@QBA_NXZ`
     // - a const, no-argument, BOOL-returning accessor for the top bit.
     // Scoped to NewmapCell here only because this tree carries the dword as
@@ -701,12 +643,10 @@ public:
     // directly and call the real member; this one cannot, because the same
     // pointer also goes to CreatureBankEvent as a NewmapCell*.
     void SetCellVisited(short player);
-#endif
     NewmapCell* get_trigger_cell();
 };
 #pragma pack(pop)
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
 // 0x4fe6c0, RETAIL-ONLY and unclaimed: no Dreamcast counterpart exists (the
 // DC roster for mapcell.cpp is exhausted), so the NAME is PROVISIONAL and
 // taken from what the body does. loadMapLayer hands it every cell it
@@ -723,7 +663,6 @@ public:
 // A free function, so /Gr makes it __fastcall - which is what retail emits:
 // the cell in ECX, the save version in EDX.
 void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion);
-#endif
 
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;

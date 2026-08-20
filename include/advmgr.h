@@ -8,6 +8,10 @@
 #include "basemgr.h"
 #include "sskilltraits.h"
 #include "struct.h"
+// EGameResource: ExtraInfoUnion's windmill/wagon/garden arms carry
+// `EGameResource resource : N` BITFIELDS, and a bitfield's enum type
+// must be complete - a forward declaration is not enough (C2150).
+#include "town.h"
 #include "window.h"
 
 class BlackBoxData;
@@ -17,8 +21,10 @@ class sample;
 class ds_memsample;
 class TreasureData;
 union ExtraInfoUnion;
+struct type_creature_bank;
+struct type_university;
+class armyGroup;
 
-#ifdef HOMM3_EVENTS_VIEW
 // events.obj needs the plain packed dword arm plus the object views its
 // reconstructed handlers actually read. Keeping this narrow avoids
 // importing the remaining eighteen bitfield views into its TU.
@@ -182,6 +188,23 @@ struct type_tree_info {
 };
 SIZE(type_tree_info, 4);
 
+// Two more retail-used arms of the four-byte union. Both getters extract
+// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
+// The other DC arms remain unmodelled until a retail consumer needs them.
+struct type_creature_bank_info {
+    unsigned long unused : 13;
+    unsigned long index : 12;
+    unsigned long tail : 7;
+};
+SIZE(type_creature_bank_info, 4);
+
+struct type_university_info {
+    unsigned long unused : 13;
+    unsigned long index : 12;
+    unsigned long tail : 7;
+};
+SIZE(type_university_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
@@ -196,6 +219,8 @@ union ExtraInfoUnion {
     type_wagon_info wagon_info;
     type_skeleton_info skeleton_info;
     type_tree_info tree_info;
+    type_creature_bank_info creature_bank_info;
+    type_university_info university_info;
 
     void SetCellVisited(short player);
 
@@ -229,7 +254,7 @@ union ExtraInfoUnion {
     // what retail inlines; a direct bitfield test would fold to a byte
     // `test` on cell+1 instead.
     unsigned char GardenIsFull() const { return garden_info.full; }
-    EGameResource GetGardenResource() const { return garden_info.resource; }
+    enum EGameResource GetGardenResource() const { return garden_info.resource; }
     void SetGardenEmpty() { garden_info.full = 0; }
 
     // The five MapCell.h accessors the two mill handlers inline. The
@@ -245,9 +270,9 @@ union ExtraInfoUnion {
     //     instead of two read-modify-writes.
     short get_wheel_gold() const { return water_wheel_info.gold * 500; }
     void set_wheel_gold(short amount) { water_wheel_info.gold = amount / 500; }
-    EGameResource get_windmill_resource() const { return windmill_info.resource; }
+    enum EGameResource get_windmill_resource() const { return windmill_info.resource; }
     short get_windmill_amount() const { return windmill_info.amount; }
-    void set_windmill(EGameResource resource, short amount)
+    void set_windmill(enum EGameResource resource, short amount)
     {
         windmill_info.resource = resource;
         windmill_info.amount = amount;
@@ -289,7 +314,7 @@ union ExtraInfoUnion {
     bool WagonIsFull() const { return wagon_info.full; }
     bool WagonHasArtifact() const { return wagon_info.has_artifact; }
     int GetWagonArtifact() const { return wagon_info.artifact; }
-    EGameResource GetWagonResource() const { return wagon_info.resource; }
+    enum EGameResource GetWagonResource() const { return wagon_info.resource; }
     short GetWagonAmount() const { return wagon_info.amount; }
     void EmptyWagon() { wagon_info.full = 0; }
 
@@ -326,60 +351,15 @@ union ExtraInfoUnion {
         skeleton_info.artifact = artifact;
         skeleton_info.has_treasure = has_treasure;
     }
-};
-SIZE(ExtraInfoUnion, 4);
-#endif
-
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-struct type_creature_bank;
-struct type_university;
-
-// Two retail-used arms of the four-byte ExtraInfoUnion. Both getters extract
-// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
-// The other eighteen DC arms remain unmodelled until a retail consumer needs
-// them.
-struct type_creature_bank_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
-};
-SIZE(type_creature_bank_info, 4);
-
-struct type_university_info {
-    unsigned long unused : 13;
-    unsigned long index : 12;
-    unsigned long tail : 7;
-};
-SIZE(type_university_info, 4);
-
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
-// SetCellVisited updates this eight-bit team-visibility lane. Retail's RMW
-// masks the shifted bit to one byte and then places it at bit 5, proving both
-// the field width and offset.
-struct type_cell_visited_info {
-    unsigned long unused : 5;
-    unsigned long visited : 8;
-    unsigned long tail : 19;
-};
-SIZE(type_cell_visited_info, 4);
-#endif
-
-union ExtraInfoUnion {
-    unsigned long value;
-    type_creature_bank_info creature_bank_info;
-    type_university_info university_info;
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
-    type_cell_visited_info cell_visited_info;
-#endif
 
     BlackBoxData* get_black_box() const;
     type_creature_bank& get_creature_bank() const;
     type_university* get_university() const;
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
-    void SetCellVisited(short player);
-#endif
 };
 SIZE(ExtraInfoUnion, 4);
+
+struct type_creature_bank;
+struct type_university;
 
 // Dreamcast CodeView supplies the domain and ordering. Retail indexes the
 // matching 32-byte per-player flag band and the parallel help-name table with
@@ -389,8 +369,6 @@ SIZE(ExtraInfoUnion, 4);
 // events.obj wants the same domain for game::SetInfoFlag's callers, so the
 // gate is widened by exactly that one view rather than opened outright -
 // the enum stays invisible to every TU that has no consumer.
-#endif
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 enum GlobalInfoFlags {
     BuoyInfo = 0,
     CloverFieldInfo,
@@ -423,8 +401,6 @@ enum GlobalInfoFlags {
     const_sacrifice_info,
     MaxInfoFlags = 32
 };
-#endif
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 
 enum WiseTreePrices {
     const_tree_wants_nothing = 0,
@@ -474,11 +450,7 @@ enum EAdvmgrRetailObjectType {
 // the object it is standing on in both of its dialogs. The guard is SPLIT
 // around this one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-#endif
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
-#endif
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a5e84) extern const char* const gTerrainNames[];
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006989c8) extern int gUnnamed6989c8;
@@ -498,11 +470,7 @@ DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
 // first letter before formatting the pickup line. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every quick-info consumer sees is unchanged, line for line.
-#endif
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 extern const char* gResourceNames[7];
-#endif
-#ifdef HOMM3_EVENTS_VIEW
 // The two mine tables advManager::DoEventMine (0x4a39a0) reads, both
 // text.obj/game-side globals declared here because this is where the
 // adventure-object tables of the events TU already live.
@@ -520,8 +488,6 @@ DATA(0x00678288) extern const int gMineCharacteristics[7];
 // and only the ROLE separates them: this one is an event dialog's text,
 // so it takes the event name. PROVISIONAL on that ground alone.
 DATA(0x006a5e20) extern const char* const gMineEventText[];
-#endif
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
 // Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
 // bytes read as [previous step direction][current step direction], both
 // in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
@@ -658,11 +624,10 @@ extern CAITurnDriver69928c* gpUnnamed69928c;
 void VideoPause();
 void VideoResume();
 
-// Retail .bss 0x6972b8, kb.cpp's game-over latch. kb.h publishes it as
-// gbGameOver behind HOMM3_EVENTS_VIEW, which advmgr.obj does not open
-// (that view drags in a much wider surface); advManager::Main tests it
-// twice - once on entry and once after the dispatch - and turns a set
-// latch into the executive's terminate-loop message.
+// Retail .bss 0x6972b8, kb.cpp's game-over latch, also published by
+// kb.h as gbGameOver; advManager::Main tests it twice - once on entry
+// and once after the dispatch - and turns a set latch into the
+// executive's terminate-loop message.
 extern int gbGameOver;
 
 // gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
@@ -707,15 +672,12 @@ enum EMapDimension {
 #define VIEW_WORLD_TILE_SCALE_FULL 16.0f
 #define VIEW_WORLD_TILE_SCALE_MID 11.84f
 #define VIEW_WORLD_TILE_SCALE_FAR 7.68f
-#endif
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
 DATA(0x006912c4) extern const char* gKnownTreePriceText;
 DATA(0x006a7bb0) extern const char* gWitchHutName;
 
 DATA(0x006912ac) extern const char* gKnownWitchSkillText;
-#endif
 
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
 // not been admitted; these ordinal names expose only the values proved by
@@ -885,7 +847,6 @@ DATA(0x00699538) extern int gCompleteDrawAllCells;
 // entry predicate at 0x40f3f0; spellings remain provisional.
 DATA(0x006989c0) extern int gCompleteDrawEnabled;
 
-#ifdef HOMM3_EVENTS_VIEW
 // A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
 // duration of the erase, and restores on every one of its three exits -
 // the same save/clear/restore bracket it puts around animCtrPaused. 86 of
@@ -894,7 +855,6 @@ DATA(0x006989c0) extern int gCompleteDrawEnabled;
 // taken here and the owning TU keeps it (the winmgr.h gbInDialog
 // precedent). Name is the house ordinal placeholder.
 extern unsigned char gUnnamed67f574;
-#endif
 DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
@@ -1149,12 +1109,10 @@ public:
     // an ungated nested enum is a type DEFINITION in the closure of every
     // TU that includes this header. MEASURED score-neutral in both
     // positions today - the gate is prophylaxis, not a repair.
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
     enum EHeroViewTile {
         HERO_VIEW_TILE_X = 9,
         HERO_VIEW_TILE_Y = 8
     };
-#endif
 
     enum EHoverBounds {
         HOVER_SCREEN_WIDTH = 800,
@@ -1366,7 +1324,6 @@ public:
     void UpdateScreen(int bAllowIntermediateMouse, int bForceDraw);
     void Reseed(int targetX, int targetY);
     void HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton);
-#ifdef HOMM3_EVENTS_VIEW
     TreasureData* get_treasure_data(NewmapCell* cell) const;
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
     // The "once per hero, keep the reward forever" family. All six take
@@ -1620,9 +1577,9 @@ public:
     // call relocation's symbol name is not scored.
     int CombatMonsterEvent(class hero* who, int monType,
                            int* numMons, NewmapCell* eventCell,
-                           type_point point, TCreatureType monType2,
+                           type_point point, enum TCreatureType monType2,
                            int numMons2, int numGroups2,
-                           TCreatureType monType3, int numMons3,
+                           enum TCreatureType monType3, int numMons3,
                            int numGroups3);
     void monsters_flee(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
@@ -1644,21 +1601,15 @@ public:
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
 // every events-view consumer sees is unchanged, line for line.
-#endif /* HOMM3_EVENTS_VIEW */
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void DoEvent(NewmapCell* eventCell, type_point point);
-#endif
 // advmgr.obj's own HandleNetMsg joined the gate for HeroSwap (its trade
 // arm swaps the two freshly-copied hero records). Split guard, the
 // GameFn_004CA780 pattern.
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
     // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
     // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
     // needs the declarator; the pair is (visitor, visited) in the DC's
     // own order and a call relocation's symbol name is not scored.
     void HeroSwap(class hero* leftHero, class hero* rightHero);
-#endif
-#ifdef HOMM3_EVENTS_VIEW
     void TownEvent(NewmapCell* cell, type_point point,
                    unsigned char human_player);
     // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
@@ -1677,7 +1628,6 @@ public:
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);
-#endif  /* HOMM3_EVENTS_VIEW */
     // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
     // the ONE declarator through its own gate rather than joining the
     // whole events view, whose other three members it never names -
@@ -1692,10 +1642,7 @@ public:
     // definition line itself. The gate is widened rather than dropped, and
     // the declarator keeps its exact position, so no other view sees a
     // reordered class.
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void SetEnvironmentOrigin(type_point point, int reset);
-#endif
-#ifdef HOMM3_EVENTS_VIEW
     void do_event_lith_one_way(class hero* current_hero, NewmapCell* cell,
                                bool human_player);
     void do_event_lith_two_way(class hero* current_hero, NewmapCell* cell,
@@ -1728,14 +1675,6 @@ public:
     // retail expands in line.
     void do_event_hero(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
-    void StopCursor(unsigned char standEnd);
-    void TeleportTo(class hero* who, type_point destination,
-                    const char* sample_name, unsigned char bIsRemoteMove,
-                    unsigned char draw_changes, unsigned char is_replay);
-#endif
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
-#endif
     void CompleteDraw(int startX, int startY, int z,
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
@@ -1820,21 +1759,21 @@ public:
     void DisableButtons();
     void EnableButtons();
     void ViewPuzzle();
-#ifdef HOMM3_ADVMGR_OPTIONS_DECLS
-    void ViewWorld(int whatToDraw, TSkillMastery level);
-#endif
+    // The mastery is spelled `int` although the DC declares
+    // TSkillMastery: that name is CONTRADICTED in this tree -
+    // herospec.h:69 defines the real enum while ai_tactical.h:34
+    // typedefs it to int for the AI signatures - and naming either
+    // here would fork the closure of whichever TU sees both. An enum
+    // parameter is int-wide under VC6, so no width is lost.
+    void ViewWorld(int whatToDraw, int level);
     void DoAdventureOptions();
-#ifdef HOMM3_ADVMGR_TELEPORT_DECLS
     // advspells.obj's, retail 0x41d930 (dc 0x22b88). townmgr.cpp's
     // DoTownGate reaches it through the townManager::MoveHero that
-    // retail expands inline, and is the only consumer here; gated so no
-    // other includer of this header widens its view of advManager (the
-    // measured include-set hazard this tree documents at
-    // townmgr.h's SetupExtraStuff).
+    // retail expands inline; the liths' handlers in events.obj push
+    // "telptout.wav" (0x67775c) as its sample_name.
     void TeleportTo(hero* who, type_point destination, const char* sample_name,
                     unsigned char bIsRemoteMove, unsigned char draw_changes,
                     unsigned char is_replay);
-#endif
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
     type_point get_map_center() const;
@@ -1847,26 +1786,14 @@ public:
     // cannot decide (a member that ignores `this` and a static with one
     // float argument are the same `ret 4`), and it does not read ecx.
     static int get_force_modifier(float strength_ratio);
-#ifdef HOMM3_EVENTS_VIEW
-    // Gated only because TCreatureType is not in this header's own
-    // include closure - it reaches events.cpp through game.h, which
-    // events.cpp includes ahead of this file. Nothing else about the
-    // declarator is view-specific.
-    static int get_like_modifier(class hero* current_hero,
-                                 TCreatureType creature);
-#endif
-#ifdef HOMM3_ADVMGR_MONSTER_MOOD_DECLS
-    // advmgr.cpp parses this header before game.h, so its copy of the
-    // declarator names the creature id with VC6's elaborated forward
-    // enum (the recruit.h spelling). Own macro so no other includer's
-    // closure moves.
+    // The creature id is spelled with VC6's elaborated forward enum
+    // (the recruit.h spelling): TCreatureType is not in this header's
+    // own include closure, and advmgr.cpp parses this header before
+    // game.h supplies the enum.
     static int get_like_modifier(class hero* current_hero,
                                  enum TCreatureType creature);
-    // cursor.obj's 0x47f7d0, the events-view declarator repeated for
-    // advmgr.cpp's own mobilization pair.
+    // cursor.obj's 0x47f7d0 (cursor.cpp:85, dc 0x79a84).
     void StopCursor(unsigned char standEnd);
-#endif
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
     // The two out-of-compiland members DoAdvCommand reaches, DECLARED
     // and not defined here - each is defined in its own TU and a call
     // relocation's symbol name is not scored.
@@ -1901,13 +1828,11 @@ public:
     // playerData::IsLocalHuman's bool result unwidened.
     void DoEventShipyard(NewmapCell* cell, type_point point,
                          unsigned char human_player);
-#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
 
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
 // Two town.obj-owned globals advManager::Close reads. town::View holds the
 // sole DATA claims for both (retail .data 0x6aa5f0 and 0x699548) because it
 // is the only body that WRITES them; these are consumer declarations, the
@@ -1917,18 +1842,15 @@ extern advManager* gpAdvManager;
 // shared tile and cursor sprite sets alive while a town is open.
 extern int gUnnamed6aa5f0;
 extern int gUnnamed699548;
-#endif
 
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void ComputeAdvNetControl();
 bool hasFlag(int objType);
 int GetFlaggedObjectOwner(NewmapCell* thisCell);
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 // Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
 // prove this five-parameter /Gr help-text signature, but no surviving name.
 void AdvmgrFn_0040D670(char* buffer, NewmapCell* cell, long playerId,
                        const char* separator, unsigned char showFullList);
-#endif
 
 // --- globals ---
 // Dreamcast public ?giHighMemBuffer@@3HA; retail TrimLoopingSounds fixes the

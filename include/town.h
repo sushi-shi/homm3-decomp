@@ -306,11 +306,10 @@ public:
     // buffer. Retail has no out-of-line body: /Ob2 expands it at every
     // call site.
     //
-    // GATED, and it has to be: added ungated this declarator took
-    // initialize_game_data 100.0 -> 96.09 and recruitUnit::Update
-    // 90.84 -> 88.24 with no semantic change anywhere - the tree's two
-    // standing include-set canaries, both at once. Every consumer opens
-    // HOMM3_TOWN_LOCATION_DECLS for itself and re-measures.
+    // Include-set measurement (2026-08): declared to every consumer this
+    // declarator took initialize_game_data 100.0 -> 96.09 and
+    // recruitUnit::Update 90.84 -> 88.24 with no semantic change
+    // anywhere (max/hist hold the peaks).
     //
     // MEASURED 2026-08-14 against the one caller this tree can already
     // score, and the result is NEGATIVE: rewriting ai_player.cpp's
@@ -340,23 +339,17 @@ public:
     //   check_included == 0 -> `[ecx+0x150]` = built
     // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
     // tree's readers had been spelling by hand. Body below, after
-    // bitNumber's declaration, under HOMM3_TOWN_HASBUILDING_API.
+    // bitNumber's declaration.
     //
-    // THE VISIBILITY IS SCOPED, and both halves of the scoping are
-    // measured (2026-08-15):
-    //   * declaring it unconditionally costs `initialize_game_data`
-    //     100.0 -> 90.1620 - the include-set canary, one more town.h
-    //     declarator renumbering C1XX's handles in initialize.obj with
-    //     no semantic change anywhere. Includes are TU-local, so only
-    //     the compilands that expand it are given the declarator, the
-    //     same device as destroy_extra_capitol below;
-    //   * town.obj must NOT see the BODY: retail's own get_growth_rate
-    //     emits `push 0 / push 8 / call town_HasBuilding` for its
-    //     Citadel arm, and this compile's /Ob2 budget expands the
-    //     inline there instead (100.0 -> 88.4737, predict-inline
-    //     `town_HasBuilding base x0 vs retail x1`). HOMM3_TOWN_OBJ_DECLS
-    //     therefore buys the declaration only, which is what keeps
-    //     retail's call.
+    // Include-set measurements (2026-08-15, re-landed by the view
+    // audit; max/hist hold the peaks):
+    //   * declared to every consumer it costs initialize_game_data
+    //     100.0 -> 90.16 - one more town.h declarator renumbering
+    //     C1XX's handles in initialize.obj with no semantic change;
+    //   * with the BODY visible, town.obj's own get_growth_rate takes
+    //     100.0 -> 88.4737: retail emits `push 0 / push 8 / call
+    //     town_HasBuilding` for its Citadel arm where /Ob2 expands the
+    //     inline instead (predict-inline `base x0 vs retail x1`).
     // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
     // const), and retail's thiscall is identical either way.
     unsigned char HasBuilding(int buildingId,

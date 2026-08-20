@@ -35,7 +35,6 @@ enum EGeneralTextIndex {
     // when the dying stack has no army record to name itself from.
     GENERAL_TEXT_MIXED_ARMY_ONE = 43,
     GENERAL_TEXT_MIXED_ARMY = 44,
-#ifdef HOMM3_EVENTS_VIEW
     // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
     // image does. The index is the folded `[Text._First + 0xbc]` load at
     // 0x4a5540, and a scan of every such load reachable from a
@@ -46,7 +45,6 @@ enum EGeneralTextIndex {
     // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
-#endif
     GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
     GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
     GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
@@ -142,7 +140,6 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_COMBAT_ONE_DEATH = 379,
     GENERAL_TEXT_COMBAT_MANY_DEATHS = 380,
     GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
-#ifdef HOMM3_EVENTS_VIEW
     // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
     // the image does. The index is the folded `[Text._First + 0x6a4]` load
     // at 0x4a2183, and a scan of every `mov r32,[r32+0x6a4]` in .text finds
@@ -156,7 +153,6 @@ enum EGeneralTextIndex {
     // include-set threshold - winmgr.h's DIALOG_RETURN_DECLINE sets that
     // precedent.
     GENERAL_TEXT_DRAGON_CITY_EMPTIED = 425,
-#endif
     GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,

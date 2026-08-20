@@ -13,29 +13,21 @@
 // with the artifact gate and for the same reason: hero.h is reached
 // through more than one include below and its guard makes only the
 // first inclusion count.
-#define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
 // widens; measured free on this compiland (1121/1504 unmoved).
-#define HOMM3_ADVMGR_TELEPORT_DECLS
 #include "advmgr.h"
-#undef HOMM3_ADVMGR_TELEPORT_DECLS
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "castle.h"
-// gpExecutive sits behind HOMM3_TOWN_OBJ_DECLS in exec.h, and this file
-// undefines that macro immediately after townmgr.h so game.h's town.h
-// stays in its narrow form. TCastleWindow::Recruit needs the global, so
-// the gate is re-opened for exec.h alone.
+// gpExecutive: TCastleWindow::Recruit needs the global.
 #include "exec.h"
 // town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
-// the per-level counts at +0xbc, both behind HOMM3_TOWN_OBJ_DECLS.
-// Opened for town.h ALONE and ahead of game.h's own include of it, so
-// nothing else in this file's closure widens.
+// the per-level counts at +0xbc.
 // town::get_location, for the type_point DoTownGate hands TeleportTo.
 #include "town.h"
 // game.h's grail-win declarator, for handle_hall_click's one call. Held

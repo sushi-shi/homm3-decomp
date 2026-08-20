@@ -51,12 +51,6 @@
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_NEWFULLMAP_CELL_OUTOFLINE  // owns the 0x408770 COMDAT copy of cell(x,y,z)
-#define HOMM3_ADVMGR_QUICKINFO_VIEW
-#define HOMM3_ADVMGR_MONSTER_MOOD_DECLS
-#define HOMM3_MAPCELL_OBJECTS_VIEW
-#define HOMM3_ADVMGR_OBJ_DECLS
-#define HOMM3_ADVMGR_TURN_DECLS
-#define HOMM3_ADVMGR_OPTIONS_DECLS
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
@@ -103,10 +97,6 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "singleselectionwindow.h"
 #include "netgame.h"
 #include "systemoptionswindow.h"
-#undef HOMM3_ADVMGR_QUICKINFO_VIEW
-#undef HOMM3_MAPCELL_OBJECTS_VIEW
-#undef HOMM3_ADVMGR_OBJ_DECLS
-#undef HOMM3_ADVMGR_OPTIONS_DECLS
 
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
