@@ -746,6 +746,16 @@ body where the whole search turned on it):
   functions' directions in one build each, before anything was spent:
   two monotone-down (shrink), one up (grow). Measure the dose, then go
   looking for a real construct of that size.
+  **It is a PEAK-FINDER, not only a direction-finder.** On `StampObject` the
+  curve reads 84.22 / **90.11 / 90.11** / 84.43 / 84.43 / 84.43 / 82.96 /
+  79.65 / ≤72.9 for N = 0,1,2,3,4,5,6-8,10,20+ — a narrow peak at ONE TO TWO
+  statements, which rules out every bulk knob at a stroke. A note there had
+  called for "mass from somewhere else or an early-site pin"; both overshoot
+  by an order of magnitude.
+  **And a peak that several different constructs hit to the digit is not
+  evidence for any of them.** Three unrelated one-statement constructs all
+  reached 90.1105 exactly; none made the frame exact or bought the missing
+  branch, so none was shipped.
 - **…UNLESS the `if (0)` block contains candidate CALL SITES**, which inverts
   it (84.46 and 79.91 against a 99.66 plateau) — dead sites still enter the
   collector.
@@ -897,6 +907,21 @@ full width (`[ebp+0xb]`, scratch `[ebp+8]`). Two independent frame facts for
 function pairs differ only in a literal, so spelling A in one and B in the
 other measures both in ONE build at identical caller-cb. Four levers were
 isolated that way in a single lane.
+
+**A FLAG WRITTEN `= 1` BEFORE A LOOP AND CONDITIONALLY CLEARED INSIDE IT GETS
+A MEMORY HOME**; retail materialises the constant AFTER the loop at a
+cross-jumped join. Moving the assignment below the loop: **+10.78**.
+
+**VC6 FOLDS `bit ? 1 : 0` INTO `shr/and`, AND YOU BREAK THE FOLD BY MAKING THE
+TWO ARMS DIFFERENT KINDS OF CONTROL TRANSFER** — `x = 0; goto decided;`
+against a plain `break` out to a shared `x = 1`. Retail's
+`test ah,0x40 / jne <back to the 1 block>` returns. **+5.26** (and a `long`
+retype measured 97.48 and is banked rejected).
+
+**RETAIL READS A VECTOR'S `_First`/`_Last` THROUGH THE VECTOR'S OWN ADDRESS** —
+`x.begin()` makes VC6 fold the member offset off `this`. Naming the vector as
+a reference restores it, but it is PER-SITE: naming both vectors in one
+function returned the row to exactly baseline.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 
