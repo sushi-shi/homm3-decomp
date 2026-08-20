@@ -115,6 +115,12 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="also run the routed solver(s) and show the edit")
     pd.add_argument("--json", action="store_true")
 
+    pr = ss.add_parser("report", help="per-plateau markdown table -> "
+                       "evidence/vc6/plateau-diagnosis.md")
+    pr.add_argument("--lo", type=float, default=50.0)
+    pr.add_argument("--unit")
+    pr.add_argument("--limit", type=int)
+
     pq = ss.add_parser("queue", help="tree-wide wall census: sweep diagnose "
                        "over every unmatched fn, rank by recoverable bytes")
     pq.add_argument("--unit", help="restrict to a comma-separated unit list")
@@ -139,6 +145,7 @@ _TOOLS = {
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),
     "atlas": ("atlas", "run"),
+    "report": ("report", "run"),
     "queue": ("queue", "run"),
     "check": ("census", "run_check"),
 }
