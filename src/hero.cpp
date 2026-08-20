@@ -3873,10 +3873,12 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // the two arms of handle_artifact_click's dragged-artifact if/else, whose
 // `update_all_slots(); DrawWindow(1,0xffff0001,0xffff);` prefixes are
 // identical. Retail does not merge them. Plus HeroFn_004D97F0 at x3 vs x4
-// (we have three source sites, retail emits four) and TQuickTownWindow::
-// QuickWindowWait x0 vs x1 against our TQuickHeroWindow:: x1 - a class
-// resolution difference, i.e. retail's TQuickHeroWindow does NOT override
-// QuickWindowWait and inherits the TQuickTownWindow body.
+// (we have three source sites, retail emits four). The TQuickTownWindow::
+// QuickWindowWait x0 vs x1 row against our TQuickHeroWindow:: x1 is NOT a
+// wall and not a class-resolution error: all three Quick*Window classes
+// have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
+// 0x117b8c) and retail folded the identical COMDATs onto one label - the
+// same row advmgr.cpp's MonsterQuickView note already discounts.
 // One more open item, NOT yet explained: retail emits 15 NormalDialog
 // call instructions where we emit 6. The source has ~14 sites, so our CL
 // is cross-jumping the identical right-click help arms and retail is not.
@@ -5462,7 +5464,15 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // eight byte-inert dead assignments to grow the caller's statement mass
 // the way the /Ob2 rule says the budget follows (44.93, byte-flat) -
 // so the lever here is NOT caller size, and no source spelling in this
-// body reaches the decision.
+// body reaches the decision. THIRD measurement, 2026-08-20, and it is a
+// MODEL finding worth keeping: `#pragma inline_depth(0)` around the four
+// call sites AFTER the `.test()` (both HeroFn_004E2550 sites,
+// remove_artifact, equip_artifact) is BYTE-FLAT at 44.93. The /Ob2 rule
+// gives a nested expansion `budget / sites-remaining`, so if pinning a
+// later site removed it from that divisor the _Xran under-inline here
+// would have opened up. It does not: the divisor counts call SITES
+// whether or not they are pinned. Site pins are the lever for an
+// OVER-inline only - they cannot buy an under-inline back.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
