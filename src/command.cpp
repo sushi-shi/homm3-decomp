@@ -11,6 +11,7 @@
 #include "hero.h"
 #include "inputmgr.h"
 #include "kb.h"
+#include "misc.h"
 #include "mousemgr.h"
 #include "prefs.h"
 #include "remote.h"
@@ -790,12 +791,60 @@ void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:2475
+// The loot presentation: the artifacts LootDeadHero swept off the dead
+// hero, shown eight to a dialog with the pickup jingle in front of each
+// page.
+//
+// Three things the bytes decide, none of them obvious from the shape:
+//   * `msg` is CONSTRUCTED AND NEVER USED. The prologue calls
+//     basic_string::_Tidy(false) on a slot at ebp-0x44 that nothing
+//     reads before the epilogue tidies it again. The Dreamcast local
+//     roster names it (`msg`, type 0x1329) and the DC build presumably
+//     still passed it somewhere; retail does not. Transcribed
+//     faithfully - the string ctor/dtor pair is 30 bytes of this body.
+//   * the qualifier is a MAKELONG, not a dword pair: retail zero-extends
+//     a WORD out of each half of the 8-byte type_artifact
+//     (`xor edx,edx / mov dx,[edi+4]` then the same on [edi]) before the
+//     shift and or. Two full dword loads is what an unconverted
+//     `extra << 16 | artifactId` would emit.
+//   * the vector's end() is RE-READ every pass (`mov esi,[ebp+8] /
+//     cmp edi,[esi+8]` at the back edge, a second load after the insert)
+//     - the standing "do not cache what retail reloads" rule.
 VA(0x004772b0, 0x1BF)  // linkorder, dc 0x6e0d8
-void combatManager::show_looted_artifacts(std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts, int dialog_timeout)
+void combatManager::show_looted_artifacts(
+    std::vector<type_artifact>& looted_artifacts, int dialog_timeout)
 {
-    // @stub
+    type_artifact* artifact = looted_artifacts.begin();
+    std::string msg;
+    std::vector<type_dialog_resource> rewards;
+    type_dialog_resource reward;
+
+    while (artifact != looted_artifacts.end()) {
+        reward.resource = LOOT_DIALOG_ARTIFACT_ROW;
+        reward.qualifier =
+            (static_cast<unsigned short>(artifact->extra) << 16)
+            | static_cast<unsigned short>(artifact->artifactId);
+        rewards.push_back(reward);
+        artifact++;
+        if (artifact == looted_artifacts.end()
+            || rewards.size() == LOOT_DIALOG_PAGE_SIZE) {
+            launch_sample(
+                format_string(DATA_COMPGEN(0x00670268, pickupSampleFormat,
+                                           "pickup%02d.82M"),
+                              Random(1, 7))
+                    .c_str(),
+                -1, 3);
+            extended_dialog(gpGeneralText->GetText(31), rewards, -1, -1,
+                            dialog_timeout);
+            rewards.clear();
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:2504
 VA(0x00477470, 0x58C)  // linkorder, dc 0x6e1c8

@@ -44,6 +44,20 @@ enum ECombatCommand {
 };
 
 
+// The two constants show_looted_artifacts (0x4772b0) carries, both read
+// straight off its bytes: the extended dialog's row KIND for an artifact
+// (`mov dword ptr [ebp-0x14], 8` into type_dialog_resource::resource,
+// one past NUM_RESOURCES, and the qualifier stored beside it packs
+// `extra<<16 | artifactId` rather than a resource amount), and the batch
+// size at which the loot sweep raises a dialog and starts a new page
+// (`and al,-8 / cmp eax,0x40` over the eight-byte element, i.e.
+// size() == 8).
+enum ELootDialog {
+    LOOT_DIALOG_ARTIFACT_ROW = 8,
+    LOOT_DIALOG_PAGE_SIZE = 8
+};
+
+
 // --- CCombatMainMsg ---
 // CODEVIEW(E:\gamedcs\netmsg.h:217, dc 0x70a58) void CCombatMainMsg::CCombatMainMsg(int nextAction, int nextActionExtra, int nextActionGridIndex, int nextActionGridIndex2, int seed);
 
