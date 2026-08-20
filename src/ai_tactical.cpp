@@ -32,6 +32,7 @@
 #define HOMM3_ARMY_SPELL_ROW_VIEW
 // get_chain_lightning_value drives the chain through two spells.obj
 // leaves this TU is the only located caller of.
+#define HOMM3_CMBTMGR_AI_SIMULATION_DECL
 #define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
