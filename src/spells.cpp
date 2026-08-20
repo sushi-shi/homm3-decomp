@@ -2412,14 +2412,117 @@ void combatManager::MirrorImage(int targetIndex, int level)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:4705
+// Summon Air/Earth/Fire/Water Elemental. The body builds a COMPLETE
+// stack on the stack frame - a 0x548-byte `army` with its own
+// constructor, InitClean and destructor - purely to ask CanFit where
+// the new creature would stand, and then throws it away and lets
+// AddArmy build the real one.
+//
+// The search is two nested loops with a no-repeat picker: the outer one
+// walks columns INWARD from both edges (1,15 then 2,14 ...) picking the
+// caster's own side's edge, the inner one draws rows 0..10 without
+// repetition and takes the first that fits. The inner `hex != -1` break
+// exits BOTH loops - VC6 threads it straight to the outer break because
+// the outer test that follows is the same condition - while the
+// picker-exhausted break falls through to the column step, which is why
+// retail carries TWO copies of the picker's inlined destructor.
+//
+// THE TRAITS COPY IS SPELLED memcpy AND THAT IS A MODELLING SHORTCUT.
+// Retail's `rep movsd` of 29 dwords into `summoned + 0x74` is the
+// embedded TCreatureTypeTraits row army.h's own note calls sMonInfo,
+// i.e. the source said `summoned.sMonInfo = akCreatureTypeTraits[type]`.
+// Modelling it as a member means restructuring army +0x74..+0xe7 into a
+// union - the span crosses HOMM3_ARMY_SPELLCAST_VIEW and
+// HOMM3_ARMY_MULTI_HEAD_VIEW and holds three of this header's measured
+// include-set canaries, so that is a layout change for the whole army
+// run and not this lane's to make. The memcpy emits the identical
+// `mov ecx,0x1d / rep movsd`.
+//
+// BOTH LOOPS ARE GOTO LOOPS, AND THAT IS WORTH TWELVE POINTS (81.26 ->
+// 93.38). Retail's outer back edge is `cmp / jle <exit> / jmp <head>` -
+// two jumps where a `for(;;)` with a trailing `break` gives VC6 the one
+// inverted `jg <head>` - and its inner back edge is a bare `jmp <head>`
+// off a shared merge point. Spelling both with explicit labels and
+// `goto` reproduces the pair, and the same edit splits the picker's
+// inlined destructor into retail's TWO copies, because the found exit
+// leaves the picker's scope from INSIDE the inner loop while the
+// exhausted exit leaves it at the scope's end. A do/while inner loop
+// was measured against this and is much worse (85.69): VC6 emits the
+// bottom test as `je <head>` with no merge point and the two destructor
+// copies collapse back into one.
+//
+// The message is built on the TEMPORARY, not through a named local
+// (93.38 -> 93.44): retail reads `[eax + 4]` straight off
+// format_string's returned object, where `std::string message = ...;
+// message.c_str()` reads the local's own _Ptr slot instead.
+//
+// Residual (93.44%): VC6 ROTATES the inner loop where retail does not -
+// it peels a second copy of `Pick()` plus the row arithmetic onto the
+// CanFit-false path and jumps back into the middle, and having done so
+// it can prove `hex == -1` there, so it tests ESI before the store
+// where retail re-reads `[ebp-0x10]` after it. Both halves are the one
+// decision and no spelling tried moved it; the rest is scratch-register
+// renaming around the 0-in-EDI the loop exits leave behind.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
-void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType, int iSpellPower, int level)
+void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
+                                    int iSpellPower, int level)
 {
-    // @stub
+    army summoned;
+    summoned.InitClean();
+    memcpy(&summoned.monInfoTownType, &akCreatureTypeTraits[iMonType],
+           sizeof(TCreatureTypeTraits));
+    int leftColumn = 1;
+    int rightColumn = 15;
+    summoned.combatSide = currentSide;
+    summoned.bitIndex = -1;
+    summoned.facing = 1 - currentSide;
+    int hex = -1;
+try_next_column:
+    {
+        int column = leftColumn;
+        if (currentSide)
+            column = rightColumn;
+        {
+            TPickANumber picker(0, 10);
+        try_next_row:
+            {
+                int pick = picker.Pick();
+                int candidate = column + pick * COMBAT_GRID_ROW_STRIDE;
+                if (pick >= 0) {
+                    if (summoned.CanFit(candidate, 0, 0))
+                        hex = candidate;
+                    if (hex != -1)
+                        goto hex_chosen;
+                    goto try_next_row;
+                }
+            }
+        }
+        leftColumn++;
+        rightColumn--;
+        if (rightColumn <= 0)
+            goto hex_chosen;
+        goto try_next_column;
+    }
+hex_chosen:
+    field_132a8[currentSide] = iMonType;
+    if (should_lower_door(&summoned, hex)) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        LowerDoor();
+    }
+    int count = akSpellTraits[spell].mastery_bonus[level] * iSpellPower;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        combatWindow->combat_message(
+            format_string(gpGeneralText->GetText(676),
+                          heroes[currentSide]->name, count,
+                          CreatureName(iMonType, count))
+                .c_str(),
+            1, 0);
+    }
+    AddArmy(currentSide, iMonType, count, hex, 0x400000, 1);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4765
 DC_ONLY(0x1564c4, 0x11E)

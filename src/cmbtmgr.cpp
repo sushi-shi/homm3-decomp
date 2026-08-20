@@ -805,8 +805,8 @@ void combatManager::InitNonVisualVars()
     eagleEyeData[1].spells.clear();
 
     field_3c = 0;
-    field_132a8 = -1;
-    field_132ac = -1;
+    field_132a8[0] = -1;
+    field_132a8[1] = -1;
     field_132d4 = -1;
     field_132dc = -99;
     currentSide = 1;
