@@ -16,6 +16,10 @@
 // to the exit-command latch at 0x6976d8, so their labels stay ordinal
 // placeholders until that consumer names them.
 enum ESystemOptionsCommand {
+    // 101 has no producer in this window - advManager::ProcessKeyPress's
+    // N arm latches it directly, one below the 102 its L arm latches, so
+    // the band starts here. Ordinal placeholder like its neighbours.
+    SYSOPT_COMMAND_101 = 101,
     SYSOPT_COMMAND_102 = 102,
     SYSOPT_COMMAND_103 = 103,
     SYSOPT_COMMAND_104 = 104,
