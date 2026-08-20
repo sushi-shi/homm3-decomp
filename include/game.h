@@ -304,6 +304,9 @@ public:
     // stamps: retail zeroes exactly 48 bytes through it and walks it with a
     // row stride of six, so the width index is the OUTER one.
     void GenerateHeightMap(const CObject* object, signed char heightMap[8][6]);
+#ifdef HOMM3_NEWMAPCELL_HAS_TOBJECTCELL
+    void StampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+#endif
 #endif
 };
 

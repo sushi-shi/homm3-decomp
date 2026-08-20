@@ -2921,14 +2921,90 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
             BOAT, obscuringBoat->id);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:4346
+// Walks the footprint of one placed object and files it into every cell it
+// covers.  The extent and the height map come from the object's type record,
+// the same 8x6 grid GenerateHeightMap fills, and the footprint is traversed
+// from the object's own tile BACKWARDS - cell(x - col, y - row, z) - because
+// an adventure object's anchor is its bottom-right corner.
+//
+// Five object classes are filed by something other than this pass and are
+// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, RANDOM_DWELLING and BOAT.
+// EVENT is skipped too but not silently - where its trigger mask covers the
+// cell, the cell is cleared of IsBlocked and is_trigger, retyped EVENT, and
+// given the object's extraInfo.  Everything else builds a TObjectCell and
+// hands it to StampObject, then recalculates the cell's derived extra.
+//
+// The two bounds tests are not the same test twice: the x test guards the
+// whole inner loop (it `continue`s the OUTER one) while the y test guards a
+// single cell.  Both compare against the world extents gMapWidth/gMapHeight
+// that game::SetMapSize writes.
+//
+// The offsets byte is packed in EIGHT-BIT arithmetic - `mov cl,bl / shl cl,4 /
+// and dl,0xf / or cl,dl` - so the row and column halves are narrowed before
+// they are combined, not after.  The OPERAND ORDER of that `|` is the last
+// byte in the function: retail accumulates into the shifted row half (`or
+// cl,dl`), which is what `(col & 0xf) | (row << 4)` compiles to.  Writing it
+// the other way round as `(row << 4) | (col & 0xf)` accumulates into the
+// column half instead (`or dl,cl`) and holds the row at 96.7976.
 VA(0x00505b20, 0x1F2)  // anchor-global, dc 0xf43e8
-int NewfullMap::PlaceObject(int ObjectIndex, unsigned char setExtraInfo)
+int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 {
-    // @stub
+    CObject* object = &objects[objectIndex];
+    CObjectType* objectType = &objectTypes[object->typeIndex];
+
+    signed char heightMap[8][6];
+    GenerateHeightMap(object, heightMap);
+
+    TAdventureObjectType objectClass =
+        gpGame->worldMap.objectTypes[object->typeIndex].objectType;
+
+    for (int col = 0; col < objectType->width; ++col) {
+        if (object->x - col < 0 || object->x - col >= gMapWidth)
+            continue;
+
+        for (int row = 0; row < objectType->height; ++row) {
+            if (object->y - row < 0 || object->y - row >= gMapHeight)
+                continue;
+
+            // The row-major lookup is expanded here rather than routed
+            // through NewfullMap::cell: retail reads Size and cellData off
+            // gpGame->worldMap - not off `this` - and reloads gpGame between
+            // them, and mapcell.obj cannot take the header's inline copy
+            // because advmgr.obj owns that function's out-of-line body.
+            NewmapCell* cell = &gpGame->worldMap.cellData[
+                (object->z * gpGame->worldMap.Size + (object->y - row))
+                    * gpGame->worldMap.Size
+                + (object->x - col)];
+
+            if (objectClass == HOLY_GRAIL || objectClass == HERO
+                || objectClass == RANDOM_HERO
+                || objectClass == RANDOM_DWELLING || objectClass == BOAT)
+                continue;
+
+            if (objectClass == EVENT) {
+                if (objectType->triggerCells.test(47 - row * 8 - col)) {
+                    cell->IsBlocked = 0;
+                    cell->is_trigger = 0;
+                    cell->type_value = EVENT;
+                    cell->extraInfo = object->extraInfo;
+                }
+                continue;
+            }
+
+            NewmapCell::TObjectCell objectCell;
+            objectCell.objectIndex = static_cast<unsigned short>(objectIndex);
+            objectCell.offsets = static_cast<unsigned char>((col & 0xf)
+                                                            | (row << 4));
+            objectCell.layer = heightMap[col][row];
+            StampObject(cell, &objectCell);
+            CalculateCellExtra(cell, setExtraInfo);
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:4404
 DC_ONLY(0xf4740, 0x50)
