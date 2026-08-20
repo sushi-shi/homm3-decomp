@@ -312,14 +312,28 @@ type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
 // arrays: 19x17 sixteen-byte tiles at ebp-0x15d4 (0x1430) followed by the
 // 17x19 visibility mask at ebp-0x1a4 (0x143) and get_puzzle_bitmap's
 // forty-byte name buffer at ebp-0x60.
+// Residual (97.1621%): a FOUR-BYTE frame surplus - 0x15d8 against retail's
+// 0x15d4 - and nothing else. Every named local already lands on retail's
+// own slot (result -0xc, current -8, best/player -0x24, guess/index/origin
+// and the double temp all coalesced onto -0x2c, the two loop-invariant
+// bitfield temps on -0x20/-0x1c); the surplus is the hidden UDT return
+// slot, which retail folds onto `point` (both at -0x14, .z written at
+// -0x12) and our CL keeps separate at -0x38, pushing point to -0x18 and
+// the two word temps off by four. Tried and rejected: initialising `point`
+// FROM the call and copying origin out of it (95.1416), declaring `point`
+// ahead of `origin` (97.1621, declaration order is canonicalised as
+// recorded), and dropping the named NewmapCell* so the cell lookup feeds
+// the constructor directly (95.3630 - and the frame stayed 0x15d8, so the
+// named local is not the surplus either).
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
 type_point AI_attempt_puzzle_guess(long player)
 {
     type_point result;
 
     int found = gpGame->SetupPuzzlePieces(player, 1);
-    if (puzzleGuessThreshold[gpGame->setup.difficulty] <=
-        found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT)) {
+    double uncovered =
+        found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT);
+    if (puzzleGuessThreshold[gpGame->setup.difficulty] <= uncovered) {
         long puzzle;
         if (player < 0 || (puzzle = gpGame->setup.alignment[player]) == -1)
             puzzle = 0;
@@ -354,13 +368,11 @@ type_point AI_attempt_puzzle_guess(long player)
 
             type_point point;
             point.z = gpGame->ultimateArtifactZ;
-            short originX = origin.x;
-            short originY = origin.y;
 
             for (int row = 0; row < 17; ++row) {
-                point.y = originY + row;
+                point.y = origin.y + row;
                 for (int col = 0; col < 19; ++col) {
-                    point.x = originX + col;
+                    point.x = origin.x + col;
                     if (point.is_valid() && visible[row][col]) {
 #pragma inline_depth(0)
                         NewmapCell* mapCell = gpGame->worldMap.cell(
@@ -381,32 +393,31 @@ type_point AI_attempt_puzzle_guess(long player)
             result.z = -1;
 
             int best = 0x7fff;
-            short firstX = guess.x;
-            short firstY = guess.y;
-
             type_point current;
             current.z = guess.z;
-            for (current.x = firstX - 2; current.x <= firstX + 2;
+            for (current.x = guess.x - 2; current.x <= guess.x + 2;
                  ++current.x) {
-                for (current.y = firstY - 2; current.y <= firstY + 2;
+                for (current.y = guess.y - 2; current.y <= guess.y + 2;
                      ++current.y) {
                     if (!current.is_valid())
                         continue;
                     if (!gpGame->worldMap.cell(current)->is_diggable())
                         continue;
 
-                    guess.x = current.x - firstX + 9;
-                    guess.y = current.y - firstY + 8;
+                    type_point index;
+                    index.x = current.x - guess.x + 9;
+                    index.y = current.y - guess.y + 8;
 
-                    if (puzzleMap[guess.x][guess.y].terrain < 0) {
-                        int distance = abs(firstY - current.y)
-                                       + abs(firstX - current.x);
+                    if (puzzleMap[index.x][index.y].terrain >= 0) {
+                        if (puzzleMap[index.x][index.y].has_grail)
+                            return current;
+                    } else {
+                        int distance = abs(guess.y - current.y)
+                                       + abs(guess.x - current.x);
                         if (result.x < 0 || distance < best) {
                             best = distance;
                             result = current;
                         }
-                    } else if (puzzleMap[guess.x][guess.y].has_grail) {
-                        return current;
                     }
                 }
             }
