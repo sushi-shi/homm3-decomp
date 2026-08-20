@@ -87,6 +87,9 @@ public:
     // readObject's SEER arm. Declared separately because the TQuestGuard
     // base is private here.
     int read(TAbstractFile* infile);
+    // 0x574a90, `ret 8` - the savegame reader, called by NewfullMap::Load on
+    // every element of the list it has just resized.
+    int load(TAbstractFile* infile, int saveVersion);
 
     std::string SeerHutFn_005741B0(unsigned char player);
     // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of
