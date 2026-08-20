@@ -2359,7 +2359,19 @@ struct type_wall_target {
     // three -1 rows are the two towers and the upper keep, the five
     // real ones are the wall segments the AI cares about.
     short blocked_column;             // +0x2
-    char pad_04[0x4];
+    // The segment's sprite ANCHOR in screen coordinates, sliced
+    // 2026-08-20 by combatManager::Earthquake (0x5a7c80): it walks the
+    // table with a pointer 2 bytes into each row and `movsx`-loads
+    // BOTH words (`movsx edi, word [p-2]` / `movsx ebx, word [p]`),
+    // then centres the SGEXPL explosion sprite on the pair - x minus
+    // half the sprite width, y minus half its height - before clipping
+    // against the combat viewport. The retail values run
+    // (586,48) (564,128) (520,212) (498,296) (520,380) (586,506)
+    // (630,506) (762,212), which is the castle wall read top to bottom
+    // with the keep last, on an 800x600 field. Retyped IN PLACE out of
+    // the pad; both words are SIGNED (movsx, not movzx).
+    short screenX;                    // +0x4
+    short screenY;                    // +0x6
     // ID into combatManager::wallStrength / wallStanding. Retail rows are
     // {5,6,8,9,10,12,13,14}.
     int wall_id;                       // +0x8
