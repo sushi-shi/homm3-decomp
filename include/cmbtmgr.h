@@ -1533,14 +1533,19 @@ extern int gCombatActive698a18;
 // quadruple - the read order is left, RIGHT, top, BOTTOM, which is the
 // natural `l <= x && x <= r && t <= y && y <= b` bounding-box test and
 // is what fixes right at +8 rather than +4.
-// SPELLED AS SIXTEEN SEPARATE INTS ON PURPOSE. A four-int struct
-// produces byte-identical IMAGE code (`cmp eax, [0x694eb0]` either
-// way), but in the OBJECT it becomes one reloc against the base symbol
-// with an in-instruction displacement of 8, where the delinked target
-// carries a distinct symbol per referenced address and a displacement
-// of ZERO - and the displacement is part of the scored bytes. So this
-// is a representation choice forced by the delinker's per-address
-// symbol split, NOT evidence that retail's source lacked a struct.
+// SPELLED AS SIXTEEN SEPARATE INTS, but NOT because a struct would
+// cost bytes. CORRECTED 2026-08-20: an earlier note here claimed the
+// in-instruction displacement a four-int struct produces (one reloc
+// against the base symbol, addend 8) is scored against the delinked
+// target's per-address symbols (addend 0). It is not - objdiff masks
+// the whole reloc'd field, addend included. The negative control is
+// drawing.obj's ResetLimitCreature, which copies gCombatAreaLimits
+// through addends 4/8/0xc against a target whose addends are all 0 and
+// scores 100.0000%. The missile animators then USED that: spelling the
+// four running limits as one aggregate is what took ShootMissile from
+// 91.22 to 91.74. So a struct is available whenever retail's source
+// plausibly had one; sixteen ints here is a naming choice (no roster
+// row reaches any of the four rectangles), not a scoring workaround.
 // NAMES ARE BOOTSTRAP INVENTIONS - no roster, string or DC global
 // reaches any of them, so each keeps an address ordinal.
 DATA(0x00694ea8) extern int gCombatHexLeft694ea8;

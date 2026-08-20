@@ -1923,14 +1923,166 @@ void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int
     // @stub
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3749
-VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
-void combatManager::ShootAnimatedMissile(int startX, int startY, int destX, int destY, int nsprites, const float* angles, const char** file_names)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\cmbtmgr.cpp:3749
+// RECONSTRUCTED 2026-08-20, from ShootMissile's shape. DC local names
+// again (deltaX, addX/addY, nframes, flipped, saved, missile,
+// next_frame_time, ARROW_DELAY, update_area) - `missile` is a LOCAL
+// here, not a parameter: this is the animator that owns its sprite,
+// loading it by name and Disposing it through virtual slot 1 at the end.
+//
+// Its step divisor settles what ShootMissile's alone could not. Retail
+// divides by 31 with the add-back magic 0x84210843 after `lea
+// ecx,[eax+0xf]`, and ShootMissile divides by 40 after `+20`: both are
+// the rounding idiom `(distance + D/2) / D`, so the addend is D/2
+// folded, not an independent constant.
+//
+// The frame-search loop is ROTATED here and un-rotated in ShootMissile,
+// from one source `while`. The difference is the bound: `nsprites` is a
+// plain parameter VC6 can hoist, whereas ShootMissile's bound re-expands
+// CSprite::GetNumFrames on every test and VC6 will not duplicate that.
+// So rotation here is NOT the goto-loop signature - that test only reads
+// that way when the loop condition is hoistable in the first place.
+//
+// Residual (91.1780%): the same three classes as ShootMissile, and the
+// two shared ones are shared for the same reason. The inlined
+// IsQuickCombat takes both player-record addresses with LEA instead of
+// folding +0xe4 into the load (LowerDoor and the out-of-line const twin
+// both fold, so this is schedule, not spelling); the `+15` ahead of the
+// magic divide comes out `mov`+`add` where retail has one `lea`, in both
+// animators identically; and retail's `right`/`bottom` seed sits in the
+// loop preheader where ours straddles the entry guard. The rest is
+// scratch-register preference (edx->ecx x10, eax->edx x6).
+// Tried and rejected, all re-measured on fuzzy rather than on the
+// solver's distance: `frame` declared last in its block (the solver's
+// own top pick - 20 slots of register distance BETTER but 90.71 fuzzy,
+// the two metrics ranking it opposite ways), `frame` hoisted above the
+// Bitmap16Bit (90.17), and `right`/`bottom` ahead of ARROW_DELAY (90.59).
+VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
+void combatManager::ShootAnimatedMissile(int startX, int startY, int destX,
+                                         int destY, int nsprites,
+                                         const float* angles,
+                                         const char* const* file_names)
+{
+    if (IsQuickCombat())
+        return;
+
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    unsigned char flipped = deltaX < 0;
+    int nframes = (static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX))) + 15) / 31;
+    int addX;
+    int addY;
+    if (nframes > 0) {
+        addX = deltaX / nframes;
+        addY = deltaY / nframes;
+    } else {
+        addX = deltaX;
+        addY = deltaY;
+    }
+
+    int sprite_index;
+    if (deltaX == 0) {
+        if (deltaY > 0)
+            sprite_index = nsprites - 1;
+        else
+            sprite_index = 0;
+    } else {
+        float angle;
+        double degrees;
+        if (flipped)
+            degrees = atan(static_cast<double>(deltaY) / deltaX)
+                      * 57.2957763671875;
+        else
+            degrees = atan(static_cast<double>(deltaY) / -deltaX)
+                      * 57.2957763671875;
+        angle = static_cast<float>(degrees);
+        int index = 1;
+        while (index < nsprites
+                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
+            ++index;
+        if (index < nsprites)
+            sprite_index = index - 1;
+        else
+            sprite_index = nsprites - 1;
+    }
+
+    CSprite* missile = ResourceManager::GetSprite(file_names[sprite_index]);
+    int width = missile->Width;
+    int height = missile->Height;
+    int x = startX - width / 2;
+    int y = startY - height / 2;
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    DrawFrame(0, 0, 0, 0, 1, 0);
+    int ARROW_DELAY = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
+
+    int frame = 0;
+    int right = x + width - 1;
+    int bottom = y + height - 1;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
+        if (step != 0) {
+            saved.Draw(0, 0, width, height,
+                       gpWindowManager->screenBitmap->map, x, y,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch, false);
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = right;
+            update_area.values[3] = bottom;
+            x += addX;
+            right += addX;
+            y += addY;
+            bottom += addY;
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        missile->Draw(0, frame, 0, 0, width, height,
+                      gpWindowManager->screenBitmap->map, x, y,
+                      gpWindowManager->screenBitmap->Width,
+                      gpWindowManager->screenBitmap->Height,
+                      gpWindowManager->screenBitmap->Pitch, flipped, 1);
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(
+            update_area.values[0], update_area.values[1],
+            update_area.values[2] - update_area.values[0] + 1,
+            update_area.values[3] - update_area.values[1] + 1);
+        ++frame;
+        if (frame >= missile->GetNumFrames(0))
+            frame = 0;
+        GameTime::DelayTil(next_frame_time);
+    }
+
+    saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map, x, y,
+               gpWindowManager->screenBitmap->Width,
+               gpWindowManager->screenBitmap->Height,
+               gpWindowManager->screenBitmap->Pitch, false);
+    gpWindowManager->UpdateScreen(x, y, width, height);
+    missile->Dispose();
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3902
 // RECONSTRUCTED 2026-08-20. Local names are DC's own
