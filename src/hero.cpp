@@ -1507,12 +1507,18 @@ static void mark_spells_of_level(std::bitset<70>& target, int level)
 // unconditionally) restored the level arm instruction-for-instruction at
 // 92.71%.
 //
-// Residual (92.71%): the FIRST TWO constant-index sets - Armageddon's
-// Blade and the Sea Captain's set(SPELL_SUMMON_BOAT) - still fold to
-// `or dword ptr [result], imm` where retail calls set; the two constant
-// sets AFTER them (Scuttle Boat, Titan's Lightning Bolt) already come
-// out as retail's calls, so the budget is running out two decisions too
-// late and nothing later in the function is left to drain it. Everything
+// 92.71 -> 93.96 (2026-08-20): the diagnosis below was right about WHICH
+// sites diverged, and `#pragma inline_depth(0)` on the Sea Captain's
+// set(SPELL_SUMMON_BOAT) site alone is the lever - it is STATEMENT-
+// granular in VC6, so it converts exactly that one expansion into the
+// call retail has, taking the census from set x2 to retail's x3. The
+// Armageddon's Blade site is deliberately LEFT expanded: retail calls set
+// three times out of four, not four, so pinning both would overshoot.
+//
+// Residual (93.96%): Armageddon's Blade still folds to
+// `or dword ptr [result], imm` - which is what retail does at one of its
+// four sites too, so this may already be right and the remainder
+// elsewhere. Everything
 // else - both loops, the jump tables, the tail-merged set chain, the
 // `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
 // registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
@@ -1545,7 +1551,9 @@ std::bitset<70> mark_spells(int artifactId)
         result.set(SPELL_ARMAGEDDON, true);
         break;
     case ARTIFACT_SEA_CAPTAINS_HAT:
+#pragma inline_depth(0)
         result.set(SPELL_SUMMON_BOAT, true);
+#pragma inline_depth()
         result.set(kSpellScuttleBoat, true);
         break;
     case ARTIFACT_TITANS_THUNDER:
@@ -6911,6 +6919,11 @@ boat* hero::find_summonable_boat()
 // Requires Summon Boat availability and mana at the effective local magic
 // terrain. An existing reachable boat wins; otherwise Advanced mastery can
 // summon one only when the global boat pool still has a free slot.
+//
+// 75.23 -> 85.70 (2026-08-20) on one `#pragma inline_depth(0)` at the
+// worldMap.cell() site: retail CALLS NewfullMap::cell(int,int,int) there
+// (predict-inline base x0 vs retail x1) where our CL expanded its index
+// arithmetic inline.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
 unsigned char hero::can_summon_boat()
 {
@@ -6934,8 +6947,13 @@ unsigned char hero::can_summon_boat()
         && invalid.z == point.z) {
         magicTerrain = kMagicTerrainNone;
     } else {
+        // Site-pinned: retail CALLS NewfullMap::cell(int,int,int) here
+        // (base x0 vs retail x1) where our CL expanded its index
+        // arithmetic inline.
+#pragma inline_depth(0)
         magicTerrain = gpGame->worldMap.cell(
             point.x, point.y, point.z)->get_magic_terrain_type();
+#pragma inline_depth()
     }
 
     int mastery = GetSpellSchoolLevel(
