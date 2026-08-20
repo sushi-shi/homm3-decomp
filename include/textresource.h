@@ -127,6 +127,12 @@ enum EGeneralTextIndex {
     // the one-death clause, fed the dying stack's name alone, and 0x5f0
     // the many-death clause, fed (deaths, name). Gated for the reason
     // GENERAL_TEXT_GOOD_MORALE above is.
+    // The wraith's mana-drain line, in its two counts. Both are folded
+    // [Text._First + N] loads in combatManager::SetNextArmy (0x465330)
+    // - 0x5d8 on `numTroops == 1` and 0x5dc otherwise - and both are
+    // fed (the draining stack's name, the drained hero's name).
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE = 374,
+    GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY = 375,
     GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER = 377,
     GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS = 378,
     GENERAL_TEXT_COMBAT_ONE_DEATH = 379,

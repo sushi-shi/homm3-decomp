@@ -264,6 +264,19 @@ enum ESpellId {
     SPELL_SORROW = 0x32,
     SPELL_FORTUNE = 0x33,
     SPELL_MISFORTUNE = 0x34,
+    // 54, and army.h's spell-influence block already fixes the value
+    // from the other side: "+0x198 + 54*4 == +0x270" is the word that
+    // header reads for Slow. The one consumer in this tree is
+    // combatManager::SetNextArmy (0x465330), where 0x36 is the FIRST of
+    // the four spells the Armor of the Damned auto-casts - Slow, Curse,
+    // Weakness, Misfortune - which is also what corroborates it, since
+    // the other three are already byte-proven enumerators above.
+    // Behind a view for this header's usual measured reason: armygrp.h
+    // reaches most of the combat tree and an ungated enumerator counts
+    // toward the include-set threshold in every consumer.
+#ifdef HOMM3_SPELL_SLOW_DECL
+    SPELL_SLOW = 0x36,
+#endif
     SPELL_SLAYER = 0x37,
     SPELL_TITANS_LIGHTNING_BOLT = 0x39,
     SPELL_BERSERK = 0x3b,

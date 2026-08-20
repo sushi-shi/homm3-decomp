@@ -43,6 +43,17 @@
 #define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
 #define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
 #define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
+// The three start-of-turn creature ids and their two army.obj bodies,
+// and the two auto-cast combination artifacts - all five reached from
+// SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
+// because the Armor of the Damned's chain opens with it. All four
+// defines sit here, ahead of every header, because armygrp.h and
+// artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
+// hero.h -> artifact.h) and a view define has to precede its header.
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
+#define HOMM3_SPELL_SLOW_DECL
+#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
@@ -1107,39 +1118,166 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
     return 0;
 }
 
-#if 0  // @carcass
+// army::get_controlling_side (0x440140) as retail's cmbtmgr.cpp saw
+// it, spelled file-locally for exactly the reason CreatureName above
+// is: the DC roster puts that body in Army.h, so the TU could expand
+// it, and SetNextArmy expands it TWICE with no call - while our
+// army.h keeps it out-of-line because army.cpp's own tuning is
+// measured against that shape. Same body, same `if`-and-return form.
+static int ControllingSide(const army* stack)
+{
+    if (stack->hypnotizeFlag)
+        return 1 - stack->combatSide;
+    return stack->combatSide;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:2364
-// SURVEYED 2026-08-20 (head only, +0x00..+0x155 of 0x4F6). What is
-// byte-verified: the first three stores are field_132b8 = group and
-// field_132bc = index - the acting (side, slot) pair KeepAttack reads
-// back - and then field_132c0 = the side the turn EFFECTS apply to,
-// formed as `armies[group][index].field_288 ? 1 - .field_f4 : .field_f4`.
-// The whole remainder is skipped when the byte at +0x13d68 is set (one
-// `jne` straight to the epilogue), so that byte is the "no per-turn
-// effects" latch and wants slicing before anyone opens this.
+// RECONSTRUCTED 2026-08-20 from the earlier lane's head survey, which
+// was right about the three stores and the +0x13d68 latch and stopped
+// one instruction short of the part that names everything else.
 //
-// The body after that is one repeated four-statement idiom, which is
-// what makes it worth its 1270 bytes: for each of a run of artifact ids
-// (0x81 and 0x84 decoded so far) test hero::IsWieldingArtifact on
-// heroes[field_132c0], then call 0x5a40d0 with (spell, 3, side, 1, 2),
-// and if that returns true call 0x59fe30 with (spell, -1, 2, -1, 3,
-// delay). Spell ids 0x30, 0x36 and 0x2a appear in the decoded head with
-// delays 0xa, 0x32 and 0x32. NEITHER CALLEE IS DECLARED YET: 0x5a40d0
-// and 0x59fe30 are spells.obj leaves in the same family cmbtmgr.h
-// already parks ComputeSpellDamage and ModifySpellDamage in, and both
-// need naming before this compiles.
+// The body is a start-of-turn hook in two halves. The first is the
+// combination-artifact auto-cast: while the acting side's field_54b0
+// latch is up and that side HAS a hero, five spells are offered, each
+// gated on the spells.obj leaf at 0x5a40d0 and cast through CastSpell
+// with a delay. Artifact 0x81 offers one spell and 0x84 offers four,
+// and the two spell SETS are what identify both artifacts and both
+// ids - Prayer alone is the Angelic Alliance, Slow/Curse/Weakness/
+// Misfortune is the Armor of the Damned. The latch is then cleared,
+// so the whole block fires once per combat and not once per turn.
 //
-// COST TO OPEN: four pad slices (+0x132b8, +0x132bc, +0x132c0, +0x13d68)
-// plus those two declarations. field_54b0[2] is already modelled and is
-// the per-side gate the effect chain sits behind.
+// The second half is a three-way compare chain on creatureType, and
+// the three ids are the creatures with a start-of-turn ability:
+// 0x3d drains two mana off the OTHER side's hero (ManaDrai.wav, the
+// wraith), 0x86 rolls the weighted random spell at army 0x447510 (the
+// faerie dragon) and 0x88 fires a mass cast gated on a three-round
+// counter (the enchanter). Every id is argued on the enumerator in
+// army.h rather than here.
+//
+// Two shapes the bytes force:
+//   * the controlling side is computed TWICE, once into the member and
+//     once again inside the wraith arm, and neither is a call - hence
+//     the file-local ControllingSide above rather than
+//     army::get_controlling_side, which our army.h keeps out of line;
+//   * the wraith arm's exits are `break`s, not `return`s: all of them
+//     land on the shared two-statement tail (lastMovedArmy = 0 and the
+//     command-bar rearm), which is also where bCreaturePlacement and
+//     the compare chain's default edge go.
+//
+// 75.89 -> 87.51% 2026-08-20, and the lever was the INLINER again, the
+// same reading place_obstacle's note records. predict-inline named it
+// in one line - retail CALLS basic_string::assign in BOTH message arms
+// and our /Ob2 expanded it in the plural arm only - and the scoped
+// inline_depth(0) on that one statement is the whole fix. Worth
+// stressing that the two arms are spelled IDENTICALLY, so no source
+// difference explains why the budget ran out between them and nothing
+// but the pragma reaches it. inline_depth(1) and (2) were both
+// measured and both leave the expansion in place (75.8883, flat), so
+// only 0 works.
+//
+// Residual (87.5102%): ONE divergence, and it is the pin's own price.
+// Retail's teardown emits three `operator delete` - both format_string
+// temporaries and `message`, each an inlined _Tidy(true) - and we now
+// emit two, because inline_depth(0) also de-inlines the pinned
+// statement's temporary destructor into a _Tidy CALL. 29 out-of-line
+// calls against retail's 27, 39 conditional branches against 44. The
+// trade is worth +11.62 net and a full expression is the narrowest
+// scope the pragma has. Everything else pairs 1:1 - the artifact
+// chain, the compare chain and both message arms - and what is left of
+// the register distance is the ebx/esi/edi three-cycle the prologue
+// opens with plus the IsQuickCombat lea-vs-fold shape damage_message's
+// note already argues is context rather than spelling.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::SetNextArmy(int group, int index)
 {
-    // @stub
-}
+    army* stack = &armies[group][index];
+    actingSide = group;
+    actingSlot = index;
+    currentSide = ControllingSide(stack);
+    if (!bCreaturePlacement) {
+        if (field_54b0[currentSide]) {
+            hero* casting_hero = heroes[currentSide];
+            if (casting_hero) {
+                if (casting_hero->IsWieldingArtifact(
+                        ARTIFACT_ANGELIC_ALLIANCE)) {
+                    if (Unnamed5a40d0(SPELL_PRAYER, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_PRAYER, -1, 2, -1, 3, 10);
+                }
+                if (casting_hero->IsWieldingArtifact(
+                        ARTIFACT_ARMOR_OF_THE_DAMNED)) {
+                    if (Unnamed5a40d0(SPELL_SLOW, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_SLOW, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_CURSE, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_CURSE, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_WEAKNESS, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_WEAKNESS, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_MISFORTUNE, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_MISFORTUNE, -1, 2, -1, 3, 50);
+                }
+            }
+            field_54b0[currentSide] = 0;
+        }
 
-#endif  // @carcass
+        switch (stack->creatureType) {
+        case army::ARMY_CREATURE_WRAITH:
+            if (field_13de4)
+                break;
+            {
+                hero* drained = heroes[1 - ControllingSide(stack)];
+                if (!drained)
+                    break;
+                if (drained->mana <= 0)
+                    break;
+                drained->mana = static_cast<short>(drained->mana - 2);
+                if (drained->mana < 0)
+                    drained->mana = 0;
+                if (!IsQuickCombat()) {
+                    SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+                        0x0066ff94, manaDrainSampleName, "ManaDrai.wav"));
+                    std::string message;
+                    if (stack->numTroops == 1)
+                        message = format_string(
+                            gpGeneralText->GetText(
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
+                            CreatureName(stack->creatureType,
+                                         stack->numTroops),
+                            drained->name);
+                    else
+                        // OVER-INLINE, pinned. Retail CALLS
+                        // basic_string::assign in BOTH arms; our /Ob2
+                        // expands it in this one only - erase x2 plus
+                        // _Grow, _Eos and the _Nullstr compare, which is
+                        // the whole 53-vs-44 conditional-branch gap. The
+                        // asymmetry is the inline budget running out at
+                        // a different point, not a spelling difference:
+                        // the two arms are written identically.
+#pragma inline_depth(0)
+                        message = format_string(
+                            gpGeneralText->GetText(
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
+                            CreatureName(stack->creatureType,
+                                         stack->numTroops),
+                            drained->name);
+#pragma inline_depth()
+                    if (combatWindow)
+                        combatWindow->combat_message(message.c_str(), 1, 0);
+                    SpellEffect(77, stack, 100, 0);
+                    WaitEndSample(sample, -1);
+                }
+            }
+            break;
+        case army::ARMY_CREATURE_FAERIE_DRAGON:
+            stack->FaerieDragonSpell();
+            break;
+        case army::ARMY_CREATURE_ENCHANTER:
+            if (field_132a0[currentSide] > 2 && stack->Unnamed447fe0())
+                field_132a0[currentSide] = 0;
+            break;
+        }
+    }
+    lastMovedArmy = 0;
+    Unnamed4782d0();
+}
 
 // Single-call-site file static: /Ob2 inlines it into CombatIsOver and
 // emits no out-of-line copy, so no retail slot is expected for it.
