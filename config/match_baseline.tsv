@@ -541,6 +541,7 @@ cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
 cmbtmgr	?IsWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0
 cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
+cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	91.6699	91.6699	91.6699	0x63600
 cmbtmgr	?LoadIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63370
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
@@ -568,7 +569,6 @@ cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	67.1937	67.1937	67.1937	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
-cmbtmgr	combatManager_LoadArmies	0.0000	0.0000	0.0000	0x63600
 cmbtmgr	combatManager_LootDeadHero	0.0000	0.0000	0.0000	0x6a070
 cmbtmgr	combatManager_MakeCreaturesVanish	0.0000	0.0000	0.0000	0x66e00
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20

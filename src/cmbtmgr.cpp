@@ -42,6 +42,7 @@
 #include <va.h>
 #define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
 #define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
+#define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
@@ -271,14 +272,117 @@ void combatManager::FreeIcons()
     combatShadowBitmap->Dispose();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1004
+// Deployment. Both halves of every war-machine block are byte-forced:
+// which side may have the machine at all, and the hex it lands on.
+//   * the catapult is gated on `fortification > 0 && side == 0` and goes
+//     into armies[0] with no side term in its address, which is why it is
+//     spelled armies[0] here and not armies[side] - retail's own source
+//     evidently said so too;
+//   * the ballista is refused to a DEFENDER of a fortified town
+//     (`!fortification || side != 1`), which is the siege rule;
+//   * the three artifact machines' hexes are `side ? A : B` ternaries -
+//     retail materialises them with the neg/sbb/and/add idiom that pairs
+//     two constants differing by one mask, not with arithmetic on side;
+//   * the arrow towers are gated on `side == 1` and address armies[1] the
+//     same way the catapult addresses armies[0]. A Citadel installs the
+//     keep alone, a Castle adds the two towers with (n+1)/2 shots each -
+//     which is exactly what InitializeArchers was already documented to
+//     prove from the other end.
+// The deployment tables' bounds come from adjacency, not from guessing a
+// stride: see their declaration in the header.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {
-    // @stub
+    for (int side = 0; side < 2; side++) {
+        for (int slot = 0; slot < 20; slot++) {
+            armies[side][slot].numTroops = 0;
+            armies[side][slot].creatureType = CREATURE_NONE;
+            armies[side][slot].InitClean();
+        }
+        numArmies[side] = 0;
+        int placed = 0;
+        hero* combat_hero = heroes[side];
+        armyGroup* group = armyGroups[side];
+        unsigned char tight_formation;
+        if (combat_hero && (combat_hero->formation & 1) && sideIsAI[side])
+            tight_formation = 1;
+        else
+            tight_formation = 0;
+        int last = group->GetNumArmies() - 1;
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            if (group->armies[i] == CREATURE_NONE)
+                continue;
+            int hex;
+            if (is_surrounded)
+                hex = gCombatDeploySurroundedHexes63d0e0[side][placed];
+            else if (tight_formation)
+                hex = gCombatDeployHexes63d0a8[side]
+                          [gCombatDeploySlots63d1dc[last][placed]];
+            else
+                hex = gCombatDeployHexes63d0a8[side]
+                          [gCombatDeploySlots63d118[last][placed]];
+            armies[side][placed].Init(group->armies[i], group->numTroops[i],
+                                      combat_hero, side, placed, hex, i);
+            armies[side][placed].LoadResources();
+            placed++;
+        }
+        if (combat_hero && !is_surrounded) {
+            if (field_132f4 > 0 && side == 0) {
+                armies[0][placed].Init(CREATURE_CATAPULT, 1, combat_hero,
+                                       side, placed, 0x77, -1);
+                armies[0][placed].LoadResources();
+                placed++;
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_BALLISTA)) {
+                if (!field_132f4 || side != 1) {
+                    armies[side][placed].Init(CREATURE_BALLISTA, 1,
+                                              combat_hero, side, placed,
+                                              side ? 0x43 : 0x33, -1);
+                    armies[side][placed].LoadResources();
+                    placed++;
+                }
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_FIRST_AID_TENT)) {
+                armies[side][placed].Init(CREATURE_FIRST_AID_TENT, 1,
+                                          combat_hero, side, placed,
+                                          side ? 0xa9 : 0x99, -1);
+                armies[side][placed].LoadResources();
+                placed++;
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_AMMO_CART)) {
+                armies[side][placed].Init(CREATURE_AMMO_CART, 1, combat_hero,
+                                          side, placed, side ? 0x20 : 0x12,
+                                          -1);
+                armies[side][placed].LoadResources();
+                placed++;
+            }
+        }
+        if (side == 1 && field_132f4 >= COMBAT_FORTIFICATION_CITADEL) {
+            int numArchers;
+            int archerLevel;
+            defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
+            armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                   combat_hero, side, placed, 0xfe, -1);
+            archers[0].armySlot = placed;
+            placed++;
+            if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
+                numArchers = (numArchers + 1) / 2;
+                armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                       combat_hero, side, placed, 0xff, -1);
+                archers[2].armySlot = placed;
+                placed++;
+                armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                       combat_hero, side, placed, 0xfb, -1);
+                archers[1].armySlot = placed;
+                placed++;
+            }
+        }
+        numArmies[side] = placed;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1151
 DC_ONLY(0x5e3d8, 0x8C)
