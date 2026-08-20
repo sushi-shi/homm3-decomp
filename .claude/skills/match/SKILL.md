@@ -95,8 +95,11 @@ MISSING forever.
   went further backwards to 64.89). Retail frequently keeps only a byte
   OFFSET live and reloads the container's `_First` each pass. The instinct to
   hoist an invariant load is usually wrong here: read what retail keeps live
-  across the back edge and spell that, even when it looks redundant. Related
-  smaller instances: `get_trigger_cell` loses 5 points assigning `z` before
+  across the back edge and spell that, even when it looks redundant. **The
+  loop BOUND obeys the same rule**: `game::GetNumThievesGuilds` caps at 91.89
+  with `numTowns` hoisted into a local and reaches EXACT with
+  `i < players[iWhichPlayer].numTowns` left in the condition, re-read every
+  iteration. Related smaller instances: `get_trigger_cell` loses 5 points assigning `z` before
   `y`; `calc_cell_extra` needs `is_trigger = 1` AFTER `type_value`, not
   before; `PlaceObject` needs `(col & 0xf) | (row << 4)` and not the operands
   reversed — with `|`, operand ORDER decides which half accumulates (96.80
@@ -203,7 +206,11 @@ MISSING forever.
   signedness evidence).
 - **Bool materialization**: `unsigned char f = expr != 0;` → `setne`+byte;
   comparing normalized ints → `neg/sbb/neg`. Retail mixing both in one compare
-  = one side was a byte local (AppWndProc fMinimized/fActive).
+  = one side was a byte local (AppWndProc fMinimized/fActive). **The RETURN
+  case is the same rule and closes functions** (game's `save_vector` 96.60 ->
+  100.0): `return a >= b;` emits `sbb`/`inc`, while assigning to an
+  `unsigned char` local first and returning that emits retail's `setae al`.
+  If retail sets a byte, the source landed the result in a byte.
 - **Import call forms**: `call [__imp__X]` needs a dllimport declaration
   (windows.h family); `call _X@N` thunk form needs a plain declaration. The
   form is PER-TU (timeGetTime: kbwin IAT vs button/misc/mousemgr thunk) — a
