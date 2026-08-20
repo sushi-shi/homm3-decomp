@@ -6306,7 +6306,20 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
-    char tempText[512];
+    // 500, NOT 512 (corrected 2026-08-20), which also makes it agree with
+    // SetRolloverText's already-established buffer. The frame layout is the
+    // proof: retail bases this buffer at [ebp-0x238] and READS [ebp-0x44],
+    // [ebp-0x40], [ebp-0x3c] and [ebp-0x38] as separate dwords, every one
+    // of which a 512-byte array based at [ebp-0x238] would cover.
+    // 0x238-0x44 = 0x1f4 = 500 is the largest size that fits, and at 500
+    // our layout ABOVE the buffer becomes exactly retail's 132 bytes
+    // ([ebp-0x2c4 .. ebp-0x241] here against retail's
+    // [ebp-0x2bc .. ebp-0x239]).
+    // Byte-flat on the score - it moves `sub esp` from 0x2e0 to 0x2b8
+    // against retail's 0x2b0, and the 8 bytes still between them are two
+    // small locals VC6 homes on our side and keeps in registers on
+    // retail's, not another array.
+    char tempText[500];
     playerData* player = gpGame->GetLocalPlayer();
     int iPlayer = gpGame->GetLocalPlayerGamePos();
     int playerBit = 1 << iPlayer;
@@ -6812,7 +6825,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
     }
 
     if (gUnnamed6989c8 > 0) {
-        char coordinateText[128];
+        // 100, NOT 128, by the same frame reading: retail bases it at
+        // [ebp-0x2bc] and uses [ebp-0x258] above it, so 0x2bc-0x258 = 0x64
+        // = 100 is its size. Byte-flat; the frame carries the evidence.
+        char coordinateText[100];
         sprintf(coordinateText, DATA_COMPGEN(
             0x00660394, quickInfoCoordinateFormat,
             "\n\nX: %3d - Y: %3d - Z: %3d"),
