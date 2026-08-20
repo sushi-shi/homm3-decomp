@@ -265,6 +265,7 @@ ai_tactical	?get_multi_head_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters
 ai_tactical	?get_poison_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500
 ai_tactical	?get_prayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ac0
 ai_tactical	?get_precision_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38b50
+ai_tactical	?get_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@W4TSpellSchool@@JJJ@Z	80.2110	80.2110	80.2110	0x396e0
 ai_tactical	?get_ranged_attack_value@type_AI_combat_parameters@@QAEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x35cb0
 ai_tactical	?get_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38c60
 ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0EJ@Z	100.0000	100.0000	100.0000	0x35c70
@@ -299,7 +300,6 @@ ai_tactical	type_AI_spellcaster_get_fire_shield_value	0.0000	0.0000	0.0000	0x3a1
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
 ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x39270
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
-ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
