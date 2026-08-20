@@ -847,6 +847,7 @@ game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20
 game	?GetName@playerData@@QAEPADXZ	100.0000	100.0000	100.0000	0xbadb0
 game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0
 game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
+game	?GetNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30
 game	?GetPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60
 game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0
 game	?GetRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0
@@ -915,7 +916,6 @@ game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
-game	game_GetNumThievesGuilds	0.0000	0.0000	0.0000	0xcce30
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0

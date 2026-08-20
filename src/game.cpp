@@ -3500,11 +3500,32 @@ int game::GetBoatsBuilt()
 // with one stack arg matches the signature, and the body walks the
 // player's towns testing building masks - the thieves-guild count the
 // advmgr quick views threshold at 1/2.
+#endif  // @carcass
+
+// The building test is the Tavern, plus - for a Castle only - the
+// Brotherhood of the Sword, which is the Castle's upgraded Tavern.
+// Retail loads the 64-bit `built` mask ONCE and ands it against both
+// bitNumber rows, so this is the direct field test and not two
+// HasBuilding calls. The roster comes off `this` but the towns come
+// off the gpGame singleton - retail reads 0x6994e8 rather than reusing
+// ecx, which is what fixes the two spellings apart.
 VA(0x004cce30, 0xB8)  // anchor-bracket + anchor-callee (quick views), dc 0xb9a34
 int game::GetNumThievesGuilds(int iWhichPlayer)
 {
-    // @stub
+    int count = 0;
+    for (int i = 0; i < players[iWhichPlayer].numTowns; i++) {
+        town* currentTown =
+            &gpGame->towns[players[iWhichPlayer].townIds[i]];
+        if ((currentTown->built & bitNumber[TAVERN_ID]) ||
+            (currentTown->type == TOWN_CASTLE &&
+             (currentTown->built & bitNumber[EXTRA_1_ID]))) {
+            count++;
+        }
+    }
+    return count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11205
 // Whole body: stores the two arguments into the map-extent globals
