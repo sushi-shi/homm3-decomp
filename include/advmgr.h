@@ -592,6 +592,9 @@ DATA(0x00698778) extern int gUnnamed698778;
 //   0x682a38  cleared for the "is this turn ours to draw" gate, tested
 //             between bVideoPaused and gCompleteDrawMessageBypass.
 DATA(0x00682a38) extern unsigned char gUnnamed682a38;
+//   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
+//             cleared right after - a draw-pass mode latch by role.
+DATA(0x006989f4) extern int gUnnamed6989f4;
 //   0x691209  lets a NON-human acting player through that same gate
 //             without the IsLastHuman probe.
 DATA(0x00691209) extern unsigned char gUnnamed691209;

@@ -48,6 +48,9 @@ public:
     // load off an int member is what fixes the 16-bit colour parameter.
     void FrameRect(int x, int y, int w, int h, unsigned short color);
     void Colorize(int x, int y, int width, int height, unsigned short color);
+    // The float overload, DC bitmap16.cpp:873. advManager::ViewPuzzle is the
+    // retail caller that proves the (hue, saturation) pair as raw dwords.
+    void Colorize(int x, int y, int w, int h, float hue, float saturation);
 };
 SIZE(Bitmap16Bit, 0x38);
 

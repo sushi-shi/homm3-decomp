@@ -98,6 +98,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "quicktownwindow.h"
 #include "quickinfowindow.h"
 #include "questlogwindow.h"
+#include "puzzlewindow.h"
 #include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -8510,14 +8511,87 @@ int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:11220
+// The obelisk puzzle viewer. The puzzle art is picked by the local
+// player's ALIGNMENT (setup.alignment[pos], the faction), the grail
+// X-mark is the arrow tileset's frame 0 centred on the ultimate-
+// artifact cell over a CompleteDraw of the puzzle origin, colorized
+// to 0.625 hue and fizzled forward over 220ms unless every piece is
+// already down (0x30 = all 48 revealed), and one type_point local is
+// reused for the puzzle origin and the closing view re-centre (the
+// tail's x/y/z writes are RMW bitfield inserts into the same slot).
+//
+// Residual (83.31%): pure schedule/register-homing inside the grail
+// draw block - branch shape agrees 4/4+1ret, call multiset agrees, and
+// the raw 13-arg DrawAdvObjWithFlag overload is byte-proven the right
+// spelling (the Bitmap16Bit* wrapper evaluates dx/dy before the bitmap
+// field loads and measures 75.35; the raw call measures 83.31; the
+// SetHeroContext merged y|z idiom in the tail was worth +5.1 before
+// that). What remains: retail re-loads arrowTileset per use where our
+// CL folds one load (sub eax,[edx+0x34] vs mov/sub), and the dy/dx
+// arithmetic interleaves with the bitmap pushes differently. Tried and
+// rejected: grailY-before-grailX declaration order (+0.01, copy-prop
+// eats it). why-reg finds first defs aligned - past-first-defs
+// schedule, the bounded class.
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
 void advManager::ViewPuzzle()
 {
-    // @stub
+    type_point centre;
+
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    DemobilizeCurrHero(0, 1);
+    int pos = gpGame->GetLocalPlayerGamePos();
+    gpGame->SetupPuzzlePieces(pos, 0);
+    TPuzzleWindow puzzle(pos >= 0 ? gpGame->setup.alignment[pos] : -1);
+    SAMPLE2 sample2 = LoadPlaySample("obelisk.wav");
+    puzzle.UpdatePuzzle(1);
+    DrawAdventureMapGems();
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+
+    if (gpGame->field_4e3e8 > 0) {
+        gpWindowManager->SaveFizzleSourceX(8, 8, 592, 544);
+        centre = gpGame->get_puzzle_origin();
+        int grailY = gpGame->ultimateArtifactY;
+        int grailX = gpGame->ultimateArtifactX;
+        gUnnamed6989f4 = 1;
+        CompleteDraw(centre.x, centre.y, centre.z, 0, 0);
+        gUnnamed6989f4 = 0;
+        arrowTileset->DrawAdvObjWithFlag(
+            0, 0, 0, 32, 32, gpWindowManager->screenBitmap->map,
+            (grailX - centre.x) * 32 + (32 - arrowTileset->Width) / 2,
+            (grailY - centre.y) * 32 + (32 - arrowTileset->Height) / 2,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0, 0);
+        gpWindowManager->screenBitmap->Colorize(8, 8, 592, 544, 0.625f,
+                                                0.0f);
+        int revealed = puzzle.UpdatePuzzle(0);
+        DrawAdventureMapGems();
+        if (revealed != TPuzzleWindow::PUZZLE_PIECE_COUNT)
+            gpWindowManager->FizzleForwardX(8, 8, 592, 544, 220);
+        else
+            gpWindowManager->ReleaseFizzleSource();
+    }
+
+    puzzle.DoModal(0);
+    ClearMemSample(sample2);
+
+    if (!gUnnamed6aac3c) {
+        RedrawAdvScreen(1, 0);
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+        // SetHeroContext's merged y|z store idiom: both values in hand
+        // before the first bitfield write.
+        int centreX = radarOrigin.x + 9;
+        int centreY = radarOrigin.y + 8;
+        int centreZ = radarOrigin.z;
+        centre.x = centreX;
+        centre.y = centreY;
+        centre.z = centreZ;
+        SetEnvironmentOrigin(centre, 1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11287
 DC_ONLY(0x1e360, 0xE8)
