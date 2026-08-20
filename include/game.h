@@ -1401,10 +1401,11 @@ public:
     void record_show_hero(hero* who, signed char player, type_point point,
                           unsigned char reset);
 #endif
-#ifdef HOMM3_TOWN_OBJ_DECLS
-    // Retail-only 0x49c720. SwapHeroes proves this three-argument member
-    // queues a hero-state record; no surviving name covers it, so keep the
-    // declaration ordinal and local to town.obj.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
+    // Retail-only 0x49c720. SwapHeroes and hero::Deallocate (0x4d9ec0)
+    // both prove this three-argument member queues a hero-state record;
+    // no surviving name covers it, so the declaration stays ordinal and
+    // gated to the two compilands that reach it.
     void GameFn_0049C720(hero* who, signed char owner,
                          unsigned char state);
 #endif

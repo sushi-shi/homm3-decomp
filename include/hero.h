@@ -156,6 +156,17 @@ SIZE(type_obscuring_object, 0x18);
 
 class boat;
 
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+// The two combat latches hero::Deallocate consults before dismissing the
+// army and before re-rolling the garrison. DECLARATION ONLY - cmbtmgr.h
+// owns the DATA claims on 0x6985a3 / 0x697744, and a second claim on the
+// same RVA is a fatal duplicate at delink time. Declared here rather than
+// by including cmbtmgr.h, which hero.obj's measured include closure does
+// not otherwise need.
+extern unsigned char gCombatFlag6985a3;
+extern unsigned char gCombatFlag697744;
+#endif
+
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
 // The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
@@ -187,6 +198,20 @@ public:
     // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
     // unrelated TU), and no other compiland needs the name.
     enum { EQUIPPED_SLOT_SOD_MISC = 18 };
+    // hero::Deallocate's domain, same gate and same reason. The
+    // availability byte's 0x40 rung is the "sits in a tavern recruit
+    // pool" sentinel game::Load memsets the whole array with; the two
+    // campaign rungs are the scenarios that keep one specific hero
+    // recruitable after death, addressed once by portrait and once by id
+    // (retail stores through a CONSTANT displacement for the second, so
+    // the id really is written twice in the source).
+    enum {
+        HERO_AVAILABILITY_TAVERN_POOL = 0x40,
+        DEALLOCATE_CAMPAIGN_BY_PORTRAIT = 8,
+        DEALLOCATE_CAMPAIGN_BY_HERO_ID = 12,
+        DEALLOCATE_KEPT_PORTRAIT = 0x9e,
+        DEALLOCATE_KEPT_HERO_ID = 150
+    };
 #endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
@@ -565,6 +590,11 @@ public:
     // DC row with NO retail body - GiveExperience carries it expanded.
 #  ifndef HOMM3_EVENTS_VIEW
     void CheckLevel();
+    // 0x4d9ec0. hero.obj OWNS the definition, so the owning compiland
+    // needs the declarator too; without one VC6 compiles the out-of-class
+    // body in a DEGRADED SCOPE and reports "undeclared identifier" from an
+    // arbitrary point onward with no error on the definition line.
+    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
 #  endif
     int GetLevel(int iExperience);
 #endif
