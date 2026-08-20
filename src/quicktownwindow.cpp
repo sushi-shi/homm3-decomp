@@ -8,7 +8,6 @@
 // Only the hall and silo four are spelled as calls here - the ctor's
 // /Ob2 budget admits five expansions and the fort chain would be the
 // sixth; the sweep is at the chain.
-#define HOMM3_TOWN_HASBUILDING_API
 #include <stdio.h>
 #include <string>
 #include <strstream>

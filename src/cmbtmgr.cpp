@@ -54,7 +54,6 @@
 #define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
-#define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
                                      // it in InitNonVisualVars' siege arms
 #include "cmbtmgr.h"
 #include "combatwindow.h"

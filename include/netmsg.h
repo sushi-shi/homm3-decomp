@@ -160,10 +160,7 @@ SIZE(CCombatTypeMsg, 0x18);
 
 class CMapChange : public CNetMsg {
 public:
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
-        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
     CMapChange() {}
-#endif
     CMapChange(eRS_Messages id, unsigned long messageSize)
         : CNetMsg(id, messageSize) {}
 };
@@ -297,7 +294,6 @@ SIZE(CMCDeadHero, 0x1c);
 
 // game.obj opens this on its own narrow gate: playerData::add_garrison_hero
 // (0x4b9fc0) broadcasts the same record town::SwapHeroes does.
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
 class CMCHideHero : public CMapChange {
 public:
     int heroId;
@@ -328,6 +324,5 @@ public:
         field_10 = 0;
     }
 };
-#endif
 
 #endif  // HOMM3_NETMSG_H

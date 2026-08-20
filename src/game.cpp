@@ -7,7 +7,6 @@
 // through town::HasBuilding in the Dreamcast bodies (dc 0xa3474 lines
 // with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
 // inline's visibility is scoped.
-#define HOMM3_TOWN_HASBUILDING_API
 // playerData::add_garrison_hero (0x4b9fc0) needs three declarators no
 // other game.obj body reaches: game::GameFn_0049C720, and CMCHideHero
 // with the two default constructors it chains through. Held on its own

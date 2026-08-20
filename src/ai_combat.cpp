@@ -31,7 +31,6 @@
 // town::HasBuilding calls in the Dreamcast body (dc 0x2a470, three
 // `jsr @r9` with r5 = 7/8/9 and r6 = 0); see town.h for why the
 // inline's visibility is scoped.
-#define HOMM3_TOWN_HASBUILDING_API
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>

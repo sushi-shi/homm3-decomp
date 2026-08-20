@@ -13,14 +13,10 @@
 // with the artifact gate and for the same reason: hero.h is reached
 // through more than one include below and its guard makes only the
 // first inclusion count.
-#define HOMM3_TOWNMGR_HEROVIEW_DECLS
 #define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
-#define HOMM3_TOWN_OBJ_DECLS
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
-#define HOMM3_TOWN_SUMMONING_DECLS
 #include "townmgr.h"
-#undef HOMM3_TOWN_OBJ_DECLS
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
 // widens; measured free on this compiland (1121/1504 unmoved).
@@ -35,35 +31,21 @@
 // undefines that macro immediately after townmgr.h so game.h's town.h
 // stays in its narrow form. TCastleWindow::Recruit needs the global, so
 // the gate is re-opened for exec.h alone.
-#define HOMM3_TOWN_OBJ_DECLS
 #include "exec.h"
-#undef HOMM3_TOWN_OBJ_DECLS
 // town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
 // the per-level counts at +0xbc, both behind HOMM3_TOWN_OBJ_DECLS.
 // Opened for town.h ALONE and ahead of game.h's own include of it, so
 // nothing else in this file's closure widens.
-#define HOMM3_TOWN_OBJ_DECLS
-#define HOMM3_TOWNMGR_TOWN_VISIT_DECLS
 // town::get_location, for the type_point DoTownGate hands TeleportTo.
-#define HOMM3_TOWN_LOCATION_DECLS
 #include "town.h"
-#undef HOMM3_TOWN_LOCATION_DECLS
-#undef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
-#undef HOMM3_TOWN_OBJ_DECLS
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
 // on its own gate so no other consumer of that header widens.
-#define HOMM3_TOWNMGR_GRAIL_DECLS
 // game.h's GetTownName inline, for SetupTown's title line, and its
 // ViewArmy declarator, for DoCommand's two info panels. Same gate
 // discipline: this compiland opens them, nothing else does.
-#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
-#define HOMM3_TOWNMGR_VIEWARMY_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
-#undef HOMM3_TOWNMGR_VIEWARMY_DECLS
-#undef HOMM3_TOWNMGR_TOWN_NAME_DECLS
-#undef HOMM3_TOWNMGR_GRAIL_DECLS
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
@@ -2984,7 +2966,7 @@ void townManager::DoPortalOfSummoning()
         townToView->SetSummoningGenerator();
 
     if (townToView->summoningType != CREATURE_NONE) {
-        gpRecruitUnit = new recruitUnit(townToView->get_army(), 1,
+        gpRecruitUnit = new recruitUnit(&townToView->get_army(), 1,
                                         townToView->summoningType,
                                         &townToView->summoningPopulation,
                                         CREATURE_NONE, 0, CREATURE_NONE, 0,
@@ -3135,10 +3117,10 @@ void townManager::DoSkeletonTransformer()
     if (townToView->visitingHeroId >= 0)
         transformGroup = &gpGame->GetHero(townToView->visitingHeroId)->army;
     else
-        transformGroup = townToView->get_army();
+        transformGroup = &townToView->get_army();
 
     if (field_12c && field_12c == field_11c)
-        transformGroup = townToView->get_army();
+        transformGroup = &townToView->get_army();
 
     {
         type_skeleton_window skeletonWin(transformGroup);
@@ -6148,7 +6130,7 @@ int TCastleWindow::WindowHandler(message* msg)
             case ROW_STAT_LABEL_5_ID + ROW_SUMMONING_OFFSET:
             case ROW_STAT_LABEL_6_ID + ROW_SUMMONING_OFFSET:
                 gpRecruitUnit = new recruitUnit(
-                    gpTownManager->townToView->get_army(), 1,
+                    &gpTownManager->townToView->get_army(), 1,
                     gpTownManager->townToView->summoningType,
                     &gpTownManager->townToView->summoningPopulation,
                     CREATURE_NONE, 0, CREATURE_NONE, 0, CREATURE_NONE, 0);
@@ -6486,7 +6468,7 @@ void GetCategoryStats(int whichCat, long* value, signed char* index)
                 for (int t = 0; t < gpGame->players[i].numTowns; t++) {
                     town* thisTown = gpGame->GetTown(gpGame->players[i].townIds[t]);
                     if (thisTown->HasGarrison())
-                        strength += AI_approximate_strength(0, thisTown->get_army());
+                        strength += AI_approximate_strength(0, &thisTown->get_army());
                 }
                 value[i] = strength;
                 break;
