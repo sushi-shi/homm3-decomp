@@ -3,15 +3,16 @@
 // 182 functions in link order; 20 compiler-generated $-thunks omitted.
 //
 // EH CENSUS of this TU's open bodies, measured 2026-08-20 by scanning
-// retail .text for the `mov eax, fs:[0]` prologue: SEVEN of the
-// twenty-three carry EH frames and are therefore parked until the
-// synth-PDB EH scope lands (P2.2), not merely unreconstructed -
-// do_post_attack 0x440bc0, DrawToBuffer 0x43e140, animate_missile
-// 0x43f2c0, compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
-// 0x443840, new_turn 0x446e30, FaerieDragonSpell 0x447510. That is
-// 7,893 of the 30,987 open bytes, so a quarter of this unit's remaining
-// mass is EH-blocked and NOT worth planning against. The other sixteen
-// are ordinary work.
+// retail .text for the `mov eax, fs:[0]` prologue: seven of the
+// twenty-three carried EH frames. THE P2.2 PARK IS LIFTED - the
+// corrected doctrine makes them ordinary work, and FaerieDragonSpell
+// (0x447510) is the proof: reconstructed EXACT 2026-08-20, its /GX
+// frame, inlined string c_str/dtor and unwind funclet all pairing
+// (the push-immediate delta in the EH prologue is the reloc addend,
+// masked). Still open with EH frames: do_post_attack 0x440bc0,
+// DrawToBuffer 0x43e140, animate_missile 0x43f2c0,
+// compute_attacker_bonus 0x443320, ComputeAttackerDamageBonuses
+// 0x443840, new_turn 0x446e30.
 #define HOMM3_ARMY_AI_VIEW
 #define HOMM3_ARMY_AURA_VIEW
 #define HOMM3_ARMY_BERSERK_VIEW
@@ -5478,15 +5479,69 @@ unsigned char army::can_cast_resurrect(long hex) const
 // 0x447fe0 at the top of a stack's turn; it walks the +0xdc spell list
 // against the table at 0x63b850 and picks one with `rand`. Name is
 // army.h's, provisional.
+#endif  // @carcass
+
+// The Faerie Dragon's lottery: (spell, weight) pairs, -1-terminated,
+// read from the hash-verified image at 0x63b850 (.rdata, so const).
+// The eight direct-damage spells at their proven ids.
+DATA(0x0063b850)
+static const int gFaerieDragonSpells[] = {
+    SPELL_ICE_BOLT,        22,
+    SPELL_LIGHTNING_BOLT,  22,
+    SPELL_FIREBALL,        21,
+    SPELL_MAGIC_ARROW,     10,
+    SPELL_FROST_RING,      10,
+    SPELL_CHAIN_LIGHTNING, 5,
+    SPELL_METEOR_SHOWER,   5,
+    SPELL_INFERNO,         5,
+    -1,
+};
+
+// The turn-start pre-pick: weight-lottery one damage spell out of the
+// table into field_4e0 (cast_spell casts it later when the player
+// presses F), and - when the controlling side's sideIsAI byte is UP -
+// announce it with the "press F to cast" combat message. The message
+// is the one EH object in the body: format_string's returned
+// std::string, its c_str() and refcounted destructor inlined by
+// retail exactly as /GX emits them.
 VA(0x00447510, 0x1A8)  // anchor-callee (SetNextArmy 0x46553e) + arity
                        // ret 0, retail-only slot
 void army::FaerieDragonSpell()
 {
-    // @stub
-}
+    long total = 0;
+    const int* p = gFaerieDragonSpells;
+    if (numSpellCasts == 0)
+        return;
+    while (*p >= 0) {
+        total += *++p;
+        ++p;
+    }
+    long roll = rand() % total;
+    for (p = gFaerieDragonSpells; *p >= 0; p += 2) {
+        roll -= p[1];
+        if (roll < 0) {
+            field_4e0 = *p;
+            break;
+        }
+    }
 
-// E:\gamedcs\army.cpp:5359
-#endif  // @carcass
+    if (static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat())
+        return;
+    if (gpCombatManager->sideIsAI[get_controlling_side()]) {
+        const char* fmt =
+            numTroops == 1
+                ? DATA_COMPGEN(0x00660ad0, faerieReadiesFormat,
+                               "The %s readies %s (press F to cast)")
+                : DATA_COMPGEN(0x00660aac, faerieReadyFormat,
+                               "The %s ready %s (press F to cast)");
+        gpCombatManager->combatWindow->combat_message(
+            format_string(fmt, GetName(creatureType, numTroops),
+                          akSpellTraits[field_4e0].name)
+                .c_str(),
+            1, 0);
+    }
+}
 
 // A PREDICATE, not a caster: could this creature's cast do anything at
 // `hex` right now? The resurrecters answer through can_cast_resurrect
