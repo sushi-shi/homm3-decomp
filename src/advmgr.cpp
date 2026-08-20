@@ -6866,6 +6866,11 @@ void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty)
 {
     bottomViewResourceType = iResType;
     bottomViewResourceQuantity = iResQty;
+    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
+    // assignment, to chase retail's out-of-line basic_string::_Tidy(0)
+    // (base x2 vs retail x3), costs 93.33 -> 26.42. Retail INLINES the
+    // assign here and only its _Tidy tail is out of line, and a statement
+    // pin cannot express "inline the parent, call the child".
     bottomViewMessage = cMsg;
     bottomViewOverride = BOTTOM_VIEW_6;
     bottomViewDeadline = GameTime::Get() + 5000;
@@ -6898,6 +6903,8 @@ unsigned char advManager::UpdBottomViewResMsg(unsigned char force_update)
 VA(0x00416210, 0xD7)  // anchor-global, dc 0x19194
 void advManager::BVMessage(const char* cMsg)
 {
+    // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
+    // reason - it costs 92.68 -> 21.28 here.
     bottomViewMessage = cMsg;
     bottomViewOverride = BOTTOM_VIEW_7;
     bottomViewDeadline = GameTime::Get() - 1;

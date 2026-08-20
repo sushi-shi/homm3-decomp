@@ -1058,7 +1058,7 @@ hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0
-hero	?can_summon_boat@hero@@QAEEXZ	75.2266	75.2266	85.7031	0xe5550
+hero	?can_summon_boat@hero@@QAEEXZ	85.7031	85.7031	85.7031	0xe5550
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
 hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	93.2051	93.2051	93.2051	0xe2a00
 hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0
@@ -1085,7 +1085,7 @@ hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0
 hero	?load@hero@@QAEHPAVTAbstractFile@@H@Z	87.9412	87.9412	87.9412	0xd7a20
 hero	?load@type_obscuring_object@@QAE_NPAX@Z	100.0000	100.0000	100.0000	0xd74f0
-hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	92.7131	92.7131	92.7131	0xd9350
+hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	93.9578	93.9578	93.9578	0xd9350
 hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760
 hero	?obscure_cell@type_obscuring_object@@QAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0
 hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0xe6500
