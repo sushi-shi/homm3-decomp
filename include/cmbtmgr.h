@@ -600,7 +600,15 @@ public:
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
     TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
-    char pad_547c[0x28];
+    // Per-stack "this stack has already been hit by the chain" marks,
+    // indexed [combatSide][army::bitIndex]: ai_tactical's
+    // get_chain_lightning_value (0x437190) raises
+    // `[this + bitIndex + 20*combatSide + 0x547c]` before asking
+    // GetNextChainLightningTarget for the next hop, and ClearEffects
+    // (0x5a66b0) is what it calls to wipe the whole block first. The
+    // 20-wide row and the 40-byte extent are the pad's own, so this is
+    // a retype in place and no byte moves.
+    unsigned char chainLightningHit[2][20];  // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -1377,6 +1385,20 @@ public:
     // the spell and this caster's side on the stack. Declared for that
     // call site; not claimed.
     unsigned char AbleToSummonElemental(SpellID spell, long side);
+    // The two spells.obj leaves ai_tactical's get_chain_lightning_value
+    // (0x437190) drives the chain with. Both are named by the DC xref
+    // graph, which records exactly these two as callees of that body,
+    // and both land where DC's spells.obj order puts them:
+    // GetNextChainLightningTarget (spells.cpp:4202, dc 0x15547c, three
+    // parameters counting `this`) and ClearEffects (spells.cpp:4387,
+    // dc 0x155a08, 24 B and `this` only). Declared for that call site;
+    // neither is claimed. Behind a view because cmbtmgr.h reaches most
+    // of the combat tree.
+#ifdef HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
+    long GetNextChainLightningTarget(const army* target, long excluded);
+                                                              // 0x5a61f0
+    void ClearEffects();                                      // 0x5a66b0
+#endif
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     unsigned char should_stay_in_castle(
