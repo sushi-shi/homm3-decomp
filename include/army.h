@@ -902,7 +902,15 @@ public:
     // below, so no array relation is asserted here.
     int blessAmount;              // +0x458
     int curseAmount;              // +0x45c
-    char pad_460[0x4];
+    // Anti-Magic's protection LEVEL, byte-proven by
+    // combatManager::SpellCastWorkChance (0x5a8090): the cast is refused
+    // outright while the stack's Anti-Magic round counter
+    // (spellInfluence[34], +0x220) is up AND the cast spell's own
+    // akSpellTraits level sits BELOW this dword - which is exactly
+    // Anti-Magic's rule, and the same rounds/amount pairing the Bless
+    // and Curse fields above already carry. Retyped IN PLACE out of the
+    // pad, so the declarator count does not move.
+    int antiMagicLevel;           // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
     int bloodlustAmount;          // +0x464
@@ -1074,7 +1082,14 @@ public:
     // include-set count stays equal between them; the whole block is
     // already behind the round/reset gate above, so nothing outside
     // those two views sees a new declarator.
-#ifdef HOMM3_ARMY_AURA_VIEW
+    //
+    // HOMM3_ARMY_AURA_SOURCES_DECL admits the four LISTS alone, without
+    // the aura/binding member functions the full view carries below:
+    // combatManager::SpellCastWorkChance (0x5a8090) prices a stack that
+    // stands in someone's aura at 0.8 of the plain chance and reads
+    // `aura_sources.size()` to find out, and needs nothing else from
+    // either block.
+#if defined(HOMM3_ARMY_AURA_VIEW) || defined(HOMM3_ARMY_AURA_SOURCES_DECL)
     unsigned char is_area_effect_target;  // +0x4f1
     char pad_4f2[0x2];
     std::vector<army*> bound_armies;   // +0x4f4

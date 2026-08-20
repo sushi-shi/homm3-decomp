@@ -32,6 +32,11 @@
 // ModifySpellDamage forwards army::creatureType into armygrp's free
 // modify_spell_damage, whose slot is TCreatureType; army.h keeps the
 // DC-typed arm of that field behind this view.
+// SpellCastWorkChance prices a stack that stands inside somebody's aura
+// at 0.8 of the plain chance and reads aura_sources.size() to find out;
+// army.h keeps the four relationship lists behind this narrow gate,
+// which admits the lists without the aura/binding member functions.
+#define HOMM3_ARMY_AURA_SOURCES_DECL
 #include "army.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
@@ -152,6 +157,23 @@ static int ControllingSide(const army* stack)
         return 1 - stack->combatSide;
     return stack->combatSide;
 }
+
+// SpellCastWorkChance's board-wide ban: it refuses every spell of level
+// 3 and up the moment EITHER combat hero wields artifact 0x53, walking
+// heroes[0] then heroes[1] and answering a zero chance from either -
+// which is exactly Recanter's Cloak's rule, and the same identification
+// ai_combat.cpp's cast_spell reaches from the other side.
+//
+// FILE-LOCAL, NOT AN ENUMERATOR, and the tree already decided this
+// twice: ai_combat.cpp keeps the identical constant for the identical
+// reason, and ai_spellvalue.h keeps a third copy with a note saying
+// unifying them is a separate measured decision. It cannot be moved
+// into armygrp.h's EArtifactId as things stand - ai_spellvalue.h
+// INCLUDES armygrp.h, so the enumerator and its `const int` would
+// collide in ai.cpp and philai.cpp (measured: C2371 on both).
+// ARTIFACT_ARMAGEDDONS_BLADE, which this body also needs, is already an
+// enumerator in artifact.h and reaches here through hero.h.
+const int ARTIFACT_RECANTERS_CLOAK = 0x53;
 
 // Retail .data 0x688334/0x688338, both initialised to -1 and each with
 // exactly FOUR references in the whole image, all eight of them inside
@@ -2800,14 +2822,232 @@ void combatManager::Earthquake(int level)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:5419
-VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
-float combatManager::SpellCastWorkChance(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char first_target, unsigned char creature_spell)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\spells.cpp:5419
+// "Would this cast do anything to this stack, and how likely is it to
+// stick." Everything above the switch is a REFUSAL LADDER answering a
+// flat 0.0, and the tail hands whatever survives to armygrp's
+// per-creature get_spell_work_chance - scaled by 0.8 when the stack
+// stands inside somebody's aura.
+//
+// The ladder is three shapes stacked in this order:
+//   * the two BOARD-WIDE bans (cursed ground caps the level at 1;
+//     Recanter's Cloak caps it at 2 for both sides at once),
+//   * an if-CHAIN on the two Dispel ids - retail compares 0x23 then
+//     0x4e with `cmp/jne`, and each arm ends in its own return, so
+//     neither is in the jump table below,
+//   * the per-stack bans (Anti-Magic, the magic-immunity creature bit,
+//     a wiped stack, Sacrifice's second click) and the benefit sign
+//     rule, which is TWO SEQUENTIAL ifs and not an if/else: retail's
+//     `jge` out of the harmful arm lands on the beneficial arm's own
+//     `jle`, reusing the same flags, and the harmful arm falls into a
+//     redundant re-test - the shape a compiler produces for two ifs
+//     over one value, never for an if/else.
+// Only then comes the real switch, and it IS a jump table (32-entry
+// byte index over spell-0x1a plus seven targets), so its ARM LAYOUT is
+// source order: Hypnotize, Armageddon, Anti-Magic, Clone, the
+// Resurrection/Animate Dead pair, Sacrifice.
+//
+// The three arms that price a spell against the stack all use the
+// SAME two-term formula - `spellPower[side] * power_factor +
+// mastery_bonus[mastery]`, then plus GetHeroSpellBonus of that running
+// total - and the two single-spell arms fold their own row address
+// (Hypnotize's `akSpellTraits + 0x2010` is 60*136 + 0x30), which is
+// what says they were written on the literal spell id and not on the
+// switch's own selector. The Resurrection/Animate Dead arm, shared by
+// two ids, indexes on `spell` and VC6 re-derives it from the 136*spell
+// the prologue already had live.
+//
+// THREE LEVERS TOOK IT 88.46 -> 97.10:
+//   * THE CREATURE-ATTRIBUTE TESTS ARE SHIFT-AND-MASK, NOT A MASK.
+//     Retail reads `[target + 0x84]` ONCE into EDX and then does
+//     `mov ecx,edx / shr ecx,0x15 / test cl,1` at each of the six
+//     sites, which is `(attributes >> N) & 1` over a NAMED local - a
+//     mask spelling emits `test dword ptr [mem], imm` and reloads the
+//     member every time. The shift is LOGICAL, so the local is
+//     unsigned.
+//   * ONE SHARED `return 0.0f` MEANS `||`, and there are three of them
+//     (Hypnotize's mirror/hit-point pair, Clone's clone-immune/mirror
+//     pair, Sacrifice's else arm). Retail's `jne` lands ON the return
+//     block the next test falls into; written as two separate ifs, VC6
+//     gives each its own seven-instruction epilogue. Those two levers
+//     together are 88.46 -> 94.35.
+//   * INVERTING THE MASTERY TEST SHARES THE `return 1.0f` (94.35 ->
+//     97.10). `if (mastery >= expert) return 1.0f; <loop>` emits an
+//     inline return-1 epilogue right there; `if (mastery < expert)
+//     { <loop> return 0.0f; } return 1.0f;` emits retail's `jge` to a
+//     trailing block, which the cross-jumper then merges with the
+//     Dispel-Helpful loop's own return-1. Same lever as
+//     ValidSpellTarget's "one shared return 1" four hundred lines up.
+//
+// AND IT CONTRADICTS A RECORDED IDENTIFICATION, measured both ways.
+// cmbtmgr.h says slot 6 is `unsigned char creature_spell`; THIS body
+// reads it `cmp dword ptr [ebp+0x1c], 1` while reading slot 5 as
+// `mov al, byte ptr [ebp+0x18]` - two different widths in one function,
+// which is as direct as callee-side width evidence gets. Retyping slot
+// 6 to `long` does reproduce those bytes, and it is worth +0.0093 here
+// (97.0968 -> 97.1061); it costs find_resurrection_target 100 -> 98.40,
+// SetMassSpellInfluence 100 -> 98.77 and ValidSpellTarget 88.49 ->
+// 87.31, i.e. the unit LOSES 82.337 -> 82.265. So `unsigned char`
+// stands on net measurement and the dword compare stays a documented
+// one-instruction divergence: the family is internally inconsistent
+// and the three callers outvote the one callee.
+//
+// Residual (97.10%): pure register binding, and `homm3 sema diff
+// --branches` says so outright - 61 branches and 25 returns on both
+// sides with the sequences AGREEING, so nothing structural is left.
+// Retail homes `spell` in MEMORY (re-read from [ebp+8] at every use)
+// and keeps `attributes` in EDX across the whole switch; our C2 does
+// the exact inverse, so the six attribute tests reload and mask-test
+// where retail shifts a live register, and every scratch pair
+// downstream renames (why-reg: eax->ecx x9, edx->eax x7). why-reg's
+// whole catalog was run and ELEVEN mutations all measured neutral or
+// worse - naming the shifted value in its own local is byte-identical
+// (VC6 coalesces it) and volatile on any of the four locals costs 4 to
+// 15 slots.
+VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
+float combatManager::SpellCastWorkChance(SpellID spell, long side,
+                                         const army* target,
+                                         unsigned char redirected,
+                                         unsigned char first_target,
+                                         unsigned char creature_spell)
+{
+    hero* casting_hero = heroes[side];
+    hero* target_hero = target->get_controller();
+    TCreatureType creature = target->creatureType;
+    const SSpellTraits* traits = &akSpellTraits[spell];
+
+    if (field_53c0 == MAGIC_TERRAIN_CURSED_GROUND && traits->level > 1)
+        return 0.0f;
+    if (traits->level > 2) {
+        if ((heroes[0]
+             && heroes[0]->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+            || (heroes[1]
+                && heroes[1]->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK)))
+            return 0.0f;
+    }
+    if (spell == SPELL_DISPEL) {
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
+            return 0.0f;
+        int mastery = casting_hero->get_spell_level(SPELL_DISPEL, field_53c0);
+        if (mastery < eMasteryAdvanced && target->combatSide != side)
+            return 0.0f;
+        if (mastery < eMasteryExpert) {
+            for (int i = 10; i < 81; i++) {
+                if (target->spellInfluence[i])
+                    return 1.0f;
+            }
+            return 0.0f;
+        }
+        return 1.0f;
+    }
+    if (spell == SPELL_DISPEL_HELPFUL) {
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
+            return 0.0f;
+        for (int i = 10; i < 81; i++) {
+            if (target->spellInfluence[i] && akSpellTraits[i].field_0 > 0)
+                return 1.0f;
+        }
+        return 0.0f;
+    }
+    if (target->spellInfluence[SPELL_ANTI_MAGIC]
+        && traits->level < target->antiMagicLevel
+        && !(traits->field_c & 0x8))
+        return 0.0f;
+    unsigned attributes = target->creatureId;
+    if (((attributes >> 21) & 1) && spell != SPELL_RESURRECTION
+        && spell != SPELL_ANIMATE_DEAD && spell != SPELL_SACRIFICE)
+        return 0.0f;
+    if (target->bAllUnitsKilled)
+        return 0.0f;
+    if (spell == SPELL_SACRIFICE && !first_target
+        && ControllingSide(target) != side)
+        return 0.0f;
+    int benefit = traits->field_0;
+    if (!redirected) {
+        if (benefit < 0 && target->combatSide == side
+            && spell != SPELL_BERSERK)
+            return 0.0f;
+        if (benefit > 0 && target->combatSide != side)
+            return 0.0f;
+    }
+
+    switch (spell) {
+    case SPELL_HYPNOTIZE: {
+        int mastery = casting_hero->get_spell_level(SPELL_HYPNOTIZE,
+                                                    field_53c0);
+        int value = spellPower[side]
+                * akSpellTraits[SPELL_HYPNOTIZE].power_factor
+            + akSpellTraits[SPELL_HYPNOTIZE].mastery_bonus[mastery];
+        value += casting_hero->GetHeroSpellBonus(SPELL_HYPNOTIZE,
+                                                 target->monInfoLevel, value);
+        if (target->magicMirrorRounds
+            || target->hitPoints * target->numTroops > value)
+            return 0.0f;
+        break;
+    }
+    case SPELL_ARMAGEDDON:
+        if (target_hero
+            && target_hero->IsWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
+            return 0.0f;
+        break;
+    case SPELL_ANTI_MAGIC:
+        if ((attributes >> 23) & 1)
+            return 0.0f;
+        break;
+    case SPELL_CLONE:
+        if (((attributes >> 23) & 1) || target->iMirrorDestIndex != -1)
+            return 0.0f;
+        if (target->monInfoLevel + 1
+            > akSpellTraits[SPELL_CLONE].mastery_bonus[
+                  casting_hero->get_spell_level(SPELL_CLONE, field_53c0)])
+            return 0.0f;
+        break;
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD: {
+        int value;
+        if (creature_spell == 1) {
+            const army* caster = &armies[actingSide][actingSlot];
+            if (caster->creatureType == CREATURE_ARCHANGEL)
+                value = caster->numTroops * 100;
+            else
+                value = caster->numTroops * 50;
+        } else {
+            int mastery = casting_hero->get_spell_level(spell, field_53c0);
+            value = spellPower[side] * akSpellTraits[spell].power_factor
+                + akSpellTraits[spell].mastery_bonus[mastery];
+            value += casting_hero->GetHeroSpellBonus(spell,
+                                                     target->monInfoLevel,
+                                                     value);
+        }
+        if (target->numTroops >= target->origNumTroops
+            || target->hitPoints > value)
+            return 0.0f;
+        break;
+    }
+    case SPELL_SACRIFICE:
+        if (!((attributes >> 4) & 1))
+            return 0.0f;
+        if ((attributes >> 22) & 1)
+            return 0.0f;
+        if (first_target) {
+            if (target->numTroops >= target->origNumTroops)
+                return 0.0f;
+        } else if (((attributes >> 18) & 1) || target->numTroops <= 0) {
+            return 0.0f;
+        }
+        break;
+    }
+
+    if (benefit <= 0 && target->aura_sources.size() != 0)
+        return get_spell_work_chance(spell, creature, casting_hero,
+                                     target_hero)
+            * 0.8f;
+    return get_spell_work_chance(spell, creature, casting_hero, target_hero);
+}
 
 // THE REAL SpellCastWorks, AND cmbtmgr.h's `// 0x5a3c80` ON THE DECLARATION
 // IS WRONG. That address is ValidSpellTargetArmy, two rows below; the two
