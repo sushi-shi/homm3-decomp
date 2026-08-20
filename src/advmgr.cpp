@@ -341,19 +341,18 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:1253
-// DECODED, NOT YET RECONSTRUCTED. Recorded here so it is not re-derived.
-// The body is `switch (advCommand)` over a jump table at VA 0x00408750
-// (fn+0xBD0, the last 32 bytes of the function, preceded by two bytes of
-// 8b ff alignment filler), indexed by advCommand - 1 over the domain 1..8;
-// default falls to the epilogue at fn+0xBB0. advCommand is a raw int here,
-// so the labels are the same literals ProcessHover already assigns.
-//
-// Cases in SOURCE (body emission) order, with the producer of each:
-//   1  fn+0x057  set the hero path target from lastMapHover, FALLS THROUGH
-//   7  fn+0x09A  walk the route: BuildPath, then a step loop over
-//                gpSearchArray->result counting DOWN, with an inner message
-//                pump that aborts on key/LMB/RMB/widget
+// RECONSTRUCTED from the decode the previous lane banked here. The body is
+// `switch (advCommand)` over a jump table at VA 0x00408750 (fn+0xBD0, the
+// last 32 bytes of the function, preceded by two bytes of 8b ff alignment
+// filler), indexed by advCommand - 1 over the domain 1..8; default falls to
+// the epilogue at fn+0xBB0. The eight table entries read 0x57, 0x781,
+// 0x684, 0x88b, 0x95b, 0x64e, 0x9a, 0xa28, which is what pins both the case
+// SET and the body emission ORDER used below:
+//   1  fn+0x057  retarget the path at lastMapHover, FALLS THROUGH
+//   7  fn+0x09A  walk the route
 //   6  fn+0x64E  hero standing on a town -> get_obscured_town()->View(0)
 //   3  fn+0x684  town, currTownId != -1  -> town::View(0)
 //   2  fn+0x781  hero, currHeroId != -1  -> HeroView
@@ -361,36 +360,375 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //   5  fn+0x95B  town, currTownId == -1  -> SetTownContext
 //   8  fn+0xA28  shipyard                -> DoEventShipyard
 //
-// Blocked on six declarators the tree does not carry:
-//   advManager::MoveHero             retail 0x004805e0, ret 0x1c (7 args)
-//   advManager::DoEventShipyard      retail 0x0049e2e0, ret 0x0c
-//   TAdventureMapWindow::SetSleepImage(int)   retail 0x00403cc0
-//   .bss 0x006968e0  ds_memsample*, the walk sample MemorySample returns
-//   .bss 0x0069777c  int, breaks the step loop when nonzero
-//   .bss 0x00699560  int, gates both SetEnvironmentOrigin calls in case 2
-// town::get_location exists (town.h:342) but is gated behind
-// HOMM3_TOWN_LOCATION_DECLS, which this TU does not define.
+// Seven declarators were added for this body, all gated to advmgr.obj's own
+// view: advManager::MoveHero, advManager::DoEventShipyard,
+// TAdventureMapWindow::SetSleepImage(int) (retail 0x403cc0 is `ret 4`, so
+// the DC's zero-parameter spelling does not transfer), the EAdvCommand
+// domain enum, and the four .bss cells 0x6968e0 / 0x69777c / 0x698774 /
+// 0x699560. HeroView's existing gate was widened rather than duplicated.
 //
-// Three findings worth keeping:
+// Findings kept from the decode, all still true of the bytes:
 //   - The two route-teardown blocks are LONGHAND, not calls. Retail leaves
-//     no call relocation at either; the block at fn+0x493 uses the ONE-arg
-//     CompleteDraw(0) plus advManager::UpdateScreen(0,0) where HideRoute's
-//     own body uses the five-arg CompleteDraw plus the window manager's
-//     UpdateScreen; and both callees are DEFINED LATER in this file, so
-//     VC6 cannot have inlined them. ForceNewHover is longhand likewise.
+//     no call relocation at either. The second one is clear_adventure_route
+//     with bUpdateScreen folded to 0, but that static is DEFINED LATER in
+//     this file, so VC6 cannot inline it here and calling it would emit a
+//     call retail does not have; writing it out is the only faithful form.
 //   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
 //     and const-qualified/defined at :1498, so calling it from a non-const
 //     member binds the undefined overload and would emit a call where
-//     retail inlines. Resolve that before using the accessor spelling for
-//     the four `radarOrigin + lastHover` sites.
-//   - CONTRADICTION, not silently patched: retail stores pathTargetZ
-//     SIXTEEN bits wide (`mov word ptr [esi+0x3d], dx`) where hero.h:200
-//     declares `int pathTargetZ; // +0x3d`.
+//     retail inlines. The four `radarOrigin + lastHover` sites are
+//     therefore written out field by field.
+//   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
+//     zero-argument arm tail-merged onto the real one. No such function
+//     exists in the DC roster and NewfullMap::cell(type_point) already
+//     models a different, unguarded body, so these are written longhand.
+//   - `advCommand != ADV_COMMAND_WALK_ROUTE` inside the WALK_ROUTE arm is
+//     provably false and retail still emits the compare - VC6 does not
+//     constant-propagate the switch value into an arm. Kept.
+//
+// Residual (77.17%): why-branch reports 123 vs 122 blocks and 80 vs 80
+// branches - structurally converged - with exactly TWO polarity flips left
+// and no size or count divergence anywhere.
+//   #15 (+0x211) is the BuildPath budget select: retail lays the 0xea5f
+//     arm out as the fall-through, ours lays out movePoints. Three
+//     spellings were measured and ALL THREE emit byte-identical code
+//     (77.17 each), so VC6 normalises this block pair itself and the
+//     order is not source-addressable here: the positive
+//     `if (F1 || F2) movePoints else 0xea5f` kept below, its De Morgan
+//     twin `if (!F1 && !F2) 0xea5f else movePoints`, and the same
+//     condition as a ternary feeding one initialiser.
+//   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
+//     and returns with an UNCONDITIONAL `jmp` because it keeps
+//     gpSearchArray live in eax across the edge and reloads it at the
+//     bottom; ours closes with a conditional `jns`. That is the
+//     rematerialisation half of the register-homing family, not a loop
+//     form - why-branch's own guided search moved all six D1/D2 loop
+//     mutations and none changed the distance (two made it far worse).
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
-    // @stub
+    NewmapCell* eventCell = 0;
+    trigger_point->x = -1;
+    hero* currHero = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+
+    switch (advCommand) {
+    case ADV_COMMAND_MOVE_HERO:
+        if (!currHero)
+            break;
+        currHero->pathTargetX = lastMapHover.x;
+        currHero->pathTargetY = lastMapHover.y;
+        currHero->pathTargetZ = lastMapHover.z;
+        /* FALLS THROUGH into ADV_COMMAND_WALK_ROUTE - retail's own */
+
+    case ADV_COMMAND_WALK_ROUTE: {
+        if (!currHero)
+            break;
+        if (currHero->pathTargetX == -1)
+            break;
+        if (currHero->pathTargetY == -1)
+            break;
+
+        {
+            type_point heroPoint;
+            heroPoint.x = currHero->x;
+            heroPoint.y = currHero->y;
+            heroPoint.z = currHero->z;
+            NewmapCell* standingOn;
+            if (!heroPoint.is_valid())
+                standingOn = fullMap->cell(0, 0, 0);
+            else
+                standingOn = fullMap->cell(heroPoint.x, heroPoint.y,
+                                           heroPoint.z);
+            // Artifact ids 0x48 and 0x5a are spelled as literals for the
+            // reason findpath's GetTerrainCost records: armygrp.h's
+            // EArtifactId rides in initialize.cpp's measured include
+            // closure. heroSamples[10] is the row past the nine terrain
+            // walk samples - the flight/water-walk sample.
+            sample* walkSample = heroSamples[standingOn->GroundSet];
+            if (!(currHero->flags & 0x40000)
+                && (currHero->flightLevel != -1
+                    || currHero->IsWieldingArtifact(0x48)))
+                walkSample = heroSamples[10];
+            walkSample->field_30 = 0;
+            gUnnamed6968e0 = gpSoundManager->MemorySample(walkSample);
+        }
+
+        {
+            type_point target;
+            target.x = currHero->pathTargetX;
+            target.y = currHero->pathTargetY;
+            target.z = currHero->pathTargetZ;
+            SeedTo(target);
+        }
+
+        int moveBudget;
+        if ((!(currHero->flags & 0x40000)
+             && (currHero->flightLevel != -1
+                 || currHero->IsWieldingArtifact(0x48)))
+            || (!(currHero->flags & 0x40000)
+                && (currHero->waterWalkLevel != -1
+                    || currHero->IsWieldingArtifact(0x5a))))
+            moveBudget = currHero->movePoints;
+        else
+            moveBudget = 0xea5f;
+        gpSearchArray->BuildPath(currHero, moveBudget);
+
+        currHero->field_11c = 0;
+        advWindow->SetSleepImage(0);
+
+        if (static_cast<int>(gpSearchArray->result.size()) <= 0)
+            break;
+
+        int savedShowRoute = bShowRoute;
+        MobilizeCurrHero(1, 0, 0);
+        if (gUnnamed698774 || savedShowRoute) {
+            ShowRoute(1, 0, 1);
+        } else if (bShowRoute && advCommand != ADV_COMMAND_WALK_ROUTE) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(0);
+                    UpdateScreen(0, 0);
+                }
+            }
+        }
+
+        gpMouseManager->HidePointer();
+        gpInputManager->Flush();
+
+        unsigned char interrupted = 0;
+        int i;
+        for (i = gpSearchArray->result.size() - 1; i >= 0; i--) {
+            int bNoMove;
+            int bFoughtBattle;
+            eventCell = MoveHero(gpSearchArray->result[i]->direction,
+                                 i == 0, trigger_point, &bNoMove, 0,
+                                 &bFoughtBattle, 0);
+            advWindow->UpdateHeroLocator(-1, 1, 1);
+            if (eventCell)
+                break;
+            if (bNoMove)
+                break;
+            if (bFoughtBattle)
+                break;
+            if (gUnnamed69777c)
+                break;
+
+            if (!(currHero->flags & 0x40000)
+                && (currHero->flightLevel != -1
+                    || currHero->IsWieldingArtifact(0x48))
+                && !currHero->can_land())
+                continue;
+            if (!(currHero->flags & 0x40000)
+                && (currHero->waterWalkLevel != -1
+                    || currHero->IsWieldingArtifact(0x5a))
+                && !currHero->can_land())
+                continue;
+
+            Process1WindowsMessage();
+            message msg = gpInputManager->GetEvent();
+            while (msg.id) {
+                if (msg.id == MESSAGE_KEY_DOWN
+                    || msg.id == MESSAGE_LEFT_BUTTON_DOWN
+                    || msg.id == MESSAGE_RIGHT_BUTTON_DOWN
+                    || msg.id == MESSAGE_WIDGET) {
+                    interrupted = 1;
+                    StopCursor(1);
+                    goto route_walk_done;
+                }
+                Process1WindowsMessage();
+                msg = gpInputManager->GetEvent();
+            }
+        }
+
+    route_walk_done:
+        seedingValid = 0;
+        if ((i <= 0 && currHero->x == currHero->pathTargetX
+             && currHero->y == currHero->pathTargetY)
+            || (interrupted && !gUnnamed698774) || eventCell) {
+            // clear_adventure_route(this, 0), written out: that static is
+            // defined further down this file, so VC6 cannot inline it here.
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                int heroId = gpCurrentPlayer->currHeroId;
+                if (heroId != -1) {
+                    hero* pathHero = &gpGame->heroes[heroId];
+                    pathHero->pathTargetX = -1;
+                    pathHero->pathTargetY = -1;
+                }
+                if (bShowRoute)
+                    bShowRoute = 0;
+            }
+        } else if (advCommand == ADV_COMMAND_WALK_ROUTE || gUnnamed698774) {
+            ShowRoute(0, 1, 1);
+        }
+
+        StopCursor(1);
+
+        if (eventCell) {
+            DoEvent(eventCell, *trigger_point);
+            trigger_point->x = -1;
+            eventCell = 0;
+            seedingValid = 0;
+        }
+
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            int hoverX;
+            int hoverY;
+            gpMouseManager->MouseCoords(&hoverX, &hoverY);
+            lastHoverX = -1;
+            ProcessHover(hoverX, hoverY);
+        }
+        gpMouseManager->ShowPointer(1);
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+
+        if (!gpCurrentPlayer->IsLocalHuman())
+            break;
+        if (gpCurrentPlayer->currHeroId == -1)
+            break;
+        if (gpGame->heroes[gpCurrentPlayer->currHeroId].IsMobile())
+            break;
+        ShowRoute(1, 0, 0);
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        gpAdvManager->CheckDimNextHeroBut();
+        break;
+    }
+
+    case ADV_COMMAND_VIEW_OBSCURED_TOWN:
+        DemobilizeCurrHero(0, 1);
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        currHero->get_obscured_town()->View(0);
+        eventCell = 0;
+        break;
+
+    case ADV_COMMAND_VIEW_TOWN: {
+        if (gpCurrentPlayer->IsLocalHuman())
+            DemobilizeCurrHero(0, 1);
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        playerData* viewingPlayer = gpGame->GetLocalPlayer();
+        if (!viewingPlayer)
+            break;
+        if (viewingPlayer->currTownId == -1)
+            break;
+        town* viewedTown = gpGame->GetTown(viewingPlayer->currTownId);
+        type_point townPoint;
+        townPoint.x = viewedTown->mapX;
+        townPoint.y = viewedTown->mapY;
+        townPoint.z = viewedTown->mapZ;
+        // The lookup's result is DISCARDED - retail makes the call and
+        // never reads eax. Transcribed as retail wrote it.
+        if (!townPoint.is_valid())
+            fullMap->cell(0, 0, 0);
+        else
+            fullMap->cell(townPoint.x, townPoint.y, townPoint.z);
+        viewedTown->View(0);
+        eventCell = 0;
+        break;
+    }
+
+    case ADV_COMMAND_VIEW_HERO: {
+        playerData* viewingPlayer = gpGame->GetLocalPlayer();
+        if (!viewingPlayer)
+            break;
+        if (viewingPlayer->currHeroId == -1)
+            break;
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        if (gUnnamed699560) {
+            type_point offMap;
+            offMap.x = -1;
+            offMap.y = -1;
+            offMap.z = 0;
+            SetEnvironmentOrigin(offMap, 1);
+        }
+        TrimLoopingSounds(0);
+        HeroView(viewingPlayer->currHeroId, 0, 0, 0);
+        if (gUnnamed699560) {
+            type_point centre;
+            centre.x = radarOrigin.x + 9;
+            centre.y = radarOrigin.y + 8;
+            centre.z = radarOrigin.z;
+            SetEnvironmentOrigin(centre, 1);
+        }
+        if (gNetworkActive69954c && pDPlay) {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (handler)
+                handler->SetInPopup(0);
+        }
+        RedrawAdvScreen(1, 0);
+        break;
+    }
+
+    case ADV_COMMAND_SELECT_HERO: {
+        type_point mapPoint;
+        mapPoint.x = radarOrigin.x + lastHoverX;
+        mapPoint.y = radarOrigin.y + lastHoverY;
+        mapPoint.z = radarOrigin.z;
+        NewmapCell* heroCell;
+        if (!mapPoint.is_valid())
+            heroCell = fullMap->cell(0, 0, 0);
+        else
+            heroCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+        SetHeroContext(heroCell->extraInfo, 0,
+                       !gpCurrentPlayer->IsLocalHuman(), 1);
+        break;
+    }
+
+    case ADV_COMMAND_SELECT_TOWN: {
+        type_point mapPoint;
+        mapPoint.x = radarOrigin.x + lastHoverX;
+        mapPoint.y = radarOrigin.y + lastHoverY;
+        mapPoint.z = radarOrigin.z;
+        NewmapCell* townCell;
+        if (!mapPoint.is_valid())
+            townCell = fullMap->cell(0, 0, 0);
+        else
+            townCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+        SetTownContext(townCell->extraInfo,
+                       !gpCurrentPlayer->IsLocalHuman(), 1);
+        break;
+    }
+
+    case ADV_COMMAND_SHIPYARD: {
+        gpMouseManager->ShowPointer(0);
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        type_point dockPoint;
+        dockPoint.x = radarOrigin.x + lastHoverX;
+        dockPoint.y = radarOrigin.y + lastHoverY;
+        dockPoint.z = radarOrigin.z;
+        type_point mapPoint;
+        mapPoint.x = radarOrigin.x + lastHoverX;
+        mapPoint.y = radarOrigin.y + lastHoverY;
+        mapPoint.z = radarOrigin.z;
+        NewmapCell* dockCell;
+        if (!mapPoint.is_valid())
+            dockCell = fullMap->cell(0, 0, 0);
+        else
+            dockCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+        DoEventShipyard(dockCell, dockPoint,
+                        gpCurrentPlayer->IsLocalHuman());
+        UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        UpdateScreen(0, 0);
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+        break;
+    }
+    }
+
+    advCommand = ADV_COMMAND_NONE;
+    lastHoverX = lastHoverY = -1;
+    return eventCell;
 }
+
+#if 0  // @carcass
 
 // The second MapCell.h COMDAT the retail link filed inside advmgr's
 // span; 21 call sites all over the image. 49 B, `ret 0xc` (3 stack
@@ -413,8 +751,14 @@ NewmapCell* NewfullMap::cell(int x, int y, int z)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
+// SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
+// `virtual int Main(message& msg) = 0` - and the DC mangling
+// (?Main@...@@UAAHAAUmessage@@@Z, AAUmessage = reference) agrees. The
+// `message*` spelling this stub used to carry would not have overridden
+// anything, and would have tripped the declaration trap the moment a body
+// was written against it.
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
-int advManager::Main(message* msg)
+int advManager::Main(message& msg)
 {
     // @stub
 }
@@ -1893,6 +2237,7 @@ int advManager::ProcessSearch(int x, int y, int z)
 
 // E:\gamedcs\advmgr.cpp:4983
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
+#pragma auto_inline(off)
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
     gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
@@ -1912,6 +2257,7 @@ void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
     }
     Process1WindowsMessage();
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
@@ -2052,11 +2398,13 @@ void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bFo
 
 // E:\gamedcs\advmgr.cpp:5223
 VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
+#pragma auto_inline(off)
 void advManager::CompleteDraw(unsigned char bForceDraw)
 {
     CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
                  bForceDraw, true);
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
@@ -3396,6 +3744,14 @@ NewmapCell* advManager::GetCell(int x, int y, int z)
 // E:\gamedcs\advmgr.cpp:7026
 #endif  // @carcass
 
+// Read by both mobilization draw gates and by UpdateRadar's radar-icon
+// frame select before repainting the adventure screen; role (an "adventure
+// repaint suppressed" latch) is what the bytes prove. No located writer yet
+// - nearest consumer holds the declaration, and UpdateRadar below is now
+// the earliest of them, so the claim sits here rather than beside
+// DemobilizeCurrHero.
+DATA(0x006aac3c) extern int gUnnamed6aac3c;
+
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::GetCell(type_point point)
 {
@@ -3405,51 +3761,420 @@ NewmapCell* advManager::GetCell(type_point point)
                               * fullMap->Size + point.x];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:7037
-// DECODED, NOT YET RECONSTRUCTED. bPartialUpdate is DEAD in retail - zero
-// references in the body - and updateFlag is read exactly once, at the end.
-// Shape: four widget rect locals off advWindow->RadarWidget (+0x18/+0x1a/
-// +0x1c/+0x1e, which InMapArea already proves are x/y/width/height, the
-// vptr putting x at +0x18); the CompleteDraw guard chain; an AI-shield
-// paint; then a row loop over the map with THREE separate switches on
-// gMapHeight - one to advance the destination row (jump table 0x4135d0,
-// index 0x4135e4), one to write the pixel block (table 0x413700, index
-// 0x413714), and one for the sprite frame/scale. The 108 arms carry the
-// 4/3 stretch: advance 1,1,2 rows per 3 map rows, and 2,1,1 pixels wide.
-// The per-cell colour switch is a jump table at 0x413654 with a byte index
-// at 0x413670 over [0x11,0xa0] and six bodies - terrain decorations (21
-// values) taking groundTileset[GroundSet]->p->data[9], then TOWN, the
-// LIGHTHOUSE/MINE pair, the two CREATURE_GENERATORs, GARRISON and
-// SHIPYARD each taking playerColors indexed by their own owner byte.
-// Row-to-row advance uses the LIVE screenBitmap->Pitch while the writes
-// inside a block use a hardcoded 0x640-byte stride; that inconsistency is
-// retail's, not a misread.
+// RECONSTRUCTED from the decode the previous lane banked on this stub.
+// bPartialUpdate is DEAD in retail - zero references in the body - and
+// updateFlag is read exactly once, at the very end.
 //
-// Blocked on three declarations:
-//   gUnnamed6aac3c is declared WITH its DATA claim further down this file,
-//     below this function - the claim has to be hoisted above it.
-//   .data 0x68c6b8, the view-world tile scale (16.0f / 11.84f / 7.68f,
-//     paired with the int at 0x68c6bc). Proven FLOAT by its writers and by
-//     the fsub at 0x5f73b0 / fdiv at 0x5fc274; viewwrld.obj owns it, so a
-//     declaration only, no DATA claim. No attested name.
-//   game::GameFn_004CA780, retail 0x4ca780, 180 B - loads aishield.pcx,
-//     blits it over the radar rect, calls UpdateScreen and sets
-//     gpAdvManager->field_38c. Ordinal placeholder, GameFn_004CA410's
-//     convention.
+// All three of the decode's blockers are now declared: gUnnamed6aac3c's
+// DATA claim is hoisted above this function, the view-world tile scale at
+// .data 0x68c6b8 is declared (no claim - viewwrld.obj owns it), and
+// game::GameFn_004CA780 takes GameFn_004CA410's ordinal-placeholder
+// convention.
 //
-// Two annotation contradictions found while decoding, neither acted on:
-//   - advmgr.h:657 claims gMapVisibilityBit at DATA(0x0069ccc4), but this
-//     body AND the exact GetCloudLookup both relocate against 0x69ccbc.
+// The three switches the decode describes are all `switch (gMapHeight)`
+// with FOUR real labels - 36, 72, 108, 144 - and a default. What made them
+// look like 108-arm monsters is VC6's dense byte-index form: a 109-byte
+// map over gMapHeight-36 in front of a five-entry jump table, which is
+// what it emits for a sparse switch over a bounded range. Both index
+// tables were decoded out of the image (0x4135e4 and 0x413714) and agree
+// exactly: 36->arm0, 72->arm1, 108->arm2, 144->arm3, everything else
+// ->arm4. The per-cell colour switch at 0x413654/0x413670 decodes the same
+// way - SIX bodies over 28 real labels, and every one of the 28 lands on a
+// TAdventureObjectType enumerator this tree already carries.
+//
+// Two contradictions the decode flagged, both now settled:
+//   - gMapVisibilityBit's address was corrected in an earlier commit on
+//     this branch; this body relocates against the corrected 0x69ccbc and
+//     reads it as the BYTE advmgr.h declares.
 //   - soundmgr.h:191 says gbUnk691209 is read only as the second half of
-//     the sound-is-on guard; this body reads it twice as a radar/AI
+//     the sound-is-on guard. This body reads it twice as a radar/AI
 //     visibility gate, as do Main, SetHeroContext and StartLocalPlayerTurn.
+//     Left as an open annotation contradiction, not silently patched.
+//
+// Retail's own inconsistency, transcribed rather than tidied: the row
+// advance uses the LIVE screenBitmap->Pitch while the writes inside a
+// pixel block use a hardcoded 0x640-byte stride.
+//
+// Residual (90.18%): why-branch reports 164 vs 167 blocks and 94 vs 95
+// conditional branches - one compare site and three blocks short on a
+// 2881-byte body, i.e. structurally converged. Its D6 "reference has MORE
+// exits (2 rets vs 1)" line is an ARTIFACT, not a lever: both sides have
+// exactly one `ret 0x18`, and the second one the tool counts is the
+// trailing jump-table data being decoded as instructions. The guided
+// search moved fifteen catalogued D9/D10/D13 mutations (case-block order,
+// induction-variable width, rect-local width) and NONE changed the
+// distance; five made it worse. The most likely remaining element is the
+// destRow preamble: retail reaches it as an if/else chain whose 36/72 arm
+// FALLS THROUGH into the shared tail while the 108 arm duplicates that
+// tail to zero the two phase counters, where this body spells one switch
+// with three arms. Not yet tried.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
-    // @stub
+    widget* radar = advWindow->RadarWidget;
+    int rectX = radar->x;
+    int rectY = radar->y;
+    int rectWidth = radar->width;
+    int rectHeight = radar->height;
+
+    if (gNetworkActive69954c && !gpCurrentPlayer->IsLocalHuman()) {
+        CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+        if (handler && handler->IsInPopup() && !gCompleteDrawMessageBypass
+            && !gUnnamed6aac3c)
+            return;
+    }
+
+    int lastColumn = gMapWidth - 1;
+    int lastRow = gMapHeight - 1;
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+
+    if (!gpCurrentPlayer->IsHuman() && field_38c == 0
+        && (!gNetworkActive69954c || gbUnk691209))
+        gpGame->GameFn_004CA780();
+
+    if (!gNetworkActive69954c && !gpCurrentPlayer->IsHuman()
+        && !gbUnk691209)
+        return;
+    if (field_38c && !gpCurrentPlayer->IsHuman())
+        return;
+    field_38c = 0;
+
+    // The acting player's live hero, and its map square, so the cell loop
+    // below can paint that one square in the owner's colour.
+    int heroX = -1;
+    int heroY = -1;
+    hero* currentHero = 0;
+    if (localPlayer->currHeroId != -1) {
+        currentHero = &gpGame->heroes[localPlayer->currHeroId];
+        if (currentHero && currentHero->z == origin.z) {
+            heroX = currentHero->x;
+            heroY = currentHero->y;
+        }
+    }
+
+    int rowPhase = 0;
+    int blockPhase = 0;
+    unsigned short* destRow;
+    switch (gMapHeight) {
+    case MAP_DIMENSION_SMALL:
+    case MAP_DIMENSION_MEDIUM:
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    case MAP_DIMENSION_LARGE:
+        rowPhase = 0;
+        blockPhase = 0;
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    default:
+        destRow = gpWindowManager->screenBitmap->map
+                  + gpWindowManager->screenBitmap->Pitch * rectY / 2 + rectX;
+        break;
+    }
+
+    unsigned char visibilityBit = gMapVisibilityBit;
+    int z = origin.z;
+    for (int y = 0; y <= lastRow; y++) {
+        unsigned short* dest = destRow;
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            destRow += 4 * gpWindowManager->screenBitmap->Pitch;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            destRow += 2 * gpWindowManager->screenBitmap->Pitch;
+            break;
+        case MAP_DIMENSION_LARGE:
+            destRow += gpWindowManager->screenBitmap->Pitch;
+            if (++rowPhase > 2) {
+                rowPhase = 0;
+                destRow += gpWindowManager->screenBitmap->Pitch;
+            } else if (rowPhase == 0) {
+                destRow += gpWindowManager->screenBitmap->Pitch;
+            }
+            break;
+        case MAP_DIMENSION_EXTRA_LARGE:
+            destRow += gpWindowManager->screenBitmap->Pitch;
+            break;
+        }
+
+        for (int x = 0; x <= lastColumn; x++) {
+            NewmapCell* cell = &fullMap->cellData[
+                (z * fullMap->Size + y) * fullMap->Size + x];
+
+            unsigned char revealed = 0;
+            if (!gCompleteDrawAllCells
+                && (visibilityBit & GetMapExtra(x, y, z)) && x >= 0
+                && y >= 0 && x < gMapWidth && y < gMapHeight)
+                revealed = 1;
+            if (view_mines && cell->type == MINE)
+                revealed = 1;
+            if (view_heros && cell->type == HERO)
+                revealed = 1;
+
+            unsigned short colour;
+            if (!(view_towns && cell->type == TOWN) && !revealed) {
+                colour = 0;
+            } else {
+                colour = groundTileset[cell->GroundSet]->p->data[8];
+                if (x == heroX && y == heroY) {
+                    colour = gUnnamed6aacb0->playerColors[currentHero->owner];
+                } else if (cell->type == HERO
+                           && (cell->cellFlags & 0x1000)) {
+                    colour = gUnnamed6aacb0->playerColors[
+                        gpGame->heroAvailability[cell->extraInfo]];
+                } else {
+                    switch (cell->get_map_object()) {
+                    case TERRAIN_CACTUS:
+                    case TERRAIN_CRATER:
+                    case TERRAIN_DEAD_VEGETATION:
+                    case TERRAIN_FROZEN_LAKE:
+                    case TERRAIN_HILL:
+                    case TERRAIN_LAKE:
+                    case TERRAIN_LAVA_LAKE:
+                    case TERRAIN_MANDRAKE:
+                    case TERRAIN_MOUND:
+                    case TERRAIN_MOUNTAIN:
+                    case TERRAIN_OAK_TREE:
+                    case TERRAIN_PINE_TREE:
+                    case TERRAIN_SAND_DUNE:
+                    case TERRAIN_SAND_PIT:
+                    case TERRAIN_STALAGMITE:
+                    case TERRAIN_STUMP:
+                    case TERRAIN_TAR_PIT:
+                    case TERRAIN_TREE:
+                    case TERRAIN_VOLCANO:
+                    case TERRAIN_WILLOW_TREE:
+                    case TERRAIN_YUCCA_TREE:
+                        if (!(cell->cellFlags & 0x40))
+                            colour = groundTileset[cell->GroundSet]
+                                         ->p->data[9];
+                        break;
+                    case TOWN:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->towns[trigger
+                                        ->get_map_extraInfo()].owner];
+                        }
+                        break;
+                    case LIGHTHOUSE:
+                    case MINE:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->mines[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case CREATURE_GENERATOR_1:
+                    case CREATURE_GENERATOR_4:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->generators[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case GARRISON:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    gpGame->garrisons[trigger
+                                        ->get_map_extraInfo()].playerOwner];
+                        }
+                        break;
+                    case SHIPYARD:
+                        if (!(cell->cellFlags & 0x40)
+                            || (cell->cellFlags & 0x1000)) {
+                            NewmapCell* trigger = cell->get_trigger_cell();
+                            if (trigger)
+                                colour = gUnnamed6aacb0->playerColors[
+                                    static_cast<signed char>(trigger
+                                        ->get_map_extraInfo())];
+                        }
+                        break;
+                    }
+                }
+            }
+
+            // The write side of the 4/3 stretch. The 0x640 stride is
+            // retail's own hardcode; the row advance above uses the live
+            // Pitch instead.
+            switch (gMapHeight) {
+            case MAP_DIMENSION_SMALL:
+                dest[0] = colour;
+                dest[1] = colour;
+                dest[2] = colour;
+                dest[3] = colour;
+                dest[0x320] = colour;
+                dest[0x321] = colour;
+                dest[0x322] = colour;
+                dest[0x323] = colour;
+                dest[0x640] = colour;
+                dest[0x641] = colour;
+                dest[0x642] = colour;
+                dest[0x643] = colour;
+                dest[0x960] = colour;
+                dest[0x961] = colour;
+                dest[0x962] = colour;
+                dest[0x963] = colour;
+                dest += 4;
+                break;
+            case MAP_DIMENSION_MEDIUM:
+                dest[0] = colour;
+                dest[1] = colour;
+                dest[0x320] = colour;
+                dest[0x321] = colour;
+                dest += 2;
+                break;
+            case MAP_DIMENSION_LARGE:
+                if (blockPhase) {
+                    dest[0] = colour;
+                    if (rowPhase)
+                        dest += 1;
+                    else {
+                        dest[0x320] = colour;
+                        dest += 1;
+                    }
+                } else {
+                    dest[0] = colour;
+                    dest[1] = colour;
+                    if (!rowPhase) {
+                        dest[0x320] = colour;
+                        dest[0x321] = colour;
+                    }
+                    dest += 2;
+                }
+                if (++blockPhase > 2)
+                    blockPhase = 0;
+                break;
+            case MAP_DIMENSION_EXTRA_LARGE:
+                dest[0] = colour;
+                dest += 1;
+                break;
+            }
+        }
+    }
+
+    // Radar-icon frame and the origin-to-screen scale.
+    int radarFrame = -1;
+    int suppressIcon = 0;
+    float scale;
+    if (gUnnamed6aac3c) {
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            scale = 4.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 13;
+            else
+                suppressIcon = 1;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            scale = 2.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 11;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 12;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                suppressIcon = 1;
+            break;
+        case MAP_DIMENSION_LARGE:
+            scale = 1.33f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 10;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 9;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                radarFrame = 10;
+            break;
+        default:
+            scale = 1.0f;
+            if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FULL)
+                radarFrame = 5;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_MID)
+                radarFrame = 6;
+            else if (gUnnamed68c6b8 == VIEW_WORLD_TILE_SCALE_FAR)
+                radarFrame = 7;
+            break;
+        }
+    } else {
+        switch (gMapHeight) {
+        case MAP_DIMENSION_SMALL:
+            radarFrame = 4;
+            scale = 4.0f;
+            break;
+        case MAP_DIMENSION_MEDIUM:
+            radarFrame = 3;
+            scale = 2.0f;
+            break;
+        case MAP_DIMENSION_LARGE:
+            radarFrame = 2;
+            scale = 1.33f;
+            break;
+        default:
+            radarFrame = 1;
+            scale = 1.0f;
+            break;
+        }
+    }
+
+    int srcX;
+    if (origin.x < 0)
+        srcX = static_cast<long>(-scale * origin.x);
+    else
+        srcX = 0;
+    int srcY;
+    if (origin.y < 0)
+        srcY = static_cast<long>(-scale * origin.y);
+    else
+        srcY = 0;
+
+    CSprite* icons = radarIcons;
+    int drawWidth = icons->Width - srcX;
+    int drawHeight = icons->Height - srcY;
+
+    int destX;
+    if (origin.x < 0)
+        destX = static_cast<long>(static_cast<float>(rectX));
+    else
+        destX = static_cast<long>(rectX + origin.x * scale);
+    int destY;
+    if (origin.y < 0)
+        destY = static_cast<long>(static_cast<float>(rectY));
+    else
+        destY = static_cast<long>(rectY + origin.y * scale);
+
+    if (icons->Width + destX > rectX + rectWidth)
+        drawWidth += rectWidth - icons->Width - destX + rectX;
+    if (icons->Height + destY > rectY + rectHeight)
+        drawHeight += rectHeight - icons->Height - destY + rectY;
+    if (drawWidth < 0)
+        drawWidth = 0;
+    if (drawHeight < 0)
+        drawHeight = 0;
+
+    if (!suppressIcon)
+        icons->DrawInterface(radarFrame, srcX, srcY, drawWidth, drawHeight,
+                             gpWindowManager->screenBitmap->map, destX,
+                             destY, gpWindowManager->screenBitmap->Width,
+                             gpWindowManager->screenBitmap->Height,
+                             gpWindowManager->screenBitmap->Pitch, 0);
+
+    if (updateFlag)
+        gpWindowManager->UpdateScreen(rectX, rectY, rectWidth, rectHeight);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7537
 #endif  // @carcass
@@ -4619,11 +5344,6 @@ void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsi
 
 #endif  // @carcass
 
-// Read by both mobilization draw gates before repainting the adventure
-// screen; role (an "adventure repaint suppressed" latch) is what the bytes
-// prove. No located writer yet - nearest consumer holds the declaration.
-DATA(0x006aac3c) extern int gUnnamed6aac3c;
-
 // E:\gamedcs\advmgr.cpp:9434
 VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520
 void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
@@ -5304,6 +6024,18 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 // the file in retail link order.
 #endif  // @carcass
 
+// MEASURED NEGATIVE, do not retry: `#pragma auto_inline(off)` around this
+// constructor. predict-inline reports ShowRoute as the one body where
+// retail CALLS the ctor and our CL expands it, and switching the pragma on
+// does move ShowRoute 65.27 -> 73.87 - but retail inlines this ctor
+// everywhere else in the compiland, so the same edit knocks THIRTEEN exact
+// functions off at once (DrawArrow, DrawArrowShadow, DrawGround,
+// DrawRiver, DrawRoad, DrawShroud, DrawBoatPart, DrawBoatPartShadow,
+// HeroQuickView, ScanForHeroOrBoat, SeedTo 100 -> 39.19, get_map_center
+// 100 -> 53.61, DemobilizeCurrHero) and takes the unit 70.08 -> 68.45.
+// VC6's inline decision is per-CALLEE, so the pragma cannot be aimed at
+// ShowRoute alone; whatever refuses the expansion there is a property of
+// that one call site.
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
 type_point::type_point(short new_x, short new_y, short new_z)
 {
@@ -5378,6 +6110,7 @@ void advManager::CheckDimHero()
 
 // E:\gamedcs\advmgr.cpp:10571
 VA(0x00419450, 0x43)  // linkorder, dc 0x1c5ec
+#pragma auto_inline(off)
 void advManager::CheckDimNextHeroBut()
 {
     if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->HasMobileHero())
@@ -5385,6 +6118,7 @@ void advManager::CheckDimNextHeroBut()
     else
         advWindow->WidgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:10579
 // A local human's current hero seeds a normal route search from the hero's
