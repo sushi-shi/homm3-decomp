@@ -152,6 +152,18 @@ DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
 
 class CObjectType;
 
+#ifdef HOMM3_MAPCELL_TYPEMASK_VIEW
+// readObjectType's two success answers. It returns 1 normally and 100 when
+// the object's own .msk resource was missing and default.msk stood in -
+// `neg bl / sbb ebx,ebx / and ebx,0x63 / inc ebx` at its tail, 0x63 + 1.
+// readMapObjects cases on the second value to collect the type indices it
+// then reports against. GATED to the one TU that reads it.
+enum EReadObjectTypeResult {
+    READ_OBJECT_TYPE_OK = 1,
+    READ_OBJECT_TYPE_DEFAULT_MASK = 100
+};
+#endif
+
 // The gate is widened with CObject's constructor below, whose body names
 // Random: an in-class member body's non-dependent names are looked up at the
 // closing brace of the class, and mapcell.cpp reaches misc.h only later in
