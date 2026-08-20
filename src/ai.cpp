@@ -1972,6 +1972,27 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     where retail memory-homes it at [ebp-0x30] and keeps `this` in
 //     ESI - that 4-byte frame deficit is the register wall above, not a
 //     missing local.
+//     QUALIFIED 2026-08-20 by counting the slots on both sides, and the
+//     "not a missing local" half does not survive the count. Both frames
+//     carry the same three byte locals and the same 48-byte
+//     type_AI_attack_hex_chooser (retail [ebp-0x64], ours [ebp-0x60] -
+//     members +0x1c/+0x20/+0x24 land at -0x48/-0x44/-0x40 and -0x44/-0x40/
+//     -0x3c, so the CLASS SIZE IS RIGHT, 0x2c both sides) and the same
+//     0x2ec-byte enemy_attacks array. What differs is the scalar region
+//     alone: retail's runs -0x38..-0x00 as TWELVE dwords, ours -0x34..-0x00
+//     as ELEVEN. So the deficit is exactly ONE MORE NAMED int-sized local,
+//     not a spill the register wall forced - retail spends its extra slot
+//     homing `this` at [ebp-0x10] while ALSO keeping it in ESI. Two further
+//     facts from the same sweep, both source-shaped: retail's two `unsigned
+//     char` locals sit in the FIRST dword slot ([ebp-0x1] and [ebp-0x2])
+//     where ours sit in the second ([ebp-0x5]/[ebp-0x6] with `this` taking
+//     [ebp-0x4]); and retail REBUILDS `&armies[enemy_side][i]` from the
+//     memory-homed counter every iteration (`mov [ebp-0x38],edx` then an
+//     immediate reload of 21*enemy_side, `add ecx,eax`, then the 1352
+//     multiply) where our compile strength-reduces the walk to `add edi,
+//     0x548`. That pair - a memory-homed counter and a rebuilt subscript -
+//     is the address-taken-loop-counter tell, so look for the missing local
+//     there before believing the wall.
 //   * the disabled-precedence guard tests BEST_ENEMY first and the
 //     candidate second - `!(best_disabled && !enemy_disabled)`. Written
 //     with the operands the other way round it is the same predicate but
