@@ -92,7 +92,7 @@ advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapC
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.4381	91.4381	92.1925	0xec90
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0
-advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	80.9400	80.9400	80.9400	0xdeb0
+advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	89.5167	89.5167	89.5167	0xdeb0
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	90.2004	90.2004	90.2004	0x137c0
 advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
@@ -993,7 +993,7 @@ hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920
 hero	?GetHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0
 hero	?GetHighestSchool@hero@@QBE?AW4TSpellSchool@@W42@@Z	100.0000	100.0000	100.0000	0xe51c0
 hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0
-hero	?GetLuck@hero@@QAEHPBV1@EE@Z	75.0406	75.0406	75.0406	0xe36c0
+hero	?GetLuck@hero@@QAEHPBV1@EE@Z	87.7439	87.7439	87.7439	0xe36c0
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0
 hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380
@@ -1027,7 +1027,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	64.6316	64.6316	64.6316	0xe3070
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	75.1012	75.1012	75.1012	0xe3070
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
@@ -1042,8 +1042,8 @@ hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0
 hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80
 hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	99.8846	99.8846	99.8846	0xdbf30
 hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070
-hero	?HeroFn_004DC100@hero@@QAEXJ@Z	65.9718	65.9718	65.9718	0xdc100
-hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	83.6009	83.6009	83.6009	0xe2550
+hero	?HeroFn_004DC100@hero@@QAEXJ@Z	87.2712	87.2712	87.2712	0xdc100
+hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	92.9185	92.9185	92.9185	0xe2550
 hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	44.9281	44.9281	44.9281	0xe2840
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0

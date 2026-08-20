@@ -153,6 +153,17 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
+// DECLARED, NOT DEFINED - viewarmywindow.cpp's precedent, and for the same
+// reason: retail's copy of this three-const-reference selector is a COMDAT
+// the linker parked at 0x4e6750, so the TU that emits the CALL never saw a
+// body to expand. hero::GetLuck's `apply_limits` clamp is that call
+// (fn+0x29e: `lea ecx,[ebp+8] / lea edx,[ebp+0x10] / push &[ebp+0xc] /
+// call 0x4e6750 / mov eax,[eax]`), with the two bounds materialised into
+// the DEAD otherHero and on_cursed_ground parameter homes. Giving our CL a
+// definition would make it inline the selector and lose the call - and
+// GetMorale's twin clamp IS inline in retail, so that one stays by value.
+const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
+
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -579,13 +590,32 @@ static int ReadDwordField(TAbstractFile* infile)
 // source-local. `predict-inline` pairs 5 of the 13 out-of-line calls off
 // by COUNT (retail names its unclaimed basic_string callees, and the
 // 0x485d90 reader itself, with synth labels our side can never emit) and
-// leaves ONE real item: `_Tidy` out of line 4 times here against
-// retail's 1. Instruction counts nearly agree (654 vs 629) while blocks
-// do not (33 vs 21), which is what an inlining decision looks like from
-// the CFG side rather than a missing statement. `why-branch` finds no
-// catalog lever, and its four induction mutations on the bitset loop all
-// measure WORSE (+2 each), which independently confirms the unsigned
-// counter is right. Same class the two describers carry.
+// leaves ONE real item, which it reports as `_Tidy` out of line 4 times
+// here against retail's 1.
+//
+// READ THAT ROW THE OTHER WAY ROUND (2026-08-20, bytes). It is an
+// OVER-inline of basic_string::_Grow on OUR side, not an under-inline of
+// _Tidy. Both compiles inline std::bitset<48>::set AND its whole _Xran
+// throw at the granted-mask loop - our fn+0x652 and retail's fn+0x5e3
+// both carry the `invalid bitset<N> position` string construction inline.
+// Inside it, `assign(const char*, size_type)` calls `_Grow(_N, true)`,
+// and THAT is where the two diverge: retail leaves _Grow a CALL
+// (`push 1 / push ebx / lea ecx,[ebp-0x30] / call 0x4a90`), while our CL
+// expands _Grow and so exposes the `_Tidy` and `_Copy` calls that live
+// inside it. Same for the customName temporary at the head, where both
+// sides are already identical (`call assign(const basic_string&,
+// size_type, size_type)` then one `_Tidy`).
+// No statement in this body reaches _Grow - it is three levels down
+// inside an expansion both compiles agree to make - so the pin lever does
+// not apply and the depth lever (spelling the site one wrapper deeper)
+// has no shallower or deeper form to choose from here.
+//
+// Instruction counts nearly agree (654 vs 629) while blocks do not
+// (33 vs 21), which is what that one expansion looks like from the CFG
+// side rather than a missing statement. `why-branch` finds no catalog
+// lever, and its four induction mutations on the bitset loop all measure
+// WORSE (+2 each), which independently confirms the unsigned counter is
+// right. Same class the two describers carry.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
@@ -1445,7 +1475,16 @@ void hero::UseSpell(int cost)
     mana = remainingMana;
     if (gpAdvManager->status == baseManager::STATUS_ACTIVE &&
         gpCurrentPlayer->IsLocalHuman())
-        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        // SINGULAR, and this is the only site in the compiland that is:
+        // retail's relocation here - both in this body (fn+0x53) and in
+        // hero::Fly, which inlines it (fn+0xea) - names
+        // ?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z, while
+        // hero::Deallocate and HeroView both name the PLURAL overload.
+        // `which == -1` is the singular form's "the current hero". Byte-
+        // flat (objdiff does not gate on a relocation's symbol name); it
+        // retires a false OVER-inline row that would otherwise send the
+        // next lane after an inliner knob in Fly.
+        gpAdvManager->advWindow->UpdateHeroLocator(-1, 1, 1);
 }
 // E:\gamedcs\hero.cpp:1515
 VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348
@@ -3245,16 +3284,27 @@ void hero::HeroFn_004DC070(long slot)
 //     records for depths 2/3/4 - so the pragmas were removed rather than
 //     left as inert noise.
 //
-// Residual (65.97%): retail calls the bitset _Xran helper x3 where we
-// still expand its _THROW(out_of_range, "invalid bitset<N> position")
-// body at two of the three bitset<12> sites (we emit ??0out_of_range x2
-// + ??0basic_string x2 against retail's x3 calls). That expansion sits
-// at depth 2 underneath set/test, which retail inlines, and inline_depth
-// cannot express "inline the parent, not the child" here. The remaining
-// delta beyond it is the esi/edi/ebx role permutation plus the
-// prologue's unwind-table addend, which is a reloc addend and not a
-// state count. The DC roster has NO row for this function at all, so its
-// call census cannot be consulted.
+// 65.9718 -> 87.2712 (2026-08-20), AND THE NOTE BELOW NAMED THE WALL AND
+// THEN DECLARED IT UNSPELLABLE. It was right that retail calls the
+// bitset<12> `_Xran` helper at all three sites (fn+0x61, +0xb7, +0x13a,
+// each `cmp <idx>,0xc / jb / call 0x4d4eb0`) with set/test themselves
+// INLINE, and right that our CL expanded the throw body at two of the
+// three. Its conclusion - "inline_depth cannot express 'inline the
+// parent, not the child'" - is true of the PRAGMA and false of the match.
+//
+// The lever is DEPTH, spelled in the source. VC6's <bitset> defines
+//     bool operator[](size_t _P) const   { return (test(_P)); }
+//     reference operator[](size_t _P)    { return reference(*this,_P); }
+//     reference& reference::operator=(bool _X) { _Pbs->set(_Off,_X); }
+// so `b[i]` and `b[i] = true` reach test/set one level DEEPER than
+// `b.test(i)` and `b.set(i)` do, which puts `_Xran` at depth 3 instead of
+// 2 - past what /Ob2 expands here. All three sites are written that way
+// and all three throws collapse into retail's calls.
+//
+// Residual (87.3%): the esi/edi/ebx role permutation plus the prologue's
+// unwind-table addend, which is a reloc addend and not a state count. The
+// DC roster has NO row for this function at all, so its call census
+// cannot be consulted.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC100(long slot)
 {
@@ -3263,14 +3313,14 @@ void hero::HeroFn_004DC100(long slot)
         akArtifactTraits[equipped[slot].artifactId];
 
     if (traits.comboType != -1) {
-        player.assembledCombinations.set(traits.comboType);
+        player.assembledCombinations[traits.comboType] = true;
         return;
     }
 
     int targetCombo = traits.targetCombo;
     if (targetCombo == -1)
         return;
-    if (player.assembledCombinations.test(targetCombo))
+    if (player.assembledCombinations[targetCombo])
         return;
 
     std::bitset<144> missing =
@@ -3287,7 +3337,19 @@ void hero::HeroFn_004DC100(long slot)
 #pragma inline_depth()
         return;
 
-    player.assembledCombinations.set(targetCombo);
+    // THE ONE SITE OF THE THREE THAT STILL EXPANDS (residual 87.27%), and
+    // it is the budget being handed downstream, not a wrong spelling.
+    // Retail emits `cmp edi,0xc / jb / call bitset<12>::_Xran` at fn+0x12e;
+    // we still build the `invalid bitset<N> position` string at [ebp-0x40]
+    // and the out_of_range at [ebp-0x70] here, which is the whole 44-byte
+    // frame surplus (`sub esp,0x64` against retail's 0x38). Fixing the two
+    // EARLIER sites is what freed the budget this one then spends - the
+    // A9 sequential-charge behaviour, observed from the receiving end.
+    // <bitset> offers no rung deeper than `operator[] -> operator= ->
+    // set -> _Xran` to push it back out: `reset(_P)` and `flip(_P)` sit at
+    // the same depth, and `at(_P)` emits TWO bounds checks where retail
+    // has one.
+    player.assembledCombinations[targetCombo] = true;
 
     int assembled = gCombinationArtifacts[targetCombo].artifactId;
     std::string prompt = format_string(gpGeneralText->GetText(733),
@@ -3710,12 +3772,29 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                     if (worn != ARTIFACT_NONE)
                         missing[worn] = false;
                 }
-                // MEASURED NEGATIVE, do not retry: `#pragma
-                // inline_depth(0)` on this test to chase retail's
-                // out-of-line bitset<144>::any() (base x0 vs retail x1)
-                // costs WindowHandler 74.47 -> 70.80 - the pin is
-                // statement-granular, so it also de-inlines the bitset
-                // machinery the test is built from.
+                // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
+                // CALLS three bitset members in this block that our CL
+                // expands: `bitset<144>::operator[]` (0x4cef80, the
+                // 18-byte reference ctor), `reference::operator=`
+                // (0x48e9f0, which carries set()'s body inlined) and
+                // `any()` (0x4e64c0) - our compile instead calls
+                // `set(size_t,bool)` once and expands any().
+                // `#pragma inline_depth(0)` reproduces each of those
+                // calls and every variant LOSES:
+                //   pin on the whole `if (!missing.any())` statement
+                //       74.4733 -> 70.80 (recorded 2026-08-20)
+                //   pin on a HOISTED `bool = !missing.any();` alone,
+                //       so the guarded body is out of the pin's reach
+                //       74.4733 -> 70.2438 (2026-08-20)
+                //   pin on `missing[worn] = false;` alone
+                //       74.4733 -> 69.5800
+                //   both site pins together
+                //       74.4733 -> 70.3412
+                // So the hoist DOES isolate the pin - the earlier
+                // "the pin also de-inlines the guarded body" reading is
+                // wrong - and imposing retail's calls still costs four
+                // points. The cross-jumping defect below is upstream of
+                // all of them.
                 if (!missing.any()) {
                     if (gpCurrentHero->HeroFn_004D9CC0(
                             record.artifactId)
@@ -3910,11 +3989,35 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
 // 0x117b8c) and retail folded the identical COMDATs onto one label - the
 // same row advmgr.cpp's MonsterQuickView note already discounts.
-// One more open item, NOT yet explained: retail emits 15 NormalDialog
-// call instructions where we emit 6. The source has ~14 sites, so our CL
-// is cross-jumping the identical right-click help arms and retail is not.
-// Read that before assuming any arm is missing - it is the same
-// cross-jumping defect as the three counts above, at a larger scale.
+// One more open item, NOW READ OFF THE BYTES (2026-08-20) and confirmed
+// A17/D7, not a missing arm: retail emits 15 NormalDialog call
+// instructions where we emit 6, and OUR SIX HELP ARMS ARE BYTE-IDENTICAL
+// TO RETAIL'S up to and including `mov edx,4`. Compare our $L70222 at
+// base+0x1047 with retail fn+0x10e: eleven pushes in the same order, the
+// same `mov ecx,[<help text>]` in the same position, the same
+// `test bl,bl / je <return 1>` guard. The ONLY difference is the last
+// five bytes: retail ends each arm `call NormalDialog / jmp <return 1>`
+// and ours ends `jmp <shared call+jmp>`. Our C2 cross-jumped the two-
+// instruction tail of all six arms (plus three more sites) into one
+// block; retail's did not, even though the tails are identical there too.
+//
+// The reverse also happens in this same body, which is why "our
+// cross-jumper is more aggressive" is the wrong summary - the two
+// compiles pick different merge SETS. UpdateHeroScreenStatusBar is base
+// x2 vs retail x1 because RETAIL merges: its mouse-move arm at fn+0x26e
+// (`mov [ecx+0x3c],eax / push esi / call UpdateHeroScreenStatusBar`) is
+// jumped into by the army-slot arm with eax already -1, so retail spells
+// `gpWindowManager->lastHover = -1; UpdateHeroScreenStatusBar(msg);`
+// once for two source sites while we emit it twice.
+//
+// Every one of this row's call-count gaps is that defect: 9 NormalDialog
+// + 1 QuickWindowWait + 1 bitset<144>::any + 1 update_all_slots + 1
+// BroadcastMessage + 1 HeroFn_004D97F0 + 1 SetPointer - 1
+// UpdateHeroScreenStatusBar = exactly the 14 that separate base's 85
+// out-of-line calls from retail's 99. Nothing is missing from the source.
+// docs/vc6/optimization-scope.md puts cross-jumping in the WHOLE-FUNCTION
+// CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
+// source spelling of an arm can reach a decision made over all of them.
 //
 // ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
 // MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
@@ -5400,6 +5503,33 @@ void hero::TransferArtifacts(hero* src)
 // simplify it away. `worn` is UNSIGNED - retail compares it with `jbe`
 // and every later bound with `jae`, which is what bitset::count()'s
 // size_t return gives.
+//
+// 83.5960 -> 92.9185 (2026-08-20) ON THE COMPONENT LOOP'S SHAPE, and the
+// evidence that found it is a MISSING RELOCATION, not a branch report.
+// `predict-inline` said base 3 out-of-line calls against retail's 4: we
+// emit bitset<19>::_Xran three times and retail emits it three times PLUS
+// one bitset<144>::_Xran (0x4346d0) that we did not emit at all. That
+// fourth call is `components.test(component)`'s bounds check, and the two
+// compiles disagree about it because they disagree about the LOOP FORM:
+//   retail  fn+0x1f3: `cmp esi,0x1200 / jb <body> / mov ecx,ebx /
+//                      call bitset<144>::_Xran`  - an UNSIGNED guard at
+//           the top of the body, with the loop's own exit test at the
+//           BOTTOM (rotated), so the guard survives as its own branch.
+//   base    fn+0x1a4: `cmp esi,0x1200 / jge <exit>` - one SIGNED test
+//           doing both jobs. VC6 had merged _Xran's `144 <= component`
+//           into the top-tested `for`'s exit test and folded the throw
+//           away entirely.
+// 0x1200 is 144*32 on both sides: the guard is strength-reduced onto the
+// akArtifactTraits byte offset that the body already needs.
+// Spelling the loop `int component = 0; do { ... } while (++component <
+// 144);` forces the bottom test, and the guard comes back with retail's
+// register assignment and its jb.
+//
+// MEASURED BYTE-FLAT, do not re-spend: the same do/while on the OTHER
+// three `component < 144` loops in this file (update_spell_list,
+// equip_artifact, remove_artifact) changes nothing - VC6 already rotates
+// those, so their guards were never folded. This lever only pays where
+// the loop came out top-tested.
 VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 {
@@ -5447,7 +5577,8 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
             const std::bitset<144>& components =
                 gCombinationArtifacts[combination].components;
             bool kept_slot = false;
-            for (int component = 0; component < 144; component++) {
+            int component = 0;
+            do {
                 if (!components.test(component))
                     continue;
                 int componentClass =
@@ -5476,7 +5607,7 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
                         goto next_slot;
                 }
                 counts[componentClass]++;
-            }
+            } while (++component < 144);
         }
         return 1;
     next_slot:;
@@ -5517,6 +5648,16 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // would have opened up. It does not: the divisor counts call SITES
 // whether or not they are pinned. Site pins are the lever for an
 // OVER-inline only - they cannot buy an under-inline back.
+// FOURTH, and it closes the search over the DEPTH lever that took
+// HeroFn_004DC100 65.97 -> 87.27 and GiveArtifact 64.63 -> 75.10 the same
+// day. That lever works by spelling a bitset access one wrapper LEVEL
+// DEEPER (`b[i]` reaches test through `operator[]`), which pushes _Xran
+// out of line. Here the divergence points the OTHER way - retail expands
+// _Xran and we call it - so it would need a SHALLOWER spelling, and
+// <bitset> has none: `test(_P)` already calls `_Xran` directly, and the
+// only other bounds-checked accessor, `at(_P)`, checks TWICE (once itself
+// and once through the `test` it forwards to) where retail checks once.
+// The depth ladder has no rung below `test`.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
@@ -5848,15 +5989,28 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // regions it blamed are DOWNSTREAM of those expansions - each inlined
 // bounds throw builds its own `invalid bitset<N> position` string
 // temporary - so removing the expansions removes the regions.
-// The old note's other claim did NOT survive measurement: it said retail
-// leaves `bitset<12>::test` an out-of-line CALL, and pinning that site
-// costs 64.63 -> 59.86. See the anchored note at the site itself.
+// The old note's other claim was half right, and the OTHER half is worth
+// 64.6316 -> 75.1012 (2026-08-20). It said retail leaves bitset<12>'s
+// bounds path out of line at the `assembledCombinations` test - true, but
+// the callee is `_Xran`, not `test`: retail emits `cmp ebx,0xc / jb /
+// call bitset<12>::_Xran` at fn+0x8f0, i.e. `test` INLINE with only its
+// throw out of line. That is why the site pin (which takes `test` itself
+// out of line, and GetLocalPlayerGamePos with it) measured 64.63 ->
+// 59.86 and stays rejected.
 //
-// Residual (64.63%): `predict-inline` now shows NO over-inline at all and
-// exactly one under-inline, basic_string::_Tidy at base x3 vs retail x2 -
-// budget starvation, i.e. this caller's body is still leaner than
-// retail's (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the
-// unwind map).
+// The lever is DEPTH, not a pragma. VC6's <bitset> defines
+// `bool operator[](size_t _P) const { return (test(_P)); }`, so writing
+// the site as `!player.assembledCombinations[targetCombo]` puts `test` at
+// depth 2 and `_Xran` at depth 3 instead of 1 and 2 - one level past what
+// /Ob2 will expand here - and the call appears with retail's registers.
+// Nothing else about the statement changes.
+// Retail EXPANDS the throw at this function's other two bitset<12> sites
+// (fn+0x9c5 and fn+0xa51, both `cmp ,0xc` followed by an inline
+// out_of_range construction), so those two deliberately stay `.set(...)`.
+//
+// Residual (75.1%): basic_string::_Tidy at base x3 vs retail x2 - budget
+// starvation, i.e. this caller's body is still leaner than retail's
+// (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the unwind map).
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
@@ -5887,7 +6041,7 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                         // 64.63 -> 59.86 - the statement pin also
                         // de-inlines GetLocalPlayerGamePos beside it.
                         if (owner == gpGame->GetLocalPlayerGamePos() &&
-                            !player.assembledCombinations.test(targetCombo)) {
+                            !player.assembledCombinations[targetCombo]) {
                             int assembled =
                                 gCombinationArtifacts[targetCombo].artifactId;
                             std::string prompt = format_string(
@@ -6008,7 +6162,18 @@ void hero::GiveResource(int whichRes, int howMuch)
 // `push 0x30 / call IsWieldingArtifact` - /Ob2 runs out of budget after
 // four expansions.
 //
-// Residual (75.0%): register HOMING, the twin's residual one step
+// 75.0433 -> 87.7439 (2026-08-20) ON THE FINAL CLAMP, which is an
+// OUT-OF-LINE CALL in retail. The standing note (below, kept because its
+// decode is what fixed the argument order) identified the callee exactly
+// and then declined to spell it, on the grounds that it needed "a helper
+// declared in a header, a VA claim on 0x004e6750 and a site pin". It
+// needs none of those three: viewarmywindow.cpp had already established
+// the pattern - DECLARE the selector and give it no definition, and VC6
+// emits the call because this TU never sees a body to expand. The
+// declaration sits with _cpp_min/_cpp_max at the top of this file; no
+// header moved, no claim was added, and no pragma is involved.
+//
+// Residual (87.7%): register HOMING, the twin's residual one step
 // further. Retail keeps `luck` in MEMORY throughout - the four artifact
 // bonuses are `inc dword ptr [ebp+0xc]` against the dead
 // on_cursed_ground slot - and saves EBX only once it needs a town-loop
@@ -6019,11 +6184,10 @@ void hero::GiveResource(int whichRes, int howMuch)
 // retail's ONE shared return-0 block, which is the D-lever the match
 // doctrine predicts for a sunk shared exit.
 //
-// AND THE FINAL CLAMP IS AN OUT-OF-LINE CALL IN RETAIL (identified
-// 2026-08-20, not spelled here). The call-sequence alignment says retail
-// emits TEN calls in this body and we emit nine; the extra one is at
-// fn+0x2d9 and its target is 0x004e6750, a 33-byte function the delinker
-// currently labels `THeroScreenWindow_scalar_deleting_destructor` off a
+// THE CLAMP CALL, as decoded 2026-08-20. The call-sequence alignment says
+// retail emits TEN calls in this body and we emitted nine; the extra one
+// is at fn+0x2b9 and its target is 0x004e6750, a 33-byte function the
+// delinker labels `THeroScreenWindow_scalar_deleting_destructor` off a
 // vtable sample. It is not a destructor. Decoded:
 //     f(ecx = const int& lo, edx = const int& value,
 //       [ebp+8] = const int& hi)
@@ -6035,18 +6199,13 @@ void hero::GiveResource(int whichRes, int howMuch)
 // (lo, value, hi) order, returning a REFERENCE - retail derefs the result
 // with `mov eax,[eax]`. It materialises the two bounds into the DEAD
 // PARAMETER SLOTS (`mov [ebp+8],-3`, `mov [ebp+0xc],3` - the otherHero and
-// on_cursed_ground homes) and `luck` into [ebp+0x10].
+// on_cursed_ground homes) and `luck` into [ebp+0x10]; our compile now
+// picks exactly those three homes.
 //
 // 0x004e6750 sits IMMEDIATELY AFTER std::bitset<70>::set (0x004e66f0,
 // 0x60) in this compiland's STL-COMDAT run, so it is a header inline
-// emitted as a COMDAT rather than a member: a three-const-reference
-// clamp helper whose two library calls VC6 inlined into it. Spelling it
-// needs that helper declared in a header, a VA claim on 0x004e6750 (the
-// h3_stl_comdat_anchor pattern this file already uses for five such rows)
-// and `#pragma inline_depth(0)` at the site so VC6 calls the COMDAT
-// instead of expanding it. Left undone deliberately: it is a modelling
-// decision about a shared header helper, not a GetLuck spelling, and the
-// helper almost certainly has callers outside this TU.
+// emitted as a COMDAT rather than a member. It stays UNCLAIMED - no
+// evidence names it, and the call resolves without a claim.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
 int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                   unsigned char apply_limits)
@@ -6096,7 +6255,7 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
     if (flags & 0x400000)
         luck += 500;
     if (apply_limits)
-        return _cpp_min(_cpp_max(luck, -3), 3);
+        return _cpp_clamp(-3, luck, 3);
     return luck;
 }
 
