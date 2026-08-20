@@ -841,7 +841,7 @@ font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
 game	??0SavedGameHeader@@QAE@XZ	96.4326	96.4326	96.4326	0xbc0e0
-game	??0game@@QAE@XZ	74.6490	74.6490	74.6490	0xcdf20
+game	??0game@@QAE@XZ	84.2891	84.2891	84.2891	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0

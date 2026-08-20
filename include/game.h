@@ -1840,7 +1840,16 @@ public:
                            unsigned char xferFile);
     int Save(TAbstractFile* outfile);             // 0x4be3f0
     int ComputeDailyGold(int player, unsigned char includeSilo);
-    void clear_event_records();                   // 0x4a0f10
+    // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
+    // was 0x4a0f10, which is not a function entry at all - it
+    // disassembles mid-instruction. 0x49d630 walks eventRecords
+    // (+0x4e7ac) backwards calling each element's virtual deleting
+    // destructor and then clears the range, it is the very next carve
+    // row after the located ResetVisibility (0x49d3d0 + 0x260), and the
+    // Dreamcast roster's next row after ResetVisibility is
+    // clear_event_records (dc 0x8e730, 74 B against 140, 1.89x).
+    // game::~game (0x4ce5b0) opens with a call to it.
+    void clear_event_records();
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
