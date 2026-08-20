@@ -1157,6 +1157,57 @@ public:
         ARTIFACT_SLOT_COUNT = 19
     };
 
+    // The hero screen's widget ids, as UpdateHeroScreenStatusBar's switch
+    // surfaces them in message::codeY. Decoded from the three dispatch
+    // nodes at 0x4db682 / 0x4dba4f / 0x4dbbb0 and their byte-index and
+    // jump tables at 0x4dbce4 / 0x4dbcbc / 0x4dbd58. Enumerated
+    // exhaustively even across consecutive runs, the
+    // TCombatOptionsWindow::*_ID precedent - and required, because raw
+    // hex `case` labels trip the magic-case-label cleanliness floor.
+    // Ids with no attested role keep an ORDINAL PLACEHOLDER spelling: the
+    // three id-triplets below are structurally "three widgets share one
+    // rollover row" (icon/label/value), but nothing in the bytes says
+    // which triplet is which.
+    enum EHeroScreenWidgetId {
+        ARTIFACT_SLOT_0_ID = 0x02,  ARTIFACT_SLOT_1_ID,  ARTIFACT_SLOT_2_ID,
+        ARTIFACT_SLOT_3_ID,  ARTIFACT_SLOT_4_ID,  ARTIFACT_SLOT_5_ID,
+        ARTIFACT_SLOT_6_ID,  ARTIFACT_SLOT_7_ID,  ARTIFACT_SLOT_8_ID,
+        ARTIFACT_SLOT_9_ID,  ARTIFACT_SLOT_10_ID, ARTIFACT_SLOT_11_ID,
+        ARTIFACT_SLOT_12_ID, ARTIFACT_SLOT_13_ID, ARTIFACT_SLOT_14_ID,
+        ARTIFACT_SLOT_15_ID, ARTIFACT_SLOT_16_ID, ARTIFACT_SLOT_17_ID,
+        ARTIFACT_SLOT_18_ID,
+        BACKPACK_SLOT_0_ID = 0x28, BACKPACK_SLOT_1_ID, BACKPACK_SLOT_2_ID,
+        BACKPACK_SLOT_3_ID, BACKPACK_SLOT_4_ID,
+        PORTRAIT_ID = 0x2d,
+        PRIMARY_SKILL_0_ID = 0x32, PRIMARY_SKILL_1_ID, PRIMARY_SKILL_2_ID,
+        PRIMARY_SKILL_3_ID,
+        ARMY_SLOT_0_ID = 0x44, ARMY_SLOT_1_ID, ARMY_SLOT_2_ID,
+        ARMY_SLOT_3_ID, ARMY_SLOT_4_ID, ARMY_SLOT_5_ID, ARMY_SLOT_6_ID,
+        SKILL_ICON_FIRST_ID  = 0x4f, SKILL_ICON_LAST_ID  = 0x56,
+        SKILL_NAME_FIRST_ID  = 0x57, SKILL_NAME_LAST_ID  = 0x5e,
+        SKILL_LEVEL_FIRST_ID = 0x5f, SKILL_LEVEL_LAST_ID = 0x66,
+        WIDGET_6B_ID = 0x6b, WIDGET_6C_ID = 0x6c, WIDGET_6D_ID = 0x6d,
+        WIDGET_70_ID = 0x70, WIDGET_71_ID = 0x71,
+        STATUS_BAR_BORDER_ID = 0x72,
+        STATUS_BAR_ID = 0x73,
+        MORALE_ID = 0x74,
+        LUCK_ID = 0x75,
+        WIDGET_76_ID = 0x76, WIDGET_77_ID = 0x77, WIDGET_78_ID = 0x78,
+        WIDGET_7A_ID = 0x7a, WIDGET_7C_ID = 0x7c,
+        FORMATION_ID = 0x7e,
+        MIXED_ARMY_ID = 0x7f,
+        WIDGET_80_ID = 0x80,
+        HERO_NAME_ID = 0x81,
+        WIDGET_8B_ID = 0x8b,
+        WIDGET_7800_ID = 0x7800
+    };
+    // The "no army slot selected" sentinel gHeroScreenArmySlot carries.
+    enum { HERO_SCREEN_NO_ARMY_SLOT = -1 };
+    // The hero::formation bit the status bar tests (`test byte
+    // [hero+0x48],2`). Bit 1 for a nominally 0/1 field is unexplained;
+    // transcribed as retail emits it.
+    enum { HERO_FORMATION_GROUPED = 2 };
+
     // Constructor-initialized hero-list scroll origin. Locator i displays
     // localPlayer->heroes[topHero + i].
     int topHero;                    // +0x60
@@ -1170,6 +1221,11 @@ public:
     virtual int WindowHandler(class message* msg);
     void update_slot(long slot);
     void update_all_slots();
+    // 0x4db660, `ret 4`. The hero screen's rollover text. The DC dump
+    // mangles it private and taking a message REFERENCE; codegen is
+    // identical for `*` and `&`, and the pointer form matches
+    // WindowHandler's declarator beside it.
+    void UpdateHeroScreenStatusBar(class message* msg);
     void UpdateHeroLocator(int iWhich);
     // 0x4e1a50, thiscall with no arguments and NOT virtual (absent from
     // vtable 0x63eae8). It dereferences no THeroScreenWindow member at

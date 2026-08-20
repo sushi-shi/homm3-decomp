@@ -2253,18 +2253,279 @@ std::string type_artifact::get_description()
     return result;
 }
 
-#if 0  // @carcass
+// HeroScrn.txt's runtime-loaded rows. The loader at 0x5b97c0 fetches the
+// resource and copies Text[0..32] into one contiguous .bss run starting
+// at 0x6a8014, which fixes both the extent and each cell's row index -
+// gEmptyArtifactRolloverText (row 11), gSpellbookRolloverText (row 14)
+// and gArtifactRolloverFormat (row 15) declared near the top of this file
+// are part of the same run. Only the rows this compiland reads are
+// declared. Names are role-derived from the retail consumer and
+// PROVISIONAL; rows no consumer pins keep an ORDINAL PLACEHOLDER
+// spelling keyed to the row index. Declared HERE rather than beside the
+// other three so the ~23 new symbols do not shift C1 handle numbers for
+// every already-matched body above.
+DATA(0x006a8014) extern const char* gHeroScreenText0;                 // row 0
+DATA(0x006a8018) extern const char* gHeroScreenNameFormat;            // row 1
+DATA(0x006a8020) extern const char* gHeroScreenMoraleHighText;        // row 3
+DATA(0x006a8024) extern const char* gHeroScreenMoraleNeutralText;     // row 4
+DATA(0x006a8028) extern const char* gHeroScreenMoraleLowText;         // row 5
+DATA(0x006a802c) extern const char* gHeroScreenLuckHighText;          // row 6
+DATA(0x006a8030) extern const char* gHeroScreenLuckNeutralText;       // row 7
+DATA(0x006a8034) extern const char* gHeroScreenLuckLowText;           // row 8
+DATA(0x006a8038) extern const char* gHeroScreenText9;                 // row 9
+DATA(0x006a803c) extern const char* gHeroScreenArmySlotFormat;        // row 10
+DATA(0x006a8044) extern const char* gHeroScreenArmySlotIdleFormat;    // row 12
+DATA(0x006a8048) extern const char* gHeroScreenArmySwapFormat;        // row 13
+DATA(0x006a8054) extern const char* gHeroScreenHeroNameFormat;        // row 16
+DATA(0x006a8058) extern const char* gHeroScreenText17;                // row 17
+DATA(0x006a8060) extern const char* gHeroScreenArmyMergeFormat;       // row 19
+DATA(0x006a8064) extern const char* gHeroScreenArmyMoveFormat;        // row 20
+DATA(0x006a8068) extern const char* gHeroScreenSecondarySkillFormat;  // row 21
+DATA(0x006a806c) extern const char* gHeroScreenText22;                // row 22
+DATA(0x006a8070) extern const char* gHeroScreenText23;                // row 23
+DATA(0x006a8074) extern const char* gHeroScreenText24;                // row 24
+DATA(0x006a8078) extern const char* gHeroScreenFormationGroupedText;  // row 25
+DATA(0x006a807c) extern const char* gHeroScreenFormationSpreadText;   // row 26
+DATA(0x006a8080) extern const char* gHeroScreenText27;                // row 27
+
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
+// selector - army::GetName (0x440100) is its out-of-line twin, and this
+// compiland gets the same file-local copy advmgr.cpp already carries.
+// Retail inlines it at every army-slot arm below with the count folded
+// away, so the `2` is only proven to be != 1.
+static inline const char* GetArmyName(int type, int count)
+{
+    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    // BARE literal, no DATA_COMPGEN: src/army.cpp:717 owns the claim on
+    // 0x691210 and a second claim on one RVA is a fatal duplicate at
+    // delink. hero.obj emits its own pooled "" and the reloc names differ
+    // from retail's, which is cosmetic.
+    return "";
+}
 
 // E:\gamedcs\hero.cpp:2477
-// A `message*` dispatcher: switches on msg->field_8 over the 0x02..0x75
-// widget-code range and gates the whole body on the dragged-artifact
-// global 0x698a88 being -1 - i.e. the hero screen's rollover text, which
-// is what UpdateHeroScreenStatusBar is.
+// The hero screen's rollover text. Gated on the dragged-artifact record
+// being empty, it switches on the hovered widget's codeY, fills gText,
+// pushes it into the status-bar widget and repaints the border/bar pair.
+// type_artifact::get_rollover_text, hero::HeroFn_004D8F70 and
+// hero::GetNthSS are all /Ob2-expanded here; the hero-exchange twin at
+// 0x5b08b0 CALLS all three, which is what proves the inline is retail's
+// and not ours. GetMorale and GetLuck really are called TWICE each.
+//
+// PINNED: the one caller is WindowHandler, and /Ob2 expands a
+// single-call-site extern regardless of size, where retail keeps a real
+// call. auto_inline(off) marks THIS body non-inlinable without stopping
+// its own callees expanding - which is why GetArmyName is defined above
+// the pinned region, not inside it.
+#pragma auto_inline(off)
 VA(0x004db660, 0x728)  // anchor-bracket + body, dc 0xcd9c4
 void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg)
 {
-    // @stub
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+        return;
+
+    switch (msg->codeY) {
+    case PRIMARY_SKILL_0_ID:
+    case PRIMARY_SKILL_1_ID:
+    case PRIMARY_SKILL_2_ID:
+    case PRIMARY_SKILL_3_ID:
+        sprintf(gText, gHeroScreenNameFormat,
+                gPrimarySkillNames[msg->codeY - PRIMARY_SKILL_0_ID]);
+        break;
+
+    case PORTRAIT_ID:
+        sprintf(gText,
+                gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+                gpCurrentHero->name, gpCurrentHero->HeroFn_004D8F70());
+        break;
+
+    case MORALE_ID:
+        if (gpCurrentHero->GetMorale(0, 0, 1) > 0)
+            strcpy(gText, gHeroScreenMoraleHighText);
+        else if (gpCurrentHero->GetMorale(0, 0, 1) == 0)
+            strcpy(gText, gHeroScreenMoraleNeutralText);
+        else
+            strcpy(gText, gHeroScreenMoraleLowText);
+        break;
+
+    case LUCK_ID:
+        if (gpCurrentHero->GetLuck(0, 0, 1) > 0)
+            strcpy(gText, gHeroScreenLuckHighText);
+        else if (gpCurrentHero->GetLuck(0, 0, 1) == 0)
+            strcpy(gText, gHeroScreenLuckNeutralText);
+        else
+            strcpy(gText, gHeroScreenLuckLowText);
+        break;
+
+    case ARMY_SLOT_0_ID:
+    case ARMY_SLOT_1_ID:
+    case ARMY_SLOT_2_ID:
+    case ARMY_SLOT_3_ID:
+    case ARMY_SLOT_4_ID:
+    case ARMY_SLOT_5_ID:
+    case ARMY_SLOT_6_ID: {
+        int slot = msg->codeY - ARMY_SLOT_0_ID;
+        if (gHeroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
+            int creature = gpCurrentHero->army.armies[slot];
+            if (creature == CREATURE_NONE)
+                strcpy(gText, gEmptyArtifactRolloverText);
+            else
+                sprintf(gText, gHeroScreenArmySlotFormat,
+                        GetArmyName(creature, 1));
+        } else if (gHeroScreenArmySlot == slot) {
+            sprintf(gText, gHeroScreenArmySlotFormat,
+                    GetArmyName(gpCurrentHero->army.armies[slot], 1));
+        } else if (gUnnamed6aa9d8) {
+            int creature = gpCurrentHero->army.armies[slot];
+            if (creature == CREATURE_NONE)
+                strcpy(gText, gEmptyArtifactRolloverText);
+            else
+                sprintf(gText, gHeroScreenArmySlotFormat,
+                        GetArmyName(creature, 1));
+        } else {
+            int creature = gpCurrentHero->army.armies[slot];
+            if (creature == CREATURE_NONE) {
+                int selected =
+                    gpCurrentHero->army.armies[gHeroScreenArmySlot];
+                if (gHeroScreenArmyStripLive)
+                    sprintf(gText, gHeroScreenArmyMoveFormat,
+                            GetArmyName(selected, 2));
+                else
+                    sprintf(gText, gHeroScreenArmySlotIdleFormat,
+                            GetArmyName(selected, 2));
+            } else {
+                int selected =
+                    gpCurrentHero->army.armies[gHeroScreenArmySlot];
+                if (creature == selected)
+                    sprintf(gText, gHeroScreenArmyMergeFormat,
+                            GetArmyName(creature, 2));
+                else
+                    sprintf(gText, gHeroScreenArmySwapFormat,
+                            GetArmyName(selected, 1),
+                            GetArmyName(creature, 1));
+            }
+        }
+        break;
+    }
+
+    case ARTIFACT_SLOT_0_ID:  case ARTIFACT_SLOT_1_ID:
+    case ARTIFACT_SLOT_2_ID:  case ARTIFACT_SLOT_3_ID:
+    case ARTIFACT_SLOT_4_ID:  case ARTIFACT_SLOT_5_ID:
+    case ARTIFACT_SLOT_6_ID:  case ARTIFACT_SLOT_7_ID:
+    case ARTIFACT_SLOT_8_ID:  case ARTIFACT_SLOT_9_ID:
+    case ARTIFACT_SLOT_10_ID: case ARTIFACT_SLOT_11_ID:
+    case ARTIFACT_SLOT_12_ID: case ARTIFACT_SLOT_13_ID:
+    case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
+    case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
+    case ARTIFACT_SLOT_18_ID:
+        gpCurrentHero->equipped[msg->codeY - ARTIFACT_SLOT_0_ID]
+            .get_rollover_text(gText);
+        break;
+
+    case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
+    case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
+    case BACKPACK_SLOT_4_ID:
+        gpCurrentHero->backpack[msg->codeY - BACKPACK_SLOT_0_ID]
+            .get_rollover_text(gText);
+        break;
+
+    case WIDGET_6B_ID:
+    case WIDGET_76_ID:
+    case WIDGET_8B_ID:
+        strcpy(gText, gHeroScreenText27);
+        break;
+
+    case WIDGET_6C_ID:
+    case WIDGET_70_ID:
+    case WIDGET_77_ID:
+        strcpy(gText, gHeroScreenText9);
+        break;
+
+    case WIDGET_6D_ID:
+    case WIDGET_71_ID:
+    case WIDGET_78_ID:
+        strcpy(gText, gHeroScreenText22);
+        break;
+
+    case WIDGET_7A_ID:
+        strcpy(gText, gHeroScreenText23);
+        break;
+
+    case WIDGET_7C_ID:
+        strcpy(gText, gHeroScreenText24);
+        break;
+
+    case FORMATION_ID:
+        if (gpCurrentHero->formation & HERO_FORMATION_GROUPED)
+            strcpy(gText, gHeroScreenFormationGroupedText);
+        else
+            strcpy(gText, gHeroScreenFormationSpreadText);
+        break;
+
+    case MIXED_ARMY_ID:
+        sprintf(gText, gHeroScreenArmyMoveFormat,
+                gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY));
+        break;
+
+    case WIDGET_80_ID:
+        strcpy(gText, gHeroScreenText0);
+        break;
+
+    case HERO_NAME_ID:
+        sprintf(gText, gHeroScreenHeroNameFormat,
+                gpCurrentHero->name, gpCurrentHero->HeroFn_004D8F70());
+        break;
+
+    case WIDGET_7800_ID:
+        strcpy(gText, gHeroScreenText17);
+        break;
+
+    default: {
+        int nth;
+        if (msg->codeY >= SKILL_ICON_FIRST_ID
+            && msg->codeY <= SKILL_ICON_LAST_ID)
+            nth = msg->codeY - SKILL_ICON_FIRST_ID;
+        else if (msg->codeY >= SKILL_NAME_FIRST_ID
+                 && msg->codeY <= SKILL_NAME_LAST_ID)
+            nth = msg->codeY - SKILL_NAME_FIRST_ID;
+        else if (msg->codeY >= SKILL_LEVEL_FIRST_ID
+                 && msg->codeY <= SKILL_LEVEL_LAST_ID)
+            nth = msg->codeY - SKILL_LEVEL_FIRST_ID;
+        else {
+            gText[0] = 0;
+            break;
+        }
+        if (nth < gpCurrentHero->skillCount) {
+            int skill = gpCurrentHero->GetNthSS(nth);
+            sprintf(gText, gHeroScreenSecondarySkillFormat,
+                    gSkillMasteryNames[gpCurrentHero->skillLevel[skill] - 1],
+                    akSSkillTraits[skill].name);
+        } else {
+            gText[0] = 0;
+        }
+        break;
+    }
+    }
+
+    message update;
+    update.qualifier = 0;
+    update.mouseX = 0;
+    update.mouseY = 0;
+    update.window = 0;
+    update.id = MESSAGE_WIDGET;
+    update.codeX = widget::WIDGET_SET_TEXT;
+    update.codeY = STATUS_BAR_ID;
+    update.extraText = gText;
+    BroadcastMessage(&update);
+    DrawWindow(1, STATUS_BAR_BORDER_ID, STATUS_BAR_ID);
 }
+#pragma auto_inline()
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2726
 DC_ONLY(0xcdf30, 0x20E)
@@ -3434,6 +3695,16 @@ int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuic
 //  - the skill loop closes on the UNREDUCED bound (`lea ecx,[edi-0x4f] /
 //    cmp ecx,8 / jl`): the counter is `i` with `i + 0x4f` as the widget
 //    id, NOT a loop from 0x4f to 0x57.
+//
+// Residual (99.5%): ONE relocation ADDEND, the class hero::GetMorale's
+// note already records. Retail carves `gSkillMasteryNames - 1`
+// (0x6a756c) as its own data symbol and addresses the mastery name with
+// a ZERO displacement; our CL names the array base 0x6a7570 and folds
+// the -1 into the displacement as `[4*ecx - 4]`. The LINKED bytes are
+// identical - only the obj's displacement field and the reloc target
+// differ - so this closes when the data phase carves the biased cell,
+// not from any source spelling. Every other row in the diff is
+// reloc-name-only.
 VA(0x004e1a50, 0x7BB)  // order-map, dc 0xd30b0
 void THeroScreenWindow::SetupHeroView()
 {
