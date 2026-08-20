@@ -1695,16 +1695,31 @@ unsigned char town::can_ever_build(int building_id) const
 // The whole can_build answer as one mask: accumulate every slot whose
 // requirements are met and which is not already active, then intersect
 // with the legal mask and knock out the dock and the capitol.
-// Residual (81.2%): same shape, same stack frame, same slot assignment
-// (mask at -0x14/-0x10, this at -0xc, 44*type at -8, the two byte locals
-// at -1/-2, the LICM'd `active` pair at -0x1c/-0x18). The deltas are
-// prologue SCHEDULING - retail loads `active` before it touches gpGame,
-// ours after - and one loop-body value retail keeps homed that ours
-// keeps in ebx. Register-homing family.
+// Residual (89.5893%): 81.2143 -> 89.5893 on 2026-08-20. The note that
+// stood here read the delta correctly - "retail loads `active` before it
+// touches gpGame, ours after" - and then filed it as register-homing.
+// It is DECLARATION ORDER, and it is spellable: giving `active` an
+// explicit `__int64 activeMask = active;` local declared ahead of
+// `townType` puts the two `[ecx+0x158]/[ecx+0x15c]` loads first, exactly
+// where retail has them, and the WHOLE loop body then falls into line -
+// what remains after the edit is the reloc-addend cosmetic on the
+// bitNumber/gHierarchyMask rows and nothing else inside the loop.
+// The compiler was already LICM-ing the member read to the same
+// [ebp-0x1c]/[ebp-0x18] pair; naming it changes only WHEN the read is
+// scheduled, not what it costs. (Standing rule to reuse: when a member
+// read is hoisted to the preheader on both sides but the PROLOGUE order
+// differs, the fix is a named local at retail's position, not a register
+// lever.)
+// What is left is prologue scheduling only: retail defers the
+// `gpGame->field_1f69d` load until after the 44*type expression, ours
+// issues it with the first pair. Measured and rejected against that: a
+// split declaration (`char castleGriffinException;` + a separate
+// assignment) with the loop index hoisted - byte-flat.
 VA(0x005c0f20, 0x156)  // anchor-global, dc 0x168714
 __int64 town::get_buildable_mask() const
 {
     __int64 mask = 0;
+    __int64 activeMask = active;
     char townType = type;
     char castleGriffinException = gpGame->field_1f69d;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
@@ -1712,8 +1727,8 @@ __int64 town::get_buildable_mask() const
         if (castleGriffinException && building == DWELLING_2_ID
             && townType == TOWN_CASTLE)
             requirements &= ~bitNumber[BLACKSMITH_ID];
-        if (!(active & bitNumber[building])
-            && (active & requirements) == requirements)
+        if (!(activeMask & bitNumber[building])
+            && (activeMask & requirements) == requirements)
             mask |= bitNumber[building];
     }
     mask &= available;
