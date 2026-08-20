@@ -105,6 +105,12 @@ int ViewArmyCastSpellHandler(message* msg);
 // header stays as small as its own consumers need.
 const unsigned int CTA_SHOOTER = 0x4;
 
+// The Dendroid's hold used to be a TU-local `const int SPELL_BIND` here,
+// byte-proven by the folded `akSpellTraits + 0x2650` row address. It is
+// armygrp.h's own ungated ESpellId enumerator as of 2026-08-20 - the
+// local copy became a hard C2373 - and the two spell it in the same
+// place with the same value, so the substitution is byte-inert.
+
 // The four BASE elementals, tested behind the version gate everywhere the
 // game asks whether a creature has an alignment at all - eight times in
 // armygrp.cpp, four in game.cpp, once each in cmbtmgr.cpp and

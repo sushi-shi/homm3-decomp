@@ -207,9 +207,11 @@ enum TArtifact {
     // above, 0x82 Cloak of the Undead King and 0x83 Elixir of Life
     // below, and 0x86 Power of the Dragon Father / 0x89 Bow of the
     // Sharpshooter / 0x8b Ring of the Magi further on.
-    // Behind a view: artifact.h reaches every TU that includes hero.h,
-    // and an ungated enumerator counts toward the include-set threshold
-    // in all of them.
+    // Corroborated a second time by combatManager::ShowSpellMessage
+    // (0x5a8950), which names the CASTER of an artifact-cast spell out
+    // of akArtifactTraits at exactly these two rows - 0x81 for Prayer,
+    // 0x84 for the Slow/Curse/Weakness/Misfortune group - and reaches
+    // them from the spell ids alone, the same pairing read backwards.
     ARTIFACT_ANGELIC_ALLIANCE = 0x81,
     ARTIFACT_ARMOR_OF_THE_DAMNED = 0x84,
     // hero::GetNecromancyCreature (0x4e3c60) gates its whole

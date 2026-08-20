@@ -4,12 +4,17 @@
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLS_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <va.h>
-// find_spell_target's third arm needs SPELL_SACRIFICE, which armygrp.h
-// keeps behind this view: declaring it unconditionally costs initialize's
-// initialize_game_data 100.0000 -> 96.0880 (measured 2026-08-20).
+// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
+// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
+#define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
+// poisonPenalty multiplier (+0x4a4) to price the hit points the stack
+// just lost; army.h keeps both behind the round view.
+#define HOMM3_ARMY_ROUND_VIEW
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
 // round counters (+0x210..+0x21c) and their four damage factors
 // (+0x4a8..+0x4b4); army.h keeps both runs behind this view because each
@@ -100,6 +105,16 @@ static int ControllingSide(const army* stack)
         return 1 - stack->combatSide;
     return stack->combatSide;
 }
+
+// Retail .bss 0x6a3cac, and every reference to it in the image is inside
+// spells.obj - two in the 0x59ec50 body that drives a cast and one in
+// SpellTargetMessage - so it is a file-scope static of this TU. Name
+// provisional, from the one modelled consumer: with the byte set,
+// SpellTargetMessage's Teleport arm stops naming the stack under the
+// cursor and prints the fixed row instead, which is the second click of
+// a two-click cast. No DC row carries it.
+DATA(0x006a3cac)
+static unsigned char gTeleportSourcePicked;
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
@@ -1000,12 +1015,128 @@ void combatManager::Armageddon(int level, int power)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3572
+#endif  // @carcass
+
+// The per-step recompute of one bolt segment: how far it still has to
+// travel, how thick it should be at that point, which way it is pointing
+// and how far off that heading this step should wander. AddBolt calls it
+// once to seed a fresh bolt and DoBolt once per drawn step.
+//
+// The RECORD IS THE EVIDENCE HERE - see cmbtmgr.h's SBolt note. Nothing
+// in the Dreamcast dump describes this type; every field this body reads
+// is either one AddBolt stored a named parameter into or one this body
+// is the only writer of.
+//
+// TWO CASTS TO `float`, NOT double, in the progress division: retail
+// spills BOTH operands back through 32-bit slots (`fild / fstp dword /
+// fld dword`) before the divide, which is what an explicit (float) on
+// each side produces and what a plain integer division promoted to
+// double does not. The same rule runs through the whole tail: every
+// float-typed intermediate retail rounds through a dword slot is a
+// named float LOCAL here (`travelled`, `distortAvg`, `wobble`,
+// `scaled`, `step`), and writing any of them as one long expression
+// instead leaves the value in the x87 stack at extended precision,
+// which is a different instruction at every step. That single reading
+// is worth 82.30 -> 94.82.
+//
+// atan2's ARGUMENT ORDER IS (dx, dy), which is NOT the usual (y, x), and
+// the stack says so with no ambiguity: retail pushes the dy double
+// FIRST, so it lands at [esp+8] and dx at [esp+0]. The callee is atan2 -
+// 0x61a0f0 is `mov edx, 0x690460 / jmp __ctrandisp2`, the CRT's
+// two-argument transcendental dispatcher. Transcribed as retail has it;
+// DrawBolt reads the heading back with the matching convention.
+//
+// TWO LOCALS ARE COMPUTED IN REVERSE DECLARATION ORDER by this CL, and
+// that is a lever, not noise: `toX` is declared first so that `toY` is
+// the delta retail computes first. Declaring them the other way round
+// measured 88.19 against 94.82.
+//
+// THE SEGMENT TEST IS SPELLED `remaining > segment * 1.5`, NOT the other
+// way round: whichever side is written LEFT has its (double) conversion
+// emitted first, and retail converts `remaining` first. Worth 94.82 ->
+// 97.29 on the operand order alone.
+//
+// Residual (97.29%): TWO sites, ~9 instructions.
+//   * The sqrt's two deltas come out in the opposite order (retail does
+//     x then y, we do y then x). The `+` operand order does NOT reach
+//     it - both spellings measure exactly 97.2924, because VC6
+//     canonicalises the commutative sum - and hoisting the deltas into
+//     locals is worse in both declaration orders (93.98 / 88.19).
+//   * The progress divide uses two temp slots where retail reuses one:
+//     retail loads the numerator to st0 BEFORE materialising the
+//     denominator, so the numerator's slot is free again. Making the
+//     numerator a named float local (`travelled`) was needed for the
+//     rest of the shape but does not move this.
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {
-    // @stub
+    if (psBolt->bDone)
+        return;
+
+    long remaining = static_cast<long>(
+        sqrt(static_cast<double>(
+            abs(psBolt->iDestY - psBolt->iY) * abs(psBolt->iDestY - psBolt->iY)
+            + abs(psBolt->iDestX - psBolt->iX)
+                * abs(psBolt->iDestX - psBolt->iX))));
+    if (remaining > psBolt->iTotalLength) {
+        psBolt->fProgress = 0;
+    } else {
+        float travelled =
+            static_cast<float>(psBolt->iTotalLength - remaining);
+        psBolt->fProgress = travelled
+            / static_cast<float>(psBolt->iTotalLength);
+    }
+
+    if (psBolt->iStartThickness != psBolt->iEndThickness) {
+        // The +-1 nudge is retail's: it biases the interpolation away
+        // from zero so a taper of one pixel still moves.
+        long span = psBolt->iEndThickness - psBolt->iStartThickness;
+        if (span > 0)
+            span++;
+        else
+            span--;
+        long thickness = static_cast<long>(static_cast<float>(span)
+                                           * psBolt->fProgress)
+            + psBolt->iStartThickness;
+        if (thickness < 1)
+            thickness = 1;
+        psBolt->iThickness = thickness;
+    }
+
+    psBolt->iSpanFirst = -(psBolt->iThickness >> 1);
+    psBolt->iSpanLast = psBolt->iSpanFirst + psBolt->iThickness - 1;
+
+    long toX = psBolt->iDestX - psBolt->iX;
+    long toY = psBolt->iDestY - psBolt->iY;
+    float angle = static_cast<float>(atan2(static_cast<double>(toX),
+                                           static_cast<double>(toY)));
+    psBolt->fAngle = angle;
+    float distortAvg = static_cast<float>((psBolt->iAngleDistortMin
+                                           + psBolt->iAngleDistortMax) / 200);
+    float wobble = (2.5 - psBolt->fProgress) / 2.0 * distortAvg;
+    psBolt->fDistortedAngle = angle + wobble;
+
+    if (psBolt->iAngleDistortMin != 0 || psBolt->iAngleDistortMax != 0) {
+        // A bolt only wanders once it has further to go than one and a
+        // half segments - unless it was asked to wander always.
+        if (static_cast<double>(remaining)
+                > static_cast<double>(psBolt->iSegmentLength) * 1.5
+            || psBolt->bDistortAlways) {
+            float distortion;
+            if (psBolt->iAngleDistortMin == psBolt->iAngleDistortMax)
+                distortion = static_cast<float>(psBolt->iAngleDistortMin);
+            else
+                distortion = static_cast<float>(
+                    Random(psBolt->iAngleDistortMin,
+                           psBolt->iAngleDistortMax));
+            float scaled = distortion / 100.0f;
+            float step = (2.0f - psBolt->fProgress) / 1.5 * scaled;
+            psBolt->fAngle = step + psBolt->fAngle;
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3702
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
@@ -1014,14 +1145,122 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3864
+#endif  // @carcass
+
+// The bolt constructor: clamp both endpoints into the screen, stamp the
+// whole record from the thirteen parameters, decide whether the run is
+// drawn along x or along y, measure it, and hand it to ResetBoltAngle
+// for the first heading. Its parameter list is what NAMES most of
+// SBolt - twenty-four field writes, thirteen of them a parameter going
+// straight into a slot.
+//
+// The clamps are 800x556, written as `if (v < 0) v = 0; else if
+// (v > MAX) v = MAX;` over the PARAMETER itself: retail merges the two
+// arms onto one store back to the parameter slot and skips the store
+// entirely when neither fires, which is what the else-if gives and what
+// two separate ifs do not.
+//
+// THE TWO SPECIAL COLOURS DECIDE THE ORIENTATION DIFFERENTLY. An
+// ordinary bolt is drawn along whichever axis it runs further on
+// (`abs(dx) > abs(dy)`); BOLT_COLOR_0 and BOLT_COLOR_3 instead ask
+// whether the source x is strictly inside the screen, i.e. they are the
+// two that are drawn as screen-edge flashes.
 VA(0x005a5a90, 0x183)  // order-map+arity, dc 0x154ac0
-void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int bDistortAlways)
+void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
+                            int iDestX, int iDestY, int iSplitFrequency,
+                            int iStartThickness, int iEndThickness,
+                            int iColor, int iAngleDistortMin,
+                            int iAngleDistortMax, int iSegmentLength,
+                            int bDistortAlways)
 {
-    // @stub
+    if (iSourceX < 0)
+        iSourceX = 0;
+    else if (iSourceX > 799)
+        iSourceX = 799;
+    if (iSourceY < 0)
+        iSourceY = 0;
+    else if (iSourceY > 555)
+        iSourceY = 555;
+    if (iDestX < 0)
+        iDestX = 0;
+    else if (iDestX > 799)
+        iDestX = 799;
+    if (iDestY < 0)
+        iDestY = 0;
+    else if (iDestY > 555)
+        iDestY = 555;
+
+    psBolt->iSourceX = iSourceX;
+    psBolt->iSourceY = iSourceY;
+    psBolt->iDestX = iDestX;
+    psBolt->iDestY = iDestY;
+    psBolt->iSplitFrequency = iSplitFrequency;
+    psBolt->iThickness = iStartThickness;
+    psBolt->iStartThickness = iStartThickness;
+    psBolt->iEndThickness = iEndThickness;
+    psBolt->iColor = iColor;
+    psBolt->iAngleDistortMin = iAngleDistortMin;
+    psBolt->iAngleDistortMax = iAngleDistortMax;
+    psBolt->iSegmentLength = iSegmentLength;
+    psBolt->fX = static_cast<float>(iSourceX);
+    psBolt->fY = static_cast<float>(iSourceY);
+    psBolt->iX = iSourceX;
+    psBolt->iY = iSourceY;
+    psBolt->iStartX = iSourceX;
+    psBolt->iStartY = iSourceY;
+    psBolt->bAtDestination = 0;
+    psBolt->bDone = 0;
+    psBolt->fProgress = 0;
+    psBolt->bDistortAlways = bDistortAlways;
+
+    if (iColor == BOLT_COLOR_0 || iColor == BOLT_COLOR_3) {
+        if (iSourceX > 0 && iSourceX < 799)
+            psBolt->bShallow = 0;
+        else
+            psBolt->bShallow = 1;
+    } else {
+        psBolt->bShallow = abs(iDestX - iSourceX) > abs(iDestY - iSourceY);
+    }
+
+    psBolt->iTotalLength = static_cast<long>(
+        sqrt(static_cast<double>(
+            abs(iDestY - iSourceY) * abs(iDestY - iSourceY)
+            + abs(iDestX - iSourceX) * abs(iDestX - iSourceX))));
+    ResetBoltAngle(psBolt);
 }
 
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
 // E:\gamedcs\spells.cpp:3940
+// DECODED BUT NOT WRITTEN (2026-08-20). What its bytes already prove,
+// banked here so the next lane does not redo the reading:
+//   * It allocates the working set with `new SBolt[25]` - `push 0xbb8 /
+//     operator new`, no array cookie because SBolt has no destructor -
+//     and frees it with a plain `operator delete`. That is the second
+//     proof of the 0x78 stride.
+//   * `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
+//     padding, and it is spelled with THIS FILE'S by-value _cpp_max:
+//     retail writes both operands back into their own parameter slots
+//     and then selects between their ADDRESSES, which is that template
+//     and not the <xutility> reference one.
+//   * The shape is `do { for (pass) { draw; UpdateScreen; if (every
+//     bolt bAtDestination) break; split; } for (each) ResetBoltAngle;
+//     } while (!allDone)`, with the pass count computed as
+//     `(iSegmentLength - 1) / iSegmentLength + 1` - which is 1 for every
+//     positive segment length, i.e. a latent retail bug, transcribe it.
+//   * The fork rule: a bolt forks when it is not at its destination,
+//     fewer than 25 bolts exist, its remaining manhattan distance is
+//     more than twice the segment length, `Random(0, iSplitFrequency *
+//     100 / iSegmentLength) < 100`, and it has travelled at least
+//     `iSplitFrequency * 0.75` from its last fork. The fork's heading is
+//     the parent's fDistortedAngle plus `+-Random(50, 80) / 100.0f`
+//     (the sign from `Random(0, 1)`), its length `min(Random(maxSplit /
+//     2, maxSplit), remaining / 2)`, and its distortion band is widened
+//     to `min * 0.66 - 20` .. `max * 0.66 + 20`.
+//   * Its two CRT helpers are 0x61a124 and 0x61a1d4 (sin / cos through
+//     __ctrandisp1), and the delay is scaled by a float table at
+//     0x63cf7c indexed by the int global at 0x6987ec - the combat-speed
+//     setting, which no header in this tree models yet.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
 {
@@ -1553,23 +1792,267 @@ unsigned char combatManager::SpellCastWorks(SpellID spell, long side,
     return Random(1, 100) <= chance;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5674
+// The spell cursor's rollover line: what would this cast hit if it
+// landed here. Eleven of the fifty-three ids in the 0xc..0x40 window get
+// their own answer and everything else names the stack standing on the
+// hex; the byte/jump table pair at +0x288/+0x26c is what enumerates them,
+// and its TOP entry is what proves SPELL_REMOVE_OBSTACLE 0x40.
+//
+// THE CELL POINTER IS HOISTED ABOVE THE DISPATCH, which is the lever this
+// TU is now three-for-three on: retail computes `&cells[targetIndex]`
+// into EDI before the range test that guards the switch and keeps it
+// there across every arm, including the two that never read it. Spelled
+// at the point of use, VC6 sinks the multiply into each arm.
+//
+// `target = 0` in the area-spell arm is what the jump table's own entry
+// argues for. That arm's answer is the same "spell name alone" line the
+// no-stack path below prints, and the table sends it not to the top of
+// that block but three bytes INTO it, past the `mov ecx, [ebp+8]` -
+// because at the dispatch ECX already holds spellId, and VC6 threaded
+// the folded `if (target)` straight to the else-block's second
+// instruction. A spelled-out sprintf in the arm would have tail-merged
+// to the block's ENTRY instead, so the fold is the reading the bytes
+// prefer.
 VA(0x005a8690, 0x2BD)  // order-map+arity, dc 0x1578b4
-void combatManager::SpellTargetMessage(int spellId, int targetIndex, unsigned char first_target)
+void combatManager::SpellTargetMessage(SpellID spellId, int targetIndex,
+                                       unsigned char first_target)
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+
+    hexcell* cell = &cells[targetIndex];
+    army* target;
+    switch (spellId) {
+    case SPELL_SACRIFICE:
+        // Both halves name a stack with no null check at all - the
+        // creature-name ladder reads +0x34/+0x4c straight off the
+        // returned pointer - so each result lands in the variable and is
+        // dereferenced, exactly as retail does it.
+        if (first_target) {
+            target = find_resurrection_target(currentSide, targetIndex, 0);
+            sprintf(gText, gpGeneralText->GetText(549),
+                    CreatureName(target->creatureType, target->numTroops));
+        } else {
+            target = cell->get_army();
+            sprintf(gText, gpGeneralText->GetText(550),
+                    CreatureName(target->creatureType, target->numTroops));
+        }
+        combatWindow->combat_message(gText, 0, 0);
+        return;
+    case SPELL_TELEPORT:
+        // The destination half of the two-click teleport: once a source
+        // stack is latched the rollover stops naming stacks and prints
+        // the fixed "pick a destination" row instead.
+        if (gTeleportSourcePicked) {
+            combatWindow->combat_message(gpGeneralText->GetText(26), 0, 0);
+            return;
+        }
+        target = cell->get_army();
+        break;
+    case SPELL_REMOVE_OBSTACLE:
+        strcpy(gText, gpGeneralText->GetText(551));
+        combatWindow->combat_message(gText, 0, 0);
+        return;
+    case SPELL_RESURRECTION:
+        target = find_resurrection_target(currentSide, targetIndex, 0);
+        break;
+    case SPELL_ANIMATE_DEAD:
+        target = find_animate_dead_target(currentSide, targetIndex);
+        break;
+    case SPELL_FORCE_FIELD:
+    case SPELL_FIRE_WALL:
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+        target = 0;
+        break;
+    default:
+        target = cell->get_army();
+        break;
+    }
+
+    if (target)
+        sprintf(gText, gpGeneralText->GetText(28), akSpellTraits[spellId].name,
+                CreatureName(target->creatureType, target->numTroops));
+    else
+        sprintf(gText, gpGeneralText->GetText(27), akSpellTraits[spellId].name);
+    combatWindow->combat_message(gText, 0, 0);
 }
 
-// E:\gamedcs\spells.cpp:5749
+// The line that goes up when a spell RESOLVES, and its first parameter
+// is a three-way "who cast this": a hero (0), a creature ability (1) or
+// an ARTIFACT (2). The artifact arm is what proves akArtifactTraits is
+// the table behind 0x660b68's reference cell from this side - it names
+// the caster out of that 32-byte-stride roster, keyed by spell, and the
+// two keys it special-cases are exactly the two auto-cast combination
+// artifacts SetNextArmy (0x465330) already pairs with the same spells:
+// 0x81 Angelic Alliance for Prayer, 0x84 Armor of the Damned for the
+// Slow / Curse / Weakness / Misfortune group. Read forwards there, read
+// backwards here.
+//
+// ITS `default:` IS A RETAIL BUG, TRANSCRIBED. When the artifact arm is
+// reached with any spell outside those five it indexes akArtifactTraits
+// with the SPELL id - `mov eax, [ebp+0xc]` sitting at the jump table's
+// default target, past both constant arms. Nothing in the image can
+// reach it (only those five spells auto-cast), so it never fires; it is
+// still what the source says, and the load has to be at the default
+// label rather than ahead of the switch for the bytes to come out.
+//
+// THE /Ob2 CALL-VS-INLINE ASYMMETRY IS SPELLED PER SITE, AGAIN. The
+// TARGET's name is a CALL to army::GetName; the CASTING stack's name, in
+// the creature arm's default, is EXPANDED. Same two source lines, one
+// written as army::GetName and one as this file's CreatureName - the
+// third instance of the lever in this TU.
+//
+// Residual (98.76%): SEVEN instructions, all in the artifact arm, and
+// one cause. Retail RELOADS `[ebp+0xc]` at that arm's default label
+// where our CL keeps the switch selector live from the dispatch - so
+// retail's selector dies in EDX and ours is promoted to ESI, and the
+// six instructions around the akArtifactTraits subscript re-schedule
+// behind that. This is the "do not cache what retail reloads" class
+// with no source lever found: three spellings were measured and all
+// three are worse -
+//   `int artifact = spellId;` with no default arm            88.90
+//   the three format_string calls written out per arm        70.97
+//   `int artifact;` hoisted to function scope       98.76 (neutral)
+// The last one is the tell: the promotion is not about where the
+// variable is declared, it is VC6's global CSE joining the dispatch
+// block's load to the default block's, which no scoping reaches.
+//
+// Everything else in the body is byte-exact, INCLUDING both /Ob2
+// asymmetries this function carries: of the nineteen
+// `message = format_string(...)` sites retail calls basic_string::assign
+// at eighteen and expands it at one (the hero arm's no-target half), and
+// of their temporaries it calls _Tidy at seventeen and expands the
+// destructor at two. Neither needed a pragma - writing the arms
+// longhand in source order reproduces both.
 VA(0x005a8950, 0x999)  // order-map+arity, dc 0x157ae4
-void combatManager::ShowSpellMessage(int bIsMonsterSpell, int spellId, army* targetArmy)
+void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
+                                     army* targetArmy)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    const char* targetName;
+    if (targetArmy)
+        targetName = army::GetName(targetArmy->creatureType,
+                                   targetArmy->numTroops);
+    else
+        targetName = 0;
+    const char* spellName = akSpellTraits[spellId].name;
+    std::string message;
+    switch (bIsMonsterSpell) {
+    case SPELL_CASTER_CREATURE:
+        switch (spellId) {
+        case SPELL_AGE: {
+            // The hit points the stack has just lost: its recomputed
+            // maximum - origHitPoints rescaled by the same poisonPenalty
+            // multiplier ResetRound keeps - minus what it has left. The
+            // cast is to `float`, not double: retail spills the widened
+            // integer back through the spellId parameter's OWN stack
+            // slot as a 32-bit `fstp dword ptr [ebp+0xc]` before
+            // reloading it for the multiply.
+            long lost = static_cast<long>(
+                            static_cast<float>(targetArmy->origHitPoints)
+                            * targetArmy->poisonPenalty + 0.95f)
+                - targetArmy->hitPoints;
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(552),
+                                        targetName, lost);
+            else
+                message = format_string(gpGeneralText->GetText(553),
+                                        targetName, lost);
+            break;
+        }
+        case SPELL_DISEASE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(554), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(555), targetName);
+            break;
+        case SPELL_DISPEL_HELPFUL:
+            message = format_string(gpGeneralText->GetText(556), targetName);
+            break;
+        case SPELL_BLIND:
+            message = format_string(gpGeneralText->GetText(557), targetName);
+            break;
+        case SPELL_CURSE:
+            message = format_string(gpGeneralText->GetText(558), targetName);
+            break;
+        case SPELL_STONE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(559), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(560), targetName);
+            break;
+        case SPELL_BIND:
+            message = format_string(gpGeneralText->GetText(561), targetName);
+            break;
+        case SPELL_POISON:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(562), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(563), targetName);
+            break;
+        case SPELL_PARALYZE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(564), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(565), targetName);
+            break;
+        default: {
+            // Every OTHER creature ability names its own caster - the
+            // stack whose turn it is - and then appends the target
+            // clause only if there is a target to name.
+            const army* caster = &armies[actingSide][actingSlot];
+            const char* casterName = CreatureName(caster->creatureType,
+                                                  caster->numTroops);
+            if (caster->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(566),
+                                        casterName, spellName);
+            else
+                message = format_string(gpGeneralText->GetText(567),
+                                        casterName, spellName);
+            if (targetName)
+                message += format_string(gpGeneralText->GetText(568),
+                                         targetName);
+            break;
+        }
+        }
+        break;
+    case SPELL_CASTER_ARTIFACT: {
+        int artifact;
+        switch (spellId) {
+        case SPELL_PRAYER:
+            artifact = ARTIFACT_ANGELIC_ALLIANCE;
+            break;
+        case SPELL_CURSE:
+        case SPELL_WEAKNESS:
+        case SPELL_MISFORTUNE:
+        case SPELL_SLOW:
+            artifact = ARTIFACT_ARMOR_OF_THE_DAMNED;
+            break;
+        default:
+            artifact = spellId;
+            break;
+        }
+        message = format_string(gpGeneralText->GetText(197),
+                                akArtifactTraits[artifact].name, spellName);
+        break;
+    }
+    default:
+        if (targetName)
+            message = format_string(gpGeneralText->GetText(196),
+                                    heroes[currentSide]->name, spellName,
+                                    targetName);
+        else
+            message = format_string(gpGeneralText->GetText(197),
+                                    heroes[currentSide]->name, spellName);
+        break;
+    }
+    combatWindow->combat_message(message.c_str(), 1, 0);
+}
 
 // The cache cmbtmgr.h renamed on 2026-08-20 from LoadCreatureSprite: it
 // keys on powSpellEffect, releases the held sprite through vtable slot 1

@@ -58,6 +58,104 @@ SIZE(TMissileStartInfo, 0x54);
 
 extern const TMissileStartInfo* gMissileStartInfo;
 
+// One segment of an animated lightning bolt. THE DREAMCAST DUMP HAS NO
+// MEMBER EVIDENCE FOR THIS TYPE AT ALL - members.csv carries zero rows
+// and the NAME comes only from the three spells.cpp prototypes that take
+// an SBolt* - so the layout below is reconstructed from retail bytes and
+// nothing else, and the field names are ordinal wherever the bytes do
+// not name them.
+//
+// The 0x78 STRIDE is byte-proven twice over by DoBolt (0x5a5c20): it
+// allocates `new(0xbb8)` = 3000 bytes for the working set and walks it
+// with five separate `add r32, 0x78` steps, i.e. 25 records of 120.
+//
+// The named fields are named because AddBolt (0x5a5a90) stores a DC-named
+// PARAMETER straight into them - it takes thirteen arguments and lands
+// twenty-four field writes, which is what fixes the first half of this
+// record. The rest is ResetBoltAngle (0x5a5260) and DrawBolt (0x5a5440).
+struct SBolt {
+    // The four endpoints, clamped by AddBolt into the 800x556 screen
+    // (`0..0x31f` on x and `0..0x22b` on y) before they are stored.
+    int iSourceX;             // +0x00
+    int iSourceY;             // +0x04
+    int iDestX;               // +0x08
+    int iDestY;               // +0x0c
+    int iSplitFrequency;      // +0x10
+    // The CURRENT thickness. AddBolt seeds it from iStartThickness and
+    // ResetBoltAngle re-interpolates it toward iEndThickness each step.
+    int iThickness;           // +0x14
+    int iColor;               // +0x18
+    int field_1c;
+    int iSegmentLength;       // +0x20
+    // The pen position, carried in float so the walk can advance by a
+    // fractional step; AddBolt seeds both from the (clamped) source.
+    float fX;                 // +0x24
+    float fY;                 // +0x28
+    // The same position rounded to whole pixels - the end of the segment
+    // drawn so far, which is what ResetBoltAngle measures the remaining
+    // distance from.
+    int iX;                   // +0x2c
+    int iY;                   // +0x30
+    // Set when the run is longer than it is tall. AddBolt decides it from
+    // `abs(dx) > abs(dy)` for an ordinary bolt, and for the two colours
+    // below from whether the source x is strictly inside the screen -
+    // those two are drawn as screen-edge flashes, so the shallow/steep
+    // choice is made by where the bolt STARTS rather than by its run.
+    int bShallow;             // +0x34
+    float fAngle;             // +0x38
+    // fAngle plus the progress-weighted distortion ResetBoltAngle adds.
+    float fDistortedAngle;    // +0x3c
+    // "This segment has reached its destination". AddBolt clears it and
+    // DrawBolt sets it; DoBolt (0x5a5c20) is what names it - after each
+    // drawn pass it walks all live bolts and stops the whole animation
+    // only when EVERY one of them has this set, and it skips a bolt's
+    // ResetBoltAngle and its split check on the same test.
+    int bAtDestination;       // +0x40
+    // ResetBoltAngle returns at once while this is set - the "this
+    // segment is finished" latch.
+    int bDone;                // +0x44
+    int field_48;
+    // The half-width span the thick line is drawn over, recomputed from
+    // iThickness every reset: -(t >> 1) to -(t >> 1) + t - 1.
+    int iSpanFirst;           // +0x4c
+    int iSpanLast;            // +0x50
+    // The segment's own start, kept while fX/fY walk away from it, and
+    // RESTAMPED to the current position every time DoBolt forks a new
+    // bolt off this one - that is how a fork throttles the next fork,
+    // since the split test measures the manhattan distance from here.
+    int iStartX;              // +0x54
+    int iStartY;              // +0x58
+    int iStartThickness;      // +0x5c
+    int iEndThickness;        // +0x60
+    // The straight-line distance from source to destination, measured
+    // once by AddBolt; ResetBoltAngle divides the remaining distance by
+    // it to get fProgress.
+    int iTotalLength;         // +0x64
+    int iAngleDistortMin;     // +0x68
+    int iAngleDistortMax;     // +0x6c
+    // 0 at the source, 1 at the destination.
+    float fProgress;          // +0x70
+    int bDistortAlways;       // +0x74
+};
+SIZE(SBolt, 0x78);
+
+// SBolt::iColor's SPECIAL values. DrawBolt (0x5a5440) proves both the
+// domain and its extent: it lowers `iColor - 0x12c` against 6 into a
+// jump table, gives each of the six values its own gradient table, and
+// for anything else writes the value straight into the framebuffer as a
+// raw 16-bit pixel. Only one member can be named from a caller -
+// ChainLightning (0x5a6360) pushes the literal 0x131 into DoBolt - so
+// the other five stay ORDINAL, exactly as army.h's gWallTargets rows do
+// where no roster names the individual segments.
+enum EBoltColor {
+    BOLT_COLOR_0 = 0x12c,
+    BOLT_COLOR_1 = 0x12d,
+    BOLT_COLOR_2 = 0x12e,
+    BOLT_COLOR_3 = 0x12f,
+    BOLT_COLOR_4 = 0x130,
+    BOLT_COLOR_CHAIN_LIGHTNING = 0x131
+};
+
 // The combat's spell-restriction code, held in combatManager+0x53c0.
 // The per-combat initializer at 0x4643b0 writes it exactly once, as -1
 // or one of 0..9 from ten straight-line branches, and clears the two
@@ -1552,6 +1650,24 @@ public:
                                long level, long power,
                                long casting_side,
                                unsigned char creature_spell);  // 0x5a66d0
+    // The lightning-bolt animator, two of its four bodies. Both take the
+    // SBolt record declared above; the DC prototypes (spells.cpp:3572 /
+    // 3864) supply every parameter name, and AddBolt's thirteen
+    // arguments are what name most of the record's fields.
+    void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
+    void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,
+                 int iDestY, int iSplitFrequency, int iStartThickness,
+                 int iEndThickness, int iColor, int iAngleDistortMin,
+                 int iAngleDistortMax, int iSegmentLength,
+                 int bDistortAlways);                          // 0x5a5a90
+    // 0x5a8690 (701 B), the ROLLOVER line the spell cursor writes while
+    // a target is being picked - it is the one spells.obj body that
+    // never resolves anything, only names what the aimed hex would hit.
+    // The DC prototype (spells.cpp:5674) supplies all three parameter
+    // names; `spellId` is spelled SpellID rather than the roster's int
+    // because the body's whole shape is a jump table over the enum.
+    void SpellTargetMessage(SpellID spellId, int targetIndex,
+                            unsigned char first_target);       // 0x5a8690
     // The two spells.obj area collectors that fill a vector of HEXES -
     // the inner halves of the two vector<army*> collectors declared far
     // below, which call these and then map each hex to its stack. The
@@ -1723,7 +1839,25 @@ public:
     void CastSpell(SpellID spellId, int targetIndex,
                    unsigned char bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
-    void ShowSpellMessage(int bIsMonsterSpell, int spellId,
+    // WHO cast the spell ShowSpellMessage is about to announce. The DC
+    // roster calls the parameter `bIsMonsterSpell`, but retail's body
+    // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
+    // and each value picks a different NOUN for the message's subject:
+    //   1 names the acting stack, out of armies[actingSide][actingSlot];
+    //   2 names an ARTIFACT, out of akArtifactTraits;
+    //   everything else names the casting hero, heroes[currentSide].
+    // 1 is corroborated from outside this body - retail's ResetRound
+    // calls 0x5a8950 with exactly (1, SPELL_POISON, this) - and 2 by
+    // combatManager::SetNextArmy (0x465330), whose two auto-cast
+    // artifacts are precisely the two rows the 2-arm special-cases.
+    // The parameter keeps its int width and its roster name; the enum
+    // exists so the arms can be spelled as what they are.
+    enum ESpellCaster {
+        SPELL_CASTER_HERO = 0,
+        SPELL_CASTER_CREATURE = 1,
+        SPELL_CASTER_ARTIFACT = 2
+    };
+    void ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
                           army* targetArmy);                   // 0x5a8950
     // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
     // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
@@ -2347,5 +2481,6 @@ void GetMissileStartingPosition(int army_type, int x, int y, int facing,
 // CODEVIEW(..\stlport\stl_construct.h:59, dc 0x64800) void std::destroy(type_artifact* __pointer);
 // CODEVIEW(..\stlport\stl_construct.h:53, dc 0x6481c) void std::__destroy_aux();
 // CODEVIEW(..\stlport\stl_construct.h:53, dc 0x64820) void std::__destroy_aux();
+
 
 #endif  /* HOMM3_CMBTMGR_H */
