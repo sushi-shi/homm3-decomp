@@ -6779,6 +6779,22 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as retail emits it; treat it as a retail quirk, not a decode gap.
 // The `owner < 6` cap on the AI bonus is likewise anomalous (players run
 // to 8 everywhere else) and is likewise literal.
+//
+// Residual (81.76%, diagnosed 2026-08-20): the AI tail is a
+// TWO-predecessor join RETAIL KEEPS IN PLACE - it sits right after the
+// sea half with the one final ret at fn+0x211, and the land half reaches
+// it with a BACKWARD `jmp fn+0x1c8` (fn+0x2ab) - while our CL sinks the
+// join past the land half and duplicates an exit (3 rets vs retail's 2;
+// four sea-half guards land on br47 instead of br23). This is the same
+// kept-in-place-join layout class as ProcessKeyPress's walk block in
+// advmgr, now seen in a second function and a second TU.
+// MEASURED NEGATIVE, both banked so they are not respent:
+//   * nested single-return (mobility=1000000 in an else-wrap, one
+//     `return mobility`): 81.76 -> 65.91.
+//   * WRITE IT TWICE (the viewarmywindow join lever - AI tail duplicated
+//     into both halves): 81.76 -> 74.13; the cross-jumper merges only
+//     the epilogue, still 3 rets, and the join still sinks. The lever
+//     that cracked viewarmywindow does NOT generalise to this class.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {
