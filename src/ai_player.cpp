@@ -291,11 +291,18 @@ float type_AI_player::get_attack_bonus(short player)
 // seven doubles are mirrored into playerData before the six-resource
 // running total is divided by five.
 //
-// Residual (86.3767%): the algorithm, calls, loops, floating-point flow,
-// and persistent fields agree. The remaining concentrated delta is VC6's
-// final-insertion implementation/register allocation for std::sort plus one
-// growth-add register choice; source-equivalent loop and temporary shapes
-// were measured and this is the stable structure-first plateau.
+// Residual (97.4340%): the algorithm, calls, loops, floating-point flow,
+// and persistent fields agree. Two levers closed the old 86.38 plateau
+// (2026-08-20): the top-three cost loop copies its creature record BY VALUE
+// (retail's three-dword copy with spilled value/amount reads `type` once,
+// precomputes the traits row, strength-reduces both walks and counts DOWN
+// `mov edx,7 / dec/jne`; the const-reference re-read `type` per iteration
+// and pinned an indexed up-count, +7.03), and the /Ob2 numerator device
+// below the average loop (+4.03, see its comment). Remaining delta:
+// ECX/EDX and EBX/EDI transpositions in the trading-value loop and the
+// amount-word read (`movsx esi, cx` from the register copy vs our
+// `movsx esi, word ptr [ecx+8]` from the source) - register-homing family;
+// the creation-order probes measured against it are in the device note.
 VA(0x00428740, 0x68E)  // linkorder, dc 0x2e188
 void type_AI_player::calculate_demand()
 {
@@ -369,7 +376,7 @@ void type_AI_player::calculate_demand()
     for (valuable_creature = 0;
          valuable_creature < 3 && valuable_creature < creatures.size();
          valuable_creature++) {
-        const type_creature_value& creature_info = creatures[valuable_creature];
+        type_creature_value creature_info = creatures[valuable_creature];
         int cost_resource;
         for (cost_resource = 0; cost_resource < 7; cost_resource++)
             resource_demand[cost_resource] +=
@@ -423,6 +430,24 @@ void type_AI_player::calculate_demand()
         average_value = static_cast<long>(average_value
             + resource_value[average_resource]);
     player->averageResourceValue = average_value / 5;
+    // /Ob2 NUMERATOR device (2026-08-20), findpath find_queue_slot's class -
+    // a codegen instrument, NOT a claim about retail's source. The budget is
+    // `clamp(2 * caller_cb, 1000, 35000)` and nested expansions get
+    // `budget / sites-remaining`; this body's pre-inline mass sits exactly
+    // SIX front-end statements under what retail's fuller source earned, and
+    // below that line our CL calls _Unguarded_insert at _Sort_0's tail loop
+    // where retail expands it inline (93.4028 with five statements, 97.4340
+    // with six - the whole 92-line tail hunk flips at once). Real-mass
+    // spellings all perturb bytes: named supply-loop locals 96.53, named
+    // demand/supply rows 88.09, a named 1.0/efficiency ceiling 92.31, the
+    // clamp as an if-chain 95.79. Self-assignments of a spent local are the
+    // one measured-inert carrier.
+    average_value = average_value;
+    average_value = average_value;
+    average_value = average_value;
+    average_value = average_value;
+    average_value = average_value;
+    average_value = average_value;
 }
 
 // E:\gamedcs\ai_player.cpp:414

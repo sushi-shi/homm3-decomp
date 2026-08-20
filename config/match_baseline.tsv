@@ -203,7 +203,7 @@ ai_combat	?initialize_creatures@type_AI_combat_data@@QAEXNPBVhero@@@Z	91.0075	91
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
-ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
+ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0
