@@ -1412,8 +1412,13 @@ public:
     // neither is claimed. Behind a view because cmbtmgr.h reaches most
     // of the combat tree.
 #ifdef HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
-    long GetNextChainLightningTarget(const army* target, long excluded);
-                                                              // 0x5a61f0
+    // Chain Lightning's bounce search: the nearest stack, by straight-line
+    // screen distance from the stack the bolt just left, that the
+    // `effected` row has not already recorded. Answers a gridIndex, or -1
+    // when nothing qualifies. Parameter names are from the reconstructed
+    // body (0x5a61f0 at 91.10%), not from the xref graph's guess.
+    long GetNextChainLightningTarget(const army* last_target,
+                                     long use_random);         // 0x5a61f0
     void ClearEffects();                                      // 0x5a66b0
 #endif
     unsigned char has_ranged_advantage(
@@ -1606,16 +1611,17 @@ public:
     // by-value _cpp_max, whose signature retail's operand-address select
     // proves.
     long get_distance(hex_point start, hex_point stop) const;
-    // 0x5a61f0, Chain Lightning's bounce search: the nearest stack, by
-    // straight-line screen distance from the stack the bolt just left,
-    // that the `effected` row has not already recorded. Answers a
-    // gridIndex, or -1 when nothing qualifies.
-    long GetNextChainLightningTarget(const army* last_target,
-                                     long use_random);         // 0x5a61f0
 #endif
-    // The last parameter is NOT a char: get_damage_value materialises
-    // `creature_spell != 0` with xor/setne into a full dword before
-    // pushing it, which a char-typed parameter would never need.
+    // REFUTED 2026-08-20 - this comment used to open "the last parameter is
+    // NOT a char", resting on get_damage_value materialising
+    // `creature_spell != 0` with xor/setne into a full dword before pushing
+    // it. That xor/setne is the CALLER's: ai_tactical writes
+    // `long creature_cast = creature_spell != 0;` as a named long local, and
+    // a long pushes identically into a char slot, so it says nothing about
+    // the callee's type. find_resurrection_target settles it the other way -
+    // it forwards a genuinely char parameter into that slot twice,
+    // unwidened. Slot 6 is `unsigned char`, as the DC prototype said all
+    // along, and the declaration below now matches.
     // Slot 4 RETYPED AND RENAMED 2026-08-20, `long hex` -> `unsigned char
     // redirected`. Every call site in ai.cpp and ai_tactical.cpp passes a
     // literal 0 here, which pushes identically under either type, so no
