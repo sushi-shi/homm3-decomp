@@ -314,6 +314,7 @@ struct type_AI_spellcaster {
     void consider_earthquake(type_spell_choice* choice);
     void consider_resurrect(type_spell_choice* choice);
     void consider_spell(type_spell_choice* choice);
+    unsigned char cast_spell(unsigned char retreating);
     void consider_teleport(type_spell_choice* choice);
     void consider_sacrifice(type_spell_choice& choice,
                             const army* healedArmy, long targetHex) const;

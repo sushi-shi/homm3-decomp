@@ -484,7 +484,12 @@ public:
     // reason its two neighbours are.
     int field_40;                     // +0x40
     int field_44;                     // +0x44
-    char pad_0048[0x4];
+    // The order's fourth slot, and ai_tactical's cast_spell (0x43c800)
+    // is the writer that slices it out of the pad: it stamps the
+    // chosen spell into field_40, its target hex into field_44 and the
+    // choice's own field_18 here, all three behind field_3c = 1.
+    // Address ordinal for the same reason its neighbours are.
+    int field_48;                     // +0x48
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and

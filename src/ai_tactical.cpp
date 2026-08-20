@@ -42,6 +42,8 @@
 // consider_spell's summon arm asks get_elemental_type which creature
 // the spell would put on the field.
 #include "spells.h"
+// cast_spell jitters the chosen spell's value through Random().
+#include "misc.h"
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -70,6 +72,17 @@
 // get_breath_bonus) while raising nothing. Declared file-locally so
 // the TU does not pull the STL surface in; ai_combat.cpp carries the
 // same pair.
+// Artifact 83, the id cast_spell (0x43c800) asks
+// hero::IsWieldingArtifact for on BOTH heroes before refusing every
+// spell above traits level 2 - Recanter's Cloak's rule and no other
+// artifact's. TU-LOCAL for the reason ai_combat.cpp's identical
+// constant is (and this is the third TU to carry it): adding an
+// enumerator to armygrp.h's artifact roster measurably perturbs
+// unrelated units through the shared type environment, and this one
+// would also collide with ai_spellvalue.h's own file-scope constant in
+// every TU that takes both.
+const int ARTIFACT_RECANTERS_CLOAK = 0x53;
+
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -4142,13 +4155,6 @@ long type_AI_spellcaster::get_caliph_value(const army* target)
 
 #if 0  // @carcass
 
-// E:\gamedcs\ai_tactical.cpp:3377
-DC_ONLY(0x425a8, 0x68)
-void type_AI_spellcaster::check_simulation()
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_tactical.cpp:3398
 DC_ONLY(0x42610, 0xA0)
 unsigned char type_AI_spellcaster::spells_not_required()
@@ -4156,12 +4162,118 @@ unsigned char type_AI_spellcaster::spells_not_required()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:3420
+// The top of the spell AI: walk every spell the hero actually knows,
+// price it through consider_spell, jitter the price, and keep the
+// best - then hand the winner to combatManager's pending-order slots.
+//
+// Four refusals before the pricing, and two of them corroborate
+// domains this tree already carries. `field_53c0 == 2` refuses every
+// spell above traits level 1 - which is Cursed Ground's published
+// rule and the same code cmbtmgr.h already records as refusing
+// creature casts. Either hero wearing artifact 83 refuses every spell
+// above level 2 - Recanter's Cloak. The other two are the spell's own
+// traits bits: bit 0 gates it at all, and bit 9 marks the spells that
+// still make sense while RETREATING.
+//
+// The value is scaled by how much mana is left: with seven casts or
+// more in the pool the spell keeps 5/2 of its value, and below that it
+// is scaled by `sqrt(mana / cost)`. Then Random(75, 100) percent of
+// that is what actually competes.
 VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
 unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
 {
-    // @stub
+    type_spell_choice best;
+    long power = gpCombatManager->spellPower[side];
+    long duration = power;
+    const armyGroup* enemy_group = gpCombatManager->armyGroups[enemy_side];
+    unsigned char inhibited = 0;
+    if (our_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+        inhibited = 1;
+    if (enemy_hero) {
+        if (enemy_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+            inhibited = 1;
+    }
+    unsigned char healing_only = 1;
+    if (!field_1c) {
+        healing_only = 0;
+    } else {
+        const army* our_army = gpCombatManager->armies[side];
+        long count = gpCombatManager->numArmies[side];
+        for (; count-- > 0; ++our_army) {
+            unsigned char immune = static_cast<unsigned char>(
+                static_cast<unsigned>(our_army->creatureId) >> 21);
+            if (immune & 1)
+                continue;
+            if (our_army->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (our_army->AI_expected_damage + our_army->topCreatureDamage
+                    >= our_army->hitPoints) {
+                healing_only = 0;
+                break;
+            }
+        }
+    }
+    if (our_hero)
+        duration = our_hero->GetSpellDurationBonus() + power;
+    if (retreating)
+        params.kills_only = 1;
+    for (long spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (!our_hero->available_spells[spell])
+            continue;
+        if ((akSpellTraits[spell].field_c & 1) == 0)
+            continue;
+        if (retreating) {
+            if ((akSpellTraits[spell].field_c & 0x200) == 0)
+                continue;
+        }
+        if (gpCombatManager->field_53c0
+                == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
+            if (akSpellTraits[spell].level > 1)
+                continue;
+        }
+        if (inhibited) {
+            if (akSpellTraits[spell].level > 2)
+                continue;
+        }
+        long mastery = our_hero->get_spell_level(spell,
+                                                 gpCombatManager->field_53c0);
+        long cost = our_hero->GetManaCost(spell, enemy_group,
+                                          gpCombatManager->field_53c0);
+        if (cost > our_hero->mana)
+            continue;
+        if (healing_only) {
+            if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
+                continue;
+        }
+        type_spell_choice choice(spell, mastery, power, duration);
+        consider_spell(&choice);
+        if (choice.value <= 0)
+            continue;
+        if (our_hero->mana >= cost * 7)
+            choice.value = choice.value * 5 / 2;
+        else
+            choice.value = static_cast<long>(
+                sqrt(static_cast<double>(our_hero->mana / cost)) * choice.value);
+        choice.value = Random(75, 100) * choice.value / 100;
+        if (choice.value > best.value)
+            best = choice;
+    }
+    if (best.spell != -1) {
+        if (best.field_20 || retreating) {
+            gpCombatManager->field_3c = 1;
+            gpCombatManager->field_40 = best.spell;
+            gpCombatManager->field_44 = best.target;
+            gpCombatManager->field_48 = best.field_18;
+            return 1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // ..\stlport\stl_deque.h:128
 DC_ONLY(0x42994, 0x2C)
