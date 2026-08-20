@@ -697,9 +697,7 @@ public:
     // Behind a gate of its own because townmgr.cpp is the only consumer
     // in the admitted surface and this header's declarator count is
     // load-bearing for every unit that includes it.
-#ifdef HOMM3_TOWNMGR_GRAIL_DECLS
     unsigned char CheckForGrailBuildingWin();
-#endif
     // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
     // hero::GiveArtifact asks it as
     // `gpGame->mapHeader.victoryCondition.CheckForArtifactWin()` - the
@@ -1407,7 +1405,7 @@ public:
 // ROLE is retail-proven while the name is not, and stays ordinal. Split
 // out of pad_00090 in the two gated views only; the ungated view keeps
 // its single pad and so sees no declarator at all.
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS)
     char pad_00000[4];
     // +0x04 and +0x4a, the current draw mask and scenario prohibition mask
     // used by game::GetRandomSpell.
@@ -1415,7 +1413,7 @@ public:
     unsigned char spellDisabled[70];
     unsigned char field_90;
     char pad_00091[0x1f3c3];
-#elif defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
+#else
     char pad_00000[0x4a];
     // +0x4a, one scenario-level prohibition byte per retail town spell.
     // mapcell.obj joins this arm for readScholarData, which rolls a random
@@ -1447,8 +1445,6 @@ public:
 #else
     char pad_00091[0x1f3c3];
 #endif
-#else
-    char pad_00000[0x1f454];
 #endif
     short difficultyRating;
     char pad_1f456[2];
@@ -1832,15 +1828,12 @@ public:
 #endif
     void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
-        || defined(HOMM3_GAME_RANDOM_OBJECTS_DECLS)
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
     // retail-sensitive game member population in the other compilands.
     // game.obj joins on its own gate for ProcessRandomObjects, which
     // calls it once per random-object case.
     void ConvertObject(NewmapCell* tempCell);
-#endif
 #ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
     // The random-object pass and the monster roll it drives. Both bodies
     // are claimed in game.cpp; the declarators are held on this gate
@@ -1862,8 +1855,6 @@ public:
     void ShowMoraleInfo(const hero* who, int dialogType);
     void ShowLuckInfo(const hero* who, int dialogType);
 #endif
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
-        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
     // Retail-only 0x49c720. SwapHeroes, hero::Deallocate (0x4d9ec0) and
     // playerData::add_garrison_hero (0x4b9fc0) all prove this
     // three-argument member queues a hero-state record; no surviving name
@@ -1871,7 +1862,6 @@ public:
     // compilands that reach it.
     void GameFn_0049C720(hero* who, signed char owner,
                          unsigned char state);
-#endif
     // 0x4c86a0. town::hire passes the player id and consumed two-slot
     // recruit index; hero::hire uses the same closeout call. The body
     // remains outside the admitted surface.
@@ -1985,7 +1975,6 @@ public:
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
     hero* GetCurrHero();
     town* GetCurrTown();
-#if defined(HOMM3_TOWNMGR_VIEWARMY_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
     // town page opens over a troop slot; declared here for
     // townManager::DoCommand's two call sites, not reconstructed. The
@@ -1994,8 +1983,6 @@ public:
     void ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
                   const town* this_town, int x, int y,
                   unsigned char show_dismiss, unsigned char isQuickView);
-#endif
-#ifdef HOMM3_TOWNMGR_TOWN_NAME_DECLS
     // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
     // inline-only member: retail has no out-of-line row and
     // townManager::SetupTown 0x5c68a4 expands it in place - the towns
@@ -2011,7 +1998,6 @@ public:
     {
         return towns[townId].cName.c_str();
     }
-#endif
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.

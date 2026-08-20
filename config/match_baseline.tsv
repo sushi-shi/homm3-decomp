@@ -765,7 +765,7 @@ events	?get_treasure_data@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	100.0000	100.0000	0xa7250
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
@@ -998,7 +998,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
 # unit's reference differently and the comparison moves with our
 # object unchanged. The header audit above found nothing because
 # there was nothing in the headers to find.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.7935	57.8826	57.8826	0xe3070
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.8826	57.8826	57.8826	0xe3070
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
@@ -1328,7 +1328,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	94.0741	100.0000	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
@@ -1858,7 +1858,7 @@ town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	
 town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
-town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60
+town	?get_growth_rate@town@@QAEFF@Z	88.4737	100.0000	100.0000	0x1bfb60
 town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230

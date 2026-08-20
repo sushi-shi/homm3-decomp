@@ -8,7 +8,6 @@
 // explicit `#include "town.h"`), and it stays defined for the whole
 // compiland: includes are TU-local, so no other object sees it. town.h's
 // own note measures what declaring it unconditionally would cost.
-#define HOMM3_TOWN_HASBUILDING_API
 #include <va.h>
 // VC6's own shipped Dinkumware headers - retail links Dinkumware, NOT
 // STLport (P2.3, answered 2026-08-07 and now byte-proven: see the COMDAT

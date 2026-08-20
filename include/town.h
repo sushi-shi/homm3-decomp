@@ -143,7 +143,6 @@ struct type_horde_effect {
 };
 SIZE(type_horde_effect, 8);
 
-#ifdef HOMM3_TOWN_OBJ_DECLS
 // Retail town.obj view of the map setup record. initialize_spells copies the
 // first 70-bit set into the town and uses the second as forced guild picks.
 class TownExtra {
@@ -153,7 +152,6 @@ public:
     std::bitset<70> fixedSpells;
 };
 SIZE(TownExtra, 0x88);
-#endif
 
 // Head model. sizeof(town) == 360 is now closed from BOTH ends: the
 // ai_player town-array stride measured 360 last lane, and `available`
@@ -235,7 +233,6 @@ public:
     // int-to-enum retype of an EXISTING member, so no view of this class
     // gains or loses a declarator.
     TCreatureType summoningType;
-#if defined(HOMM3_TOWN_SUMMONING_DECLS)
     // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
     // straight after `summoningType` at 52.
     // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
@@ -248,24 +245,13 @@ public:
     // the tree's documented include-set canary and one extra member
     // anywhere in town takes initialize_game_data 100.0 -> 96.09.
     short summoningPopulation;
-#  if defined(HOMM3_TOWN_OBJ_DECLS)
     char pad_42[2];
-#  else
-    char pad_42[0x82];
-#  endif
-#elif defined(HOMM3_TOWN_OBJ_DECLS)
-    char pad_40[0x4];
-#else
-    char pad_40[0x84];
-#endif
-#ifdef HOMM3_TOWN_OBJ_DECLS
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
     int mageGuildSpells[5][6];
     signed char mageGuildSpellCounts[5];
     char pad_c1[3];
-#endif
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
     // Its element semantics are not yet reached, so the name is ordinal.
@@ -338,7 +324,6 @@ public:
     // landed anyway because the Dreamcast evidence for the accessor is
     // solid and the gating requirement is now measured, but the next
     // lane should treat the caller list as UNPROVEN and score each one.
-#ifdef HOMM3_TOWN_LOCATION_DECLS
     type_point get_location() const
     {
         type_point point;
@@ -347,7 +332,6 @@ public:
         point.z = mapZ;
         return point;
     }
-#endif
     // DC `town::HasBuilding` (dc 0x1fe14, E:\gamedcs\Town.h:324) - an
     // INLINE MEMBER of this header, not a town.obj method. Retail's
     // out-of-line copy at 0x4305a0 is the COMDAT VC6 emits for the call
@@ -373,12 +357,10 @@ public:
     //     `town_HasBuilding base x0 vs retail x1`). HOMM3_TOWN_OBJ_DECLS
     //     therefore buys the declaration only, which is what keeps
     //     retail's call.
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_TOWN_HASBUILDING_API)
     // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
     // const), and retail's thiscall is identical either way.
     unsigned char HasBuilding(int buildingId,
                               unsigned char check_included) const;
-#endif
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
@@ -386,7 +368,6 @@ public:
     // no-fort band at +18; the town-state and small-icon flags select the
     // adjacent variants. DC's `_N` parameter proves native bool.
     int GetPortraitFrame(bool is_small) const;
-#ifdef HOMM3_TOWN_SUMMONING_DECLS
     // 0x5bd750, the body immediately after GetPortraitFrame and the DC
     // roster's next town.cpp row (town::SetSummoningGenerator, dc
     // 0x165da4). Void and argument-less: retail calls it with the town
@@ -396,8 +377,6 @@ public:
     // constructor is the only admitted caller and town.cpp must not
     // see a new declarator.
     void SetSummoningGenerator();
-#endif
-#ifdef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
     // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
     // (dc 0x165da4) and town::town (dc 0x166408) is
     // ApplySpecialBuildingEffect, and the retail bracket has exactly one
@@ -407,7 +386,6 @@ public:
     // hero right after the tavern hire, and on a gate of its own because
     // town.cpp must not see a new declarator.
     void ApplySpecialBuildingEffect(hero* townHero);
-#endif
     // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
     // gHordeBuildings row is int and an enum return would need a cast
     // (the UpgradedDwellingID precedent).
@@ -418,11 +396,9 @@ public:
     // it follows get_castle_growth_bonus' neighbour rather than
     // asserting one.
     long get_legion_bonus(long dwelling);
-#ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x5bf900. Per-tier artifact growth contributed by the two heroes
     // associated with this town.
     long TownFn_005BF900(long dwelling);
-#endif
     // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
     // growth for one dwelling slot.
     short get_growth_rate(short dwelling);
@@ -439,14 +415,12 @@ public:
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id create_building(type_building_id building);
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // 0x5bec60. Downgrades this town's duplicate Capitol when another
     // owned town already carries one. The declaration is scoped by VIEW
     // because member population affects VC6 output elsewhere; events.obj
     // joins for advManager::TownEvent, which runs it immediately after
     // ClaimTown on both of its capture paths.
     void destroy_extra_capitol();
-#endif
     // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
     // with the object occupying the town's dock square.
     void update_shipyard();
@@ -483,31 +457,23 @@ public:
 // (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
 // after PlaceInMap. Widening the existing guard rather than adding a
 // second declarator keeps every other includer's view of town unchanged.
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
-    || defined(HOMM3_GAME_TOWN_HEROES_DECLS)
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
     void GiveSpells(hero* forceHero);
-#endif
 // advmgr.obj joins the gate for View alone: DoAdvCommand's two town arms
 // call it, one on gpGame->GetTown(currTownId) and one on the town the
 // current hero obscures. The guard is SPLIT around the single declarator
 // so no other includer's view of this class widens.
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
-    || defined(HOMM3_ADVMGR_OBJ_DECLS)
     // 0x5be210. Enters the shared town manager and restores the visiting
     // hero as the adventure-map context on return.
     void View(int bAlreadyFaded);
-#endif
-#ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x5c12e0. Charges and places one of the player's tavern offers.
     void hire(hero* new_hero, long player_id);
     // 0x5be450. Exchanges the garrison and visiting heroes.
     void SwapHeroes();
     // 0x5be600. Rolls and publishes the five Mage Guild spell rows.
     void initialize_spells(const TownExtra* town_setup);
-#endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void Deallocate();
@@ -532,19 +498,16 @@ public:
     // and only ONE retail row exists for the two - /OPT:ICF folded the
     // identical bodies.
     const class armyGroup& get_army() const;
-#if defined(HOMM3_TOWN_SUMMONING_DECLS)
-    // The NON-const half of that DC pair, declared 2026-08-14 for
-    // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
-    // hands the town's garrison straight to a `recruitUnit`, whose first
-    // parameter is a plain `armyGroup*`, and retail's `call 0x5c1460 /
-    // push eax` is that overload's return used as a pointer - which is
-    // also the shape the DC declares (`armyGroup* town::get_army()`).
-    // Never defined: /OPT:ICF folded the two bodies onto the one row the
-    // const half already claims. Behind the SUMMONING gate, which only
-    // townmgr.cpp defines, so no other view of this class gains a
-    // declarator (the initialize.obj include-set canary).
-    class armyGroup* get_army();
-#endif
+    // The NON-const half of that DC pair. Its RETURN TYPE follows the
+    // DC mangled name (?get_army@town@@QAAAAVarmyGroup@@XZ - AAV, a
+    // REFERENCE), not the dump's C prototype printer, which rendered it
+    // `armyGroup*` and briefly had this row spelled as a pointer while
+    // the two spellings lived in separate views (view audit 2026-08-20).
+    // Retail's `call 0x5c1460 / push eax` at the summoning-portal row is
+    // this overload's return with `&` applied at the call site. Never
+    // defined: /OPT:ICF folded the two bodies onto the one row the
+    // const half already claims.
+    class armyGroup& get_army();
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp
@@ -616,7 +579,6 @@ extern __int64 bitNumber[];
 
 // The Town.h inline declared above. Placed here because it indexes
 // bitNumber, which the class definition precedes.
-#ifdef HOMM3_TOWN_HASBUILDING_API
 inline unsigned char town::HasBuilding(int buildingId,
                                        unsigned char check_included) const
 {
@@ -624,7 +586,6 @@ inline unsigned char town::HasBuilding(int buildingId,
         return (active & bitNumber[buildingId]) != 0;
     return (built & bitNumber[buildingId]) != 0;
 }
-#endif
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.
@@ -665,7 +626,6 @@ enum ETownConstants {
 // One-based dwelling tier used by the retail artifact-growth helper.
 // Tier one has no corresponding growth artifact, so only the switch's
 // populated domain is named here.
-#ifdef HOMM3_TOWN_OBJ_DECLS
 enum ETownDwellingTier {
     TOWN_DWELLING_TIER_2 = 2,
     TOWN_DWELLING_TIER_3 = 3,
@@ -673,7 +633,6 @@ enum ETownDwellingTier {
     TOWN_DWELLING_TIER_5 = 5,
     TOWN_DWELLING_TIER_6 = 6
 };
-#endif
 
 // Retail .bss 0x6a74f4, the per-town-type name-pointer table
 // town::GetTypeName (0x5c1450) hands out: `movsx eax,[this+4]` then
