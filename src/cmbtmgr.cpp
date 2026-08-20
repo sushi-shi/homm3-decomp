@@ -1904,18 +1904,31 @@ void combatManager::ResetHitByCreature()
 // wrong root cause, because a 191-byte inline moves every allocation
 // after it.
 //
-// Residual (67.19%), and the three parts are now separately named:
-//   * OUR LOOP IS ROTATED AND RETAIL'S IS NOT. Retail has ONE Pick call,
-//     at the top, with every rejection jumping back to it; our CL emits a
-//     SECOND copy at the bottom (base x2 vs retail x1). The goto form is
-//     already what this body is written in, so VC6's "goto flow is not
-//     rotated" rule does not hold for a loop whose header is a call.
-//   * retail destroys the picker OUT OF LINE on the failure path (a call
-//     to 0x46a650) and inlines the operator delete only on the success
-//     path; our CL inlines it on both.
-//   * retail inlines TObstacleVector::size() where we emit a call.
-// Tried and rejected earlier: break + re-test, while-loop form, and an
-// int (rather than byte) odd-row flag.
+//
+// 67.19 -> 74.84% 2026-08-20, both points off the same three-part
+// residual the note below named, and both fixed with the pin rather than
+// against it:
+//   * HOIST WHAT RETAIL KEEPS INLINE OUT OF A PINNED STATEMENT. The
+//     PlaceObstacle pin also de-inlined the `obstacles.size() - 1` in
+//     the same statement, which retail expands here; landing it in a
+//     named local ahead of the pragma is worth 6.50 (67.1937 ->
+//     73.6911).
+//   * PIN THE FAILURE-PATH RETURN. Retail destroys the picker OUT OF
+//     LINE there (a call to 0x46a650) and inlines the operator delete
+//     only on the success path; a scoped inline_depth(0) on the
+//     `return 0;` statement alone reproduces that split, +1.15
+//     (73.6911 -> 74.8377).
+//
+// Residual (74.84%): ONE part left, and it is the loop shape. Retail has
+// ONE Pick call at the top with every rejection jumping back to it; our
+// CL emits a SECOND copy at the bottom (base x2 vs retail x1), which is
+// also the whole 19-vs-18 conditional-branch gap and the one remaining
+// operator delete. The goto form is already what this body is written
+// in, so VC6's "goto flow is not rotated" rule does not hold for a loop
+// whose header is a call. Note that the SIBLING wants the opposite:
+// SetupAndLoadObstacles' reject loop needs TWO Pick sites and gained
+// 1.64 when it got them. Tried and rejected earlier: break + re-test,
+// while-loop form, and an int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
@@ -1925,7 +1938,9 @@ unsigned char combatManager::place_obstacle(int obstacle_id)
 next_hex:
     hex = picker.Pick();
     if (hex < 0x12)
+#pragma inline_depth(0)
         return 0;
+#pragma inline_depth()
     {
         int row = hex / COMBAT_GRID_ROW_STRIDE;
         if (shape->minRow > row)
@@ -1970,19 +1985,133 @@ next_hex:
         obstacle.spell_damage = 0;
         obstacle.field_10 = 0;
         obstacle.field_14 = -1;
+        // OVER-INLINE, pinned. insert is defined in this TU so that
+        // SetupAndLoadObstacles can expand it the way retail does; retail
+        // CALLS it here (0x46aeb0), and without the pin our /Ob2 expands
+        // it at both sites.
+#pragma inline_depth(0)
         obstacles.insert(obstacles.end, 1, obstacle);
+#pragma inline_depth()
         // Retail CALLS PlaceObstacle here - predict-inline reads it as
         // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
         // inline and retail was not. Scoped to this one statement so that
         // PlaceAllObstacles, which is already exact WITH the call, is not
         // disturbed (the auto_inline(off)-around-the-callee form would
         // have reached it too).
+        int obstacle_slot = obstacles.size() - 1;
 #pragma inline_depth(0)
-        PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+        PlaceObstacle(&obstacle, obstacle_slot, hex, 2);
 #pragma inline_depth()
         return 1;
     }
     goto next_hex;
+}
+
+// Dinkumware's three-arm `vector<T>::insert(iterator, size_type, const T&)`
+// over the hand-modelled obstacle vector, plus the two uninitialised-range
+// helpers it reduces to. All three are retail rows of this compiland and
+// all three are spelled here rather than in cmbtmgr.h so that only this TU
+// sees a body: retail's own cmbtmgr.obj carries BOTH forms of insert -
+// SetupAndLoadObstacles expands it, place_obstacle calls the out-of-line
+// copy - which is the ordinary /Ob2 budget split between a 1543-byte
+// caller and a 579-byte one.
+//
+// The shapes are read straight off 0x46aeb0: `(capacity - end) / 24`
+// against an UNSIGNED count (`jae`), the grow arm's
+// `size() + (count < size() ? size() : count)`, Dinkumware `_Allocate`'s
+// `if (n < 0) n = 0` before `operator new(n * 24)`, the null-guarded
+// size() at both ends, and the three-arm tail
+// (_Ucopy / copy_backward / fill) with the element moves as `rep movsd 6`.
+// Destroy stays DECLARED-NOT-DEFINED: retail's inline expansion in
+// SetupAndLoadObstacles calls it (the ICF-folded `ret 8` at 0x404140)
+// while the out-of-line body has it inlined away to nothing, which is the
+// same budget split one level down.
+//
+// `inline` IS LOAD-BEARING, and this is the finding to carry away: with a
+// plain out-of-class definition VC6's /Ob2 auto-inliner does NOT take a
+// 740-byte body - the score of every caller stayed identical to the digit
+// - while it does take the two 59/49-byte helpers. Marking insert `inline`
+// is what makes SetupAndLoadObstacles expand it.
+//
+// LEFT UNCLAIMED ON PURPOSE. Retail's own rows are 0x46aeb0 (740 B),
+// 0x46b1a0 (59 B) and 0x46b1e0 (49 B), all three inside cmbtmgr's span and
+// all three reachable by call edge from claimed bodies - so a claim would
+// be defensible - but they are the compiler-emitted STL container surface
+// this file's header already lists as the excluded COMDAT class, and
+// objdiff does not score a base symbol with no delinked counterpart
+// anyway (measured: defining all three added no report row at all). The
+// three `#pragma inline_depth(0)` pins below therefore cost nothing here -
+// they shape only the INLINE copy SetupAndLoadObstacles carries, and the
+// unclaimed out-of-line bodies are free to diverge from retail's, which
+// expands _Ucopy/_Ufill into all three arms.
+inline void combatManager::TObstacleVector::insert(TObstacle* where,
+                                                   unsigned count,
+                                                   const TObstacle& value)
+{
+    if (capacity - end < count) {
+#pragma inline_depth(0)
+        unsigned grown = size() + (count < static_cast<unsigned>(size())
+                                       ? static_cast<unsigned>(size())
+                                       : count);
+#pragma inline_depth()
+        int raw = static_cast<int>(grown);
+        if (raw < 0)
+            raw = 0;
+        TObstacle* moved = static_cast<TObstacle*>(
+            ::operator new(raw * sizeof(TObstacle)));
+#pragma inline_depth(0)
+        TObstacle* head = _Ucopy(begin, where, moved);
+        _Ufill(head, count, value);
+        _Ucopy(where, end, head + count);
+#pragma inline_depth()
+        Destroy(begin, end);
+        ::operator delete(begin);
+        capacity = moved + grown;
+#pragma inline_depth(0)
+        end = moved + size() + count;
+#pragma inline_depth()
+        begin = moved;
+    } else if (static_cast<unsigned>(end - where) < count) {
+#pragma inline_depth(0)
+        _Ucopy(where, end, where + count);
+        _Ufill(end, count - (end - where), value);
+#pragma inline_depth()
+        for (TObstacle* filled = where; filled != end; ++filled)
+            *filled = value;
+        end += count;
+    } else if (0 < count) {
+#pragma inline_depth(0)
+        _Ucopy(end - count, end, end);
+#pragma inline_depth()
+        {
+            TObstacle* source = end - count;
+            TObstacle* target = end;
+            while (source != where)
+                *--target = *--source;
+        }
+        for (TObstacle* filled = where; filled != where + count; ++filled)
+            *filled = value;
+        end += count;
+    }
+}
+
+// `allocator.construct(dest, *first)` is placement new, and VC6 lowers a
+// placement new with a NULL TEST on the destination - which is the
+// `test eax,eax / je` inside both of these loops at 0x46b1a0 and
+// 0x46b1e0, not a defensive check in the source.
+combatManager::TObstacle* combatManager::TObstacleVector::_Ucopy(
+    const TObstacle* first, const TObstacle* last, TObstacle* dest)
+{
+    for (; first != last; ++dest, ++first)
+        new (static_cast<void*>(dest)) TObstacle(*first);
+    return dest;
+}
+
+void combatManager::TObstacleVector::_Ufill(TObstacle* first, unsigned count,
+                                            const TObstacle& value)
+{
+    for (; 0 < count; --count, ++first)
+        new (static_cast<void*>(first)) TObstacle(value);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2859
@@ -2002,46 +2131,51 @@ next_hex:
 //     retail falls THROUGH to Random on `jl` and skips on `je`, and the
 //     positive `!(a && b)` spelling emits those two swapped;
 //   * the placement loop is `while (placed < budget)` with `placed`
-//     pre-set to 0, which VC6 folds to a `test/jle` on budget alone,
-//     and the inner re-draw is a do/while rather than a `continue` -
-//     the same shape PlaceAllObstacles already proves, and what puts
-//     the SECOND `id < 0` test in front of place_obstacle.
+//     pre-set to 0, which VC6 folds to a `test/jle` on budget alone.
+//     The inner re-draw is the ROTATED two-Pick shape PlaceLargeObstacle
+//     already carries - a leading `Pick()` and a second one at the foot
+//     of the reject loop, not a do/while with one site: retail emits two
+//     out-of-line Pick calls and a do/while can only ever emit one
+//     (89.8722 -> 91.5113 on that rewrite alone). The redundant
+//     `id < 0` re-test in front of place_obstacle survives it.
 //
-// Residual (64.8103%). The semantics are complete - every branch, both
-// tables, both loops and all three ComputeSpellDamage arms - and what
-// is left is ONE inliner decision that is a HEADER change, not a
-// spelling:
+// 64.8103 -> 91.5113% 2026-08-20, and the whole 26.7 points is the
+// INLINE STRUCTURE the note below had already diagnosed correctly. What
+// had been missing was the mechanism, and there are two:
 //
-//   RETAIL EXPANDS TObstacleVector::insert INLINE HERE, and it is
-//   roughly 460 of this body's 1543 bytes. Our header declares insert
-//   without defining it (cmbtmgr.h), precisely so place_obstacle keeps
-//   retail's CALL, so we can only ever emit a call. The proof is in the
-//   call census: retail emits 25 out-of-line calls to our 13, and the
-//   twelve extra are exactly the pieces of an expanded Dinkumware
-//   vector::insert - _Ucopy x4 (0x46b1a0, thiscall, ret 0xc, returns
-//   the destination end), _Ufill x2 (0x46b1e0, thiscall, ret 0xc),
-//   size() x2 out-of-line (0x517750), one operator new, one Destroy
-//   (the ICF-folded `ret 8` at 0x404140) and one operator delete, with
-//   the fill/copy_backward pairs expanded as `rep movsd 6`. Retail's
-//   cmbtmgr.obj carries BOTH forms: place_obstacle calls the
-//   out-of-line copy at 0x46aeb0 while this body inlines it, which is
-//   the ordinary /Ob2 budget split (this caller is 1543 B, that one
-//   579 B). Closing it means defining insert, declaring _Ucopy/_Ufill
-//   as TObstacleVector members, and pinning place_obstacle's own call
-//   site - a header change large enough to want its own measurement
-//   pass against place_obstacle, RemoveObstacle and PlaceAllObstacles.
+//   * RETAIL EXPANDS TObstacleVector::insert INLINE HERE, roughly 460 of
+//     this body's 1543 bytes, and it CALLS the out-of-line copy at
+//     0x46aeb0 from place_obstacle - the ordinary /Ob2 budget split
+//     between a 1543-byte caller and a 579-byte one. insert, _Ucopy and
+//     _Ufill are now defined in this TU (below place_obstacle) with the
+//     helpers' call sites pinned, and place_obstacle's own insert site
+//     pinned, which reproduces retail's call census exactly: _Ucopy x4,
+//     _Ufill x2, one Destroy, one operator new, one operator delete,
+//     with the fill/copy_backward pairs expanded as `rep movsd 6`.
+//     `inline` ON THE DEFINITION IS LOAD-BEARING: without it VC6's /Ob2
+//     leaves the 740-byte body a call at BOTH sites and the score does
+//     not move by one digit - auto-inlining reaches the small helpers
+//     (59 B, 49 B) but not a body that size.
 //
-// TRIED AND REJECTED - the PlaceObstacle pin, twice. predict-inline
-// reports `PlaceObstacle base x0 vs retail x1` here, the identical
-// reading that paid +18.10 on place_obstacle, and the identical
-// `#pragma inline_depth(0)` LOSES 5.89 (64.8103 -> 58.9216). The
-// pragma also de-inlines the `obstacles.size() - 1` in the same
-// statement, which retail expands inline at this site; hoisting the
-// size() into a local ahead of the pragma recovers part of it and is
-// still worse (61.5917). Left unpinned. This is the second measured
-// case in this tree of a correctly-diagnosed inline divergence whose
-// documented fix ranks the wrong way - keep only what the ratchet
-// agrees with.
+//   * THE PlaceObstacle PIN IS RIGHT AFTER ALL, and the note that
+//     rejected it was measuring a different function. With insert still
+//     a call the identical `#pragma inline_depth(0)` LOST 5.89
+//     (64.8103 -> 58.9216); with insert expanded it GAINS 10.9
+//     (78.9588 -> 89.8722). A pin's verdict is only valid against the
+//     inline structure it was measured in, so re-try a rejected pin
+//     after any earlier inline decision changes. `obstacles.size() - 1`
+//     is hoisted into a named local ahead of the pragma because retail
+//     expands it at this site.
+//
+// Residual (91.5113%): 48 conditional branches against retail's 49 and
+// 26 out-of-line calls against 25, with no UNDER- or OVER-inline row
+// left. The one count that still differs is size(): retail calls it
+// twice out of line (0x517750) inside the expansion and we call it four
+// times, because the pragma is statement-granular and the grow arm's
+// `size() + (count < size() ? size() : count)` is one statement with
+// three uses. Dropping the fourth (un-pinning `end = moved + size() +
+// count`) measures 86.6144, i.e. WORSE than the count-mismatched form,
+// so the surplus is kept.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::SetupAndLoadObstacles()
 {
@@ -2115,7 +2249,10 @@ void combatManager::SetupAndLoadObstacles()
                 new_landmine.field_10 = 0;
                 new_landmine.field_14 = 0x3b;
                 obstacles.insert(obstacles.end, 1, new_landmine);
-                PlaceObstacle(&new_landmine, obstacles.size() - 1, hex, 8);
+                int landmine_slot = obstacles.size() - 1;
+#pragma inline_depth(0)
+                PlaceObstacle(&new_landmine, landmine_slot, hex, 8);
+#pragma inline_depth()
             }
         }
 
@@ -2160,14 +2297,12 @@ void combatManager::SetupAndLoadObstacles()
     int placed = 0;
     TPickANumber obstacle_picker(0, 90);
     while (placed < budget) {
-        int obstacle_id;
-        do {
+        int obstacle_id = obstacle_picker.Pick();
+        while (obstacle_id >= 0
+               && !(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
+               && !(ObstacleInfo[obstacle_id].special_terrain_mask
+                    & special_terrain_mask))
             obstacle_id = obstacle_picker.Pick();
-            if (obstacle_id < 0)
-                return;
-        } while (!(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
-                 && !(ObstacleInfo[obstacle_id].special_terrain_mask
-                      & special_terrain_mask));
         if (obstacle_id < 0)
             return;
         if (place_obstacle(obstacle_id))

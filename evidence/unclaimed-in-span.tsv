@@ -4,7 +4,6 @@
 unit	functions	bytes
 game	81	55959
 tradpost	15	45736
-army	34	31527
 townmgr	20	27184
 sacrifice_window	37	25978
 seerhut	73	22609
@@ -34,5 +33,6 @@ bottomviewsubwindow	6	379
 campaignwindow	1	256
 misc	1	221
 victorylossconditions	1	69
+army	1	56
 adventureoptionswindow	1	16
 csequence	1	15
