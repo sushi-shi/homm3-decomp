@@ -851,6 +851,23 @@ public:
         TOWN_4_ID = 36,
         CHAT_TEXT_ID = 37,
         CHAT_EDIT_ID = 38,
+        // The second hero row, a Complete-era addition the Dreamcast enum
+        // (which stops at CHAT_EDIT_ID) never saw, so the spelling is
+        // PROVISIONAL and the role is what the bytes prove. Three retail
+        // dispatchers agree on the block: advManager::ProcessSelect's
+        // byte-index table sends 15..19 AND 39..43 to one arm that
+        // normalises the id with `id - 15` below 39 and `id - 39` at or
+        // above it and then indexes topHero + slot, and
+        // TAdventureMapWindow::ProcessRightSelect (0x402e70) does exactly
+        // the same - so 39..43 answer for the same five hero slots as the
+        // portrait buttons. ProcessHover (0x403010) leaves them at the
+        // default rollover text, which is why the row is the highlight
+        // strip rather than a second set of buttons.
+        HERO_LOCATOR_0_ID = 39,
+        HERO_LOCATOR_1_ID = 40,
+        HERO_LOCATOR_2_ID = 41,
+        HERO_LOCATOR_3_ID = 42,
+        HERO_LOCATOR_4_ID = 43,
         NUM_HERO_BUTTONS = 5,
         NUM_TOWN_BUTTONS = 5
     };
@@ -1010,6 +1027,17 @@ public:
         ADVENTURE_SCREEN_WIDTH = 608,
         ADVENTURE_SCREEN_HEIGHT = 544,
         ADVENTURE_ANIMATION_MAX_ELAPSED = 180
+    };
+
+    // The adventure screen's help-id band, proven by ProcessSelect's
+    // shared tail: after the widget switch it answers a right-click
+    // (MESSAGE_MODIFIER_RIGHT) on any id in this inclusive range with one
+    // general-text row through NormalDialog, and ignores every id outside
+    // it. Bounds are retail's own `cmp 0x7d0 / jl` and `cmp 0x898 / jg`;
+    // no surviving symbol names the band, so the spelling is provisional.
+    enum EAdventureHelpIds {
+        ADV_HELP_ID_FIRST = 2000,
+        ADV_HELP_ID_LAST = 2200
     };
 
     enum EAdventureSoundExtent {
