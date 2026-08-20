@@ -820,6 +820,7 @@ game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
 game	?ClaimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
+game	?ClaimTown@game@@QAEXHHEE@Z	97.8269	97.8269	97.8269	0xc61e0
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
@@ -902,6 +903,7 @@ game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 # CMCHideHero in include/netmsg.h and above the body in src/game.cpp.
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
 game	?calculate_production@game@@QAEXXZ	88.1659	88.1659	88.1659	0xb8af0
+game	?get_alignment@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xc6690
 game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
@@ -917,7 +919,6 @@ game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
-game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_game	0.0000	0.0000	0.0000	0xcdf20

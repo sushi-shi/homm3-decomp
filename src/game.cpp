@@ -26,6 +26,11 @@
 // HOMM3_GAME_OBJ_DECLS cost recruitUnit::Update 90.84 -> 88.24), and
 // townmgr.obj shares that macro.
 #define HOMM3_GAME_TOWN_HEROES_DECLS
+// game::ClaimTown (0x4c61e0) needs four declarators no other game.obj
+// body reaches: record_claim_town, game::get_alignment, is_human_ally
+// and generator::remove_bonus. Held on its own gate for the same reason
+// the town-heroes group is - townmgr.obj shares HOMM3_GAME_OBJ_DECLS.
+#define HOMM3_GAME_CLAIM_TOWN_DECLS
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "terrain.h"
@@ -37,6 +42,7 @@
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
 #undef HOMM3_GAME_TOWN_HEROES_DECLS
+#undef HOMM3_GAME_CLAIM_TOWN_DECLS
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -346,16 +352,38 @@ unsigned char generator::save(TAbstractFile* outfile)
     return saved;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:503
+// update_bonus's negative twin, and retail keeps NO out-of-line row for
+// it: generator::save ends at 0x4b8791 and update_bonus opens at
+// 0x4b87a0, fifteen bytes later, so every retail caller expands it.
+// game::ClaimTown is the caller that proves the body - its first
+// generator sweep IS this function inlined, down to the `-1`.
+//
+// The one place it differs from update_bonus is the elemental gate:
+// this side CALLS game::get_alignment (0x4c6690) where update_bonus
+// writes the four CREATURE_*_ELEMENTAL compares and the traits lookup
+// out longhand. Two retail bodies differing means two sources
+// differing, so the call stays a call - and stays pinned, because our
+// CL inlines a 67-byte callee here that retail does not.
 DC_ONLY(0xa30c4, 0xB2)
-void generator::remove_bonus()
+inline void generator::remove_bonus()
 {
-    // @stub
-}
+    if (playerOwner < 0)
+        return;
 
-#endif  // @carcass
+    playerData* player = &gpGame->players[playerOwner];
+#pragma inline_depth(0)
+    int townType = gpGame->get_alignment(type[0]);
+#pragma inline_depth()
+    if (townType == -1)
+        return;
+
+    for (int index = 0; index < player->numTowns; index++) {
+        town* currentTown = gpGame->GetTown(player->townIds[index]);
+        if (currentTown->type == townType)
+            currentTown->change_generator_bonus(type[0], -1);
+    }
+}
 
 // E:\gamedcs\game.cpp:530
 VA(0x004b87a0, 0xB8)  // anchor-global, dc 0xa3178
@@ -3329,14 +3357,154 @@ int NewSMapHeader::readString(void* infile, std::basic_string<char,std::char_tra
     // @stub
 }
 
+#endif  // @carcass
+
+// victorylossconditions.cpp's `get_team` under a TU-local name: the
+// negative arm returns the player number itself, which is what lets VC6
+// thread `owner < 0` straight through the caller's `>= 0` test instead
+// of branching twice. That file's applies_to_player (0x5f15a0, exact)
+// is the shape ClaimTown's team block repeats.
+static int claim_town_team(game* thisGame, int playerNum)
+{
+    if (playerNum < 0)
+        return playerNum;
+    return thisGame->mapHeader.teamInfo[playerNum];
+}
+
 // E:\gamedcs\game.cpp:7289
+// The two generator sweeps are generator::remove_bonus and
+// generator::update_bonus INLINED - both keep the owner re-read that
+// their own `if (playerOwner < 0) return;` produces, which is why the
+// byte at +0x57 is loaded twice per candidate.
+//
+// The team block is applies_to_player's shape: get_team threaded so the
+// negative arm falls straight through the `>= 0` test, then
+// game::IsHuman (0x4ce940) expanded with its out-of-range CLAMP intact -
+// VC6 cannot prove `player` in-range across the inline even though the
+// loop bounds it to 0..7, so the dead `>= 8 || < 0` clamp survives.
 VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
 void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
 {
-    // @stub
+    town* whichTown = &towns[townId];
+    int oldOwner = whichTown->owner;
+    if (oldOwner == newPlayerOwner)
+        return;
+
+    if (!gbInSetup698400 && !bIsRemoteMove)
+        record_claim_town(townId, newPlayerOwner);
+
+    whichTown->field_32 = 0;
+
+    if (!bIsRemoteMove) {
+        for (unsigned i = 0; i < generators.size(); i++) {
+            if (generators[i].playerOwner == oldOwner
+                || generators[i].playerOwner == newPlayerOwner)
+                generators[i].remove_bonus();
+        }
+    }
+
+    if (whichTown->owner != -1) {
+        int team = claim_town_team(this, whichTown->owner);
+        if (team >= 0 && !is_human_ally(team)) {
+            int newTeam = claim_town_team(this, newPlayerOwner);
+            if (newTeam >= 0) {
+                int player = 0;
+                signed char* teams = mapHeader.teamInfo;
+                for (; player < 8; ++player) {
+                    if (teams[player] == newTeam
+                        && gpGame->IsHuman(player)) {
+                        whichTown->field_02 = 0;
+                        break;
+                    }
+                }
+            }
+        }
+        gpGame->GetTown(townId)->Deallocate();
+    }
+
+    whichTown->owner = newPlayerOwner;
+    if (bIsRemoteMove)
+        return;
+
+    // The const overload, const_cast to reach a non-const method,
+    // exactly as calculate_production and add_garrison_hero already
+    // spell it in this TU: /OPT:ICF folded the DC's const and non-const
+    // get_army onto one row, so the const mangling is what the target
+    // side names and the codegen is identical either way.
+    const_cast<armyGroup&>(whichTown->get_army()).Initialize();
+    if (whichTown->owner != -1) {
+        players[newPlayerOwner].townIds[players[newPlayerOwner].numTowns] =
+            static_cast<char>(townId);
+        players[newPlayerOwner].numTowns++;
+
+        if (check_end_game
+            && mapHeader.victoryCondition.IsTownCaptureTarget(whichTown)
+            && mapHeader.victoryCondition.CheckForTownCaptureWin())
+            CheckEndGame(0);
+
+        SetVisibility(towns[townId].mapX, towns[townId].mapY,
+                      towns[townId].mapZ, newPlayerOwner, 5, 0);
+
+        if (whichTown->type == TOWN_TOWER) {
+            if (whichTown->HasBuilding(EXTRA_0_ID, 0))
+                gpGame->SetVisibility(whichTown->mapX, whichTown->mapY,
+                                      whichTown->mapZ, newPlayerOwner,
+                                      20, 0);
+            if (whichTown->HasBuilding(HOLY_GRAIL_ID, 0)) {
+                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
+                                      newPlayerOwner, gMapWidth, 0);
+                if (gpGame->worldMap.HasTwoLevels + 1 > 1)
+                    gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
+                                          newPlayerOwner, gMapWidth, 0);
+            }
+        }
+    }
+
+    for (unsigned i = 0; i < generators.size(); i++) {
+        if (generators[i].playerOwner == oldOwner
+            || generators[i].playerOwner == newPlayerOwner) {
+            generator* thisGenerator = &generators[i];
+            if (thisGenerator->playerOwner < 0)
+                continue;
+
+            playerData* player = &gpGame->players[thisGenerator->playerOwner];
+            int creature = thisGenerator->type[0];
+            if (!gpGame->f_1f698 &&
+                (creature == CREATURE_AIR_ELEMENTAL ||
+                 creature == CREATURE_EARTH_ELEMENTAL ||
+                 creature == CREATURE_FIRE_ELEMENTAL ||
+                 creature == CREATURE_WATER_ELEMENTAL))
+                continue;
+
+            int townType = akCreatureTypeTraits[creature].townType;
+            if (townType == -1)
+                continue;
+
+            for (int index = 0; index < player->numTowns; index++) {
+                town* currentTown = gpGame->GetTown(player->townIds[index]);
+                if (currentTown->type == townType)
+                    currentTown->change_generator_bonus(
+                        thisGenerator->type[0], 1);
+            }
+        }
+    }
 }
 
-#endif  // @carcass
+// The Dreamcast keeps this a header inline (game.h:1375); retail's
+// out-of-line copy therefore lands in game.obj, between ClaimTown and
+// ClaimMine. generator::remove_bonus is the only body in this TU that
+// calls it - update_bonus writes the same logic out longhand.
+VA(0x004c6690, 0x43)  // link-order (game span) + body identity, dc 0x2000c
+int game::get_alignment(int creature) const
+{
+    if (!f_1f698
+        && (creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL))
+        return -1;
+    return akCreatureTypeTraits[creature].townType;
+}
 
 // E:\gamedcs\game.cpp:7379
 VA(0x004c66e0, 0xCB)  // anchor-global, dc 0xb1748
