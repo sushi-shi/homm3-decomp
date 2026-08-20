@@ -802,8 +802,15 @@ public:
     int field_132a0[2];               // +0x132a0
     // Two more dwords InitNonVisualVars sets to -1, alongside
     // field_132d4. Ordinals.
-    int field_132a8;                  // +0x132a8
-    int field_132ac;                  // +0x132ac
+    //
+    // RETYPED AS A PER-SIDE PAIR 2026-08-20 by combatManager::
+    // SummonElemental (0x5a7080), which stamps the summoned creature's
+    // type through `[this + 4*currentSide + 0x132a8]` - so the two
+    // dwords are one row indexed by SIDE, exactly like the six other
+    // per-side pairs this class already carries, and not two unrelated
+    // ordinals. The name stays an ordinal: no roster or string reaches
+    // the row.
+    int field_132a8[2];               // +0x132a8 .. +0x132af
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -1723,6 +1730,24 @@ public:
     // supplies both parameter names; `level` is what indexes the spell's
     // mastery_bonus row, i.e. it is the mastery the cast landed at.
     void Armageddon(int level, int power);                     // 0x5a4bc0
+    // The last three spells.obj bodies this header had no declarator for.
+    // Every parameter name is the DC prototype's (spells.cpp:4424 / 4705
+    // / 5164); the three types the DC roster leaves open are read off the
+    // retail bodies:
+    //   * ShowMassSpell's first slot is the `effected` row itself - a
+    //     [2][20] byte array indexed `[side][slot]` with a 0x14 stride,
+    //     which is why it is spelled as a pointer to the row rather than
+    //     the DC's bare `[]*`.
+    //   * SummonElemental's iMonType goes straight into a 116-byte
+    //     akCreatureTypeTraits copy and into AddArmy, so it is the
+    //     creature domain.
+    //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
+    //     for the number of wall sections to bring down.
+    void ShowMassSpell(const unsigned char* bEffected, int spellEffect,
+                       unsigned char bShowWince);              // 0x5a67c0
+    void SummonElemental(SpellID spell, TCreatureType iMonType,
+                         int iSpellPower, int level);          // 0x5a7080
+    void Earthquake(int level);                                // 0x5a7c80
     void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
     void DrawBolt(SBolt* psBolt, int iDrawLength);             // 0x5a5440
     void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,

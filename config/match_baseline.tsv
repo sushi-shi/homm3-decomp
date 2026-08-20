@@ -622,7 +622,22 @@ combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 command	?DoVictory@combatManager@@QAEXH@Z	99.4634	99.4634	99.4634	0x77470
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+# GetCommand ACCEPTED 92.5714 -> 92.5357 (2026-08-20, spells lane).
+# THE TRADE: cmbtmgr.h gained the three member declarators the class was
+# missing for spells.obj's last three bodies - ShowMassSpell (0x5a67c0),
+# SummonElemental (0x5a7080) and Earthquake (0x5a7c80). Without them the
+# definitions do not compile at all: VC6 reports a member function never
+# declared in its class as C2673 "global functions do not have 'this'
+# pointers" plus a cascade of C2065 on every this-relative member.
+# WHAT IT BOUGHT: 2.9 KB of spells.obj, and with it the unit's last
+# unreconstructed bodies. WHAT IT COST: this row alone, and it is the
+# documented include-set class at its documented value - the exact
+# 0.0357 a single cmbtmgr.h declarator has cost GetCommand four times
+# before (see cmbtmgr.h's own notes at its simulate_combat and
+# numSpellCasts declarations). No semantic change reaches command.obj:
+# the delta is one addressing-mode choice and command.cpp's own source
+# and include set did not move. hist stays at 92.5714.
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -1625,6 +1640,7 @@ spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	98.760
 spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEE@Z	97.0968	97.0968	97.0968	0x1a8090
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690
+spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	93.4375	93.4375	93.4375	0x1a7080
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEE@Z	88.4937	88.4937	88.4937	0x1a39c0
 spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a3c80
 spells	?demonic_resurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	100.0000	100.0000	100.0000	0x1a7390
@@ -1642,7 +1658,6 @@ spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$alloc
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
 spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
-spells	combatManager_SummonElemental	0.0000	0.0000	0.0000	0x1a7080
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0
