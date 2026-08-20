@@ -61,6 +61,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "kb.h"
 #include "cursor.h"
 #include "puzzlewindow.h"
+#include "resourcemanager.h"
 #include "herospec.h"
 #include "imm_mouse.h"
 
@@ -3884,12 +3885,121 @@ void game::InsertObject(int x, int y, int z, int objType, int objectIndex, int e
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:9195
+// The materializer ProcessRandomObjects hands each rolled cell. It CLONES
+// the object's current CObjectType onto the back of objectTypes,
+// overwrites the clone's .def name / type / extra for the concrete
+// object, registers the new sprite, and re-points every map cell the
+// object covers at the clone.
+//
+// The dispatch is a real jump table: five entries at 0x4c9d58 and a
+// 94-byte `type - ARTIFACT` index table at 0x4c9d6c, both inside this
+// function's own extent. RANDOM_MONSTER shares MONSTER's arm and
+// RANDOM_TOWN shares TOWN's; every other value falls to the default.
+// Arm order below is retail's physical order, i.e. the source order.
+//
+// The !is_trigger path reaches the tail with defName UNINITIALIZED. That
+// is retail: ProcessRandomObjects only ever calls this for trigger cells,
+// so the arm is unreachable in practice. Transcribed, not repaired.
+//
+// All three tail loops RE-READ their bounds - newType->height and
+// newType->width are reloaded with movsx at each increment, and
+// cell->objects.end() at the bottom of every iteration - and
+// objectTypes.size() is recomputed at every match rather than hoisted.
+// The sprite push_back goes through this->worldMap while
+// CalculateCellExtra RELOADS gpGame; do not unify them.
+//
+// Residual (97.2390%): one block, the town arm's three building-mask
+// tests, and it is the register-homing family. Retail loads
+// theTown->built once into an EDX:ESI pair, HOMES the town pointer to a
+// stack slot, and threads all three masks through that pair; we load
+// built once as well but keep the town pointer in a register and pick
+// the opposite registers for the mask ANDs, which shifts the whole
+// block. The two raw `built & bitNumber[...]` tests and the third as a
+// real HasBuilding call are retail's own asymmetry - it emits a bare
+// and/and/or/je with no setne for the first two and a call for the
+// third - so they are transcribed as they stand rather than tidied into
+// three of a kind. The remaining rows are cosmetic reloc names: the five
+// .def tables, gpGame and the STL COMDATs have no name on the target
+// side, and _Nullstr's empty-string datum is shared image-wide.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::ConvertObject(NewmapCell* tempCell)
 {
-    // @stub
+    char defName[100];
+
+    int objectId = tempCell->object_type_index;
+    CObject* object = &worldMap.objects[objectId];
+
+    worldMap.objectTypes.push_back(worldMap.objectTypes[object->typeIndex]);
+    CObjectType* newType = &worldMap.objectTypes.back();
+
+    TAdventureObjectType newObject = NOTHING;
+    if (tempCell->is_trigger) {
+        newObject = tempCell->get_map_object();
+        switch (newObject) {
+        case RESOURCE:
+            strcpy(defName, gResourceObjectDefs[tempCell->objectIndex]);
+            break;
+        case ARTIFACT:
+            sprintf(defName, gArtifactObjectDefFormat, tempCell->objectIndex);
+            break;
+        case MONSTER:
+        case RANDOM_MONSTER:
+            strcpy(defName,
+                   worldMap.NewfullMapFn_00505EA0(MONSTER,
+                                                  tempCell->objectIndex)
+                       ->ImageName.c_str());
+            newObject = MONSTER;
+            tempCell->type = MONSTER;
+            break;
+        case RANDOM_TOWN:
+        case TOWN: {
+            town* theTown = gpGame->GetTown(tempCell->get_map_extraInfo());
+            if (theTown->built & bitNumber[HALL_CAPITOL_ID])
+                strcpy(defName, gTownCapitolObjectDefs[tempCell->objectIndex]);
+            else if ((theTown->built & bitNumber[CASTLE_FORT_ID])
+                     || (theTown->built & bitNumber[CASTLE_CITADEL_ID])
+                     || theTown->HasBuilding(CASTLE_CASTLE_ID, 0))
+                strcpy(defName, gTownFortObjectDefs[tempCell->objectIndex]);
+            else
+                strcpy(defName, gTownVillageObjectDefs[tempCell->objectIndex]);
+            break;
+        }
+        }
+    }
+
+    TAdventureObjectType oldType = newType->objectType;
+    newType->ImageName = defName;
+    newType->objectType = newObject;
+    newType->extra = tempCell->objectIndex;
+    worldMap.sprites.push_back(
+        ResourceManager::GetSprite(newType->ImageName.c_str()));
+
+    for (int iy = 0; iy < newType->height; iy++) {
+        if (object->y - iy < 0 || object->y - iy >= gMapHeight)
+            continue;
+        for (int ix = 0; ix < newType->width; ix++) {
+            if (object->x - ix < 0 || object->x - ix >= gMapWidth)
+                continue;
+            NewmapCell* cell = worldMap.cell(object->x - ix,
+                                             object->y - iy, object->z);
+            for (NewmapCell::TObjectCell* entry = cell->objects.begin();
+                 entry != cell->objects.end(); entry++) {
+                if (entry->objectIndex == objectId) {
+                    object->typeIndex = static_cast<unsigned short>(
+                        worldMap.objectTypes.size() - 1);
+                    if (cell->type == oldType && !cell->is_trigger)
+                        cell->type = newObject;
+                }
+            }
+            gpGame->worldMap.CalculateCellExtra(cell, 0);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

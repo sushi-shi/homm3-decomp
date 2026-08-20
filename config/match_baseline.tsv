@@ -822,6 +822,7 @@ game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0x
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
+game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
@@ -916,7 +917,6 @@ game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
-game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
