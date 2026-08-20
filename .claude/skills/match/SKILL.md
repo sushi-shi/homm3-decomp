@@ -31,7 +31,14 @@ only mapcell.cpp's two new VA claims and re-delinking returned it to exactly
 - a cross-unit "regression" after a merge that added claims MAY be this
   rather than a code change — check whether the unit's source and headers
   actually moved before hunting a spelling. But do not assume it: of the
-  FOUR observed instances it is two and two. Two were real ungated `game.h`
+  FIVE observed instances it is two, two and one - and the fifth has the
+  BEST fix of the three. A lane put three channel-mask externs in
+  `bitmap16.h`, which 21 TUs include, and it cost `recruitUnit::Update`
+  90.84 -> 88.24; MOVING them to `spells.h`, which 2 TUs include, made the
+  regression disappear entirely. So before gating and before accepting, ask
+  whether the declaration is simply in too wide a header. Narrowing the
+  header is not a workaround - a declaration belongs with its consumers, and
+  it costs nothing. Of the other four, Two were real ungated `game.h`
   additions (a `type_point` member that made a class non-POD, and a nested
   enum), both restored by gating; two were the delink generation, each PROVEN
   by a revert control — stash the lane's source and headers, re-delink, and
@@ -240,6 +247,28 @@ declaration AND initialiser above the string/vector locals took
 - A dead store retail keeps needs `volatile`; a plain local is dead-stored
   away (+0.8). Flag it in-source as a codegen claim, not a proven token.
 - **A wider load than the store means an int-parameter inline between them.**
+
+**A TERNARY ARGUMENT RETAIL BRANCHES OVER MUST BE AN IF/ELSE OVER TWO CALLS**
+(2026-08-20). `DoBolt` 84.83 -> **98.22** in one edit - the whole register
+allocation fell into line behind it. `why-branch` named it exactly (D8/D13)
+from a one-branch CFG-count difference, so run it on any residual that reduces
+to a single branch.
+
+**A SHARED STORE AT THE FOOT OF AN IF/ELSE MUST BE MERGED, NOT DUPLICATED**
+into an early-return arm. Rewriting that way closed `LoadSpellEffect`
+(89.68 -> 100) AND lifted an unrelated caller 87.03 -> 88.12.
+
+**`(r) | (g) | (b)` EMITS RIGHT-TO-LEFT** - which is what fixes the channel
+assignment of a mask triple (`DrawBolt` 71.63 -> 76.90).
+
+**LOCALS ONLY READ ON A LATER ITERATION ARE UNINITIALISED IN RETAIL**
+(`ChainLightning` 95.30 -> 96.19).
+
+**A MEMBER FUNCTION NEVER DECLARED IN ITS CLASS** produces a cascade of C2109
+"subscript requires array or pointer type" and C2228 on every `this`-relative
+member, **at a line number that MOVES as you edit unrelated code**. It reads
+exactly like a VC6 capacity limit and is not one. Check the class declaration
+first; a 20-line probe TU isolates it in one compile.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 

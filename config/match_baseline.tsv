@@ -567,7 +567,7 @@ cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
 cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
-cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.1988	96.1988	96.1988	0x68990
+cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	96.2232	96.2232	96.2232	0x68990
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
@@ -622,7 +622,7 @@ combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 command	?DoVictory@combatManager@@QAEXH@Z	99.4634	99.4634	99.4634	0x77470
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -1605,14 +1605,20 @@ spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970
+spells	?Armageddon@combatManager@@QAEXHH@Z	88.1546	88.1546	88.1546	0x1a4bc0
+spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
+spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	98.2205	98.2205	98.2205	0x1a5c20
+spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	76.8992	76.8992	76.8992	0x1a5440
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
-spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	89.6774	89.6774	89.6774	0x1a92f0
+spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0
+spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
 spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.2924	97.2924	97.2924	0x1a5260
+spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	90.5846	90.5846	90.5846	0x1a7560
 spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJE@Z	100.0000	100.0000	100.0000	0x1a66d0
 spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	98.7602	0x1a8950
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
@@ -1633,13 +1639,7 @@ spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$al
 spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
 spells	HandleGetTeleportDestination	0.0000	0.0000	0.0000	0x1a37d0
-spells	combatManager_Armageddon	0.0000	0.0000	0.0000	0x1a4bc0
-spells	combatManager_ChainLightning	0.0000	0.0000	0.0000	0x1a6360
-spells	combatManager_DoBolt	0.0000	0.0000	0.0000	0x1a5c20
-spells	combatManager_DrawBolt	0.0000	0.0000	0.0000	0x1a5440
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
-spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
-spells	combatManager_Resurrect	0.0000	0.0000	0.0000	0x1a7560
 spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
 spells	combatManager_SpellCastWorkChance	0.0000	0.0000	0.0000	0x1a8090
 spells	combatManager_SummonElemental	0.0000	0.0000	0.0000	0x1a7080
@@ -1696,22 +1696,6 @@ textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
 textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
-# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
-# audit. hist holds 99.3021 and recovering it is ordinary work.
-#
-# CAUSE: town::get_army()'s NON-const overload was declared to return
-# `armyGroup*` in one view and used as a reference in another - town.cpp
-# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
-# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
-# other's declaration. With the gates gone both are visible at once and the
-# contradiction is forced. The DC mangled name settles it:
-# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
-# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
-# prototype printer. town.cpp's four call sites were converted to `.`, which
-# is what moved this row.
-#
-# This is the clearest instance of what the audit was for: a per-TU view let
-# two incompatible models of one function coexist indefinitely.
 town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	78.5766	78.5766	99.3036	0x1bede0
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
@@ -2001,6 +1985,22 @@ winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90
+# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
+# audit. hist holds 99.3021 and recovering it is ordinary work.
+#
+# CAUSE: town::get_army()'s NON-const overload was declared to return
+# `armyGroup*` in one view and used as a reference in another - town.cpp
+# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
+# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
+# other's declaration. With the gates gone both are visible at once and the
+# contradiction is forced. The DC mangled name settles it:
+# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
+# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
+# prototype printer. town.cpp's four call sites were converted to `.`, which
+# is what moved this row.
+#
+# This is the clearest instance of what the audit was for: a per-TU view let
+# two incompatible models of one function coexist indefinitely.
 # GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
 # first batch of byte-proven field slices, and RECOVERED to 92.5714 later
 # the same day when a SECOND batch of slices (bloodlustRounds /
