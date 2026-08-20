@@ -1544,6 +1544,14 @@ public:
     // still a member - retail reads all three arguments off the stack
     // behind a thiscall `ret 0xc`, where a static would be __fastcall.
     void remove_corpse(hexcell* hex, long side, long slot);    // 0x5a7320
+    // 0x5a7390, the Pit Lord's raise. The DC prototype (spells.cpp:4850)
+    // names the pair caster / target, and the body fixes both roles: the
+    // resurrection size is priced off the FIRST argument
+    // (`caster->get_resurrection_size(target)`, thiscall on ebx) and the
+    // new stack's side off ITS controller, while every grid field -
+    // gridIndex, combatSide, bitIndex, originalIndex - is read off the
+    // second.
+    void demonic_resurrection(const army* caster, army* target); // 0x5a7390
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.

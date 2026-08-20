@@ -40,10 +40,15 @@
 #undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
+#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
+#include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
+#include "kb.h"      // gText, the shared combat-message scratch buffer
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "textresource.h"  // gpGeneralText
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <math.h>    // sqrt, for the chain-lightning bounce search
 
@@ -68,6 +73,38 @@ inline long combatManager::get_distance(hex_point start, hex_point stop) const
     if ((dx < 0) == (dy < 0))
         return _cpp_max(abs(dx), abs(dy));
     return abs(dx) + abs(dy);
+}
+
+// army::GetName (0x440100) as retail's spells.cpp saw it - the DC roster
+// puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline this TU
+// could expand, and every message body here expands it rather than
+// calling 0x440100. Spelled file-locally for exactly the reason
+// cmbtmgr.cpp's identical copy is; static with no surviving reference,
+// so no slot is expected.
+static const char* CreatureName(int type, long count)
+{
+    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
+    // literal; the linker folds our COMDAT onto it, so the only delta is
+    // a reloc NAME (masked).
+    return "";
+}
+
+// army::get_controlling_side (0x440140) as retail's spells.cpp saw it.
+// The DC roster puts that body in Army.h too (Army.h:800), i.e. an
+// inline this TU could expand, and every site here expands it rather
+// than calling 0x440140 - army.cpp keeps the out-of-line copy that the
+// /Ob2 extern-linkage rule emits regardless. Spelled file-locally for
+// exactly the reason CreatureName above is.
+static int ControllingSide(const army* stack)
+{
+    if (stack->hypnotizeFlag)
+        return 1 - stack->combatSide;
+    return stack->combatSide;
 }
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
@@ -1004,12 +1041,46 @@ void combatManager::remove_corpse(army* corpse)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4850
+#endif  // @carcass
+
+// The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
+// stack takes its cell.
 VA(0x005a7390, 0x1CB)  // order-map+arity, dc 0x1566f8
 void combatManager::demonic_resurrection(const army* caster, army* target)
 {
-    // @stub
+    SAMPLE2 sample;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+        sample = LoadPlaySample(
+            DATA_COMPGEN(0x00660af4, resurrectSampleName, "Resurect.wav"));
+
+    remove_corpse(&cells[target->gridIndex], target->combatSide,
+                  target->bitIndex);
+    if (target->Is(0) & 1)
+        remove_corpse(&cells[target->get_second_grid_index()],
+                      target->combatSide, target->bitIndex);
+
+    long raised = caster->get_resurrection_size(target);
+    long orig_position = target->originalIndex;
+    army* demons = AddArmy(ControllingSide(caster),
+                           army::ARMY_CREATURE_DEMON, raised,
+                           target->gridIndex, 0, 1);
+    demons->originalIndex = orig_position;
+    ResetLimitCreature();
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        UpdateGrid(0, 1);
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        if (raised != 1)
+            sprintf(gText, gpGeneralText->GetText(117), raised,
+                    CreatureName(demons->creatureType, raised));
+        else
+            sprintf(gText, gpGeneralText->GetText(118), raised,
+                    CreatureName(demons->creatureType, raised));
+        combatWindow->combat_message(gText, 1, 0);
+        WaitEndSample(sample, -1);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4888
 VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
