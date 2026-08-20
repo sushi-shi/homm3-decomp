@@ -26,6 +26,7 @@
 //
 #include <va.h>
 #include "advmgr_objects.h"
+#include "csprite.h"
 #include "advmgr.h"
 #include "game.h"
 #include "kb.h"
@@ -2870,14 +2871,141 @@ void NewfullMap::StampObject(NewmapCell* thisCell, NewmapCell::TObjectCell* objC
     // @stub
 }
 
+#endif  // @carcass -- located/reconstruction-pending bodies
+
 // E:\gamedcs\mapcell.cpp:4167
+// Recomputes everything a cell derives from the objects standing on it.  The
+// cell is first reset to bare terrain - rock blocks, and a beach border that
+// is not water becomes an ANCHOR_POINT - and then FIVE reverse passes over
+// the cell's object list decide what it actually is.  Each pass walks the
+// list from the top down, so the object added last wins, and each of the last
+// four RETURNS on its first hit; only the animation pass runs to completion.
+//
+// The passes in retail's order: mark the cell animated if any object's sprite
+// has more than one frame; take the first object whose TRIGGER mask covers
+// the cell (that one also sets is_trigger); then the first FLAGGED object
+// whose passable mask leaves the cell blocked; then the same test without the
+// flag; and finally the first object of type TERRAIN_HOLE.
+//
+// The animation test is `GetNumFrames(0) > 1`, the CSprite header inline
+// expanded in place: retail's three-test chain is that guard verbatim -
+// numSequences > 0, validSeqMask[0] != 0, s[0]->numFrames > 1 - with the else
+// arm's literal 0 folded away against the `> 1`.  csprite.h joins this TU's
+// include closure for it, and was measured include-set NEUTRAL first: adding
+// it alone moved no function in this unit (40/67 exact, 57.3982 fuzzy before
+// and after, zero per-row deltas).
+//
+// The cell coordinate inside the object comes back out of TObjectCell's
+// packed `offsets` byte as two SIGNED nibbles (`sar cl,4` for the row,
+// `shl al,4 / sar al,4` for the column), giving the same 47 - row*8 - col bit
+// index GenerateHeightMap and PlaceObject use.
+//
+// The last byte was a statement ORDER, not a spelling.  In the trigger pass
+// `is_trigger = 1` has to be written AFTER `type_value`, not between it and
+// the index store: retail schedules the `or byte ptr [cell+0xd],0x10` between
+// the load of objectType->objectType and the store of it, and only that
+// source order puts it there.  Setting it first holds the row at 99.4366.
 VA(0x00505610, 0x3F8)  // order-map: calls hasFlag 0x40fca0 (DC-unique callee); sole caller CalculateCellExtra 0x505a10 (DC-isomorphic); reverse_iterator templates inlined, dc 0xf3a24
 void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
 {
-    // @stub
-}
+    if (bSetExtraInfo) {
+        short storedIndex = thisCell->object_type_index;
+        if (storedIndex >= 0 && storedIndex < objects.size())
+            objects[storedIndex].extraInfo = thisCell->extraInfo;
+    }
 
-#endif  // @carcass -- located/reconstruction-pending bodies
+    thisCell->IsBlocked = 0;
+    thisCell->object_type_index = -1;
+    if (thisCell->GroundSet == eTerrainRock)
+        thisCell->IsBlocked = 1;
+
+    thisCell->type_value = NOTHING;
+    thisCell->is_trigger = 0;
+    thisCell->Passable = 1;
+    if (thisCell->IsBeachBorder && thisCell->GroundSet != eTerrainWater)
+        thisCell->type_value = ANCHOR_POINT;
+
+    std::vector<NewmapCell::TObjectCell>::reverse_iterator it;
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        if (sprites[object->typeIndex]->GetNumFrames(0) > 1)
+            thisCell->Animated = 1;
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        signed char packed = it->offsets;
+        int row = packed >> 4;
+        int col = static_cast<signed char>(packed << 4) >> 4;
+        if (objectType->triggerCells.test(47 - row * 8 - col)) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->is_trigger = 1;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            return;
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        if (hasFlag(objectType->objectType)) {
+            signed char packed = it->offsets;
+            int row = packed >> 4;
+            int col = static_cast<signed char>(packed << 4) >> 4;
+            if (!objectType->passableCells.test(47 - row * 8 - col)) {
+                thisCell->object_type_index = it->objectIndex;
+                thisCell->type_value = objectType->objectType;
+                thisCell->objectIndex = static_cast<short>(objectType->extra);
+                if (bSetExtraInfo)
+                    thisCell->extraInfo = object->extraInfo;
+                thisCell->Passable = 0;
+                thisCell->IsBlocked = 1;
+                return;
+            }
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        signed char packed = it->offsets;
+        int row = packed >> 4;
+        int col = static_cast<signed char>(packed << 4) >> 4;
+        if (!objectType->passableCells.test(47 - row * 8 - col)) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            thisCell->Passable = 0;
+            thisCell->IsBlocked = 1;
+            return;
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        if (objectType->objectType == TERRAIN_HOLE) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            return;
+        }
+    }
+}
 
 // E:\gamedcs\mapcell.cpp:4310
 // Retail temporarily restores a hero or boat, recalculates the underlying
