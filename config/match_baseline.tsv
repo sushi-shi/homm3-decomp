@@ -326,7 +326,7 @@ army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
-army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	94.6999	94.6999	94.6999	0x448f0
+army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	99.0928	99.0928	99.0928	0x448f0
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0
@@ -384,7 +384,7 @@ army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?new_turn@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46e30
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
-army	?range_attack@army@@QAEXPAV1@@Z	88.9058	88.9058	88.9058	0x3f900
+army	?range_attack@army@@QAEXPAV1@@Z	95.7033	95.7033	95.7033	0x3f900
 army	?range_attack@army@@QAEXXZ	100.0000	100.0000	100.0000	0x40160
 army	?remove_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ec50
 army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
@@ -805,12 +805,12 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
-findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	78.9419	78.9419	78.9419	0xb3400
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
 findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
-findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	83.7018	83.7018	83.7018	0xb1a70
+findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	87.4589	87.4589	87.4589	0xb1a70
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0
 findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	90.1238	90.1238	90.1238	0xb2300
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90
@@ -1257,7 +1257,7 @@ mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xf
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	91.8870	91.8870	91.8870	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
-mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	76.8302	76.8302	76.8302	0x105230
+mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	84.2237	84.2237	84.2237	0x105230
 mapcell	?calc_cell_extra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105610
 mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
@@ -1283,9 +1283,9 @@ mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
-mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	86.7264	86.7264	86.7264	0x1021c0
+mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	88.5042	88.5042	88.5042	0x1021c0
 mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220
-mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	78.4070	78.4070	78.4070	0x104470
+mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	87.2791	87.2791	87.2791	0x104470
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0
 mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	96.9833	96.9833	96.9833	0x102e00

@@ -1681,7 +1681,19 @@ static void WaitSample_(army* that, army::TSampleID which)
 // The three creature-name selections are GetName's body inlined where
 // the luck message got a call - the same budget drain LoadResources'
 // note records; spelled as calls at all four sites.
-// Residual (88.9058%): the register-homing family, three shapes deep.
+// Residual (95.7033%): 88.9058 -> 90.9874 -> 93.3846 -> 95.7033, and TWO of
+// the three shapes the old note filed as register-homing were source facts
+// (2026-08-20).  Declaration order: `slot` is read BEFORE `side` in BOTH scan
+// loops - retail's `movsx edx,byte [ecx+0x1b]` lands ahead of the `movsx
+// ebx,al` that reuses the already-tested armySide byte - worth +2.08 in the
+// Magog loop and +2.32 in the Lich loop.  And the damage_message target is an
+// IF, not a ternary: retail branches over the argument where
+// `multiple != 0 ? 0 : first` makes VC6 if-convert to neg/sbb/not/and, +2.40.
+//
+// What is genuinely left is the first shape, and the frame still says so
+// (0x24 against retail's 0x20).
+//
+// Old text, still true of what remains:
 // (1) In both effect blocks retail spills the CELL BASE to the dead
 // [ebp+8] arg slot and keeps x in ECX where ours homes x immediately
 // and keeps the base registered - downstream, our x -= Width/2 becomes
@@ -1690,7 +1702,11 @@ static void WaitSample_(army* that, army::TSampleID which)
 // byte-inert, measured). (3) Retail reuses the armySlot temp's slot
 // for fire_damage (sub esp 0x20 vs our 0x24); neither dropping the
 // side/slot locals for longhand re-reads (88.63) nor closing them in a
-// nested block (88.89) reaches it. Branch structure and the call
+// nested block (88.89) reaches it.  Naming the target cell is measured
+// NEGATIVE in the new structure too, both spellings: `const hexcell&`
+// 88.9058 -> 86.9294 before the declaration-order fix, `hexcell*`
+// 95.7033 -> 93.2700 after it.  Splitting `y` into three statements is
+// byte-flat. Branch structure and the call
 // multiset agree in full.
 VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::range_attack(army* armyToAttack)
@@ -1766,8 +1782,13 @@ void army::range_attack(army* armyToAttack)
                 continue;
             if (cell->armySide < 0)
                 continue;
-            long side = cell->armySide;
+            // SLOT IS DECLARED FIRST, in both of this body's two scan
+            // loops: retail's `movsx edx,byte [ecx+0x1b]` for the slot lands
+            // AHEAD of the `movsx ebx,al` that reuses the already-tested
+            // armySide byte.  Worth +2.08 here and +2.32 in the Lich loop
+            // below.
             long slot = cell->armySlot;
+            long side = cell->armySide;
             army* a = cell->get_army();
             if (gpCombatManager->effected[side][slot] != 0)
                 continue;
@@ -1788,10 +1809,19 @@ void army::range_attack(army* armyToAttack)
             killed += killedNow;
         }
         if (damage > 0) {
+            // NOT the ternary `multiple != 0 ? 0 : first` this used to be:
+            // retail branches over the argument (`test al,al / je / xor
+            // ecx,ecx / jmp`) where a ternary makes VC6 if-convert it to
+            // `neg/sbb/not/and`.  Worth +2.40.  The fuller `army* reported;
+            // if (multiple) reported = 0; else reported = first;` is NOT
+            // better - it measures 95.7033 -> 93.3328, because retail loads
+            // `first` unconditionally and only the zero arm is branched.
+            army* reported = first;
+            if (multiple)
+                reported = 0;
             gpCombatManager->damage_message(GetName(creatureType,
                                                     numTroops),
-                                            numTroops, damage,
-                                            multiple != 0 ? 0 : first,
+                                            numTroops, damage, reported,
                                             killed);
             gpCombatManager->PowEffect(effect, 1);
         }
@@ -1840,8 +1870,8 @@ void army::range_attack(army* armyToAttack)
                 continue;
             if (cell->armySide < 0)
                 continue;
-            long side = cell->armySide;
             long slot = cell->armySlot;
+            long side = cell->armySide;
             army* a = cell->get_army();
             if (i != COMBAT_DIRECTION_COUNT && !(a->Is(4) & 1))
                 continue;
@@ -4693,6 +4723,132 @@ void army::CancelAllSpells()
 // E:\gamedcs\army.cpp:3816
 #endif  // @carcass
 
+// THE THREE /Ob2 BUDGET DOSES SetSpellInfluence NEEDS (2026-08-20), and they
+// are a STEP, not a ramp: each one alone is byte-flat to the digit and the
+// three together are worth 94.6999 -> 99.0928.  Its standing note called the
+// residual "one statement, unreachable by statement-scoped pins" and stopped
+// there.  That was true of the PIN and wrong about the wall - the pin imposes
+// at the outermost callee, which here is the `push_back` retail expands, but
+// the CALLER-SHRINK lever reaches the nested expansions a pin cannot, and
+// this body at 2969 B had budget to spare.
+//
+// Retail keeps `std::copy` (0x5093c0 - the same fastcall COMDAT
+// findpath's FindCombatPath needs) and the deque map-iterator constructor
+// (0x5586d0) OUT of line inside its own push_back expansion; our CL wrote the
+// copy loop out longhand and inlined the ctor.  Lifting the Hypnotize
+// teardown alone crosses the threshold (+0.98 and the iterator ctor comes
+// back out of line), the duration switch then pays +1.49, and the Poison arm
+// +1.92, at which point the copy is a call too.  Order does not matter;
+// PRESENCE of all three does - with drop_aura_links removed the other two
+// measure exactly 94.6999, the untouched baseline.
+//
+// TWO NEGATIVE DOSES, so do not just add more: the Anti-Magic loop measures
+// 94.6999 -> 93.7251 on its own, and adding the Age arm on top of the three
+// below overshoots hard, 99.0928 -> 93.2875.  The dose is a PEAK.
+//
+// None of the three is a claim about retail's source.  The DC roster runs
+// army.cpp:3802 (CancelAllSpells) straight to 3816 (SetSpellInfluence) to
+// 4129 (DecrementSpellRounds) with nothing between, and it DOES list helpers
+// a build inlined away - so these are codegen devices in the same class as
+// the statement pins beside them, exactly like findpath's find_queue_slot.
+// They cost no symbol: army.obj defines none of them.
+//
+// Residual (99.0928%): two `lea ecx,[esi+0x2b0]` scheduled one slot late
+// against the erase_item calls, and the Age arm materialising `hp - 1` as
+// `lea ecx,[eax-1]` before `topCreatureDamage` where retail stores
+// `topCreatureDamage`'s _cpp_min temp first and reaches `hp-1` with
+// `mov ecx,eax / dec ecx`.  Both are temp-creation order inside one
+// statement.
+
+// SetSpellInfluence's Poison arm, lifted out for the /Ob2 BUDGET probe
+// above.  +1.92 as the third dose.
+static void apply_poison_step(army* self)
+{
+    double clamped =
+        _cpp_max(static_cast<double>(self->poisonPenalty - 0.1f), 0.5);
+    float penalty = static_cast<float>(clamped);
+    self->poisonPenalty = penalty;
+    long hp;
+    if (self->spellInfluence[SPELL_AGE]) {
+        float base = self->origHitPoints;
+        hp = static_cast<long>(base * penalty * 0.5f + 0.95f);
+    } else {
+        float base = self->origHitPoints;
+        hp = static_cast<long>(base * penalty + 0.95f);
+    }
+    self->hitPoints = hp;
+    self->topCreatureDamage = _cpp_min(self->topCreatureDamage, hp - 1);
+}
+
+// SetSpellInfluence's duration pick, lifted out for the /Ob2 BUDGET probe
+// above.  +1.49 as the second dose.
+static long spell_influence_rounds(const army* self, int spell, int power)
+{
+    switch (spell) {
+    case SPELL_DISRUPTING_RAY:
+    case SPELL_BERSERK:
+    case SPELL_BIND:
+        return 255;
+    case SPELL_FRENZY:
+        return (self != gpCombatManager->get_current_army()) + 1;
+    default:
+        return power;
+    }
+}
+
+// SetSpellInfluence's Hypnotize teardown, lifted out for the /Ob2 BUDGET
+// probe above.  This is the dose that crosses the threshold: +0.98 alone,
+// and without it the other two are byte-flat.
+static void drop_aura_links(army* self)
+{
+    long i = self->aura_sources.size();
+    while (i-- > 0) {
+        std::vector<army*>& clients = self->aura_sources[i]->aura_clients;
+#pragma inline_depth(0)
+        unsigned n = clients.size();
+#pragma inline_depth()
+        while (n-- != 0) {
+            if (clients[n] == self) {
+                army** pos = clients.begin() + n;
+#pragma inline_depth(0)
+                clients.erase(pos);
+#pragma inline_depth()
+                break;
+            }
+        }
+    }
+    {
+        army** first = self->aura_sources.begin();
+        army** last = self->aura_sources.end();
+#pragma inline_depth(0)
+        self->aura_sources.erase(first, last);
+#pragma inline_depth()
+    }
+    long j = self->aura_clients.size();
+    while (j-- > 0) {
+        std::vector<army*>& sources = self->aura_clients[j]->aura_sources;
+#pragma inline_depth(0)
+        unsigned n = sources.size();
+#pragma inline_depth()
+        while (n-- != 0) {
+            if (sources[n] == self) {
+                army** pos = sources.begin() + n;
+#pragma inline_depth(0)
+                sources.erase(pos);
+#pragma inline_depth()
+                break;
+            }
+        }
+    }
+    {
+        army** first = self->aura_clients.begin();
+        army** last = self->aura_clients.end();
+#pragma inline_depth(0)
+        self->aura_clients.erase(first, last);
+#pragma inline_depth()
+    }
+}
+
 // Put one spell ON this stack: pick how many rounds it stands (255 for
 // the three that never time out on their own, "until your next turn"
 // for Frenzy, the caster's power for everything else), raise-or-return
@@ -4713,14 +4869,10 @@ void army::CancelAllSpells()
 // conversion or the reference-return dereference folds the copy retail
 // keeps (+0.95).
 //
-// Residual (94.6999%): all inside push_back's expansion and the
-// register-homing family. Retail's push_back keeps one std::copy
-// (0x5093c0) and the map-iterator constructor (0x5586d0) as calls
-// inside its OWN expansion - one statement, unreachable by
-// statement-scoped pins - where our CL writes the copy loop out and
-// inlines the ctor; the remainder is scratch-register mirroring in
-// the entry and the deque-grow paths. Reloc-name-only rows on the
-// paired float pool and STL COMDATs are cosmetic.
+// Residual (99.0928%): see the budget-dose note above the three file-local
+// helpers this body calls - that note replaces the "unreachable by
+// statement-scoped pins" reading, which was right about the pin and wrong
+// about the wall.
 //
 // The float constants are read from the image: the factor arms divide
 // the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
@@ -4737,20 +4889,7 @@ VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::SetSpellInfluence(int spell, int power, int mastery,
                              const hero* casting_hero)
 {
-    long rounds;
-    switch (spell) {
-    case SPELL_DISRUPTING_RAY:
-    case SPELL_BERSERK:
-    case SPELL_BIND:
-        rounds = 255;
-        break;
-    case SPELL_FRENZY:
-        rounds = (this != gpCombatManager->get_current_army()) + 1;
-        break;
-    default:
-        rounds = power;
-        break;
-    }
+    long rounds = spell_influence_rounds(this, spell, power);
     if (spellInfluence[spell] > 0) {
         if (rounds > spellInfluence[spell])
             spellInfluence[spell] = rounds;
@@ -4888,57 +5027,11 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
     case SPELL_BERSERK:
         CancelIndividualSpell(SPELL_HYPNOTIZE);
         break;
-    case SPELL_HYPNOTIZE: {
+    case SPELL_HYPNOTIZE:
         CancelIndividualSpell(SPELL_BERSERK);
-        long i = aura_sources.size();
-        while (i-- > 0) {
-            std::vector<army*>& clients = aura_sources[i]->aura_clients;
-#pragma inline_depth(0)
-            unsigned n = clients.size();
-#pragma inline_depth()
-            while (n-- != 0) {
-                if (clients[n] == this) {
-                    army** pos = clients.begin() + n;
-#pragma inline_depth(0)
-                    clients.erase(pos);
-#pragma inline_depth()
-                    break;
-                }
-            }
-        }
-        {
-            army** first = aura_sources.begin();
-            army** last = aura_sources.end();
-#pragma inline_depth(0)
-            aura_sources.erase(first, last);
-#pragma inline_depth()
-        }
-        long j = aura_clients.size();
-        while (j-- > 0) {
-            std::vector<army*>& sources = aura_clients[j]->aura_sources;
-#pragma inline_depth(0)
-            unsigned n = sources.size();
-#pragma inline_depth()
-            while (n-- != 0) {
-                if (sources[n] == this) {
-                    army** pos = sources.begin() + n;
-#pragma inline_depth(0)
-                    sources.erase(pos);
-#pragma inline_depth()
-                    break;
-                }
-            }
-        }
-        {
-            army** first = aura_clients.begin();
-            army** last = aura_clients.end();
-#pragma inline_depth(0)
-            aura_clients.erase(first, last);
-#pragma inline_depth()
-        }
+        drop_aura_links(this);
         add_aura();
         break;
-    }
     case SPELL_BLIND:
         blindFactor = amount / 100.0;
         break;
@@ -4948,23 +5041,9 @@ void army::SetSpellInfluence(int spell, int power, int mastery,
         attackSkill = attackSkill - diseaseAttackPenalty;
         defenseSkill = defenseSkill - diseaseDefensePenalty;
         break;
-    case SPELL_POISON: {
-        double clamped =
-            _cpp_max(static_cast<double>(poisonPenalty - 0.1f), 0.5);
-        float penalty = static_cast<float>(clamped);
-        poisonPenalty = penalty;
-        long hp;
-        if (spellInfluence[SPELL_AGE]) {
-            float base = origHitPoints;
-            hp = static_cast<long>(base * penalty * 0.5f + 0.95f);
-        } else {
-            float base = origHitPoints;
-            hp = static_cast<long>(base * penalty + 0.95f);
-        }
-        hitPoints = hp;
-        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+    case SPELL_POISON:
+        apply_poison_step(this);
         break;
-    }
     case SPELL_AGE: {
         long hp;
         if (spellInfluence[SPELL_AGE]) {

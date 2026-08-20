@@ -630,10 +630,20 @@ Companion sweep: **positive `[ebp+N]` slots retail writes and we never do** are
 the recycled-parameter sites, found mechanically. Validate the base
 instruction count first — llvm-objdump truncates EH-bearing base dumps.
 
-**A CALLER-SHRINK DOSE THAT IS TOO SMALL IS BYTE-FLAT, NOT FRACTIONAL.**
-Lifting one function's field stores into a helper moved the score by 0.0000.
-The /Ob2 threshold is a STEP, so a null result means "too small", not "wrong
-idea" — which is why dose titration reads as nothing-then-everything.
+**A CALLER-SHRINK DOSE THAT IS TOO SMALL IS BYTE-FLAT, NOT FRACTIONAL, AND
+DOSES ARE NOT INDEPENDENT.** The /Ob2 threshold is a STEP, so a null result
+means "too small", not "wrong idea".
+- `SetSpellInfluence`: three lifts, **each byte-flat alone**, worth **+4.39
+  together** — and removing the one that crosses the threshold puts the other
+  two back at *exactly* the untouched baseline.
+- `FindCombatPath`: four doses, the third worth +0.17 and the fourth **+6.52**.
+  A note reading "the two levers do not add" was two doses short, not wrong.
+- **When a dose OVERSHOOTS, slice the same block thinner.** `PushPoint`'s
+  whole magic_forbidden block measured −4.7; only the cell lookup inside it
+  measured **+3.76**. A banked negative can be measuring the dose SIZE rather
+  than the block.
+So never conclude from a single flat measurement: titrate combinations, and
+re-slice a block that overshoots.
 
 **`DON'T CACHE WHAT RETAIL RELOADS` CAN BE ASYMMETRIC INSIDE ONE STATEMENT
 PAIR.** Retail named one value in a temp slot and recomputed its sibling with
@@ -680,6 +690,33 @@ block means the OTHER arm is the `if` (95.66 -> 97.16).
 note predicted the leaner direction; hoisting as it suggested costs **4.01**.
 Both directions are now measured worse — 68.08 is a local maximum. Measure
 both before acting on a directional verdict.
+
+**THE FRAME IS A SIGNAL, NOT AN OBJECTIVE.** Reaching `StampObject`'s exact
+0x7c frame by hoisting a local one scope further out costs **12.6 points**.
+Use the frame delta to name the missing fact, then find the spelling that
+produces it — do not chase the number.
+
+**AN ADDRESS-TAKEN LOOP COUNTER BLOCKS STRENGTH REDUCTION.** `readMapObjects`'
+`i` must be `int`, not `unsigned`, so `vector<int>::push_back` binds
+`const int&` to `i` ITSELF — that takes its address, forbids induction-variable
+rewriting, and makes retail rebuild every subscript from `i` across four loops.
+One word, **+2.99**. **The same mechanism from the other side:** a member
+re-read inside a loop blocks it too, so naming it once per iteration gives
+retail's `lea/dec/movsx` walk (**+7.22**).
+
+**BLOCK SCOPE IS WHAT PUTS A LOCAL IN A DEAD PARAMETER HOME.** Function-scoped,
+`int int_buffer` gets its own slot; block-scoped, VC6 puts it in retail's own
+`[ebp+8]` with the flag byte at `[ebp+0xb]`.
+
+**BIND A BY-VALUE STRING RETURN BY `const&`** — VC6 does not elide the copy
+into a named `std::string`. **+1.67** and 16 frame bytes.
+
+**A BRANCHED TERNARY ARGUMENT WANTS `x = a; if (c) x = b;`**, not a symmetric
+if/else — retail loads the default unconditionally (93.33 vs **95.70**).
+
+**DECLARATION ORDER IS OBSERVABLE WHEN THE TWO LOADS COME FROM DIFFERENT
+SOURCES** — reading a memory operand before one the guard already left live in
+a register. **+2.08 / +2.32** in two loops of one function.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 
