@@ -1665,6 +1665,11 @@ public:
     void GameFn_004C7C50();
 #endif
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // Retail-only 0x4cbd40, an ordinal placeholder: HandleNetMsg's
+    // game-transmit-init arm hands it the message's three leading
+    // payload dwords, a set flag and the trailing byte; nonzero answer
+    // lets the remote-load path run. Not claimed here.
+    int GameFn_004CBD40(int a, int b, int c, int d, unsigned char e);
     // Retail-only 0x4ca5b0, an ordinal placeholder on GameFn_004CA410's
     // convention. advManager::Open calls it when the incoming player is
     // not the local human; the row is not claimed here.
@@ -1994,6 +1999,22 @@ extern int gNetLocalGamePos;                // .bss 0x69cca8
 // the byte the WRONG 2026-08-20-corrected gMapVisibilityBit claim used
 // to sit on - a real, distinct cell. Name stays ordinal.
 extern unsigned char gUnnamed69ccc4;
+
+#ifdef HOMM3_ADVMGR_TURN_DECLS
+// The two-hero-snapshot trade payload HandleNetMsg's RS_TRADE_REQUEST arm
+// copies into gpGame->heroes by each snapshot's own id field. The DC
+// gives its same-shape class the CTradeRequestMsg name ("embeds two hero
+// snapshots", see netmsg.h) - that tree name is currently on the compact
+// gift record, so this view keeps an ordinal spelling until the netmsg
+// attribution swap lands. Defined HERE (not netmsg.h) because it embeds
+// hero by value and game.h is where advmgr's include order has both
+// CNetMsg and hero complete.
+class CTradeHeroesMsg : public CNetMsg {
+public:
+    hero m_hero1;
+    hero m_hero2;
+};
+#endif
 
 // Two game-band routines StartLocalPlayerTurn drives, spelled as /Gr free
 // functions (the game lands in ECX either way) so class game stays

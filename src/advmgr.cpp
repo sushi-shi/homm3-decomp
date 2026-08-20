@@ -217,14 +217,221 @@ type_university* ExtraInfoUnion::get_university() const
     return &gpGame->universities[university_info.index];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:420
+// The adventure-map network dispatcher. The 1049..1063 map-change batch
+// short-circuits ahead of the switch; every other case is the DC
+// eRS_Messages ladder's own name. Nine arms defer into the popup-abort
+// slot with DIRECT member stores (the reason the base fields went
+// protected), the RS_GIFT arm goes through vtable slot 4 while
+// RS_GIFT_REQUEST calls its sibling direct, the two visibility arms are
+// deliberate longhand duplicates, and the session-lost arm's else falls
+// into the same new-host hand-off as default (VC6 cross-jumps them).
+// The common tail recycles whatever message pointer survived.
 VA(0x00405e30, 0x64B)  // dc-bracket forced, dc 0x58f0
 CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    if (pNetMsg->subType >= RS_MAP_CHANGE_START
+        && pNetMsg->subType <= RS_MAP_CHANGE_END) {
+        gpAdvManager->AdvmgrFn_00482010(pNetMsg);
+        RemoteFn_00555910(pNetMsg);
+        return 0;
+    }
+
+    switch (pNetMsg->subType) {
+    case RS_GAME_TRANSMIT_INIT: {
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        CGameTransmitInitMsg* pMsg =
+            static_cast<CGameTransmitInitMsg*>(pNetMsg);
+        if (gpGame->GameFn_004CBD40(pMsg->m_field_14, pMsg->m_field_18,
+                                    pMsg->field_00, 1, pMsg->m_field_20)) {
+            if (pMsg->m_field_1c)
+                KbFn_004F4C00(pMsg->field_00, 1);
+            gpAdvManager->LoadRemote(pMsg->m_field_21);
+        }
+        break;
+    }
+    case RS_CHAT_MSG: {
+        CChatMsg* pMsg = static_cast<CChatMsg*>(pNetMsg);
+        ReceiveChat(pMsg->m_text, pMsg->field_00);
+        break;
+    }
+    case RS_COMBAT_INIT:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        gpAdvManager->AdvmgrFn_004ACD70(pNetMsg);
+        break;
+    case RS_TURN_UPDATE: {
+        CTurnUpdateMsg* pMsg = static_cast<CTurnUpdateMsg*>(pNetMsg);
+        int pos = pMsg->m_gamePos;
+        gNetLocalGamePos = pos;
+        gpCurrentPlayer = &gpGame->players[pos];
+        gUnnamed69ccc4 = 1 << pos;
+        if (!m_inPopup) {
+            gpAdvManager->bottomViewType = advManager::BOTTOM_VIEW_DEFAULT;
+            gpAdvManager->UpdBottomView(1, 1, 1);
+        }
+        if (gpCurrentPlayer->IsHuman()) {
+            RemoteFn_00553AA0(gUnnamed69d7b0, gpGeneralText->GetText(352),
+                              gpCurrentPlayer->cName);
+            gUnnamed69d810 = gNetLocalGamePos;
+        }
+        break;
+    }
+    case RS_PLAYER_DROPPED: {
+        CPlayerDroppedMsg* pMsg = static_cast<CPlayerDroppedMsg*>(pNetMsg);
+        if (m_inPopup
+            && gpGame->GetGamePosFromDPID(pMsg->field_04) == gUnnamed69d810) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        RemoteFn_00556430(pMsg->m_gamePos);
+        break;
+    }
+    case RS_PLAYER_DROP_UPDATE: {
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        CPlayerDropUpdateMsg* pMsg =
+            static_cast<CPlayerDropUpdateMsg*>(pNetMsg);
+        RemoteFn_005565E0(pMsg->m_gamePos);
+        break;
+    }
+    case RS_PLAYER_DEAD: {
+        CPlayerDeadMsg* pMsg = static_cast<CPlayerDeadMsg*>(pNetMsg);
+        RemoteFn_00556780(pMsg->m_gamePos, 1);
+        break;
+    }
+    case RS_PLAYER_WON:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        RemoteFn_00556940(pNetMsg);
+        break;
+    case RS_PLAYER_LOST:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        RemoteFn_005569A0(pNetMsg);
+        break;
+    case RS_SET_VISIBILITY: {
+        CSetVisibilityMsg* pMsg = static_cast<CSetVisibilityMsg*>(pNetMsg);
+        gpGame->SetVisibility(pMsg->m_point.x, pMsg->m_point.y,
+                              pMsg->m_point.z, pMsg->m_playerPos,
+                              pMsg->m_range, 0);
+        gpAdvManager->UpdateRadar(gpAdvManager->radarOrigin, 1, 1, 0, 0, 0);
+        gpAdvManager->CompleteDraw(gpAdvManager->radarOrigin.x,
+                                   gpAdvManager->radarOrigin.y,
+                                   gpAdvManager->radarOrigin.z, 0, 1);
+        gpWindowManager->UpdateScreen(advManager::ADVENTURE_SCREEN_X,
+                                      advManager::ADVENTURE_SCREEN_Y,
+                                      advManager::ADVENTURE_SCREEN_WIDTH,
+                                      advManager::ADVENTURE_SCREEN_HEIGHT);
+        unsigned long curTime = GameTime::Get();
+        if (static_cast<long>(
+                curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                >= 0
+            && !gpAdvManager->animCtrPaused) {
+            ++gpAdvManager->animFrame;
+            long elapsedTime =
+                curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                _cpp_max(elapsedTime,
+                         static_cast<long>(
+                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
+        }
+        Process1WindowsMessage();
+        break;
+    }
+    case RS_RESET_VISIBILITY: {
+        CSetVisibilityMsg* pMsg = static_cast<CSetVisibilityMsg*>(pNetMsg);
+        gpGame->SetVisibility(pMsg->m_point.x, pMsg->m_point.y,
+                              pMsg->m_point.z, pMsg->m_playerPos,
+                              pMsg->m_range, 0);
+        gpAdvManager->UpdateRadar(gpAdvManager->radarOrigin, 1, 1, 0, 0, 0);
+        gpAdvManager->CompleteDraw(gpAdvManager->radarOrigin.x,
+                                   gpAdvManager->radarOrigin.y,
+                                   gpAdvManager->radarOrigin.z, 0, 1);
+        gpWindowManager->UpdateScreen(advManager::ADVENTURE_SCREEN_X,
+                                      advManager::ADVENTURE_SCREEN_Y,
+                                      advManager::ADVENTURE_SCREEN_WIDTH,
+                                      advManager::ADVENTURE_SCREEN_HEIGHT);
+        unsigned long curTime = GameTime::Get();
+        if (static_cast<long>(
+                curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                >= 0
+            && !gpAdvManager->animCtrPaused) {
+            ++gpAdvManager->animFrame;
+            long elapsedTime =
+                curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                _cpp_max(elapsedTime,
+                         static_cast<long>(
+                             advManager::ADVENTURE_ANIMATION_MAX_ELAPSED));
+        }
+        Process1WindowsMessage();
+        break;
+    }
+    case RS_COMBAT_TYPE: {
+        CCombatTypeMsg* pMsg = static_cast<CCombatTypeMsg*>(pNetMsg);
+        gpGame->players[pMsg->field_00].quickCombat = pMsg->m_combatType;
+        break;
+    }
+    case RS_TRADE_REQUEST: {
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        CTradeHeroesMsg* pMsg = static_cast<CTradeHeroesMsg*>(pNetMsg);
+        gpGame->heroes[pMsg->m_hero1.id] = pMsg->m_hero1;
+        gpGame->heroes[pMsg->m_hero2.id] = pMsg->m_hero2;
+        gpAdvManager->HeroSwap(&gpGame->heroes[pMsg->m_hero1.id],
+                               &gpGame->heroes[pMsg->m_hero2.id]);
+        break;
+    }
+    case RS_PLAYER_ACTIVE:
+        RemoteFn_00553AA0(
+            gUnnamed69d7b0, gpGeneralText->GetText(40),
+            gpGame->GetPlayerName(gpGame->GetLocalPlayerGamePos()));
+        break;
+    case RS_GIFT:
+        HandleTradeRequestMsg(pNetMsg);
+        break;
+    case RS_GIFT_REQUEST:
+        HandleGiftMsg(pNetMsg);
+        break;
+    case RS_SESSION_LOST:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        pNetMsg = RemoteFn_00557920(pNetMsg);
+        break;
+    case RS_NORMAL_WIN:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        RemoteFn_005569F0(pNetMsg);
+        break;
+    default:
+        pNetMsg = RemoteFn_00557920(pNetMsg);
+        break;
+    }
+
+    if (pNetMsg)
+        RemoteFn_00555910(pNetMsg);
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:651
 // CLAIM WITHDRAWN 2026-08-20: 0x00406480 is NOT this method, and the row
