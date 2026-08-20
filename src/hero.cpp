@@ -1184,17 +1184,87 @@ void hero::AddSpell(int whichSpell)
 
 // E:\gamedcs\hero.cpp:1527
 VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
-void mark_spells(unsigned char* spell_list, TSpellSchool school)
+std::bitset<70> mark_spells(int artifactId)
 {
     // @stub
 }
 
+#endif  // @carcass
+
+// 0x004d9350, still unwritten, but its SIGNATURE is settled from the
+// retail call sites and is NOT the DC row's `(unsigned char*,
+// TSpellSchool)`: it is a /Gr free function returning a bitset<70> BY
+// VALUE (hidden return pointer in ECX, artifact id pushed out to EDX -
+// `lea ecx,[ebp-0x50] / mov edx,<artifact id> / call`), and the caller
+// copies exactly three dwords out of the result, which is bitset<70>'s
+// storage. Declared here so update_spell_list emits the CALL retail
+// emits; mark_spells has two call sites image-wide, so /Ob2's
+// single-call-site rule does not threaten it.
+std::bitset<70> mark_spells(int artifactId);
+
 // E:\gamedcs\hero.cpp:1542
+// Rebuilds available_spells from the spellbook plus every spell-granting
+// artifact the hero wears. The two grant loops are written LONGHAND
+// twice because retail expands them twice - once for the worn artifact
+// itself and once per component of the combination it belongs to.
+//
+// Loop forms are not interchangeable here and each is taken from the
+// bytes: the 19-slot sweep is a DOWNCOUNT (`mov ecx,0x13` / `dec` /
+// `jne`); the 144-component sweep is a signed INDEX loop, which survives
+// strength reduction as `cmp <byte offset>,0x1200 / jl`; and the 70-entry
+// grant loop is a POINTER walk closing on `!=`, not an index compare -
+// equality has no signedness, which is why the pointer-compare rule that
+// governs the other two does not reach it. The `jb` inside the grant
+// loop is bitset::test's own size_t bounds check, not the loop.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
-    // @stub
+    std::copy(in_spellbook, in_spellbook + NUM_SPELLS, available_spells);
+
+    int remaining = 19;
+    const type_artifact* slot = equipped;
+    do {
+        int artifactId = slot->artifactId;
+        long extra = slot->extra;
+        if (artifactId != ARTIFACT_NONE) {
+            if (artifactId == ARTIFACT_SPELL_SCROLL) {
+                available_spells[extra] = 1;
+            } else {
+                if (akArtifactTraits[artifactId].givesSpells) {
+                    std::bitset<70> granted = mark_spells(artifactId);
+                    unsigned char* dst = available_spells;
+                    unsigned int spell = 0;
+                    while (dst != available_spells + NUM_SPELLS) {
+                        *dst = *dst || granted.test(spell);
+                        ++dst;
+                        ++spell;
+                    }
+                }
+                int comboType = akArtifactTraits[artifactId].comboType;
+                if (comboType != -1) {
+                    const std::bitset<144>& components =
+                        gCombinationArtifacts[comboType].components;
+                    for (int component = 0; component < 144; component++) {
+                        if (components.test(component) &&
+                            akArtifactTraits[component].givesSpells) {
+                            std::bitset<70> granted = mark_spells(component);
+                            unsigned char* dst = available_spells;
+                            unsigned int spell = 0;
+                            while (dst != available_spells + NUM_SPELLS) {
+                                *dst = *dst || granted.test(spell);
+                                ++dst;
+                                ++spell;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        slot++;
+    } while (--remaining);
 }
+
+#if 0  // @carcass
 
 // ARITY DIVERGENCE, flagged 2026-08-07 by the tail-audit's `ret N` vs DC
 // param-count sweep; the five hero-screen rows below all disagree with
