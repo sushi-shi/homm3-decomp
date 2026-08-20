@@ -21,6 +21,22 @@ comment (precedent: GetArmyMorale). Promoting a carcass fn renames its row —
 DELETE the superseded flat-name row in the same change or the gate reports it
 MISSING forever.
 
+**A MAX IS ONLY COMPARABLE WITHIN A DELINK GENERATION** (proven 2026-08-20).
+New claims in ANY TU rename symbols in the synth PDB, vostok delinks every
+unit against that PDB, so the TARGET half of the comparison moves for units
+you never touched. `recruit::Update` fell 90.8376 -> 88.2360 at an
+integration with recruit.cpp and all its headers byte-identical; reverting
+only mapcell.cpp's two new VA claims and re-delinking returned it to exactly
+90.83756, and restoring them returned it to 88.23604. So:
+- a cross-unit "regression" after a merge that added claims is usually THIS,
+  not a code change — check whether the unit's source and headers actually
+  moved before hunting a spelling;
+- the newer, more-claimed reference is the more ACCURATE one, so the lower
+  number is generally the honest one. Accept it with the cause recorded, do
+  not chase it;
+- conversely, do not bank a max measured against a stale delink. Re-run
+  build -> delink -> build before trusting a number you are about to record.
+
 ## The loop
 
 1. **Locate** (if unclaimed). The DC CodeView roster is the spine:
