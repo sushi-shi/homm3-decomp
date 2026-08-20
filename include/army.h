@@ -87,6 +87,16 @@ enum EAttackCriteria {
 // Behind the round view for the usual measured reason.
 #ifdef HOMM3_ARMY_ROUND_VIEW
 enum EArmySpellRowId {
+    // The three rows Cure (0x446500) cancels that armygrp.h keeps
+    // behind its own views: taking those views here is not an option,
+    // because the ENCHANTMENT_TABLE block redefines SPELL_FRENZY,
+    // SPELL_BIND and SPELL_AGE, which this roster already owns. Each
+    // value is fixed twice over - once by armygrp.h's ladder and once
+    // by this header's own +0x198 round row (SLOW +0x270 == 54*4,
+    // PARALYZE +0x2b0 == 74*4) - and Cure's call order corroborates
+    // all three a third time, since its fourteen cancels run in
+    // strictly ascending spell id.
+    SPELL_SLOW = 0x36,
     // The one row ResetRound refuses to decrement. 0x38 is the slot
     // between SPELL_SLAYER 0x37 and SPELL_TITANS_LIGHTNING_BOLT 0x39,
     // and frenzyRounds below already pairs +0x278 == +0x198 + 56*4 on
@@ -98,6 +108,8 @@ enum EArmySpellRowId {
     // CancelIndividualSpell` - which is the same index 72 the +0x2b8
     // bindRounds field already pairs, reached from the other side.
     SPELL_BIND = 0x48,
+    SPELL_DISEASE = 0x49,
+    SPELL_PARALYZE = 0x4a,
     SPELL_AGE = 0x4b
 };
 #endif
@@ -1295,6 +1307,23 @@ public:
     void DrawToBuffer(int x, int y, int bNumBoxOnly);
     void CancelSpellType(int iSpellType);    // 0x4444d0
     void CancelIndividualSpell(int spell);   // 0x444510
+    // The Cure spell's whole effect: restore hit points, clamp the top
+    // creature's damage to what the stack can still survive, cancel the
+    // fourteen negative influences one by one and heal the remainder.
+    // The DC prototype (army.cpp:4739) names the three parameters and
+    // retail's `ret 0xc` agrees.
+    //
+    // BEHIND THE ROUND VIEW, AND THAT IS A MEASUREMENT: declared
+    // unconditionally this ONE declarator costs command.obj's
+    // GetCommand 92.5714 -> 92.5357, the same value and the same
+    // function as the get_clockwise / get_counter_clockwise pair
+    // recorded further down - this header's own include-set canary. The
+    // round view is where it belongs anyway: every field the body
+    // touches (spellInfluence, origHitPoints, poisonPenalty) is already
+    // scoped to it, and army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
+#endif
     // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
     // address is not claimed here, only the declaration. spells.obj's
     // SetMassSpellInfluence (0x5a66d0) is the located caller and its
