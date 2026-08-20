@@ -4077,6 +4077,12 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 //     XOR-and-mask chain (`xor bx,[eax] / and ebx,0x3ff`) is what VC6
 //     emits for the three short:10 / short:4 BITFIELD compares written
 //     out longhand, not for the operator.
+//   * 2026-08-20, the doses-combine rule applied: the KNOWN-RIGHT erase
+//     guard PAIRED with each rejected knob - guard + gpGame->GetHero
+//     70.1844, guard + players[] re-subscript 71.7318. Every guard
+//     combination measures 5-7 under the guardless 77.4860, so the
+//     "something around it is still wrong" element is not either of
+//     those two; the pair search is closed on them.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
