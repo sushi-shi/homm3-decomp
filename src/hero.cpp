@@ -62,6 +62,15 @@
 #include "message.h"
 #include "misc.h"
 #include "winmgr.h"
+// TLevelUpWindow, akLevelUpSkillTraits and the two skill-icon ids: the
+// level-up dialog hero::CheckLevel raises. levelupwindow.h only adds
+// advmgr_popup.h on top of what hero.h already pulls.
+#include "levelupwindow.h"
+// gTurnDuration69d630 - CheckLevel shortens the multiplayer dialog
+// deadline once the turn timer has expired.
+#include "remote.h"
+// launch_sample - the level-up jingle.
+#include "soundmgr.h"
 
 inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
 {
@@ -516,13 +525,13 @@ int hero::load(TAbstractFile* infile, int saveVersion)
     patrolY = ReadByteField(infile);
     facing = ReadByteField(infile);
     formation = ReadByteField(infile);
-    pad_08f[0] = ReadByteField(infile);
-    pad_08f[1] = ReadByteField(infile);
+    iLevelSeed = ReadByteField(infile);
+    lastWisdom = ReadByteField(infile);
 
     pathTargetX = ReadDwordField(infile);
     pathTargetY = ReadDwordField(infile);
     pathTargetZ = ReadWordField(infile);
-    field_03f = ReadWordField(infile);
+    last_magic_school_level = ReadWordField(infile);
     maxMovePoints = ReadDwordField(infile);
     movePoints = ReadDwordField(infile);
     experience = ReadDwordField(infile);
@@ -652,13 +661,13 @@ int hero::save(TAbstractFile* outfile)
     WriteByteField(outfile, patrolY);
     WriteByteField(outfile, facing);
     WriteByteField(outfile, formation);
-    WriteByteField(outfile, pad_08f[0]);
-    WriteByteField(outfile, pad_08f[1]);
+    WriteByteField(outfile, iLevelSeed);
+    WriteByteField(outfile, lastWisdom);
 
     WriteDwordField(outfile, pathTargetX);
     WriteDwordField(outfile, pathTargetY);
     WriteWordField(outfile, pathTargetZ);
-    WriteWordField(outfile, field_03f);
+    WriteWordField(outfile, last_magic_school_level);
     WriteDwordField(outfile, maxMovePoints);
     WriteDwordField(outfile, movePoints);
     WriteDwordField(outfile, experience);
@@ -1668,11 +1677,33 @@ void hero::ApplyBattleLossTemps()
     ApplyBattleWinTemps();
 }
 
-#if 0  // @carcass
-
 // hero::GetLevel (dc 0xccc8c, 272 B) has NO retail row: the carve is
 // gap-free from GetExperienceIncrement 0x004da420 straight into
 // ApplyBattleWinTemps 0x004da510. Left DC_ONLY above.
+
+// Retail .bss 0x698400. 0x4bfe70 sets it for the whole of its
+// scenario-setup pass and clears it at the end; every reader treats
+// nonzero as "suppress the interactive path" - game::ClaimTown skips its
+// notify call, CheckLevel skips the level-up window entirely. Eight
+// references image-wide, three in the body below. NAME UNATTESTED,
+// address-ordinal placeholder.
+DATA(0x00698400) extern int gbInSetup698400;
+
+// philai.obj 0x52bbd0 (dc 0x114a5c). Declared here rather than by
+// including philai.h, whose closure hero.obj does not otherwise need.
+TSecondarySkill AI_choose_secondary_skill(const hero* our_hero,
+                                          TSecondarySkill first,
+                                          TSecondarySkill second,
+                                          unsigned char complex_choice);
+
+// get_skill_award is defined further down (0x4dad00): retail emits this
+// caller FIRST, so the helper needs a declaration here. Being only
+// declared is also what keeps /Ob2 from expanding it - retail calls it
+// four times.
+TSecondarySkill get_skill_award(const hero* current_hero,
+                                TSkillMastery min_level,
+                                TSkillMastery max_level,
+                                TSecondarySkill excluded);
 
 // STATIC-HELPER-AFTER-CALLER: retail emits CheckLevel BEFORE
 // get_skill_award, the reverse of the DC source order. Proven by the
@@ -1683,11 +1714,158 @@ void hero::ApplyBattleLossTemps()
 // reads ecx only (`void hero::CheckLevel()`), 0x004dad00 reads ecx AND
 // edx, i.e. the /Gr free function `get_skill_award(hero*, ...)`.
 // E:\gamedcs\hero.cpp:2147
+//
+// The level-up loop. EH-bearing, but NOT from a source try/catch: three
+// TLevelUpWindow locals in three mutually exclusive arms plus /GX give
+// the fs:[0] frame and the 0/1/2 trylevel by themselves, and the
+// prologue's `push 0xb` is a relocation ADDEND, not a state count.
+// hero::GetLevel is /Ob2-expanded at the top (it is `inline` and defined
+// above); get_skill_award is not, and must not be. The magic-school test
+// on skills[0] really is emitted TWICE - once before skills[1] is drawn
+// and again inside the two-entry loop - so it is written twice here.
+// The inner braces in the third arm are load-bearing: that window's
+// destructor runs BEFORE the dialogReturn chain, where the second arm's
+// GiveSS runs INSIDE its window's lifetime.
 VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::CheckLevel()
 {
-    // @stub
+    int newLevel = GetLevel(experience);
+    if (level != newLevel) {
+        while (level < newLevel) {
+            level = level + 1;
+            sprintf(gText,
+                    gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
+                    name);
+            SRand(level * 214013 + iLevelSeed * 156823 + 153567);
+
+            int stat = 0;
+            int roll = Random(1, 100);
+            const signed char* chances;
+            if (level > LEVEL_UP_LOW_LEVEL_LAST)
+                chances = akHeroClasses[heroClass].gainPrimarySkillChance10P;
+            else
+                chances = akHeroClasses[heroClass].gainPrimarySkillChance;
+            if (gCampaignMode &&
+                gpGame->campaign.currentCampaign == LEVEL_UP_CAMPAIGN_OVERRIDE &&
+                id == LEVEL_UP_OVERRIDE_HERO_ID) {
+                if (level > LEVEL_UP_LOW_LEVEL_LAST)
+                    chances = akHeroClasses[eClassBarbarian]
+                                  .gainPrimarySkillChance10P;
+                else
+                    chances = akHeroClasses[eClassBarbarian]
+                                  .gainPrimarySkillChance;
+                roll = Random(1, chances[0] + chances[1]);
+            }
+            while (roll > chances[stat]) {
+                roll -= chances[stat];
+                stat++;
+            }
+
+            stats[stat]++;
+            char text[200];
+            sprintf(text, "\n%s +1", gPrimarySkillNames[stat]);
+            strcat(gText, text);
+
+            TSecondarySkill skills[LEVEL_UP_SKILL_CHOICES];
+            skills[0] = get_skill_award(this, eMasteryBasic, eMasteryExpert,
+                                        eSecSkillNone);
+            if (skills[0] == eSecSkillNone)
+                skills[0] = get_skill_award(this, eMasteryNone,
+                                            eMasteryExpert, eSecSkillNone);
+            if (skills[0] == eSecSkillSchoolOfFireMagic ||
+                skills[0] == eSecSkillSchoolOfAirMagic ||
+                skills[0] == eSecSkillSchoolOfWaterMagic ||
+                skills[0] == eSecSkillSchoolOfEarthMagic)
+                last_magic_school_level = level;
+
+            skills[1] = get_skill_award(this, eMasteryNone, eMasteryBasic,
+                                        skills[0]);
+            if (skills[1] == eSecSkillNone)
+                skills[1] = get_skill_award(this, eMasteryNone,
+                                            eMasteryExpert, skills[0]);
+
+            for (int i = 0; i < LEVEL_UP_SKILL_CHOICES; i++) {
+                if (skills[i] == eSecSkillWisdom)
+                    lastWisdom = static_cast<unsigned char>(level);
+                if (skills[i] == eSecSkillSchoolOfFireMagic ||
+                    skills[i] == eSecSkillSchoolOfAirMagic ||
+                    skills[i] == eSecSkillSchoolOfWaterMagic ||
+                    skills[i] == eSecSkillSchoolOfEarthMagic)
+                    last_magic_school_level = level;
+            }
+
+            if (!gbInSetup698400 && owner >= 0 &&
+                gpGame->IsLocalHuman(owner)) {
+                launch_sample("nwherolv.82m", -1, 3);
+                if (bVideoPaused)
+                    gpCurrentPlayer->IsLocalHuman();
+
+                if (skills[0] == eSecSkillNone) {
+                    TLevelUpWindow window(this, stat, -1, -1);
+                    if (gpGame->IsMultiplayer() &&
+                        gTurnDuration69d630.IsExpired())
+                        gDialogDeadline697784 = 15000;
+                    window.DoModal(0);
+                } else if (skills[1] == eSecSkillNone) {
+                    TLevelUpWindow window(
+                        this, stat,
+                        skills[0] * 3 + 3 + skillLevel[skills[0]], -1);
+                    if (gpGame->IsMultiplayer() &&
+                        gTurnDuration69d630.IsExpired())
+                        gDialogDeadline697784 = 15000;
+                    window.DoModal(0);
+                    GiveSS(skills[0], 1);
+                } else {
+                    sprintf(text,
+                            gpGeneralText->GetText(
+                                GENERAL_TEXT_LEVEL_UP_CHOICE),
+                            gSkillMasteryNames[skillLevel[skills[0]]],
+                            akLevelUpSkillTraits[skills[0]].name,
+                            gSkillMasteryNames[skillLevel[skills[1]]],
+                            akLevelUpSkillTraits[skills[1]].name);
+                    strcat(gText, text);
+                    {
+                        TLevelUpWindow window(
+                            this, stat,
+                            skills[0] * 3 + 3 + skillLevel[skills[0]],
+                            skills[1] * 3 + 3 + skillLevel[skills[1]]);
+                        if (gpGame->IsMultiplayer() &&
+                            gTurnDuration69d630.IsExpired())
+                            gDialogDeadline697784 = 15000;
+                        window.DoModal(0);
+                    }
+                    if (gpWindowManager->dialogReturn ==
+                        DIALOG_RETURN_TIMEOUT) {
+                        if (!gbInSetup698400 && owner >= 0)
+                            GiveSS(AI_choose_secondary_skill(
+                                       this, skills[0], skills[1], 1), 1);
+                        else
+                            GiveSS(AI_choose_secondary_skill(
+                                       this, skills[0], skills[1], 0), 1);
+                    } else if (gpWindowManager->dialogReturn ==
+                               TLevelUpWindow::SKILLICON_1_ID) {
+                        GiveSS(skills[0], 1);
+                    } else if (gpWindowManager->dialogReturn ==
+                               TLevelUpWindow::SKILLICON_2_ID) {
+                        GiveSS(skills[1], 1);
+                    }
+                }
+            } else if (skills[0] != eSecSkillNone) {
+                if (skills[1] == eSecSkillNone)
+                    GiveSS(skills[0], 1);
+                else if (!gbInSetup698400 && owner >= 0)
+                    GiveSS(AI_choose_secondary_skill(
+                               this, skills[0], skills[1], 1), 1);
+                else
+                    GiveSS(AI_choose_secondary_skill(
+                               this, skills[0], skills[1], 0), 1);
+            }
+        }
+        level = newLevel;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2014
 // /Gr free function: ecx = current_hero, edx = min_level, the remaining
