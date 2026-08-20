@@ -475,6 +475,18 @@ static int ReadDwordField(TAbstractFile* infile)
 // type_obscuring_object::load's result is checked and every scalar Read
 // is unchecked. EH-bearing: the name assignment owns a string temporary
 // and the bitset's inlined set() carries its range throw.
+//
+// Residual (87.9%): the /Ob2 budget inside the name assignment, nothing
+// source-local. `predict-inline` pairs 5 of the 13 out-of-line calls off
+// by COUNT (retail names its unclaimed basic_string callees, and the
+// 0x485d90 reader itself, with synth labels our side can never emit) and
+// leaves ONE real item: `_Tidy` out of line 4 times here against
+// retail's 1. Instruction counts nearly agree (654 vs 629) while blocks
+// do not (33 vs 21), which is what an inlining decision looks like from
+// the CFG side rather than a missing statement. `why-branch` finds no
+// catalog lever, and its four induction mutations on the bitset loop all
+// measure WORSE (+2 each), which independently confirms the unsigned
+// counter is right. Same class the two describers carry.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
