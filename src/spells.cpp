@@ -17,7 +17,11 @@
 // SetMassSpellInfluence calls army::SetSpellInfluence, whose declarator
 // army.h keeps behind this view.
 #define HOMM3_ARMY_SPELLS_VIEW
+// GetNextChainLightningTarget measures screen distance with army::MidX /
+// army::MidY, which army.h keeps behind this declaration view.
+#define HOMM3_ARMY_MIDPOINT_DECL
 #include "army.h"
+#undef HOMM3_ARMY_MIDPOINT_DECL
 #undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
@@ -40,6 +44,7 @@
 #include "hero.h"
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
+#include <math.h>    // sqrt, for the chain-lightning bounce search
 
 // VC6's own <xutility> reference-returning max, declared file-locally
 // exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
@@ -752,12 +757,90 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iD
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4202
+#endif  // @carcass
+
+// Chain Lightning's bounce search: of every stack the `effected` row has
+// not already recorded, take the one nearest the stack the bolt just
+// left. The distance is a real EUCLIDEAN one on SCREEN midpoints -
+// `sqrt((double)(dx*dx + dy*dy))` truncated by __ftol - not the axial
+// hex metric the area sweeps use, which is why the bolt visibly jumps to
+// the closest stack on screen rather than the closest by hex.
+//
+// The two accessors are army::MidX (0x446660) and army::MidY (0x446630).
+// NOTE FOR THE NAME MAP: build/gen/symbol_names.csv carries 0x46660 as a
+// working label `army_PlayAnimation`, which is REFUTED here - this call
+// site passes no stack arguments and consumes the return value, while
+// army::PlayAnimation takes three and returns void, and its real body is
+// already claimed at 0x446940. army.h has had 0x446660 as MidX since the
+// KeepAttack lane.
+//
+// THE WORK-CHANCE TEST IS WRITTEN TWICE, once per arm, and retail HOISTS
+// THE SHARED ARGUMENT PUSHES above the branch: the six pushes appear
+// once and each arm has its own `call`. The two arms also leave by
+// different paths because only the random one clobbers `this`.
+//
+// The zero compare is a FLOAT (`fcomp dword`), where
+// ValidSpellTargetArmy's is a double (`fcomp qword`) - the same
+// predicate spelled against a differently-typed literal in two places.
+//
+// NAMING THE STACK POINTER IS LOAD-BEARING, AND SO IS DECLARING IT
+// BEFORE THE `effected` TEST (49.22 -> 74.18 -> 91.10). With
+// `armies[side][i]` written out at each of the four uses, VC6 keeps only
+// `21*side` as an induction variable and recomputes the `*0x548` product
+// inside the body, and the two work-chance arms each build their own
+// argument list; naming the pointer merges the two arms' pushes as
+// retail has them, and hoisting the declaration ABOVE the `effected`
+// early-out makes it unconditional, which is what lets VC6 strength-
+// reduce it to retail's `add edi, 0x548` on the back edge. A pointer
+// computed after a `continue` cannot become an induction variable.
+//
+// Residual (91.1%): a whole-body ESI/EDI role swap and nothing else -
+// retail binds `this` to ESI and `last_target` to EDI, we bind them the
+// other way round, and the schedule is otherwise instruction-for-
+// instruction identical. This is the catalog's B1 with the transposed
+// pair being `this` against a PARAMETER, which docs/vc6/regalloc.md
+// records as the C1 handle-state class: no statement-local spelling
+// reaches it. `homm3 vc6 why-reg` enumerated sixteen catalog mutations
+// here and every one measured neutral or worse (best: three at +0,
+// thirteen from +1 to +83).
 VA(0x005a61f0, 0x163)  // order-map+arity, dc 0x15547c
-int combatManager::GetNextChainLightningTarget(army* lastTargetArmy, int bUseSRandom)
+long combatManager::GetNextChainLightningTarget(const army* last_target,
+                                                long use_random)
 {
-    // @stub
+    long best = 999999;
+    long best_index = -1;
+    long from_x = last_target->MidX();
+    long from_y = last_target->MidY();
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            army* target = &armies[side][i];
+            if (effected[side][i])
+                continue;
+            if (use_random) {
+                int chance = SpellCastWorkChance(SPELL_CHAIN_LIGHTNING,
+                                                 1 - side, target, 0, 1, 0)
+                    * 100.0f;
+                if (Random(1, 100) > chance)
+                    continue;
+            } else if (SpellCastWorkChance(SPELL_CHAIN_LIGHTNING, 1 - side,
+                                           target, 0, 1, 0) <= 0.0f) {
+                continue;
+            }
+            long dx = target->MidX() - from_x;
+            long dy = target->MidY() - from_y;
+            long distance = static_cast<long>(
+                sqrt(static_cast<double>(abs(dy) * abs(dy)
+                                         + abs(dx) * abs(dx))));
+            if (distance < best) {
+                best = distance;
+                best_index = target->gridIndex;
+            }
+        }
+    }
+    return best_index;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4255
 VA(0x005a6360, 0x34A)  // order-map+arity, dc 0x155664

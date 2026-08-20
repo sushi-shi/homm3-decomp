@@ -1532,6 +1532,12 @@ public:
     // by-value _cpp_max, whose signature retail's operand-address select
     // proves.
     long get_distance(hex_point start, hex_point stop) const;
+    // 0x5a61f0, Chain Lightning's bounce search: the nearest stack, by
+    // straight-line screen distance from the stack the bolt just left,
+    // that the `effected` row has not already recorded. Answers a
+    // gridIndex, or -1 when nothing qualifies.
+    long GetNextChainLightningTarget(const army* last_target,
+                                     long use_random);         // 0x5a61f0
 #endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
