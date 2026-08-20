@@ -145,6 +145,16 @@ MISSING forever.
   carcass already named the three helpers to split out
   (`handle_artifact_click`, `handle_backpack_click`, `show_skills`). Check
   the carcass for helper names before inventing your own.
+  **BUT THE PIN CAN RANK BACKWARDS, and the mechanism is worth knowing:
+  `auto_inline(off)` / `inline_depth(0)` de-inlines EVERYTHING in the
+  statements it covers, not just the callee you diagnosed.** Measured on
+  cmbtmgr's SetupAndLoadObstacles: `PlaceObstacle base x0 vs retail x1` is
+  the identical diagnosis that paid +18.10 on place_obstacle, and the
+  identical pragma LOST 5.89 there (64.81 -> 58.92) because it also
+  de-inlined the `obstacles.size()` in the same statement; hoisting `size()`
+  out first recovers part and is still worse (61.59). Scope the pragma as
+  tightly as you can, and measure — this is the second case in this tree of a
+  CORRECT diagnosis whose documented fix ranks the wrong way.
 - **/Ob2 single-call-site inlining**: statics AND extern functions with one
   call site inline REGARDLESS OF SIZE (AppInit→WinMain ~300B; AppCommand→
   AppWndProc is our uncracked over-inline residual). Unconditional out-of-line
