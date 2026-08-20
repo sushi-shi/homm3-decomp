@@ -2297,6 +2297,52 @@ void game::setup_shipyards()
 // counts deliberately skip only that vector rather than failing the load.
 #endif  // @carcass
 
+// WALL IDENTIFIED AND LARGELY CLEARED 2026-08-20 - and it was NOT the
+// old `_Tidy` story. `homm3 vc6 diagnose 0x004bcda0` classed this
+// INLINER (predict-inline): 14 callees expanded on retail's side only, 2
+// on ours, 203 basic blocks against 139, 97 conditional branches against
+// 72. The frame already matched (`sub esp,0x7a8` both sides); we simply
+// emitted ~200 more instructions.
+//
+// The whole cluster was ONE decision seen from both ends. Retail keeps
+// every std::vector<T>::resize instantiation OUT OF LINE and inlines
+// insert/erase/size INTO it - vector<type_point>::resize is the 497-byte
+// body at 0x4d4aa0, called five times from here. We did the inverse:
+// resize expanded into Load at every site, and the insert/erase/size it
+// contains were then left as calls. Our direct-call multiset carried
+// 5 insert, 4 erase and 9 size() rows retail has none of.
+//
+// The fix is to pin the eight resize CALL SITES, not the function.
+// `#pragma inline_depth(0)` is NOT function-granular in VC6 - this tree
+// already relies on that around generator::Grow above - so wrapping each
+// `X.resize(n)` statement alone suppresses exactly the one expansion and
+// leaves the fourteen expansions retail wants. 50.4577 -> 69.6199.
+//
+// Second point, from the pin's own documented side effect: it also
+// de-inlines everything else in the statement it covers, and
+// `resize(n)`'s DEFAULT ARGUMENT lives inside that statement, so the
+// empty `type_point()` was being emitted as five out-of-line constructor
+// calls retail does not make. Building the fill value as a named local
+// OUTSIDE the pin and passing it explicitly took 69.6199 -> 71.7143.
+// `emptyPoint` is a CODEGEN DEVICE, not retail's source spelling -
+// retail certainly wrote `resize(n)` - and it is semantically identical
+// because type_point's default constructor is empty, so both leave the
+// fill value uninitialised.
+//
+// Two knobs measured and REJECTED, so they are not re-tried:
+//   * `#pragma inline_depth(0)` scoped to the whole function: 50.46 ->
+//     48.97. It suppresses the resize expansion but also kills the
+//     fourteen expansions retail makes, and those dominate.
+//   * `#pragma auto_inline(off)` around a leading `#include <vector>`:
+//     no effect whatsoever (50.4577 either way). auto_inline only
+//     excludes functions from AUTOMATIC inlining, and the vector members
+//     are defined inside the class, so they are implicitly `inline` and
+//     the pragma never reaches them.
+//
+// Residual (71.7143%): `sub esp,0x7a4` against retail's 0x7a8 - one
+// slot, which appeared with the emptyPoint hoist - and the diagnostic
+// now reports 1 under-inline / 7 over-inline with the CFG at 136 blocks
+// against 139 and 68 conditional branches against 72.
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
@@ -2349,7 +2395,9 @@ int game::Load(TAbstractFile* infile)
     field_1f680.clear();
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
+#pragma inline_depth(0)
     field_1f680.resize(char_buffer);
+#pragma inline_depth()
     int eventBytes = char_buffer * sizeof(LoadEventRecord);
     if (infile->Read(field_1f680.begin(), eventBytes) < eventBytes)
         return -1;
@@ -2365,7 +2413,9 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(&short_buffer, sizeof(short_buffer)) <
         sizeof(short_buffer))
         return -1;
+#pragma inline_depth(0)
     generators.resize(short_buffer);
+#pragma inline_depth()
     int i;
     for (i = 0; i < short_buffer; ++i) {
         if (!generators[i].load(infile))
@@ -2392,7 +2442,9 @@ int game::Load(TAbstractFile* infile)
     unsigned char townCount;
     if (infile->Read(&townCount, sizeof(townCount)) < sizeof(townCount))
         return -1;
+#pragma inline_depth(0)
     towns.resize(townCount);
+#pragma inline_depth()
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].load(infile, saveVersion) < 0)
             return -1;
@@ -2490,7 +2542,10 @@ int game::Load(TAbstractFile* infile)
     for (i = 0; i < poolCount; ++i) {
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            lithPools[i].resize(short_buffer);
+            type_point emptyPoint;
+#pragma inline_depth(0)
+            lithPools[i].resize(short_buffer, emptyPoint);
+#pragma inline_depth()
             infile->Read(lithPools[i].begin(),
                          short_buffer * sizeof(type_point));
         }
@@ -2498,7 +2553,10 @@ int game::Load(TAbstractFile* infile)
     for (i = 0; i < poolCount; ++i) {
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            lithExitPools[i].resize(short_buffer);
+            type_point emptyPoint;
+#pragma inline_depth(0)
+            lithExitPools[i].resize(short_buffer, emptyPoint);
+#pragma inline_depth()
             infile->Read(lithExitPools[i].begin(),
                          short_buffer * sizeof(type_point));
         }
@@ -2506,18 +2564,27 @@ int game::Load(TAbstractFile* infile)
 
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        whirlpools.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        whirlpools.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(whirlpools.begin(), short_buffer * sizeof(type_point));
     }
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        undergroundGateExits.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        undergroundGateExits.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(undergroundGateExits.begin(),
                      short_buffer * sizeof(type_point));
     }
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        undergroundGatePairs.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        undergroundGatePairs.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(undergroundGatePairs.begin(),
                      short_buffer * sizeof(type_point));
     }
