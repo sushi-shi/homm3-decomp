@@ -221,6 +221,10 @@ public:
         QUEST_TEXT_PROGRESS = 1,
         QUEST_TEXT_COMPLETION = 2,
         QUEST_TEXT_DESCRIPTION = 3,
+        // Column 4, the QUEST-LOG line: TQuestGuard 0x572d60 and TSeerHut
+        // 0x574070 are its only readers, and they are the two builders the
+        // quest log's own window calls.
+        QUEST_TEXT_LOG = 4,
         QUEST_TEXT_COLUMNS = 5
     };
     // The five-column group this quest type owns, computed ONCE: slot 14

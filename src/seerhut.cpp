@@ -242,6 +242,12 @@ inline TCreatureType creature_type_from_int(int value)
     return storage.creature;
 }
 
+// seerhut.obj's own quest factory, 0x573240: the h3m quest type in ecx
+// and a byte in edx, i.e. the /Gr fastcall default. Both readers below
+// pass 0 for the second argument and nothing in this tree proves what it
+// selects, so the name is provisional. Unclaimed - declared, not defined.
+type_quest* create_quest(int questType, unsigned char flags);
+
 // misc.obj's variadic string formatter, 0x50c600 - misc.h declares it, but
 // seerhut.cpp needs exactly this one symbol out of that header and the
 // include-set residual class makes a one-line declaration the cheaper edge.
@@ -1283,6 +1289,34 @@ void type_belong_to_player_quest::SetDefaultText()
         completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
                               requirement.c_str());
 }
+// The quest guard's default constructor. Retail emits it OUT OF LINE -
+// mapcell.obj's readObject calls 0x572b50 on its stack local rather than
+// expanding the two stores - which is why seerhut.h declares it rather
+// than defining it, and this is the definition that declaration names.
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00572b50, 0xD)  // anchor-caller(mapcell readObject 0x502e00) + body, retail-only
+TQuestGuard::TQuestGuard()
+{
+    quest = 0;
+    visitedPlayers = 0;
+}
+
+// The quest log's line for this guard, and the ONE reader of the text
+// table's fifth column: the quest's own requirement line formatted into
+// whatever that column holds. Nullary where the quick-info and rollover
+// pair above take a player, which is what TQuestLogWindow's call site
+// pushes.
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00572d60, 0xE0)  // anchor-caller(TQuestLogWindow::UpdateQuestLocator) + arity(bare ret past the return buffer), retail-only
+std::string TQuestGuard::QuestGuardFn_00572D60()
+{
+    return format_string(
+        quest->quest_text(type_quest::QUEST_TEXT_LOG).c_str(),
+        quest->GetRequirementText().c_str());
+}
+
 
 
 
@@ -1345,6 +1379,46 @@ std::string TQuestGuard::QuestGuardFn_00573040(int player)
 
     return text;
 }
+// The guard's h3m reader and its savegame writer, both reached from
+// mapcell/NewfullMap. Each is one byte of quest TYPE through the factory
+// and then the quest's own slot 12 or slot 13 - which is a second,
+// independent witness for slot 13 being the serializer: this body picks
+// it out of the vtable at +0x34 right after writing the type byte.
+
+// E:\gamedcs\seerhut.cpp
+VA(0x005734e0, 0x3B)  // anchor-callee(create_quest 0x573240 + quest slot 12) + arity(ret 4), retail-only
+int TQuestGuard::read(TAbstractFile* infile)
+{
+    unsigned char questType;
+
+    infile->Read(&questType, sizeof(questType));
+    quest = create_quest(questType, 0);
+    if (quest)
+        quest->LoadFromMap(infile);
+    return 0;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00573520, 0x5E)  // anchor-callee(quest slot 8 + slot 13) + arity(ret 4), retail-only
+int TQuestGuard::save(TAbstractFile* outfile)
+{
+    // The NULL arm is retail's fallthrough, not its else: `test ecx,ecx /
+    // jne` puts the quest-bearing path at the jump target and shares the
+    // zero it writes with the null pointer it just tested.
+    if (!quest) {
+        unsigned char questType = 0;
+        outfile->Write(&questType, sizeof(questType));
+    } else {
+        unsigned char questType = static_cast<unsigned char>(quest->quest_type());
+        outfile->Write(&questType, sizeof(questType));
+        quest->Save(outfile);
+    }
+
+    unsigned char visited = visitedPlayers;
+    outfile->Write(&visited, sizeof(visited));
+    return 0;
+}
+
 
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
