@@ -121,6 +121,12 @@ const int CAMPAIGN_ARMY_OVERRIDE_TRAITS = 96;
 // campaignwindow.h is not in this TU's closure, so the value lives here as a
 // local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
 const int FIRST_SHADOW_OF_DEATH_CAMPAIGN = 13;
+// The map's full obelisk roster and the puzzle it uncovers are the same
+// 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
+// std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
+// loop works over the 47 pieces below the last one.
+const int OBELISK_COUNT = 48;
+const int PUZZLE_PLACEABLE_PIECES = 47;
 
 const int PRODUCTION_ARTIFACT_CRYSTAL = 0x6d;
 const int PRODUCTION_ARTIFACT_GEMS = 0x6e;
@@ -1678,16 +1684,85 @@ void ComputeUALoc(int whichPlayer)
     gpGame->players[whichPlayer].guess_grail_location(whichPlayer);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1999
+// One puzzle piece per obelisk visited, plus a share of the
+// 48 - numObelisks pieces that no obelisk pays for, awarded on the
+// quadratic curve ((p + 1) * p) / 2 in p, the fraction of obelisks found.
+// countOnly stops at the count; otherwise the shared bitset is re-rolled
+// from a seed derived from whichPlayer alone, so a player always uncovers
+// the same pieces in the same order.
+//
+// GetNumObelisks is expanded THREE times by /Ob2 - three 48-iteration
+// scans of obeliskFlags - because retail calls it three times in source,
+// not because a CSE failed. The Dreamcast dump names every local here
+// (dc 0xa6350): iPiecesRemoved, iExtraPieces, piece, i, j and the two
+// floats. `47 - i` is an induction expression, not a variable, which is
+// why VC6 carries it as a second down-counter. The fild/fstp/fld
+// round-trips on each int->float conversion are /Op rounding, not extra
+// source variables.
+// Residual (98.9637%): two instructions, and it is /Op scheduling. Retail
+// interleaves the numerator's `fld` BETWEEN the two int->float
+// round-trips of the division; we emit both round-trips and then the
+// load. Measured three cast placements - on the numerator, on the
+// denominator, on both - all 98.9637, so the order is not source-
+// reachable. The other rows are cosmetic reloc names (gpGame, the two
+// float pool constants and puzzlePiecesRemoved are unnamed on the
+// target side).
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
 int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
 {
-    // @stub
-}
+    int i;
+    long j;
+    long piece;
+    int iExtraPieces;
+    int iPiecesRemoved;
+    float fPercentObelisksFound;
+    float fPercentExtraPieces;
 
-#endif  // @carcass
+    iPiecesRemoved = GetNumObelisks(whichPlayer);
+    iExtraPieces = OBELISK_COUNT - field_4e3e8;
+    fPercentObelisksFound =
+        static_cast<float>(GetNumObelisks(whichPlayer)) / field_4e3e8;
+    fPercentExtraPieces =
+        (fPercentObelisksFound + 1.0f) * fPercentObelisksFound / 2.0f;
+    iPiecesRemoved = static_cast<int>(
+        iPiecesRemoved + iExtraPieces * fPercentExtraPieces);
+    if (GetNumObelisks(whichPlayer) == field_4e3e8)
+        iPiecesRemoved = OBELISK_COUNT;
+
+    iPiecesRemoved += players[whichPlayer].extraPuzzlePieces;
+    if (iPiecesRemoved > OBELISK_COUNT)
+        iPiecesRemoved = OBELISK_COUNT;
+    if (!field_4e3e8)
+        iPiecesRemoved = 0;
+    if (countOnly)
+        return iPiecesRemoved;
+
+    if (iPiecesRemoved == OBELISK_COUNT) {
+        puzzlePiecesRemoved.set();
+        return iPiecesRemoved;
+    }
+    puzzlePiecesRemoved.reset();
+
+    SRand(whichPlayer * 424909 + 423869);
+
+    for (i = 0; i < iPiecesRemoved; i++) {
+        piece = 0;
+        while (piece < PUZZLE_PLACEABLE_PIECES && puzzlePiecesRemoved[piece])
+            piece += Random(1, 5);
+        if (piece >= PUZZLE_PLACEABLE_PIECES) {
+            j = Random(1, PUZZLE_PLACEABLE_PIECES - i);
+            for (piece = 0; piece < PUZZLE_PLACEABLE_PIECES; piece++) {
+                if (!puzzlePiecesRemoved[piece]) {
+                    if (--j == 0)
+                        break;
+                }
+            }
+        }
+        puzzlePiecesRemoved.set(piece);
+    }
+    return iPiecesRemoved;
+}
 
 // E:\gamedcs\game.cpp:2081
 VA(0x004bb160, 0x7)  // linkorder, dc 0xa65c4

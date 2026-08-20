@@ -1303,7 +1303,16 @@ public:
     std::vector<boat> boats;             // +0x4e3b8
     std::vector<type_university> universities;      // +0x4e3c8
     std::vector<type_creature_bank> creatureBanks; // +0x4e3d8
-    unsigned char field_4e3e8;
+    // +0x4e3e8, the map's obelisk count. RETYPED unsigned -> plain (i.e.
+    // signed) char 2026-08-20: SetupPuzzlePieces (0x4baf00) reads it with
+    // `mov al,[this+0x4e3e8]` followed by `movsx ebx,al`, which an
+    // unsigned char cannot produce, and it does so at three sites - the
+    // 48 - x, the float divisor and the == x compare. The Dreamcast dump
+    // types the same member T_RCHAR and names it `numObelisks`, and the
+    // DC body loads it with the sign-extending mov.b. The rename is
+    // available on the same evidence but is left as a separate decision;
+    // the only two other users are plain byte copies in Load/Save.
+    char field_4e3e8;
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.
@@ -1391,6 +1400,9 @@ public:
     bool IsLocalHuman(int gamePos) const;        // 0x4ce970
     boat* GetHeroBoat(int id, unsigned char occupied);       // 0x4ce900
     int MineTypesOwned(int iWhichPlayer, int iMineType);     // 0x4bae70
+    // 0x4baf00, its link-order neighbour. countOnly stops at the piece
+    // count; otherwise the shared puzzlePiecesRemoved bitset is re-rolled.
+    int SetupPuzzlePieces(int whichPlayer, int countOnly);
     int GetTownId(int x, int y, int z);                      // 0x4bb870
     int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
     void GiveArmy(armyGroup* thisMonInfo, int iMonType,
