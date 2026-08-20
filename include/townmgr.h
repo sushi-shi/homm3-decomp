@@ -213,6 +213,10 @@ public:
     virtual ~TTownScreenWindow();
     void UpdateTownLocator(int i);
     void UpdateTownLocators();
+    // Retail 0x5c5b40 (dc 0x16ad04). The faction-bonus panel of the
+    // page's bottom row. townManager::UpdateTownInfo 0x5c66d0 is its
+    // only caller in the image and hands it the town being shown.
+    void set_bonus_display(town* pTown);
 };
 
 class TThievesGuildWindow : public CAdvPopup {
@@ -401,18 +405,46 @@ public:
 // bracket the dialog with the tavern's background video.
 class TTavernWindow : public CAdvPopup {
 public:
+    // The page's widget ids, all of them proven by the two bodies below:
+    // SetRolloverText 0x5d7920 dispatches on exactly this set and
+    // WindowHandler 0x5d7b30 acts on three of them. The two portraits are
+    // consecutive because both bodies index playerData::recruits with
+    // `id - RECRUIT_0_ID`, and the lit/dim pair the handler broadcasts
+    // (`slot + 8` and `9 - slot`) is the same two-wide family one band up.
+    // NAMES provisional - no roster covers this dialog's ids - VALUES
+    // retail's own.
     enum {
+        RECRUIT_0_ID = 5,
+        RECRUIT_1_ID = 6,
+        THIEVES_GUILD_BUTTON_ID = 11,
+        HIRE_BUTTON_ID = 12,
+        RUMOR_PANEL_ID = 15,
         CANCEL_BUTTON_ID = 0x7800
     };
 
+    // +0x60, the recruit slot the page has selected - 0 or 1, the index
+    // of the portrait that was clicked. The constructor clears it and
+    // both bodies below read it as the index into playerData::recruits.
     int field_60;              // +0x60  cleared by the constructor
-    char pad_64[8];            // +0x64  unattested
+    // +0x64 / +0x68, NAMED 2026-08-21 by WindowHandler 0x5d7b30: the
+    // hover pair the whole compiland's dialog family carries, tested
+    // together and refreshed together before the rollover line is
+    // rewritten. Same shape as TBlacksmithWindow's lastHover, with the
+    // qualifier alongside it because this page's rollover changes on a
+    // right-click as well as on a move.
+    int lastHover;             // +0x64
+    int lastQualifier;         // +0x68
     textWidget* rolloverText;  // +0x6c
 
     TTavernWindow(int x2, int y2);
     virtual ~TTavernWindow();
+    // Retail 0x5d7920 (dc 0x17a7a0). NOT virtual - the Dreamcast
+    // mangling is QAA and the page's own handler reaches it with a
+    // direct call.
+    void SetRolloverText(int id);
     virtual int Open(int zOrder, unsigned char update);  // slot 1
     virtual void Close(unsigned char update);            // slot 2
+    virtual int WindowHandler(message* msg) OVERRIDE;    // slot 9, 0x5d7b30
 };
 
 // The fort page: one row per creature dwelling - a separator strip, a
