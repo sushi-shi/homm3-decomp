@@ -1216,6 +1216,16 @@ std::bitset<70> mark_spells(int artifactId);
 // equality has no signedness, which is why the pointer-compare rule that
 // governs the other two does not reach it. The `jb` inside the grant
 // loop is bitset::test's own size_t bounds check, not the loop.
+//
+// Residual (78.0%): block counts AGREE (34 vs 34); the whole distance is
+// two branch KINDS transposed inside each grant loop - `vc6 diagnose`
+// reads #6/#7 and #15/#16 as base jne/jb against retail jb/jne, i.e. the
+// loop guard and bitset::test's bounds check come out in the opposite
+// order. Tried and rejected: the same loop as a `for` with both
+// increments in the header (69.97, WORSE). The `while` form here is the
+// best measured spelling; the transposition reads as guard polarity,
+// a D8 arm-order item the catalog has no lever for on a pointer-guarded
+// loop.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
