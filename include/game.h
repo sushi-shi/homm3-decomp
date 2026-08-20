@@ -611,11 +611,14 @@ enum EMapFormatVersion {
 // objective-bonus branches.
 enum EVictoryConditionType {
 #ifdef HOMM3_VLC_CHECKS_VIEW
-    // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1`; the value
-    // agrees with the map-format victory-condition ordinal (0 artifact,
-    // 1 creatures, 2 resources, ...). Gated: enumerators count against
-    // the include-set declarator wall for every consumer of this header.
+    // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
+    // 0x5f1d40 CheckForUpgradedTown on `cmp Type,3`; the values agree
+    // with the map-format victory-condition ordinal (0 artifact,
+    // 1 creatures, 2 resources, 3 upgrade town, ...). Gated:
+    // enumerators count against the include-set declarator wall for
+    // every consumer of this header.
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
+    VICTORY_CONDITION_UPGRADE_TOWN = 3,
 #endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
@@ -672,7 +675,17 @@ public:
     int TownX;
     int TownY;
     int TownZ;
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // CheckForUpgradedTown (0x5f1d40) dispatches both of its switches
+    // with `movsx` BYTE reads at +0x24/+0x25 - retail kept the DC pair
+    // HallLevel/CastleLevel char-sized where it widened the neighbours.
+    // Gated like the pad_03 slice above.
+    signed char HallLevel;
+    signed char CastleLevel;
+    char pad_26[0xe];
+#else
     char pad_24[0x10];
+#endif
     int HeroID;
     char pad_38[0x10];
     unsigned char GameWon;
@@ -684,6 +697,11 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
+#ifdef HOMM3_VLC_CHECKS_VIEW
+    // 0x5f1d40 (dc 0x190038), reconstructed in the owning TU. Kept out
+    // of the EVENTS view so events.obj's declarator count is untouched.
+    unsigned char CheckForUpgradedTown();
+#endif
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_VLC_CHECKS_VIEW)
     // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
     // (0x4aaaa0) calls the pair back to back on the same

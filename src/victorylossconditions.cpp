@@ -142,14 +142,63 @@ eligible:
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
+// The upgrade victory has no team-eligibility idiom - the guards go
+// straight to the town lookup. Both switches dispatch on the char-sized
+// level fields and each arm is an ordinary 64-bit
+// `(active & bitNumber[id]) != 0` materialized branchily; a level past 2
+// leaves the flag at its zero initializer. The owner byte is read
+// before the -1 gate and reused as the winner, and retail reaches
+// town+1 unguarded even though GetTown's -1 arm can hand it a null.
 // E:\gamedcs\victorylossconditions.cpp:125
 VA(0x005f1d40, 0x1A4)  // anchor-global, dc 0x190038
 unsigned char VictoryConditionStruct::CheckForUpgradedTown()
 {
-    // @stub
+    if (Type != VICTORY_CONDITION_UPGRADE_TOWN
+        || !gpCurrentPlayer
+        || gpGame->playerDisabled[gNetLocalGamePos])
+        return 0;
+
+    unsigned char hall_ok = 0;
+    unsigned char castle_ok = 0;
+    town* checkedTown =
+        gpGame->GetTown(gpGame->GetTownId(TownX, TownY, TownZ));
+    signed char owner = checkedTown->owner;
+    if (owner == -1)
+        return 0;
+
+    switch (HallLevel) {
+    case 0:
+        hall_ok = (checkedTown->active & bitNumber[HALL_TOWN_ID]) != 0;
+        break;
+    case 1:
+        hall_ok = (checkedTown->active & bitNumber[HALL_CITY_ID]) != 0;
+        break;
+    case 2:
+        hall_ok = (checkedTown->active & bitNumber[HALL_CAPITOL_ID]) != 0;
+        break;
+    }
+    switch (CastleLevel) {
+    case 0:
+        castle_ok = (checkedTown->active & bitNumber[CASTLE_FORT_ID]) != 0;
+        break;
+    case 1:
+        castle_ok =
+            (checkedTown->active & bitNumber[CASTLE_CITADEL_ID]) != 0;
+        break;
+    case 2:
+        castle_ok =
+            (checkedTown->active & bitNumber[CASTLE_CASTLE_ID]) != 0;
+        break;
+    }
+    if (hall_ok && castle_ok) {
+        GameWon = 1;
+        playerWinner = owner;
+        return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\victorylossconditions.cpp:184
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
