@@ -406,6 +406,17 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
                                CREATURE_NOMAD) > 0);
 }
 
+// PushPoint's cursed/garrison terrain test, lifted for the /Ob2 BUDGET probe.
+static unsigned char terrain_forbids_magic(type_point where)
+{
+    TAdventureObjectType special =
+        gpGame->worldMap.cellData[
+            (where.z * gpGame->worldMap.Size + where.y)
+                * gpGame->worldMap.Size
+            + where.x].get_special_terrain();
+    return special == CURSED_GROUND || special == GARRISON;
+}
+
 // PushPoint's ordering key search, lifted out of its body for the /Ob2
 // BUDGET (2026-08-20).  There is NO Dreamcast row for this - the roster runs
 // PushPoint at findpath.cpp:271 straight to TestPossibleDirections at 461 with
@@ -424,9 +435,15 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // before we called _Construct at two of the sites retail calls _Ufill and
 // _Ucopy at.  It costs no symbol: findpath.obj defines no find_queue_slot.
 //
-// The lever is DOSE-SENSITIVE, so do not just add more.  Lifting the
-// magic_forbidden block out as well - the same shape, the next block up -
-// measures 81.1401 -> 76.4357.
+// The lever is DOSE-SENSITIVE, but the GRANULARITY matters more than the
+// count (2026-08-20).  Lifting the WHOLE magic_forbidden block - the next
+// block up - measures 81.1401 -> 76.4357; lifting only the CELL LOOKUP inside
+// it (terrain_forbids_magic, below) is worth 83.7018 -> 87.4589.  When a dose
+// overshoots, try a SMALLER SLICE of the same block before concluding the
+// lever is spent.  Two other slices measured negative from that peak and are
+// recorded so they are not re-spent: the dimension-door delta block
+// 83.7018 -> 63.7172, and the already-visited key comparison
+// 87.4589 -> 72.7429.
 // The second /Ob2 budget dose for PushPoint - see find_queue_slot below.
 // Worth 81.1401 -> 83.7018, and it is what brings visited_points.insert's
 // expansion into agreement with retail's ten calls.  No Dreamcast row; a
@@ -512,9 +529,13 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // so retail really does expand that one - the pin is only correct where
 // retail keeps the whole callee out of line.
 //
-// Residual (83.7018%): 74.3805 -> 81.1401 -> 83.7018 on the caller-shrink
-// lever, in two doses, and the CALL MULTISET NOW AGREES - 22 out-of-line calls
-// on each side.
+// Residual (87.4589%): 74.3805 -> 81.1401 -> 83.7018 -> 87.4589 on the
+// caller-shrink lever, in THREE doses, and the call multiset now sits at 23
+// out-of-line calls against retail's 22 with every name pairing by count.
+// What is left is the register-homing family (retail binds the map-cell base
+// to EDI where we bind EBX) plus one folded iterator: our
+// `queue.erase(queue.end() - 1)` emits `mov eax,[edi+8] / sub eax,0x1c /
+// add eax,0x1c` where retail folded `_P + 1` straight back to `_Last`.
 //
 // LOCALISED 2026-08-20 by aligning the two call sequences site by site. The
 // old note said the six callees we expand and retail calls were "all of them
@@ -625,12 +646,7 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
         point->magic_forbidden = 0;
         if (can_cast_teleport || can_summon_boat || can_cast_flight
                 || can_cast_water_walk) {
-            TAdventureObjectType special =
-                gpGame->worldMap.cellData[
-                    (point->point.z * gpGame->worldMap.Size + point->point.y)
-                        * gpGame->worldMap.Size
-                    + point->point.x].get_special_terrain();
-            if (special == CURSED_GROUND || special == GARRISON)
+            if (terrain_forbids_magic(point->point))
                 point->magic_forbidden = 1;
         }
     }
@@ -1429,6 +1445,53 @@ static unsigned char build_combat_path(searchArray* search,
     return search->result.size() > 0;
 }
 
+// FindCombatPath's speed/limit pick, lifted for the /Ob2 BUDGET probe.
+static void combat_walk_limits(const army* current_army,
+                               unsigned char in_placement_phase,
+                               long* limit, long* base_speed)
+{
+    if (in_placement_phase) {
+        *base_speed = *limit = 1000;
+    } else {
+        if (*base_speed < 0)
+            *base_speed = current_army->GetSpeed();
+        if (*base_speed == 0 || current_army->boundFlag)
+            *limit = 0;
+    }
+}
+
+// FindCombatPath's siege-pressure preamble, lifted for the /Ob2 BUDGET probe.
+static unsigned char combat_siege_pressure(const army* current_army,
+                                           long current_group)
+{
+    unsigned char siege_pressure = 0;
+    if (gpCombatManager->defendingTown != 0
+            && gpCombatManager->is_computer_action(current_army)) {
+        if (current_group == 1
+                || gpCombatManager->drawbridgeState != DRAWBRIDGE_UP)
+            siege_pressure = 1;
+        if (current_army->get_total_hit_points(0)
+                <= gTownSiegeStrength63bd18[
+                        gpCombatManager->defendingTown->type] * 4)
+            siege_pressure = 1;
+        if (siege_pressure
+                && current_army->get_total_hit_points(0)
+                    > gTownSiegeStrength63bd18[
+                            gpCombatManager->defendingTown->type] * 40)
+            siege_pressure = 0;
+    }
+    return siege_pressure;
+}
+
+// FindCombatPath's 187-cell mark wipe, lifted for the /Ob2 BUDGET probe.
+static void clear_combat_cell_marks()
+{
+    for (long clear_hex = 0; clear_hex < COMBAT_GRID_CELLS; clear_hex++) {
+        gpCombatManager->cells[clear_hex].field_4a = 0;
+        gpCombatManager->cells[clear_hex].field_4b = 0;
+    }
+}
+
 // E:\gamedcs\findpath.cpp:1218
 // `ret 0x18` = six stack arguments over `this`, and the DC roster's
 // seven-parameter count matches exactly.
@@ -1458,10 +1521,40 @@ static unsigned char build_combat_path(searchArray* search,
 // bIsMoatSlowed is reached through is_moat(short) throughout; see
 // findpath.h for why that parameter width is proven rather than chosen.
 //
-// Residual (78.9419%): 46.4584 -> 47.8289 -> 73.5149 -> 78.9419, and the
-// whole 32.5 points came from RE-READING THE FOUR getCellData CALLS, which
-// the note this replaces had placed at the wrong sites, and then from
-// SHRINKING THE CALLER.
+// Residual (87.6468%): 46.4584 -> 47.8289 -> 73.5149 -> 78.9419 -> 85.6279
+// -> 87.6468, from RE-READING THE FOUR getCellData CALLS, then from SHRINKING
+// THE CALLER, and then from a FOURTH shrink dose plus one if/else arm swap.
+//
+// THE TWO std::copy CALLS ARE CLOSED (2026-08-20), and the note that recorded
+// them as a two-lever dead end was measuring the wrong number of doses.  It
+// had tried build_combat_path alone (78.9419), the siege preamble alone
+// (76.2936) and the two stacked (byte-flat), and concluded the levers "do not
+// add".  The /Ob2 threshold is a STEP, so two doses landing byte-flat means
+// TOO SMALL, not wrong idea - exactly what army::SetSpellInfluence showed the
+// same day, where each of three lifts was byte-flat alone and the three
+// together were worth 4.4 points.  Four doses cross it here:
+//   build_combat_path (the epilogue)          73.5149 -> 78.9419
+//   + clear_combat_cell_marks (187-cell wipe) byte-flat, 78.9419
+//   + combat_siege_pressure (the preamble)    78.9419 -> 79.1115
+//   + combat_walk_limits (the speed/limit pick) 79.1115 -> 85.6279
+// at which point `predict-inline` reports 30 calls each side with
+// copy<pathCell> x2 (0x4b4270) and copy<pathCell*> x1 (0x5093c0) PAIRED.
+// Two further doses overshoot and are recorded so they are not re-spent: the
+// per-direction moat test lifted out costs 79.1115 -> 76.5777, and the
+// moat-blocked test on top of the four above costs 87.6468 -> 84.6358.
+//
+// AND THE MOAT TEST'S ARMS ARE IN THE WRONG ORDER, worth +2.02 on its own
+// (85.6279 -> 87.6468).  Retail's `test byte ptr [eax+0x?],1` is followed by
+// `jne` into the two-hex arm with `moat = is_moat(adjacent)` FALLING THROUGH,
+// so the source tests the NEGATION first: `if (!(creatureId & 1)) { moat =
+// is_moat(adjacent); } else { ...two-hex... }`.  Written the other way round
+// VC6 sinks the one-line arm and emits `je`.
+//
+// The three preamble helpers have no Dreamcast row - the roster runs
+// findpath.cpp:1136 (build_combat_path, which DOES have one) to 1218
+// (FindCombatPath) with nothing between - so like find_queue_slot above they
+// are codegen devices, not claims about retail's source, and findpath.obj
+// defines none of them.
 //
 // The retail call sequence settles it. FindCombatPath calls getCellData
 // (0x4b3b90) at +0x42f, +0x481, +0x53e and +0x590 - each one immediately after
@@ -1551,36 +1644,13 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
     if (current_army == 0)
         return 0;
 
-    unsigned char siege_pressure = 0;
-    if (gpCombatManager->defendingTown != 0
-            && gpCombatManager->is_computer_action(current_army)) {
-        if (current_group == 1
-                || gpCombatManager->drawbridgeState != DRAWBRIDGE_UP)
-            siege_pressure = 1;
-        if (current_army->get_total_hit_points(0)
-                <= gTownSiegeStrength63bd18[
-                        gpCombatManager->defendingTown->type] * 4)
-            siege_pressure = 1;
-        if (siege_pressure
-                && current_army->get_total_hit_points(0)
-                    > gTownSiegeStrength63bd18[
-                            gpCombatManager->defendingTown->type] * 40)
-            siege_pressure = 0;
-    }
+    unsigned char siege_pressure =
+        combat_siege_pressure(current_army, current_group);
 
-    { for (long clear_hex = 0; clear_hex < COMBAT_GRID_CELLS; clear_hex++) {
-        gpCombatManager->cells[clear_hex].field_4a = 0;
-        gpCombatManager->cells[clear_hex].field_4b = 0;
-    } }
+    clear_combat_cell_marks();
 
-    if (in_placement_phase) {
-        base_speed = limit = 1000;
-    } else {
-        if (base_speed < 0)
-            base_speed = current_army->GetSpeed();
-        if (base_speed == 0 || current_army->boundFlag)
-            limit = 0;
-    }
+    combat_walk_limits(current_army, in_placement_phase, &limit,
+                       &base_speed);
 
     long start_hex = current_army->gridIndex;
     if (cellData == 0)
@@ -1624,15 +1694,15 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
 
             long flight_cost = 0;
             unsigned char moat = 0;
-            if (current_army->creatureId & 1) {
+            if (!(current_army->creatureId & 1)) {
+                moat = is_moat(adjacent);
+            } else {
                 long side_step = current_army->facing ? 1 : -1;
                 long tail = adjacent + side_step;
                 if (is_moat(adjacent) && adjacent != hex + side_step)
                     moat = 1;
                 if (is_moat(tail) && tail != hex)
                     moat = 1;
-            } else {
-                moat = is_moat(adjacent);
             }
 
             long step = 1;

@@ -3145,7 +3145,21 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // this note used to carry was WRONG, so read the correction before
 // re-deriving it.
 //
-// Residual (86.7264%): the two inlined bitset<70>::_Xran throw paths, and
+// Residual (88.5042%): the frame is still 0xe4 against retail's 0xc4, which
+// says 32 bytes of locals retail does not have - the sign the frame sweep
+// calls "a value that could not reach a dead parameter home".  Two of the
+// four have been paid off (2026-08-20): block-scoping the three scratch reads
+// put `int_buffer` in retail's own [ebp+8] and the name flag in [ebp+0xb]
+// (+0.11), and binding ReadLengthPrefixedString's return by const reference
+// instead of copying it into a named local removed a whole 16-byte string
+// object (+1.67, frame 0xf4 -> 0xe4).  What is left sits between `padding`
+// (ours [ebp-0x8c], retail [ebp-0x6c] - the deepest non-tempText local on
+// both sides) and the shallow byte locals, where retail uses [ebp-0x5c] for
+// TWO objects our compile gives separate slots.  Find those 32 bytes before
+// spending anything on the throw paths below - a frame delta shifts every
+// deep local and reads as a score hole on its own.
+//
+// Under that: the two inlined bitset<70>::_Xran throw paths, and
 // specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
 // retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
 // still expand it.  Everything else in the call sequence pairs off site for
@@ -3202,8 +3216,15 @@ VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
 {
+    // THE SCRATCH READS ARE BLOCK-SCOPED, and that is a source fact the frame
+    // publishes.  Retail recycles the dead parameter homes as its temp pool -
+    // `infile` goes to EBX at entry and its home [ebp+8] then carries the
+    // dword `int_buffer` at three sites, with [ebp+0xb] carrying the
+    // name-flag byte - and VC6 will only put a local there if the local's
+    // lifetime is confined to its own block.  A function-scoped
+    // `int int_buffer;` gets a slot of its own below EBP and the parameter
+    // home stays unused, which is what this body used to do.
     char tempText[100] = { 0 };
-    int int_buffer;
 
     // The Shadow of Death quest identifier: absent on the oldest format, and
     // it survives the whole body to reach HeroExtra::field_008.
@@ -3211,6 +3232,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         identifier = 0;
     } else {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         identifier = int_buffer;
     }
@@ -3224,10 +3246,14 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     if (HeroID == -1)
         isRandomHero = 1;
 
-    char nameFlag;
-    infile->Read(&nameFlag, sizeof(nameFlag));
-    char customName = nameFlag != 0;
+    char customName;
+    {
+        char nameFlag;
+        infile->Read(&nameFlag, sizeof(nameFlag));
+        customName = nameFlag != 0;
+    }
     if (customName) {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         infile->Read(tempText, int_buffer);
         tempText[int_buffer] = 0;
@@ -3241,6 +3267,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
     unsigned char bCustomExperience;
     if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
         || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        int int_buffer;
         infile->Read(&int_buffer, sizeof(int_buffer));
         experience = int_buffer;
         if (experience != 0 && (!gbUnk69774c || experience >= 40))
@@ -3303,19 +3330,25 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         }
     }
 
-    char skillsFlag;
-    infile->Read(&skillsFlag, sizeof(skillsFlag));
-    if (skillsFlag)
-        readHeroSecondarySkills(infile, hero_data);
+    {
+        char skillsFlag;
+        infile->Read(&skillsFlag, sizeof(skillsFlag));
+        if (skillsFlag)
+            readHeroSecondarySkills(infile, hero_data);
+    }
 
-    char armiesFlag;
-    infile->Read(&armiesFlag, sizeof(armiesFlag));
-    if (armiesFlag)
-        readHeroArmies(infile, hero_data, mapVersion);
+    {
+        char armiesFlag;
+        infile->Read(&armiesFlag, sizeof(armiesFlag));
+        if (armiesFlag)
+            readHeroArmies(infile, hero_data, mapVersion);
+    }
 
-    char formation;
-    infile->Read(&formation, sizeof(formation));
-    hero_data->GroupFormation = formation != 0;
+    {
+        char formation;
+        infile->Read(&formation, sizeof(formation));
+        hero_data->GroupFormation = formation != 0;
+    }
 
     char artifactsFlag;
     infile->Read(&artifactsFlag, sizeof(artifactsFlag));
@@ -3365,16 +3398,25 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
     }
 
-    char patrolRadius;
-    infile->Read(&patrolRadius, sizeof(patrolRadius));
-    hero_data->PatrolRadius = patrolRadius;
+    {
+        char patrolRadius;
+        infile->Read(&patrolRadius, sizeof(patrolRadius));
+        hero_data->PatrolRadius = patrolRadius;
+    }
 
     if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
         char customNameFlag;
         infile->Read(&customNameFlag, sizeof(customNameFlag));
         if (customNameFlag) {
             hero_data->customName = 1;
-            std::string heroName = ReadLengthPrefixedString(infile);
+            // BOUND BY const REFERENCE, not copied.  ReadLengthPrefixedString
+            // returns by value and VC6 does not elide the copy into a named
+            // `std::string` local, so that spelling puts TWO 16-byte string
+            // objects on the frame where retail has one - worth 1.67 and 16
+            // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
+            // lifetime to the reference's scope, which is exactly the block
+            // the assign sits in.
+            const std::string& heroName = ReadLengthPrefixedString(infile);
 #pragma inline_depth(0)
             hero_data->name.assign(heroName, 0, std::string::npos);
 #pragma inline_depth()
@@ -4339,29 +4381,64 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // from loadMapObjects': the index rebuild first, then the progress tick.
 // That is retail's order in each body, not a transcription slip.
 //
-// Residual (78.4070%): ONE branch over retail (base 35, target 34) and one
+// TWO SOURCE FACTS, both read straight out of the frame, worth 78.4070 ->
+// 87.2791 together (2026-08-20).  The note this replaces had both of them
+// pointed at the wrong construct, so read the bytes, not the prose.
+//
+//   * `i` IS AN `int`, NOT AN `unsigned` - because `gMissingMaskTypes` is a
+//     `vector<int>` and `push_back` takes `const int&`.  With an `unsigned`
+//     counter the conversion materialises a TEMPORARY and retail's
+//     `lea ecx,[ebp-0x10] / push ecx` becomes ours plus a
+//     `mov [ebp-<temp>], ebx`.  The temp is not the point: binding the
+//     reference to `i` ITSELF takes its address, which forbids VC6 from
+//     strength-reducing the subscripts onto an induction variable.  Retail
+//     therefore homes `i` at [ebp-0x10], reloads it at every use
+//     (`mov edi,[ebp-0x10] / inc edi`) and rebuilds `&objectTypes[i]` as
+//     `shl/add/lea [ebx+4*ecx]` and `&objects[i]` as `lea [edi+2*edi]` every
+//     iteration - in FOUR loops.  We carried a byte offset in a frame slot
+//     and bumped it by 0x44 / 0x0c instead.  One word: +2.99.
+//   * THE SECOND RESIZE PASSES `count`, NOT `objectTypes.size()`.  Retail
+//     spills the first Read's `count` at entry - `mov edi,[ebp-0x14] /
+//     mov [ebp-0x1c],edi`, a compiler temp made because [ebp-0x14] is
+//     `count`'s home and the SECOND Read overwrites it - and reloads
+//     [ebp-0x1c] as `sprites.resize`'s argument at fn+0x261.  Spelling it
+//     `objectTypes.size()` cost the whole null-checked 0x78787879 division
+//     ahead of the call.  +5.88.  (The old note read that division as a
+//     fifth `size()` belonging to the FIRST resize, and concluded
+//     `oldSprites.resize` did not pass `sprites.size()`.  It does; the
+//     surplus call was the other resize's argument.)
+//
+// Residual (87.2791%): ONE branch over retail (base 35, target 34) and one
 // extra cleanup region (EH transcript base [0,1,-1,2,-1,-1] against retail's
-// [0,1,-1,2,-1]).  Both are the SAME defect and it is now located, if not
-// closed (2026-08-20).
+// [0,1,-1,2,-1]).  Both are the same defect, and it is now a pure /Ob2
+// BUDGET question with three witnesses in one direction - retail EXPANDS
+// where we CALL, so the lever is to GROW this caller, and no statement pin
+// reaches any of them because a pin only ever removes expansions:
 //
-// The extra region is the SECOND `infile->Read(&count)`'s failure exit, at
-// fn+0x3d3.  Both sides destroy `oldSprites` there and both call
-// `operator delete`, but ours ALSO calls
-// `vector<CSprite*>::_Destroy(_First, _Last)` and stores `[ebp-4] = -1`
-// first, where retail (fn+0x3af) emits `push [ebp-0x34] / call operator
-// delete` and nothing else.  `_Destroy` over a pointer element is an empty
-// loop; retail EXPANDED it and VC6 deleted the loop, we keep the call.  That
-// is an A8/A9 under-inline - our caller is leaner than retail's - and no
-// statement pin reaches it, because a pin only ever removes expansions.
+//   * fn+0x60: retail expands `basic_string(const allocator&)` into
+//     `mov al,[ebp+0xb] / mov [ebp-0x7c],al / push 0 / call _Tidy` - the
+//     allocator temp living in the dead top byte of the `infile` parameter
+//     home - at the first of the six ctors `objectTypes.resize(count)`'s
+//     `CObjectType()` temp needs.  We call `??0basic_string@...@@QAE@AB`.
+//   * fn+0x1e5: retail folds `oldSprites.size()` to 0 in `if (size() < _N)`
+//     (the ctor's `_First=_Last=0` stores are still live), giving one
+//     `je`; we CALL size() and `cmp eax,ebx / jae`.  Retail still calls
+//     size() for the `_N - size()` argument two instructions later, so this
+//     is per-site, not a spelling.
+//   * fn+0x3af: the SECOND `infile->Read(&count)`'s failure exit.  Retail
+//     emits `push [ebp-0x34] / call operator delete` and nothing else,
+//     because it EXPANDED `vector<CSprite*>::_Destroy` (an empty loop over
+//     a pointer element, which VC6 then deletes) and `operator delete` is
+//     `_THROW0()`, so no `[ebp-4]` state is needed either.  We call
+//     `_Destroy` and store the state, which makes this block byte-identical
+//     to the objects-loop failure exit - so VC6 MERGES them, and retail's
+//     second copy at fn+0x4c3 (which does call `_Destroy`) has no twin on
+//     our side.  That merge is the whole branch- and region-count delta.
 //
-// The same alignment names one more real divergence, in the sprite refill:
-// retail's FIRST resize expands to exactly `size()/insert/size()/erase`,
-// four calls, while ours emits a fifth `size()` in FRONT of them for the
-// ARGUMENT.  Retail's `oldSprites.resize(...)` therefore does not pass
-// `sprites.size()`; the second resize, `sprites.resize(objectTypes.size())`,
-// agrees with retail at five calls including its argument.  What retail
-// passes instead is not yet identified - the twin loadMapObjects has no
-// counterpart to read it off.
+// The three sites are in source order and the budget is spent sequentially,
+// which is why retail expands the first `_Destroy` and calls the second.
+// Nothing byte-visible is missing from this body, so the mass has to come
+// from somewhere else; not found this round.
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
@@ -4377,7 +4454,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     objectTypes.resize(count);
 
-    unsigned int i;
+    int i;
     for (i = 0; i < objectTypes.size(); ++i) {
         int status = readObjectType(infile, &objectTypes[i]);
         if (status < 0)
@@ -4396,7 +4473,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     for (i = 0; i < sprites.size(); ++i)
         oldSprites[i] = sprites[i];
 
-    sprites.resize(objectTypes.size());
+    sprites.resize(count);
     for (i = 0; i < objectTypes.size(); ++i) {
         sprites[i] =
             ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
@@ -4677,7 +4754,35 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // and +0.70 after them (76.1294 without it) - re-measure a low-mass knob at
 // each new plateau.
 //
-// Residual (76.8302%): ONE register permutation and everything downstream of
+// Fourth, and it is what actually makes the walk happen: `newObject->y` IS
+// NAMED IN THE X-LOOP BODY (2026-08-20).  With the subscript written
+// `heights[newObject->y - y]` VC6 re-loads the member on every inner
+// iteration, and a memory re-read inside the loop blocks the strength
+// reduction, so the index is rebuilt as `sub edx,ecx / cmp al,[edx+ebx]`
+// every pass.  Naming it once per x-iteration -
+// `int objectY = newObject->y;` - gives retail's shape exactly:
+// `lea edi,[ebp+ebx-0x74]` in the preheader, `dec edi` on the back edge and
+// `movsx eax,byte ptr [edi]` at the test, with the byte compare widening to
+// retail's `movsx/movsx/cmp` pair for free.  76.8302 -> 84.0539, and
+// declaring it BEFORE `heights` rather than after is worth 0.17 more.
+// SCOPE IS LOAD-BEARING: hoisted one level further out, above the x loop, it
+// makes the frame EXACT at 0x7c and costs 12.6 (84.2237 -> 71.6604).  The
+// frame is not the objective.
+//
+// Residual (84.2237%): the tail's `vector<TObjectCell>::size()`, plus the
+// register permutation below.  Retail EXPANDS that size() inside the inlined
+// insert's capacity path - `mov ecx,[edi+4] / test ecx,ecx / jne` with the
+// null arm folded - where we keep the call; that one under-inline is both of
+// the two branches we are short (base 30 against retail's 32) and the whole
+// of the remaining flow distance.  It is the A8 direction that wants a BIGGER
+// caller, and nothing is missing from this body's source, so the lever is
+// either mass from somewhere else or an early-site pin to enlarge the
+// remaining budget.  The frame is now 0x78 against retail's 0x7c, i.e. one
+// named local short - and note that the one edit which DID make it exact
+// (hoisting objectY above the x loop) cost 12.6 points, so do not chase the
+// frame here.
+//
+// Under that: ONE register permutation and everything downstream of
 // it.  Retail binds this->ESI, newObject->EDI, position->EBX; this compile
 // binds position->ESI, this->EDI, newObject->EBX, i.e. retail's earliest
 // call-crossing pseudo is `this` and ours is `position`.  Every later
@@ -4749,6 +4854,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 overlap.bottom = gMapHeight;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
+                int objectY = newObject->y;
                 signed char* heights = heightMap[newObject->x - x];
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
                     NewfullMap& worldMap = gpGame->worldMap;
@@ -4759,7 +4865,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                         = cell->objects.begin();
                     while (scan->objectIndex != (position - 1)->objectIndex)
                         ++scan;
-                    if (scan->layer > heights[newObject->y - y])
+                    if (scan->layer > heights[objectY - y])
                         goto sinkPast;
                 }
             }
