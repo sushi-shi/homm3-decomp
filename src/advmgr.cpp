@@ -1728,12 +1728,17 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 // retail's source keeps the per-arm test and this spelling does not.
 // It is a PLACEMENT DEVICE that is semantically identical (walkDir
 // already carries the same 0..7 the arm passed) and it wins because the
-// mis-placed blocks cost more than the seven missing calls do. The shape
-// that would be BOTH right and better is the sunk-join lever: retail's
-// layout is exactly "KP_8's copy of the walk block falls through, the
-// other seven jump to a second copy", i.e. WRITE THE WALK BLOCK TWICE,
-// not eight times. The rejected experiment below wrote it eight times
-// and measured the wrong dose.
+// mis-placed blocks cost more than the seven missing calls do.
+// Retail's layout reads as the sunk-join shape - "KP_8's copy of the
+// walk block falls through, the other seven jump to a second copy" - so
+// WRITE IT TWICE is the obvious next lever, and it is ALREADY REFUTED
+// HERE by the eight-copy experiment recorded below: that run reported
+// VC6 merging NONE of the copies (952 -> 2208 instructions), and a
+// cross-jumper that declines eight identical tails will decline two.
+// The block is ~110 source lines, so an unmerged second copy is roughly
+// +250 instructions against retail's 948. Do not spend a round on it
+// without first finding a case where this body's cross-jumper merges
+// anything at all.
 //
 // What ALSO paid was removing the brace scope around the shared block's
 // locals - 71.36 -> 75.65, purely through register allocation inside the
