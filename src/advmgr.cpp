@@ -2704,7 +2704,14 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         if (!cellPoint.is_valid())
             cell = fullMap->cellData;
         else
-            cell = fullMap->cell(cellPoint);
+            // LONGHAND, not `cell(cellPoint)`: retail expands the index
+            // arithmetic here (`imul Size` twice off the packed point's
+            // two words, at fn+0xef..+0x133) and leaves no relocation, so
+            // calling the member emits a call retail does not have. Same
+            // treatment DoAdvCommand's five is_valid()/cell() pairs get.
+            cell = &fullMap->cellData[
+                (cellPoint.z * fullMap->Size + cellPoint.y) * fullMap->Size
+                + cellPoint.x];
     }
 
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
@@ -7640,7 +7647,11 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         if (!cellPoint.is_valid())
             heroCell = fullMap->cellData;
         else
-            heroCell = fullMap->cell(cellPoint);
+            // LONGHAND for the same reason as ProcessMapSelect's copy:
+            // retail expands the index arithmetic and emits no call.
+            heroCell = &fullMap->cellData[
+                (cellPoint.z * fullMap->Size + cellPoint.y) * fullMap->Size
+                + cellPoint.x];
     }
 
     if (!waitingPlayer) {
