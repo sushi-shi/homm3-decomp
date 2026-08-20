@@ -166,6 +166,31 @@ struct RandomDwellingData {
     CObject* object;
 };
 SIZE(RandomDwellingData, 0x10);
+
+// The scenario's town-definition pool, the vector at game+0x94. Byte-proven
+// from three independent sides:
+//   * NewfullMap::Read and ::Load clear it through the out-of-line
+//     vector<T>::erase COMDAT at 0x508730, whose copy loop strides 0x88 -
+//     136 bytes per record;
+//   * the random-dwelling resolution pass at 0x502b60 walks the same _First
+//     at game+0x98 with the same 136-byte stride (`shl eax,4 / add eax,edx /
+//     lea eax,[ecx+eax*8]`) and matches on the record's FIRST DWORD against
+//     a RandomDwellingData's castleId, which is what types that field;
+//   * the element destructor at 0x4d4450 is 62 bytes long and releases
+//     exactly ONE Dinkumware string, whose _Ptr it reads at +0x5c - so the
+//     record carries a std::string at +0x58 and nothing else that needs
+//     destroying. That non-trivial destructor is also why Read's `clear()`
+//     is a CALL at all: a trivially destructible element would have let VC6
+//     fold erase(begin(),end()) down to a single store.
+// Only those two fields are named. Everything between and after them stays
+// padding - no retail byte in this lane reaches it.
+struct TScenarioTown {
+    int castleId;
+    char pad_04[0x54];
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
+    char pad_68[0x20];
+};
+SIZE(TScenarioTown, 0x88);
 #endif
 
 class NewfullMap {
@@ -260,6 +285,23 @@ public:
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
 #endif
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // `ret 0x10`: FOUR arguments, one more than Save's three. The fourth is
+    // the map version, and Read forwards it verbatim to readMapObjects and
+    // readTimedEventList and reads it nowhere else.
+    int Read(TAbstractFile* infile, int size, unsigned char twoLayers,
+             int mapVersion);
+    int readMapObjects(TAbstractFile* infile, int mapVersion);
+    int loadMapObjects(TAbstractFile* infile, int saveVersion);
+    // Two retail-only members with no Dreamcast counterpart, both reached
+    // only from Read's tail and named for their addresses on this tree's
+    // NewfullMapFn_00505F20 precedent.
+    //   0x502b60 resolves every randomDwellings entry to a town alignment,
+    //     matching its castleId against the scenarioTowns pool at game+0x94
+    //     and falling back on a `generator`;
+    //   0x500de0 walks the map one more time - its first read is
+    //     `[this+0xd8]`, HasTwoLevels, which is what proves it is a member.
+    void NewfullMapFn_00502B60();
+    void NewfullMapFn_00500DE0();
     void Init(int size, unsigned char twoLayers);
     int loadObject(TAbstractFile* infile, CObject* object);
     int saveObject(TAbstractFile* outfile, CObject* object);
@@ -1239,7 +1281,16 @@ public:
     // clear and picking one.
     unsigned char spellDisabled[70];
     unsigned char field_90;
+    // +0x94, sliced out of the pad for NewfullMap::Read and ::Load, which
+    // clear it. The guard is SPLIT around these three declarators rather
+    // than moved, so the preprocessed text town.obj sees is unchanged.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    char pad_00091[3];
+    std::vector<TScenarioTown> scenarioTowns;
+    char pad_000a4[0x1f3b0];
+#else
     char pad_00091[0x1f3c3];
+#endif
 #else
     char pad_00000[0x1f454];
 #endif

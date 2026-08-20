@@ -647,14 +647,94 @@ NewmapCell::NewmapCell()
     object_type_index = -1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:614
+// The h3m entry point.  Init sizes the cell grid, the two terrain layers are
+// read straight back into it, and then EVERY pool the previous scenario left
+// behind is emptied - eleven on the map itself and ten more on the game -
+// before a single object record is deserialized.
+//
+// The clears are `clear()`, not `erase(begin(), end())`: Dinkumware's own
+// clear() IS that erase, so the source spelling that reaches this call is the
+// short one.  Nine of them are calls and the creature-bank one is expanded
+// inline; that split is the compiler's, not the source's.
+//
+// The placement pass at the tail re-reads objects.size() on EVERY iteration -
+// the induction variable is compared against a freshly called size(), not
+// against a hoisted count - which is this compiland's standing
+// do-not-cache-what-retail-reloads shape.
+//
+// Residual (93.7029%): ONE over-inline, and everything else about it follows.
+// Retail CALLS vector<CObject>::size() in that placement loop, both at the
+// entry guard and on the back edge; our CL expands it (the /12 magic
+// multiply 0x2aaaaaab).  Because retail's loop condition is a single call it
+// is cheap to duplicate, so VC6 ROTATES the loop - `test eax,eax / jbe` once,
+// then body, then `cmp edi,eax / jb` back.  Ours, with the condition expanded,
+// is not worth rotating, so it stays top-tested with a `jmp` back edge, and
+// that is exactly the two branch-kind rows `sema diff --branches` reports
+// (`base je -> target jbe`, `base jae -> target jb`).  One inline decision,
+// two branches.
+//
+// Everything else in the body is byte-identical; the remaining diff rows are
+// reloc NAMES only, on the ten STL erase COMDATs the clears reach, which are
+// excluded class and will never carry a claim.
+//
+// Standing hypothesis, same as readObject's: readMapObjects and loadMapObjects
+// are still stubs in this compiland, and both walk `objects`.  Their size()
+// call sites would take this instantiation off the single-digit-call-site
+// path VC6 inlines most eagerly, so this may settle when the TU is finished.
+// Not tried, because it cannot be tried until those two bodies exist.
 VA(0x004fd690, 0x2B3)  // order-map: calls readTimedEventList 0xfc000, Init 0xfd4f0, readMapLayer 0xfe220 x2, readMapObjects 0x104470, PlaceObject 0x505b20 (placeObjects inlined), dc 0xec8f4
-int NewfullMap::Read(void* infile, int size, unsigned char two_layers)
+int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
+                     int mapVersion)
 {
-    // @stub
+    Init(size, two_layers);
+
+    if (readMapLayer(infile, size, 0) < 0)
+        return -1;
+    if (two_layers) {
+        if (readMapLayer(infile, size, 1) < 0)
+            return -1;
+    }
+
+    AdvanceLoadingBarFn_004ED2A0(1);
+
+    objectTypes.clear();
+    objects.clear();
+    randomDwellings.clear();
+    customTreasure.clear();
+    CustomMonsterList.clear();
+    blackBoxes.clear();
+    SeerHutList.clear();
+    QuestGuardList.clear();
+    TimedEventList.clear();
+    TownEventList.clear();
+    heroPlaceholders.clear();
+    gpGame->towns.clear();
+    gpGame->scenarioTowns.clear();
+    gpGame->signs.clear();
+    gpGame->mines.clear();
+    gpGame->generators.clear();
+    gpGame->garrisons.clear();
+    gpGame->boats.clear();
+    gpGame->field_1f680.clear();
+    gpGame->universities.clear();
+    gpGame->creatureBanks.clear();
+
+    if (readMapObjects(infile, mapVersion) < 0)
+        return -1;
+    if (readTimedEventList(infile, mapVersion) < 0)
+        return -1;
+
+    NewfullMapFn_00502B60();
+
+    for (unsigned int i = 0; i < objects.size(); ++i)
+        PlaceObject(i, 1);
+
+    NewfullMapFn_00500DE0();
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:679
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
