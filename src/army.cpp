@@ -27,9 +27,11 @@
 #define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_SPELLS_VIEW
 #define HOMM3_ARMY_SPELL_ROW_VIEW
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #define HOMM3_ARMY_WALL_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #include <algorithm>
+#include <math.h>
 #include <stdlib.h>
 
 #include <va.h>
@@ -4379,14 +4381,143 @@ unsigned char army::Unnamed447fe0()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:5601
+// One creature-cast, animated and dispatched: face the target, play
+// the cast (cs_special_*) sequence - or the attack triple when the
+// sprite has no cast frames - spend one of the stack's casts, route
+// the effect by creature (the Archangel's resurrection, the Pit Lord's
+// demon-raise, the Master Genie's random boon, the Faerie Dragon's
+// pre-chosen spell, the four upgraded elementals' protections and the
+// Ogre Mage's Bloodlust), then wait out the shoot sample and restore
+// the combat draw extent and the caster's facing.
+//
+// The angle machinery is animate_missile's (cmbtmgr.cpp precedent):
+// atan(dy/dx) through two double slots, scaled by the shared
+// missileRadiansToDegrees pool double, against the +-25-degree float
+// thresholds at 0x63b76c/0x63b8e8. The frame-delay division runs
+// BEFORE the frame count is tested - a zero-frame cast divides by
+// zero in retail too; transcribe, do not guard.
 VA(0x00448260, 0x582)  // anchor-global, dc 0x4c468
 void army::cast_spell(long hex)
 {
-    // @stub
+    long original_facing = facing;
+    if (!static_cast<const combatManager*>(gpCombatManager)
+             ->IsQuickCombat()) {
+        long targetX = gpCombatManager->cells[hex].field_00;
+        long targetY = gpCombatManager->cells[hex].field_02;
+        long myX = MidX();
+        long myY = MidY();
+        unsigned char bTurn = 0;
+        SetupAnimation();
+        if (targetX > myX && facing == 0)
+            bTurn = 1;
+        if ((targetX < myX && facing == 1) || bTurn)
+            Turn(1);
+        gpCombatManager->ResetLimitCreature();
+        gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+        gpCombatManager->ComputeMaxExtent();
+        long dx = targetX - myX;
+        long dy = targetY - myY;
+        if (dx < 0)
+            dx = -dx;
+        float angle;
+        if (dx == 0) {
+            angle = (dy > 0) ? -90 : 90;
+        } else {
+            angle = static_cast<float>(
+                atan(static_cast<double>(dy) / dx)
+                * DATA_COMPGEN(0x0063b8f0, missileRadiansToDegrees,
+                               57.2957763671875));
+        }
+        if (angle > 25.0f)
+            currFrameType = cs_special_ur;
+        else if (angle > -25.0f)
+            currFrameType = cs_special_r;
+        else
+            currFrameType = cs_special_dr;
+        long frames = stdIcon->GetNumFrames(currFrameType);
+        if (frames == 0) {
+            if (angle > 25.0f)
+                currFrameType = cs_attack_ur;
+            else if (angle > -25.0f)
+                currFrameType = cs_attack_r;
+            else
+                currFrameType = cs_attack_dr;
+            frames = stdIcon->GetNumFrames(currFrameType);
+        }
+        play_sample(SHOOT_SAMPLE);
+        long delay = frameInfoAttackStartCycleTime / frames;
+        for (currFrameIndex = 0; currFrameIndex < frames;
+             currFrameIndex++) {
+            gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
+        }
+        currFrameIndex = frames - 1;
+    }
+    numSpellCasts--;
+    switch (creatureType) {
+    case CREATURE_ARCHANGEL: {
+        army* target = gpCombatManager->find_resurrection_target(
+            get_controlling_side(), hex, 1);
+        if (target) {
+            SAMPLE2 sample;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat())
+                sample = LoadPlaySample(DATA_COMPGEN(
+                    0x00660af4, resurrectSampleName, "Resurect.wav"));
+            gpCombatManager->Resurrect(target, numTroops * 100, 0);
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat())
+                WaitEndSample(sample, -1);
+        }
+        break;
+    }
+    case ARMY_CREATURE_PIT_LORD: {
+        army* target = gpCombatManager->find_demonic_resurrection_target(
+            get_controlling_side(), hex);
+        if (target)
+            gpCombatManager->demonic_resurrection(this, target);
+        break;
+    }
+    case CREATURE_MASTER_GENIE:
+        cast_caliph_spell(hex);
+        break;
+    case CREATURE_FAERIE_DRAGON:
+        if (hex >= 0 && hex < COMBAT_GRID_CELLS)
+            gpCombatManager->CastSpell(field_4e0, hex, 1, -1, 2,
+                                       numTroops * 5);
+        break;
+    case CREATURE_STORM_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_ICE_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_WATER, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_ENERGY_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_FIRE, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_MAGMA_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_EARTH, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_OGRE_MAGE:
+        gpCombatManager->CastSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
+        break;
+    }
+    if (!static_cast<const combatManager*>(gpCombatManager)
+             ->IsQuickCombat()
+        && armySample[SHOOT_SAMPLE])
+        gpSoundManager->WaitSample(armySample[SHOOT_SAMPLE]->field_1c, -1);
+    gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+    if (original_facing != facing
+        && !static_cast<const combatManager*>(gpCombatManager)
+                ->IsQuickCombat())
+        Turn(1);
 }
-
-#endif  // @carcass
 
 // Complete-only helper: retail first takes the active Magic Mirror backlash
 // percentage, then floors Faerie Dragons at the spell's base mastery value.

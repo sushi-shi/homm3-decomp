@@ -36,6 +36,14 @@ enum creature_seqid {
     cs_range_ur = 14,
     cs_range_r = 15,
     cs_range_dr = 16,
+    // DC creature_seqid.cs_special_{ur,r,dr} (dump enum 0x4962), the
+    // cast-animation triple. Byte-proven by army::cast_spell
+    // (0x448260): it selects 17/18/19 from the missile angle and falls
+    // back to the cs_attack triple when the sprite has no frames for
+    // them.
+    cs_special_ur = 17,
+    cs_special_r = 18,
+    cs_special_dr = 19,
     cs_prewalk = 0x14,
     cs_postwalk = 0x15
 };

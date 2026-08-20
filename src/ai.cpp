@@ -1629,7 +1629,7 @@ unsigned char combatManager::choose_creature_spell(const army* current_army, lon
         case CREATURE_MASTER_GENIE:
             value = caster.get_caliph_value(target);
             break;
-        case CREATURE_DRAGON_FLY:
+        case CREATURE_OGRE_MAGE:
             value = caster.get_ogre_mage_value(target);
             break;
         }
@@ -1778,7 +1778,7 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
             return 1;
         break;
     case CREATURE_MASTER_GENIE:
-    case CREATURE_DRAGON_FLY:
+    case CREATURE_OGRE_MAGE:
         if (choose_creature_spell(current_army, best_value, estimate))
             return 1;
         break;

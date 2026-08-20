@@ -103,6 +103,14 @@ enum TCreatureType {
     // a live fireShieldRounds counter. NH3API spelling, Complete
     // numbering (0x34 is the plain Efreeti).
     CREATURE_EFREET_SULTAN = 0x35,
+    // The two remaining creature CASTERS, byte-proven by
+    // army::cast_spell (0x448260): its creature switch routes 0x25 to
+    // cast_caliph_spell - the Master Genie's random-beneficial roll -
+    // and 0x5b to CastSpell(SPELL_BLOODLUST, ...), the Ogre Mage's one
+    // spell. NH3API spellings, Complete numbering (0x24 the plain
+    // Genie, 0x5a the plain Ogre).
+    CREATURE_MASTER_GENIE = 0x25,
+    CREATURE_OGRE_MAGE = 0x5b,
     // Retail army::get_mirror_effect floors this creature's backlash chance
     // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
     CREATURE_FAERIE_DRAGON = 0x86,
