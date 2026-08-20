@@ -575,7 +575,7 @@ cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	89.9086	89.9086	89.9086	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
-cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	91.5113	91.5113	91.5113	0x66290
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1361	98.1361	98.1361	0x66290
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00
