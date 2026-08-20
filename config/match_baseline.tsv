@@ -798,7 +798,23 @@ events	?get_treasure_data@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.
 events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60
 events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6df0
 events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7000
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+# monsters_sell_out ACCEPTED 100.0000 -> 99.9517 (2026-08-20, spells lane).
+# THE TRADE: armygrp.h's ESpellId gained two UNGATED enumerators -
+# SPELL_TELEPORT 0x3f (un-gated out of HOMM3_SPELL_TELEPORT_DECL) and
+# SPELL_REMOVE_OBSTACLE 0x40 (new) - so that spells.obj's message
+# bodies can spell their 53- and 37-entry jump tables as
+# `case <enumerator>:` rather than magic numbers. WHAT IT BOUGHT:
+# ~4.4 KB of spells.obj that could not be written at all without those
+# labels, since the magic-case-label AND .cpp-local-enum cleanliness
+# floors are both 0. WHAT IT COST: this row and initialize_game_data,
+# both the documented include-set class - no semantic change reaches
+# either TU and events.cpp does not include armygrp.h at all.
+# The delta here is one addressing-mode choice, 3 bytes of 6216.
+# `max` and `hist` both keep 100.0000, so this is a re-measure owed to
+# a later lane, not lost work. Do NOT hunt a local spelling: see the
+# initialize_game_data block further down for the sweep that
+# established the class is non-monotonic and not source-nameable.
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	99.9517	100.0000	0xa7250
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
@@ -1361,7 +1377,28 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
+# initialize_game_data ACCEPTED 100.0000 -> 96.0880 AGAIN (2026-08-20,
+# spells lane), the seventh recorded movement of this row and the
+# fourth time it has landed on exactly 96.0880. THE TRADE, in full:
+# armygrp.h's ESpellId gained two UNGATED enumerators, SPELL_TELEPORT
+# 0x3f (un-gated out of a view) and SPELL_REMOVE_OBSTACLE 0x40 (new),
+# and armygrp.h is inside initialize.cpp's include closure through
+# town.h. What that bought is ~4.4 KB of spells.obj message bodies -
+# SpellTargetMessage 0x5a8690, ShowSpellMessage 0x5a8950 - whose whole
+# shape is a jump table over named spell ids; without the enumerators
+# they cannot be written at all, because `case 0x40:` is floored at 0
+# and a .cpp-local enum is floored at 0 too. The two enumerators are
+# byte-proven by those same tables (0x40 is the top entry of the
+# 53-wide table and gets its own strcpy arm).
+# The measurement was taken ALONE, with the two enumerators the only
+# change in the tree, and it moved exactly two rows: this one and
+# events' monsters_sell_out (100.0000 -> 99.9517, block above).
+# `max` and `hist` both keep 100.0000. This costs a re-measure, not a
+# result. It is also the SECOND datum for the step-function reading of
+# this class: two enumerators moved the row by the same amount one
+# enumerator did on 2026-08-08, which is what a population threshold
+# looks like and not what a per-declarator penalty looks like.
+initialize	?initialize_game_data@@YIXXZ	96.0880	96.0880	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
