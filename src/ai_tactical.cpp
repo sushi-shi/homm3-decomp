@@ -2769,14 +2769,98 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2455
+// The SINGLE-TARGET half: same eligibility sweep as
+// consider_enchantment below, but it keeps the BEST stack rather than
+// a sum, and then answers "should the caster spend this action now?"
+// in choice->field_20.
+//
+// Two things the mass version does not have:
+//   - the MAGIC MIRROR discount. A positive value aimed at the ENEMY
+//     group is scaled by `(50 - target->get_mirror_effect()) * 2 / 100`
+//     while the target's mirror is standing - Dispel excepted, since
+//     dispelling the mirror is not something the mirror can reflect.
+//   - the acting-stack test, which is consider_teleport's inlined
+//     is_last_action with a different fallback: where teleport answers
+//     0 the moment another of our stacks can still act, this one asks
+//     the spell's own traits word (bit 14 of +0xc) whether it is worth
+//     casting anyway. Haste overrides the whole answer to 1.
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
 void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)
 {
-    // @stub
+    TEnchantValue value_of = get_enchantment_function(choice->spell);
+    const army* best = 0;
+    for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
+        const army* target = &gpCombatManager->armies[group][i];
+        if (target->disabled_290)
+            continue;
+        if (target->disabled_2b0)
+            continue;
+        if (target->disabled_2c0)
+            continue;
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (target->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (target->creatureType == CREATURE_AMMO_CART)
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->SpellCastWorks(choice->spell, side, target, 1,
+                                             creature_cast))
+            continue;
+        if (target->spellInfluence[choice->spell])
+            continue;
+        long value = (this->*value_of)(target, *choice);
+        if (target->magicMirrorRounds && group != side && value > 0
+                && choice->spell != SPELL_DISPEL)
+            value = (50 - target->get_mirror_effect()) * value * 2 / 100;
+        if (value > choice->value) {
+            best = target;
+            choice->value = value;
+            choice->target = target->gridIndex;
+        }
+    }
+    if (best == 0)
+        return;
+    unsigned char act_now;
+    if (group == side) {
+        act_now = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (best != current) {
+            long total = gpCombatManager->numArmies[side];
+            for (long j = 0; j < total; j++) {
+                const army* other = &gpCombatManager->armies[side][j];
+                if (other->creatureId & 0x200040)
+                    continue;
+                if (other->disabled_290)
+                    continue;
+                if (other->disabled_2b0)
+                    continue;
+                if (other->disabled_2c0)
+                    continue;
+                unsigned char idle = static_cast<unsigned char>(
+                    static_cast<unsigned>(other->creatureId) >> 26);
+                if (idle & 1)
+                    continue;
+                if (other != current) {
+                    if ((akSpellTraits[choice->spell].field_c & 0x4000) == 0)
+                        act_now = 0;
+                    break;
+                }
+            }
+        }
+    } else {
+        act_now = should_attack_now(best);
+    }
+    choice->field_20 = act_now;
+    if (choice->spell == SPELL_HASTE)
+        choice->field_20 = 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2513
 // The MASS half of the enchantment pricer: a single-target spell is
