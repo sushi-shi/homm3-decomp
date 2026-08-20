@@ -2532,16 +2532,52 @@ void game::setup_shipyards()
 //     hoisted out of the pin. With the recompute of `count * 28`,
 //     85.1473 -> 86.7504.
 //
-// Residual (86.7504%): TWO cleanup sites, and they are the documented
-// merged-return class rather than a spelling. Retail reaches ONE unwind
-// state from two conditions in each of two places - the generators count
-// read shares its site with the generator::load guard (state 0x10 at
-// 0x417c, entered by `jb` and by `je`), and the field_4e3e8 byte read
-// shares its site with the obeliskFlags read (state 0x16 at 0x41ec). Our
-// CL gives each `return -1` its own state pair and its own _Tidy call, so
-// the counts stand at 41 against 39 and the branch census at 73 against
-// 72. Nothing about the two statements differs; only the cleanup-site
-// allocation does.
+// 86.7504 -> 90.0926, 2026-08-20, and the note it replaces was wrong to
+// call the merged-return class unreachable (game::Save carries the full
+// write-up of the lever). Retail emits 39 numbered cleanup sites here and
+// we emitted 43; the four extra are FOUR merges, each one `return -1`
+// reached by two conditions, and a `goto` to a label inside the surviving
+// arm produces every one:
+//   * the event-record count read + the payload read (state 0x8 at
+//     0x4043) - forward goto, label in the SECOND guard, because retail's
+//     teardown is the fall-through successor of the second test;
+//   * the generators count read + the generator::load loop (0x10 at
+//     0x417c) - backward goto, label in the COUNT READ's own `if`, since
+//     both predecessors are jumps and the block is displaced one teardown
+//     down;
+//   * the field_4e3e8 byte + the obeliskFlags read (0x16 at 0x41ec) -
+//     forward goto. The `||`-with-comma spelling banked here as
+//     "MEASURED AND REJECTED, -2.5" was rejecting the wrong thing: the
+//     merge is real, the `||` just lowers it as a two-jump join that
+//     sinks to the end of the function;
+//   * the town count read + the town::load loop (0x1b at 0x430c) -
+//     backward goto.
+// Worth +2.12 for the four together.
+//
+// THE TWO SCRATCH BUFFERS MUST BE BLOCK-SCOPED (+1.22, and it is
+// game::Save's own frame lever applied here). At function scope VC6 gives
+// `char_buffer` and `short_buffer` permanent slots (-0xf and -0xe); with
+// each use group wrapped in its own brace pair they COLOUR INTO THE
+// INCOMING PARAMETER'S HOME, which is where retail keeps them - [ebp+0xb]
+// for the byte (10 refs) and [ebp+0xa] for the short (22), with the byte
+// temp at -0xd matching ref for ref.
+//
+// Residual (90.0926%):
+//   * `sub esp,0x7b0` against retail's 0x7a8, and the fileName string
+//     sits at -0x98 where retail has it at -0x74. Our small-slot region
+//     is 36 bytes (9 dwords) larger and our deep locals correspondingly
+//     smaller; retail reuses ONE slot (-0x24, 7 refs) for every
+//     `resize(n, T())` temporary where we spend several.
+//   * ONE cleanup site short of retail's 39, and it is not a missing
+//     statement: at the gMapExtra guard alone VC6 expands `_Tidy` inline
+//     (base 0xc0e) where retail calls it (site 0x4b at 0x48e8). Pinning
+//     that `return -1` forces the WHOLE ~SavedGameHeader out of line
+//     instead, which is not retail's shape and measures 90.0926 ->
+//     89.0988. Retail's shape is depth-1, and `#pragma inline_depth(1)`
+//     is byte-flat in VC6.
+//   * the poolCount ternary lowers inverted - retail `setl al / and
+//     eax,5 / add eax,3`, ours `setge al / and al,-5 / add eax,8` - and
+//     reads saveVersion from [ebp+8] where retail reads [ebp-0x5cc].
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
@@ -2567,8 +2603,6 @@ int game::Load(TAbstractFile* infile)
     memcpy(gpGame->playerDisabled, saved.deadPlayer,
            sizeof(gpGame->playerDisabled));
 
-    char char_buffer;
-    short short_buffer;
     char byteValue;
     char extraByteValue;
     short shortValue;
@@ -2582,6 +2616,7 @@ int game::Load(TAbstractFile* infile)
     gpSearchArray->Close();
 
     if (saveVersion >= 41) {
+        char char_buffer;
         infile->Read(&char_buffer, sizeof(char_buffer));
         gUnnamed69950c = char_buffer;
     } else {
@@ -2614,17 +2649,24 @@ int game::Load(TAbstractFile* infile)
 #pragma inline_depth(0)
     field_1f680.erase(eventFirst, eventLast);
 #pragma inline_depth()
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
-        return -1;
+    {
+        char char_buffer;
+        if (infile->Read(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer))
+            goto event_records_failed;
 #pragma inline_depth(0)
-    field_1f680.resize(char_buffer);
+        field_1f680.resize(char_buffer);
 #pragma inline_depth()
-    // Retail recomputes `count * 28` TWICE - `movsx / lea [8*n] / sub /
-    // shl 2` once for the request and again for the compare. Landing it in
-    // an `eventBytes` local costs the second sign-extended reload.
-    if (infile->Read(field_1f680.begin(), char_buffer * sizeof(LoadEventRecord))
-        < char_buffer * sizeof(LoadEventRecord))
-        return -1;
+        // Retail recomputes `count * 28` TWICE - `movsx / lea [8*n] / sub /
+        // shl 2` once for the request and again for the compare. Landing it
+        // in an `eventBytes` local costs the second sign-extended reload.
+        if (infile->Read(field_1f680.begin(),
+                         char_buffer * sizeof(LoadEventRecord))
+            < char_buffer * sizeof(LoadEventRecord)) {
+        event_records_failed:
+            return -1;
+        }
+    }
 
     if (worldMap.Load(infile, mapHeader.Size, mapHeader.HasTwoLayers,
                       saveVersion) < 0)
@@ -2634,16 +2676,21 @@ int game::Load(TAbstractFile* infile)
     if (LoadMinePool(infile, saveVersion) < 0)
         return -1;
 
-    if (infile->Read(&short_buffer, sizeof(short_buffer)) <
-        sizeof(short_buffer))
-        return -1;
-#pragma inline_depth(0)
-    generators.resize(short_buffer);
-#pragma inline_depth()
     int i;
-    for (i = 0; i < short_buffer; ++i) {
-        if (!generators[i].load(infile))
+    {
+        short short_buffer;
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) <
+            sizeof(short_buffer)) {
+        generators_failed:
             return -1;
+        }
+#pragma inline_depth(0)
+        generators.resize(short_buffer);
+#pragma inline_depth()
+        for (i = 0; i < short_buffer; ++i) {
+            if (!generators[i].load(infile))
+                goto generators_failed;
+        }
     }
 
     if (LoadGarrisonPool(infile, saveVersion) < 0)
@@ -2651,17 +2698,24 @@ int game::Load(TAbstractFile* infile)
     if (LoadBoatPool(infile) < 0)
         return -1;
 
-    // MEASURED AND REJECTED (86.7504 -> 84.2222): folding these two guards
-    // into one `||` with a comma so they share ONE cleanup site, which is
-    // what retail has (state 0x16 at 0x41ec, entered by `jb` and by the
-    // fall-through). The shared site is real and the `||` does not produce
-    // it - this is the merged-return class, not a spelling.
-    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
-        return -1;
-    field_4e3e8 = char_buffer;
-    if (infile->Read(obeliskFlags, sizeof(obeliskFlags)) <
-        sizeof(obeliskFlags))
-        return -1;
+    // Retail's state 0x16 at 0x41ec is entered by `jb` from the byte guard
+    // and by the FALL-THROUGH from the obeliskFlags guard: one `return -1`
+    // for two conditions. The `||`-with-comma spelling measured -2.5 here
+    // because it lowers as a two-jump join that sinks to the end of the
+    // function; a forward `goto` into the second guard's own block puts
+    // the teardown where retail puts it.
+    {
+        char char_buffer;
+        if (infile->Read(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer))
+            goto obelisk_failed;
+        field_4e3e8 = char_buffer;
+        if (infile->Read(obeliskFlags, sizeof(obeliskFlags)) <
+            sizeof(obeliskFlags)) {
+        obelisk_failed:
+            return -1;
+        }
+    }
 
     for (i = 0; i < 8; ++i) {
         if (players[i].load(infile, saveVersion) < 0)
@@ -2669,14 +2723,16 @@ int game::Load(TAbstractFile* infile)
     }
 
     unsigned char townCount;
-    if (infile->Read(&townCount, sizeof(townCount)) < sizeof(townCount))
+    if (infile->Read(&townCount, sizeof(townCount)) < sizeof(townCount)) {
+    towns_failed:
         return -1;
+    }
 #pragma inline_depth(0)
     towns.resize(townCount);
 #pragma inline_depth()
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].load(infile, saveVersion) < 0)
-            return -1;
+            goto towns_failed;
     }
 
     int heroCount = saveVersion < 25 ? 128 : HERO_COUNT;
@@ -2815,6 +2871,7 @@ int game::Load(TAbstractFile* infile)
 
     int poolCount = saveVersion < 32 ? 3 : 8;
     for (i = 0; i < poolCount; ++i) {
+        short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
             type_point emptyPoint;
@@ -2826,6 +2883,7 @@ int game::Load(TAbstractFile* infile)
         }
     }
     for (i = 0; i < poolCount; ++i) {
+        short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
             type_point emptyPoint;
@@ -2837,43 +2895,56 @@ int game::Load(TAbstractFile* infile)
         }
     }
 
-    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
-        sizeof(short_buffer)) {
-        type_point emptyPoint;
+    {
+        short short_buffer;
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            type_point emptyPoint;
 #pragma inline_depth(0)
-        whirlpools.resize(short_buffer, emptyPoint);
+            whirlpools.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
-        infile->Read(whirlpools.begin(), short_buffer * sizeof(type_point));
+            infile->Read(whirlpools.begin(),
+                         short_buffer * sizeof(type_point));
+        }
     }
-    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
-        sizeof(short_buffer)) {
-        type_point emptyPoint;
+    {
+        short short_buffer;
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            type_point emptyPoint;
 #pragma inline_depth(0)
-        undergroundGateExits.resize(short_buffer, emptyPoint);
+            undergroundGateExits.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
-        infile->Read(undergroundGateExits.begin(),
-                     short_buffer * sizeof(type_point));
+            infile->Read(undergroundGateExits.begin(),
+                         short_buffer * sizeof(type_point));
+        }
     }
-    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
-        sizeof(short_buffer)) {
-        type_point emptyPoint;
+    {
+        short short_buffer;
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            type_point emptyPoint;
 #pragma inline_depth(0)
-        undergroundGatePairs.resize(short_buffer, emptyPoint);
+            undergroundGatePairs.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
-        infile->Read(undergroundGatePairs.begin(),
-                     short_buffer * sizeof(type_point));
+            infile->Read(undergroundGatePairs.begin(),
+                         short_buffer * sizeof(type_point));
+        }
     }
 
     // The tail, mirroring game::Save's: universities as a plain block
     // read, creatureBanks element by element, then the event log.
-    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
-        sizeof(short_buffer)) {
-        type_university emptyUniversity;
+    {
+        short short_buffer;
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            type_university emptyUniversity;
 #pragma inline_depth(0)
-        universities.resize(short_buffer, emptyUniversity);
+            universities.resize(short_buffer, emptyUniversity);
 #pragma inline_depth()
-        infile->Read(universities.begin(),
-                     short_buffer * sizeof(type_university));
+            infile->Read(universities.begin(),
+                         short_buffer * sizeof(type_university));
+        }
     }
     load_object_vector(infile, &creatureBanks);
 
