@@ -1328,7 +1328,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	96.0880	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
@@ -1866,17 +1866,17 @@ town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
 town	?get_legion_bonus@town@@QAEJJ@Z	81.7262	81.7262	81.7262	0x1bf810
 town	?get_silo_income@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280
+town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	86.7098	86.7098	86.7098	0x1bfeb0
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0
 town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.0000	0x1bfdd0
 town	?initialize_hordes@town@@SIXXZ	99.7778	99.7778	99.7778	0x1bdf60
 town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	89.8561	89.8561	89.8561	0x1be600
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
+town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	92.6954	92.6954	92.6954	0x1c0220
+town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	93.2294	93.2294	93.2294	0x1c0400
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210
 town	initialize_buildings	0.0000	0.0000	0.0000	0x1c08c0
-town	show_building_rewards	0.0000	0.0000	0.0000	0x1c0220
-town	show_creature_rewards	0.0000	0.0000	0.0000	0x1c0400
-town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340

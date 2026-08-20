@@ -56,6 +56,17 @@ enum EGeneralTextIndex {
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
 #endif
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // town.obj's three event-reward rows: the " and " list separator
+    // (folded [Text._First + 0x238] in both show_* helpers), and the
+    // two town-event dialog formats give_event_reward's helpers wrap
+    // around the reward list ([+0x92c] buildings, [+0x930] creatures).
+    // Gated: an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
+    GENERAL_TEXT_LIST_AND = 142,
+    GENERAL_TEXT_EVENT_BUILDINGS = 587,
+    GENERAL_TEXT_EVENT_CREATURES = 588,
+#endif
     GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
     GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
     GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
