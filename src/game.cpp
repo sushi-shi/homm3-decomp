@@ -673,7 +673,7 @@ void game::calculate_production()
 
     for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
         hero* currentHero = &heroes[heroId];
-        if (currentHero->owner < 0)
+        if (currentHero->owner == -1)
             continue;
         if (currentHero->army.get_creature_total(
                 creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)

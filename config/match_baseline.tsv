@@ -902,7 +902,7 @@ game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 # Measured both ways; the larger exact body wins. See the A/B recorded on
 # CMCHideHero in include/netmsg.h and above the body in src/game.cpp.
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
-game	?calculate_production@game@@QAEXXZ	88.1659	88.1659	88.1659	0xb8af0
+game	?calculate_production@game@@QAEXXZ	88.7511	88.7511	88.7511	0xb8af0
 game	?get_alignment@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xc6690
 game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70
