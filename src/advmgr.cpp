@@ -1040,12 +1040,177 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:2307
+// The radar drag. A right-click is answered with one general-text row and
+// nothing else; a left-click recentres the view on the radar pixel under
+// the pointer and then holds a modal pump until the button comes back up,
+// recentring again on every mouse move.
+//
+// The radar-to-world scale is picked off the map's own extent. Retail's
+// third constant is 0x3faaa993, which is NOT 4/3 (0x3faaaaab) and not any
+// ratio of the four extents - it is the literal `1.3333f` exactly, so the
+// original source hand-rounded it and the three siblings 4.0f/2.0f/1.0f
+// keep it company. Spell it as the literal or the constant moves.
+//
+// Two retail quirks are transcribed as found, both harmless because the
+// radar and the world are square: the vertical pointer clamp compares
+// against the radar's height but assigns from its WIDTH, and both world
+// clamps in the drag body bound against gMapWidth - 1, the y one
+// included. VC6 CSEs the second gMapWidth load away, which is what makes
+// the single `dec eax` serve both.
+//
+// Three spellings carried this from 92.17 to exact, all of them worth
+// reusing:
+//   * The message local's zero-init must ENUMERATE every member.
+//     `= { 0 }` compiles to `mov [slot],0` plus `rep stosd` of the other
+//     seven, and memset() to a bare `rep stosd`; only the full
+//     `{ 0, 0, 0, 0, 0, 0, 0, 0 }` gives retail's eight individual
+//     stores - and only that form lets the zero live in a REGISTER, which
+//     is what unifies it with the `push esi` that feeds UpdateRadar's
+//     three trailing flags, CompleteDraw's bForceDraw and UpdateScreen's
+//     x. That one edit was 97.42 -> 100.0.
+//   * The clamped drag coordinates need NAMED int locals before the
+//     bitfield store. Assigning `_cpp_min(...) - 9` straight into
+//     radarOrigin.x lets VC6 narrow the whole chain to 16 bits
+//     (`mov cx,[..]; sub cx,9`) where retail keeps it 32-bit; the local
+//     forces the dword read. 92.17 -> 97.42 with the init fix.
+//   * `_cpp_max(0, v)` and not `_cpp_max(v, 0)`. The template tests
+//     `_X > _Y`, so argument order picks the branch polarity, and retail
+//     yields the zero on `jl` here. MoreTreesNear four hundred lines down
+//     is byte-proven to want the OTHER order - the two really did differ
+//     in the original source, so measure per site.
 VA(0x0040a0c0, 0x50D)  // anchor-callee, dc 0xa168
 void advManager::ProcessRadarSelect(const message* msg)
 {
-    // @stub
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        NormalDialog(gpGeneralText->GetText(55), 4, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        return;
+    }
+
+    DemobilizeCurrHero(0, 1);
+
+    float radarScale;
+    switch (gMapHeight) {
+    case MAP_DIMENSION_SMALL:
+        radarScale = 4.0f;
+        break;
+    case MAP_DIMENSION_MEDIUM:
+        radarScale = 2.0f;
+        break;
+    case MAP_DIMENSION_LARGE:
+        radarScale = 1.3333f;
+        break;
+    default:
+        radarScale = 1.0f;
+        break;
+    }
+
+    int mapY = static_cast<int>(
+        (msg->mouseY - advWindow->RadarWidget->y) / radarScale);
+    int mapX = static_cast<int>(
+        (msg->mouseX - advWindow->RadarWidget->x) / radarScale);
+    radarOrigin.x = mapX - 9;
+    radarOrigin.y = mapY - 8;
+
+    if (radarOrigin.x < -9)
+        radarOrigin.x = -9;
+    if (radarOrigin.y < -8)
+        radarOrigin.y = -8;
+    if (radarOrigin.x > gMapWidth - 10)
+        radarOrigin.x = gMapWidth - 10;
+    if (radarOrigin.y > gMapHeight - 9)
+        radarOrigin.y = gMapHeight - 9;
+
+    UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
+                                  ADVENTURE_SCREEN_WIDTH,
+                                  ADVENTURE_SCREEN_HEIGHT);
+
+    unsigned long curTime = GameTime::Get();
+    if (static_cast<long>(
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+        && !animCtrPaused) {
+        ++animFrame;
+        long elapsedTime =
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(elapsedTime,
+                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+    }
+    Process1WindowsMessage();
+
+    message dragMsg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message event;
+    do {
+        Process1WindowsMessage();
+        event = gpInputManager->GetEvent();
+        dragMsg = event;
+        while (event.id != MESSAGE_LEFT_BUTTON_UP) {
+            if (!event.id)
+                break;
+            if (event.id == MESSAGE_MOUSE_MOVE)
+                dragMsg = event;
+            Process1WindowsMessage();
+            event = gpInputManager->GetEvent();
+        }
+
+        if (dragMsg.id == MESSAGE_MOUSE_MOVE) {
+            if (dragMsg.codeX < advWindow->RadarWidget->x)
+                dragMsg.codeX = advWindow->RadarWidget->x;
+            if (dragMsg.codeX >= advWindow->RadarWidget->x
+                                    + advWindow->RadarWidget->width)
+                dragMsg.codeX = advWindow->RadarWidget->x
+                                + advWindow->RadarWidget->width - 1;
+            if (dragMsg.codeY < advWindow->RadarWidget->y)
+                dragMsg.codeY = advWindow->RadarWidget->y;
+            if (dragMsg.codeY >= advWindow->RadarWidget->y
+                                    + advWindow->RadarWidget->height)
+                dragMsg.codeY = advWindow->RadarWidget->y
+                                + advWindow->RadarWidget->width - 1;
+
+            gpMouseManager->Main(dragMsg);
+
+            int dragY = static_cast<int>(
+                (dragMsg.codeY - advWindow->RadarWidget->y) / radarScale);
+            int dragX = static_cast<int>(
+                (dragMsg.codeX - advWindow->RadarWidget->x) / radarScale);
+            int newX = _cpp_min(_cpp_max(0, dragX), gMapWidth - 1);
+            int newY = _cpp_min(_cpp_max(0, dragY), gMapWidth - 1);
+            radarOrigin.x = newX - 9;
+            radarOrigin.y = newY - 8;
+
+            UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
+            CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+            gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                          ADVENTURE_SCREEN_Y,
+                                          ADVENTURE_SCREEN_WIDTH,
+                                          ADVENTURE_SCREEN_HEIGHT);
+
+            unsigned long dragTime = GameTime::Get();
+            if (static_cast<long>(
+                    dragTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+                && !animCtrPaused) {
+                ++animFrame;
+                long dragElapsed =
+                    dragTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                    _cpp_max(dragElapsed,
+                             static_cast<long>(
+                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
+            }
+            Process1WindowsMessage();
+            dragMsg.id = 0;
+        }
+    } while (event.id != MESSAGE_LEFT_BUTTON_UP);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2434
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
