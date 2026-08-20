@@ -268,6 +268,24 @@ struct type_AI_spellcaster {
     long get_hypnotize_value(const army* enemy, type_enchant_data caster);
     long get_berserk_value(const army* enemy, type_enchant_data caster);
     long get_traitor_value(const army* enemy, const army* target);
+    // The luck twin of get_mirth_value / get_sorrow_value below;
+    // get_enchantment_function (0x43b690) address-takes it for the
+    // SPELL_FORTUNE row of its dispatch.
+    long get_fortune_value(const army* our_army, type_enchant_data caster);
+    // 0x43b680 (16 B), the row get_enchantment_function hands back for
+    // every spell it does not price. Its only evidence is that
+    // address-take plus the carve slot; the DC roster spells the name.
+    long unimplemented(const army* enemy, type_enchant_data caster);
+    // The shape of every row in get_enchantment_function's table, and
+    // the shape get_cancel_value (0x439a80) and get_caliph_value
+    // (0x43c4a0) call back through: retail's `call dword ptr [ebp-x]`
+    // with the object in ECX and no this-adjust is a single-inheritance
+    // pointer-to-member-function, which is one code address wide.
+    typedef long (type_AI_spellcaster::*TEnchantValue)(const army*,
+                                                       type_enchant_data);
+    TEnchantValue get_enchantment_function(SpellID spell);
+    void consider_single_enchantment(type_spell_choice* choice, long group);
+    void consider_enchantment(type_spell_choice* choice, long group);
     void consider_teleport(type_spell_choice* choice);
     void consider_sacrifice(type_spell_choice& choice,
                             const army* healedArmy, long targetHex) const;

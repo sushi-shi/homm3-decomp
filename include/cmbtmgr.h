@@ -66,8 +66,34 @@ extern const TMissileStartInfo* gMissileStartInfo;
 // it while still allowing a hero cast. BOOTSTRAP INVENTION - no roster
 // attests the domain or the spelling, and the other nine codes stay
 // unnamed until one of the 0x4643b0 branches is decoded.
+//
+// FIVE MORE CODES DECODED 2026-08-20 from the other side, by
+// ai_tactical's creature-spell pricers get_ogre_mage_value (0x43c330)
+// and get_caliph_value (0x43c4a0). Both open with the same
+// jump-table switch over this word, and each arm's only effect is to
+// raise the mastery the spell is priced at from ADVANCED to EXPERT:
+// code 1 raises it unconditionally, and codes 6/7/8/9 raise it only
+// when the spell's own school mask (`akSpellTraits[spell].school`,
+// +0x1c) carries bit 2 / bit 1 / bit 3 / bit 0 - i.e. eSchoolWater,
+// eSchoolFire, eSchoolEarth and eSchoolAir respectively. The
+// enumerators are named after that measured EFFECT rather than after
+// the battlefield that sets the code, so no roster is being invented;
+// for the record the effects are the five spell-affecting special
+// battlefields' published rules, and code 2's already-recorded
+// "creature casts refused" is the sixth.
+// Behind a view because cmbtmgr.h reaches most of the combat tree and
+// an ungated enumerator counts toward the include-set threshold in
+// every consumer.
 enum ECombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
+#ifdef HOMM3_CMBTMGR_SPELL_MASTERY_DECL
+    ,
+    COMBAT_SPELL_RESTRICTION_ALL_EXPERT = 0x1,
+    COMBAT_SPELL_RESTRICTION_WATER_EXPERT = 0x6,
+    COMBAT_SPELL_RESTRICTION_FIRE_EXPERT = 0x7,
+    COMBAT_SPELL_RESTRICTION_EARTH_EXPERT = 0x8,
+    COMBAT_SPELL_RESTRICTION_AIR_EXPERT = 0x9
+#endif
 };
 
 // Combat-grid geometry, byte-proven wherever a cmbtmgr or findpath body
