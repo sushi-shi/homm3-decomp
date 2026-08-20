@@ -386,7 +386,24 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     provably false and retail still emits the compare - VC6 does not
 //     constant-propagate the switch value into an arm. Kept.
 //
-// Residual: see the comment refreshed after the first measurement below.
+// Residual (77.17%): why-branch reports 123 vs 122 blocks and 80 vs 80
+// branches - structurally converged - with exactly TWO polarity flips left
+// and no size or count divergence anywhere.
+//   #15 (+0x211) is the BuildPath budget select: retail lays the 0xea5f
+//     arm out as the fall-through, ours lays out movePoints. Three
+//     spellings were measured and ALL THREE emit byte-identical code
+//     (77.17 each), so VC6 normalises this block pair itself and the
+//     order is not source-addressable here: the positive
+//     `if (F1 || F2) movePoints else 0xea5f` kept below, its De Morgan
+//     twin `if (!F1 && !F2) 0xea5f else movePoints`, and the same
+//     condition as a ternary feeding one initialiser.
+//   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
+//     and returns with an UNCONDITIONAL `jmp` because it keeps
+//     gpSearchArray live in eax across the edge and reloads it at the
+//     bottom; ours closes with a conditional `jns`. That is the
+//     rematerialisation half of the register-homing family, not a loop
+//     form - why-branch's own guided search moved all six D1/D2 loop
+//     mutations and none changed the distance (two made it far worse).
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
