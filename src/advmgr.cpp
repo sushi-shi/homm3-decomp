@@ -1515,7 +1515,10 @@ void advManager::ProcessRadarSelect(const message* msg)
 //     Measured both ways with and without the currHeroId guard below:
 //     member/guard 87.94, member/no-guard 88.33, local/no-guard 90.89,
 //     local/guard 90.90. Kept the highest; the delta is real and the
-//     spelling above is NOT retail's.
+//     spelling above is NOT retail's. SetHeroContext's frame-shrinking
+//     lever does NOT rescue it either: block-scoping hoverPoint/cellPoint
+//     forces the left half onto the member (the local is out of scope) and
+//     lands at 87.95, so the two findings are independent.
 //   * We spill `cell` to [ebp-8] where retail keeps it in EDI for the whole
 //     body, so our frame is 0x1c against retail's 0x14 and localPlayer and
 //     heroMobile fail to share retail's one [ebp-4] slot.
