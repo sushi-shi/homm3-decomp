@@ -314,6 +314,13 @@ enum ESpellId {
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
     SPELL_BLIND = 0x3e,
+    // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
+    // which pushes the literal 0x3f into SpellCastWorks as the spell it
+    // is pricing. Behind a view for this header's usual measured
+    // reason, as SPELL_SLOW above.
+#ifdef HOMM3_SPELL_TELEPORT_DECL
+    SPELL_TELEPORT = 0x3f,
+#endif
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
     // Dreamcast CodeView supplies the enumerator spellings.
