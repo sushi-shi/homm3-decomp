@@ -406,6 +406,17 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
                                CREATURE_NOMAD) > 0);
 }
 
+// PushPoint's cursed/garrison terrain test, lifted for the /Ob2 BUDGET probe.
+static unsigned char terrain_forbids_magic(type_point where)
+{
+    TAdventureObjectType special =
+        gpGame->worldMap.cellData[
+            (where.z * gpGame->worldMap.Size + where.y)
+                * gpGame->worldMap.Size
+            + where.x].get_special_terrain();
+    return special == CURSED_GROUND || special == GARRISON;
+}
+
 // PushPoint's ordering key search, lifted out of its body for the /Ob2
 // BUDGET (2026-08-20).  There is NO Dreamcast row for this - the roster runs
 // PushPoint at findpath.cpp:271 straight to TestPossibleDirections at 461 with
@@ -424,9 +435,15 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // before we called _Construct at two of the sites retail calls _Ufill and
 // _Ucopy at.  It costs no symbol: findpath.obj defines no find_queue_slot.
 //
-// The lever is DOSE-SENSITIVE, so do not just add more.  Lifting the
-// magic_forbidden block out as well - the same shape, the next block up -
-// measures 81.1401 -> 76.4357.
+// The lever is DOSE-SENSITIVE, but the GRANULARITY matters more than the
+// count (2026-08-20).  Lifting the WHOLE magic_forbidden block - the next
+// block up - measures 81.1401 -> 76.4357; lifting only the CELL LOOKUP inside
+// it (terrain_forbids_magic, below) is worth 83.7018 -> 87.4589.  When a dose
+// overshoots, try a SMALLER SLICE of the same block before concluding the
+// lever is spent.  Two other slices measured negative from that peak and are
+// recorded so they are not re-spent: the dimension-door delta block
+// 83.7018 -> 63.7172, and the already-visited key comparison
+// 87.4589 -> 72.7429.
 // The second /Ob2 budget dose for PushPoint - see find_queue_slot below.
 // Worth 81.1401 -> 83.7018, and it is what brings visited_points.insert's
 // expansion into agreement with retail's ten calls.  No Dreamcast row; a
@@ -512,9 +529,13 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // so retail really does expand that one - the pin is only correct where
 // retail keeps the whole callee out of line.
 //
-// Residual (83.7018%): 74.3805 -> 81.1401 -> 83.7018 on the caller-shrink
-// lever, in two doses, and the CALL MULTISET NOW AGREES - 22 out-of-line calls
-// on each side.
+// Residual (87.4589%): 74.3805 -> 81.1401 -> 83.7018 -> 87.4589 on the
+// caller-shrink lever, in THREE doses, and the call multiset now sits at 23
+// out-of-line calls against retail's 22 with every name pairing by count.
+// What is left is the register-homing family (retail binds the map-cell base
+// to EDI where we bind EBX) plus one folded iterator: our
+// `queue.erase(queue.end() - 1)` emits `mov eax,[edi+8] / sub eax,0x1c /
+// add eax,0x1c` where retail folded `_P + 1` straight back to `_Last`.
 //
 // LOCALISED 2026-08-20 by aligning the two call sequences site by site. The
 // old note said the six callees we expand and retail calls were "all of them
@@ -625,12 +646,7 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
         point->magic_forbidden = 0;
         if (can_cast_teleport || can_summon_boat || can_cast_flight
                 || can_cast_water_walk) {
-            TAdventureObjectType special =
-                gpGame->worldMap.cellData[
-                    (point->point.z * gpGame->worldMap.Size + point->point.y)
-                        * gpGame->worldMap.Size
-                    + point->point.x].get_special_terrain();
-            if (special == CURSED_GROUND || special == GARRISON)
+            if (terrain_forbids_magic(point->point))
                 point->magic_forbidden = 1;
         }
     }
