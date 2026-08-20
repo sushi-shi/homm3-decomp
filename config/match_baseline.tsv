@@ -252,6 +252,7 @@ ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_en
 ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a00
 ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x35dc0
 ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399d0
+ai_tactical	?get_fire_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a110
 ai_tactical	?get_forgetfulness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b500
 ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0
 ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0
@@ -296,7 +297,6 @@ ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000	0.0000	0.0000	0x39a80
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
 ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000	0.0000	0.0000	0x39e80
 ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000	0.0000	0.0000	0x3b690
-ai_tactical	type_AI_spellcaster_get_fire_shield_value	0.0000	0.0000	0.0000	0x3a110
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
 ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x39270
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330

@@ -2141,14 +2141,91 @@ long type_AI_spellcaster::get_counterstroke_value(const army* our_army, type_enc
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2314
+// A boost priced through the DAMAGE-RATIO ladder, not the loss pricer:
+// fire shield adds a share of the blow this stack is about to TAKE to
+// the blow it deals, so the value is the same `(sqrt(factor) - 1) *
+// total * scale` tail get_bless_value and get_attack_skill_value close
+// with - only the numerator differs. `increase` is
+// (reflected + own) / own, where `reflected` is the enemy's average
+// swing scaled by the mastery row's percentage, capped at what this
+// stack can actually survive, and multiplied by the census's `count`
+// (the number of attackers the shield will burn).
+//
+// The mastery row is the RUN-TIME `caster.spell` form - the `shl 4 /
+// add / lea eax+2*edx` triple - not a folded enumerator, exactly like
+// the earth/water protection wrappers above.
+//
+// The Efreet Sultan already carries a fire shield, so its own casting
+// is docked a flat 20 off the mastery row before the `<= 0` bail.
+//
+// EXACT 2026-08-20 (91.31 -> 100.00), and the last edit is a REUSABLE
+// IDIOM for this TU's `_cpp_min` call sites: bind the reference return
+// to a `const long&` local. `_cpp_min` returns `const _TYPE&`, so its
+// inlined body splits in two - the operand HOMING plus the
+// `lea &a / jl / lea &b` selection, which produce the address, and the
+// `mov reg,[addr]` deref, which consumes it. Retail runs the selection
+// BEFORE the old_damage call and the deref after it. No expression
+// spelling reaches that: with `old_damage` computed in its own prior
+// statement the call necessarily precedes the whole min, and with the
+// call inlined into the `combined` expression there is no named local
+// left for `increase`'s divisor (retail stores it once at [ebp-0x14]
+// and reads it twice). A reference local is the one shape that splits
+// them, and it lands the body byte-exact.
 VA(0x0043a110, 0x222)  // linkorder, dc 0x407e8
 long type_AI_spellcaster::get_fire_shield_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    if (field_1c)
+        return 0;
+    long count = enemies[our_army->bitIndex].count;
+    long amount = akSpellTraits[caster.spell].mastery_bonus[caster.mastery];
+    if (our_army->creatureType == CREATURE_EFREET_SULTAN)
+        amount -= 20;
+    if (amount <= 0)
+        return 0;
+    const army* target = enemies[our_army->bitIndex].enemy;
+    if (target == 0)
+        return 0;
+    unsigned char fire_immune = static_cast<unsigned char>(static_cast<unsigned>(target->creatureId) >> 14);
+    if (fire_immune & 1)
+        return 0;
+    long reflected = target->get_average_damage(our_army, 0, target->numTroops, 1, 0)
+                     * amount / 100;
+    long our_hits = our_army->get_total_hit_points(0);
+    const long& capped = _cpp_min(reflected, our_hits);
+    long old_damage = our_army->get_average_damage(target, 0, our_army->numTroops, 1, 0);
+    long combined = capped * count + old_damage;
+    double increase = static_cast<double>(combined) / static_cast<double>(old_damage);
+    long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                               our_army->numTroops, 1, 0);
+    double factor = increase;
+    long boosted = static_cast<long>(damage * increase);
+    long enemy_hits = target->get_total_hit_points(0);
+    if (boosted > enemy_hits) {
+        factor = static_cast<double>(enemy_hits) / static_cast<double>(damage);
+        boosted = enemy_hits;
+    }
+    if (boosted > damage) {
+        double portion;
+        if (caster.duration >= params.odds)
+            portion = 1.0;
+        else
+            portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+        unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+        double scale;
+        if ((slow_flag & 1)
+                && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+            scale = 0.0;
+        else
+            scale = portion;
+        double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                            params.lowest_defense));
+        return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2360
 // EXACT 2026-08-08 (90.5 -> 100.0): the two damage figures are the
