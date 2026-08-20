@@ -2565,11 +2565,20 @@ int game::Load(TAbstractFile* infile)
 //     at [ebp+0xb]. We spend two real slots (-0x10, -0x18) on the same
 //     two variables and use [ebp+0x8] only as an int loop counter.
 // So the arithmetic is exact: 2 retail non-tail slots + 5 tail slots =
-// 7 = 0x5c0. Ours is 4 non-tail + 5 tail = 9 = 0x5c8, and the two
-// surplus slots ARE char_buffer and short_buffer failing to colour into
-// the parameter home. That is the thing to move, and it is a lifetime
-// question, not a statement-order one. Do not re-add the tail before
-// the slot count is 2.
+// 7 = 0x5c0. Ours was 4 non-tail + 5 tail = 9 = 0x5c8, and the two
+// surplus slots WERE char_buffer and short_buffer failing to colour
+// into the parameter home.
+//
+// FIXED 2026-08-20 by BLOCK-SCOPING them. Each guarded write now
+// declares its own buffer inside braces instead of reusing two
+// function-scope variables; that cuts their live ranges to a single
+// statement and lets VC6 colour them where retail put them. The
+// small-slot region went from FOUR slots to TWO, `sub esp` from 0x5b4
+// to 0x5ac, and the census now shows the same [ebp+0x8] / [ebp+0xb]
+// parameter-home pair retail uses. 42.2290 -> 42.3069 on the scoping
+// alone. 0x5ac + the five tail slots = 0x5c0 = retail's frame exactly,
+// so the tail is UNBLOCKED - but it must be spelled with exactly the
+// five temps below and no more, or the frame overshoots again.
 //
 // The tail's own temps, for whoever writes it: the twelve scalar writes
 // use exactly FIVE temps in retail, in this grouping - byte temp at
@@ -2587,8 +2596,10 @@ int game::Save(TAbstractFile* outfile)
     if (saved.Save(outfile) < 0)
         return -1;
 
-    char char_buffer = gUnnamed69950c;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    {
+        char char_buffer = gUnnamed69950c;
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+    }
     outfile->Write(artifactDisabled, sizeof(artifactDisabled));
     outfile->Write(artifactUsed, sizeof(artifactUsed));
     outfile->Write(field_4e658, sizeof(field_4e658));
@@ -2596,14 +2607,16 @@ int game::Save(TAbstractFile* outfile)
     if (SaveRumours(outfile) < 0)
         return -1;
 
-    char_buffer = field_1f680.size();
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = field_1f680.size();
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
+        int eventBytes = char_buffer * sizeof(LoadEventRecord);
+        if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
+            return -1;
     }
-    int eventBytes = char_buffer * sizeof(LoadEventRecord);
-    if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
-        return -1;
 
     if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
         return -1;
@@ -2612,15 +2625,17 @@ int game::Save(TAbstractFile* outfile)
     if (SaveMinePool(outfile) < 0)
         return -1;
 
-    short short_buffer = generators.size();
-    if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
-        sizeof(short_buffer)) {
-        return -1;
-    }
     int i;
-    for (i = 0; i < short_buffer; ++i) {
-        if (!generators[i].save(outfile))
+    {
+        short short_buffer = generators.size();
+        if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
+            sizeof(short_buffer)) {
             return -1;
+        }
+        for (i = 0; i < short_buffer; ++i) {
+            if (!generators[i].save(outfile))
+                return -1;
+        }
     }
 
     if (SaveGarrisonPool(outfile) < 0)
@@ -2628,10 +2643,12 @@ int game::Save(TAbstractFile* outfile)
     if (SaveBoatPool(outfile) < 0)
         return -1;
 
-    char_buffer = field_4e3e8;
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = field_4e3e8;
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
     }
     if (outfile->Write(obeliskFlags, sizeof(obeliskFlags)) <
         sizeof(obeliskFlags)) {
@@ -2643,10 +2660,12 @@ int game::Save(TAbstractFile* outfile)
             return -1;
     }
 
-    char_buffer = towns.size();
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = towns.size();
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
     }
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].save(outfile) < 0)
