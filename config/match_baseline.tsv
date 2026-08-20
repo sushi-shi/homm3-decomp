@@ -369,6 +369,7 @@ army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_combat_value@army@@QBEJJJ@Z	94.7414	94.7414	94.7414	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	92.1581	92.1581	92.1581	0x42a50
+army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	96.2453	96.2453	96.2453	0x3d730
 army	?is_adjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
 army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
@@ -391,7 +392,6 @@ army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
 army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
-army	army_initialize	0.0000	0.0000	0.0000	0x3d730
 army	army_new_turn	0.0000	0.0000	0.0000	0x46e30
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0

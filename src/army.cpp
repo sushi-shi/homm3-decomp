@@ -66,6 +66,7 @@
 // the cost back out of cellData by hand; includes are TU-local and cost
 // nothing to the include-set canaries.
 #include "findpath.h"
+#include "game.h"   // gpGame->f_1f698, initialize's elemental-town gate
 #include "hero.h"
 #include "herospec.h"
 #include "kb.h"
@@ -275,13 +276,84 @@ void army::WaitSample(army::TSampleID which)
 // army.h at exactly ZERO cost across all 131 units, so the change is
 // worth measuring rather than assuming - do it as its own commit with
 // nothing else in it.
-VA(0x0043d730, 0x17D)  // anchor-bracket + arity (ret 0x18 = 6 args), dc 0x439b0
-void army::initialize(TCreatureType type, long number, const hero* owner, long new_group, long new_index, long new_grid_index)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Residual (96.2453%): the scheduling family, all inside the closing
+// store run - retail computes `1 - new_group` at new_group's own load
+// (before the currFrameType/combatSide stores) where ours sinks it
+// after the -1 pair, and the origNumTroops/baseSpeed/origHitPoints
+// load-store triple rotates ecx/edx/eax against retail's edx/eax/ecx.
+// A named local for the subtraction is byte-inert (C2 forward-
+// substitutes it); no spelling reached the schedule.
+//
+// The layout blocker above is DISSOLVED, not paid: the rep movsd is
+// reproduced by memcpy through the two-step static_cast the tree's
+// ResetLimitCreature already uses (drawing.cpp precedent), so the
+// named slices stay and no union or army.h include edge was needed.
+// The `traits` pointer is genuine source surface - retail shares ONE
+// lea [this+0x74] between the townType store and the HeroFn argument.
+VA(0x0043d730, 0x17D)  // anchor-bracket + arity (ret 0x18 = 6 args), dc 0x439b0
+void army::initialize(int type, long number, const hero* owner,
+                      long new_group, long new_index, long new_grid_index)
+{
+    InitClean();
+    // The DC prototype types `type` as TCreatureType; this tree keeps
+    // the int spelling because armyGroup's slot array is int and the
+    // retype is a cross-TU pass this lane does not own. An int cannot
+    // assign into the enum field without a cast to a tree enum (floored
+    // at zero), so the store is spelled as the 4-byte copy it compiles
+    // to either way.
+    memcpy(&creatureType, &type, sizeof(creatureType));
+    numTroops = number;
+    iDrawPriority = 4;
+    TCreatureTypeTraits* traits = static_cast<TCreatureTypeTraits*>(
+        static_cast<void*>(&monInfoTownType));
+    memcpy(traits, &akCreatureTypeTraits[type],
+           sizeof(TCreatureTypeTraits));
+    traits->townType =
+        (gpGame->f_1f698 == 0
+         && (type == CREATURE_AIR_ELEMENTAL
+             || type == CREATURE_EARTH_ELEMENTAL
+             || type == CREATURE_FIRE_ELEMENTAL
+             || type == CREATURE_WATER_ELEMENTAL))
+            ? -1
+            : akCreatureTypeTraits[type].townType;
+    if (owner != 0)
+        owner->HeroFn_004E6120(type, traits);
+    if (gpCombatManager->field_53c0 != 2
+        && akNativeTerrains[monInfoTownType]
+               == gpCombatManager->terrainType)
+        field_4d8 = 1;
+    else
+        field_4d8 = 0;
+    if (field_4d8) {
+        if (!(Is(6) & 1))
+            field_c4++;
+        attackSkill++;
+        defenseSkill++;
+    }
+    currFrameType = cs_wait;
+    combatSide = new_group;
+    side = -1;
+    slot = -1;
+    facing = 1 - new_group;
+    bitIndex = new_index;
+    gridIndex = new_grid_index;
+    numTroopsBattleResurrected = 0;
+    currFrameIndex = 0;
+    iLuckStatus = 0;
+    topCreatureDamage = 0;
+    bShowAttackFrames = 0;
+    residualBlindness = 0;
+    residualParalyze = 0;
+    bAllUnitsKilled = 0;
+    bSomeUnitsDamaged = 0;
+    show_fire_shield = 0;
+    origNumTroops = numTroops;
+    baseSpeed = field_c4;
+    origHitPoints = hitPoints;
+    poisonPenalty = 1.0f;
+}
 
 // E:\gamedcs\army.cpp:261
 // Everything `initialize` does, plus the three things only a stack that
