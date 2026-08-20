@@ -27,6 +27,7 @@ adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	99.9367	99.9367	99.9367	0x5730
+adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x5680
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040
 advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
@@ -321,6 +322,7 @@ army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0
 army	?LoadResources@army@@QAEXXZ	98.6225	98.6225	98.6225	0x3d9f0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
+army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
 army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
@@ -652,6 +654,7 @@ creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0
 csequence	??0CSequence@@AAE@H@Z	100.0000	100.0000	100.0000	0x7b840
+csequence	??1CSequence@@AAE@XZ	100.0000	100.0000	100.0000	0x7b890
 csequence	?AddFrame@CSequence@@AAEHPAVCSpriteFrame@@@Z	100.0000	100.0000	100.0000	0x7b8a0
 csprite	?ColorCycle@CSprite@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x7bcd0
 csprite	?GetPalette@CSprite@@QAEPAVpalette@@XZ	100.0000	100.0000	100.0000	0x7bcc0

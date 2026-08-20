@@ -5596,6 +5596,20 @@ static TWallTargetId choose_wall_target(TWallTargetId wall,
     return chosen;
 }
 
+#if 0  // @carcass: claim-only home for the header COMDAT below
+
+// E:\gamedcs\Army.h:736
+// The compiled body comes from army.h. This declaration-shaped carcass only
+// assigns its retail address to the same decorated member so the delinker can
+// enroll and name the COMDAT without introducing a second definition.
+VA(0x00445cd0, 0x38)  // anchor-caller + exact header-inline body, dc 0x27c9c
+int army::OffsetToFront(int direction) const
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:4427
 VA(0x00445d10, 0x14)  // exact x86/DC decorated identity + simple_move edge
 unsigned char army::move_to(int hex, unsigned char restore_facing)
