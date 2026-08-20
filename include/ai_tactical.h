@@ -298,6 +298,7 @@ struct type_AI_spellcaster {
     TEnchantValue get_enchantment_function(SpellID spell);
     void consider_single_enchantment(type_spell_choice* choice, long group);
     void consider_enchantment(type_spell_choice* choice, long group);
+    void consider_earthquake(type_spell_choice* choice);
     void consider_teleport(type_spell_choice* choice);
     void consider_sacrifice(type_spell_choice& choice,
                             const army* healedArmy, long targetHex) const;
