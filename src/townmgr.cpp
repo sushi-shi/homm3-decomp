@@ -2253,6 +2253,11 @@ void TMageGuildWindow::SetRolloverText(int codeY)
 // is NOT counted as a candidate site, unlike the byte-inert probe).
 // What is missing is a <=0x28-byte inline call somewhere after widget 42
 // that our headers do not currently declare inline.
+// Re-swept 2026-08-20: the one untried tail variant - hotkey back to
+// push_back with the LAST widget push respelled `insert(end(), okButton)`
+// (site 51, past the 45/46/47/49 ladder above) - measures 98.0492,
+// under the insert-hotkey spelling; the ladder's rise stops before the
+// end. The two-argument hotkey insert stays the best honest spelling.
 //
 // The OTHER /Ob2 axis is now measured here, and it is NOT the answer:
 // byte-inert front-end mass - the `budget = 2*caller_cb` lever that took
