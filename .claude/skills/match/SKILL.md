@@ -122,6 +122,26 @@ Reconcile per function, preferring the header - it is modelled from bytes.
    <spellings>.` Never record scores-as-claims in §5 without the ratchet
    agreeing.
 
+**A CARCASS STUB IS A GOOD ENOUGH CALLEE — RE-TRY ANYTHING PARKED ON THIS**
+(2026-08-20). objdiff scores a relocation whose target is a working label as
+MATCHING, so a caller can reach byte-exact while its callees are still
+`// @stub`. `type_AI_spellcaster::get_enchantment_function` closed at
+100.0000 with two of its 37 address-taken callees unreconstructed. The same
+thing from the other side: renaming `SpellCastWorks` to
+`ValidSpellTargetArmy` moved 7 relocations and changed no score at all.
+So "its callees are not emitted yet" is NOT a reason to park a function, and
+any row parked on that reasoning should be re-tried.
+
+**AN INCLUDE-SET MEASUREMENT DOES NOT SURVIVE A MERGE** (2026-08-20). The
+wall counts DECLARATORS, not edits, so two header additions that are each
+individually ratchet-clean are not jointly clean. Two lanes added declarators
+to `cmbtmgr.h`; each measured its own as neutral on its own branch, and the
+merged count regressed `command::GetCommand` 92.5714 -> 92.5357 exactly as
+one of them had predicted for a single bare declarator. Gate every new
+declarator behind a view macro even when it measures neutral — the
+measurement is only valid for the branch it was taken on. Re-measure the
+include-set-sensitive rows after every merge that touches a shared header.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
