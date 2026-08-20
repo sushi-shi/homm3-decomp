@@ -330,6 +330,15 @@ SIZE(type_AI_spellcaster, 0x410);
 // literal pool right behind a string, so the owning TU is unproven -
 // no DATA claim until it is.
 extern const long akHypnotizeTurns[4];
+// Retail 0x63b7c8, four dwords {4, 4, 5, 5} read as [mastery]: how
+// many stacks a chain lightning at that mastery bounces through.
+// get_chain_lightning_value (0x437190) is its only consumer and the
+// slot sits in this TU's own .rdata, immediately before the class
+// vftable at 0x63b7d8 - but it is left DECLARED, not defined, for the
+// same reason akHypnotizeTurns above is: emitting it here would put a
+// fresh .rdata allocation in our object whose placement retail's
+// section layout does not have to agree with.
+extern const long akChainLightningTargets[4];
 
 double value_of_luck_and_morale(long value, long change,
                                 double good_value_multiplier,

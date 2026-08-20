@@ -30,6 +30,9 @@
 // both. Split out of army.cpp's round view so this TU does not also
 // take that view's other twenty-six declarators.
 #define HOMM3_ARMY_SPELL_ROW_VIEW
+// get_chain_lightning_value drives the chain through two spells.obj
+// leaves this TU is the only located caller of.
+#define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -1152,16 +1155,43 @@ inline void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1059
+// The chain walked forward: price the bolt on each stack it will hop
+// to, halving the damage at every hop, and close on
+// get_mass_damage_effect - which retail INLINES here exactly as it
+// does in get_area_effect_value above.
+//
+// The hop itself is combatManager's: mark the stack in the
+// chainLightningHit block, ask GetNextChainLightningTarget for the
+// next hex, and stop the moment it answers off-field. ClearEffects
+// wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
 long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery mastery, army* target)
 {
-    // @stub
+    long count = akChainLightningTargets[mastery];
+    long enemy_damage = 0;
+    long friendly_damage = 0;
+    gpCombatManager->ClearEffects();
+    long damage = akSpellTraits[SPELL_CHAIN_LIGHTNING].mastery_bonus[mastery]
+                  + akSpellTraits[SPELL_CHAIN_LIGHTNING].power_factor * power;
+    while (count--) {
+        if (target->combatSide == side)
+            friendly_damage += get_damage_value(SPELL_CHAIN_LIGHTNING, damage,
+                                                our_hero, target);
+        else
+            enemy_damage += get_damage_value(SPELL_CHAIN_LIGHTNING, damage,
+                                             enemy_hero, target);
+        gpCombatManager->chainLightningHit[target->combatSide][target->bitIndex] = 1;
+        long hex = gpCombatManager->GetNextChainLightningTarget(target, 0);
+        if (hex < 0)
+            break;
+        if (hex >= COMBAT_GRID_CELLS)
+            break;
+        target = gpCombatManager->cells[hex].get_army();
+        damage = damage / 2;
+    }
+    return get_mass_damage_effect(enemy_damage, friendly_damage);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1094
 // EXACT 2026-08-11. The enemy-side walk is the ordinary
