@@ -7514,10 +7514,14 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
 // The "no route to draw" tail, inlined at all three of ShowRoute's exits
 // where the arrow overlay has to come down: dim the move button, forget
 // the hero's path target, and repaint only if the overlay was actually up.
-// Retail expands it three times with the pathTarget clear folded away in
-// the copy reached with currHeroId already known to be -1, which is what a
-// same-TU static under /Ob2 does.
-static void clear_adventure_route(advManager* manager, int bUpdateScreen)
+// It carries a bRemoveTarget flag exactly as its out-of-line body-twin
+// HideRoute does: the first exit (currHeroId already -1) passes 0 and the
+// whole heroId block folds away in that inlined copy - retail copy 1 has
+// no currHeroId recheck while copies 2 and 3 keep it, which a flag
+// constant-folded per site produces and a shared re-reading body cannot
+// (the IsLocalHuman/BroadcastMessage calls make the global opaque).
+static void clear_adventure_route(advManager* manager, int bUpdateScreen,
+                                  int bRemoveTarget)
 {
     if (!gpCurrentPlayer->IsLocalHuman()
         && (!gUnnamed6989c8 || !gUnnamed69ccd4))
@@ -7528,11 +7532,13 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen)
         TAdventureMapWindow::MOVE_ID,
         widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 
-    int heroId = gpCurrentPlayer->currHeroId;
-    if (heroId != -1) {
-        hero* currentHero = &gpGame->heroes[heroId];
-        currentHero->pathTargetX = -1;
-        currentHero->pathTargetY = -1;
+    if (bRemoveTarget) {
+        int heroId = gpCurrentPlayer->currHeroId;
+        if (heroId != -1) {
+            hero* currentHero = &gpGame->heroes[heroId];
+            currentHero->pathTargetX = -1;
+            currentHero->pathTargetY = -1;
+        }
     }
 
     if (!manager->bShowRoute)
@@ -7555,45 +7561,54 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen)
 // bank by adding 0x19, and reaching any affordable step is what un-dims
 // the move button at the end.
 //
-// Residual (52.02%): an OVER-inline, not a missing block - the structure
-// is already close, 32 branches / 2 returns against retail's 30 / 3.
-// Retail's call multiset is 3x CompleteDraw(unsigned char) + 1x the
-// five-argument CompleteDraw + 4x UpdateScreen: it CALLS the one-argument
-// forwarder at each of the three clear tails. Our build inlines that
-// forwarder into its own five-argument call, and at one of the three
-// sites inlines UpdateScreen as well, leaking GameTime::Get,
-// Process1WindowsMessage and heroWindowManager::UpdateScreen into the
-// body. That is /Ob2 budget, so per doctrine it wants a fuller caller,
-// not a respelling.
-// Tried and rejected: writing the three clear tails LONGHAND instead of
-// as one static - the reading copy 1 suggests by having no pathTarget
-// clear - measured 29.88, far worse. So the same-TU static inlined three
-// times is the right shape, and copy 1's missing clear really is VC6
-// propagating the currHeroId == -1 it has just tested.
+// Residual (73.82%): the type_point(F,F,F) ctor at the SeedTo argument -
+// retail CALLS it (lea ecx,[ebp-0xc] / call / mov eax,[eax] / push), we
+// expand it - and the register/slot cascade downstream of that call.
+// The earlier over-inline reading of this function was wrong twice over:
+// the "missing" CompleteDraw/UpdateScreen calls were VC6 cross-jumping
+// copy 1's tail into copy 2's (identical bytes), not inlining, and copy
+// 1's missing pathTarget clear was never value propagation (the
+// IsLocalHuman/BroadcastMessage calls make the global opaque) - it is a
+// bRemoveTarget flag constant-folded per site, exactly HideRoute's
+// convention (see clear_adventure_route). With the flag and with
+// routeAffordable initialized at the top (retail zeroes EBX at entry and
+// stores it before the first call, which flavors copy 1's tail with
+// ebx-pushes vs copy 2's immediates and kills the cross-jump), the shape
+// is retail's: 3 rets, CompleteDraw(uchar) x3, UpdateScreen x4, frame
+// 0x1c. The ctor expansion survives every budget experiment - dead-mass
+// doses in clear_adventure_route flip the clears to calls (candidacy
+// cliff at cb>=1000) without ever un-inlining the ctor, and sequential
+// budget arithmetic cannot reject a small site at the SeedTo position
+// while accepting the bigger clear#3 after it, so retail's call is NOT a
+// budget rejection; whatever refuses it is front-end site state our
+// spelling sweep (named local vs temp expression) does not reach.
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
 void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 {
+    int routeAffordable = 0;
+
     if (!gpCurrentPlayer->IsLocalHuman())
         return;
 
     int heroId = gpCurrentPlayer->currHeroId;
     if (heroId == -1) {
-        clear_adventure_route(this, bUpdateScreen);
+        clear_adventure_route(this, bUpdateScreen, 0);
         return;
     }
 
     hero* currentHero = &gpGame->heroes[heroId];
     if (currentHero->pathTargetX == -1) {
-        clear_adventure_route(this, bUpdateScreen);
+        clear_adventure_route(this, bUpdateScreen, 1);
         return;
     }
 
-    SeedTo(type_point(currentHero->pathTargetX, currentHero->pathTargetY,
-                      currentHero->pathTargetZ));
+    type_point seedTarget(currentHero->pathTargetX, currentHero->pathTargetY,
+                          currentHero->pathTargetZ);
+    SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
     if (gpSearchArray->result.size() <= 0 || pathLength <= 0) {
-        clear_adventure_route(this, bUpdateScreen);
+        clear_adventure_route(this, bUpdateScreen, 1);
     } else {
         memset(routeArray, 0,
                (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
@@ -7608,7 +7623,6 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 
         currentHero->army.GetNativeTerrain();
 
-        int routeAffordable = 0;
         int i;
         for (i = gpSearchArray->result.size() - 1; i >= 0; i--) {
             int dir = gpSearchArray->result[i]->direction;
