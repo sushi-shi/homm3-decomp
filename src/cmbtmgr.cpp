@@ -46,6 +46,7 @@
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
+#define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #define HOMM3_CMBTMGR_SETUP_VIEW
@@ -71,7 +72,9 @@
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "remote.h"
 #define HOMM3_TEXT_COMBAT_MORALE_VIEW
+#define HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #include "textresource.h"
+#undef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
@@ -2779,16 +2782,92 @@ not_blocked:
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4731
+// The whole head is IsQuickCombat() expanded inline - the same four
+// inputs, the same `setne al / test al, al` tail on the global-mode arm
+// that LowerDoor and the two morale bodies show - so the guard is one
+// `if (IsQuickCombat()) return;` and not the four separate tests the
+// branch graph first reads as.
+//
+// The line is built in a std::string and printed once. Two shapes in the
+// death clause are settled by the bytes rather than by taste:
+//   * army::GetName is called ONCE, before the bit-6 test, so the test
+//     is nested inside `if (defender)` rather than hoisted;
+//   * the one-death and many-death arms are SHARED between the
+//     defender and no-defender paths (one EH state each, 5 and 6, not
+//     two), which is what puts the goto in - writing them inside both
+//     arms of the `if (defender)` duplicates them.
+// The `deaths == 1` test is written twice in source and retail only
+// emits it once on the no-defender path: VC6 jump-threads the second
+// copy from 0x469c34 straight into the singular arm because it already
+// knows the answer there.
+//
+// Residual (89.6402%), 263 instructions against retail's 264, flow-
+// distance 0 - the CFG is identical and predict-inline reports the call
+// multisets AGREE, so nothing structural is left. Three register/PRE
+// decisions remain, and the first two are NOT source-addressable:
+//   * the inlined IsQuickCombat forms both player-record addresses with
+//     `lea` and then loads .quickCombat from each, where we fold the
+//     +0xe4 into the load. DO NOT RETUNE THE SHARED INLINE FOR THIS -
+//     retail's own LowerDoor (0x4671c0, exact here) expands the very
+//     same source into the FOLDED form `mov edx,[ecx+8*eax+0x20bb4]`,
+//     so the two retail bodies disagree with each other and the shape
+//     is downstream register pressure, not spelling.
+//   * `gpGeneralText->Text._First`: retail hoists it above the
+//     `attacker_qty == 1` branch (we load it per arm) and then does the
+//     OPPOSITE at the `deaths == 1` branch, duplicating it into both
+//     arms where we hoist it. That one duplicated load is the whole
+//     instruction-count gap. Retail CSEs the pointer one level and we
+//     CSE two; both arms are already spelled exactly as retail's.
+//   * the first _Tidy picks AL where retail picks CL, and orders the
+//     allocator byte store after the `lea ecx` instead of before.
+// why-reg's guided search offers one candidate (B23, make `name`
+// volatile) and it moves the distance by +0. Register-homing family.
 VA(0x00469a90, 0x324)  // anchor-global, dc 0x6335c
 void combatManager::damage_message(const char* attacker, long attacker_qty, long damage, const army* defender, long deaths)
 {
-    // @stub
-}
+    if (IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    std::string message;
+    if (attacker_qty == 1)
+        message = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER),
+            attacker, damage);
+    else
+        message = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS),
+            attacker, damage);
+
+    if (deaths > 0) {
+        std::string deathText;
+        const char* name;
+        if (defender) {
+            name = army::GetName(defender->creatureType, deaths);
+            if (defender->Is(6) & 1) {
+                deathText = format_string(
+                    gpGeneralText->GetText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
+                    name);
+                goto have_death_text;
+            }
+        } else {
+            name = deaths == 1
+                ? gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY_ONE)
+                : gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
+        }
+        if (deaths == 1)
+            deathText = format_string(
+                gpGeneralText->GetText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+        else
+            deathText = format_string(
+                gpGeneralText->GetText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                deaths, name);
+have_death_text:
+        message += deathText;
+    }
+
+    combatWindow->combat_message(message.c_str(), 1, 0);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4776
 // The second row only exists for a Fortress: retail reads the town type
