@@ -3643,6 +3643,31 @@ TBuyBuildWindow::~TBuyBuildWindow()
 // extends once (`movsx ebx,ax`) and stores four bytes, which is what
 // took this body from 55.35 to 68.08.
 //
+// THE VENDORED <vector> IS RETAIL'S <vector>, and this is the negative
+// control that forecloses the obvious hypothesis (measured 2026-08-20).
+// The three synth labels retail's call multiset names here look like the
+// FREE <memory> templates rather than vector members - 0x574ce0 is a
+// 3-argument copy loop with the placement-new null test hoisted out
+// (`uninitialized_copy`), 0x48d940 the fill twin
+// (`uninitialized_fill_n`), 0x423110 a `(_Last - _First) >> 2` - and all
+// three enter through `push ebp / mov ecx,[ebp+8]`, i.e. every argument
+// on the stack, which is not what a __thiscall member looks like. They
+// ARE the members: `vector<widget*>::_Ucopy` never touches `this`,
+// because the Dinkumware allocator is an empty member at offset 0, so
+// the incoming ecx is simply dead. TTownScreenWindow settles it by
+// COUNT - _Ucopy 36 against 0x574ce0 36, _Ufill 18 against 0x8d940 18,
+// size 37 against 0x423110 37, exact on all three.
+// The experiment that proves it: rewriting the toolchain <vector>'s
+// _Ucopy/_Ufill as one-line forwards to uninitialized_copy /
+// uninitialized_fill_n - the shape those labels suggest - moves BuyBuild
+// 68.08 -> 71.60 and breaks SEVEN townmgr rows that are currently exact
+// (TThievesGuildWindow, TMageGuildWindow, TGarrisonWindow,
+// TBlacksmithWindow, TShipWindow, TBuyBuildWindow, TTavernWindow), takes
+// THallWindow 85.99 -> 83.46, TTownScreenWindow 95.59 -> 84.48 and the
+// whole tree 94.55 -> 93.43. The pinned header is right; the BuyBuild
+// gain under it is only the /Ob2 accounting moving, and confirms the
+// direction below rather than the header.
+//
 // Residual (68.08%): the prologue, both tables, the message block, the
 // whole quick-view/dialog tail, the resource debit and both epilogues are
 // retail's instruction for instruction. The ONE divergence is the /Ob2
