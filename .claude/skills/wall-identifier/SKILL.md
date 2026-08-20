@@ -46,14 +46,22 @@ different questions:
   anything under 50% at all.
 
 **RANK ON BYTES, NOT ON COUNTS OR PERCENTAGES.** Both other rankings mislead,
-in opposite directions, and the census measured by how much (2026-08-20, 300
-unmatched functions, 37.2 KB recoverable):
+in opposite directions, and the census measured by how much (2026-08-20, 347
+unmatched functions, 71.6 KB recoverable):
 
 ```
+    34.4 KB    47 fn   unclaimed (no source binding)
     25.4 KB    84 fn   inliner (predict-inline)
      6.2 KB    58 fn   control-flow (why-branch)
      5.3 KB   136 fn   register-homing (why-reg)
 ```
+
+The first row is the one to internalise: **nearly half of everything left is
+in functions no source claim owns**, sitting at 0.00% under a flat carve name.
+The solvers cannot see them at all — there is no symbol in the base object to
+compare against — so any triage built only on what `diagnose` can classify
+silently omits half the campaign. `queue` counts them; `report` cannot see
+them at any `--lo`.
 
 Counting functions says register-homing is the dominant wall — it is the most
 common and the least valuable, 136 functions holding 40 bytes each on average.
