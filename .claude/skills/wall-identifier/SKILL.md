@@ -44,6 +44,28 @@ different questions:
   and the knob. Use this to READ a unit's plateaus in detail. It reports the
   raw classifier, not the routed answer, and by default cannot see stubs or
   anything under 50% at all.
+- **`python3 -m homm3.analysis.ordermap <unit>`** → the DC-roster-to-x86
+  alignment for claiming work, with a VERDICT from arity agreement and span
+  coverage. Verdicts as of 2026-08-20, after the anchor fix below:
+  spells 98%, advmgr 97%, town 96%, army 94%, cmbtmgr 94%, hero 93% — all
+  USABLE; townmgr 86%, game 75%, mapcell 70% — MIXED; ai_tactical 51%,
+  sacrifice_window 64%, tradpost 55% — DO NOT CLAIM; seerhut THIN.
+
+**A TOOL VALIDATED ON ONE UNIT IS NOT VALIDATED** (learned the hard way,
+2026-08-20). `ordermap`'s anchor detection tokenized the mangled label and
+demanded exactly one DC-name match. Every `army::X` label contains the token
+`army`, which the roster's own `army::army` constructor also answers to — so
+almost every anchor in almost every unit was silently discarded. It was
+calibrated on `spells`, which is the ONE unit that cannot reveal the bug,
+because its claims are mostly free functions whose labels never carry a class
+token. On that evidence a triage table was published calling `spells` the only
+usable unit and `army` MIXED at 79%. After the fix army is 94% USABLE, hero
+93%, advmgr 97%, cmbtmgr 94%, town 96%, and game moved 47% -> 75%. Anchors
+went 2 -> 73 on army, 9 -> 96 on hero, 15 -> 95 on advmgr.
+Two lessons: **a low-anchor verdict may be an artifact of the anchor finder,
+not a property of the unit** — check the anchor count before believing a
+verdict; and validate a heuristic on the unit most likely to BREAK it, not the
+one it was written against.
 
 **RANK ON BYTES, NOT ON COUNTS OR PERCENTAGES.** Both other rankings mislead,
 in opposite directions, and the census measured by how much (2026-08-20, 347
