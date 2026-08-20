@@ -633,6 +633,9 @@ enum EVictoryCastleLevel {
 
 enum EVictoryConditionType {
 #ifdef HOMM3_VLC_CHECKS_VIEW
+    // 0x5f1610 CheckForArtifactWin's main arm gates on `cmp Type,0`,
+    // the map-format acquire-artifact ordinal.
+    VICTORY_CONDITION_ARTIFACT = 0,
     // 0x5f1b10 CheckForTotalCreatures gates on `cmp Type,1` and
     // 0x5f1d40 CheckForUpgradedTown on `cmp Type,3`; the values agree
     // with the map-format victory-condition ordinal (0 artifact,
@@ -793,7 +796,7 @@ public:
     // calls CheckEndGame(0) when it answers yes. Gated for exactly the
     // reason that one is: this header's declarator count is load-bearing
     // for every unit that includes it.
-#ifdef HOMM3_HERO_OBJ_DECLS
+#if defined(HOMM3_HERO_OBJ_DECLS) || defined(HOMM3_VLC_CHECKS_VIEW)
     unsigned char CheckForArtifactWin();
 #endif
 };
