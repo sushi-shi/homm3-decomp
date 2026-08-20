@@ -427,10 +427,18 @@ int type_artifact_quest::GetAIValue(int player)
     int total = 0;
 
     for (unsigned i = 0; i < artifacts.size(); ++i) {
-        type_artifact wanted;
+        // Retail stores exactly two dwords into the record - the id from
+        // artifacts[i] and an immediate -1 - with no default-construction
+        // ahead of them. `type_artifact wanted; wanted.artifactId = ...;
+        // wanted.extra = -1;` was byte-exact while hero.h's
+        // `type_artifact() : artifactId(-1), extra(-1) {}` sat behind
+        // HOMM3_GAME_HERO_EXTRA_VIEW (added dc0c45f, gate retired by the
+        // view audit 654997d): once the default ctor became visible here it
+        // prepended `or eax,-1` plus two -1 stores and cost 100 -> 70. The
+        // two-argument ctor reproduces retail's pair of stores without the
+        // dead initialisation, and needs no header edit.
+        type_artifact wanted(artifacts[i], -1);
 
-        wanted.artifactId = artifacts[i];
-        wanted.extra = -1;
         total += AI_get_value_of_artifact(&wanted, player);
     }
     return total;
