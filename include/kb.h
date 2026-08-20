@@ -104,6 +104,21 @@ extern unsigned char bForegroundApp;
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kb.cpp:240, dc 0xdf160) void DrawProgressCount();
 // CODEVIEW(E:\gamedcs\kb.cpp:252, dc 0xdf1dc) void IncProgressBar(unsigned char bUpdate);
+// PROMOTED to a live declarator 2026-08-20 for mapcell.obj, whose four map
+// serializers reach it. Retail body 0x4ed2a0, and the pairing is a complete
+// DC-isomorphic call-count match across all FOUR of them - no other row in
+// the roster fits, and the counts are not close, they are equal:
+//   NewfullMap::Read            dc 1 call   retail 1 call to 0x4ed2a0
+//   NewfullMap::Load            dc 2         retail 2
+//   NewfullMap::loadMapObjects  dc 5         retail 5
+//   NewfullMap::readMapObjects  dc 6         retail 6
+// The body corroborates: one byte argument in cl (/Gr fastcall), a counter
+// at .bss 0x699574 bumped and clamped to twenty, and a repaint through the
+// object at 0x699570 - a progress bar with twenty steps.
+// DECLARED, NOT CLAIMED: 0x4ed2a0 sits in a link-order gap this tree has
+// not attributed, and kb.cpp's own claims start at 0x4f42c0, so promoting
+// its DC_ONLY row in src/kb.cpp to a VA claim is left to a kb lane.
+void IncProgressBar(unsigned char bUpdate);
 // CODEVIEW(E:\gamedcs\kb.cpp:269, dc 0xdf228) void ShowProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:292, dc 0xdf2a4) void UnloadProgressBar();
 // CODEVIEW(E:\gamedcs\kb.cpp:318, dc 0xdf330) void PollSound();
