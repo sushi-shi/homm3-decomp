@@ -1817,7 +1817,7 @@ townmgr	?DoShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720
 townmgr	?DoSkeletonTransformer@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2f90
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0
-townmgr	?DoUniversity@townManager@@QAEXXZ	89.7683	89.7683	89.7683	0x1d2da0
+townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0

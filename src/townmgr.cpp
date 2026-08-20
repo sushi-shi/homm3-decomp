@@ -3098,6 +3098,19 @@ void townManager::DoHall()
 // fort page's summoning row: the generic recruit dialog over the town's
 // own garrison, with the portal's creature and its stock as slot one.
 
+// The no-hero info dialog, lifted for the /Ob2 BUDGET (2026-08-20) -
+// findpath find_queue_slot's class, a codegen device, not a source
+// claim. One _Tidy over-inline was the whole inliner residual (we
+// expanded the info string's destructor helper where retail calls it);
+// shrinking caller_cb and nesting the expansion puts it back out of
+// line. Single call site, inlined straight back, no new symbol.
+static void university_info_dialog(town* current_town)
+{
+    std::string info(GetBuildingInfo(current_town, EXTRA_0_ID, 1, 1));
+    NormalDialog(info.c_str(), 1, -1, -1, current_town->type + 0x16,
+                 EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+}
+
 // E:\gamedcs\townmgr.cpp:5685
 VA(0x005d2950, 0xEF)  // anchor-callee(SetSummoningGenerator 0x5bd750 + recruitUnit ctor) + arity, dc 0x174bfc
 void townManager::DoPortalOfSummoning()
@@ -3207,9 +3220,7 @@ void townManager::DoUniversity()
         townHero = gpGame->GetHero(townToView->garrisonHeroId);
 
     if (!townHero) {
-        std::string info(GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
-        NormalDialog(info.c_str(), 1, -1, -1, townToView->type + 0x16,
-                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+        university_info_dialog(townToView);
     } else {
         type_university townUniversity;
         type_university_window universityWin(townHero, &townUniversity, 1);
