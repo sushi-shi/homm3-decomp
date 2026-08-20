@@ -848,6 +848,14 @@ int hero::save(TAbstractFile* outfile)
 // The member that creates this wall is precisely the one the Dreamcast
 // build does not have. Nothing is padded: the probe is an instrument and
 // the row is deliberately left at 70.99.
+// MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` spanning the
+// member-initialiser expansion, to chase retail's out-of-line
+// basic_string::_Tidy (base x0 vs retail x1), costs 70.99 -> 53.99. The
+// pin DOES reach a member-init - which is worth knowing, the eh-cleanup
+// doc's caveat notwithstanding - but it de-inlines the whole init closure
+// (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
+// default-ctor pair) where retail keeps all of those expanded, and only
+// customName's _Tidy out of line.
 VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
@@ -979,6 +987,12 @@ void hero::initialize(short index)
     dWalkSpellsCast = 0;
     field_129 = eMasteryInvalid;
     hasCustomName = 0;
+    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
+    // assignment costs 82.86 -> 62.31. The identical pin on the identical
+    // spelling in HeroFn_004D8B30 pays +38.93 there, so the assign pin is
+    // NOT a general lever for this TU's string stores - retail inlines the
+    // assign HERE and calls it THERE, and the two must be spelled
+    // differently even though both read `customName = <char const*>`.
     customName = emptyRolloverText;
     field_11c = 0;
     formation = 2;
@@ -1046,18 +1060,31 @@ static void apply_setup_artifacts(hero* who, const HeroExtra* setup)
 // +0x301 where retail puts it. The DC counterpart is the free function
 // initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
 // a member and moved it into hero.cpp.
-// Residual (55.74%): an A8/A12 inliner wall. Retail's census is ten calls
-// and exactly ONE is a string call, basic_string::assign; our CL inlines
-// assign as well and spills its internals (_Grow x2, _Split x2, _Eos,
-// memmove, operator delete) into this body, which is the whole remaining
-// branch gap (base 53 against retail's 37). Tried and rejected, both
-// no-ops at 55.74: `customName = setup->name` against
-// `customName.assign(setup->name, 0, std::string::npos)` - game.h's own
-// note already records that operator= collapses onto the same assign -
-// and `#pragma inline_depth(1)` around the body, which does not reach the
-// decision. Splitting apply_setup_artifacts out DID work (49.03 ->
-// 55.74), so the budget is the right lever; what is missing is one more
-// pre-inline caller reduction, not a spelling.
+// 55.74 -> 94.67 (2026-08-20) ON ONE `#pragma inline_depth(0)` AT THE
+// `customName = setup->name` SITE, and that CORRECTS this note's old
+// conclusion. The diagnosis was right and had been right for a while -
+// retail's census is ten calls and exactly ONE is a string call,
+// basic_string::assign, which our CL expanded, spilling _Grow x2,
+// _Split x2, _Eos, memmove and operator delete into this body and
+// accounting for the whole branch gap (base 53 against retail's 37). What
+// was wrong was the KNOB. The old text recorded `#pragma inline_depth(1)`
+// around the body as not reaching the decision and concluded "what is
+// missing is one more pre-inline caller reduction, not a spelling".
+// inline_depth is STATEMENT-granular in VC6 and only bites at 0: pinning
+// the single assign site reproduces retail's census exactly - base 10
+// calls against retail 10, and flow-distance 0.
+// Still true and still worth keeping: splitting apply_setup_artifacts out
+// paid 49.03 -> 55.74 before this.
+// NOT a general lever for this TU - measure per site. The identical pin on
+// the identical `customName = <char const*>` spelling in hero::initialize
+// costs 82.86 -> 62.31, because retail inlines the assign THERE and calls
+// it HERE.
+//
+// Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
+// "bindings agree at every first definition, the divergence is past the
+// first defs", i.e. not the B1 minimum slice and no creation-order edit
+// reaches it. The schedule is aligned and flow-distance is 0; what is left
+// is edi->ecx x7 / ecx->edx x5 over 54 register-visible slots.
 VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
 void hero::HeroFn_004D8B30(const HeroExtra* setup)
 {
@@ -1127,7 +1154,13 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
 
     if (setup->customName) {
         hasCustomName = 1;
+        // Retail keeps basic_string::assign an out-of-line CALL here; our
+        // CL expanded it and spilled its internals (_Grow x2, _Split x2,
+        // _Eos, memmove, operator delete) into this body. inline_depth(0)
+        // is STATEMENT-granular in VC6, so it pins this one site.
+#pragma inline_depth(0)
         customName = setup->name;
+#pragma inline_depth()
     }
 
     if (setup->bCustomExperience) {
@@ -1482,12 +1515,18 @@ static void mark_spells_of_level(std::bitset<70>& target, int level)
 // unconditionally) restored the level arm instruction-for-instruction at
 // 92.71%.
 //
-// Residual (92.71%): the FIRST TWO constant-index sets - Armageddon's
-// Blade and the Sea Captain's set(SPELL_SUMMON_BOAT) - still fold to
-// `or dword ptr [result], imm` where retail calls set; the two constant
-// sets AFTER them (Scuttle Boat, Titan's Lightning Bolt) already come
-// out as retail's calls, so the budget is running out two decisions too
-// late and nothing later in the function is left to drain it. Everything
+// 92.71 -> 93.96 (2026-08-20): the diagnosis below was right about WHICH
+// sites diverged, and `#pragma inline_depth(0)` on the Sea Captain's
+// set(SPELL_SUMMON_BOAT) site alone is the lever - it is STATEMENT-
+// granular in VC6, so it converts exactly that one expansion into the
+// call retail has, taking the census from set x2 to retail's x3. The
+// Armageddon's Blade site is deliberately LEFT expanded: retail calls set
+// three times out of four, not four, so pinning both would overshoot.
+//
+// Residual (93.96%): Armageddon's Blade still folds to
+// `or dword ptr [result], imm` - which is what retail does at one of its
+// four sites too, so this may already be right and the remainder
+// elsewhere. Everything
 // else - both loops, the jump tables, the tail-merged set chain, the
 // `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
 // registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
@@ -1520,7 +1559,9 @@ std::bitset<70> mark_spells(int artifactId)
         result.set(SPELL_ARMAGEDDON, true);
         break;
     case ARTIFACT_SEA_CAPTAINS_HAT:
+#pragma inline_depth(0)
         result.set(SPELL_SUMMON_BOAT, true);
+#pragma inline_depth()
         result.set(kSpellScuttleBoat, true);
         break;
     case ARTIFACT_TITANS_THUNDER:
@@ -3159,24 +3200,38 @@ void hero::HeroFn_004DC070(long slot)
 // The owner index is taken WITHOUT the `owner < 0` guard get_player
 // carries; retail indexes gpGame->players directly.
 //
-// Residual (48.8%): THREE /Ob2 over-inlines, all budget. Retail leaves
-// bitset<12>::_Xran a CALL out of the two inlined set/test expansions -
-// our CL expands its whole _THROW(out_of_range, "invalid bitset<N>
-// position") body, a cold string temporary and a __CxxThrowException,
-// at each of the three sites - and it leaves bitset<144>::set(size_t,
-// bool) and bitset<144>::any() out of line where we expand both.
-// THE BUDGET THRESHOLD IS MEASURED (2026-08-20). Adding N byte-inert
-// user-defined inline sites to the body moves the row:
+// 48.77 -> 65.97 (2026-08-20) ON TWO SITE-GRANULAR PINS, and this
+// CORRECTS the note this entry used to carry. The old text concluded
+// "no source spelling in this body reaches the decision" after measuring
+// a byte-inert padding sweep:
 //     N=0/2 -> 48.77   N=6 -> 57.92   N=12/20/30/45 -> 78.07
-// so retail's body carries about TWELVE more inline candidate sites than
-// this reconstruction, and at that ceiling the only residual left is the
-// esi/edi/ebx role permutation (plus the prologue's unwind-table addend,
-// which is a reloc addend and not a state count). Twelve is far more
-// than the one or two the sibling bodies are short of, so this is likely
-// a spelling that routes through several small accessors rather than one
-// missing statement - and the DC roster has NO row for this function at
-// all, so its call census cannot be consulted. Nothing is padded: the
-// row is deliberately left at 48.77.
+// and read that as "retail's body carries about TWELVE more inline
+// candidate sites". That reading was wrong. The budget is not what
+// diverged - the SITES are: retail keeps bitset<144>::set(size_t, bool)
+// and bitset<144>::any() OUT OF LINE where our CL expanded both, and
+// `#pragma inline_depth(0)` is STATEMENT-granular in VC6, so wrapping
+// those two call sites alone reproduces retail's census directly, with no
+// padding and no change to the semantics. `predict-inline` now reports
+// ZERO over- and zero under-inline entries for this body: every call
+// pairs, base 10 against retail 9.
+// Measured and rejected while landing this, one compile each:
+//   * `#pragma inline_depth(1)` on the three bitset<12> set/test sites,
+//     to keep set/test inline while forcing the nested _Xran out of line
+//     the way retail has it: BYTE-FLAT (65.97). inline_depth only bites
+//     at 0 in this compiland - the same result hero.cpp:888 already
+//     records for depths 2/3/4 - so the pragmas were removed rather than
+//     left as inert noise.
+//
+// Residual (65.97%): retail calls the bitset _Xran helper x3 where we
+// still expand its _THROW(out_of_range, "invalid bitset<N> position")
+// body at two of the three bitset<12> sites (we emit ??0out_of_range x2
+// + ??0basic_string x2 against retail's x3 calls). That expansion sits
+// at depth 2 underneath set/test, which retail inlines, and inline_depth
+// cannot express "inline the parent, not the child" here. The remaining
+// delta beyond it is the esi/edi/ebx role permutation plus the
+// prologue's unwind-table addend, which is a reloc addend and not a
+// state count. The DC roster has NO row for this function at all, so its
+// call census cannot be consulted.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC100(long slot)
 {
@@ -3200,9 +3255,13 @@ void hero::HeroFn_004DC100(long slot)
     for (int i = 0; i < 19; i++) {
         int artifactId = equipped[i].artifactId;
         if (artifactId != ARTIFACT_NONE)
+#pragma inline_depth(0)
             missing.set(artifactId, false);
+#pragma inline_depth()
     }
+#pragma inline_depth(0)
     if (missing.any())
+#pragma inline_depth()
         return;
 
     player.assembledCombinations.set(targetCombo);
@@ -3554,8 +3613,16 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
     if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
         if (right_mouse)
             return;
+        // Pinned per SITE, not per function: `predict-inline` reports
+        // HeroFn_004E2840 base x0 vs retail x1 inside WindowHandler, i.e.
+        // retail CALLS 0x4e2840 here where our CL expands it (this helper
+        // is itself a single-call-site static that /Ob2 folds into
+        // WindowHandler, so the budget reaches through). The sibling site
+        // in update_slot already carries the same pin.
+#pragma inline_depth(0)
         if (!gpCurrentHero->HeroFn_004E2840(
                 gHeroScreenDraggedArtifact.artifactId, slot))
+#pragma inline_depth()
             return;
         if (record.artifactId != ARTIFACT_NONE) {
             gpCurrentHero->remove_artifact(slot);
@@ -3565,7 +3632,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                 gpCurrentHero->HeroFn_004DC100(slot);
             gpCurrentHero->UpdateStats();
             gHeroScreenDraggedArtifact = record;
+#pragma inline_depth(0)
             gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
             gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
             gpMouseManager->SetPointer(
                 gHeroScreenDraggedArtifact.artifactId,
@@ -3577,7 +3646,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                 gpCurrentHero->HeroFn_004DC100(slot);
             gpCurrentHero->UpdateStats();
             gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+#pragma inline_depth(0)
             gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
             gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
             gpMouseManager->SetPointer(0,
                                        mouseManager::DEFAULT_SET);
@@ -3616,6 +3687,12 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                     if (worn != ARTIFACT_NONE)
                         missing[worn] = false;
                 }
+                // MEASURED NEGATIVE, do not retry: `#pragma
+                // inline_depth(0)` on this test to chase retail's
+                // out-of-line bitset<144>::any() (base x0 vs retail x1)
+                // costs WindowHandler 74.47 -> 70.80 - the pin is
+                // statement-granular, so it also de-inlines the bitset
+                // machinery the test is built from.
                 if (!missing.any()) {
                     if (gpCurrentHero->HeroFn_004D9CC0(
                             record.artifactId)
@@ -3654,7 +3731,9 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
     gHeroScreenDraggedArtifact = record;
     gpCurrentHero->remove_artifact(slot);
     gpCurrentHero->UpdateStats();
+#pragma inline_depth(0)
     gpHeroScreenWindow->update_all_slots();
+#pragma inline_depth()
     gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
     gpMouseManager->SetPointer(
         gHeroScreenDraggedArtifact.artifactId,
@@ -3702,7 +3781,12 @@ static void handle_backpack_click(long code, unsigned char right_mouse)
     gHeroScreenDraggedArtifact = record;
     short i = static_cast<short>(index);
     if (gpCurrentHero->backpack[i].artifactId != ARTIFACT_NONE) {
+        // Same site-granular pin: retail CALLS get_last_backpack_index
+        // from WindowHandler (base x0 vs retail x1) where our CL expands
+        // its descending walk inline.
+#pragma inline_depth(0)
         long last = gpCurrentHero->get_last_backpack_index();
+#pragma inline_depth()
         for (; i < last; i++)
             gpCurrentHero->backpack[i] =
                 gpCurrentHero->backpack[i + 1];
@@ -3768,22 +3852,46 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // icon/label/value: {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77}
 // experience, {0x6d,0x71,0x78} spell points. SetupHeroView corroborates
 // each one independently.
-// Residual (71.10%): an A12 INLINER wall, not spelling. `predict-inline`
-// now agrees on most of the census, and what is left is four callees our
-// CL still expands where retail keeps a call - update_all_slots (x1 vs
-// x3, and the two extra update_slot calls that follow from it),
-// HeroFn_004E2840, get_last_backpack_index and TQuickHeroWindow::
-// QuickWindowWait - plus HeroFn_004D97F0 at x3 vs x4. The knob the solver
-// names is `#pragma auto_inline(off)` on the callee; for update_all_slots
-// that was MEASURED and REJECTED (see its own note above): it buys
-// WindowHandler 71.10 -> 72.89 but costs SetupHeroView 99.53 -> 98.69,
-// and SetupHeroView's own residual is a single data-phase reloc addend,
-// i.e. that function is otherwise finished. The ratchet's max for this
-// row was accepted back down to 71.10 with hist kept at 72.89.
+// 71.10 -> 74.47 (2026-08-20) BY PINNING THE SITE, NOT THE FUNCTION, and
+// that CORRECTS the note this entry used to carry. The old text recorded
+// `#pragma auto_inline(off)` on update_all_slots as MEASURED AND REJECTED
+// - it bought WindowHandler 71.10 -> 72.89 but cost SetupHeroView
+// 99.53 -> 98.69, so the max was accepted back down. That trade is an
+// artefact of the KNOB, not of the diagnosis: `auto_inline(off)` marks the
+// callee non-inlinable for the whole compiland, so SetupHeroView loses an
+// expansion retail keeps. `#pragma inline_depth(0)` is STATEMENT-granular,
+// so wrapping the individual call sites here reaches the same four callees
+// with ZERO collateral - SetupHeroView held at exactly 99.5294 across both
+// edits. Applied, each measured:
+//   * HeroFn_004E2840 in handle_artifact_click + get_last_backpack_index
+//     in handle_backpack_click (both base x0 vs retail x1): +2.06.
+//   * the three update_all_slots sites in the two click helpers
+//     (base x1 vs retail x3): +1.31, and it also closed the
+//     update_slot / remove_artifact / equip_artifact count divergences
+//     that followed from those expansions.
+// MEASURED NEGATIVE at the same time: the same pin on `missing.any()`
+// (bitset<144>::any, base x0 vs retail x1) costs 74.47 -> 70.80, because
+// statement granularity cuts both ways - it also de-inlines the bitset
+// machinery the test is built from. See the anchored note at that site.
+//
+// Residual (74.47%): the census still shows update_all_slots x2 vs x3,
+// SetPointer x4 vs x5 and BroadcastMessage x1 vs x2 - all three are the
+// SAME defect and it is NOT the inliner: SetPointer and BroadcastMessage
+// are cross-TU and can never be /Ob2 candidates, so our CL is CROSS-JUMPING
+// the two arms of handle_artifact_click's dragged-artifact if/else, whose
+// `update_all_slots(); DrawWindow(1,0xffff0001,0xffff);` prefixes are
+// identical. Retail does not merge them. Plus HeroFn_004D97F0 at x3 vs x4
+// (we have three source sites, retail emits four). The TQuickTownWindow::
+// QuickWindowWait x0 vs x1 row against our TQuickHeroWindow:: x1 is NOT a
+// wall and not a class-resolution error: all three Quick*Window classes
+// have their own attested QuickWindowWait (dc 0x117818 / 0x1187f8 /
+// 0x117b8c) and retail folded the identical COMDATs onto one label - the
+// same row advmgr.cpp's MonsterQuickView note already discounts.
 // One more open item, NOT yet explained: retail emits 15 NormalDialog
 // call instructions where we emit 6. The source has ~14 sites, so our CL
 // is cross-jumping the identical right-click help arms and retail is not.
-// Read that before assuming any arm is missing.
+// Read that before assuming any arm is missing - it is the same
+// cross-jumping defect as the three counts above, at a larger scale.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -5364,7 +5472,15 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // eight byte-inert dead assignments to grow the caller's statement mass
 // the way the /Ob2 rule says the budget follows (44.93, byte-flat) -
 // so the lever here is NOT caller size, and no source spelling in this
-// body reaches the decision.
+// body reaches the decision. THIRD measurement, 2026-08-20, and it is a
+// MODEL finding worth keeping: `#pragma inline_depth(0)` around the four
+// call sites AFTER the `.test()` (both HeroFn_004E2550 sites,
+// remove_artifact, equip_artifact) is BYTE-FLAT at 44.93. The /Ob2 rule
+// gives a nested expansion `budget / sites-remaining`, so if pinning a
+// later site removed it from that divisor the _Xran under-inline here
+// would have opened up. It does not: the divisor counts call SITES
+// whether or not they are pinned. Site pins are the lever for an
+// OVER-inline only - they cannot buy an under-inline back.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
@@ -5686,16 +5802,25 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
 // block, not at the end of the NormalDialog full-expression.
 //
-// Residual (57.9%): the EH CLEANUP TRANSCRIPT, and it is /Ob2 budget
-// rather than spelling. `vc6 diagnose` reads our unwind states as
-// [1,0,reg,-1,3,4] against retail's [0,-1,1,2] - two cleanup regions
-// retail does not open - and pairs that with 5 under- and 1 over-inline.
-// Retail leaves `bitset<12>::test` an out-of-line CALL and inlines only
-// TWO of its three bitset bounds throws; each throw our CL expands
-// instead builds its own `invalid bitset<N> position` string temporary,
-// and each such temporary is one more cleanup region. Nothing local
-// reaches that - the lever is caller statement mass (docs/vc6/inliner.md,
-// and docs/vc6/eh-cleanup.md for the unwind map). Left at 57.88.
+// 57.88 -> 64.63 (2026-08-20), the same two site pins that took the
+// HeroFn_004DC100 twin 48.77 -> 65.97: `#pragma inline_depth(0)` on
+// `missing.set(artifactId, false)` and on `if (!missing.any())`, because
+// retail keeps bitset<144>::set(size_t, bool) and bitset<144>::any() OUT
+// OF LINE where our CL expanded both. That CORRECTS this note's old
+// verdict, which read the divergence as caller statement mass ("nothing
+// local reaches that") and left the row at 57.88: the extra EH cleanup
+// regions it blamed are DOWNSTREAM of those expansions - each inlined
+// bounds throw builds its own `invalid bitset<N> position` string
+// temporary - so removing the expansions removes the regions.
+// The old note's other claim did NOT survive measurement: it said retail
+// leaves `bitset<12>::test` an out-of-line CALL, and pinning that site
+// costs 64.63 -> 59.86. See the anchored note at the site itself.
+//
+// Residual (64.63%): `predict-inline` now shows NO over-inline at all and
+// exactly one under-inline, basic_string::_Tidy at base x3 vs retail x2 -
+// budget starvation, i.e. this caller's body is still leaner than
+// retail's (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the
+// unwind map).
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
@@ -5711,11 +5836,20 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                 for (int i = 0; i < 19; i++) {
                     int artifactId = equipped[i].artifactId;
                     if (artifactId != ARTIFACT_NONE)
+#pragma inline_depth(0)
                         missing.set(artifactId, false);
+#pragma inline_depth()
                 }
+#pragma inline_depth(0)
                 if (!missing.any()) {
+#pragma inline_depth()
                     playerData& player = gpGame->players[owner];
                     if (bAnnounce) {
+                        // MEASURED NEGATIVE, do not retry: pinning this
+                        // test to chase the out-of-line bitset<12>::test
+                        // the old note claimed retail keeps costs
+                        // 64.63 -> 59.86 - the statement pin also
+                        // de-inlines GetLocalPlayerGamePos beside it.
                         if (owner == gpGame->GetLocalPlayerGamePos() &&
                             !player.assembledCombinations.test(targetCombo)) {
                             int assembled =
@@ -6803,6 +6937,11 @@ boat* hero::find_summonable_boat()
 // Requires Summon Boat availability and mana at the effective local magic
 // terrain. An existing reachable boat wins; otherwise Advanced mastery can
 // summon one only when the global boat pool still has a free slot.
+//
+// 75.23 -> 85.70 (2026-08-20) on one `#pragma inline_depth(0)` at the
+// worldMap.cell() site: retail CALLS NewfullMap::cell(int,int,int) there
+// (predict-inline base x0 vs retail x1) where our CL expanded its index
+// arithmetic inline.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
 unsigned char hero::can_summon_boat()
 {
@@ -6826,8 +6965,13 @@ unsigned char hero::can_summon_boat()
         && invalid.z == point.z) {
         magicTerrain = kMagicTerrainNone;
     } else {
+        // Site-pinned: retail CALLS NewfullMap::cell(int,int,int) here
+        // (base x0 vs retail x1) where our CL expanded its index
+        // arithmetic inline.
+#pragma inline_depth(0)
         magicTerrain = gpGame->worldMap.cell(
             point.x, point.y, point.z)->get_magic_terrain_type();
+#pragma inline_depth()
     }
 
     int mastery = GetSpellSchoolLevel(

@@ -646,24 +646,40 @@ DATA(0x0065f67c) extern const char* const kBoatFrothIconNames[3];
 
 // E:\gamedcs\advmgr.cpp:837
 //
-// Residual (52.72%): ONE inliner refusal, twice, and its cascade - and
-// it is the strongest counterexample the RE'd budget model has. Retail
-// CALLS ?insert@vector<resource*>@ at both push_back sites; our CL
-// expands the whole grow path (capacity test, new, _Ucopy/_Ufill/
-// _Destroy, delete) at each, which is most of our 59-vs-36 branch
-// excess. The budget rule cannot produce retail's refusal: budget =
-// 2*cb(Open) with cb(Open) ~= 255 source lines is far above cb(insert),
-// the only prior charged site is the (inlined, matching) reserve, and
-// rejections do not charge - so a compliant SP3 C2 must accept these
-// sites. Measured and rejected: the direct 3-arg insert spelling
-// (42.12), #pragma auto_inline(off) around an explicit member
-// instantiation (no effect - candidacy comes from the saved template
-// body), dead-store doses of 100/200/300 statements (48.7/47.5/42.7,
-// non-monotonic nested-share churn, insert never flips), and the RTM
-// C2 A/B (byte-identical to SP3 - NOT a generation wall). Same family
-// as ShowRoute's type_point ctor call: a site-local refusal outside
-// both the budget model and the C2 generation; suspected front-end
-// (C1XX) site state. The rest of the body is structurally aligned.
+// 52.72 -> 97.80 (2026-08-20) ON TWO `#pragma inline_depth(0)` SITE PINS,
+// one per push_back. THE DIAGNOSIS BELOW WAS RIGHT AND THE CONCLUSION WAS
+// WRONG, so read this before trusting a "no known lever" verdict anywhere
+// else in the tree.
+//
+// What the old note established, and it still stands: retail CALLS
+// ?insert@vector<resource*>@ at both push_back sites where our CL expanded
+// the whole grow path (capacity test, new, _Ucopy/_Ufill/_Destroy,
+// delete), and that expansion was most of our 59-vs-36 branch excess. It
+// also correctly established that the RE'd /Ob2 budget rule CANNOT produce
+// retail's refusal - budget = 2*cb(Open) is far above cb(insert), the only
+// prior charged site is the matching reserve, and rejections do not charge,
+// so a compliant SP3 C2 must accept these sites. The RTM-vs-SP3 C2 A/B came
+// out byte-identical, so it is not a generation wall either.
+//
+// The error was inferring from "the model cannot explain retail's refusal"
+// that no lever exists. Reproducing the refusal never required explaining
+// it: `#pragma inline_depth(0)` is STATEMENT-granular in VC6, so pinning
+// the two push_back sites simply IMPOSES the call retail has. The model
+// question - what front-end site state makes retail refuse a site the
+// budget rule must accept - is still open and still interesting, but it is
+// no longer in the way of the match.
+//
+// Everything the old note lists as tried-and-rejected was aimed at moving
+// the BUDGET, which is why none of it worked: the direct 3-arg insert
+// spelling (42.12), #pragma auto_inline(off) around an explicit member
+// instantiation (no effect - candidacy comes from the saved template body),
+// and dead-store doses of 100/200/300 statements (48.7/47.5/42.7,
+// non-monotonic, insert never flips). Do not retry those.
+//
+// The identical fix cracked ShowRoute's type_point ctor, the other member
+// of this "site-local refusal" family (73.82 -> 79.97).
+//
+// Residual (97.80%): the tail of the same cascade, register/slot only.
 // The adventure screen setup. Retail's grouping is preserved: the route
 // array and the map window are allocated lazily with MemError guards,
 // the cached-graphics list reverses each name and picks GetSprite for
@@ -713,10 +729,14 @@ int advManager::Open(int newPriority)
                       DATA_COMPGEN(0x00660328, defExtensionReversed, "fed"),
                       3) == 0) {
             resource* graphic = ResourceManager::GetSprite(kAdvCachedGraphicNames[cached]);
+#pragma inline_depth(0)
             CachedGraphics.push_back(graphic);
+#pragma inline_depth()
         } else {
             resource* graphic = ResourceManager::GetBitmap816(kAdvCachedGraphicNames[cached]);
+#pragma inline_depth(0)
             CachedGraphics.push_back(graphic);
+#pragma inline_depth()
         }
         if (cached == CACHED_GRAPHIC_TICK)
             IncProgressBar(1);
@@ -921,6 +941,12 @@ void advManager::Close()
         }
         for (unsigned int cached = 0; cached < CachedGraphics.size(); cached++)
             CachedGraphics[cached]->Dispose();
+        // MEASURED BYTE-FLAT, do not retry: `#pragma inline_depth(2)`
+        // here, to keep clear()+erase() inline while forcing the
+        // destroy-range helper out of line the way retail has it, changes
+        // nothing (86.3656 either way). inline_depth only bites at 0 in
+        // VC6 - the same result hero.cpp records for depths 1/2/3/4 - so
+        // there is no way to spell "inline the parent, call the child".
         CachedGraphics.clear();
         movingObjectSprite->Dispose();
         movingObjectSprite = 0;
@@ -6866,6 +6892,11 @@ void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty)
 {
     bottomViewResourceType = iResType;
     bottomViewResourceQuantity = iResQty;
+    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
+    // assignment, to chase retail's out-of-line basic_string::_Tidy(0)
+    // (base x2 vs retail x3), costs 93.33 -> 26.42. Retail INLINES the
+    // assign here and only its _Tidy tail is out of line, and a statement
+    // pin cannot express "inline the parent, call the child".
     bottomViewMessage = cMsg;
     bottomViewOverride = BOTTOM_VIEW_6;
     bottomViewDeadline = GameTime::Get() + 5000;
@@ -6898,6 +6929,8 @@ unsigned char advManager::UpdBottomViewResMsg(unsigned char force_update)
 VA(0x00416210, 0xD7)  // anchor-global, dc 0x19194
 void advManager::BVMessage(const char* cMsg)
 {
+    // MEASURED NEGATIVE, do not retry: same pin as BVResMsg above, same
+    // reason - it costs 92.68 -> 21.28 here.
     bottomViewMessage = cMsg;
     bottomViewOverride = BOTTOM_VIEW_7;
     bottomViewDeadline = GameTime::Get() - 1;
@@ -7030,7 +7063,19 @@ void advManager::TownQuickView(int townId, int x, int y,
         return;
 
     int localPos = gpGame->GetLocalPlayerGamePos();
-    town* thisTown = &gpGame->towns[townId];
+    // CONST, and the bytes require it: retail's four get_army() calls below
+    // are ?get_army@town@@QBEABVarmyGroup@@XZ, the const overload, which is
+    // a DIFFERENT function at a different address from the non-const one a
+    // plain `town*` binds (town.h models both; DC 0x168bf8 / 0x168bd0).
+    // `predict-inline` reports the pair as get_army base x0 vs retail x4 -
+    // a mangled-name divergence its OVER-inline bucket cannot tell apart
+    // from an inlining decision. TQuickTownWindow's ctor already takes
+    // `const town*`, so this costs no extra declarator. MEASURED BYTE-FLAT
+    // (85.3187 either way): objdiff does not gate on the reloc's symbol
+    // name, so this is a fidelity fix - it makes the object reference the
+    // function retail references - and it retires a false OVER-inline row
+    // that would otherwise send the next lane after an inliner knob.
+    const town* thisTown = &gpGame->towns[townId];
     type_point point(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
 
     int identifyLevel = get_identify_level(point);
@@ -7785,6 +7830,9 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
             int bottomX = xMax;
             int leftY = yMax;
             int k;
+            // MEASURED NEGATIVE, do not retry: `k > 0` here, to chase
+            // diagnose's `#6 je->jle`, costs 63.94 -> 57.54. The `jle`
+            // it names is not this guard.
             for (k = edgeLength; k != 0; k--) {
                 InsertSound(topX, yMin, z, ring, soundsType);
                 InsertSound(xMax, rightY, z, ring, soundsType);
@@ -8151,9 +8199,16 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen,
 // bank by adding 0x19, and reaching any affordable step is what un-dims
 // the move button at the end.
 //
-// Residual (73.82%): the type_point(F,F,F) ctor at the SeedTo argument -
-// retail CALLS it (lea ecx,[ebp-0xc] / call / mov eax,[eax] / push), we
-// expand it - and the register/slot cascade downstream of that call.
+// 73.82 -> 79.97 (2026-08-20) on ONE `#pragma inline_depth(0)` around the
+// seedTarget construction. The analysis below is intact and correct - the
+// ctor expansion really does survive every budget experiment, and retail's
+// call really is NOT a budget rejection - but "outside the budget model"
+// does not mean "unreachable". inline_depth(0) is STATEMENT-granular in
+// VC6, so it imposes the call retail has without needing to explain why
+// retail refuses the site. advManager::Open's two vector::insert sites,
+// the other member of this family, went 52.72 -> 97.80 the same way.
+//
+// Residual (79.97%): the register/slot cascade downstream of that call.
 // The earlier over-inline reading of this function was wrong twice over:
 // the "missing" CompleteDraw/UpdateScreen calls were VC6 cross-jumping
 // copy 1's tail into copy 2's (identical bytes), not inlining, and copy
@@ -8192,8 +8247,10 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         return;
     }
 
+#pragma inline_depth(0)
     type_point seedTarget(currentHero->pathTargetX, currentHero->pathTargetY,
                           currentHero->pathTargetZ);
+#pragma inline_depth()
     SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
