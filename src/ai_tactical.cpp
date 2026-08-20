@@ -1609,35 +1609,139 @@ long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data 
     return static_cast<long>(total * scale * effect);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1370
-// SURVEYED 2026-08-08, NOT the luck/morale family's shape and NOT
-// unblocked by the clamp work: 0x438490 contains ZERO stack-address
-// selections (`lea reg,[ebp+disp]` count is 0 over all 811 bytes), so
-// no _cpp_clamp / _cpp_min / _cpp_max call site exists in it. The
-// [-3, 3] handling is open-coded integer arithmetic instead -
-// `cmp luck,3` for the upper bail, `lea ecx,[luck+change]` then
-// `cmp ecx,-3` for the lower, and `mov ecx,3 / sub ecx,luck` for the
-// trim - i.e. value_of_luck_and_morale's own body specialised inline
-// rather than called (the out-of-line pricer is never reached from
-// here).
-// It is also the only member of the group that INLINES
-// get_defense_boost_value (0x4387c0), TWICE - once per luck arm - so
-// the body carries two full copies of that function's
-// can_shoot / get_average_damage / get_total_hit_points head, its
-// params.odds scale block, its slow-flag subtraction and its
-// `(sqrt(x) - 1.0) * total * scale` tail, plus a `* 2 / 3` weighting
-// (imul by 0x2aaaaaab, sar 2) between them. Reconstructing it is an
-// independent job the size of get_defense_boost_value plus
-// value_of_luck_and_morale, not a variation on get_mirth_value.
+// Fortune is priced through the DAMAGE-RATIO ladder, not the
+// luck/morale value pricer - which is what the 2026-08-08 survey note
+// this replaces got half right: it correctly found ZERO
+// `lea reg,[ebp+disp]` stack-address selections (so no
+// _cpp_clamp / _cpp_min / _cpp_max call site exists in it) and
+// correctly read the open-coded [-3, 3] handling, but it named the
+// inlined body get_defense_boost_value. It is not: the two blocks
+// carry the SLOW-FLAG subtraction that get_defense_boost_value has no
+// trace of, and none of that function's three census guards. They are
+// get_fire_shield_value's ladder, twice.
+//
+// The doubling is HoMM3's luck rule read backwards. Bad luck halves a
+// strike and good luck doubles it, so the pricer runs the same
+// `(sqrt(factor) - 1) * total * scale` tail twice: once over the HALF
+// damage the stack's standing NEGATIVE luck is costing it, once over
+// the FULL damage its resulting POSITIVE luck would add - each
+// weighted by how many luck points that arm actually moves and
+// divided by 24, which is the per-point chance a lucky strike fires.
+//
+// Three shape edits took it 76.37 -> 96.06 and all three are standing
+// rules: ONE shared `return 0` epilogue means the whole body is nested
+// (four guards jump to it, so they are not four `return 0`
+// statements); a `long gain; if (cond) gain = 0; else {...}` is not
+// the same as `long gain = 0; if (!cond) {...}` (retail falls THROUGH
+// to the zero and jumps to the work); and `luck` is read before the
+// traits row, not after the damage call.
+//
+// Residual (96.06%): the ZERO REGISTER. Retail materialises 0 into EDX
+// once and spends it on the `value = 0` store and both `< 0` / `> 0`
+// compares (`cmp ebx,edx`); ours stores the immediate and uses
+// `test ebx,ebx`, which also flips the `lea ecx,[luck+bonus]` operand
+// order and moves one slot of the second block into a parameter slot.
 VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
 long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* target = our_army->AI_target;
+    if (target != 0
+            && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+        long luck = our_army->luck;
+        long bonus = akSpellTraits[SPELL_FORTUNE].mastery_bonus[caster.mastery];
+        long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                                   our_army->numTroops, 0, 0);
+        long value = 0;
+        if (luck < 3 && bonus + luck > -3) {
+            if (bonus + luck > 3)
+                bonus = 3 - luck;
+            if (luck < 0) {
+                long strikes;
+                if (bonus + luck > 0)
+                    strikes = -luck;
+                else
+                    strikes = bonus;
+                long unlucky = damage / 2;
+                double factor = 2.0;
+                long boosted = static_cast<long>(unlucky * factor);
+                long enemy_hits = target->get_total_hit_points(0);
+                if (boosted > enemy_hits) {
+                    factor = static_cast<double>(enemy_hits)
+                             / static_cast<double>(unlucky);
+                    boosted = enemy_hits;
+                }
+                long gain;
+                if (boosted <= unlucky) {
+                    gain = 0;
+                } else {
+                    double portion;
+                    if (caster.duration >= params.odds)
+                        portion = 1.0;
+                    else
+                        portion = static_cast<double>(caster.duration)
+                                  / static_cast<double>(params.odds);
+                    unsigned char slow_flag = static_cast<unsigned char>(
+                        static_cast<unsigned>(our_army->creatureId) >> 26);
+                    double scale;
+                    if ((slow_flag & 1)
+                            && (portion = portion
+                                          - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                        scale = 0.0;
+                    else
+                        scale = portion;
+                    double total = static_cast<double>(
+                        our_army->get_total_combat_value(params.lowest_attack,
+                                                         params.lowest_defense));
+                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+                }
+                value = gain * strikes / 24;
+            }
+            if (bonus + luck > 0) {
+                long strikes;
+                if (luck < 0)
+                    strikes = bonus + luck;
+                else
+                    strikes = bonus;
+                double factor = 2.0;
+                long boosted = static_cast<long>(damage * factor);
+                long enemy_hits = target->get_total_hit_points(0);
+                if (boosted > enemy_hits) {
+                    factor = static_cast<double>(enemy_hits)
+                             / static_cast<double>(damage);
+                    boosted = enemy_hits;
+                }
+                long gain;
+                if (boosted <= damage) {
+                    gain = 0;
+                } else {
+                    double portion;
+                    if (caster.duration >= params.odds)
+                        portion = 1.0;
+                    else
+                        portion = static_cast<double>(caster.duration)
+                                  / static_cast<double>(params.odds);
+                    unsigned char slow_flag = static_cast<unsigned char>(
+                        static_cast<unsigned>(our_army->creatureId) >> 26);
+                    double scale;
+                    if ((slow_flag & 1)
+                            && (portion = portion
+                                          - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                        scale = 0.0;
+                    else
+                        scale = portion;
+                    double total = static_cast<double>(
+                        our_army->get_total_combat_value(params.lowest_attack,
+                                                         params.lowest_defense));
+                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+                }
+                value += gain * strikes / 24;
+            }
+            return value;
+        }
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1429
 // EXACT 2026-08-08 (96.2 -> 100.0): the dead `lea this+i*16` and the
