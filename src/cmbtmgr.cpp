@@ -69,6 +69,8 @@
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
 #define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
+#define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
+                                     // it in InitNonVisualVars' siege arms
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #define HOMM3_CMBTMGR_SETUP_VIEW
@@ -541,36 +543,163 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
     backgroundName = GetBackgroundName();
 }
 
-#if 0  // @carcass
+// Retail's clamp shape at the four hero-statistic sites, and it is NOT
+// _cpp_clamp's. That helper tests the LOW bound first
+// (`_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V)`) and selects an ADDRESS;
+// these four test the HIGH bound first, use `>` throughout and
+// materialise the value straight into EAX. The floor differs per site -
+// 0 for attack and defense, 1 for spell power, which is never zero -
+// so it is a parameter rather than a literal.
+static int ClampStat(signed char value, int lowest)
+{
+    if (value > 99)
+        return 99;
+    if (value > 0)
+        return value;
+    return lowest;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1348
-// SURVEYED 2026-08-20, not reconstructed, and the survey is worth more
-// than a bare @stub because this body is the cheapest-looking of the
-// remaining stubs and is NOT: 1084 bytes with only six relocations, so it
-// reads as pure member initialisation, but the work is elsewhere.
-//   * It is a 6-way JUMP TABLE on `defendingTown->type - 2` (the table is
-//     the six DIR32 rows the carve counts inside this function's 0x43C),
-//     each arm a `built`/`active` & bitNumber[21|22|26] test that bumps
-//     one of hero+0x476/+0x477/+0x478.
-//   * It needs roughly fifteen pad slices in this header - 0x132a8,
-//     0x132dc, 0x132e4, 0x132f8, 0x13d48, 0x5414, 0x53de..0x53e3,
-//     0x13de8..0x13df4, 0x13d75/0x13d76, 0x1329c - plus three hero bytes
-//     (+0x476/+0x477/+0x478), a hero short (+0x18) and an army byte
-//     (+0x4d8). All of the cmbtmgr ones sit behind the SETUP view, so
-//     they are cheap; the hero and army ones are not.
-//   * THE REAL BLOCKER is in the middle: it clears both eagle-eye sets
-//     through a three-argument __cdecl call, `f(&ret, *root, root)`, which
-//     is a Dinkumware set::erase(first, last) returning an iterator by
-//     value. Reproducing that byte-for-byte needs TCombatEagleEyeSide's
-//     set modelled properly, which is a bigger piece of work than the
-//     rest of this function put together.
-//   * It also proves the class runs to at least +0x14030 (a byte store),
-//     past everything this header models.
+// Everything about the combat that is NOT a screen object: the two
+// heroes' cached combat statistics, the town's own siege bonuses, the
+// per-side latches, the grid, the armies.
+//
+// The earlier survey called the middle of this body a blocker - "a
+// three-argument __cdecl call, f(&ret, *root, root), which is a
+// Dinkumware set::erase(first, last) returning an iterator by value" -
+// and said modelling it was "a bigger piece of work than the rest of
+// this function put together". IT IS `clear()`. The three pushes are
+// the hidden return slot, `_Left(_Head)` and `_Head`, which is exactly
+// what VC6's `void clear() { erase(begin(), end()); }` expands to, and
+// TCombatEagleEyeSide::spells was already a std::set<SpellID> in this
+// header. The DC roster names the member outright (std::set<SpellID>::
+// clear, dc 0x63b98). No new STL surface at all.
+//
+// The town arm is a real six-entry JUMP TABLE on `defendingTown->type`,
+// not a compare chain, and slot 2 (Necropolis) points at the default -
+// VC6 built a dense 2..7 table over five live cases. Stronghold's arm
+// FALLS THROUGH into the Fortress arm; that is a case without a break
+// in the source, not a shared tail.
+//
+// THE CLAMP HELPER'S PARAMETER IS A signed char, not an int, and that
+// alone is worth +3.69 (92.0332 -> 95.7196). With an int parameter VC6
+// widens the stat with `movsx` at the call and then compares a full
+// register, where retail compares the BYTE (`cmp al, 0x63`) and only
+// sign-extends on the surviving arm; worse, the widened form lets VC6
+// collapse the zero floor into a BRANCHLESS `setle / dec / and`, which
+// costs three conditional branches retail has. Byte in, branches back.
+//
+// Residual (95.7196%): flow-distance 2, ONE conditional branch short
+// (26 against 27) and one block, with predict-inline reporting the call
+// multisets equal at 6 and 6 - including the two set::erase calls,
+// which is what confirms the clear() reading from the other side. The
+// whole six-arm siege switch is now a reloc-NAME diff only: retail's
+// delinked side spells the masks as raw addresses where ours names
+// bitNumber, which objdiff masks.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::InitNonVisualVars()
 {
-    // @stub
+    field_13d74 = 0;
+    field_13d75 = 0;
+    field_13d76 = 0;
+    field_132c4 = 0;
+    field_132f8 = 0;
+    field_14030 = 0;
+    field_132e4 = 0;
+
+    if (heroes[1]) {
+        field_13de8 = ClampStat(heroes[1]->stats[0], 0);
+        field_13dec = ClampStat(heroes[1]->stats[1], 0);
+        field_13df0 = ClampStat(heroes[1]->stats[2], 1);
+        field_13df4 = heroes[1]->mana;
+
+        if (defendingTown) {
+            switch (defendingTown->type) {
+            case TOWN_TOWER:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->mana = static_cast<short>(
+                        heroes[1]->mana + 150);
+                break;
+            case TOWN_INFERNO:
+                if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
+                    heroes[1]->stats[2] += 2;
+                break;
+            case TOWN_DUNGEON:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->stats[2] += 12;
+                break;
+            case TOWN_STRONGHOLD:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->stats[0] += 20;
+                break;
+            case TOWN_FORTRESS:
+                if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
+                    heroes[1]->stats[0] += 2;
+                if (defendingTown->HasBuilding(EXTRA_1_ID, 1))
+                    heroes[1]->stats[1] += 2;
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 1)) {
+                    heroes[1]->stats[0] += 10;
+                    heroes[1]->stats[1] += 10;
+                }
+                break;
+            }
+        }
+    } else {
+        field_13de8 = 0;
+        field_13dec = 0;
+        field_13df0 = 0;
+        field_13df4 = 0;
+    }
+
+    spellPower[0] = heroes[0]
+        ? ClampStat(heroes[0]->stats[2], 1) : 0;
+    spellPower[1] = heroes[1]
+        ? ClampStat(heroes[1]->stats[2], 1) : 0;
+
+    field_5414 = 0;
+    field_5418 = 3;
+    field_53e0[0] = field_53e0[1] = 0;
+    field_53e2[0] = field_53e2[1] = 0;
+    field_53dc[0] = field_53dc[1] = 0;
+    field_53de[0] = field_53de[1] = 0;
+
+    eagleEyeData[0].spells.clear();
+    eagleEyeData[1].spells.clear();
+
+    field_3c = 0;
+    field_132a8 = -1;
+    field_132ac = -1;
+    field_132d4 = -1;
+    field_132dc = -99;
+    currentSide = 1;
+    actingSide = 1;
+    actingSlot = 0;
+    gCombatFlag6985a3 = 0;
+    gCombatFlag697744 = 0;
+    field_132b2[0] = 0;
+    field_132b2[1] = 0;
+    field_132b0[0] = 0;
+    field_132b0[1] = 0;
+    field_13d48 = 3;
+    lastMovedArmy = 0;
+    TurnOffHighlighter(0);
+
+    SetupAdjacencyArray();
+    GenerateMap();
+    LoadArmies(isSurrounded);
+
+    for (int side = 0; side < 2; side++) {
+        field_1329c[side] = 0;
+        for (int slot = 0; slot < numArmies[side]; slot++) {
+            if (armies[side][slot].field_4d8) {
+                field_1329c[side] = 1;
+                break;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1498
 DC_ONLY(0x5e948, 0x64)
