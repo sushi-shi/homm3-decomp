@@ -40,12 +40,15 @@
 #include <stdlib.h>
 
 #include <va.h>
+#define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
+#define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #define HOMM3_CMBTMGR_SETUP_VIEW
+#define HOMM3_CMBTMGR_TURN_VIEW
 #include "cmbtmgr.h"
 #define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
@@ -288,8 +291,12 @@ void combatManager::FreeArmies()
 
 // E:\gamedcs\cmbtmgr.cpp:1178
 // The seed expression is byte-forced: retail builds `x*0x1aed3` with one
-// imul and `y*0x28fb9` out of five lea/shl/sub steps, so both multipliers
-// and the 0x13ea1 addend come straight from the encoding, not a guess.
+// imul and `y*0x28f79` out of seven lea/shl/sub steps, so both multipliers
+// and the 0x13ea1 addend come straight from the encoding, not a guess -
+// and the chain is the ONLY thing that proves the second multiplier,
+// which is why an early transcription of it as 0x28fb9 read as a
+// compiler-generation wall (that constant is composite, and VC6 lowers it
+// with an imul, where 0x28f79 is prime and gets exactly retail's chain).
 // The three fortification tests are `built & bitNumber[7|8|9]` in exactly
 // that order - fort first, castle last - which is only coherent because
 // this game's `built` mask holds ONE of the three at a time (a Citadel
@@ -298,6 +305,20 @@ void combatManager::FreeArmies()
 // The moat expression's two exclusions are the game's own: Tower has no
 // moat, and Stronghold gained one only in Shadow of Death, which is what
 // the f_1f698 >= 2 gate says.
+//
+// Residual (96.4459%): ONE scheduling decision, seen twice, and nothing
+// else - every other row of the diff is a reloc NAME on a datum the
+// delinker carries no symbol for. Retail loads gpGame at the LAST moment,
+// after the argument is already pushed (`mov ecx,[ebx] / push ecx / mov
+// ecx,[gpGame]`) and after the players[] index is fully scaled; our CL
+// hoists that load ahead of both. The instruction COUNTS are equal on
+// both sides - only the load's position and its scratch register differ.
+// why-reg v2 (--model) settles this rather than guessing at it: the three
+// long-lived bindings agree exactly (esi<-this, ebx, edi created at the
+// same points), so the divergence is in caller-saved EAX/ECX/EDX creation
+// order, and the model reports the value that would have to move first is
+// copy-propagated - C1 handle state, which no local spelling reaches.
+// Register-homing family; not ground past that verdict.
 VA(0x004639f0, 0x270)  // anchor-callee, dc 0x5e464
 void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int iSeed, unsigned char is_surrounded)
 {
@@ -839,14 +860,100 @@ int combatManager::CheckApplyBadMorale(int group, int index)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2152
+// The turn scan. Two structural facts are forced by the encoding rather
+// than chosen: the outer pass loop is a GOTO loop - five separate sites
+// jump back to the top of the BODY without touching the pass counter, so
+// the restart is a `goto`, not a `continue` (a `while` would have been
+// rotated) - and the whole scan re-runs from scratch on every restart.
+// The stack rows are reached as `armies[side][i]`; VC6's own strength
+// reduction is what biases the induction pointer by +0x290 and steps it
+// by sizeof(army).
+//
+// Retail tests bCreaturePlacement TWICE in the inner scan, which is why
+// the field_c4 test and the boundary-depth pair are written as two
+// separate `if` blocks here: one block would have emitted one test. The
+// first test's branch is threaded straight past the second because the
+// second immediately re-tests the same unchanged byte.
 VA(0x00465080, 0x2A2)  // anchor-callee, dc 0x5f518
 unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
 {
-    // @stub
+    if (actingSlot >= 0 && actingSide == 0
+        && armies[0][actingSlot].creatureType == CREATURE_CATAPULT) {
+        actingSide = 1;
+        actingSlot = 0;
+    }
+    for (int pass = (field_13de4 != 0) + 1; pass <= 2; pass++) {
+    restart:
+        army* best = 0;
+        for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army* stack = &armies[side][i];
+                if (stack->Is(26) & 1)
+                    continue;
+                if (stack->Is(21) & 1)
+                    continue;
+                if (stack->Is(25) & 1)
+                    continue;
+                if (stack->field_4f0) {
+                    if (stack->disabled_290)
+                        continue;
+                    if (stack->disabled_2b0)
+                        continue;
+                    if (stack->disabled_2c0)
+                        continue;
+                }
+                if (bCreaturePlacement) {
+                    if (!stack->field_c4)
+                        continue;
+                }
+                if (bCreaturePlacement) {
+                    if (placementBoundaryDepth > 0 && side != 0)
+                        continue;
+                    if (placementBoundaryDepth < 0 && side != 1)
+                        continue;
+                }
+                if (stack->creatureType == CREATURE_AMMO_CART)
+                    continue;
+                if (bCreaturePlacement && (stack->Is(6) & 1))
+                    continue;
+                if (best && Unnamed464f50(best, stack))
+                    continue;
+                best = stack;
+            }
+        }
+        if (best) {
+            if (!field_13de4)
+                best->new_turn();
+            if (best->disabled_290)
+                goto restart;
+            if (best->disabled_2b0)
+                goto restart;
+            if (best->disabled_2c0)
+                goto restart;
+            if (checking_for_bad_morale && !bCreaturePlacement
+                && !field_13de4) {
+                if (CheckApplyBadMorale(best->combatSide, best->bitIndex))
+                    goto restart;
+                if (Unnamed464d40(best))
+                    goto restart;
+            }
+            SetNextArmy(best->combatSide, best->bitIndex);
+            return 1;
+        }
+        if (pass == 1) {
+            field_13de4 = 1;
+            checking_for_bad_morale = 0;
+            for (int s = 0; s < 2; s++) {
+                for (int j = 0; j < numArmies[s]; j++)
+                    armies[s][j].creatureId &= ~(1 << 25);
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2364
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
