@@ -8,6 +8,8 @@
 // CObjectType, and this header's include closure is measured.
 #define HOMM3_MAPCELL_TYPEMASK_VIEW
 #define HOMM3_MAPCELL_TOWNEXTRA_VIEW
+#define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_MAPCELL_HERO_SETUP_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
 // class, so the span has no missing attributions at the small end:
@@ -43,6 +45,8 @@
 #include "newgame.h"
 #include "resourcemanager.h"
 #include "smackmgr.h"
+#undef HOMM3_MAPCELL_HERO_SETUP_VIEW
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
@@ -2809,14 +2813,310 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:2951
+// The map file's hero record, and the widest one this compiland reads: it
+// fills a whole HeroExtra out of gpGame's 156-record setup pool at +0xa4 and
+// leaves the object's extraInfo holding the hero id.
+//
+// THREE version gates, and they do not read the same source.  The leading
+// quest identifier and the experience block test the mapVersion PARAMETER;
+// the armies width tests the parameter again out of its stack home;
+// everything from the artifacts on tests gpGame->mapHeader.version.  That is
+// readBlackBox's and readTownData's asymmetry again, not a slip.
+//
+// EXACTLY ONE READ IS CHECKED - the sixteen trailing padding bytes, whose
+// short count is the function's only -1.  Twenty-eight other Reads ignore
+// their result, including every one whose value reaches the record.
+//
+// The hero id is resolved in three steps: the stream byte through the
+// 0x4ba1c0 helper, then the per-player reservation at 0x69fb24 (CONSUMED on
+// use - the slot is stored -1 again), then GetStartingHeroId as the fallback.
+// Whichever answer wins is also latched into the setup screen's startingHero
+// slot if that is still -1.
+//
+// The two spell formats are exclusive and THE PRIMARY SKILLS RIDE WITH THE
+// SECOND: Armageddon's Blade carries one signed spell id (-2 = no record,
+// -1 = clear the set) and jumps straight to the padding, while every later
+// format carries a 70-bit mask in nine bytes and then the four primaries.
+//
+// The alignment reaching GetStartingHeroId is moved into its enum with
+// memcpy rather than a cast, which is this tree's own idiom for the
+// conversion - pick_alignment does exactly the same thing to its loop index,
+// and the cast-into-an-enum floor is why.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
-int NewfullMap::readHeroData(void* infile, CObject* heroObject)
+int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
+                             int mapVersion)
 {
-    // @stub
+    char tempText[100] = { 0 };
+    int int_buffer;
+
+    // The Shadow of Death quest identifier: absent on the oldest format, and
+    // it survives the whole body to reach HeroExtra::field_008.
+    int identifier;
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        identifier = 0;
+    } else {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        identifier = int_buffer;
+    }
+
+    char char_buffer;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    char Owner = char_buffer;
+
+    int HeroID = ReadHeroId(infile, mapVersion);
+    unsigned char isRandomHero = 0;
+    if (HeroID == -1)
+        isRandomHero = 1;
+
+    char nameFlag;
+    infile->Read(&nameFlag, sizeof(nameFlag));
+    char customName = nameFlag != 0;
+    if (customName) {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        infile->Read(tempText, int_buffer);
+        tempText[int_buffer] = 0;
+    }
+
+    // Restoration of Erathia and Armageddon's Blade always carry the
+    // experience dword; Shadow of Death gates it behind a flag byte.  In a
+    // campaign game a value below forty is treated as no custom experience at
+    // all, which is what the gbUnk69774c consult is doing on both arms.
+    int experience;
+    unsigned char bCustomExperience;
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA
+        || mapVersion == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        experience = int_buffer;
+        if (experience != 0 && (!gbUnk69774c || experience >= 40))
+            bCustomExperience = 1;
+        else
+            bCustomExperience = 0;
+    } else {
+        char experienceFlag;
+        infile->Read(&experienceFlag, sizeof(experienceFlag));
+        bCustomExperience = experienceFlag != 0;
+        if (bCustomExperience) {
+            infile->Read(&experience, sizeof(experience));
+            if (gbUnk69774c && experience < 40)
+                bCustomExperience = 0;
+        } else {
+            experience = 0;
+        }
+    }
+
+    if (HeroID == -1) {
+        if (gUnnamed69fb24[char_buffer] != -1) {
+            HeroID = gUnnamed69fb24[char_buffer];
+            gUnnamed69fb24[char_buffer] = -1;
+        } else {
+            TTownType alignment;
+            memcpy(&alignment, &gpGame->setup.alignment[char_buffer],
+                   sizeof(alignment));
+            HeroID = gpGame->GetStartingHeroId(alignment, char_buffer,
+                                               experience);
+        }
+    }
+    if (gpGame->setup.startingHero[char_buffer] == -1)
+        gpGame->setup.startingHero[char_buffer] = HeroID;
+
+    HeroExtra* hero_data = &gpGame->heroSetup[HeroID];
+    hero_data->Owner = Owner;
+    hero_data->id = HeroID;
+    hero_data->field_008 = identifier;
+    heroObject->extraInfo = HeroID;
+
+    if (customName) {
+        hero_data->bCustomName = 1;
+        strcpy(hero_data->Name, tempText);
+    }
+
+    if (bCustomExperience) {
+        hero_data->bCustomExperience = 1;
+        hero_data->Experience = experience;
+    }
+
+    // A random hero keeps its rolled portrait unless the campaign engine is
+    // running, which is the only reader of the flag byte pair.
+    char portrait;
+    infile->Read(&portrait, sizeof(portrait));
+    if (portrait) {
+        infile->Read(&portrait, sizeof(portrait));
+        if (!isRandomHero || gbUnk69774c) {
+            hero_data->bCustomPortraitNumber = 1;
+            hero_data->PortraitNumber = portrait;
+        }
+    }
+
+    char skillsFlag;
+    infile->Read(&skillsFlag, sizeof(skillsFlag));
+    if (skillsFlag) {
+        hero_data->bCustomSecondarySkills = 1;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        hero_data->NumSecondarySkills = int_buffer;
+        for (int skill = 0; skill < hero_data->NumSecondarySkills; ++skill) {
+            char type;
+            infile->Read(&type, sizeof(type));
+            hero_data->secondarySkill[skill] = type;
+            char level;
+            infile->Read(&level, sizeof(level));
+            hero_data->secondarySkillLevel[skill] = level;
+        }
+    }
+
+    char armiesFlag;
+    infile->Read(&armiesFlag, sizeof(armiesFlag));
+    if (armiesFlag) {
+        hero_data->bCustomArmies = 1;
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            int creature;
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                creature = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                creature = wide;
+            }
+            hero_data->armies[slot] = creature;
+
+            short troops;
+            infile->Read(&troops, sizeof(troops));
+            hero_data->numTroops[slot] = troops;
+        }
+    }
+
+    char formation;
+    infile->Read(&formation, sizeof(formation));
+    hero_data->GroupFormation = formation != 0;
+
+    char artifactsFlag;
+    infile->Read(&artifactsFlag, sizeof(artifactsFlag));
+    if (artifactsFlag) {
+        hero_data->bCustomArtifacts = 1;
+
+        // Eighteen equipped positions before Shadow of Death, nineteen after.
+        int equippedCount = (gpGame->mapHeader.version
+                             == MAP_FORMAT_SHADOW_OF_DEATH) + 18;
+        for (int equipped = 0; equipped < equippedCount; ++equipped) {
+            int artifact;
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                artifact = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                artifact = wide;
+            }
+            hero_data->artifacts[equipped].artifactId = artifact;
+        }
+
+        short short_buffer;
+        infile->Read(&short_buffer, sizeof(short_buffer));
+        hero_data->numInBackpack = static_cast<unsigned char>(short_buffer);
+        for (int carried = 0; carried < hero_data->numInBackpack; ++carried) {
+            int artifact;
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                artifact = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                artifact = wide;
+            }
+            hero_data->backpack[carried].artifactId = artifact;
+        }
+
+        // The fourth war-machine position is never serialized: every hero
+        // starts with the catapult in it.
+        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].artifactId
+            = ARTIFACT_CATAPULT;
+        hero_data->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4].extra = -1;
+    }
+
+    char patrolRadius;
+    infile->Read(&patrolRadius, sizeof(patrolRadius));
+    hero_data->PatrolRadius = patrolRadius;
+
+    if (gpGame->mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        char customNameFlag;
+        infile->Read(&customNameFlag, sizeof(customNameFlag));
+        if (customNameFlag) {
+            hero_data->customName = 1;
+            hero_data->name = ReadLengthPrefixedString(infile);
+        }
+
+        char sexByte;
+        infile->Read(&sexByte, sizeof(sexByte));
+        int sex = sexByte;
+        if (sex != -1)
+            hero_data->sex = sex;
+
+        if (gpGame->mapHeader.version == MAP_FORMAT_ARMAGEDDONS_BLADE) {
+            char spellByte;
+            infile->Read(&spellByte, sizeof(spellByte));
+            int spell = spellByte;
+            if (spell != -2) {
+                hero_data->customSpells = 1;
+                std::bitset<70> noSpells;
+                hero_data->spells = noSpells;
+                if (spell != -1)
+                    hero_data->spells.set(spell);
+            }
+        } else {
+            char spellsFlag;
+            infile->Read(&spellsFlag, sizeof(spellsFlag));
+            if (spellsFlag) {
+                hero_data->customSpells = 1;
+                unsigned char spellMask[9];
+                infile->Read(spellMask, sizeof(spellMask));
+                for (int i = 0; i < 70; ++i) {
+                    hero_data->spells.set(
+                        i, (spellMask[i / 8] & (1 << (i % 8))) != 0);
+                }
+            }
+
+            char primaryFlag;
+            infile->Read(&primaryFlag, sizeof(primaryFlag));
+            if (primaryFlag) {
+                hero_data->customPrimarySkills = 1;
+                for (int stat = 0; stat < 4; ++stat) {
+                    char value;
+                    infile->Read(&value, sizeof(value));
+                    hero_data->primarySkills[stat] = value;
+                }
+            }
+        }
+    }
+
+    char padding[16];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+
+    // A prison hero is not owned and not in any tavern pool.
+    if (objectTypes[heroObject->typeIndex].objectType == PRISON)
+        gpGame->heroAvailability[HeroID] = 0x41;
+    else
+        gpGame->heroAvailability[HeroID] = Owner;
+
+    int x;
+    int y;
+    heroObject->FindTrigger(&x, &y);
+
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = heroObject->z;
+    hero_data->location = point;
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3229
 #endif  // @carcass
