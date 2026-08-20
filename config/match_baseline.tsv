@@ -572,6 +572,7 @@ cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	87.5102	87.5102	87.5102	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	64.8103	64.8103	64.8103	0x66290
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	91.1779	91.1779	91.1779	0x67db0
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	86.4031	86.4031	86.4031	0x67a00
@@ -591,7 +592,6 @@ cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
-cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000	0.0000	0.0000	0x66290
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
 combatcontrolsubwindow	??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z	100.0000	100.0000	100.0000	0x6b610

@@ -149,6 +149,16 @@ enum ECombatFortification {
 // moat proper (0x5e from the Fortress row) while the bridge is down.
 // Names are BOOTSTRAP INVENTIONS.
 enum ECombatGateHex {
+    // The ROW those three columns are the fifth entry of, which is what
+    // SetupAndLoadObstacles compares against directly: it lays a mine in
+    // every moat row of a Tower except this one, and it tests the row
+    // INDEX before loading gMoatColumns rather than testing the column
+    // against COMBAT_HEX_GATE_MOAT afterwards. Behind the obstacle view
+    // so only its one consumer pays the include-set threshold, and
+    // FIRST in the enum so the guard does not leave a trailing comma.
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+    COMBAT_GATE_ROW = 5,
+#endif
     COMBAT_HEX_OUTER_MOAT = 0x5e,
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
@@ -737,21 +747,32 @@ public:
     // retail-proven. The DC roster attests the accessor
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
     // not the field, so the name is the accessor's.
-    int wallStrength[15];             // +0x13f60
-    // DamageWall clears one slot in each three-dword row for targets 7/6/0,
-    // then marks the indexed defender army's creatureId bit 21. Roles await
-    // readers; the shared reversed indexing is byte-proven here.
-    int field_13f9c[3];               // +0x13f9c
+    // EIGHTEEN, not fifteen plus a separate three (merged 2026-08-20).
+    // SetupAndLoadObstacles (0x466290) settles the extent outright: it
+    // fills this band with ONE 18-iteration loop out of
+    // akWallTraits[defendingTown->type][i].hitpoints, then stores 1
+    // into slots 15, 16 and 17, then copies all eighteen into
+    // wallStanding with a second 18-iteration loop whose source is
+    // exactly dst - 0x48. A 15+3 split cannot express either loop.
+    // The three tail slots are the two arrow towers and the keep - what
+    // DamageWall's targets 7, 6 and 0 clear - so the old field_13f9c /
+    // field_13fe4 rows were the same array seen through their one
+    // decoded writer, and DamageWall now spells them wallStrength[17]
+    // / [16] / [15] at byte-identical offsets.
+    int wallStrength[18];             // +0x13f60
     // One dword per wall id (5..14 used): 1 while strength remains, 0 when
-    // the segment reaches zero.
-    int wallStanding[15];             // +0x13fa8
-    int field_13fe4[3];               // +0x13fe4
+    // the segment reaches zero. Same 18 extent, same reason.
+    int wallStanding[18];             // +0x13fa8
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point mapPoint;              // +0x13ff0
     Bitmap816* combatCellGridBitmap;   // +0x13ff4
     Bitmap816* combatShadowBitmap;     // +0x13ff8
-    char pad_13ffc[0x4];
+    // Sliced out of the old pad in place 2026-08-20 (a retype, not a new
+    // declarator). SetupAndLoadObstacles zeroes it as its very first
+    // statement and nothing else decoded touches it, so the name stays
+    // an ordinal.
+    int field_13ffc;                   // +0x13ffc
     // "This slot's stack was added mid-combat and still owes a fizzle-in
     // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
     // index 20*iSide + slot for every stack that is NOT an arrow tower.
@@ -880,6 +901,12 @@ public:
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
     void PlaceAllObstacles();
+    // 0x466290, DC cmbtmgr.cpp:2859. Ungated, alongside the three
+    // obstacle bodies it sits between and calls: PlaceLargeObstacle,
+    // place_obstacle and PlaceObstacle are all ungated declarators
+    // here already, and gating this one alone would put it out of the
+    // declarator order C1XX numbers the group from.
+    void SetupAndLoadObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();
     const char* GetBackgroundName();
@@ -1564,6 +1591,29 @@ DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
 // the rva is the shorts view above, so this alias carries none - the only
 // delta it can produce is a reloc NAME.
 extern const type_obstacle_shape gObstacleShapes[];
+
+// The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
+// town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
+// which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
+// and mark_firewalls (0x4215e0) read the same table with a live index.
+// Name is a BOOTSTRAP INVENTION - no roster attests it.
+DATA(0x0063bd18) extern const int gMoatDamage[];
+
+// The standalone 20-byte obstacle shape the Tower's moat mines are
+// built from, at .rdata 0x63cf00 - not a row of gObstacleShapes but a
+// singleton, and its spriteName points at "C09spF1.def". Retail takes
+// its address whole (`push 0x63cf00`) into TObstacle::shape and loads
+// [0x63cf10] for the sprite name, which is +0x10, the struct's own
+// spriteName slot. Name is a BOOTSTRAP INVENTION.
+DATA(0x0063cf00) extern const type_obstacle_shape gLandMineShape;
+
+// The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
+// SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
+// literal address 0x63d3e8 - the next symbol in .rdata, which is why
+// the delinked reference names the combatManager vtable there - so the
+// extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
+// BOOTSTRAP INVENTION.
+DATA(0x0063d368) extern const int gBoatBlockedHexes[];
 #endif
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];

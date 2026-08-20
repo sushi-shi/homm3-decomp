@@ -193,6 +193,16 @@ enum ESpellId {
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
     SPELL_VISIONS = 0x2,
+    // 11. combatManager::SetupAndLoadObstacles (0x466290) prices the
+    // Tower's moat with ComputeSpellDamage(11, ...) and builds each
+    // moat hex out of the obstacle shape whose sprite is C09spF1.def -
+    // i.e. the Tower's moat IS a minefield, which is what identifies
+    // the spell. The id also sits one below SPELL_EARTHQUAKE 0xe in the
+    // battlefield-obstacle run this enum already anchors at that end.
+    // Behind a view for this header's usual measured reason.
+#ifdef HOMM3_SPELL_LAND_MINE_DECL
+    SPELL_LAND_MINE = 0xb,
+#endif
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
     // corresponding 0x88-byte traits row's per-mastery mana-cost band.
     SPELL_FLY = 0x6,
