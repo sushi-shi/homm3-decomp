@@ -1904,18 +1904,31 @@ void combatManager::ResetHitByCreature()
 // wrong root cause, because a 191-byte inline moves every allocation
 // after it.
 //
-// Residual (67.19%), and the three parts are now separately named:
-//   * OUR LOOP IS ROTATED AND RETAIL'S IS NOT. Retail has ONE Pick call,
-//     at the top, with every rejection jumping back to it; our CL emits a
-//     SECOND copy at the bottom (base x2 vs retail x1). The goto form is
-//     already what this body is written in, so VC6's "goto flow is not
-//     rotated" rule does not hold for a loop whose header is a call.
-//   * retail destroys the picker OUT OF LINE on the failure path (a call
-//     to 0x46a650) and inlines the operator delete only on the success
-//     path; our CL inlines it on both.
-//   * retail inlines TObstacleVector::size() where we emit a call.
-// Tried and rejected earlier: break + re-test, while-loop form, and an
-// int (rather than byte) odd-row flag.
+//
+// 67.19 -> 74.84% 2026-08-20, both points off the same three-part
+// residual the note below named, and both fixed with the pin rather than
+// against it:
+//   * HOIST WHAT RETAIL KEEPS INLINE OUT OF A PINNED STATEMENT. The
+//     PlaceObstacle pin also de-inlined the `obstacles.size() - 1` in
+//     the same statement, which retail expands here; landing it in a
+//     named local ahead of the pragma is worth 6.50 (67.1937 ->
+//     73.6911).
+//   * PIN THE FAILURE-PATH RETURN. Retail destroys the picker OUT OF
+//     LINE there (a call to 0x46a650) and inlines the operator delete
+//     only on the success path; a scoped inline_depth(0) on the
+//     `return 0;` statement alone reproduces that split, +1.15
+//     (73.6911 -> 74.8377).
+//
+// Residual (74.84%): ONE part left, and it is the loop shape. Retail has
+// ONE Pick call at the top with every rejection jumping back to it; our
+// CL emits a SECOND copy at the bottom (base x2 vs retail x1), which is
+// also the whole 19-vs-18 conditional-branch gap and the one remaining
+// operator delete. The goto form is already what this body is written
+// in, so VC6's "goto flow is not rotated" rule does not hold for a loop
+// whose header is a call. Note that the SIBLING wants the opposite:
+// SetupAndLoadObstacles' reject loop needs TWO Pick sites and gained
+// 1.64 when it got them. Tried and rejected earlier: break + re-test,
+// while-loop form, and an int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
@@ -1925,7 +1938,9 @@ unsigned char combatManager::place_obstacle(int obstacle_id)
 next_hex:
     hex = picker.Pick();
     if (hex < 0x12)
+#pragma inline_depth(0)
         return 0;
+#pragma inline_depth()
     {
         int row = hex / COMBAT_GRID_ROW_STRIDE;
         if (shape->minRow > row)
@@ -1983,8 +1998,9 @@ next_hex:
         // PlaceAllObstacles, which is already exact WITH the call, is not
         // disturbed (the auto_inline(off)-around-the-callee form would
         // have reached it too).
+        int obstacle_slot = obstacles.size() - 1;
 #pragma inline_depth(0)
-        PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+        PlaceObstacle(&obstacle, obstacle_slot, hex, 2);
 #pragma inline_depth()
         return 1;
     }

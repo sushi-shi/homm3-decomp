@@ -589,7 +589,7 @@ cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	89.6402	89.6402	89.
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
-cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	67.1937	67.1937	67.1937	0x66010
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	74.8377	74.8377	74.8377	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
