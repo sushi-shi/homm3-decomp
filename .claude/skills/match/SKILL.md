@@ -140,6 +140,25 @@ merged count regressed `command::GetCommand` 92.5714 -> 92.5357 exactly as
 one of them had predicted for a single bare declarator. Re-measure the
 include-set-sensitive rows after every merge that touches a shared header.
 
+**THE WALL IS A STEP FUNCTION, NOT A SUM** (measured across the view audit's
+seven commits, 2026-08-20). Removing 89 view macros moved rows
+NON-MONOTONICALLY: `initialize_game_data` crossed 100 -> 96.09 -> 94.07 ->
+100 -> 94.07, while `command::GetCommand` and `events::monsters_sell_out`
+dipped and RECOVERED to max, and `hero::GiveArtifact` round-tripped. So the
+include-set class responds to the closure's total declarator POPULATION
+crossing a threshold, not to a per-declarator penalty that accumulates. Two
+consequences: a lane must not assume its own edit is what moved a row - the
+population may have crossed on someone else's - and must not assume a dip is
+permanent, because adding further declarators can carry it back over.
+
+**AND THE GATES WERE HIDING REAL MODELLING ERRORS.** Emptying them surfaced
+`ExtraInfoUnion` and `CCombatTypeMsg` each DEFINED TWICE with contradictory
+member sets, `town::get_army` declared with two different return types (the
+DC mangled name `QAAAAV` settles it: a reference), `SPELL_SACRIFICE` in two
+`ESpellId` arms, and four enumerators duplicated between `EArmySpellRowId`
+and `ESpellId`. A per-TU view lets two incompatible models of the same type
+coexist indefinitely, because no TU ever sees both.
+
 **BUT DO NOT OVER-GATE FOR IT.** The ledger tracks `cur`, `max` AND `hist`,
 and the ratchet compares against `max`: a perturbation lowers `cur` while
 `max` and `hist` keep the peak, and even `--accept-regressions` leaves `hist`
