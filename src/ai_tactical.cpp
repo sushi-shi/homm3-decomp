@@ -7,6 +7,11 @@
 // transitively and a view define has to precede its header.
 #define HOMM3_SPELL_COUNTERSTRIKE_DECL
 #define HOMM3_CREATURE_GRIFFIN_DECL
+// get_muck_and_mire_value prices itself off the SLOW row - it reads
+// `[akSpellTraits + 4*mastery + 0x1ce4]` = 54*136 + 0x34 and pushes the
+// literal 0x36 into SpellCastWorkChance - so it needs the enumerator
+// armygrp.h already carries behind this view for cmbtmgr.cpp.
+#define HOMM3_SPELL_SLOW_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -1764,14 +1769,132 @@ long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1788
+// Muck and mire is priced as a SLOW: it reads the Slow mastery row
+// (54*136 + 0x34) for the speed it takes away and pushes the literal
+// 0x36 into SpellCastWorkChance at the end, which is what pins both to
+// SPELL_SLOW. The body is get_speed_value's shape run the other way
+// round - the enemy is the one being slowed - and it prices two
+// separate things, summing them into one running `value`:
+//
+//   - if the enemy is about to strike THIS turn (time == 1), the best
+//     exchange any of our stacks that is targeting it could get instead
+//     (the get_exchange_effect pair, exactly as in get_speed_value);
+//   - if the enemy is a walker, the turns of approach the slow buys us,
+//     priced through the same `(odds - t + 1) * total / odds` ladder
+//     get_speed_value closes with.
+//
+// The delay uses this TU's overwrite-the-variable shape twice over:
+// `new_time` is turned into a DELTA against `time`, capped at the
+// spell's remaining turns, then turned back into an absolute time by
+// adding `time` again before the odds cap.
+//
+// The work chance is the FLOAT round-trip (`fild dword / fstp DWORD /
+// fmul dword`), not the double one, as in get_damage_value.
+//
+// Residual (96.9%): the two odds-ladder terms are EVALUATED in the
+// opposite order. Retail computes `(odds - time + 1) * total / odds`
+// first, spills it to [ebp-0x20] while it computes the new_time term,
+// then `sub ecx,eax / add value,ecx`; our CL computes the new_time term
+// first (its operand is already live in ESI from the cap) and reloads
+// `time` for the second. The arithmetic, the immediates, the two idivs
+// and the final combine all agree - only which term lands in a register
+// first differs, and it follows from retail parking `time` in EDX
+// across the cap where our CL parks it in EAX and loses it to
+// `lea eax,[ecx+1]`. Register-homing family.
+// Tried and rejected: naming the first term in its own local, and
+// naming the whole difference - both byte-identical at 96.8602, VC6
+// folds either back into the expression.
+//
+// Three edits took this from 74.62: inverting the null-target test so
+// the zero arm is the FALL-THROUGH (`if (target == 0) { effect = 0; }
+// else { ... }`, +13.7 - arm layout follows the source's test
+// polarity), and hoisting the army pointer out of the loop with
+// `j++, our_army++` in the increment instead of re-subscripting
+// `&armies[side][j]` inside the body (+8.6 - the subscript form folds
+// j into the pre-header base address, where retail computes
+// `&armies[side][0]` with no j at all; set_melee_enemies below already
+// carries the hoisted form).
 VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
 long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if (enemy->AI_target == 0)
+        return 0;
+    if (field_1c)
+        return 0;
+    long time = enemy->get_AI_target_time(enemy->GetSpeed());
+    if (time > params.odds)
+        return 0;
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+    long turns = caster.duration;
+    if (slow_flag & 1)
+        turns--;
+    if (turns == 0)
+        return 0;
+    long value = 0;
+    long speed = enemy->GetSpeed();
+    long new_speed = akSpellTraits[SPELL_SLOW].mastery_bonus[caster.mastery] * speed / 100;
+    if (new_speed < 1)
+        new_speed = 1;
+    if (time == 1) {
+        const army* our_army = &gpCombatManager->armies[side][0];
+        for (long j = 0; j < gpCombatManager->numArmies[side]; j++, our_army++) {
+            if (our_army->AI_target != enemy)
+                continue;
+            if (our_army->disabled_290)
+                continue;
+            if (our_army->disabled_2b0)
+                continue;
+            if (our_army->disabled_2c0)
+                continue;
+            unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 21);
+            if (immune & 1)
+                continue;
+            if (our_army->creatureType == CREATURE_FIRST_AID_TENT)
+                continue;
+            if (our_army->creatureType == CREATURE_AMMO_CART)
+                continue;
+            if (our_army->GetSpeed() > speed)
+                continue;
+            if (our_army->GetSpeed() <= new_speed)
+                continue;
+            long effect;
+            army* target = our_army->AI_target;
+            if (target == 0) {
+                effect = 0;
+            } else {
+                long ours = params.get_exchange_effect(our_army, target, 0);
+                effect = params.get_exchange_effect(target, our_army, 0) + ours;
+            }
+            if (effect > value)
+                value = effect;
+        }
+    }
+    if (!enemy->can_shoot(0)) {
+        long new_time = enemy->get_AI_target_time(new_speed);
+        new_time -= time;
+        if (new_time > turns)
+            new_time = turns;
+        if (new_time > 0) {
+            long total = enemy->get_total_combat_value(params.lowest_attack,
+                                                       params.lowest_defense);
+            new_time += time;
+            if (new_time > params.odds + 1)
+                new_time = params.odds + 1;
+            value += (params.odds - time + 1) * total / params.odds
+                     - (params.odds - new_time + 1) * total / params.odds;
+        }
+    }
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
+        value = static_cast<long>(
+            gpCombatManager->SpellCastWorkChance(SPELL_SLOW, side, enemy, 0, 1,
+                                                 creature_cast) * value);
+    }
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1884
 // Poison takes half of what the stack's top creature has left, so the

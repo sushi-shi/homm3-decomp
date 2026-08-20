@@ -263,6 +263,7 @@ ai_tactical	?get_mass_damage_effect@type_AI_spellcaster@@QAEJJJ@Z	100.0000	100.0
 ai_tactical	?get_mastery_value@type_enchant_data@@QAEJXZ	100.0000	100.0000	100.0000	0x36930
 ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170
 ai_tactical	?get_misfortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38f60
+ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.8602	96.8602	96.8602	0x39270
 ai_tactical	?get_multi_head_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36620
 ai_tactical	?get_poison_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500
 ai_tactical	?get_prayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ac0
@@ -298,7 +299,6 @@ ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000	0.0000	0.0000	0x39a80
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
 ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000	0.0000	0.0000	0x3b690
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
-ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x39270
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
