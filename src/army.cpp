@@ -20,19 +20,7 @@
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
 #include "bitmap16.h"
-#define HOMM3_CMBTMGR_MOVE_VIEW
-#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-#define HOMM3_CMBTMGR_RESURRECT_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
-#define HOMM3_CMBTMGR_CALIPH_VIEW
-#define HOMM3_CMBTMGR_TOWER_VIEW
 #include "cmbtmgr.h"
-#undef HOMM3_CMBTMGR_TOWER_VIEW
-#undef HOMM3_CMBTMGR_CALIPH_VIEW
-#undef HOMM3_CMBTMGR_ROUND_VIEW
-#undef HOMM3_CMBTMGR_RESURRECT_VIEW
-#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-#undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "csprite.h"
 #include "drawing.h"
 // get_berserk_targets (0x445490) seeds the combat search and then reads

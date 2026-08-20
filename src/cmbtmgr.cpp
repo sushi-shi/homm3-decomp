@@ -47,25 +47,15 @@
 // defines sit here, ahead of every header, because armygrp.h and
 // artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
 // hero.h -> artifact.h) and a view define has to precede its header.
-#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
-#define HOMM3_CMBTMGR_ROUND_VIEW
 #define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
-#define HOMM3_CMBTMGR_ICONS_VIEW
-#define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
-#define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
-#define HOMM3_CMBTMGR_OPEN_VIEW      // the two GameTime stamps Open takes
 #define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
                                      // it in InitNonVisualVars' siege arms
-#define HOMM3_CMBTMGR_MORALE_VIEW
-#define HOMM3_CMBTMGR_OBSTACLE_VIEW
-#define HOMM3_CMBTMGR_SETUP_VIEW
-#define HOMM3_CMBTMGR_TURN_VIEW
 #include "cmbtmgr.h"
 #include "combatwindow.h"
 #include "combatoptionswindow.h"
