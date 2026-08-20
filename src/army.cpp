@@ -23,7 +23,10 @@
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
+#define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLCAST_VIEW
+#define HOMM3_ARMY_SPELLS_VIEW
+#define HOMM3_ARMY_SPELL_ROW_VIEW
 #define HOMM3_ARMY_WALL_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #include <algorithm>
@@ -2593,11 +2596,305 @@ void army::CancelAllSpells()
 }
 
 // E:\gamedcs\army.cpp:3816
+#endif  // @carcass
+
+// Put one spell ON this stack: pick how many rounds it stands (255 for
+// the three that never time out on their own, "until your next turn"
+// for Frenzy, the caster's power for everything else), raise-or-return
+// if the spell is already standing, otherwise record it, fold its
+// per-mastery traits amount into the stack's own words, and append it
+// to the cast-order queue. The exact inverse of CancelIndividualSpell
+// above, arm for arm.
+//
+// SPELLING LEDGER (0 -> 87.51 -> 93.75 -> 94.70): the HYPNOTIZE arm's
+// two teardown loops must be erase_item's body written LONGHAND with
+// the size() and erase(iterator) sites pinned - retail expands
+// erase_item here but keeps ITS internals out of line (the 0x423110
+// size COMDAT and the 0x448d30 one-arg vector erase), the exact
+// opposite granularity of CancelIndividualSpell's arm, and no pin can
+// reach inside a real call's expansion; the two clears are pinned
+// erase(begin, end) exactly as there. Poison's clamp must round
+// through a NAMED DOUBLE local (`double clamped`) before the float
+// conversion or the reference-return dereference folds the copy retail
+// keeps (+0.95).
+//
+// Residual (94.6999%): all inside push_back's expansion and the
+// register-homing family. Retail's push_back keeps one std::copy
+// (0x5093c0) and the map-iterator constructor (0x5586d0) as calls
+// inside its OWN expansion - one statement, unreachable by
+// statement-scoped pins - where our CL writes the copy loop out and
+// inlines the ctor; the remainder is scratch-register mirroring in
+// the entry and the deque-grow paths. Reloc-name-only rows on the
+// paired float pool and STL COMDATs are cosmetic.
+//
+// The float constants are read from the image: the factor arms divide
+// the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
+// by 1.5, Poison steps poisonPenalty down 0.1f with a 0.5 floor
+// (_cpp_max over doubles - the 0.5 literal builds its slot from
+// immediates while the compare uses the pooled copy), and both HP
+// recomputes carry the same +0.95f rounding CancelIndividualSpell's
+// AGE arm has. The AGE arm reads its OWN just-set round row (always
+// non-zero -> always the 0.5 halving path) - retail-faithful, do not
+// "fix" - and its topCreatureDamage clamp is written TWICE in a row,
+// the second min re-reading the first's store; transcribed as the two
+// statements they were.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
-void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero)
+void army::SetSpellInfluence(int spell, int power, int mastery,
+                             const hero* casting_hero)
 {
-    // @stub
+    long rounds;
+    switch (spell) {
+    case SPELL_DISRUPTING_RAY:
+    case SPELL_BERSERK:
+    case SPELL_BIND:
+        rounds = 255;
+        break;
+    case SPELL_FRENZY:
+        rounds = (this != gpCombatManager->get_current_army()) + 1;
+        break;
+    default:
+        rounds = power;
+        break;
+    }
+    if (spellInfluence[spell] > 0) {
+        if (rounds > spellInfluence[spell])
+            spellInfluence[spell] = rounds;
+        if (mastery > spell_level[spell])
+            spell_level[spell] = mastery;
+        return;
+    }
+    numSpellInfluences++;
+    spellInfluence[spell] = rounds;
+    spell_level[spell] = mastery;
+    long amount = akSpellTraits[spell].mastery_bonus[mastery];
+    switch (spell) {
+    case SPELL_SHIELD:
+        shieldFactor = amount / 100.0;
+        break;
+    case SPELL_AIR_SHIELD:
+        airShieldFactor = amount / 100.0;
+        break;
+    case SPELL_FIRE_SHIELD:
+        fireShieldStrength = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_AIR:
+        protectionFromAirFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_FIRE:
+        protectionFromFireFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_WATER:
+        protectionFromWaterFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_EARTH:
+        protectionFromEarthFactor = amount / 100.0;
+        break;
+    case SPELL_ANTI_MAGIC: {
+        antiMagicSpellLevel = amount;
+        for (int j = 0; j < 81; j++) {
+            if (akSpellTraits[j].level < antiMagicSpellLevel
+                && akSpellTraits[j].field_0 < 0
+                && !(akSpellTraits[j].field_c & 8))
+                CancelIndividualSpell(j);
+        }
+        break;
+    }
+    case SPELL_BLESS:
+        CancelIndividualSpell(SPELL_CURSE);
+        blessAmount = amount;
+        break;
+    case SPELL_CURSE:
+        CancelIndividualSpell(SPELL_BLESS);
+        curseAmount = amount;
+        break;
+    case SPELL_BLOODLUST:
+        bloodlustAmount = amount;
+        if (casting_hero)
+            bloodlustAmount += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_PRECISION:
+        precisionAmount = amount;
+        if (casting_hero)
+            precisionAmount += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_WEAKNESS:
+        weaknessPenalty = amount;
+        if (casting_hero)
+            weaknessPenalty += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        if (attackSkill < weaknessPenalty)
+            weaknessPenalty = attackSkill;
+        attackSkill = attackSkill - weaknessPenalty;
+        break;
+    case SPELL_STONE_SKIN:
+        toughskinBonus = amount;
+        if (casting_hero)
+            toughskinBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        defenseSkill = defenseSkill + toughskinBonus;
+        break;
+    case SPELL_PRAYER:
+        prayerBonus = amount;
+        if (casting_hero)
+            prayerBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        attackSkill = attackSkill + prayerBonus;
+        defenseSkill = defenseSkill + prayerBonus;
+        if (!(Is(6) & 1))
+            field_c4 = field_c4 + prayerBonus;
+        break;
+    case SPELL_MIRTH:
+        moraleBonus = amount;
+        break;
+    case SPELL_SORROW:
+        moralePenalty = amount;
+        break;
+    case SPELL_FORTUNE:
+        luckBonus = amount;
+        if (casting_hero)
+            luckBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_MISFORTUNE:
+        luckPenalty = amount;
+        break;
+    case SPELL_HASTE:
+        if (!(Is(6) & 1)) {
+            CancelIndividualSpell(SPELL_SLOW);
+            tailwindBonus = amount;
+            if (casting_hero)
+                tailwindBonus += casting_hero->GetHeroSpellBonus(
+                    spell, monInfoLevel, amount);
+            field_c4 = field_c4 + tailwindBonus;
+            frameInfoWalkCycleTime =
+                static_cast<long>(origWalkCycleTime * 0.65);
+        }
+        break;
+    case SPELL_SLOW:
+        if (!(Is(6) & 1)) {
+            CancelIndividualSpell(SPELL_HASTE);
+            slowFactor = amount / 100.0;
+            frameInfoWalkCycleTime =
+                static_cast<long>(origWalkCycleTime * 1.5);
+        }
+        break;
+    case SPELL_SLAYER:
+        slayerLevel = mastery;
+        break;
+    case SPELL_FRENZY:
+        frenzyFactor = amount / 100.0;
+        break;
+    case SPELL_COUNTERSTRIKE:
+        counterstrokeBonus = amount;
+        retaliationCount = retaliationCount + amount;
+        break;
+    case SPELL_BERSERK:
+        CancelIndividualSpell(SPELL_HYPNOTIZE);
+        break;
+    case SPELL_HYPNOTIZE: {
+        CancelIndividualSpell(SPELL_BERSERK);
+        long i = aura_sources.size();
+        while (i-- > 0) {
+            std::vector<army*>& clients = aura_sources[i]->aura_clients;
+#pragma inline_depth(0)
+            unsigned n = clients.size();
+#pragma inline_depth()
+            while (n-- != 0) {
+                if (clients[n] == this) {
+                    army** pos = clients.begin() + n;
+#pragma inline_depth(0)
+                    clients.erase(pos);
+#pragma inline_depth()
+                    break;
+                }
+            }
+        }
+        {
+            army** first = aura_sources.begin();
+            army** last = aura_sources.end();
+#pragma inline_depth(0)
+            aura_sources.erase(first, last);
+#pragma inline_depth()
+        }
+        long j = aura_clients.size();
+        while (j-- > 0) {
+            std::vector<army*>& sources = aura_clients[j]->aura_sources;
+#pragma inline_depth(0)
+            unsigned n = sources.size();
+#pragma inline_depth()
+            while (n-- != 0) {
+                if (sources[n] == this) {
+                    army** pos = sources.begin() + n;
+#pragma inline_depth(0)
+                    sources.erase(pos);
+#pragma inline_depth()
+                    break;
+                }
+            }
+        }
+        {
+            army** first = aura_clients.begin();
+            army** last = aura_clients.end();
+#pragma inline_depth(0)
+            aura_clients.erase(first, last);
+#pragma inline_depth()
+        }
+        add_aura();
+        break;
+    }
+    case SPELL_BLIND:
+        blindFactor = amount / 100.0;
+        break;
+    case SPELL_DISEASE:
+        diseaseDefensePenalty = _cpp_min(2, defenseSkill);
+        diseaseAttackPenalty = _cpp_min(2, attackSkill);
+        attackSkill = attackSkill - diseaseAttackPenalty;
+        defenseSkill = defenseSkill - diseaseDefensePenalty;
+        break;
+    case SPELL_POISON: {
+        double clamped =
+            _cpp_max(static_cast<double>(poisonPenalty - 0.1f), 0.5);
+        float penalty = static_cast<float>(clamped);
+        poisonPenalty = penalty;
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * penalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * penalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_AGE: {
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_MAGIC_MIRROR:
+        backlashChance = amount;
+        break;
+    case SPELL_FORGETFULNESS:
+        forgetfulnessLevel = mastery;
+        break;
+    }
+    SpellInfluenceQueue.push_back(spell);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4129
 DC_ONLY(0x4a2e8, 0x5E)
