@@ -1847,14 +1847,62 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:2073
+// The map event shares the pandora's-box record outright: same
+// blackBoxes.size() index, same BlackBoxData temporary, same readBlackBox,
+// same 400-entry cap and the same 10-bit index lane in extraInfo.  What the
+// event adds is three bytes of its own, and they land in the bits directly
+// above that lane - an eight-bit player mask at 10..17, then two one-bit
+// flags at 18 and 19.
+//
+// The publish block sits BETWEEN the flag reads and the four discarded tail
+// bytes, not at the end: retail reads all three bytes, then tests the cap,
+// then reads the padding.
+//
+// Retail routes most failures into ONE shared destructor chain (every early
+// exit `jmp`s to the same `lea ecx,[ebp-0x68]` cleanup) but duplicates a
+// partial copy for the first byte read.  That asymmetry is the EH scope
+// machinery's, not a source shape - the body below is plain early returns.
 VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor; called by readObject; EH-bearing, dc 0xef5dc
-int NewfullMap::readEventData(void* infile, CObject* eventObject)
+int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
+                              int mapVersion)
 {
-    // @stub
+    int boxIndex = blackBoxes.size();
+
+    eventObject->extraInfo = 0;
+
+    BlackBoxData tempBox;
+    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+        return -1;
+
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfffc03ff)
+        | ((value & 0xff) << 10);
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfffbffff)
+        | ((value & 1) << 18);
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfff7ffff)
+        | ((value & 1) << 19);
+
+    if (boxIndex < 400) {
+        blackBoxes.push_back(tempBox);
+        eventObject->extraInfo ^= (eventObject->extraInfo ^ boxIndex) & 0x3ff;
+    }
+
+    unsigned char padding[4];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2124
 DC_ONLY(0xef7c8, 0x3F0)
