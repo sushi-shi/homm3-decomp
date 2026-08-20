@@ -1424,26 +1424,49 @@ public:
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
     // pushing it, which a char-typed parameter would never need.
+    // Slot 4 RETYPED AND RENAMED 2026-08-20, `long hex` -> `unsigned char
+    // redirected`. Every call site in ai.cpp and ai_tactical.cpp passes a
+    // literal 0 here, which pushes identically under either type, so no
+    // decoded body could ever have distinguished them. SpellCastWorks
+    // (0x5a8640) can: it forwards its OWN `unsigned char redirected`
+    // parameter into this slot, and retail pushes it raw where a `long`
+    // parameter forces a widening `and edx, 0xff` - the single delta that
+    // stood between that body and exact. The DC roster names slot 4
+    // `redirected` and slot 5 `first_target` (spells.cpp:5419), which is
+    // also how the two callers divide: SpellCastWorks pins first_target to
+    // 1 and passes its own redirected; ValidSpellTargetArmy (0x5a3c80)
+    // pins redirected to 0 and passes its own first_target.
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
-                              long hex, unsigned char check_immunity,
+                              unsigned char redirected,
+                              unsigned char first_target,
                               long creature_spell);            // 0x5a8090
-    // 0x5a3c80, CORRECTED 2026-08-14. The address this line carried was
-    // 0x5a8950, which is refuted by arity: that body ends `ret 0xc` and
-    // this signature has five stack arguments. ai_tactical's
-    // consider_chain_lightning (0x437310) is the only call site in the
-    // tree and its retail body calls 0x5a3c80 - immediately before
-    // find_resurrection_target 0x5a3cc0. Neither body is claimed here.
+    // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
+    // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
+    // carried two wrong addresses. 0x5a8950 went first (refuted by arity -
+    // that body is `ret 0xc`); 0x5a3c80 replaced it and is refuted here.
+    // 0x5a3c80 has the same arity as this function, so the 2026-08-14 note
+    // could not separate them, and the call site it cites is real - but it
+    // is a call to ValidSpellTargetArmy, declared just below, which the AI
+    // uses everywhere it asks "may I aim at this stack". Only 0x5a8640
+    // rolls `Random(1, 100)` against the chance, which is what casting
+    // "working" means; the spells.obj order-map puts it at spells.cpp:5660
+    // where the DC roster's SpellCastWorks is, and the exact match seals it.
     unsigned char SpellCastWorks(SpellID spell, long side,
                                  const army* target,
                                  unsigned char redirected,
-                                 long creature_spell);         // 0x5a3c80
+                                 long creature_spell);         // 0x5a8640
     // spells.obj leaves used by ai_tactical's sacrifice scan. The retail
     // call sites fix these exact stack arities; Dreamcast supplies names and
     // parameter types.
-    unsigned char ValidSpellTargetArmy(int spellId, int castingSide,
+    // 0x5a3c80, the address the line above used to claim - see there. Its
+    // eleven retail callers are the whole AI targeting family. `spellId` is
+    // SpellID rather than the roster's `int` so the forward into
+    // SpellCastWorkChance needs no cast into the enum domain; every caller
+    // already passes a SpellID.
+    unsigned char ValidSpellTargetArmy(SpellID spellId, int castingSide,
                                        const army* targetArmy,
                                        unsigned char firstTarget,
-                                       long creatureSpell);
+                                       long creatureSpell);    // 0x5a3c80
     army* find_resurrection_target(int armyGroup, int targetIndex,
                                    unsigned char creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
