@@ -823,7 +823,14 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 
     NewfullMapFn_00502B60();
 
-    for (unsigned int i = 0; i < objects.size(); ++i)
+    // Retail CALLS vector<CObject>::size in this loop's CONDITION, at
+    // Read+0x285 (entry) and +0x29b (back edge) - the two calls that sit
+    // between 0x502b60 and 0x500de0 in its relocation sequence and that we
+    // had inlined. Same lexical placement as Load's seer-hut loop.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < objects.size(); ++i)
+#pragma inline_depth()
         PlaceObject(i, 1);
 
     NewfullMapFn_00500DE0();
@@ -887,9 +894,24 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // it" - was WRONG. The budget being per-caller is exactly what makes it
 // reachable: move the resize into a function small enough to be starved of
 // budget and it stays a call, then let the single-call-site static inline
-// back. resizeSeerHutList above does that, 72.8624 -> 77.3789. What remains
-// is the mapObjectData half, which does NOT respond to the same treatment
-// (77.2574, measured).
+// back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
+//
+// 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
+// mapObjectData half the old text expected. Retail CALLS
+// vector<TSeerHut>::size (0x5066b0) in the seer-hut loop's CONDITION, twice
+// - once at loop entry and once on the back edge, at fn+0x2b9 and fn+0x313 -
+// where our CL expanded both. `#pragma inline_depth(0)` is LEXICAL, so
+// putting it in front of the `for` header and restoring the depth before the
+// body's opening brace covers the condition alone and leaves the body's own
+// decisions untouched. The index has to be hoisted out of the `for` init for
+// that placement to be legal.
+//
+// MEASURED NEGATIVE while landing it, do not retry: the mapObjectData half
+// really is different. Spelling it as an explicit two-argument
+// `insert(dataEnd, questData)` with a statement pin - the edit that is worth
+// points in readObject's QUEST_GUARD arm on the identical instantiation -
+// costs 82.8043 -> 82.4190 here. Also still true from the old note: the
+// budget-starved-helper treatment on the same site scores 77.2574.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
@@ -938,7 +960,15 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
         return -1;
 
     resizeSeerHutList(this, count);
-    for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
+    // Retail CALLS vector<TSeerHut>::size (0x5066b0) in this loop's
+    // condition - twice, once at entry and once on the back edge - where our
+    // CL expands it. The pin is lexical, so restoring the depth before the
+    // body leaves the body's own decisions alone.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < SeerHutList.size(); ++i)
+#pragma inline_depth()
+    {
         SeerHutList[i].load(infile, saveVersion);
         if (SeerHutList[i].quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
@@ -1016,14 +1046,27 @@ static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
     int count = map->SeerHutList.size();
     if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
         return -1;
-    for (unsigned int i = 0; i < map->SeerHutList.size(); ++i)
+    // Retail CALLS vector<TSeerHut>::size in this loop's CONDITION, at
+    // Save+0x224 (entry) and +0x246 (back edge), and inlines the count
+    // read above it. The pin is lexical, so it covers the `for` header
+    // only; the index has to leave the init for that to be legal.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < map->SeerHutList.size(); ++i)
+#pragma inline_depth()
         map->SeerHutList[i].save(outfile);
     return 0;
 }
 
 static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
 {
+    // The mirror of the seer-hut helper, one call further: retail calls
+    // vector<TQuestGuard>::size THREE times (Save+0x254 for this count,
+    // +0x26e and +0x297 for the loop) where our CL only left the loop's
+    // two out of line.
+#pragma inline_depth(0)
     int count = map->QuestGuardList.size();
+#pragma inline_depth()
     outfile->Write(&count, 2);
     for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
         map->QuestGuardList[i].save(outfile);
@@ -3381,20 +3424,31 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
-// readObject's QUEST_GUARD arm, factored out for ONE reason: the /Ob2 budget
-// is per-CALLER and clamps at a floor, so a SMALL function gets a small
-// budget. Inside a helper this size there is not enough of it to expand
-// vector<TQuestGuard>::insert, so the insert stays a CALL - and the helper,
-// a static with a single call site, is then inlined back into readObject
-// whole and BRINGS THAT CALL WITH IT. That is retail's shape, and nothing
-// spelled inside readObject could reach it, because there the budget is
-// readObject's own and it is large enough to expand the insert.
+// readObject's QUEST_GUARD arm. It was factored out here because the /Ob2
+// budget is per-CALLER and clamps at a floor, so a small function gets a
+// small budget and the insert stayed a CALL, which the single-call-site
+// static then carried back into readObject when it was inlined whole. That
+// bought 42.6246 -> 45.0977 and it costs no symbol (mapcell.obj still carries
+// exactly 67 functions).
 //
-// Worth 2.5 points on its own (42.6246 -> 45.0977), and it costs no symbol:
-// mapcell.obj still carries exactly 67 functions, because an inlined
-// single-call-site static leaves nothing behind.
+// THE STARVATION IS NO LONGER WHAT KEEPS THE CALL, and this is why the helper
+// looks redundant now: once the three RANDOM_DWELLING arms below stopped
+// expanding their inserts, the budget they freed came straight back here and
+// the arm expanded again - the documented "pinning an EARLY site enlarges
+// budget/sites-remaining for the LATER ones" effect, seen from the receiving
+// end. The two inserts and the size() are now SITE-PINNED instead, and the
+// overload each site names is read off the retail push sequence rather than
+// guessed: retail pushes TWO arguments at both inserts here, so this arm
+// calls insert(iterator, const T&) and NOT the three-argument
+// insert(iterator, size_type, const T&) the RANDOM_DWELLING arms call. The
+// third pin is size(): retail calls vector<TQuestGuard>::size out of line
+// (0x1066e0, 32 B) at `extraInfo = size() - 1`, immediately after the insert
+// and with &QuestGuardList still live in esi.
 //
-// The same treatment does NOT transfer to its neighbours. On the
+// The helper is kept because it is byte-inert and still starves anything not
+// explicitly pinned.
+//
+// The starvation lever did NOT transfer to its neighbours. On the
 // RANDOM_DWELLING_FACTION arm it scores 33.0580 - twelve points BELOW doing
 // nothing - because that arm's two siblings already come out at retail's
 // exact length and the three are costed together; and the SEER arm cannot be
@@ -3405,11 +3459,23 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 {
     TQuestGuard tempGuard;
     tempGuard.read(infile);
-    map->QuestGuardList.push_back(tempGuard);
-    tempObject->extraInfo = map->QuestGuardList.size() - 1;
-    if (tempGuard.quest)
-        map->mapObjectData.push_back(static_cast<CMapObjectData*>(
-            static_cast<void*>(tempGuard.quest)));
+    {
+        std::vector<TQuestGuard>::iterator guardEnd
+            = map->QuestGuardList.end();
+#pragma inline_depth(0)
+        map->QuestGuardList.insert(guardEnd, tempGuard);
+        tempObject->extraInfo = map->QuestGuardList.size() - 1;
+#pragma inline_depth()
+    }
+    if (tempGuard.quest) {
+        CMapObjectData* questData = static_cast<CMapObjectData*>(
+            static_cast<void*>(tempGuard.quest));
+        std::vector<CMapObjectData*>::iterator dataEnd
+            = map->mapObjectData.end();
+#pragma inline_depth(0)
+        map->mapObjectData.insert(dataEnd, questData);
+#pragma inline_depth()
+    }
 }
 
 // E:\gamedcs\mapcell.cpp:3290
@@ -3432,59 +3498,62 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 // abandoned arm into the lighthouse's `readMineData` call rather than
 // duplicating it, which is a compiler transform over two separate cases, not
 // a fallthrough in the source.
-// Residual (45.0977%): an INLINER wall, and a narrow one - twenty-one of the
-// twenty-six arms already come out at retail's exact byte length, arm for
-// arm, off the same jump table and index table:
-//   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
-//   equal, SEER 122 vs 120, then 74/23/31/23/23/27/155/140 and the default's
-//   14 all equal too.
-// It breaks in the last two heavy arms: id-218 emits 574 bytes where retail
-// emits 149 and QUEST_GUARD 1048 where retail emits 91, because our CL
-// expands `vector<T>::insert(iterator, size_type, const T&)` INLINE there -
-// dragging in _Ucopy, _Ufill, _Destroy, operator new and operator delete -
-// where retail calls it.  predict-inline: base 54 out-of-line calls vs
-// retail 29, every extra one from that expansion.
+// 45.0977 -> 96.9833 (2026-08-20) ON FIVE `#pragma inline_depth(0)` SITE
+// PINS, and the note this entry used to carry had the diagnosis right and the
+// arithmetic wrong. Read the correction before re-deriving any of it.
 //
-// Retail's own decisions are cost-driven and this tree reproduces most of
-// them: `insert(iterator, const T&)` is expanded for the 4- and 16-byte
-// element types (its `_P - begin()` is a shift) and CALLED for TSeerHut (19)
-// and TQuestGuard (5), whose pointer difference needs a magic multiply.  We
-// expand it for all five, and then the id-218 and QUEST_GUARD sites expand
-// the big three-argument insert underneath it as well.  That expansion also
-// costs the register assignment: it forces `this` to be spilled at +0x18 and
-// swaps its register with tempObject's (ours edi/ebx, retail's ebx/edi),
-// which is what holds the arms that DO match at length below 100%.
+// The old text said the wall was "id-218 (RANDOM_DWELLING_FACTION) at 574
+// bytes against retail's 149" and that its "two siblings at 155 and 140
+// already match". That last half is what misled three attempts. Retail
+// CALLS the insert at ALL THREE dwelling arms - its three calls sit at
+// fn+0x521, +0x5ad and +0x642 with nothing between them - while our compile
+// called it at the FIRST arm only and expanded it at the other two. So the
+// lever was never "make the FACTION arm behave like its siblings"; it was
+// "pin the two arms the budget ran out on". Pinning FACTION alone is what
+// every earlier measurement did, and it loses because arm two is still
+// expanding underneath it.
 //
-// Tried and rejected: `#pragma inline_depth(2)` and `(1)` around the body -
-// both are ignored under /O2 /Ob2, byte-identical output at 42.5589.
-// Tried and KEPT: giving each arm its own stream-read local instead of
-// reusing one function-scope byte.  That is what retail does - its header
-// reads land in [ebp+0xb] and its arm reads in a different home - and it
-// moves the first read onto retail's own [ebp+0xb] (42.5589 -> 42.6246).
-// It does not reach the runaway.
+// THE OVERLOAD IS READ OFF THE PUSH SEQUENCE, NOT GUESSED. `push_back`
+// reaches insert(iterator, const T&), which reaches
+// insert(iterator, size_type, const T&), and retail stops at a DIFFERENT
+// depth per site - so an explicit spelling has to name the right one:
+//   * the three RANDOM_DWELLING arms and the SEER arm's mapObjectData site
+//     push THREE arguments -> insert(iterator, size_type, const T&);
+//   * the SEER arm's SeerHutList site and both QUEST_GUARD sites push TWO
+//     -> insert(iterator, const T&).
+// Getting this wrong still scores well, because objdiff pairs the two
+// overloads' relocations positionally - the three-argument spelling at the
+// two-argument sites reached 95.1950 and only the extra `push 1` at each
+// site was wrong - but it is a real byte difference and worth 1.7 points.
 //
-// THE STANDING HYPOTHESIS ABOVE IS DISPROVED (2026-08-20). It held that the
-// arm order would only settle once the TU was finished, because the other
-// bodies would add CALL SITES to these instantiations and a multi-site
-// inline function is costed differently from a single-site one. Measured
-// directly: a throwaway second growth site for vector<TQuestGuard> - a
-// resize plus a push_back in a second function of this TU - moved readObject
-// by exactly NOTHING, 42.6246 before and after. The /Ob2 budget is per
-// CALLER; how many other functions instantiate the same template does not
-// enter its decision. Do not re-derive it.
+// `end()` must be HOISTED out of every pin: the pragma is statement-granular
+// and would otherwise turn `end()` itself into a call retail does not have.
 //
-// What DID move it is the other half of that same budget rule, and it is
-// now applied: see readQuestGuardArm above. A helper small enough to be
-// budget-starved keeps the insert out of line, and being a single-call-site
-// static it is inlined back complete with that call. QUEST_GUARD alone is
-// worth 42.6246 -> 45.0977.
+// One more pin, and it is the same reading applied to a non-insert callee:
+// retail CALLS vector<TQuestGuard>::size (0x1066e0, 32 B) at the QUEST_GUARD
+// arm's `extraInfo = size() - 1`, immediately after the insert with
+// &QuestGuardList still live in esi. The SEER arm's size() is inlined on both
+// sides; do not pin that one.
 //
-// Still open, and the whole of the remaining gap: id-218
-// (RANDOM_DWELLING_FACTION) at 574 bytes against retail's 149. The same
-// helper lever scores 33.0580 there - twelve points WORSE than leaving it -
-// because its two siblings at 155 and 140 already match and the three arms
-// are costed as a group. SEER (122 vs 120) cannot use the lever at all:
-// TSeerHut derives privately from TQuestGuard and friends only NewfullMap.
+// Kept from the old note because they still hold:
+//   * `#pragma inline_depth(2)` and `(1)` around the body are ignored under
+//     /O2 /Ob2, byte-identical at 42.5589. Only 0 bites.
+//   * giving each arm its own stream-read local instead of reusing one
+//     function-scope byte is retail's shape (42.5589 -> 42.6246).
+//   * the multi-site hypothesis is DISPROVED: a throwaway second growth site
+//     for vector<TQuestGuard> in another function of this TU moved readObject
+//     by exactly nothing. The /Ob2 budget is per CALLER.
+//   * the helper-starvation lever (readQuestGuardArm above) was worth
+//     42.6246 -> 45.0977 and is still in place, but it is no longer what
+//     keeps that arm's insert out of line - see its own note.
+//
+// Residual (96.9833%): register/home only. Retail spills three of the
+// arms' temporaries into the DEAD PARAMETER SLOT at [ebp+0x10] - the
+// `mapVersion` argument - where our compile gives each a fresh negative
+// local: the HERO_PLACEHOLDER record, the SEER arm's quest pointer and the
+// QUEST_GUARD arm's quest pointer all read `[ebp+0x10]` in retail and
+// `[ebp-N]` here. That is the B4 knob, and why-reg's model does not reach a
+// parameter slot from a body spelling.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
@@ -3631,7 +3700,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case SEER: {
         TSeerHut tempHut;
         tempHut.read(infile);
-        SeerHutList.push_back(tempHut);
+        {
+            std::vector<TSeerHut>::iterator hutEnd = SeerHutList.end();
+#pragma inline_depth(0)
+            SeerHutList.insert(hutEnd, tempHut);
+#pragma inline_depth()
+        }
         tempObject->extraInfo = SeerHutList.size() - 1;
         if (tempHut.quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
@@ -3733,7 +3807,13 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         dwelling.maxLevel = level;
 
         dwelling.object = tempObject;
-        randomDwellings.push_back(dwelling);
+        {
+            std::vector<RandomDwellingData>::iterator dwellingEnd
+                = randomDwellings.end();
+#pragma inline_depth(0)
+            randomDwellings.insert(dwellingEnd, 1, dwelling);
+#pragma inline_depth()
+        }
         break;
     }
 
@@ -3759,7 +3839,13 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         dwelling.maxLevel = maxLevel;
 
         dwelling.object = tempObject;
-        randomDwellings.push_back(dwelling);
+        {
+            std::vector<RandomDwellingData>::iterator dwellingEnd
+                = randomDwellings.end();
+#pragma inline_depth(0)
+            randomDwellings.insert(dwellingEnd, 1, dwelling);
+#pragma inline_depth()
+        }
         break;
     }
 
@@ -4145,15 +4231,29 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // from loadMapObjects': the index rebuild first, then the progress tick.
 // That is retail's order in each body, not a transcription slip.
 //
-// Residual (78.4070%): ONE branch over retail (base 35, target 34), and it is
-// not in the shared half - every construct this body has in common with the
-// now-exact loadMapObjects reproduces, including the CObjectType temp's six
-// sub-constructors (four bitset<48>::_Tidy plus the bitset<10> one), both
-// inlined resizes, the sprite save/refill/dispose, and the two-argument
-// vector<int>::insert the missing-mask collection reaches.  The extra branch
-// is somewhere in the reporting pass that loadMapObjects does not have -
-// either the missing-mask scan's shape or the sprintf/MessageBoxA block.
-// Not chased further this lane; the twin is the control to diff against.
+// Residual (78.4070%): ONE branch over retail (base 35, target 34) and one
+// extra cleanup region (EH transcript base [0,1,-1,2,-1,-1] against retail's
+// [0,1,-1,2,-1]).  Both are the SAME defect and it is now located, if not
+// closed (2026-08-20).
+//
+// The extra region is the SECOND `infile->Read(&count)`'s failure exit, at
+// fn+0x3d3.  Both sides destroy `oldSprites` there and both call
+// `operator delete`, but ours ALSO calls
+// `vector<CSprite*>::_Destroy(_First, _Last)` and stores `[ebp-4] = -1`
+// first, where retail (fn+0x3af) emits `push [ebp-0x34] / call operator
+// delete` and nothing else.  `_Destroy` over a pointer element is an empty
+// loop; retail EXPANDED it and VC6 deleted the loop, we keep the call.  That
+// is an A8/A9 under-inline - our caller is leaner than retail's - and no
+// statement pin reaches it, because a pin only ever removes expansions.
+//
+// The same alignment names one more real divergence, in the sprite refill:
+// retail's FIRST resize expands to exactly `size()/insert/size()/erase`,
+// four calls, while ours emits a fifth `size()` in FRONT of them for the
+// ARGUMENT.  Retail's `oldSprites.resize(...)` therefore does not pass
+// `sprites.size()`; the second resize, `sprites.resize(objectTypes.size())`,
+// agrees with retail at five calls including its argument.  What retail
+// passes instead is not yet identified - the twin loadMapObjects has no
+// counterpart to read it off.
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
@@ -4468,6 +4568,16 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // branches / 3 rets against retail's 32 / 4 - and predict-inline now has the
 // inline structure agreeing to within one call, so it is no longer an
 // inliner question.
+//
+// THAT ONE CALL IS NAMED (2026-08-20): the call-sequence alignment pairs
+// every relocation in this body except a single
+// `vector<TObjectCell>::size()` at fn+0x2d2 that retail does not emit.  It
+// comes from inside the inlined `insert`'s capacity path (`size() + ...`),
+// which retail expands and we call, so it is an A8/A9 under-inline on top of
+// the loop-shape difference and not a second wall.  Everything else -
+// operator new, the three `_Construct`s, both `_Ucopy`s and the `_Ufill` -
+// lines up one for one, which also confirms that retail EXPANDS this insert
+// exactly as we do: the readObject site-pin lever does not apply here.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)

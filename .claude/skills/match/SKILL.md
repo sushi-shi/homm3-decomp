@@ -447,6 +447,31 @@ byte-identical.
 `jg <head>` (`SummonElemental` 81.26 -> 93.38). A do/while scored 85.69. The
 same edit also splits an inlined destructor into retail's two copies.
 
+**A RESIDUAL NOTE IS A HYPOTHESIS, NOT A FACT — AND THEY DECAY.** Four
+separate times in one day a recorded note sent a lane the wrong way, and the
+notes were written in good faith by lanes that had measured something real:
+
+- **A conclusion can be right about the mechanism and wrong about the
+  verdict.** `Open`/`ShowRoute` were "model-refuting, no known lever" — true
+  of everything tried, all of which aimed at the BUDGET. The pin imposes the
+  refusal instead: 52.72 -> 97.80.
+- **A "TRIED AND REJECTED" measurement is CONTEXT-DEPENDENT.** The
+  PlaceObstacle pin was banked as "LOSES 5.89"; once an earlier inline
+  decision in the same body moved, the identical pin GAINED 10.9. **Re-try
+  rejected knobs after anything upstream in that body changes.**
+- **A note can name its own answer and walk past it.** `readHeroData`'s note
+  blamed `bitset<70>::_Xran` and declared the wall unreachable while naming
+  `basic_string::assign` in the same paragraph: +11.86 on one line.
+- **A note can be wrong about WHICH sites are involved.** `readObject`'s said
+  the wall was the FACTION arm "whose two siblings already match"; retail
+  calls `insert` at ALL THREE dwelling arms, so every attempt that pinned
+  FACTION alone lost because arm two was still expanding. **That misreading
+  cost three lanes** before someone re-counted. 45.10 -> 96.98 once all three
+  were pinned.
+
+Read the note for its EVIDENCE and re-derive its conclusion. Cite the bytes,
+not the prose.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)

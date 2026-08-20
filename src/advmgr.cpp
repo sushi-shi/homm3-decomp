@@ -2704,7 +2704,14 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         if (!cellPoint.is_valid())
             cell = fullMap->cellData;
         else
-            cell = fullMap->cell(cellPoint);
+            // LONGHAND, not `cell(cellPoint)`: retail expands the index
+            // arithmetic here (`imul Size` twice off the packed point's
+            // two words, at fn+0xef..+0x133) and leaves no relocation, so
+            // calling the member emits a call retail does not have. Same
+            // treatment DoAdvCommand's five is_valid()/cell() pairs get.
+            cell = &fullMap->cellData[
+                (cellPoint.z * fullMap->Size + cellPoint.y) * fullMap->Size
+                + cellPoint.x];
     }
 
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
@@ -3056,6 +3063,28 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero,
     NewmapCell* cell, const char* separator_1, const char* separator_2);
 
 // E:\gamedcs\advmgr.cpp:3146
+// 90.0426 -> 90.9026 (2026-08-20) on the explicit type_cell_adjuster
+// restore at the foot of the body - see the comment at that site for why
+// the obscure_cell/restore_cell census is exactly 2x ours and why the
+// first copy is a STATEMENT, not a scope exit.
+//
+// Residual (90.9026%): CROSS-JUMPING of the SET_VISITED_ROLLOVER /
+// APPEND_VISIT_TEXT macro bodies, in BOTH directions, plus one genuinely
+// missing sprintf. The call-sequence alignment (base 65 out-of-line calls
+// against retail's 66) localises it exactly, between anchors that resolve
+// identically on both sides:
+//   * the CREATURE_BANK..DERELICT_SHIP span: retail 3 sprintf, we 2;
+//   * the GetArmySizeName..SEER span: retail 5, we 4;
+//   * the TREE_OF_KNOWLEDGE..WITCH_HUT span: retail 4, we 5.
+// Net +1 for retail, which is the `_sprintf base x36 vs retail x37` row
+// predict-inline reports. The macro arms hold far more sprintf sites than
+// either side emits - our CL merges ten source sites down to six before
+// the first creature bank where retail merges them to nine - so the
+// per-span counts are a cross-jumping ledger, not a statement census, and
+// the two compiles simply pick different merge sets. The one remaining
+// non-cross-jump row is the QuestGuard string temporary: retail expands
+// basic_string::_Tidy there and calls operator delete, we call _Tidy,
+// which is an A8/A9 under-inline (budget), not a spelling.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3461,6 +3490,27 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 #undef SET_VISITED_ROLLOVER
 #undef APPEND_VISIT_TEXT
 
+    // type_cell_adjuster::restore_cell() (dc 0xc038), written longhand
+    // because retail inlines it everywhere and leaves no row of its own -
+    // the same reason ~type_cell_adjuster carries the body verbatim.
+    // Retail expands the three-slot sweep TWICE in this function: once
+    // here, ahead of the inlined DrawRolloverText, and once at the closing
+    // brace as the destructor (only that copy carries `mov [ebp-4],-1`).
+    if (adjuster.obscuring_hero) {
+        adjuster.obscuring_hero->obscure_cell(HERO,
+                                              adjuster.obscuring_hero->id);
+        adjuster.obscuring_hero = 0;
+    }
+    if (adjuster.obscuring_boat) {
+        adjuster.obscuring_boat->type_obscuring_object::obscure_cell(
+            BOAT, adjuster.obscuring_boat->id);
+        adjuster.obscuring_boat = 0;
+    }
+    if (adjuster.mobile_hero) {
+        adjuster.mobile_hero->restore_cell();
+        adjuster.mobile_hero = 0;
+    }
+
     DrawRolloverText(gText);
 }
 
@@ -3830,6 +3880,23 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // the boat-frame if/else; the ternary spelling of that increment keeps
 // the join and merged the sites, 78.80 -> 79.80 (the goto respellings
 // recorded earlier attacked the wrong pair).
+//
+// AND THE ONE REMAINING CALL-COUNT ROW IS NAMED (2026-08-20, not
+// closeable): retail emits 29 out-of-line calls to our 28, and the extra
+// one is at fn+0x596 with target 0x00404140 - a THREE-BYTE function the
+// delinker labels `sample_vslot03`. Reading the bytes around it settles
+// what it is: `mov edi,[gpAdvManager]+0x48 / mov ecx,[..+0x50] / mov
+// esi,[edi+4]` then a copy loop, then `push [edi+8] / push esi / mov
+// ecx,edi / call 0x404140` and `mov [edi+8],esi`. That is one INLINED
+// `vector<T>::erase(begin(), end())` whose `_Destroy(_First, _Last)` is
+// left as a CALL - and for a POD element `_Destroy` is an empty loop, so
+// the callee really is three bytes. Our compile inlines `_Destroy` away
+// and VC6 deletes the empty loop.
+// It is therefore the "inline the parent, call the child" shape, which
+// `inline_depth` cannot express: pinning the clear() statement would take
+// erase() out of line too, and retail expands that. Recorded so the next
+// lane does not spend a build on the over-inline knob predict-inline's
+// bucket suggests here.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -7109,10 +7176,32 @@ void advManager::TownQuickView(int townId, int x, int y,
             if ((thisTown->built & bitNumber[building])
                 && thisTown->is_legal_building(
                        building_id_from_int(building))) {
-                if (!first)
-                    text += ", ";
+                // Retail CALLS basic_string::append(const char*,
+                // size_type) at BOTH of this arm's appends - fn+0x349 for
+                // the separator and fn+0x371 for the name - with the
+                // strlen expanded in front of each as `repne scasb`, and
+                // our CL expanded the append too. `operator+=` reaches
+                // append(const char*) which reaches this two-argument one,
+                // so the site has to be spelled at the depth retail stops
+                // at before a statement pin can impose the call.
+                // MEASURED NEGATIVE, do not extend: the same treatment on
+                // the other seven `text += <literal>` sites in this block
+                // costs 90.9834 -> 73.8082. Retail calls append at THESE
+                // two and expands it at the rest.
+                if (!first) {
+                    const char* sep = ", ";
+                    size_t sepLen = strlen(sep);
+#pragma inline_depth(0)
+                    text.append(sep, sepLen);
+#pragma inline_depth()
+                }
                 first = 0;
-                text += GetBuildingName(thisTown->type, building);
+                const char* buildingName =
+                    GetBuildingName(thisTown->type, building);
+                size_t buildingNameLen = strlen(buildingName);
+#pragma inline_depth(0)
+                text.append(buildingName, buildingNameLen);
+#pragma inline_depth()
             }
         }
 
@@ -7580,7 +7669,11 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         if (!cellPoint.is_valid())
             heroCell = fullMap->cellData;
         else
-            heroCell = fullMap->cell(cellPoint);
+            // LONGHAND for the same reason as ProcessMapSelect's copy:
+            // retail expands the index arithmetic and emits no call.
+            heroCell = &fullMap->cellData[
+                (cellPoint.z * fullMap->Size + cellPoint.y) * fullMap->Size
+                + cellPoint.x];
     }
 
     if (!waitingPlayer) {

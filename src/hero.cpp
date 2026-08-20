@@ -2209,6 +2209,29 @@ TSecondarySkill get_skill_award(const hero* current_hero,
 // hero::GetLevel is deliberately left as a pointer walk - it already
 // emits retail's signed `jle`, so the pointer-compare rule does not
 // apply and respelling would risk the now-exact GiveExperience.
+//
+// THE AI_choose_secondary_skill x1-vs-x4 IS OUR CROSS-JUMP, and the bytes
+// name the mechanism (2026-08-20). Retail keeps `call
+// AI_choose_secondary_skill / push eax` inside each of the four arms and
+// merges only at the shared `mov ecx,ebx / call GiveSS`; the arms are at
+// fn+0x533, +0x547, +0x5b7 and +0x5cb. Our CL merges one step earlier, at
+// the AI_choose call itself, so the four arms become four two-push stubs
+// jumping into one call site.
+// What DIFFERS between retail's arms - and is presumably why its
+// cross-jumper declined - is the SCHEDULE, not the content: the true arms
+// materialise the constant into EAX and push it twice
+// (`mov eax,1 / mov edx,esi / push eax / push eax / push edi`), sharing
+// one register between GiveSS's second argument and complex_choice, while
+// the false arms push the 1 as an immediate and take the 0 from
+// `xor eax,eax`. That puts `mov edx,<second>` in FRONT of the pushes in
+// the true arms and AFTER them in the false arms, so no two arm tails are
+// identical. Ours pushes two immediates in every arm and schedules
+// `mov edx,<second>` identically, which is exactly what a cross-jumper
+// wants.
+// MEASURED NEGATIVE, do not retry: binding the flag to an
+// `unsigned char complexChoice` local in each of the four arms, to chase
+// that shared-register materialisation, is BYTE-FLAT on this row (83.4342
+// either way) and costs hero 92.1826 -> 92.1392 fuzzy elsewhere.
 VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::CheckLevel()
 {
@@ -3892,6 +3915,19 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // is cross-jumping the identical right-click help arms and retail is not.
 // Read that before assuming any arm is missing - it is the same
 // cross-jumping defect as the three counts above, at a larger scale.
+//
+// ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
+// MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
+// the status code as the constant the arm already knows: both emit
+// `mov [gHeroScreenArmySlot],edi / call HeroFn_004D97F0 / mov
+// eax,[gHeroScreenArmySlot] / cmp eax,-1 / jne push 6 / push 5` in front
+// of ONE heroWindowManager::BroadcastMessage(0x200, .., 0x7f, 0x4008), at
+// fn+0x6e8 and fn+0x7dc - i.e. it RE-READS the global after the call and
+// selects WIDGET_CLEAR_STATUS(6) / WIDGET_SET_STATUS(5) at run time. The
+// values our two arms pass as constants agree with what that select
+// produces, so this is a spelling and not a polarity error. Writing it as
+// the ternary in both arms costs 74.4733 -> 74.2419, so the select alone
+// does not pay: the rest of those two blocks has to converge with it.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -5982,6 +6018,35 @@ void hero::GiveResource(int whichRes, int howMuch)
 // the two Hourglass tests (71.67) - the `||` spelling is what gives
 // retail's ONE shared return-0 block, which is the D-lever the match
 // doctrine predicts for a sunk shared exit.
+//
+// AND THE FINAL CLAMP IS AN OUT-OF-LINE CALL IN RETAIL (identified
+// 2026-08-20, not spelled here). The call-sequence alignment says retail
+// emits TEN calls in this body and we emit nine; the extra one is at
+// fn+0x2d9 and its target is 0x004e6750, a 33-byte function the delinker
+// currently labels `THeroScreenWindow_scalar_deleting_destructor` off a
+// vtable sample. It is not a destructor. Decoded:
+//     f(ecx = const int& lo, edx = const int& value,
+//       [ebp+8] = const int& hi)
+//     eax = *lo; esi = *value;
+//     if (esi < eax)            return lo;
+//     eax = hi; if (*hi < esi)  return hi;
+//     return value;                                    // ret 4
+// which is `_cpp_min(_cpp_max(value, lo), hi)` with the arguments in
+// (lo, value, hi) order, returning a REFERENCE - retail derefs the result
+// with `mov eax,[eax]`. It materialises the two bounds into the DEAD
+// PARAMETER SLOTS (`mov [ebp+8],-3`, `mov [ebp+0xc],3` - the otherHero and
+// on_cursed_ground homes) and `luck` into [ebp+0x10].
+//
+// 0x004e6750 sits IMMEDIATELY AFTER std::bitset<70>::set (0x004e66f0,
+// 0x60) in this compiland's STL-COMDAT run, so it is a header inline
+// emitted as a COMDAT rather than a member: a three-const-reference
+// clamp helper whose two library calls VC6 inlined into it. Spelling it
+// needs that helper declared in a header, a VA claim on 0x004e6750 (the
+// h3_stl_comdat_anchor pattern this file already uses for five such rows)
+// and `#pragma inline_depth(0)` at the site so VC6 calls the COMDAT
+// instead of expanding it. Left undone deliberately: it is a modelling
+// decision about a shared header helper, not a GetLuck spelling, and the
+// helper almost certainly has callers outside this TU.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
 int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                   unsigned char apply_limits)
