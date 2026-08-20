@@ -12,5 +12,8 @@
 // CODEVIEW(E:\gamedcs\initialize.cpp:565, dc 0xdc4a4) void create_requirement_masks(const int* town_buildings, __int64* requirements, __int64* legal_buildings);
 // CODEVIEW(E:\gamedcs\initialize.cpp:594, dc 0xdc534) void create_building_masks();
 // CODEVIEW(E:\gamedcs\initialize.cpp:625, dc 0xdc614) void initialize_game_data();
+// 0x4eb730, and game::game (0x4cdf20) calls it once, between the
+// globalInfoFlags/cartographer band and the rumourState sweep.
+void initialize_game_data();
 
 #endif  /* HOMM3_INITIALIZE_H */

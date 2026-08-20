@@ -29,6 +29,7 @@
 // two groups above.
 #include "advmgr_objects.h"
 #include "advmgr.h"
+#include "initialize.h"
 #include "terrain.h"
 #include <stdio.h>
 #include <string.h>
@@ -5518,6 +5519,49 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
 game::game()
 {
+    difficultyRating = 0;
+    field_1f4d4 = 0;
+    memset(saveFileName, 0, sizeof(saveFileName));
+    memset(&setup, 0, sizeof(setup));
+    memset(playerDisabled, 0, sizeof(playerDisabled));
+    field_1f63e = 0;
+    field_1f640 = 0;
+    field_1f642 = 0;
+    memset(heroAvailability, -1, sizeof(heroAvailability));
+    // MISSING STATEMENT, LEFT OUT DELIBERATELY AND NOT SILENTLY. Retail
+    // fills heroPoolMap here - `mov ecx,0x9c / mov eax,0xff /
+    // lea edi,[esi+0x4dfb4] / rep stosd`, i.e. 156 dwords of 0x000000ff,
+    // which is `heroPoolMap[i].set()` over the whole array. Our CL will
+    // not lower a fill over an array of CLASS type into `rep stos`: it
+    // strength-reduces to a pointer walk (`mov [eax],0xff / add eax,4 /
+    // dec ecx / jne`), and the extra conditional branch takes the branch
+    // count to 3 against retail's 2, which cascades through the scorer -
+    // `heroPoolMap[i].set()` measures 28.2094 and `heroPoolMap[i] = 0xff`
+    // (which also builds a bitset temporary) 6.8614, against 84.2891
+    // with the statement absent. Restoring it needs a spelling that
+    // reaches `rep stosd`, not a re-measurement of these two.
+    memset(artifactUsed, 0, sizeof(artifactUsed));
+    memset(artifactDisabled, 0, sizeof(artifactDisabled));
+    memset(obeliskFlags, 0, sizeof(obeliskFlags));
+    ultimateArtifactX = -1;
+    ultimateArtifactY = -1;
+    ultimateArtifactZ = -1;
+    field_1f695 = 0x7f;
+    ultimateArtifactPresent = 0;
+    f_1f698 = 0;
+    field_1f69c = 0;
+    memset(currentRumour, 0, sizeof(currentRumour));
+    field_4e3e8 = 0;
+    memset(globalInfoFlags, 0, sizeof(globalInfoFlags));
+    memset(borderTentVisitFlags, 0, sizeof(borderTentVisitFlags));
+    cartographerMask[0] = 0x100;
+    cartographerMask[1] = 0xbf;
+    cartographerMask[2] = 0x40;
+    memset(cartographerFlags, 0, sizeof(cartographerFlags));
+    initialize_game_data();
+    memset(rumourState, 0, sizeof(rumourState));
+    field_1f69d = 0;
+    field_90 = 0;
 }
 
 #if 0  // @carcass
