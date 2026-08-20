@@ -1726,6 +1726,19 @@ TSecondarySkill get_skill_award(const hero* current_hero,
 // The inner braces in the third arm are load-bearing: that window's
 // destructor runs BEFORE the dialogReturn chain, where the second arm's
 // GiveSS runs INSIDE its window's lifetime.
+//
+// Residual (83.4%): closed from 46.28 by pinning hero::GiveSS with
+// `#pragma auto_inline(off)` - `predict-inline` named it the sole
+// OVER-inline, expanded at all six sites here where retail keeps a real
+// call at the two that survive cross-jumping, worth 23 conditional
+// branches. Tried and rejected since, one compile each: the campaign
+// gate's third operand bound to an `unsigned char` local to chase
+// retail's `sete dl` (81.23, WORSE - the branch-kind report names the
+// symptom, not the lever, exactly as it did on UpdateStats); and
+// `Random(1, chances[1] + chances[0])` for the load order (byte-flat).
+// hero::GetLevel is deliberately left as a pointer walk - it already
+// emits retail's signed `jle`, so the pointer-compare rule does not
+// apply and respelling would risk the now-exact GiveExperience.
 VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::CheckLevel()
 {
