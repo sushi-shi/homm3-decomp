@@ -993,6 +993,7 @@ hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	44.9281	44.9281	44.9281	0xe2840
 hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	100.0000	100.0000	100.0000	0xe4ec0
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0
 hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990
+hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0
@@ -1058,7 +1059,6 @@ hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
-hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
