@@ -4319,7 +4319,7 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // it is worth keeping: the same experiment on csprite.h a function earlier
 // was also flat, so mapcell.obj tolerates both.
 //
-// Residual (61.5553%): the OVERLAP SCAN's loop shape, and it is a
+// Residual (65.1777%): the OVERLAP SCAN's loop shape, and it is a
 // strength-reduction difference rather than a spelling one.  Retail
 // recomputes `(z*Size + y)*Size + x` and its 38-byte scale on every inner
 // iteration, holding only Size and cellData in the inner loop's preheader;
@@ -4333,9 +4333,22 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // the way: computing `thisCell->objects.end()` BEFORE the GenerateHeightMap
 // call rather than after is worth 0.3 points (61.2480 -> 61.5553) and is
 // retail's order - it reclaims the first parameter slot for `&objects` the
-// way retail does.  NOT yet tried, and the next thing to try: giving the
-// scan its own `worldMap` reference so the geometry loads land where retail
-// puts them.
+// way retail does.
+//
+// The `worldMap` reference this note used to list as the next thing to try
+// IS worth it: 61.5553 -> 65.1777. But ONLY declared inside the INNERMOST
+// loop, which is this tree's don't-cache-what-retail-reloads rule stated in
+// reverse - a reference declared there is not a cache, it is a fresh reload
+// every iteration, and that is exactly what retail's
+// `mov esi,[edx+0x1fc44] / mov edx,[edx+0x1fc40]` per inner iteration is.
+// Lifting the SAME declaration one level out, to just above the x loop,
+// hands VC6 the hoist straight back and returns the row to 61.5553.
+// Measured both ways.
+//
+// What is left is the strength reduction itself and the exit count - base 30
+// branches / 3 rets against retail's 32 / 4 - and predict-inline now has the
+// inline structure agreeing to within one call, so it is no longer an
+// inliner question.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
@@ -4381,9 +4394,9 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
 
             for (int x = overlap.left; x < overlap.right; ++x) {
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
-                    NewmapCell* cell = &gpGame->worldMap.cellData[
-                        (newObject->z * gpGame->worldMap.Size + y)
-                            * gpGame->worldMap.Size
+                    NewfullMap& worldMap = gpGame->worldMap;
+                    NewmapCell* cell = &worldMap.cellData[
+                        (newObject->z * worldMap.Size + y) * worldMap.Size
                         + x];
                     std::vector<NewmapCell::TObjectCell>::iterator scan
                         = cell->objects.begin();

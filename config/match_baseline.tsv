@@ -1377,7 +1377,7 @@ mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	72.9210	72.9210	72.9210	0xf
 mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	88.6918	88.6918	88.6918	0xfdf40
 mapcell	?Save@TTimedEvent@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc440
 mapcell	?SetCellVisited@ExtraInfoUnion@@QAEXF@Z	100.0000	100.0000	100.0000	0xfbf90
-mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	61.5553	61.5553	61.5553	0x105230
+mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	65.1779	65.1779	65.1779	0x105230
 mapcell	?calc_cell_extra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	100.0000	100.0000	100.0000	0x105610
 mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
