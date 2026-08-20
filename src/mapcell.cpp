@@ -2843,6 +2843,32 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // memcpy rather than a cast, which is this tree's own idiom for the
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
+//
+// Residual (69.8688%): an INLINER wall, and the arithmetic identifies it
+// exactly. predict-inline reports base 21 out-of-line calls against retail's
+// 13, and the whole difference is `std::bitset<70>::_Xran`: retail CALLS it
+// once per range check - the body the unwind symbol
+// `game_invalid_bitset_n_positio_1021c0_unwind02` names - where our CL
+// expands the entire `throw out_of_range("invalid bitset<N> position")` in
+// place: assign(const char*,size_t), the exception constructor, _Tidy,
+// assign(const string&,size_t,size_t) and _CxxThrowException, five calls
+// apiece. Two sites, five-for-one, and 21 - 13 = 8 exactly.
+//
+// It is NOT the bitset<48> case this same file already gets right -
+// readObjectType CALLS bitset<48>::_Xran (0x41b410) and is exact. The
+// instantiations differ, and retail's own readTownData is split down the
+// middle, one of its two bitset<70> checks a call and the other expanded,
+// which is what a per-caller /Ob2 budget spent SEQUENTIALLY looks like
+// rather than a per-callee decision.
+//
+// Tried, and each kept for a fraction of a point without touching the wall:
+// spelling the name store as an explicit three-argument
+// `assign(temp, 0, npos)` through a named temporary (69.1834 -> 69.4400 -
+// and retail does CALL that same three-argument assign where we expand it,
+// a second site of this very class), and writing both spell-mask writes as
+// `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688). No source
+// spelling reached the _Xran decision, and `#pragma auto_inline(off)` cannot
+// reach it either: the callee is a library template this TU never defines.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
@@ -3048,7 +3074,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
         infile->Read(&customNameFlag, sizeof(customNameFlag));
         if (customNameFlag) {
             hero_data->customName = 1;
-            hero_data->name = ReadLengthPrefixedString(infile);
+            std::string heroName = ReadLengthPrefixedString(infile);
+            hero_data->name.assign(heroName, 0, std::string::npos);
         }
 
         char sexByte;
@@ -3066,7 +3093,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 std::bitset<70> noSpells;
                 hero_data->spells = noSpells;
                 if (spell != -1)
-                    hero_data->spells.set(spell);
+                    hero_data->spells[spell] = 1;
             }
         } else {
             char spellsFlag;
@@ -3076,8 +3103,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 unsigned char spellMask[9];
                 infile->Read(spellMask, sizeof(spellMask));
                 for (int i = 0; i < 70; ++i) {
-                    hero_data->spells.set(
-                        i, (spellMask[i / 8] & (1 << (i % 8))) != 0);
+                    hero_data->spells[i] =
+                        (spellMask[i / 8] & (1 << (i % 8))) != 0;
                 }
             }
 
