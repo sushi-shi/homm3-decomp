@@ -1175,12 +1175,35 @@ void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
 // `(twidth + 799) / twidth` by `(theight + 599) / theight` copies, each
 // clipped against what is left of the row or column. The 599 against a
 // 556-pixel clip is retail's own inconsistency; transcribed.
+//
+// 88.72 -> 93.90, 2026-08-20 (cold-combatpath lane), three edits:
+//   * bDamageDone's zero moved AFTER the memset (+0.95): retail stores
+//     it from AL, sharing the memset expansion's xor eax,eax; written
+//     before the memset it is an immediate store.
+//   * iMaxFrames spelled if/else, not ternary (+1.34): retail assigns
+//     each arm straight into ESI where the ternary funnels through EAX
+//     (the DoBolt lever again).
+//   * the tile clips spelled `if (sh > 556 - dy) sh = 556 - dy;` (and
+//     800 - dx), with NO named remaining counters (+2.89): retail's
+//     `neg` runs are VC6 strength-reducing the inline subtraction onto
+//     a negated induction variable, which a named `remainingY -=
+//     theight` local never produces.
+// Residual (93.90%): the ComputeSpellDamage expansion's argument
+// scheduling - retail pushes 0/target/controller straight after
+// get_controller returns and computes the damage operand LAST, where
+// our CL hoists the akSpellTraits loads and the power_factor imul above
+// the pushes - plus the register renames cascading from it. why-reg v2:
+// bindings agree at every first def, so it is not the B1 minimum slice;
+// no creation-order edit is proposed. Scheduling verdicts are
+// provisional; if this reopens, look for a missing source element in
+// the damage argument first.
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::Armageddon(int level, int power)
 {
     const SSpellTraits* spell_traits = &akSpellTraits[SPELL_ARMAGEDDON];
-    unsigned char bDamageDone = 0;
+    unsigned char bDamageDone;
     memset(effected, 0, sizeof(effected));
+    bDamageDone = 0;
 
     { for (int side = 0; side < 2; side++) {
         { for (int i = 0; i < numArmies[side]; i++) {
@@ -1200,7 +1223,11 @@ void combatManager::Armageddon(int level, int power)
 
     if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
         LoadSpellEffect(spell_traits->m_effect);
-        long iMaxFrames = powSprite ? powSprite->GetNumFrames(0) : 0;
+        long iMaxFrames;
+        if (powSprite)
+            iMaxFrames = powSprite->GetNumFrames(0);
+        else
+            iMaxFrames = 0;
 
         // Every stack the spell landed on drops into its wince or its
         // death sequence, and the animation runs for however many frames
@@ -1255,17 +1282,15 @@ void combatManager::Armageddon(int level, int power)
             DrawFrame(0, 0, 0, 100, 1, 1);
             if (powSprite && frame < powSprite->GetNumFrames(0)) {
                 long dy = 0;
-                long remainingY = 556;
                 { for (int ty = 0; ty < ytiles; ty++) {
                     long sh = theight;
-                    if (sh > remainingY)
-                        sh = remainingY;
+                    if (sh > 556 - dy)
+                        sh = 556 - dy;
                     long dx = 0;
-                    long remainingX = 800;
                     { for (int tx = 0; tx < xtiles; tx++) {
                         long sw = twidth;
-                        if (sw > remainingX)
-                            sw = remainingX;
+                        if (sw > 800 - dx)
+                            sw = 800 - dx;
                         powSprite->Draw(0, frame, 0, 0, sw, sh,
                                         gpWindowManager->screenBitmap->map,
                                         dx, dy,
@@ -1274,10 +1299,8 @@ void combatManager::Armageddon(int level, int power)
                                         gpWindowManager->screenBitmap->Pitch,
                                         0, 0);
                         dx += twidth;
-                        remainingX -= twidth;
                     } }
                     dy += theight;
-                    remainingY -= theight;
                 } }
             }
             UpdateCombatArea();
