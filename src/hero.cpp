@@ -4064,6 +4064,16 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
 // source spelling of an arm can reach a decision made over all of them.
 //
+// THE C2 GENERATION IS NOW RULED OUT TOO (2026-08-20): `homm3 vc6 ab run`
+// on this function - the first Track R run outside the original corpus -
+// reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
+// sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
+// merge-set flip is generational at all, it is the FRONT END: retail's
+// Rich header carries 26 RTM-stamped C++ objects, hero.obj is a
+// candidate, and rtm-generation.md Â§4 already names the C1XX+C2 overlay
+// as the one unexplored generation lever - staged, hash-recorded, NOT
+// admitted; running it is a separate decision, not a lane action.
+//
 // ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
 // MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
 // the status code as the constant the arm already knows: both emit
