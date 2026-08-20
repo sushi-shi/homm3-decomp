@@ -82,6 +82,19 @@ the D-knobs (goto ↔ while ↔ `for(;;)+break`, split-if vs `||`/`&&` vs
 merged-return block placement, switch case-emission order, ternary-vs-if, bool
 materialization). `homm3 sema diff <addr> --branches` is the raw structural signal.
 
+### THE SOLVERS RANK ON DISTANCE, THE LEDGER RANKS ON FUZZY — RE-MEASURE
+Every solver here scores candidates on its own distance metric (register-slot
+disagreements, branch-shape disagreements). That metric is a PROXY and it can
+rank OPPOSITE to the number the ratchet banks. Measured 2026-08-20: why-reg's
+top-ranked pick on cmbtmgr's `ShootAnimatedMissile` improved register distance
+by 20 slots and LOST 0.46 fuzzy. A why-branch pick on the same lane's tree
+improved branch distance and moved fuzzy not at all.
+
+So treat a solver's "improved" column as a HYPOTHESIS ORDERING, never as a
+result: apply the edit, run the real build, and keep it only if FUZZY rose.
+The solvers are still worth running first — a why-branch mutation closed
+readGarrisonData outright — but the verdict is always the ratchet's.
+
 ### register walls — use the model (v2)
 `homm3 vc6 why-reg <src> --fn F --against <unit:F> --model`. The allocator is RE'd
 (`docs/vc6/regalloc.md`): one preference order **EAX ECX EDX ESI EDI EBX EBP**,
