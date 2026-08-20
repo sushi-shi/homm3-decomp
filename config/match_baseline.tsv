@@ -1526,6 +1526,7 @@ scenarioinfo	??_GCScenarioInfoDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1697d0
 scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x1698a0
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	86.3333	86.3333	86.3333	0x16a0d0
+seerhut	??0TQuestGuard@@QAE@XZ	100.0000	100.0000	100.0000	0x172b50
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580
 seerhut	?DoProgressDialog@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171fc0
 seerhut	?DoProgressDialog@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1725b0
@@ -1570,6 +1571,7 @@ seerhut	?LoadFromMap@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	10
 seerhut	?LoadFromMap@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171bb0
 seerhut	?LoadFromMap@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16de90
 seerhut	?NotifyHeroDefeated@type_defeat_hero_quest@@UAEXHH@Z	100.0000	100.0000	100.0000	0x16e550
+seerhut	?QuestGuardFn_00572D60@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172d60
 seerhut	?QuestGuardFn_00572E40@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x172e40
 seerhut	?QuestGuardFn_00573040@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x173040
 seerhut	?Save@type_artifact_quest@@UAEXPAVTAbstractFile@@@Z	99.0079	99.0079	99.0079	0x1700a0
@@ -1604,6 +1606,8 @@ seerhut	?quest_type@type_be_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x1721
 seerhut	?quest_type@type_belong_to_player_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x172810
 seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16e3d0
 seerhut	?quest_type@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0
+seerhut	?read@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	96.2963	96.2963	96.2963	0x1734e0
+seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	97.5111	97.5111	97.5111	0x173520
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
