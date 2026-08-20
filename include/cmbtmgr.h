@@ -249,6 +249,32 @@ struct type_obstacle_shape {
 // past the real army boundary and its field offsets were 0x50 short -
 // objdiff's immediate masking hid the error as the old 99.9 residual
 // on ResetHitByCreature.)
+// The pending-order CODES combatManager::field_3c carries. All three
+// rungs below are byte-witnessed, and the two writers corroborate each
+// other:
+//   - army::berserk_attack (0x4222c0) stores 6 on BOTH of its melee
+//     paths and 12 on the path where it gives up, and it is also the
+//     writer that fills the (field_40, field_44) pair the field_40
+//     comment describes as "(where I go, what I hit)" - so 6 is the
+//     move-and-strike order;
+//   - army::GoBerserk (0x4456d0) stores 7 on the branch it takes for a
+//     ballista, an arrow tower or a stack with shots left, writing only
+//     field_44, and 12 when the target list comes back empty.
+// ai_tactical's consider_teleport (0x43aa60) reads the pair back and
+// accepts a teleport only while the code is 6, which is the third
+// witness for that rung.
+// The SPELLINGS are behaviour-derived and provisional - no roster or
+// string reaches this domain, exactly as the three field names it
+// describes are address ordinals. Behind a view because cmbtmgr.h
+// reaches most of the combat tree.
+#ifdef HOMM3_CMBTMGR_AI_ORDER_DECL
+enum EAIOrder {
+    AI_ORDER_MOVE_AND_ATTACK = 6,
+    AI_ORDER_SHOOT = 7,
+    AI_ORDER_NONE = 12
+};
+#endif
+
 class combatManager : public baseManager {
 public:
     // Retail obstacle-catalogue prefix. PlaceAllObstacles reads the two

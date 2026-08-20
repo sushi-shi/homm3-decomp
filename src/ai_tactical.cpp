@@ -12,6 +12,10 @@
 // literal 0x36 into SpellCastWorkChance - so it needs the enumerator
 // armygrp.h already carries behind this view for cmbtmgr.cpp.
 #define HOMM3_SPELL_SLOW_DECL
+// consider_teleport pushes the literal 0x3f into SpellCastWorks, and
+// reads combatManager's pending-order code back as a domain member.
+#define HOMM3_SPELL_TELEPORT_DECL
+#define HOMM3_CMBTMGR_AI_ORDER_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -2718,12 +2722,112 @@ void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long g
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2553
+// Teleport is priced by SIMULATION, not by a formula: for each of our
+// walkers that the spell would actually land on, ask
+// choose_melee_action what the stack is worth staying put (melee_only
+// 0) and what it would be worth allowed to relocate (melee_only 1), and
+// take the difference. The two calls leave combatManager's scratch
+// answer behind, which is why the body then reads field_3c / field_40 /
+// field_44 rather than anything it computed itself: 6 is the action
+// code that means "move there", field_44 is the hex chosen, and
+// field_40 is what lands in choice->field_18.
+//
+// Those calls also PERTURB the AI target state for both sides, so the
+// body latches a flag the first time it commits to one and re-runs
+// combatManager::find_AI_targets for group 0 and 1 on the way out. The
+// flag is set before the first choose_melee_action, not after the
+// choice is taken - the damage is done by asking, not by accepting.
+//
+// The trailing choice->field_20 block is the same inlined
+// is_last_action test consider_sacrifice carries, with the acting-stack
+// comparison widened by this stack's own disabled triple. Note the two
+// are NOT the same helper: this one gates on the stack's disabled
+// triple, consider_sacrifice's on `field_1c` and the HEALED stack -
+// which is why neither can be factored into a shared function without
+// putting a body in the image retail does not carry.
+//
+// Residual (95.5%): the `last` flag is MEMORY-HOMED on our side and
+// register-merged on retail's. Retail sets EAX to 1 at the loop exit,
+// jumps a cold `xor eax,eax` block in from the end of the function for
+// the break path, and stores AL to choice->field_20 ONCE; our CL gives
+// the flag a stack slot, stores 0 into it on the break path and reloads
+// it at the merge - four instructions and a `jmp` more. Everything else
+// in the body agrees, including both choose_melee_action calls, the
+// field_3c/40/44 reads and the find_AI_targets tail.
+// Tried and rejected: `unsigned char last` instead of `long last`
+// (95.5371 vs 95.5486 - the full-word local is marginally closer but
+// still homed). A shared static helper would give retail's
+// two-paths-merge-in-EAX shape, but the two call sites test different
+// conditions, so there is no single helper to write.
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
 {
-    // @stub
+    unsigned char moved = 0;
+    const army* our_army = gpCombatManager->armies[side];
+    long count = gpCombatManager->numArmies[side];
+    for (; count-- > 0; ++our_army) {
+        unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        unsigned char no_target = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+        if (no_target & 1)
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->SpellCastWorks(SPELL_TELEPORT, side, our_army, 1,
+                                             creature_cast))
+            continue;
+        if (our_army->can_shoot(0))
+            continue;
+        moved = 1;
+        long before = gpCombatManager->choose_melee_action(our_army, 0, 0, side);
+        long gain = gpCombatManager->choose_melee_action(our_army, 1, 0, side)
+                    - before;
+        if (gpCombatManager->field_3c != AI_ORDER_MOVE_AND_ATTACK)
+            continue;
+        if (gpCombatManager->field_44 == our_army->gridIndex)
+            continue;
+        if (gain <= choice->value)
+            continue;
+        choice->value = gain;
+        choice->target = our_army->gridIndex;
+        choice->field_18 = gpCombatManager->field_40;
+        long last = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (our_army != current && !our_army->disabled_290
+                && !our_army->disabled_2b0 && !our_army->disabled_2c0) {
+            long total = gpCombatManager->numArmies[side];
+            for (long j = 0; j < total; j++) {
+                const army* other = &gpCombatManager->armies[side][j];
+                if (other->creatureId & 0x200040)
+                    continue;
+                if (other->disabled_290)
+                    continue;
+                if (other->disabled_2b0)
+                    continue;
+                if (other->disabled_2c0)
+                    continue;
+                unsigned char idle = static_cast<unsigned char>(static_cast<unsigned>(other->creatureId) >> 26);
+                if (idle & 1)
+                    continue;
+                if (other != current) {
+                    last = 0;
+                    break;
+                }
+            }
+        }
+        choice->field_20 = static_cast<unsigned char>(last);
+    }
+    if (moved) {
+        for (long group = 0; group < 2; group++)
+            gpCombatManager->find_AI_targets(group, 0, 0, &params, 0);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2608
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
