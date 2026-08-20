@@ -129,6 +129,16 @@ static int ControllingSide(const army* stack)
     return stack->combatSide;
 }
 
+// Retail .bss 0x6a3cac, and every reference to it in the image is inside
+// spells.obj - two in the 0x59ec50 body that drives a cast and one in
+// SpellTargetMessage - so it is a file-scope static of this TU. Name
+// provisional, from the one modelled consumer: with the byte set,
+// SpellTargetMessage's Teleport arm stops naming the stack under the
+// cursor and prints the fixed row instead, which is the second click of
+// a two-click cast. No DC row carries it.
+DATA(0x006a3cac)
+static unsigned char gTeleportSourcePicked;
+
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:97
@@ -1581,14 +1591,95 @@ unsigned char combatManager::SpellCastWorks(SpellID spell, long side,
     return Random(1, 100) <= chance;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5674
+// The spell cursor's rollover line: what would this cast hit if it
+// landed here. Eleven of the fifty-three ids in the 0xc..0x40 window get
+// their own answer and everything else names the stack standing on the
+// hex; the byte/jump table pair at +0x288/+0x26c is what enumerates them,
+// and its TOP entry is what proves SPELL_REMOVE_OBSTACLE 0x40.
+//
+// THE CELL POINTER IS HOISTED ABOVE THE DISPATCH, which is the lever this
+// TU is now three-for-three on: retail computes `&cells[targetIndex]`
+// into EDI before the range test that guards the switch and keeps it
+// there across every arm, including the two that never read it. Spelled
+// at the point of use, VC6 sinks the multiply into each arm.
+//
+// `target = 0` in the area-spell arm is what the jump table's own entry
+// argues for. That arm's answer is the same "spell name alone" line the
+// no-stack path below prints, and the table sends it not to the top of
+// that block but three bytes INTO it, past the `mov ecx, [ebp+8]` -
+// because at the dispatch ECX already holds spellId, and VC6 threaded
+// the folded `if (target)` straight to the else-block's second
+// instruction. A spelled-out sprintf in the arm would have tail-merged
+// to the block's ENTRY instead, so the fold is the reading the bytes
+// prefer.
 VA(0x005a8690, 0x2BD)  // order-map+arity, dc 0x1578b4
-void combatManager::SpellTargetMessage(int spellId, int targetIndex, unsigned char first_target)
+void combatManager::SpellTargetMessage(SpellID spellId, int targetIndex,
+                                       unsigned char first_target)
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+
+    hexcell* cell = &cells[targetIndex];
+    army* target;
+    switch (spellId) {
+    case SPELL_SACRIFICE:
+        // Both halves name a stack with no null check at all - the
+        // creature-name ladder reads +0x34/+0x4c straight off the
+        // returned pointer - so each result lands in the variable and is
+        // dereferenced, exactly as retail does it.
+        if (first_target) {
+            target = find_resurrection_target(currentSide, targetIndex, 0);
+            sprintf(gText, gpGeneralText->GetText(549),
+                    CreatureName(target->creatureType, target->numTroops));
+        } else {
+            target = cell->get_army();
+            sprintf(gText, gpGeneralText->GetText(550),
+                    CreatureName(target->creatureType, target->numTroops));
+        }
+        combatWindow->combat_message(gText, 0, 0);
+        return;
+    case SPELL_TELEPORT:
+        // The destination half of the two-click teleport: once a source
+        // stack is latched the rollover stops naming stacks and prints
+        // the fixed "pick a destination" row instead.
+        if (gTeleportSourcePicked) {
+            combatWindow->combat_message(gpGeneralText->GetText(26), 0, 0);
+            return;
+        }
+        target = cell->get_army();
+        break;
+    case SPELL_REMOVE_OBSTACLE:
+        strcpy(gText, gpGeneralText->GetText(551));
+        combatWindow->combat_message(gText, 0, 0);
+        return;
+    case SPELL_RESURRECTION:
+        target = find_resurrection_target(currentSide, targetIndex, 0);
+        break;
+    case SPELL_ANIMATE_DEAD:
+        target = find_animate_dead_target(currentSide, targetIndex);
+        break;
+    case SPELL_FORCE_FIELD:
+    case SPELL_FIRE_WALL:
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+        target = 0;
+        break;
+    default:
+        target = cell->get_army();
+        break;
+    }
+
+    if (target)
+        sprintf(gText, gpGeneralText->GetText(28), akSpellTraits[spellId].name,
+                CreatureName(target->creatureType, target->numTroops));
+    else
+        sprintf(gText, gpGeneralText->GetText(27), akSpellTraits[spellId].name);
+    combatWindow->combat_message(gText, 0, 0);
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:5749
 VA(0x005a8950, 0x999)  // order-map+arity, dc 0x157ae4
