@@ -42,6 +42,13 @@ int __fastcall loadString(TAbstractFile* infile, std::string* value);
 // Map-format strings use a 32-bit length and live in the later game.cpp
 // helper at 0x4c6010 (distinct from saved-game loadString's short length).
 int __fastcall readMapString(TAbstractFile* infile, std::string* value);
+// 0x4ba1c0, 80 B, in a compiland this tree has not admitted. One stream byte
+// masked to 0xff, -1 for the 0xff sentinel, and on the oldest map format two
+// campaign ids remapped (0x80 -> 0x92, 0x81 -> 0x9c) - which is what makes
+// the second argument the map version rather than anything of the file's.
+// Reached from readHeroData; the NAME is invented from that role, on
+// readMapString's own precedent.
+int __fastcall ReadHeroId(TAbstractFile* infile, int mapVersion);
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
@@ -182,13 +189,56 @@ SIZE(RandomDwellingData, 0x10);
 //     destroying. That non-trivial destructor is also why Read's `clear()`
 //     is a CALL at all: a trivially destructible element would have let VC6
 //     fold erase(begin(),end()) down to a single store.
-// Only those two fields are named. Everything between and after them stays
-// padding - no retail byte in this lane reaches it.
+// Only those two fields are named in the DEFAULT view. Everything between and
+// after them stays padding there - no retail byte in that lane reaches it.
+//
+// readTownData (0x5019f0) does reach the rest, and the gated view below is
+// its evidence. The Dreamcast field list names this record TownExtra and
+// gives every member; retail widens three of them - it inserts the leading
+// castleId dword, promotes cName to a std::string and townType to a DWORD,
+// and carries a SECOND bitset<70> the Dreamcast record has not got. Each
+// offset below is a store readTownData issues, and the member constructors
+// it runs at entry - armyGroup at +0x1c, string _Tidy at +0x58, then
+// bitset<70> _Tidy at +0x70 and again at +0x7c - fix the declaration ORDER
+// independently of the stores.
+//
+// GATED, and to its OWN macro rather than to HOMM3_MAPCELL_OBJECTS_VIEW,
+// which advmgr/game/puzzlewindow also define: this header is shared with
+// live work and the include-set class this tree documents is real. The
+// layout is identical in both arms - 0x88 either way, with armyGroup's 56
+// bytes landing exactly on the string at +0x58 - and the addition was
+// measured with zero per-function deltas across all 1810 rows before any
+// body used it.
 struct TScenarioTown {
     int castleId;
+#ifdef HOMM3_MAPCELL_TOWNEXTRA_VIEW
+    char playerOwner;
+    char bCustomBuildings;
+    char pad_06[2];
+    // Six bytes of stream reach each of these two; the record keeps eight.
+    __int64 BuildingBuiltMask;
+    __int64 BuildingDisabledMask;
+    char HasFort;
+    char bCustomArmies;
+    char pad_1a[2];
+    armyGroup townArmy;
+    char bCustomName;
+    char pad_55[3];
+#else
     char pad_04[0x54];
+#endif
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
+#ifdef HOMM3_MAPCELL_TOWNEXTRA_VIEW
+    // A char in the Dreamcast record, a DWORD here: readTownData assigns it
+    // from CObjectType::extra and from setup.alignment[], both int.
+    int townType;
+    char bIsGrouped;
+    char pad_6d[3];
+    std::bitset<70> spells;
+    std::bitset<70> fixedSpells;
+#else
     char pad_68[0x20];
+#endif
 };
 SIZE(TScenarioTown, 0x88);
 #endif
@@ -545,7 +595,14 @@ SIZE(type_university, 0x10);
 class CNetPlayerInfo;
 
 enum EMapFormatVersion {
-    MAP_FORMAT_RESTORATION_OF_ERATHIA = 14
+    MAP_FORMAT_RESTORATION_OF_ERATHIA = 14,
+    // Both byte-proven by readHeroData (0x5021c0), which gates on each of
+    // them separately: `cmp esi,0x15` decides whether the hero record
+    // carries a single signed spell id or a 70-bit mask, and
+    // `cmp [gpGame+0x1f86c],0x1c` decides whether the equipped-artifact
+    // band is eighteen positions or nineteen.
+    MAP_FORMAT_ARMAGEDDONS_BLADE = 21,
+    MAP_FORMAT_SHADOW_OF_DEATH = 28
 };
 
 // Retail victory/loss records embedded in game at +0x1f89c/+0x1f8e8.
@@ -1331,7 +1388,21 @@ public:
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     char pad_00091[3];
     std::vector<TScenarioTown> scenarioTowns;
+    // +0xa4, the map's per-hero setup pool. readHeroData (0x5021c0)
+    // addresses it with the multiply chain `lea edx,[ecx+4*ecx] /
+    // lea eax,[ecx+8*edx] / lea eax,[eax+4*eax] / lea esi,[edx+4*eax+0xa4]`
+    // = gpGame + 820*id + 0xa4, and 156 * 0x334 is EXACTLY the 0x1f3b0 the
+    // pad it replaces measured - 0xa4 + 0x1f3b0 lands on difficultyRating.
+    //
+    // Gated NARROWLY, to a macro only mapcell.cpp defines, even though the
+    // band already sits inside HOMM3_MAPCELL_OBJECTS_VIEW: advmgr,
+    // puzzlewindow and game also define that one, and for them this #ifdef
+    // is false, so their preprocessed text is byte-for-byte what it was.
+#ifdef HOMM3_MAPCELL_HERO_SETUP_VIEW
+    HeroExtra heroSetup[156];
+#else
     char pad_000a4[0x1f3b0];
+#endif
 #else
     char pad_00091[0x1f3c3];
 #endif
@@ -1855,6 +1926,17 @@ DATA(0x0069774c) extern unsigned char gbUnk69774c;
 // restore path; advManager also updates it when the local player finds the
 // Holy Grail. Its wider role is not yet byte-proven.
 DATA(0x0069950c) extern int gUnnamed69950c;
+// Eight ints indexed by PLAYER, and readHeroData (0x5021c0) CONSUMES an
+// entry: `movsx eax,[owner] / mov ecx,[4*eax + 0x69fb24]`, and when that is
+// not -1 it becomes the hero id and the slot is stored -1 again. A reserved
+// id therefore wins over GetStartingHeroId, exactly once. game::Init
+// (0x4bf1a0) is what fills the array with -1 to begin with
+// (`mov edi,0x69fb24 / mov ecx,8 / or eax,-1 / rep stosd`), so game.obj owns
+// the definition; this is the shared declaration.
+//
+// No Dreamcast or NH3API symbol covers it, so the spelling stays ordinal on
+// gUnnamed69950c's precedent rather than inventing a role name.
+DATA(0x0069fb24) extern int gUnnamed69fb24[8];
 extern playerData* gpCurrentPlayer;
 
 inline int game::GetCurrHeroId()
