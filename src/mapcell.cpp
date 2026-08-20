@@ -4211,15 +4211,29 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // from loadMapObjects': the index rebuild first, then the progress tick.
 // That is retail's order in each body, not a transcription slip.
 //
-// Residual (78.4070%): ONE branch over retail (base 35, target 34), and it is
-// not in the shared half - every construct this body has in common with the
-// now-exact loadMapObjects reproduces, including the CObjectType temp's six
-// sub-constructors (four bitset<48>::_Tidy plus the bitset<10> one), both
-// inlined resizes, the sprite save/refill/dispose, and the two-argument
-// vector<int>::insert the missing-mask collection reaches.  The extra branch
-// is somewhere in the reporting pass that loadMapObjects does not have -
-// either the missing-mask scan's shape or the sprintf/MessageBoxA block.
-// Not chased further this lane; the twin is the control to diff against.
+// Residual (78.4070%): ONE branch over retail (base 35, target 34) and one
+// extra cleanup region (EH transcript base [0,1,-1,2,-1,-1] against retail's
+// [0,1,-1,2,-1]).  Both are the SAME defect and it is now located, if not
+// closed (2026-08-20).
+//
+// The extra region is the SECOND `infile->Read(&count)`'s failure exit, at
+// fn+0x3d3.  Both sides destroy `oldSprites` there and both call
+// `operator delete`, but ours ALSO calls
+// `vector<CSprite*>::_Destroy(_First, _Last)` and stores `[ebp-4] = -1`
+// first, where retail (fn+0x3af) emits `push [ebp-0x34] / call operator
+// delete` and nothing else.  `_Destroy` over a pointer element is an empty
+// loop; retail EXPANDED it and VC6 deleted the loop, we keep the call.  That
+// is an A8/A9 under-inline - our caller is leaner than retail's - and no
+// statement pin reaches it, because a pin only ever removes expansions.
+//
+// The same alignment names one more real divergence, in the sprite refill:
+// retail's FIRST resize expands to exactly `size()/insert/size()/erase`,
+// four calls, while ours emits a fifth `size()` in FRONT of them for the
+// ARGUMENT.  Retail's `oldSprites.resize(...)` therefore does not pass
+// `sprites.size()`; the second resize, `sprites.resize(objectTypes.size())`,
+// agrees with retail at five calls including its argument.  What retail
+// passes instead is not yet identified - the twin loadMapObjects has no
+// counterpart to read it off.
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
@@ -4534,6 +4548,16 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // branches / 3 rets against retail's 32 / 4 - and predict-inline now has the
 // inline structure agreeing to within one call, so it is no longer an
 // inliner question.
+//
+// THAT ONE CALL IS NAMED (2026-08-20): the call-sequence alignment pairs
+// every relocation in this body except a single
+// `vector<TObjectCell>::size()` at fn+0x2d2 that retail does not emit.  It
+// comes from inside the inlined `insert`'s capacity path (`size() + ...`),
+// which retail expands and we call, so it is an A8/A9 under-inline on top of
+// the loop-shape difference and not a second wall.  Everything else -
+// operator new, the three `_Construct`s, both `_Ucopy`s and the `_Ufill` -
+// lines up one for one, which also confirms that retail EXPANDS this insert
+// exactly as we do: the readObject site-pin lever does not apply here.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)

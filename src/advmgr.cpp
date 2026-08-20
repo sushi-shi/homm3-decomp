@@ -3056,6 +3056,28 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero,
     NewmapCell* cell, const char* separator_1, const char* separator_2);
 
 // E:\gamedcs\advmgr.cpp:3146
+// 90.0426 -> 90.9026 (2026-08-20) on the explicit type_cell_adjuster
+// restore at the foot of the body - see the comment at that site for why
+// the obscure_cell/restore_cell census is exactly 2x ours and why the
+// first copy is a STATEMENT, not a scope exit.
+//
+// Residual (90.9026%): CROSS-JUMPING of the SET_VISITED_ROLLOVER /
+// APPEND_VISIT_TEXT macro bodies, in BOTH directions, plus one genuinely
+// missing sprintf. The call-sequence alignment (base 65 out-of-line calls
+// against retail's 66) localises it exactly, between anchors that resolve
+// identically on both sides:
+//   * the CREATURE_BANK..DERELICT_SHIP span: retail 3 sprintf, we 2;
+//   * the GetArmySizeName..SEER span: retail 5, we 4;
+//   * the TREE_OF_KNOWLEDGE..WITCH_HUT span: retail 4, we 5.
+// Net +1 for retail, which is the `_sprintf base x36 vs retail x37` row
+// predict-inline reports. The macro arms hold far more sprintf sites than
+// either side emits - our CL merges ten source sites down to six before
+// the first creature bank where retail merges them to nine - so the
+// per-span counts are a cross-jumping ledger, not a statement census, and
+// the two compiles simply pick different merge sets. The one remaining
+// non-cross-jump row is the QuestGuard string temporary: retail expands
+// basic_string::_Tidy there and calls operator delete, we call _Tidy,
+// which is an A8/A9 under-inline (budget), not a spelling.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -3851,6 +3873,23 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // the boat-frame if/else; the ternary spelling of that increment keeps
 // the join and merged the sites, 78.80 -> 79.80 (the goto respellings
 // recorded earlier attacked the wrong pair).
+//
+// AND THE ONE REMAINING CALL-COUNT ROW IS NAMED (2026-08-20, not
+// closeable): retail emits 29 out-of-line calls to our 28, and the extra
+// one is at fn+0x596 with target 0x00404140 - a THREE-BYTE function the
+// delinker labels `sample_vslot03`. Reading the bytes around it settles
+// what it is: `mov edi,[gpAdvManager]+0x48 / mov ecx,[..+0x50] / mov
+// esi,[edi+4]` then a copy loop, then `push [edi+8] / push esi / mov
+// ecx,edi / call 0x404140` and `mov [edi+8],esi`. That is one INLINED
+// `vector<T>::erase(begin(), end())` whose `_Destroy(_First, _Last)` is
+// left as a CALL - and for a POD element `_Destroy` is an empty loop, so
+// the callee really is three bytes. Our compile inlines `_Destroy` away
+// and VC6 deletes the empty loop.
+// It is therefore the "inline the parent, call the child" shape, which
+// `inline_depth` cannot express: pinning the clear() statement would take
+// erase() out of line too, and retail expands that. Recorded so the next
+// lane does not spend a build on the over-inline knob predict-inline's
+// bucket suggests here.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
