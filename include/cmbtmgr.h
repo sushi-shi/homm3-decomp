@@ -81,19 +81,14 @@ extern const TMissileStartInfo* gMissileStartInfo;
 // for the record the effects are the five spell-affecting special
 // battlefields' published rules, and code 2's already-recorded
 // "creature casts refused" is the sixth.
-// Behind a view because cmbtmgr.h reaches most of the combat tree and
-// an ungated enumerator counts toward the include-set threshold in
-// every consumer.
 enum ECombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
-#ifdef HOMM3_CMBTMGR_SPELL_MASTERY_DECL
     ,
     COMBAT_SPELL_RESTRICTION_ALL_EXPERT = 0x1,
     COMBAT_SPELL_RESTRICTION_WATER_EXPERT = 0x6,
     COMBAT_SPELL_RESTRICTION_FIRE_EXPERT = 0x7,
     COMBAT_SPELL_RESTRICTION_EARTH_EXPERT = 0x8,
     COMBAT_SPELL_RESTRICTION_AIR_EXPERT = 0x9
-#endif
 };
 
 // Combat-grid geometry, byte-proven wherever a cmbtmgr or findpath body
@@ -132,17 +127,14 @@ enum ECombatGrid {
     // the naming NOT proven; GetCommand (0x476490) tests 0xff first,
     // ahead of the keep, and the four GetGridIndex hit rectangles are
     // tested 252, 253, 254, 255.
-    // GATED, AND MEASURED: adding this one enumerator un-gated costs
-    // command.obj's GetCommand 92.5714 -> 92.5357, the same include-set
-    // firing an enumerator produced for the previous lane on this header.
-    // It joins the declarator-count evidence recorded at field_132a0 - an
-    // enumerator counts too - and only cmbtmgr.cpp names the value.
+    // Include-set measurement: this enumerator visible to command.obj
+    // cost GetCommand 92.5714 -> 92.5357 (max/hist hold the peak); it
+    // joins the declarator-count evidence recorded at field_132a0 - an
+    // enumerator counts too.
     COMBAT_HEX_KEEP = 0xfe,
     COMBAT_HEX_UPPER_TOWER = 0xff
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
     ,
     COMBAT_HEX_LOWER_TOWER = 0xfb
-#endif
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
@@ -183,9 +175,7 @@ enum ECombatGateHex {
     // against COMBAT_HEX_GATE_MOAT afterwards. Behind the obstacle view
     // so only its one consumer pays the include-set threshold, and
     // FIRST in the enum so the guard does not leave a trailing comma.
-#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
     COMBAT_GATE_ROW = 5,
-#endif
     COMBAT_HEX_OUTER_MOAT = 0x5e,
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
@@ -235,7 +225,6 @@ enum ECombatMineType {
 // as `4 * (5 * id) + table` - and reads the two placement bounds at +4/+5
 // and the sprite name at +0x10 out of the same row it stores into
 // TObstacle::shape.
-#ifdef HOMM3_CMBTMGR_ICONS_VIEW
 // The eighteen combat hero animations, keyed `2 * townType + sex`.
 // Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
 // stride and only the .def name is read, so the trailing three dwords
@@ -250,7 +239,6 @@ struct TCombatHeroSprite {
     int field_0c;
 };
 DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
-#endif
 
 struct type_obstacle_shape {
     char pad_00[0x4];
@@ -291,15 +279,12 @@ struct type_obstacle_shape {
 // witness for that rung.
 // The SPELLINGS are behaviour-derived and provisional - no roster or
 // string reaches this domain, exactly as the three field names it
-// describes are address ordinals. Behind a view because cmbtmgr.h
-// reaches most of the combat tree.
-#ifdef HOMM3_CMBTMGR_AI_ORDER_DECL
+// describes are address ordinals.
 enum EAIOrder {
     AI_ORDER_MOVE_AND_ATTACK = 6,
     AI_ORDER_SHOOT = 7,
     AI_ORDER_NONE = 12
 };
-#endif
 
 class combatManager : public baseManager {
 public:
@@ -338,18 +323,15 @@ public:
         short pad_22;
     };
     static TWallTraits akWallTraits[9][18];
-#ifdef HOMM3_CMBTMGR_ICONS_VIEW
     enum {
         // The moat row of a town's eighteen wall records: LoadIcons
         // (0x463370) suppresses exactly this row's five icons for
         // Stronghold under the pre-expansion ruleset, and the static
-        // table's row 2 is the SgCsMoat.pcx group. Gated because an
-        // ungated enumerator counts toward the include-set threshold in
-        // every consumer - it moved command.obj's GetCommand when it was
-        // visible to that TU.
+        // table's row 2 is the SgCsMoat.pcx group. An include-set
+        // trigger: this enumerator moved command.obj's GetCommand when
+        // visible to that TU (measured; max/hist hold the peak).
         WALL_TRAITS_ROW_MOAT = 2
     };
-#endif
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -408,7 +390,6 @@ public:
         ~TObstacleVector();
 
         void Destroy(TObstacle* first, TObstacle* last);
-#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
         // Dinkumware's own null-guarded size(): place_obstacle folds the
         // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
         // divide by sizeof(TObstacle) inline right after the insert.
@@ -416,7 +397,6 @@ public:
         // The out-of-line worker push_back reduces to. DECLARED, NOT
         // DEFINED: retail CALLS it, so this TU must not see a body.
         void insert(TObstacle* where, unsigned count, const TObstacle& value);
-#endif
         void erase(TObstacle* first, TObstacle* last)
         {
             TObstacle* vectorEnd = end;
@@ -681,9 +661,6 @@ public:
     //     unmoved. Three such renames landed un-gated and cost nothing.
     // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
     // from - not the member's name, its type, or the bytes it covers.
-    // Both arms below describe the same bytes and only the count differs,
-    // so no TU sees a different layout.
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
     // The per-side pair InitNonVisualVars' closing walk raises when a
     // side owns at least one stack with army::field_4d8 set. Byte-wide
     // and indexed by side.
@@ -694,9 +671,6 @@ public:
     // field_132d4. Ordinals.
     int field_132a8;                  // +0x132a8
     int field_132ac;                  // +0x132ac
-#else
-    char pad_1329c[0x14];
-#endif
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -777,8 +751,7 @@ public:
     // The battlefield background image name. SetupCombat caches
     // GetBackgroundName()'s answer here as its very last act; the pointer
     // is into the .rdata name tables that method selects from, so it is
-    // never owned or freed. Gated for the declarator-count reason spelled
-    // out at field_132a0; both arms are the same bytes.
+    // never owned or freed.
     // Per-army "this stack is leaving the field" latch, twenty bytes per
     // side, tested by BOTH of MakeCreaturesVanish's walks - the first to
     // raise the matching +0x14000 effect byte (or an arrow-tower latch),
@@ -787,10 +760,7 @@ public:
     // the walk steps the byte arrays by 20 and the army index by 21 in
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
     // +0x14000. Name is an address ordinal - nothing decoded WRITES it
-    // yet. Sliced out of pad_13304 in place; both arms of the gate below
-    // gain the same two declarators so the include-set count stays equal
-    // between them, per field_132a0.
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    // yet. Sliced out of pad_13304 in place.
     char pad_13304[0x134];
     unsigned char field_13438[2][20]; // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
@@ -798,11 +768,6 @@ public:
     // needs running. A retype, not a new declarator.
     int field_13460;                  // +0x13460
     const char* backgroundName;       // +0x13464
-#else
-    char pad_13304[0x134];
-    unsigned char field_13438[2][20]; // +0x13438
-    char pad_13460[0x8];
-#endif
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -933,8 +898,7 @@ public:
     // Raised to 1 by SetupCombat before it has touched anything else about
     // the two sides, and by nothing else in the located span. Reads like a
     // "combat is being set up / is live" latch, but no reader is decoded
-    // yet, so the name is an address ordinal. Gated for the
-    // declarator-count reason spelled out at field_132a0.
+    // yet, so the name is an address ordinal.
     //
     // CORRECTION 2026-08-20: when this row landed its comment claimed the
     // byte was the LAST of the class and could not move sizeof. That was
@@ -944,12 +908,10 @@ public:
     // here. Nothing depends on the old claim (no SIZE assert covers
     // combatManager), but do not read the end of this list as the end of
     // the object.
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
     unsigned char field_1402f;         // +0x1402f
     // +0x14030, cleared by InitNonVisualVars - the byte that proves the
     // class runs past everything modelled above. Ordinal.
     unsigned char field_14030;         // +0x14030
-#endif
 
     combatManager();
 
@@ -1031,7 +993,6 @@ public:
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
     void LoadIcons();
-#ifdef HOMM3_CMBTMGR_MORALE_VIEW
     void CheckApplyGoodMorale(int group, int index);
     int CheckApplyBadMorale(int group, int index);
     // drawing.obj's four-argument overload (drawing.cpp:2524, dc 0x86ea0,
@@ -1039,7 +1000,6 @@ public:
     // bodies call it; the body stays drawing.cpp's.
     void SpellEffect(int effect, army* target_army, int iDelay,
                      unsigned char bDoWince);
-#endif
     void FreeIcons();
     void Close();
     unsigned char HexIsBlocked(int index) const;
@@ -1162,9 +1122,7 @@ public:
     // this declaration alone already costs GetCommand 92.5714 ->
     // 92.5357 unconditionally (include-set class, bisected), so it is
     // scoped to army.cpp and the field waits for the same lane.
-#ifdef HOMM3_CMBTMGR_MOVE_VIEW
     void mark_moving_army(const army* moving_army);           // 0x46a520
-#endif
     // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
     // army::range_attack (0x440160) short-circuits into it for an ARROW
     // TOWER, passing that stack's indexToAttack as the tower position -
@@ -1173,12 +1131,8 @@ public:
     // PARAMETER TYPE IS THE ONE DIVERGENCE: the DC prototype takes
     // combatManager::TArcherID, an enum this header does not model yet,
     // so the declaration takes the int retail actually pushes and the
-    // enum waits for the lane that reconstructs the body. Behind a view
-    // because a bare member declaration is this header's own measured
-    // include-set trigger (mark_moving_army above).
-#ifdef HOMM3_CMBTMGR_TOWER_VIEW
+    // enum waits for the lane that reconstructs the body.
     void KeepAttack(int iTowerPos);                           // 0x465ad0
-#endif
     // DC header inline (CmbtMgr.h:1555, dc 0x4cc74, 24 B) with an
     // out-of-line copy on that build and NONE on retail, so /Ob2 took
     // every retail site: army::do_multi_head_attack (0x440310) carries
@@ -1210,7 +1164,6 @@ public:
     // is one of the two retail-only rows. Name is a bootstrap invention.
     // Behind the same view as MarkCreatureEffect below, for this
     // header's usual measured reason; army.cpp is the only consumer.
-#ifdef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
     void CheckRebirth();                                      // 0x469440
     void MarkCreatureEffect(int group, int index)
     {
@@ -1226,17 +1179,13 @@ public:
     // GetName, its numTroops, the accumulated damage, the ONE stack it
     // hit (null when the sweep caught more than one creature type) and
     // the accumulated kill count.
-#endif
     // Split out of the multi-head view 2026-08-20 so cmbtmgr.cpp, which
     // now DEFINES this body, can see its declarator without also taking
     // CheckRebirth and MarkCreatureEffect - two declarators it has no
     // use for and would pay the include-set threshold for.
-#if defined(HOMM3_CMBTMGR_MULTI_HEAD_VIEW) \
-        || defined(HOMM3_CMBTMGR_MESSAGE_VIEW)
     void damage_message(const char* attacker, long attacker_qty,
                         long damage, const army* defender,
                         long deaths);                         // 0x469a90
-#endif
     // 0x46a520 (68 B), the row above's only decoded writer and
     // army::simple_move's second call: it zeroes field_14031 and marks
     // the hex - or the two hexes - the passed stack stands on. It sits
@@ -1374,7 +1323,6 @@ public:
                          searchArray* search_array);          // 0x422b20
     // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
     // both sides: DC's own ai.obj roster puts
-#ifdef HOMM3_CMBTMGR_AI_SIMULATION_DECL
     // GATED 2026-08-20: these two declarators are individually
     // include-set neutral, but the wall counts DECLARATORS, not edits.
     // Merged with the spells lane's cmbtmgr.h additions the combined count
@@ -1397,7 +1345,6 @@ public:
     // the spell and this caster's side on the stack. Declared for that
     // call site; not claimed.
     unsigned char AbleToSummonElemental(SpellID spell, long side);
-#endif  // HOMM3_CMBTMGR_AI_SIMULATION_DECL
     // The two spells.obj leaves ai_tactical's get_chain_lightning_value
     // (0x437190) drives the chain with. Both are named by the DC xref
     // graph, which records exactly these two as callees of that body,
@@ -1407,11 +1354,9 @@ public:
     // dc 0x155a08, 24 B and `this` only). Declared for that call site;
     // neither is claimed. Behind a view because cmbtmgr.h reaches most
     // of the combat tree.
-#ifdef HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
     long GetNextChainLightningTarget(const army* target, long excluded);
                                                               // 0x5a61f0
     void ClearEffects();                                      // 0x5a66b0
-#endif
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     unsigned char should_stay_in_castle(
@@ -1588,12 +1533,9 @@ public:
     // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
     // exactly. TSkillMastery is spelled int here because its typedef
     // lives in a header this one does not include. Not claimed.
-#ifdef HOMM3_CMBTMGR_CALIPH_VIEW
     void CastSpell(SpellID spellId, int targetIndex,
                    unsigned char bIsMonsterSpell, int secondaryIndex,
                    int monster_skill, long monster_power);   // 0x59fe30
-#endif
-#ifdef HOMM3_CMBTMGR_ROUND_VIEW
     void ShowSpellMessage(int bIsMonsterSpell, int spellId,
                           army* targetArmy);                   // 0x5a8950
     // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
@@ -1612,16 +1554,13 @@ public:
     enum TSpellEffectID {
         eSpellEffectFireShield = 11
     };
-#endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->
     // 92.5357, the include-set class this header pair has now fired
     // three times from a bare member declaration. Bisected ALONE
     // against army.h's numSpellCasts slice, which triggers by itself
     // as well. army.cpp is the only consumer.
-#ifdef HOMM3_CMBTMGR_RESURRECT_VIEW
     army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
-#endif
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
     army* find_resurrection_target(SpellID spell, long group, long hex,
@@ -1677,10 +1616,8 @@ public:
     // 92.5714 -> 92.5357 - the same include-set trip, at the same two
     // values, that the RESURRECT_VIEW note above records. spells.cpp is
     // the only consumer.
-#ifdef HOMM3_CMBTMGR_AREA_VIEW
     void mark_berserk_area_effect(long hex, long mastery,
                                   std::vector<army*>& targets);  // 0x5a4810
-#endif
     // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
     // already had an out-of-class definition in cmbtmgr.cpp with only a
     // CODEVIEW comment to declare it, which VC6 accepts on the definition
@@ -1692,7 +1629,6 @@ public:
     // so new rows go where they renumber nothing that is already exact.
     // Behind a view because a bare member declarator on this header is
     // that wall's own trigger shape; cmbtmgr.cpp is the only consumer.
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
     // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
     // trailing _N is spelled `unsigned char` here, as everywhere else in
@@ -1706,8 +1642,6 @@ public:
     // (`A` access), which costs nothing here and is recorded rather than
     // acted on: this header keeps one public block.
     void LoadArmies(unsigned char is_surrounded);
-#endif
-#ifdef HOMM3_CMBTMGR_TURN_VIEW
     // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
     // spelled `unsigned char` as everywhere else in this header.
     unsigned char NextArmy(unsigned char checking_for_bad_morale);
@@ -1767,7 +1701,6 @@ public:
     //     move, or re-arms the combat pointer.
     void Unnamed479f30();
     void Unnamed478890();
-#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
@@ -1788,10 +1721,8 @@ extern combatManager* gpCombatManager;
 // extern added to this header is its own measured include-set trigger
 // (the field_132a0 bisection), and cmbtmgr.obj is the only consumer
 // that needs them today.
-#ifdef HOMM3_CMBTMGR_OPEN_VIEW
 DATA(0x00698998) extern unsigned long gCombatStamp698998;
 DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
-#endif
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
 
@@ -1811,7 +1742,6 @@ DATA(0x00697744) extern unsigned char gCombatFlag697744;
 // 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
 // bulk probe of externs added together evidently does not reproduce what
 // a single extern added to a header this widely included does.
-#ifdef HOMM3_CMBTMGR_SETUP_VIEW
 extern int gCombatSeed66d840;
 
 // THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
@@ -1831,7 +1761,6 @@ extern const int gCombatDeployHexes63d0a8[2][7];
 extern const int gCombatDeploySurroundedHexes63d0e0[2][7];
 extern const int gCombatDeploySlots63d118[7][7];
 extern const int gCombatDeploySlots63d1dc[7][7];
-#endif
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its
@@ -1868,7 +1797,6 @@ extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 // referenced address independently; indexing by ten shorts preserves
 // the common 20-byte stride.
 DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
-#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
 // The same 0x63c7c8 table, typed as its 20-byte rows. The DATA claim for
 // the rva is the shorts view above, so this alias carries none - the only
 // delta it can produce is a reloc NAME.
@@ -1915,7 +1843,6 @@ DATA(0x0063cf00) extern const type_obstacle_shape gLandMineShape;
 // extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
 // BOOTSTRAP INVENTION.
 DATA(0x0063d368) extern const int gBoatBlockedHexes[];
-#endif
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
 DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];

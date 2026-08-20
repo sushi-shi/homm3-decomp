@@ -10,15 +10,10 @@
 #include "army.h"
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
-#define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
-#define HOMM3_CMBTMGR_OBSTACLE_VIEW
 // mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
 // bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
 // it is unconditional (measured 2026-08-20).
-#define HOMM3_CMBTMGR_AREA_VIEW
 #include "cmbtmgr.h"
-#undef HOMM3_CMBTMGR_AREA_VIEW
-#undef HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
