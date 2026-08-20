@@ -123,6 +123,15 @@ enum TCreatureType {
     // BONE/GHOST_DRAGON 0x44/0x45 pin the Necropolis run, the
     // TROGLODYTE/MINOTAUR pairs pin Dungeon, HALFLING/ROGUE pin the
     // neutrals). NH3API spellings.
+    // Three more of do_attack's own witnesses (0x441610): 0x2f takes
+    // the Cerberus arm - the three-headed cleave that widens the
+    // attack mask by the two ring neighbours - and 0x6e/0x6f are the
+    // two ids its attack-frame chooser pins to cs_attack_r, the
+    // hydras, at the Fortress top exactly where the Complete run ends.
+    // NH3API spellings.
+    CREATURE_CERBERUS = 0x2f,
+    CREATURE_HYDRA = 0x6e,
+    CREATURE_CHAOS_HYDRA = 0x6f,
     CREATURE_DENDROID_GUARD = 0x16,
     CREATURE_DENDROID_SOLDIER = 0x17,
     CREATURE_ZOMBIE = 0x3b,

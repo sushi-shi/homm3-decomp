@@ -1878,7 +1878,12 @@ public:
     // zero; the rest of the enum waits for the lane that reconstructs
     // PowEffect's own body.
     enum TSpellEffectID {
-        eSpellEffectFireShield = 11
+        eSpellEffectFireShield = 11,
+        // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
+        // proves the number at army::do_attack (0x441610), which hands
+        // it to SpellEffect as the good-luck sparkle over the striking
+        // stack.
+        eSpellEffectFortune = 18
     };
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->
