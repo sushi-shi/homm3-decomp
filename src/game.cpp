@@ -3006,26 +3006,64 @@ int game::Load(TAbstractFile* infile)
 // are the pair retail emits as `lea ecx,[ebp-0x5cc] / call 0x4bdf80`
 // twice over, once behind the `jne` and once on the fall-through.
 //
-// Residual (82.6492%): TWO things, and neither is a spelling.
-//   * `sub esp,0x5b8` against retail's 0x5c0, two slots. VC6 packs
-//     byteValue, extraByteValue and poolBits into ONE dword
-//     (-0xd/-0xe/-0xf) where retail spends two slots plus the parameter
-//     home (-0xd, -0x15, [ebp+0xb]). The hero-pool pin is what moves
-//     poolBits out of the parameter home; narrowing that pin to the inner
-//     loop alone was measured and changes neither the score nor the frame.
-//   * the merged-return class, exactly as in game::Load. Retail reaches
-//     one unwind state from two conditions in several places - the town
-//     COUNT write shares its cleanup site with the town::save guard
-//     (state 0x1a at 0x5041), and there are two more - and the shared
-//     sites are SUNK, so retail branches `jb <teardown>` forward where we
-//     emit `jae <next>` with the teardown inline. Our _Tidy census is 38
-//     against retail's 36. Same statements, different cleanup-site
-//     allocation.
+// 82.6492 -> 85.4129, 2026-08-20. THE MERGED-RETURN CLASS IS SPELLABLE,
+// and the note it replaces was wrong to call it unreachable. The `[ebp-4]`
+// cleanup-site census names it exactly: retail emits 37 numbered sites,
+// we emitted 39, and the two extra are three merges minus one placement
+// difference. A merged site is ONE `return -1` reached by two conditions,
+// and a `goto` to a label inside the surviving arm produces it. Which arm
+// carries the label decides the BLOCK LAYOUT, and both cases occur here:
+//   * generators and towns - "count write guard" + "element save loop
+//     guard". The label goes in the COUNT WRITE's own `if` body and the
+//     loop `goto`s BACKWARD to it. Retail's merged block then lands where
+//     retail puts it (0x10 emitted after 0x12; 0x1a in natural order).
+//     Writing it the other way round - the loop inside an `if` with the
+//     `return -1` in a trailing `else` - merges the site but SINKS the
+//     block to the end of the function and scores 0.02 lower.
+//   * field_4e3e8 + obeliskFlags - two adjacent guarded writes. Here the
+//     label goes in the SECOND guard and the first `goto`s FORWARD into
+//     it, because retail's teardown is the fall-through successor of the
+//     second test (`jb <teardown>` then `jae <skip>` then the teardown).
+//     That reproduces retail's 0x4efd-0x4f47 instruction for instruction.
+//     An `||` merges the site too, but as a two-jump join that sinks to
+//     the function end; it measured 0.14 HIGHER on its own and 1.34 LOWER
+//     once the tail pin below was narrowed, so the four combinations rank
+//     non-monotonically - measure the pair, not each knob.
+// Worth +1.69 across the three merges.
+//
+// THE HERO-POOL BYTE IS AN ARRAY, NOT A SCALAR (+1.10, and it is the
+// exact mirror of game::Load's `poolBits[player >> 3] & (1 << (player &
+// 7))`). Retail's `mov edx,edi / shr edx,3 / lea eax,[ebp+edx+0xb] / or
+// byte ptr [eax],dl` is an INDEXED store: a one-element `unsigned char
+// poolBits[1]` written `poolBits[player >> 3] |= 1 << (player & 7)`.
+// Spelled as a scalar `poolBits |= 1 << player` VC6 keeps it in a real
+// frame slot; spelled as an array, and declared INSIDE the hero loop
+// rather than at function scope, it coalesces the way retail's does.
+//
+// Residual (85.4129%): three things, all measured.
+//   * `sub esp,0x5b8` against retail's 0x5c0, two slots. Retail spends
+//     SEVEN dwords between -0x10 and -0x28 with byte temps at -0xd and
+//     -0x15; we spend FIVE, packing three byte temps into the -0x10
+//     dword. No spelling tried moves it.
+//   * ONE guarded-return teardown still has the wrong destructor shape.
+//     Retail splits the two pool loops: the lithPools failure expands
+//     ~SavedGameHeader and CALLS `_Tidy` (site 0x48 at 0x556e, falling
+//     through into the shared tail), while the lithExitPools failure
+//     calls ~SavedGameHeader out of line (0x55b6). Taking the lithPools
+//     `return -1` out of the `#pragma inline_depth(0)` block - by landing
+//     save_vector's result in a `lithSaved` local and pinning only that
+//     assignment - reproduces the SPLIT (+0.35, and it is what takes the
+//     site census to 37 = retail's) but VC6 then expands `_Tidy` there
+//     too. `#pragma inline_depth(1)` on that `return` is byte-flat, as
+//     the module guide's bound predicts, so the depth-1 shape retail has
+//     is not spellable. Costs 3 branches (58 against 55).
 //   * one over-inline the pin cannot reach: retail CALLS
 //     vector<town>::size() (0x4cf6c0) in the town loop's CONDITION while
 //     inlining the same size() for the byte count two statements earlier.
 //     A statement pin on the `for` would also de-inline the `towns[i]`
 //     subscript, which retail keeps inline.
+//   * the heroes loop's teardown is emitted after the heroAvailability
+//     write's (0x1e before 0x1c) where retail emits them in order.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
@@ -3092,11 +3130,12 @@ int game::Save(TAbstractFile* outfile)
         short short_buffer = generators.size();
         if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
             sizeof(short_buffer)) {
+        generators_failed:
             return -1;
         }
         for (i = 0; i < short_buffer; ++i) {
             if (!generators[i].save(outfile))
-                return -1;
+                goto generators_failed;
         }
     }
 
@@ -3109,12 +3148,13 @@ int game::Save(TAbstractFile* outfile)
         char char_buffer = field_4e3e8;
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
+            goto obelisk_failed;
+        }
+        if (outfile->Write(obeliskFlags, sizeof(obeliskFlags)) <
+            sizeof(obeliskFlags)) {
+        obelisk_failed:
             return -1;
         }
-    }
-    if (outfile->Write(obeliskFlags, sizeof(obeliskFlags)) <
-        sizeof(obeliskFlags)) {
-        return -1;
     }
 
     for (i = 0; i < 8; ++i) {
@@ -3126,12 +3166,13 @@ int game::Save(TAbstractFile* outfile)
         char char_buffer = towns.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
+        towns_failed:
             return -1;
         }
-    }
-    for (i = 0; i < towns.size(); ++i) {
-        if (towns[i].save(outfile) < 0)
-            return -1;
+        for (i = 0; i < towns.size(); ++i) {
+            if (towns[i].save(outfile) < 0)
+                goto towns_failed;
+        }
     }
 
     for (i = 0; i < HERO_COUNT; ++i) {
@@ -3151,15 +3192,16 @@ int game::Save(TAbstractFile* outfile)
     // a whole std::out_of_range and its "invalid bitset<N> position"
     // string onto the frame, 28 bytes that retail's frame does not have.
     for (i = 0; i < HERO_COUNT; ++i) {
-        unsigned char poolBits = 0;
+        unsigned char poolBits[1];
+        poolBits[0] = 0;
         unsigned int player;
 #pragma inline_depth(0)
         for (player = 0; player < 8; ++player) {
             if (heroPoolMap[i].test(player))
-                poolBits |= 1 << player;
+                poolBits[player >> 3] |= 1 << (player & 7);
         }
 #pragma inline_depth()
-        outfile->Write(&poolBits, sizeof(poolBits));
+        outfile->Write(poolBits, sizeof(poolBits));
     }
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
@@ -3263,11 +3305,15 @@ int game::Save(TAbstractFile* outfile)
     // the tail landed this body grew past the /Ob2 budget that had been
     // keeping them out, so VC6 began expanding save_vector in place -
     // the vector-size shl/sar and a `setae` per site.
-#pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
-        if (!save_vector(outfile, &lithPools[i]))
+        unsigned char lithSaved;
+#pragma inline_depth(0)
+        lithSaved = save_vector(outfile, &lithPools[i]);
+#pragma inline_depth()
+        if (!lithSaved)
             return -1;
     }
+#pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
         if (!save_vector(outfile, &lithExitPools[i]))
             return -1;
