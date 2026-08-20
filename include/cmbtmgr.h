@@ -1374,6 +1374,11 @@ public:
                          searchArray* search_array);          // 0x422b20
     // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
     // both sides: DC's own ai.obj roster puts
+#ifdef HOMM3_CMBTMGR_AI_SIMULATION_DECL
+    // GATED 2026-08-20: these two declarators are individually
+    // include-set neutral, but the wall counts DECLARATORS, not edits.
+    // Merged with the spells lane's cmbtmgr.h additions the combined count
+    // pushed command::GetCommand 92.5714 -> 92.5357.  Gating restores it.
     // combatManager::simulate_combat (ai.cpp:2584, dc 0x277f4, 146 B,
     // three parameters counting `this`) immediately before
     // find_AI_targets (ai.cpp:2608, dc 0x27888) in exactly the same
@@ -1392,6 +1397,7 @@ public:
     // the spell and this caster's side on the stack. Declared for that
     // call site; not claimed.
     unsigned char AbleToSummonElemental(SpellID spell, long side);
+#endif  // HOMM3_CMBTMGR_AI_SIMULATION_DECL
     // The two spells.obj leaves ai_tactical's get_chain_lightning_value
     // (0x437190) drives the chain with. Both are named by the DC xref
     // graph, which records exactly these two as callees of that body,
@@ -1481,9 +1487,6 @@ public:
     // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
     // same eight - and its source line 5065 sits just before
     // ModifySpellDamage's 5086, which is the retail order exactly.
-    // spells.cpp:4387, dc 0x155a08 - clears chainLightningHit.
-    void ClearEffects();
-
     long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
                             hero* casting_hero, hero* target_hero,
                             const army* target,
