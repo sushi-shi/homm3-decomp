@@ -597,7 +597,15 @@ public:
     int field_104;                 // +0x104
     char pad_108[0x4];
     char* yModify;                // +0x10c
-    char pad_110[0x40];
+    // sMonFrameInfo.iMissileOffset (DC SMonFrameInfo@0, short[6] -
+    // monframeinfo.h carries the record), the three launch-point pairs
+    // for the ranged poses ur/r/dr. Byte-proven by attack_wall
+    // (0x445fd0): the first angle estimate reads the middle pair
+    // [2]/[3] and the aimed shot reads [2*pose]/[2*pose+1], both
+    // movsx'd shorts at +0x110..+0x11b. Sliced in the range arm only,
+    // per the band's own "read the fields you need" rule.
+    short frameInfoMissileOffset[6]; // +0x110 == sMonFrameInfo.iMissileOffset
+    char pad_11c[0x34];
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
     char pad_154[0x4];
 #elif defined(HOMM3_ARMY_POW_VIEW)
@@ -657,16 +665,20 @@ public:
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
     CSprite* stdIcon;             // +0x164
-    // MidY (0x446630) subtracts HALF of +0x16c from the hexcell's own y,
-    // and LoadResources (0x43dd62) writes it as `0x10b - <stdIcon frame
-    // metric>` - the stack's own vertical span on the combat field.
-    // InitClean zeroes it. Sliced behind a view because this header is
-    // included tree-wide and the slice adds a declarator (see the
-    // include-set note at the top of army.cpp); army.cpp is the only
-    // consumer.
+    // DC army.missileIcon (members.csv army@340, right between stdIcon
+    // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
+    // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
+    // missile, which is what fixes the type.
+    // image_height is DC army@344: MidY (0x446630) subtracts HALF of it
+    // from the hexcell's own y, and LoadResources (0x43dd62) writes it
+    // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
+    // span on the combat field. InitClean zeroes it. Sliced behind a
+    // view because this header is included tree-wide and the slice adds
+    // declarators (see the include-set note at the top of army.cpp);
+    // army.cpp is the only consumer.
 #ifdef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
-    int field_168;                // +0x168
-    int field_16c;                // +0x16c
+    CSprite* missileIcon;         // +0x168
+    int image_height;             // +0x16c
 #else
     char pad_168[0x8];
 #endif

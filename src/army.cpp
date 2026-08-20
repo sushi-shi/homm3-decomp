@@ -65,6 +65,7 @@
 #include "kbwin.h"
 #include "misc.h"
 #include "prefs.h"
+#include "resourcemanager.h"   // GetSprite for attack_wall's explosion
 #include "sample.h"
 #include "soundmgr.h"
 #include "textresource.h"
@@ -213,7 +214,7 @@ void army::InitClean()
     if (stdIcon)
         stdIcon->Dispose();
     stdIcon = 0;
-    field_16c = 0;
+    image_height = 0;
     bShowPowEffect = 0;
     field_4f0 = 0;
     iPostPowSpellToCast = -1;
@@ -4170,16 +4171,182 @@ void army::attack_wall(TWallTargetId wall,
     attack_wall(wall, levels);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:4577
+// The landed shot: aim from the catapult's launch point at the
+// segment's own impact point (gWallTargets' +0x4/+0x6 pair, sliced by
+// this body), pick the ranged pose from the same +-25-degree atan the
+// cast path uses, play the attack cycle, fly the missile, and run the
+// explosion sprite over the wall - applying the damage on frame FIVE
+// of that explosion, not before. A quick combat skips all of it and
+// just applies the damage.
+//
+// The angle machinery is cast_spell's, statement for statement
+// (missileRadiansToDegrees, the +-25 float pool pair, the
+// `(dy > 0) ? -90 : 90` vertical arm); the first estimate reads the
+// straight pair iMissileOffset[2]/[3], the aimed shot re-reads
+// [2*pose]/[2*pose+1] with the chosen pose.
+//
+// SPELLINGS THE BYTES FORCED, each measured:
+//   - dy is declared AFTER the abs-of-dx branch (81.42 -> 86.67):
+//     startY must stay live across the jns or C2 folds it away.
+//   - both name ternaries are spelled `levelsDestroyed == 0 ?
+//     <miss form> : <hit form>` - the miss operand loads first and the
+//     je jumps the hit overwrite, retail's exact arm order.
+//   - the bounds stores and the clamp chain each go through their own
+//     block-scoped TDrawbridgeBounds& (87.47 -> 89.70): longhand
+//     spellings reload gpCombatManager after every aliasing store,
+//     where retail materialises each group's base exactly once.
+//
+// Residual (89.70%): the register-homing family. Retail's frame is
+// 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
+// -0x14) and targetX carried to the explosion block in EBX; ours packs
+// the same lifetimes into 0x20 and reloads. Branch sequences AGREE
+// (25/25); tried and rejected: precomputing right/bottom as named
+// locals (89.47 - the compute/store interleave moves further off), and
+// the pre-fix longhand forms above.
 VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
 void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat()) {
+        gpCombatManager->DamageWall(wall, levelsDestroyed);
+        return;
+    }
 
-#endif  // @carcass
+    long targetX = gWallTargets[wall].x;
+    long targetY = gWallTargets[wall].y;
+
+    long startX;
+    if (facing == 1)
+        startX = gpCombatManager->cells[gridIndex].field_00
+                 + frameInfoMissileOffset[2];
+    else
+        startX = gpCombatManager->cells[gridIndex].field_00
+                 - frameInfoMissileOffset[2];
+    long startY = gpCombatManager->cells[gridIndex].field_02
+                  + frameInfoMissileOffset[3];
+
+    // dy is declared AFTER the abs: startY has to stay live across the
+    // branch, which is what keeps retail from folding it into the
+    // subtraction (the jns/jge polarity at +0xbb is the same artifact).
+    long dx = targetX - startX;
+    if (dx < 0)
+        dx = -dx;
+    long dy = targetY - startY;
+    float angle;
+    if (dx == 0) {
+        angle = (dy > 0) ? -90 : 90;
+    } else {
+        angle = static_cast<float>(
+            atan(static_cast<double>(dy) / dx)
+            * DATA_COMPGEN(0x0063b8f0, missileRadiansToDegrees,
+                           57.2957763671875));
+    }
+    long pose;
+    if (angle > 25.0f) {
+        currFrameType = cs_range_ur;
+        pose = 0;
+    } else if (angle > -25.0f) {
+        currFrameType = cs_range_r;
+        pose = 1;
+    } else {
+        currFrameType = cs_range_dr;
+        pose = 2;
+    }
+    if (facing == 1)
+        startX = gpCombatManager->cells[gridIndex].field_00
+                 + frameInfoMissileOffset[2 * pose];
+    else
+        startX = gpCombatManager->cells[gridIndex].field_00
+                 - frameInfoMissileOffset[2 * pose];
+    startY = gpCombatManager->cells[gridIndex].field_02
+             + frameInfoMissileOffset[2 * pose + 1];
+
+    sample* wallSample = LoadSampleResource(
+        levelsDestroyed == 0 ? DATA_COMPGEN(0x00660a84, wallMissSampleName,
+                                            "WallMiss.82m")
+                             : DATA_COMPGEN(0x00660a78, wallHitSampleName,
+                                            "WallHit.82m"));
+    gpCombatManager->ResetLimitCreature();
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    gpCombatManager->ComputeMaxExtent();
+    ds_memsample* shootMemSample =
+        gpSoundManager->MemorySample(armySample[SHOOT_SAMPLE]);
+
+    long frames = frameInfoAttackFrames;
+    if (frames <= 0)
+        frames = stdIcon->GetNumFrames(currFrameType);
+    long delay = frameInfoAttackStartCycleTime / frames;
+    for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
+        gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
+    }
+
+    currFrameType = cs_wait;
+    currFrameIndex = 0;
+    gpCombatManager->ShootBallisticMissile(startX, startY, targetX, targetY,
+                                           missileIcon);
+    ds_memsample* wallMemSample = gpSoundManager->MemorySample(wallSample);
+
+    CSprite* explosion = ResourceManager::GetSprite(
+        levelsDestroyed == 0
+            ? DATA_COMPGEN(0x00660a6c, rockSpriteName, "CSGRCK.DEF")
+            : DATA_COMPGEN(0x00660a60, explosionSpriteName, "SGEXPL.DEF"));
+    long halfWidth = explosion->Width / 2;
+    long x = targetX - halfWidth;
+    long halfHeight = explosion->Height / 2;
+    long y = targetY - halfHeight;
+    {
+        TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
+        bounds.values[0] = x;
+        bounds.values[1] = y;
+        bounds.values[2] = explosion->Width - halfWidth + targetX - 1;
+        bounds.values[3] = explosion->Height - halfHeight + targetY - 1;
+    }
+    {
+        TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
+        if (bounds.values[0] < gCombatDrawLimits694f18.values[0])
+            bounds.values[0] = gCombatDrawLimits694f18.values[0];
+        if (bounds.values[1] < gCombatDrawLimits694f18.values[1])
+            bounds.values[1] = gCombatDrawLimits694f18.values[1];
+        if (bounds.values[2] > gCombatDrawLimits694f18.values[2])
+            bounds.values[2] = gCombatDrawLimits694f18.values[2];
+        if (bounds.values[3] > gCombatDrawLimits694f18.values[3])
+            bounds.values[3] = gCombatDrawLimits694f18.values[3];
+    }
+
+    for (long frame = 0; frame < explosion->GetNumFrames(0); frame++) {
+        if (frame == 5 && levelsDestroyed != 0)
+            gpCombatManager->DamageWall(wall, levelsDestroyed);
+        gpCombatManager->DrawFrame(0, 0, 1, 100, 0, 1);
+        explosion->Draw(0, frame, 0, 0,
+                        gpCombatManager->drawbridgeBounds.values[2]
+                            - gpCombatManager->drawbridgeBounds.values[0]
+                            + 1,
+                        gpCombatManager->drawbridgeBounds.values[3]
+                            - gpCombatManager->drawbridgeBounds.values[1]
+                            + 1,
+                        gpWindowManager->screenBitmap->map,
+                        targetX - explosion->Width / 2,
+                        targetY - explosion->Height / 2,
+                        gpWindowManager->screenBitmap->Width,
+                        gpWindowManager->screenBitmap->Height,
+                        gpWindowManager->screenBitmap->Pitch, 0, 1);
+        gpWindowManager->UpdateScreen(
+            gpCombatManager->drawbridgeBounds.values[0],
+            gpCombatManager->drawbridgeBounds.values[1],
+            gpCombatManager->drawbridgeBounds.values[2]
+                - gpCombatManager->drawbridgeBounds.values[0] + 1,
+            gpCombatManager->drawbridgeBounds.values[3]
+                - gpCombatManager->drawbridgeBounds.values[1] + 1);
+    }
+    explosion->Dispose();
+    gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+    gpSoundManager->WaitSample(shootMemSample, -1);
+    gpSoundManager->WaitSample(wallMemSample, -1);
+    if (wallSample)
+        wallSample->Dispose();
+    CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
+}
 
 // E:\gamedcs\army.cpp:4739
 // The Cure spell, and its fourteen CancelIndividualSpell calls ARE the
@@ -4249,7 +4416,7 @@ void army::Cure(int level, int iSpellPower, const hero* casting_hero)
 VA(0x00446630, 0x2E)  // anchor-global (body) + call-site pairing, dc 0x4b14c
 int army::MidY() const
 {
-    return gpCombatManager->cells[gridIndex].field_02 - field_16c / 2;
+    return gpCombatManager->cells[gridIndex].field_02 - image_height / 2;
 }
 
 #if 0  // @carcass

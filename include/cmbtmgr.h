@@ -2342,7 +2342,12 @@ struct type_wall_target {
     // three -1 rows are the two towers and the upper keep, the five
     // real ones are the wall segments the AI cares about.
     short blocked_column;             // +0x2
-    char pad_04[0x4];
+    // The segment's missile-impact screen point, byte-proven by
+    // army::attack_wall (0x445fd0): it movsx-loads the pair as the
+    // catapult shot's destination and the explosion center. Retail
+    // values run (586,48) (564,128) .. (762,212).
+    short x;                          // +0x4
+    short y;                          // +0x6
     // ID into combatManager::wallStrength / wallStanding. Retail rows are
     // {5,6,8,9,10,12,13,14}.
     int wall_id;                       // +0x8
