@@ -88,6 +88,15 @@ MISSING forever.
   retail source used `goto`; while/for(;;)+break get rotated (duplicated
   condition) AND win the import an LICM hoist
   (kbwin::Process1WindowsMessage). VC6 does not rotate or LICM goto flow.
+- **A pointer relational compare is UNSIGNED and can never produce `jl`**
+  (byte-proven 2026-08-20, closed three hero.obj functions). VC6
+  strength-reduces a *signed* `for (int i = 0; i < N; ++i)` walk into pointer
+  form while KEEPING the original compare's signedness, so retail ending a
+  loop on `cmp ebx,<End> / jl` was written as an INT INDEX, not a pointer
+  walk — a `p < end` spelling emits `jb` and cannot match. Change BOTH loops
+  of a nested pair in the same edit: converting only the inner one measured
+  WORSE (equip_artifact 85.25 -> 75.08) because VC6 re-derived the outer
+  bound as an unrelated offset while the outer walk stayed pointer-form.
 - **The /Ob2 budget cuts BOTH ways - a local win can cost exact functions
   elsewhere.** Factoring duplicated arms into a shared helper made
   soundmgr's ConvertVolume score better IN ISOLATION but shrank it under
@@ -135,8 +144,17 @@ MISSING forever.
 - **Register-homing family** (smackmgr VideoPlay/DrawRects, widget
   send_message/enable): retail memory-homes a value our CL promotes (or vice
   versa). Order sweeps plateau; document.
-- **EH-bearing functions** (P2.2): fs:[0] frames can't close until the
-  synth-PDB EH scope lands. Claim + `// EH-bearing`, body only if cheap.
+- **EH-bearing functions** — **NOT a wall; this entry was wrong** (corrected
+  2026-08-20). It used to read "fs:[0] frames can't close until the synth-PDB
+  EH scope lands (P2.2); claim + `// EH-bearing`, body only if cheap", and
+  lanes were skipping bodies on that basis. Counter-evidence, byte-proven:
+  `THeroScreenWindow::THeroScreenWindow` (0x4de710, 11,346 B) is EH-bearing
+  AND exact, and the whole EH-bearing mapcell reader family
+  (readArtifactData, readGarrisonData, TTimedEvent::Read, readTimedEventList,
+  loadTimedEventList) is exact or near it. Treat an fs:[0] frame as ordinary
+  work. Local string/temporary cleanup DOES duplicate per early return in
+  retail while our CL sometimes shares one epilogue — that is the
+  merged-return class above, not an EH limitation.
 - **Include-set sensitivity** (initialize_game_data precedent, byte-proven
   2026-08-08): a function's exactness can depend on the COUNT OF
   USER-DEFINED TYPE DEFINITIONS visible in its TU, with no semantic change
