@@ -1702,6 +1702,22 @@ TThievesGuildWindow::~TThievesGuildWindow()
 //     and 101-line holes that are provably comments). Per the
 //     do_general_melee precedent the scaffolding stays out of the
 //     tree; the row holds at 85.9895 until an honest carrier appears.
+//
+// AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
+// after the orchestrator reopened the sizing): respelling k of the 49
+// push_back sites measures 85.60 (k=5, arm 1), 89.59 (k=10, arms 1-2),
+// 88.60 (k=10, arms 4-5), 87.81 (k=15, arms 1-3) - a sharp peak near
+// k=10 that sits TEN POINTS BELOW the pure-statement plateau. The
+// construct is not the same currency as call-free mass: each respelled
+// site also adds an end() candidate SITE, and the denominator effect
+// caps the lever. Two constraints bound any future attempt: the
+// respelled sites must be EXPANDED-phase sites (at the nine
+// called-phase sites - Conflux arm + tail - an insert spelling would
+// emit `call insert` against retail's `call push_back`, a hard reloc
+// mismatch), and no uniform site family lands in the window (the
+// backgrounds and the tail singles both straddle the phase boundary).
+// So the partial dose is real but capped ~89.6, and it is non-uniform
+// source; not banked, same verdict as the naked titration.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
