@@ -240,6 +240,7 @@ ai_tactical	?get_blind_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_dat
 ai_tactical	?get_blood_lust_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38100
 ai_tactical	?get_breath_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36760
 ai_tactical	?get_clone_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0
+ai_tactical	?get_counterstroke_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39e80
 ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	95.4886	95.4886	95.4886	0x39c30
 ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	99.8731	99.8731	99.8731	0x3b370
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60
@@ -295,7 +296,6 @@ ai_tactical	type_AI_spellcaster_consider_teleport	0.0000	0.0000	0.0000	0x3aa60
 ai_tactical	type_AI_spellcaster_get_caliph_value	0.0000	0.0000	0.0000	0x3c4a0
 ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000	0.0000	0.0000	0x39a80
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
-ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000	0.0000	0.0000	0x39e80
 ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000	0.0000	0.0000	0x3b690
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
 ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x39270
