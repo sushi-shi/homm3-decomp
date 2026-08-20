@@ -61,6 +61,13 @@ enum EMessageModifiers {
     // homm2 splits those two bits into right/left shift.
     MESSAGE_MODIFIER_SHIFT_KEYS = 3,
     MESSAGE_MODIFIER_CONTROL = 4,
+    // CONTROL's pair-mask, the same shape SHIFT_KEYS has three lines up:
+    // advManager::ProcessMapSelect gates its "keep the existing path"
+    // arm on `qualifier & 0xc`, and 0xc is CONTROL plus the bit the homm2
+    // lineage splits off as the second control key. Only the MASK is
+    // byte-proven here; no located producer sets bit 3, which is why bit 3
+    // gets no enumerator of its own.
+    MESSAGE_MODIFIER_CONTROL_KEYS = 0xc,
     MESSAGE_MODIFIER_ALT = 0x20,
     MESSAGE_MODIFIER_RIGHT = 0x200,
     MESSAGE_MODIFIER_MASK = 0x300

@@ -1028,6 +1028,18 @@ public:
         COMPLETE_DRAW_LAST_Y = 17
     };
 
+    // The view-relative tile the acting hero is always parked on. The
+    // adventure view is COMPLETE_DRAW_LAST_X+1 by COMPLETE_DRAW_LAST_Y+1
+    // tiles and every recentring path derives radarOrigin as
+    // `mapX - 9 / mapY - 8` (ProcessRadarSelect and the kingdom-overview
+    // arm of ProcessDeSelect both spell it out), so this pair is that
+    // offset read back: ProcessMapSelect compares lastHoverX/lastHoverY
+    // against it to recognise a click on the hero's own square.
+    enum EHeroViewTile {
+        HERO_VIEW_TILE_X = 9,
+        HERO_VIEW_TILE_Y = 8
+    };
+
     enum EHoverBounds {
         HOVER_SCREEN_WIDTH = 800,
         HOVER_SCREEN_HEIGHT = 600,
