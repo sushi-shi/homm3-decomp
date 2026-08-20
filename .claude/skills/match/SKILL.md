@@ -147,6 +147,17 @@ merged count regressed `command::GetCommand` 92.5714 -> 92.5357 exactly as
 one of them had predicted for a single bare declarator. Re-measure the
 include-set-sensitive rows after every merge that touches a shared header.
 
+**THE WALL SATURATES** (measured 2026-08-20, and it CORRECTS two headers that
+recorded the opposite as fact). `armygrp.h`'s SSpellTraits note and `army.h`'s
+EArmyCreatureId note both said ANY enumerator costs `initialize_game_data`
+100.0000 -> 96.0880 and that "the wall fires on the FIRST one and no count
+restores it". Measured cleanly: two enumerators cost exactly what one did, and
+flattening the rest of the `ESpellId` roster afterwards - roughly twenty more
+enumerators visible tree-wide - left the row AT 96.0880, moved exactly one
+other row, and GAINED an exact function elsewhere. So the gates were buying
+nothing after the first one. Do not price a header addition as if each
+declarator costs again.
+
 **THE WALL IS A STEP FUNCTION, NOT A SUM** (measured across the view audit's
 seven commits, 2026-08-20). Removing 89 view macros moved rows
 NON-MONOTONICALLY: `initialize_game_data` crossed 100 -> 96.09 -> 94.07 ->
