@@ -4608,6 +4608,17 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // playing (InsertSound returns early on soundsType 1), pass 2 is the one
 // allowed to claim a free slot. The four running edge counters are what
 // make retail emit inc/inc/dec/dec rather than indexed addressing.
+//
+// Residual (63.94%): register-homing only. The function is branch-for-
+// branch identical to retail - 15 branches, 1 return, identical call
+// multiset - and why-reg v2 confirms the definition slots and their order
+// agree on BOTH sides, with only the ebx/edi bindings permuted: retail
+// holds `this` in edi and hoists the 0x7f idle priority into ebx, we hold
+// `this` in ebx and spend edi on the loop counter that retail memory-homes.
+// Since the value that must move first is `this` - a parameter - no local
+// spelling reaches it; this is C1 front-end handle state, the bounded
+// class. The one lever the model did find (creating `y` before `x`) is
+// applied above and is worth 16 slots / +0.27.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
@@ -4634,8 +4645,8 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
 
     touchedSounds = 0;
 
-    int x = point.x;
     int y = point.y;
+    int x = point.x;
     int z = point.z;
 
     int soundsType;
