@@ -937,6 +937,7 @@ hero	??_GTHeroScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe1520
 hero	?AddSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330
 hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510
+hero	?CheckLevel@hero@@QAEXXZ	46.2763	46.2763	46.2763	0xda720
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340
 hero	?Deallocate@hero@@QAEXEE@Z	93.0529	93.0529	93.0529	0xd9ec0
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260
@@ -1056,7 +1057,6 @@ hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
-hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
 hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120

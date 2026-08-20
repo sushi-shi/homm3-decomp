@@ -173,6 +173,16 @@ extern unsigned char gCombatFlag697744;
 // hero::load emits before the call. NAME INVENTED from the role; the row
 // is unclaimed and no DC or NH3API symbol covers it.
 std::string ReadLengthPrefixedString(TAbstractFile* infile);
+
+// hero::CheckLevel's three outside names. DECLARATIONS ONLY - the DATA
+// claims on 0x6a7570 and 0x69954c belong to levelupwindow.cpp and
+// kbwin.cpp, and a second claim on one RVA is a fatal duplicate at
+// delink (the gCombatFlag pair above is the same case). They live here
+// rather than in a .cpp because a line-initial `extern` in a .cpp is a
+// cleanliness-floor violation, and here rather than by including
+// kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
+extern const char* gSkillMasteryNames[3];
+extern int bVideoPaused;
 #endif
 
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
@@ -220,6 +230,22 @@ public:
         DEALLOCATE_KEPT_PORTRAIT = 0x9e,
         DEALLOCATE_KEPT_HERO_ID = 150
     };
+    // hero::CheckLevel's domain, same gate and same reason. The
+    // class-traits row carries TWO primary-skill chance columns and the
+    // level-up takes the second from level 10 up (retail `cmp cx,9 / jg`,
+    // a 16-bit signed test on the already-incremented level). The
+    // campaign/hero pair is the one scenario that swaps in the Barbarian
+    // class row instead of the hero's own, and re-rolls against that
+    // row's first two chances rather than a percentile. Note that
+    // LEVEL_UP_CAMPAIGN_OVERRIDE's 14 collides in VALUE with
+    // eSecSkillSchoolOfAirMagic - different domains, which is exactly
+    // why both want names.
+    enum {
+        LEVEL_UP_LOW_LEVEL_LAST = 9,
+        LEVEL_UP_CAMPAIGN_OVERRIDE = 14,
+        LEVEL_UP_OVERRIDE_HERO_ID = 45,
+        LEVEL_UP_SKILL_CHOICES = 2
+    };
 #endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
@@ -265,7 +291,10 @@ public:
     // on BOTH sides because type_point's z is a four-bit bitfield.
     // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
     short pathTargetZ;                  // +0x3d
-    short field_03f;                    // +0x3f
+    // +0x3f, DC-attested (`hero,66,T_SHORT,last_magic_school_level`,
+    // retail +0x3f under the same -5 repack). hero::CheckLevel writes the
+    // new `level` here whenever the level-up offers a magic school.
+    short last_magic_school_level;      // +0x3f
     short field_041;                    // +0x41
     unsigned char targetIsCritical;       // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
@@ -348,7 +377,21 @@ public:
     unsigned long Shrine1Flags;             // +0x83
     unsigned long Shrine2Flags;             // +0x87
     unsigned long Shrine3Flags;             // +0x8b
-    char pad_08f[0x2];
+    // +0x8f / +0x90, DC-attested (evidence/dreamcast/members.csv rows
+    // `hero,148,iLevelSeed` and `hero,149,lastWisdom` - the same uniform
+    // -5 repack the flag band above already answers to, and the two rows
+    // sit between Shrine3Flags (DC 144, retail +0x8b) and heroArmy
+    // (DC 152, retail +0x91), so the pair fills this pad exactly).
+    // RETAIL BYTE-PROOF, both from hero::CheckLevel (0x4da720): it seeds
+    // the level-up RNG with
+    //   SRand(level*214013 + iLevelSeed*156823 + 153567)
+    // reading +0x8f ZERO-extended (`xor ecx,ecx / mov cl,[ebx+0x8f]`,
+    // which is what types it unsigned), and it stores the new level's LOW
+    // BYTE into +0x90 (`mov dl,[ebx+0x55] / mov [ebx+0x90],dl`) whenever
+    // the level-up offers Wisdom - the "guaranteed Wisdom within N
+    // levels" bookkeeping, which is what makes the DC name fit.
+    unsigned char iLevelSeed;           // +0x8f
+    unsigned char lastWisdom;           // +0x90
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
