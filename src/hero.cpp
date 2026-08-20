@@ -848,6 +848,14 @@ int hero::save(TAbstractFile* outfile)
 // The member that creates this wall is precisely the one the Dreamcast
 // build does not have. Nothing is padded: the probe is an instrument and
 // the row is deliberately left at 70.99.
+// MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` spanning the
+// member-initialiser expansion, to chase retail's out-of-line
+// basic_string::_Tidy (base x0 vs retail x1), costs 70.99 -> 53.99. The
+// pin DOES reach a member-init - which is worth knowing, the eh-cleanup
+// doc's caveat notwithstanding - but it de-inlines the whole init closure
+// (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
+// default-ctor pair) where retail keeps all of those expanded, and only
+// customName's _Tidy out of line.
 VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
