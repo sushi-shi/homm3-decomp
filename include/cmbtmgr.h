@@ -1781,7 +1781,25 @@ public:
                    int monster_skill, long monster_power);   // 0x59fe30
 #endif
 #ifdef HOMM3_CMBTMGR_ROUND_VIEW
-    void ShowSpellMessage(int bIsMonsterSpell, int spellId,
+    // WHO cast the spell ShowSpellMessage is about to announce. The DC
+    // roster calls the parameter `bIsMonsterSpell`, but retail's body
+    // (0x5a8950) is a three-way `dec eax / je` chain, not a bool test,
+    // and each value picks a different NOUN for the message's subject:
+    //   1 names the acting stack, out of armies[actingSide][actingSlot];
+    //   2 names an ARTIFACT, out of akArtifactTraits;
+    //   everything else names the casting hero, heroes[currentSide].
+    // 1 is corroborated from outside this body - retail's ResetRound
+    // calls 0x5a8950 with exactly (1, SPELL_POISON, this) - and 2 by
+    // combatManager::SetNextArmy (0x465330), whose two auto-cast
+    // artifacts are precisely the two rows the 2-arm special-cases.
+    // The parameter keeps its int width and its roster name; the enum
+    // exists so the arms can be spelled as what they are.
+    enum ESpellCaster {
+        SPELL_CASTER_HERO = 0,
+        SPELL_CASTER_CREATURE = 1,
+        SPELL_CASTER_ARTIFACT = 2
+    };
+    void ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
                           army* targetArmy);                   // 0x5a8950
     // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
     // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
