@@ -11,6 +11,11 @@
 #define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// DrawBolt writes 16-bit pixels straight into the screen bitmap, so
+// it needs the Bitmap16Bit layout; the channel masks its RGBto16
+// packs them with are declared in spells.h, for a measured reason
+// recorded there.
+#include "bitmap16.h"
 // ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
 // poisonPenalty multiplier (+0x4a4) to price the hit points the stack
 // just lost; army.h keeps both behind the round view.
@@ -101,6 +106,23 @@ static const char* CreatureName(int type, long count)
     // literal; the linker folds our COMDAT onto it, so the only delta is
     // a reloc NAME (masked).
     return "";
+}
+
+// WinGraph.h:55's RGBto16 (dc 0xff780) as retail's spells.cpp saw it -
+// a header inline with no retail out-of-line body, which DrawBolt
+// expands SIX times. Spelled file-locally for exactly the reason
+// CreatureName below is; mousemgr.cpp already carries its own
+// hand-spelled two-term copy of the same expansion.
+//
+// The `x * mask / 255 & mask` term is byte-exact in both: the divide is
+// the unsigned 0x80808081 reciprocal (`mul` then `shr edx, 7`), which
+// is what fixes the product as UNSIGNED - i.e. the mask, not the
+// component, decides the expression's type.
+static unsigned RGBto16(int r, int g, int b)
+{
+    return ((r * gColorMask68c860 / 255) & gColorMask68c860)
+        | ((g * gColorMask68c864 / 255) & gColorMask68c864)
+        | ((b * gColorMask68c868 / 255) & gColorMask68c868);
 }
 
 // army::get_controlling_side (0x440140) as retail's spells.cpp saw it.
@@ -1146,16 +1168,232 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+// DrawBolt's three span-colour ramps, .data 0x68833c / 0x68834c /
+// 0x68835c, read straight from the hash-verified image. Each row is one
+// (R, G, B) byte triple - the channel order is byte-proven in
+// bitmap16.h's note on the 0x68c86x mask triple - and DrawBolt is the
+// only function in the image that references any of the three, which is
+// what makes them spells.obj's own file statics.
+//
+// The two FIVE-row tables are indexed by the DISTANCE FROM THE NEARER
+// EDGE of the drawn span, so row 0 paints both rims and the last row
+// the middle. The FIFTEEN-row one is indexed by the span position
+// itself, forwards for BOLT_COLOR_0 and backwards from row 14 for
+// BOLT_COLOR_3 - the same ramp read in both directions, which is what
+// the two colours are FOR.
+DATA(0x0068833c)
+static unsigned char gBoltGreenSpanColors[5][3] = {
+    { 0x98, 0xbc, 0x18 }, { 0x7c, 0xd8, 0x7c }, { 0x24, 0xb4, 0x24 },
+    { 0x0c, 0x84, 0x0c }, { 0x00, 0x60, 0x00 }
+};
 
-// E:\gamedcs\spells.cpp:3702
+DATA(0x0068834c)
+static unsigned char gBoltWhiteSpanColors[5][3] = {
+    { 0xc0, 0xc0, 0xc0 }, { 0xd0, 0xd0, 0xd0 }, { 0xe0, 0xe0, 0xe0 },
+    { 0xf0, 0xf0, 0xf0 }, { 0xff, 0xff, 0xff }
+};
+
+DATA(0x0068835c)
+static unsigned char gBoltSpectrumColors[15][3] = {
+    { 0xb4, 0x24, 0x24 }, { 0xbc, 0x38, 0x38 }, { 0xe0, 0x84, 0x2c },
+    { 0xec, 0xb8, 0x60 }, { 0xf4, 0xd0, 0x7c }, { 0xf0, 0xdc, 0x6c },
+    { 0xe8, 0xcc, 0x34 }, { 0xe0, 0xc4, 0x00 }, { 0xa4, 0xd0, 0x00 },
+    { 0x68, 0xb0, 0x5c }, { 0x70, 0xb0, 0xbc }, { 0x40, 0x4c, 0xb4 },
+    { 0x20, 0x30, 0x98 }, { 0x70, 0x44, 0x94 }, { 0x5c, 0x30, 0x80 }
+};
+
+// The bolt RASTERISER: step the pen one pixel along the bolt's current
+// heading iDrawLength times and, at every position it actually moved
+// to, paint a thickness-wide span straight into the screen bitmap.
+//
+// `this` IS NEVER TOUCHED - ecx is dead from the first instruction -
+// which is why every screen access here goes through gpWindowManager
+// rather than through the combat manager's own back buffer, and why the
+// row stride is the literal 800 rather than screenBitmap->Pitch.
+//
+// FIVE COLOUR ARMS, NOT SIX. The switch lowers `iColor - 0x12c` against
+// 6, and its jump table's SECOND entry - the one for BOLT_COLOR_1 -
+// points at the default block, so 0x12d has no case of its own.
+// cmbtmgr.h's EBoltColor note is corrected there. The arms are written
+// in retail's own emission order (0x130, 0x12e, 0x12c, 0x12f, 0x131,
+// default), which is what the arm addresses give.
+//
+// iUseThicknessStopOffset IS DEAD, and it is retail's own dead store:
+// `Random(7, 12)` is called once before the loop and its result is
+// never read by any of the 1612 bytes. The DC roster names the local
+// (variables.csv, dc 0x154680), so the call is transcribed with it.
+//
+// THE PEN AND THE PIXEL are separate: fX/fY carry the fractional
+// position and iX/iY the rounded one, and BOTH are clamped when the
+// rounded one leaves the screen - the float being reset to the clamp
+// value is what stops the pen walking away off-screen and never coming
+// back. The four clamps are SEPARATE ifs, not else-ifs: retail re-reads
+// iX from the record between the `< 0` and `> 799` tests, which an
+// else-if chain would not do.
+//
+// THE ARRIVAL LATCH is two-stage and reads off the last block. bDone is
+// raised the first time the remaining manhattan distance drops under
+// 15, and field_48 then tracks the CLOSEST approach; once the bolt is
+// either within 2 pixels or has started moving AWAY again (further than
+// field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
+//
+// RGBto16's THREE TERMS ARE EMITTED RIGHT-TO-LEFT, and that reading is
+// worth 71.63 -> 76.90 on its own: `(r) | (g) | (b)` in source order
+// puts the BLUE term's mask load FIRST in the object, which is retail's
+// order in all six expansions. Writing the return the other way round
+// reverses every one of them.
+//
+// Residual (76.9%): ONE class, the B1 whole-body binding swap
+// (`esi->ebx x36` and its knock-ons). Retail keeps psBolt in EBX for
+// the whole body and has ESI and EDI free for the two pixel
+// coordinates; our CL binds psBolt->ESI, which pushes the y coordinate
+// into the caller-saved ECX and forces a reload of psBolt from [ebp+8]
+// in every arm. Under the RE'd first-fit rule (docs/vc6/regalloc.md)
+// EBX is the THIRD call-crossing pseudo, so retail created two values
+// before the parameter - which the model calls unreachable from a local
+// spelling. Tried and rejected: unnaming iSpanFirst (why-reg's own top
+// pick at -71 masked slots, and it MEASURED 76.90 -> 75.80 - the
+// low-mass inversion); hoisting iX/iY to function scope in either
+// order (byte-flat); declaring `i` at function scope between iLastX and
+// iLastY the way the DC slot order has it (byte-flat, kept for its
+// provenance); all thirteen of why-branch's D-class mutations.
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
 void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 {
-    // @stub
-}
+    long iLastX = static_cast<long>(psBolt->fX);
+    long i;
+    long iLastY = static_cast<long>(psBolt->fY);
+    long iSpanLast = psBolt->iSpanLast;
+    long iSpanFirst = psBolt->iSpanFirst;
+    long iUseThicknessStopOffset = Random(7, 12);
 
-#endif  // @carcass
+    { for (i = 0; i < iDrawLength; i++) {
+        psBolt->fX = static_cast<float>(
+            cos(static_cast<double>(psBolt->fAngle)) + psBolt->fX);
+        psBolt->fY = static_cast<float>(
+            sin(static_cast<double>(psBolt->fAngle)) + psBolt->fY);
+        psBolt->iX = static_cast<long>(psBolt->fX);
+        psBolt->iY = static_cast<long>(psBolt->fY);
+        if (psBolt->iX < 0) {
+            psBolt->iX = 0;
+            psBolt->fX = 0;
+        }
+        if (psBolt->iX > 799) {
+            psBolt->iX = 799;
+            psBolt->fX = 799;
+        }
+        if (psBolt->iY < 0) {
+            psBolt->iY = 0;
+            psBolt->fY = 0;
+        }
+        if (psBolt->iY > 555) {
+            psBolt->iY = 555;
+            psBolt->fY = 555;
+        }
+
+        long iX = psBolt->iX;
+        long iY = psBolt->iY;
+        if (iX == iLastX && iY == iLastY)
+            continue;
+        iLastX = iX;
+        iLastY = iY;
+
+        { for (long k = iSpanFirst; k <= iSpanLast; k++) {
+            if (psBolt->bShallow)
+                iY = psBolt->iY + k;
+            else
+                iX = psBolt->iX + k;
+            if (iX >= 0 && iX < 800 && iY >= 0 && iY < 556) {
+                long iFromEdge;
+                if (k < 0)
+                    iFromEdge = k - iSpanFirst;
+                else
+                    iFromEdge = iSpanLast - k;
+
+                switch (psBolt->iColor) {
+                case BOLT_COLOR_4:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(
+                            RGBto16(gBoltWhiteSpanColors[iFromEdge][0],
+                                    gBoltWhiteSpanColors[iFromEdge][1],
+                                    gBoltWhiteSpanColors[iFromEdge][2]));
+                    break;
+                case BOLT_COLOR_2:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(
+                            RGBto16(gBoltGreenSpanColors[iFromEdge][0],
+                                    gBoltGreenSpanColors[iFromEdge][1],
+                                    gBoltGreenSpanColors[iFromEdge][2]));
+                    break;
+                case BOLT_COLOR_0:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(RGBto16(
+                            gBoltSpectrumColors[k - iSpanFirst][0],
+                            gBoltSpectrumColors[k - iSpanFirst][1],
+                            gBoltSpectrumColors[k - iSpanFirst][2]));
+                    break;
+                case BOLT_COLOR_3:
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(RGBto16(
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][0],
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][1],
+                            gBoltSpectrumColors[14 - (k - iSpanFirst)][2]));
+                    break;
+                case BOLT_COLOR_CHAIN_LIGHTNING:
+                    // Six hand-written shades rather than a table, and
+                    // retail spells all six: each arm expands RGBto16
+                    // in full and only the last channel term is
+                    // tail-merged between them.
+                    if (iFromEdge == BOLT_SPAN_DEPTH_0)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(255, 255, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_1)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(240, 240, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_2)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(224, 224, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_3)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(216, 216, 255));
+                    else if (iFromEdge == BOLT_SPAN_DEPTH_4)
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(200, 200, 255));
+                    else
+                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                            static_cast<unsigned short>(
+                                RGBto16(192, 192, 255));
+                    break;
+                default:
+                    // Anything outside the six special values is a raw
+                    // 16-bit pixel, written straight through.
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] =
+                        static_cast<unsigned short>(psBolt->iColor);
+                    break;
+                }
+            }
+        } }
+
+        long iRemaining = abs(psBolt->iDestY - psBolt->iY)
+            + abs(psBolt->iDestX - psBolt->iX);
+        if (psBolt->bDone) {
+            if (iRemaining > psBolt->field_48 + 1 || iRemaining <= 2) {
+                psBolt->bAtDestination = 1;
+                return;
+            }
+            if (iRemaining < psBolt->field_48)
+                psBolt->field_48 = iRemaining;
+        } else if (iRemaining < 15) {
+            psBolt->bDone = 1;
+            psBolt->field_48 = iRemaining;
+        }
+    } }
+}
 
 // The bolt constructor: clamp both endpoints into the screen, stamp the
 // whole record from the thirteen parameters, decide whether the run is

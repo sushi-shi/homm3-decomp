@@ -1593,6 +1593,7 @@ spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
 spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	98.2205	98.2205	98.2205	0x1a5c20
+spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	76.8992	76.8992	76.8992	0x1a5440
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	89.6774	89.6774	89.6774	0x1a92f0
@@ -1621,7 +1622,6 @@ spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.
 spells	HandleGetTeleportDestination	0.0000	0.0000	0.0000	0x1a37d0
 spells	combatManager_Armageddon	0.0000	0.0000	0.0000	0x1a4bc0
 spells	combatManager_ChainLightning	0.0000	0.0000	0.0000	0x1a6360
-spells	combatManager_DrawBolt	0.0000	0.0000	0.0000	0x1a5440
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
 spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
 spells	combatManager_Resurrect	0.0000	0.0000	0.0000	0x1a7560
