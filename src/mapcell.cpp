@@ -2783,12 +2783,85 @@ int NewfullMap::loadMapObjects(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:4018
+// Builds the per-cell stacking depth an object's sprite occupies, as an 8x6
+// byte grid.  The grid is zeroed wholesale (`rep stosd` of twelve dwords), the
+// object's type record supplies the extent, and a type flagged suppressDraw
+// contributes nothing at all.
+//
+// The WIDTH index is the outer loop and the height index the inner one - the
+// grid pointer advances by six per outer iteration while the inner one indexes
+// single bytes, which fixes the orientation as heightMap[width][height].  Both
+// loop bounds are re-read from the type record on every iteration, so neither
+// is hoisted.
+//
+// The mask is passableCells, addressed as a 6x8 bit grid packed most
+// significant bit first: cell (col,row) is bit 47 - row*8 - col.  The two
+// neighbour probes fall out of that arithmetic - 55 - row*8 - col is the cell
+// one ROW up, 48 - row*8 - col the cell one COLUMN left - which is why the
+// two guards are `row > 0` and `col > 0` respectively.  bitset::test is the
+// spelling, not operator[]: retail carries the `pos >= 48` bounds check and
+// its out-of-line _Xran call at all four sites.
+//
+// THE BODY DOES NOT CACHE A CObjectType POINTER, and that is worth 29 points.
+// Hoisting `CObjectType* objectType = &objectTypes[typeIndex];` and reaching
+// every field through it scores 68.1677; re-subscripting `objectTypes[
+// typeIndex]` at each of the seven uses scores 96.7484.  The bytes say why:
+// retail keeps only the BYTE OFFSET 68*typeIndex live in EBX and reloads
+// `objectTypes._First` from `this` on every loop iteration
+// (`mov eax,[edx+4] / add eax,ebx`), which is what VC6 emits when it cannot
+// prove the vector's base is loop-invariant.  A cached pointer removes those
+// reloads and takes `this` out of its stack slot with it.  Measured on the
+// way: hoisting only `object->typeIndex` above the memset (retail computes the
+// index before the `rep stosd` and the vector base after) is worth another
+// 1.5 points, 66.6581 -> 68.1677, while hoisting the whole subscript
+// expression above the memset goes backwards to 64.8903.
+//
+// Residual (96.7484%): four reloc NAME rows plus one scheduling block.  The
+// four are the bitset _Xran calls, which the delinked side spells
+// `game_invalid_bitset_n_positio_1b410` because that helper is unclaimed - the
+// readGarrisonData/DoDialog cosmetic class.  The one real delta is the third
+// bitset probe's block, where retail loads `this` a slot earlier and lands
+// col/this/_First in ecx/eax/edx against this compile's eax/eax/ecx: same
+// instructions, same order of effects, one schedule apart.  Branch counts and
+// targets agree 15/15 with a single ret, so nothing structural is left.
 VA(0x00505060, 0x1CD)  // order-map: callers exactly StampObject 0x505230 + PlaceObject 0x505b20 (DC-isomorphic); bitset<48> ops, dc 0xf33fc
-void NewfullMap::GenerateHeightMap(const CObject* obj, []* map)
+void NewfullMap::GenerateHeightMap(const CObject* object,
+                                   signed char heightMap[8][6])
 {
-    // @stub
+    int typeIndex = object->typeIndex;
+
+    memset(heightMap, 0, 48);
+
+    if (objectTypes[typeIndex].suppressDraw)
+        return;
+
+    for (int col = 0; col < objectTypes[typeIndex].width; ++col) {
+        int depth = 1;
+        for (int row = 0; row < objectTypes[typeIndex].height; ++row) {
+            if (row > 0) {
+                if (!objectTypes[typeIndex].passableCells.test(
+                        47 - row * 8 - col)
+                    && objectTypes[typeIndex].passableCells.test(
+                        55 - row * 8 - col))
+                    depth = 1;
+            }
+            if (col > 0) {
+                if (objectTypes[typeIndex].passableCells.test(
+                        47 - row * 8 - col)
+                    && !objectTypes[typeIndex].passableCells.test(
+                        48 - row * 8 - col))
+                    depth = heightMap[col - 1][row];
+            }
+            heightMap[col][row] = static_cast<signed char>(depth);
+            ++depth;
+        }
+    }
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:4053
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
