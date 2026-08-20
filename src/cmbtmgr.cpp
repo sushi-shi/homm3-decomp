@@ -175,18 +175,35 @@ unsigned char combatManager::LoadWallTraitsTable()
 // exists only to run operator delete if a constructor throws, since
 // there is no STL and no string anywhere in the body.
 //
-// Residual (82.9093%): predict-inline reports the call multisets EQUAL,
-// 45 against 45, and the branch COUNTS equal at 60 - so nothing is
-// missing and nothing extra is expanded. The 18 branch-shape
-// disagreements are dominated by ONE divergence repeated across all six
-// inlined IsQuickCombat expansions: retail forms both player-record
-// addresses with `lea` and holds zero in EDI to compare memory against,
-// where our CL folds +0xe4 into the load and picks a different zero
-// register. That is the same shape damage_message's note argues is
-// context rather than spelling - retail's own LowerDoor expands the
-// identical source into the FOLDED form - so the shared inline must not
-// be retuned for it here either. why-branch's three guided candidates
-// (D13 on the two tactics locals and the side flag) all measure +0.
+// 82.9093 -> 97.0819 -> 99.4306 (2026-08-20), and the first step
+// REFUTES what stood here. The old note read the repeated divergence in
+// the six inlined IsQuickCombat expansions correctly - retail forms both
+// player-record addresses with `lea` where we fold +0xe4 into the load -
+// and then argued the shared inline must not be retuned because
+// "retail's own LowerDoor expands the identical source into the FOLDED
+// form". It does not: naming the two records as `const playerData&`
+// references in IsQuickCombat's body (see there) hoists both `lea`
+// chains ahead of the short-circuit exactly as retail does, and
+// LowerDoor stayed at 100.0000 through the change. Six cmbtmgr rows rose
+// on that one edit.
+//
+// The second step is the combat-window arm order. Retail lays the `new
+// TCombatWindow` block out AHEAD of the inlined predicate's last arm and
+// falls through into `combatWindow = 0` (`setne al / test al,al / je`);
+// this body had the arms the other way round and got `jne`. Writing the
+// quick-combat case as the IF arm and the window construction as the
+// ELSE arm reproduces retail's layout: +2.35.
+//
+// Residual (99.4306%): one scheduling slot, in the inlined `strcpy` of
+// cMgrName. Retail emits BOTH of the block's immediate dword stores
+// back to back ahead of the `or ecx,-1 / xor eax,eax / repne scasb`
+// strlen and puts `lea edx,[ebx+cMgrName]` after `sub edi,ecx`; our CL
+// keeps the first store, hoists the `lea` ahead of the scasb and sinks
+// the second store past the copy. Not source-addressable: swapping the
+// `id = 0x200` and `priority = newPriority` statements so the two
+// immediate stores are adjacent in source measures byte-identical at
+// 99.4306, so VC6 schedules this block independently of the order it
+// is written in.
 //
 // TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
 // of the flat `&&`, which is how the branch graph first reads. Measured
@@ -246,13 +263,13 @@ int combatManager::Open(int newPriority)
     chatMan.PauseTimeOuts();
     field_13300 = 1;
 
-    if (!IsQuickCombat()) {
+    if (IsQuickCombat()) {
+        combatWindow = 0;
+    } else {
         combatWindow = new TCombatWindow(bCreaturePlacement);
         if (!combatWindow)
             MemError();
         gpWindowManager->AddWindow(combatWindow, -1, 1);
-    } else {
-        combatWindow = 0;
     }
 
     UpdateArmyLuckAndMorale();
@@ -953,17 +970,48 @@ void combatManager::UpdateArmyGroup(int whichSide)
 // E:\gamedcs\cmbtmgr.cpp:1653
 // RECONSTRUCTED 2026-08-09 from retail's 11x17 cell initializer. All eight
 // short coordinate fields, five empty sentinels and three cleared state
-// fields are written in retail order. Residual (58.8421%): the five-block
-// loop flow agrees, but retail spills y and three row expressions while this
-// compile retains/strength-reduces y. Cached/repeated GetCell spellings,
-// function/block y lifetimes and the nested GetHexIndex boundary converge.
+// fields are written in retail order.
+//
+// CORRECTED 2026-08-20, and the correction is semantic, not cosmetic. The
+// odd-row shift on the LOWER pair was inverted. Retail computes it as
+// `neg cl / sbb ecx,ecx / and ecx,-16h / add ecx,16h`, which is
+// `odd ? 0 : 22`; the upper pair's `and al,-16h / add eax,2Ch` is
+// `odd ? 22 : 44`. This body had both as `odd ? 22 : <else>`, so every odd
+// row's field_04/field_08 sat 22 too far right.
+//
+// The three derived coordinates are READ BACK OUT OF THE JUST-STORED
+// MEMBER, not recomputed and not cached in a named local. Retail spells
+// field_0a/field_0c as `lea ecx,[edi+2Ah]` / `[edi+34h]` off the field_06
+// value and field_08 as `add esi,2Ch` off the field_04 value. Written as
+// `y*42+128` / `y*42+138` / `x*44+lower+14+44` they constant-fold into
+// three independent expressions VC6 never re-associates back together;
+// landing them in named locals is WORSE still, because `int top = y*42+86`
+// is an affine function of the outer counter and VC6 strength-reduces it
+// onto its own induction variable (`mov edi,56h` ... `add edi,2Ah` /
+// `cmp edi,224h`) where retail recomputes `y*42` from y every outer
+// iteration. Measured: 58.8421 (folded) -> 54.4868 (named locals) ->
+// 60.3026 (member read-back).
+//
+// Residual (60.3026%): ONE allocation decision. Retail hoists `or ebx,-1`
+// into the outer preheader and feeds all five sentinels from it (`mov
+// [eax+14h],bl` x3, `mov [eax+10h],ebx`), which costs it EBX and pushes y
+// AND the cell pointer into frame slots ([ebp-4], [ebp-8], frame 14h);
+// this compile keeps y in EBX and the pointer in EAX (frame 0Ch) and pays
+// with five -1 immediates. The choice is C2's and the source cannot reach
+// it - tried and rejected, all BYTE-IDENTICAL to the plain form at
+// 60.3026: `cell->field_1a = cell->armySlot = cell->armySide = -1;`
+// (chained, which also yields retail's left-to-right store order), a
+// hoisted `int empty = -1;` fed through `static_cast<signed char>`, and
+// both together; the constant folds back every time. Downstream of the
+// same decision: our base pointer lands at cells+18h against retail's
+// cells+4, which is what pushes four stores onto disp32 encodings.
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
 void combatManager::GenerateMap()
 {
     int y;
     for (y = 0; y < 11; y++) {
         int upper_offset = RowIsOdd(y) ? 22 : 44;
-        int lower_offset = RowIsOdd(y) ? 22 : 0;
+        int lower_offset = RowIsOdd(y) ? 0 : 22;
 
         for (int x = 0; x < 17; x++) {
             hexcell* cell = &GetCell(x, y);
@@ -976,12 +1024,11 @@ void combatManager::GenerateMap()
             cell->field_00 = static_cast<short>(
                 x * 44 + upper_offset + 14);
             cell->field_02 = static_cast<short>(y * 42 + 128);
-            cell->field_0a = static_cast<short>(y * 42 + 128);
+            cell->field_0a = static_cast<short>(cell->field_06 + 42);
             cell->field_04 = static_cast<short>(
                 x * 44 + lower_offset + 14);
-            cell->field_0c = static_cast<short>(y * 42 + 138);
-            cell->field_08 = static_cast<short>(
-                x * 44 + lower_offset + 14 + 44);
+            cell->field_0c = static_cast<short>(cell->field_06 + 52);
+            cell->field_08 = static_cast<short>(cell->field_04 + 44);
             cell->field_10 = 0;
             cell->iBodiesInHex = 0;
             cell->field_4c = 0;
@@ -1185,13 +1232,32 @@ void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
 // Dreamcast lists this as a cmbtmgr.h inline with no retail body.
 // LowerDoor's inlined branch graph proves all four inputs and the exact
 // distinction between network-side quick combat and the global mode.
+//
+// THE TWO PLAYER RECORDS ARE NAMED REFERENCES, AND THAT IS WORTH SIX
+// FUNCTIONS (2026-08-20). Retail computes BOTH `lea` chains -
+// `lea edx,[ecx+8*edx+K]` and `lea eax,[ecx+8*eax+K]` - ahead of the
+// short-circuit and then tests `mov ecx,[edx+0e4h] / cmp ecx,edi` and
+// `cmp [eax+0e4h],edi`. Spelled as two `gpGame->players[...].quickCombat`
+// subscripts joined by `&&`, VC6 folds +0xe4 into each load and defers
+// the second address chain past the first branch, which is one extra
+// branch-shape divergence in EVERY expansion of this body. Naming the
+// records first hoists the addresses and leaves the loads at the tests,
+// which is exactly retail's shape. Measured on the same build:
+// Open 82.9093 -> 97.0819, damage_message 89.6402 -> 98.8371,
+// ShootBallisticMissile 86.4031 -> 89.3406, ShootMissile 91.7404 ->
+// 93.9760, ShootAnimatedMissile 91.1779 -> 93.5088, SetNextArmy
+// 87.5102 -> 89.9086, and LowerDoor - the body a standing note in Open
+// cited as proof that the folded form was retail's - held at 100.0000
+// throughout.
 inline unsigned char combatManager::IsQuickCombat()
 {
     if (gpGame->field_1f69d)
         return 0;
-    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
-        return gpGame->players[playerIds[0]].quickCombat
-            && gpGame->players[playerIds[1]].quickCombat;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1]) {
+        const playerData& left = gpGame->players[playerIds[0]];
+        const playerData& right = gpGame->players[playerIds[1]];
+        return left.quickCombat && right.quickCombat;
+    }
     return gCombatQuickMode69877c != 0;
 }
 

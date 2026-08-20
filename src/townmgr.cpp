@@ -1612,6 +1612,23 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // settle: the cb currency is expression NODES, the direction is MORE,
 // and the dose needed is small - well under a tenth of what 49 end()
 // nodes buy.
+//
+// SIXTH CANDIDATE, MEASURED AND REJECTED 2026-08-20 - and it is NOT
+// another dose of the same shape; it eliminates a different mechanism.
+// The divergence is three levels deep and only the innermost level
+// differs. BOTH sides inline `reserve` - `cmp ecx,4Dh` / `push 134h` /
+// `call operator new` / the copy loop / `call operator delete` /
+// `add eax,134h` land instruction-for-instruction - and BOTH inline
+// `_Ucopy` into its loop; retail then expands `_Construct` INSIDE that
+// loop as `cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx` (the
+// placement-new null test plus the pointer store) where we emit
+// `call std::_Construct`. So the refusal is at inline DEPTH 3, which
+// makes `#pragma inline_depth(255)` on the reserve statement the obvious
+// question - the depth can be lowered but not raised once expansion has
+// begun, so it has to be set at the site beforehand, which a statement
+// pin does. Measured byte-flat: 85.9895 to the digit. Depth is not the
+// limiter; the `budget / (n - k)` quotient is, exactly as this note
+// says.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)

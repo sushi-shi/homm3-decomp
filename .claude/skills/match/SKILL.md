@@ -26,12 +26,19 @@ compares against `max`, so once a max has been accepted downward the row sits
 below a value it once reached and the build stays green forever. `hist` is the
 only record. `homm3 vc6 queue` now reports every such row.
 
-This is not hypothetical: a retired view gate left a header invariant
-unenforced — the `#if` went with the audit, the prose survived the merge — and
-two `town` rows sat 20.7 and 11.5 points under their peaks with the ratchet
-clean. Both were recovered in one lane, one of them back to EXACT. **When a
-gate or a declaration is removed, re-read what its comment claimed to
-guarantee.**
+This is not hypothetical, and it happened TWICE from the same cause:
+- A retired view gate left a header invariant unenforced — the `#if` went with
+  the audit, the prose survived the merge — and two `town` rows sat 20.7 and
+  11.5 points under their peaks with the ratchet clean. Both recovered, one
+  back to EXACT.
+- The same audit exposed a **default constructor**: `type_artifact`'s
+  `: artifactId(-1), extra(-1) {}` had been gated so only `game.cpp` saw it.
+  With the gate gone `seerhut.cpp` saw it too, and its loop gained two dead
+  `-1` stores plus a lost CSE — `GetAIValue` 100 -> 70. Constructing through
+  the two-argument ctor restored the exact bytes with no header change.
+
+**When a gate or a declaration is removed, re-read what its comment claimed to
+guarantee — and check SPECIAL MEMBERS, not only function definitions.**
 
 **A MAX IS ONLY COMPARABLE WITHIN A DELINK GENERATION** (proven 2026-08-20).
 New claims in ANY TU rename symbols in the synth PDB, vostok delinks every
@@ -509,6 +516,23 @@ function needed the re-reads AND two `unsigned short` truncations together;
 either alone is a LOSS (the casts alone measured below baseline), both give
 +4.12. If a known-good lever measures negative, check the types before
 discarding it.
+
+**WHERE RETAIL COMPUTES BOTH OPERAND ADDRESSES AHEAD OF A SHORT-CIRCUIT, NAME
+THEM AS `const T&` LOCALS.** `a.x && b.x` written as two subscripts makes VC6
+fold the offset into each load and defer the second address chain past the
+branch; retail forms both with `lea` first. Six rows moved on one edit —
+`combatManager::Open` **+16.52** and `damage_message` **+9.20**.
+
+**A COORDINATE RETAIL DERIVES FROM A JUST-STORED MEMBER MUST BE SPELLED AS A
+READ-BACK OF THAT MEMBER.** Neither the folded expression (VC6 never
+re-associates it) nor a named local affine in the loop counter works — the
+latter gets STRENGTH-REDUCED onto its own induction variable, which retail
+does not do. 58.84 -> 54.49 (named local) -> **60.30** (read-back).
+
+**INLINE DEPTH IS NOT A SUBSTITUTE FOR BUDGET.** For an under-inline at depth
+3, `#pragma inline_depth(255)` set at the site before expansion begins is
+BYTE-FLAT — 85.9895 to the digit. The `budget/(n-k)` quotient is the limiter,
+not the depth.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 
