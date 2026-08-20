@@ -7,3 +7,4 @@
 # retail_producer: delinked = build/objdiff/target/<unit>.c.obj (same disassembler both sides); capstone = image producer (cross-producer skew inflates distances)
 fn	unit	rva	size	sp3_align	sp3_flow	rtm_align	rtm_flow	sp3_vs_rtm	retail_producer	verdict	note
 ?Open@advManager@@UAEHH@Z	advmgr	0x6fd0	0x7d6	397	102	397	102	0	delinked	neither	RTM output identical to SP3 - not a generation wall
+?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	hero	0xdd2d0	0x143e	1089	327	1089	327	0	delinked	neither	RTM output identical to SP3 - not a generation wall
