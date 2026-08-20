@@ -5379,7 +5379,7 @@ void advManager::EraseObj(NewmapCell* thisCell, type_point point,
     }
 
     thisCell->extraInfo = -1;
-    gpGame->GameFn_004CA410();
+    gpGame->SetupAdjacentMons();
 
     CMCEraseObject message(point);
     SendMapChange(&message);
