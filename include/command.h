@@ -67,6 +67,27 @@ enum EVictoryDialog {
     VICTORY_DIALOG_PAGE_SIZE = 8
 };
 
+// `1 - winningGroup` maps a winning side onto the LOSING side's index,
+// and maps the "nobody won" winner (-1) onto 2 - which is why
+// DoVictory's ladder has a third arm that touches BOTH heroes rather
+// than an index into heroes[]. Retail spells the three arms with
+// constant displacements (0x53cc and 0x53d0), never `heroes[loser]`.
+enum ELastAliveSide {
+    LAST_ALIVE_ATTACKER = 0,
+    LAST_ALIVE_DEFENDER = 1,
+    LAST_ALIVE_NEITHER = 2
+};
+
+// 0x697788. DECLARATION ONLY - src/advmgr.cpp:88 owns the DATA claim,
+// and a second claim on one RVA is a fatal duplicate at delink. It lives
+// here rather than in the .cpp because a line-initial `extern` in a .cpp
+// is a cleanliness-floor violation, and here rather than by including
+// advmgr.h, whose closure command.obj does not otherwise need - the
+// pattern hero.h already documents for bVideoPaused. DoVictory
+// (0x477470) reads it once, crossed with the network latch, to decide
+// whether the results dialog gets a deadline.
+extern int gbThisNetGotAdventureControl;
+
 
 // --- CCombatMainMsg ---
 // CODEVIEW(E:\gamedcs\netmsg.h:217, dc 0x70a58) void CCombatMainMsg::CCombatMainMsg(int nextAction, int nextActionExtra, int nextActionGridIndex, int nextActionGridIndex2, int seed);

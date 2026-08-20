@@ -5,12 +5,14 @@
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
 #include "command.h"
+#include "combatresultswindow.h"
 #include "combatwindow.h"
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
 #include "inputmgr.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
 #include "mousemgr.h"
 #include "prefs.h"
@@ -909,16 +911,200 @@ void combatManager::show_looted_artifacts(
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:2504
+// The whole end-of-combat sequence: strip the loser's Grail, settle the
+// surviving stacks, resurrect the necromancer's dead, hand out experience
+// and artifacts, and raise the results window.
+//
+// Residual (99.4634%): FIVE instructions, all inside the inlined
+// _cpp_min, and the branch diff agrees 45/45 with one ret on both sides.
+// Retail materialises BOTH const-reference temporaries and only then
+// compares (`mov [ebp-0x28],edx / movsx ecx,.. / mov [ebp+8],ecx /
+// cmp ecx,edx`); our CL sinks the second store past the compare and
+// names the two registers the other way round. Tried and rejected:
+// folding the result back into the assignment as
+// `heroes[1]->mana = static_cast<short>(_cpp_min(..))` - it keeps the
+// same schedule AND re-narrows the load, 99.4634 -> 96.4902. Scheduling
+// inside a straight-line block; not ground past that.
 VA(0x00477470, 0x58C)  // linkorder, dc 0x6e1c8
 void combatManager::DoVictory(int winningGroup)
 {
-    // @stub
-}
+    // `1 - winningGroup` is the LOSER, and the -1 (nobody won) case makes
+    // it 2, which is what gives the switch its third arm rather than an
+    // index. Retail addresses heroes[0] and heroes[1] with constant
+    // displacements in every arm, so this is three written-out arms and
+    // not `heroes[loser]`.
+    int iLastAliveSideIndex = 1 - winningGroup;
+    if (iLastAliveSideIndex == LAST_ALIVE_ATTACKER) {
+        if (heroes[0])
+            heroes[0]->remove_artifact(ARTIFACT_HOLY_GRAIL);
+    } else if (iLastAliveSideIndex == LAST_ALIVE_DEFENDER) {
+        if (heroes[1])
+            heroes[1]->remove_artifact(ARTIFACT_HOLY_GRAIL);
+    } else if (iLastAliveSideIndex == LAST_ALIVE_NEITHER) {
+        if (heroes[0])
+            heroes[0]->remove_artifact(ARTIFACT_HOLY_GRAIL);
+        if (heroes[1])
+            heroes[1]->remove_artifact(ARTIFACT_HOLY_GRAIL);
+    }
 
-#endif  // @carcass
+    // Battle-resurrected troops go back where they came from, and a side
+    // that would be left with nothing keeps one creature in its LAST
+    // surviving slot (retail records the index every time the guard
+    // passes, so it is the last, not the first).
+    for (int side = 0; side < 2; side++) {
+        int survivingTroops = 0;
+        int lastAliveSlot = -1;
+        for (int slot = 0; slot < 20; slot++) {
+            army* stack = &armies[side][slot];
+            if (stack->creatureType != CREATURE_NONE && stack->numTroops > 0) {
+                lastAliveSlot = slot;
+                if (stack->numTroopsBattleResurrected > 0)
+                    stack->numTroops -= stack->numTroopsBattleResurrected;
+                if (stack->numTroops < 0)
+                    stack->numTroops = 0;
+                survivingTroops += stack->numTroops;
+            }
+        }
+        if (survivingTroops == 0 && lastAliveSlot != -1)
+            armies[side][lastAliveSlot].numTroops = 1;
+    }
+
+    // Necromancy. The raise is per DEAD STACK, capped at that stack's own
+    // losses, and the hit-point term is the SMALLER of the dead
+    // creature's and the raised creature's - so a necromancer never
+    // profits from killing something tougher than a skeleton.
+    raisedCreatureCount = 0;
+    if (winningGroup != -1 && heroes[winningGroup]) {
+        float necromancyFactor = heroes[winningGroup]->GetNecromancyFactor(1);
+        if (necromancyFactor > 0.0f) {
+            raisedCreatureType =
+                heroes[winningGroup]->GetNecromancyCreature();
+            int raisedHitPoints =
+                akCreatureTypeTraits[raisedCreatureType].hitPoints;
+            unsigned char anythingDied = 0;
+            for (int slot = 0; slot < 20; slot++) {
+                army* stack = &armies[iLastAliveSideIndex][slot];
+                if (stack->creatureType == CREATURE_NONE)
+                    continue;
+                int killed = stack->origNumTroops - stack->numTroops;
+                if (killed <= 0)
+                    continue;
+                anythingDied = 1;
+                int hitPoints =
+                    akCreatureTypeTraits[stack->creatureType].hitPoints;
+                if (hitPoints > raisedHitPoints)
+                    hitPoints = raisedHitPoints;
+                int raised = static_cast<int>(hitPoints * killed
+                                              * necromancyFactor
+                                              / raisedHitPoints);
+                if (raised > killed)
+                    raised = killed;
+                raisedCreatureCount += raised;
+            }
+            if (anythingDied && raisedCreatureCount < 1)
+                raisedCreatureCount = 1;
+        }
+    }
+
+    UpdateArmyGroup(0);
+    UpdateArmyGroup(1);
+    if (heroes[1]) {
+        heroes[1]->SetPrimarySkill(0, field_13de8);
+        heroes[1]->SetPrimarySkill(1, field_13dec);
+        heroes[1]->SetPrimarySkill(2, field_13df0);
+        // `std::_cpp_min`, not `std::min`: retail SELECTS AN ADDRESS
+        // (`lea ecx,[ebp+8] / jl / lea ecx,[ebp-0x28] / mov ecx,[ecx]`),
+        // which only a function returning `const T&` produces - a
+        // ternary or the __min macro would move the value. It has to be
+        // the _cpp_ spelling here because windows.h is in this TU's
+        // closure and its `min` macro makes `std::min` a syntax error;
+        // <xutility> ships _cpp_min for exactly that reason, and its
+        // `_Y < _X ? _Y : _X` body is the branch polarity retail has.
+        if (defendingTown) {
+            int manaCap = field_13df4;
+            int currentMana = heroes[1]->mana;
+            int newMana = std::_cpp_min(manaCap, currentMana);
+            heroes[1]->mana = newMana;
+        }
+    }
+
+    int iExperience = 0;
+    std::vector<type_artifact> looted_artifacts;
+    if (winningGroup != -1) {
+        if (heroes[winningGroup]) {
+            CalculateGainedExperience(winningGroup, &iExperience);
+            // The LOCAL human's experience is awarded later, beside the
+            // results window; a remote or AI winner gets it here.
+            if (!sideIsLocalHuman[winningGroup])
+                heroes[winningGroup]->GiveExperience(iExperience, 1, 1);
+            RaiseSkeletons(winningGroup);
+            LearnSpellFromEagleEye(winningGroup);
+            LootDeadHero(winningGroup, looted_artifacts);
+        }
+        if (heroes[winningGroup])
+            heroes[winningGroup]->ApplyBattleWinTemps();
+        if (heroes[iLastAliveSideIndex])
+            heroes[iLastAliveSideIndex]->ApplyBattleLossTemps();
+    } else {
+        if (heroes[0])
+            heroes[0]->ApplyBattleLossTemps();
+        if (heroes[1])
+            heroes[1]->ApplyBattleLossTemps();
+    }
+
+    StopCombatSounds();
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+        combatWindow->combat_message("", 0, 0);
+    gpMouseManager->field_38 = 0;
+    gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+    gpMouseManager->ShowPointer(false);
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        gpWindowManager->screenBitmap->Darken(0, 0, 800, 600);
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    }
+
+    // DIALOG_TIMEOUT is the Dreamcast local roster's own spelling. A
+    // networked machine that is not holding adventure control arms a
+    // deadline and passes it on to the two presentations; everyone else
+    // waits forever (0).
+    int DIALOG_TIMEOUT = 15000;
+    if (gNetworkActive69954c && !gbThisNetGotAdventureControl) {
+        gDialogDeadline697784 = GameTime::Get() + DIALOG_TIMEOUT;
+    } else {
+        gDialogDeadline697784 = 0;
+        DIALOG_TIMEOUT = 0;
+    }
+    if (gbUnk691209)
+        gDialogDeadline697784 = GameTime::Get() + 2000;
+
+    if (winningGroup != -1 && playerIds[winningGroup] != -1
+        && gpGame->IsLocalHuman(playerIds[winningGroup])) {
+        {
+            TCombatResultsWindow results_window(
+                heroes[0], heroes[1], winningGroup, winningGroup,
+                defendingTown != 0, iExperience);
+            gpSoundManager->StartMP3(
+                gCombatResultMusic[gCombatResultFlag695014], 1, 1);
+            results_window.DoModal();
+        }
+        if (heroes[winningGroup]) {
+            heroes[winningGroup]->GiveExperience(
+                iExperience, !sideIsLocalHuman[winningGroup], 1);
+            show_eagle_eye(winningGroup, DIALOG_TIMEOUT);
+            show_looted_artifacts(looted_artifacts, DIALOG_TIMEOUT);
+        }
+    } else if (!gbUnk691209) {
+        TCombatResultsWindow results_window(
+            heroes[0], heroes[1], iLastAliveSideIndex, winningGroup,
+            defendingTown != 0, 0);
+        gpSoundManager->StartMP3(
+            gCombatResultMusic[gCombatResultFlag695014], 1, 1);
+        results_window.DoModal();
+    }
+
+    gDialogDeadline697784 = 0;
+}
 
 // E:\gamedcs\command.cpp:2770
 VA(0x00477a00, 0xB2)  // anchor-global, dc 0x6e898

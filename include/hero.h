@@ -585,6 +585,15 @@ public:
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     signed char stats[4];                       // +0x476
+    // DC-attested header inline (E:\gamedcs\hero.h:687, dc 0x70a1c, 16
+    // SH4 bytes, params `skill` and `amount` both T_INT4) - and its own
+    // command.obj attribution is the reason it is written out here:
+    // combatManager::DoVictory hands it three combatManager ints, and
+    // retail loads each of them with a full `mov r32, dword ptr [..]`
+    // before the byte store. A direct `stats[i] = field` narrows the
+    // load to `mov r8, byte ptr [..]` instead; the int PARAMETER is what
+    // keeps the dword.
+    void SetPrimarySkill(int skill, int amount) { stats[skill] = amount; }
     // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
     // widens it to double and uses it as the attacking side's combat
     // modifier. The role remains provisional, so keep the ordinal name.
