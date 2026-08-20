@@ -1620,16 +1620,99 @@ void combatManager::InitializeArchers()
     archers[2].field_1c = 0;
 }
 
-#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3299
+// RECONSTRUCTED 2026-08-20. Two walks over the same +0x13438 latch: the
+// first raises each marked stack's drawing-effect byte (or, for an arrow
+// tower, the one of three keep/tower latches its grid index selects),
+// the second clears the stack's hexcell occupancy. Only the drawing half
+// is quick-combat gated - the occupancy clear runs either way, which is
+// what makes the two IsQuickCombat expansions straddle it.
+//
+// The tower branch is written out here rather than routed through
+// mark_tower_army (0x46a460), which is the same three-way switch: retail
+// EXPANDS it at this site and keeps the out-of-line body for LoadArmies,
+// the /Ob2 asymmetry this TU shows twice more. Calling it from here
+// would emit a CALL retail does not have, because nothing in this tree
+// defines a body for VC6 to expand.
+//
+// The 20-per-side byte arrays against armies[2][21] are retail's own
+// asymmetry, not a mis-slice: one loop steps the byte arrays by 20 and
+// the army index by 21, and ResetLimitCreature memsets exactly 2x20.
+//
+// Residual (96.8312%): one CSE asymmetry in the extent capture. Retail
+// loads drawbridgeBounds.values[1] TWICE - once for `top` and again for
+// the height subtraction - while CSE-ing values[0] between `left` and
+// the width subtraction; our CL does the mirror image, CSE-ing values[1]
+// and reloading values[0], for four loads against retail's five.
+// Spelling the width subtraction as `values[2] - left + 1` to force the
+// first CSE explicitly emits byte-identical code (96.8312 either way),
+// so the asymmetry is the optimiser's own and not reachable from the
+// source side.
 VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0
 void combatManager::MakeCreaturesVanish()
 {
-    // @stub
+    int left;
+    int top;
+    int width;
+    int height;
+    int side;
+    int index;
+    if (!IsQuickCombat()) {
+        ResetLimitCreature();
+        for (side = 0; side < 2; side++) {
+            for (index = 0; index < numArmies[side]; index++) {
+                if (!field_13438[side][index])
+                    continue;
+                if (armies[side][index].creatureType
+                        == army::ARMY_CREATURE_ARROW_TOWER) {
+                    switch (armies[side][index].gridIndex) {
+                    case COMBAT_HEX_LOWER_TOWER:
+                        field_1402d = 1;
+                        break;
+                    case COMBAT_HEX_KEEP:
+                        field_1402c = 1;
+                        break;
+                    case COMBAT_HEX_UPPER_TOWER:
+                        field_1402e = 1;
+                        break;
+                    }
+                } else {
+                    field_14000[side][index] = 1;
+                }
+            }
+        }
+        ComputeMaxExtent();
+        left = drawbridgeBounds.values[0];
+        top = drawbridgeBounds.values[1];
+        width = drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1;
+        height = drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1;
+    }
+
+    for (side = 0; side < 2; side++) {
+        for (index = 0; index < numArmies[side]; index++) {
+            if (!field_13438[side][index])
+                continue;
+            const army& stack = armies[side][index];
+            cells[stack.gridIndex].armySide = -1;
+            cells[stack.gridIndex].armySlot = -1;
+            if (stack.Is(0) & 1) {
+                cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySide = -1;
+                cells[stack.gridIndex + (stack.facing ? 1 : -1)].armySlot = -1;
+            }
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        gpWindowManager->SaveFizzleSourceX(left, top, width, height);
+        DrawFrame(0, 0, 1, 0, 1, 0);
+        gpWindowManager->FizzleForwardX(
+            left, top, width, height,
+            static_cast<int>(
+                gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
+    }
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3351
 // The opening test is army::is_enemy's own effective-side idiom spelled

@@ -559,6 +559,7 @@ cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x6
 # the number: when the diff tool learns this case the row banks itself.
 cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	0.0000	0.0000	33.3711	0x6a070
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
+cmbtmgr	?MakeCreaturesVanish@combatManager@@QAEXXZ	96.8312	96.8312	96.8312	0x66e00
 cmbtmgr	?NextArmy@combatManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x65080
 cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
@@ -586,7 +587,6 @@ cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	67.1937	67.1937	67.1937	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
-cmbtmgr	combatManager_MakeCreaturesVanish	0.0000	0.0000	0.0000	0x66e00
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
 cmbtmgr	combatManager_SetNextArmy	0.0000	0.0000	0.0000	0x65330
