@@ -82,6 +82,11 @@ inline TArtifact artifact_from_int(int value)
     return converted.artifact;
 }
 
+// Defined at the foot of this file, where retail emits it (0x4d2ac0):
+// declared here so game::Save's pool writes call it out of line.
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_point>* src_vector);
+
 const int SAVED_CREATURE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
 // hero" sentinel the roster stores as -1. Saves older than version 25
@@ -2446,7 +2451,34 @@ int game::Load(TAbstractFile* infile)
 }
 
 // E:\gamedcs\game.cpp:3311
-// PARTIAL: retail header/payload prefix through the eight player records.
+// PARTIAL: retail prefix through the town / hero / hero-pool block and
+// the five type_point pool writes. Still absent after them, in retail's
+// order: twelve guarded scalar writes (0x1f4d4, 0x1f634, then
+// 0x1f690/0x1f692 as shorts and 0x1f694, 0x1f695, 0x1f696, 0x1f698,
+// 0x1f69c as bytes, then 0x1f63e/0x1f640/0x1f642 as shorts), six array
+// writes (0x1f644 asking 0x20 but accepting 8, 0x1f664 0x1c,
+// globalInfoFlags 0x20, borderTentVisitFlags 8, cartographerMask 6,
+// cartographerFlags 3), a four-byte literal zero, a gMapExtra payload
+// of 2*(worldMap.HasTwoLevels+1)*gMapWidth*gMapHeight bytes, then
+// universities via save_vector<type_university> (0x4d2b20),
+// creatureBanks via save_object_vector (0x4d2b80) and
+// game::save_recorded_events (0x49dc60).
+//
+// MEASURED, and the reason they are not written yet: adding them
+// LOWERS the score. 42.23 with the block above; 40.62 with the twelve
+// scalar and six array writes added; 37.18 with the zero and gMapExtra
+// writes on top. The cause is the FRAME, not the statements - retail
+// is `sub esp,0x5c0` and ours is `sub esp,0x5e4`, with every named
+// local shifted by 8 (saved at [ebp-0x5cc] vs [ebp-0x5d4], the
+// fileName string at [ebp-0x6c] vs [ebp-0x74]). Every frame-relative
+// displacement in all 800+ instructions therefore differs, so each
+// correct statement added only lengthens a stream that cannot align.
+// The _Tidy census is the sharp instrument here: retail destroys the
+// SavedGameHeader::fileName string 36 times on the failure ladder and
+// ours does it 39 times with the extra writes in, so the guarded-write
+// count is very close - it is the eight bytes of frame that have to be
+// found FIRST. Do not re-add the statements before then.
+// Residual (42.2312%): missing tail above, gated on the frame delta.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
@@ -2510,6 +2542,49 @@ int game::Save(TAbstractFile* outfile)
         if (players[i].save(outfile) < 0)
             return -1;
     }
+
+    char_buffer = towns.size();
+    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+        sizeof(char_buffer)) {
+        return -1;
+    }
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].save(outfile) < 0)
+            return -1;
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        if (heroes[i].save(outfile) < 0)
+            return -1;
+    }
+
+    if (outfile->Write(heroAvailability, sizeof(heroAvailability)) <
+        sizeof(heroAvailability)) {
+        return -1;
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        unsigned char poolBits = 0;
+        unsigned int player;
+        for (player = 0; player < 8; ++player) {
+            if (heroPoolMap[i].test(player))
+                poolBits |= 1 << player;
+        }
+        outfile->Write(&poolBits, sizeof(poolBits));
+    }
+
+    for (i = 0; i < 8; ++i) {
+        if (!save_vector(outfile, &lithPools[i]))
+            return -1;
+    }
+    for (i = 0; i < 8; ++i) {
+        if (!save_vector(outfile, &lithExitPools[i]))
+            return -1;
+    }
+
+    save_vector(outfile, &whirlpools);
+    save_vector(outfile, &undergroundGateExits);
+    save_vector(outfile, &undergroundGatePairs);
 
     return 0;
 }
