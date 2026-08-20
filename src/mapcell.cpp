@@ -148,6 +148,10 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
     unsigned char padding[16];
     if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
+    // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
+    // predict-inline says retail calls basic_string::_Tidy at THREE cleanup
+    // sites and we call it at two, so the game::Load return-pin looks like
+    // the right lever - it is not here, 72.9210 -> 67.0263.
     return 0;
 }
 
@@ -2559,6 +2563,11 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         MonsterData tempMonster;
         readMapString(infile, &tempMonster.Message);
 
+        // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
+        // predict-inline says retail CALLS basic_string::_Tidy once here and
+        // we expand it, which is game::Load's return-pin shape exactly - but
+        // the local whose scope this exits is BLOCK-scoped, not
+        // function-scoped, and the pin costs 96.4729 -> 90.0370.
         for (int i = 0; i < 7; ++i) {
             int quantityRead;
             if (infile->Read(&quantityRead, sizeof(quantityRead))
@@ -2879,6 +2888,10 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->Read(spellBuf, sizeof(spellBuf));
+        // MEASURED AND REJECTED: writing this first mask longhand so that one
+        // of the two bitset<70> range checks inlines - predict-inline says
+        // retail CALLS bitset<70>::_Xran (0x4d1c80) exactly once here and we
+        // never do, so the split looks right. 82.0785 -> 79.9793.
         unpackSpellMask(&tempTown.fixedSpells, spellBuf);
     }
 
