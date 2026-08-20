@@ -610,7 +610,16 @@ public:
     // SCAFFOLDING is scoped; the field list below appears once and is
     // shared by both arms, so the two views cannot disagree about a
     // single byte. army.cpp is the only consumer of the row form.
-#ifdef HOMM3_ARMY_ROUND_VIEW
+    //
+    // SPLIT OUT OF THE ROUND VIEW 2026-08-20, the same way ProcessDeath
+    // was: ai_tactical's spell pricers walk the row by spell id
+    // (consider_enchantment 0x43a910 reads
+    // `[target + 4*choice->spell + 0x198]`, get_cancel_value 0x439a80
+    // walks both rows at once) and they must not also inherit
+    // ResetRound and the round view's other twenty-six declarators to
+    // do it. HOMM3_ARMY_SPELL_ROW_VIEW opens the union alone, plus the
+    // spell_level row it is paired with below.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
     int numSpellInfluences;       // +0x194
     // THE ROW ITSELF, and the array is retail's own model rather than
     // this header's. ResetRound (0x447120) walks it whole with a single
@@ -720,11 +729,29 @@ public:
     int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
     char pad_2bc[0x4];
     int disabled_2c0;             // +0x2c0
-#ifdef HOMM3_ARMY_ROUND_VIEW
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
     char pad_2c4[0x18];
         };
     };
+    // THE SECOND ROW, and it is the one the spellInfluence note above
+    // already predicted: "DC's own spellInfluence[80] at 388 with
+    // spell_level[80] straight after it at 708". Retail's pair is
+    // 81 wide, so +0x198 + 81*4 == +0x2dc is where the second row
+    // starts, and DC's 708 - 388 == 320 == 80*4 is the same
+    // back-to-back layout one element shorter.
+    // BYTE-PROVEN by ai_tactical's get_cancel_value (0x439a80), which
+    // walks ONE pointer over this row - `p = &current_army[0x304]`,
+    // stride 4 - and reads the ROUNDS row through the same pointer at
+    // a constant `-0x144`, i.e. exactly 81 dwords lower. It feeds the
+    // dereference straight into a type_enchant_data's `mastery` field,
+    // which is what names the row: the mastery the standing spell was
+    // cast at.
+#ifdef HOMM3_ARMY_SPELL_ROW_VIEW
+    int spell_level[81];          // +0x2dc .. +0x41f
+    char pad_420[0x34];
+#else
     char pad_2dc[0x178];
+#endif
 #else
     char pad_2c4[0x190];
 #endif

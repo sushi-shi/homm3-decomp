@@ -25,6 +25,11 @@
 // header's roster did not carry; its own byte/dword table pair proves
 // each of them.
 #define HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
+// The enchantment pricers walk army's +0x198 spell-influence row and
+// its +0x2dc mastery twin by spell id, which needs the row form of
+// both. Split out of army.cpp's round view so this TU does not also
+// take that view's other twenty-six declarators.
+#define HOMM3_ARMY_SPELL_ROW_VIEW
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -2724,14 +2729,59 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2513
+// The MASS half of the enchantment pricer: a single-target spell is
+// handed straight to consider_single_enchantment, and everything else
+// is summed over every stack in `group` that the spell can actually
+// land on. The seven skips are the enchantment eligibility rule -
+// three "cannot act" round counters, creature bit 21 (magic immune),
+// the two non-combatant war machines, and a stack that already carries
+// the spell - and then SpellCastWorks has the last word.
+//
+// The per-stack value goes through get_enchantment_function's
+// pointer-to-member, so `*choice` is SLICED by value onto the stack
+// exactly as in get_caliph_value: the family's second parameter is a
+// type_enchant_data, and a type_spell_choice derives from it.
+//
+// The +0x198 row is read HERE by spell id, which is what the split of
+// army.h's spell-row view out of the round view exists for.
 VA(0x0043a910, 0x150)  // anchor-global, dc 0x40dc8
 void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long group)
 {
-    // @stub
+    if (SpellTargetsASingleArmy(choice->spell, choice->mastery)) {
+        consider_single_enchantment(choice, group);
+        return;
+    }
+    TEnchantValue value_of = get_enchantment_function(choice->spell);
+    long value = 0;
+    for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
+        const army* target = &gpCombatManager->armies[group][i];
+        if (target->disabled_290)
+            continue;
+        if (target->disabled_2b0)
+            continue;
+        if (target->disabled_2c0)
+            continue;
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (target->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (target->creatureType == CREATURE_AMMO_CART)
+            continue;
+        if (target->spellInfluence[choice->spell])
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (gpCombatManager->SpellCastWorks(choice->spell, side, target, 1,
+                                            creature_cast))
+            value += (this->*value_of)(target, *choice);
+    }
+    choice->field_20 = 1;
+    choice->value = value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2553
 // Teleport is priced by SIMULATION, not by a formula: for each of our
