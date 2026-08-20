@@ -1683,6 +1683,10 @@ public:
     // bFlashLighten) are DEAD in the retail body - no instruction in the
     // 1474 bytes reads either slot - and are kept because the arity is
     // what the call sites push.
+    // 0x5a6c70, the clone. The DC prototype (spells.cpp:4576) supplies
+    // both parameter names; `level` is DEAD in the retail body, which
+    // reads neither its slot nor anything derived from it.
+    void MirrorImage(int targetIndex, int level);               // 0x5a6c70
     // 0x5a6360, the bouncing bolt. The DC prototype (spells.cpp:4255)
     // supplies all three parameter names; `level` indexes both the
     // spell's mastery_bonus row and the per-mastery bounce table.

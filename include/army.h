@@ -580,7 +580,18 @@ public:
     // independently corroborated by set_inside_area_effect (0x43efe0),
     // whose whole animation arm is about the cs_fidget sequence.
     unsigned long iLastFidgetTime; // +0xfc
-    char pad_100[0xc];
+    // The per-frame DRAW OFFSET a stack is currently displaced by,
+    // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
+    // difference between the source hex's and the clone's own hexcell
+    // screen coordinates (+0x1c4 / +0x1c6), divides both by 16, counts
+    // them down over sixteen DrawFrame steps and zeroes them at the end
+    // - i.e. the clone slides out of the caster's hex into its own.
+    // +0x100 carries the Y difference and +0x104 the X one. Names stay
+    // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
+    // for either, and nothing else decoded reads them yet.
+    int field_100;                 // +0x100
+    int field_104;                 // +0x104
+    char pad_108[0x4];
     char* yModify;                // +0x10c
     char pad_110[0x40];
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
@@ -591,7 +602,9 @@ public:
     // stack before the animation loop and raises it the frame a stack
     // falls back to cs_wait, which is what stops that stack advancing
     // for the rest of the sequence.
-    char pad_fc[0xc];
+    char pad_fc[0x4];
+    int field_100;                       // +0x100
+    int field_104;                       // +0x104
     // An INT, not the byte the name suggests (byte-proven 2026-08-20):
     // PowEffect both TESTS and STORES it a dword wide -
     // `mov eax,[esi+0x108] / test eax,eax` and
@@ -602,7 +615,19 @@ public:
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
     char pad_154[0x4];
 #else
-    char pad_fc[0x54];
+    char pad_fc[0x4];
+    // The per-frame DRAW OFFSET a stack is currently displaced by,
+    // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
+    // difference between the source hex's and the clone's own hexcell
+    // screen coordinates (+0x1c4 / +0x1c6), divides both by 16, counts
+    // them down over sixteen DrawFrame steps and zeroes them at the end
+    // - i.e. the clone slides out of the caster's hex into its own.
+    // +0x100 carries the Y difference and +0x104 the X one. Names stay
+    // ADDRESS ORDINALS: the behaviour is proven, the roster has no row
+    // for either, and nothing else decoded reads them yet.
+    int field_100;                // +0x100
+    int field_104;                // +0x104
+    char pad_108[0x48];
     // Two more fields sliced out of the embedded animation-traits row,
     // both byte-proven by DoBolt (0x5a5c20): its reset tail guards the
     // whole attack-animation flush on +0x150 and divides +0x15c by the

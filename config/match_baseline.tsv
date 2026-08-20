@@ -1599,6 +1599,7 @@ spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	76.8992	76.8992	76.8992	0x1a54
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.0000	0x1a92f0
+spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
 spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.2924	97.2924	97.2924	0x1a5260
@@ -1623,7 +1624,6 @@ spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$alloc
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
 spells	HandleGetTeleportDestination	0.0000	0.0000	0.0000	0x1a37d0
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
-spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
 spells	combatManager_Resurrect	0.0000	0.0000	0.0000	0x1a7560
 spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
 spells	combatManager_SpellCastWorkChance	0.0000	0.0000	0.0000	0x1a8090
