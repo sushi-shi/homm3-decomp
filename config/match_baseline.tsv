@@ -369,6 +369,7 @@ army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
+army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 army	army_CancelIndividualSpell	0.0000	0.0000	0.0000	0x44510
 army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
@@ -392,7 +393,6 @@ army	army_get_unit_combat_value	0.0000	0.0000	0.0000	0x42a50
 army	army_initialize	0.0000	0.0000	0.0000	0x3d730
 army	army_new_turn	0.0000	0.0000	0.0000	0x46e30
 army	army_range_attack	0.0000	0.0000	0.0000	0x3f900
-army	spell_is_valid_on_target	0.0000	0.0000	0.0000	0x47a80
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80
@@ -1681,22 +1681,6 @@ textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
 textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
-# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
-# audit. hist holds 99.3021 and recovering it is ordinary work.
-#
-# CAUSE: town::get_army()'s NON-const overload was declared to return
-# `armyGroup*` in one view and used as a reference in another - town.cpp
-# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
-# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
-# other's declaration. With the gates gone both are visible at once and the
-# contradiction is forced. The DC mangled name settles it:
-# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
-# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
-# prototype printer. town.cpp's four call sites were converted to `.`, which
-# is what moved this row.
-#
-# This is the clearest instance of what the audit was for: a per-TU view let
-# two incompatible models of one function coexist indefinitely.
 town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	78.5766	78.5766	99.3036	0x1bede0
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
@@ -1986,6 +1970,22 @@ winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	
 winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	100.0000	100.0000	100.0000	0x202bd0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90
+# DELIBERATE LOWER 2026-08-20, integrating lane/town-vlc across the view
+# audit. hist holds 99.3021 and recovering it is ordinary work.
+#
+# CAUSE: town::get_army()'s NON-const overload was declared to return
+# `armyGroup*` in one view and used as a reference in another - town.cpp
+# wrote `get_army()->armies[slot]` while townmgr.cpp wrote
+# `&townToView->get_army()`. Both compiled, because neither TU ever saw the
+# other's declaration. With the gates gone both are visible at once and the
+# contradiction is forced. The DC mangled name settles it:
+# ?get_army@town@@QAAAAVarmyGroup@@XZ - `QAAAAV` is a REFERENCE return, where
+# a pointer would be `QAAPAV`; the pointer spelling came from the dump's C
+# prototype printer. town.cpp's four call sites were converted to `.`, which
+# is what moved this row.
+#
+# This is the clearest instance of what the audit was for: a per-TU view let
+# two incompatible models of one function coexist indefinitely.
 # GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
 # first batch of byte-proven field slices, and RECOVERED to 92.5714 later
 # the same day when a SECOND batch of slices (bloodlustRounds /

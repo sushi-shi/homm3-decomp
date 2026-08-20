@@ -3646,18 +3646,167 @@ unsigned char army::can_cast_spell(long hex) const
     // @stub
 }
 
+#endif  // @carcass
+
 // RETAIL-ONLY: the shared spell-validity worker army.h describes -
 // is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
 // calls it, and Unnamed447fe0 calls it twice. Two fastcall register
 // arguments and a bare `ret`, so it is a free function, which rules out
 // the three one-argument group_has_* statics the DC roster has left in
 // this bracket. Name is army.h's, a bootstrap invention.
+//
+// Would the Genie's roll actually CHANGE anything for the target it
+// landed on? A spell already standing on the stack is never re-cast,
+// ValidSpellTargetArmy answers the immunity/first-target half, and the
+// switch is the per-spell "would it matter" test: protections and the
+// mirror only matter while the enemy hero can cast (wields the
+// spellbook slot), Cure needs damage to heal, the two melee-side
+// screens need a live shooter (Air Shield) or a live melee attacker
+// (Shield / Fire Shield) among the enemy stacks, Precision needs the
+// target itself shooting and Bloodlust the opposite.
+//
+// THIS BODY IS WHY can_shoot HAS AN OUT-OF-LINE COPY AT ALL (the note
+// on 0x4428f0): the two loop sites below are the sites VC6 declines,
+// while the Precision/Bloodlust tail sites expand - Bloodlust's only
+// partially, leaving the OffsetToFront COMDAT call and the
+// army::enemy_is_adjacent wrapper call retail shows.
+//
+// WHAT EACH SPELLING MEASURED (0.00 -> 41.65 -> 85.84 -> 87.41 ->
+// 91.07): the switch arms are laid out in SOURCE order exactly as
+// written; the two loop arms carry statement-scoped
+// `#pragma inline_depth(0)` pins on their can_shoot calls because our
+// CL otherwise expands both (retail declines them - the pins are what
+// force can_shoot's out-of-line COMDAT exactly as retail's own
+// rejected sites do); the loop idiom is `i = n; while (i-- > 0)`
+// (the `for (i=n-1; i>=0; i--)` spelling emits dec/js and loses the
+// count-copy retail has); `1 - side` must be a NAMED LOCAL `group` in
+// all three loop arms or the front end folds numArmies/armies into
+// two different displacement constants where retail indexes both off
+// one register; Prayer needs the uchar cast `(uchar)~Is(26) & 1` for
+// retail's `not al` (bare `~Is(26)&1` emits `not eax`); the
+// protections arm must RETURN the `&&` expression (the int
+// materialization `mov eax,1`/`xor eax,eax` retail has - the
+// early-return spelling emits byte `xor al,al` and a private
+// epilogue); Precision is `return can_shoot(0);` EXPANDED (writing
+// the same tests longhand duplicates five zero-exits retail shares,
+// 91.07 -> 87.41-class); Bloodlust longhand-with-flag beats
+// `return !can_shoot(0);` (87.02) because our expansion of the
+// negated call diverges harder than the flag form's exits.
+//
+// Residual (91.0744%): the stale-CL flag-threading class, same family
+// as can_shoot's own 92.00. (1) In the two expanded tail arms retail
+// THREADS bCanShoot's constant stores into two cloned sete epilogues
+// (`xor al,al`/`mov al,1` + `sete cl; mov al,cl`) where our CL
+// materializes the flag in EBX (`mov ebx,1`/`mov bl,1`, `xor ebx,ebx`)
+// and funnels one merged `mov al,bl` exit. (2) Precision's depth-3
+// OffsetToFront(-1) site: retail REJECTS it (`push -1 / call` on the
+// 0x445cd0 COMDAT), ours expands the neg/sbb longhand; no
+// statement-scoped pin can reach inside can_shoot's expansion without
+// also de-inlining the accessors retail keeps inline. (3) The three
+// loop-guard `jle` exits target retail's shared zero block at +0x32d
+// where ours picks each arm's local copy - displacement-only. Tried
+// and rejected: longhand Precision with pinned OffsetToFront (87.41),
+// `return !can_shoot(0)` Bloodlust (87.02). Not tried:
+// `inline_depth(2)` over the tail arms - it would reject
+// get_controlling_side's depth-3 expansion retail keeps, trading a
+// 5-instruction gap for a 10-instruction one.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spell_is_valid_on_target(int spell, const army* target)
 {
-    // @stub
+    if (target->spellInfluence[spell])
+        return 0;
+    long side = gpCombatManager->currentSide;
+    if (!gpCombatManager->ValidSpellTargetArmy(spell, side, target, 1, 1))
+        return 0;
+    switch (spell) {
+    case SPELL_PROTECTION_FROM_AIR:
+    case SPELL_PROTECTION_FROM_FIRE:
+    case SPELL_PROTECTION_FROM_WATER:
+    case SPELL_PROTECTION_FROM_EARTH:
+    case SPELL_ANTI_MAGIC:
+    case SPELL_MAGIC_MIRROR: {
+        hero* enemy_hero = gpCombatManager->heroes[1 - side];
+        return enemy_hero
+               && enemy_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK);
+    }
+    case SPELL_CURE:
+        return target->topCreatureDamage > 0;
+    case SPELL_PRAYER:
+        return static_cast<unsigned char>(~target->Is(26)) & 1;
+    case SPELL_SLAYER: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            if (gpCombatManager->armies[group][i].Is(7) & 1)
+                return 1;
+        }
+        return 0;
+    }
+    case SPELL_SHIELD:
+    case SPELL_FIRE_SHIELD: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            army* enemy = &gpCombatManager->armies[group][i];
+            if (!enemy->disabled_290 && !enemy->disabled_2b0
+                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && enemy->creatureType != CREATURE_FIRST_AID_TENT
+                && enemy->creatureType != CREATURE_AMMO_CART) {
+#pragma inline_depth(0)
+                if (!enemy->can_shoot(0))
+                    return 1;
+#pragma inline_depth()
+            }
+        }
+        return 0;
+    }
+    case SPELL_AIR_SHIELD: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            army* enemy = &gpCombatManager->armies[group][i];
+            if (!enemy->disabled_290 && !enemy->disabled_2b0
+                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && enemy->creatureType != CREATURE_FIRST_AID_TENT
+                && enemy->creatureType != CREATURE_AMMO_CART) {
+#pragma inline_depth(0)
+                if (enemy->can_shoot(0))
+                    return 1;
+#pragma inline_depth()
+            }
+        }
+        return 0;
+    }
+    case SPELL_PRECISION:
+        return target->can_shoot(0);
+    case SPELL_BLOODLUST: {
+        unsigned char shoots;
+        if (target->creatureType == army::ARMY_CREATURE_BALLISTA
+            || target->creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
+            shoots = 1;
+        } else if (!(target->Is(2) & 1) || target->shotsLeft <= 0) {
+            shoots = 0;
+        } else {
+            hero* controller = target->get_controller();
+            shoots = 1;
+            if (!controller
+                || !controller->IsWieldingArtifact(
+                       ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
+                if (target->enemy_is_adjacent(0))
+                    shoots = 0;
+            }
+            if (shoots && target->forgetfulnessRounds
+                && target->forgetfulnessLevel >= 2)
+                shoots = 0;
+        }
+        return !shoots;
+    }
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5396
 DC_ONLY(0x4c004, 0x80)
