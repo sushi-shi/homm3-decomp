@@ -1128,12 +1128,111 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1717
+#endif  // @carcass
+
+// The on-attack debuff roll: does THIS attacker's special land on
+// `target`? The switch is over the ATTACKER's creatureType (source
+// order = layout order for the jump table), each arm rolls its chance,
+// runs SpellCastWorks for the real spells, and parks the landed effect
+// in the target's iPostPowSpellToCast for the post-animation pow to
+// apply. Returns 1 only for the three incapacitators - blind, stone,
+// paralyze - which is what suppresses the retaliation.
+//
+// The dendroid arm is TWO add_item calls (the static above, inlined
+// whole with its std::find and its push_back's insert COMDAT), the
+// first one guarded: an already-bound target returns without
+// re-raising the pending spell or the mirror link.
+//
+// The living-targets gate is the target's creature bit 4 (undead and
+// war machines shrug off disease, poison and aging); blind, curse,
+// stone, paralyze and bind roll without it. Chances are 20% except the
+// knights'/mummy's curse at 25% and the wyvern monarch's poison at
+// 30%; the rust dragon's acid applies with NO roll whenever the
+// victim has defense left to eat.
 VA(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
 unsigned char army::check_special_attack(army* target)
 {
-    // @stub
+    switch (creatureType) {
+    case CREATURE_GHOST_DRAGON:
+        if (target->Is(4) & 1 && Random(1, 100) <= 20
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_AGE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_AGE;
+        return 0;
+    case CREATURE_ZOMBIE:
+        if (target->Is(4) & 1 && Random(1, 100) <= 20
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_DISEASE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_DISEASE;
+        return 0;
+    case ARMY_CREATURE_UNICORN:
+    case ARMY_CREATURE_WAR_UNICORN:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_BLIND,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_BLIND;
+            return 1;
+        }
+        return 0;
+    case CREATURE_DENDROID_GUARD:
+    case CREATURE_DENDROID_SOLDIER:
+        if (!add_item(target->binders, this))
+            return 0;
+        target->iPostPowSpellToCast = SPELL_BIND;
+        add_item(bound_armies, target);
+        return 0;
+    case CREATURE_BLACK_KNIGHT:
+    case CREATURE_DREAD_KNIGHT:
+    case CREATURE_MUMMY:
+        if (Random(1, 100) <= 25 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_CURSE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_CURSE;
+        return 0;
+    case CREATURE_MEDUSA:
+    case CREATURE_MEDUSA_QUEEN:
+    case CREATURE_BASILISK:
+    case CREATURE_GREATER_BASILISK:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_STONE,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_STONE;
+            return 1;
+        }
+        return 0;
+    case CREATURE_RUST_DRAGON:
+        if (target->numTroops > 0 && target->defenseSkill > 0)
+            target->iPostPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
+        return 0;
+    case CREATURE_WYVERN_MONARCH:
+        if (target->Is(4) & 1 && Random(1, 100) <= 30
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_POISON,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_POISON;
+        return 0;
+    case CREATURE_SCORPICORE:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_PARALYZE,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_PARALYZE;
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
 }
 
+#if 0  // @carcass
 #endif  // @carcass
 
 // The retaliation a Fire Shield charges the attacker, and the one body

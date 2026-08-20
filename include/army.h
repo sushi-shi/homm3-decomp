@@ -1279,6 +1279,10 @@ public:
     void range_attack(army* armyToAttack);
 #endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
+    // 0x440500, reconstructed in army.cpp: the attacker's on-attack
+    // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
+    // paralyze); returns 1 for the three incapacitators.
+    unsigned char check_special_attack(army* target);
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
