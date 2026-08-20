@@ -582,6 +582,32 @@ void townManager::SetupExtraStuff()
 // one and call a later one. Equal counts, one site of shift. The frame
 // slot for the temp moves with it ([ebp-0x24] against our [ebp-0x1c]),
 // which is what smears the rest. Nothing here is unreconstructed.
+//
+// RE-DERIVED 2026-08-20 (cold-combatpath lane), and it CORRECTS two
+// standing claims:
+//   * "our CL calls the reserve's _Construct once, retail zero times"
+//     is WRONG. Retail's 0x404dc0 IS std::_Construct(widget**,...)
+//     (test ecx,ecx / je / mov eax,[edx] / mov [ecx],eax / ret) and
+//     retail CALLS it here exactly as we do - the whole call multiset
+//     of this constructor is IDENTICAL, so this row shares NOTHING
+//     with THallWindow's under-inline.
+//   * The residual is not positional either. sub esp is 0x14 against
+//     retail's 0x18, and the reserve expansions are INSTRUCTION-FOR-
+//     INSTRUCTION identical with only the temp SLOTS assigned
+//     differently: retail homes (new-buffer, limit) at (-0x18, -0x1c)
+//     where we swap them, and retail allocates a FRESH -0x24 dword for
+//     the old-_First-before-delete temp (then reuses it for all 71
+//     widget temporaries) where we reuse the dead copy-cursor slot
+//     -0x14 (then home the widget temps in the dead buffer slot
+//     -0x1c). Semantics identical; C2 temp-slot allocation state only.
+//   * The budget axis is closed at BOTH ends now: 4/8/16 self-assign
+//     probes are byte-flat at 95.5868 to the digit, 40 was 95.54 and
+//     70 was 93.20 (the old titration), so no positive dose shifts the
+//     one-site insert phase boundary the earlier note found, and the
+//     slot divergence begins at the RESERVE, before any widget site -
+//     upstream of the phase shift, not downstream of it. No local body
+//     knob reaches a C2 temp-allocator tie; this row waits on TU-state
+//     convergence, not on a spelling.
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
