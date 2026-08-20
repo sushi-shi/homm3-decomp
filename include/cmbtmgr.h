@@ -1552,6 +1552,20 @@ public:
     // gridIndex, combatSide, bitIndex, originalIndex - is read off the
     // second.
     void demonic_resurrection(const army* caster, army* target); // 0x5a7390
+    // 0x5a4970, the spells.obj body every AREA damage spell runs
+    // through: play the spell's own sprite effect over the centre hex,
+    // collect the stacks the area covers, roll each one separately and
+    // damage the ones that take it. The DC prototype (spells.cpp:3324)
+    // supplies the four parameter names; `mastery` is spelled long here
+    // for the reason mark_area_effect's is.
+    void AreaEffect(long targetCell, SpellID iSpellType, long mastery,
+                    long power);                               // 0x5a4970
+    // drawing.obj's HEX-taking SpellEffect overload (drawing.cpp:2593,
+    // dc 0x8703c, retail 0x496a10), declared here because AreaEffect
+    // calls it and the army*-taking sibling already sits behind the
+    // morale view above. The body stays drawing.cpp's.
+    void SpellEffect(int effect, int hex, int iDelay,
+                     unsigned char leave_last_frame);          // 0x496a10
     // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
     // `effected` for. It rolls SpellCastWorkChance separately per stack
     // on both sides and records which ones took the spell.

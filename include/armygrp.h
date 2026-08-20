@@ -446,16 +446,32 @@ struct SSpellTraits {
     // LoadPlaySample as `[akSpellTraits + 29*136 + 4]`. The record's
     // first seven fields are UNSHIFTED against the DC roster (m_flags
     // 12/+0xc, m_name 16/+0x10, m_abbreviated_name 20/+0x14,
-    // m_level 24/+0x18 all already agree here), so 4 is 4. +8 is the
-    // DC's m_effect and stays in the pad until a body reads it.
+    // m_level 24/+0x18 all already agree here), so 4 is 4.
     //
-    // BEHIND A VIEW: this header is inside initialize.cpp's include
-    // closure, where the include-set class has fired before, and
-    // army.cpp is the only consumer of the name. Both arms spell the
-    // same eight bytes.
-#ifdef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
+    // +0x08 IS THE DC's m_effect, sliced 2026-08-20: the SPRITE-EFFECT
+    // id this spell plays over its target. combatManager::AreaEffect
+    // (0x5a4970) is the witness - it loads
+    // `[akSpellTraits + spell*136 + 8]` and hands it straight to
+    // drawing.obj's hex-taking SpellEffect overload (0x496a10) as the
+    // effect argument, exactly as do_fire_shield hands +0x04 to
+    // LoadPlaySample.
+    //
+    // BEHIND A VIEW EACH: this header is inside initialize.cpp's include
+    // closure, where the include-set class has fired before, and each
+    // name has exactly one consumer (army.cpp for m_sample, spells.cpp
+    // for m_effect). All four arms spell the same eight bytes AND the
+    // same declarator count, so no consumer's include-set moves either
+    // way.
+#if defined(HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW) \
+        && defined(HOMM3_ARMYGRP_SPELL_EFFECT_VIEW)
+    const char* m_sample;     // +0x04
+    int m_effect;             // +0x08
+#elif defined(HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW)
     const char* m_sample;     // +0x04
     char pad_08[4];
+#elif defined(HOMM3_ARMYGRP_SPELL_EFFECT_VIEW)
+    char pad_04[4];
+    int m_effect;             // +0x08
 #else
     char pad_04[8];
 #endif
