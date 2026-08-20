@@ -628,14 +628,34 @@ void CheckEndGame(int bForceWin);
 // Residual (99.3036%): one `teamInfo[team]` SIB base/index swap
 // (base ecx+eax, retail eax+ecx) - the B18 encoder tie-break class -
 // plus reloc-name cosmetics on the bitNumber loads.
+//
+// THE SEVEN HasBuilding SITES ARE PINNED, AND THAT IS WHAT RESTORES THE
+// 99.3036 (from 78.5766, 2026-08-20). town.h's HasBuilding note already
+// states the rule - "town.obj must NOT see the BODY", because retail
+// declines to expand the inline here and emits `call town_HasBuilding`
+// (0x4305a0, 0x66 B) instead - but the view-gate audit retired the
+// HOMM3_TOWN_OBJ_DECLS macro that had been enforcing it, and this
+// compiland then expanded all seven and the row fell 20.7 points.
+// `predict-inline` names it exactly: base 11 out-of-line calls against
+// retail's 18, the whole gap being `town_HasBuilding retail x7` with no
+// base counterpart, and this body's seven source sites ARE those seven.
+// The replacement for the retired macro is the standing lever for the
+// OVER-inline class - statement-scoped `#pragma inline_depth(0)` at the
+// SITE - which needs no view gate, no header edit, and changes nothing
+// any other compiland sees. The same single site in get_growth_rate
+// below is worth 88.4737 -> 100.0000, i.e. exact.
+// The third pin restores depth BEFORE the `if` body so it does not also
+// reach `worldMap.cell()`, which retail expands.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
 type_building_id town::BuildBuilding(int buildingId,
                                      unsigned char SetBuiltFlag,
                                      unsigned char apply_special_effect)
 {
+#pragma inline_depth(0)
     unsigned char had_fort = (built & bitNumber[CASTLE_FORT_ID])
         || HasBuilding(CASTLE_CITADEL_ID, 0)
         || HasBuilding(CASTLE_CASTLE_ID, 0);
+#pragma inline_depth()
     unsigned char had_capitol = (built & bitNumber[HALL_CAPITOL_ID]) != 0;
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
     // HEE@Z`) and required by the townmgr call sites - while
@@ -680,7 +700,9 @@ type_building_id town::BuildBuilding(int buildingId,
         memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
         for (int level = 1; level <= field_14; level++) {
             int count = gMageGuildBaseSpellCounts[level - 1];
+#pragma inline_depth(0)
             if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+#pragma inline_depth()
                 count++;
             while (count > 0
                    && mageGuildSpells[level - 1][count - 1] == -1)
@@ -690,11 +712,14 @@ type_building_id town::BuildBuilding(int buildingId,
     }
     GiveSpells(0);
 
+#pragma inline_depth(0)
     if ((HasBuilding(HALL_CAPITOL_ID, 0) && !had_capitol)
         || ((HasBuilding(CASTLE_FORT_ID, 0)
              || HasBuilding(CASTLE_CITADEL_ID, 0)
              || HasBuilding(CASTLE_CASTLE_ID, 0))
-            && !had_fort)) {
+            && !had_fort))
+#pragma inline_depth()
+    {
         gpGame->ConvertObject(gpGame->worldMap.cell(mapX, mapY, mapZ));
     }
     if (gpGame->mapHeader.victoryCondition.CheckForUpgradedTown())
@@ -1048,6 +1073,11 @@ short town::get_growth_rate(short dwelling)
             long legion_growth =
                 akCreatureTypeTraits[legion_creature].growthRate;
             long castle_bonus;
+            // Retail emits `push 0 / push 8 / call town_HasBuilding` for
+            // the Citadel arm; the pin is what keeps it out of line here
+            // now that the HOMM3_TOWN_OBJ_DECLS gate is gone (88.4737 ->
+            // 100.0000). Nothing else in this chain is a candidate.
+#pragma inline_depth(0)
             if (built & bitNumber[CASTLE_CASTLE_ID])
                 castle_bonus = legion_growth;
             else if (HasBuilding(CASTLE_CITADEL_ID, 0))
@@ -1055,6 +1085,7 @@ short town::get_growth_rate(short dwelling)
                     akCreatureTypeTraits[legion_creature].growthRate / 2;
             else
                 castle_bonus = 0;
+#pragma inline_depth()
             legion_bonus = (legion_growth + castle_bonus) / 2;
         }
         growth += legion_bonus;

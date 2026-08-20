@@ -1716,7 +1716,7 @@ textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
 textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
-town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	78.5766	78.5766	99.3036	0x1bede0
+town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	99.3036	99.3036	99.3036	0x1bede0
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
 town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
@@ -1744,7 +1744,7 @@ town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	
 town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
-town	?get_growth_rate@town@@QAEFF@Z	88.4737	88.4737	100.0000	0x1bfb60
+town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60
 town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
