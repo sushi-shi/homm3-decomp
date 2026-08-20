@@ -74,6 +74,7 @@ advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?InsertSound@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x18c10
 advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100
+advmgr	?Main@advManager@@UAEHAAVmessage@@@Z	93.2341	93.2341	93.2341	0x87b0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.9576	0x17150
@@ -129,7 +130,6 @@ advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
-advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
 advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
 advmgr	advManager_ProcessKeyPress	0.0000	0.0000	0.0000	0x8c40
 advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
@@ -983,7 +983,7 @@ hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
 # reconstruction at 58% is below the resolution worth a lane's time.
 # FIRST cross-lane interference regression of the campaign - if this
 # recurs, stop accepting and bisect the combined header set properly.
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.7935	57.7935	57.8826	0xe3070
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.8826	57.8826	57.8826	0xe3070
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
