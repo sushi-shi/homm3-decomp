@@ -107,7 +107,7 @@ advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80
-advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	64.7279	64.7279	64.7279	0xabe0
+advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0
 advmgr	?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0
 advmgr	?get_creature_bank@ExtraInfoUnion@@QBEAAUtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0
 advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	87.1292	87.1292	87.2833	0xd3f0
