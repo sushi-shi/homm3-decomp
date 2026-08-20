@@ -878,6 +878,18 @@ public:
                    unsigned char bLimitDraw, int iDelay,
                    unsigned char bRefreshBackground,
                    unsigned char bDoDelayTil);
+    // The three missile animators. Every pointer parameter's constness
+    // is read off the DC S_PUB32 mangling rather than guessed:
+    // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
+    // `const float*` (PBM) and `const CSprite*` (PBVCSprite), and
+    // ShootAnimatedMissile's PBQBD gives `const char* const*`.
+    void ShootBallisticMissile(int startX, int startY, int destX, int destY,
+                               const CSprite* missile);
+    void ShootAnimatedMissile(int startX, int startY, int destX, int destY,
+                              int nsprites, const float* angles,
+                              const char* const* file_names);
+    void ShootMissile(int startX, int startY, int destX, int destY,
+                      const float* angles, const CSprite* missile);
     // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
     // own guards just tested; routing the call through this inline does
@@ -1467,6 +1479,21 @@ extern const int gCombatDeploySlots63d1dc[7][7];
 // size, so the stripped target still represents interior relocations as
 // separate symbols; source keeps the retail-proven aggregate shape.
 DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
+
+// The clip rectangle every combat-drawing pass intersects its dirty
+// region with before handing it to heroWindowManager::UpdateScreen.
+// Sixteen readers image-wide (DrawFrame twice, UpdateCombatArea,
+// ComputeMaxExtent, DrawObstacleAt, DrawWallAt, army::animate_missile
+// and all three missile animators). It is .bss seeded by the
+// initializer at 0x462610, which writes exactly {0, 0, 0x31f, 0x22b} -
+// i.e. left 0, top 0, right 799, bottom 555 - so this is the combat
+// viewport in screen coordinates, not a hex-space bound. Spelled as
+// the same four-int aggregate as the drawbridge bounds because the
+// readers take its four dwords one at a time; the reloc addend that
+// choice produces is masked (ResetLimitCreature is exact through the
+// identical aggregate copy). NAME IS A SOURCE-FACING INVENTION and
+// carries its address - no roster row, string or DC global reaches it.
+DATA(0x00694f18) extern TDrawbridgeBounds gCombatDrawLimits694f18;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
