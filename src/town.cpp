@@ -634,7 +634,8 @@ void CheckEndGame(int bForceWin);
 // states the rule - "town.obj must NOT see the BODY", because retail
 // declines to expand the inline here and emits `call town_HasBuilding`
 // (0x4305a0, 0x66 B) instead - but the view-gate audit retired the
-// HOMM3_TOWN_OBJ_DECLS macro that had been enforcing it, and this
+// HOMM3_TOWN_HASBUILDING_API macro that had been enforcing it (654997d,
+// group 7; the header's prose survived the merge, the `#if` did not), and this
 // compiland then expanded all seven and the row fell 20.7 points.
 // `predict-inline` names it exactly: base 11 out-of-line calls against
 // retail's 18, the whole gap being `town_HasBuilding retail x7` with no
@@ -1075,7 +1076,7 @@ short town::get_growth_rate(short dwelling)
             long castle_bonus;
             // Retail emits `push 0 / push 8 / call town_HasBuilding` for
             // the Citadel arm; the pin is what keeps it out of line here
-            // now that the HOMM3_TOWN_OBJ_DECLS gate is gone (88.4737 ->
+            // now that the HOMM3_TOWN_HASBUILDING_API gate is gone (88.4737 ->
             // 100.0000). Nothing else in this chain is a candidate.
 #pragma inline_depth(0)
             if (built & bitNumber[CASTLE_CASTLE_ID])
