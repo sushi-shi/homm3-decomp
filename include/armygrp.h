@@ -293,6 +293,24 @@ enum ESpellId {
     SPELL_CURE = 0x25,
     SPELL_RESURRECTION = 0x26,
     SPELL_ANIMATE_DEAD = 0x27,
+    // The gap between ANIMATE_DEAD and BLESS, byte-proven 2026-08-20 by
+    // combatManager::find_spell_target (0x5a3950): its three-way jump
+    // chain is `sub edx, 0x26 / dec / dec`, so the third arm is 0x28, and
+    // that arm is the one gated on `first_target` before it reaches
+    // find_resurrection_target - the sacrifice beneficiary lookup.
+    //
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT, NOT CAUTION. Declared
+    // unconditionally this ONE enumerator costs initialize.obj's
+    // initialize_game_data 100.0000 -> 96.0880 - the include-set class
+    // this header has fired before, at the same two values, when three
+    // ESpellId enumerators were added and withdrawn on 2026-08-08. The
+    // value is explicit and every neighbour's value is explicit too, so
+    // the two arms describe the same domain; only the count of
+    // enumerators visible to a TU differs. spells.cpp is the only
+    // consumer.
+#ifdef HOMM3_ARMYGRP_SACRIFICE_VIEW
+    SPELL_SACRIFICE = 0x28,
+#endif
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
     // The 41..52 enchantment ladder, byte-proven end to end 2026-08-08
