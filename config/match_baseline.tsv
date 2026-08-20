@@ -541,7 +541,7 @@ cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
 cmbtmgr	?IsWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0
 cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
-cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	91.6699	91.6699	91.6699	0x63600
+cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	99.3528	99.3528	99.3528	0x63600
 cmbtmgr	?LoadIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63370
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
