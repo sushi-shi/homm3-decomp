@@ -930,6 +930,16 @@ public:
     float GetOffenseFactor();
     float GetDefenseFactor();
     float GetIntelligenceFactor();
+#ifdef HOMM3_HERO_OBJ_VIEW
+    // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
+    // xrefs put direct calls in both hero-screen functions; the retail
+    // hero.obj sites expand it byte-for-byte under /Ob2.
+    int GetMaxMana()
+    {
+        return static_cast<int>(
+            GetPrimarySkill(3) * 10 * GetIntelligenceFactor());
+    }
+#endif
     float GetFirstAidFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
