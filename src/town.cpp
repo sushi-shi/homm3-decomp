@@ -1158,6 +1158,12 @@ void show_creature_rewards(const town* this_town,
 static const int kRewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
+// Residual (86.7%): branch topology #12 lands one block off (the D3
+// jump-threading class - why-branch's catalog found no applicable
+// lever) and a 15-slot edx/ecx register permutation follows from it.
+// Tried and rejected: the eligible mask hoisted into a local (85.7),
+// event-field re-reads instead of the short growth local (85.8),
+// resource-store reordering (neutral).
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1230,7 +1236,10 @@ void town::give_event_reward(const TTownEvent* thisEvent)
 }
 
 // E:\gamedcs\town.cpp:1732
-// Joins the granted building names with ", "/" and ", wraps them in the
+// Residual (92.7%): retail expands the format_string temporary's
+// destructor inline (the refcount arms) where our CL calls _Tidy(1) -
+// the sequential-inline-budget class; a scoped named local measured
+// 92.0. Joins the granted building names with ", "/" and ", wraps them in the
 // town-event dialog format, raises the extended dialog for the local
 // owner, and clears the reward vector for the caller's next batch.
 VA(0x005c0220, 0x1DA)  // anchor-caller (give_event_reward), dc 0x167958
@@ -1256,7 +1265,9 @@ void show_building_rewards(const town* this_town,
 }
 
 // E:\gamedcs\town.cpp:1760
-// The creature twin: "<count> <name>" per reward with the same
+// Residual (93.2%): the same temporary-destructor inline-vs-call class
+// as show_building_rewards, plus slot cosmetics around the "%d "
+// format call. The creature twin: "<count> <name>" per reward with the same
 // separators, the count picking the singular or plural creature name,
 // and the first reward's count driving the outer format.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
@@ -1382,6 +1393,9 @@ void town::initialize(const TownExtra* town_setup)
 // gEventBuildingIds with the horde upgrades rolled up, the built mask
 // expanded through included_buildings and pruned to what is available -
 // or raises the default fort/tavern/dwelling openers.
+// Residual (90.2%): the CFG agrees 23/23; what is left is the
+// register/slot family (bitNumber addend cosmetics, AND-operand load
+// order, two hoisted-mask slot swaps). Operand flips measured neutral.
 VA(0x005c08c0, 0x3CE)  // anchor-callgraph + arity (ret 0, /Gr), dc 0x167ff4
 void initialize_buildings(town* current_town, const TownExtra* town_setup)
 {
