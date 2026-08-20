@@ -2004,6 +2004,7 @@ university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.000
 university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0
 victorylossconditions	?CheckForArtifactTransportWin@VictoryConditionStruct@@QAEEPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2860
 victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	91.5981	91.5981	91.5981	0x1f1610
+victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	75.8636	75.8636	75.8636	0x1f2a40
 victorylossconditions	?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAE_NPBVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x1f2390
 victorylossconditions	?CheckForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40
 victorylossconditions	?CheckForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600
@@ -2019,7 +2020,6 @@ victorylossconditions	?HeroKilled@LossConditionStruct@@QAEEPBVhero@@@Z	100.0000	
 victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	92.5679	92.5679	92.5679	0x1f2160
 victorylossconditions	?IsTownCaptureTarget@VictoryConditionStruct@@QAE_NPAVtown@@@Z	100.0000	100.0000	100.0000	0x1f2260
 victorylossconditions	?applies_to_player@VictoryConditionStruct@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1f15a0
-victorylossconditions	LossConditionStruct_CheckForDefeatedHeroLoss	0.0000	0.0000	0.0000	0x1f2a40
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210
 viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7021	88.7021	88.7021	0x1f3b50
 viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9877	89.9877	89.9877	0x1f3360

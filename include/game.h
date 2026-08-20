@@ -615,6 +615,10 @@ enum EMapFormatVersion {
 // defeat-hero ids are fixed independently by AI_value_of_combat's two
 // objective-bonus branches.
 #ifdef HOMM3_VLC_CHECKS_VIEW
+// hero.cpp owns the DATA claim (0x69774c); this view only needs the
+// name for CheckForDefeatedHeroLoss's campaign-mode gate.
+extern unsigned char gCampaignMode;
+
 // The upgrade-town victory's two level domains (map-format ordinals).
 // CheckForUpgradedTown (0x5f1d40) maps each to the matching
 // type_building_id bit: town/city/capitol halls, fort/citadel/castle.

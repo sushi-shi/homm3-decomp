@@ -620,17 +620,193 @@ eligible:
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// CheckForDefeatedHeroLoss's campaign table: the ordinals with a
+// special hero-death loss rule, the map ordinals each arm gates on,
+// and the protected hero ids each arm tests. No roster in this tree
+// names campaign slots or the campaign hero ids, so every constant
+// stays value-ordinal (the hero.cpp kStartLevelCampaign precedent);
+// the artifact ids come from the artifact domain. All values are
+// retail compares at 0x5f2a40, and the switch's case ORDER is the
+// retail jump-table arm layout (3,7,10,12,9,14,15,17,18,19 - source
+// order IS layout order for a jump-table switch).
+static const int kLossCampaign3 = 3;
+static const int kLossCampaign7 = 7;
+static const int kLossCampaign9 = 9;
+static const int kLossCampaign10 = 10;
+static const int kLossCampaign12 = 12;
+static const int kLossCampaign14 = 14;
+static const int kLossCampaign15 = 15;
+static const int kLossCampaign17 = 17;
+static const int kLossCampaign18 = 18;
+static const int kLossCampaign19 = 19;
+static const int kMap2 = 2;
+static const int kMap3 = 3;
+static const int kMap4 = 4;
+static const int kMap5 = 5;
+static const int kMap6 = 6;
+static const int kMap7 = 7;
+static const int kMap8 = 8;
+static const int kMap9 = 9;
+static const int kMap10 = 10;
+static const int kMap11 = 11;
+static const int kLossHero4 = 4;
+static const int kLossHero22 = 0x16;
+static const int kLossHero27 = 0x1b;
+static const int kLossHero45 = 0x2d;
+static const int kLossHero74 = 0x4a;
+static const int kLossHero76 = 0x4c;
+static const int kLossHero96 = 0x60;
+static const int kLossHero97 = 0x61;
+static const int kLossHero102 = 0x66;
+static const int kLossHero104 = 0x68;
+static const int kLossHero110 = 0x6e;
+static const int kLossHero145 = 0x91;
+static const int kLossHero146 = 0x92;
+static const int kLossHero147 = 0x93;
+static const int kLossHero148 = 0x94;
+static const int kLossHero149 = 0x95;
+static const int kLossHero152 = 0x98;
+static const int kLossPortrait146 = 0x92;
 
+// In campaign mode a per-campaign table of protected heroes (and, in
+// two campaigns, carried quest artifacts) loses the game immediately;
+// outside those arms the ordinary lose-hero condition compares ids.
+// THE TAIL IS SPELLED TWICE ON PURPOSE, and that is a byte-measured
+// lever worth 62 points (10.67 -> 73.01): with a single post-switch
+// tail our CL hoists the merged tail block between the case-14 and
+// case-15 arms (chaining it after case 14's loop exit), which
+// misaligns every arm after it. Duplicating the tail - once inside the
+// campaign block for the arms, once at the end for the !gCampaignMode
+// path - pins the arms' copy at retail's position. Retail's head
+// reaches the SAME single tail with a far jump, so its source likely
+// wrote it once and its CL simply did not hoist.
+// Residual (75.8636%): our CL cross-jumps several single-compare arms'
+// return-1 epilogues (case 10's leading id test, cases 12/9) onto case
+// 15's shared instance, emitting `je shared` where retail keeps the
+// jne-plus-inline-epilogue ladder, and the !gCampaignMode tail copy
+// stays inline at the head where retail jumps far. The merged-return
+// class (path.obj/kbwin); polarity flips, a goto spelling, a trailing
+// default arm, and solver-proposed case swaps all measured equal or
+// worse.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser)
 {
-    // @stub
+    hero* h = const_cast<hero*>(loser);
+    if (gCampaignMode) {
+        int map;
+        int i;
+        switch (gpGame->campaign.currentCampaign) {
+        case kLossCampaign3:
+            if (gpGame->campaign.currentMap == kMap2
+                && (h->id == kLossHero4
+                    || h->portrait == kLossPortrait146))
+                return 1;
+            break;
+        case kLossCampaign7:
+            if ((gpGame->campaign.currentMap == kMap6
+                 || gpGame->campaign.currentMap == kMap7)
+                && (h->id == kLossHero148 || h->id == kLossHero152
+                    || h->id == kLossHero146))
+                return 1;
+            break;
+        case kLossCampaign10:
+            if (h->id == kLossHero149)
+                return 1;
+            if ((gpGame->campaign.currentMap == 1
+                 || gpGame->campaign.currentMap == kMap2)
+                && (h->id == kLossHero104 || h->id == kLossHero97
+                    || h->id == kLossHero110))
+                return 1;
+            break;
+        case kLossCampaign12:
+            if (h->id == kLossHero145)
+                return 1;
+            break;
+        case kLossCampaign9:
+            if (h->id == kLossHero147)
+                return 1;
+            break;
+        case kLossCampaign14:
+            if (h->id == kLossHero45)
+                return 1;
+            map = gpGame->campaign.currentMap;
+            if (map == kMap2) {
+                if (h->HasArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT)
+                    || h->HasArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)
+                    || h->HasArtifact(ARTIFACT_ORB_OF_SILT)
+                    || h->HasArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE)
+                    || h->HasArtifact(ARTIFACT_ORB_OF_INHIBITION)
+                    || h->HasArtifact(ARTIFACT_SWORD_OF_HELLFIRE))
+                    return 1;
+            } else if (map != kMap3 && map != kMap4) {
+                break;
+            }
+            if (h->HasArtifact(ARTIFACT_ANGELIC_ALLIANCE))
+                return 1;
+            for (i = 0; i < 0x90; ++i) {
+                if (gCombinationArtifacts[0].components.test(i)
+                    && h->HasArtifact(i))
+                    return 1;
+            }
+            break;
+        case kLossCampaign15:
+            map = gpGame->campaign.currentMap;
+            if (map == 1) {
+                if (h->id == kLossHero22)
+                    return 1;
+            } else if (map == kMap2) {
+                if (h->id == kLossHero22
+                    || h->HasArtifact(ARTIFACT_VAMPIRES_COWL))
+                    return 1;
+            } else if (map == kMap3) {
+                if (h->id == kLossHero22
+                    || h->HasArtifact(ARTIFACT_DEAD_MANS_BOOTS))
+                    return 1;
+            }
+            break;
+        case kLossCampaign17:
+            if ((gpGame->campaign.currentMap == kMap2
+                 || gpGame->campaign.currentMap == kMap3)
+                && (h->id == kLossHero74 || h->id == kLossHero76))
+                return 1;
+            break;
+        case kLossCampaign18:
+            map = gpGame->campaign.currentMap;
+            if (map == kMap4) {
+                if (h->id == kLossHero96)
+                    return 1;
+            } else if (map == kMap5) {
+                if (h->id == kLossHero148)
+                    return 1;
+            } else if (map == kMap8) {
+                if (h->id == kLossHero27 || h->id == kLossHero148)
+                    return 1;
+            } else if (map == kMap9) {
+                if (h->id == kLossHero96 || h->id == kLossHero102)
+                    return 1;
+            } else if (map == kMap10 || map == kMap11) {
+                if (h->id == kLossHero27 || h->id == kLossHero148
+                    || h->id == kLossHero102
+                    || h->id == kLossHero96)
+                    return 1;
+            }
+            break;
+        case kLossCampaign19:
+            if ((gpGame->campaign.currentMap == 0
+                 || gpGame->campaign.currentMap == kMap2)
+                && h->id == kLossHero74)
+                return 1;
+            break;
+        }
+        if (Type == LOSS_CONDITION_LOSE_HERO)
+            return h->id == HeroID;
+        return 0;
+    }
+    if (Type == LOSS_CONDITION_LOSE_HERO)
+        return h->id == HeroID;
+    return 0;
 }
-
-// E:\gamedcs\victorylossconditions.cpp:498
-#endif  // @carcass
 
 // Retail brackets this Complete-only helper directly between
 // CheckForDefeatedHeroLoss and CheckForDefeatedTownLoss. Its body calls the
