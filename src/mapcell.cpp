@@ -4339,29 +4339,64 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 // from loadMapObjects': the index rebuild first, then the progress tick.
 // That is retail's order in each body, not a transcription slip.
 //
-// Residual (78.4070%): ONE branch over retail (base 35, target 34) and one
+// TWO SOURCE FACTS, both read straight out of the frame, worth 78.4070 ->
+// 87.2791 together (2026-08-20).  The note this replaces had both of them
+// pointed at the wrong construct, so read the bytes, not the prose.
+//
+//   * `i` IS AN `int`, NOT AN `unsigned` - because `gMissingMaskTypes` is a
+//     `vector<int>` and `push_back` takes `const int&`.  With an `unsigned`
+//     counter the conversion materialises a TEMPORARY and retail's
+//     `lea ecx,[ebp-0x10] / push ecx` becomes ours plus a
+//     `mov [ebp-<temp>], ebx`.  The temp is not the point: binding the
+//     reference to `i` ITSELF takes its address, which forbids VC6 from
+//     strength-reducing the subscripts onto an induction variable.  Retail
+//     therefore homes `i` at [ebp-0x10], reloads it at every use
+//     (`mov edi,[ebp-0x10] / inc edi`) and rebuilds `&objectTypes[i]` as
+//     `shl/add/lea [ebx+4*ecx]` and `&objects[i]` as `lea [edi+2*edi]` every
+//     iteration - in FOUR loops.  We carried a byte offset in a frame slot
+//     and bumped it by 0x44 / 0x0c instead.  One word: +2.99.
+//   * THE SECOND RESIZE PASSES `count`, NOT `objectTypes.size()`.  Retail
+//     spills the first Read's `count` at entry - `mov edi,[ebp-0x14] /
+//     mov [ebp-0x1c],edi`, a compiler temp made because [ebp-0x14] is
+//     `count`'s home and the SECOND Read overwrites it - and reloads
+//     [ebp-0x1c] as `sprites.resize`'s argument at fn+0x261.  Spelling it
+//     `objectTypes.size()` cost the whole null-checked 0x78787879 division
+//     ahead of the call.  +5.88.  (The old note read that division as a
+//     fifth `size()` belonging to the FIRST resize, and concluded
+//     `oldSprites.resize` did not pass `sprites.size()`.  It does; the
+//     surplus call was the other resize's argument.)
+//
+// Residual (87.2791%): ONE branch over retail (base 35, target 34) and one
 // extra cleanup region (EH transcript base [0,1,-1,2,-1,-1] against retail's
-// [0,1,-1,2,-1]).  Both are the SAME defect and it is now located, if not
-// closed (2026-08-20).
+// [0,1,-1,2,-1]).  Both are the same defect, and it is now a pure /Ob2
+// BUDGET question with three witnesses in one direction - retail EXPANDS
+// where we CALL, so the lever is to GROW this caller, and no statement pin
+// reaches any of them because a pin only ever removes expansions:
 //
-// The extra region is the SECOND `infile->Read(&count)`'s failure exit, at
-// fn+0x3d3.  Both sides destroy `oldSprites` there and both call
-// `operator delete`, but ours ALSO calls
-// `vector<CSprite*>::_Destroy(_First, _Last)` and stores `[ebp-4] = -1`
-// first, where retail (fn+0x3af) emits `push [ebp-0x34] / call operator
-// delete` and nothing else.  `_Destroy` over a pointer element is an empty
-// loop; retail EXPANDED it and VC6 deleted the loop, we keep the call.  That
-// is an A8/A9 under-inline - our caller is leaner than retail's - and no
-// statement pin reaches it, because a pin only ever removes expansions.
+//   * fn+0x60: retail expands `basic_string(const allocator&)` into
+//     `mov al,[ebp+0xb] / mov [ebp-0x7c],al / push 0 / call _Tidy` - the
+//     allocator temp living in the dead top byte of the `infile` parameter
+//     home - at the first of the six ctors `objectTypes.resize(count)`'s
+//     `CObjectType()` temp needs.  We call `??0basic_string@...@@QAE@AB`.
+//   * fn+0x1e5: retail folds `oldSprites.size()` to 0 in `if (size() < _N)`
+//     (the ctor's `_First=_Last=0` stores are still live), giving one
+//     `je`; we CALL size() and `cmp eax,ebx / jae`.  Retail still calls
+//     size() for the `_N - size()` argument two instructions later, so this
+//     is per-site, not a spelling.
+//   * fn+0x3af: the SECOND `infile->Read(&count)`'s failure exit.  Retail
+//     emits `push [ebp-0x34] / call operator delete` and nothing else,
+//     because it EXPANDED `vector<CSprite*>::_Destroy` (an empty loop over
+//     a pointer element, which VC6 then deletes) and `operator delete` is
+//     `_THROW0()`, so no `[ebp-4]` state is needed either.  We call
+//     `_Destroy` and store the state, which makes this block byte-identical
+//     to the objects-loop failure exit - so VC6 MERGES them, and retail's
+//     second copy at fn+0x4c3 (which does call `_Destroy`) has no twin on
+//     our side.  That merge is the whole branch- and region-count delta.
 //
-// The same alignment names one more real divergence, in the sprite refill:
-// retail's FIRST resize expands to exactly `size()/insert/size()/erase`,
-// four calls, while ours emits a fifth `size()` in FRONT of them for the
-// ARGUMENT.  Retail's `oldSprites.resize(...)` therefore does not pass
-// `sprites.size()`; the second resize, `sprites.resize(objectTypes.size())`,
-// agrees with retail at five calls including its argument.  What retail
-// passes instead is not yet identified - the twin loadMapObjects has no
-// counterpart to read it off.
+// The three sites are in source order and the budget is spent sequentially,
+// which is why retail expands the first `_Destroy` and calls the second.
+// Nothing byte-visible is missing from this body, so the mass has to come
+// from somewhere else; not found this round.
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
@@ -4377,7 +4412,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 
     objectTypes.resize(count);
 
-    unsigned int i;
+    int i;
     for (i = 0; i < objectTypes.size(); ++i) {
         int status = readObjectType(infile, &objectTypes[i]);
         if (status < 0)
@@ -4396,7 +4431,7 @@ int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
     for (i = 0; i < sprites.size(); ++i)
         oldSprites[i] = sprites[i];
 
-    sprites.resize(objectTypes.size());
+    sprites.resize(count);
     for (i = 0; i < objectTypes.size(); ++i) {
         sprites[i] =
             ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
