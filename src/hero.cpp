@@ -28,9 +28,7 @@
 // hero.obj owns get_morale_description / get_luck_description, so the
 // owning compiland joins their gate rather than defining armygrp's
 // wider HOMM3_ARMYGRP_DESCRIPTION_API.
-#define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
-#undef HOMM3_HERO_DESCRIPTION_DEFS
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"

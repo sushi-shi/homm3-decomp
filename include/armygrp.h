@@ -21,16 +21,11 @@
 #include "struct.h"    // type_point, used through this header's consumers
 #include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
 
-// Keep the description-only string surface out of unrelated TUs: VC6's
-// optimizer is sensitive even to otherwise unused class members. armygrp.cpp
-// opts into this source-boundary view while reconstructing the two bodies.
-#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
 namespace std {
 template<class T> class allocator;
 template<class E> struct char_traits;
 template<class E, class Tr, class A> class basic_string;
 }
-#endif
 
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
@@ -43,14 +38,9 @@ enum TCreatureType {
     // multiplier for 4 and refuses the spell outright for 5, which is
     // exactly the retaliation ladder (the Griffin retaliates twice, the
     // Royal Griffin already retaliates without limit, so buying it more
-    // retaliations is worth nothing). Behind a view for this header's
-    // usual measured reason - armygrp.h reaches most of the combat tree
-    // and an ungated enumerator counts toward the include-set threshold
-    // in every consumer.
-#ifdef HOMM3_CREATURE_GRIFFIN_DECL
+    // retaliations is worth nothing).
     CREATURE_GRIFFIN = 0x4,
     CREATURE_ROYAL_GRIFFIN = 0x5,
-#endif
     // The four base elementals (NH3API enum spellings; IDs proven by
     // GetAlignments' compare chain at 0x44ac08).
     CREATURE_AIR_ELEMENTAL = 0x70,
@@ -82,11 +72,8 @@ enum TCreatureType {
     // same joustBonus army.h already carries at +0x490 - and 10/11 is
     // where the Castle dwelling order puts the pair, immediately below
     // the Angel/Archangel 0xc/0xd this enum already proves.
-    // Behind a view for this header's usual measured reason.
-#ifdef HOMM3_CREATURE_JOUST_DECL
     CREATURE_CAVALIER = 0xa,
     CREATURE_CHAMPION = 0xb,
-#endif
     CREATURE_ANGEL = 0xc,
     CREATURE_ARCHANGEL = 0xd,
     CREATURE_BONE_DRAGON = 0x44,
@@ -260,10 +247,7 @@ enum ESpellId {
     // i.e. the Tower's moat IS a minefield, which is what identifies
     // the spell. The id also sits one below SPELL_EARTHQUAKE 0xe in the
     // battlefield-obstacle run this enum already anchors at that end.
-    // Behind a view for this header's usual measured reason.
-#ifdef HOMM3_SPELL_LAND_MINE_DECL
     SPELL_LAND_MINE = 0xb,
-#endif
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
     // corresponding 0x88-byte traits row's per-mastery mana-cost band.
     SPELL_FLY = 0x6,
@@ -313,18 +297,13 @@ enum ESpellId {
     // that arm is the one gated on `first_target` before it reaches
     // find_resurrection_target - the sacrifice beneficiary lookup.
     //
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT, NOT CAUTION. Declared
-    // unconditionally this ONE enumerator costs initialize.obj's
-    // initialize_game_data 100.0000 -> 96.0880 - the include-set class
-    // this header has fired before, at the same two values, when three
-    // ESpellId enumerators were added and withdrawn on 2026-08-08. The
-    // value is explicit and every neighbour's value is explicit too, so
-    // the two arms describe the same domain; only the count of
-    // enumerators visible to a TU differs. spells.cpp is the only
-    // consumer.
-#ifdef HOMM3_ARMYGRP_SACRIFICE_VIEW
+    // Include-set measurement, 2026-08-08 and again by the view audit:
+    // declared unconditionally this ONE enumerator costs initialize.obj's
+    // initialize_game_data 100.0000 -> 96.0880 (max/hist hold the peak).
+    // Corroborated a second time by consider_spell's dispatch: its
+    // 56-entry byte table sends `spell - 14 == 26` to the arm that calls
+    // type_AI_spellcaster::consider_sacrifice and nothing else.
     SPELL_SACRIFICE = 0x28,
-#endif
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
     // The 41..52 enchantment ladder, byte-proven end to end 2026-08-08
@@ -360,33 +339,25 @@ enum ESpellId {
     // the four spells the Armor of the Damned auto-casts - Slow, Curse,
     // Weakness, Misfortune - which is also what corroborates it, since
     // the other three are already byte-proven enumerators above.
-    // Behind a view for this header's usual measured reason: armygrp.h
-    // reaches most of the combat tree and an ungated enumerator counts
-    // toward the include-set threshold in every consumer.
-#ifdef HOMM3_SPELL_SLOW_DECL
     SPELL_SLOW = 0x36,
-#endif
     SPELL_SLAYER = 0x37,
     SPELL_TITANS_LIGHTNING_BOLT = 0x39,
     // 58, byte-proven by ai_tactical's get_counterstroke_value
     // (0x439e80), which folds the row into the displacement as
     // `[akSpellTraits + 4*mastery + 0x1f04]` = 58*136 + 0x34 - the
-    // constant form, so the enumerator is what the source names. Behind
-    // a view for the same measured reason as SPELL_SLOW below.
-#ifdef HOMM3_SPELL_COUNTERSTRIKE_DECL
+    // constant form, so the enumerator is what the source names.
+    // ResetRound (0x447120) corroborates from the round side: the 0x3a
+    // influence row adds army::counterstrokeBonus to the round's
+    // retaliation allowance - Counterstrike's rule and nothing else.
     SPELL_COUNTERSTRIKE = 0x3a,
-#endif
     SPELL_BERSERK = 0x3b,
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
     SPELL_BLIND = 0x3e,
     // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
     // which pushes the literal 0x3f into SpellCastWorks as the spell it
-    // is pricing. Behind a view for this header's usual measured
-    // reason, as SPELL_SLOW above.
-#ifdef HOMM3_SPELL_TELEPORT_DECL
+    // is pricing.
     SPELL_TELEPORT = 0x3f,
-#endif
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
     // Dreamcast CodeView supplies the enumerator spellings.
@@ -395,7 +366,7 @@ enum ESpellId {
     SPELL_SUMMON_WATER_ELEMENTAL = 0x44,
     SPELL_SUMMON_AIR_ELEMENTAL = 0x45,
     SPELL_STONE = 0x46,
-    SPELL_POISON = 0x47
+    SPELL_POISON = 0x47,
     // The nine rows ai_tactical's enchantment dispatch
     // get_enchantment_function (0x43b690) needs and this roster did
     // not carry. Each is byte-proven by that function's own two
@@ -414,24 +385,26 @@ enum ESpellId {
     // Four of the nine are independently corroborated by army.h's
     // +0x198 spell-influence row, which already fixes FRENZY 0x38,
     // BIND 0x48 and AGE 0x4b from the round-counter side and puts
-    // PARALYZE on 74. Behind a view for this header's usual measured
-    // reason.
-#ifdef HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
-    ,
+    // PARALYZE on 74.
     SPELL_MAGIC_ARROW = 0xf,
-    // 40, byte-proven by consider_spell's own dispatch: its 56-entry
-    // byte table sends `spell - 14 == 26` to the arm that calls
-    // type_AI_spellcaster::consider_sacrifice and nothing else.
-    SPELL_SACRIFICE = 0x28,
     SPELL_IMPLOSION = 0x12,
     SPELL_HASTE = 0x35,
+    // Round-side corroboration: the one influence row ResetRound
+    // (0x447120) refuses to decrement, paired with army.h's frenzyRounds
+    // (+0x278 == +0x198 + 56*4) by ComputeAttackerDamageReduction.
     SPELL_FRENZY = 0x38,
     SPELL_CLONE = 0x41,
+    // Round-side corroboration: remove_binding (0x43ee10) cancels this
+    // row the moment a bound stack's `binders` list empties - `push 0x48
+    // / call CancelIndividualSpell` - the same index 72 army.h's +0x2b8
+    // bindRounds field pairs. Also the folded `akSpellTraits + 0x2650`
+    // row address in viewarmywindow.cpp's Dendroid-hold arm.
     SPELL_BIND = 0x48,
     SPELL_DISEASE = 0x49,
     SPELL_PARALYZE = 0x4a,
+    // Round-side corroboration: the 0x4b row HALVES the stack's
+    // recomputed maximum hit points in ResetRound - Aging's rule.
     SPELL_AGE = 0x4b
-#endif
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
@@ -449,16 +422,8 @@ struct SSpellTraits {
     // m_level 24/+0x18 all already agree here), so 4 is 4. +8 is the
     // DC's m_effect and stays in the pad until a body reads it.
     //
-    // BEHIND A VIEW: this header is inside initialize.cpp's include
-    // closure, where the include-set class has fired before, and
-    // army.cpp is the only consumer of the name. Both arms spell the
-    // same eight bytes.
-#ifdef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
     const char* m_sample;     // +0x04
     char pad_08[4];
-#else
-    char pad_04[8];
-#endif
     unsigned int field_c;     // bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons
@@ -680,9 +645,7 @@ DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
 // initialize_game_data from 100.00% to 96.09% - the include-set class,
 // measured, with no semantic change anywhere. armygrp.cpp and
 // viewarmywindow.cpp are the two TUs that define the macro.
-#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
 DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
-#endif
 
 // Minimal stream interface for save/load: retail virtual-calls slot 1
 // to read and slot 2 to write (this in ecx, (buffer, size) on stack).
@@ -784,7 +747,6 @@ public:
     int GetArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
                     unsigned char apply_limits);
-#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description(TCreatureType creature, int morale,
                                const class hero* ownerHero,
@@ -803,7 +765,6 @@ public:
                              const class hero* enemyHero,
                              const armyGroup* enemyGroup,
                              int magicTerrain) const;
-#endif
     int GetNumArmies() const;
     int Add(int armyType, int newNumTroops, int newIndex);
     static const char* GetArmySizeName(int howMany, int iNameSet);

@@ -37,9 +37,7 @@
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
-#define HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "armygrp.h"
-#undef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "bitmap16.h"
 #define HOMM3_CMBTMGR_MOVE_VIEW
 #define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
