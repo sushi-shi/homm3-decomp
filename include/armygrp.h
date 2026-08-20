@@ -472,6 +472,13 @@ enum ESpellId {
     SPELL_DISEASE = 0x49,
     SPELL_PARALYZE = 0x4a,
     SPELL_AGE = 0x4b,
+    // The Lich shot's pseudo-spell row: army::range_attack (0x43f900)
+    // reads akSpellTraits[0x4c].m_sample/m_effect for the death-cloud
+    // animation over the target hex. NH3API's SPELL_DEATH_CLOUD at the
+    // same value; the neighbours 0x4a/0x4b above and 0x4e below bracket
+    // it. Canaries measured on admission (the ESpellId class is
+    // non-monotonic - see the SSpellTraits school note).
+    SPELL_DEATH_CLOUD = 0x4c,
     // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
     // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
     // 0x4e is the TOP entry, with an arm of its own that prints one
@@ -480,6 +487,11 @@ enum ESpellId {
     // value is fixed at both ends by the same table: 0x4b AGE is the
     // last already-proven rung below it, and the window closes at 0x4e.
     SPELL_DISPEL_HELPFUL = 0x4e,
+    // The Mighty Gorgon's pseudo-spell row: army::do_post_attack
+    // (0x440bc0) plays akSpellTraits[0x4f].m_sample over its death
+    // stare, exactly as the Rust Dragon plays row 0x50's below.
+    // Bracketed by the proven 0x4e above and 0x50 below.
+    SPELL_DEATH_STARE = 0x4f,
     // 80, the one row Complete's 81-wide influence table carries past
     // the Dreamcast build's kNumSpellsAndCreatureEffects = 80: the
     // Rust Dragon's acid. Byte-proven by check_special_attack
@@ -670,6 +682,11 @@ const unsigned int CTA_SIEGE_WEAPON = 0x40;
 // 0x20000 zeroes a stack's morale outright (GetArmyMorale 0x44b11e) -
 // the no-morale trait (undead/elemental/war-machine family).
 const unsigned int CTA_NO_MORALE = 0x20000;
+// Bit 4, byte-proven by army::new_turn (0x446e30): the Elixir of Life
+// regenerates a stack only when its traits row carries this bit - the
+// living-creature marker (the Elixir does nothing for the undead and
+// the war machines).
+const unsigned int CTA_ALIVE = 0x10;
 
 // Artifact ids as the IsWieldingArtifact gates surface them (NH3API
 // artifact.hpp spellings; every name is corroborated by the byte-

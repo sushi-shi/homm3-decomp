@@ -52,7 +52,61 @@ enum EAreaAttackCreature {
     // 2's field +0x40). 2 is the Archer, third row of the Castle
     // dwelling run below Pikeman 0 and Halberdier 1. Here for the same
     // reason as every enumerator above.
-    CREATURE_ARCHER = 0x2
+    CREATURE_ARCHER = 0x2,
+    // The rest of army::LoadResources' shooter roster (0x43d9f0): its
+    // missile-sprite switch maps every one of these ids to a named
+    // projectile .def (the archers above to the crossbow bolt, the
+    // monks to the zealot beam, both elves plus armygrp.h's
+    // SHARPSHOOTER to the elf arrow, and so on), and every pair lands
+    // exactly where the Complete dwelling runs the wide enum's anchors
+    // put it (WOOD_ELF/GRAND_ELF directly under PEGASUS 0x14/0x15,
+    // POWER_LICH above beside armygrp.h's LICH 0x40, BEHOLDER between
+    // HARPY_HAG 0x49 above and MEDUSA 0x4c). VAMPIRE/VAMPIRE_LORD are
+    // proven by the same body's extra-sample gate (the ext1/ext2 pair
+    // they share with the two devils). They live HERE and not in
+    // armygrp.h for the measured reason every enumerator above does:
+    // adding this block to the wide roster took initialize_game_data
+    // 100.00 -> 90.16 (2026-08-20); in this narrow header the canaries
+    // do not move. NH3API spellings, Complete numbering.
+    CREATURE_MARKSMAN = 0x3,
+    CREATURE_MONK = 0x8,
+    CREATURE_ZEALOT = 0x9,
+    CREATURE_WOOD_ELF = 0x12,
+    CREATURE_GRAND_ELF = 0x13,
+    CREATURE_MASTER_GREMLIN = 0x1d,
+    CREATURE_TITAN = 0x29,
+    CREATURE_GOG = 0x2c,
+    CREATURE_VAMPIRE = 0x3e,
+    CREATURE_VAMPIRE_LORD = 0x3f,
+    CREATURE_BEHOLDER = 0x4a,
+    CREATURE_EVIL_EYE = 0x4b,
+    CREATURE_ORC = 0x58,
+    CREATURE_ORC_CHIEFTAIN = 0x59,
+    CREATURE_LIZARDMAN = 0x64,
+    CREATURE_LIZARD_WARRIOR = 0x65,
+    // army::new_turn (0x446e30) regenerates exactly three creatures
+    // unconditionally: WIGHT 0x3c, WRAITH 0x3d and this one - 0x90 is
+    // the Troll, the one regenerating neutral, bracketed by the proven
+    // ROGUE 0x8f and CATAPULT 0x91 in armygrp.h's roster.
+    CREATURE_TROLL = 0x90,
+    // army::compute_attacker_bonus (0x443320) proves the four: the
+    // jousting bonus (CAVALIER/CHAMPION) is void against 0 and 1 - the
+    // Castle root pair, Pikeman and Halberdier - and the hate ladder
+    // pairs the plain Genie 0x24 and plain Efreeti 0x34 with the
+    // MASTER_GENIE 0x25 / EFREET_SULTAN 0x35 armygrp.h already proves.
+    CREATURE_PIKEMAN = 0x0,
+    CREATURE_HALBERDIER = 0x1,
+    CREATURE_GENIE = 0x24,
+    CREATURE_EFREETI = 0x34,
+    // army::do_post_attack's dispatch (0x440bc0) proves the four: the
+    // Thunderbird's 20% lightning at 0x5d (Stronghold's upgraded Roc),
+    // the Mighty Gorgon's death stare at 0x67, and the Serpent/Dragon
+    // Fly dispel pair at 0x68/0x69 (only 0x69 adds the Weakness cast),
+    // each id bracketed by the proven runs around it.
+    CREATURE_THUNDERBIRD = 0x5d,
+    CREATURE_MIGHTY_GORGON = 0x67,
+    CREATURE_SERPENT_FLY = 0x68,
+    CREATURE_DRAGON_FLY = 0x69
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort

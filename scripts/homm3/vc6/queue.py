@@ -42,14 +42,25 @@ def _targets():
     for u in data["units"]:
         unit = (u.get("name") or u.get("id") or "").split("/")[-1]
         for fn in u.get("functions", []):
-            # A MISSING key is not a zero. objdiff declines to diff some
-            # functions outright - typically when the object emits template
-            # COMDATs with no delinked counterpart - and omits the field
-            # entirely. Defaulting it to 0.0 counted 18 functions and 21 KB
-            # as fully recoverable stub mass when they are not scoreable at
-            # all, which is what ranked `army` first for several rounds.
+            # A MISSING key has TWO causes and they are opposites, which the
+            # NAME FORM tells apart:
+            #   * a FLAT CARVE NAME (`army_do_post_attack`) means the body
+            #     still sits in `#if 0` - sec-0 undefined, so the delinker
+            #     labels it with the flat src-VA name. It is unclaimed
+            #     carcass and its whole size IS recoverable. Once claimed and
+            #     re-delinked it scores normally: an army lane took thirteen
+            #     such rows from "no key" to 67-100% in one session.
+            #   * a MANGLED name (`?LootDeadHero@...`) means objdiff genuinely
+            #     declines to diff a claimed function - the object emits
+            #     template COMDATs with no delinked counterpart. That one is
+            #     not recoverable mass.
+            # Excluding both (2026-08-20) wrongly dropped 20 KB of real work
+            # and kept the 723 B that actually is undiffable - backwards.
             if "fuzzy_match_percent" not in fn:
-                undiffable.append((unit, fn["name"], _size(fn)))
+                if fn["name"].startswith("?"):
+                    undiffable.append((unit, fn["name"], _size(fn)))
+                    continue
+                out.append((unit, fn["name"], 0.0, _size(fn)))
                 continue
             p = fn.get("fuzzy_match_percent") or 0.0
             if p >= 99.999:
@@ -62,9 +73,8 @@ def _targets():
     if undiffable:
         tot = sum(s for _u, _n, s in undiffable)
         print(f"[queue] {len(undiffable)} function(s), {tot/1024:.1f} KB, "
-              "carry NO score at all - objdiff declines to diff them.\n"
-              "        They are NOT recoverable mass and are excluded "
-              "from the ranking:")
+              "are CLAIMED but carry no score - objdiff declines to\n"
+              "        diff them. Not recoverable mass; excluded from the ranking:")
         for u, n, s in sorted(undiffable, key=lambda r: -r[2])[:8]:
             print(f"          {s:6d} B  {u}:{n[:52]}")
     return out
