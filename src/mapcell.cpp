@@ -25,6 +25,7 @@
 // by calling pick_alignment - a random-dwelling resolution pass.
 //
 #include <va.h>
+#include <windows.h>
 #include "advmgr_objects.h"
 #include "csprite.h"
 #include "advmgr.h"
@@ -2862,16 +2863,120 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:4053
+// Files one object cell into a map cell's draw list at its correct depth.
+// The list is kept sorted by layer and the search runs BACKWARDS from the
+// end, so a new cell sinks only as far as it has to.
+//
+// The comparison has two levels.  Layers that differ settle it outright - a
+// higher one wins the position, a lower one sinks past.  Equal layers go to a
+// footprint test: both objects' extents become RECTs anchored at their
+// bottom-right tile (left = x - width + 1, right = x + 1, likewise for y),
+// intersected with IntersectRect and clamped to the world with
+// gMapWidth/gMapHeight.  Every cell of that overlap is then looked up in its
+// OWN draw list - by a linear scan bounded by nothing but the match, which is
+// retail's and not a transcription slip - and if the cell already sitting
+// there is above this object's height map at the corresponding grid position,
+// the new cell sinks past.  The height map is indexed
+// [newObject->x - x][newObject->y - y], the orientation GenerateHeightMap
+// fills.
+//
+// Everything from the insertion point on is one INLINED
+// vector<TObjectCell>::insert(iterator, const T&) - all three Dinkumware
+// paths: the reallocating one with its operator new/delete pair, the
+// room-at-the-end one, and the shift-up one.  There is no source knob there.
+//
+// windows.h joins this TU's include closure for RECT and IntersectRect, and
+// was measured include-set NEUTRAL first: adding it alone moved no function
+// in this unit (41/67 exact, 60.1933 fuzzy before and after, zero per-row
+// deltas).  That measurement is the reason this row is reachable at all, and
+// it is worth keeping: the same experiment on csprite.h a function earlier
+// was also flat, so mapcell.obj tolerates both.
+//
+// Residual (61.5553%): the OVERLAP SCAN's loop shape, and it is a
+// strength-reduction difference rather than a spelling one.  Retail
+// recomputes `(z*Size + y)*Size + x` and its 38-byte scale on every inner
+// iteration, holding only Size and cellData in the inner loop's preheader;
+// this compile additionally precomputes 38*Size and turns the y loop into an
+// induction-variable add, which costs two branches and one exit against
+// retail (base 30 branches / 3 rets, retail 32 / 4).  This is the same class
+// GenerateHeightMap's 29-point re-subscripting lesson sits in - retail's
+// input does NOT let VC6 hoist the map geometry - but there the lever was a
+// cached pointer that could simply be removed, and here the expression is
+// already written out longhand with nothing left to un-cache.  Measured on
+// the way: computing `thisCell->objects.end()` BEFORE the GenerateHeightMap
+// call rather than after is worth 0.3 points (61.2480 -> 61.5553) and is
+// retail's order - it reclaims the first parameter slot for `&objects` the
+// way retail does.  NOT yet tried, and the next thing to try: giving the
+// scan its own `worldMap` reference so the geometry loads land where retail
+// puts them.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
-void NewfullMap::StampObject(NewmapCell* thisCell, NewmapCell::TObjectCell* objCell)
+void NewfullMap::StampObject(NewmapCell* thisCell,
+                             NewmapCell::TObjectCell* objectCell)
 {
-    // @stub
-}
+    std::vector<NewmapCell::TObjectCell>::iterator position
+        = thisCell->objects.end();
+    CObject* newObject = &objects[objectCell->objectIndex];
 
-#endif  // @carcass -- located/reconstruction-pending bodies
+    signed char heightMap[8][6];
+    GenerateHeightMap(newObject, heightMap);
+
+    while (position != thisCell->objects.begin()) {
+        if (objectCell->layer > (position - 1)->layer)
+            break;
+
+        if (objectCell->layer == (position - 1)->layer) {
+            CObject* belowObject = &objects[(position - 1)->objectIndex];
+            CObjectType* newType = &objectTypes[newObject->typeIndex];
+            CObjectType* belowType = &objectTypes[belowObject->typeIndex];
+
+            RECT newRect;
+            newRect.left = newObject->x - newType->width + 1;
+            newRect.top = newObject->y - newType->height + 1;
+            newRect.right = newObject->x + 1;
+            newRect.bottom = newObject->y + 1;
+
+            RECT belowRect;
+            belowRect.left = belowObject->x - belowType->width + 1;
+            belowRect.top = belowObject->y - belowType->height + 1;
+            belowRect.right = belowObject->x + 1;
+            belowRect.bottom = belowObject->y + 1;
+
+            RECT overlap;
+            IntersectRect(&overlap, &newRect, &belowRect);
+            if (overlap.left < 0)
+                overlap.left = 0;
+            if (overlap.top < 0)
+                overlap.top = 0;
+            if (overlap.right > gMapWidth)
+                overlap.right = gMapWidth;
+            if (overlap.bottom > gMapHeight)
+                overlap.bottom = gMapHeight;
+
+            for (int x = overlap.left; x < overlap.right; ++x) {
+                for (int y = overlap.top; y < overlap.bottom; ++y) {
+                    NewmapCell* cell = &gpGame->worldMap.cellData[
+                        (newObject->z * gpGame->worldMap.Size + y)
+                            * gpGame->worldMap.Size
+                        + x];
+                    std::vector<NewmapCell::TObjectCell>::iterator scan
+                        = cell->objects.begin();
+                    while (scan->objectIndex != (position - 1)->objectIndex)
+                        ++scan;
+                    if (scan->layer
+                        > heightMap[newObject->x - x][newObject->y - y])
+                        goto sinkPast;
+                }
+            }
+            break;
+        }
+
+    sinkPast:
+        --position;
+    }
+
+    thisCell->objects.insert(position, *objectCell);
+}
 
 // E:\gamedcs\mapcell.cpp:4167
 // Recomputes everything a cell derives from the objects standing on it.  The
