@@ -14,7 +14,6 @@ enum eRS_Messages {
     // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
     // note. DC eRS_Messages has RS_SET_VISIBILITY = 1021, and retail's two
     // monolith handlers stamp 0x3fd into the message they transmit.
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
     RS_SET_VISIBILITY = 0x3fd,
     // The next rung, and the DC ladder is gapless: 1022. Retail's
     // DoEventCoverOfDarkness (0x4a14b0) stamps 0x3fe into a message whose
@@ -22,7 +21,6 @@ enum eRS_Messages {
     // pairing the two names describe. Gated for the same reason its
     // neighbours are.
     RS_RESET_VISIBILITY = 0x3fe,
-#endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
@@ -33,9 +31,7 @@ enum eRS_Messages {
     // ungated it takes recruit.obj's recruitUnit::Update 90.84 -> 88.24,
     // the include-set sensitivity class reaching a TU that never mentions
     // the value. Measured both ways 2026-08-14.
-#ifdef HOMM3_EVENTS_VIEW
     RS_ERASE_OBJECT = 0x422,
-#endif
     // GATED for exactly the reason RS_ERASE_OBJECT is, and measured the
     // same way. The VALUE is fixed by hero::Deallocate (0x4d9ec0), whose
     // inlined CMCDeadHero constructor stores 0x423 as the record subtype -
@@ -43,7 +39,6 @@ enum eRS_Messages {
     RS_DEAD_HERO = 0x423,
     RS_TELEPORT_HERO = 0x424,
     RS_HIDE_HERO = 0x426,
-#ifdef HOMM3_ADVMGR_TURN_DECLS
     // The adventure dispatcher's case roster, named from the gapless DC
     // eRS_Messages ladder (values 1000..1078 transfer whole; see the note
     // at the top of this enum). Gated to advmgr's view - an ungated
@@ -65,7 +60,6 @@ enum eRS_Messages {
     RS_GIFT_REQUEST = 1075,
     RS_SESSION_LOST = 1076,
     RS_NORMAL_WIN = 1078
-#endif
 };
 
 class CNetMsg {
@@ -91,7 +85,6 @@ public:
 // three dwords at +0x14. HandleTradeRequestMsg proves their player/resource/
 // amount roles. The Dreamcast port's same-named class instead embeds two hero
 // snapshots, a protocol-level platform divergence.
-#ifdef HOMM3_ADVMGR_TURN_DECLS
 // The dispatcher-facing message views advmgr's HandleNetMsg reads. Field
 // offsets are the handler's own byte-proven reads; the class names come
 // from the DC ctor publics (CGameTransmitInitMsg KKK_N_N, CChatMsg PBD,
@@ -127,7 +120,6 @@ public:
     int m_gamePos;
 };
 
-#endif
 
 class CTradeRequestMsg : public CNetMsg {
 public:
@@ -203,7 +195,6 @@ public:
           point(location), playerPos(player) {}
 };
 
-#ifdef HOMM3_EVENTS_VIEW
 // Dreamcast CodeView names the class, its single `m_point` member at +0x14
 // and the netmsg.h:662 constructor that takes the point BY VALUE.
 // advManager::EraseObj (0x4aabb0) builds it on the stack and hands it
@@ -220,11 +211,9 @@ public:
 };
 SIZE(CMCEraseObject, 0x18);
 
-#endif
 // advmgr.obj joins the gate for CSetVisibilityMsg alone (its two
 // visibility dispatch arms read it); split guard, CMCEraseObject and the
 // reset twin stay events-view-only.
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
 // NOT a CMapChange - the Dreamcast classes list gives CSetVisibilityMsg a
 // 32-byte extent, three members and the base CNetMsg directly, and retail
 // agrees on both counts: the monolith handlers hand it to
@@ -243,8 +232,6 @@ public:
           m_point(point), m_playerPos(playerPos), m_range(range) {}
 };
 SIZE(CSetVisibilityMsg, 0x20);
-#endif
-#ifdef HOMM3_EVENTS_VIEW
 
 // CResetVisibilityMsg (netmsg.h:747 in the DC roster, dc 0x9ccd4) is
 // CSetVisibilityMsg with the opposite subtype and nothing else changed:
@@ -263,7 +250,6 @@ public:
           m_point(point), m_playerPos(playerPos), m_range(range) {}
 };
 SIZE(CResetVisibilityMsg, 0x20);
-#endif
 
 class CMCTeleportHero : public CMapChange {
 public:

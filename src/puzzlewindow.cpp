@@ -10,9 +10,7 @@
 #include "border.h"
 #include "textwdgt.h"
 #include "exec.h"
-#define HOMM3_MAPCELL_OBJECTS_VIEW
 #include "game.h"
-#undef HOMM3_MAPCELL_OBJECTS_VIEW
 #include "kb.h"
 #include "message.h"
 #include "puzzlewindow.h"

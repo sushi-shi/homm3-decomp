@@ -507,7 +507,6 @@ unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
 // mapcell.obj's is_diggable independently rejects both 8 and 9.
 enum TTerrainType {
     TERRAIN_NONE = -1,
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // Terrain 7 is lava, byte-proven by terrain.h's ten-mask permutation
     // and needed by mapcell.obj's readMapLayer, which marks a cell
     // animated on terrain 7 or 8 and on any river or road.
@@ -520,7 +519,6 @@ enum TTerrainType {
     // anywhere. The view macro keeps the extra symbol out of the TUs
     // that do not need it.
     eTerrainLava = 7,
-#endif
     eTerrainWater = 8,
     eTerrainRock = 9
 };

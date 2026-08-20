@@ -723,9 +723,6 @@ public:
     void handle_hall_click();
     // Retail 0x5c7250 (dc 0x16c518). Writes the status line and the
     // command for a hero-to-hero drag between the page's two strips.
-    // Inside this gate rather than out of it for the reason SetupMage's
-    // note gives: recruit.cpp opens HOMM3_TOWNMGR_MGR_DECLS, not this
-    // one, so a declarator added here is invisible to the canary.
     void SetHeroCommand();
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0

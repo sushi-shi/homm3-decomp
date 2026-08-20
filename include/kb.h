@@ -87,9 +87,7 @@ void CheckEndGame(int bForceWin);                        // 0x4f2ce0
 // round. So the standing note that plain externs are inert is wrong for
 // this consumer; kb.h reaches it and its include-set sensitivity counts
 // declarations of every kind. Measured both ways 2026-08-14.
-#ifdef HOMM3_EVENTS_VIEW
 extern int gbGameOver;
-#endif
 // The retail entry at 0x4f1190 is the five-byte public thunk used by
 // questlogwindow; the implementation body follows at 0x4f1820.
 int TrueFalseDialogHandler(message* msg);

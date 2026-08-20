@@ -1239,7 +1239,7 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // modelled as a file-local helper, so the inline scan stays. `limit` x1 is the
 // clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
 // against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
-// HOMM3_TOWN_OBJ_DECLS declaration - and when town.h opened on 2026-08-14 that
+// HasBuilding declaration - and when town.h opened on 2026-08-14 that
 // promotion turned out to be CONTRA-INDICATED BY RETAIL BYTES, so it is closed
 // here rather than left as a standing follow-up. Two functions carry the same
 // DC `town::HasBuilding` census row and are ALREADY BYTE-EXACT with the
@@ -1997,8 +1997,8 @@ after_magic_terrain:
 // (x1/x3 against our x2/x2) already said the port's bodies differ.
 // Two further census leads are real but not reachable from this file:
 // `town::HasBuilding` x1 (E:\gamedcs\Town.h:324) where we read
-// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h keeps the
-// declaration behind HOMM3_TOWN_OBJ_DECLS - and `std::string::operator+=`
+// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h carries
+// the declaration - and `std::string::operator+=`
 // x3 against our mixed `+=`/`append`.
 // THE SITE COUNT IS RE-MEASURED AND THE SEARCH IS NARROWED TO ONE BLOCK
 // (2026-08-15). The deficit is still exactly FOUR free candidate sites,

@@ -83,11 +83,9 @@ enum hero_seqid {
 // unaligned dword loads). Names provisional.
 #pragma pack(push, 1)
 
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 enum EHeroBackpackLimit {
     HERO_BACKPACK_CAPACITY = 64
 };
-#endif
 
 // The 8-byte artifact record - what an equipped slot or a backpack
 // slot actually holds. NAME CORRECTED 2026-08-08: this header used to
@@ -110,13 +108,8 @@ struct type_artifact {
         : artifactId(id), extra(extraValue) {}
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
-// copy of the war machine's artifact record, so that compiland needs the
-// declarator too. It gets its own narrow gate rather than
-// HOMM3_ADVMGR_QUICKINFO_VIEW: that macro also widens game.h, mapcell.h
-// and advmgr.h, and a compiland's include closure is load-bearing here
-// (the initialize_game_data precedent).
-// hero.obj owns the DEFINITION (0x4db3e0) and its own consumers need
-// the declarator too, so the compiland's view joins the gate.
+// copy of the war machine's artifact record; hero.obj owns the
+// DEFINITION (0x4db3e0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
     void get_rollover_text(char* buffer);
@@ -581,14 +574,12 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
     unsigned char SpellIsAvailable(SpellID spell) const
     {
         return available_spells[spell];
     }
-#endif
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
@@ -639,7 +630,6 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
-#ifdef HOMM3_EVENTS_VIEW
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
@@ -665,18 +655,9 @@ public:
     // combat it starts. Declared only; the body is not reconstructed and
     // the row is not claimed from here.
     void CheckLevel();
-#endif
     // hero.obj's own view of the same two. GiveExperience calls
     // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
     // DC row with NO retail body - GiveExperience carries it expanded.
-#  ifndef HOMM3_EVENTS_VIEW
-    void CheckLevel();
-    // 0x4d9ec0. hero.obj OWNS the definition, so the owning compiland
-    // needs the declarator too; without one VC6 compiles the out-of-class
-    // body in a DEGRADED SCOPE and reports "undeclared identifier" from an
-    // arbitrary point onward with no error on the definition line.
-    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
-#  endif
     int GetLevel(int iExperience);
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact

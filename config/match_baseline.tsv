@@ -623,7 +623,7 @@ command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 # the four slice groups did not restore it while it was down, and adding
 # further evidenced slices (+0x28c, +0xd8) in either combination did not
 # either - only the later batch, as a whole, did.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5714	92.5714	0x76490
+command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -1328,7 +1328,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	94.0741	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
