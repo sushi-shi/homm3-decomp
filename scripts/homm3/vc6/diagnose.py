@@ -55,16 +55,19 @@ def _inline_divergence(unit: str, fn: str):
     return inline_model.divergence_note(bc, rc)
 
 
-def run(args) -> int:
-    unit, fn, src = _resolve(args.target)
-    if not unit:
-        _common.die(f"could not resolve the owning unit for {args.target!r} "
-                    "(pass UNIT:FN explicitly)")
+def route(unit: str, fn: str):
+    """(diagnosis, eh_div, inline_div, routes) for one function, or None when
+    the unit has no built objects.
+
+    THE routing decision - `run` renders it for one target, `queue` sweeps it
+    over the tree. Both must see the same answer, so neither owns a second
+    copy of these rules. Raises ValueError if the diagnosis itself failed.
+    """
     d = report._diagnose_one(unit, fn)
     if d is None:
-        _common.die(f"no build objects for {unit} - run `homm3 build` first")
+        return None
     if "error" in d:
-        _common.die(f"diagnosis failed: {d['error']}")
+        raise ValueError(d["error"])
 
     reg, flow = d["reg_dist"], d["flow_dist"]
     cls = d["class"]
@@ -98,6 +101,22 @@ def run(args) -> int:
                        "no source knob - see catalog C9/D21"))
     if not routes:
         routes.append((None, "unclassified - try why-reg then why-branch"))
+    return d, eh_div, inline_div, routes
+
+
+def run(args) -> int:
+    unit, fn, src = _resolve(args.target)
+    if not unit:
+        _common.die(f"could not resolve the owning unit for {args.target!r} "
+                    "(pass UNIT:FN explicitly)")
+    try:
+        routed = route(unit, fn)
+    except ValueError as e:
+        _common.die(f"diagnosis failed: {e}")
+    if routed is None:
+        _common.die(f"no build objects for {unit} - run `homm3 build` first")
+    d, eh_div, _inline_div, routes = routed
+    reg, flow, cls = d["reg_dist"], d["flow_dist"], d["class"]
 
     solver_cmds = []
     for solver, _why in routes:

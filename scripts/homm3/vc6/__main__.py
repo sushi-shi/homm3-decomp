@@ -115,6 +115,11 @@ def _build_parser() -> argparse.ArgumentParser:
                     help="also run the routed solver(s) and show the edit")
     pd.add_argument("--json", action="store_true")
 
+    pq = ss.add_parser("queue", help="tree-wide wall census: sweep diagnose "
+                       "over every unmatched fn, rank by recoverable bytes")
+    pq.add_argument("--unit", help="restrict to a comma-separated unit list")
+    pq.add_argument("--quiet", action="store_true")
+
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
     for g in ("argv", "il", "inline", "reg", "locator"):
         pc.add_argument(f"--{g}", action="store_true")
@@ -134,6 +139,7 @@ _TOOLS = {
     "oracle": ("oracle", "run"),
     "diagnose": ("diagnose", "run"),
     "atlas": ("atlas", "run"),
+    "queue": ("queue", "run"),
     "check": ("census", "run_check"),
 }
 
