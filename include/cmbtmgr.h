@@ -1650,16 +1650,29 @@ public:
                                long level, long power,
                                long casting_side,
                                unsigned char creature_spell);  // 0x5a66d0
-    // The lightning-bolt animator, two of its four bodies. Both take the
-    // SBolt record declared above; the DC prototypes (spells.cpp:3572 /
-    // 3864) supply every parameter name, and AddBolt's thirteen
-    // arguments are what name most of the record's fields.
+    // The lightning-bolt animator, all four bodies. All take the SBolt
+    // record declared above; the DC prototypes (spells.cpp:3572 / 3702 /
+    // 3864 / 3940) supply every parameter name, and AddBolt's thirteen
+    // arguments are what name most of the record's fields. DoBolt's
+    // seventeen ints are the DC roster's own order, and its `ret 0x44`
+    // corroborates the count exactly; two of them (iDrawsPerSegment and
+    // bFlashLighten) are DEAD in the retail body - no instruction in the
+    // 1474 bytes reads either slot - and are kept because the arity is
+    // what the call sites push.
     void ResetBoltAngle(SBolt* psBolt);                        // 0x5a5260
+    void DrawBolt(SBolt* psBolt, int iDrawLength);             // 0x5a5440
     void AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX,
                  int iDestY, int iSplitFrequency, int iStartThickness,
                  int iEndThickness, int iColor, int iAngleDistortMin,
                  int iAngleDistortMax, int iSegmentLength,
                  int bDistortAlways);                          // 0x5a5a90
+    void DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX,
+                int iDestY, int iSplitFrequency, int iMaxSplitLength,
+                int iStartThickness, int iEndThickness, int iColor,
+                int iAngleDistortMin, int iAngleDistortMax,
+                int iSegmentLength, int iDrawsPerSegment,
+                int bDistortAlways, int iDelay,
+                int bFlashLighten);                            // 0x5a5c20
     // 0x5a8690 (701 B), the ROLLOVER line the spell cursor writes while
     // a target is being picked - it is the one spells.obj body that
     // never resolves anything, only names what the aimed hex would hit.
