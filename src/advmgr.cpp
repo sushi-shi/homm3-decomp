@@ -884,12 +884,147 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:1939
+// The left-select dispatcher. Retail switches on msg->codeY - not
+// msg->id - over a dense 0..CHAT_EDIT_ID+5 domain, which VC6 lowers to a
+// byte index table at fn+0x264 into five targets at fn+0x250. The
+// index table is the whole widget-id map: MAP_ID and CHAT_TEXT_ID share
+// the map arm, RADAR_ID takes the radar arm, the two hero-id blocks
+// (HERO_0..HERO_4 and HERO_LOCATOR_0..HERO_LOCATOR_4) share one arm that
+// normalises whichever block the id came from down to a 0..4 slot, and
+// TOWN_0..TOWN_4 take the town arm. Everything else in range, and every
+// id past the last case, falls through to the shared tail.
+//
+// The tail runs on EVERY path, including the ones that dispatched: a
+// right-click (MESSAGE_MODIFIER_RIGHT in the qualifier) on any id in the
+// help band pops the general-text row through kb's NormalDialog. The
+// function always returns 1.
+//
+// Both hero paths take the acting player TWICE, exactly as SetTownContext
+// four functions down does: once at the top for the waitingPlayer byte
+// this passes on to SetHeroContext/SetTownContext, and once more inside
+// the town arm's guard, uncached.
+//
+// CASE ORDER IS THE WHOLE MATCH HERE (84.02 -> 100.0 on that edit alone).
+// VC6 emits switch arms in SOURCE order, and retail's physical layout is
+// hero (fn+0x49), town (fn+0x9d), map (fn+0x1e0), radar (fn+0x1f2) - the
+// two locator blocks are written FIRST and the map and radar arms last,
+// the reverse of the widget-id order the enum reads in. Writing the cases
+// in id order costs the whole arm layout and, with it, the msg/index
+// register pair: retail parks msg in EDX and the jump-table index in EBX,
+// and id order swaps the two. Nothing inside any arm had to change. Read
+// a differing arm ORDER as a source-order fact before re-spelling
+// anything inside an arm.
 VA(0x004097e0, 0x290)  // anchor-callee, dc 0x9330
 int advManager::ProcessSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+
+    switch (msg->codeY) {
+    case TAdventureMapWindow::HERO_0_ID:
+    case TAdventureMapWindow::HERO_1_ID:
+    case TAdventureMapWindow::HERO_2_ID:
+    case TAdventureMapWindow::HERO_3_ID:
+    case TAdventureMapWindow::HERO_4_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_0_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_1_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_2_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_3_ID:
+    case TAdventureMapWindow::HERO_LOCATOR_4_ID: {
+        int heroSlot = msg->codeY - TAdventureMapWindow::HERO_0_ID;
+        if (heroSlot > TAdventureMapWindow::NUM_HERO_BUTTONS - 1)
+            heroSlot = msg->codeY - TAdventureMapWindow::HERO_LOCATOR_0_ID;
+        int heroId = localPlayer->heroes[advWindow->topHero + heroSlot];
+        if (heroSlot < localPlayer->numHeroes) {
+            if (heroId == localPlayer->currHeroId) {
+                advCommand = ADV_COMMAND_VIEW_HERO;
+                DoAdvCommand(trigger_point);
+            } else {
+                SetHeroContext(heroId, 0, waitingPlayer, 1);
+            }
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::TOWN_0_ID:
+    case TAdventureMapWindow::TOWN_1_ID:
+    case TAdventureMapWindow::TOWN_2_ID:
+    case TAdventureMapWindow::TOWN_3_ID:
+    case TAdventureMapWindow::TOWN_4_ID: {
+        int townSlot = msg->codeY - TAdventureMapWindow::TOWN_0_ID;
+        int townId = localPlayer->townIds[advWindow->topTown + townSlot];
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                                  ADVENTURE_SCREEN_Y,
+                                                  ADVENTURE_SCREEN_WIDTH,
+                                                  ADVENTURE_SCREEN_HEIGHT);
+
+                    unsigned long curTime = GameTime::Get();
+                    if (static_cast<long>(
+                            curTime
+                            - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                            >= 0
+                        && !animCtrPaused) {
+                        ++animFrame;
+                        long elapsedTime =
+                            curTime
+                            - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                            _cpp_max(elapsedTime,
+                                     static_cast<long>(
+                                         ADVENTURE_ANIMATION_MAX_ELAPSED));
+                    }
+                    Process1WindowsMessage();
+                }
+            }
+        }
+        if (townId == localPlayer->currTownId) {
+            advCommand = ADV_COMMAND_VIEW_TOWN;
+            *peventCell = DoAdvCommand(trigger_point);
+        } else {
+            SetTownContext(townId, waitingPlayer, 1);
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::MAP_ID:
+    case TAdventureMapWindow::CHAT_TEXT_ID:
+        ProcessMapSelect(msg, trigger_point, peventCell);
+        break;
+
+    case TAdventureMapWindow::RADAR_ID:
+        ProcessRadarSelect(msg);
+        break;
+
+    default:
+        break;
+    }
+
+    if ((msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+        && msg->codeY >= ADV_HELP_ID_FIRST && msg->codeY <= ADV_HELP_ID_LAST) {
+        // Row 110 of the general text, the only help string the whole
+        // adventure-button band answers with. No surviving symbol names
+        // the row, so the index stays a literal.
+        NormalDialog(gpGeneralText->GetText(110), 4, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2031
 DC_ONLY(0x9614, 0x47E)
