@@ -125,16 +125,28 @@ MISSING forever.
   A single function-scope local keeps the slot live across an inlined region,
   so that region's own values need fresh slots and the spill cascades. When
   the frame is bigger than retail's, look for values whose scope should end
-  early.
-- **SWITCH ARM ORDER IS SOURCE ORDER** (byte-proven 2026-08-20,
-  advManager::ProcessSelect 84.02 -> 100.0 on this edit alone). The physical
-  layout of a switch's arms in retail is the order the source wrote the
-  `case` labels, NOT the numeric order of the labels. ProcessSelect's four
-  arms were each already byte-correct and it still plateaued; retail lays
-  them out hero/town/map/radar, the reverse of widget-id order. Reordering
-  the cases and changing nothing inside them closed it, and carried the
-  msg/index register pair with it. **Read a differing arm ORDER as a
-  source-order fact before re-spelling anything inside an arm.**
+  early. **The inverse is also real, so measure both directions**: REMOVING
+  the brace scope around a shared block's locals took ProcessKeyPress 71.36
+  -> 75.65 through register allocation alone, with block layout unchanged.
+- **SWITCH ARM ORDER IS SOURCE ORDER — BUT ONLY FOR A JUMP-TABLE SWITCH.**
+  Byte-proven 2026-08-20 on advManager::ProcessSelect (84.02 -> 100.0 on the
+  edit alone): its four arms were each already byte-correct and it still
+  plateaued, because retail lays them out hero/town/map/radar, the reverse of
+  widget-id order. Reordering the cases and changing nothing inside them
+  closed it. **QUALIFIED the same day, with a control**: for a SPARSE switch
+  that compiles to a compare chain rather than a jump table, source order is
+  NOT a lever — a control over three exact compare-chain switches
+  (`army::AttackWall`, `bitmapBorder::Main`, `kbwin::AppCommand`) shows arm
+  bodies emerge in REVERSE of the ascending dispatch order regardless of what
+  the source wrote. So: check first whether retail dispatches through a jump
+  table (reorder is a lever) or a compare chain (it is not, and the layout
+  tells you nothing about source order).
+- **A SEPARATE ZERO TEST BEFORE THE SWITCH.** advManager::Main went **64.64
+  -> 93.23** and its frame 0x18 -> retail's 0x14 on one restructure: written
+  as a single switch over {0, 1, 4, 0x200} VC6 pivots the list, whereas
+  retail is `if (msg.id != MESSAGE_NONE) { switch } else { idle }` — a plain
+  ascending three-case chain behind an explicit zero test. When a dispatch
+  includes a "none" value, try lifting it out of the switch.
 - **ZERO-INIT MUST ENUMERATE EVERY MEMBER** (97.42 -> 100.0). For a struct
   local, `= {0}` compiles to one store plus `rep stosd`, and `memset` to a
   bare `rep stosd`. Only the fully written-out `= {0,0,0,0,0,0,0,0}` gives
