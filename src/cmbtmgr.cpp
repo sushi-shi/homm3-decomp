@@ -43,9 +43,35 @@
 #define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
 #define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
 #define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
+#define HOMM3_ARMY_MIDPOINT_DECL     // army::MidX / MidY, for KeepAttack
+// The three start-of-turn creature ids and their two army.obj bodies,
+// and the two auto-cast combination artifacts - all five reached from
+// SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
+// because the Armor of the Damned's chain opens with it. All four
+// defines sit here, ahead of every header, because armygrp.h and
+// artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
+// hero.h -> artifact.h) and a view define has to precede its header.
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
+#define HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
+#define HOMM3_SPELL_SLOW_DECL
+#define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
+#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
+// PowEffect's own surface: its declarator and TSpellEffectID from
+// cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
+// and bPowSequenceComplete from army.h, the death sequence from
+// csprite.h and the Immersion hook from game.h.
+#define HOMM3_CMBTMGR_ROUND_VIEW
+#define HOMM3_ARMY_POW_VIEW
+#define HOMM3_CSPRITE_DEATH_SEQ_DECL
+#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
+#define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
+#define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
+#define HOMM3_CMBTMGR_OPEN_VIEW      // the two GameTime stamps Open takes
+#define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
+                                     // it in InitNonVisualVars' siege arms
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #define HOMM3_CMBTMGR_SETUP_VIEW
@@ -64,17 +90,24 @@
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
 #include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
+#include "inputmgr.h" // gpInputManager, for Open
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
+#include "monframeinfo.h" // gMonFrameInfo, the shot table KeepAttack times from
 #include "prefs.h"  // the local quick-combat preference
 #include "mapcell.h"
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "remote.h"
+#include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
 #define HOMM3_TEXT_COMBAT_MORALE_VIEW
+#define HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #include "textresource.h"
+#undef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
+#include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
 #include "winmgr.h"
 
 // E:\gamedcs\cmbtmgr.cpp:510
@@ -146,14 +179,166 @@ unsigned char combatManager::LoadWallTraitsTable()
     }
     return 1;
 }
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:594
+// baseManager's virtual Open: bring the whole combat up. Five separate
+// inline expansions of IsQuickCombat structure it, and the quick path
+// skips the window, the music, the fades and the menu entirely.
+//
+// Two asymmetries in the bytes that are real and not transcription
+// slips: showCombatMouseHex is saved and cleared UNCONDITIONALLY at the
+// top but restored only inside the last !IsQuickCombat() block, and
+// gpMouseManager->field_38 is raised unconditionally and lowered only
+// there too. A quick combat therefore leaves both changed.
+//
+// EH states run 0..4, one per `new`, with -1 between them - the frame
+// exists only to run operator delete if a constructor throws, since
+// there is no STL and no string anywhere in the body.
+//
+// Residual (82.9093%): predict-inline reports the call multisets EQUAL,
+// 45 against 45, and the branch COUNTS equal at 60 - so nothing is
+// missing and nothing extra is expanded. The 18 branch-shape
+// disagreements are dominated by ONE divergence repeated across all six
+// inlined IsQuickCombat expansions: retail forms both player-record
+// addresses with `lea` and holds zero in EDI to compare memory against,
+// where our CL folds +0xe4 into the load and picks a different zero
+// register. That is the same shape damage_message's note argues is
+// context rather than spelling - retail's own LowerDoor expands the
+// identical source into the FOLDED form - so the shared inline must not
+// be retuned for it here either. why-branch's three guided candidates
+// (D13 on the two tactics locals and the side flag) all measure +0.
+//
+// TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
+// of the flat `&&`, which is how the branch graph first reads. Measured
+// byte-flat (82.9093 either way) - VC6 folds the two forms together -
+// so the flatter source is kept.
 VA(0x00462a20, 0x83F)  // anchor-vtable, dc 0x5d60c
 int combatManager::Open(int newPriority)
 {
-    // @stub
+    SAMPLE2 sample;
+
+    gpMouseManager->field_38 = 1;
+    int savedShowMouseHex = gUnnamed698758.showCombatMouseHex;
+    gUnnamed698758.showCombatMouseHex = 0;
+    field_13300 = 0;
+    gpSoundManager->StopAllSamples(1);
+
+    if (!IsQuickCombat()) {
+        char cName[20];
+        sprintf(cName,
+                DATA_COMPGEN(0x0066fee8, battleSampleFormat,
+                             "battle%02d.wav"),
+                Random(1, 8) - 1);
+        sample = LoadPlaySample(cName);
+        gpWindowManager->FadeScreen(1, 4, 1);
+    }
+
+    field_53ac = new Bitmap16Bit(683, 472);
+    field_53b0 = new Bitmap16Bit(800, 600);
+    field_53b4 = new Bitmap16Bit(855, 52);
+
+    LoadIcons();
+    InitializeArchers();
+    InitNonVisualVars();
+    SetupAndLoadObstacles();
+
+    memset(field_004c, 0, COMBAT_GRID_CELLS);
+    memset(field_0107, 0, COMBAT_GRID_CELLS);
+
+    field_53b8 = 0;
+    gCombatActive698a18 = field_539c;
+    powSprite = 0;
+    powSpellEffect = -1;
+
+    int leftTactics = heroes[0] ? heroes[0]->skillLevel[19] : 0;
+    int rightTactics = heroes[1] ? heroes[1]->skillLevel[19] : 0;
+    int tacticsSide = rightTactics > leftTactics;
+    placementBoundaryDepth = leftTactics - rightTactics;
+    bCreaturePlacement = placementBoundaryDepth != 0 && !isSurrounded;
+    if (bCreaturePlacement && !IsQuickCombat() && sideIsAI[tacticsSide]
+            && !(heroes[tacticsSide]->formation & 2))
+        bCreaturePlacement = 0;
+
+    field_13d6c = 0;
+    currentSide = 1;
+    actingSide = 1;
+    actingSlot = 0;
+    chatMan.PauseTimeOuts();
+    field_13300 = 1;
+
+    if (!IsQuickCombat()) {
+        combatWindow = new TCombatWindow(bCreaturePlacement);
+        if (!combatWindow)
+            MemError();
+        gpWindowManager->AddWindow(combatWindow, -1, 1);
+    } else {
+        combatWindow = 0;
+    }
+
+    UpdateArmyLuckAndMorale();
+    field_13de4 = 0;
+    if (bCreaturePlacement && !IsQuickCombat()) {
+        currentSide = placementBoundaryDepth <= 0;
+        if (!gpGame->IsLocalHuman(playerIds[currentSide])) {
+            combatWindow->WidgetSetStatus(
+                0x7d9, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+            combatWindow->WidgetSetStatus(
+                0x7802, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        combatWindow->DrawWindow(1, -65535, 65535);
+        gCombatStamp698998 = GameTime::Get();
+        KBChangeMenu(gameMenu);
+        CheckMenuItem(activeMenu, 0xb798, 0);
+        CheckMenuItem(activeMenu, 0xb79c, 0);
+        CheckMenuItem(activeMenu, 0xb79b, 0);
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+        gUnnamed698758.showCombatMouseHex = savedShowMouseHex;
+        gpMouseManager->field_38 = 0;
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        gpMouseManager->ShowPointer(0);
+        gpWindowManager->FadeScreen(0, 4, 0);
+        WaitEndSample(sample, 10000);
+
+        char cMusic[100];
+        sprintf(cMusic,
+                DATA_COMPGEN(0x0066fedc, combatMusicFormat, "combat%02d"),
+                Random(1, 4));
+        gpSoundManager->StartMP3(cMusic, 0, 1);
+    }
+
+    gCombatStamp6989b8 = GameTime::Get();
+    Unnamed479f30();
+    gpInputManager->Flush();
+    Unnamed478890();
+
+    field_132e0 = 0;
+    priority = newPriority;
+    id = 0x200;
+    strcpy(cMgrName,
+           DATA_COMPGEN(0x0066fecc, combatManagerName, "combatManager"));
+    status = 1;
+
+    if (bCreaturePlacement
+            && gpGame->IsLocalHuman(playerIds[currentSide])
+            && gpGame->players[playerIds[currentSide]]
+                   .placement_help_enabled
+            && !IsQuickCombat()) {
+        NormalDialogTimeOut(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_PLACEMENT_HELP),
+            1, 10000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
+        gpGame->players[playerIds[currentSide]].placement_help_enabled = 0;
+    }
+
+    chatMan.ResumeTimeOuts();
+    field_38 = new CNetMsgHandlerPause();
+    NextArmy(0);
+    return 0;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
@@ -268,7 +453,7 @@ void combatManager::FreeIcons()
             heroFlagSprites[side]->Dispose();
     }
 
-    LoadCreatureSprite(-1);
+    LoadSpellEffect(-1);
     combatGridBitmap->Dispose();
     combatCellGridBitmap->Dispose();
     combatShadowBitmap->Dispose();
@@ -515,36 +700,163 @@ void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* lef
     backgroundName = GetBackgroundName();
 }
 
-#if 0  // @carcass
+// Retail's clamp shape at the four hero-statistic sites, and it is NOT
+// _cpp_clamp's. That helper tests the LOW bound first
+// (`_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V)`) and selects an ADDRESS;
+// these four test the HIGH bound first, use `>` throughout and
+// materialise the value straight into EAX. The floor differs per site -
+// 0 for attack and defense, 1 for spell power, which is never zero -
+// so it is a parameter rather than a literal.
+static int ClampStat(signed char value, int lowest)
+{
+    if (value > 99)
+        return 99;
+    if (value > 0)
+        return value;
+    return lowest;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1348
-// SURVEYED 2026-08-20, not reconstructed, and the survey is worth more
-// than a bare @stub because this body is the cheapest-looking of the
-// remaining stubs and is NOT: 1084 bytes with only six relocations, so it
-// reads as pure member initialisation, but the work is elsewhere.
-//   * It is a 6-way JUMP TABLE on `defendingTown->type - 2` (the table is
-//     the six DIR32 rows the carve counts inside this function's 0x43C),
-//     each arm a `built`/`active` & bitNumber[21|22|26] test that bumps
-//     one of hero+0x476/+0x477/+0x478.
-//   * It needs roughly fifteen pad slices in this header - 0x132a8,
-//     0x132dc, 0x132e4, 0x132f8, 0x13d48, 0x5414, 0x53de..0x53e3,
-//     0x13de8..0x13df4, 0x13d75/0x13d76, 0x1329c - plus three hero bytes
-//     (+0x476/+0x477/+0x478), a hero short (+0x18) and an army byte
-//     (+0x4d8). All of the cmbtmgr ones sit behind the SETUP view, so
-//     they are cheap; the hero and army ones are not.
-//   * THE REAL BLOCKER is in the middle: it clears both eagle-eye sets
-//     through a three-argument __cdecl call, `f(&ret, *root, root)`, which
-//     is a Dinkumware set::erase(first, last) returning an iterator by
-//     value. Reproducing that byte-for-byte needs TCombatEagleEyeSide's
-//     set modelled properly, which is a bigger piece of work than the
-//     rest of this function put together.
-//   * It also proves the class runs to at least +0x14030 (a byte store),
-//     past everything this header models.
+// Everything about the combat that is NOT a screen object: the two
+// heroes' cached combat statistics, the town's own siege bonuses, the
+// per-side latches, the grid, the armies.
+//
+// The earlier survey called the middle of this body a blocker - "a
+// three-argument __cdecl call, f(&ret, *root, root), which is a
+// Dinkumware set::erase(first, last) returning an iterator by value" -
+// and said modelling it was "a bigger piece of work than the rest of
+// this function put together". IT IS `clear()`. The three pushes are
+// the hidden return slot, `_Left(_Head)` and `_Head`, which is exactly
+// what VC6's `void clear() { erase(begin(), end()); }` expands to, and
+// TCombatEagleEyeSide::spells was already a std::set<SpellID> in this
+// header. The DC roster names the member outright (std::set<SpellID>::
+// clear, dc 0x63b98). No new STL surface at all.
+//
+// The town arm is a real six-entry JUMP TABLE on `defendingTown->type`,
+// not a compare chain, and slot 2 (Necropolis) points at the default -
+// VC6 built a dense 2..7 table over five live cases. Stronghold's arm
+// FALLS THROUGH into the Fortress arm; that is a case without a break
+// in the source, not a shared tail.
+//
+// THE CLAMP HELPER'S PARAMETER IS A signed char, not an int, and that
+// alone is worth +3.69 (92.0332 -> 95.7196). With an int parameter VC6
+// widens the stat with `movsx` at the call and then compares a full
+// register, where retail compares the BYTE (`cmp al, 0x63`) and only
+// sign-extends on the surviving arm; worse, the widened form lets VC6
+// collapse the zero floor into a BRANCHLESS `setle / dec / and`, which
+// costs three conditional branches retail has. Byte in, branches back.
+//
+// Residual (95.7196%): flow-distance 2, ONE conditional branch short
+// (26 against 27) and one block, with predict-inline reporting the call
+// multisets equal at 6 and 6 - including the two set::erase calls,
+// which is what confirms the clear() reading from the other side. The
+// whole six-arm siege switch is now a reloc-NAME diff only: retail's
+// delinked side spells the masks as raw addresses where ours names
+// bitNumber, which objdiff masks.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::InitNonVisualVars()
 {
-    // @stub
+    field_13d74 = 0;
+    field_13d75 = 0;
+    field_13d76 = 0;
+    field_132c4 = 0;
+    field_132f8 = 0;
+    field_14030 = 0;
+    field_132e4 = 0;
+
+    if (heroes[1]) {
+        field_13de8 = ClampStat(heroes[1]->stats[0], 0);
+        field_13dec = ClampStat(heroes[1]->stats[1], 0);
+        field_13df0 = ClampStat(heroes[1]->stats[2], 1);
+        field_13df4 = heroes[1]->mana;
+
+        if (defendingTown) {
+            switch (defendingTown->type) {
+            case TOWN_TOWER:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->mana = static_cast<short>(
+                        heroes[1]->mana + 150);
+                break;
+            case TOWN_INFERNO:
+                if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
+                    heroes[1]->stats[2] += 2;
+                break;
+            case TOWN_DUNGEON:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->stats[2] += 12;
+                break;
+            case TOWN_STRONGHOLD:
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 0))
+                    heroes[1]->stats[0] += 20;
+                break;
+            case TOWN_FORTRESS:
+                if (defendingTown->HasBuilding(EXTRA_0_ID, 1))
+                    heroes[1]->stats[0] += 2;
+                if (defendingTown->HasBuilding(EXTRA_1_ID, 1))
+                    heroes[1]->stats[1] += 2;
+                if (defendingTown->HasBuilding(HOLY_GRAIL_ID, 1)) {
+                    heroes[1]->stats[0] += 10;
+                    heroes[1]->stats[1] += 10;
+                }
+                break;
+            }
+        }
+    } else {
+        field_13de8 = 0;
+        field_13dec = 0;
+        field_13df0 = 0;
+        field_13df4 = 0;
+    }
+
+    spellPower[0] = heroes[0]
+        ? ClampStat(heroes[0]->stats[2], 1) : 0;
+    spellPower[1] = heroes[1]
+        ? ClampStat(heroes[1]->stats[2], 1) : 0;
+
+    field_5414 = 0;
+    field_5418 = 3;
+    field_53e0[0] = field_53e0[1] = 0;
+    field_53e2[0] = field_53e2[1] = 0;
+    field_53dc[0] = field_53dc[1] = 0;
+    field_53de[0] = field_53de[1] = 0;
+
+    eagleEyeData[0].spells.clear();
+    eagleEyeData[1].spells.clear();
+
+    field_3c = 0;
+    field_132a8 = -1;
+    field_132ac = -1;
+    field_132d4 = -1;
+    field_132dc = -99;
+    currentSide = 1;
+    actingSide = 1;
+    actingSlot = 0;
+    gCombatFlag6985a3 = 0;
+    gCombatFlag697744 = 0;
+    field_132b2[0] = 0;
+    field_132b2[1] = 0;
+    field_132b0[0] = 0;
+    field_132b0[1] = 0;
+    field_13d48 = 3;
+    lastMovedArmy = 0;
+    TurnOffHighlighter(0);
+
+    SetupAdjacencyArray();
+    GenerateMap();
+    LoadArmies(isSurrounded);
+
+    for (int side = 0; side < 2; side++) {
+        field_1329c[side] = 0;
+        for (int slot = 0; slot < numArmies[side]; slot++) {
+            if (armies[side][slot].field_4d8) {
+                field_1329c[side] = 1;
+                break;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1498
 DC_ONLY(0x5e948, 0x64)
@@ -1104,39 +1416,166 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
     return 0;
 }
 
-#if 0  // @carcass
+// army::get_controlling_side (0x440140) as retail's cmbtmgr.cpp saw
+// it, spelled file-locally for exactly the reason CreatureName above
+// is: the DC roster puts that body in Army.h, so the TU could expand
+// it, and SetNextArmy expands it TWICE with no call - while our
+// army.h keeps it out-of-line because army.cpp's own tuning is
+// measured against that shape. Same body, same `if`-and-return form.
+static int ControllingSide(const army* stack)
+{
+    if (stack->hypnotizeFlag)
+        return 1 - stack->combatSide;
+    return stack->combatSide;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:2364
-// SURVEYED 2026-08-20 (head only, +0x00..+0x155 of 0x4F6). What is
-// byte-verified: the first three stores are field_132b8 = group and
-// field_132bc = index - the acting (side, slot) pair KeepAttack reads
-// back - and then field_132c0 = the side the turn EFFECTS apply to,
-// formed as `armies[group][index].field_288 ? 1 - .field_f4 : .field_f4`.
-// The whole remainder is skipped when the byte at +0x13d68 is set (one
-// `jne` straight to the epilogue), so that byte is the "no per-turn
-// effects" latch and wants slicing before anyone opens this.
+// RECONSTRUCTED 2026-08-20 from the earlier lane's head survey, which
+// was right about the three stores and the +0x13d68 latch and stopped
+// one instruction short of the part that names everything else.
 //
-// The body after that is one repeated four-statement idiom, which is
-// what makes it worth its 1270 bytes: for each of a run of artifact ids
-// (0x81 and 0x84 decoded so far) test hero::IsWieldingArtifact on
-// heroes[field_132c0], then call 0x5a40d0 with (spell, 3, side, 1, 2),
-// and if that returns true call 0x59fe30 with (spell, -1, 2, -1, 3,
-// delay). Spell ids 0x30, 0x36 and 0x2a appear in the decoded head with
-// delays 0xa, 0x32 and 0x32. NEITHER CALLEE IS DECLARED YET: 0x5a40d0
-// and 0x59fe30 are spells.obj leaves in the same family cmbtmgr.h
-// already parks ComputeSpellDamage and ModifySpellDamage in, and both
-// need naming before this compiles.
+// The body is a start-of-turn hook in two halves. The first is the
+// combination-artifact auto-cast: while the acting side's field_54b0
+// latch is up and that side HAS a hero, five spells are offered, each
+// gated on the spells.obj leaf at 0x5a40d0 and cast through CastSpell
+// with a delay. Artifact 0x81 offers one spell and 0x84 offers four,
+// and the two spell SETS are what identify both artifacts and both
+// ids - Prayer alone is the Angelic Alliance, Slow/Curse/Weakness/
+// Misfortune is the Armor of the Damned. The latch is then cleared,
+// so the whole block fires once per combat and not once per turn.
 //
-// COST TO OPEN: four pad slices (+0x132b8, +0x132bc, +0x132c0, +0x13d68)
-// plus those two declarations. field_54b0[2] is already modelled and is
-// the per-side gate the effect chain sits behind.
+// The second half is a three-way compare chain on creatureType, and
+// the three ids are the creatures with a start-of-turn ability:
+// 0x3d drains two mana off the OTHER side's hero (ManaDrai.wav, the
+// wraith), 0x86 rolls the weighted random spell at army 0x447510 (the
+// faerie dragon) and 0x88 fires a mass cast gated on a three-round
+// counter (the enchanter). Every id is argued on the enumerator in
+// army.h rather than here.
+//
+// Two shapes the bytes force:
+//   * the controlling side is computed TWICE, once into the member and
+//     once again inside the wraith arm, and neither is a call - hence
+//     the file-local ControllingSide above rather than
+//     army::get_controlling_side, which our army.h keeps out of line;
+//   * the wraith arm's exits are `break`s, not `return`s: all of them
+//     land on the shared two-statement tail (lastMovedArmy = 0 and the
+//     command-bar rearm), which is also where bCreaturePlacement and
+//     the compare chain's default edge go.
+//
+// 75.89 -> 87.51% 2026-08-20, and the lever was the INLINER again, the
+// same reading place_obstacle's note records. predict-inline named it
+// in one line - retail CALLS basic_string::assign in BOTH message arms
+// and our /Ob2 expanded it in the plural arm only - and the scoped
+// inline_depth(0) on that one statement is the whole fix. Worth
+// stressing that the two arms are spelled IDENTICALLY, so no source
+// difference explains why the budget ran out between them and nothing
+// but the pragma reaches it. inline_depth(1) and (2) were both
+// measured and both leave the expansion in place (75.8883, flat), so
+// only 0 works.
+//
+// Residual (87.5102%): ONE divergence, and it is the pin's own price.
+// Retail's teardown emits three `operator delete` - both format_string
+// temporaries and `message`, each an inlined _Tidy(true) - and we now
+// emit two, because inline_depth(0) also de-inlines the pinned
+// statement's temporary destructor into a _Tidy CALL. 29 out-of-line
+// calls against retail's 27, 39 conditional branches against 44. The
+// trade is worth +11.62 net and a full expression is the narrowest
+// scope the pragma has. Everything else pairs 1:1 - the artifact
+// chain, the compare chain and both message arms - and what is left of
+// the register distance is the ebx/esi/edi three-cycle the prologue
+// opens with plus the IsQuickCombat lea-vs-fold shape damage_message's
+// note already argues is context rather than spelling.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::SetNextArmy(int group, int index)
 {
-    // @stub
-}
+    army* stack = &armies[group][index];
+    actingSide = group;
+    actingSlot = index;
+    currentSide = ControllingSide(stack);
+    if (!bCreaturePlacement) {
+        if (field_54b0[currentSide]) {
+            hero* casting_hero = heroes[currentSide];
+            if (casting_hero) {
+                if (casting_hero->IsWieldingArtifact(
+                        ARTIFACT_ANGELIC_ALLIANCE)) {
+                    if (Unnamed5a40d0(SPELL_PRAYER, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_PRAYER, -1, 2, -1, 3, 10);
+                }
+                if (casting_hero->IsWieldingArtifact(
+                        ARTIFACT_ARMOR_OF_THE_DAMNED)) {
+                    if (Unnamed5a40d0(SPELL_SLOW, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_SLOW, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_CURSE, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_CURSE, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_WEAKNESS, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_WEAKNESS, -1, 2, -1, 3, 50);
+                    if (Unnamed5a40d0(SPELL_MISFORTUNE, 3, currentSide, 1, 2))
+                        CastSpell(SPELL_MISFORTUNE, -1, 2, -1, 3, 50);
+                }
+            }
+            field_54b0[currentSide] = 0;
+        }
 
-#endif  // @carcass
+        switch (stack->creatureType) {
+        case army::ARMY_CREATURE_WRAITH:
+            if (field_13de4)
+                break;
+            {
+                hero* drained = heroes[1 - ControllingSide(stack)];
+                if (!drained)
+                    break;
+                if (drained->mana <= 0)
+                    break;
+                drained->mana = static_cast<short>(drained->mana - 2);
+                if (drained->mana < 0)
+                    drained->mana = 0;
+                if (!IsQuickCombat()) {
+                    SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+                        0x0066ff94, manaDrainSampleName, "ManaDrai.wav"));
+                    std::string message;
+                    if (stack->numTroops == 1)
+                        message = format_string(
+                            gpGeneralText->GetText(
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_ONE),
+                            CreatureName(stack->creatureType,
+                                         stack->numTroops),
+                            drained->name);
+                    else
+                        // OVER-INLINE, pinned. Retail CALLS
+                        // basic_string::assign in BOTH arms; our /Ob2
+                        // expands it in this one only - erase x2 plus
+                        // _Grow, _Eos and the _Nullstr compare, which is
+                        // the whole 53-vs-44 conditional-branch gap. The
+                        // asymmetry is the inline budget running out at
+                        // a different point, not a spelling difference:
+                        // the two arms are written identically.
+#pragma inline_depth(0)
+                        message = format_string(
+                            gpGeneralText->GetText(
+                                GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
+                            CreatureName(stack->creatureType,
+                                         stack->numTroops),
+                            drained->name);
+#pragma inline_depth()
+                    if (combatWindow)
+                        combatWindow->combat_message(message.c_str(), 1, 0);
+                    SpellEffect(77, stack, 100, 0);
+                    WaitEndSample(sample, -1);
+                }
+            }
+            break;
+        case army::ARMY_CREATURE_FAERIE_DRAGON:
+            stack->FaerieDragonSpell();
+            break;
+        case army::ARMY_CREATURE_ENCHANTER:
+            if (field_132a0[currentSide] > 2 && stack->Unnamed447fe0())
+                field_132a0[currentSide] = 0;
+            break;
+        }
+    }
+    lastMovedArmy = 0;
+    Unnamed4782d0();
+}
 
 // Single-call-site file static: /Ob2 inlines it into CombatIsOver and
 // emits no out-of-line copy, so no retail slot is expected for it.
@@ -1265,22 +1704,22 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
             break;
         case WALL_TARGET_0: {
             int slot = archers[2].armySlot;
-            field_13f9c[2] = 0;
-            field_13fe4[2] = 0;
+            wallStrength[17] = 0;
+            wallStanding[17] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_6: {
             int slot = archers[1].armySlot;
-            field_13f9c[1] = 0;
-            field_13fe4[1] = 0;
+            wallStrength[16] = 0;
+            wallStanding[16] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_7: {
             int slot = archers[0].armySlot;
-            field_13f9c[0] = 0;
-            field_13fe4[0] = 0;
+            wallStrength[15] = 0;
+            wallStanding[15] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
@@ -1295,38 +1734,145 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
         wallStanding[wall_id] = 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2603
-// SURVEYED 2026-08-20 (head only, +0x00..+0x15f of 0x443), and the
-// survey starts with a PROTOTYPE CORRECTION. The DC roster calls the
-// parameter `combatManager::TArcherID iTowerPos`; retail uses it as a
-// FLAT ARMY ORDINAL. It is scaled by 169 and added to +0x54cc, i.e.
-// `&armies[0][0] + param * sizeof(army)`, so its domain is 0..41 over
-// the flattened armies[2][21] run and not the three-valued archer id.
+// One arrow-tower shot, and the survey it replaces got the PROTOTYPE
+// right and two of its four callee readings wrong.
 //
-// The archer id is derived instead, and from a different army: the body
-// reads the ACTING pair (+0x132b8, +0x132bc) that SetNextArmy stored,
-// forms `&armies[group][index]`, and maps that stack's gridIndex through
-// the same three-way switch mark_tower_army uses - but to an INDEX
-// rather than a latch, 0xfb -> 1, 0xfe -> 0, 0xff -> 2. That index then
-// selects a 36-byte record in the array at +0x13d78, which is where the
-// archers[3] this header already models must live.
+// The parameter is NOT combatManager::TArcherID. It is scaled by 169 and
+// added to +0x54cc, i.e. `&armies[0][0] + p * sizeof(army)`, with no
+// side term at all - retail hardcodes group 0 because an arrow tower is
+// always the defender and only ever shoots side 0. The single caller
+// (army::range_attack, 0x4401c3) pushes `this->slot`, so the domain is
+// 0..20 and the value names the VICTIM, not the tower. The acting tower
+// is read separately, from the (actingSide, actingSlot) pair.
 //
-// One more thing decoded: the record's first dword indexes a table with
-// an 84-BYTE STRIDE reached through the stored pointer at .data
-// 0x67ff24. Identify that table before writing the body - the stride is
-// what will name it.
+// The two corrections:
+//   * 0x446660 / 0x446630 are army::MidX / army::MidY, not
+//     army::PlayAnimation. The real PlayAnimation is 0x446940 and takes
+//     three arguments where these take none; the `army_PlayAnimation`
+//     label on 0x446660 is a stale delinker working label, and the DC
+//     xref graph lists MidX and MidY among this body's callees and no
+//     PlayAnimation at all.
+//   * the 84-byte-stride table behind .data 0x67ff24 is gMonFrameInfo,
+//     already fully modelled in monframeinfo.h - the cell holds
+//     0x6998e0, which is monframeinfo.cpp's own sMonFrameInfoTable.
+//     cmbtmgr.h's TMissileStartInfo is a SECOND model of that same
+//     object and cannot serve here: +0x40 and +0x4c fall inside its
+//     `float angles[18]`.
 //
-// After the inlined IsQuickCombat guard the body calls
-// army::PlayAnimation, then 0x446630, then GetMissileStartingPosition
-// with four out-parameter addresses, which is the shape the missile
-// trio's callers all have.
+// The three-way gridIndex switch has NO default arm - retail leaves the
+// archer index uninitialised for any other hex - and its 0xfe -> 0 /
+// 0xfb -> 1 / 0xff -> 2 mapping is what proves field_1402c is an array.
+//
+// Residual (95.0344%): FLOW-DISTANCE 0 and the call multisets agree
+// exactly, 17 against 17, so nothing structural is left. What remains
+// is register binding with the schedule already aligned - eax->ebx x11,
+// ecx->eax x8 - which is the register-homing family damage_message's
+// note also lands in. why-reg's B6/B14 naming knobs are the only route
+// the catalog offers and neither is source-addressable here.
+//
+// Two shapes the bytes forced and that are worth not re-litigating:
+// the damage accumulator is a DOWN-counted loop over a copy of
+// numTroops (retail spills the count and steps it with dec/jne, which
+// an up-counted `for (i = 0; i < n; i++)` does not produce), and
+// `damage * ComputeDefenderDamageReduction(1)` is in THAT operand
+// order - retail materialises and spills the int-to-double conversion
+// BEFORE the call, which is the left-operand-first shape.
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
-void combatManager::KeepAttack(combatManager::TArcherID iTowerPos)
+void combatManager::KeepAttack(int iTowerPos)
 {
-    // @stub
+    army* tower = &armies[actingSide][actingSlot];
+    int archerIndex;
+    switch (tower->gridIndex) {
+    case COMBAT_HEX_KEEP:
+        archerIndex = 0;
+        break;
+    case COMBAT_HEX_LOWER_TOWER:
+        archerIndex = 1;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        archerIndex = 2;
+        break;
+    }
+    TArcher* archer = &archers[archerIndex];
+    const SMonFrameInfo* info = &gMonFrameInfo[archer->creatureType];
+    army* target = &armies[0][iTowerPos];
+
+    SAMPLE2 sample;
+    int army_dir;
+    int delay;
+    int start_x;
+    int start_y;
+    int missile_frame;
+
+    if (!IsQuickCombat()) {
+        int dest_x = target->MidX();
+        int dest_y = target->MidY();
+        archer->field_14 = dest_x >= archer->x;
+        GetMissileStartingPosition(archer->creatureType, archer->x,
+                                   archer->y, archer->field_14, dest_x,
+                                   dest_y, archer->shadowSprite,
+                                   &start_x, &start_y, &army_dir,
+                                   &missile_frame);
+        sprintf(gText,
+                DATA_COMPGEN(0x0066ffa4, towerShotSampleFormat,
+                             "%sshot.82m"),
+                akCreatureTypeTraits[archer->creatureType].cSamplePrefix);
+        sample = LoadPlaySample(gText);
+
+        int frames = info->iAttackFrames;
+        if (frames <= 0)
+            frames = archer->sprite->GetNumFrames(army_dir);
+        archer->field_18 = army_dir;
+        delay = info->iAttackStartCycleTime / frames;
+
+        ResetLimitCreature();
+        field_1402c[archerIndex] = 1;
+        for (archer->field_1c = 0; archer->field_1c < frames;
+                archer->field_1c++)
+            DrawFrame(1, 1, 0, delay, 1, 1);
+        if (archer->field_1c > 0)
+            archer->field_1c--;
+
+        ShootMissile(start_x, start_y, dest_x, dest_y, info->fArrowAngle,
+                     archer->shadowSprite);
+    }
+
+    // The accumulator is a DOWN-counted loop over a copy of numTroops:
+    // retail spills the count and steps it with `dec / jne`, which an
+    // up-counted `for (i = 0; i < n; i++)` does not produce.
+    int damage = 0;
+    for (int shot = tower->numTroops; shot > 0; shot--)
+        damage += Random(2, 4);
+    damage = static_cast<int>(
+        damage * target->ComputeDefenderDamageReduction(1));
+    if (damage <= 0)
+        damage = 1;
+
+    int killed = target->Damage(damage);
+    damage_message(
+        gpGeneralText->GetText(GENERAL_TEXT_COMBAT_ARROW_TOWER_ATTACKER),
+        1, damage, target, killed);
+    target->CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_DAMAGE);
+    PowEffect(-1, 1);
+
+    if (!IsQuickCombat()) {
+        while (archer->field_1c
+                < archer->sprite->GetNumFrames(army_dir) - 1) {
+            archer->field_1c++;
+            DrawFrame(1, 1, 0, delay, 1, 1);
+        }
+    }
+    archer->field_14 = 0;
+    archer->field_18 = cs_wait;
+    archer->field_1c = 0;
+    DrawFrame(1, 0, 0, 0, 1, 0);
+
+    if (!IsQuickCombat())
+        WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2727
 DC_ONLY(0x6021c, 0x4)
@@ -1458,16 +2004,195 @@ next_hex:
     goto next_hex;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2859
+// Everything the battlefield carries before the armies land: the wall
+// hitpoint tables, the castle wall's blocked column, a Tower's mined
+// moat, the two-boat naval blockade, and the random scatter of ordinary
+// obstacles. Called only from Open.
+//
+// Shapes the bytes force, all of them cheap to get wrong:
+//   * the naval branch has its OWN epilogue, so it is a real `return`
+//     and not a jump into the shared tail every other exit uses;
+//   * both obstacle-budget arms tail-merge into ONE Random call site,
+//     which is what says a single local is assigned in an if/else
+//     rather than two calls written out;
+//   * the large-obstacle guard is the De Morgan form
+//     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
+//     retail falls THROUGH to Random on `jl` and skips on `je`, and the
+//     positive `!(a && b)` spelling emits those two swapped;
+//   * the placement loop is `while (placed < budget)` with `placed`
+//     pre-set to 0, which VC6 folds to a `test/jle` on budget alone,
+//     and the inner re-draw is a do/while rather than a `continue` -
+//     the same shape PlaceAllObstacles already proves, and what puts
+//     the SECOND `id < 0` test in front of place_obstacle.
+//
+// Residual (64.8103%). The semantics are complete - every branch, both
+// tables, both loops and all three ComputeSpellDamage arms - and what
+// is left is ONE inliner decision that is a HEADER change, not a
+// spelling:
+//
+//   RETAIL EXPANDS TObstacleVector::insert INLINE HERE, and it is
+//   roughly 460 of this body's 1543 bytes. Our header declares insert
+//   without defining it (cmbtmgr.h), precisely so place_obstacle keeps
+//   retail's CALL, so we can only ever emit a call. The proof is in the
+//   call census: retail emits 25 out-of-line calls to our 13, and the
+//   twelve extra are exactly the pieces of an expanded Dinkumware
+//   vector::insert - _Ucopy x4 (0x46b1a0, thiscall, ret 0xc, returns
+//   the destination end), _Ufill x2 (0x46b1e0, thiscall, ret 0xc),
+//   size() x2 out-of-line (0x517750), one operator new, one Destroy
+//   (the ICF-folded `ret 8` at 0x404140) and one operator delete, with
+//   the fill/copy_backward pairs expanded as `rep movsd 6`. Retail's
+//   cmbtmgr.obj carries BOTH forms: place_obstacle calls the
+//   out-of-line copy at 0x46aeb0 while this body inlines it, which is
+//   the ordinary /Ob2 budget split (this caller is 1543 B, that one
+//   579 B). Closing it means defining insert, declaring _Ucopy/_Ufill
+//   as TObstacleVector members, and pinning place_obstacle's own call
+//   site - a header change large enough to want its own measurement
+//   pass against place_obstacle, RemoveObstacle and PlaceAllObstacles.
+//
+// TRIED AND REJECTED - the PlaceObstacle pin, twice. predict-inline
+// reports `PlaceObstacle base x0 vs retail x1` here, the identical
+// reading that paid +18.10 on place_obstacle, and the identical
+// `#pragma inline_depth(0)` LOSES 5.89 (64.8103 -> 58.9216). The
+// pragma also de-inlines the `obstacles.size() - 1` in the same
+// statement, which retail expands inline at this site; hoisting the
+// size() into a local ahead of the pragma recovers part of it and is
+// still worse (61.5917). Left unpinned. This is the second measured
+// case in this tree of a correctly-diagnosed inline divergence whose
+// documented fix ranks the wrong way - keep only what the ratchet
+// agrees with.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::SetupAndLoadObstacles()
 {
-    // @stub
-}
+    field_13ffc = 0;
+    largeObstacleId = -1;
+    if (isSurrounded)
+        return;
 
-#endif  // @carcass
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE) {
+        for (int wall = 0; wall < 18; wall++)
+            wallStrength[wall] =
+                akWallTraits[defendingTown->type][wall].hitpoints;
+        wallStrength[15] = 1;
+        wallStrength[16] = 1;
+        wallStrength[17] = 1;
+        for (int copy = 0; copy < 18; copy++)
+            wallStanding[copy] = wallStrength[copy];
+
+        if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
+            wallStrength[6]++;
+            wallStrength[8]++;
+            wallStrength[10]++;
+            wallStrength[12]++;
+        }
+
+        for (int row = 0; row < 11; row++)
+            cells[gCastleWallColumns[row]].field_10 |= 2;
+
+        // A Tower's moat is a minefield. Row 5 is the gate hex and is
+        // skipped; every other row gets one obstacle whose damage is the
+        // greater of the town's own moat figure and what the defending
+        // hero's Land Mine would do.
+        if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
+                && defendingTown->type == TOWN_TOWER) {
+            for (int row = 0; row < 11; row++) {
+                if (row == COMBAT_GATE_ROW)
+                    continue;
+                int hex = gMoatColumns[row];
+
+                long damage;
+                if (gpGame->f_1f698 >= 2) {
+                    damage = gMoatDamage[TOWN_TOWER];
+                    if (heroes[1]) {
+                        long cast = ComputeSpellDamage(
+                            SPELL_LAND_MINE, spellPower[1],
+                            heroes[1]->get_spell_level(SPELL_LAND_MINE,
+                                                       field_53c0),
+                            0, 0, 0, 0);
+                        if (cast > damage)
+                            damage = cast;
+                    }
+                } else if (heroes[1]) {
+                    damage = ComputeSpellDamage(
+                        SPELL_LAND_MINE, spellPower[1],
+                        heroes[1]->get_spell_level(SPELL_LAND_MINE,
+                                                   field_53c0),
+                        0, 0, 0, 0);
+                } else {
+                    damage = ComputeSpellDamage(SPELL_LAND_MINE, 3, 0,
+                                                0, 0, 0, 0);
+                }
+
+                TObstacle new_landmine;
+                new_landmine.sprite =
+                    ResourceManager::GetSprite(gLandMineShape.spriteName);
+                new_landmine.shape = &gLandMineShape;
+                new_landmine.hex = static_cast<unsigned char>(hex);
+                new_landmine.field_09 = 1;
+                new_landmine.field_0a = 0;
+                new_landmine.spell_damage = damage;
+                new_landmine.field_10 = 0;
+                new_landmine.field_14 = 0x3b;
+                obstacles.insert(obstacles.end, 1, new_landmine);
+                PlaceObstacle(&new_landmine, obstacles.size() - 1, hex, 8);
+            }
+        }
+
+        if (gpGame->f_1f698 >= 2)
+            return;
+        if (defendingTown->type != TOWN_STRONGHOLD)
+            return;
+        if (field_132f4 < COMBAT_FORTIFICATION_CITADEL)
+            return;
+    }
+
+    // Two boats meeting at sea: the hulls block thirty-two hexes and
+    // nothing else is placed at all.
+    if (terrainType == eTerrainWater
+            && heroes[0] && (heroes[0]->flags & 0x40000)
+            && heroes[1] && (heroes[1]->flags & 0x40000)) {
+        for (const int* hex = gBoatBlockedHexes;
+                hex < gBoatBlockedHexes + 32; hex++)
+            cells[*hex].field_10 |= 2;
+        return;
+    }
+
+    int budget;
+    if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
+            && defendingTown->type == TOWN_STRONGHOLD)
+        budget = Random(10, 16);
+    else
+        budget = Random(5, 12);
+
+    unsigned int terrain_mask = 0;
+    unsigned int special_terrain_mask = 0;
+    if (field_53c0 != -1)
+        special_terrain_mask = 1 << field_53c0;
+    else
+        terrain_mask = 1 << terrainType;
+
+    if ((field_132f4 < COMBAT_FORTIFICATION_CITADEL
+                || defendingTown->type != TOWN_STRONGHOLD)
+            && Random(1, 100) <= 40)
+        budget -= PlaceLargeObstacle(terrain_mask, special_terrain_mask) / 2;
+
+    int placed = 0;
+    TPickANumber obstacle_picker(0, 90);
+    while (placed < budget) {
+        int obstacle_id;
+        do {
+            obstacle_id = obstacle_picker.Pick();
+            if (obstacle_id < 0)
+                return;
+        } while (!(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
+                 && !(ObstacleInfo[obstacle_id].special_terrain_mask
+                      & special_terrain_mask));
+        if (obstacle_id < 0)
+            return;
+        if (place_obstacle(obstacle_id))
+            placed += gObstacleShapes[obstacle_id].extra_hex_count;
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3063
 // The bracket [SetupAndLoadObstacles .. PlaceObstacle] holds exactly
@@ -1715,13 +2440,13 @@ void combatManager::MakeCreaturesVanish()
                         == army::ARMY_CREATURE_ARROW_TOWER) {
                     switch (armies[side][index].gridIndex) {
                     case COMBAT_HEX_LOWER_TOWER:
-                        field_1402d = 1;
+                        field_1402c[1] = 1;
                         break;
                     case COMBAT_HEX_KEEP:
-                        field_1402c = 1;
+                        field_1402c[0] = 1;
                         break;
                     case COMBAT_HEX_UPPER_TOWER:
-                        field_1402e = 1;
+                        field_1402c[2] = 1;
                         break;
                     }
                 } else {
@@ -2584,16 +3309,314 @@ void combatManager::ViewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:4158
-VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
-void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature)
+// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
+// homes both operands to the frame, selects an ADDRESS with lea/lea and
+// dereferences it - which is what a const-reference-in, const-reference-
+// out select inlines to and what neither a by-value helper nor an
+// inline ternary produces (both enregister; 93.3%). VC6's own
+// <algorithm> does not export `max` into namespace std, so the template
+// is written out here rather than included.
+//
+// MOVED AHEAD OF PowEffect 2026-08-20: that body performs seven of these
+// selects and a static has to be defined before its first use. get_distance,
+// the other consumer, is measured after every move.
+static const long& MaxOf(const long& x, const long& y)
 {
-    // @stub
+    return x < y ? y : x;
 }
 
-#endif  // @carcass
+// E:\gamedcs\cmbtmgr.cpp:4158
+// The whole combat animation frame pump: one spell effect's worth of
+// attack, wince, death and defend sequences played across every stack
+// at once, then the deaths resolved.
+//
+// The body is NOT a switch - `spellEffect` is only ever compared with
+// -1 and used as a twelve-byte index into akSpellEffectTraits. What it
+// is instead is eleven `for(side) for(slot)` walks over armies[2][21],
+// split by three separately inlined IsQuickCombat guards: the first
+// skips the entire animation half, the second gates the per-stack
+// samples, the third gates the wind-down loop.
+//
+// Shapes worth keeping:
+//   * the frame budget is four chained MaxOf selects ending on
+//     `wince + attack - 1`, which retail forms with one
+//     `lea eax,[esi+edi-1]`;
+//   * `iNextFrameType = cs_wince + (Is(27) & 1)` is ARITHMETIC, not a
+//     ternary - retail emits `setne cl` straight into `add ecx,3`;
+//   * walk 4 is MakeCreaturesVanish's own first walk verbatim, down to
+//     the three-way arrow-tower switch on gridIndex;
+//   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
+//     counted loop - retail has no bound to test.
+//
+// Two measured refinements on top of the first compile (96.1134):
+//   * army::bPowSequenceComplete is an INT, not the byte its name
+//     suggests. Retail both tests and stores it a dword wide, and
+//     retyping it is worth +0.03 (96.1134 -> 96.1439). The field note
+//     in army.h carries the bytes.
+//   * the attack-frame skip is a GOTO, not a nested if. Retail spells
+//     `cmp frameCount, attack_frames-1 / jge <play> / jmp <continue>`,
+//     i.e. it tests the POSITIVE and falls through to the continue,
+//     which the plain `if (frameCount < attack_frames - 1) continue;`
+//     emits with both arms the other way round. +0.055, and it takes
+//     the branch-shape distance from 3 to 1. Swapping the enclosing
+//     `if (attack_frames)` arms instead was measured and is much worse
+//     (94.90) - the flip is on the inner test alone.
+//
+// Residual (96.1988%): ONE block, 819 instructions against retail's
+// 820, one unpaired branch that matches no cataloged D signature, and
+// predict-inline reports the call multisets AGREE exactly (14 and 14).
+// why-branch's six guided candidates all measure +0 or worse.
+VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
+void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
+{
+    int side;
+    int slot;
+
+    if (!IsQuickCombat()) {
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                stack.bShowRangeFrames = static_cast<unsigned char>(
+                    stack.currFrameType == cs_range_ur
+                    || stack.currFrameType == cs_range_r
+                    || stack.currFrameType == cs_range_dr);
+                stack.iNextFrameType = -1;
+                if (stack.bSomeUnitsDamaged || stack.bShowAttackFrames) {
+                    if (stack.bShowAttackFrames)
+                        stack.iNextFrameType = stack.iShowAttackFrameType;
+                    else if (stack.bAllUnitsKilled)
+                        stack.iNextFrameType = cs_death;
+                    else
+                        stack.iNextFrameType = static_cast<signed char>(
+                            cs_wince + ((stack.Is(27) & 1) != 0));
+                    stack.iRemainingFramesToPlay = static_cast<signed char>(
+                        stack.stdIcon->GetNumFrames(stack.iNextFrameType));
+                    if (stack.iNextFrameType == stack.currFrameType)
+                        stack.iRemainingFramesToPlay--;
+                    if (stack.iDrawPriority < 5)
+                        stack.iDrawPriority = 5;
+                }
+                stack.bPowSequenceComplete = 0;
+            }
+        }
+
+        unsigned char bShowSomePowEffect = 0;
+        if (spellEffect != -1) {
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    if (armies[side][slot].bShowPowEffect) {
+                        bShowSomePowEffect = 1;
+                        break;
+                    }
+                }
+            }
+            if (bShowSomePowEffect && !LoadSpellEffect(spellEffect))
+                bShowSomePowEffect = 0;
+        }
+
+        int numFrames = 0;
+        if (bShowSomePowEffect)
+            numFrames = powSprite->GetNumFrames(0);
+
+        int attack_frames = 0;
+        int wince_frames = 0;
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                if (stack.bShowAttackFrames)
+                    attack_frames = MaxOf(attack_frames,
+                        stack.stdIcon->GetNumFrames(
+                            stack.iShowAttackFrameType));
+                else if (stack.bAllUnitsKilled)
+                    wince_frames = MaxOf(wince_frames,
+                        stack.stdIcon->GetNumFrames(cs_death));
+                else if (stack.bSomeUnitsDamaged)
+                    wince_frames = MaxOf(wince_frames,
+                        stack.stdIcon->GetNumFrames(cs_wince));
+            }
+        }
+        numFrames = MaxOf(numFrames, wince_frames);
+        numFrames = MaxOf(numFrames, attack_frames);
+        numFrames = MaxOf(numFrames, wince_frames + attack_frames - 1);
+
+        if (bResetLimitCreature)
+            ResetLimitCreature();
+
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                if (stack.Is(21) & 1)
+                    continue;
+                if (!stack.bSomeUnitsDamaged && !stack.bShowAttackFrames
+                        && !stack.bShowRangeFrames)
+                    continue;
+                if (stack.creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
+                    switch (stack.gridIndex) {
+                    case COMBAT_HEX_LOWER_TOWER:
+                        field_1402c[1] = 1;
+                        break;
+                    case COMBAT_HEX_KEEP:
+                        field_1402c[0] = 1;
+                        break;
+                    case COMBAT_HEX_UPPER_TOWER:
+                        field_1402c[2] = 1;
+                        break;
+                    }
+                } else {
+                    field_14000[side][slot] = 1;
+                }
+            }
+        }
+
+        ComputeMaxExtent();
+        if (spellEffect != -1)
+            PlayImmEffect(akSpellEffectTraits[spellEffect].m_immName, 1);
+
+        for (int frameCount = 0; frameCount < numFrames; frameCount++) {
+            int wince_start_offset = numFrames - 1 - frameCount;
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    army& stack = armies[side][slot];
+
+                    if (stack.bShowRangeFrames
+                            && stack.currFrameType != cs_wait) {
+                        if (stack.currFrameIndex
+                                < stack.stdIcon->GetNumFrames(
+                                    stack.currFrameType) - 1) {
+                            stack.currFrameIndex++;
+                        } else {
+                            stack.currFrameType = cs_wait;
+                            stack.currFrameIndex = 0;
+                        }
+                    }
+                    if (stack.iNextFrameType == -1)
+                        continue;
+                    if (stack.bPowSequenceComplete)
+                        continue;
+
+                    if (!stack.bShowAttackFrames
+                            && wince_start_offset
+                                > stack.iRemainingFramesToPlay) {
+                        if (attack_frames) {
+                            if (frameCount >= attack_frames - 1)
+                                goto play_frame;
+                            continue;
+                        } else if (stack.currFrameType == cs_wince
+                                && stack.currFrameIndex
+                                    >= stack.stdIcon->GetNumFrames(
+                                        stack.currFrameType) - 1) {
+                            continue;
+                        }
+                    }
+
+play_frame:
+                    if (stack.currFrameType != stack.iNextFrameType) {
+                        if (!IsQuickCombat()) {
+                            if (stack.bShowAttackFrames)
+                                stack.play_sample(army::ATTACK_SAMPLE);
+                            else if (stack.iNextFrameType == cs_wince)
+                                stack.play_sample(army::WINCE_SAMPLE);
+                            else if (stack.iNextFrameType == cs_death)
+                                stack.play_sample(army::DIE_SAMPLE);
+                            else if (stack.iNextFrameType == cs_defend)
+                                stack.play_sample(army::DEFEND_SAMPLE);
+                        }
+                        stack.currFrameType = stack.iNextFrameType;
+                        stack.currFrameIndex = 0;
+                    } else if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(
+                                stack.currFrameType) - 1) {
+                        stack.currFrameIndex++;
+                    } else if (stack.currFrameType != cs_wait
+                            && stack.currFrameType != cs_death) {
+                        stack.currFrameType = cs_wait;
+                        stack.currFrameIndex = 0;
+                        stack.bPowSequenceComplete = 1;
+                    }
+                }
+            }
+
+            if (bShowSomePowEffect
+                    && frameCount < powSprite->GetNumFrames(0))
+                powFrameIndex = frameCount;
+
+            DrawFrame(0, 1, 0, 100, 1, 1);
+            gpWindowManager->UpdateScreen(
+                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+        }
+    }
+
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            if (stack.iPostPowSpellToCast != -1) {
+                if (stack.numTroops > 0)
+                    CastSpell(stack.iPostPowSpellToCast, stack.gridIndex,
+                              1, -1, 0, 3);
+                stack.iPostPowSpellToCast = -1;
+            }
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        for (;;) {
+            int bFramesChanged = 0;
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    army& stack = armies[side][slot];
+                    if (stack.currFrameType == cs_wait)
+                        continue;
+                    if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(
+                                stack.currFrameType) - 1) {
+                        stack.currFrameIndex++;
+                    } else if (stack.currFrameType == cs_death) {
+                        continue;
+                    } else {
+                        stack.currFrameType = cs_wait;
+                        stack.currFrameIndex = 0;
+                    }
+                    bFramesChanged = 1;
+                }
+            }
+            if (!bFramesChanged)
+                break;
+            DrawFrame(1, 1, 0, 100, 1, 1);
+        }
+        if (bResetLimitCreature)
+            ResetLimitCreature();
+    }
+
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            if (stack.bAllUnitsKilled) {
+                stack.ProcessDeath(0);
+                if (stack.Is(6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        stack.creatureType);
+            }
+        }
+    }
+    if (field_13460)
+        MakeCreaturesVanish();
+
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            stack.bShowPowEffect = 0;
+            stack.bSomeUnitsDamaged = 0;
+            stack.iDrawPriority = 4;
+            stack.bShowAttackFrames = 0;
+            stack.numTroopsToShowOverride = -1;
+        }
+    }
+    DrawFrame(1, 0, 0, 0, 1, 0);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4497
 // `current_army` KEEPS the DC roster's const (corrected 2026-08-14). The
@@ -2621,18 +3644,6 @@ unsigned char combatManager::enemy_is_adjacent(const army* current_army, int gri
 #if 0  // @carcass
 
 #endif  // @carcass
-
-// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
-// homes both operands to the frame, selects an ADDRESS with lea/lea and
-// dereferences it - which is what a const-reference-in, const-reference-
-// out select inlines to and what neither a by-value helper nor an
-// inline ternary produces (both enregister; 93.3%). VC6's own
-// <algorithm> does not export `max` into namespace std, so the template
-// is written out here rather than included.
-static const long& MaxOf(const long& x, const long& y)
-{
-    return x < y ? y : x;
-}
 
 // E:\gamedcs\cmbtmgr.cpp:4519
 // Free __fastcall, not the DC roster's method: retail takes start in
@@ -2779,16 +3790,92 @@ not_blocked:
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4731
+// The whole head is IsQuickCombat() expanded inline - the same four
+// inputs, the same `setne al / test al, al` tail on the global-mode arm
+// that LowerDoor and the two morale bodies show - so the guard is one
+// `if (IsQuickCombat()) return;` and not the four separate tests the
+// branch graph first reads as.
+//
+// The line is built in a std::string and printed once. Two shapes in the
+// death clause are settled by the bytes rather than by taste:
+//   * army::GetName is called ONCE, before the bit-6 test, so the test
+//     is nested inside `if (defender)` rather than hoisted;
+//   * the one-death and many-death arms are SHARED between the
+//     defender and no-defender paths (one EH state each, 5 and 6, not
+//     two), which is what puts the goto in - writing them inside both
+//     arms of the `if (defender)` duplicates them.
+// The `deaths == 1` test is written twice in source and retail only
+// emits it once on the no-defender path: VC6 jump-threads the second
+// copy from 0x469c34 straight into the singular arm because it already
+// knows the answer there.
+//
+// Residual (89.6402%), 263 instructions against retail's 264, flow-
+// distance 0 - the CFG is identical and predict-inline reports the call
+// multisets AGREE, so nothing structural is left. Three register/PRE
+// decisions remain, and the first two are NOT source-addressable:
+//   * the inlined IsQuickCombat forms both player-record addresses with
+//     `lea` and then loads .quickCombat from each, where we fold the
+//     +0xe4 into the load. DO NOT RETUNE THE SHARED INLINE FOR THIS -
+//     retail's own LowerDoor (0x4671c0, exact here) expands the very
+//     same source into the FOLDED form `mov edx,[ecx+8*eax+0x20bb4]`,
+//     so the two retail bodies disagree with each other and the shape
+//     is downstream register pressure, not spelling.
+//   * `gpGeneralText->Text._First`: retail hoists it above the
+//     `attacker_qty == 1` branch (we load it per arm) and then does the
+//     OPPOSITE at the `deaths == 1` branch, duplicating it into both
+//     arms where we hoist it. That one duplicated load is the whole
+//     instruction-count gap. Retail CSEs the pointer one level and we
+//     CSE two; both arms are already spelled exactly as retail's.
+//   * the first _Tidy picks AL where retail picks CL, and orders the
+//     allocator byte store after the `lea ecx` instead of before.
+// why-reg's guided search offers one candidate (B23, make `name`
+// volatile) and it moves the distance by +0. Register-homing family.
 VA(0x00469a90, 0x324)  // anchor-global, dc 0x6335c
 void combatManager::damage_message(const char* attacker, long attacker_qty, long damage, const army* defender, long deaths)
 {
-    // @stub
-}
+    if (IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    std::string message;
+    if (attacker_qty == 1)
+        message = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER),
+            attacker, damage);
+    else
+        message = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS),
+            attacker, damage);
+
+    if (deaths > 0) {
+        std::string deathText;
+        const char* name;
+        if (defender) {
+            name = army::GetName(defender->creatureType, deaths);
+            if (defender->Is(6) & 1) {
+                deathText = format_string(
+                    gpGeneralText->GetText(GENERAL_TEXT_COMBAT_STACK_WIPED_OUT),
+                    name);
+                goto have_death_text;
+            }
+        } else {
+            name = deaths == 1
+                ? gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY_ONE)
+                : gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
+        }
+        if (deaths == 1)
+            deathText = format_string(
+                gpGeneralText->GetText(GENERAL_TEXT_COMBAT_ONE_DEATH), name);
+        else
+            deathText = format_string(
+                gpGeneralText->GetText(GENERAL_TEXT_COMBAT_MANY_DEATHS),
+                deaths, name);
+have_death_text:
+        message += deathText;
+    }
+
+    combatWindow->combat_message(message.c_str(), 1, 0);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4776
 // The second row only exists for a Fortress: retail reads the town type

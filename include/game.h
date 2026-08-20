@@ -1688,6 +1688,19 @@ public:
 
 unsigned char InitImmMouse(void* hInst, void* hwnd);  // 0x4b6890
 void ImmMouseWindowMoved();                           // 0x4b6950
+// 0x4b69f0, the third member of the same Immersion block and a /Gr free
+// function (name in ECX, count in EDX). The body asks CImmProject at
+// .bss 0x696d84 for CreateEffect(name, 0, 0) and then Start(count, 0) on
+// the compound effect at 0x696d88. Its ONE decoded caller is
+// combatManager::PowEffect (0x468990), which hands it
+// akSpellEffectTraits[spellEffect].m_immName and 1 - i.e. the force
+// feedback that plays with a combat spell. Retail-only (the Dreamcast
+// build has no Immersion layer), so the NAME is a bootstrap invention
+// and the return value, which PowEffect discards, stays unmodelled.
+// Behind a view: game.h reaches most of the tree.
+#ifdef HOMM3_GAME_IMM_EFFECT_DECL
+void PlayImmEffect(const char* effectName, int count);  // 0x4b69f0
+#endif
 void ComputeUALoc(int whichPlayer);                   // 0x4baed0
 
 // --- globals ---

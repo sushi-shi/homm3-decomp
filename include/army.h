@@ -200,7 +200,25 @@ public:
     // been re-placed in the grid - i.e. the draw order a moving stack
     // takes against the row it is entering. Pad slice, behind the move
     // view with the rest of Walk's surface.
-#ifdef HOMM3_ARMY_MOVE_VIEW
+    // The five animation-state bytes that open the record, all proven by
+    // combatManager::PowEffect (0x468990) and named from the Dreamcast
+    // members.csv run army@0..army@4. PowEffect's first walk writes
+    // bShowRangeFrames from the current sequence, picks iNextFrameType
+    // (-1 = nothing to play), loads iRemainingFramesToPlay out of
+    // CSprite::GetNumFrames and raises iDrawPriority to at least 5; its
+    // animation loop then drives all five. They arrive as their own view
+    // rather than by widening the move view because that one carries
+    // twenty declarators cmbtmgr.obj has no use for.
+#ifdef HOMM3_ARMY_POW_VIEW
+    unsigned char bShowAttackFrames;     // +0x00
+    unsigned char bShowRangeFrames;      // +0x01
+    signed char iShowAttackFrameType;    // +0x02
+    signed char iNextFrameType;          // +0x03
+    signed char iRemainingFramesToPlay;  // +0x04
+    char pad_05[0x3];
+    int iDrawPriority;            // +0x08
+    char pad_0c[0x4];
+#elif defined(HOMM3_ARMY_MOVE_VIEW)
     char pad_00[0x8];
     int iDrawPriority;            // +0x08
     char pad_0c[0x4];
@@ -236,6 +254,13 @@ public:
     unsigned char bShowPowEffect;  // +0x20
     char pad_21[0xb];
     int iRoundsLeftBeforeVanish;   // +0x2c
+#elif defined(HOMM3_ARMY_POW_VIEW)
+    // PowEffect needs only the first of that pair - it scans every stack
+    // for a raised bShowPowEffect to decide whether to load the effect
+    // sprite at all, and clears it in the closing walk - so the pow view
+    // takes one declarator where the round view takes three.
+    unsigned char bShowPowEffect;  // +0x20
+    char pad_21[0xf];
 #else
     char pad_20[0x10];
 #endif
@@ -485,7 +510,19 @@ public:
     // rename cannot move it (GetCommand held 92.5714 across it).
     unsigned char bSomeUnitsDamaged; // +0xe9
     unsigned char bAllUnitsKilled;   // +0xea
+    // DC army.iPostPowSpellToCast (members.csv army@216, a SpellID -
+    // retail sits a flat +0x14 above the DC record from hitByCreature
+    // onward, so DC 216 lands on +0xec). PowEffect's post-animation
+    // walk is its only decoded reader: any stack whose value is not -1
+    // gets that spell cast on its own hex, and the slot is reset to -1
+    // straight after. Spelled int because SpellID's enum lives in a
+    // header this one does not include.
+#ifdef HOMM3_ARMY_POW_VIEW
+    char pad_eb[0x1];
+    int iPostPowSpellToCast;         // +0xec
+#else
     char pad_eb[0x5];
+#endif
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // The side that OWNS this stack, written once by Init and never by
@@ -526,6 +563,20 @@ public:
     char pad_fc[0x10];
     char* yModify;                // +0x10c
     char pad_110[0x48];
+#elif defined(HOMM3_ARMY_POW_VIEW)
+    // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
+    // flat +0x14 the band above carries). PowEffect clears it for every
+    // stack before the animation loop and raises it the frame a stack
+    // falls back to cs_wait, which is what stops that stack advancing
+    // for the rest of the sequence.
+    char pad_fc[0xc];
+    // An INT, not the byte the name suggests (byte-proven 2026-08-20):
+    // PowEffect both TESTS and STORES it a dword wide -
+    // `mov eax,[esi+0x108] / test eax,eax` and
+    // `mov dword ptr [esi+0x108],1` - where a char field would emit
+    // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
+    int bPowSequenceComplete;            // +0x108
+    char pad_10c[0x4c];
 #else
     char pad_fc[0x5c];
 #endif
@@ -770,7 +821,20 @@ public:
     int forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
     float slowFactor;             // +0x4c8
-    char pad_4cc[0x14];
+    char pad_4cc[0xc];
+    // +0x4d8. combatManager::InitNonVisualVars (0x463c60) is the one
+    // decoded reader: its closing walk scans each side's stacks and
+    // raises the per-side latch at combatManager+0x1329c the moment it
+    // finds a stack whose byte here is non-zero, so the byte is a
+    // per-stack "this side has one of these" marker whose meaning that
+    // latch does not name either. Behind the pow view, which the same
+    // TU already defines.
+#ifdef HOMM3_ARMY_POW_VIEW
+    unsigned char field_4d8;      // +0x4d8
+    char pad_4d9[0x7];
+#else
+    char pad_4d8[0x8];
+#endif
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
@@ -1201,6 +1265,34 @@ public:
 #endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
+        // The three creatures with a START-OF-TURN ability, and
+        // combatManager::SetNextArmy (0x465330) is the one body that
+        // proves all three: its compare chain answers 0x3d, 0x86 and
+        // 0x88 and nothing else. Each id follows from the arithmetic the
+        // elemental block above already fixes - Psychic / Magic
+        // Elemental on 0x78/0x79 and Ice 0x7b / Magma 0x7d / Storm 0x7f
+        // / Energy 0x81 with the four unused slots between them, which
+        // continues Firebird 0x82 / Phoenix 0x83, Azure 0x84 / Crystal
+        // 0x85 / FAERIE 0x86 / Rust 0x87, then ENCHANTER 0x88 - and
+        // 0x3d closes the Necropolis run that opens at Skeleton 0x38.
+        // The bodies corroborate each id independently:
+        //   - 0x3d drains two mana off the OTHER side's hero and plays
+        //     ManaDrai.wav, which is the wraith's rule and no other
+        //     creature's;
+        //   - 0x86 calls 0x447510, whose body picks a spell at random
+        //     out of a weighted table - the faerie dragon's rule - and
+        //     which the HD crossbuild map independently names
+        //     FaerieDragonSpell;
+        //   - 0x88 is gated on a per-side counter that must exceed 2 and
+        //     is reset to 0 on success, i.e. an ability with a cooldown
+        //     of three rounds, which is the enchanter's mass cast.
+        // Behind a view for this header's usual measured reason;
+        // cmbtmgr.cpp is the only consumer.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
+        ARMY_CREATURE_WRAITH = 0x3d,
+        ARMY_CREATURE_FAERIE_DRAGON = 0x86,
+        ARMY_CREATURE_ENCHANTER = 0x88,
+#endif
         // The two combat participants can_shoot (0x4428f0) admits as
         // shooters unconditionally, ahead of every other test - the
         // ballista and the arrow tower, which are the only war machines
@@ -1282,10 +1374,43 @@ public:
     // (`get_controlling_side() != other->group`) is also exactly what
     // is_enemy's asymmetric compare does.
     int get_controlling_side() const;        // 0x440140
+    // The two start-of-turn ability bodies combatManager::SetNextArmy
+    // (0x465330) dispatches to off creatureType. Both take `this` only
+    // and both sit in army.obj; neither is claimed here, and neither is
+    // named by the DC roster, so 0x447fe0 keeps the address-ordinal
+    // shape this tree uses for exactly that case.
+    //   FaerieDragonSpell (0x447510, 424 B) spends one of the +0xdc
+    //     counters and picks a spell out of the weighted table at
+    //     .rdata 0x63b850 with a single rand()%total draw. The NAME is
+    //     the HD crossbuild map's, adopted because the creature id that
+    //     reaches it - 0x86 - independently lands on the faerie dragon
+    //     by the elemental-block arithmetic recorded on the enumerator.
+    //   Unnamed447fe0 (638 B) answers a byte; SetNextArmy calls it only
+    //     for the enchanter and only while the per-side counter at
+    //     combatManager+0x132a0 exceeds 2, clearing that counter when
+    //     the answer is non-zero.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
+    void FaerieDragonSpell();                // 0x447510
+    unsigned char Unnamed447fe0();           // 0x447fe0
+#endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the
     // roster spells it, and can_shoot pass its own const this.
+    // 0x446660 / 0x446630, the two screen-midpoint accessors, both const
+    // on the DC roster (army.cpp:4790 / 4773). combatManager::KeepAttack
+    // (0x465ad0) is the decoded consumer and it proves both roles: the
+    // MidX result is compared against the firing archer's own x to form
+    // the horizontal flip, and both are handed to
+    // GetMissileStartingPosition as the destination. Retail's bodies
+    // read gpCombatManager->cells[gridIndex] at +0x1c4 and +0x1c6 with
+    // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
+    // still carries both as DC_ONLY carcasses. Behind a view for this
+    // header's usual measured reason.
+#ifdef HOMM3_ARMY_MIDPOINT_DECL
+    int MidX() const;                        // 0x446660
+    int MidY() const;                        // 0x446630
+#endif
     unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
@@ -1426,11 +1551,16 @@ public:
     // rounds: retaliations restored, spell rounds decremented, poison
     // applied, and the summon countdown that ends in ProcessDeath.
     void ResetRound();
+#endif
     // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
     // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
     // argument, which is what the DC roster's two-parameter row and the
     // body's `ret 4` both say. Declared here so ResetRound can spell the
-    // call; the BODY is still a carcass.
+    // call; the BODY is still a carcass. Split out of the round view
+    // 2026-08-20 so combatManager::PowEffect, whose death sweep is its
+    // second decoded caller, can reach it without also taking
+    // ResetRound and the round view's other twenty-six declarators.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_POW_VIEW)
     void ProcessDeath(int bFadeElementals);
 #endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this pair is the FOURTH

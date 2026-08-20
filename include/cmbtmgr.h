@@ -13,6 +13,7 @@
 #include "struct.h"
 
 class Bitmap16Bit;
+class CNetMsgHandlerPause;
 class Bitmap816;
 class CSprite;
 class hero;
@@ -149,6 +150,16 @@ enum ECombatFortification {
 // moat proper (0x5e from the Fortress row) while the bridge is down.
 // Names are BOOTSTRAP INVENTIONS.
 enum ECombatGateHex {
+    // The ROW those three columns are the fifth entry of, which is what
+    // SetupAndLoadObstacles compares against directly: it lays a mine in
+    // every moat row of a Tower except this one, and it tests the row
+    // INDEX before loading gMoatColumns rather than testing the column
+    // against COMBAT_HEX_GATE_MOAT afterwards. Behind the obstacle view
+    // so only its one consumer pays the include-set threshold, and
+    // FIRST in the enum so the guard does not leave a trailing comma.
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+    COMBAT_GATE_ROW = 5,
+#endif
     COMBAT_HEX_OUTER_MOAT = 0x5e,
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
@@ -396,7 +407,11 @@ public:
     // (0x5994b0) independently reads its status member at +0x34 while
     // combat music is active; the retail ctor's baseManager call and
     // combatManager vptr store prove the inheritance directly.
-    CCombatOwnedObject* field_38;
+    // A CNetMsgHandlerPause, not a CCombatOwnedObject (retyped in place
+    // 2026-08-20, a rename): Open (0x462a20) assigns
+    // `new CNetMsgHandlerPause()` here off an operator new(0x10), which
+    // is SIZE(CNetMsgHandlerPause, 0x10) exactly, and Close deletes it.
+    CNetMsgHandlerPause* field_38;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -417,7 +432,16 @@ public:
     // reason its two neighbours are.
     int field_40;                     // +0x40
     int field_44;                     // +0x44
-    char pad_0048[0x17c];
+    char pad_0048[0x4];
+    // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
+    // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
+    // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
+    // 0x4c + 0xbb == 0x107 and 0x107 + 0xbb == 0x1c2 closes the band
+    // exactly against `cells`. Same shape as the 187-byte row at
+    // +0x14031. No reader is decoded for either, so both stay ordinals.
+    unsigned char field_004c[COMBAT_GRID_CELLS];   // +0x4c
+    unsigned char field_0107[COMBAT_GRID_CELLS];   // +0x107
+    char pad_01c2[0x2];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
@@ -444,14 +468,19 @@ public:
     // always nested inside the field_53a8 test above. Name provisional.
     unsigned char field_53a9;         // +0x53a9
     char pad_53aa[0x2];
-    CCombatOwnedObject* field_53ac;
+    // A Bitmap16Bit, not a CCombatOwnedObject (retyped in place
+    // 2026-08-20, a rename): Open constructs all THREE of these with
+    // Bitmap16Bit::Bitmap16Bit(w, h) at 0x44df70 off an
+    // `operator new(0x38)`, which is sizeof(Bitmap16Bit), and field_53b0
+    // between them was already spelled that way.
+    Bitmap16Bit* field_53ac;
     // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
     // on this slot once per animation frame, blitting the clean
     // battlefield back over the previous frame's extent - so it is the
     // combat back-buffer, not a bare polymorphic object. Close still
     // deletes it through the same slot-0 virtual destructor either way.
     Bitmap16Bit* field_53b0;
-    CCombatOwnedObject* field_53b4;
+    Bitmap16Bit* field_53b4;
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
@@ -493,7 +522,14 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0x6];
+    // Three more per-side byte pairs, all cleared together by
+    // InitNonVisualVars (0x463c60) in the order (0x53e0, 0x53e1),
+    // (0x53e2, 0x53e3), (0x53dc, 0x53dd), (0x53de, 0x53df) - each pair
+    // written HIGH slot first, which is the `x[0] = x[1] = 0` chained
+    // form. No reader is decoded for any of them.
+    unsigned char field_53de[2];      // +0x53de
+    unsigned char field_53e0[2];      // +0x53e0
+    unsigned char field_53e2[2];      // +0x53e2
     // Two per-side dword pairs LoadIcons (0x463370) clears alongside the
     // two sprite pointers, at full int width (`mov [esi + 4*edi + 0x53e4],
     // edx` with edx held at zero). No reader is decoded yet, so both
@@ -503,7 +539,11 @@ public:
     char pad_53f4[0x10];
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
-    char pad_5414[0x48];
+    // Two scalars InitNonVisualVars sets to 0 and 3 respectively, the 3
+    // shared with field_13d48 out of one register. Both ordinals.
+    int field_5414;                    // +0x5414
+    int field_5418;                    // +0x5418
+    char pad_541c[0x40];
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
@@ -577,9 +617,16 @@ public:
     // Both arms below describe the same bytes and only the count differs,
     // so no TU sees a different layout.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
-    char pad_1329c[0x4];
+    // The per-side pair InitNonVisualVars' closing walk raises when a
+    // side owns at least one stack with army::field_4d8 set. Byte-wide
+    // and indexed by side.
+    unsigned char field_1329c[2];     // +0x1329c
+    char pad_1329e[0x2];
     int field_132a0[2];               // +0x132a0
-    char pad_132a8[0x8];
+    // Two more dwords InitNonVisualVars sets to -1, alongside
+    // field_132d4. Ordinals.
+    int field_132a8;                  // +0x132a8
+    int field_132ac;                  // +0x132ac
 #else
     char pad_1329c[0x14];
 #endif
@@ -637,15 +684,27 @@ public:
     // into field_40, which is the same (where I go, what I hit) pair
     // field_40/field_44 already carry. Name is an address ordinal.
     int field_132d8;                  // +0x132d8
-    char pad_132dc[0x4];
+    // Set to -99 by InitNonVisualVars and by nothing else decoded.
+    int field_132dc;                  // +0x132dc
     int field_132e0;                  // +0x132e0
-    char pad_132e4[0x10];
+    // Sliced in place 2026-08-20 (a retype, not new declarators) off two
+    // bodies that agree field for field: LoadSpellEffect (0x5a92f0)
+    // disposes powSprite, refills it from akSpellEffectTraits and stores
+    // the effect id it cached, and PowEffect (0x468990) asks powSprite
+    // for its frame count and drives powFrameIndex across the animation.
+    // Cleared by InitNonVisualVars a byte wide. Ordinal.
+    unsigned char field_132e4;        // +0x132e4
+    char pad_132e5[0x3];
+    CSprite* powSprite;               // +0x132e8
+    int powSpellEffect;               // +0x132ec
+    int powFrameIndex;                // +0x132f0
     // "This combat is fought over a walled town": HexIsBlocked
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
     ECombatFortification field_132f4; // +0x132f4
-    char pad_132f8[0x4];
+    // Cleared by InitNonVisualVars at full width. Ordinal.
+    int field_132f8;                  // +0x132f8
     TCombatWindow* combatWindow;      // +0x132fc
     int field_13300;                  // +0x13300
     // The battlefield background image name. SetupCombat caches
@@ -667,7 +726,10 @@ public:
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
     char pad_13304[0x134];
     unsigned char field_13438[2][20]; // +0x13438
-    char pad_13460[0x4];
+    // Sliced in place off PowEffect, which zeroes it beside field_13438
+    // and then asks it, after the death sweep, whether MakeCreaturesVanish
+    // needs running. A retype, not a new declarator.
+    int field_13460;                  // +0x13460
     const char* backgroundName;       // +0x13464
 #else
     char pad_13304[0x134];
@@ -686,7 +748,9 @@ public:
     // every drawbridge animation. The role of each coordinate awaits a
     // decoded drawing reader, so the member stays an ordinal array.
     TDrawbridgeBounds drawbridgeBounds; // +0x13d38
-    char pad_13d48[0x4];
+    // Set to 3 by InitNonVisualVars, out of the same register as
+    // field_5418. Ordinal.
+    int field_13d48;                  // +0x13d48
     // Pending post-combat raised stack. RaiseSkeletons first attempts
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
@@ -703,7 +767,9 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x7];
+    char pad_13d69[0x3];
+    // Cleared by Open just before the acting pair is stamped. Ordinal.
+    int field_13d6c;                  // +0x13d6c
     // Placement inset measured in combat-grid columns. command.obj's
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
     // two side limits as 2*n+1 and 2*n+15 respectively.
@@ -713,7 +779,11 @@ public:
     // reads as a "casting restriction lifted" latch. Name is an address
     // ordinal - nothing else decoded reaches it.
     unsigned char field_13d74;        // +0x13d74
-    char pad_13d75[0x3];
+    // Its two neighbours, cleared with it in one run by
+    // InitNonVisualVars. Ordinals.
+    unsigned char field_13d75;        // +0x13d75
+    unsigned char field_13d76;        // +0x13d76
+    char pad_13d77[0x1];
     TArcher archers[3];               // +0x13d78; armySlot at +0x20
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
@@ -726,7 +796,16 @@ public:
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
     unsigned char field_13de4;        // +0x13de4
-    char pad_13de5[0x13];
+    char pad_13de5[0x3];
+    // The DEFENDING hero's combat snapshot, taken by InitNonVisualVars
+    // before the town's own bonuses are applied: stats[0] and stats[1]
+    // clamped to [0, 99], stats[2] clamped to [1, 99] - spell power is
+    // never zero - and the mana word widened. All four are zeroed when
+    // there is no defending hero.
+    int field_13de8;                  // +0x13de8
+    int field_13dec;                  // +0x13dec
+    int field_13df0;                  // +0x13df0
+    int field_13df4;                  // +0x13df4
     Bitmap816* combatIcons[18][5];    // +0x13df8
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
     // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
@@ -737,21 +816,32 @@ public:
     // retail-proven. The DC roster attests the accessor
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
     // not the field, so the name is the accessor's.
-    int wallStrength[15];             // +0x13f60
-    // DamageWall clears one slot in each three-dword row for targets 7/6/0,
-    // then marks the indexed defender army's creatureId bit 21. Roles await
-    // readers; the shared reversed indexing is byte-proven here.
-    int field_13f9c[3];               // +0x13f9c
+    // EIGHTEEN, not fifteen plus a separate three (merged 2026-08-20).
+    // SetupAndLoadObstacles (0x466290) settles the extent outright: it
+    // fills this band with ONE 18-iteration loop out of
+    // akWallTraits[defendingTown->type][i].hitpoints, then stores 1
+    // into slots 15, 16 and 17, then copies all eighteen into
+    // wallStanding with a second 18-iteration loop whose source is
+    // exactly dst - 0x48. A 15+3 split cannot express either loop.
+    // The three tail slots are the two arrow towers and the keep - what
+    // DamageWall's targets 7, 6 and 0 clear - so the old field_13f9c /
+    // field_13fe4 rows were the same array seen through their one
+    // decoded writer, and DamageWall now spells them wallStrength[17]
+    // / [16] / [15] at byte-identical offsets.
+    int wallStrength[18];             // +0x13f60
     // One dword per wall id (5..14 used): 1 while strength remains, 0 when
-    // the segment reaches zero.
-    int wallStanding[15];             // +0x13fa8
-    int field_13fe4[3];               // +0x13fe4
+    // the segment reaches zero. Same 18 extent, same reason.
+    int wallStanding[18];             // +0x13fa8
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point mapPoint;              // +0x13ff0
     Bitmap816* combatCellGridBitmap;   // +0x13ff4
     Bitmap816* combatShadowBitmap;     // +0x13ff8
-    char pad_13ffc[0x4];
+    // Sliced out of the old pad in place 2026-08-20 (a retype, not a new
+    // declarator). SetupAndLoadObstacles zeroes it as its very first
+    // statement and nothing else decoded touches it, so the name stays
+    // an ordinal.
+    int field_13ffc;                   // +0x13ffc
     // "This slot's stack was added mid-combat and still owes a fizzle-in
     // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
     // index 20*iSide + slot for every stack that is NOT an arrow tower.
@@ -761,11 +851,18 @@ public:
     char pad_14028[0x4];
     // The three arrow-tower latches, keyed by the tower's grid index by
     // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
-    // +0x1402e. Declared as three bytes rather than an array because the
-    // hex order and the slot order do not agree. Names are ordinals.
-    unsigned char field_1402c;         // +0x1402c
-    unsigned char field_1402d;         // +0x1402d
-    unsigned char field_1402e;         // +0x1402e
+    // +0x1402e.
+    //
+    // AN ARRAY, corrected 2026-08-20. This used to be three scalars, on
+    // the reasoning that "the hex order and the slot order do not
+    // agree" - and KeepAttack (0x465ad0) refutes it outright, because it
+    // INDEXES the band: it maps the acting tower's gridIndex through the
+    // same three-way switch mark_tower_army uses, to 0xfe -> 0,
+    // 0xfb -> 1, 0xff -> 2, and then stores with
+    // `mov byte ptr [ecx + edi + 0x1402c], 1`. That index is exactly the
+    // scalar order 0x46a460 writes, so the two orders DO agree and the
+    // band is one array. Every existing reader keeps its byte offset.
+    unsigned char field_1402c[3];      // +0x1402c
     // Raised to 1 by SetupCombat before it has touched anything else about
     // the two sides, and by nothing else in the located span. Reads like a
     // "combat is being set up / is live" latch, but no reader is decoded
@@ -782,6 +879,9 @@ public:
     // the object.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
     unsigned char field_1402f;         // +0x1402f
+    // +0x14030, cleared by InitNonVisualVars - the byte that proves the
+    // class runs past everything modelled above. Ordinal.
+    unsigned char field_14030;         // +0x14030
 #endif
 
     combatManager();
@@ -880,6 +980,20 @@ public:
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
     void PlaceAllObstacles();
+    // 0x466290, DC cmbtmgr.cpp:2859. Ungated, alongside the three
+    // obstacle bodies it sits between and calls: PlaceLargeObstacle,
+    // place_obstacle and PlaceObstacle are all ungated declarators
+    // here already, and gating this one alone would put it out of the
+    // declarator order C1XX numbers the group from.
+    // 0x463c60, DC cmbtmgr.cpp:1348. Ungated for the same reason
+    // SetupAndLoadObstacles above is: Open calls both back to back and
+    // both are defined in this compiland.
+    // 0x462a20, DC cmbtmgr.cpp:594 - baseManager's virtual Open, the
+    // slot the vtable anchor names. Ungated beside Close, which it
+    // mirrors and which is already ungated here.
+    int Open(int newPriority);
+    void InitNonVisualVars();
+    void SetupAndLoadObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();
     const char* GetBackgroundName();
@@ -1044,7 +1158,14 @@ public:
     // pushes exactly them in exactly that order - the attacker's
     // GetName, its numTroops, the accumulated damage, the ONE stack it
     // hit (null when the sweep caught more than one creature type) and
-    // the accumulated kill count. Its own body is not claimed here.
+    // the accumulated kill count.
+#endif
+    // Split out of the multi-head view 2026-08-20 so cmbtmgr.cpp, which
+    // now DEFINES this body, can see its declarator without also taking
+    // CheckRebirth and MarkCreatureEffect - two declarators it has no
+    // use for and would pay the include-set threshold for.
+#if defined(HOMM3_CMBTMGR_MULTI_HEAD_VIEW) \
+        || defined(HOMM3_CMBTMGR_MESSAGE_VIEW)
     void damage_message(const char* attacker, long attacker_qty,
                         long damage, const army* defender,
                         long deaths);                         // 0x469a90
@@ -1056,7 +1177,17 @@ public:
     // 0x46a4a0) but the DC roster has no row for it there, so both the
     // NAME and the parameter's constness are PROVISIONAL and its claim
     // waits for the lane that reconstructs the body.
-    CSprite* LoadCreatureSprite(int creatureType);             // 0x5a92f0
+    // 0x5a92f0, RENAMED 2026-08-20 - it was `LoadCreatureSprite(int
+    // creatureType)` and the retail body refutes that outright: it
+    // caches on [this + 0x132ec], disposes [this + 0x132e8] and, for any
+    // argument other than -1, indexes the TWELVE-byte
+    // akSpellEffectTraits row at 0x641e08 for a sprite name. That is a
+    // SPELL EFFECT sprite, not a creature's. The DC roster settles the
+    // name and the compiland: combatManager::LoadSpellEffect(int
+    // effect), spells.obj, E:\gamedcs\spells.cpp:5858, dc 0x15802c.
+    // Close's existing `LoadSpellEffect(-1)` call is the sentinel arm
+    // that just clears the cache. Body stays spells.cpp's; not claimed.
+    CSprite* LoadSpellEffect(int effect);                      // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
                                 long lowest_defense,
@@ -1441,6 +1572,39 @@ public:
     // Declared, not claimed: their bodies are outside this lane.
     unsigned char Unnamed464d40(army* selected);
     unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
+    // TWO MORE ADDRESS ORDINALS, both pinned by SetNextArmy's body and
+    // both left unnamed for the reason above - no DC roster row reaches
+    // either, and neither carries a name in evidence/ida or the HD
+    // crossbuild map.
+    //   0x5a40d0 (155 B, spells.obj) answers a byte and gates every one
+    //     of the five artifact auto-casts: SetNextArmy asks it
+    //     (spell, 3, side, 1, 2) and only calls CastSpell when it is
+    //     non-zero. The 3 is the same expert-mastery literal CastSpell
+    //     itself takes as monster_skill one line later, so the second
+    //     parameter is a mastery and the third the casting side; the
+    //     trailing 1 and 2 are unattested. It is NOT SpellCastWorks
+    //     (0x5a3c80) or SpellCastWorkChance (0x5a8090) - both are
+    //     declared above with different arities.
+    //   0x4782d0 (1461 B, command.obj) is a combatManager method taking
+    //     nothing, and SetNextArmy's epilogue calls it immediately after
+    //     clearing lastMovedArmy - i.e. it is what re-arms the command
+    //     bar for the new acting stack. Its compiland says the same.
+    // Declared, not claimed: both bodies are outside this lane.
+    unsigned char Unnamed5a40d0(SpellID spell, long mastery, long side,
+                                long arg4, long arg5);
+    void Unnamed4782d0();
+    // TWO MORE, both command.obj bodies Open calls back to back with no
+    // arguments, and both left as address ordinals for the reason above.
+    //   0x479f30 (139 B) takes one GameTime::Get(), stores it to
+    //     +0x53fc and +0x5400, then walks both sides' stacks and seeds
+    //     army+0xfc with `now + 2*Random(1,50) - army+0x154` for every
+    //     stack whose +0x154 exceeds 0x33 - a per-stack animation-phase
+    //     seeder.
+    //   0x478890 (110 B) returns at once under IsQuickCombat; otherwise
+    //     it either clears the combat message line and forces a mouse
+    //     move, or re-arms the combat pointer.
+    void Unnamed479f30();
+    void Unnamed478890();
 #endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
@@ -1455,6 +1619,17 @@ extern combatManager* gpCombatManager;
 // UNATTESTED - no DC global, roster or string reaches either byte, so
 // both keep an address-ordinal placeholder rather than a guess at the
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
+// Two GameTime stamps Open takes on its way in, both shared with other
+// compilands - 0x698998 with advmgr.obj's own Open/Main/ProcessKeyPress
+// and with command.obj's combatManager::Main frame pacer, 0x6989b8 with
+// Main and CycleCombatScreen. Behind a view because a single file-scope
+// extern added to this header is its own measured include-set trigger
+// (the field_132a0 bisection), and cmbtmgr.obj is the only consumer
+// that needs them today.
+#ifdef HOMM3_CMBTMGR_OPEN_VIEW
+DATA(0x00698998) extern unsigned long gCombatStamp698998;
+DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
+#endif
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
 
@@ -1536,6 +1711,48 @@ DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
 // the rva is the shorts view above, so this alias carries none - the only
 // delta it can produce is a reloc NAME.
 extern const type_obstacle_shape gObstacleShapes[];
+
+// One spell-effect row, at .rdata 0x641e08 with a TWELVE-byte stride.
+// Two retail bodies fix the layout between them and neither needs the
+// other: LoadSpellEffect (0x5a92f0) forms `[12*effect + 0x641e08]` and
+// hands +0 to ResourceManager::GetSprite, so +0 is a .def sprite name;
+// PowEffect (0x468990) forms the same row and hands +4 to the
+// Immersion helper at 0x4b69f0, so +4 is a force-feedback effect name.
+// The remaining dword is unread by anything decoded here and stays a
+// pad. The Dreamcast roster supplies the TYPE and the array name -
+// ?akSpellEffectTraits@@3QBUTSpellEffectTraits@@B, with m_name at 0 -
+// but its own record is EIGHT bytes, so the +4 Immersion slot is a
+// retail insertion and its name is a bootstrap invention.
+struct TSpellEffectTraits {
+    const char* m_name;      // +0x0, the .def sprite
+    const char* m_immName;   // +0x4, the Immersion effect
+    char pad_08[0x4];
+};
+SIZE(TSpellEffectTraits, 0xc);
+DATA(0x00641e08) extern const TSpellEffectTraits akSpellEffectTraits[];
+
+// The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
+// town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,
+// which is 0x63bd18 + 4*TOWN_TOWER. searchArray::set_moat (0x4b3290)
+// and mark_firewalls (0x4215e0) read the same table with a live index.
+// Name is a BOOTSTRAP INVENTION - no roster attests it.
+DATA(0x0063bd18) extern const int gMoatDamage[];
+
+// The standalone 20-byte obstacle shape the Tower's moat mines are
+// built from, at .rdata 0x63cf00 - not a row of gObstacleShapes but a
+// singleton, and its spriteName points at "C09spF1.def". Retail takes
+// its address whole (`push 0x63cf00`) into TObstacle::shape and loads
+// [0x63cf10] for the sprite name, which is +0x10, the struct's own
+// spriteName slot. Name is a BOOTSTRAP INVENTION.
+DATA(0x0063cf00) extern const type_obstacle_shape gLandMineShape;
+
+// The thirty-two hexes two facing boats occupy, at .rdata 0x63d368.
+// SetupAndLoadObstacles walks it as a POINTER and ends the walk on the
+// literal address 0x63d3e8 - the next symbol in .rdata, which is why
+// the delinked reference names the combatManager vtable there - so the
+// extent is exactly (0x63d3e8 - 0x63d368) / 4 == 32. Name is a
+// BOOTSTRAP INVENTION.
+DATA(0x0063d368) extern const int gBoatBlockedHexes[];
 #endif
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
