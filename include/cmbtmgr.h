@@ -1967,7 +1967,10 @@ public:
         eSpellEffectFortune = 18,
         // Retail proves the number at army::new_turn (0x446e30), which
         // hands it to SpellEffect over a regenerating stack.
-        eSpellEffectRegeneration = 79
+        eSpellEffectRegeneration = 79,
+        // Proven at army::ComputeAttackerDamageBonuses (0x443840):
+        // the Dread Knight's death-blow flash over the defender.
+        eSpellEffectDeathBlow = 73
     };
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->

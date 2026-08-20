@@ -3191,11 +3191,98 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
 // 0x443320 (0x514 B) is a RETAIL-ONLY worker split out of this body -
 // the offense/archery/spell-bonus arithmetic, same five arguments - and
 // it is called from here and from the retail-only 0x443e30.
+#endif  // @carcass
+
+// The Artillery double-damage chance per mastery, at .rdata 0x63b810 -
+// {0, 50, 75, 100} read from the hash-verified image. Name is a
+// source-facing invention like kArtilleryFactors below; no roster row
+// reaches the table.
+DATA(0x0063b810)
+static const int kArtilleryDoubleChances[4] = { 0, 50, 75, 100 };
+
+// Residual (98.9804%): register naming only - the mastery load lands
+// in EDX against retail's EAX and the ballista's += pair rotates with
+// it, plus the string-ctor allocator byte store scheduling one slot
+// apart; the EH-prologue push immediate is the documented reloc-addend
+// cosmetic. THE STRUCTURAL FINDING THIS BODY BANKED: the switch's TEST
+// chain is value-sorted regardless of source, but the EH STATE NUMBERS
+// follow SOURCE case order - retail's ballista-arm strings carry
+// states 0/1 and the death-blow arm 2/3/4, which pins the ballista
+// case FIRST in source (28.54 -> 98.98 from the swap alone).
+//
+// The wrapper retail kept when it split the arithmetic out into
+// compute_attacker_bonus: run the numbers, then roll the two
+// double-damage specials that ANNOUNCE themselves - the Ballista under
+// the controller's Artillery mastery (kArtilleryDoubleChances) and the
+// Dread Knight's flat 20% death blow, each doubling base_damage with a
+// GetText(366|367) message, the death blow adding Deathblo.wav and the
+// id-73 effect over the defender. The /GX frame covers the message
+// strings, operator= from format_string's temporary exactly as
+// new_turn's; GetName is a CALL in the ballista arm and INLINED in
+// both death-blow arms with its count test folded by the dominating
+// numTroops compare - the same budget drain LoadResources records.
 VA(0x00443840, 0x344)  // anchor-global + dc-callgraph, dc 0x4868c
-int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance) const
+int army::ComputeAttackerDamageBonuses(int base_damage,
+                                       unsigned char is_shooting,
+                                       army* defender,
+                                       unsigned char simulate_only,
+                                       long distance) const
 {
-    // @stub
+    int result = compute_attacker_bonus(base_damage, is_shooting, defender,
+                                        simulate_only == 0, distance);
+    switch (creatureType) {
+    case ARMY_CREATURE_BALLISTA: {
+        long mastery =
+            gpCombatManager->heroes[get_controlling_side()]
+                ->skillLevel[eSecSkillBattlefieldBallistics];
+        if (!simulate_only
+            && Random(1, 100) <= kArtilleryDoubleChances[mastery]) {
+            result += base_damage;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                std::string text;
+                const char* creature_name;
+#pragma inline_depth(0)
+                creature_name = GetName(creatureType, numTroops);
+#pragma inline_depth()
+                text = format_string(gpGeneralText->GetText(366),
+                                     creature_name);
+                gpCombatManager->combatWindow->combat_message(
+                    text.c_str(), 1, 0);
+            }
+        }
+        break;
+    }
+
+    case CREATURE_DREAD_KNIGHT:
+        if (!simulate_only && Random(1, 100) <= 20) {
+            result += base_damage;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                std::string text;
+                if (numTroops == 1)
+                    text = format_string(gpGeneralText->GetText(366),
+                                         GetName(creatureType, numTroops));
+                else
+                    text = format_string(gpGeneralText->GetText(367),
+                                         GetName(creatureType, numTroops));
+                gpCombatManager->combatWindow->combat_message(
+                    text.c_str(), 1, 0);
+                SAMPLE2 sample = LoadPlaySample(
+                    DATA_COMPGEN(0x00660a50, deathBlowSampleName,
+                                 "Deathblo.wav"));
+                gpCombatManager->SpellEffect(
+                    combatManager::eSpellEffectDeathBlow, defender, 100,
+                    0);
+                WaitEndSample(sample, -1);
+            }
+        }
+        break;
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3230
 DC_ONLY(0x48c10, 0x50)
