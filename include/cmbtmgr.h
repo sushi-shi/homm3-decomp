@@ -1368,6 +1368,15 @@ public:
     // stack arguments. Declared so that constructor can spell the
     // call; not claimed, and the body belongs to the ai.obj lane.
     void simulate_combat(long side, unsigned char simulated);  // 0x422a40
+    // 0x5a93a0, the row IMMEDIATELY AFTER get_elemental_type (0x5a9360)
+    // in spells.obj - which is exactly where DC's own spells.cpp
+    // roster puts combatManager::AbleToSummonElemental (spells.cpp:5912,
+    // dc 0x1580c4, three parameters counting `this`) against
+    // get_elemental_type (spells.cpp:5890, dc 0x158090). ai_tactical's
+    // consider_spell (0x43bb20) gates its whole summon arm on it, with
+    // the spell and this caster's side on the stack. Declared for that
+    // call site; not claimed.
+    unsigned char AbleToSummonElemental(SpellID spell, long side);
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     unsigned char should_stay_in_castle(
