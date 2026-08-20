@@ -1056,9 +1056,10 @@ DATA(0x0067dce8) extern const THeroTraits (&akHeroTraits)[156];
 // CODEVIEW(E:\gamedcs\hero.cpp:2726, dc 0xcdf30) void handle_artifact_click(long code, unsigned char right_mouse);
 // CODEVIEW(E:\gamedcs\hero.cpp:3181, dc 0xcea3c) void handle_backpack_click(long code, unsigned char right_mouse);
 // CODEVIEW(E:\gamedcs\hero.cpp:4273, dc 0xd2e80) int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView);
-#ifdef HOMM3_TOWNMGR_HEROVIEW_DECLS
+#if defined(HOMM3_TOWNMGR_HEROVIEW_DECLS) || defined(HOMM3_ADVMGR_OBJ_DECLS)
 // Retail 0x4e1800. The full hero screen; declared for the town page's
-// view-hero command, which is the only consumer this tree has so far.
+// view-hero command and for advmgr's own ADV_COMMAND_VIEW_HERO arm,
+// which reaches it with /Gr's ecx/edx pair plus two pushed zeroes.
 // Held on its own gate for the standing include-set reason - hero.h
 // rides in a great many closures.
 int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded,
