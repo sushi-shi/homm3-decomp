@@ -1637,24 +1637,24 @@ std::bitset<70> mark_spells(int artifactId)
 // a D8 arm-order item the catalog has no lever for on a pointer-guarded
 // loop.
 //
-// CORRECTION 2026-08-20 - do NOT act on the paragraph above as if the
-// residual were scheduling-only. Retail's FRAME IS 20 BYTES LARGER THAN
-// OURS (`sub esp,0x5c` against our `sub esp,0x48`), so this body is
-// missing source elements, and the branch-kind transposition is a
-// downstream symptom. Two independent witnesses of the same gap, both
-// in the first grant arm:
-//  - retail loads `slot->extra` EAGERLY, before the ARTIFACT_NONE test
-//    (`mov edx,[eax] / mov eax,[eax+4] / cmp edx,-1`), where our CL sinks
-//    the load into the scroll arm because that is the only path using it.
-//    Something else in retail's source reads `extra` on another path.
-//  - retail's scroll store is `mov [ebx+eax+0x430], dl`, reusing the
-//    register still holding the artifact id (provably 1 there), where we
-//    materialize the immediate.
-// The locals we do not have are 16 bytes between the scalar band and the
-// first bitset temp plus one more dword at [ebp-0x4] (which retail uses
-// to memory-home the `dst` pointer). Find those 20 bytes before touching
-// loop spelling again; `predict-inline` says the call multisets AGREE, so
-// this is not the /Ob2 budget.
+// 78.04 -> 80.93 (2026-08-20), two of the three witnesses above CLOSED:
+//  - the eager two-dword load IS a struct copy: `type_artifact current =
+//    *slot;` reproduces retail's `mov edx,[eax] / mov eax,[eax+4] /
+//    cmp edx,-1` exactly, and it also lands the scroll store - dl still
+//    holds the id (ARTIFACT_SPELL_SCROLL == 1), so `[ebx+eax+0x430],dl`
+//    now byte-matches without materializing the immediate. (+1.43)
+//  - the paired jne<->jb transpositions in BOTH copy loops were the ||
+//    OPERAND ORDER: retail evaluates `granted.test(spell) || *dst`, the
+//    bounds check ahead of the short-circuit. flow-distance 2 -> 0.
+//    (+1.46)
+// STILL OPEN - the 20-byte frame gap (retail sub esp,0x5c vs our 0x48):
+// every deep local sits 0x14 higher on retail's side (its first bitset
+// temp at -0x50, ours at -0x3c) plus the dst memory-home at [ebp-0x4].
+// MEASURED NEGATIVE: a by-value `std::bitset<144> components` copy is
+// exactly 20 bytes but adds copy code retail lacks, 80.93 -> 76.59.
+// Best remaining hypothesis: retail's two bitset<70> `granted` temps do
+// NOT share a slot (12+12 > our one coalesced 12), the class of slot
+// packing why-reg cannot reach. Call multisets AGREE - not /Ob2.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
@@ -1663,8 +1663,9 @@ void hero::update_spell_list()
     int remaining = 19;
     const type_artifact* slot = equipped;
     do {
-        int artifactId = slot->artifactId;
-        long extra = slot->extra;
+        type_artifact current = *slot;
+        int artifactId = current.artifactId;
+        long extra = current.extra;
         if (artifactId != ARTIFACT_NONE) {
             if (artifactId == ARTIFACT_SPELL_SCROLL) {
                 available_spells[extra] = 1;
@@ -1674,7 +1675,7 @@ void hero::update_spell_list()
                     unsigned char* dst = available_spells;
                     unsigned int spell = 0;
                     while (dst != available_spells + NUM_SPELLS) {
-                        *dst = *dst || granted.test(spell);
+                        *dst = granted.test(spell) || *dst;
                         ++dst;
                         ++spell;
                     }
@@ -1690,7 +1691,7 @@ void hero::update_spell_list()
                             unsigned char* dst = available_spells;
                             unsigned int spell = 0;
                             while (dst != available_spells + NUM_SPELLS) {
-                                *dst = *dst || granted.test(spell);
+                                *dst = granted.test(spell) || *dst;
                                 ++dst;
                                 ++spell;
                             }
