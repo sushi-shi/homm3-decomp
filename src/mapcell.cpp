@@ -125,8 +125,19 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
 
     if (infile->Read(ResQty, sizeof(ResQty)) < sizeof(ResQty))
         return -1;
+    // THE PIN GOES HERE, NOT ON THE TAIL `return 0` (72.9210 -> 99.4737,
+    // 2026-08-20).  The note at the bottom of this body had the census right
+    // - retail CALLS `basic_string::_Tidy` at three cleanup sites and we
+    // called it at two - and pinned the wrong one.  Read the sites in order:
+    // retail calls `_Tidy` after the ResQty read and again after the
+    // PlayerFlags read, and only at the THIRD (ApplyToComputer) does it
+    // expand the refcount-decrement chain in place.  Ours matched sites one
+    // and three and expanded site TWO, so exactly one `return -1` was over-
+    // inlined.  `#pragma inline_depth(0)` on that statement alone, +26.55.
     if (infile->Read(&PlayerFlags, sizeof(PlayerFlags)) < sizeof(PlayerFlags))
+#pragma inline_depth(0)
         return -1;
+#pragma inline_depth()
 
     if (saveVersion >= 28) {
         unsigned char value;
@@ -148,10 +159,17 @@ int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
     unsigned char padding[16];
     if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
         return -1;
-    // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`.
-    // predict-inline says retail calls basic_string::_Tidy at THREE cleanup
-    // sites and we call it at two, so the game::Load return-pin looks like
-    // the right lever - it is not here, 72.9210 -> 67.0263.
+    // MEASURED AND REJECTED: `#pragma inline_depth(0)` on this `return`,
+    // 72.9210 -> 67.0263.  It was the right lever at the wrong site - see
+    // the PlayerFlags guard above, where the same pragma is worth +26.55.
+    //
+    // Residual (99.4737%): ONE relocation.  At the pinned site retail calls
+    // `_Tidy(true)` where we call `~basic_string()` - retail expands the
+    // destructor and leaves its child out of line, and `inline_depth(N)` has
+    // no N that spells "inline the parent, call the child".  Measured here
+    // too: `inline_depth(1)` at that site is byte-flat with NO pin at all
+    // (72.9210 to the digit), which is a clean confirmation of the standing
+    // "only N=0 bites" bound on a body where N=0 moves 26 points.
     return 0;
 }
 
@@ -3159,6 +3177,28 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // spending anything on the throw paths below - a frame delta shifts every
 // deep local and reads as a score hole on its own.
 //
+// THE 32 BYTES ARE NOW READ OFF THE SLOT MAPS, AND THEY ARE THE THROW PATH
+// ITSELF (2026-08-20), so the two paragraphs are one problem and not two.
+// Retail's Armageddon's-Blade spell arm builds exactly TWO objects - the
+// "invalid bitset<N> position" string at [ebp-0x40] and the out_of_range at
+// [ebp-0x5c] - and calls out to construct the second from the first.  Ours
+// builds FOUR: the string at [ebp-0x4c], an intermediate at [ebp-0x70], the
+// thrown object at [ebp-0x7c], and a fourth constructed out of the recycled
+// [ebp+0xc] parameter home.  That is the `logic_error(const string&)` base
+// construction expanded in place, and its objects are what push `padding`
+// from retail's [ebp-0x6c] down to our [ebp-0x8c].  Two doses measured
+// against it and BOTH lose, so record them before re-trying:
+//   * `hero_data->spells.set(spell, 1)` instead of `spells[spell] = 1`
+//     costs 1.26 (88.5042 -> 87.2472).  Note the direction: `[i] = 1` runs
+//     operator[] -> reference::operator= -> set -> _Xran, one level DEEPER
+//     than `set(i,v)`, and deeper is what keeps the throw out of line here.
+//   * lifting the whole artifacts block into a single-call-site static -
+//     the caller-shrink that paid +12.20 on armygrp's get_morale_description
+//     the same round - costs 1.96 (-> 86.5417).  This body is not starved of
+//     budget the way that one was.
+// Retail's own slot map also puts `noSpells` shallow (its three dwords at
+// [ebp-0x24]/[ebp-0x20]/[ebp-0x1c]) where ours sits deep at [ebp-0x60].
+//
 // Under that: the two inlined bitset<70>::_Xran throw paths, and
 // specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
 // retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
@@ -4857,6 +4897,13 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 int objectY = newObject->y;
                 signed char* heights = heightMap[newObject->x - x];
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
+                    // The ACCESSOR SPELLING LOSES HERE, and by a lot:
+                    // `gpGame->worldMap.cell(x, y, newObject->z)` costs
+                    // 84.2237 -> 77.6442 (2026-08-20).  It is the right
+                    // spelling in findpath (+10.58 on GetTerrainCost, +5.62
+                    // on TestPossibleDirections) because those bodies
+                    // OVER-inline and the accessor shrinks caller_cb; this
+                    // one UNDER-inlines and wants the mass.
                     NewfullMap& worldMap = gpGame->worldMap;
                     NewmapCell* cell = &worldMap.cellData[
                         (newObject->z * worldMap.Size + y) * worldMap.Size

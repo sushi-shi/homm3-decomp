@@ -1595,9 +1595,25 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // reach it (measured 2026-08-20): respelling the `!progress && a < 7` scan as
 // an explicit `dedup_scan:` label with `++a; goto dedup_scan;` at the foot -
 // the un-rotated top-tested form retail emits - is BYTE-FLAT at 79.5363. VC6
-// rotates it back. The frame slot is the live lead, not the loop form. Artificial volatile qualifiers,
+// rotates it back. Artificial volatile qualifiers,
 // alternate outer-loop indices and goto rewrites worsened the comparison and
 // were reverted.
+// WHAT DOES REACH IT IS LIFTING THE TEST OUT OF THE CONDITION (79.5363 ->
+// 80.0168, 2026-08-20).  `for (a = 1; a < 7; ++a) { if (progress) break; ... }`
+// gives retail's eighteenth conditional branch where `!progress && a < 7`
+// gives seventeen: VC6 rotates a compound loop CONDITION and cannot rotate
+// away a `break` statement that is the loop's first statement.  The goto
+// rewrite failed because it moved the same test, not because the shape was
+// unreachable.
+// THE FRAME SLOT IS STILL OPEN, and the diff now names it exactly.  Retail
+// spills BOTH walkers to negative slots (`lea ebx,[ebp-X] / lea edi,[ebp-Y]`,
+// both stored) and puts `processed` in the recycled `ag` parameter home;
+// this compile coalesces the walkers - it reads the type walker as
+// `[edi - K]` off the troop walker - and spends the parameter home on the
+// surviving walker instead.  Swapping the two walker declarations was
+// measured against that and is 0.06 WORSE (79.9609), so declaration order is
+// not the knob; what is needed is a spelling VC6 cannot fold into one
+// induction variable.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
@@ -1634,8 +1650,9 @@ unsigned char armyGroup::Merge(armyGroup* ag)
                         ag1.armies[i] = type;
                     } else {
                         unsigned char progress = 0;
-                        for (int a = 1; !progress
-                                        && a < ARMY_GROUP_SLOT_COUNT; ++a) {
+                        for (int a = 1; a < ARMY_GROUP_SLOT_COUNT; ++a) {
+                            if (progress)
+                                break;
                             int b;
                             for (b = a;
                                  b < ARMY_GROUP_SLOT_COUNT
@@ -1837,6 +1854,84 @@ source_stack_merges:
 // forwards to `test`), which is the shape that bought +21.30 and +10.47
 // elsewhere, and here it COSTS 2.96 (79.1754 -> 76.2182). Do not re-run
 // it; the over-inline that is left is a budget fact, not a depth one.
+//
+// AND BECAUSE IT IS A BUDGET FACT, THE CALLER-SHRINK REACHES IT
+// (79.1754 -> 91.3771, 2026-08-20).  Every earlier attempt on this row moved
+// the /Ob2 DIVISOR - candidate sites added or removed - and the note above
+// correctly recorded that the divisor is not monotone here.  The other half
+// of `budget = clamp(2 * caller_cb, 1000, 35000)` is the NUMERATOR, and it
+// had never been tried: lifting the two magic-terrain blocks into
+// `apply_morale_magic_terrain` below drops the caller's own pre-inline mass,
+// the budget with it, and the Dinkumware expansions this row over-inlines
+// (`basic_string::assign` at both early returns, the `bitset<9>::_Xran`
+// throw path) go back out of line.  +12.20 with the statements unchanged -
+// the helper has ONE call site, so /Ob2 puts it straight back.
+// THE DOSE IS A PEAK AND ITS NEIGHBOURS ARE ALL WORSE, measured on top of
+// this one: the whole `GetAlignments` + grouping block 91.3771 -> 75.7762,
+// the grouping loop alone (the thinner slice of the same block)
+// -> 82.1934, and the angel/archangel member pick -> 89.2445.  This body
+// wants exactly one lift and it is the magic-terrain pair.
+//
+// CALLER-SHRINK DOSE for get_morale_description (below): the row's residual
+// is measured as OUR /Ob2 budget being too large, so the lever is the
+// caller's own pre-inline mass.  Lifted verbatim - one call site, so /Ob2
+// puts it straight back and the emitted statements are unchanged.
+static void apply_morale_magic_terrain(int magicTerrain, TCreatureType creature,
+                                       int townType, int& currentMorale,
+                                       std::string& result)
+{
+    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
+        switch (townType) {
+        case TOWN_CASTLE:
+        case TOWN_RAMPART:
+        case TOWN_TOWER:
+            goto holy_ground_good;
+        case TOWN_INFERNO:
+        case TOWN_NECROPOLIS:
+        case TOWN_DUNGEON:
+            goto holy_ground_evil;
+        case TOWN_STRONGHOLD:
+        case TOWN_FORTRESS:
+        case TOWN_CONFLUX:
+            return;
+        }
+    holy_ground_good:
+        ++currentMorale;
+        result.append(gHolyGroundGoodMoraleText);
+        return;
+    holy_ground_evil:
+        --currentMorale;
+        result.append(gHolyGroundEvilMoraleText);
+        return;
+    }
+
+    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
+        switch (townType) {
+        case TOWN_CASTLE:
+        case TOWN_RAMPART:
+        case TOWN_TOWER:
+            goto evil_fog_good;
+        case TOWN_INFERNO:
+        case TOWN_NECROPOLIS:
+        case TOWN_DUNGEON:
+            goto evil_fog_evil;
+        case TOWN_STRONGHOLD:
+        case TOWN_FORTRESS:
+        case TOWN_CONFLUX:
+            return;
+        }
+    evil_fog_good:
+        --currentMorale;
+        result.append(gEvilFogGoodMoraleText);
+        return;
+    evil_fog_evil:
+        ++currentMorale;
+        result.append(gEvilFogEvilMoraleText);
+    }
+}
+
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1860,58 +1955,9 @@ std::string armyGroup::get_morale_description(
     if (ownerHero)
         result = ownerHero->get_morale_description();
 
-    if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
-        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
-        switch (creatureTraits.townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto holy_ground_good;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto holy_ground_evil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto after_magic_terrain;
-        }
-    holy_ground_good:
-        ++currentMorale;
-        result.append(gHolyGroundGoodMoraleText);
-        goto after_magic_terrain;
-    holy_ground_evil:
-        --currentMorale;
-        result.append(gHolyGroundEvilMoraleText);
-        goto after_magic_terrain;
-    }
+    apply_morale_magic_terrain(magicTerrain, creature, creatureTraits.townType,
+                               currentMorale, result);
 
-    if (magicTerrain == MAGIC_TERRAIN_EVIL_FOG
-        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
-        switch (creatureTraits.townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-            goto evil_fog_good;
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto evil_fog_evil;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto after_magic_terrain;
-        }
-    evil_fog_good:
-        --currentMorale;
-        result.append(gEvilFogGoodMoraleText);
-        goto after_magic_terrain;
-    evil_fog_evil:
-        ++currentMorale;
-        result.append(gEvilFogEvilMoraleText);
-    }
-
-after_magic_terrain:
     unsigned char alignments[10];
     int numAlignments =
         const_cast<armyGroup*>(this)->GetAlignments(alignments);
@@ -2086,6 +2132,42 @@ after_magic_terrain:
 // statement retail wrote and because it narrows the outstanding deficit
 // to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
 // gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
+//
+// THE CALLER-SHRINK MOVES IT WITHOUT A PROBE (82.5689 -> 84.5060,
+// 2026-08-20).  The +4-site instrument above measures the /Ob2 DIVISOR;
+// `budget = clamp(2 * caller_cb, 1000, 35000)` has a numerator as well, and
+// lifting the clover arm into `apply_luck_magic_terrain` below pushes it the
+// same direction with real code instead of padding.  Same lever, same round,
+// +12.20 on get_morale_description.  Two further doses measured on top of
+// this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
+// devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
+// body, like its twin, wants exactly one lift and it is the magic-terrain
+// arm.  The +4-site probe above is NOT re-measured against this baseline.
+static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
+                                     int& currentLuck, std::string& result)
+{
+    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
+        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
+        switch (akCreatureTypeTraits[creature].townType) {
+        case TOWN_CASTLE:
+        case TOWN_RAMPART:
+        case TOWN_TOWER:
+        case TOWN_INFERNO:
+        case TOWN_NECROPOLIS:
+        case TOWN_DUNGEON:
+            return;
+        case TOWN_STRONGHOLD:
+        case TOWN_FORTRESS:
+        case TOWN_CONFLUX:
+            break;
+        default:
+            return;
+        }
+        currentLuck -= 2;
+        result.append(gCloverFieldLuckText);
+    }
+}
+
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -2110,28 +2192,7 @@ std::string armyGroup::get_luck_description(
     if (ourHero)
         result = ourHero->get_luck_description();
 
-    if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
-        && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
-        switch (akCreatureTypeTraits[creature].townType) {
-        case TOWN_CASTLE:
-        case TOWN_RAMPART:
-        case TOWN_TOWER:
-        case TOWN_INFERNO:
-        case TOWN_NECROPOLIS:
-        case TOWN_DUNGEON:
-            goto no_clover_bonus;
-        case TOWN_STRONGHOLD:
-        case TOWN_FORTRESS:
-        case TOWN_CONFLUX:
-            goto apply_clover_bonus;
-        default:
-            goto no_clover_bonus;
-        }
-    apply_clover_bonus:
-        currentLuck -= 2;
-        result.append(gCloverFieldLuckText);
-    no_clover_bonus:;
-    }
+    apply_luck_magic_terrain(magicTerrain, creature, currentLuck, result);
 
     if (enemyGroup) {
         TCreatureType devilType = CREATURE_NONE;
