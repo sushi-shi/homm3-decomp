@@ -3162,8 +3162,6 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
     return damage;
 }
 
-#if 0  // @carcass
-
 // RETAIL-ONLY, no roster row anywhere: the numeric half of
 // ComputeAttackerDamageBonuses (0x443840, immediately below), carrying the
 // SAME five arguments - offense/archery factors, the hero spell bonus and
@@ -3172,14 +3170,147 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
 // split it out because get_estimated_damage (0x443e30) needs the number
 // without the combat message and sound the wrapper adds. NAME IS A
 // BOOTSTRAP INVENTION, same class as get_estimated_damage below.
+// Residual (92.2095%): the string-teardown inline budget. Retail
+// keeps the SINGULAR hate-message temporary's destructor as a _Tidy
+// call and inlines the plural arm's and text's (the sites-remaining
+// divisor GROWS as the walk empties, so a later site can be accepted
+// where an earlier one was refused); ours inlines all three and runs
+// ~63 bytes long, pushing our jump tables past the carve span. A
+// discarded-c_str free-site probe before combat_message is inert.
+// Everything outside the announce block pairs, including both jump
+// tables, the shared sete tail of the Titan/Black Dragon cases and
+// the duplicated float-cast arms of the offense/archery tail.
 VA(0x00443320, 0x514)  // anchor-callee (0x443840 and 0x443e30 are its only
                        // callers) + arity ret 0x14, retail-only slot
 int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
-                                 army* defender, unsigned char simulate_only,
+                                 army* defender, unsigned char announce,
                                  long distance) const
 {
-    // @stub
+    int bonus = 0;
+    if ((creatureType == CREATURE_CAVALIER
+         || creatureType == CREATURE_CHAMPION)
+        && defender->creatureType != 0 && defender->creatureType != 1) {
+        bonus = static_cast<long>(static_cast<double>(base_damage)
+                                  * distance * 0.05);
+    }
+    if (iLuckStatus > 0)
+        bonus += base_damage;
+
+    long attack = get_adjusted_attack(defender, is_shooting);
+    long defense = defender->get_adjusted_defense(this, 1);
+    if (attack >= defense) {
+        double factor = (attack - defense) * 0.05;
+        if (factor > 3.0)
+            factor = 3.0;
+        bonus = static_cast<long>(base_damage * factor + bonus);
+    }
+
+    if (defender != 0) {
+        switch (creatureType) {
+        case CREATURE_EARTH_ELEMENTAL:
+        case CREATURE_MAGMA_ELEMENTAL:
+            if (defender->creatureType == CREATURE_AIR_ELEMENTAL
+                || defender->creatureType == CREATURE_STORM_ELEMENTAL)
+                bonus += base_damage;
+            break;
+        case CREATURE_AIR_ELEMENTAL:
+        case CREATURE_STORM_ELEMENTAL:
+            if (defender->creatureType == CREATURE_EARTH_ELEMENTAL
+                || defender->creatureType == CREATURE_MAGMA_ELEMENTAL)
+                bonus += base_damage;
+            break;
+        case CREATURE_WATER_ELEMENTAL:
+        case CREATURE_ICE_ELEMENTAL:
+            if (defender->creatureType == CREATURE_FIRE_ELEMENTAL
+                || defender->creatureType == CREATURE_ENERGY_ELEMENTAL)
+                bonus += base_damage;
+            break;
+        case CREATURE_FIRE_ELEMENTAL:
+        case CREATURE_ENERGY_ELEMENTAL:
+            if (defender->creatureType == CREATURE_WATER_ELEMENTAL
+                || defender->creatureType == CREATURE_ICE_ELEMENTAL)
+                bonus += base_damage;
+            break;
+        }
+
+        unsigned char hates = 0;
+        switch (creatureType) {
+        case CREATURE_ANGEL:
+        case CREATURE_ARCHANGEL:
+            hates = defender->creatureType == CREATURE_DEVIL
+                    || defender->creatureType == CREATURE_ARCH_DEVIL;
+            break;
+        case CREATURE_DEVIL:
+        case CREATURE_ARCH_DEVIL:
+            hates = defender->creatureType == CREATURE_ANGEL
+                    || defender->creatureType == CREATURE_ARCHANGEL;
+            break;
+        case CREATURE_EFREETI:
+        case CREATURE_EFREET_SULTAN:
+            hates = defender->creatureType == CREATURE_GENIE
+                    || defender->creatureType == CREATURE_MASTER_GENIE;
+            break;
+        case CREATURE_GENIE:
+        case CREATURE_MASTER_GENIE:
+            hates = defender->creatureType == CREATURE_EFREETI
+                    || defender->creatureType == CREATURE_EFREET_SULTAN;
+            break;
+        case CREATURE_BLACK_DRAGON:
+            hates = defender->creatureType == CREATURE_TITAN;
+            break;
+        case CREATURE_TITAN:
+            hates = defender->creatureType == ARMY_CREATURE_BLACK_DRAGON;
+            break;
+        }
+        if (hates) {
+            bonus += base_damage / 2;
+            if (announce) {
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    std::string text;
+                    if (numTroops == 1)
+                        text = format_string(
+                            gpGeneralText->GetText(369),
+                            GetName(creatureType, numTroops),
+                            GetName(defender->creatureType,
+                                    defender->numTroops));
+                    else
+                        text = format_string(
+                            gpGeneralText->GetText(370),
+                            GetName(creatureType, numTroops),
+                            GetName(defender->creatureType,
+                                    defender->numTroops));
+                    gpCombatManager->combatWindow->combat_message(
+                        text.c_str(), 1, 0);
+                }
+            }
+        }
+    }
+
+    hero* controller =
+        gpCombatManager->heroes[get_controlling_side()];
+    if (controller != 0) {
+        long total;
+        if (is_shooting)
+            total = static_cast<long>(
+                controller->GetArcheryFactor()
+                    * static_cast<float>(base_damage)
+                + static_cast<float>(bonus));
+        else
+            total = static_cast<long>(
+                controller->GetOffenseFactor()
+                    * static_cast<float>(base_damage)
+                + static_cast<float>(bonus));
+        if (spellInfluence[SPELL_BLESS])
+            total += controller->GetHeroSpellBonus(SPELL_BLESS,
+                                                   monInfoLevel,
+                                                   base_damage);
+        return total;
+    }
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3076
 // CONFIRMED against 0x443320, which has the SAME arity (ret 0x14) and a
