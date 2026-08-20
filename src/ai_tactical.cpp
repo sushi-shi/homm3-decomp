@@ -5,38 +5,27 @@
 // folds into a displacement, and the two griffins it special-cases.
 // Both defines sit ahead of every header because armygrp.h arrives
 // transitively and a view define has to precede its header.
-#define HOMM3_SPELL_COUNTERSTRIKE_DECL
-#define HOMM3_CREATURE_GRIFFIN_DECL
 // get_muck_and_mire_value prices itself off the SLOW row - it reads
 // `[akSpellTraits + 4*mastery + 0x1ce4]` = 54*136 + 0x34 and pushes the
 // literal 0x36 into SpellCastWorkChance - so it needs the enumerator
 // armygrp.h already carries behind this view for cmbtmgr.cpp.
-#define HOMM3_SPELL_SLOW_DECL
 // consider_teleport pushes the literal 0x3f into ValidSpellTargetArmy, and
 // reads combatManager's pending-order code back as a domain member.
-#define HOMM3_SPELL_TELEPORT_DECL
-#define HOMM3_CMBTMGR_AI_ORDER_DECL
 // The creature-spell pricers get_ogre_mage_value / get_caliph_value
 // switch on combatManager+0x53c0's spell-restriction code with a
 // jump table, so the five codes that raise a spell's mastery need
 // enumerators.
-#define HOMM3_CMBTMGR_SPELL_MASTERY_DECL
 // get_enchantment_function's dispatch names nine spell rows this
 // header's roster did not carry; its own byte/dword table pair proves
 // each of them.
-#define HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
 // The enchantment pricers walk army's +0x198 spell-influence row and
 // its +0x2dc mastery twin by spell id, which needs the row form of
 // both. Split out of army.cpp's round view so this TU does not also
 // take that view's other twenty-six declarators.
-#define HOMM3_ARMY_SPELL_ROW_VIEW
 // get_chain_lightning_value drives the chain through two spells.obj
 // leaves this TU is the only located caller of.
-#define HOMM3_CMBTMGR_AI_SIMULATION_DECL
-#define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
-#define HOMM3_CREATURE_JOUST_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>

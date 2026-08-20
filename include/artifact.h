@@ -187,13 +187,8 @@ enum TArtifact {
     // above, 0x82 Cloak of the Undead King and 0x83 Elixir of Life
     // below, and 0x86 Power of the Dragon Father / 0x89 Bow of the
     // Sharpshooter / 0x8b Ring of the Magi further on.
-    // Behind a view: artifact.h reaches every TU that includes hero.h,
-    // and an ungated enumerator counts toward the include-set threshold
-    // in all of them.
-#ifdef HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
     ARTIFACT_ANGELIC_ALLIANCE = 0x81,
     ARTIFACT_ARMOR_OF_THE_DAMNED = 0x84,
-#endif
     // hero::GetNecromancyCreature (0x4e3c60) gates its whole
     // Walking Dead / Wight / Lich ladder on artifact 0x82 - which is
     // precisely what the Cloak of the Undead King does in HoMM3, and

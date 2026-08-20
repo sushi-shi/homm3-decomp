@@ -317,7 +317,6 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left,
 // CODEVIEW(E:\gamedcs\findpath.cpp:131, dc 0x9f034) int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain);
 // CODEVIEW(E:\gamedcs\findpath.cpp:223, dc 0x9f154) int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking);
 // CODEVIEW(E:\gamedcs\findpath.cpp:233, dc 0x9f184) int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left);
-#ifdef HOMM3_ADVMGR_OBJ_DECLS
 // Retail 0x4b18c0, still unclaimed in findpath.cpp. Declared here because
 // advManager::ShowRoute is a caller and needs the declarator. The retail
 // call site is what pins the parameter ORDER against the mangled name: a
@@ -327,7 +326,6 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left,
 // the two stack arguments, pushed move_left first.
 int GetTerrainCost(hero* current_hero, type_point start, int direction,
                    int move_left);
-#endif
 
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\CmbtMgr.h:327, dc 0xa1144) unsigned char combatManager::TObstacle::IsVisible(int side);

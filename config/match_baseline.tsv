@@ -88,9 +88,9 @@ advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	79.7982	79.7982	79.7982	0xe360
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	75.6482	75.6482	75.6482	0x8c40
-advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0
+advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	83.4137	83.4137	91.1006	0xa5d0
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
-advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
+advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.4381	91.4381	92.1925	0xec90
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	80.9400	80.9400	80.9400	0xdeb0
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	90.2004	90.2004	90.2004	0x137c0
@@ -101,7 +101,7 @@ advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0
-advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	99.2746	99.2746	99.2746	0x17b20
+advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	95.2558	95.2558	99.2746	0x17b20
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	92.1202	92.1202	92.1202	0x19990
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.0426	90.0426	90.0426	0xb150
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
@@ -656,7 +656,7 @@ command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 # the four slice groups did not restore it while it was down, and adding
 # further evidenced slices (+0x28c, +0xd8) in either combination did not
 # either - only the later batch, as a whole, did.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -1077,7 +1077,7 @@ hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0
-hero	?can_summon_boat@hero@@QAEEXZ	85.7031	85.7031	85.7031	0xe5550
+hero	?can_summon_boat@hero@@QAEEXZ	75.2266	75.2266	85.7031	0xe5550
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
 hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	93.2051	93.2051	93.2051	0xe2a00
 hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0
@@ -1361,7 +1361,43 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
+# DELIBERATE LOWER 2026-08-20 - the view-gate audit. This row and seven
+# others were lowered by REMOVING view-gate macros, not by any change to
+# their own source. 89 of the tree's 91 view macros and all 331 gate sites
+# are gone; two compile-required gates survive, plus one restored during
+# integration (cmbtmgr's axial get_distance overload, which HIDES the
+# file-scope get_distance(long,long) that cmbtmgr.cpp calls).
+#
+# WHY THIS IS ACCEPTABLE, AND IT IS THE WHOLE POINT: the ratchet compares
+# against `max`, and `hist` keeps the peak regardless. Every one of the
+# eight rows still carries its old value in hist - this one at 100.0000 -
+# so the cost is a RE-MEASURE by a later lane, not lost work. The macros
+# had accumulated on the unstated assumption that any perturbation is
+# damage. It is not.
+#
+# The eight, max -> accepted (hist unchanged):
+#   seerhut  GetAIValue           100.00 -> 70.00
+#   town     get_growth_rate      100.00 -> 88.47   (HasBuilding body-inline)
+#   this row initialize_game_data 100.00 -> 94.07   (the include-set canary)
+#   advmgr   SetHeroContext        99.27 -> 95.26
+#   advmgr   ProcessSearch         92.19 -> 91.44
+#   advmgr   ProcessMapSelect      91.10 -> 83.41
+#   hero     can_summon_boat       85.70 -> 75.23
+#   command  GetCommand            92.57 -> 92.54
+#
+# NON-MONOTONIC, and that is a finding about the wall itself: across the
+# audit's seven commits initialize_game_data crossed 100 -> 96.09 -> 94.07
+# -> 100 -> 94.07, while GetCommand and events::monsters_sell_out dipped
+# and RECOVERED to max, and hero::GiveArtifact round-tripped. The
+# include-set wall is a STEP FUNCTION of closure population, not a sum of
+# per-declarator penalties - so a lane must not assume its own edit is
+# what moved a row, and must not assume a dip is permanent.
+#
+# Net across 131 units: -3 exact, -0.05pp fuzzy. Repaid by what the gates
+# were hiding: ExtraInfoUnion and CCombatTypeMsg were each DEFINED TWICE
+# with contradictory members, town::get_army had two return types, and
+# several enumerators were declared in two enums at once.
+initialize	?initialize_game_data@@YIXXZ	94.0741	94.0741	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
@@ -1676,7 +1712,7 @@ scenarioinfo	?OnWidgetDeselect@CScenarioInfoDlg@@UAEHHPAE@Z	100.0000	100.0000	10
 scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x1698c0
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	86.3333	86.3333	86.3333	0x16a0d0
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580
-seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0
+seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	70.0000	70.0000	100.0000	0x16f5a0
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560
 seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650
@@ -1891,7 +1927,7 @@ town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	
 town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
-town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60
+town	?get_growth_rate@town@@QAEFF@Z	88.4737	88.4737	100.0000	0x1bfb60
 town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230

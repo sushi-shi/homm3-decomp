@@ -367,16 +367,10 @@ enum EFountainLuck {
 };
 
 // The Tree of Knowledge's price selector, enumerator NAMES the
-// Dreamcast's own (evidence/dreamcast/enums.csv, enum WiseTreePrices).
-// DoEventTreeOfKnowledge (0x4a6710) switches over it with the decrement
-// chain and sends anything else straight to the experience award, which
-// is why the count enumerator has no arm of its own.
-enum WiseTreePrices {
-    const_tree_wants_nothing = 0,
-    const_tree_wants_gold = 1,
-    const_tree_wants_gems = 2,
-    const_tree_price_count = 3
-};
+// The tree-price selector enum WiseTreePrices lives in advmgr.h (the
+// one copy). DoEventTreeOfKnowledge (0x4a6710) switches over it with the
+// decrement chain and sends anything else straight to the experience
+// award, which is why the count enumerator has no arm of its own.
 
 // The sea chest's reward selector, enumerator NAMES the Dreamcast's own
 // (evidence/dreamcast/enums.csv, enum SeaChestRewardTypes). The domain is
@@ -388,15 +382,9 @@ enum SeaChestRewardTypes {
     const_sea_chest_artifact = 2
 };
 
-// The scholar's award selector, and the enumerator NAMES are the
-// Dreamcast's own (evidence/dreamcast/enums.csv, enum ScholarAwards);
-// DoEventScholar (0x4a4dc0) tests the three values in the order 2, 1, 0
-// and lets anything else fall through to the pick-up unrewarded.
-enum ScholarAwards {
-    const_scholar_primary_skill = 0,
-    const_scholar_secondary_skill = 1,
-    const_scholar_spell = 2
-};
+// The scholar's award selector enum ScholarAwards lives in mapcell.h
+// (the one copy; DoEventScholar 0x4a4dc0 tests the three values in the
+// order 2, 1, 0 and lets anything else fall through unrewarded).
 
 // DoEventFlotsam's (0x4a2230) size selector, held in the cell's own
 // extra-info dword. The domain is closed by construction: retail

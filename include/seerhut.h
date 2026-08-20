@@ -18,16 +18,12 @@ public:
     type_quest* quest;
     unsigned char visitedPlayers;
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // NOT inline for this view: readObject (0x502e00) CALLS the constructor
     // at 0x572b50 on its quest-guard local instead of expanding the two
     // stores, so the declaration retail's mapcell.cpp saw was this one and
     // the definition lived in seerhut.cpp. The inline body stays for the
     // views whose own call sites do expand it.
     TQuestGuard();
-#else
-    TQuestGuard() : quest(0), visitedPlayers(0) {}
-#endif
 
     // The h3m reader, reached from readObject's QUEST_GUARD arm with the
     // stream as its one argument. DECLARED, not defined: the body is an

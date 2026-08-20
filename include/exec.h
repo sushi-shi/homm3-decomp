@@ -29,9 +29,7 @@ public:
 // events.obj joins the gate for the refugee camp (0x4a4600), whose
 // recruit dialog is run through gpExecutive->DoDialog. The pointer stays
 // invisible to every TU with no consumer.
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
 extern executive* gpExecutive;  // retail .bss 0x699500
-#endif
 
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();

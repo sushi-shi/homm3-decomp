@@ -113,7 +113,6 @@ enum THeroAbilityKind {
     // subject dword at all. Role unattested - ORDINAL PLACEHOLDER
     // spelling (the WIDGET_RETURN_32 precedent).
     eHeroAbilityKind5 = 5
-#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
     ,
     // Two more kinds, both byte-proven by hero::HeroFn_004E6120
     // (0x4e6120), and both needed there as CASE LABELS - which is the
@@ -128,21 +127,20 @@ enum THeroAbilityKind {
     // compiland that names either.
     eHeroAbilityCreatureUniversal = 4,
     eHeroAbilityDragons = 7
-#endif
 };
 
 struct THeroSpecificAbility {
     int type;                   // +0x00 - a THeroAbilityKind
-#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
     // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE
     // for kind 1 and hands it to UpgradedCreatureType, which takes a
     // TCreatureType - so that arm needs a real lvalue of that type, not
-    // a cast into an enum (a cleanliness floor at zero here). GATED
-    // because herospec.h does not include armygrp.h and findpath.cpp
-    // reaches this header before any armygrp.h is guaranteed.
+    // a cast into an enum (a cleanliness floor at zero here). The
+    // creature member is spelled with VC6's elaborated forward enum
+    // because herospec.h does not include armygrp.h and several TUs
+    // (advmgr.cpp, findpath.cpp) reach this header before it.
     union {
-        TSecondarySkill skill;  // +0x04 - valid for kind 0
-        TCreatureType creature; // +0x04 - valid for kind 1
+        TSecondarySkill skill;       // +0x04 - valid for kind 0
+        enum TCreatureType creature; // +0x04 - valid for kind 1
     };
     // +0x08/+0x0c/+0x10, the FLAT creature bonuses kinds 4 and 7 add.
     // Byte-proven by hero::HeroFn_004E6120, which reads them at exactly
@@ -154,10 +152,6 @@ struct THeroSpecificAbility {
     int creatureDefenseBonus;   // +0x0c
     int creatureDamageBonus;    // +0x10
     char pad_14[0x8];
-#else
-    TSecondarySkill skill;      // +0x04 - valid for kind 0
-    char pad_08[0x14];
-#endif
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
     // and THeroScreenWindow::SetupHeroView sprintf's it into widget 0x8b,
@@ -169,7 +163,6 @@ struct THeroSpecificAbility {
     // only "the 17-byte retail getter returns +0x1c" is proof, so the
     // name here is role-derived.
     const char* shortText;      // +0x1c
-#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
     char pad_20[0x4];
     // +0x24, the LONG description the note above predicted. Landed
     // 2026-08-20 by the consumer it names: THeroScreenWindow::
@@ -177,9 +170,6 @@ struct THeroSpecificAbility {
     // into gText before the describe dialog. Sliced only in hero.obj's
     // view so no other compiland's declarator count moves.
     const char* longText;       // +0x24
-#else
-    char pad_20[0x8];
-#endif
 };
 SIZE(THeroSpecificAbility, 40);
 
