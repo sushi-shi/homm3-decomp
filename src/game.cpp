@@ -2908,8 +2908,15 @@ int game::Save(TAbstractFile* outfile)
             sizeof(char_buffer)) {
             return -1;
         }
-        int eventBytes = char_buffer * sizeof(LoadEventRecord);
-        if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
+        // Length recomputed on BOTH sides of the compare, not cached:
+        // retail re-widens the count byte and rebuilds `n * 28` as
+        // `lea edx,[8*ecx] / sub edx,ecx / shl edx,2` for the test,
+        // exactly as save_vector re-reads its short. An `eventBytes`
+        // local CSEs the two and compares SIGNED (`cmp eax,edi / jge`)
+        // where retail compares UNSIGNED (`cmp eax,edx / jae`).
+        if (outfile->Write(field_1f680.begin(),
+                           char_buffer * sizeof(LoadEventRecord)) <
+            char_buffer * sizeof(LoadEventRecord))
             return -1;
     }
 
