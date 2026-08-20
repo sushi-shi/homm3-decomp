@@ -3673,12 +3673,30 @@ unsigned char game::get_random_whirlpool(long excluded, type_point* result)
 // selects a gate-pair index, which selects the destination point. A hero is
 // accepted at the destination only while it is itself the trigger object;
 // an exposed underground gate is accepted directly.
-// Residual (70.6923%): the shared result local raises the prior split-local
-// form slightly and matches retail's frame home. Retail nevertheless retains
-// unfused load/mask/or/store bitfield assignments for the invalid point and
-// reverses the equivalent final gate branch. Direct constructor returns and
-// assignment from a constructor temporary both fold back to the 70.6154%
-// hidden-return-object form, so the shared direct assignments remain best.
+// The invalid point is 255, NOT -1, and that is what the old "unfused
+// load/mask/or/store" note was really seeing. type_point is
+// `short x:10, y:10, z:4`; assigning -1 saturates every bit of each
+// field, so VC6 folds the whole thing to `or word,0x3ff` / `or
+// word,0x3fff` with no masking. Retail instead emits `and ah,-4` +
+// `or eax,0x3cff` - it CLEARS bits 8..9 of the 10-bit fields and sets
+// bits 0..7, i.e. it stores 0x0ff into x and y and 0xf into z. That is
+// an unsigned-char -1 widened into the bitfields, and writing 0xff
+// reproduces the first invalid block byte for byte.
+// The gate test then needs its condition NEGATED with the stores
+// inside it: `!(A || B)` gives retail's branch senses exactly
+// (jne / jne to the shared exit, then je to it) and leaves the invalid
+// block as the fall-through. The invalid block keeps its OWN `return`
+// - retail tail-duplicates the epilogue and has THREE rets, and
+// merging the last two costs 3.35.
+// Residual (81.4103%): register allocation only. Retail carries the
+// point in edi and the map stride in esi and needs two callee-saved
+// registers; our CL keeps the high word live across the index
+// computation, spends a third register (ebx) on a copy it does not
+// need, and register-homes the invalid stores where retail re-reads
+// them from the frame. Known register-homing class - no spelling
+// tried moved it. Measured: -1 stores + shared exit 70.69; 0xff stores
+// 68.86 (the register churn masks the gain); 0xff + negated gate
+// 78.06; + own return in the invalid block 81.41.
 VA(0x004cde40, 0xE0)  // anchor-global, dc 0xbb490
 type_point game::get_underground_gate_exit(const NewmapCell* cell)
 {
@@ -3687,22 +3705,22 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
     memcpy(&exitIndex, &undergroundGatePairs[cell->extraInfo],
            sizeof(exitIndex));
     if (exitIndex < 0) {
-        result.x = -1;
-        result.y = -1;
-        result.z = -1;
+        result.x = 0xff;
+        result.y = 0xff;
+        result.z = 0xff;
         return result;
     }
 
     result = undergroundGateExits[exitIndex];
     NewmapCell* exitCell = &worldMap.cellData[
         (result.z * worldMap.Size + result.y) * worldMap.Size + result.x];
-    if ((exitCell->type == HERO && exitCell->is_trigger)
-        || exitCell->type == UNDERGROUND_GATE)
+    if (!((exitCell->type == HERO && exitCell->is_trigger)
+          || exitCell->type == UNDERGROUND_GATE)) {
+        result.x = 0xff;
+        result.y = 0xff;
+        result.z = 0xff;
         return result;
-
-    result.x = -1;
-    result.y = -1;
-    result.z = -1;
+    }
     return result;
 }
 
