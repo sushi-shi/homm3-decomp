@@ -1425,6 +1425,18 @@ public:
                              unsigned char ranged_attack) const;
     long get_attack_modifier(const army* enemy,
                              unsigned char ranged_attack) const;
+    // 0x442660 (41 B). The 2026-08-08 note on ai_tactical's
+    // type_AI_combat_parameters ctor called this leaf "unidentified";
+    // it is get_defense_modifier, and three things say so together: the
+    // DC roster order army.cpp:2623 get_attack_modifier (dc 0x477b8) <
+    // army.cpp:2670 get_defense_modifier (dc 0x478c8) maps onto retail
+    // 0x442550 < 0x442660 with nothing between; the ctor's call site
+    // passes NO arguments, which only the defense signature fits; and
+    // its result is stored as the defense half of the same
+    // lowest-attack / lowest-defense pair get_attack_modifier feeds.
+    // Claimed nowhere yet - declared here so ai_tactical can call it,
+    // exactly as can_shoot above.
+    long get_defense_modifier() const;                          // 0x442660
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
