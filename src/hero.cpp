@@ -434,16 +434,137 @@ void hero::PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags)
     SendMapChange(&change);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\hero.cpp:577
-VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
-int hero::load(void* infile)
+// The three scalar readers hero::load funnels every field through - the
+// exact mirror of save's writers, and for the same reason. Each returns
+// BY VALUE, so the deserialised scalar is a compiler TEMPORARY rather
+// than a named local, and retail packs all three into the dead incoming
+// `infile` word: the byte at [ebp+0xb], the short at [ebp+0xa] and the
+// dword at [ebp+8], allocated from the top of that arena downwards.
+// Named locals do not get that arena.
+static unsigned char ReadByteField(TAbstractFile* infile)
 {
-    // @stub
+    unsigned char value;
+    infile->Read(&value, sizeof(value));
+    return value;
 }
 
-#endif  // @carcass
+static short ReadWordField(TAbstractFile* infile)
+{
+    short value;
+    infile->Read(&value, sizeof(value));
+    return value;
+}
+
+static int ReadDwordField(TAbstractFile* infile)
+{
+    int value;
+    infile->Read(&value, sizeof(value));
+    return value;
+}
+
+// E:\gamedcs\hero.cpp:577
+// save's twin, field for field and in the same order. Three SAVE-VERSION
+// gates are the only asymmetry, and each is a real format migration:
+//   >= 25  the sex byte, the custom-name flag and the name itself;
+//   <= 30  only EIGHTEEN equipped slots on the wire, after which the
+//          nineteenth - the one Shadow of Death added, and the one
+//          HeroFn_004E2550 refuses in a pre-SoD game - is cleared here
+//          by hand. Independent corroboration of that slot's identity;
+//   >= 32  the per-class artifact counts.
+// Unlike save, load takes `ret 8` for its two arguments; only
+// type_obscuring_object::load's result is checked and every scalar Read
+// is unchecked. EH-bearing: the name assignment owns a string temporary
+// and the bitset's inlined set() carries its range throw.
+VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
+int hero::load(TAbstractFile* infile, int saveVersion)
+{
+    if (!type_obscuring_object::load(infile))
+        return -1;
+
+    if (saveVersion >= 25) {
+        sex = static_cast<signed char>(ReadByteField(infile));
+        hasCustomName = ReadByteField(infile) != 0;
+        customName = ReadLengthPrefixedString(infile);
+    }
+
+    owner = ReadByteField(infile);
+    patrolRadius = ReadByteField(infile);
+    field_11a = ReadByteField(infile);
+    field_11b = ReadByteField(infile);
+    backpackCount = ReadByteField(infile);
+    disguiseLevel = static_cast<signed char>(ReadByteField(infile));
+    flightLevel = static_cast<signed char>(ReadByteField(infile));
+    waterWalkLevel = static_cast<signed char>(ReadByteField(infile));
+    dWalkSpellsCast = ReadByteField(infile);
+    field_129 = static_cast<signed char>(ReadByteField(infile));
+    id = static_cast<signed char>(ReadByteField(infile));
+    heroClass = static_cast<signed char>(ReadByteField(infile));
+    portrait = ReadByteField(infile);
+    patrolX = ReadByteField(infile);
+    patrolY = ReadByteField(infile);
+    facing = ReadByteField(infile);
+    formation = ReadByteField(infile);
+    pad_08f[0] = ReadByteField(infile);
+    pad_08f[1] = ReadByteField(infile);
+
+    pathTargetX = ReadDwordField(infile);
+    pathTargetY = ReadDwordField(infile);
+    pathTargetZ = ReadWordField(infile);
+    field_03f = ReadWordField(infile);
+    maxMovePoints = ReadDwordField(infile);
+    movePoints = ReadDwordField(infile);
+    experience = ReadDwordField(infile);
+    skillCount = ReadDwordField(infile);
+    mana = ReadWordField(infile);
+    level = ReadWordField(infile);
+    field_041 = ReadWordField(infile);
+
+    TrainingGroundsFlags = ReadDwordField(infile);
+    DefenseTowerFlags = ReadDwordField(infile);
+    GardenOfRevelationFlags = ReadDwordField(infile);
+    MercCampFlags = ReadDwordField(infile);
+    PowerSchoolFlags = ReadDwordField(infile);
+    TreeOfKnowledgeFlags = ReadDwordField(infile);
+    LibraryFlags = ReadDwordField(infile);
+    ArenaFlags = ReadDwordField(infile);
+    MagicSchoolFlags = ReadDwordField(infile);
+    WarSchoolFlags = ReadDwordField(infile);
+    UniversityFlags = ReadDwordField(infile);
+    Shrine1Flags = ReadDwordField(infile);
+    Shrine2Flags = ReadDwordField(infile);
+    Shrine3Flags = ReadDwordField(infile);
+    flags = ReadDwordField(infile);
+
+    army.load(infile);
+
+    infile->Read(name, sizeof(name));
+    infile->Read(skillLevel, sizeof(skillLevel));
+    infile->Read(skillOrder, sizeof(skillOrder));
+    infile->Read(stats, sizeof(stats));
+    infile->Read(in_spellbook, sizeof(in_spellbook));
+    infile->Read(available_spells, sizeof(available_spells));
+
+    if (saveVersion <= 30) {
+        infile->Read(equipped, 18 * sizeof(type_artifact));
+        equipped[EQUIPPED_SLOT_SOD_MISC].artifactId = -1;
+        equipped[EQUIPPED_SLOT_SOD_MISC].extra = -1;
+    } else {
+        infile->Read(equipped, sizeof(equipped));
+    }
+    infile->Read(backpack, sizeof(backpack));
+    if (saveVersion >= 32)
+        infile->Read(artifactSlotCounts, sizeof(artifactSlotCounts));
+
+    field_11c = ReadByteField(infile) != 0;
+
+    std::bitset<48> granted;
+    unsigned char granted_mask[6];
+    infile->Read(granted_mask, sizeof(granted_mask));
+    for (unsigned int i = 0; i < 48; i++)
+        granted.set(i, (granted_mask[i >> 3] & (1 << (i & 7))) != 0);
+    TownSpecialGrantedMask = granted;
+    return 0;
+}
 
 // E:\gamedcs\hero.cpp:914
 // The record serialiser. Three scratch locals carry every scalar into
