@@ -454,11 +454,32 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // retail keeps the whole callee out of line.
 //
 // Residual (74.38%): 16 out-of-line calls against retail's 22 and 93
-// conditional branches against 78, so we are still expanding roughly six
-// callees retail calls - all of them NESTED inside the first insert's
-// own expansion (_Ucopy / _Ufill / copy_backward). `inline_depth(1..4)`
-// is inert mid-function in VC6, so "expand the insert, call its helpers"
-// is not spellable; nothing in the body reaches it.
+// conditional branches against 78, so we are still expanding six callees
+// retail calls. LOCALISED 2026-08-20 by aligning the two call sequences
+// site by site, and it is NOT the queue insert - it is `visited_points`:
+//
+//   queue.insert's expansion agrees in COUNT and position, ten calls each
+//   within eleven bytes end to end (new +0x570/+0x581, _Construct
+//   +0x58e/+0x59f, _Destroy +0x5e7/+0x5e5, operator delete +0x5f0/+0x5ee,
+//   size +0x60c/+0x60a, _Ucopy +0x64e/+0x64c, _Ufill +0x679/+0x677,
+//   _Ucopy +0x6aa/+0x6a4). Two of the ten differ in IDENTITY only: at
+//   +0x5ae and +0x5c8 we call _Construct where retail calls _Ufill
+//   (0x434c30) and _Ucopy (0x434bf0), i.e. we expanded those two helpers
+//   and retail did not.
+//
+//   visited_points.insert's expansion is where the six go missing. Retail
+//   emits TEN calls there - new +0x763, _Construct<pathCell*> +0x77d and
+//   +0x79a, _Ucopy +0x7aa, _Destroy +0x7b9, delete +0x7c2, size +0x7d8,
+//   _Ucopy +0x800, _Ufill +0x81e, _Ucopy +0x840 - and we emit FOUR: new,
+//   delete and the two _Constructs. _Ucopy x3, _Ufill, _Destroy and
+//   size() are all expanded on our side.
+//
+// Both are the same shape: retail expands `insert` and CALLS the helpers
+// nested inside it. `inline_depth(1..4)` is inert mid-function in VC6 and
+// a statement pin imposes at the OUTERMOST callee (which here is the
+// insert retail expands), so "expand the insert, call its helpers" is not
+// spellable from this body - it is reachable only where the container is
+// hand-modelled in the TU, the way cmbtmgr's TObstacleVector is.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
                             int direction, int move_cost, int limit,
@@ -584,6 +605,10 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
         // running out between the two arms. `end()` is hoisted out of the
         // pinned statement first because retail keeps it inline
         // (57.4653 -> 73.8393 without the hoist, 74.3805 with it).
+        // The arms are in RETAIL'S ORDER: writing the test as
+        // `middle >= size()` with the two blocks swapped - which is what
+        // retail's `cmp/jb` into the expanded arm at +0x4dc looks like -
+        // measures 74.3805 -> 67.4717.
         pathCell* tail = queue.end();
 #pragma inline_depth(0)
         queue.insert(tail, 1, *point);
