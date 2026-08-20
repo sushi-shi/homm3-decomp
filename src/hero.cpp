@@ -3352,6 +3352,13 @@ int hero::TakeSS(int iWhichSS, int iNumLevelsToTake)
 }
 
 // E:\gamedcs\hero.cpp:4627
+// PINNED against /Ob2. Retail keeps GiveSS a real CALL at both of
+// CheckLevel's surviving sites (the three dialogReturn arms cross-jump
+// onto one shared `mov ecx,ebx / call`), where our CL expanded it at all
+// six - `predict-inline` reported it as the sole OVER-inline there,
+// worth 23 extra conditional branches. auto_inline(off) suppresses the
+// expansion without touching this body's own emission.
+#pragma auto_inline(off)
 VA(0x004e22d0, 0x61)  // anchor-caller (SetSS, CheckLevel), dc 0xd37c0
 int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
 {
@@ -3367,6 +3374,7 @@ int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
         skillLevel[iWhichSS] = 3;
     return skillLevel[iWhichSS] - iOldLevel;
 }
+#pragma auto_inline(on)
 
 #if 0  // @carcass
 
