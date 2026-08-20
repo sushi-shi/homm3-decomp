@@ -75,6 +75,19 @@ inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
     playerPos = gNetLocalGamePos;
 }
 
+// The dead-hero twin, expanded inside hero::Deallocate. Same store order
+// as the teleport record above, minus the playerPos tail.
+inline CMCDeadHero::CMCDeadHero(int id, type_point location)
+{
+    field_00 = -1;
+    field_04 = 0;
+    subType = RS_DEAD_HERO;
+    size = sizeof(CMCDeadHero);
+    field_10 = 0;
+    heroId = id;
+    point = location;
+}
+
 #include "mousemgr.h"
 #include "widget.h"
 // The hero screen's own widget zoo: THeroScreenWindow's constructor
@@ -1246,16 +1259,123 @@ int hero::HeroFn_004D9CC0(int artifact)
     return gpWindowManager->dialogReturn;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1732
+// Retires the hero from the map. NOT EH-bearing - the prologue carries no
+// fs:[0] frame, which is a consistency constraint on CMCDeadHero: it must
+// have no user-declared destructor or VC6 would add one.
+// `restore_cell` and GetPrimarySkill are /Ob2-expanded here; the
+// intelligence factor and GetMobility are open-coded exactly as
+// hero::initialize carries them. The chained `maxMovePoints = movePoints
+// = ...` is retail's store order (movePoints first). The tavern block
+// re-derives players[owner] from a fresh byte read rather than reusing
+// `player`, because EBX has been repurposed by then.
 VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
 void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
 {
-    // @stub
-}
+    unsigned char freedTownVisitor = 0;
+    int townId = gpGame->GetTownId(x, y, z);
+    if (townId >= 0) {
+        town* visited = gpGame->GetTown(townId);
+        if (visited->garrisonHeroId == id) {
+            visited->garrisonHeroId = -1;
+            freedTownVisitor = 1;
+        }
+    }
 
-#endif  // @carcass
+    if (bGameLoaded && !remote_move) {
+        CMCDeadHero change(id, type_point(x, y, z));
+        SendMapChange(&change);
+        gpGame->GameFn_0049C720(this, -1, freedTownVisitor);
+    }
+
+    int oldOwner = owner;
+    playerData* player = &gpGame->players[oldOwner];
+    if (bGameLoaded) {
+        gpAdvManager->MobilizeCurrHero(0, 0, 1);
+        gpAdvManager->HideRoute(0, 0, 0);
+    }
+
+    if (flags & 0x40000) {
+        gpGame->GetHeroBoat(id, 1)->allocated = 0;
+        flags &= 0xfffbffff;
+    }
+
+    type_obscuring_object::restore_cell();
+
+    if (!gCombatFlag697744) {
+        for (int slot = 0; slot < 7; slot++)
+            army.Dismiss(slot);
+    }
+
+    int pos = player->FindHero(id);
+    if (pos >= 0) {
+        for (int i = pos; i < player->numHeroes - 1; i++)
+            player->heroes[i] = player->heroes[i + 1];
+        player->heroes[player->numHeroes - 1] = -1;
+        player->numHeroes--;
+    }
+    if (player->currHeroId == id) {
+        player->currHeroId = -1;
+        if (gNetLocalGamePos == owner)
+            gpAdvManager->drawCursor = 0;
+        if (oldOwner == gNetLocalGamePos)
+            gpAdvManager->inDialog = 0;
+    }
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 1);
+    gpGame->heroAvailability[id] = -1;
+
+    if (gCombatFlag6985a3 || gCombatFlag697744) {
+        int slot = Random(0, 1);
+        int other = gpGame->players[owner].recruits[slot];
+        if (other != -1) {
+            if (gpGame->heroes[other].flags & 0x20000) {
+                slot = 1 - slot;
+                other = gpGame->players[owner].recruits[slot];
+            }
+            if (other != -1 && gpGame->heroAvailability[other] == HERO_AVAILABILITY_TAVERN_POOL)
+                gpGame->heroAvailability[other] = -1;
+        }
+        gpGame->players[owner].recruits[slot] = id;
+        gpGame->heroAvailability[id] = HERO_AVAILABILITY_TAVERN_POOL;
+        flags |= 0x20000;
+    }
+
+    if (gCampaignMode) {
+        switch (gpGame->campaign.currentCampaign) {
+        case DEALLOCATE_CAMPAIGN_BY_PORTRAIT:
+            if (portrait == DEALLOCATE_KEPT_PORTRAIT)
+                gpGame->heroAvailability[id] = HERO_AVAILABILITY_TAVERN_POOL;
+            break;
+        case DEALLOCATE_CAMPAIGN_BY_HERO_ID:
+            if (id == DEALLOCATE_KEPT_HERO_ID)
+                gpGame->heroAvailability[DEALLOCATE_KEPT_HERO_ID] =
+                    HERO_AVAILABILITY_TAVERN_POOL;
+            break;
+        }
+    }
+
+    owner = -1;
+    pathTargetY = -1;
+    pathTargetX = -1;
+    if (!(flags & 0x20000)) {
+        int knowledge = GetPrimarySkill(3);
+        float intelligence =
+            kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
+        if (skillLevel[eSecSkillIntelligence] > 0) {
+            const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+            if (ability.type == eHeroAbilitySecondarySkill &&
+                ability.skill == eSecSkillIntelligence)
+                intelligence = (level * 0.05f + 1.0f) * intelligence;
+        }
+        float baseMana = static_cast<float>(knowledge * 10);
+        mana = static_cast<short>(
+            static_cast<long>((intelligence + 1.0f) * baseMana));
+        maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
+    }
+
+    if (!gCombatFlag697744)
+        gpGame->SetRandomHeroArmies(id, 0, 1);
+}
 
 // E:\gamedcs\hero.cpp:1836
 // The experience ladder. Levels 1..12 are the table; every level above
@@ -3497,6 +3617,17 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // written twice because retail tests it twice, 8-bit both times.
 // `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
 // block, not at the end of the NormalDialog full-expression.
+//
+// Residual (57.9%): the EH CLEANUP TRANSCRIPT, and it is /Ob2 budget
+// rather than spelling. `vc6 diagnose` reads our unwind states as
+// [1,0,reg,-1,3,4] against retail's [0,-1,1,2] - two cleanup regions
+// retail does not open - and pairs that with 5 under- and 1 over-inline.
+// Retail leaves `bitset<12>::test` an out-of-line CALL and inlines only
+// TWO of its three bitset bounds throws; each throw our CL expands
+// instead builds its own `invalid bitset<N> position` string temporary,
+// and each such temporary is one more cleanup region. Nothing local
+// reaches that - the lever is caller statement mass (docs/vc6/inliner.md,
+// and docs/vc6/eh-cleanup.md for the unwind map). Left at 57.88.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
