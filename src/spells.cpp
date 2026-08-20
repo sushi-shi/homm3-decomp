@@ -1038,16 +1038,182 @@ void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:3389
+// Armageddon: roll the spell against EVERY stack on the field, damage
+// the ones it lands on, play the whole burning-field animation over the
+// combat screen, and then bury whatever it killed.
+//
+// The local names are the Dreamcast roster's own (variables.csv, dc
+// 0x153d2c): bDamageDone, spell_traits, iMaxFrames, twidth, theight,
+// xtiles, ytiles, sh and dy are all attested rows, and the parameters
+// are `level` and `power` - `level` is what indexes the spell's
+// mastery_bonus row, i.e. it is the mastery.
+//
+// FOUR SEPARATE 2x21 SWEEPS, each `for (side) for (i < numArmies[side])`
+// and each strength-reduced by our CL and by retail alike into three
+// parallel induction variables (armies by 0x6ee8, `effected` by 0x14,
+// numArmies by 4). They are not merged in retail and they are not
+// merged here: roll+damage, then set up each hit stack's wince/death
+// animation, then the frame loop, then the death sweep.
+//
+// THE DAMAGE IS ComputeSpellDamage (0x5a7890) EXPANDED, not called -
+// its `mastery_bonus[level] + power_factor * power` body appears twice,
+// once per stack and once for the message line, exactly as the /Ob2
+// rules predict for an extern helper with a live out-of-line copy.
+//
+// LoadSpellEffect's return is DISCARDED and powSprite re-read: retail
+// loads [this+0x132e8] again straight after the inlined call rather
+// than reusing the returned register, which is what a statement-call
+// followed by member uses produces and a captured local does not.
+//
+// THE SPRITE IS TILED over the whole 800x556 combat screen -
+// `(twidth + 799) / twidth` by `(theight + 599) / theight` copies, each
+// clipped against what is left of the row or column. The 599 against a
+// 556-pixel clip is retail's own inconsistency; transcribed.
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::Armageddon(int level, int power)
 {
-    // @stub
-}
+    const SSpellTraits* spell_traits = &akSpellTraits[SPELL_ARMAGEDDON];
+    unsigned char bDamageDone = 0;
+    memset(effected, 0, sizeof(effected));
 
-#endif  // @carcass
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++) {
+            if (Random(1, 100)
+                <= static_cast<long>(
+                       SpellCastWorkChance(SPELL_ARMAGEDDON, currentSide,
+                                           &armies[side][i], 0, 1, 0)
+                       * 100.0f)) {
+                armies[side][i].Damage(ComputeSpellDamage(
+                    SPELL_ARMAGEDDON, power, level, heroes[currentSide],
+                    armies[side][i].get_controller(), &armies[side][i], 0));
+                bDamageDone = 1;
+                effected[side][i] = 1;
+            }
+        } }
+    } }
+
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        LoadSpellEffect(spell_traits->m_effect);
+        long iMaxFrames = powSprite ? powSprite->GetNumFrames(0) : 0;
+
+        // Every stack the spell landed on drops into its wince or its
+        // death sequence, and the animation runs for however many frames
+        // the LONGEST of them needs - the fire sheet included.
+        { for (int side = 0; side < 2; side++) {
+            { for (int i = 0; i < numArmies[side]; i++) {
+                army* pArmy = &armies[side][i];
+                if (effected[side][i]) {
+                    if (pArmy->numTroops <= 0) {
+                        if (pArmy->stdIcon->GetNumFrames(cs_death)
+                            > iMaxFrames)
+                            iMaxFrames =
+                                pArmy->stdIcon->GetNumFrames(cs_death);
+                        pArmy->currFrameType = cs_death;
+                        pArmy->play_sample(army::DIE_SAMPLE);
+                    } else {
+                        if (pArmy->stdIcon->GetNumFrames(cs_wince)
+                            > iMaxFrames)
+                            iMaxFrames =
+                                pArmy->stdIcon->GetNumFrames(cs_wince);
+                        pArmy->currFrameType = cs_wince;
+                        pArmy->play_sample(army::WINCE_SAMPLE);
+                    }
+                    pArmy->currFrameIndex = 0;
+                }
+            } }
+        } }
+
+        long twidth = powSprite->Width;
+        long theight = powSprite->Height;
+        long xtiles = (twidth + 799) / twidth;
+        long ytiles = (theight + 599) / theight;
+        { for (int frame = 0; frame < iMaxFrames; frame++) {
+            { for (int side = 0; side < 2; side++) {
+                { for (int i = 0; i < numArmies[side]; i++) {
+                    army* pArmy = &armies[side][i];
+                    if (effected[side][i]) {
+                        // A wincing stack falls back to cs_wait once its
+                        // sequence runs out; a dying one holds its last
+                        // frame, which is why only cs_wince is reset.
+                        if (pArmy->currFrameIndex
+                            < pArmy->stdIcon->GetNumFrames(
+                                  pArmy->currFrameType) - 1) {
+                            pArmy->currFrameIndex++;
+                        } else if (pArmy->currFrameType == cs_wince) {
+                            pArmy->currFrameType = cs_wait;
+                            pArmy->currFrameIndex = 0;
+                        }
+                    }
+                } }
+            } }
+            DrawFrame(0, 0, 0, 100, 1, 1);
+            if (powSprite && frame < powSprite->GetNumFrames(0)) {
+                long dy = 0;
+                long remainingY = 556;
+                { for (int ty = 0; ty < ytiles; ty++) {
+                    long sh = theight;
+                    if (sh > remainingY)
+                        sh = remainingY;
+                    long dx = 0;
+                    long remainingX = 800;
+                    { for (int tx = 0; tx < xtiles; tx++) {
+                        long sw = twidth;
+                        if (sw > remainingX)
+                            sw = remainingX;
+                        powSprite->Draw(0, frame, 0, 0, sw, sh,
+                                        gpWindowManager->screenBitmap->map,
+                                        dx, dy,
+                                        gpWindowManager->screenBitmap->Width,
+                                        gpWindowManager->screenBitmap->Height,
+                                        gpWindowManager->screenBitmap->Pitch,
+                                        0, 0);
+                        dx += twidth;
+                        remainingX -= twidth;
+                    } }
+                    dy += theight;
+                    remainingY -= theight;
+                } }
+            }
+            UpdateCombatArea();
+        } }
+    }
+
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++)
+            armies[side][i].bShowPowEffect = 0; }
+    } }
+
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    unsigned char bDeaths = 0;
+    { for (int side = 0; side < 2; side++) {
+        { for (int i = 0; i < numArmies[side]; i++) {
+            army* pArmy = &armies[side][i];
+            if (effected[side][i] && pArmy->numTroops == 0) {
+                pArmy->ProcessDeath(0);
+                // Bit 6 of creatureId is the siege-weapon marker, so a
+                // catapult or tent killed here also loses the artifact
+                // its owner was carrying it as.
+                if ((static_cast<unsigned>(pArmy->creatureId) >> 6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        pArmy->creatureType);
+                bDeaths = 1;
+            }
+        } }
+    } }
+    if (bDeaths)
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    if (field_13460)
+        MakeCreaturesVanish();
+    if (bDamageDone
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        sprintf(gText, gpGeneralText->GetText(89),
+                ComputeSpellDamage(SPELL_ARMAGEDDON, power, level, 0, 0, 0,
+                                   0));
+        combatWindow->combat_message(gText, 1, 0);
+    }
+    CheckRebirth();
+}
 
 // The per-step recompute of one bolt segment: how far it still has to
 // travel, how thick it should be at that point, which way it is pointing
@@ -2536,12 +2702,11 @@ CSprite* combatManager::LoadSpellEffect(int effect)
     if (powSpellEffect != effect) {
         if (powSprite)
             powSprite->Dispose();
-        if (effect != -1) {
-            powSpellEffect = effect;
-            return powSprite = ResourceManager::GetSprite(
+        if (effect != -1)
+            powSprite = ResourceManager::GetSprite(
                 akSpellEffectTraits[effect].m_name);
-        }
-        powSprite = 0;
+        else
+            powSprite = 0;
         powSpellEffect = effect;
     }
     return powSprite;
