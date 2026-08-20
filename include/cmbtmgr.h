@@ -92,13 +92,29 @@ enum ECombatGrid {
     // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
     // full CASTLE, which is the tier that builds the central keep and
     // the tier that builds the two side towers respectively. So 0xfe is
-    // the KEEP and 0xff is one of the two side towers, the other being
-    // row 6's ordinary hex 183. Which of the two side towers 0xff is
-    // (upper or lower) is the one half of this naming NOT proven;
-    // GetCommand (0x476490) tests it first, ahead of the keep, and the
-    // four GetGridIndex hit rectangles are tested 252, 253, 254, 255.
+    // the KEEP and 0xff is one of the two side towers.
+    // CORRECTION 2026-08-20: this comment used to finish "the other being
+    // row 6's ordinary hex 183", and that was wrong. LoadArmies
+    // (0x463600) installs THREE arrow-tower stacks, at 0xfe, 0xff and
+    // 0xfb - never at 183 - and the field_1402c/d/e note further down
+    // this header had already recorded 0x46a460 keying the same three
+    // pseudo-hexes 254/251/255. So 0xfb is the third member of this
+    // domain, and it is added below rather than left as a literal.
+    // Which side tower is which (upper vs lower) remains the one half of
+    // the naming NOT proven; GetCommand (0x476490) tests 0xff first,
+    // ahead of the keep, and the four GetGridIndex hit rectangles are
+    // tested 252, 253, 254, 255.
+    // GATED, AND MEASURED: adding this one enumerator un-gated costs
+    // command.obj's GetCommand 92.5714 -> 92.5357, the same include-set
+    // firing an enumerator produced for the previous lane on this header.
+    // It joins the declarator-count evidence recorded at field_132a0 - an
+    // enumerator counts too - and only cmbtmgr.cpp names the value.
     COMBAT_HEX_KEEP = 0xfe,
     COMBAT_HEX_UPPER_TOWER = 0xff
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    ,
+    COMBAT_HEX_LOWER_TOWER = 0xfb
+#endif
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
@@ -445,7 +461,11 @@ public:
     // while the byte below is set. Both names await a writer.
     int field_53c0;                   // +0x53c0
     unsigned char field_53c4;         // +0x53c4
-    char pad_53c5[0x1];
+    // "This combat was started by surrounding the defender": SetupCombat
+    // parks its own is_surrounded parameter here, as its second-to-last
+    // act, and that parameter's name is the DC SetupCombat prototype's.
+    // Sliced out of the old pad by that writer; no reader is decoded yet.
+    unsigned char isSurrounded;       // +0x53c5
     // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
     // Name remains ordinal until its writer is reconstructed.
     unsigned char field_53c6;         // +0x53c6
@@ -492,15 +512,31 @@ public:
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
     // parameters ctor 0x435ec0). Name provisional.
+    // WRITER FOUND 2026-08-20 (SetupCombat 0x4639f0): the pair is stamped
+    // with `gpGame->IsHuman(playerIds[side])`, and with 0 when the side
+    // has no player id at all - so the latch reads "this side is HUMAN"
+    // and the provisional name above is inverted. Recorded rather than
+    // renamed: seventeen readers across ai.cpp, ai_tactical.cpp,
+    // combatcontrolsubwindow.cpp and this TU would move with it, and this
+    // lane touches none of them (the field_54b4 precedent).
     unsigned char sideIsAI[2];        // +0x54a4
-    char pad_54a6[0x2];
+    // Per-side "this side is played on THIS machine": SetupCombat stamps
+    // it with `gpGame->IsLocalHuman(playerIds[side])` in the same loop
+    // that fills sideIsAI, and clears it for a side with no player id.
+    // Sliced out of the old pad by that writer; no reader is decoded yet,
+    // so the name states only what the writer proves.
+    unsigned char sideIsLocalHuman[2]; // +0x54a6
     // The adventure-map player ids behind the two combat sides. LowerDoor's
     // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
     // each value and reads that player's +0xe4 quickCombat preference;
     // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
     // the selected id is not -1.
     int playerIds[2];                 // +0x54a8
-    char pad_54b0[0x2];
+    // Per-side latch SetupCombat raises to 1 for BOTH sides unconditionally,
+    // outside the player-id test that guards the three bytes around it.
+    // Sliced out of the old pad by that writer; no reader is decoded yet
+    // and no roster row reaches the pair, so the name is an ordinal.
+    unsigned char field_54b0[2];      // +0x54b0
     // Passed as the final, byte-wide SetMorale input for every stack
     // controlled by the indexed side. Its meaning and public name are
     // not attested by the available symbols.
@@ -520,7 +556,32 @@ public:
     // post-combat raised stack into the selected group.
     armyGroup* armyGroups[2];         // +0x54c4
     army armies[2][21];               // +0x54cc
+    // Per-side dword SetupCombat initialises to 30000 (0x7530) for both
+    // sides, in the same loop as playerIds and field_54b0 - retail reaches
+    // it as `[&playerIds[side] + 0xddf8]`, which is what proves the stride
+    // and the pair. The magnitude reads like a millisecond budget but no
+    // reader is decoded, so the name stays an address ordinal.
+    // GATED, AND THAT IS A MEASUREMENT - the fourth firing of the
+    // include-set class from this header, and the first one that says
+    // WHICH edit shape fires it. Bisected 2026-08-20 against command.obj's
+    // GetCommand (92.5714 is that canary's ceiling), one edit at a time:
+    //   * slicing one pad declarator into three (this row), or adding any
+    //     further member declarator to the class          -> 92.5357;
+    //   * RETYPING a pad in place at the SAME declarator count,
+    //     `char pad_54a6[2]` -> `unsigned char sideIsLocalHuman[2]`,
+    //                                                     -> 92.5714,
+    //     unmoved. Three such renames landed un-gated and cost nothing.
+    // So the trigger is the DECLARATOR COUNT C1XX numbers member handles
+    // from - not the member's name, its type, or the bytes it covers.
+    // Both arms below describe the same bytes and only the count differs,
+    // so no TU sees a different layout.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    char pad_1329c[0x4];
+    int field_132a0[2];               // +0x132a0
+    char pad_132a8[0x8];
+#else
     char pad_1329c[0x14];
+#endif
     // Two per-side "this side has already lost / fled" latches, byte
     // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
@@ -586,7 +647,17 @@ public:
     char pad_132f8[0x4];
     TCombatWindow* combatWindow;      // +0x132fc
     int field_13300;                  // +0x13300
+    // The battlefield background image name. SetupCombat caches
+    // GetBackgroundName()'s answer here as its very last act; the pointer
+    // is into the .rdata name tables that method selects from, so it is
+    // never owned or freed. Gated for the declarator-count reason spelled
+    // out at field_132a0; both arms are the same bytes.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    char pad_13304[0x160];
+    const char* backgroundName;       // +0x13464
+#else
     char pad_13304[0x164];
+#endif
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -679,6 +750,23 @@ public:
     unsigned char field_1402c;         // +0x1402c
     unsigned char field_1402d;         // +0x1402d
     unsigned char field_1402e;         // +0x1402e
+    // Raised to 1 by SetupCombat before it has touched anything else about
+    // the two sides, and by nothing else in the located span. Reads like a
+    // "combat is being set up / is live" latch, but no reader is decoded
+    // yet, so the name is an address ordinal. Gated for the
+    // declarator-count reason spelled out at field_132a0.
+    //
+    // CORRECTION 2026-08-20: when this row landed its comment claimed the
+    // byte was the LAST of the class and could not move sizeof. That was
+    // wrong - it was inferred from this header stopping here, not from
+    // retail. InitNonVisualVars (0x463c60) stores a byte at +0x14030, so
+    // the class runs at least one byte further than anything modelled
+    // here. Nothing depends on the old claim (no SIZE assert covers
+    // combatManager), but do not read the end of this list as the end of
+    // the object.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    unsigned char field_1402f;         // +0x1402f
+#endif
 
     combatManager();
 
@@ -1266,6 +1354,60 @@ public:
     // from the sibling by the parameter it actually takes.
     void mark_hex_area_effect(long hex, long shape, long mastery,
                               std::vector<army*>& targets);      // 0x5a46f0
+    // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
+    // already had an out-of-class definition in cmbtmgr.cpp with only a
+    // CODEVIEW comment to declare it, which VC6 accepts on the definition
+    // line and then punishes with "undeclared identifier" on the members
+    // the body touches - so the bodies could not be written at all until
+    // these landed. Appended at the END of the class on purpose: C1XX
+    // numbers member handles in declaration order (docs/vc6/handle-order.md)
+    // and this header has already fired the include-set wall three times,
+    // so new rows go where they renumber nothing that is already exact.
+    // Behind a view because a bare member declarator on this header is
+    // that wall's own trigger shape; cmbtmgr.cpp is the only consumer.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+    // DC ?SetupCombat@combatManager@@QAAXUtype_point@@PAVhero@@PAVarmyGroup@@
+    // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
+    // trailing _N is spelled `unsigned char` here, as everywhere else in
+    // this header, and retail reads it as one byte either way.
+    void SetupCombat(type_point point, hero* leftHero,
+                     armyGroup* leftArmyGroup, long right_player,
+                     town* rightTown, hero* rightHero,
+                     armyGroup* rightArmyGroup, int x, int y, int iSeed,
+                     unsigned char is_surrounded);
+    // DC ?LoadArmies@combatManager@@AAAX_N@Z - PRIVATE on the Dreamcast
+    // (`A` access), which costs nothing here and is recorded rather than
+    // acted on: this header keeps one public block.
+    void LoadArmies(unsigned char is_surrounded);
+#endif
+#ifdef HOMM3_CMBTMGR_TURN_VIEW
+    // DC ?NextArmy@combatManager@@QAA_N_N@Z - returns and takes _N,
+    // spelled `unsigned char` as everywhere else in this header.
+    unsigned char NextArmy(unsigned char checking_for_bad_morale);
+    void SetNextArmy(int group, int index);
+    // THE TWO UNNAMED TURN-SCAN HELPERS, 0x464d40 (525 B) and 0x464f50
+    // (291 B). This file's locate sweep left both unclaimed and unnamed
+    // on purpose: neither has a counterpart anywhere in the DC
+    // cmbtmgr.obj roster, so a name would be invention. That decision
+    // stands - these are address ordinals, the town.h Unnamed526d20
+    // shape - but NextArmy's body now pins down what they ARE, which is
+    // what a later lane needs to promote them:
+    //   0x464d40 is a combatManager method taking the selected stack and
+    //     answering a byte. Its call site is nested in the SAME guard as
+    //     CheckApplyBadMorale, immediately after it, and a non-zero
+    //     answer restarts the whole turn scan - the stack loses its
+    //     turn. Retail's body reaches FEAR.WAV. Read together that is a
+    //     fear check, but the roster does not say so and this lane does
+    //     not name it.
+    //   0x464f50 is a combatManager method taking TWO stacks and
+    //     answering a byte, and retail's body calls only army::GetSpeed.
+    //     NextArmy asks it (best, candidate) and KEEPS the incumbent
+    //     when the answer is non-zero, so it orders two stacks - the
+    //     move-order comparator. Also left unnamed.
+    // Declared, not claimed: their bodies are outside this lane.
+    unsigned char Unnamed464d40(army* selected);
+    unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
+#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
@@ -1281,6 +1423,44 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
+// parameter here and NOTHING in the image ever reads it back - the reloc
+// sweep over the whole image finds exactly one reference to the address,
+// that store. Declared extern rather than defined: an unclaimed data
+// extern still pairs (the DoDialog precedent) and a definition would add
+// a word to a .data section that already reads 100%. The name states what
+// its only writer calls the value.
+//
+// GATED, AND THAT IS A MEASUREMENT that CORRECTS THE DOCTRINE. The match
+// skill's include-set note records "`extern int` ... do NOT move it",
+// from the 200-extern probe that cleared the wrong hypothesis. On THIS
+// header that is false: adding this one file-scope `extern int`, with
+// every other edit of the lane held gated, costs command.obj's GetCommand
+// 92.5714 -> 92.5357 by itself, and gating it restores the ceiling. A
+// bulk probe of externs added together evidently does not reproduce what
+// a single extern added to a header this widely included does.
+#ifdef HOMM3_CMBTMGR_SETUP_VIEW
+extern int gCombatSeed66d840;
+
+// THE FOUR COMBAT DEPLOYMENT TABLES, .rdata, and their BOUNDS ARE PROVEN
+// BY ADJACENCY rather than assumed: 0x63d0a8 + 2*7*4 = 0x63d0e0,
+// + 2*7*4 = 0x63d118, + 7*7*4 = 0x63d1dc, + 7*7*4 = 0x63d2a0, which is
+// exactly where gTownCombatBackgrounds already starts. Four tables, no
+// slack, and every stride matches the indexing LoadArmies performs.
+//
+// LoadArmies uses them as a two-stage lookup: the SLOT tables are indexed
+// [numArmies-1][nth stack placed] and yield a position ordinal, which then
+// indexes the HEX table [side][ordinal]. The surrounded table skips the
+// indirection and gives the hex directly. Which of the two slot tables is
+// chosen turns on the defending hero's formation byte, so the pair is the
+// game's tight/loose deployment split - but no roster row or string
+// reaches any of the four, so the names carry their addresses.
+extern const int gCombatDeployHexes63d0a8[2][7];
+extern const int gCombatDeploySurroundedHexes63d0e0[2][7];
+extern const int gCombatDeploySlots63d118[7][7];
+extern const int gCombatDeploySlots63d1dc[7][7];
+#endif
 
 // Source aggregate copied into combatManager+0x13d38 by the constructor,
 // LowerDoor and RaiseDoor. The current DATA contract cannot express its

@@ -40,11 +40,16 @@
 #include <stdlib.h>
 
 #include <va.h>
+#define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
+#define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
+#define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MORALE_VIEW
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
+#define HOMM3_CMBTMGR_SETUP_VIEW
+#define HOMM3_CMBTMGR_TURN_VIEW
 #include "cmbtmgr.h"
 #define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
@@ -267,14 +272,140 @@ void combatManager::FreeIcons()
     combatShadowBitmap->Dispose();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1004
+// Deployment. Both halves of every war-machine block are byte-forced:
+// which side may have the machine at all, and the hex it lands on.
+//   * the catapult is gated on `fortification > 0 && side == 0` and goes
+//     into armies[0] with no side term in its address, which is why it is
+//     spelled armies[0] here and not armies[side] - retail's own source
+//     evidently said so too;
+//   * the ballista is refused to a DEFENDER of a fortified town
+//     (`!fortification || side != 1`), which is the siege rule;
+//   * the three artifact machines' hexes are `side ? A : B` ternaries -
+//     retail materialises them with the neg/sbb/and/add idiom that pairs
+//     two constants differing by one mask, not with arithmetic on side;
+//   * the arrow towers are gated on `side == 1` and address armies[1] the
+//     same way the catapult addresses armies[0]. A Citadel installs the
+//     keep alone, a Castle adds the two towers with (n+1)/2 shots each -
+//     which is exactly what InitializeArchers was already documented to
+//     prove from the other end.
+// The deployment tables' bounds come from adjacency, not from guessing a
+// stride: see their declaration in the header.
+//
+// TWO SPELLINGS HERE ARE BYTE-FORCED AND LOOK REDUNDANT IN SOURCE; both
+// were measured, and both are retail's:
+//   * `group` is a local for GetNumArmies and for Init's two arguments,
+//     but the loop's empty-slot test re-reads `armyGroups[side]` from the
+//     member. Using the local for the test too costs 99.35 -> 95.90 -
+//     retail really does load the pointer once into a frame slot AND
+//     re-read the member at the top of each iteration.
+//   * the hex lookup is hoisted out of the tight/loose arms into a
+//     separate `ordinal`, because retail forms the `7*side` index ONCE
+//     after the two arms rejoin; writing the two-level index inside each
+//     arm duplicates it and costs 95.90 -> 94.18.
+//
+// Residual (99.3528%): one comparison. Retail tests the combat hero with
+// `cmp eax, esi` against the register still holding the zero it has just
+// stored into numArmies[side], where our CL emits `test eax, eax`.
+// Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
+// to force the two zeroes to share, which is byte-identical.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {
-    // @stub
+    for (int side = 0; side < 2; side++) {
+        for (int slot = 0; slot < 20; slot++) {
+            armies[side][slot].numTroops = 0;
+            armies[side][slot].creatureType = CREATURE_NONE;
+            armies[side][slot].InitClean();
+        }
+        numArmies[side] = 0;
+        int placed = 0;
+        hero* combat_hero = heroes[side];
+        armyGroup* group = armyGroups[side];
+        unsigned char tight_formation;
+        if (combat_hero && (combat_hero->formation & 1) && sideIsAI[side])
+            tight_formation = 1;
+        else
+            tight_formation = 0;
+        int last = group->GetNumArmies() - 1;
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            if (armyGroups[side]->armies[i] == CREATURE_NONE)
+                continue;
+            int hex;
+            if (is_surrounded) {
+                hex = gCombatDeploySurroundedHexes63d0e0[side][placed];
+            } else {
+                int ordinal;
+                if (tight_formation)
+                    ordinal = gCombatDeploySlots63d1dc[last][placed];
+                else
+                    ordinal = gCombatDeploySlots63d118[last][placed];
+                hex = gCombatDeployHexes63d0a8[side][ordinal];
+            }
+            armies[side][placed].Init(group->armies[i], group->numTroops[i],
+                                      combat_hero, side, placed, hex, i);
+            armies[side][placed].LoadResources();
+            placed++;
+        }
+        if (combat_hero && !is_surrounded) {
+            if (field_132f4 > 0 && side == 0) {
+                armies[0][placed].Init(CREATURE_CATAPULT, 1, combat_hero,
+                                       side, placed, 0x77, -1);
+                armies[0][placed].LoadResources();
+                placed++;
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_BALLISTA)) {
+                if (!field_132f4 || side != 1) {
+                    armies[side][placed].Init(CREATURE_BALLISTA, 1,
+                                              combat_hero, side, placed,
+                                              side ? 0x43 : 0x33, -1);
+                    armies[side][placed].LoadResources();
+                    placed++;
+                }
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_FIRST_AID_TENT)) {
+                armies[side][placed].Init(CREATURE_FIRST_AID_TENT, 1,
+                                          combat_hero, side, placed,
+                                          side ? 0xa9 : 0x99, -1);
+                armies[side][placed].LoadResources();
+                placed++;
+            }
+            if (combat_hero->IsWieldingArtifact(ARTIFACT_AMMO_CART)) {
+                armies[side][placed].Init(CREATURE_AMMO_CART, 1, combat_hero,
+                                          side, placed, side ? 0x20 : 0x12,
+                                          -1);
+                armies[side][placed].LoadResources();
+                placed++;
+            }
+        }
+        if (side == 1 && field_132f4 >= COMBAT_FORTIFICATION_CITADEL) {
+            int numArchers;
+            int archerLevel;
+            defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
+            armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                   combat_hero, side, placed,
+                                   COMBAT_HEX_KEEP, -1);
+            archers[0].armySlot = placed;
+            placed++;
+            if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
+                numArchers = (numArchers + 1) / 2;
+                armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                       combat_hero, side, placed,
+                                       COMBAT_HEX_UPPER_TOWER, -1);
+                archers[2].armySlot = placed;
+                placed++;
+                armies[1][placed].Init(CREATURE_ARROW_TOWER, numArchers,
+                                       combat_hero, side, placed,
+                                       COMBAT_HEX_LOWER_TOWER, -1);
+                archers[1].armySlot = placed;
+                placed++;
+            }
+        }
+        numArmies[side] = placed;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1151
 DC_ONLY(0x5e3d8, 0x8C)
@@ -283,14 +414,130 @@ void combatManager::FreeArmies()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1178
+// The seed expression is byte-forced: retail builds `x*0x1aed3` with one
+// imul and `y*0x28f79` out of seven lea/shl/sub steps, so both multipliers
+// and the 0x13ea1 addend come straight from the encoding, not a guess -
+// and the chain is the ONLY thing that proves the second multiplier,
+// which is why an early transcription of it as 0x28fb9 read as a
+// compiler-generation wall (that constant is composite, and VC6 lowers it
+// with an imul, where 0x28f79 is prime and gets exactly retail's chain).
+// The three fortification tests are `built & bitNumber[7|8|9]` in exactly
+// that order - fort first, castle last - which is only coherent because
+// this game's `built` mask holds ONE of the three at a time (a Citadel
+// replaces the Fort bit rather than adding to it); the same three-way
+// walk in check_wall_archery_penalty (0x424790) reads the same way.
+// The moat expression's two exclusions are the game's own: Tower has no
+// moat, and Stronghold gained one only in Shadow of Death, which is what
+// the f_1f698 >= 2 gate says.
+//
+// Residual (96.4459%): ONE scheduling decision, seen twice, and nothing
+// else - every other row of the diff is a reloc NAME on a datum the
+// delinker carries no symbol for. Retail loads gpGame at the LAST moment,
+// after the argument is already pushed (`mov ecx,[ebx] / push ecx / mov
+// ecx,[gpGame]`) and after the players[] index is fully scaled; our CL
+// hoists that load ahead of both. The instruction COUNTS are equal on
+// both sides - only the load's position and its scratch register differ.
+// why-reg v2 (--model) settles this rather than guessing at it: the three
+// long-lived bindings agree exactly (esi<-this, ebx, edi created at the
+// same points), so the divergence is in caller-saved EAX/ECX/EDX creation
+// order, and the model reports the value that would have to move first is
+// copy-propagated - C1 handle state, which no local spelling reaches.
+// Register-homing family; not ground past that verdict.
 VA(0x004639f0, 0x270)  // anchor-callee, dc 0x5e464
 void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int iSeed, unsigned char is_surrounded)
 {
-    // @stub
+    gCombatSeed66d840 = iSeed;
+    SRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
+    mapPoint = point;
+    combatCell = gpAdvManager->GetCell(point);
+    field_1402f = 1;
+    if (leftHero)
+        playerIds[0] = leftHero->owner;
+    else
+        playerIds[0] = -1;
+    heroes[0] = leftHero;
+    playerIds[1] = right_player;
+    armyGroups[0] = leftArmyGroup;
+    heroes[1] = rightHero;
+    armyGroups[1] = rightArmyGroup;
+    for (int side = 0; side < 2; side++) {
+        if (playerIds[side] >= 0) {
+            sideIsAI[side] = gpGame->IsHuman(playerIds[side]);
+            sideIsLocalHuman[side] = gpGame->IsLocalHuman(playerIds[side]);
+            field_54b2[side] =
+                gpGame->players[playerIds[side]].hasGivenArtifact(0x81);
+        } else {
+            sideIsAI[side] = 0;
+            sideIsLocalHuman[side] = 0;
+            field_54b2[side] = 0;
+        }
+        field_54b0[side] = 1;
+        field_54b4[side] = 0;
+        field_132a0[side] = 30000;
+    }
+    if (rightTown) {
+        if (rightTown->built & bitNumber[CASTLE_FORT_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_FORT;
+            field_53a9 = 0;
+            field_53a8 = 0;
+        } else if (rightTown->built & bitNumber[CASTLE_CITADEL_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_CITADEL;
+            field_53a8 = rightTown->type != TOWN_TOWER
+                         && (rightTown->type != TOWN_STRONGHOLD
+                             || gpGame->f_1f698 >= 2);
+            field_53a9 = rightTown->type == TOWN_FORTRESS;
+        } else if (rightTown->built & bitNumber[CASTLE_CASTLE_ID]) {
+            field_132f4 = COMBAT_FORTIFICATION_CASTLE;
+            field_53a8 = rightTown->type != TOWN_TOWER
+                         && (rightTown->type != TOWN_STRONGHOLD
+                             || gpGame->f_1f698 >= 2);
+            field_53a9 = rightTown->type == TOWN_FORTRESS;
+        } else {
+            field_132f4 = COMBAT_FORTIFICATION_NONE;
+            field_53a9 = 0;
+            field_53a8 = 0;
+        }
+        drawbridgeState = DRAWBRIDGE_UP;
+        defendingTown = rightTown;
+    } else {
+        field_132f4 = COMBAT_FORTIFICATION_NONE;
+        field_53a9 = 0;
+        field_53a8 = 0;
+        defendingTown = 0;
+    }
+    DetermineCombatTerrain();
+    isSurrounded = is_surrounded;
+    backgroundName = GetBackgroundName();
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1348
+// SURVEYED 2026-08-20, not reconstructed, and the survey is worth more
+// than a bare @stub because this body is the cheapest-looking of the
+// remaining stubs and is NOT: 1084 bytes with only six relocations, so it
+// reads as pure member initialisation, but the work is elsewhere.
+//   * It is a 6-way JUMP TABLE on `defendingTown->type - 2` (the table is
+//     the six DIR32 rows the carve counts inside this function's 0x43C),
+//     each arm a `built`/`active` & bitNumber[21|22|26] test that bumps
+//     one of hero+0x476/+0x477/+0x478.
+//   * It needs roughly fifteen pad slices in this header - 0x132a8,
+//     0x132dc, 0x132e4, 0x132f8, 0x13d48, 0x5414, 0x53de..0x53e3,
+//     0x13de8..0x13df4, 0x13d75/0x13d76, 0x1329c - plus three hero bytes
+//     (+0x476/+0x477/+0x478), a hero short (+0x18) and an army byte
+//     (+0x4d8). All of the cmbtmgr ones sit behind the SETUP view, so
+//     they are cheap; the hero and army ones are not.
+//   * THE REAL BLOCKER is in the middle: it clears both eagle-eye sets
+//     through a three-argument __cdecl call, `f(&ret, *root, root)`, which
+//     is a Dinkumware set::erase(first, last) returning an iterator by
+//     value. Reproducing that byte-for-byte needs TCombatEagleEyeSide's
+//     set modelled properly, which is a bigger piece of work than the
+//     rest of this function put together.
+//   * It also proves the class runs to at least +0x14030 (a byte store),
+//     past everything this header models.
 VA(0x00463c60, 0x43C)  // anchor-callee, dc 0x5e690
 void combatManager::InitNonVisualVars()
 {
@@ -762,14 +1009,100 @@ int combatManager::CheckApplyBadMorale(int group, int index)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2152
+// The turn scan. Two structural facts are forced by the encoding rather
+// than chosen: the outer pass loop is a GOTO loop - five separate sites
+// jump back to the top of the BODY without touching the pass counter, so
+// the restart is a `goto`, not a `continue` (a `while` would have been
+// rotated) - and the whole scan re-runs from scratch on every restart.
+// The stack rows are reached as `armies[side][i]`; VC6's own strength
+// reduction is what biases the induction pointer by +0x290 and steps it
+// by sizeof(army).
+//
+// Retail tests bCreaturePlacement TWICE in the inner scan, which is why
+// the field_c4 test and the boundary-depth pair are written as two
+// separate `if` blocks here: one block would have emitted one test. The
+// first test's branch is threaded straight past the second because the
+// second immediately re-tests the same unchanged byte.
 VA(0x00465080, 0x2A2)  // anchor-callee, dc 0x5f518
 unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
 {
-    // @stub
+    if (actingSlot >= 0 && actingSide == 0
+        && armies[0][actingSlot].creatureType == CREATURE_CATAPULT) {
+        actingSide = 1;
+        actingSlot = 0;
+    }
+    for (int pass = (field_13de4 != 0) + 1; pass <= 2; pass++) {
+    restart:
+        army* best = 0;
+        for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army* stack = &armies[side][i];
+                if (stack->Is(26) & 1)
+                    continue;
+                if (stack->Is(21) & 1)
+                    continue;
+                if (stack->Is(25) & 1)
+                    continue;
+                if (stack->field_4f0) {
+                    if (stack->disabled_290)
+                        continue;
+                    if (stack->disabled_2b0)
+                        continue;
+                    if (stack->disabled_2c0)
+                        continue;
+                }
+                if (bCreaturePlacement) {
+                    if (!stack->field_c4)
+                        continue;
+                }
+                if (bCreaturePlacement) {
+                    if (placementBoundaryDepth > 0 && side != 0)
+                        continue;
+                    if (placementBoundaryDepth < 0 && side != 1)
+                        continue;
+                }
+                if (stack->creatureType == CREATURE_AMMO_CART)
+                    continue;
+                if (bCreaturePlacement && (stack->Is(6) & 1))
+                    continue;
+                if (best && Unnamed464f50(best, stack))
+                    continue;
+                best = stack;
+            }
+        }
+        if (best) {
+            if (!field_13de4)
+                best->new_turn();
+            if (best->disabled_290)
+                goto restart;
+            if (best->disabled_2b0)
+                goto restart;
+            if (best->disabled_2c0)
+                goto restart;
+            if (checking_for_bad_morale && !bCreaturePlacement
+                && !field_13de4) {
+                if (CheckApplyBadMorale(best->combatSide, best->bitIndex))
+                    goto restart;
+                if (Unnamed464d40(best))
+                    goto restart;
+            }
+            SetNextArmy(best->combatSide, best->bitIndex);
+            return 1;
+        }
+        if (pass == 1) {
+            field_13de4 = 1;
+            checking_for_bad_morale = 0;
+            for (int s = 0; s < 2; s++) {
+                for (int j = 0; j < numArmies[s]; j++)
+                    armies[s][j].creatureId &= ~(1 << 25);
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2364
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
@@ -985,15 +1318,28 @@ void combatManager::ResetHitByCreature()
 //     48.28);
 //   * the obstacle row is a 20-byte type_obstacle_shape, proven by
 //     retail forming the base as `4 * (5 * id) + table`.
-// Residual (49.09%): register transposition plus stack-slot reuse, not
-// source-addressable from here. Retail carries `hex` in ECX and the row
-// in EBX where this compile swaps them, which cascades - with EBX free,
-// retail keeps the odd-row flag in BL where we home it to a byte slot -
-// and retail spills the shape pointer into the dead `obstacle_id`
-// PARAMETER slot while our CL takes a fresh local. Retail also emits the
-// picker's vector destructor out of line on the failure path where our
-// CL inlines the operator delete. Tried and rejected: break + re-test,
-// while-loop form, and an int (rather than byte) odd-row flag.
+// 49.09 -> 67.19% 2026-08-20, and the lever was an INLINER decision, not
+// any of the register noise the earlier residual note blamed. predict-
+// inline reads it in one line - `PlaceObstacle base x0 vs retail x1` -
+// so our /Ob2 was expanding 191 bytes of a callee that retail CALLS. The
+// scoped inline_depth(0) at that statement is the whole fix; the earlier
+// note's register story was downstream of it. Worth remembering: the
+// register-transposition reading was measured honestly and was still the
+// wrong root cause, because a 191-byte inline moves every allocation
+// after it.
+//
+// Residual (67.19%), and the three parts are now separately named:
+//   * OUR LOOP IS ROTATED AND RETAIL'S IS NOT. Retail has ONE Pick call,
+//     at the top, with every rejection jumping back to it; our CL emits a
+//     SECOND copy at the bottom (base x2 vs retail x1). The goto form is
+//     already what this body is written in, so VC6's "goto flow is not
+//     rotated" rule does not hold for a loop whose header is a call.
+//   * retail destroys the picker OUT OF LINE on the failure path (a call
+//     to 0x46a650) and inlines the operator delete only on the success
+//     path; our CL inlines it on both.
+//   * retail inlines TObstacleVector::size() where we emit a call.
+// Tried and rejected earlier: break + re-test, while-loop form, and an
+// int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
@@ -1049,7 +1395,15 @@ next_hex:
         obstacle.field_10 = 0;
         obstacle.field_14 = -1;
         obstacles.insert(obstacles.end, 1, obstacle);
+        // Retail CALLS PlaceObstacle here - predict-inline reads it as
+        // `base x0 vs retail x1`, i.e. 191 bytes our /Ob2 was expanding
+        // inline and retail was not. Scoped to this one statement so that
+        // PlaceAllObstacles, which is already exact WITH the call, is not
+        // disturbed (the auto_inline(off)-around-the-callee form would
+        // have reached it too).
+#pragma inline_depth(0)
         PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+#pragma inline_depth()
         return 1;
     }
     goto next_hex;
@@ -1514,6 +1868,50 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
     return 1;
 }
 
+// THE THREE MISSILE ANIMATORS, SURVEYED 2026-08-20 (not reconstructed).
+// They are one body written three times, so the survey is recorded once,
+// here, at the first of them.
+//
+// VERIFIED DIRECTLY: none of the three touches a single pad byte of this
+// class. Every `this`-relative displacement in all three bodies is one of
+// +0x54a4, +0x54a5, +0x54a8, +0x54ac - which is just the inlined
+// IsQuickCombat guard - plus gpGame+0x1f69d inside it. So the header work
+// for this family is declarations and .rdata externs ONLY, with no layout
+// archaeology, which makes them far cheaper than InitNonVisualVars
+// despite being bigger.
+//
+// The shared nine-phase skeleton, in order: the inlined IsQuickCombat
+// guard (byte-identical in all three) / deltas / a `steps` divide /
+// per-step motion / sprite-or-frame selection / `Bitmap16Bit backup(w,h)`
+// plus four limits seeded from the 0x6aace8 quad / DrawFrame / a frame
+// delay from gCombatSpeedFactors[combatSpeed] / the animation loop. The
+// loop body is Grab, sprite Draw, a four-way union of the sprite rect
+// into the limits, a four-way clip against the 0x694f18 quad,
+// UpdateScreen with (r-l+1, b-t+1), then DelayTil.
+//
+// Where they differ: ShootBallisticMissile is the only PARABOLIC one - it
+// recomputes x and y from an `arc` term every frame instead of
+// accumulating a step - is the only one with no DrawFrame call, is the
+// only one whose backup restore sits INSIDE the loop, and uses a 100.0f
+// delay factor where the other two use 33.0f. ShootMissile is the only
+// one that does NOT cycle the sprite frame: it picks one frame from the
+// angle and holds it. ShootAnimatedMissile is the only one that owns its
+// sprite (ResourceManager::GetSprite ... Dispose).
+//
+// The union+clip+UpdateScreen block is DC's SLimitData::Include +
+// ::Clip + Width()/Height(), and the same block appears in
+// army::animate_missile (0x43f2c0), combatManager::DrawFrame (0x494440)
+// and ComputeMaxExtent (0x495bf0) - so spelling it right here pays off in
+// several more bodies. Suggested order: ShootMissile first (fullest angle
+// path, simplest loop), then ShootAnimatedMissile, then the parabola.
+//
+// One thing to settle before writing any of them: all four dwords of each
+// limits quad are read INDIVIDUALLY, each at displacement 0 against its
+// own symbol, so they want four separate externs rather than one struct -
+// the gCombatHexLeft694ea8 precedent in the header. And every new
+// file-scope extern on cmbtmgr.h fires the include-set wall by itself
+// (measured at gCombatSeed66d840), so all of them must be gated.
+
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3640
@@ -1943,6 +2341,33 @@ void combatManager::LearnSpellFromEagleEye(int side)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
+// SURVEYED 2026-08-20 (not reconstructed), and the survey starts with a
+// correction: an out-of-tree note had this body at 0x469f40, which is
+// wrong - that address is inside LearnSpellFromEagleEye (0x00469fe0,
+// 0x88). The claim below is the carve's and is the one that matches.
+//
+// The body is hero::TransferArtifacts (src/hero.cpp:2630, already
+// reconstructed) with GiveArtifact in place of add_to_backpack and a
+// vector append on the end. Byte-verified here: the two flag guards, the
+// looted hero as `heroes[1 - side]` (retail forms it as
+// `[this + 4*(0x14f4 - side)]`, and 0x14f4*4 == 0x53d0 == &heroes[1]),
+// the winner as heroes[side], equipped at dead+0x12d walked 19 slots of
+// 8 bytes, backpack at dead+0x3cc walked DOWNWARDS from 63, and the same
+// seven-way refusal chain in the same compare order (-1, 2, 0, 3, 4, 5,
+// 6) that artifact.h already names in full.
+//
+// TWO THINGS TO SETTLE BEFORE WRITING IT, neither of them about bytes:
+//   * hero::GiveArtifact is declared `void` in hero.h but retail returns
+//     in al and this body branches on it (`test al,al / je`). Fixing that
+//     is a hero.h edit, and a sibling lane owns src/hero.cpp - coordinate
+//     rather than race it. The change is a retype at constant declarator
+//     count, which this lane measured to be include-set inert.
+//   * the append is a real out-of-line call to the three-argument
+//     vector insert at 0x54d330, reached as `insert(_Last, 1, &artifact)`
+//     with the vector in ecx. Whether to spell that `push_back` (the DC
+//     roster carries the push_back row) or the insert directly depends on
+//     how the STL surface is modelled here; place_obstacle's own
+//     TObstacleVector uses the explicit insert spelling.
 VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
 void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts)
 {
