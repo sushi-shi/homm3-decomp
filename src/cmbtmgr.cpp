@@ -36,6 +36,11 @@
 //     moat-damage helper) - retail bodies with no counterpart anywhere
 //     in the DC cmbtmgr.obj roster, and all but 0x69e50 are called
 //     only from outside this span. Naming them would be invention.
+#define HOMM3_ARMY_MIDPOINT_DECL
+#define HOMM3_ARMY_NEW_TURN_DECL
+#define HOMM3_ARMY_POW_VIEW
+#define HOMM3_ARMY_RESET_LATCH_DECL
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #include <math.h>
 #include <stdlib.h>
 

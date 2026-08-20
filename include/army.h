@@ -7,6 +7,18 @@
 
 #include <va.h>
 #include <vector>
+// <deque> is admitted ONLY to the two views that declare
+// SpellInfluenceQueue (+0x420) below. It is not a score gate but a
+// COMPILE requirement in the strict sense: the member's type cannot be
+// named without it, and this header reaches most of the tree while
+// <deque> drags in a whole second container's worth of type
+// definitions - exactly the population this header's own measurements
+// (GetCommand 92.5714 -> 92.5357 for ONE declarator) show it is
+// sensitive to. Both arms of the member below still describe the same
+// 48 bytes, so the class layout is identical everywhere.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
+#include <deque>
+#endif
 
 class hero;
 class armyGroup;
@@ -57,6 +69,47 @@ enum EAttackCriteria {
 // switch at 0x4444d0 independently proves the attack/damage values; the
 // zero move value is corroborated by the exact FlyTo consumer.  Names
 // follow the mature HoMM2 sibling domain, whose behavior is homologous.
+// TWO SPELL-ROW INDICES armygrp.h's ESpellId does not name, parked here
+// for the same reason the creature ids below are: ANY enumerator added
+// to that enum costs initialize.obj's initialize_game_data 100.0000 ->
+// 96.0880, and army.cpp is the only consumer of these two. Both ids are
+// fixed by arithmetic against ids ESpellId already proves and by the
+// rule ResetRound (0x447120) implements against each:
+//   - 0x3a is the slot between SPELL_TITANS_LIGHTNING_BOLT 0x39 and
+//     SPELL_BERSERK 0x3b, and the row it gates adds
+//     army::counterstrokeBonus to the round's retaliation allowance -
+//     which is Counterstrike's rule and nothing else in the roster;
+//   - 0x4b sits four past SPELL_POISON 0x47 on the creature-spell run
+//     whose first four slots army.h already pairs as Bind (+0x2b8,
+//     index 72) and the paralyze slot CancelSpellType cancels on damage
+//     (index 74), and the row it gates HALVES the stack's recomputed
+//     maximum hit points - which is Aging's rule and nothing else.
+// Behind the round view for the usual measured reason.
+#ifdef HOMM3_ARMY_ROUND_VIEW
+enum EArmySpellRowId {
+    // Duplicates REMOVED 2026-08-20: armygrp.h's ESpellId owns these ids
+    // canonically now that its gates are gone; declaring them here too is
+    // a C2371 redefinition. Use the ESpellId spelling.
+    // The three rows Cure (0x446500) cancels that armygrp.h keeps
+    // behind its own views: taking those views here is not an option,
+    // because the ENCHANTMENT_TABLE block redefines SPELL_FRENZY,
+    // SPELL_BIND and SPELL_AGE, which this roster already owns. Each
+    // value is fixed twice over - once by armygrp.h's ladder and once
+    // by this header's own +0x198 round row (SLOW +0x270 == 54*4,
+    // PARALYZE +0x2b0 == 74*4) - and Cure's call order corroborates
+    // all three a third time, since its fourteen cancels run in
+    // strictly ascending spell id.
+    // The one row ResetRound refuses to decrement. 0x38 is the slot
+    // between SPELL_SLAYER 0x37 and SPELL_TITANS_LIGHTNING_BOLT 0x39,
+    // and frenzyRounds below already pairs +0x278 == +0x198 + 56*4 on
+    // ComputeAttackerDamageReduction's own reading.
+    // The row remove_binding (0x43ee10) cancels on a bound stack the
+    // moment its `binders` list empties - `push 0x48 / call
+    // CancelIndividualSpell` - which is the same index 72 the +0x2b8
+    // bindRounds field already pairs, reached from the other side.
+};
+#endif
+
 // The eight rows of cmbtmgr's gWallTargets. Retail DamageWall dispatches
 // on all eight values; names remain ordinal because no local roster names
 // the individual segments.
@@ -102,6 +155,7 @@ enum EArmySpellCancelType {
 //
 // Behind the wall view for the usual measured reason: a struct
 // definition is the include-set class's own trigger shape.
+#ifdef HOMM3_ARMY_WALL_VIEW
 struct type_ballistics_traits {
     signed char field_00;
     signed char field_01;
@@ -133,6 +187,7 @@ SIZE(type_ballistics_traits, 8);
 // experience ladder at 0x679c88 - so no DATA claim is made here.
 // army.cpp is the only located reader.
 extern const type_ballistics_traits (&const_ballistics_traits)[4];
+#endif
 
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
@@ -174,6 +229,7 @@ public:
     // animation loop then drives all five. They arrive as their own view
     // rather than by widening the move view because that one carries
     // twenty declarators cmbtmgr.obj has no use for.
+#ifdef HOMM3_ARMY_POW_VIEW
     unsigned char bShowAttackFrames;     // +0x00
     unsigned char bShowRangeFrames;      // +0x01
     signed char iShowAttackFrameType;    // +0x02
@@ -182,6 +238,13 @@ public:
     char pad_05[0x3];
     int iDrawPriority;            // +0x08
     char pad_0c[0x4];
+#elif defined(HOMM3_ARMY_MOVE_VIEW)
+    char pad_00[0x8];
+    int iDrawPriority;            // +0x08
+    char pad_0c[0x4];
+#else
+    char pad_00[0x10];
+#endif
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
     //
@@ -201,6 +264,7 @@ public:
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
+#ifdef HOMM3_ARMY_ROUND_VIEW
     // DC army.bShowPowEffect (members.csv army@32) and
     // army.iRoundsLeftBeforeVanish (army@44) - the low run this class
     // already pairs UNSHIFTED, IsMoving 48/+0x30 through origSpeed
@@ -208,8 +272,26 @@ public:
     // poison bites and counts the second down, sending the stack to
     // ProcessDeath the moment it reaches zero.
     unsigned char bShowPowEffect;  // +0x20
-    char pad_21[0xb];
+    char pad_21[0x3];
+    // DC army.iMirrorSourceIndex / army.iMirrorDestIndex (members.csv
+    // army@36 and @40, the same unshifted low run bShowPowEffect 32 and
+    // iRoundsLeftBeforeVanish 44 already pair). InitClean (0x43d5c0)
+    // resets both to -1 out of the same `or eax,-1` it uses for
+    // iPostPowSpellToCast, originalIndex and numTroopsToShowOverride,
+    // which is what fixes them as ints rather than the pad.
+    int iMirrorSourceIndex;        // +0x24
+    int iMirrorDestIndex;          // +0x28
     int iRoundsLeftBeforeVanish;   // +0x2c
+#elif defined(HOMM3_ARMY_POW_VIEW)
+    // PowEffect needs only the first of that pair - it scans every stack
+    // for a raised bShowPowEffect to decide whether to load the effect
+    // sprite at all, and clears it in the closing walk - so the pow view
+    // takes one declarator where the round view takes three.
+    unsigned char bShowPowEffect;  // +0x20
+    char pad_21[0xf];
+#else
+    char pad_20[0x10];
+#endif
     // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
     // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
     // army::Fly (0x4b4a40) raises it for the duration of the flight
@@ -231,24 +313,19 @@ public:
     // winmgr.h, bitmap16.h), which are army.cpp-local and move nothing.
     // Both arms spell the SAME four bytes, so the two views cannot
     // disagree about the layout; only the name is scoped.
+#ifdef HOMM3_ARMY_MOVE_VIEW
     unsigned char LetsPretendImNotHere;  // +0x31
     char pad_32[0x2];
+#else
+    char pad_31[0x3];
+#endif
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
     // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).
-    //
-    // THE TYPED ARM IS THE DC's OWN (members.csv `army,52,TCreatureType,
-    // armyType`), and combatManager::ModifySpellDamage (0x5a78e0) is the
-    // retail witness: it hands `[army + 0x34]` straight into armygrp's
-    // free modify_spell_damage, whose S_PUB32 mangling
-    // (?modify_spell_damage@@YIJJHW4TCreatureType@@@Z) types that slot
-    // TCreatureType - so the field is that enum in the original source
-    // or the call would not compile. TCreatureType lives in armygrp.h and
-    // this header does NOT include it, which is why it used to sit behind
-    // a view. UNGATED 2026-08-20: the ELABORATED form parses in every
-    // include order without the declaration being visible, which is the
-    // same spelling that dissolved herospec.h's creature view. One
-    // declarator of the same width either way, so no layout moves.
+    // enum, not int: hero::modify_spell_damage takes a TCreatureType and
+    // retail's S_PUB32 mangling for that slot is `W4TCreatureType`. The
+    // ELABORATED spelling parses in every include order without armygrp.h
+    // being visible, which is why this needs no view macro.
     enum TCreatureType creatureType;   // +0x34, DC army::armyType
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
@@ -270,7 +347,11 @@ public:
     // line below). army::Walk (0x43f0b0) stores its `direction`
     // parameter here before it touches the animation. Pad slice; behind
     // the move view with the rest of Walk's surface.
+#ifdef HOMM3_ARMY_MOVE_VIEW
     int walkDirection;            // +0x48
+#else
+    char pad_48[0x4];
+#endif
     // Stack size: set_melee_enemies (0x43bf20) feeds it to
     // get_average_damage as the attacking creature count.
     int numTroops;                // +0x4c
@@ -302,6 +383,7 @@ public:
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
+#ifdef HOMM3_ARMY_ROUND_VIEW
     // DC army.origHitPoints (members.csv army@108), the third of the
     // orig* trio after origPos 92/+0x5c and origSpeed 100/+0x64 that
     // this class already carries unshifted. ResetRound recomputes
@@ -316,6 +398,9 @@ public:
     // the rest of the sweep swings plain. Pad slice - the include-set
     // canaries do not move for one.
     int iLuckStatus;               // +0x70
+#else
+    char pad_68[0xc];
+#endif
     // +0x74 starts an EMBEDDED copy of the creature's traits row (the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
     // retail offsets already proven in this class agree with it field
@@ -427,7 +512,9 @@ public:
     // 92.5714 -> 92.5357 on its own - the include-set class, fired by
     // the arm nobody reads. Nested, the outside arm is the one pad it
     // always was.
+#ifdef HOMM3_ARMY_SPELLCAST_VIEW
     int numSpellCasts;            // +0xdc
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     char pad_e0[0x8];
     // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
     // show_fire_shield against this band's already-anchored +20 shift
@@ -436,6 +523,12 @@ public:
     // byte on the head it burned, and only when adjust_damage handed
     // back a non-zero fire component.
     unsigned char show_fire_shield;  // +0xe8
+#else
+    char pad_e0[0x9];
+#endif
+#else
+    char pad_dc[0xd];
+#endif
     // NAMED 2026-08-15 from the Dreamcast member table, and the three
     // bytes come out of it as one run: DC army@212/213/214 are
     // show_fire_shield / bSomeUnitsDamaged / bAllUnitsKilled against
@@ -455,9 +548,17 @@ public:
     // walk is its only decoded reader: any stack whose value is not -1
     // gets that spell cast on its own hex, and the slot is reset to -1
     // straight after. Spelled int because SpellID's enum lives in a
-    // header this one does not include.
+    // header this one does not include. The ROUND view is admitted to
+    // the same slice 2026-08-20: InitClean (0x43d5c0) resets it to -1
+    // out of the same shared `or eax,-1` it uses for originalIndex and
+    // the iMirror pair, which is a second and independent witness that
+    // +0xec is a dword field and not pad.
+#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_ROUND_VIEW)
     char pad_eb[0x1];
     int iPostPowSpellToCast;         // +0xec
+#else
+    char pad_eb[0x5];
+#endif
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // The side that OWNS this stack, written once by Init and never by
@@ -491,21 +592,37 @@ public:
     // the same shift combatSide/bitIndex already carry (DC group 224 ->
     // +0xf4, index 228 -> +0xf8, sMonFrameInfo 252 -> +0x110), so DC
     // 248 lands here. range_attack (0x440160) clears it as its first
-    // statement and nothing located yet reads it.
-    char pad_fc[0xc];
+    // statement and nothing located yet reads it. BEHIND A VIEW like
+    // every other name this header scopes: the bytes are identical in
+    // both arms, only the name is TU-local.
+#ifdef HOMM3_ARMY_RANGE_VIEW
+    // DC army.iLastFidgetTime (members.csv army@232, the flat +0x14
+    // this band carries from hitByCreature onward - the same shift that
+    // lands DC index 228 on combatSide's neighbour +0xf8). InitClean
+    // (0x43d5c0) stamps GameTime::Get() into it, and the name is
+    // independently corroborated by set_inside_area_effect (0x43efe0),
+    // whose whole animation arm is about the cs_fidget sequence.
+    unsigned long iLastFidgetTime; // +0xfc
+    char pad_100[0xc];
+    char* yModify;                // +0x10c
+    char pad_110[0x48];
+#elif defined(HOMM3_ARMY_POW_VIEW)
     // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
     // flat +0x14 the band above carries). PowEffect clears it for every
     // stack before the animation loop and raises it the frame a stack
     // falls back to cs_wait, which is what stops that stack advancing
     // for the rest of the sequence.
+    char pad_fc[0xc];
     // An INT, not the byte the name suggests (byte-proven 2026-08-20):
     // PowEffect both TESTS and STORES it a dword wide -
     // `mov eax,[esi+0x108] / test eax,eax` and
     // `mov dword ptr [esi+0x108],1` - where a char field would emit
     // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
-    int bPowSequenceComplete;     // +0x108
-    char* yModify;                // +0x10c
-    char pad_110[0x48];
+    int bPowSequenceComplete;            // +0x108
+    char pad_10c[0x4c];
+#else
+    char pad_fc[0x5c];
+#endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
     char pad_15c[0x4];
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
@@ -518,12 +635,16 @@ public:
     // MidY (0x446630) subtracts HALF of +0x16c from the hexcell's own y,
     // and LoadResources (0x43dd62) writes it as `0x10b - <stdIcon frame
     // metric>` - the stack's own vertical span on the combat field.
-    // InitClean zeroes it. UNGATED 2026-08-20 by the view audit: the
-    // slice adds a declarator to a tree-wide header, which is the
-    // include-set class, but that is a `cur` perturbation only - max and
-    // hist keep the peak - so it does not justify a macro.
+    // InitClean zeroes it. Sliced behind a view because this header is
+    // included tree-wide and the slice adds a declarator (see the
+    // include-set note at the top of army.cpp); army.cpp is the only
+    // consumer.
+#ifdef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
     int field_168;                // +0x168
     int field_16c;                // +0x16c
+#else
+    char pad_168[0x8];
+#endif
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
     sample* armySample[8];        // +0x170
@@ -536,13 +657,24 @@ public:
     // +0x194 on the flat +0x14 shift this class carries from
     // hitByCreature 220/+0xf0 onward).
     //
-    // Include-set measurement (2026-08): the array member and the union
-    // that carries it cost command.obj's GetCommand 92.5714 -> 92.5357
-    // when visible to every consumer (max/hist hold the peak).
-    // ai_tactical's spell pricers walk the row by spell id
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: the array member and the
+    // union that carries it cost command.obj's GetCommand 92.5714 ->
+    // 92.5357 unconditionally - the include-set class, fired here by a
+    // union/struct pair where this header's earlier triggers were
+    // declarations, enumerators and plain data members. Only the
+    // SCAFFOLDING is scoped; the field list below appears once and is
+    // shared by both arms, so the two views cannot disagree about a
+    // single byte. army.cpp is the only consumer of the row form.
+    //
+    // SPLIT OUT OF THE ROUND VIEW 2026-08-20, the same way ProcessDeath
+    // was: ai_tactical's spell pricers walk the row by spell id
     // (consider_enchantment 0x43a910 reads
     // `[target + 4*choice->spell + 0x198]`, get_cancel_value 0x439a80
-    // walks both rows at once).
+    // walks both rows at once) and they must not also inherit
+    // ResetRound and the round view's other twenty-six declarators to
+    // do it. HOMM3_ARMY_SPELL_ROW_VIEW opens the union alone, plus the
+    // spell_level row it is paired with below.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
     int numSpellInfluences;       // +0x194
     // THE ROW ITSELF, and the array is retail's own model rather than
     // this header's. ResetRound (0x447120) walks it whole with a single
@@ -558,6 +690,9 @@ public:
         int spellInfluence[81];   // +0x198 .. +0x2db
         struct {
     char pad_198[0x6c];
+#else
+    char pad_194[0x70];
+#endif
     // Shield / Air Shield round counters, byte-proven by
     // ComputeDefenderDamageReduction (0x443d90): the SHOOTING arm gates
     // on +0x208 and takes its factor from +0x4bc, the melee arm gates
@@ -588,19 +723,21 @@ public:
     // proves, +0x210..+0x21c is indices 30..33, i.e. SPELL_PROTECTION_AIR
     // (30) .. SPELL_PROTECTION_EARTH (33), directly after
     // SPELL_FIRE_SHIELD (29) at +0x20c above.
-    // UNGATED 2026-08-20 by the view audit. The gate was a measurement:
-    // slicing this run costs command.obj's GetCommand 92.5714 -> 92.5357
-    // via the include-set class, and slicing both halves unconditionally
-    // costs exactly that same one function and nothing else in the tree.
-    // That is a `cur` perturbation - max and hist keep the peak - so it
-    // is a re-measure by a later lane, not lost work, and it does not
-    // justify a macro. ModifySpellDamageForSpells (0x5a7bb0) pairs each
-    // counter with the multiplier at +0x4a8..+0x4b4 below.
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this slice alone, with
+    // the float run below left as its pad, costs command.obj's
+    // GetCommand 92.5714 -> 92.5357 - the include-set class, at the same
+    // two values this header's round-row union already records. Slicing
+    // both halves unconditionally costs exactly the same one function
+    // and nothing else in the tree; gating both returns it.
+#ifdef HOMM3_ARMY_PROTECTION_VIEW
     int protectionFromAirRounds;   // +0x210
     int protectionFromFireRounds;  // +0x214
     int protectionFromWaterRounds; // +0x218
     int protectionFromEarthRounds; // +0x21c
     char pad_220[0x8];
+#else
+    char pad_210[0x18];
+#endif
     // SPELL_MAGIC_MIRROR's entry in the 81-dword spellInfluence row.
     int magicMirrorRounds;        // +0x228
     char pad_22c[0x10];
@@ -677,6 +814,7 @@ public:
     int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
     char pad_2bc[0x4];
     int disabled_2c0;             // +0x2c0
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
     char pad_2c4[0x18];
         };
     };
@@ -693,8 +831,48 @@ public:
     // dereference straight into a type_enchant_data's `mastery` field,
     // which is what names the row: the mastery the standing spell was
     // cast at.
+    // THE SPELL QUEUE, and it is a std::deque - not this header's
+    // guess but retail's own container arithmetic. InitClean (0x43d5c0)
+    // calls ONE function on the object at +0x420, handing it the two
+    // SIXTEEN-BYTE values at +0x424 and +0x434 BY VALUE and taking a
+    // sixteen-byte answer back through a hidden return pointer; that
+    // callee (0x448db0) opens by comparing the +0xc words of the two
+    // and, when they differ, computes `((a-b)>>2 + 0x3fffff) << 10`
+    // plus a second scaled difference. That is Dinkumware's
+    // `deque::erase(iterator, iterator)` with its map/block distance,
+    // over 4-byte elements and a 1024-entry block - so +0x424 is
+    // `_First`, +0x434 is `_Last`, and the whole record is
+    // allocator(4) + two 16-byte iterators + _Map + _Mapsize + _Size =
+    // 48 bytes, 0x420..0x44f. The call is `clear()`, which /Ob2 folds
+    // into `erase(begin(), end())` exactly as seen.
+    //
+    // DC names it (members.csv army@1028 SpellInfluenceQueue, nested
+    // type TSpellQueue) and the DC carcass tail in army.cpp lists its
+    // whole COMDAT set, `deque<enum SpellID, allocator<enum SpellID>,
+    // 0>`. THE OFFSET IS THE LAYOUT PROOF: DC 1028 -> retail 0x420 is a
+    // 28-byte shift while DC 1072 retaliationCount -> retail +0x454 is
+    // 36, and the difference is exactly the 8 bytes Dinkumware's deque
+    // is bigger than STLport's - the same "retail's preceding STL
+    // expansion shifts it" the armySample note records.
+    //
+    // Spelled `int` rather than SpellID for the reason
+    // iPostPowSpellToCast above already carries: that enum lives in a
+    // header this one does not include. Same 4-byte element, same
+    // codegen; only the mangled COMDAT name differs, and those are
+    // unclaimed rows whose reloc names are cosmetic anyway.
+    typedef std::deque<int> TSpellQueue;
+#ifdef HOMM3_ARMY_SPELL_ROW_VIEW
     int spell_level[81];          // +0x2dc .. +0x41f
-    char pad_420[0x34];
+    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
+    float PaletteEffect;          // +0x450 (DC army@1068)
+#else
+    char pad_2dc[0x144];
+    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
+    float PaletteEffect;          // +0x450 (DC army@1068)
+#endif
+#else
+    char pad_2c4[0x190];
+#endif
     // Retaliations left this round: simulate_attack (0x4359b0) only
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
@@ -720,6 +898,7 @@ public:
     // Slayer's mastery level: get_adjusted_attack admits creature bit 7
     // at any level, bit 8 from 2 up and bit 9 from 3 up.
     int slayerLevel;              // +0x48c
+#ifdef HOMM3_ARMY_ROUND_VIEW
     // DC army.counterstrokeBonus (members.csv army@1136 on the flat
     // +0x24 shift retaliationCount 1072/+0x454 fixes for this run;
     // slayerLevel 1128/+0x48c two lines above is the same shift).
@@ -732,6 +911,9 @@ public:
     // `distance`, which is the Champion's per-hex charge bonus.
     int joustBonus;                // +0x490
     int counterstrokeBonus;        // +0x494
+#else
+    char pad_490[0x8];
+#endif
     // Frenzy's defense-to-attack conversion factor: while frenzyRounds
     // is up, get_adjusted_attack answers
     // `get_adjusted_defense(enemy, 0) * this + attack`. It is also what
@@ -751,12 +933,18 @@ public:
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
     float fireShieldStrength;     // +0x4a0
+#ifdef HOMM3_ARMY_ROUND_VIEW
     // DC army.poison_penalty (members.csv army@1152), the word straight
     // after fire_shield_strength 1148/+0x4a0 in the same DC run. It is
     // a MULTIPLIER, not a count: ResetRound subtracts 0.1f from it once
     // per round, floors the result at 0.5 and rescales the stack's
     // hitPoints by what is left.
     float poisonPenalty;           // +0x4a4
+#elif defined(HOMM3_ARMY_PROTECTION_VIEW)
+    char pad_4a4[0x4];
+#else
+    char pad_4a4[0x14];
+#endif
     // The four Protection-from-<school> damage multipliers, DC-named
     // (members.csv army 1156/1160/1164/1168 protectionFrom{Air,Fire,
     // Water,Earth}Factor) and pinned to these retail offsets by the same
@@ -765,15 +953,23 @@ public:
     // retail +0x4b8, so the four words between them are +0x4a8..+0x4b4
     // in DC order. ModifySpellDamageForSpells (0x5a7bb0) reads all four
     // and pairs each with the round counter at +0x210..+0x21c above.
-    // UNGATED 2026-08-20 by the view audit. The gate that used to hold
-    // these cost command.obj's GetCommand 92.5714 -> 92.5357 to remove,
-    // which is a `cur` perturbation only - max and hist keep the peak,
-    // so it is a re-measure and not a loss. Four floats occupy exactly
-    // the 0x10 the old pad did.
+    // BEHIND THE SAME VIEW AS THE COUNTERS, AND THAT IS A MEASUREMENT:
+    // slicing this pad alone, with the counters above left gated, costs
+    // command.obj's GetCommand 92.5714 -> 92.5357 all by itself - so the
+    // two halves each trip the include-set class independently, at the
+    // same two values this header's neighbours already record.
+    // The #elif keeps every arm's declarator COUNT unchanged for TUs
+    // that do not ask for the view: with neither view the run is still
+    // one pad_4a4[0x14], and with the round view alone it is still
+    // poisonPenalty + pad_4a8[0x10]. Every field is declared once.
+#ifdef HOMM3_ARMY_PROTECTION_VIEW
     float protectionFromAirFactor;   // +0x4a8
     float protectionFromFireFactor;  // +0x4ac
     float protectionFromWaterFactor; // +0x4b0
     float protectionFromEarthFactor; // +0x4b4
+#elif defined(HOMM3_ARMY_ROUND_VIEW)
+    char pad_4a8[0x10];
+#endif
     // The two damage multipliers ComputeDefenderDamageReduction pairs
     // with shieldRounds and airShieldRounds above.
     float shieldFactor;           // +0x4b8
@@ -804,8 +1000,12 @@ public:
     // per-stack "this side has one of these" marker whose meaning that
     // latch does not name either. Behind the pow view, which the same
     // TU already defines.
+#ifdef HOMM3_ARMY_POW_VIEW
     unsigned char field_4d8;      // +0x4d8
     char pad_4d9[0x7];
+#else
+    char pad_4d8[0x8];
+#endif
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
@@ -825,8 +1025,11 @@ public:
     // the corroborating pair, not the proof.
     int morale;                   // +0x4e8
     int luck;                     // +0x4ec
-    // combatManager::NextArmy (0x465080) gates its three disabled_*
-    // tests on this latch.
+// HOMM3_ARMY_RESET_LATCH_DECL admits field_4f0 ALONE, without the aura
+// vectors or army.cpp's round view: combatManager::NextArmy (0x465080)
+// gates its three disabled_* tests on this latch and needs nothing else
+// from either block. Both arms below still describe the same bytes.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_RESET_LATCH_DECL)
     // A per-round latch ResetRound clears before anything else. No
     // roster attests it and ResetRound is the only writer located so
     // far, so the name is an address ordinal. (DC calls it
@@ -843,14 +1046,31 @@ public:
     // teardowns: remove_binding walks +0x4f4 erasing `this` from each
     // element's +0x504, and remove_aura walks +0x524 erasing `this`
     // from each element's +0x514, each pair being the exact inverse of
-    // the other. (+0x4f1 is the DC's is_area_effect_target byte, left
-    // in the pad until a body reads it; the +0x4f0 latch above is the
-    // DC's reset_this_round.)
-    char pad_4f1[0x3];
+    // the other. (The +0x4f0 latch above is the DC's reset_this_round.)
+    //
+    // +0x4f1 is the DC's is_area_effect_target, sliced out of the pad
+    // 2026-08-20 when set_inside_area_effect (0x43efe0) was
+    // reconstructed: that body compares it against its own byte
+    // argument, stores the argument into it, and then RELOADS it from
+    // the member for the animation test - which is what fixes the
+    // offset and the byte width. Both arms take the declarator so the
+    // include-set count stays equal between them; the whole block is
+    // already behind the round/reset gate above, so nothing outside
+    // those two views sees a new declarator.
+#ifdef HOMM3_ARMY_AURA_VIEW
+    unsigned char is_area_effect_target;  // +0x4f1
+    char pad_4f2[0x2];
     std::vector<army*> bound_armies;   // +0x4f4
     std::vector<army*> binders;        // +0x504
     std::vector<army*> aura_clients;   // +0x514
     std::vector<army*> aura_sources;   // +0x524
+#else
+    unsigned char is_area_effect_target;  // +0x4f1
+    char pad_4f2[0x42];
+#endif
+#else
+    char pad_4f0[0x44];
+#endif
     // Damage this stack is already committed to take this turn: the
     // AI subtracts it from the stack's total hit points before every
     // simulation (get_simple_attack_effect 0x435b90).
@@ -958,8 +1178,10 @@ public:
     // it the way advmgr / events / hero already scope theirs. The
     // measurement is the whole justification: remove the guard and
     // GetCommand drops again.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     long get_clockwise(long direction) const;
     long get_counter_clockwise(long direction) const;
+#endif
     // DC public ?CanFit@army@@QBAHHHPAH@Z; mark_teleport's retail call
     // passes (hex, 0, 0) through a const army pointer.
     int CanFit(int destIndex, int bAllowShifting,
@@ -971,6 +1193,13 @@ public:
     void add_aura();                         // 0x43ea70
     void remove_aura();                      // 0x43ec50
     void remove_binding();                   // 0x43ee10
+    // Raise or lower the "this stack is standing in an area effect"
+    // latch and re-pose it: the retail body (0x43efe0) returns 0 when
+    // the latch is already the requested value, so callers use the
+    // answer as "did anything change". `_N_N` on the DC public
+    // (?set_inside_area_effect@army@@QAA_N_N@Z) is both the byte
+    // argument and the byte return.
+    unsigned char set_inside_area_effect(unsigned char arg);  // 0x43efe0
     void play_sample(TSampleID id);          // 0x43d540
     void stop_sample(TSampleID id);          // 0x43d580
     // simple_move is PRIVATE on its own public
@@ -989,6 +1218,7 @@ public:
     // now one). Bisected against the other three declarations added in
     // the same change: only this one and cmbtmgr.h's mark_moving_army
     // fire it. army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_MOVE_VIEW
     unsigned char WalkTo(int destIndex, unsigned char restore_facing);
     unsigned char attack_hex(int hex, unsigned char restore_facing);
     // 0x445cd0 (56 B), CORRECTED 2026-08-15. This row carried the name
@@ -1001,12 +1231,14 @@ public:
     // The row is the COMDAT copy of the header inline, emitted because
     // attack_hex's own expansion of can_shoot leaves a real call to it
     // at depth 2 while army::Walk inlines it at depth 1.
+#endif
     unsigned char move_to(int hex, unsigned char restore_facing);
     // The catapult pair, both claimed in army.cpp and both behind a view
     // for the same measured reason every other member declaration in
     // this header carries. army.cpp is the only consumer: AttackWall
     // (0x445d30) drives the traits overload once per shot and that one
     // tail-calls the other.
+#ifdef HOMM3_ARMY_WALL_VIEW
     // 0x445d30. The whole bombardment: aim once, then fire the row's
     // `shots` at that segment, re-aiming whenever it falls.
     void AttackWall(int iTargetGridIndex);
@@ -1023,6 +1255,7 @@ public:
     // recorded here and NOT acted on: the access move is the same
     // whole-family pass simple_move's note above is waiting on.
     void attack_wall(TWallTargetId wall, long levelsDestroyed);
+#endif
     // The shooting pair. 0x440160 is the public no-argument entry - it
     // resolves groupToAttack/indexToAttack into the target stack, turns
     // to face it, and fires between one and three volleys - and it
@@ -1030,12 +1263,15 @@ public:
     // 0x43f900 (still a carcass), which is the animation-and-damage
     // worker. Behind a view for the header's usual measured reason;
     // army.cpp is the only consumer of either.
+#ifdef HOMM3_ARMY_RANGE_VIEW
     void range_attack();
     void range_attack(army* armyToAttack);
+#endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
+#ifdef HOMM3_ARMY_MOVE_VIEW
     // Two CLASS-BODY inlines the Dreamcast dump attests in Army.h and
     // retail carries no out-of-line copy of - the /Ob2 header-inline
     // case, same as get_owning_side above. Both are ONE statement on
@@ -1065,11 +1301,18 @@ public:
     }
     void Walk(int direction, unsigned char end_walk,
               unsigned char initial_walk);   // 0x43f0b0
+#endif
     // 0x43e140, carcass in army.cpp; declared here because army::Fly
     // (fly.obj) calls it once per animation frame.
     void DrawToBuffer(int x, int y, int bNumBoxOnly);
     void CancelSpellType(int iSpellType);    // 0x4444d0
     void CancelIndividualSpell(int spell);   // 0x444510
+    // The Cure spell's whole effect: restore hit points, clamp the top
+    // creature's damage to what the stack can still survive, cancel the
+    // fourteen negative influences one by one and heal the remainder.
+    // The DC prototype (army.cpp:4739) names the three parameters and
+    // retail's `ret 0xc` agrees.
+    void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
     // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
     // address is not claimed here, only the declaration. spells.obj's
     // SetMassSpellInfluence (0x5a66d0) is the located caller and its
@@ -1077,10 +1320,12 @@ public:
     // them. BEHIND A VIEW because this header is in almost every TU's
     // include closure and its declarator count is already near an
     // include-set boundary; src/spells.cpp is the only consumer.
+#ifdef HOMM3_ARMY_SPELLS_VIEW
     // `mastery` is TSkillMastery, spelled int here because that typedef
     // is not in this header's closure.
     void SetSpellInfluence(int spell, int power, int mastery,
                            const hero* casting_hero);
+#endif
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
     unsigned char ValidFlight(int destIndex,
@@ -1176,6 +1421,7 @@ public:
         // that takes the DEMONIC resurrection arm, priced (in
         // get_resurrection_size 0x447330, already exact) in
         // akCreatureTypeTraits[0x30].hitPoints. NH3API spelling.
+#ifdef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
         ARMY_CREATURE_BLACK_DRAGON = 0x53,
         ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
         ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
@@ -1193,6 +1439,7 @@ public:
         // town's run eight slots later. NH3API spellings.
         ARMY_CREATURE_GRIFFIN = 0x4,
         ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
+#endif
         // The two creatures that bring down a wall segment without a
         // catapult, and AttackWall (0x445d30) is what proves both: its
         // switch answers 0x5e with ballistics row 1 and 0x5f with row
@@ -1205,8 +1452,10 @@ public:
         // Ancient Behemoth 0x61, so the tier-five pair is 0x5e/0x5f,
         // and Cyclopes are HoMM3's one wall-breaking creature.
         // Behind the wall view for the header's usual measured reason.
+#ifdef HOMM3_ARMY_WALL_VIEW
         ARMY_CREATURE_CYCLOPS = 0x5e,
         ARMY_CREATURE_CYCLOPS_KING = 0x5f,
+#endif
         // The aura pair. add_aura (0x43ea70) is the only reader and it
         // tests BOTH stacks against the same two ids, once in each
         // direction, which is what says these are the creature that
@@ -1217,8 +1466,10 @@ public:
         // subject - Rampart owns both of HoMM3's stack-to-stack
         // relationships, the unicorn's resistance aura and the
         // dendroid's bind. Behind the aura view; NH3API spellings.
+#ifdef HOMM3_ARMY_AURA_VIEW
         ARMY_CREATURE_UNICORN = 0x18,
         ARMY_CREATURE_WAR_UNICORN = 0x19,
+#endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
         // The three creatures with a START-OF-TURN ability, and
@@ -1244,9 +1495,11 @@ public:
         //     of three rounds, which is the enchanter's mass cast.
         // Behind a view for this header's usual measured reason;
         // cmbtmgr.cpp is the only consumer.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
         ARMY_CREATURE_WRAITH = 0x3d,
         ARMY_CREATURE_FAERIE_DRAGON = 0x86,
         ARMY_CREATURE_ENCHANTER = 0x88,
+#endif
         // The two combat participants can_shoot (0x4428f0) admits as
         // shooters unconditionally, ahead of every other test - the
         // ballista and the arrow tower, which are the only war machines
@@ -1308,10 +1561,12 @@ public:
     // not folded into the addressing mode" barrier get_controller's
     // note already records, worth 1.09 on that body. Behind the aura
     // view; army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_AURA_VIEW
     int get_owning_side() const
     {
         return combatSide;
     }
+#endif
     // 0x440140 (31 B, `this` only): the side that is CURRENTLY driving
     // this stack - combatSide, or its complement while the hypnotize
     // counter is up. Located 2026-08-14 by body identity: the same
@@ -1341,8 +1596,10 @@ public:
     //     for the enchanter and only while the per-side counter at
     //     combatManager+0x132a0 exceeds 2, clearing that counter when
     //     the answer is non-zero.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
     void FaerieDragonSpell();                // 0x447510
     unsigned char Unnamed447fe0();           // 0x447fe0
+#endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the
@@ -1357,8 +1614,10 @@ public:
     // the 112-byte hexcell stride. DECLARED, NOT DEFINED - army.cpp
     // still carries both as DC_ONLY carcasses. Behind a view for this
     // header's usual measured reason.
+#ifdef HOMM3_ARMY_MIDPOINT_DECL
     int MidX() const;                        // 0x446660
     int MidY() const;                        // 0x446630
+#endif
     unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
@@ -1423,6 +1682,17 @@ public:
                                      long distance) const;
     double ComputeAttackerDamageReduction(const army* defender,
                                           unsigned char is_shooting) const;
+    // 0x443320, the retail-only numeric half of the row above: the
+    // offense / archery / spell-bonus arithmetic with no combat
+    // message and no sound, so that get_estimated_damage (0x443e30)
+    // can price a blow without playing one. Same five parameters and
+    // the same `ret 0x14`, and its `defender` stays NON-const for the
+    // same reason adjust_damage's does - the const caller casts, the
+    // declaration does not drop it. Declared, not claimed here;
+    // army.cpp owns the body.
+    int compute_attacker_bonus(int base_damage, unsigned char is_shooting,
+                               army* defender, unsigned char simulate_only,
+                               long distance) const;
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const
@@ -1445,6 +1715,7 @@ public:
     // Shield retaliation. Behind a view because a bare member
     // declaration is this header's own measured include-set trigger;
     // army.cpp is the only consumer of either.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
     void do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
                               long* fire_damage);
     void do_fire_shield(long damage);
@@ -1454,6 +1725,7 @@ public:
     // live.
     void do_attack(int direction);
     unsigned char do_attack(army* armyToAttack, int direction);
+#endif
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
@@ -1496,14 +1768,20 @@ public:
     // consumer costs command.obj's GetCommand 92.5714 -> 92.5357, this
     // header's include-set class again and its third bare member
     // DECLARATION to fire it. army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_BERSERK_VIEW
     void GoBerserk();
+#endif
+#ifdef HOMM3_ARMY_CALIPH_VIEW
     // 0x447ee0, claimed in army.cpp: roll one of the caliph spells the
     // stack at `hex` is a legal target for and cast it.
     void cast_caliph_spell(long hex);
+#endif
+#ifdef HOMM3_ARMY_ROUND_VIEW
     // 0x447120, claimed in army.cpp. Everything a stack does between
     // rounds: retaliations restored, spell rounds decremented, poison
     // applied, and the summon countdown that ends in ProcessDeath.
     void ResetRound();
+#endif
     // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
     // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
     // argument, which is what the DC roster's two-parameter row and the
@@ -1512,12 +1790,15 @@ public:
     // 2026-08-20 so combatManager::PowEffect, whose death sweep is its
     // second decoded caller, can reach it without also taking
     // ResetRound and the round view's other twenty-six declarators.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_POW_VIEW)
     void ProcessDeath(int bFadeElementals);
+#endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this pair is the FOURTH
     // bare member declaration in this header to move command.obj's
     // GetCommand 92.5714 -> 92.5357, after numSpellCasts, GoBerserk and
     // cmbtmgr.h's find_demonic_resurrection_target. ai.cpp is the only
     // consumer of either.
+#ifdef HOMM3_ARMY_AI_VIEW
     // 0x43d730, army.obj. Six stack arguments over `this` - the DC
     // roster's own count for army::initialize (army.cpp:150, dc
     // 0x439b0) - and ai.cpp's choose_resurrect_action (0x421000) passes
@@ -1528,11 +1809,14 @@ public:
     // this header does not include it. Same width, same codegen.
     void initialize(int type, long number, const hero* owner,
                     long new_group, long new_index, long new_grid_index);
+#endif
     int get_second_grid_index() const;                          // 0x4466a0
+#ifdef HOMM3_ARMY_AI_VIEW
     // DC Army.h twin of the grid-index pair above (army.cpp:4850, dc
     // 0x4b398). Const because ai.cpp's choose_defense_hex (0x4205d0)
     // asks it through the `const army* client` it takes.
     unsigned char is_adjacent(int hex) const;
+#endif
     int get_mirror_effect() const;                              // 0x4487f0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,
@@ -1580,20 +1864,17 @@ public:
     // disabled_2c0` test appears inlined at 23 other sites across
     // ai/ai_tactical/army/spells. Const
     // (?IsIncapacitated@army@@QBA_NXZ); the body is three reads.
-    // COMPILE-REQUIRED GATE (view audit 2026-08-20): the DEFINITION is
-    // scoped, not the symbol. ai.cpp carries the out-of-line definition
-    // that owns the 0x41f380 claim, so the header body visible there is
-    // C2084; army::do_attack (0x441cb0) expands the test, so army.cpp
-    // needs the body. Both spell the same three reads.
-#ifdef HOMM3_ARMY_ISINCAPACITATED_DEF
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    // THE DEFINITION IS SCOPED, NOT THE SYMBOL: army::do_attack
+    // (0x441cb0) expands this test where every other TU calls or
+    // re-expands it, so army.cpp needs the body while ai.cpp keeps the
+    // out-of-line definition that owns the 0x41f380 claim. Both spell
+    // the same three reads.
     unsigned char IsIncapacitated() const
     {
         return static_cast<unsigned char>(disabled_290 || disabled_2b0
                                           || disabled_2c0);
     }
-#else
-    unsigned char IsIncapacitated() const;                      // 0x41f380
-#endif
     // The other Army.h inline of the same family (DC Army.h:847, dc
     // 0x27dd8), RECONSTRUCTED 2026-08-15 from the ONE retail expansion
     // that exists: army::do_attack (0x441cb0) emits its four tests in
@@ -1607,6 +1888,9 @@ public:
         return numTroops > 0 && !(attacker->Is(16) & 1) && !disabled_2b0
                && retaliationCount > 0;
     }
+#else
+    unsigned char IsIncapacitated() const;                      // 0x41f380
+#endif
     // 0x446e30 (737 B), the DC roster's army::new_turn (army.cpp:5177,
     // dc 0x4ba88), attributed to army.obj by link order. Void and
     // argument-less: combatManager::NextArmy (0x465080) calls it with
@@ -1616,16 +1900,19 @@ public:
     // is the include-set wall's trigger shape and C1XX numbers member
     // handles in declaration order; cmbtmgr.cpp is the only consumer so
     // far. Declared, not claimed - army.cpp owns the body.
+#ifdef HOMM3_ARMY_NEW_TURN_DECL
     void new_turn();
+#endif
     // 0x43d5c0 (358 B) <- army::InitClean (dc 0x438e8, 200 B, 1 param =
     // `this` only; SH4->x86 ratio 1.79, in band). LoadArmies (0x463600)
     // calls it on each of the twenty slots it has just blanked, and the
     // DC order InitClean < Init < LoadResources holds in retail too -
     // 0x43d5c0 < 0x43d8b0 < 0x43d9f0 - which is what corroborates the
     // arity match. The Init/LoadResources pair above was located
-    // independently from AddArmy and needs no gate; this row is gated
-    // only because it is a NEW declarator on a header this widely
-    // included. Declared, not claimed - army.cpp owns the body.
+    // independently from AddArmy and needs no gate, and neither does
+    // this one any more: the gate it carried was a declarator-count
+    // gate, which is the class the view-gate audit is unwinding.
+    // Declared, not claimed - army.cpp owns the body.
     void InitClean();
 };
 SIZE(army, 0x548);
@@ -1643,8 +1930,10 @@ SIZE(army, 0x548);
 // whose only located expansion is get_multi_head_directions
 // (0x448ab0). Names are bootstrap inventions - no roster attests them.
 // Scoped to army.cpp with the accessor pair above, same measurement.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
 DATA(0x00660878) extern const long akWideDirectionRingIndex[8];
 DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
+#endif
 
 // The five globals a walk publishes for the redraw, and their NAMES ARE
 // THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
@@ -1656,11 +1945,13 @@ DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
 // They sit immediately below akWideDirectionRingIndex at 0x660878,
 // which is the four dwords 0x660868..0x660874 exactly. Scoped to
 // army.cpp with the rest of the move surface.
+#ifdef HOMM3_ARMY_MOVE_VIEW
 DATA(0x00660868) extern int giWalkingFrom;
 DATA(0x0066086c) extern int giWalkingFrom2;
 DATA(0x00660870) extern int giWalkingTo;
 DATA(0x00660874) extern int giWalkingTo2;
 DATA(0x00693858) extern int giWalkingYMod;
+#endif
 
 // The caliph (creature-cast) spell predicates, both /Gr free functions
 // taking their two arguments in ECX/EDX.
