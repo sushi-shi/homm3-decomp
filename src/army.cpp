@@ -7124,8 +7124,6 @@ inline long army::get_counter_clockwise(long direction) const
     return (direction + 5) % COMBAT_DIRECTION_COUNT;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:5717
 // The AI's "keep the best attack seen this round" sink: the three
 // arguments are stored verbatim into the AI target / value / time
@@ -7136,10 +7134,27 @@ VA(0x00448840, 0x26F)  // anchor-global (body: the AI-target triple store)
                        // + arity ret 0xc, dc 0x4c778
 void army::consider_attack(const army* enemy, long value, long attack_distance)
 {
-    // @stub
+    long turns;
+    if (!GetSpeed()) {
+        turns = 1;
+    } else {
+        turns = (attack_distance + GetSpeed() - 1) / GetSpeed();
+        if (turns < 1)
+            turns = 1;
+    }
+    if (turns == 1)
+        AI_possible_targets |= 1 << enemy->bitIndex;
+    if (AI_target) {
+        long current = get_AI_target_time(GetSpeed());
+        if (turns > current)
+            return;
+        if (turns == current && value <= AI_target_value)
+            return;
+    }
+    AI_target = const_cast<army*>(enemy);
+    AI_target_value = value;
+    AI_target_time = attack_distance;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\army.cpp:5757
 // The Cerberus fan: which directions a three-headed swing at `enemy`
