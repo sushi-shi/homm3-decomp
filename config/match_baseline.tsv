@@ -310,6 +310,7 @@ army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
 army	?Cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
+army	?FaerieDragonSpell@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47510
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?GoBerserk@army@@QAEXXZ	86.0096	86.0096	86.0096	0x456d0
@@ -387,7 +388,6 @@ army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
-army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
 army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
 army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
