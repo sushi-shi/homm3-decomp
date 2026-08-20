@@ -57,7 +57,8 @@ public:
 
 #if defined(HOMM3_TOWN_OBJ_DECLS) \
         || defined(HOMM3_SYSTEMOPTIONSWINDOW_OBJ_DECLS) \
-        || defined(HOMM3_HERO_OBJ_DECLS)
+        || defined(HOMM3_HERO_OBJ_DECLS) \
+        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
     CNetMsg() {}
 #endif
     CNetMsg(int new_sub_type, unsigned long new_size)
@@ -105,7 +106,8 @@ SIZE(CCombatTypeMsg, 0x18);
 
 class CMapChange : public CNetMsg {
 public:
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS) \
+        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
     CMapChange() {}
 #endif
     CMapChange(eRS_Messages id, unsigned long messageSize)
@@ -232,11 +234,28 @@ public:
 SIZE(CMCDeadHero, 0x1c);
 #endif
 
-#ifdef HOMM3_TOWN_OBJ_DECLS
+// game.obj opens this on its own narrow gate: playerData::add_garrison_hero
+// (0x4b9fc0) broadcasts the same record town::SwapHeroes does.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
 class CMCHideHero : public CMapChange {
 public:
     int heroId;
 
+    // MEMBER FIRST, and the two call sites CONTRADICT each other on it -
+    // A/B'd both ways 2026-08-20 with both bodies compiled:
+    //   this spelling      -> SwapHeroes 100.00, add_garrison_hero 98.99
+    //   base-first, i.e.
+    //   `: CMapChange(RS_HIDE_HERO, sizeof(CMCHideHero)) { heroId = id; }`
+    //   (and the two equivalent init-list / body-last forms, all three
+    //   measured identical) -> add_garrison_hero 100.00, SwapHeroes 97.77
+    // In retail the two differ only in WHICH REGISTER holds the id:
+    // SwapHeroes has it in ECX, so the store is forced ahead of the
+    // `lea ecx,[ebp-0x20]` that sets up the call, while
+    // add_garrison_hero has it in EAX and sinks the store past all five
+    // base stores. One emission is scheduling luck either way; no source
+    // spelling reproduces both. Kept here because SwapHeroes is EXACT
+    // with it and the alternative only trades that exact row for this
+    // one (and regresses town.obj below its recorded max).
     CMCHideHero(int id)
         : CMapChange()
     {

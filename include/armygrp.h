@@ -134,6 +134,40 @@ enum TCreatureType {
     CREATURE_ARCH_MAGE = 0x23,
     CREATURE_ENCHANTER = 0x88,
     CREATURE_SHARPSHOOTER = 0x89,
+    // The rest of the two blocks the note above already brackets, added
+    // 2026-08-20 for game::GetRandomMonster (0x4c92c0). That body strikes
+    // ids out of its roll domain with PUSHED IMMEDIATES, so every value
+    // here is retail-proven at the byte, and the two sets it forms are
+    // each semantically closed. 0x84..0x89 is the six Armageddon's Blade
+    // neutral specials - the same block this header already runs "Azure
+    // Dragon 0x84 / Crystal Dragon 0x85 ... Halfling 0x8a" through, with
+    // Enchanter/Sharpshooter already pinned inside it. 0x76..0x83, with
+    // 0x7a/0x7c/0x7e/0x80 skipped, is every Conflux-exclusive creature:
+    // the upgrade half of each elemental pair plus the two Phoenix rungs.
+    // The four BASE elementals are deliberately absent from that set -
+    // they are generic neutrals and GetRandomMonster leaves them in the
+    // domain, which is what makes the skipped ids evidence rather than a
+    // gap. Existing neighbours 0x7b/0x7d/0x7f/0x81/0x86/0x88/0x89/0x8a
+    // bracket the new values with no slack. NH3API Complete spellings.
+    // MAGIC_ELEMENTAL 0x79, AZURE_DRAGON 0x84 and CRYSTAL_DRAGON 0x85 are
+    // NOT repeated here - get_spell_work_chance's immunity switch already
+    // carries all three below, at the same values this body proves.
+    //
+    // GATED, and it has to be - measured both ways 2026-08-20, exactly
+    // like netmsg.h's RS_ERASE_OBJECT. Ungated, these six enumerators take
+    // initialize ?initialize_game_data@@YIXXZ 100.00 -> 96.09 and events
+    // ?monsters_sell_out@advManager@@... 100.00 -> 99.95. 96.09 is the
+    // include-set canary's own signature value, and neither TU mentions a
+    // creature id: this is the documented type/symbol-table population
+    // class, not a modelling error. game.obj opens them for itself.
+#ifdef HOMM3_GAME_RANDOM_OBJECTS_DECLS
+    CREATURE_PIXIE = 0x76,
+    CREATURE_SPRITE = 0x77,
+    CREATURE_PSYCHIC_ELEMENTAL = 0x78,
+    CREATURE_FIREBIRD = 0x82,
+    CREATURE_PHOENIX = 0x83,
+    CREATURE_RUST_DRAGON = 0x87,
+#endif
     // hero::GetManaCost (0x4e5240) crosses two pairs: 0x14/0x15 in the
     // ENEMY group add 2 to the cost, 0x22/0x23 in the caster's own
     // group take 2 off. The second pair is the Mage/Arch Mage above -

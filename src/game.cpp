@@ -8,7 +8,19 @@
 // with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
 // inline's visibility is scoped.
 #define HOMM3_TOWN_HASBUILDING_API
+// playerData::add_garrison_hero (0x4b9fc0) needs three declarators no
+// other game.obj body reaches: game::GameFn_0049C720, and CMCHideHero
+// with the two default constructors it chains through. Held on its own
+// gate so neither townmgr.obj (the other HOMM3_GAME_OBJ_DECLS consumer)
+// nor any town.h/hero.h reader widens its include closure.
+#define HOMM3_GAME_GARRISON_HERO_DECLS
+// game::ProcessRandomObjects (0x4c9dd0) needs its own declarator, the
+// GetRandomMonster it rolls each monster case with, and ConvertObject -
+// which town.obj already declares behind its own gate. Held together
+// here so townmgr.obj gains no member of class game.
+#define HOMM3_GAME_RANDOM_OBJECTS_DECLS
 #include "advmgr_objects.h"
+#include "advmgr.h"
 #include "terrain.h"
 #include <stdio.h>
 #include <string.h>
@@ -49,6 +61,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "kb.h"
 #include "cursor.h"
 #include "puzzlewindow.h"
+#include "resourcemanager.h"
 #include "herospec.h"
 #include "imm_mouse.h"
 
@@ -86,6 +99,14 @@ inline TArtifact artifact_from_int(int value)
 // declared here so game::Save's pool writes call it out of line.
 unsigned char save_vector(TAbstractFile* outfile,
                           std::vector<type_point>* src_vector);
+// The other two instantiations game::Save's tail reaches, both also
+// defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
+// one is a plain block write like the type_point overload; the creature
+// bank one serialises each element, hence the different name.
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_university>* src_vector);
+unsigned char save_object_vector(TAbstractFile* outfile,
+                                 std::vector<type_creature_bank>* src_vector);
 
 const int SAVED_CREATURE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
@@ -102,6 +123,19 @@ const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
 const int CAMPAIGN_ARMY_OVERRIDE_TRAITS = 96;
+// game::GetRandomMonster gates the Conflux strike-out on
+// `campaign.currentCampaign >= 13`. Thirteen is where TCampaignWindow's
+// page seeds put the Shadow of Death set - page 0 covers rows 0-6 (Restoration
+// of Erathia), page 1 rows 7-12 (Armageddon's Blade), page 2 rows 13-19.
+// campaignwindow.h is not in this TU's closure, so the value lives here as a
+// local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
+const int FIRST_SHADOW_OF_DEATH_CAMPAIGN = 13;
+// The map's full obelisk roster and the puzzle it uncovers are the same
+// 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
+// std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
+// loop works over the 47 pieces below the last one.
+const int OBELISK_COUNT = 48;
+const int PUZZLE_PLACEABLE_PIECES = 47;
 
 const int PRODUCTION_ARTIFACT_CRYSTAL = 0x6d;
 const int PRODUCTION_ARTIFACT_GEMS = 0x6e;
@@ -1046,16 +1080,72 @@ loop:
     goto loop;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1336
+// The town's visiting hero steps INTO the garrison: the reverse of
+// town::remove_garrison_hero, and a near-twin of town::SwapHeroes
+// (0x5be450) - same GameFn_0049C720 / restore_cell / roster-shift /
+// currHero-latch tail, which is why that body is the control for this
+// spelling. Three retail facts are specific to this row:
+//   * both entry gates are one-sided and OPPOSITE (`visitingHeroId < 0`
+//     bails, `garrisonHeroId >= 0` bails), each with its own return;
+//   * the hide-hero broadcast is GATED on 0x69954c here where SwapHeroes
+//     sends unconditionally - `cmp [0x69954c],ebx / je` skips the whole
+//     record;
+//   * the roster count is decremented LAST, after the currHero latch,
+//     so the sentinel store spells `heroes[numHeroes - 1]` rather than
+//     SwapHeroes' post-decrement `heroes[numHeroes]`. That store, the
+//     `currHeroId = -1` and the town's `visitingHeroId = -1` all share
+//     the single `or ecx,-1` - the signedness-CSE lever, and what keeps
+//     all three as int stores.
+// get_army is the CONST overload in retail's call
+// (?get_army@town@@QBEABVarmyGroup@@XZ), so the const_cast is retail's
+// own - the same idiom recruit.obj already carries.
+// Residual (98.9899%): one instruction, the CMCHideHero member store.
+// Retail sinks it past the five base stores; ours emits it first. That
+// position is fixed by the shared constructor and the two call sites
+// disagree - see the A/B recorded on CMCHideHero in netmsg.h. Making
+// this body exact costs town::SwapHeroes its own exactness, so the
+// spelling that keeps the larger body is the one in the tree.
 VA(0x004b9fc0, 0x167)  // anchor-global, dc 0xa4ee8
 unsigned char playerData::add_garrison_hero(town* our_town)
 {
-    // @stub
-}
+    if (our_town->visitingHeroId < 0)
+        return 0;
+    if (our_town->garrisonHeroId >= 0)
+        return 0;
 
-#endif  // @carcass
+    hero* visitingHero = gpGame->GetHero(our_town->visitingHeroId);
+    if (!visitingHero->army.Merge(
+            const_cast<armyGroup*>(&our_town->get_army())))
+        return 0;
+
+    gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
+
+    if (bVideoPaused) {
+        CMCHideHero hideHero(visitingHero->id);
+        SendMapChange(&hideHero);
+    }
+
+    int rosterIndex = FindHero(visitingHero->id);
+    visitingHero->restore_cell();
+
+    for (int i = rosterIndex; i < numHeroes - 1; ++i)
+        heroes[i] = heroes[i + 1];
+    heroes[numHeroes - 1] = -1;
+
+    if (currHeroId == visitingHero->id) {
+        currHeroId = -1;
+        if (gNetLocalGamePos == visitingHero->owner) {
+            gpAdvManager->drawCursor = 0;
+            gpAdvManager->inDialog = 0;
+        }
+    }
+    --numHeroes;
+
+    our_town->garrisonHeroId = visitingHero->id;
+    our_town->visitingHeroId = -1;
+    return 1;
+}
 
 // E:\gamedcs\game.cpp:1388
 // CLAIM CORRECTED 2026-08-08 - this row was carrying SetName (dc
@@ -1603,16 +1693,85 @@ void ComputeUALoc(int whichPlayer)
     gpGame->players[whichPlayer].guess_grail_location(whichPlayer);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1999
+// One puzzle piece per obelisk visited, plus a share of the
+// 48 - numObelisks pieces that no obelisk pays for, awarded on the
+// quadratic curve ((p + 1) * p) / 2 in p, the fraction of obelisks found.
+// countOnly stops at the count; otherwise the shared bitset is re-rolled
+// from a seed derived from whichPlayer alone, so a player always uncovers
+// the same pieces in the same order.
+//
+// GetNumObelisks is expanded THREE times by /Ob2 - three 48-iteration
+// scans of obeliskFlags - because retail calls it three times in source,
+// not because a CSE failed. The Dreamcast dump names every local here
+// (dc 0xa6350): iPiecesRemoved, iExtraPieces, piece, i, j and the two
+// floats. `47 - i` is an induction expression, not a variable, which is
+// why VC6 carries it as a second down-counter. The fild/fstp/fld
+// round-trips on each int->float conversion are /Op rounding, not extra
+// source variables.
+// Residual (98.9637%): two instructions, and it is /Op scheduling. Retail
+// interleaves the numerator's `fld` BETWEEN the two int->float
+// round-trips of the division; we emit both round-trips and then the
+// load. Measured three cast placements - on the numerator, on the
+// denominator, on both - all 98.9637, so the order is not source-
+// reachable. The other rows are cosmetic reloc names (gpGame, the two
+// float pool constants and puzzlePiecesRemoved are unnamed on the
+// target side).
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
 int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
 {
-    // @stub
-}
+    int i;
+    long j;
+    long piece;
+    int iExtraPieces;
+    int iPiecesRemoved;
+    float fPercentObelisksFound;
+    float fPercentExtraPieces;
 
-#endif  // @carcass
+    iPiecesRemoved = GetNumObelisks(whichPlayer);
+    iExtraPieces = OBELISK_COUNT - field_4e3e8;
+    fPercentObelisksFound =
+        static_cast<float>(GetNumObelisks(whichPlayer)) / field_4e3e8;
+    fPercentExtraPieces =
+        (fPercentObelisksFound + 1.0f) * fPercentObelisksFound / 2.0f;
+    iPiecesRemoved = static_cast<int>(
+        iPiecesRemoved + iExtraPieces * fPercentExtraPieces);
+    if (GetNumObelisks(whichPlayer) == field_4e3e8)
+        iPiecesRemoved = OBELISK_COUNT;
+
+    iPiecesRemoved += players[whichPlayer].extraPuzzlePieces;
+    if (iPiecesRemoved > OBELISK_COUNT)
+        iPiecesRemoved = OBELISK_COUNT;
+    if (!field_4e3e8)
+        iPiecesRemoved = 0;
+    if (countOnly)
+        return iPiecesRemoved;
+
+    if (iPiecesRemoved == OBELISK_COUNT) {
+        puzzlePiecesRemoved.set();
+        return iPiecesRemoved;
+    }
+    puzzlePiecesRemoved.reset();
+
+    SRand(whichPlayer * 424909 + 423869);
+
+    for (i = 0; i < iPiecesRemoved; i++) {
+        piece = 0;
+        while (piece < PUZZLE_PLACEABLE_PIECES && puzzlePiecesRemoved[piece])
+            piece += Random(1, 5);
+        if (piece >= PUZZLE_PLACEABLE_PIECES) {
+            j = Random(1, PUZZLE_PLACEABLE_PIECES - i);
+            for (piece = 0; piece < PUZZLE_PLACEABLE_PIECES; piece++) {
+                if (!puzzlePiecesRemoved[piece]) {
+                    if (--j == 0)
+                        break;
+                }
+            }
+        }
+        puzzlePiecesRemoved.set(piece);
+    }
+    return iPiecesRemoved;
+}
 
 // E:\gamedcs\game.cpp:2081
 VA(0x004bb160, 0x7)  // linkorder, dc 0xa65c4
@@ -2222,6 +2381,52 @@ void game::setup_shipyards()
 // counts deliberately skip only that vector rather than failing the load.
 #endif  // @carcass
 
+// WALL IDENTIFIED AND LARGELY CLEARED 2026-08-20 - and it was NOT the
+// old `_Tidy` story. `homm3 vc6 diagnose 0x004bcda0` classed this
+// INLINER (predict-inline): 14 callees expanded on retail's side only, 2
+// on ours, 203 basic blocks against 139, 97 conditional branches against
+// 72. The frame already matched (`sub esp,0x7a8` both sides); we simply
+// emitted ~200 more instructions.
+//
+// The whole cluster was ONE decision seen from both ends. Retail keeps
+// every std::vector<T>::resize instantiation OUT OF LINE and inlines
+// insert/erase/size INTO it - vector<type_point>::resize is the 497-byte
+// body at 0x4d4aa0, called five times from here. We did the inverse:
+// resize expanded into Load at every site, and the insert/erase/size it
+// contains were then left as calls. Our direct-call multiset carried
+// 5 insert, 4 erase and 9 size() rows retail has none of.
+//
+// The fix is to pin the eight resize CALL SITES, not the function.
+// `#pragma inline_depth(0)` is NOT function-granular in VC6 - this tree
+// already relies on that around generator::Grow above - so wrapping each
+// `X.resize(n)` statement alone suppresses exactly the one expansion and
+// leaves the fourteen expansions retail wants. 50.4577 -> 69.6199.
+//
+// Second point, from the pin's own documented side effect: it also
+// de-inlines everything else in the statement it covers, and
+// `resize(n)`'s DEFAULT ARGUMENT lives inside that statement, so the
+// empty `type_point()` was being emitted as five out-of-line constructor
+// calls retail does not make. Building the fill value as a named local
+// OUTSIDE the pin and passing it explicitly took 69.6199 -> 71.7143.
+// `emptyPoint` is a CODEGEN DEVICE, not retail's source spelling -
+// retail certainly wrote `resize(n)` - and it is semantically identical
+// because type_point's default constructor is empty, so both leave the
+// fill value uninitialised.
+//
+// Two knobs measured and REJECTED, so they are not re-tried:
+//   * `#pragma inline_depth(0)` scoped to the whole function: 50.46 ->
+//     48.97. It suppresses the resize expansion but also kills the
+//     fourteen expansions retail makes, and those dominate.
+//   * `#pragma auto_inline(off)` around a leading `#include <vector>`:
+//     no effect whatsoever (50.4577 either way). auto_inline only
+//     excludes functions from AUTOMATIC inlining, and the vector members
+//     are defined inside the class, so they are implicitly `inline` and
+//     the pragma never reaches them.
+//
+// Residual (71.7143%): `sub esp,0x7a4` against retail's 0x7a8 - one
+// slot, which appeared with the emptyPoint hoist - and the diagnostic
+// now reports 1 under-inline / 7 over-inline with the CFG at 136 blocks
+// against 139 and 68 conditional branches against 72.
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
@@ -2274,7 +2479,9 @@ int game::Load(TAbstractFile* infile)
     field_1f680.clear();
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
+#pragma inline_depth(0)
     field_1f680.resize(char_buffer);
+#pragma inline_depth()
     int eventBytes = char_buffer * sizeof(LoadEventRecord);
     if (infile->Read(field_1f680.begin(), eventBytes) < eventBytes)
         return -1;
@@ -2290,7 +2497,9 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(&short_buffer, sizeof(short_buffer)) <
         sizeof(short_buffer))
         return -1;
+#pragma inline_depth(0)
     generators.resize(short_buffer);
+#pragma inline_depth()
     int i;
     for (i = 0; i < short_buffer; ++i) {
         if (!generators[i].load(infile))
@@ -2317,7 +2526,9 @@ int game::Load(TAbstractFile* infile)
     unsigned char townCount;
     if (infile->Read(&townCount, sizeof(townCount)) < sizeof(townCount))
         return -1;
+#pragma inline_depth(0)
     towns.resize(townCount);
+#pragma inline_depth()
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].load(infile, saveVersion) < 0)
             return -1;
@@ -2415,7 +2626,10 @@ int game::Load(TAbstractFile* infile)
     for (i = 0; i < poolCount; ++i) {
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            lithPools[i].resize(short_buffer);
+            type_point emptyPoint;
+#pragma inline_depth(0)
+            lithPools[i].resize(short_buffer, emptyPoint);
+#pragma inline_depth()
             infile->Read(lithPools[i].begin(),
                          short_buffer * sizeof(type_point));
         }
@@ -2423,7 +2637,10 @@ int game::Load(TAbstractFile* infile)
     for (i = 0; i < poolCount; ++i) {
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            lithExitPools[i].resize(short_buffer);
+            type_point emptyPoint;
+#pragma inline_depth(0)
+            lithExitPools[i].resize(short_buffer, emptyPoint);
+#pragma inline_depth()
             infile->Read(lithExitPools[i].begin(),
                          short_buffer * sizeof(type_point));
         }
@@ -2431,18 +2648,27 @@ int game::Load(TAbstractFile* infile)
 
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        whirlpools.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        whirlpools.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(whirlpools.begin(), short_buffer * sizeof(type_point));
     }
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        undergroundGateExits.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        undergroundGateExits.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(undergroundGateExits.begin(),
                      short_buffer * sizeof(type_point));
     }
     if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
         sizeof(short_buffer)) {
-        undergroundGatePairs.resize(short_buffer);
+        type_point emptyPoint;
+#pragma inline_depth(0)
+        undergroundGatePairs.resize(short_buffer, emptyPoint);
+#pragma inline_depth()
         infile->Read(undergroundGatePairs.begin(),
                      short_buffer * sizeof(type_point));
     }
@@ -2467,28 +2693,110 @@ int game::Load(TAbstractFile* infile)
 // MEASURED, and the reason they are not written yet: adding them
 // LOWERS the score. 42.23 with the block above; 40.62 with the twelve
 // scalar and six array writes added; 37.18 with the zero and gMapExtra
-// writes on top. The cause is the FRAME, not the statements - retail
-// is `sub esp,0x5c0` and ours is `sub esp,0x5e4`, with every named
-// local shifted by 8 (saved at [ebp-0x5cc] vs [ebp-0x5d4], the
-// fileName string at [ebp-0x6c] vs [ebp-0x74]). Every frame-relative
-// displacement in all 800+ instructions therefore differs, so each
-// correct statement added only lengthens a stream that cannot align.
-// The _Tidy census is the sharp instrument here: retail destroys the
-// SavedGameHeader::fileName string 36 times on the failure ladder and
-// ours does it 39 times with the extra writes in, so the guarded-write
-// count is very close - it is the eight bytes of frame that have to be
-// found FIRST. Do not re-add the statements before then.
-// Residual (42.2312%): missing tail above, gated on the frame delta.
+// writes on top. The cause is the FRAME, not the statements.
+//
+// FRAME DIAGNOSIS CORRECTED 2026-08-20 (the earlier note here said
+// "eight bytes, every named local shifted by 8" and was measured with
+// the tail statements IN; with them out the shift is a uniform TWELVE,
+// and the whole delta is now localised):
+//   * retail is `sub esp,0x5c0`, ours `sub esp,0x5b4`, and every named
+//     local sits exactly 0xc closer to ebp on our side (the fileName
+//     string at [ebp-0x60] vs [ebp-0x6c], the header at [ebp-0x5c0] vs
+//     [ebp-0x5cc], and the -0xdc/-0x2ac/-0x5b0 triple against retail's
+//     -0xe8/-0x2b8/-0x5bc);
+//   * the BIG locals are already byte-for-byte the right size. Subtract
+//     the small-slot region from each frame and both sides give exactly
+//     0x5a4. The entire 0xc is the COUNT of 4-byte slots in the region
+//     between ebp-0xc and the fileName string: retail has SEVEN, we
+//     have FOUR;
+//   * retail's seven are -0x10 (a byte temp at -0xd), -0x14 (the loop
+//     counter i), -0x18 (a second byte temp at -0x15), -0x1c and -0x20
+//     (two dword temps), -0x24 (the 0x9c length constant) and -0x28
+//     (the four-byte literal zero). ALL FIVE of -0x10/-0x18/-0x1c/
+//     -0x20/-0x28 belong to the missing tail;
+//   * retail's NON-tail locals need only TWO real slots, because it
+//     packs char_buffer and short_buffer into the incoming parameter's
+//     home slot - `mov byte [ebp+0xb],dl / lea eax,[ebp+0xb]` for the
+//     byte and `mov [ebp+0x8],edx / cmp word [ebp+0x8],di` for the
+//     short, byte 3 and bytes 0-1 of the same dword, coalesced with the
+//     dead `allocator<char>()` temporary the string construction leaves
+//     at [ebp+0xb]. We spend two real slots (-0x10, -0x18) on the same
+//     two variables and use [ebp+0x8] only as an int loop counter.
+// So the arithmetic is exact: 2 retail non-tail slots + 5 tail slots =
+// 7 = 0x5c0. Ours was 4 non-tail + 5 tail = 9 = 0x5c8, and the two
+// surplus slots WERE char_buffer and short_buffer failing to colour
+// into the parameter home.
+//
+// FIXED 2026-08-20 by BLOCK-SCOPING them. Each guarded write now
+// declares its own buffer inside braces instead of reusing two
+// function-scope variables; that cuts their live ranges to a single
+// statement and lets VC6 colour them where retail put them. The
+// small-slot region went from FOUR slots to TWO, `sub esp` from 0x5b4
+// to 0x5ac, and the census now shows the same [ebp+0x8] / [ebp+0xb]
+// parameter-home pair retail uses. 42.2290 -> 42.3069 on the scoping
+// alone. 0x5ac + the five tail slots = 0x5c0 = retail's frame exactly,
+// so the tail is UNBLOCKED - but it must be spelled with exactly the
+// five temps below and no more, or the frame overshoots again.
+//
+// TAIL LANDED 2026-08-20: 42.3069 -> 73.7978. Three things had to be
+// right at once, and each was measured on its own.
+//
+// 1. PLACEMENT. The earlier note here put the missing block after the
+//    five type_point pool writes. It goes BEFORE them - retail's order
+//    is heroPoolMap loop, then the twelve scalars, six arrays, literal
+//    zero and gMapExtra, and only THEN lithPools. Three independent
+//    proofs: linear disassembly order; the EH-state counter running
+//    0x1f..0x48 consecutively over exactly 21 guarded sites, with the
+//    lithPools loop numbered LAST at 0x47/0x48; and the base compile's
+//    own adjacency of heroPoolMap to lithPools. Only universities,
+//    creatureBanks and save_recorded_events append at the end.
+// 2. THE TEMPS. Four scalar temps plus the literal-zero int, declared at
+//    FUNCTION scope, not in a block. Block-scoped they get coalesced
+//    into the parameter home and the frame lands 12 bytes short; hoisted
+//    they take five real slots and `sub esp` reaches retail's 0x5c0 with
+//    the slot map matching offset for offset and use-count for
+//    use-count. The two shorts must be `short`, not `int`: retail loads
+//    16 bits and stores 32, which is VC6's narrow-local/widened-store
+//    idiom, where an int local would sign- or zero-extend on the load.
+// 3. TWO INLINE PINS, and this is the part that is easy to get wrong.
+//    Adding ~600 bytes of correct code RAISES this function's /Ob2
+//    budget (clamp(2*caller_cb,...)), which then pulls in two expansions
+//    retail does not have. Both had to be pinned back out:
+//      * std::bitset<8>::test in the heroPoolMap loop - retail emits
+//        `push edi / call`. Inlined, it drags its _Xran throw path with
+//        it, and a whole std::out_of_range plus its "invalid bitset<N>
+//        position" string lands on the frame: 28 bytes retail has not.
+//        Removing this pin alone costs 73.7978 -> 43.8831.
+//      * the seven save_vector / save_object_vector sites - retail calls
+//        every one. Inlined, each contributes a vector-size shl/sar and
+//        a `setae`. Adding this pin alone gave 37.4763 -> 73.7978.
+//    This is the /Ob2-budget lever running in the direction the module
+//    guide warns about: a local win elsewhere in the body changed the
+//    inline decisions here.
+//
+// Residual (73.7978%): `sub esp,0x5b8` against retail's 0x5c0, two
+// slots. VC6 packs byteValue, extraByteValue and poolBits into ONE dword
+// (-0xd/-0xe/-0xf) where retail spends two slots plus the parameter home
+// (-0xd, -0x15, [ebp+0xb]). The hero-pool pin is what moves poolBits out
+// of the parameter home; narrowing that pin to the inner loop alone was
+// measured and changes neither the score nor the frame.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
+    char byteValue;
+    char extraByteValue;
+    short shortValue;
+    short extraShortValue;
+    int zero;
     SavedGameHeader saved;
     saved.Reset();
     if (saved.Save(outfile) < 0)
         return -1;
 
-    char char_buffer = gUnnamed69950c;
-    outfile->Write(&char_buffer, sizeof(char_buffer));
+    {
+        char char_buffer = gUnnamed69950c;
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+    }
     outfile->Write(artifactDisabled, sizeof(artifactDisabled));
     outfile->Write(artifactUsed, sizeof(artifactUsed));
     outfile->Write(field_4e658, sizeof(field_4e658));
@@ -2496,14 +2804,16 @@ int game::Save(TAbstractFile* outfile)
     if (SaveRumours(outfile) < 0)
         return -1;
 
-    char_buffer = field_1f680.size();
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = field_1f680.size();
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
+        int eventBytes = char_buffer * sizeof(LoadEventRecord);
+        if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
+            return -1;
     }
-    int eventBytes = char_buffer * sizeof(LoadEventRecord);
-    if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
-        return -1;
 
     if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
         return -1;
@@ -2512,15 +2822,17 @@ int game::Save(TAbstractFile* outfile)
     if (SaveMinePool(outfile) < 0)
         return -1;
 
-    short short_buffer = generators.size();
-    if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
-        sizeof(short_buffer)) {
-        return -1;
-    }
     int i;
-    for (i = 0; i < short_buffer; ++i) {
-        if (!generators[i].save(outfile))
+    {
+        short short_buffer = generators.size();
+        if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
+            sizeof(short_buffer)) {
             return -1;
+        }
+        for (i = 0; i < short_buffer; ++i) {
+            if (!generators[i].save(outfile))
+                return -1;
+        }
     }
 
     if (SaveGarrisonPool(outfile) < 0)
@@ -2528,10 +2840,12 @@ int game::Save(TAbstractFile* outfile)
     if (SaveBoatPool(outfile) < 0)
         return -1;
 
-    char_buffer = field_4e3e8;
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = field_4e3e8;
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
     }
     if (outfile->Write(obeliskFlags, sizeof(obeliskFlags)) <
         sizeof(obeliskFlags)) {
@@ -2543,10 +2857,12 @@ int game::Save(TAbstractFile* outfile)
             return -1;
     }
 
-    char_buffer = towns.size();
-    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
-        sizeof(char_buffer)) {
-        return -1;
+    {
+        char char_buffer = towns.size();
+        if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+            sizeof(char_buffer)) {
+            return -1;
+        }
     }
     for (i = 0; i < towns.size(); ++i) {
         if (towns[i].save(outfile) < 0)
@@ -2563,16 +2879,126 @@ int game::Save(TAbstractFile* outfile)
         return -1;
     }
 
+    // PINNED: retail CALLS std::bitset<8>::test here (`push edi / call`),
+    // it does not inline it. Once the tail below landed, this body grew
+    // past the /Ob2 budget that had been keeping the expansion out, and
+    // VC6 inlined test together with its _Xran throw path - which drags
+    // a whole std::out_of_range and its "invalid bitset<N> position"
+    // string onto the frame, 28 bytes that retail's frame does not have.
     for (i = 0; i < HERO_COUNT; ++i) {
         unsigned char poolBits = 0;
         unsigned int player;
+#pragma inline_depth(0)
         for (player = 0; player < 8; ++player) {
             if (heroPoolMap[i].test(player))
                 poolBits |= 1 << player;
         }
+#pragma inline_depth()
         outfile->Write(&poolBits, sizeof(poolBits));
     }
 
+    // The twelve guarded scalar writes. Retail carries FOUR temps for
+    // them, not one: a char reused across writes 1-2 and 7-9, a second
+    // char for 5-6, a short for 3-4 and a second short for 10-12. Those
+    // four plus the literal-zero dword below are exactly the five slots
+    // that take `sub esp` from our 0x5ac to retail's 0x5c0.
+    // The shorts must be `short` locals, not `int`: retail loads 16 bits
+    // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
+    // which is VC6's narrow-local/widened-store idiom - an int local
+    // would sign- or zero-extend on the load instead.
+    {
+        byteValue = field_1f4d4;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        byteValue = field_1f634;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+
+        shortValue = ultimateArtifactX;
+        if (outfile->Write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+            return -1;
+        shortValue = ultimateArtifactY;
+        if (outfile->Write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+            return -1;
+
+        extraByteValue = ultimateArtifactZ;
+        if (outfile->Write(&extraByteValue, sizeof(extraByteValue)) <
+            sizeof(extraByteValue))
+            return -1;
+        extraByteValue = field_1f695;
+        if (outfile->Write(&extraByteValue, sizeof(extraByteValue)) <
+            sizeof(extraByteValue))
+            return -1;
+
+        byteValue = ultimateArtifactPresent;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        // f_1f698 is an int member and retail writes only its low byte.
+        byteValue = static_cast<char>(f_1f698);
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        byteValue = field_1f69c;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+
+        extraShortValue = field_1f63e;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+        extraShortValue = field_1f640;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+        extraShortValue = field_1f642;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+    }
+
+    // Six array writes. The first is retail's own inconsistency: it ASKS
+    // for sizeof(field_1f644) == 0x20 and accepts 8. The compare is
+    // unsigned (`jae`), so the bound has to be an unsigned expression;
+    // sizeof(borderTentVisitFlags) is the one in scope that equals 8.
+    // The original expression is not recoverable from the bytes - only
+    // its value and its unsignedness are.
+    if (outfile->Write(field_1f644, sizeof(field_1f644)) <
+        sizeof(borderTentVisitFlags))
+        return -1;
+    if (outfile->Write(field_1f664, sizeof(field_1f664)) < sizeof(field_1f664))
+        return -1;
+    if (outfile->Write(globalInfoFlags, sizeof(globalInfoFlags)) <
+        sizeof(globalInfoFlags))
+        return -1;
+    if (outfile->Write(borderTentVisitFlags, sizeof(borderTentVisitFlags)) <
+        sizeof(borderTentVisitFlags))
+        return -1;
+    if (outfile->Write(cartographerMask, sizeof(cartographerMask)) <
+        sizeof(cartographerMask))
+        return -1;
+    if (outfile->Write(cartographerFlags, sizeof(cartographerFlags)) <
+        sizeof(cartographerFlags))
+        return -1;
+
+    zero = 0;
+    if (outfile->Write(&zero, sizeof(zero)) < sizeof(zero))
+        return -1;
+
+    // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
+    // not through this->worldMap, and the *2 is applied LAST - retail's
+    // `lea edi,[eax+eax]` follows both imuls. The count is computed once
+    // into one local because a virtual call sits between its two uses.
+    unsigned int mapExtraBytes =
+        (gpGame->worldMap.HasTwoLevels + 1) * gMapWidth * gMapHeight *
+        sizeof(unsigned short);
+    if (outfile->Write(gMapExtra, mapExtraBytes) < mapExtraBytes)
+        return -1;
+
+    // PINNED for the same reason the heroPoolMap bitset test above is:
+    // retail CALLS every one of these seven helpers out of line, and once
+    // the tail landed this body grew past the /Ob2 budget that had been
+    // keeping them out, so VC6 began expanding save_vector in place -
+    // the vector-size shl/sar and a `setae` per site.
+#pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
         if (!save_vector(outfile, &lithPools[i]))
             return -1;
@@ -2585,6 +3011,14 @@ int game::Save(TAbstractFile* outfile)
     save_vector(outfile, &whirlpools);
     save_vector(outfile, &undergroundGateExits);
     save_vector(outfile, &undergroundGatePairs);
+
+    // Unguarded, like the three pool writes above them.
+    save_vector(outfile, &universities);
+    save_object_vector(outfile, &creatureBanks);
+#pragma inline_depth()
+
+    if (!save_recorded_events(outfile))
+        return -1;
 
     return 0;
 }
@@ -3140,12 +3574,109 @@ void game::PerMonth()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:8707
+// Roll a creature id whose level falls in [minLevel, maxLevel], out of a
+// bitset that starts all-ones and is punched down by the expansion and
+// campaign filters.
+//
+// The width is 145, and retail proves it twice: bitset<145>::_Tidy writes
+// five words and trims the last with 0x1ffff == (1<<17)-1, which is
+// 145 % 32 == 17, and the traits sweep runs to 0x41b4 == 145 * 0x74 ==
+// 145 * sizeof(TCreatureTypeTraits). CREATURE_CATAPULT is exactly 145:
+// the traits table holds 150 rows but the last five are war machines, so
+// the roll domain is every id BELOW the first of them.
+//
+// f_1f698 == 0 is the no-expansion map - everything from CREATURE_PIXIE
+// up is struck out. On an expansion map only the six Armageddon's Blade
+// neutral specials go, plus, in a Shadow of Death campaign, the ten
+// Conflux-exclusive creatures.
+//
+// Every strike is spelled `monsterOk[id] = false;` UNIFORMLY. Retail
+// shows three different shapes for it - a bare call to bitset::set, an
+// inlined operator[] with an out-of-line reference::operator=, and both
+// out of line - but that is /Ob2 budget decay across one source
+// spelling, not three spellings. Do not write .set() for some of them.
+//
+// The final scan has NO bound and no `count() == 0` guard: on an empty
+// bitset retail rolls Random(0, -1) and walks off the end. Transcribed
+// faithfully.
+//
+// Residual (86.7929%): ONE block, the no-expansion clear loop. Every
+// other instruction pairs off - the thirteen strike-out calls, the
+// traits sweep, count/Random and the final scan all match, and the
+// remaining rows are cosmetic reloc names (the STL COMDATs and
+// gbUnk69774c have no name on the target side yet). Retail's loop
+// variable there is an EIGHT-BYTE object {bitset<145>*, size_t}: it
+// calls a nullary const member that returns a copy of both words by
+// value (0x4d4ca0) and then reference::operator= on the temporary, and
+// its exit test compares BOTH fields against {&monsterOk, 145}. That is
+// a bitset ITERATOR - `for (it = begin() + CREATURE_PIXIE; it != end();
+// ++it) *it = false;` - and VC6's std::bitset has none, so the type came
+// from the game's own source. 0x4d4ca0 has exactly one caller in the
+// whole image, so nothing else can pin it, and no name for it exists in
+// this tree. An index loop is the closest spelling available; binding
+// each element to a named bitset<145>::reference first was measured and
+// changes nothing (86.7929 either way) because VC6 folds operator[] plus
+// reference::operator= straight back into bitset::set.
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
 TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
 {
-    // @stub
+    int i;
+    int TotalInClass;
+    int curCount;
+    int x;
+
+    std::bitset<CREATURE_CATAPULT> monsterOk;
+    monsterOk.set();
+
+    if (!f_1f698) {
+        for (i = CREATURE_PIXIE; i < CREATURE_CATAPULT; ++i)
+            monsterOk[i] = false;
+    } else {
+        monsterOk[CREATURE_AZURE_DRAGON] = false;
+        monsterOk[CREATURE_CRYSTAL_DRAGON] = false;
+        monsterOk[CREATURE_FAERIE_DRAGON] = false;
+        monsterOk[CREATURE_RUST_DRAGON] = false;
+        monsterOk[CREATURE_ENCHANTER] = false;
+        monsterOk[CREATURE_SHARPSHOOTER] = false;
+        if (gbUnk69774c
+            && campaign.currentCampaign >= FIRST_SHADOW_OF_DEATH_CAMPAIGN) {
+            monsterOk[CREATURE_PIXIE] = false;
+            monsterOk[CREATURE_SPRITE] = false;
+            monsterOk[CREATURE_PSYCHIC_ELEMENTAL] = false;
+            monsterOk[CREATURE_MAGIC_ELEMENTAL] = false;
+            monsterOk[CREATURE_ICE_ELEMENTAL] = false;
+            monsterOk[CREATURE_MAGMA_ELEMENTAL] = false;
+            monsterOk[CREATURE_STORM_ELEMENTAL] = false;
+            monsterOk[CREATURE_ENERGY_ELEMENTAL] = false;
+            monsterOk[CREATURE_FIREBIRD] = false;
+            monsterOk[CREATURE_PHOENIX] = false;
+        }
+    }
+
+    for (i = 0; i < CREATURE_CATAPULT; ++i) {
+        if (akCreatureTypeTraits[i].level < minLevel
+            || akCreatureTypeTraits[i].level > maxLevel)
+            monsterOk[i] = false;
+    }
+
+    TotalInClass = monsterOk.count();
+    curCount = Random(0, TotalInClass - 1);
+    x = 0;
+    for (;;) {
+        if (monsterOk[x]) {
+            if (curCount == 0)
+                break;
+            --curCount;
+        }
+        ++x;
+    }
+    return creature_type_from_int(x);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:8749
 #endif  // @carcass
@@ -3354,19 +3885,253 @@ void game::InsertObject(int x, int y, int z, int objType, int objectIndex, int e
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:9195
+// The materializer ProcessRandomObjects hands each rolled cell. It CLONES
+// the object's current CObjectType onto the back of objectTypes,
+// overwrites the clone's .def name / type / extra for the concrete
+// object, registers the new sprite, and re-points every map cell the
+// object covers at the clone.
+//
+// The dispatch is a real jump table: five entries at 0x4c9d58 and a
+// 94-byte `type - ARTIFACT` index table at 0x4c9d6c, both inside this
+// function's own extent. RANDOM_MONSTER shares MONSTER's arm and
+// RANDOM_TOWN shares TOWN's; every other value falls to the default.
+// Arm order below is retail's physical order, i.e. the source order.
+//
+// The !is_trigger path reaches the tail with defName UNINITIALIZED. That
+// is retail: ProcessRandomObjects only ever calls this for trigger cells,
+// so the arm is unreachable in practice. Transcribed, not repaired.
+//
+// All three tail loops RE-READ their bounds - newType->height and
+// newType->width are reloaded with movsx at each increment, and
+// cell->objects.end() at the bottom of every iteration - and
+// objectTypes.size() is recomputed at every match rather than hoisted.
+// The sprite push_back goes through this->worldMap while
+// CalculateCellExtra RELOADS gpGame; do not unify them.
+//
+// Residual (97.2390%): one block, the town arm's three building-mask
+// tests, and it is the register-homing family. Retail loads
+// theTown->built once into an EDX:ESI pair, HOMES the town pointer to a
+// stack slot, and threads all three masks through that pair; we load
+// built once as well but keep the town pointer in a register and pick
+// the opposite registers for the mask ANDs, which shifts the whole
+// block. The two raw `built & bitNumber[...]` tests and the third as a
+// real HasBuilding call are retail's own asymmetry - it emits a bare
+// and/and/or/je with no setne for the first two and a call for the
+// third - so they are transcribed as they stand rather than tidied into
+// three of a kind. The remaining rows are cosmetic reloc names: the five
+// .def tables, gpGame and the STL COMDATs have no name on the target
+// side, and _Nullstr's empty-string datum is shared image-wide.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::ConvertObject(NewmapCell* tempCell)
 {
-    // @stub
+    char defName[100];
+
+    int objectId = tempCell->object_type_index;
+    CObject* object = &worldMap.objects[objectId];
+
+    worldMap.objectTypes.push_back(worldMap.objectTypes[object->typeIndex]);
+    CObjectType* newType = &worldMap.objectTypes.back();
+
+    TAdventureObjectType newObject = NOTHING;
+    if (tempCell->is_trigger) {
+        newObject = tempCell->get_map_object();
+        switch (newObject) {
+        case RESOURCE:
+            strcpy(defName, gResourceObjectDefs[tempCell->objectIndex]);
+            break;
+        case ARTIFACT:
+            sprintf(defName, gArtifactObjectDefFormat, tempCell->objectIndex);
+            break;
+        case MONSTER:
+        case RANDOM_MONSTER:
+            strcpy(defName,
+                   worldMap.NewfullMapFn_00505EA0(MONSTER,
+                                                  tempCell->objectIndex)
+                       ->ImageName.c_str());
+            newObject = MONSTER;
+            tempCell->type = MONSTER;
+            break;
+        case RANDOM_TOWN:
+        case TOWN: {
+            town* theTown = gpGame->GetTown(tempCell->get_map_extraInfo());
+            if (theTown->built & bitNumber[HALL_CAPITOL_ID])
+                strcpy(defName, gTownCapitolObjectDefs[tempCell->objectIndex]);
+            else if ((theTown->built & bitNumber[CASTLE_FORT_ID])
+                     || (theTown->built & bitNumber[CASTLE_CITADEL_ID])
+                     || theTown->HasBuilding(CASTLE_CASTLE_ID, 0))
+                strcpy(defName, gTownFortObjectDefs[tempCell->objectIndex]);
+            else
+                strcpy(defName, gTownVillageObjectDefs[tempCell->objectIndex]);
+            break;
+        }
+        }
+    }
+
+    TAdventureObjectType oldType = newType->objectType;
+    newType->ImageName = defName;
+    newType->objectType = newObject;
+    newType->extra = tempCell->objectIndex;
+    worldMap.sprites.push_back(
+        ResourceManager::GetSprite(newType->ImageName.c_str()));
+
+    for (int iy = 0; iy < newType->height; iy++) {
+        if (object->y - iy < 0 || object->y - iy >= gMapHeight)
+            continue;
+        for (int ix = 0; ix < newType->width; ix++) {
+            if (object->x - ix < 0 || object->x - ix >= gMapWidth)
+                continue;
+            NewmapCell* cell = worldMap.cell(object->x - ix,
+                                             object->y - iy, object->z);
+            for (NewmapCell::TObjectCell* entry = cell->objects.begin();
+                 entry != cell->objects.end(); entry++) {
+                if (entry->objectIndex == objectId) {
+                    object->typeIndex = static_cast<unsigned short>(
+                        worldMap.objectTypes.size() - 1);
+                    if (cell->type == oldType && !cell->is_trigger)
+                        cell->type = newObject;
+                }
+            }
+            gpGame->worldMap.CalculateCellExtra(cell, 0);
+        }
+    }
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:9320
+// The random-object pass: walk every cell of every level and turn each
+// RANDOM_* trigger into a concrete object, then hand the cell to
+// ConvertObject. The dispatch is a real jump table (retail carries a
+// 15-entry table at 0x4c9fa0 and a 100-byte `type - 65` index table at
+// 0x4c9fdc, both inside this function's extent), so the arms are a
+// SWITCH and their physical order is the source order below.
+// RANDOM_HERO and RANDOM_TOWN fall through to the default - this pass
+// does not handle them.
+//
+// The three loop bounds are all RE-READ every iteration in retail:
+// `worldMap.HasTwoLevels + 1` is recomputed with movzx/inc at the z
+// increment, gMapHeight is reloaded at the y increment and gMapWidth at
+// the x increment. None of the three may be hoisted into a local, and
+// the level count is spelled inline rather than through
+// NewfullMap::GetNumLevels (no call is emitted).
+//
+// Every arm ends with its own ConvertObject call: the Dreamcast xref
+// graph records FOURTEEN call sites into ConvertObject from this body,
+// one per case, and retail cross-jump-merges all fourteen tails - the
+// objectIndex store included - onto the single block at 0x4c9f4c.
+//
+// The artifact arguments are artraits.txt class bits: 2 treasure,
+// 4 minor, 8 major, 16 relic, and RANDOM_ARTIFACT's 14 is
+// treasure|minor|major, i.e. every class except relics.
 VA(0x004c9dd0, 0x270)  // linkorder, dc 0xb5910
 void game::ProcessRandomObjects()
 {
-    // @stub
+    int y, z, x;
+    NewmapCell* tempCell;
+
+    for (z = 0; z < worldMap.HasTwoLevels + 1; ++z) {
+        for (y = 0; y < gMapHeight; ++y) {
+            for (x = 0; x < gMapWidth; ++x) {
+                tempCell = worldMap.cell(x, y, z);
+                if (!tempCell->is_trigger)
+                    continue;
+
+                switch (tempCell->type) {
+                case RANDOM_MONSTER:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(0, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_1:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(0, 0));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_2:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(1, 1));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_3:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(2, 2));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_4:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(3, 3));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_5:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(4, 4));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_6:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(5, 5));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_MONSTER_7:
+                    tempCell->type = MONSTER;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomMonster(6, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_RESOURCE:
+                    tempCell->type = RESOURCE;
+                    tempCell->objectIndex = static_cast<short>(Random(0, 6));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(14));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_1:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(2));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_2:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(4));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_3:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(8));
+                    ConvertObject(tempCell);
+                    break;
+                case RANDOM_ARTIFACT_4:
+                    tempCell->type = ARTIFACT;
+                    tempCell->objectIndex =
+                        static_cast<short>(GetRandomArtifactId(16));
+                    ConvertObject(tempCell);
+                    break;
+                }
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9455
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
@@ -3704,14 +4469,89 @@ void game::CheckForTownEvent()
     // @stub
 }
 
-// E:\gamedcs\game.cpp:11571
-VA(0x004cdb80, 0x231)  // anchor-bracket, dc 0xbb0e4
-unsigned char game::get_random_lith(const std::vector<type_point,std::allocator<type_point>* points, type_point* result, long cell_type, long excluded)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\game.cpp:11571
+// Two passes over the same pool with the SAME predicate: count the
+// eligible squares, roll Random(1, count), then walk again and hand back
+// the count-th one. The predicate is one short-circuit OR, and retail's
+// branch ladder gives both arms exactly:
+//   A: the square holds a trigger HERO who is NOT on the local player's
+//      team (`cmp type,0x22` / `test [cell+0xd],0x10` / the inlined
+//      OnSameTeam, whose FALSE arm is the one that counts);
+//   B: the square is the requested lith type, is not the excluded
+//      object, and is a trigger.
+// `type` is loaded once into a register and reused by both arms, while
+// is_trigger is tested twice - one test per arm, which is why the
+// spelling repeats it rather than hoisting it.
+// The cell lookup is NewfullMap::cell(x,y,z) expanded in place: the point
+// is copied to a stack local first (retail reads the second bitfield unit
+// back off that copy at ebp-0x1a), so the local is material.
+//
+// The two arms are `if / else if`, NOT `A || B`, and the second loop is
+// what proves it: retail DUPLICATES the whole `--pick == 0` tail, giving
+// each arm its own decrement and its own return site (the first returns
+// the point out of memory, the second out of ESI). `A || B` joins the
+// arms before the tail and cannot produce that; it measured 86.04 where
+// this spelling measures 99.88. The first loop still shows a SINGLE
+// `inc count` under the same source - a bare increment tail-merges where
+// the five-instruction return tail does not, which is why the two loops
+// look structurally different in retail while sharing one spelling.
+// `int n` is declared BEFORE `int count`: retail emits `count = 0`
+// between the size computation and the loop guard (86.04 -> 97.38 for
+// the arms, 97.38 -> 99.88 for this swap).
+// Residual (99.8757%): two rows, both the same cosmetic data-reloc name -
+// the target side spells 0x69cca8 `bss_29cca8` because no data phase has
+// named it yet. A DATA claim on the declaration does NOT change that
+// (gpGame carries one and is still `bss_2994e8` on the target side);
+// measured 2026-08-20, whole-tree fuzzy identical with and without.
+// Every instruction matches.
+VA(0x004cdb80, 0x231)  // anchor-bracket, dc 0xbb0e4
+unsigned char game::get_random_lith(const std::vector<type_point>* points,
+                                    type_point* result, long cell_type,
+                                    long excluded)
+{
+    int n = points->size();
+    int count = 0;
+    int i;
+
+    for (i = 0; i < n; ++i) {
+        type_point point = (*points)[i];
+        NewmapCell* cell = &worldMap.cellData[
+            (point.z * worldMap.Size + point.y) * worldMap.Size + point.x];
+        if (cell->type == HERO && cell->is_trigger
+            && !OnSameTeam(heroes[cell->extraInfo].owner, gNetLocalGamePos)) {
+            ++count;
+        } else if (cell->type == cell_type && cell->extraInfo != excluded
+                   && cell->is_trigger) {
+            ++count;
+        }
+    }
+
+    if (count == 0)
+        return 0;
+
+    int pick = Random(1, count);
+    for (i = 0; i < n; ++i) {
+        type_point point = (*points)[i];
+        NewmapCell* cell = &worldMap.cellData[
+            (point.z * worldMap.Size + point.y) * worldMap.Size + point.x];
+        if (cell->type == HERO && cell->is_trigger
+            && !OnSameTeam(heroes[cell->extraInfo].owner, gNetLocalGamePos)) {
+            if (--pick == 0) {
+                *result = point;
+                return 1;
+            }
+        } else if (cell->type == cell_type && cell->extraInfo != excluded
+                   && cell->is_trigger) {
+            if (--pick == 0) {
+                *result = point;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\game.cpp:11635
 // Three one-line wrappers around the four-argument get_random_lith.
