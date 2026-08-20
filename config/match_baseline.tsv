@@ -1738,6 +1738,7 @@ spelldefs	?SpellTargetsASingleArmy@@YIEHH@Z	100.0000	100.0000	100.0000	0x19e060
 spelldefs	__h3cg$spelldefs$static_dtor$abbreviatedSpellNames	100.0000	100.0000	100.0000	0x19e4d0
 spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0000	0x19e4b0
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0
+spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?get_elemental_type@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360
 spells	?is_valid_teleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
