@@ -1868,6 +1868,50 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
     return 1;
 }
 
+// THE THREE MISSILE ANIMATORS, SURVEYED 2026-08-20 (not reconstructed).
+// They are one body written three times, so the survey is recorded once,
+// here, at the first of them.
+//
+// VERIFIED DIRECTLY: none of the three touches a single pad byte of this
+// class. Every `this`-relative displacement in all three bodies is one of
+// +0x54a4, +0x54a5, +0x54a8, +0x54ac - which is just the inlined
+// IsQuickCombat guard - plus gpGame+0x1f69d inside it. So the header work
+// for this family is declarations and .rdata externs ONLY, with no layout
+// archaeology, which makes them far cheaper than InitNonVisualVars
+// despite being bigger.
+//
+// The shared nine-phase skeleton, in order: the inlined IsQuickCombat
+// guard (byte-identical in all three) / deltas / a `steps` divide /
+// per-step motion / sprite-or-frame selection / `Bitmap16Bit backup(w,h)`
+// plus four limits seeded from the 0x6aace8 quad / DrawFrame / a frame
+// delay from gCombatSpeedFactors[combatSpeed] / the animation loop. The
+// loop body is Grab, sprite Draw, a four-way union of the sprite rect
+// into the limits, a four-way clip against the 0x694f18 quad,
+// UpdateScreen with (r-l+1, b-t+1), then DelayTil.
+//
+// Where they differ: ShootBallisticMissile is the only PARABOLIC one - it
+// recomputes x and y from an `arc` term every frame instead of
+// accumulating a step - is the only one with no DrawFrame call, is the
+// only one whose backup restore sits INSIDE the loop, and uses a 100.0f
+// delay factor where the other two use 33.0f. ShootMissile is the only
+// one that does NOT cycle the sprite frame: it picks one frame from the
+// angle and holds it. ShootAnimatedMissile is the only one that owns its
+// sprite (ResourceManager::GetSprite ... Dispose).
+//
+// The union+clip+UpdateScreen block is DC's SLimitData::Include +
+// ::Clip + Width()/Height(), and the same block appears in
+// army::animate_missile (0x43f2c0), combatManager::DrawFrame (0x494440)
+// and ComputeMaxExtent (0x495bf0) - so spelling it right here pays off in
+// several more bodies. Suggested order: ShootMissile first (fullest angle
+// path, simplest loop), then ShootAnimatedMissile, then the parabola.
+//
+// One thing to settle before writing any of them: all four dwords of each
+// limits quad are read INDIVIDUALLY, each at displacement 0 against its
+// own symbol, so they want four separate externs rather than one struct -
+// the gCombatHexLeft694ea8 precedent in the header. And every new
+// file-scope extern on cmbtmgr.h fires the include-set wall by itself
+// (measured at gCombatSeed66d840), so all of them must be gated.
+
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3640
@@ -2297,6 +2341,33 @@ void combatManager::LearnSpellFromEagleEye(int side)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
+// SURVEYED 2026-08-20 (not reconstructed), and the survey starts with a
+// correction: an out-of-tree note had this body at 0x469f40, which is
+// wrong - that address is inside LearnSpellFromEagleEye (0x00469fe0,
+// 0x88). The claim below is the carve's and is the one that matches.
+//
+// The body is hero::TransferArtifacts (src/hero.cpp:2630, already
+// reconstructed) with GiveArtifact in place of add_to_backpack and a
+// vector append on the end. Byte-verified here: the two flag guards, the
+// looted hero as `heroes[1 - side]` (retail forms it as
+// `[this + 4*(0x14f4 - side)]`, and 0x14f4*4 == 0x53d0 == &heroes[1]),
+// the winner as heroes[side], equipped at dead+0x12d walked 19 slots of
+// 8 bytes, backpack at dead+0x3cc walked DOWNWARDS from 63, and the same
+// seven-way refusal chain in the same compare order (-1, 2, 0, 3, 4, 5,
+// 6) that artifact.h already names in full.
+//
+// TWO THINGS TO SETTLE BEFORE WRITING IT, neither of them about bytes:
+//   * hero::GiveArtifact is declared `void` in hero.h but retail returns
+//     in al and this body branches on it (`test al,al / je`). Fixing that
+//     is a hero.h edit, and a sibling lane owns src/hero.cpp - coordinate
+//     rather than race it. The change is a retype at constant declarator
+//     count, which this lane measured to be include-set inert.
+//   * the append is a real out-of-line call to the three-argument
+//     vector insert at 0x54d330, reached as `insert(_Last, 1, &artifact)`
+//     with the vector in ecx. Whether to spell that `push_back` (the DC
+//     roster carries the push_back row) or the insert directly depends on
+//     how the STL surface is modelled here; place_obstacle's own
+//     TObstacleVector uses the explicit insert spelling.
 VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
 void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts)
 {
