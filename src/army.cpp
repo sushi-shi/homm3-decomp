@@ -4646,19 +4646,87 @@ void army::FaerieDragonSpell()
 }
 
 // E:\gamedcs\army.cpp:5359
-// A PREDICATE, not a caster: every callee is a validity test
-// (combatManager::can_cast_spells, ValidSpellTargetArmy,
-// find_resurrection_target, get_resurrection_size, hexcell::get_army),
-// it switches on the spell id through a jump table, and both of its
-// callers ask a question - combatManager::choose_creature_spell and
-// combatManager::GetCommand.
+#endif  // @carcass
+
+// A PREDICATE, not a caster: could this creature's cast do anything at
+// `hex` right now? The resurrecters answer through can_cast_resurrect
+// (INLINED whole, its own can_cast_spells re-check included), the
+// Master Genie counts the caliph roster over the target exactly as
+// cast_caliph_spell's first pass does, and the fixed-spell casters ask
+// ValidSpellTargetArmy - whose argument setup the inlined
+// get_controlling_side ternary tail-duplicates into both hypnotize
+// arms, which is retail's own shape. Its callers ask the question:
+// combatManager::choose_creature_spell and GetCommand.
+//
+// The fixed-spell arms RETURN THE && - `target && ValidSpellTargetArmy`
+// - which is what buys retail's dword 0/1 materialization pair
+// (96.46 -> 99.04 over the if/return spelling, the sivot case-2 lever
+// again).
+//
+// Residual (99.0409%): ONE materialization. The Genie arm's
+// `count > 0` return if-converts to `setg al` under our CL where
+// retail branches to its own `mov eax,1` epilogue; `count <= 0`
+// inverted, ternary and `!`-spellings all reconverge on the setg.
+// Four instructions, merged-return family.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
-    // @stub
+    if (numSpellCasts == 0)
+        return 0;
+    if (!gpCombatManager->can_cast_spells(get_controlling_side(), 0))
+        return 0;
+    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        return 0;
+    army* target = gpCombatManager->cells[hex].get_army();
+    switch (creatureType) {
+    case CREATURE_ARCHANGEL:
+    case ARMY_CREATURE_PIT_LORD:
+        return can_cast_resurrect(hex);
+    case CREATURE_MASTER_GENIE: {
+        if (!target)
+            return 0;
+        long count = 0;
+        for (SpellID spell = 10; spell < 70; spell++) {
+            if (is_valid_caliph_spell(spell, target))
+                count++;
+        }
+        if (count <= 0)
+            return 0;
+        return 1;
+    }
+    case CREATURE_FAERIE_DRAGON:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(field_4e0,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_STORM_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_PROTECTION_FROM_AIR,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_ICE_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(
+                SPELL_PROTECTION_FROM_WATER, get_controlling_side(), target,
+                1, 1);
+    case CREATURE_ENERGY_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_PROTECTION_FROM_FIRE,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_MAGMA_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(
+                SPELL_PROTECTION_FROM_EARTH, get_controlling_side(), target,
+                1, 1);
+    case CREATURE_OGRE_MAGE:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_BLOODLUST,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // RETAIL-ONLY: the shared spell-validity worker army.h describes -
 // is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
