@@ -18,7 +18,21 @@ public:
     type_quest* quest;
     unsigned char visitedPlayers;
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // NOT inline for this view: readObject (0x502e00) CALLS the constructor
+    // at 0x572b50 on its quest-guard local instead of expanding the two
+    // stores, so the declaration retail's mapcell.cpp saw was this one and
+    // the definition lived in seerhut.cpp. The inline body stays for the
+    // views whose own call sites do expand it.
+    TQuestGuard();
+#else
     TQuestGuard() : quest(0), visitedPlayers(0) {}
+#endif
+
+    // The h3m reader, reached from readObject's QUEST_GUARD arm with the
+    // stream as its one argument. DECLARED, not defined: the body is an
+    // unclaimed carve row outside this compiland.
+    int read(TAbstractFile* infile);
 
     std::string QuestGuardFn_00573040(int player);
     // 0x572d60, 224 B, carved and unclaimed. NULLARY where the pair above
@@ -55,12 +69,27 @@ SIZE(TSeerReward, 0xc);
 // writes every named state byte below. This is the one class layout used by
 // seerhut, mapcell, and advmgr; there is no TU-private vector projection.
 class TSeerHut : private TQuestGuard {
+    // readObject's SEER arm tests the base's `quest` pointer on the local it
+    // just deserialized, before deciding whether to register it in the
+    // +0xb0 pool. Friendship rather than a public base: only the map reader
+    // reaches across, and everything else here still goes through TSeerHut's
+    // own surface.
+    friend class NewfullMap;
+
 public:
     TSeerReward reward;
     signed char NameIndex;
     unsigned char field_12;
 
     TSeerHut();
+
+    // The SeerHutList twin of TQuestGuard::read, reached the same way from
+    // readObject's SEER arm. Declared separately because the TQuestGuard
+    // base is private here.
+    int read(TAbstractFile* infile);
+    // 0x574a90, `ret 8` - the savegame reader, called by NewfullMap::Load on
+    // every element of the list it has just resized.
+    int load(TAbstractFile* infile, int saveVersion);
 
     std::string SeerHutFn_005741B0(unsigned char player);
     // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of

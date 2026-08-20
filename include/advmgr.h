@@ -440,9 +440,34 @@ enum WitchHutSkillEncoding {
 // Retail SetRolloverText dispatches id 215 through NewfullMap's five-byte
 // quest-guard pool. The name is corroborated by the admitted retail structure
 // evidence; the Dreamcast adventure-object enum predates this object.
+//
+// The four ids added 2026-08-20 are the rest of that same post-Dreamcast
+// block, and every one of them is byte-proven by readObject's (0x502e00)
+// jump table - its five highest arms are exactly 214..218, in that order:
+//   214  reads an owner byte and a hero id, widens the 0xff sentinel to -1,
+//        and only then reads a power-rating byte, appending the record to
+//        NewfullMap's +0xa0 pool.  That is a hero PLACEHOLDER, and
+//        PlaceObject's skip list agrees - 214 is skipped beside HERO,
+//        RANDOM_HERO, BOAT and HOLY_GRAIL, the classes something else
+//        places.  (mapcell.h's events-only view spells 212 with this name;
+//        212 is BORDER_GATE above and that view's spelling is contradicted
+//        by these bytes.  Left standing there - no byte in this lane
+//        reaches it.)
+//   216  reads owner, a castle id, and - only when that id is zero - a
+//        faction mask, then a min and a max level.
+//   217  the same record with both levels forced to the object type's own
+//        `extra` field, read as a byte.
+//   218  the same record with the castle id zeroed and the faction mask
+//        set to `1 << extra`, the levels still coming off the stream.
+// All three of the 216..218 arms append to the SAME 16-byte-element pool at
+// NewfullMap+0xc0 that the retail-only resolution pass at 0x502b60 walks.
 enum EAdvmgrRetailObjectType {
     BORDER_GATE = 212,
-    QUEST_GUARD = 215
+    HERO_PLACEHOLDER = 214,
+    QUEST_GUARD = 215,
+    RANDOM_DWELLING = 216,
+    RANDOM_DWELLING_LVL = 217,
+    RANDOM_DWELLING_FACTION = 218
 };
 
 // events.obj joins the gate for the refugee camp (0x4a4600), which names

@@ -3,6 +3,10 @@
 // 594 functions in link order; 24 compiler-generated $-thunks omitted.
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+// The ten-bit mask CObjectType carries at +0x34. Its own gate, deliberately
+// narrower than HOMM3_MAPCELL_OBJECTS_VIEW: only this TU constructs a
+// CObjectType, and this header's include closure is measured.
+#define HOMM3_MAPCELL_TYPEMASK_VIEW
 // SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
 // claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
 // class, so the span has no missing attributions at the small end:
@@ -24,6 +28,7 @@
 // by finding a matching record in gpGame's 136-byte-stride pool at +0x98 or
 // by calling pick_alignment - a random-dwelling resolution pass.
 //
+#include <stdio.h>
 #include <va.h>
 #include <windows.h>
 #include "advmgr_objects.h"
@@ -31,8 +36,11 @@
 #include "advmgr.h"
 #include "game.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
 #include "monsterdata.h"
+#include "resourcemanager.h"
+#undef HOMM3_MAPCELL_TYPEMASK_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 
@@ -647,23 +655,190 @@ NewmapCell::NewmapCell()
     object_type_index = -1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:614
+// The h3m entry point.  Init sizes the cell grid, the two terrain layers are
+// read straight back into it, and then EVERY pool the previous scenario left
+// behind is emptied - eleven on the map itself and ten more on the game -
+// before a single object record is deserialized.
+//
+// The clears are `clear()`, not `erase(begin(), end())`: Dinkumware's own
+// clear() IS that erase, so the source spelling that reaches this call is the
+// short one.  Nine of them are calls and the creature-bank one is expanded
+// inline; that split is the compiler's, not the source's.
+//
+// The placement pass at the tail re-reads objects.size() on EVERY iteration -
+// the induction variable is compared against a freshly called size(), not
+// against a hoisted count - which is this compiland's standing
+// do-not-cache-what-retail-reloads shape.
+//
+// Residual (93.7029%): ONE over-inline, and everything else about it follows.
+// Retail CALLS vector<CObject>::size() in that placement loop, both at the
+// entry guard and on the back edge; our CL expands it (the /12 magic
+// multiply 0x2aaaaaab).  Because retail's loop condition is a single call it
+// is cheap to duplicate, so VC6 ROTATES the loop - `test eax,eax / jbe` once,
+// then body, then `cmp edi,eax / jb` back.  Ours, with the condition expanded,
+// is not worth rotating, so it stays top-tested with a `jmp` back edge, and
+// that is exactly the two branch-kind rows `sema diff --branches` reports
+// (`base je -> target jbe`, `base jae -> target jb`).  One inline decision,
+// two branches.
+//
+// Everything else in the body is byte-identical; the remaining diff rows are
+// reloc NAMES only, on the ten STL erase COMDATs the clears reach, which are
+// excluded class and will never carry a claim.
+//
+// Standing hypothesis, same as readObject's: readMapObjects and loadMapObjects
+// are still stubs in this compiland, and both walk `objects`.  Their size()
+// call sites would take this instantiation off the single-digit-call-site
+// path VC6 inlines most eagerly, so this may settle when the TU is finished.
+// Not tried, because it cannot be tried until those two bodies exist.
 VA(0x004fd690, 0x2B3)  // order-map: calls readTimedEventList 0xfc000, Init 0xfd4f0, readMapLayer 0xfe220 x2, readMapObjects 0x104470, PlaceObject 0x505b20 (placeObjects inlined), dc 0xec8f4
-int NewfullMap::Read(void* infile, int size, unsigned char two_layers)
+int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
+                     int mapVersion)
 {
-    // @stub
+    Init(size, two_layers);
+
+    if (readMapLayer(infile, size, 0) < 0)
+        return -1;
+    if (two_layers) {
+        if (readMapLayer(infile, size, 1) < 0)
+            return -1;
+    }
+
+    IncProgressBar(1);
+
+    objectTypes.clear();
+    objects.clear();
+    randomDwellings.clear();
+    customTreasure.clear();
+    CustomMonsterList.clear();
+    blackBoxes.clear();
+    SeerHutList.clear();
+    QuestGuardList.clear();
+    TimedEventList.clear();
+    TownEventList.clear();
+    heroPlaceholders.clear();
+    gpGame->towns.clear();
+    gpGame->scenarioTowns.clear();
+    gpGame->signs.clear();
+    gpGame->mines.clear();
+    gpGame->generators.clear();
+    gpGame->garrisons.clear();
+    gpGame->boats.clear();
+    gpGame->field_1f680.clear();
+    gpGame->universities.clear();
+    gpGame->creatureBanks.clear();
+
+    if (readMapObjects(infile, mapVersion) < 0)
+        return -1;
+    if (readTimedEventList(infile, mapVersion) < 0)
+        return -1;
+
+    NewfullMapFn_00502B60();
+
+    for (unsigned int i = 0; i < objects.size(); ++i)
+        PlaceObject(i, 1);
+
+    NewfullMapFn_00500DE0();
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:679
+// The savegame twin of Read, and the differences from it are the interesting
+// part.  It clears NINE map pools where Read clears eleven - the hero
+// placeholders at +0xa0 and the random dwellings at +0xc0 are NOT emptied
+// here, because a save has already resolved both away - and it skips the
+// game's own +0x1f680 list, which Read does empty.  It then reads the pools
+// back through the load* family instead of readMapObjects/readTimedEventList
+// alone, and the seer huts it deserializes itself.
+//
+// That seer-hut loop is this compiland's do-not-cache shape at its purest:
+// retail keeps ONLY a byte offset live across the body, adds it to a freshly
+// reloaded _First for the load call, and reloads _First AGAIN for the quest
+// test on the very next line.  Writing it as a subscript twice is what
+// produces that; hoisting a row pointer does not.
+// Residual (72.8624%): the same over-inline family readObject and Read hit,
+// twice over.  Retail CALLS vector<TSeerHut>::resize (two arguments, the
+// count and the default-argument temporary); our CL expands it into its
+// size()/insert/size()/erase body, which is the whole of the branch-count
+// gap `sema diff --branches` reports (base 17 vs target 14).  Retail also
+// reaches mapObjectData through the TWO-argument insert(iterator, const T&)
+// where we expand that wrapper and call the three-argument one underneath -
+// character for character the divergence readObject's QUEST_GUARD arm shows
+// on the same two instantiations.
+//
+// It is NOT element size: the already-exact loadMonsterList expands resize
+// for a 48-byte element, which needs the same magic multiply, so retail's
+// inliner is not simply refusing awkward strides.  Both divergences sit
+// AFTER eighteen inlined clear() expansions, which is the one thing Load has
+// that loadMonsterList does not - consistent with a per-caller /Ob2 budget
+// that retail had already spent by the time it reached the resize and ours
+// had not.  No source spelling reached it; recorded rather than ground on.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
-int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
+int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
+                     int saveVersion)
 {
-    // @stub
-}
+    Init(size, two_layers);
 
-#endif  // @carcass
+    if (loadMapLayer(infile, size, 0, saveVersion) < 0)
+        return -1;
+    if (two_layers) {
+        if (loadMapLayer(infile, size, 1, saveVersion) < 0)
+            return -1;
+    }
+
+    IncProgressBar(1);
+
+    objectTypes.clear();
+    objects.clear();
+    customTreasure.clear();
+    CustomMonsterList.clear();
+    blackBoxes.clear();
+    SeerHutList.clear();
+    QuestGuardList.clear();
+    TimedEventList.clear();
+    TownEventList.clear();
+    gpGame->towns.clear();
+    gpGame->scenarioTowns.clear();
+    gpGame->signs.clear();
+    gpGame->mines.clear();
+    gpGame->generators.clear();
+    gpGame->garrisons.clear();
+    gpGame->boats.clear();
+    gpGame->universities.clear();
+    gpGame->creatureBanks.clear();
+
+    if (loadMapObjects(infile) < 0)
+        return -1;
+    if (loadBlackBoxList(infile, saveVersion) < 0)
+        return -1;
+    if (loadTreasureList(infile) < 0)
+        return -1;
+    if (loadMonsterList(infile) < 0)
+        return -1;
+
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    SeerHutList.resize(count);
+    for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
+        SeerHutList[i].load(infile, saveVersion);
+        if (SeerHutList[i].quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(SeerHutList[i].quest)));
+    }
+
+    if (saveVersion >= 25)
+        NewfullMapFn_004FD950(infile, saveVersion);
+
+    if (loadTimedEventList(infile, saveVersion) < 0)
+        return -1;
+    if (loadTownEventList(infile, saveVersion) < 0)
+        return -1;
+
+    IncProgressBar(1);
+    return 0;
+}
 
 // E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
 // three are members of NewfullMap. Retail inlines each at its only call
@@ -2521,16 +2696,366 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3290
+// The h3m object dispatcher.  Five stream fields land in the object itself -
+// x, y, z, a FOUR-byte type index of which only the low word is kept, and
+// five discarded bytes - and each of those five reads is checked and returns
+// -1.  Everything after that is a switch on the object TYPE, read out of the
+// type record the index selects, and every arm of it returns 1: the reads
+// inside an arm that are checked at all `break` to that shared 1, they do not
+// report failure.
+//
+// The switch is a jump table over 5..218 with a 214-entry byte index, and its
+// arm order is retail's own source order - the reconstruction keeps it.
+// Twenty of the twenty-five arms are a single call; the five inlined ones are
+// HERO_PLACEHOLDER, SHIPYARD, HOLY_GRAIL, SEER, SHRINE1/2/3, QUEST_GUARD and
+// the three RANDOM_DWELLING flavours, which is what the Dreamcast roster's
+// missing readHolyGrail/readShrine/readShipyard rows mean here.
+//
+// MINE and LIGHTHOUSE share a tail: retail cross-jumps the mine's non-
+// abandoned arm into the lighthouse's `readMineData` call rather than
+// duplicating it, which is a compiler transform over two separate cases, not
+// a fallthrough in the source.
+// Residual (42.6246%): an INLINER wall, and a narrow one - twenty-one of the
+// twenty-six arms already come out at retail's exact byte length, arm for
+// arm, off the same jump table and index table:
+//   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
+//   equal, SEER 122 vs 120, then 74/23/31/23/23/27/155/140 and the default's
+//   14 all equal too.
+// It breaks in the last two heavy arms: id-218 emits 574 bytes where retail
+// emits 149 and QUEST_GUARD 1048 where retail emits 91, because our CL
+// expands `vector<T>::insert(iterator, size_type, const T&)` INLINE there -
+// dragging in _Ucopy, _Ufill, _Destroy, operator new and operator delete -
+// where retail calls it.  predict-inline: base 54 out-of-line calls vs
+// retail 29, every extra one from that expansion.
+//
+// Retail's own decisions are cost-driven and this tree reproduces most of
+// them: `insert(iterator, const T&)` is expanded for the 4- and 16-byte
+// element types (its `_P - begin()` is a shift) and CALLED for TSeerHut (19)
+// and TQuestGuard (5), whose pointer difference needs a magic multiply.  We
+// expand it for all five, and then the id-218 and QUEST_GUARD sites expand
+// the big three-argument insert underneath it as well.  That expansion also
+// costs the register assignment: it forces `this` to be spilled at +0x18 and
+// swaps its register with tempObject's (ours edi/ebx, retail's ebx/edi),
+// which is what holds the arms that DO match at length below 100%.
+//
+// Tried and rejected: `#pragma inline_depth(2)` and `(1)` around the body -
+// both are ignored under /O2 /Ob2, byte-identical output at 42.5589.
+// Tried and KEPT: giving each arm its own stream-read local instead of
+// reusing one function-scope byte.  That is what retail does - its header
+// reads land in [ebp+0xb] and its arm reads in a different home - and it
+// moves the first read onto retail's own [ebp+0xb] (42.5589 -> 42.6246).
+// It does not reach the runaway.
+// Not tried, and the standing hypothesis: the other nine bodies of this
+// compiland are still stubs, and Load/readMapObjects/loadMapObjects add call
+// sites to these very instantiations - a multi-site inline function is
+// costed differently from a single-site one, so this arm order may only
+// settle once the TU is finished.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
-int NewfullMap::readObject(void* infile, CObject* tempObject)
+int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
+                           int mapVersion)
 {
-    // @stub
-}
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->x = value;
 
-#endif  // @carcass
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->y = value;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->z = value;
+
+    int typeIndex;
+    if (infile->Read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+        return -1;
+    tempObject->typeIndex = static_cast<unsigned short>(typeIndex);
+
+    char padding[5];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+
+    switch (objectTypes[tempObject->typeIndex].objectType) {
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        readArtifactData(infile, tempObject);
+        break;
+
+    case HERO:
+    case PRISON:
+    case RANDOM_HERO:
+        readHeroData(infile, tempObject, mapVersion);
+        break;
+
+    case BOAT: {
+        signed char boatType = static_cast<signed char>(
+            objectTypes[tempObject->typeIndex].extra);
+        int triggerX;
+        int triggerY;
+        tempObject->FindTrigger(&triggerX, &triggerY);
+        tempObject->extraInfo = gpGame->CreateBoat(
+            triggerX, triggerY, tempObject->z, -1, 1, boatType);
+        break;
+    }
+
+    case RANDOM_TOWN:
+    case TOWN:
+        readTownData(infile, tempObject, mapVersion);
+        break;
+
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        readMonsterData(infile, tempObject);
+        break;
+
+    case EVENT:
+        readEventData(infile, tempObject, mapVersion);
+        break;
+
+    case HERO_PLACEHOLDER: {
+        HeroPlaceholderData placeholder;
+        placeholder.object = tempObject;
+
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        placeholder.owner = owner;
+
+        unsigned char heroId;
+        infile->Read(&heroId, sizeof(heroId));
+        placeholder.heroId = heroId;
+        if (placeholder.heroId
+                == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
+            placeholder.heroId = -1;
+            unsigned char powerRating;
+            infile->Read(&powerRating, sizeof(powerRating));
+            placeholder.powerRating = powerRating;
+        }
+
+        heroPlaceholders.push_back(placeholder);
+        break;
+    }
+
+    case SPELL_SCROLL:
+        readSpellScrollData(infile, tempObject);
+        break;
+
+    case SHIPYARD: {
+        unsigned char owner;
+        if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+            break;
+        tempObject->shipyard_info.owner = owner;
+
+        char shipyardPadding[3];
+        if (infile->Read(shipyardPadding, sizeof(shipyardPadding))
+                < sizeof(shipyardPadding))
+            break;
+        tempObject->shipyard_info.boatX = 0xff;
+        tempObject->shipyard_info.boatY = 0xff;
+        break;
+    }
+
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        readResourceData(infile, tempObject);
+        break;
+
+    case HOLY_GRAIL: {
+        unsigned char radius;
+        if (infile->Read(&radius, sizeof(radius)) < sizeof(radius))
+            break;
+        gpGame->ultimateArtifactX = tempObject->x;
+        gpGame->ultimateArtifactY = tempObject->y;
+        gpGame->ultimateArtifactZ = tempObject->z;
+        gpGame->field_1f695 = radius;
+
+        char grailPadding[3];
+        infile->Read(grailPadding, sizeof(grailPadding));
+        break;
+    }
+
+    case BLACK_BOX:
+        readBlackBoxData(infile, tempObject, mapVersion);
+        break;
+
+    case SCHOLAR:
+        readScholarData(infile, tempObject);
+        break;
+
+    case SEER: {
+        TSeerHut tempHut;
+        tempHut.read(infile);
+        SeerHutList.push_back(tempHut);
+        tempObject->extraInfo = SeerHutList.size() - 1;
+        if (tempHut.quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(tempHut.quest)));
+        break;
+    }
+
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3: {
+        char spell;
+        if (infile->Read(&spell, sizeof(spell)) < sizeof(spell))
+            break;
+        tempObject->shrine_info.spell = spell;
+
+        char shrinePadding[3];
+        infile->Read(shrinePadding, sizeof(shrinePadding));
+        break;
+    }
+
+    case OCEAN_BOTTLE:
+    case SIGN:
+        readSignData(infile, tempObject);
+        break;
+
+    case MINE:
+        if (objectTypes[tempObject->typeIndex].extra == NUM_RESOURCES)
+            readAbandonedMineData(infile, tempObject);
+        else
+            readMineData(infile, tempObject);
+        break;
+
+    case LIGHTHOUSE:
+        readMineData(infile, tempObject);
+        break;
+
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        readGeneratorData(infile, tempObject);
+        break;
+
+    case GARRISON:
+        readGarrisonData(infile, tempObject, mapVersion);
+        break;
+
+    case RANDOM_DWELLING: {
+        RandomDwellingData dwelling;
+
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        int castleId;
+        infile->Read(&castleId, sizeof(castleId));
+        dwelling.castleId = castleId;
+        if (castleId == 0) {
+            short factionMask;
+            infile->Read(&factionMask, sizeof(factionMask));
+            dwelling.factionMask = factionMask;
+        }
+
+        unsigned char minLevel;
+        infile->Read(&minLevel, sizeof(minLevel));
+        dwelling.minLevel = minLevel;
+        unsigned char maxLevel;
+        infile->Read(&maxLevel, sizeof(maxLevel));
+        dwelling.maxLevel = maxLevel;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case RANDOM_DWELLING_LVL: {
+        RandomDwellingData dwelling;
+
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        int castleId;
+        infile->Read(&castleId, sizeof(castleId));
+        dwelling.castleId = castleId;
+        if (castleId == 0) {
+            short factionMask;
+            infile->Read(&factionMask, sizeof(factionMask));
+            dwelling.factionMask = factionMask;
+        }
+
+        unsigned char level = static_cast<unsigned char>(
+            objectTypes[tempObject->typeIndex].extra);
+        dwelling.minLevel = level;
+        dwelling.maxLevel = level;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case RANDOM_DWELLING_FACTION: {
+        RandomDwellingData dwelling;
+
+        unsigned char owner;
+        infile->Read(&owner, sizeof(owner));
+        dwelling.owner = owner;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        dwelling.castleId = 0;
+        dwelling.factionMask = static_cast<unsigned short>(
+            1 << objectTypes[tempObject->typeIndex].extra);
+
+        unsigned char minLevel;
+        infile->Read(&minLevel, sizeof(minLevel));
+        dwelling.minLevel = minLevel;
+        unsigned char maxLevel;
+        infile->Read(&maxLevel, sizeof(maxLevel));
+        dwelling.maxLevel = maxLevel;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case QUEST_GUARD: {
+        TQuestGuard tempGuard;
+        tempGuard.read(infile);
+        QuestGuardList.push_back(tempGuard);
+        tempObject->extraInfo = QuestGuardList.size() - 1;
+        if (tempGuard.quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(tempGuard.quest)));
+        break;
+    }
+
+    case WITCH_HUT:
+        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            tempObject->extraInfo = 0xefbf;
+        } else {
+            int allowedSkills;
+            infile->Read(&allowedSkills, sizeof(allowedSkills));
+            tempObject->extraInfo = allowedSkills;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return 1;
+}
 
 // E:\gamedcs\mapcell.cpp:3443
 #pragma auto_inline(off)
@@ -2740,17 +3265,116 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// The h3m object-table reader, loadMapObjects' twin - same resize/refill/
+// dispose shape for the sprite table, same re-taken subscripts - plus the
+// missing-mask reporting the save path has no need of.
+//
+// readObjectType answers 100, not 1, when an object's own .msk was missing
+// and default.msk stood in.  Every such TYPE index is collected here, and
+// then every OBJECT that turns out to reference one is reported by name and
+// position.  That is what the file-scope vector below is for, and why it is
+// CLEARED on entry rather than merely constructed empty.
+//
+// It also corrects this compiland's span audit: the static ctor/dtor pair at
+// 0x504260/0x504290 was recorded as belonging to a 16-byte STRING global at
+// 0x699690.  It is this vector - the reads at 0x699694/0x699698 are _First
+// and _Last, and the entry clear passes exactly that pair to
+// vector<int>::erase.
+//
+// Note the two helpers at the end of the type loop run in the OPPOSITE order
+// from loadMapObjects': the index rebuild first, then the progress tick.
+// That is retail's order in each body, not a transcription slip.
+//
+// Residual (78.4070%): ONE branch over retail (base 35, target 34), and it is
+// not in the shared half - every construct this body has in common with the
+// now-exact loadMapObjects reproduces, including the CObjectType temp's six
+// sub-constructors (four bitset<48>::_Tidy plus the bitset<10> one), both
+// inlined resizes, the sprite save/refill/dispose, and the two-argument
+// vector<int>::insert the missing-mask collection reaches.  The extra branch
+// is somewhere in the reporting pass that loadMapObjects does not have -
+// either the missing-mask scan's shape or the sprintf/MessageBoxA block.
+// Not chased further this lane; the twin is the control to diff against.
+DATA(0x00699690)
+static std::vector<int> gMissingMaskTypes;
 
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
-int NewfullMap::readMapObjects(void* infile)
+int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
 {
-    // @stub
-}
+    gMissingMaskTypes.clear();
 
-// E:\gamedcs\mapcell.cpp:3924
-#endif  // @carcass
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objectTypes.resize(count);
+
+    unsigned int i;
+    for (i = 0; i < objectTypes.size(); ++i) {
+        int status = readObjectType(infile, &objectTypes[i]);
+        if (status < 0)
+            return -1;
+        if (i == objectTypes.size() / 2)
+            IncProgressBar(1);
+        if (status == READ_OBJECT_TYPE_DEFAULT_MASK)
+            gMissingMaskTypes.push_back(i);
+    }
+
+    NewfullMapFn_005042C0();
+    IncProgressBar(1);
+
+    std::vector<CSprite*> oldSprites;
+    oldSprites.resize(sprites.size());
+    for (i = 0; i < sprites.size(); ++i)
+        oldSprites[i] = sprites[i];
+
+    sprites.resize(objectTypes.size());
+    for (i = 0; i < objectTypes.size(); ++i) {
+        sprites[i] =
+            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
+        if (i == objectTypes.size() / 3)
+            IncProgressBar(1);
+        if (i == objectTypes.size() / 3 * 2)
+            IncProgressBar(1);
+    }
+
+    for (i = 0; i < oldSprites.size(); ++i)
+        oldSprites[i]->Dispose();
+    oldSprites.clear();
+
+    IncProgressBar(1);
+
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objects.resize(count);
+    for (i = 0; i < objects.size(); ++i) {
+        if (readObject(infile, &objects[i], mapVersion) < 0)
+            return -1;
+
+        unsigned int missing;
+        for (missing = 0; missing < gMissingMaskTypes.size(); ++missing) {
+            if (objects[i].typeIndex == gMissingMaskTypes[missing]) {
+                sprintf(gText,
+                        DATA_COMPGEN(0x0067fb48, readMapObjectsInvalidObject,
+                                     "Invalid Object Referenced!\n\n"
+                                     "x: %d y: %d z: %d - Type: %s"),
+                        objects[i].x, objects[i].y, objects[i].z,
+                        gAdventureObjectNames[
+                            objectTypes[objects[i].typeIndex].objectType]);
+                MessageBoxA(hwndApp, gText,
+                            DATA_COMPGEN(0x0067fb08,
+                                         readMapObjectsErrorCaption, "Error!"),
+                            0);
+            }
+        }
+
+        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 VA(0x00504a40, 0x127)  // order-map: calls saveObject 0x503640 + saveObjectType 0x503c40 (exact DC callee pair); called by Save, dc 0xf3018
 int NewfullMap::saveMapObjects(TAbstractFile* outfile)
@@ -2776,16 +3400,77 @@ int NewfullMap::saveMapObjects(TAbstractFile* outfile)
     return 1;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3962
+// The save twin of readMapObjects, and the only serializer here that
+// REPLACES a live sprite table rather than filling an empty one: the old
+// CSprite pointers are copied aside, `sprites` is refilled from the freshly
+// loaded type records, and only then is each old sprite Disposed.  That
+// aside-vector is the function's one EH object.
+//
+// Neither list read has the `count == 0 -> clear()` arm readTimedEventList
+// needs: both go straight into resize, which is loadBlackBox's shape.
+//
+// objectTypes.size() is spelled five times and objects.size() once, and the
+// Dreamcast xref graph counts exactly five and one for the same body.  Every
+// subscript is re-taken - objects[i] twice inside the object loop,
+// objectTypes[i] twice across the two type loops - because retail keeps only
+// a byte offset live and reloads _First each pass.
+//
+// The two progress ticks inside the sprite loop fire at size()/3 and at
+// size()/3*2, in that order and with the division FIRST: retail's
+// `mul 0xaaaaaaab / shr edx,1` then `shl edx,1` is (n/3)*2, not 2*n/3.
 VA(0x00504b70, 0x4E9)  // order-map: calls loadObject 0x5036d0 + loadObjectType 0x503f00 + GetSprite 0x55c7b0; called by Load; EH-bearing, dc 0xf318c
-int NewfullMap::loadMapObjects(void* infile)
+int NewfullMap::loadMapObjects(TAbstractFile* infile)
 {
-    // @stub
-}
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
 
-#endif  // @carcass
+    objectTypes.resize(count);
+
+    unsigned int i;
+    for (i = 0; i < objectTypes.size(); ++i) {
+        if (loadObjectType(infile, &objectTypes[i]) < 0)
+            return -1;
+    }
+
+    IncProgressBar(1);
+    NewfullMapFn_005042C0();
+
+    std::vector<CSprite*> oldSprites;
+    oldSprites.resize(sprites.size());
+    for (i = 0; i < sprites.size(); ++i)
+        oldSprites[i] = sprites[i];
+
+    sprites.resize(objectTypes.size());
+    for (i = 0; i < objectTypes.size(); ++i) {
+        sprites[i] =
+            ResourceManager::GetSprite(objectTypes[i].ImageName.c_str());
+        if (i == objectTypes.size() / 3)
+            IncProgressBar(1);
+        if (i == objectTypes.size() / 3 * 2)
+            IncProgressBar(1);
+    }
+
+    for (i = 0; i < oldSprites.size(); ++i)
+        oldSprites[i]->Dispose();
+    oldSprites.clear();
+
+    IncProgressBar(1);
+
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    objects.resize(count);
+    for (i = 0; i < objects.size(); ++i) {
+        if (loadObject(infile, &objects[i]) < 0)
+            return -1;
+        objects[i].animationOffset = static_cast<unsigned char>(Random(0, 255));
+    }
+
+    IncProgressBar(1);
+    return 1;
+}
 
 // E:\gamedcs\mapcell.cpp:4018
 // Builds the per-cell stacking depth an object's sprite occupies, as an 8x6
@@ -3162,7 +3847,7 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
 // an adventure object's anchor is its bottom-right corner.
 //
 // Five object classes are filed by something other than this pass and are
-// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, RANDOM_DWELLING and BOAT.
+// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, HERO_PLACEHOLDER and BOAT.
 // EVENT is skipped too but not silently - where its trigger mask covers the
 // cell, the cell is cleared of IsBlocked and is_trigger, retyped EVENT, and
 // given the object's extraInfo.  Everything else builds a TObjectCell and
@@ -3212,7 +3897,7 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO
                 || objectClass == RANDOM_HERO
-                || objectClass == RANDOM_DWELLING || objectClass == BOAT)
+                || objectClass == HERO_PLACEHOLDER || objectClass == BOAT)
                 continue;
 
             if (objectClass == EVENT) {
