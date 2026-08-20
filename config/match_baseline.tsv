@@ -1835,6 +1835,7 @@ spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	89.6774	89.6774	89.677
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
 spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJE@Z	100.0000	100.0000	100.0000	0x1a66d0
+spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	98.7602	0x1a8950
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
 spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x1a8690
 spells	?ValidSpellTarget@combatManager@@QAEEHJJJEE@Z	88.4937	88.4937	88.4937	0x1a39c0
@@ -1863,7 +1864,6 @@ spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
 spells	combatManager_ResetBoltAngle	0.0000	0.0000	0.0000	0x1a5260
 spells	combatManager_Resurrect	0.0000	0.0000	0.0000	0x1a7560
 spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
-spells	combatManager_ShowSpellMessage	0.0000	0.0000	0.0000	0x1a8950
 spells	combatManager_SpellCastWorkChance	0.0000	0.0000	0.0000	0x1a8090
 spells	combatManager_SummonElemental	0.0000	0.0000	0.0000	0x1a7080
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20

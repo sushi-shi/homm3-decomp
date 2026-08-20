@@ -7,6 +7,10 @@
 #define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
+// ShowSpellMessage's Age arm reads origHitPoints (+0x6c) and the
+// poisonPenalty multiplier (+0x4a4) to price the hit points the stack
+// just lost; army.h keeps both behind the round view.
+#define HOMM3_ARMY_ROUND_VIEW
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
 // round counters (+0x210..+0x21c) and their four damage factors
 // (+0x4a8..+0x4b4); army.h keeps both runs behind this view because each
@@ -1672,16 +1676,179 @@ void combatManager::SpellTargetMessage(SpellID spellId, int targetIndex,
     combatWindow->combat_message(gText, 0, 0);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:5749
+// The line that goes up when a spell RESOLVES, and its first parameter
+// is a three-way "who cast this": a hero (0), a creature ability (1) or
+// an ARTIFACT (2). The artifact arm is what proves akArtifactTraits is
+// the table behind 0x660b68's reference cell from this side - it names
+// the caster out of that 32-byte-stride roster, keyed by spell, and the
+// two keys it special-cases are exactly the two auto-cast combination
+// artifacts SetNextArmy (0x465330) already pairs with the same spells:
+// 0x81 Angelic Alliance for Prayer, 0x84 Armor of the Damned for the
+// Slow / Curse / Weakness / Misfortune group. Read forwards there, read
+// backwards here.
+//
+// ITS `default:` IS A RETAIL BUG, TRANSCRIBED. When the artifact arm is
+// reached with any spell outside those five it indexes akArtifactTraits
+// with the SPELL id - `mov eax, [ebp+0xc]` sitting at the jump table's
+// default target, past both constant arms. Nothing in the image can
+// reach it (only those five spells auto-cast), so it never fires; it is
+// still what the source says, and the load has to be at the default
+// label rather than ahead of the switch for the bytes to come out.
+//
+// THE /Ob2 CALL-VS-INLINE ASYMMETRY IS SPELLED PER SITE, AGAIN. The
+// TARGET's name is a CALL to army::GetName; the CASTING stack's name, in
+// the creature arm's default, is EXPANDED. Same two source lines, one
+// written as army::GetName and one as this file's CreatureName - the
+// third instance of the lever in this TU.
+//
+// Residual (98.76%): SEVEN instructions, all in the artifact arm, and
+// one cause. Retail RELOADS `[ebp+0xc]` at that arm's default label
+// where our CL keeps the switch selector live from the dispatch - so
+// retail's selector dies in EDX and ours is promoted to ESI, and the
+// six instructions around the akArtifactTraits subscript re-schedule
+// behind that. This is the "do not cache what retail reloads" class
+// with no source lever found: three spellings were measured and all
+// three are worse -
+//   `int artifact = spellId;` with no default arm            88.90
+//   the three format_string calls written out per arm        70.97
+//   `int artifact;` hoisted to function scope       98.76 (neutral)
+// The last one is the tell: the promotion is not about where the
+// variable is declared, it is VC6's global CSE joining the dispatch
+// block's load to the default block's, which no scoping reaches.
+//
+// Everything else in the body is byte-exact, INCLUDING both /Ob2
+// asymmetries this function carries: of the nineteen
+// `message = format_string(...)` sites retail calls basic_string::assign
+// at eighteen and expands it at one (the hero arm's no-target half), and
+// of their temporaries it calls _Tidy at seventeen and expands the
+// destructor at two. Neither needed a pragma - writing the arms
+// longhand in source order reproduces both.
 VA(0x005a8950, 0x999)  // order-map+arity, dc 0x157ae4
-void combatManager::ShowSpellMessage(int bIsMonsterSpell, int spellId, army* targetArmy)
+void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
+                                     army* targetArmy)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    const char* targetName;
+    if (targetArmy)
+        targetName = army::GetName(targetArmy->creatureType,
+                                   targetArmy->numTroops);
+    else
+        targetName = 0;
+    const char* spellName = akSpellTraits[spellId].name;
+    std::string message;
+    switch (bIsMonsterSpell) {
+    case SPELL_CASTER_CREATURE:
+        switch (spellId) {
+        case SPELL_AGE: {
+            // The hit points the stack has just lost: its recomputed
+            // maximum - origHitPoints rescaled by the same poisonPenalty
+            // multiplier ResetRound keeps - minus what it has left. The
+            // cast is to `float`, not double: retail spills the widened
+            // integer back through the spellId parameter's OWN stack
+            // slot as a 32-bit `fstp dword ptr [ebp+0xc]` before
+            // reloading it for the multiply.
+            long lost = static_cast<long>(
+                            static_cast<float>(targetArmy->origHitPoints)
+                            * targetArmy->poisonPenalty + 0.95f)
+                - targetArmy->hitPoints;
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(552),
+                                        targetName, lost);
+            else
+                message = format_string(gpGeneralText->GetText(553),
+                                        targetName, lost);
+            break;
+        }
+        case SPELL_DISEASE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(554), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(555), targetName);
+            break;
+        case SPELL_DISPEL_HELPFUL:
+            message = format_string(gpGeneralText->GetText(556), targetName);
+            break;
+        case SPELL_BLIND:
+            message = format_string(gpGeneralText->GetText(557), targetName);
+            break;
+        case SPELL_CURSE:
+            message = format_string(gpGeneralText->GetText(558), targetName);
+            break;
+        case SPELL_STONE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(559), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(560), targetName);
+            break;
+        case SPELL_BIND:
+            message = format_string(gpGeneralText->GetText(561), targetName);
+            break;
+        case SPELL_POISON:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(562), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(563), targetName);
+            break;
+        case SPELL_PARALYZE:
+            if (targetArmy->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(564), targetName);
+            else
+                message = format_string(gpGeneralText->GetText(565), targetName);
+            break;
+        default: {
+            // Every OTHER creature ability names its own caster - the
+            // stack whose turn it is - and then appends the target
+            // clause only if there is a target to name.
+            const army* caster = &armies[actingSide][actingSlot];
+            const char* casterName = CreatureName(caster->creatureType,
+                                                  caster->numTroops);
+            if (caster->numTroops == 1)
+                message = format_string(gpGeneralText->GetText(566),
+                                        casterName, spellName);
+            else
+                message = format_string(gpGeneralText->GetText(567),
+                                        casterName, spellName);
+            if (targetName)
+                message += format_string(gpGeneralText->GetText(568),
+                                         targetName);
+            break;
+        }
+        }
+        break;
+    case SPELL_CASTER_ARTIFACT: {
+        int artifact;
+        switch (spellId) {
+        case SPELL_PRAYER:
+            artifact = ARTIFACT_ANGELIC_ALLIANCE;
+            break;
+        case SPELL_CURSE:
+        case SPELL_WEAKNESS:
+        case SPELL_MISFORTUNE:
+        case SPELL_SLOW:
+            artifact = ARTIFACT_ARMOR_OF_THE_DAMNED;
+            break;
+        default:
+            artifact = spellId;
+            break;
+        }
+        message = format_string(gpGeneralText->GetText(197),
+                                akArtifactTraits[artifact].name, spellName);
+        break;
+    }
+    default:
+        if (targetName)
+            message = format_string(gpGeneralText->GetText(196),
+                                    heroes[currentSide]->name, spellName,
+                                    targetName);
+        else
+            message = format_string(gpGeneralText->GetText(197),
+                                    heroes[currentSide]->name, spellName);
+        break;
+    }
+    combatWindow->combat_message(message.c_str(), 1, 0);
+}
 
 // The cache cmbtmgr.h renamed on 2026-08-20 from LoadCreatureSprite: it
 // keys on powSpellEffect, releases the held sprite through vtable slot 1
