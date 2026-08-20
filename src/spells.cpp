@@ -2089,6 +2089,41 @@ long combatManager::GetNextChainLightningTarget(const army* last_target,
 DATA(0x00642274)
 static const int gChainLightningTargets[4] = { 4, 4, 5, 5 };
 
+// Earthquake's screen-shake path, .rdata 0x642284: fifteen (dx, dy)
+// pairs the whole framebuffer is blitted back at, three times over.
+// Referenced from exactly two sites, both inside Earthquake (the loop's
+// reset and its back edge), so it is spells.obj's own file static, and
+// the dword AFTER the run belongs to a different table - which is what
+// bounds it at fifteen. Read straight from the hash-verified image.
+// Spelled as an int[15][2] rather than a record because a .cpp-local
+// struct definition is a cleanliness floor at zero; the stride and the
+// two loads are the same either way.
+DATA(0x00642284)
+static const int gEarthquakeShakeOffsets[15][2] = {
+    {  2,  2 }, {  4,  1 }, {  3, -2 }, {  0, -6 }, {  2, -2 },
+    { -1,  3 }, { -5,  4 }, { -8,  6 }, { -4,  2 }, { -1,  1 },
+    { -3, -3 }, { -7, -5 }, { -5, -7 }, { -2, -3 }, {  0,  0 }
+};
+
+// The frame of the SGEXPL explosion at which Earthquake actually brings
+// the wall section down. Retail tests the animation counter against a
+// bare 5; named here because a literal in an `==` is a cleanliness floor
+// at zero, and because the value IS a domain point - the impact frame of
+// one particular DEF - rather than a count.
+const int kEarthquakeImpactFrame = 5;
+
+// combatManager::DamageWall's first slot is TWallTargetId while
+// Earthquake's own walk of gWallTargets is an int counter; this
+// bit-preserving inline bridges the crossing rather than lying with an
+// enum cast, exactly as ai_combat.cpp's creature_type_from_int and
+// ai_player.cpp's twin do. VC6 reduces the four-byte copy to a move.
+inline TWallTargetId wall_target_from_int(int value)
+{
+    TWallTargetId wall;
+    memcpy(&wall, &value, sizeof wall);
+    return wall;
+}
+
 // Residual (96.2%): two sites. The `_cpp_min(_cpp_max(d, 8), 30)` chain
 // makes ONE by-value copy our CL does not fold - retail lets the
 // address _cpp_max returned flow straight into _cpp_min and compares the
@@ -2916,16 +2951,161 @@ long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
     return damage;
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:5164
+// Earthquake, and it is three passes in one body.
+//
+// FIRST the screen SHAKES: the whole framebuffer is grabbed into the
+// combat back-buffer and blitted back fifteen times at the offsets in
+// the table above, three times over.
+//
+// THEN the wall sections are drawn by lot. `counts[i]` accumulates how
+// many levels each of gWallTargets' eight segments takes; each round
+// censuses the segments that still have more strength than they have
+// already been dealt, rolls Random(1, that), and walks the table again
+// to the roll-th STANDING segment. The two walks disagree - the census
+// tests `strength > counts[i]` and the picker tests `strength != 0` -
+// and that is retail's, not a transcription slip.
+//
+// LAST the SGEXPL explosion plays over every segment that drew a level,
+// and DamageWall is called from inside frame 5 of that animation, one
+// call per segment. When there is nothing to draw, or the combat is
+// quick, the same eight DamageWall calls happen in one sweep instead.
+//
+// NAMING THE FOUR EDGES AND A POINTER TO THE BOUNDS IS WORTH 2.5
+// (82.48 -> 84.96), the sixth instance of the array-pointer-above lever
+// in this TU: retail computes left/right/top/bottom into locals and
+// then stores all four THROUGH one materialised `&drawbridgeBounds`,
+// where storing each expression straight into `drawbridgeBounds.values[n]`
+// makes VC6 fold the member into `this + 0x13d38` addressing and reload
+// the sprite's Width and Height at every use.
+//
+// Residual (84.96%): the register-homing class, and it is one decision.
+// Retail memory-homes `this` at [ebp-8] and reloads it, which frees all
+// three callee-saved registers for the animation body's own
+// call-crossing values - ESI takes `&drawbridgeBounds`, EDI the
+// segment's x and EBX its y. Our C2 keeps `this` in ESI for the whole
+// function, so those three fight over two registers and every store
+// through the bounds pointer becomes a `this`-relative one instead.
+// That is exactly the asymmetry AreaEffect's note four hundred lines up
+// records from the other side. why-reg's catalog was run: its own top
+// pick, `volatile int x`, closes 13 of its 283 slots and MEASURES
+// 84.96 -> 82.02 - the low-mass inversion for the third time in this
+// TU - and all twenty other mutations are worse still.
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::Earthquake(int level)
 {
-    // @stub
-}
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        gpMouseManager->HidePointer();
+        field_53b0->Grab(gpWindowManager->screenBitmap->map, 0, 0,
+                         gpWindowManager->screenBitmap->Width,
+                         gpWindowManager->screenBitmap->Height,
+                         gpWindowManager->screenBitmap->Pitch);
+        long shakeDelay = static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 15.0f);
+        int pass = 3;
+        do {
+            for (int step = 0; step < 15; step++) {
+                unsigned long shakeTil = GameTime::Get() + shakeDelay;
+                PollSound();
+                field_53b0->Draw(0, 0, field_53b0->Width, field_53b0->Height,
+                                 gpWindowManager->screenBitmap->map,
+                                 gEarthquakeShakeOffsets[step][0],
+                                 gEarthquakeShakeOffsets[step][1],
+                                 gpWindowManager->screenBitmap->Width,
+                                 gpWindowManager->screenBitmap->Height,
+                                 gpWindowManager->screenBitmap->Pitch, 0);
+                UpdateCombatArea();
+                GameTime::DelayTil(shakeTil);
+            }
+        } while (--pass);
+        field_53b8 = 0;
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    }
 
-#endif  // @carcass
+    int counts[WALL_TARGET_COUNT];
+    memset(counts, 0, sizeof counts);
+    int remaining = akSpellTraits[SPELL_EARTHQUAKE].mastery_bonus[level];
+    int drawn = 0;
+    while (remaining-- > 0) {
+        int candidates = 0;
+        for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+            if (wallStrength[gWallTargets[i].wall_id] > counts[i])
+                candidates++;
+        }
+        if (candidates == 0)
+            break;
+        int roll = Random(1, candidates);
+        int chosen;
+        for (chosen = 0; chosen < WALL_TARGET_COUNT; chosen++) {
+            if (wallStrength[gWallTargets[chosen].wall_id] != 0) {
+                roll--;
+                if (roll == 0)
+                    break;
+            }
+        }
+        if (counts[chosen] == 0)
+            drawn++;
+        counts[chosen]++;
+    }
+
+    if (drawn != 0
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        long frameDelay = static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 15.0f);
+        CSprite* blast = ResourceManager::GetSprite("SGEXPL.DEF");
+        launch_sample("WallHit.82m", -1, 3);
+        for (int frame = 0; frame < blast->GetNumFrames(0); frame++) {
+            unsigned long frameTil = GameTime::Get() + frameDelay;
+            DrawFrame(0, 0, 1, 0, 0, 0);
+            for (int i = 0; i < WALL_TARGET_COUNT; i++) {
+                if (counts[i] == 0)
+                    continue;
+                int w = blast->Width;
+                int h = blast->Height;
+                int x = gWallTargets[i].screenX;
+                int y = gWallTargets[i].screenY;
+                int left = x - w / 2;
+                int right = x + (w - w / 2) - 1;
+                int top = y - h / 2;
+                int bottom = y + (h - h / 2) - 1;
+                TDrawbridgeBounds* bounds = &drawbridgeBounds;
+                bounds->values[0] = left;
+                bounds->values[1] = top;
+                bounds->values[2] = right;
+                bounds->values[3] = bottom;
+                if (bounds->values[0] < gCombatDrawLimits694f18.values[0])
+                    bounds->values[0] = gCombatDrawLimits694f18.values[0];
+                if (bounds->values[1] < gCombatDrawLimits694f18.values[1])
+                    bounds->values[1] = gCombatDrawLimits694f18.values[1];
+                if (bounds->values[2] > gCombatDrawLimits694f18.values[2])
+                    bounds->values[2] = gCombatDrawLimits694f18.values[2];
+                if (bounds->values[3] > gCombatDrawLimits694f18.values[3])
+                    bounds->values[3] = gCombatDrawLimits694f18.values[3];
+                if (frame == kEarthquakeImpactFrame)
+                    DamageWall(wall_target_from_int(i), counts[i]);
+                blast->Draw(0, frame, 0, 0,
+                            bounds->values[2] - bounds->values[0] + 1,
+                            bounds->values[3] - bounds->values[1] + 1,
+                            gpWindowManager->screenBitmap->map,
+                            x - blast->Width / 2, y - blast->Height / 2,
+                            gpWindowManager->screenBitmap->Width,
+                            gpWindowManager->screenBitmap->Height,
+                            gpWindowManager->screenBitmap->Pitch, 0, 1);
+                gpWindowManager->UpdateScreen(
+                    bounds->values[0], bounds->values[1],
+                    bounds->values[2] - bounds->values[0] + 1,
+                    bounds->values[3] - bounds->values[1] + 1);
+            }
+            GameTime::DelayTil(frameTil);
+        }
+        blast->Dispose();
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    } else {
+        for (int i = 0; i < WALL_TARGET_COUNT; i++)
+            DamageWall(wall_target_from_int(i), counts[i]);
+    }
+    gpMouseManager->ShowPointer(0);
+}
 
 // E:\gamedcs\spells.cpp:5419
 // "Would this cast do anything to this stack, and how likely is it to
