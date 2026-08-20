@@ -257,6 +257,19 @@ public:
     NewmapCell* cellData;
     int Size;
     unsigned char HasTwoLevels;
+    // +0xdc, and it is a MEMBER, not the pad `game` used to carry after
+    // worldMap: NewfullMap::NewfullMap (0x4fd060) hands `this+0xdc` to the
+    // `vector constructor iterator' with count 0xe8 and stride 0x10, and
+    // ~NewfullMap (0x4fd1e0) hands the same triple to the `vector
+    // destructor iterator'. The element ctor 0x4fd1c0 is a bare Dinkumware
+    // vector default constructor (allocator byte + three null pointers) and
+    // the element dtor 0x506260 walks its range with a stride of 0x44 =
+    // sizeof(CObjectType), calling CObjectType::~CObjectType (0x4fca60) -
+    // so the element type is vector<CObjectType> and nothing else fits.
+    // 232 is one past the largest TAdventureObjectType (ROCKLANDS = 231);
+    // NewfullMapFn_00505EA0 subscripts it as `this+0xdc+16*objectType`.
+    // Layout-neutral: the 0xe80 it occupies came out of game's pad_1fc4c.
+    std::vector<CObjectType> objectTypeIndex[232];
 
 
     // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
@@ -432,6 +445,12 @@ public:
     // row stride of six, so the width index is the OUTER one.
     void GenerateHeightMap(const CObject* object, signed char heightMap[8][6]);
     void StampObject(NewmapCell* cell, NewmapCell::TObjectCell* objectCell);
+
+    // Both are real retail rows (0x4fd060 / 0x4fd1e0) reconstructed in
+    // mapcell.cpp; declaring them here is what stops VC6 synthesising its
+    // own. Neither is virtual - the constructor stores no vftable.
+    NewfullMap();
+    ~NewfullMap();
 };
 
 class town;
@@ -1487,7 +1506,11 @@ public:
     SGameSetupOptions setup;             // +0x1f6a0
     NewSMapHeader mapHeader;             // +0x1f86c
     NewfullMap worldMap;  // +0x1fb70
-    char pad_1fc4c[0xe84];
+    // Was pad_1fc4c[0xe84]. NewfullMap now models its own +0xdc array of
+    // 232 vector<CObjectType>, which is 0xe80 of that pad; the four bytes
+    // below are what remains between worldMap's end (+0x20acc) and the
+    // player records (+0x20ad0). Every later offset is unchanged.
+    char pad_20acc[4];
     // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
     // with 45*owner scaled by 8).
     playerData players[8];
