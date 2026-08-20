@@ -135,6 +135,36 @@ def _in_span_unclaimed():
     return total, count
 
 
+def _lost_peaks():
+    """Rows whose `hist` peak exceeds their current `max`.
+
+    THE RATCHET CANNOT SEE THESE. It compares against `max`, so once a max has
+    been accepted downward the row sits below a value it once reached and the
+    build stays green forever. `hist` is the only record that it was ever
+    higher, and recovering it is ordinary work - two such rows were recovered
+    in one lane (20.7 and 11.5 points) after a retired view gate had left an
+    invariant unenforced.
+    """
+    path = _common.REPO / "config/match_baseline.tsv"
+    if not path.is_file():
+        return []
+    out = []
+    for line in path.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        p = line.split("\t")
+        if len(p) < 6:
+            continue
+        try:
+            mx, hist = float(p[3]), float(p[4])
+        except ValueError:
+            continue
+        if hist > mx + 1e-9:
+            out.append((hist - mx, p[0], p[1], mx, hist))
+    out.sort(reverse=True)
+    return out
+
+
 def _horizon(in_unit_bytes: float) -> None:
     """Print what this census can and cannot see.
 
@@ -258,5 +288,15 @@ def run(args) -> int:
     print("\nby unit (top 12):")
     for unit, kb in sorted(by_unit.items(), key=lambda x: -x[1])[:12]:
         print(f"  {kb / 1024:7.1f} KB  {unit}")
+    lost = _lost_peaks()
+    if lost:
+        print(f"\n{len(lost)} row(s) below a peak they once reached "
+              f"({sum(d for d, *_ in lost):.1f} points). The ratchet compares "
+              "against\nmax and CANNOT see these - only hist records that they "
+              "were ever higher:")
+        for d, unit, fn, mx, hist in lost[:8]:
+            print(f"  +{d:6.2f}  {unit:<14}{fn[:46]}  max {mx:.2f} hist "
+                  f"{hist:.2f}")
+
     print(f"\nwrote {out.relative_to(_common.REPO)}")
     return 0

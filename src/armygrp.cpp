@@ -79,6 +79,22 @@ inline const char* armygrp_creature_plural_name(TCreatureType creature)
     return "";
 }
 
+// armyGroup::HasSomeUndead (E:\gamedcs\armygrp.cpp:668, dc 0x4eb88) has no
+// out-of-line retail body - /Ob2 inlined its single call site and /OPT:REF
+// dropped the copy, which is why the 0x4ab20..0x4ab80 gap holds Dismiss. The
+// mirror of HasAllUndead above, modelled file-locally so an inlined static
+// vanishes exactly as retail's did.
+inline unsigned char armygrp_has_some_undead(const armyGroup* group)
+{
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (group->armies[i] == CREATURE_NONE)
+            continue;
+        if (akCreatureTypeTraits[group->armies[i]].attributes & CTA_UNDEAD)
+            return 1;
+    }
+    return 0;
+}
+
 DATA(0x00693878)
 static TSplitWindow* gpSplitWindow;
 
@@ -1574,7 +1590,12 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // Residual (79.5363%): retail keeps distinct type/troop walkers and one more
 // stack slot (0x8c frame versus 0x88 here), while this VC6 compile coalesces
 // the walkers and colors the processed count differently. Its dedup loop
-// retains one extra top-of-loop progress test. Artificial volatile qualifiers,
+// retains one extra top-of-loop progress test.
+// That extra test is a LOOP-ROTATION difference and the goto lever does not
+// reach it (measured 2026-08-20): respelling the `!progress && a < 7` scan as
+// an explicit `dedup_scan:` label with `++a; goto dedup_scan;` at the foot -
+// the un-rotated top-tested form retail emits - is BYTE-FLAT at 79.5363. VC6
+// rotates it back. The frame slot is the live lead, not the loop form. Artificial volatile qualifiers,
 // alternate outer-loop indices and goto rewrites worsened the comparison and
 // were reverted.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
@@ -1772,6 +1793,45 @@ source_stack_merges:
 // took TBottomViewKingdom 94.06 -> 98.52 in the same round. GetMorale
 // carries the identical pair (dc 0x4f078 lines 1014/1017) and is
 // byte-flat on it.
+//
+// THE UNDEAD SCAN IS A HasSomeUndead CALL (74.4820 -> 79.1754, 2026-08-20),
+// AND THE DC CALL CENSUS - NOT THE LINE TABLE - IS WHAT PRICES THIS BODY.
+// The note above is right that `*** SRCLINES ***` at dc 0x4f708 describes an
+// older six-argument function; the XREF census at the same offset does NOT.
+// It reads format_string x8, operator+= x7+x2, GetArmyName x3, IsMember x5,
+// GetAlignments x1, GetMorale x1, GetBuildingName x2, IsWieldingArtifact x2,
+// hero::get_morale_description x1, town::HasBuilding x1 - and the x8
+// format_string count is this body's exactly, so the census IS this function.
+// The one construct in it we did not spell was `armyGroup::HasSomeUndead`
+// (dc 0x4eb88), which the seven-slot undead scan below was written out
+// longhand for. Retail has no out-of-line body for it - /Ob2 inlined its
+// single call site and /OPT:REF dropped the copy, which is why the
+// 0x4ab20..0x4ab80 gap holds Dismiss - so it is modelled as a file-local
+// inline at the top of this file, where an inlined static vanishes the same
+// way. The expansion is the same instructions; what moved is the /Ob2
+// candidate-site count, exactly as the HasBuilding pair above did, and it is
+// worth 4.7 points. Note this is the OPPOSITE verdict to the GetMorale row's
+// (98.5654, byte-flat on the same helper): a site is worth points only where
+// the budget divisor is actually biting.
+// THE HERO ARM ASSIGNS (byte-flat, and it is retail's spelling): the census
+// carries `basic_string::operator=` x2 with `result` empty at that point, and
+// get_luck_description's own note proves the same shape from the eh
+// transcript. Recorded because `predict-inline` reads the call multiset.
+// Two further census rows measured and REJECTED here, both regressions:
+// `armygrp_creature_plural_name(angelType)` for the angel arm's name - it
+// would make GetArmyName x3 agree - costs 2.42 (79.1754 -> 76.7514); and
+// rewriting all six `result.append(<const char*>)` as `result +=`, which
+// would make the census's operator+= split agree, costs 2.89 (-> 76.2901).
+// Both are real census facts and both are past this body's budget optimum,
+// so the site count is NOT monotone - measure every added site.
+// Residual (79.1754%): `predict-inline` prices it 2 over-inlined `_Tidy`
+// (base x8 calls against retail's x10) plus the `bitset<9>::test` bounds
+// check, whose `_Xran` body retail leaves out of line and we expand - the
+// `out_of_range` ctor and the `basic_string(const char*)` for "invalid
+// bitset<N> position" are both in our call list and neither is in retail's,
+// and that inlined throw path is the ONE extra eh state (base 20 against
+// retail 19). Pinning `.test()` is the wrong lever by the standing rule -
+// retail keeps only the nested CHILD out of line.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1793,7 +1853,7 @@ std::string armyGroup::get_morale_description(
     std::string result;
 
     if (ownerHero)
-        result += ownerHero->get_morale_description();
+        result = ownerHero->get_morale_description();
 
     if (magicTerrain == MAGIC_TERRAIN_HOLY_GROUND
         && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
@@ -1869,13 +1929,8 @@ after_magic_terrain:
         result.append(gSameAlignmentMoraleText);
     }
 
-    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-        if (armies[i] != CREATURE_NONE
-            && (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD)) {
-            result.append(gUndeadMoraleText);
-            break;
-        }
-    }
+    if (armygrp_has_some_undead(this))
+        result.append(gUndeadMoraleText);
 
     TCreatureType angelType = CREATURE_NONE;
     if (const_cast<armyGroup*>(this)->IsMember(CREATURE_ANGEL))

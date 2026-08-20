@@ -628,14 +628,35 @@ void CheckEndGame(int bForceWin);
 // Residual (99.3036%): one `teamInfo[team]` SIB base/index swap
 // (base ecx+eax, retail eax+ecx) - the B18 encoder tie-break class -
 // plus reloc-name cosmetics on the bitNumber loads.
+//
+// THE SEVEN HasBuilding SITES ARE PINNED, AND THAT IS WHAT RESTORES THE
+// 99.3036 (from 78.5766, 2026-08-20). town.h's HasBuilding note already
+// states the rule - "town.obj must NOT see the BODY", because retail
+// declines to expand the inline here and emits `call town_HasBuilding`
+// (0x4305a0, 0x66 B) instead - but the view-gate audit retired the
+// HOMM3_TOWN_HASBUILDING_API macro that had been enforcing it (654997d,
+// group 7; the header's prose survived the merge, the `#if` did not), and this
+// compiland then expanded all seven and the row fell 20.7 points.
+// `predict-inline` names it exactly: base 11 out-of-line calls against
+// retail's 18, the whole gap being `town_HasBuilding retail x7` with no
+// base counterpart, and this body's seven source sites ARE those seven.
+// The replacement for the retired macro is the standing lever for the
+// OVER-inline class - statement-scoped `#pragma inline_depth(0)` at the
+// SITE - which needs no view gate, no header edit, and changes nothing
+// any other compiland sees. The same single site in get_growth_rate
+// below is worth 88.4737 -> 100.0000, i.e. exact.
+// The third pin restores depth BEFORE the `if` body so it does not also
+// reach `worldMap.cell()`, which retail expands.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
 type_building_id town::BuildBuilding(int buildingId,
                                      unsigned char SetBuiltFlag,
                                      unsigned char apply_special_effect)
 {
+#pragma inline_depth(0)
     unsigned char had_fort = (built & bitNumber[CASTLE_FORT_ID])
         || HasBuilding(CASTLE_CITADEL_ID, 0)
         || HasBuilding(CASTLE_CASTLE_ID, 0);
+#pragma inline_depth()
     unsigned char had_capitol = (built & bitNumber[HALL_CAPITOL_ID]) != 0;
     // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
     // HEE@Z`) and required by the townmgr call sites - while
@@ -680,7 +701,9 @@ type_building_id town::BuildBuilding(int buildingId,
         memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
         for (int level = 1; level <= field_14; level++) {
             int count = gMageGuildBaseSpellCounts[level - 1];
+#pragma inline_depth(0)
             if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+#pragma inline_depth()
                 count++;
             while (count > 0
                    && mageGuildSpells[level - 1][count - 1] == -1)
@@ -690,11 +713,14 @@ type_building_id town::BuildBuilding(int buildingId,
     }
     GiveSpells(0);
 
+#pragma inline_depth(0)
     if ((HasBuilding(HALL_CAPITOL_ID, 0) && !had_capitol)
         || ((HasBuilding(CASTLE_FORT_ID, 0)
              || HasBuilding(CASTLE_CITADEL_ID, 0)
              || HasBuilding(CASTLE_CASTLE_ID, 0))
-            && !had_fort)) {
+            && !had_fort))
+#pragma inline_depth()
+    {
         gpGame->ConvertObject(gpGame->worldMap.cell(mapX, mapY, mapZ));
     }
     if (gpGame->mapHeader.victoryCondition.CheckForUpgradedTown())
@@ -924,6 +950,10 @@ long town::get_horde_bonus(long dwelling) const
 // The dead `xor eax,eax` is the tell that retail's `bonus` and
 // `growth` did NOT coalesce there and ours do; that is an allocator
 // tie-break, not a statement-order question.
+// Measured and rejected 2026-08-20: rewriting the two guards as early
+// `return 0;`s and the tail as `return bonus / 2;` - aimed at retail's FOUR
+// exits against our three, the tail-duplication direction - costs 18.1
+// (81.7262 -> 63.6309). Retail's fourth exit is not a source-level return.
 VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), dc 0x1675d4
 long town::get_legion_bonus(long dwelling)
 {
@@ -1048,6 +1078,11 @@ short town::get_growth_rate(short dwelling)
             long legion_growth =
                 akCreatureTypeTraits[legion_creature].growthRate;
             long castle_bonus;
+            // Retail emits `push 0 / push 8 / call town_HasBuilding` for
+            // the Citadel arm; the pin is what keeps it out of line here
+            // now that the HOMM3_TOWN_HASBUILDING_API gate is gone (88.4737 ->
+            // 100.0000). Nothing else in this chain is a candidate.
+#pragma inline_depth(0)
             if (built & bitNumber[CASTLE_CASTLE_ID])
                 castle_bonus = legion_growth;
             else if (HasBuilding(CASTLE_CITADEL_ID, 0))
@@ -1055,6 +1090,7 @@ short town::get_growth_rate(short dwelling)
                     akCreatureTypeTraits[legion_creature].growthRate / 2;
             else
                 castle_bonus = 0;
+#pragma inline_depth()
             legion_bonus = (legion_growth + castle_bonus) / 2;
         }
         growth += legion_bonus;
@@ -1157,12 +1193,38 @@ void show_creature_rewards(const town* this_town,
 static const int kRewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Residual (86.7%): branch topology #12 lands one block off (the D3
+// Residual (90.8287%): 86.7098 -> 90.8287 on 2026-08-20, and the fix
+// CONTRADICTS the "tried and rejected" line that stood here. That line
+// recorded "event-field re-reads instead of the short growth local
+// (85.8)" as refuted. The re-read IS retail's spelling; what was missing
+// beside it is the TYPE. `TTownEvent::generatorBonuses` is
+// `unsigned short[7]` (timedevent.h), so a `short growth` local converts
+// it to SIGNED and every use came out `movsx`. Retail's three reads of
+// that field are all ZERO-extended - `mov ax,[ebx] / test ax,ax` for the
+// guard, a reload for `add word ptr [edi+0xe],ax`, and a third
+// `xor eax,eax / mov ax,[ebx]` for the packed qualifier - and the
+// creature half is a WORD read out of a DWORD-strided table
+// (`mov dx, word ptr [4*ecx]` against gTownDwellingCreatures' 4-byte
+// elements). So the pack is
+// `((unsigned short)bonus << 16) | (unsigned short)creature`, which is
+// MAKELONG's exact shape. Spell the re-reads AND both truncations and
+// the row moves 4.1 points; EITHER ALONE IS A LOSS - the truncations
+// with the local still in place measure 86.2972, below the old baseline.
+// This is "do not cache what retail reloads" with a type error hiding
+// under it: the re-read looked refuted because the operands were signed.
+// What is LEFT, read off the unmasked pair: retail materialises the
+// guard operand (`mov ax,[ebx] / test ax,ax`) where we compare in memory
+// (`cmp word ptr [ebx],0`); retail CROSS-JUMPS the two arms' shared
+// push_back tail into one block where we emit both copies, so retail's
+// two arms share the [ebp-0x20]/[ebp-0x1c] pair and ours take two.
+// Measured against exactly that and rejected: one
+// `type_dialog_resource reward;` hoisted to cover both arms (-0.007),
+// and an `unsigned short growth` local used ONLY by the zero test
+// (byte-flat - VC6 folds it back into the memory compare).
+// Still open: branch topology #12 lands one block off (the D3
 // jump-threading class - why-branch's catalog found no applicable
-// lever) and a 15-slot edx/ecx register permutation follows from it.
-// Tried and rejected: the eligible mask hoisted into a local (85.7),
-// event-field re-reads instead of the short growth local (85.8),
-// resource-store reordering (neutral).
+// lever). Tried and rejected earlier: the eligible mask hoisted into a
+// local (85.7), resource-store reordering (neutral).
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1207,23 +1269,26 @@ void town::give_event_reward(const TTownEvent* thisEvent)
         show_building_rewards(this, &rewards);
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        short growth = thisEvent->generatorBonuses[i];
-        if (growth != 0) {
+        if (thisEvent->generatorBonuses[i] != 0) {
             if (active & bitNumber[DWELLING_0_UPG_ID + i]) {
                 type_dialog_resource reward;
                 reward.resource = 0x15;
-                population[i + TOWN_DWELLING_COUNT] += growth;
-                reward.qualifier = (growth << 16)
-                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
-                                             + i + TOWN_DWELLING_COUNT];
+                population[i + TOWN_DWELLING_COUNT] +=
+                    thisEvent->generatorBonuses[i];
+                reward.qualifier = (thisEvent->generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          gTownDwellingCreatures[
+                              type * (2 * TOWN_DWELLING_COUNT)
+                              + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (active & bitNumber[DWELLING_0_ID + i]) {
                 type_dialog_resource reward;
                 reward.resource = 0x15;
-                population[i] += growth;
-                reward.qualifier = (growth << 16)
-                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
-                                             + i];
+                population[i] += thisEvent->generatorBonuses[i];
+                reward.qualifier = (thisEvent->generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          gTownDwellingCreatures[
+                              type * (2 * TOWN_DWELLING_COUNT) + i]);
                 rewards.push_back(reward);
             }
             if (rewards.size() == kRewardDialogBatch)
@@ -1583,6 +1648,10 @@ void town::update_full_building_mask()
 // tried and rejected: an int temp for the bitNumber index (no change - VC6
 // CSEs it back), and calling is_legal_building (short -> type_building_id
 // needs an explicit cast).
+// Measured and rejected 2026-08-20: the named `__int64 activeMask = active;`
+// local that took get_buildable_mask 81.21 -> 89.59 costs THIS row 1.92
+// (89.6018 -> 87.6852). The lever is positional - it works where retail's
+// prologue loads `active` FIRST and ours does not, and here it already does.
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::can_build(short building_id) const
 {
@@ -1634,16 +1703,31 @@ unsigned char town::can_ever_build(int building_id) const
 // The whole can_build answer as one mask: accumulate every slot whose
 // requirements are met and which is not already active, then intersect
 // with the legal mask and knock out the dock and the capitol.
-// Residual (81.2%): same shape, same stack frame, same slot assignment
-// (mask at -0x14/-0x10, this at -0xc, 44*type at -8, the two byte locals
-// at -1/-2, the LICM'd `active` pair at -0x1c/-0x18). The deltas are
-// prologue SCHEDULING - retail loads `active` before it touches gpGame,
-// ours after - and one loop-body value retail keeps homed that ours
-// keeps in ebx. Register-homing family.
+// Residual (89.5893%): 81.2143 -> 89.5893 on 2026-08-20. The note that
+// stood here read the delta correctly - "retail loads `active` before it
+// touches gpGame, ours after" - and then filed it as register-homing.
+// It is DECLARATION ORDER, and it is spellable: giving `active` an
+// explicit `__int64 activeMask = active;` local declared ahead of
+// `townType` puts the two `[ecx+0x158]/[ecx+0x15c]` loads first, exactly
+// where retail has them, and the WHOLE loop body then falls into line -
+// what remains after the edit is the reloc-addend cosmetic on the
+// bitNumber/gHierarchyMask rows and nothing else inside the loop.
+// The compiler was already LICM-ing the member read to the same
+// [ebp-0x1c]/[ebp-0x18] pair; naming it changes only WHEN the read is
+// scheduled, not what it costs. (Standing rule to reuse: when a member
+// read is hoisted to the preheader on both sides but the PROLOGUE order
+// differs, the fix is a named local at retail's position, not a register
+// lever.)
+// What is left is prologue scheduling only: retail defers the
+// `gpGame->field_1f69d` load until after the 44*type expression, ours
+// issues it with the first pair. Measured and rejected against that: a
+// split declaration (`char castleGriffinException;` + a separate
+// assignment) with the loop index hoisted - byte-flat.
 VA(0x005c0f20, 0x156)  // anchor-global, dc 0x168714
 __int64 town::get_buildable_mask() const
 {
     __int64 mask = 0;
+    __int64 activeMask = active;
     char townType = type;
     char castleGriffinException = gpGame->field_1f69d;
     for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
@@ -1651,8 +1735,8 @@ __int64 town::get_buildable_mask() const
         if (castleGriffinException && building == DWELLING_2_ID
             && townType == TOWN_CASTLE)
             requirements &= ~bitNumber[BLACKSMITH_ID];
-        if (!(active & bitNumber[building])
-            && (active & requirements) == requirements)
+        if (!(activeMask & bitNumber[building])
+            && (activeMask & requirements) == requirements)
             mask |= bitNumber[building];
     }
     mask &= available;

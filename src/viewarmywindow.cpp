@@ -245,6 +245,38 @@ inline void TViewArmyWindow::create_rollover_widget()
 // Tried and rejected: writing all five helper rows longhand in the body
 // (61.42% - the budget then reaches _Tidy AND the [-3, 3] selector at
 // both icon rows), and a defined `_cpp_clamp` template (87.11%).
+//
+// 2026-08-20, TWO CORRECTIONS FROM RETAIL'S OWN RELOCATION SEQUENCE.
+// Reading `sema disasm --verbose | grep IMAGE_REL_I386_REL32` off both
+// sides and normalising the synth names gives the ordered call list, and
+// it settles two things the prose above got wrong:
+//   * THE OWNER/CONTROLLER ASSIGNMENT WAS INVERTED at all three sites.
+//     Retail's sequence is get_controller -> bitmapBorder (the plate),
+//     get_controller -> create_damage_widget, and get_owner ->
+//     get_morale_description. This body had get_owner on the first two
+//     and get_controller on the third, and the comment above the plate
+//     asserted the opposite of the bytes. Byte-flat (both are extern
+//     thiscall `hero*(void) const`, so only the relocation NAME moves,
+//     which objdiff does not score) - but it is what retail wrote, it is
+//     what `predict-inline` reads, and leaving it inverted was costing
+//     every future diagnosis of this row a phantom
+//     `get_controller base x1 vs retail x2`.
+//   * `creature_type_from_int` INSIDE A PINNED STATEMENT IS A CALL.
+//     The two describer set-ups sit under `#pragma inline_depth(0)`, and
+//     the pin de-inlines the enum bridge along with the describer -
+//     retail has no such call at all. Hoisting it into a local union
+//     ahead of the pin (the idiom WindowHandler already uses, and the
+//     standing "hoist what retail keeps inline out of the pinned
+//     statement" rule) is worth 89.9877 -> 90.8074 here and
+//     88.7021 -> 90.4657 on the armyGroup ctor below.
+// What the same reading leaves OPEN, both still budget: retail calls
+// `vector::size()` inside the inlined reserve where we expand it, and at
+// `morale_help = <temp>` retail expands one level MORE than the pin
+// allows - it calls `assign(const&, uint, uint)` and `_Tidy(bool)` where
+// the pin makes us call `operator=` and `~basic_string`. Removing the
+// pin does not fix that (it over-inlines instead): measured on the
+// armyGroup ctor, 90.4657 with the pin against 89.9195 without, so the
+// pin stays as the closest reachable point.
 // E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
 TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
@@ -273,9 +305,11 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
 
     Widgets.reserve(NWIDGETS);
 
-    // The plate is recoloured for the stack's OWNER (not its current
-    // controller), falling back to the local player when it has no hero.
-    create_background_widget(this_army->get_owner());
+    // The plate is recoloured for the stack's CONTROLLER, falling back to
+    // the local player when it has no hero - retail's relocation order is
+    // `call get_controller` immediately ahead of the bitmapBorder ctor.
+    // (The note that stood here said OWNER; see the correction above.)
+    create_background_widget(this_army->get_controller());
 
     // The singular/plural pair comes off the TABLE row - retail
     // rematerialises the 0x6747b0 base here instead of reusing the
@@ -297,7 +331,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_defense_widget(type_traits->defenseSkill, defense);
     create_shots_widget(stack_traits, type_traits->numShots,
                         stack_traits->numShots);
-    create_damage_widget(stack_traits, this_army->get_owner());
+    create_damage_widget(stack_traits, this_army->get_controller());
     create_hitpoints_widget(type_traits->hitPoints, stack_traits->hitPoints);
     create_hitpoints_left_widget(stack_traits->hitPoints
                                  - this_army->topCreatureDamage);
@@ -307,7 +341,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_morale_widget(morale);
 
     int side = this_army->combatSide;
-    const hero* our_hero = this_army->get_controller();
+    const hero* our_hero = this_army->get_owner();
     const town* our_town = 0;
     armyGroup* our_group = gpCombatManager->armyGroups[side];
     const hero* enemy_hero = gpCombatManager->heroes[1 - side];
@@ -321,9 +355,14 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     // statement pin is ai_player.cpp's idiom for exactly this (the
     // `warning.append` site) and it is worth 87.11 -> 89.62 here,
     // closing the branch count to retail's 31 on the nose.
+    union {
+        int value;
+        TCreatureType creature;
+    } shown_type;
+    shown_type.value = ArmyType;
 #pragma inline_depth(0)
     morale_help = our_group->get_morale_description(
-        creature_type_from_int(ArmyType), morale, our_hero, our_town,
+        shown_type.creature, morale, our_hero, our_town,
         enemy_hero, enemy_group, gpCombatManager->field_53c0,
         group_alignments);
 #pragma inline_depth()
@@ -332,7 +371,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
     create_luck_widget(luck);
 #pragma inline_depth(0)
     luck_help = our_group->get_luck_description(
-        creature_type_from_int(ArmyType), luck, our_hero, our_town,
+        shown_type.creature, luck, our_hero, our_town,
         enemy_hero, enemy_group, gpCombatManager->field_53c0);
 #pragma inline_depth()
 
@@ -469,9 +508,14 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     morale = group->GetArmyMorale(iarmy, this_hero, this_town, -1,
                                   group_alignments, 0);
     create_morale_widget(morale);
+    union {
+        int value;
+        TCreatureType creature;
+    } shown_type;
+    shown_type.value = ArmyType;
 #pragma inline_depth(0)
     morale_help = group->get_morale_description(
-        creature_type_from_int(ArmyType), morale, this_hero, this_town,
+        shown_type.creature, morale, this_hero, this_town,
         0, 0, -1, group_alignments);
 #pragma inline_depth()
 
@@ -757,26 +801,47 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
 // the strip gets a fixed descriptor instead of Duration.
 //
-// Residual (35.5280%): the CALL MULTISET IS EXACT - all 50 calls agree in
-// order and target through the string destructor, including which of the
-// four `text +=` sites retail inlines and which it calls - and the first
-// 0x4af bytes are instruction-for-instruction identical. What is left is
-// ONE BLOCK PLACEMENT: retail emits the animation head (the ten
-// instructions from the glTimers load to `jmp` past the siege branch) as
-// the FALL-THROUGH of the string destructor's `operator delete` tail at
-// 0x5f4cff, so its widget and rollover arms reach it by BACKWARD jumps;
-// our CL emits the same block once, at the end, and the two arms fall
-// into it. The move is what the score is paying for: displaced branch
-// targets across the whole second half.
-// It is not source-addressable from here (D3 topology). Measured and
-// rejected, all three byte-identical to each other: the plain
-// if/else-if chain; `animate:` placed textually between the first arm and
-// the other two with `goto animate` from both (the adventureoptionswindow
-// idiom, whose own handler has this exact join at 99.94%); and the same
-// with an `else goto dispatch;` so every arm-to-tail edge is a backward
-// jump in SOURCE order too. VC6's placement here follows the flow graph,
-// not the statement order - all three spellings produce the identical
-// object.
+// THE JOIN BLOCK IS PLACED BY DUPLICATING IT, NOT BY MOVING IT
+// (35.5280 -> 73.6288, 2026-08-20 - and it OVERTURNS the "not
+// source-addressable" verdict below, which is kept because its
+// measurements are all still true).
+//
+// The diagnosis was right: the whole residual was ONE BLOCK PLACEMENT.
+// Retail emits the animation head (glTimers load .. the siege branch) as
+// the FALL-THROUGH of the right-click arm's `operator delete` tail at
+// 0x5f4cff and lets the widget and rollover arms reach it by BACKWARD
+// jumps; we emitted the same block once, at the end, with every arm
+// falling forward into it, and the displaced branch targets across the
+// whole second half were the entire 64 points.
+//
+// What was wrong was the conclusion. Four single-copy spellings were
+// measured and all four produce the identical object (the plain
+// if/else-if chain; `animate:` between the first arm and the other two
+// with `goto animate` from both; the same with `else goto dispatch;`;
+// and, added this round, the adventureoptionswindow idiom exactly -
+// `animate:` INSIDE the first arm's braces with `goto animate` from the
+// others, 35.5040). That is not "VC6 follows the flow graph": it is VC6
+// SINKING a multi-predecessor join to the end, unconditionally, whatever
+// the source order. You cannot move such a block. You CAN stop it being
+// one: WRITE THE BLOCK TWICE. With a copy at the end of the right-click
+// arm and a copy at the tail, the first copy has a single predecessor,
+// nothing sinks it, and it lands exactly where retail's is - +38.1
+// points, and the second half's branch targets come back with it.
+// The cross-jumper then merges what it can: spelling the shared
+// DrawWindow/NextFrameTime tail once behind `goto animate_tail` (rather
+// than duplicating that too) is honoured - 671 instructions -> 648
+// against retail's 626 - so the landed shape is retail's ONE tail with
+// one extra copy of the ~14-instruction head.
+// Left: that extra head (3 of the 6 surplus branches, base 61 against
+// retail's 55) - retail has ONE head with six predecessors and no
+// spelling reaches that without re-creating the sink - plus the
+// cross-jump item below.
+//
+// (The original note, all of it still measured and still true:)
+// The CALL MULTISET IS EXACT - all 50 calls agree in order and target
+// through the string destructor, including which of the four `text +=`
+// sites retail inlines and which it calls - and the first 0x4af bytes
+// are instruction-for-instruction identical.
 // One secondary item, same class: retail cross-jumps the dismiss and
 // upgrade arms' shared tail (`call NormalDialog` + the
 // DIALOG_RETURN_ACCEPT test) into one block and jumps into it from the
@@ -862,6 +927,23 @@ int TViewArmyWindow::WindowHandler(message* msg)
                 NormalDialog(text.c_str(), 4, -1, -1, iResType, 0, -1, 0,
                              -1, 0, -1, 0);
         }
+        {
+            unsigned long lastFrame =
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+            if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+                union {
+                    int value;
+                    TCreatureType creature;
+                } shown_type;
+                shown_type.value = ArmyType;
+                if (IsSiegeWeapon(shown_type.creature))
+                    SpriteWidget->NextRandomSiegeEngineFrame();
+                else
+                    SpriteWidget->NextRandomFrame();
+                goto animate_tail;
+            }
+        }
+        return MESSAGE_DISPATCH_CONSUME;
     } else if (msg->id == MESSAGE_WIDGET) {
         if (msg->codeX == widget::WIDGET_DESELECT) {
             switch (msg->codeY) {
@@ -964,25 +1046,29 @@ int TViewArmyWindow::WindowHandler(message* msg)
         }
     }
 
-    // The creature sprite steps its own animation on every message the
-    // popup sees, on the shared adventure-animation clock.
-    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
-    if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
-        union {
-            int value;
-            TCreatureType creature;
-        } shown_type;
-        shown_type.value = ArmyType;
-        if (IsSiegeWeapon(shown_type.creature))
-            SpriteWidget->NextRandomSiegeEngineFrame();
-        else
-            SpriteWidget->NextRandomFrame();
-        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
-            GameTime::NextFrameTime(
-                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
-                VIEW_ARMY_DELAY);
+    {
+        unsigned long lastFrame =
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+            union {
+                int value;
+                TCreatureType creature;
+            } shown_type;
+            shown_type.value = ArmyType;
+            if (IsSiegeWeapon(shown_type.creature))
+                SpriteWidget->NextRandomSiegeEngineFrame();
+            else
+                SpriteWidget->NextRandomFrame();
+            goto animate_tail;
+        }
     }
+    return MESSAGE_DISPATCH_CONSUME;
+animate_tail:
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+        GameTime::NextFrameTime(
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
+            VIEW_ARMY_DELAY);
     return MESSAGE_DISPATCH_CONSUME;
 }
 

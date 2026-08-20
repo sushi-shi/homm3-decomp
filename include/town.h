@@ -371,7 +371,8 @@ public:
     //   check_included == 0 -> `[ecx+0x150]` = built
     // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
     // tree's readers had been spelling by hand. Body below, after
-    // bitNumber's declaration, under HOMM3_TOWN_HASBUILDING_API.
+    // bitNumber's declaration - UNGATED as of the view audit, see the
+    // correction at the end of this note.
     //
     // THE VISIBILITY IS SCOPED, and both halves of the scoping are
     // measured (2026-08-15):
@@ -388,6 +389,20 @@ public:
     //     `town_HasBuilding base x0 vs retail x1`). HOMM3_TOWN_OBJ_DECLS
     //     therefore buys the declaration only, which is what keeps
     //     retail's call.
+    //
+    // CORRECTION 2026-08-20 - THE SECOND BULLET'S GATE IS GONE AND THIS
+    // COMMENT OUTLIVED IT. `HOMM3_TOWN_HASBUILDING_API`, the macro that
+    // kept the body out of town.obj, was retired by the view audit
+    // (654997d, group 7); the prose survived a merge, the `#if` did not.
+    // town.obj then expanded all eight of its sites and two rows sat
+    // BELOW their recorded peaks with the ratchet clean, because the max
+    // had been re-baselined down: town::BuildBuilding 99.3036 -> 78.5766
+    // and town::get_growth_rate 100.0000 -> 88.4737, both still visible
+    // in `match_baseline.tsv`'s `hist` column. The invariant is now
+    // enforced from the CALL SIDE instead - statement-scoped
+    // `#pragma inline_depth(0)` at each site in town.cpp - which
+    // restores both peaks to the digit and costs no declarator anywhere.
+    // Do not re-add the gate; and if you move a site, pin it.
     // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
     // const), and retail's thiscall is identical either way.
     unsigned char HasBuilding(int buildingId,
