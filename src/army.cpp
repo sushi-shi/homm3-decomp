@@ -22,6 +22,7 @@
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
+#define HOMM3_ARMY_NEW_TURN_DECL
 #define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
@@ -5341,17 +5342,75 @@ int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex) const
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:5177
+// Start-of-turn upkeep, once per stack per round (the field_4f0
+// latch): drop the DEFEND stance's banked defense bonus and its
+// creatureId bit 27, then - unless the placement phase is still up -
+// regenerate the top creature (the WIGHT/WRAITH/TROLL trio always, any
+// LIVING creature under the owner's Elixir of Life) 50 points a turn
+// with the Regener.wav / GetText(371|372) announcement and the
+// regeneration sparkle, and count the FRENZY row down to its cancel.
+//
+// The /GX frame covers two std::string objects: `text` (default-
+// constructed, then operator= from format_string's temporary - the
+// assign(str, 0, npos) COMDAT with npos read from the pooled -1) and
+// the temporary itself; the two destructor expansions come out
+// asymmetric (arm one calls the _Tidy COMDAT, arm two inlines the
+// refcount teardown) exactly as retail's budget drained.
 VA(0x00446e30, 0x2E1)  // linkorder, dc 0x4ba88
 void army::new_turn()
 {
-    // @stub
+    if (field_4f0 != 0)
+        return;
+    field_4f0 = 1;
+    if (Is(27) & 1) {
+        defenseSkill -= field_4dc;
+        creatureId &= ~0x08000000;
+    }
+    if (gpCombatManager->bCreaturePlacement != 0)
+        return;
+    if (topCreatureDamage > 0) {
+        if (creatureType == CREATURE_WIGHT
+            || creatureType == ARMY_CREATURE_WRAITH
+            || creatureType == CREATURE_TROLL
+            || ((akCreatureTypeTraits[creatureType].attributes
+                 & CTA_ALIVE)
+                && gpCombatManager->heroes[combatSide] != 0
+                && gpCombatManager->heroes[combatSide]
+                       ->IsWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))) {
+            long heal = topCreatureDamage;
+            long amount = heal > 50 ? 50 : heal;
+            topCreatureDamage = heal - amount;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                SAMPLE2 sample = LoadPlaySample(
+                    DATA_COMPGEN(0x00660a94, regenerSampleName,
+                                 "Regener.wav"));
+                std::string text;
+                if (numTroops == 1)
+                    text = format_string(
+                        gpGeneralText->GetText(371),
+                        GetName(creatureType, numTroops));
+                else
+                    text = format_string(
+                        gpGeneralText->GetText(372),
+                        GetName(creatureType, numTroops));
+                gpCombatManager->combatWindow->combat_message(
+                    text.c_str(), 1, 0);
+                gpCombatManager->SpellEffect(
+                    combatManager::eSpellEffectRegeneration, this, 100,
+                    0);
+                WaitEndSample(sample, -1);
+            }
+        }
+    }
+    if (spellInfluence[SPELL_FRENZY] != 0) {
+        if (spellInfluence[SPELL_FRENZY] > 1)
+            spellInfluence[SPELL_FRENZY]--;
+        else
+            CancelIndividualSpell(SPELL_FRENZY);
+    }
 }
-
-// E:\gamedcs\army.cpp:5300
-#endif  // @carcass
 
 // Everything a stack does between rounds: the round-scoped creature
 // bits cleared, the retaliation allowance rebuilt, every standing spell

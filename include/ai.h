@@ -83,7 +83,12 @@ enum EAreaAttackCreature {
     CREATURE_ORC = 0x58,
     CREATURE_ORC_CHIEFTAIN = 0x59,
     CREATURE_LIZARDMAN = 0x64,
-    CREATURE_LIZARD_WARRIOR = 0x65
+    CREATURE_LIZARD_WARRIOR = 0x65,
+    // army::new_turn (0x446e30) regenerates exactly three creatures
+    // unconditionally: WIGHT 0x3c, WRAITH 0x3d and this one - 0x90 is
+    // the Troll, the one regenerating neutral, bracketed by the proven
+    // ROGUE 0x8f and CATAPULT 0x91 in armygrp.h's roster.
+    CREATURE_TROLL = 0x90
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort

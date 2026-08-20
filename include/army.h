@@ -1068,7 +1068,13 @@ public:
     // TU already defines.
 #ifdef HOMM3_ARMY_POW_VIEW
     unsigned char field_4d8;      // +0x4d8
-    char pad_4d9[0x7];
+    char pad_4d9[0x3];
+    // The DEFEND stance's banked defense bonus: new_turn (0x446e30)
+    // subtracts it back out of defenseSkill and clears creatureId bit
+    // 27 in the same breath, so the bit is "is defending" and this word
+    // is what the stance added. Name stays ordinal - no roster row
+    // reaches it and the writer (the defend command) is not decoded.
+    int field_4dc;                // +0x4dc
 #else
     char pad_4d8[0x8];
 #endif
