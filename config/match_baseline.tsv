@@ -589,7 +589,7 @@ cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	98.8371	98.8371	98.
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
-cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	74.8377	74.8377	74.8377	0x66010
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
@@ -891,7 +891,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	90.0926	90.0926	90.0926	0xbcda0
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	90.9797	90.9797	90.9797	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
@@ -904,7 +904,7 @@ game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
-game	?Save@game@@QAEHPAVTAbstractFile@@@Z	85.4129	85.4129	85.4129	0xbe3f0
+game	?Save@game@@QAEHPAVTAbstractFile@@@Z	89.1864	89.1864	89.1864	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGame@game@@QAEEPBDEEEE@Z	93.8148	93.8148	93.8148	0xbeea0
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
@@ -1625,7 +1625,7 @@ spelldefs	__h3cg$spelldefs$static_dtor$spellDescriptions	100.0000	100.0000	100.0
 spelldefs	__h3cg$spelldefs$static_dtor$spellNames	100.0000	100.0000	100.0000	0x19e4f0
 spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5a90
 spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	99.8565	99.8565	99.8565	0x1a4970
-spells	?Armageddon@combatManager@@QAEXHH@Z	88.7244	88.7244	88.7244	0x1a4bc0
+spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
@@ -1910,7 +1910,7 @@ viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.8074	90.8074	90.8074	0x
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	73.6288	73.6288	73.6288	0x1f4850
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	74.4096	74.4096	74.4096	0x1f4850
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	96.4286	96.4286	96.4286	0x1f5860

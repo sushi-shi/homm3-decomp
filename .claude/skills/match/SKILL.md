@@ -718,6 +718,33 @@ if/else — retail loads the default unconditionally (93.33 vs **95.70**).
 SOURCES** — reading a memory operand before one the guard already left live in
 a register. **+2.08 / +2.32** in two loops of one function.
 
+**WHAT CARRIES CALLER-cb, MEASURED THREE WAYS** (2026-08-20, on an 11.5 KB
+body where the whole search turned on it):
+- **Folded constants carry ZERO cb.** A 300-node `0|0|…|0` dead store is
+  byte-flat to the digit. That kills the folded-constant respelling family
+  everywhere — it is not a dose, it is nothing.
+- **Statements under `if (0)` carry FULL cb, byte-inertly.** Sixty wrapped
+  probes reproduced the naked plateau exactly. This is the clean carrier.
+- **…UNLESS the `if (0)` block contains candidate CALL SITES**, which inverts
+  it (84.46 and 79.91 against a 99.66 plateau) — dead sites still enter the
+  collector.
+
+**PIN A LOOP CONDITION ALONE.** Pragma state is per-site at collection, so
+`#pragma inline_depth(0)` before a `while (i < v.size())` with
+`#pragma inline_depth()` as the first BODY line confines the pin to the
+condition: `size()` goes out of line while the body's subscript stays inline.
+`game::Save` **+3.68**.
+
+**FRAME TOO SMALL: PROMOTE BLOCK-SCOPED BUFFERS. FRAME TOO BIG: DELETE A
+CACHE.** Both measured on the same pair of functions, both frames now exact —
+`game::Save` gained two dwords by promoting five serialization buffers to
+function scope; `game::Load`'s 8-byte surplus WAS a `saveVersion` local, and
+retail re-reads `saved.version` at all eighteen uses.
+
+**RETAIL `neg` RUNS ARE INLINE SUBTRACTION STRENGTH-REDUCED ONTO A NEGATED
+INDUCTION** — spell `LIMIT - i` inline; a named decrementing counter never
+produces them (`Armageddon` +2.89).
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)

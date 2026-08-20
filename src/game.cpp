@@ -2595,12 +2595,19 @@ void game::setup_shipyards()
 // for the byte (10 refs) and [ebp+0xa] for the short (22), with the byte
 // temp at -0xd matching ref for ref.
 //
-// Residual (90.0926%):
-//   * `sub esp,0x7b0` against retail's 0x7a8, and the fileName string
-//     sits at -0x98 where retail has it at -0x74. Our small-slot region
-//     is 36 bytes (9 dwords) larger and our deep locals correspondingly
-//     smaller; retail reuses ONE slot (-0x24, 7 refs) for every
-//     `resize(n, T())` temporary where we spend several.
+// 90.0926 -> 91.8624, 2026-08-20 (cold-combatpath lane): the frame is
+// RETAIL'S NOW (sub esp,0x7a8 both sides), and the lever was the
+// saveVersion CACHE - retail re-reads saved.version from [ebp-0x5cc] at
+// every one of the 18 uses (the note below already said the poolCount
+// compare reads it there); deleting `int saveVersion` and spelling
+// `saved.version` at each use is +1.77 and the whole 8-byte frame
+// delta. Do not cache what retail reloads, once more. Measured against
+// it in the same pass: the emptyPoint fills respelled as unnamed
+// `resize(n, type_point())` temporaries are -1.2 in this context (the
+// named block-scoped local is retail's shape), and the poolCount
+// ternary flipped to `>= 32 ? 8 : 3` is -0.75, so the setl lowering is
+// not the operand order.
+// Residual (91.8624%):
 //   * ONE cleanup site short of retail's 39, and it is not a missing
 //     statement: at the gMapExtra guard alone VC6 expands `_Tidy` inline
 //     (base 0xc0e) where retail calls it (site 0x4b at 0x48e8). Pinning
@@ -2624,7 +2631,6 @@ int game::Load(TAbstractFile* infile)
     // edx`, then `mov ecx,[gpGame]` again for mapHeader, again for
     // setup, again for campaign, again for the filename. Do not cache
     // what retail reloads.
-    int saveVersion = saved.version;
     gpGame->f_1f698 = saved.gameVersion;
     gpGame->mapHeader = saved.mapHeader;
     gpGame->setup = saved.mapSetup;
@@ -2648,7 +2654,7 @@ int game::Load(TAbstractFile* infile)
     gMapHeight = mapHeader.Size;
     gpSearchArray->Close();
 
-    if (saveVersion >= 41) {
+    if (saved.version >= 41) {
         char char_buffer;
         infile->Read(&char_buffer, sizeof(char_buffer));
         gUnnamed69950c = char_buffer;
@@ -2656,15 +2662,15 @@ int game::Load(TAbstractFile* infile)
         gUnnamed69950c = -1;
     }
 
-    if (saveVersion >= 34) {
+    if (saved.version >= 34) {
         infile->Read(artifactDisabled, sizeof(artifactDisabled));
         infile->Read(artifactUsed, sizeof(artifactUsed));
-    } else if (saveVersion >= 25) {
+    } else if (saved.version >= 25) {
         infile->Read(artifactDisabled, 0x81);
         infile->Read(artifactUsed, 0x81);
     }
 
-    if (saveVersion >= 29)
+    if (saved.version >= 29)
         infile->Read(field_4e658, sizeof(field_4e658));
     else
         memset(field_4e658, 0, sizeof(field_4e658));
@@ -2702,11 +2708,11 @@ int game::Load(TAbstractFile* infile)
     }
 
     if (worldMap.Load(infile, mapHeader.Size, mapHeader.HasTwoLayers,
-                      saveVersion) < 0)
+                      saved.version) < 0)
         return -1;
     if (LoadSignPool(infile) < 0)
         return -1;
-    if (LoadMinePool(infile, saveVersion) < 0)
+    if (LoadMinePool(infile, saved.version) < 0)
         return -1;
 
     int i;
@@ -2726,7 +2732,7 @@ int game::Load(TAbstractFile* infile)
         }
     }
 
-    if (LoadGarrisonPool(infile, saveVersion) < 0)
+    if (LoadGarrisonPool(infile, saved.version) < 0)
         return -1;
     if (LoadBoatPool(infile) < 0)
         return -1;
@@ -2751,7 +2757,7 @@ int game::Load(TAbstractFile* infile)
     }
 
     for (i = 0; i < 8; ++i) {
-        if (players[i].load(infile, saveVersion) < 0)
+        if (players[i].load(infile, saved.version) < 0)
             return -1;
     }
 
@@ -2764,29 +2770,29 @@ int game::Load(TAbstractFile* infile)
     towns.resize(townCount);
 #pragma inline_depth()
     for (i = 0; i < towns.size(); ++i) {
-        if (towns[i].load(infile, saveVersion) < 0)
+        if (towns[i].load(infile, saved.version) < 0)
             goto towns_failed;
     }
 
-    int heroCount = saveVersion < 25 ? 128 : HERO_COUNT;
+    int heroCount = saved.version < 25 ? 128 : HERO_COUNT;
     for (i = 0; i < heroCount; ++i) {
-        if (heroes[i].load(infile, saveVersion) < 0)
+        if (heroes[i].load(infile, saved.version) < 0)
             return -1;
     }
 
     unsigned char legacyHeroPoolMap[8];
-    if (saveVersion < 31
+    if (saved.version < 31
         && infile->Read(legacyHeroPoolMap, sizeof(legacyHeroPoolMap))
             < sizeof(legacyHeroPoolMap)) {
         return -1;
     }
 
     // THE AVAILABILITY READ IS AN IF/ELSE ON THE VERSION, NOT ONE READ OF
-    // `heroCount`. Retail re-tests `saveVersion >= 25` here and emits two
+    // `heroCount`. Retail re-tests `saved.version >= 25` here and emits two
     // separate guarded reads with the literals 0x9c and 0x80 - two
     // teardowns, not one - and the 0x40 fill lives inside the SHORT arm
     // rather than behind an `if (heroCount < HERO_COUNT)`.
-    if (saveVersion >= 25) {
+    if (saved.version >= 25) {
         if (infile->Read(heroAvailability, HERO_COUNT) < HERO_COUNT)
             return -1;
     } else {
@@ -2795,7 +2801,7 @@ int game::Load(TAbstractFile* infile)
         memset(heroAvailability + 128, 0x40, HERO_COUNT - 128);
     }
 
-    if (saveVersion >= 31) {
+    if (saved.version >= 31) {
         for (i = 0; i < HERO_COUNT; ++i) {
 #pragma inline_depth(0)
             std::bitset<8> poolMap(0);
@@ -2849,7 +2855,7 @@ int game::Load(TAbstractFile* infile)
     // `static_cast<char>(f_1f698)` as its own eighth scalar.
     if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
         return -1;
-    if (saveVersion < 40)
+    if (saved.version < 40)
         f_1f698 = byteValue;
 
     if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
@@ -2902,13 +2908,13 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(gMapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
 
-    int poolCount = saveVersion < 32 ? 3 : 8;
+    int poolCount = saved.version < 32 ? 3 : 8;
     for (i = 0; i < poolCount; ++i) {
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            type_point emptyPoint;
 #pragma inline_depth(0)
+            type_point emptyPoint;
             lithPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithPools[i].begin(),
@@ -2919,8 +2925,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            type_point emptyPoint;
 #pragma inline_depth(0)
+            type_point emptyPoint;
             lithExitPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithExitPools[i].begin(),
@@ -2932,8 +2938,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            type_point emptyPoint;
 #pragma inline_depth(0)
+            type_point emptyPoint;
             whirlpools.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(whirlpools.begin(),
@@ -2944,8 +2950,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            type_point emptyPoint;
 #pragma inline_depth(0)
+            type_point emptyPoint;
             undergroundGateExits.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGateExits.begin(),
@@ -2956,8 +2962,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-            type_point emptyPoint;
 #pragma inline_depth(0)
+            type_point emptyPoint;
             undergroundGatePairs.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGatePairs.begin(),
@@ -2981,7 +2987,7 @@ int game::Load(TAbstractFile* infile)
     }
     load_object_vector(infile, &creatureBanks);
 
-    if (!load_recorded_events(infile, saveVersion))
+    if (!load_recorded_events(infile, saved.version))
         return -1;
 
     gpAdvManager->inDialog = 0;
@@ -3144,12 +3150,26 @@ int game::Load(TAbstractFile* infile)
 // frame slot; spelled as an array, and declared INSIDE the hero loop
 // rather than at function scope, it coalesces the way retail's does.
 //
-// Residual (85.4129%): three things, all measured.
-//   * `sub esp,0x5b8` against retail's 0x5c0, two slots. Retail spends
-//     SEVEN dwords between -0x10 and -0x28 with byte temps at -0xd and
-//     -0x15; we spend FIVE, packing three byte temps into the -0x10
-//     dword. No spelling tried moves it.
-//   * ONE guarded-return teardown still has the wrong destructor shape.
+// 85.4129 -> 89.1864, 2026-08-20 (cold-combatpath lane), two of the three
+// residual items below closed:
+//   * THE FRAME IS RETAIL'S NOW (sub esp,0x5c0 both sides): the two
+//     missing dwords were the five BLOCK-scoped serialization buffers
+//     (four `char char_buffer` blocks and one `short short_buffer`)
+//     sharing slots; promoting them to two more FUNCTION-scope locals
+//     (`char char_buffer; short short_buffer;`) is retail's seven-dword
+//     temp pool exactly (+0.10 alone - the frame is the enabler, not
+//     the win; the doses-combine rule in person).
+//   * THE towns.size() OVER-INLINE IS SPELLABLE, +3.68: a statement pin
+//     covers a whole `for` including its body, but PRAGMA STATE IS
+//     PER-SITE AT COLLECTION - so `i = 0; #pragma inline_depth(0)
+//     while (i < towns.size()) { #pragma inline_depth() <body>; ++i; }`
+//     confines the pin to the loop CONDITION: size() goes out of line
+//     (retail's call) while towns[i].save's receiver subscript stays
+//     inline. New lever: PIN A LOOP CONDITION ALONE by resetting the
+//     pragma as the first body line.
+// Residual (89.1864%): one item, measured and bounded.
+//   * ONE guarded-return teardown still has the wrong destructor shape
+//     (predict-inline: `_Tidy base x35 vs retail x36`).
 //     Retail splits the two pool loops: the lithPools failure expands
 //     ~SavedGameHeader and CALLS `_Tidy` (site 0x48 at 0x556e, falling
 //     through into the shared tail), while the lithExitPools failure
@@ -3173,8 +3193,10 @@ int game::Save(TAbstractFile* outfile)
 {
     char byteValue;
     char extraByteValue;
+    char char_buffer;
     short shortValue;
     short extraShortValue;
+    short short_buffer;
     int zero;
     SavedGameHeader saved;
     saved.Reset();
@@ -3182,7 +3204,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = gUnnamed69950c;
+        char_buffer = gUnnamed69950c;
         outfile->Write(&char_buffer, sizeof(char_buffer));
     }
     outfile->Write(artifactDisabled, sizeof(artifactDisabled));
@@ -3193,7 +3215,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = field_1f680.size();
+        char_buffer = field_1f680.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
             return -1;
@@ -3231,7 +3253,7 @@ int game::Save(TAbstractFile* outfile)
 
     int i;
     {
-        short short_buffer = generators.size();
+        short_buffer = generators.size();
         if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
             sizeof(short_buffer)) {
         generators_failed:
@@ -3249,7 +3271,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = field_4e3e8;
+        char_buffer = field_4e3e8;
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
             goto obelisk_failed;
@@ -3267,15 +3289,19 @@ int game::Save(TAbstractFile* outfile)
     }
 
     {
-        char char_buffer = towns.size();
+        char_buffer = towns.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
         towns_failed:
             return -1;
         }
-        for (i = 0; i < towns.size(); ++i) {
+        i = 0;
+#pragma inline_depth(0)
+        while (i < towns.size()) {
+#pragma inline_depth()
             if (towns[i].save(outfile) < 0)
                 goto towns_failed;
+            ++i;
         }
     }
 
@@ -4051,6 +4077,12 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 //     XOR-and-mask chain (`xor bx,[eax] / and ebx,0x3ff`) is what VC6
 //     emits for the three short:10 / short:4 BITFIELD compares written
 //     out longhand, not for the operator.
+//   * 2026-08-20, the doses-combine rule applied: the KNOWN-RIGHT erase
+//     guard PAIRED with each rejected knob - guard + gpGame->GetHero
+//     70.1844, guard + players[] re-subscript 71.7318. Every guard
+//     combination measures 5-7 under the guardless 77.4860, so the
+//     "something around it is still wrong" element is not either of
+//     those two; the pair search is closed on them.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
