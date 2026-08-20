@@ -7921,8 +7921,9 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // allowed to claim a free slot. The four running edge counters are what
 // make retail emit inc/inc/dec/dec rather than indexed addressing.
 //
-// Residual (63.94%): register-homing only. The function is branch-for-
-// branch identical to retail - 15 branches, 1 return, identical call
+// Residual (63.94%): register-homing only (flow-distance 0 as of
+// 2026-08-20, the k-loop guard now byte-matches). The function is branch-
+// for-branch identical to retail - 15 branches, 1 return, identical call
 // multiset - and why-reg v2 confirms the definition slots and their order
 // agree on BOTH sides, with only the ebx/edi bindings permuted: retail
 // holds `this` in edi and hoists the 0x7f idle priority into ebx, we hold
@@ -7978,18 +7979,28 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
             int bottomX = xMax;
             int leftY = yMax;
             int k;
-            // MEASURED NEGATIVE, do not retry: `k > 0` here, to chase
-            // diagnose's `#6 je->jle`, costs 63.94 -> 57.54. The `jle`
-            // it names is not this guard.
-            for (k = edgeLength; k != 0; k--) {
-                InsertSound(topX, yMin, z, ring, soundsType);
-                InsertSound(xMax, rightY, z, ring, soundsType);
-                InsertSound(bottomX, yMax, z, ring, soundsType);
-                InsertSound(xMin, leftY, z, ring, soundsType);
-                topX++;
-                rightY++;
-                bottomX--;
-                leftY--;
+            // The `jle` diagnose names IS this guard after all - the
+            // earlier note drew the wrong conclusion from the right
+            // probe. `k > 0` as the for-condition costs 63.94 -> 57.54
+            // because it also changes the BOTTOM test away from retail's
+            // `dec/jne`; the form that has BOTH ends right is the
+            // explicit-guard do/while below: `if (edgeLength > 0)` gives
+            // retail's `test eax,eax / jle` top and `--k != 0` keeps the
+            // `jne` back edge. Byte-flat on the fuzzy score (the register
+            // permutation dominates at this size) but flow-distance goes
+            // 2 -> 0 and the opcode now matches retail's 0x7e.
+            k = edgeLength;
+            if (edgeLength > 0) {
+                do {
+                    InsertSound(topX, yMin, z, ring, soundsType);
+                    InsertSound(xMax, rightY, z, ring, soundsType);
+                    InsertSound(bottomX, yMax, z, ring, soundsType);
+                    InsertSound(xMin, leftY, z, ring, soundsType);
+                    topX++;
+                    rightY++;
+                    bottomX--;
+                    leftY--;
+                } while (--k != 0);
             }
             xMax++;
             yMax++;
