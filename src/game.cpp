@@ -76,6 +76,11 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "resourcemanager.h"
 #include "herospec.h"
 #include "savegame.h"
+#include "winmgr.h"
+#include "creaturetype.h"
+#include "viewarmywindow.h"
+#include "recruit.h"
+#include "quicktownwindow.h"
 #include "imm_mouse.h"
 
 inline type_point::type_point(short new_x, short new_y, short new_z)
@@ -3789,11 +3794,157 @@ void game::ClaimShipyard(type_point location, int newPlayerOwner)
 // one. It is `ret 0x20` - eight stack arguments plus `this` - and the DC
 // prototype is p=9. Eight is a distinctive arity; no other row in the
 // span has it.
+#endif  // @carcass
+
+// RECONSTRUCTED 2026-08-20. Decide what the stack could be upgraded to,
+// whether its owner holds the Angelic Alliance, raise the view window,
+// and act on what the window returned.
+//
+// The upgrade answer comes from TWO independent sources and the second
+// overwrites the first: the town the stack is standing in (its dwelling
+// row must name this creature AND the matching UPGRADED dwelling must be
+// built), then the hero's own specialty record.
+//
+// THE FOUR-WAY ELEMENTAL GUARD APPEARS FOUR TIMES, and the first of them
+// IS game::get_alignment (0x4c6690) - a header inline on the Dreamcast,
+// which is why retail carries both an out-of-line copy and this
+// expansion. The other three wrap UpgradedCreatureType in the identical
+// `f_1f698 == 0 && creature is one of the four base-set elementals`
+// test, so they are the same source idiom with a different tail;
+// written longhand because no second out-of-line row for that shape
+// exists to name.
+//
+// THREE MEASURED EDITS TOOK THIS FROM 81.27 TO 96.96, and each is a
+// standing rule paying out again:
+//   * DO NOT CACHE WHAT RETAIL RELOADS, 81.2742 -> 90.3347. Binding the
+//     specialty record's two creature subjects to locals up front makes
+//     our CL load BOTH before the first compare; retail reads +0x04,
+//     tests it, and only then reads +0x14. Spell the member accesses
+//     where they are used.
+//   * THE RESULT DISPATCH IS A SWITCH, NOT AN IF-CHAIN, 90.3347 ->
+//     96.6936 (with the bitNumber operand swap, which was inert on its
+//     own). Both compile to the same compare chain over 300 / 0x7803,
+//     but the switch SINKS the first arm's body past the second's -
+//     the documented "compare-chain arm bodies emerge in reverse of the
+//     dispatch order" layout - and the if-chain leaves it inline.
+//   * THE DWELLING SCAN EXITS ON THE CONDITION, 96.6936 -> 96.9556.
+//     `for (b = 30; b <= 36; b++)` gives `jle top / jmp exit`; retail
+//     has `jg exit / jmp top`, which is the `for (;;) { ...;
+//     if (++b > DWELLING_6_ID) break; }` shape. Branches then agree
+//     41/41 with one ret on both sides.
+//
+// Residual (96.9556%): three things, all below control flow. The
+// bitNumber test copies the dwelling id into a second register where
+// retail destroys it on the last use; the specialty row's base pointer
+// is loaded before the index scale rather than after; and the
+// gTownDwellingCreatures subscript carries its `- DWELLING_0_ID` bias as
+// a NEGATIVE displacement on the relocation where retail folded the same
+// -120 into the symbol's own addend, which is a reloc-addend difference
+// rather than an addressing one.
 VA(0x004c6c50, 0x2EB)  // arity (ret 0x20 = p9) + anchor-bracket, dc 0xb1c8c
-void game::ViewArmy(armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x, int y, unsigned char show_dismiss, unsigned char isQuickView)
+void game::ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
+                    const town* this_town, int x, int y,
+                    unsigned char show_dismiss, unsigned char isQuickView)
 {
-    // @stub
+    TCreatureType creature = group.armyTypes[iarmy];
+    int numTroops = group.numTroops[iarmy];
+    TCreatureType upgrade = CREATURE_NONE;
+    unsigned char hasAngelicAlliance = 0;
+
+    if (this_town && get_alignment(creature) == this_town->type) {
+        int building = DWELLING_0_ID;
+        for (;;) {
+            if (gTownDwellingCreatures[this_town->type * 2
+                                           * TOWN_DWELLING_COUNT
+                                       + building - DWELLING_0_ID]
+                    == creature
+                && (bitNumber[town::UpgradedDwellingID(building)]
+                    & this_town->active)) {
+                if (!f_1f698
+                    && (creature == CREATURE_AIR_ELEMENTAL
+                        || creature == CREATURE_EARTH_ELEMENTAL
+                        || creature == CREATURE_FIRE_ELEMENTAL
+                        || creature == CREATURE_WATER_ELEMENTAL))
+                    upgrade = CREATURE_NONE;
+                else
+                    upgrade = UpgradedCreatureType(creature);
+                break;
+            }
+            if (++building > DWELLING_6_ID)
+                break;
+        }
+    }
+
+    if (this_hero) {
+        const THeroSpecificAbility& ability =
+            akHeroSpecificAbilities[this_hero->id];
+        if (ability.type == eHeroAbilityCreatureUpgrade) {
+            if (creature == ability.creature
+                || creature
+                       == ((!f_1f698
+                            && (ability.creature == CREATURE_AIR_ELEMENTAL
+                                || ability.creature == CREATURE_EARTH_ELEMENTAL
+                                || ability.creature == CREATURE_FIRE_ELEMENTAL
+                                || ability.creature == CREATURE_WATER_ELEMENTAL))
+                               ? CREATURE_NONE
+                               : UpgradedCreatureType(ability.creature))
+                || creature == ability.upgradeAlternateSubject
+                || creature
+                       == ((!f_1f698
+                            && (ability.upgradeAlternateSubject
+                                    == CREATURE_AIR_ELEMENTAL
+                                || ability.upgradeAlternateSubject
+                                       == CREATURE_EARTH_ELEMENTAL
+                                || ability.upgradeAlternateSubject
+                                       == CREATURE_FIRE_ELEMENTAL
+                                || ability.upgradeAlternateSubject
+                                       == CREATURE_WATER_ELEMENTAL))
+                               ? CREATURE_NONE
+                               : UpgradedCreatureType(
+                                     ability.upgradeAlternateSubject)))
+                upgrade = ability.upgradeResult;
+        }
+    }
+
+    if (this_town) {
+        if (this_town->owner >= 0)
+            hasAngelicAlliance = players[this_town->owner]
+                                     .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+    } else if (this_hero) {
+        if (this_hero->owner >= 0)
+            hasAngelicAlliance = players[this_hero->owner]
+                                     .hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+        else
+            hasAngelicAlliance =
+                const_cast<hero*>(this_hero)->IsWieldingArtifact(
+                    ARTIFACT_ANGELIC_ALLIANCE);
+    }
+
+    TViewArmyWindow* window = new TViewArmyWindow(
+        &group, iarmy, this_hero, this_town, x, y, upgrade, show_dismiss,
+        !isQuickView, hasAngelicAlliance);
+    if (isQuickView) {
+        window->QuickView();
+    } else {
+        window->DoModal();
+        switch (gpWindowManager->dialogReturn) {
+        case TViewArmyWindow::UPGRADE_ID: {
+            int cost[NUM_RESOURCES];
+            get_upgrade_cost(creature, upgrade, numTroops, cost);
+            for (int resource = 0; resource < NUM_RESOURCES; resource++)
+                gpCurrentPlayer->resources[resource] -= cost[resource];
+            group.armies[iarmy] = upgrade;
+            break;
+        }
+        case TViewArmyWindow::DISMISS_ID:
+            group.Dismiss(iarmy);
+            break;
+        }
+    }
+    delete window;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7572
 DC_ONLY(0xb1f1c, 0x42)

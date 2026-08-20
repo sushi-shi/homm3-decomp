@@ -126,6 +126,14 @@ enum THeroAbilityKind {
     // Gated with the creature view because hero.obj is the only
     // compiland that names either.
     eHeroAbilityCreatureUniversal = 4,
+    // Byte-proven by game::ViewArmy (0x4c6c50), which is the only body
+    // in this tree that reaches kind 6: it requires the record's type to
+    // be 6, matches the viewed stack against BOTH creature subjects
+    // (+0x04 and +0x14) and against each one's UpgradedCreatureType, and
+    // on a hit takes the upgrade target out of +0x18. That is the
+    // creature-UPGRADE specialty - the hero who upgrades one ladder into
+    // another for free.
+    eHeroAbilityCreatureUpgrade = 6,
     eHeroAbilityDragons = 7
 };
 
@@ -151,7 +159,13 @@ struct THeroSpecificAbility {
     int creatureAttackBonus;    // +0x08
     int creatureDefenseBonus;   // +0x0c
     int creatureDamageBonus;    // +0x10
-    char pad_14[0x8];
+    // +0x14 / +0x18, sliced out of the pad 2026-08-20 by game::ViewArmy
+    // (0x4c6c50) - the only reader of either. For kind 6 the record
+    // names TWO creatures it will upgrade, the one at +0x04 and this
+    // second one, and +0x18 is what both become. Elaborated enum for the
+    // reason the union above is: herospec.h does not include armygrp.h.
+    enum TCreatureType upgradeAlternateSubject;  // +0x14
+    enum TCreatureType upgradeResult;            // +0x18
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,
     // and THeroScreenWindow::SetupHeroView sprintf's it into widget 0x8b,
