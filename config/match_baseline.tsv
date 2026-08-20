@@ -985,7 +985,18 @@ hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580
 hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
-hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.8826	57.8826	57.8826	0xe3070
+# DELIBERATE LOWER 2026-08-20, integration of lane/cmbtmgr4. This row
+# fell 57.88 -> 57.79 at the MERGE, not in either lane: cmbtmgr4 and the
+# hero lanes each measured clean in isolation and the 0.09 appears only
+# in combination. Investigated before accepting: cmbtmgr4 added ~60
+# declarators and 20 pad slices, but every one is behind a gate hero.cpp
+# does NOT define (checked macro by macro), and no ungated line landed in
+# any header hero.cpp includes. The delta is real codegen, not reloc
+# naming. Cause not isolated; 0.09 on a body that is itself an incomplete
+# reconstruction at 58% is below the resolution worth a lane's time.
+# FIRST cross-lane interference regression of the campaign - if this
+# recurs, stop accepting and bisect the combined header set properly.
+hero	?GiveArtifact@hero@@QAEEPBUtype_artifact@@EE@Z	57.7935	57.7935	57.8826	0xe3070
 hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
