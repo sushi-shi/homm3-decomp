@@ -4626,86 +4626,82 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // it is worth keeping: the same experiment on csprite.h a function earlier
 // was also flat, so mapcell.obj tolerates both.
 //
-// Residual (65.1777%): the OVERLAP SCAN's loop shape, and it is a
-// strength-reduction difference rather than a spelling one.  Retail
-// recomputes `(z*Size + y)*Size + x` and its 38-byte scale on every inner
-// iteration, holding only Size and cellData in the inner loop's preheader;
-// this compile additionally precomputes 38*Size and turns the y loop into an
-// induction-variable add, which costs two branches and one exit against
-// retail (base 30 branches / 3 rets, retail 32 / 4).  This is the same class
-// GenerateHeightMap's 29-point re-subscripting lesson sits in - retail's
-// input does NOT let VC6 hoist the map geometry - but there the lever was a
-// cached pointer that could simply be removed, and here the expression is
-// already written out longhand with nothing left to un-cache.  Measured on
-// the way: computing `thisCell->objects.end()` BEFORE the GenerateHeightMap
-// call rather than after is worth 0.3 points (61.2480 -> 61.5553) and is
-// retail's order - it reclaims the first parameter slot for `&objects` the
-// way retail does.
+// THE 65.18 PLATEAU WAS A FRAME DELTA, AND THE FRAME NAMED THE MISSING
+// SOURCE (2026-08-20).  Retail's `sub esp,0x7c` against this compile's 0x78
+// said retail had one dword local we did not, and the head says which:
+// retail's FIRST act is `mov eax,[ebp+8] / add eax,0xe / mov [ebp+8],eax`,
+// biasing the thisCell parameter home to `&thisCell->objects` and reading
+// end() as `[eax+8]`, begin() as `[eax+4]` and the insert's `_Last`/`_End`
+// pair as `[ecx+8]`/`[ecx+0xc]` through the SAME pointer at the tail.  That
+// is a named reference to the member vector, not a folded member offset:
 //
-// The `worldMap` reference this note used to list as the next thing to try
-// IS worth it: 61.5553 -> 65.1777. But ONLY declared inside the INNERMOST
-// loop, which is this tree's don't-cache-what-retail-reloads rule stated in
-// reverse - a reference declared there is not a cache, it is a fresh reload
-// every iteration, and that is exactly what retail's
-// `mov esi,[edx+0x1fc44] / mov edx,[edx+0x1fc40]` per inner iteration is.
-// Lifting the SAME declaration one level out, to just above the x loop,
-// hands VC6 the hoist straight back and returns the row to 61.5553.
-// Measured both ways.
+//   std::vector<TObjectCell>& objectList = thisCell->objects;   +5.48
+//        (65.2507 -> 70.7305; the frame becomes 0x7c, exact)
 //
-// What is left is the strength reduction itself and the exit count - base 30
-// branches / 3 rets against retail's 32 / 4 - and predict-inline now has the
-// inline structure agreeing to within one call, so it is no longer an
-// inliner question.
+// The second edit is the same rule from the other side.  Retail materialises
+// `newType` into a temp slot and reads width/height off it, but recomputes
+// `objectTypes[belowObject->typeIndex]` with FULL addressing at both of the
+// belowRect sites - `movsx esi,[edx + 4*esi + 0x10]` and `+0x11` - so the
+// source names `newType` and does NOT name `belowType`:
 //
-// THAT ONE CALL IS NAMED (2026-08-20): the call-sequence alignment pairs
-// every relocation in this body except a single
-// `vector<TObjectCell>::size()` at fn+0x2d2 that retail does not emit.  It
-// comes from inside the inlined `insert`'s capacity path (`size() + ...`),
-// which retail expands and we call, so it is an A8/A9 under-inline on top of
-// the loop-shape difference and not a second wall.  Everything else -
-// operator new, the three `_Construct`s, both `_Ucopy`s and the `_Ufill` -
-// lines up one for one, which also confirms that retail EXPANDS this insert
-// exactly as we do: the readObject site-pin lever does not apply here.
+//   belowRect.left = belowObject->x
+//       - objectTypes[belowObject->typeIndex].width + 1;    +6.10
+//        (70.7305 -> 76.8302)
 //
-// AND THE DIRECTION IS NOW FIXED (2026-08-20).  That unpaired `size()` is an
-// UNDER-inline - our caller is already LEANER than retail's - so the /Ob2
-// caller-shrink that moved five rows elsewhere this round is the wrong lever
-// here, and it is expensive: lifting the two RECT builds plus IntersectRect
-// and the four clamps into a file-local helper costs 65.1777 -> 53.8086.
-// Anything that reaches this row has to make the caller BIGGER, not smaller.
+// don't-cache-what-retail-reloads, asymmetric within one statement pair.
 //
-// TWO MORE MEASURED NEGATIVES, 2026-08-20, both aimed at exactly that:
-//   * `insert(position, 1, *objectCell)` - the three-argument form, which
-//     lifts the capacity path's `size()` one level shallower and is the lever
-//     that opened readTownData - measures 65.1777 -> 61.3531.  The two-
-//     argument `insert(position, *objectCell)` is retail's spelling.
-//   * `short y` for the inner induction variable, which is `why-branch`'s own
-//     top D10 pick here (45 disagreements -> 43), measures 65.1777 ->
-//     63.3235.  The eighth instance of the low-mass inversion; confirm every
-//     solver pick against the real score.
-// The remaining exit delta (base 3 rets, retail 4) is INSIDE the insert
-// expansion - retail's four returns are its three arms plus the empty-vector
-// path (blocks B41/B42/B46/B51), and the whole scan above it, B0..B25, has
-// one exit on both sides.
+// Third, retail's x-loop preheader keeps `(newObject->x - x) * 6` in
+// [ebp-0x8] and the y loop walks the row with `dec edi`, so the row is a
+// source value: `signed char* heights = heightMap[newObject->x - x];` and
+// `heights[newObject->y - y]` inside.  Worth +0.07 before the two edits above
+// and +0.70 after them (76.1294 without it) - re-measure a low-mass knob at
+// each new plateau.
+//
+// Residual (76.8302%): ONE register permutation and everything downstream of
+// it.  Retail binds this->ESI, newObject->EDI, position->EBX; this compile
+// binds position->ESI, this->EDI, newObject->EBX, i.e. retail's earliest
+// call-crossing pseudo is `this` and ours is `position`.  Every later
+// difference in the body follows from it - retail can then hold Size in ESI
+// and z*Size in ECX across the inner loop while we spill both to [ebp-0x10]
+// and [ebp-0xc], and retail memory-homes `y` where we keep it in EDI.
+// why-reg v2 CAPS it as front-end handle state (C1): the transposed pair is
+// `this` against an expression value, which no statement-level knob names.
+// Three declaration orders were measured against that verdict anyway and all
+// three are worse - newObject first 73.8517, objectList/newObject/position
+// 74.8517, position moved after GenerateHeightMap 76.7305 - which is the
+// evidence for the CAP rather than against it.
+//
+// Superseded by the above, kept because the measurements are still true of
+// the structure they were made in: the `worldMap` reference must be declared
+// inside the INNERMOST loop (lifting it one level out cost 3.6 then), and two
+// negatives aimed at the old under-inline reading -
+// `insert(position, 1, *objectCell)` 65.1777 -> 61.3531 (the two-argument
+// form is retail's) and `short y` for the inner induction variable, which was
+// why-branch's own top D10 pick, 65.1777 -> 63.3235.
+//
+// The one unpaired relocation, a `vector<TObjectCell>::size()` at fn+0x2d2
+// from inside the inlined insert's capacity path, is unchanged by all of
+// this; the rest of the insert expansion - operator new, three `_Construct`s,
+// both `_Ucopy`s and the `_Ufill` - still lines up one for one.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
 {
+    std::vector<NewmapCell::TObjectCell>& objectList = thisCell->objects;
     std::vector<NewmapCell::TObjectCell>::iterator position
-        = thisCell->objects.end();
+        = objectList.end();
     CObject* newObject = &objects[objectCell->objectIndex];
 
     signed char heightMap[8][6];
     GenerateHeightMap(newObject, heightMap);
 
-    while (position != thisCell->objects.begin()) {
+    while (position != objectList.begin()) {
         if (objectCell->layer > (position - 1)->layer)
             break;
 
         if (objectCell->layer == (position - 1)->layer) {
             CObject* belowObject = &objects[(position - 1)->objectIndex];
             CObjectType* newType = &objectTypes[newObject->typeIndex];
-            CObjectType* belowType = &objectTypes[belowObject->typeIndex];
 
             RECT newRect;
             newRect.left = newObject->x - newType->width + 1;
@@ -4714,8 +4710,10 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
             newRect.bottom = newObject->y + 1;
 
             RECT belowRect;
-            belowRect.left = belowObject->x - belowType->width + 1;
-            belowRect.top = belowObject->y - belowType->height + 1;
+            belowRect.left = belowObject->x
+                - objectTypes[belowObject->typeIndex].width + 1;
+            belowRect.top = belowObject->y
+                - objectTypes[belowObject->typeIndex].height + 1;
             belowRect.right = belowObject->x + 1;
             belowRect.bottom = belowObject->y + 1;
 
@@ -4731,6 +4729,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                 overlap.bottom = gMapHeight;
 
             for (int x = overlap.left; x < overlap.right; ++x) {
+                signed char* heights = heightMap[newObject->x - x];
                 for (int y = overlap.top; y < overlap.bottom; ++y) {
                     NewfullMap& worldMap = gpGame->worldMap;
                     NewmapCell* cell = &worldMap.cellData[
@@ -4740,8 +4739,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
                         = cell->objects.begin();
                     while (scan->objectIndex != (position - 1)->objectIndex)
                         ++scan;
-                    if (scan->layer
-                        > heightMap[newObject->x - x][newObject->y - y])
+                    if (scan->layer > heights[newObject->y - y])
                         goto sinkPast;
                 }
             }
@@ -4752,7 +4750,7 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
         --position;
     }
 
-    thisCell->objects.insert(position, *objectCell);
+    objectList.insert(position, *objectCell);
 }
 
 // E:\gamedcs\mapcell.cpp:4167
