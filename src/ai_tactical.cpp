@@ -12,7 +12,7 @@
 // literal 0x36 into SpellCastWorkChance - so it needs the enumerator
 // armygrp.h already carries behind this view for cmbtmgr.cpp.
 #define HOMM3_SPELL_SLOW_DECL
-// consider_teleport pushes the literal 0x3f into SpellCastWorks, and
+// consider_teleport pushes the literal 0x3f into ValidSpellTargetArmy, and
 // reads combatManager's pending-order code back as a domain member.
 #define HOMM3_SPELL_TELEPORT_DECL
 #define HOMM3_CMBTMGR_AI_ORDER_DECL
@@ -1210,7 +1210,7 @@ long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery ma
 // EXACT 2026-08-11. The enemy-side walk is the ordinary
 // `1 - side` / numArmies / armies loop. Retail's one unusual edge is
 // source-natural short circuiting: creature bit 21 rejects the stack
-// before SpellCastWorks, preserving the side/global registers across
+// before ValidSpellTargetArmy, preserving the side/global registers across
 // that arm, while a successful value replaces all three choice fields.
 VA(0x00437310, 0xD1)  // anchor-callee, dc 0x3dde8
 void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
@@ -1222,7 +1222,7 @@ void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
             static_cast<unsigned>(target->creatureId) >> 21);
         long creature_cast = creature_spell != 0;
         if (!(immune & 1)
-                && gpCombatManager->SpellCastWorks(SPELL_CHAIN_LIGHTNING,
+                && gpCombatManager->ValidSpellTargetArmy(SPELL_CHAIN_LIGHTNING,
                                                    side, target, 1,
                                                    creature_cast)) {
             long value = get_chain_lightning_value(choice->power,
@@ -2467,7 +2467,7 @@ long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchoo
             continue;
         if (!enemy_hero->available_spells[i])
             continue;
-        if (!gpCombatManager->SpellCastWorks(i, enemy_side, our_army, 1, 0))
+        if (!gpCombatManager->ValidSpellTargetArmy(i, enemy_side, our_army, 1, 0))
             continue;
         long mastery = enemy_hero->get_spell_level(i, gpCombatManager->field_53c0);
         if (enemy_hero->GetManaCost(i, group, gpCombatManager->field_53c0)
@@ -3096,7 +3096,7 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
         if (target->creatureType == CREATURE_AMMO_CART)
             continue;
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(choice->spell, side, target, 1,
+        if (!gpCombatManager->ValidSpellTargetArmy(choice->spell, side, target, 1,
                                              creature_cast))
             continue;
         if (target->spellInfluence[choice->spell])
@@ -3156,7 +3156,7 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
 // land on. The seven skips are the enchantment eligibility rule -
 // three "cannot act" round counters, creature bit 21 (magic immune),
 // the two non-combatant war machines, and a stack that already carries
-// the spell - and then SpellCastWorks has the last word.
+// the spell - and then ValidSpellTargetArmy has the last word.
 //
 // The per-stack value goes through get_enchantment_function's
 // pointer-to-member, so `*choice` is SLICED by value onto the stack
@@ -3193,7 +3193,7 @@ void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long g
         if (target->spellInfluence[choice->spell])
             continue;
         long creature_cast = creature_spell != 0;
-        if (gpCombatManager->SpellCastWorks(choice->spell, side, target, 1,
+        if (gpCombatManager->ValidSpellTargetArmy(choice->spell, side, target, 1,
                                             creature_cast))
             value += (this->*value_of)(target, *choice);
     }
@@ -3257,7 +3257,7 @@ void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
         if (no_target & 1)
             continue;
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(SPELL_TELEPORT, side, our_army, 1,
+        if (!gpCombatManager->ValidSpellTargetArmy(SPELL_TELEPORT, side, our_army, 1,
                                              creature_cast))
             continue;
         if (our_army->can_shoot(0))
@@ -3333,7 +3333,7 @@ void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
     long count = gpCombatManager->numArmies[side];
     for (; count-- > 0; ++our_army) {
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(choice->spell, side, our_army, 1,
+        if (!gpCombatManager->ValidSpellTargetArmy(choice->spell, side, our_army, 1,
                                              creature_cast))
             continue;
         long hex = our_army->gridIndex;
@@ -3434,7 +3434,7 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice, const ar
         if (victim == healed_army)
             continue;
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(choice.spell, side, victim, 0,
+        if (!gpCombatManager->ValidSpellTargetArmy(choice.spell, side, victim, 0,
                                              creature_cast))
             continue;
         long resurrected = (akSpellTraits[choice.spell].mastery_bonus[choice.mastery]
