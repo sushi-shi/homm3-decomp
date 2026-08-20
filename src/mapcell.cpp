@@ -568,21 +568,104 @@ TAdventureObjectType NewmapCell::get_special_terrain() const
     return NOTHING;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:524
+// RECONSTRUCTED 2026-08-20. Fourteen default member constructions and one
+// null pointer - the whole body is `cellData = 0`, and the interesting part
+// is where retail puts it.
+//
+// The thirteen leading vectors come out as thirteen copies of the identical
+// four-store block (`mov al,[ebp-0xd]` for the allocator byte, then three
+// null pointers), and the fourteenth member is the +0xdc array: retail
+// hands `this+0xdc`, stride 0x10 and count 0xe8 to the `vector constructor
+// iterator' with the element constructor at 0x4fd1c0. That call is what
+// proves the array is a member of THIS class rather than the pad `game`
+// carried after worldMap.
+//
+// `cellData(0)` MUST be an initialiser-list entry, not the first body
+// statement: retail stores the null at +0xd0 BEFORE the array's iterator
+// call, and VC6 runs the list in DECLARATION order, where cellData sits
+// between randomDwellings and the array. Written as a body statement it
+// schedules after every member construction and lands on the wrong side of
+// that call.
 VA(0x004fd060, 0x15C)  // anchor-global, dc 0xec4fc
-void NewfullMap::NewfullMap()
+NewfullMap::NewfullMap()
+    : cellData(0)
 {
-    // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:530
+// RECONSTRUCTED 2026-08-20. This is NewfullMap::Close's body inlined ahead
+// of the fourteen member destructions, which is what the note under Close
+// below already predicted.
+//
+// Three things, in retail's order:
+//   * the cell array, freed through NewmapCell's `vector deleting
+//     destructor' at 0x4fd460 with flags 3 and then nulled;
+//   * every mapObjectData entry deleted through virtual slot zero (`push 1
+//     / call [edx]`, the scalar deleting destructor - the null test in
+//     front of it is `delete p`'s own, not a source guard), then the vector
+//     cleared through the out-of-line vector<CMapObjectData*>::clear COMDAT
+//     at 0x48b4a0 that Init already reaches;
+//   * every sprite disposed through virtual slot ONE - CSprite::Dispose,
+//     `call [edx+4]` with no argument, NOT a delete - then that vector
+//     cleared too. This one expands to `erase(begin(), end())` (0x54cdb0)
+//     rather than an out-of-line clear, which is VC6's own choice per
+//     instantiation and not a spelling difference.
+// Both loops re-read `size()` across the back edge, complete with
+// Dinkumware's `_First == 0` guard, exactly as Init's already-exact
+// mapObjectData sweep does. Do not hoist either bound.
+//
+// Residual (95.8833%): ONE block, the `delete[]`. Retail emits
+// `push 3 / call ??_ENewmapCell` - the compiler-generated vector deleting
+// destructor at 0x4fd460 - and our CL expands it in place (array cookie,
+// `vector destructor iterator', operator delete). Every other row of the
+// diff is a reloc NAME on an unclaimed COMDAT, including two the retail
+// link FOLDED: ~vector<CSprite*> and ~vector<CObject*> both resolve to
+// 0x46a650, so one synth label answers for two of our symbols.
+//
+// AND IT IS A BUDGET SEE-SAW, NOT A MISSING SPELLING - three ways measured,
+// all worse than leaving it:
+//   * `#pragma inline_depth(0)` on the `delete[]` statement DOES produce
+//     retail's `call ??_ENewmapCell` exactly, and still scores 89.2893,
+//     because the budget it frees is then spent over-inlining
+//     ~vector<BlackBoxData> (0x506350), which retail CALLS. predict-inline
+//     confirms the trade: 23 out-of-line calls on both sides, ours carrying
+//     one extra `operator delete`. Pinning an EARLY site enlarges
+//     budget/sites-remaining for the later ones - the documented rule that
+//     a LATER pin cannot shrink an earlier site's divisor does not run
+//     backwards.
+//   * a pin before the closing brace, to reach the fourteen implicit member
+//     destructions, de-inlines all fourteen: 46.6142.
+//   * writing the body as a single-call-site `closeMap(this)` helper - the
+//     readQuestGuardArm lever, and the shape NewfullMap::Close's note below
+//     predicts - scores 87.7157.
 VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
-void NewfullMap::~NewfullMap()
+NewfullMap::~NewfullMap()
 {
-    // @stub
+    if (cellData) {
+        delete[] cellData;
+        cellData = 0;
+    }
+
+    unsigned int i;
+    for (i = 0; i < mapObjectData.size(); ++i)
+        delete mapObjectData[i];
+    // OVER-INLINE PIN, +2.34 (93.5482 -> 95.8833). Retail calls the
+    // out-of-line vector<CMapObjectData*>::clear COMDAT at 0x48b4a0 here;
+    // unpinned our CL expands clear() into erase(begin(), end()) and calls
+    // erase instead. The sprites clear() below is retail's OWN expansion of
+    // the same member into erase (0x54cdb0) and must stay unpinned - the
+    // two instantiations really do diverge in retail.
+#pragma inline_depth(0)
+    mapObjectData.clear();
+#pragma inline_depth()
+
+    for (i = 0; i < sprites.size(); ++i)
+        sprites[i]->Dispose();
+    sprites.clear();
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:537
 // NO RETAIL SLOT. The old VA claim at 0x4fd460 was false: retail takes a
