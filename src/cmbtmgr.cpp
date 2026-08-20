@@ -2143,15 +2143,39 @@ next_hex:
 // they shape only the INLINE copy SetupAndLoadObstacles carries, and the
 // unclaimed out-of-line bodies are free to diverge from retail's, which
 // expands _Ucopy/_Ufill into all three arms.
+// Dinkumware's `fill` and `copy_backward` take their bounds BY VALUE, and
+// that is byte-load-bearing: the fill loop compares against the register
+// copy of `_Last` (`cmp eax, edx`) where a member-read spelling re-reads
+// `[ebx+end]` every iteration, and `_Last - _M` stays a spilled CSE
+// (`lea eax, [ecx-24]` + [ebp-X]) because copy_backward receives it as a
+// separate argument. File-local so no header widens.
+static inline void obstacle_fill(combatManager::TObstacle* first,
+                                 combatManager::TObstacle* last,
+                                 const combatManager::TObstacle& value)
+{
+    for (; first != last; ++first)
+        *first = value;
+}
+
+static inline combatManager::TObstacle* obstacle_copy_backward(
+    combatManager::TObstacle* first, combatManager::TObstacle* last,
+    combatManager::TObstacle* dest)
+{
+    while (first != last)
+        *--dest = *--last;
+    return dest;
+}
+
 inline void combatManager::TObstacleVector::insert(TObstacle* where,
                                                    unsigned count,
                                                    const TObstacle& value)
 {
     if (capacity - end < count) {
+        unsigned tail = (count < static_cast<unsigned>(size())
+                             ? static_cast<unsigned>(size())
+                             : count);
 #pragma inline_depth(0)
-        unsigned grown = size() + (count < static_cast<unsigned>(size())
-                                       ? static_cast<unsigned>(size())
-                                       : count);
+        unsigned grown = size() + tail;
 #pragma inline_depth()
         int raw = static_cast<int>(grown);
         if (raw < 0)
@@ -2175,21 +2199,15 @@ inline void combatManager::TObstacleVector::insert(TObstacle* where,
         _Ucopy(where, end, where + count);
         _Ufill(end, count - (end - where), value);
 #pragma inline_depth()
-        for (TObstacle* filled = where; filled != end; ++filled)
-            *filled = value;
+        obstacle_fill(where, end, value);
         end += count;
     } else if (0 < count) {
+        TObstacle* shifted = end - count;
 #pragma inline_depth(0)
-        _Ucopy(end - count, end, end);
+        _Ucopy(shifted, end, end);
 #pragma inline_depth()
-        {
-            TObstacle* source = end - count;
-            TObstacle* target = end;
-            while (source != where)
-                *--target = *--source;
-        }
-        for (TObstacle* filled = where; filled != where + count; ++filled)
-            *filled = value;
+        obstacle_copy_backward(where, shifted, end);
+        obstacle_fill(where, where + count, value);
         end += count;
     }
 }
@@ -2266,15 +2284,36 @@ void combatManager::TObstacleVector::_Ufill(TObstacle* first, unsigned count,
 //     is hoisted into a named local ahead of the pragma because retail
 //     expands it at this site.
 //
-// Residual (91.5113%): 48 conditional branches against retail's 49 and
-// 26 out-of-line calls against 25, with no UNDER- or OVER-inline row
-// left. The one count that still differs is size(): retail calls it
-// twice out of line (0x517750) inside the expansion and we call it four
-// times, because the pragma is statement-granular and the grow arm's
-// `size() + (count < size() ? size() : count)` is one statement with
-// three uses. Dropping the fourth (un-pinning `end = moved + size() +
-// count`) measures 86.6144, i.e. WORSE than the count-mismatched form,
-// so the surplus is kept.
+// 91.5113 -> 98.1361 2026-08-20, four levers, all read off the bytes:
+//
+//   * THE size() SURPLUS SPLITS INSIDE ONE STATEMENT, and the earlier
+//     verdict that the statement-granular pragma made x4 the floor was
+//     wrong: retail's grow arm expands the TERNARY's two size() uses as
+//     ONE inline CSE'd magic-division (the `test/je` null guard and
+//     `imul/sar/shr/add` tail are in the bytes) and calls size() only
+//     for the leftmost ADDEND. Two statements reach it: an unpinned
+//     `unsigned tail = (count < size() ? size() : count);` then a
+//     pinned `grown = size() + tail;`. x4 -> x2, census exact (+3.79).
+//   * Dinkumware's fill/copy_backward take their bounds BY VALUE
+//     (obstacle_fill/obstacle_copy_backward below); the hand loops
+//     re-read [this+end] per iteration where retail compares the
+//     register copy (+0.87), and a named `shifted = end - count` gives
+//     retail's spilled CSE across the pinned _Ucopy call (+0.47).
+//   * The reject-loop exit is `break`, NOT `return`: an in-loop return
+//     is a second scope-exit dtor path, and the cross-jumper leaves two
+//     argument heads on operator delete where retail's single exit
+//     block has one (+1.00).
+//   * `landmine_slot` is initialised from size() and DECREMENTED
+//     (`dec edx` on the division result) - `size() - 1` in one
+//     initialiser makes a second pseudo and a `lea` (+0.49).
+//
+// Residual (98.1361%): scheduling only - the field stores of the
+// landmine record interleave into insert's inlined division a slot
+// later than retail's, retail reuses the `end` load for insert's
+// `where` argument where this compile re-reads the member, and the
+// grow arm places `mov ecx,ebx` for the pinned size() call one store
+// earlier. Register-homing family; the remaining named-vs-anonymous
+// reloc rows (gLandMineShape/const_23cf10, GetSprite) are cosmetic.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::SetupAndLoadObstacles()
 {
@@ -2348,7 +2387,8 @@ void combatManager::SetupAndLoadObstacles()
                 new_landmine.field_10 = 0;
                 new_landmine.field_14 = 0x3b;
                 obstacles.insert(obstacles.end, 1, new_landmine);
-                int landmine_slot = obstacles.size() - 1;
+                int landmine_slot = obstacles.size();
+                landmine_slot--;
 #pragma inline_depth(0)
                 PlaceObstacle(&new_landmine, landmine_slot, hex, 8);
 #pragma inline_depth()
@@ -2403,7 +2443,7 @@ void combatManager::SetupAndLoadObstacles()
                     & special_terrain_mask))
             obstacle_id = obstacle_picker.Pick();
         if (obstacle_id < 0)
-            return;
+            break;
         if (place_obstacle(obstacle_id))
             placed += gObstacleShapes[obstacle_id].extra_hex_count;
     }
@@ -2509,21 +2549,26 @@ void combatManager::PlaceAllObstacles()
 // The mirror of PlaceObstacle: same shape walk and same odd-row
 // correction, clearing the low six attribute bits off every extra hex
 // and bit 0 off the anchor, then disposing the obstacle's sprite.
-// Residual (87.3%): one register-allocation decision, nothing else -
-// retail keeps obstacles_begin in EAX across the three guards, so it
-// touches neither EBX nor EDI until after the bound check and has to
-// RE-LOAD the pointer for the indexing; our CL coalesces that value
-// into EDI, pushes EDI in the prologue and keeps it, which flips the
-// push/pop order and reschedules the loop preamble. Tried and
-// rejected: the split-if guard trio (87.3%, identical bytes), routing
-// the body through the DC header inline GetObstacle (87.3%, VC6 CSEs
-// the second load away). Register-homing family.
+// EXACT 2026-08-20 (87.29 -> 100.0000), and the close is one spelling:
+// the bound guard reads `obstacles.size()` - the null-guarded accessor -
+// instead of hand-folding `begin == 0` and `end - begin`. The old note
+// diagnosed the codegen correctly (retail keeps begin in EAX across the
+// guards and RE-LOADS it for the indexing, ours coalesced it into EDI
+// and pushed early) but filed it as an unreachable register-allocation
+// decision; it was a source fact. The accessor's expansion consumes its
+// begin load producing size, so nothing holds the pointer across the
+// guard and VC6 re-reads it for GetObstacle exactly as retail does -
+// the pushes sink past the guards and the pop order follows. Same tell
+// as SetupAndLoadObstacles' grow arm: when retail re-reads a member an
+// accessor already reads once, write the accessor. (The old rejects
+// stand: split-if trio byte-identical, GetObstacle routing CSE'd away -
+// the guard, not the body, was the load-bearing site.)
 VA(0x00466b30, 0x11F)  // anchor-global, dc 0x60b20
 void combatManager::RemoveObstacle(int index)
 {
-    if (index < 0 || obstacles.begin == 0
+    if (index < 0
             || static_cast<unsigned>(index)
-               >= static_cast<unsigned>(obstacles.end - obstacles.begin))
+               >= static_cast<unsigned>(obstacles.size()))
         return;
     TObstacle* obstacle = &GetObstacle(index);
     const type_obstacle_shape* shape = obstacle->shape;
