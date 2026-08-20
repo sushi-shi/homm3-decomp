@@ -1498,6 +1498,35 @@ void advManager::ProcessRadarSelect(const message* msg)
 // arms already spell it eight hundred lines up. searchArray::get_cell IS a
 // header inline and does expand, flying = 0 folding `(z*2+0)*gMapHeight`
 // into the single `lea edi,[eax+2*edi]`.
+//
+// The LEFT-click object dispatch below is an IF-CHAIN and not a switch, and
+// that is a byte fact rather than a taste call: retail compares HERO(34),
+// TOWN(98), SHIPYARD(87) in SOURCE order, where a switch makes VC6 sort the
+// three compares ascending and relocate the whole hero arm past the town
+// arm. 77.76 -> 90.90 on that one edit.
+//
+// Residual (90.90%): three shapes, all measured, none closed.
+//   * Retail reads the MEMBER lastMapHover for every comparison in the
+//     left-click half (`mov ax,[esi+0xea]`) where we read the local copy
+//     (`mov eax,[ebp-0xa]`). Spelling those four sites on lastMapHover
+//     matches those instructions and CUTS the raw instruction-level
+//     disagreement from 166 rows to 126 - but costs 2.5 points of fuzzy
+//     (90.90 -> 88.33), because it perturbs the allocation around them.
+//     Measured both ways with and without the currHeroId guard below:
+//     member/guard 87.94, member/no-guard 88.33, local/no-guard 90.89,
+//     local/guard 90.90. Kept the highest; the delta is real and the
+//     spelling above is NOT retail's.
+//   * We spill `cell` to [ebp-8] where retail keeps it in EDI for the whole
+//     body, so our frame is 0x1c against retail's 0x14 and localPlayer and
+//     heroMobile fail to share retail's one [ebp-4] slot.
+//   * Retail keeps its ONE `advCommand = VIEW_HERO; DoAdvCommand` block at
+//     the FIRST of the two sites and jumps back into it from the hero arm;
+//     our CL cross-jumps the same pair the other way and keeps the second.
+//     Same block count, mirrored placement.
+// The redundant `currHeroId != -1` guard is retail's own: its inlined
+// GetHero re-tests the id off the same flags and leaves a dead
+// `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
+// but does not pay (see the four measurements above).
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
