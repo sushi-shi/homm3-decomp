@@ -142,6 +142,34 @@ declarator behind a view macro even when it measures neutral — the
 measurement is only valid for the branch it was taken on. Re-measure the
 include-set-sensitive rows after every merge that touches a shared header.
 
+**DECLARE-BUT-DO-NOT-DEFINE TO FORCE A SPECIAL MEMBER OUT OF LINE** (2026-08-20).
+The first lever that actually works against the OVER-inline family. If retail
+CALLS a compiler-generated copy-assign / copy-ctor that our compile expands
+inline, declare it in the class and give it no definition:
+`hero& operator=(const hero&);`. The implicit member disappears, the call goes
+out of line, and the linker is happy because retail's own `??4hero` COMDAT is
+the real definition. `CAdvMgrNetMsgHandler::HandleNetMsg` went **28.43 ->
+95.76 on that one line** (two inlined 0x492-byte copies collapsed), with zero
+tree-wide fallout.
+
+**predict-inline's CALL-MULTISET DIVERGENCE IS NOT ALWAYS THE INLINER.**
+Three misreads proven in one lane, each with a different real cause:
+- **tail duplication** — VC6 duplicated a shared join call into both arms of
+  an if/else, so the count differs with no inlining involved. `SetPointer` is
+  cross-TU and can never be an /Ob2 candidate; a ternary merged the sites.
+- **cross-jumping** — `ShowRoute`'s "missing" CompleteDraw/UpdateScreen calls
+  were merged tails, not expansions.
+- **constant-folded flag arguments** — per-copy block differences that look
+  like divergent expansions. VC6 cannot propagate a tested global across an
+  opaque call, so if the diagnosis requires that, it is wrong.
+Before acting on an inliner route, check whether the callee is even a
+candidate (cross-TU ones never are).
+
+**VC6 INITIALIZES MEMBERS IN DECLARATION ORDER, NOT INIT-LIST ORDER**
+(byte-inert A/B). Reordering the init list changes nothing. But a member
+assigned as the FIRST BODY STATEMENT schedules after the later members'
+default construction - worth +7.3 on `advManager::advManager`.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
