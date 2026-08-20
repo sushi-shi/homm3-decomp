@@ -402,6 +402,15 @@ DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
 // 0x6a5d9c the one-name "move here" format the two empty-far-end arms
 // share, 0x6a5da0 the two-name exchange format and 0x6a5da8 the plain
 // refusal line, which is copied rather than formatted.
+// The garrison dialog's three, on the same standing again: 0x6a5d84 is
+// the "divide this stack" format the divide button's rollover takes the
+// creature name into, 0x6a5d90 the same button's line when nothing is
+// selected, and 0x6a5da4 the cancel button's. Every image-wide reference
+// to each lands inside this compiland's bracket and nothing in the image
+// writes them.
+DATA(0x006a5d84) extern const char* gUnnamed6a5d84;
+DATA(0x006a5d90) extern const char* gUnnamed6a5d90;
+DATA(0x006a5da4) extern const char* gUnnamed6a5da4;
 DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
 DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
 DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
@@ -2360,6 +2369,166 @@ void TMageGuildWindow::SetRolloverText(int codeY)
     gpWindowManager->UpdateScreen(8, 0x22c, 0x2e0, 0x12);
 }
 
+// The mage guild page's handler. The click arm folds the page's TWO
+// widget runs onto one slot number - the frame run 10..35 and the scroll
+// run 40..65 are the same thirty spells - and then splits that slot into
+// a guild level and a column with one signed division by six, which
+// retail emits BEFORE it decides which of the two answers to give.
+//
+// The two answers are the page's whole behaviour: Conflux with the Grail
+// standing shows the Grail building's own line instead of a spell (the
+// faction whose Grail is a spell fountain), and every other slot inside
+// this level's width shows that spell's description with its own
+// picture. A slot past the level's width says nothing at all.
+//
+// The hover latch is the WINDOW MANAGER's lastHover, not a member of
+// this dialog - the mage guild has no state of its own past CAdvPopup's
+// 0x60, which is what the constructor already proves.
+//
+// The dialog TYPE is the qualifier: 4 on a right-click, 1 otherwise, and
+// retail computes it with the `neg / sbb / and 3 / inc` chain off the
+// masked qualifier at both sites.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005ce370, 0x1F0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
+int TMageGuildWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != gpWindowManager->lastHover) {
+            gpWindowManager->lastHover = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        break;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+        case widget::WIDGET_RIGHT_SELECT: {
+            int qualifier = msg->qualifier & MESSAGE_MODIFIER_RIGHT;
+            int id = msg->codeY;
+            // The frame run (10..35) and the scroll run (40..65), thirty
+            // slots each and the same thirty spells; anything else
+            // leaves the slot at the sentinel and the arm does nothing.
+            int slot = -1;
+            if (id >= 10 && id < 36)
+                slot = id - 10;
+            if (id >= 40 && id < 66)
+                slot = id - 40;
+            if (slot != -1) {
+                town* thisTown = gpTownManager->townToView;
+                int level = slot / 6;
+                int column = slot % 6;
+                if (thisTown->type == TOWN_CONFLUX
+                    && (thisTown->active & bitNumber[HOLY_GRAIL_ID])) {
+                    NormalDialog(
+                        format_string(
+                            gpGeneralText->GetText(707),
+                            GetBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
+                            .c_str(),
+                        qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                        -1, 0);
+                } else if (column < thisTown->mageGuildSpellCounts[level]) {
+                    int spell = thisTown->mageGuildSpells[level][column];
+                    NormalDialog(akSpellTraits[spell].levelDescriptions[0],
+                                 qualifier ? 4 : 1, -1, -1, 9, spell,
+                                 -1, 0, -1, 0, -1, 0);
+                }
+            }
+            break;
+        }
+        }
+        break;
+    }
+    return 1;
+}
+
+// The town page's mage guild button, and the spellbook toll in front of
+// it. The hero it asks about is the VISITING slot first and the garrison
+// slot second - ONE conditional expression over two game::GetHero
+// expansions, which is why the second expansion's null arm is the
+// `if (hero)` target rather than a branch of its own - and everything
+// below the offer is skipped when there is no hero, when the hero
+// already carries a spellbook, or when the acting player is not local.
+//
+// The scripted refusal above the offer reuses hero::CheckLevel's
+// campaign/hero pair, and finding the SAME (campaign 14, hero 45) pair
+// in a second, unrelated body is corroboration for that identification
+// rather than a coincidence: this page refuses to sell that hero a book
+// in that campaign at all.
+//
+// The offer itself is the standard two-step - a refusal line when the
+// player cannot afford 500 gold, then an iMBType-2 yes/no - and only the
+// DECLINE reply returns without opening the page. Everything past it is
+// the modal-page recipe DoHall carries, with two differences that are
+// retail's own: the net handler is handed the town's own bar back BEFORE
+// the two deletes rather than after, and there is no RedrawTownScreen
+// tail.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005ce560, 0x2CC)  // anchor-callee(TMageGuildWindow ctor 0x5cc980 + SetupMage 0x5d6ef0) + anchor-caller(Main 0x5d3240) + arity(bare ret), dc 0x171320
+void townManager::handle_mage_guild_click()
+{
+    hero* pHero = townToView->visitingHeroId != -1
+                      ? gpGame->GetHero(townToView->visitingHeroId)
+                      : gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (pHero && !pHero->HasArtifact(0) && gpCurrentPlayer->IsLocalHuman()) {
+        if (gbUnk69774c
+            && pHero->id == hero::LEVEL_UP_OVERRIDE_HERO_ID
+            && gpGame->campaign.currentCampaign
+                   == hero::LEVEL_UP_CAMPAIGN_OVERRIDE) {
+            NormalDialog(gpGeneralText->GetText(737), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (gpCurrentPlayer->resources[GOLD] < 500) {
+            NormalDialog(gpGeneralText->GetText(214), 1, -1, 8, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        NormalDialog(gpGeneralText->GetText(215), 2, -1, 8, -1, 0,
+                     -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+        type_artifact spellbook(0, -1);
+        pHero->GiveArtifact(&spellbook, 1, 1);
+        gpCurrentPlayer->resources[GOLD] -= 500;
+    }
+
+    hallWindow = new TMageGuildWindow();
+    if (!hallWindow)
+        MemError();
+    SetupMage(hallWindow);
+
+    heroWindow* guildPage = hallWindow;
+    if (dialogResourceDisplay) {
+        delete dialogResourceDisplay;
+        dialogResourceDisplay = 0;
+    }
+    dialogResourceDisplay = new TResourceDisplay(guildPage, 1);
+    dialogResourceDisplay->Update(1, 0);
+    if (netMsgHandler)
+        netMsgHandler->SetResourceDisplay(dialogResourceDisplay);
+
+    hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                  WINDOW_SCREEN_HEIGHT);
+    hallWindow->DoModal(0);
+
+    if (netMsgHandler)
+        netMsgHandler->SetResourceDisplay(pResourceDisplay);
+    delete dialogResourceDisplay;
+    dialogResourceDisplay = 0;
+    delete hallWindow;
+}
+
+
 // Residual (98.29%): one /Ob2 candidate-call-site short, and the cost of
 // buying that site back. Retail leaves the first FORTY-TWO push_backs
 // out of line and expands the last seven inline (eight inline vector
@@ -2582,6 +2751,260 @@ type_garrison_base_window::~type_garrison_base_window()
             delete *it;
     }
 }
+
+// The garrison dialog's status line, and the town page's command with
+// it: every arm either writes the manager's own `statusText` buffer or
+// hands the decision to one of the three townManager writers, and every
+// arm converges on the same broadcast/redraw/blit tail over the dialog's
+// 0x217x0x13 status strip.
+//
+// The command slot is cleared to -2 on the way IN, before the dispatch,
+// so an arm that sets nothing leaves the page with no command.
+//
+// The two seven-slot runs (0x73..0x79 over the top strip, 0x8c..0x92
+// over the bottom one) are written LONGHAND rather than folded: retail
+// emits both bodies in full, and the only differences between them are
+// the strip and the base id. Each run decides between a command and a
+// plain selection on one test - the manager already has a slot latched
+// AND that slot's strip belongs to this machine's player - and between
+// the split and the plain command on the divide latch or a held shift.
+//
+// `field_6c`, the base window's own byte, rides through both runs as the
+// third argument of select_army and the second of SetArmyCommand;
+// retail spills it to the dead parameter home ([ebp+8], the message
+// pointer's own slot) rather than keeping a register, which is the
+// parameter-recycling idiom this tree already records.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
+void type_garrison_base_window::SetCommandAndText(message* msg)
+{
+    gpTownManager->field_19c = -2;
+
+    switch (msg->codeY) {
+    case TOP_SLOT_FIRST_ID + 0:
+    case TOP_SLOT_FIRST_ID + 1:
+    case TOP_SLOT_FIRST_ID + 2:
+    case TOP_SLOT_FIRST_ID + 3:
+    case TOP_SLOT_FIRST_ID + 4:
+    case TOP_SLOT_FIRST_ID + 5:
+    case TOP_SLOT_FIRST_ID + 6: {
+        unsigned char isOwnerCell = field_6c;
+        int slot = msg->codeY - TOP_SLOT_FIRST_ID;
+        int qualifier = msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
+        townManager* mgr = gpTownManager;
+        strip* thisStrip = mgr->field_11c;
+        if (thisStrip->group) {
+            if (mgr->field_130 >= 0
+                && mgr->field_12c->owner == gNetLocalGamePos) {
+                mgr->field_134 = thisStrip;
+                mgr->field_138 = slot;
+                if (mgr->field_1c4 || qualifier)
+                    mgr->SetArmyCommand(1, isOwnerCell);
+                else
+                    mgr->SetArmyCommand(0, isOwnerCell);
+            } else {
+                mgr->select_army(thisStrip, slot, isOwnerCell);
+            }
+        }
+        break;
+    }
+
+    case BOTTOM_OWNER_ID:
+        gpTownManager->field_134 = gpTownManager->field_120;
+        gpTownManager->field_138 = -1;
+        gpTownManager->field_19c = TOWN_COMMAND_VIEW_HERO;
+        break;
+
+    case BOTTOM_SLOT_FIRST_ID + 0:
+    case BOTTOM_SLOT_FIRST_ID + 1:
+    case BOTTOM_SLOT_FIRST_ID + 2:
+    case BOTTOM_SLOT_FIRST_ID + 3:
+    case BOTTOM_SLOT_FIRST_ID + 4:
+    case BOTTOM_SLOT_FIRST_ID + 5:
+    case BOTTOM_SLOT_FIRST_ID + 6: {
+        unsigned char isOwnerCell = field_6c;
+        int slot = msg->codeY - BOTTOM_SLOT_FIRST_ID;
+        int qualifier = msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS;
+        townManager* mgr = gpTownManager;
+        strip* thisStrip = mgr->field_120;
+        if (thisStrip->group) {
+            if (mgr->field_130 >= 0
+                && mgr->field_12c->owner == gNetLocalGamePos) {
+                mgr->field_134 = thisStrip;
+                mgr->field_138 = slot;
+                if (mgr->field_1c4 || qualifier)
+                    mgr->SetArmyCommand(1, isOwnerCell);
+                else
+                    mgr->SetArmyCommand(0, isOwnerCell);
+            } else {
+                mgr->select_army(thisStrip, slot, isOwnerCell);
+            }
+        }
+        break;
+    }
+
+    case DIVIDE_BUTTON_ID: {
+        townManager* mgr = gpTownManager;
+        if (mgr->field_130 == -2) {
+            strcpy(mgr->statusText, gUnnamed6a5d90);
+        } else {
+            int creature = mgr->field_12c->group->armies[mgr->field_130];
+            // The traits row's own bound, spelled as the literal
+            // retail compares against: armygrp.h's ARMY_CREATURE_LAST
+            // is a member of `army`, which this compiland's include
+            // closure does not define and must not grow to.
+            sprintf(mgr->statusText, gUnnamed6a5d84,
+                    creature >= 0 && creature <= 0x96
+                        ? akCreatureTypeTraits[creature].m_name
+                        : emptyRolloverText);
+        }
+        break;
+    }
+
+    case CANCEL_BUTTON_ID:
+        strcpy(gpTownManager->statusText, gUnnamed6a5da4);
+        break;
+
+    default:
+        strcpy(gpTownManager->statusText, emptyRolloverText);
+        break;
+    }
+
+    message textMessage;
+    textMessage.extraText = gpTownManager->statusText;
+    textMessage.qualifier = 0;
+    textMessage.mouseX = 0;
+    textMessage.mouseY = 0;
+    textMessage.window = 0;
+    textMessage.id = MESSAGE_WIDGET;
+    textMessage.codeX = widget::WIDGET_SET_TEXT;
+    textMessage.codeY = 0xc9;
+    BroadcastMessage(&textMessage);
+    DrawWindow(0, 0xc8, 0xc9);
+    gpWindowManager->UpdateScreen(x + 7, y + 0x171, 0x217, 0x13);
+}
+
+// The garrison dialog's handler. It reads its window out of the MESSAGE
+// rather than out of `this` - every member access below goes through
+// `msg->window`, and the only use of the real `this` is the forward to
+// CAdvPopup - which is what puts the hover pair at the message's window
+// and not at the receiver.
+//
+// A left click on a troop slot does not act on it here: it re-runs the
+// manager's dispatch on whatever command the last SetCommandAndText
+// left in field_19c, then rewrites the line. A RIGHT click is the info
+// panel - the slot is latched into the manager's selectedStrip/slot pair
+// and handed to game::ViewArmy with the strip's own hero. Both of those
+// run off a DENSE jump table over the 0x73..0x92 band, which is why they
+// are spelled as a switch here and as ranged compares in
+// SetCommandAndText above.
+//
+// The divide button's deselect commits the split: it lights the divide
+// latch and repaints BOTH strips with the creature that is being divided.
+
+// E:\gamedcs\townmgr.cpp
+VA(0x005d0910, 0x228)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
+int type_garrison_base_window::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    type_garrison_base_window* win =
+        static_cast<type_garrison_base_window*>(msg->window);
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != win->lastHover
+            || msg->qualifier != win->lastQualifier) {
+            win->lastHover = msg->codeY;
+            win->lastQualifier = msg->qualifier;
+            win->SetCommandAndText(msg);
+        }
+        return 1;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case TOP_SLOT_FIRST_ID + 0:
+            case TOP_SLOT_FIRST_ID + 1:
+            case TOP_SLOT_FIRST_ID + 2:
+            case TOP_SLOT_FIRST_ID + 3:
+            case TOP_SLOT_FIRST_ID + 4:
+            case TOP_SLOT_FIRST_ID + 5:
+            case TOP_SLOT_FIRST_ID + 6:
+            case BOTTOM_SLOT_FIRST_ID + 0:
+            case BOTTOM_SLOT_FIRST_ID + 1:
+            case BOTTOM_SLOT_FIRST_ID + 2:
+            case BOTTOM_SLOT_FIRST_ID + 3:
+            case BOTTOM_SLOT_FIRST_ID + 4:
+            case BOTTOM_SLOT_FIRST_ID + 5:
+            case BOTTOM_SLOT_FIRST_ID + 6:
+                gpTownManager->DoCommand(gpTownManager->field_19c, 1, win);
+                win->SetCommandAndText(msg);
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            if (msg->codeY == DIVIDE_BUTTON_ID) {
+                townManager* mgr = gpTownManager;
+                enum TCreatureType creature = creature_type_from_int(
+                    mgr->field_12c->group->armies[mgr->field_130]);
+                mgr->field_1c4 = 1;
+                gpTownManager->field_11c->Draw(creature);
+                gpTownManager->field_120->Draw(creature);
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_RIGHT_SELECT:
+            switch (msg->codeY) {
+            case TOP_SLOT_FIRST_ID + 0:
+            case TOP_SLOT_FIRST_ID + 1:
+            case TOP_SLOT_FIRST_ID + 2:
+            case TOP_SLOT_FIRST_ID + 3:
+            case TOP_SLOT_FIRST_ID + 4:
+            case TOP_SLOT_FIRST_ID + 5:
+            case TOP_SLOT_FIRST_ID + 6:
+                gpTownManager->selectedStrip = gpTownManager->field_11c;
+                gpTownManager->field_128 = msg->codeY - TOP_SLOT_FIRST_ID;
+                break;
+
+            case BOTTOM_SLOT_FIRST_ID + 0:
+            case BOTTOM_SLOT_FIRST_ID + 1:
+            case BOTTOM_SLOT_FIRST_ID + 2:
+            case BOTTOM_SLOT_FIRST_ID + 3:
+            case BOTTOM_SLOT_FIRST_ID + 4:
+            case BOTTOM_SLOT_FIRST_ID + 5:
+            case BOTTOM_SLOT_FIRST_ID + 6:
+                gpTownManager->selectedStrip = gpTownManager->field_120;
+                gpTownManager->field_128 = msg->codeY - BOTTOM_SLOT_FIRST_ID;
+                break;
+
+            default:
+                return 1;
+            }
+            {
+                townManager* mgr = gpTownManager;
+                strip* thisStrip = mgr->selectedStrip;
+                int slot = mgr->field_128;
+                armyGroup* group = thisStrip->group;
+                if (group->armies[slot] != -1) {
+                    gpGame->ViewArmy(*group, slot, thisStrip->thisHero, 0,
+                                     0x77, 0x14, 0, 1);
+                }
+            }
+            return 1;
+        }
+        break;
+    }
+    return 1;
+}
+
 
 // The join-offer window's constructor, and the second of the two rows
 // that free a withdrawn ??_G: it is the only body that stores vftable
@@ -5036,23 +5459,9 @@ void TMageGuildWindow::SetRolloverText(int codeY)
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:4652
-DC_ONLY(0x171118, 0x1AC)
-int TMageGuildWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:4728
 DC_ONLY(0x1712c4, 0x5A)
 void townManager::create_popup_bank(heroWindow* parent)
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:4740
-DC_ONLY(0x171320, 0x234)
-void townManager::handle_mage_guild_click()
 {
     // @stub
 }
