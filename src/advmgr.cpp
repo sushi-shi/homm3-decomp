@@ -3461,6 +3461,27 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 #undef SET_VISITED_ROLLOVER
 #undef APPEND_VISIT_TEXT
 
+    // type_cell_adjuster::restore_cell() (dc 0xc038), written longhand
+    // because retail inlines it everywhere and leaves no row of its own -
+    // the same reason ~type_cell_adjuster carries the body verbatim.
+    // Retail expands the three-slot sweep TWICE in this function: once
+    // here, ahead of the inlined DrawRolloverText, and once at the closing
+    // brace as the destructor (only that copy carries `mov [ebp-4],-1`).
+    if (adjuster.obscuring_hero) {
+        adjuster.obscuring_hero->obscure_cell(HERO,
+                                              adjuster.obscuring_hero->id);
+        adjuster.obscuring_hero = 0;
+    }
+    if (adjuster.obscuring_boat) {
+        adjuster.obscuring_boat->type_obscuring_object::obscure_cell(
+            BOAT, adjuster.obscuring_boat->id);
+        adjuster.obscuring_boat = 0;
+    }
+    if (adjuster.mobile_hero) {
+        adjuster.mobile_hero->restore_cell();
+        adjuster.mobile_hero = 0;
+    }
+
     DrawRolloverText(gText);
 }
 

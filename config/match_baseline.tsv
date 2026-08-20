@@ -103,7 +103,7 @@ advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a
 advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	63.9403	63.9403	63.9403	0x183d0
 advmgr	?SetHeroContext@advManager@@QAEXHHEE@Z	95.2558	95.2558	99.2746	0x17b20
 advmgr	?SetInitialMapOrigin@advManager@@QAEXXZ	92.1202	92.1202	92.1202	0x19990
-advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.0426	90.0426	90.0426	0xb150
+advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.9026	90.9026	90.9026	0xb150
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTownContext@advManager@@QAEXHEE@Z	88.1312	88.1312	88.1312	0x17830
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
