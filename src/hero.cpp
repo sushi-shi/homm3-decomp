@@ -3159,24 +3159,38 @@ void hero::HeroFn_004DC070(long slot)
 // The owner index is taken WITHOUT the `owner < 0` guard get_player
 // carries; retail indexes gpGame->players directly.
 //
-// Residual (48.8%): THREE /Ob2 over-inlines, all budget. Retail leaves
-// bitset<12>::_Xran a CALL out of the two inlined set/test expansions -
-// our CL expands its whole _THROW(out_of_range, "invalid bitset<N>
-// position") body, a cold string temporary and a __CxxThrowException,
-// at each of the three sites - and it leaves bitset<144>::set(size_t,
-// bool) and bitset<144>::any() out of line where we expand both.
-// THE BUDGET THRESHOLD IS MEASURED (2026-08-20). Adding N byte-inert
-// user-defined inline sites to the body moves the row:
+// 48.77 -> 65.97 (2026-08-20) ON TWO SITE-GRANULAR PINS, and this
+// CORRECTS the note this entry used to carry. The old text concluded
+// "no source spelling in this body reaches the decision" after measuring
+// a byte-inert padding sweep:
 //     N=0/2 -> 48.77   N=6 -> 57.92   N=12/20/30/45 -> 78.07
-// so retail's body carries about TWELVE more inline candidate sites than
-// this reconstruction, and at that ceiling the only residual left is the
-// esi/edi/ebx role permutation (plus the prologue's unwind-table addend,
-// which is a reloc addend and not a state count). Twelve is far more
-// than the one or two the sibling bodies are short of, so this is likely
-// a spelling that routes through several small accessors rather than one
-// missing statement - and the DC roster has NO row for this function at
-// all, so its call census cannot be consulted. Nothing is padded: the
-// row is deliberately left at 48.77.
+// and read that as "retail's body carries about TWELVE more inline
+// candidate sites". That reading was wrong. The budget is not what
+// diverged - the SITES are: retail keeps bitset<144>::set(size_t, bool)
+// and bitset<144>::any() OUT OF LINE where our CL expanded both, and
+// `#pragma inline_depth(0)` is STATEMENT-granular in VC6, so wrapping
+// those two call sites alone reproduces retail's census directly, with no
+// padding and no change to the semantics. `predict-inline` now reports
+// ZERO over- and zero under-inline entries for this body: every call
+// pairs, base 10 against retail 9.
+// Measured and rejected while landing this, one compile each:
+//   * `#pragma inline_depth(1)` on the three bitset<12> set/test sites,
+//     to keep set/test inline while forcing the nested _Xran out of line
+//     the way retail has it: BYTE-FLAT (65.97). inline_depth only bites
+//     at 0 in this compiland - the same result hero.cpp:888 already
+//     records for depths 2/3/4 - so the pragmas were removed rather than
+//     left as inert noise.
+//
+// Residual (65.97%): retail calls the bitset _Xran helper x3 where we
+// still expand its _THROW(out_of_range, "invalid bitset<N> position")
+// body at two of the three bitset<12> sites (we emit ??0out_of_range x2
+// + ??0basic_string x2 against retail's x3 calls). That expansion sits
+// at depth 2 underneath set/test, which retail inlines, and inline_depth
+// cannot express "inline the parent, not the child" here. The remaining
+// delta beyond it is the esi/edi/ebx role permutation plus the
+// prologue's unwind-table addend, which is a reloc addend and not a
+// state count. The DC roster has NO row for this function at all, so its
+// call census cannot be consulted.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC100(long slot)
 {
@@ -3200,9 +3214,13 @@ void hero::HeroFn_004DC100(long slot)
     for (int i = 0; i < 19; i++) {
         int artifactId = equipped[i].artifactId;
         if (artifactId != ARTIFACT_NONE)
+#pragma inline_depth(0)
             missing.set(artifactId, false);
+#pragma inline_depth()
     }
+#pragma inline_depth(0)
     if (missing.any())
+#pragma inline_depth()
         return;
 
     player.assembledCombinations.set(targetCombo);
