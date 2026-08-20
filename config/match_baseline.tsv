@@ -2005,6 +2005,7 @@ university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z
 victorylossconditions	?CheckForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	100.0000	100.0000	100.0000	0x1f2e40
 victorylossconditions	?CheckForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600
 victorylossconditions	?CheckForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720
+victorylossconditions	?CheckForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	99.2692	99.2692	99.2692	0x1f1ef0
 victorylossconditions	?CheckForHeroDefeatWin@VictoryConditionStruct@@QAE_NHPBVhero@@@Z	100.0000	100.0000	100.0000	0x1f2100
 victorylossconditions	?CheckForTimeLimitExpired@LossConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2f20
 victorylossconditions	?CheckForTotalCreatures@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f1b10
@@ -2019,7 +2020,6 @@ victorylossconditions	LossConditionStruct_CheckForDefeatedHeroLoss	0.0000	0.0000
 victorylossconditions	VictoryConditionStruct_CheckForArtifactTransportWin	0.0000	0.0000	0.0000	0x1f2860
 victorylossconditions	VictoryConditionStruct_CheckForArtifactWin	0.0000	0.0000	0.0000	0x1f1610
 victorylossconditions	VictoryConditionStruct_CheckForDefeatedMonsterWin	0.0000	0.0000	0.0000	0x1f2390
-victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	0.0000	0.0000	0.0000	0x1f1ef0
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	100.0000	100.0000	100.0000	0x1f4210
 viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7021	88.7021	88.7021	0x1f3b50
 viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9877	89.9877	89.9877	0x1f3360
