@@ -1561,13 +1561,11 @@ public:
     // an area spell centred on `hex` would touch into the caller's
     // vector; ai_tactical's get_area_effect_value (0x437040) is the
     // located caller and passes a freshly constructed local.
-    // The NAME is PROVISIONAL: the DC roster has three
-    // combatManager::mark_area_effect overloads in spells.obj
-    // (spells.cpp:3159/3227/3303), all five-parameter, and the dump
-    // prints no parameter types to separate them - the pairing here
-    // rests only on arity and the soundmgr..spells link bracket, not
-    // on a proof that this is the spells.cpp:3303 one. Its own claim
-    // waits for src/spells.cpp.
+    // The pairing to spells.cpp:3303 is SETTLED 2026-08-20 and the body
+    // is claimed in src/spells.cpp. The order-map over the whole spells
+    // span separates the three mark_area_effect rows by position, and
+    // spells.h's CODEVIEW line for 3303 is the only one of the three whose
+    // first parameter is a SpellID - which is what this body switches on.
     // `mastery` is ai_tactical's TSkillMastery, spelled `long` here
     // because that typedef lives in the header that includes this one.
     void mark_area_effect(SpellID spell, long hex, long mastery,
@@ -1577,13 +1575,38 @@ public:
     // (0x41eda0) is the located caller and hands it (hex, 1, 1,
     // &targets) - a HEX where the sibling above takes a SpellID, so the
     // two are different overloads, not one function seen twice. The DC
-    // roster's three combatManager::mark_area_effect rows (spells.cpp
-    // 3159/3227/3303) are all five-parameter and the dump prints no
-    // parameter types, so which of the three this is stays undecided;
-    // the name is therefore an ordinal-free PROVISIONAL, distinguished
-    // from the sibling by the parameter it actually takes.
-    void mark_hex_area_effect(long hex, long shape, long mastery,
+    // roster's three combatManager::mark_area_effect rows are separated by
+    // the order-map as of 2026-08-20: this one is spells.cpp:3227, whose
+    // CODEVIEW parameter list is (long target_hex, long radius, unsigned
+    // char include_center, std::vector<army*>& result). Slots 2 and 3 are
+    // RETYPED AND RENAMED to that, and retail proves slot 3 is byte-sized
+    // independently: mark_area_effect (0x5a4920) pushes `targets` out of
+    // edx and only THEN does `setne dl`, so the third argument reaches
+    // this callee with the upper three bytes of a pointer still in it -
+    // which only a char-sized parameter tolerates. The `long` spelling
+    // forced a widening that no retail byte asks for. ai.cpp's one call
+    // site passes the literal 1, which pushes identically either way, so
+    // no decoded body could have caught this before.
+    // The NAME stays the ordinal-free provisional: renaming it to a true
+    // mark_area_effect overload is a separate change and ai.cpp owns the
+    // only call site.
+    void mark_hex_area_effect(long hex, long radius,
+                              unsigned char include_center,
                               std::vector<army*>& targets);      // 0x5a46f0
+    // 0x5a4810, the berserk arm mark_area_effect routes SPELL_BERSERK to.
+    // DC spells.cpp:3265, mark_berserk_area_effect(long target_hex,
+    // TSkillMastery mastery, std::vector<army*>& result) - `mastery` is
+    // spelled long here for the same reason as its sibling above. Retail
+    // pushes all three raw, so none of them is byte-sized.
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declared unconditionally
+    // this bare member declarator costs command.obj's GetCommand
+    // 92.5714 -> 92.5357 - the same include-set trip, at the same two
+    // values, that the RESURRECT_VIEW note above records. spells.cpp is
+    // the only consumer.
+#ifdef HOMM3_CMBTMGR_AREA_VIEW
+    void mark_berserk_area_effect(long hex, long mastery,
+                                  std::vector<army*>& targets);  // 0x5a4810
+#endif
     // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
     // already had an out-of-class definition in cmbtmgr.cpp with only a
     // CODEVIEW comment to declare it, which VC6 accepts on the definition
