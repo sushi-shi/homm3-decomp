@@ -1047,10 +1047,17 @@ public:
     // arm of ProcessDeSelect both spell it out), so this pair is that
     // offset read back: ProcessMapSelect compares lastHoverX/lastHoverY
     // against it to recognise a click on the hero's own square.
+    // Gated to advmgr.obj's own view for the standing include-set reason,
+    // exactly as EAdvCommand is: ProcessMapSelect is the only reader, and
+    // an ungated nested enum is a type DEFINITION in the closure of every
+    // TU that includes this header. MEASURED score-neutral in both
+    // positions today - the gate is prophylaxis, not a repair.
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
     enum EHeroViewTile {
         HERO_VIEW_TILE_X = 9,
         HERO_VIEW_TILE_Y = 8
     };
+#endif
 
     enum EHoverBounds {
         HOVER_SCREEN_WIDTH = 800,
