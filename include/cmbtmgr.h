@@ -1606,6 +1606,14 @@ public:
                                long level, long power,
                                long casting_side,
                                unsigned char creature_spell);  // 0x5a66d0
+    // 0x5a8690 (701 B), the ROLLOVER line the spell cursor writes while
+    // a target is being picked - it is the one spells.obj body that
+    // never resolves anything, only names what the aimed hex would hit.
+    // The DC prototype (spells.cpp:5674) supplies all three parameter
+    // names; `spellId` is spelled SpellID rather than the roster's int
+    // because the body's whole shape is a jump table over the enum.
+    void SpellTargetMessage(SpellID spellId, int targetIndex,
+                            unsigned char first_target);       // 0x5a8690
     // The two spells.obj area collectors that fill a vector of HEXES -
     // the inner halves of the two vector<army*> collectors declared far
     // below, which call these and then map each hex to its stack. The
