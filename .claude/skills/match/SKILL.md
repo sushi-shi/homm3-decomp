@@ -21,6 +21,15 @@ comment (precedent: GetArmyMorale). Promoting a carcass fn renames its row —
 DELETE the superseded flat-name row in the same change or the gate reports it
 MISSING forever.
 
+**A PEAK CAN BE LOST WITHOUT `hist` RECORDING IT.** If an edit regresses and
+is re-banked at the lower value before anyone notices, BOTH `max` and `hist`
+sit at the lower number and nothing in the ledger remembers. `game::Load`'s
+five `type_point emptyPoint;` declarations had drifted back INSIDE their pins;
+`max` and `hist` both read 90.98, and the only surviving record was its own
+residual note, which quoted 91.8624 — exactly where re-hoisting them landed.
+**So a note quoting a number higher than the row's `max` is itself a lost-peak
+report.** Grep the notes for figures the ledger cannot account for.
+
 **CHECK `hist` AGAINST `max` — THE RATCHET CANNOT SEE A LOST PEAK.** It
 compares against `max`, so once a max has been accepted downward the row sits
 below a value it once reached and the build stays green forever. `hist` is the
@@ -771,6 +780,35 @@ at the first two and expands at the third while we matched the first and
 third. One pragma on the right guard: **+26.55**. `inline_depth(1)` at the
 same site is byte-flat — a clean confirmation of "only N=0 bites" on a body
 where N=0 moves 26 points.
+
+**DIFF CALL STREAMS IN ORDER, NOT AS A CENSUS.** Every win in one lane's round
+came from reading the two sides' call sequences positionally, and FOUR of them
+were invisible to a count — equal totals, or pairs the tool discounts as
+name-unresolvable. A census says how many sites disagree; only the order says
+which.
+
+**CONSTRUCTOR CALL STREAMS ARE THE CHEAPEST LAYOUT ORACLE** — which class owns
+a member is decided by which ctor constructs it. `heroPlayerSetups` was
+modelled on `NewSMapHeader`; `CMapHeaderData`'s own ctor writes the `_Tree`
+triple and buys the head node while `game::game` has no `_Tree` call at all.
+Moving it: **+2.46** and one more exact function tree-wide.
+
+**A CONSTANT-STORE FILL LOOP REACHES `rep stosd` ONLY WITH THE VALUE IN A
+NAMED LOOP-INVARIANT LOCAL.** `bits[i].set()` stores the immediate and C2's
+store idiom declines the fill (31.40); `bits[i] = allPlayers` with the value
+named fires it (87.85).
+
+**THE CONDITION-ONLY PIN GENERALISES FROM LOOP CONDITIONS TO `if`
+CONDITIONS** — close the pragma between the condition and its statement, and
+no local is needed. `game::Save` **+4.38**, against a banked "narrowing
+measured worse" that had been measuring a different narrowing (one that added
+a local).
+
+**THE ACCESSOR TELL DOES NOT APPLY WHERE THE ACCESSOR IS COMPILED OUT OF
+LINE.** `advmgr.cpp` defines `HOMM3_NEWFULLMAP_CELL_OUTOFLINE` — one of the
+three surviving compile-required gates — so writing `cell(x,y,z)` there emits
+a CALL rather than the reload pattern. Check whether the TU opts out before
+converting a longhand subscript.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 

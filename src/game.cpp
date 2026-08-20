@@ -2511,6 +2511,16 @@ void game::setup_shipyards()
 // retail certainly wrote `resize(n)` - and it is semantically identical
 // because type_point's default constructor is empty, so both leave the
 // fill value uninitialised.
+// OUTSIDE THE PIN MEANS OUTSIDE, AND THE DECLARATION HAD DRIFTED BACK IN
+// (restored 2026-08-20, 90.9797 -> 91.8624). All five sites read
+// `#pragma inline_depth(0) / type_point emptyPoint; / X.resize(...)`,
+// which puts the declaration INSIDE the pinned region and de-inlines the
+// empty constructor again - `??0type_point@@QAE@XZ` came out as five
+// out-of-line calls at fn+0xc6d, +0xcc8, +0xd13, +0xd57 and +0xd9b that
+// retail does not make. Moving the declaration above the pragma is the
+// whole fix, and it lands exactly on the 91.8624 this note already
+// quotes: the note survived a merge that the code did not. If this row
+// ever reads 90.98 again, look here FIRST.
 //
 // Two knobs measured and REJECTED, so they are not re-tried:
 //   * `#pragma inline_depth(0)` scoped to the whole function: 50.46 ->
@@ -2913,8 +2923,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             lithPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithPools[i].begin(),
@@ -2925,8 +2935,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             lithExitPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithExitPools[i].begin(),
@@ -2938,8 +2948,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             whirlpools.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(whirlpools.begin(),
@@ -2950,8 +2960,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             undergroundGateExits.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGateExits.begin(),
@@ -2962,8 +2972,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             undergroundGatePairs.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGatePairs.begin(),
@@ -3238,16 +3248,23 @@ int game::Save(TAbstractFile* outfile)
     // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
     // function: inline_depth(0) is statement-granular in VC6, and
     // SaveMinePool immediately below is expanded on BOTH sides.
-    // NARROWING THE PIN TO THE CALL ALONE WAS MEASURED AND IS WORSE
-    // (82.6492 -> 82.4641). With the whole `if` inside the pin, this
-    // exit's ~SavedGameHeader also goes out of line and grows its own
-    // epilogue where retail emits `_Tidy / jmp shared-tail`; landing the
-    // result in an `int signPoolResult` local first fixes that and costs
-    // more than it buys, because the local takes a frame slot.
+    // THE PIN IS CONDITION-ONLY, and that is worth 89.1864 -> 93.5676
+    // (2026-08-20). The note that stood here read "NARROWING THE PIN TO
+    // THE CALL ALONE WAS MEASURED AND IS WORSE (82.6492 -> 82.4641)" -
+    // true of the narrowing it measured, which landed the result in a
+    // local first and paid for a frame slot. Closing the pin between the
+    // `if (...)` and its `return -1;` needs no local: pragma state is
+    // per-site at collection, so SaveSignPool stays out of line while
+    // this exit's ~SavedGameHeader goes back to being EXPANDED.
+    // THE CENSUS WAS ALREADY RIGHT AND THE PLACEMENT WAS NOT: both sides
+    // emit three out-of-line ~SavedGameHeader calls, but retail's are all
+    // in the tail (fn+0x9fb, +0xa70, +0xa8b) and ours put one at fn+0x247
+    // - this exit - and only two in the tail. Read the sites IN ORDER,
+    // not as a count.
 #pragma inline_depth(0)
     if (SaveSignPool(outfile) < 0)
-        return -1;
 #pragma inline_depth()
+        return -1;
     if (SaveMinePool(outfile) < 0)
         return -1;
 
@@ -5560,18 +5577,35 @@ game::game()
     field_1f640 = 0;
     field_1f642 = 0;
     memset(heroAvailability, -1, sizeof(heroAvailability));
-    // MISSING STATEMENT, LEFT OUT DELIBERATELY AND NOT SILENTLY. Retail
-    // fills heroPoolMap here - `mov ecx,0x9c / mov eax,0xff /
-    // lea edi,[esi+0x4dfb4] / rep stosd`, i.e. 156 dwords of 0x000000ff,
-    // which is `heroPoolMap[i].set()` over the whole array. Our CL will
-    // not lower a fill over an array of CLASS type into `rep stos`: it
-    // strength-reduces to a pointer walk (`mov [eax],0xff / add eax,4 /
-    // dec ecx / jne`), and the extra conditional branch takes the branch
-    // count to 3 against retail's 2, which cascades through the scorer -
-    // `heroPoolMap[i].set()` measures 28.2094 and `heroPoolMap[i] = 0xff`
-    // (which also builds a bitset temporary) 6.8614, against 84.2891
-    // with the statement absent. Restoring it needs a spelling that
-    // reaches `rep stosd`, not a re-measurement of these two.
+    // heroPoolMap is touched TWICE in retail and the two sites are
+    // different things - the note that used to stand here read them as
+    // one and sent the statement away as unspellable.
+    //  * fn+0x27a is the COMPILER-GENERATED default construction:
+    //    `lea edi,[esi+0x4dfb4] / mov [ebp-0x14],0x9c` then a 156-trip
+    //    loop `push ebx / mov ecx,edi / call 0x4cff30 / add edi,4`.
+    //    0x4cff30 is `std::bitset<8>::_Tidy(unsigned long)` (`mov
+    //    eax,[ebp+8] / test eax,eax / mov [ecx],eax / je / and eax,0xff
+    //    / mov [ecx],eax / ret 4`) and `push ebx` passes ZERO. Ours is
+    //    the same construction with _Tidy EXPANDED, which VC6 then folds
+    //    to `mov ecx,0x9c / xor eax,eax / rep stosd`. That is one A9
+    //    depth-2 inline decision with no source statement behind it.
+    //  * fn+0x460 is THIS statement, and it is a real 0xff fill:
+    //    `mov ecx,0x9c / mov eax,0xff / lea edi,[esi+0x4dfb4] /
+    //    rep stosd`, sitting between heroAvailability's -1 memset and
+    //    artifactUsed's zero fill exactly as written here.
+    //
+    // THE FILL ONLY REACHES `rep stosd` WITH THE VALUE IN A NAMED
+    // LOOP-INVARIANT LOCAL. Written as `heroPoolMap[i].set()` the store
+    // lands as an IMMEDIATE - `mov [eax],0xff / add eax,4 / dec ecx /
+    // jne` - and C2's store idiom declines it (31.4012, which is the
+    // 28.2094 the old note banked, re-measured under the corrected
+    // CMapHeaderData layout). Naming the all-set bitset and COPYING it
+    // hoists 0xff into eax and the idiom fires: 86.7493 -> 87.8496, and
+    // the four instructions are retail's in retail's order.
+    std::bitset<8> allPlayers;
+    allPlayers.set();
+    for (int i = 0; i < HERO_COUNT; i++)
+        heroPoolMap[i] = allPlayers;
     memset(artifactUsed, 0, sizeof(artifactUsed));
     memset(artifactDisabled, 0, sizeof(artifactDisabled));
     memset(obeliskFlags, 0, sizeof(obeliskFlags));

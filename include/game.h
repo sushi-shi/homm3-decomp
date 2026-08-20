@@ -855,13 +855,24 @@ public:
     VictoryConditionStruct victoryCondition;
     LossConditionStruct lossCondition;
     TPlayerSlotAttributes playerSlotAttributes[8];
+    // +0x2c0, and it belongs to THIS class, not to NewSMapHeader - byte-
+    // proven 2026-08-20 by the two constructors. CMapHeaderData's own
+    // compiler-generated ctor at 0x45a990 writes the Dinkumware _Tree
+    // triple in place - `mov [esi+0x2c0],dl` / `mov [esi+0x2c1],al` /
+    // `mov [esi+0x2c8],ebx` - and then runs `_Lockit` + `operator
+    // new(0x2c)` to buy the head node, which is `_Tree::_Tree` inlined.
+    // game::game correspondingly has NO _Tree call: after the one
+    // `call CMapHeaderData::CMapHeaderData` its next three constructions
+    // are at mapHeader+0x2d0, +0x2e0 and +0x2f0 (the two strings and the
+    // bitset). Modelled on NewSMapHeader instead, the map's ctor call
+    // lands in game::game and shifts every construction after it.
+    std::map<int, type_map_hero_info> heroPlayerSetups;
 };
-SIZE(CMapHeaderData, 0x2c0);
+SIZE(CMapHeaderData, 0x2d0);
 SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
 class NewSMapHeader : public CMapHeaderData {
 public:
-    std::map<int, type_map_hero_info> heroPlayerSetups;
     std::string mapName;
     std::string mapDescription;
     std::bitset<156> availableHeroes;
