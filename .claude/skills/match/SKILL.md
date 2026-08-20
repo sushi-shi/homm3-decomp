@@ -287,8 +287,20 @@ their conclusion was wrong.
 
 **Bounds, all measured:**
 - **Only N=0 bites.** Mid-function `inline_depth(1|2|3|4)` is inert - measured
-  twice in one function and four times in another. So "inline the parent, call
-  the child" is NOT spellable.
+  twice in one function and four times in another, and again at FILE scope
+  around a whole function (townmgr `BuyBuild`, `inline_depth(1)` byte-flat
+  with the control at the same placement moving it 68.0799 -> 50.8477). So
+  "inline the parent, call the child" is NOT spellable at any placement, and
+  the several tree rows whose residual is exactly that shape - retail expands
+  `vector::insert` and CALLS `_Ucopy`/`_Ufill`/`_Construct` while we expand
+  both levels - are unreachable while the callee lives in a vendored header
+  you may not pin inside. When the container is HAND-MODELLED the pins go in
+  its own body and it IS reachable (see cmbtmgr's insert below).
+- **A statement pin inside a shared inline function is a per-CALLEE knob, not
+  a per-call-site one.** Pinning `getCellData` inside findpath's `mark_enemy`
+  carried into every expansion: `FindCombatPath` 46.4584 -> 51.5746 and
+  `mark_teleport` 100.0000 -> 82.7826, a net loss. Only sites written in the
+  caller's own body are per-site.
 - Consequently, anything retail keeps INLINE must be hoisted out of the pinned
   statement first - subscripts, `begin()`/`end()`, the call result into a
   named local.
@@ -333,8 +345,46 @@ their conclusion was wrong.
   further down, which retail calls. After a pin, re-read the WHOLE call
   multiset, not just the site you aimed at.
 
+**A REJECTED PIN IS ONLY REJECTED FOR THE INLINE STRUCTURE IT WAS MEASURED
+IN** (2026-08-20, cmbtmgr). `#pragma inline_depth(0)` on
+`SetupAndLoadObstacles`'s PlaceObstacle call was measured, recorded and
+rejected at 64.8103 -> 58.9216. After an EARLIER decision in the same body
+changed - `TObstacleVector::insert` started expanding - the identical pin
+GAINED 10.9 (78.9588 -> 89.8722). Re-try every rejected pin in a function
+whose inline structure has since moved, and never carry a pin verdict
+across such a change. Two corollaries measured in the same body:
+- **Hoist what retail keeps inline OUT of the pinned statement, always.**
+  The same pin also de-inlined the `obstacles.size() - 1` sitting in its
+  statement; landing that in a named local first is worth **+6.50** on
+  `place_obstacle` (67.1937 -> 73.6911) and +0.54 on findpath's
+  `PushPoint`. This is the single most repeated cheap win of the lever.
+- **A `return` statement is a pinnable site.** Retail destroyed
+  `place_obstacle`'s picker OUT OF LINE on the failure path and inlined
+  the delete on the success path; `inline_depth(0)` on the `return 0;`
+  alone reproduces the split (+1.15).
+
+**`inline` ON AN OUT-OF-CLASS DEFINITION IS LOAD-BEARING FOR /Ob2**
+(2026-08-20, and it bounds the "definition order is not the lever" note).
+VC6's /Ob2 auto-inliner does NOT take a large body from a plain
+out-of-class definition: `combatManager::TObstacleVector::insert` (740 B)
+stayed a CALL at both of its sites and every score held identical to the
+digit, whether the definition sat before or after its callers. The same
+compile DID auto-inline the 59 B and 49 B helpers beside it. Marking the
+definition `inline` is what made it expand, and it is the whole
+difference between "no movement at all" and `SetupAndLoadObstacles`
+64.8103 -> 91.5113. So when retail expands a hand-modelled container
+member in one caller and CALLS it in another, the recipe is: define it
+`inline` in the .cpp (not the header - only that TU needs a body), pin
+the caller retail calls it from, and pin the helper sites inside it that
+retail keeps out of line. A defined-but-unclaimed symbol costs nothing:
+objdiff adds no report row for a base symbol with no delinked twin.
+
 **predict-inline's OVER-inline bucket cannot tell a mangled-name divergence
-from an inlining decision.** `TownQuickView` reported `get_army base x0 vs
+from an inlining decision.** ICF makes this worse than the entry below
+records: `vector<widget*>::push_back` and `vector<int>::push_back` fold to
+one COMDAT, so the delinked target names the OTHER instantiation and the
+tool reports `base x0 vs retail x3` for a pair that is already identical.
+Check element size before believing a template-callee divergence. `TownQuickView` reported `get_army base x0 vs
 retail x4` because retail calls the CONST overload - a different function at a
 different address. Check the overload before reaching for a knob.
 **And the const-overload case has a source cause worth knowing**: three game

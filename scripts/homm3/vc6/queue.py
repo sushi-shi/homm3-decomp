@@ -26,16 +26,32 @@ HEADER = ("class", "recoverable", "fuzzy", "size", "unit", "fn", "route",
           "knob")
 
 
+def _size(fn):
+    try:
+        return int(fn.get("size", 0) or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
 def _targets():
     rep = _common.REPO / "build/objdiff/report.json"
     if not rep.is_file():
         _common.die("no build/objdiff/report.json - run `homm3 build` first")
     data = json.loads(rep.read_text())
-    out = []
+    out, undiffable = [], []
     for u in data["units"]:
         unit = (u.get("name") or u.get("id") or "").split("/")[-1]
         for fn in u.get("functions", []):
-            p = fn.get("fuzzy_match_percent", 0.0) or 0.0
+            # A MISSING key is not a zero. objdiff declines to diff some
+            # functions outright - typically when the object emits template
+            # COMDATs with no delinked counterpart - and omits the field
+            # entirely. Defaulting it to 0.0 counted 18 functions and 21 KB
+            # as fully recoverable stub mass when they are not scoreable at
+            # all, which is what ranked `army` first for several rounds.
+            if "fuzzy_match_percent" not in fn:
+                undiffable.append((unit, fn["name"], _size(fn)))
+                continue
+            p = fn.get("fuzzy_match_percent") or 0.0
             if p >= 99.999:
                 continue
             try:
@@ -43,6 +59,14 @@ def _targets():
             except (TypeError, ValueError):
                 size = 0
             out.append((unit, fn["name"], p, size))
+    if undiffable:
+        tot = sum(s for _u, _n, s in undiffable)
+        print(f"[queue] {len(undiffable)} function(s), {tot/1024:.1f} KB, "
+              "carry NO score at all - objdiff declines to diff them.\n"
+              "        They are NOT recoverable mass and are excluded "
+              "from the ranking:")
+        for u, n, s in sorted(undiffable, key=lambda r: -r[2])[:8]:
+            print(f"          {s:6d} B  {u}:{n[:52]}")
     return out
 
 

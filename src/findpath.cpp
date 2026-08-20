@@ -439,6 +439,26 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // expand here verbatim - the `z*2 + !last_can_stop` plane selector and the
 // `[danger_zones + 4*index]` load - which is the cheapest corroboration
 // that this really is the adventure-map searcher's push.
+//
+// 57.4653 -> 74.3805% 2026-08-20, and the whole 16.9 points is ONE
+// statement-scoped `#pragma inline_depth(0)` on the SECOND
+// `queue.insert`. The note above had already read retail correctly -
+// only the first arm is expanded - but the class was recorded as
+// unreachable because nothing was known to impose a refusal the /Ob2
+// budget rule accepts. The pragma imposes it. Two bounds measured right
+// here: hoisting `queue.end()` into `tail` FIRST is worth 0.54
+// (73.8393 pinned in place against 74.3805 hoisted), because the pin is
+// statement-granular and would otherwise de-inline `end()` too; and the
+// SAME pin on `visited_points.insert` LOSES 6.68 (74.3805 -> 67.6979),
+// so retail really does expand that one - the pin is only correct where
+// retail keeps the whole callee out of line.
+//
+// Residual (74.38%): 16 out-of-line calls against retail's 22 and 93
+// conditional branches against 78, so we are still expanding roughly six
+// callees retail calls - all of them NESTED inside the first insert's
+// own expansion (_Ucopy / _Ufill / copy_backward). `inline_depth(1..4)`
+// is inert mid-function in VC6, so "expand the insert, call its helpers"
+// is not spellable; nothing in the body reaches it.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
                             int direction, int move_cost, int limit,
@@ -558,8 +578,17 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 
     if (middle < queue.size())
         queue.insert(queue.begin() + middle, 1, *point);
-    else
-        queue.insert(queue.end(), 1, *point);
+    else {
+        // OVER-INLINE, pinned. Retail expands the `begin() + middle` arm
+        // and CALLS this one - the same symbol, the /Ob2 budget simply
+        // running out between the two arms. `end()` is hoisted out of the
+        // pinned statement first because retail keeps it inline
+        // (57.4653 -> 73.8393 without the hoist, 74.3805 with it).
+        pathCell* tail = queue.end();
+#pragma inline_depth(0)
+        queue.insert(tail, 1, *point);
+#pragma inline_depth()
+    }
 
     if (!dest->visited && point->last_can_stop)
         visited_points.insert(visited_points.end(), 1, dest);
@@ -1303,6 +1332,23 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // call relocations pair by name (46.458397 both ways - objdiff does not
 // weigh a call relocation's symbol name; see the note over
 // combatManager::GetCommand in command.cpp for the full control).
+//
+// 46.4584 -> 47.8289% 2026-08-20 on the statement-scoped
+// `#pragma inline_depth(0)` lever (see PushPoint above): the two
+// getCellData sites this body spells itself are pinned, taking the
+// surviving over-inline row from `base x1 vs retail x4` to `base x3 vs
+// retail x4`.
+//
+// THE FOURTH getCellData IS OUT OF REACH FROM HERE, and the control is
+// recorded because it is the general shape of the problem: it sits
+// inside mark_enemy, which retail expands (mark_enemy has NO retail
+// slot at all) and which mark_teleport also expands. Pinning it in
+// mark_enemy's own body DOES carry into both expansions - FindCombatPath
+// goes 46.4584 -> 51.5746, +5.12 - but mark_teleport, exact today, falls
+// 100.0000 -> 82.7826 for a net LOSS of about 40 recovered bytes. A
+// statement pin inside a shared inline function is a per-CALLEE knob,
+// not a per-call-site one; only sites written in the caller's own body
+// are per-site.
 VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
 unsigned char searchArray::FindCombatPath(const army* current_army,
                                           long current_group, long destination,
@@ -1445,7 +1491,9 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
 
     found:
         {
+#pragma inline_depth(0)
             pathCell* reached = getCellData(adjacent);
+#pragma inline_depth()
             reached->point.x = static_cast<short>(adjacent);
             reached->direction = direction;
             reached->last_point = cell.point;
@@ -1469,7 +1517,9 @@ unsigned char searchArray::FindCombatPath(const army* current_army,
     }
 
     while (best_hex != start_hex) {
+#pragma inline_depth(0)
         pathCell* step_cell = getCellData(best_hex);
+#pragma inline_depth()
         result.push_back(step_cell);
         best_hex = current_army->GetAdjacentCellIndex(
             best_hex, OppositeDirection(step_cell->direction));

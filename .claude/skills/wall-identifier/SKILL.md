@@ -79,6 +79,20 @@ what a lane did by hand to get a 53-anchor map when the tool was offering it
 span**, army 94 -> 98%, townmgr 86 -> 95%. When you land a claim, WRITE THE
 `dc` TAG — it is not decoration, it is the next lane's anchor.
 
+**A MISSING SCORE IS NOT A ZERO** (found by a lane, 2026-08-20). objdiff
+declines to diff some functions outright — typically where the object emits
+template COMDATs with no delinked counterpart — and OMITS
+`fuzzy_match_percent` from `report.json` entirely. A ranking that defaults the
+missing key to 0.0 counts the whole body as recoverable stub mass. **18
+functions and 21 KB were being counted that way**, which is what ranked `army`
+first for three consecutive rounds; excluding them drops it from 17.4 KB to
+0.8 and puts it twelfth.
+
+`queue` now separates and reports them. They are NOT nothing — the code is
+real and often already written — but a lane working them **will see no score
+move**, which reads as failure. Treat them as their own category and say so in
+the brief.
+
 **RANK ON BYTES, NOT ON COUNTS OR PERCENTAGES.** Both other rankings mislead,
 in opposite directions, and the census measured by how much (2026-08-20, 347
 unmatched functions, 71.6 KB recoverable):
