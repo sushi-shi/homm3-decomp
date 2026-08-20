@@ -252,7 +252,11 @@ public:
     short population[14];
     char field_32;
     unsigned char field_33;
-    char field_34;
+    // UNSIGNED, byte-proven by game::calculate_production's special-
+    // building arm: retail tests it `mov al,[esi+0x34] / test al,al /
+    // jbe` and widens it `and eax,0xff`. A signed `char` gives `jle` and
+    // `movsx`, and the row plateaus 2.2 points lower.
+    unsigned char field_34;
     char pad_35[0x3];
     int field_38;
     // +0x3c, NAMED AND TYPED 2026-08-14. DC `summoningType` at its own
