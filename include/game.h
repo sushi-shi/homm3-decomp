@@ -912,6 +912,15 @@ public:
     // caller mass; re-take this the moment it does. Declaring
     // ~SavedGameHeader to hold the same line is NOT the way - measured at
     // the same time, it collapses game::Load to 9.88%.
+    // RE-TAKEN 2026-08-20, with game::Load's tail landed and the function
+    // at 74.6385% instead of the 50.46% above: STILL net negative, and by
+    // a wider margin than the caller-mass argument predicted. Implicit
+    // costs game::Load 74.6385 -> 58.5009 and game::Save 79.1973 ->
+    // 61.0073, i.e. game.obj 83.6719 -> 80.5175, against campaignwindow
+    // at 89.7220. Caller mass was NOT the whole story - both bodies still
+    // expand the pair where retail calls the COMDATs - so they stay
+    // declared and this line is now a measured result rather than a
+    // deferred one.
     SCampaign();
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
@@ -1630,18 +1639,33 @@ public:
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
     // copied into it, reached with the cell and the point on the stack.
     void record_erase_object(NewmapCell* cell, type_point point); // 0x49c390
-    // Retail-only 0x4ca410, an ordinal placeholder. A no-argument sweep of
-    // the whole map (it reads gMapWidth/gMapHeight and the level count at
-    // +0x1fc48) that advManager::EraseObj runs once the object is gone.
-    // No surviving symbol names it; the row is not claimed here.
-    void GameFn_004CA410();
+#endif
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_GAME_LOAD_TAIL_DECLS)
+    // 0x4ca410. NAMED 2026-08-20, correcting this entry: it used to read
+    // "Retail-only ... no surviving symbol names it", and the Dreamcast
+    // dump does name it - `?SetupAdjacentMons@game@@QAAXXZ`, public,
+    // void, no arguments, dc 0xb61d0, E:\gamedcs\game.cpp:9596. Four
+    // things agree. The DC callee set is GetNumMapLevels +
+    // advManager::FindAdjacentMonster + GetMapExtraPtr, and retail
+    // 0x4ca410 calls FindAdjacentMonster once and GetMapExtraPtr twice
+    // while reading the level count at +0x1fc48. The DC caller set is
+    // advManager::EraseObj, game::Load, game::NewMap and game::PerMonth -
+    // the first two are exactly the retail call sites, and Load's is the
+    // one this gate now serves. evidence/ida carries the HD twin under
+    // the same mangled name. The body sets bit 0x100 in the map-extra
+    // word when a monster is adjacent and clears it otherwise, which is
+    // what the old ordinal note described without a name. The row is
+    // still not claimed here.
+    void SetupAdjacentMons();
+#endif
+#ifdef HOMM3_EVENTS_VIEW
 // advmgr.obj joins the gate for the one declarator below. The guard is
 // SPLIT around it rather than moved, so the preprocessed text every
 // events-view consumer sees is unchanged, line for line.
 #endif /* HOMM3_EVENTS_VIEW */
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     // Retail-only 0x4ca780, 180 B, an ordinal placeholder on
-    // GameFn_004CA410's convention. Loads aishield.pcx, blits it over the
+    // GameFn_004C7C50's convention. Loads aishield.pcx, blits it over the
     // radar rect, calls UpdateScreen and latches gpAdvManager->field_38c;
     // advManager::UpdateRadar is the caller that needs the declarator and
     // the row is not claimed here.
@@ -1654,8 +1678,7 @@ public:
     // declarator; the row is claimed as a carcass stub in event_record.cpp.
     void ResetVisibility(int startX, int startY, int z,
                          int whichPlayer, int range);          // 0x49d3d0
-    // Retail-only 0x4c7c50, an ordinal placeholder like GameFn_004CA410
-    // above. A no-argument sweep of all 156 hero records (stride 0x492)
+    // Retail-only 0x4c7c50, an ordinal placeholder. A no-argument sweep of all 156 hero records (stride 0x492)
     // that re-runs game::SetVisibility for every hero still on the map -
     // which is what has to happen after ResetVisibility blanks a disc.
     // No surviving symbol names it; the row is not claimed here.
@@ -1776,6 +1799,22 @@ public:
     // eventRecords count as a dword and then each record through the
     // vtable. Body belongs to event_record.obj.
     unsigned char save_recorded_events(TAbstractFile* outfile);
+#ifdef HOMM3_GAME_LOAD_TAIL_DECLS
+    // 0x49dac0, save_recorded_events' mirror - and ASYMMETRIC with it.
+    // save ends `ret 4`; this one ends `ret 8` at both exits, because
+    // retail added a save-version parameter it forwards to every
+    // record's own Load through the vtable's +8 slot. The Dreamcast
+    // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
+    // one void*) is stale on that arity. game::Load is the only caller.
+    unsigned char load_recorded_events(TAbstractFile* infile, int version);
+    // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
+    // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
+    // players[i].shipyards and re-derives them by sweeping the map,
+    // temporarily restoring any hero or boat obscuring a cell so the
+    // shipyard underneath is visible. game::Load's tail is the caller
+    // the Dreamcast xref graph records.
+    void setup_shipyards();
+#endif
     void ShowScenInfo();
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
@@ -1928,6 +1967,28 @@ DATA(0x0069774c) extern unsigned char gbUnk69774c;
 // Holy Grail. Its wider role is not yet byte-proven.
 DATA(0x0069950c) extern int gUnnamed69950c;
 extern playerData* gpCurrentPlayer;
+#ifdef HOMM3_GAME_LOAD_TAIL_DECLS
+// Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
+// (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
+// its own, and advManager::ProcessHover gates fog on it with the same
+// `test byte ptr [...], al` shape. game::Load's tail writes the pair one
+// after the other and that is what separates them: 0x69ccbc takes
+// `1 << gUnnamed69778c` (the acting player) while this one takes
+// `1 << gNetLocalGamePos` (this machine's own seat). NAME UNATTESTED -
+// address-ordinal placeholder, as gUnnamed69778c is.
+DATA(0x0069ccc4) extern unsigned char gUnnamed69ccc4;
+// 0x69954c, extern-only here: kbwin.cpp owns the DATA claim under the
+// name bVideoPaused, which recruit.cpp already records as CONTRADICTED
+// with the storage correct. remote.h spells the same word
+// gNetworkActive69954c and game::Load's use agrees with remote.h - not
+// networked means the acting player IS the local seat.
+extern int gNetworkActive69954c;
+// philai.obj owns the body (0x52b9c0, dc 0x1147ac,
+// E:\gamedcs\philai.cpp:4126, `?AI_examine_map@@YAXXZ`); declared here
+// because game::Load is the caller that needs it and philai.h is not in
+// this TU's include closure. Declared, not claimed.
+void AI_examine_map();
+#endif
 #ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
 // hero.cpp owns the DATA claim on 0x698400 (name unattested,
 // address-ordinal placeholder) and game.obj is a second reader, so this
