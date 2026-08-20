@@ -734,8 +734,20 @@ public:
 
     // Spelled int (not TCreatureType) so slot writes from int-typed
     // parameters (Add) stay cast-free; the enum appears where the
-    // Dreamcast prototypes demand it.
-    int armies[ARMY_GROUP_SLOT_COUNT];
+    // Dreamcast prototypes demand it - and game::ViewArmy (0x4c6c50) is
+    // the first body that needs the READING side typed as well, because
+    // it hands a slot straight to UpgradedCreatureType and
+    // get_upgrade_cost and both take the enum. A union of the two views
+    // over ONE storage keeps readers and writers alike cast-free, which
+    // this tree's zero enum-cast floor requires; `armyTypes` is the
+    // Dreamcast's own typing of the array and `armies` the writers'
+    // convenience. Retyping the array outright was measured and does
+    // NOT work: it breaks five int-typed slot writes in armygrp.cpp and
+    // one in townmgr.cpp.
+    union {
+        int armies[ARMY_GROUP_SLOT_COUNT];
+        TCreatureType armyTypes[ARMY_GROUP_SLOT_COUNT];
+    };
     int numTroops[ARMY_GROUP_SLOT_COUNT];
 
     armyGroup();
