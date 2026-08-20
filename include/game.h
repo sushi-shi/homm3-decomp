@@ -636,6 +636,7 @@ enum EVictoryConditionType {
     // every consumer of this header.
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
+    VICTORY_CONDITION_BUILD_GRAIL = 4,
 #endif
     VICTORY_CONDITION_TOTAL_RESOURCES = 2,
     VICTORY_CONDITION_DEFEAT_HERO = 5,
@@ -755,7 +756,7 @@ public:
     // Behind a gate of its own because townmgr.cpp is the only consumer
     // in the admitted surface and this header's declarator count is
     // load-bearing for every unit that includes it.
-#ifdef HOMM3_TOWNMGR_GRAIL_DECLS
+#if defined(HOMM3_TOWNMGR_GRAIL_DECLS) || defined(HOMM3_VLC_CHECKS_VIEW)
     unsigned char CheckForGrailBuildingWin();
 #endif
     // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.

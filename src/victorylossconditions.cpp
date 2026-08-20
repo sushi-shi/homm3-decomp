@@ -198,16 +198,57 @@ unsigned char VictoryConditionStruct::CheckForUpgradedTown()
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
+// Walks every same-team player's towns looking for one at the target
+// coordinate (or any town when the target is the wildcard) whose Grail
+// building is active. target and wildcard are built once before the
+// walk; the townLocation pack and both operator== compares are the
+// IsGrailTarget idiom repeated per town, wildcard test unhoisted. The
+// j bound stays IN the condition: the call-free loop body lets VC6 LICM
+// the numTowns read itself, and the hoisted address is what anchors the
+// outer strength-reduced player pointer at +0x3e (a hand-hoisted local
+// anchored it at townIds' +0x40 instead, 98.49 vs 99.27). The outer
+// loop is for(;;) with the bound-return inside - a rotated for(<8)
+// emits jl-top where retail has jge-exit/jmp-top.
+// Residual (99.2692%): one extra mov in the townLocation==target y
+// compare (base routes target-hi through ESI, retail loads it into EDX
+// directly). All four operator receiver/argument combos and both
+// operand orders inside the inline operator== measure identically; the
+// same C1 register-rotation class as IsGrailTarget's standing residual.
 // E:\gamedcs\victorylossconditions.cpp:184
 VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
 unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
 {
-    // @stub
-}
+    if (Type != VICTORY_CONDITION_BUILD_GRAIL
+        || !gpCurrentPlayer
+        || gpGame->playerDisabled[gNetLocalGamePos])
+        return 0;
 
-#endif  // @carcass
+    type_point target(TownX, TownY, TownZ);
+    type_point wildcard(-1, -1, -1);
+
+    int player = 0;
+    for (;;) {
+        if (same_team(gpGame, player, gNetLocalGamePos)) {
+            for (int j = 0; j < gpGame->players[player].numTowns; ++j) {
+                town* thisTown = gpGame->GetTown(
+                    gpGame->players[player].townIds[j]);
+                type_point townLocation(thisTown->mapX, thisTown->mapY,
+                                        thisTown->mapZ);
+                if (townLocation.operator==(&target)
+                    || target.operator==(&wildcard)) {
+                    if (thisTown->active & bitNumber[HOLY_GRAIL_ID]) {
+                        playerWinner = thisTown->owner;
+                        GameWon = 1;
+                        return 1;
+                    }
+                }
+            }
+        }
+        ++player;
+        if (player >= 8)
+            return 0;
+    }
+}
 
 // E:\gamedcs\victorylossconditions.cpp:233
 VA(0x005f2100, 0x53)  // anchor-global, dc 0x190244
