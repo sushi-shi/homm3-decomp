@@ -523,9 +523,18 @@ public:
         // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
         // divide by sizeof(TObstacle) inline right after the insert.
         int size() const { return begin == 0 ? 0 : end - begin; }
-        // The out-of-line worker push_back reduces to. DECLARED, NOT
-        // DEFINED: retail CALLS it, so this TU must not see a body.
+        // The out-of-line worker push_back reduces to. Defined in
+        // cmbtmgr.cpp so that SetupAndLoadObstacles can expand it the way
+        // retail does while place_obstacle keeps retail's call.
         void insert(TObstacle* where, unsigned count, const TObstacle& value);
+        // Dinkumware's two uninitialised-range helpers. DECLARED, NOT
+        // DEFINED here: retail's insert expansion in SetupAndLoadObstacles
+        // CALLS both (0x46b1a0 thiscall/ret 0xc returning the destination
+        // end, 0x46b1e0 thiscall/ret 0xc), so this header must not offer a
+        // body for either.
+        TObstacle* _Ucopy(const TObstacle* first, const TObstacle* last,
+                          TObstacle* dest);
+        void _Ufill(TObstacle* first, unsigned count, const TObstacle& value);
         void erase(TObstacle* first, TObstacle* last)
         {
             TObstacle* vectorEnd = end;
