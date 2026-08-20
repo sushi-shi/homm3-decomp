@@ -481,13 +481,23 @@ void type_cell_adjuster::type_cell_adjuster()
 
 #endif  // @carcass
 
-// RETAIL-RECONSTRUCTED 2026-08-09 (54.9494%). The body consolidates repeated
-// creature slots before choosing either a detailed seven-slot list or one
-// approximate size/name pair. The detailed form stops at the first empty
-// consolidated slot and shares its guarded creature-name append. All retail
-// operations are represented; the residual is Dinkumware append inlining/EH
-// state. Its caller set is the creature-bank help group and QuickInfo; no
+// RETAIL-RECONSTRUCTED 2026-08-09. The body consolidates repeated creature
+// slots before choosing either a detailed seven-slot list or one approximate
+// size/name pair. The detailed form stops at the first empty consolidated
+// slot. Its caller set is the creature-bank help group and QuickInfo; no
 // Dreamcast standalone copy survives, so the name is role-derived.
+//
+// Both creature-name sites go through the TU's own GetArmyName helper and
+// pass the REAL count - numTroops[i] in the detailed list, the consolidated
+// total in the approximate form - so a stack of one takes the singular name.
+// Writing the bounds guard longhand against m_plural_name instead cost 28
+// points (64.73 against 93.21): it duplicated a guard retail shares and
+// dropped the count test retail folds, which is what put our body at 57
+// blocks / 32 branches against retail's 42 / 23.
+//
+// Residual (93.21%): Dinkumware append inlining. Tried and rejected:
+// spelling the single-space appends as char appends (`+= ' '`) rather than
+// append(" ") - measured 61.45.
 VA(0x0040abe0, 0x37D)
 std::string get_army_help_text(const armyGroup* source,
                               unsigned char show_full_list)
