@@ -314,11 +314,11 @@ unsigned char LossConditionStruct::HeroKilled(const hero* loser)
 
 // The loss record stores its target coordinate as three full dwords, while
 // town stores its map coordinate as three bytes. Retail packs both through
-// the canonical four-byte type_point before comparing x/y/z.
-// Residual: the six-block CFG and all operations match; VC6 assigns the two
-// equivalent point locals to the opposite stack slots. Reversing their
-// initialization order or comparing temporaries regresses the instruction
-// schedule substantially, so the canonical named form is retained.
+// the canonical four-byte type_point before comparing via the inline
+// operator==. The memberwise x/y/z spelling scored 99.84 with the two point
+// locals on swapped stack slots; routing the compare through
+// lost.operator==(&target) (the IsGrailTarget idiom) makes target
+// address-taken and swaps the aggregates' frame homes to retail's - exact.
 // E:\gamedcs\victorylossconditions.cpp:498
 VA(0x005f2e40, 0xD9)  // anchor-bracket, dc 0x19074c
 unsigned char LossConditionStruct::CheckForDefeatedTownLoss(
@@ -329,9 +329,7 @@ unsigned char LossConditionStruct::CheckForDefeatedTownLoss(
         type_point lost(lost_town->mapX, lost_town->mapY,
                         lost_town->mapZ);
 
-        if (target.x == lost.x
-            && target.y == lost.y
-            && target.z == lost.z) {
+        if (lost.operator==(&target)) {
             playerLoser = static_cast<signed char>(old_owner);
             GameLost = 1;
             return 1;
