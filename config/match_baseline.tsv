@@ -889,6 +889,7 @@ game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
 game	?Save@game@@QAEHPAVTAbstractFile@@@Z	80.0926	80.0926	80.0926	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
+game	?SaveGame@game@@QAEEPBDEEEE@Z	93.8148	93.8148	93.8148	0xbeea0
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
 game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	99.7000	99.7000	99.7000	0xbbc20
@@ -933,7 +934,6 @@ game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
-game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
