@@ -88,6 +88,21 @@ MISSING forever.
   retail source used `goto`; while/for(;;)+break get rotated (duplicated
   condition) AND win the import an LICM hoist
   (kbwin::Process1WindowsMessage). VC6 does not rotate or LICM goto flow.
+- **SWITCH ARM ORDER IS SOURCE ORDER** (byte-proven 2026-08-20,
+  advManager::ProcessSelect 84.02 -> 100.0 on this edit alone). The physical
+  layout of a switch's arms in retail is the order the source wrote the
+  `case` labels, NOT the numeric order of the labels. ProcessSelect's four
+  arms were each already byte-correct and it still plateaued; retail lays
+  them out hero/town/map/radar, the reverse of widget-id order. Reordering
+  the cases and changing nothing inside them closed it, and carried the
+  msg/index register pair with it. **Read a differing arm ORDER as a
+  source-order fact before re-spelling anything inside an arm.**
+- **ZERO-INIT MUST ENUMERATE EVERY MEMBER** (97.42 -> 100.0). For a struct
+  local, `= {0}` compiles to one store plus `rep stosd`, and `memset` to a
+  bare `rep stosd`. Only the fully written-out `= {0,0,0,0,0,0,0,0}` gives
+  retail's individual per-member stores — and only that form keeps the zero
+  in a REGISTER, which is what lets it unify with a later `push` feeding
+  other call sites. Count retail's stores and match the initializer's arity.
 - **A pointer relational compare is UNSIGNED and can never produce `jl`**
   (byte-proven 2026-08-20, closed three hero.obj functions). VC6
   strength-reduces a *signed* `for (int i = 0; i < N; ++i)` walk into pointer
