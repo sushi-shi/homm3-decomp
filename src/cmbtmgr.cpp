@@ -57,6 +57,8 @@
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "drawing.h"  // gCombatAreaLimits / gCombatSpeedFactors, for the
+                      // missile animators
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
@@ -1928,14 +1930,168 @@ void combatManager::ShootAnimatedMissile(int startX, int startY, int destX, int 
     // @stub
 }
 
-// E:\gamedcs\cmbtmgr.cpp:3902
-VA(0x00468220, 0x48F)  // anchor-global, dc 0x61e60
-void combatManager::ShootMissile(int startX, int startY, int destX, int destY, const float* angles, const CSprite* missile)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\cmbtmgr.cpp:3902
+// RECONSTRUCTED 2026-08-20. Local names are DC's own
+// (evidence/dreamcast/variables.csv): deltaX/deltaY, addX/addY,
+// nframes, flipped, saved, frame, next_frame_time, ARROW_DELAY, and
+// update_area for the four running limits - which is why update_area is
+// spelled as ONE four-int aggregate rather than four scalars: the
+// aggregate is worth half a point here (91.22 -> 91.74) because it
+// colours the four limits into one slot run the way retail does.
+//
+// Two shapes were forced by retail rather than chosen. `angle` is
+// assigned from a NAMED DOUBLE, not from a cast expression: retail
+// rounds the atan product to double and reloads it before narrowing to
+// the float (`fstp qword / fld qword / fstp dword`), and neither
+// `angle = expr` nor `angle = (float)expr` emits that middle pair -
+// only a real double lvalue does (90.68 -> 91.18). And the multiplier
+// is 0x63b8f0, whose stored double is 57.2957763671875 - the FLOAT
+// rounding of 180/PI, not the 57.29577951308232 that
+// GetMissileStartingPosition multiplies by further down this same TU.
+// Two constants, two spellings, both retail's.
+//
+// Residual (91.7404%): register binding only - 416 instructions against
+// retail's 416, an identical frame-slot set, and branch/call/ret
+// mnemonic sequences that compare identical end to end. What is left is
+// a permutation (edx->ecx x11, eax->edx x4, ecx->eax x3, edx->ebx x3)
+// of which register carries which limit, plus two placement effects
+// that follow from it: retail frees EBX as push scratch across the
+// three blit calls where we keep it live, and retail's `right`/`bottom`
+// seed sits in the loop preheader where ours straddles the entry guard.
+// The inlined IsQuickCombat also takes both player-record addresses
+// with LEA here while folding the +0xe4 into the load in LowerDoor and
+// in the out-of-line const twin at 0x46a4a0 - one source inline, three
+// schedules, so that shape is not ours to spell.
+// Tried and rejected, each re-measured at the plateau: `(20 + d) / 40`
+// (identical bytes), a named `distance` local before the divide
+// (90.43), four scalar limits instead of the aggregate (91.22),
+// `right` before `bottom` (91.22), and an explicit (float) cast on the
+// angle expression (90.68).
+VA(0x00468220, 0x48F)  // anchor-global, dc 0x61e60
+void combatManager::ShootMissile(int startX, int startY, int destX, int destY,
+                                 const float* angles, const CSprite* missile)
+{
+    if (IsQuickCombat())
+        return;
+
+    int deltaX = destX - startX;
+    int deltaY = destY - startY;
+    unsigned char flipped = deltaX < 0;
+    int nframes = (static_cast<int>(sqrt(static_cast<double>(
+                       deltaY * deltaY + deltaX * deltaX))) + 20) / 40;
+    int addX;
+    int addY;
+    if (nframes > 0) {
+        addX = deltaX / nframes;
+        addY = deltaY / nframes;
+    } else {
+        addX = deltaX;
+        addY = deltaY;
+    }
+
+    int width = missile->Width;
+    int height = missile->Height;
+    int x = startX - width / 2;
+    int y = startY - height / 2;
+
+    int frame;
+    if (deltaX == 0) {
+        if (deltaY > 0)
+            frame = missile->GetNumFrames(0) - 1;
+        else
+            frame = 0;
+    } else {
+        float angle;
+        // The double result is stored, reloaded and only then narrowed
+        // to the float: that round-trip is /Op's, and an explicit
+        // (float) cast on the expression suppresses it.
+        double degrees;
+        if (flipped)
+            degrees = atan(static_cast<double>(deltaY) / deltaX)
+                    * DATA_COMPGEN(0x0063b8f0, missileRadiansToDegrees,
+                                   57.2957763671875);
+        else
+            degrees = atan(static_cast<double>(deltaY) / -deltaX)
+                    * 57.2957763671875;
+        angle = static_cast<float>(degrees);
+        int index = 1;
+        while (index < missile->GetNumFrames(0)
+                && (angles[index - 1] + angles[index]) / 2.0f >= angle)
+            ++index;
+        if (index < missile->GetNumFrames(0))
+            frame = index - 1;
+        else
+            frame = missile->GetNumFrames(0) - 1;
+    }
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    DrawFrame(0, 0, 0, 0, 1, 0);
+    int ARROW_DELAY = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
+
+    int bottom = y + height - 1;
+    int right = x + width - 1;
+    for (int step = 0; step < nframes; step++) {
+        unsigned long next_frame_time = GameTime::Get() + ARROW_DELAY;
+        if (step != 0) {
+            saved.Draw(0, 0, width, height,
+                       gpWindowManager->screenBitmap->map, x, y,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch, false);
+            update_area.values[0] = x;
+            update_area.values[1] = y;
+            update_area.values[2] = right;
+            update_area.values[3] = bottom;
+            x += addX;
+            right += addX;
+            y += addY;
+            bottom += addY;
+        }
+        saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch);
+        // DC's own mangling makes `missile` a `const CSprite*`
+        // (PBVCSprite) while CSprite::Draw is non-const on both builds,
+        // so the cast is retail's, not ours.
+        const_cast<CSprite*>(missile)->Draw(
+            0, frame, 0, 0, width, height,
+            gpWindowManager->screenBitmap->map, x, y,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, flipped, 1);
+        if (update_area.values[0] > x)
+            update_area.values[0] = x;
+        if (update_area.values[1] > y)
+            update_area.values[1] = y;
+        if (update_area.values[2] < right)
+            update_area.values[2] = right;
+        if (update_area.values[3] < bottom)
+            update_area.values[3] = bottom;
+        if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+            update_area.values[0] = gCombatDrawLimits694f18.values[0];
+        if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+            update_area.values[1] = gCombatDrawLimits694f18.values[1];
+        if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+            update_area.values[2] = gCombatDrawLimits694f18.values[2];
+        if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+            update_area.values[3] = gCombatDrawLimits694f18.values[3];
+        gpWindowManager->UpdateScreen(update_area.values[0], update_area.values[1],
+                                      update_area.values[2] - update_area.values[0] + 1,
+                                      update_area.values[3] - update_area.values[1] + 1);
+        GameTime::DelayTil(next_frame_time);
+    }
+
+    saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map, x, y,
+               gpWindowManager->screenBitmap->Width,
+               gpWindowManager->screenBitmap->Height,
+               gpWindowManager->screenBitmap->Pitch, false);
+    gpWindowManager->UpdateScreen(x, y, width, height);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4041
 // RECONSTRUCTED 2026-08-09. Retail's 0x50-byte stack object and its
