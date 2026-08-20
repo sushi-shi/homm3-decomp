@@ -105,7 +105,12 @@ struct SBolt {
     float fAngle;             // +0x38
     // fAngle plus the progress-weighted distortion ResetBoltAngle adds.
     float fDistortedAngle;    // +0x3c
-    int field_40;             // AddBolt zeroes it
+    // "This segment has reached its destination". AddBolt clears it and
+    // DrawBolt sets it; DoBolt (0x5a5c20) is what names it - after each
+    // drawn pass it walks all live bolts and stops the whole animation
+    // only when EVERY one of them has this set, and it skips a bolt's
+    // ResetBoltAngle and its split check on the same test.
+    int bAtDestination;       // +0x40
     // ResetBoltAngle returns at once while this is set - the "this
     // segment is finished" latch.
     int bDone;                // +0x44
@@ -114,7 +119,10 @@ struct SBolt {
     // iThickness every reset: -(t >> 1) to -(t >> 1) + t - 1.
     int iSpanFirst;           // +0x4c
     int iSpanLast;            // +0x50
-    // The segment's own start, kept while fX/fY walk away from it.
+    // The segment's own start, kept while fX/fY walk away from it, and
+    // RESTAMPED to the current position every time DoBolt forks a new
+    // bolt off this one - that is how a fork throttles the next fork,
+    // since the split test measures the manhattan distance from here.
     int iStartX;              // +0x54
     int iStartY;              // +0x58
     int iStartThickness;      // +0x5c

@@ -1228,7 +1228,7 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
     psBolt->iY = iSourceY;
     psBolt->iStartX = iSourceX;
     psBolt->iStartY = iSourceY;
-    psBolt->field_40 = 0;
+    psBolt->bAtDestination = 0;
     psBolt->bDone = 0;
     psBolt->fProgress = 0;
     psBolt->bDistortAlways = bDistortAlways;
@@ -1252,6 +1252,35 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3940
+// DECODED BUT NOT WRITTEN (2026-08-20). What its bytes already prove,
+// banked here so the next lane does not redo the reading:
+//   * It allocates the working set with `new SBolt[25]` - `push 0xbb8 /
+//     operator new`, no array cookie because SBolt has no destructor -
+//     and frees it with a plain `operator delete`. That is the second
+//     proof of the 0x78 stride.
+//   * `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
+//     padding, and it is spelled with THIS FILE'S by-value _cpp_max:
+//     retail writes both operands back into their own parameter slots
+//     and then selects between their ADDRESSES, which is that template
+//     and not the <xutility> reference one.
+//   * The shape is `do { for (pass) { draw; UpdateScreen; if (every
+//     bolt bAtDestination) break; split; } for (each) ResetBoltAngle;
+//     } while (!allDone)`, with the pass count computed as
+//     `(iSegmentLength - 1) / iSegmentLength + 1` - which is 1 for every
+//     positive segment length, i.e. a latent retail bug, transcribe it.
+//   * The fork rule: a bolt forks when it is not at its destination,
+//     fewer than 25 bolts exist, its remaining manhattan distance is
+//     more than twice the segment length, `Random(0, iSplitFrequency *
+//     100 / iSegmentLength) < 100`, and it has travelled at least
+//     `iSplitFrequency * 0.75` from its last fork. The fork's heading is
+//     the parent's fDistortedAngle plus `+-Random(50, 80) / 100.0f`
+//     (the sign from `Random(0, 1)`), its length `min(Random(maxSplit /
+//     2, maxSplit), remaining / 2)`, and its distortion band is widened
+//     to `min * 0.66 - 20` .. `max * 0.66 + 20`.
+//   * Its two CRT helpers are 0x61a124 and 0x61a1d4 (sin / cos through
+//     __ctrandisp1), and the delay is scaled by a float table at
+//     0x63cf7c indexed by the int global at 0x6987ec - the combat-speed
+//     setting, which no header in this tree models yet.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
 {
