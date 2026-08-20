@@ -421,7 +421,7 @@ int HandleGetTeleportDestination(message* msg)
 VA(0x005a3950, 0x68)  // order-map+arity+anchor-callee, dc 0x152dec
 army* combatManager::find_spell_target(SpellID spell, long side, long hex,
                                        unsigned char first_target,
-                                       unsigned char creature_spell)
+                                       long creature_spell)
 {
     if (!ValidHex(hex))
         return 0;
@@ -506,7 +506,7 @@ unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
                                               long casting_side,
                                               unsigned char first_target,
-                                              unsigned char creature_spell)
+                                              long creature_spell)
 {
     if (!ValidHex(targetIndex))
         return 0;
@@ -648,7 +648,7 @@ unsigned char combatManager::ValidSpellTargetArmy(SpellID spellId,
 // compare rather than jumping over it.
 VA(0x005a3cc0, 0x175)  // order-map+arity, dc 0x153158
 army* combatManager::find_resurrection_target(int side, int hex,
-                                              unsigned char creature_spell)
+                                              long creature_spell)
 {
     if (!ValidHex(hex))
         return 0;
@@ -818,7 +818,7 @@ VA(0x005a40d0, 0x9B)  // order-map+arity, dc 0x153580
 unsigned char combatManager::HasValidSpellTarget(SpellID spellId, long mastery,
                                                  long casting_side,
                                                  unsigned char first_target,
-                                                 unsigned char creature_spell)
+                                                 long creature_spell)
 {
     for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
         if (InInvisibleColumn(hex))
@@ -2289,7 +2289,7 @@ VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
 void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                           long level, long power,
                                           long casting_side,
-                                          unsigned char creature_spell)
+                                          long creature_spell)
 {
     memset(effected, 0, sizeof(effected));
     for (int side = 0; side < 2; side++) {
@@ -3287,37 +3287,48 @@ void combatManager::Earthquake(int level)
 //     Dispel-Helpful loop's own return-1. Same lever as
 //     ValidSpellTarget's "one shared return 1" four hundred lines up.
 //
-// AND IT CONTRADICTS A RECORDED IDENTIFICATION, measured both ways.
-// cmbtmgr.h says slot 6 is `unsigned char creature_spell`; THIS body
-// reads it `cmp dword ptr [ebp+0x1c], 1` while reading slot 5 as
-// `mov al, byte ptr [ebp+0x18]` - two different widths in one function,
-// which is as direct as callee-side width evidence gets. Retyping slot
-// 6 to `long` does reproduce those bytes, and it is worth +0.0093 here
-// (97.0968 -> 97.1061); it costs find_resurrection_target 100 -> 98.40,
-// SetMassSpellInfluence 100 -> 98.77 and ValidSpellTarget 88.49 ->
-// 87.31, i.e. the unit LOSES 82.337 -> 82.265. So `unsigned char`
-// stands on net measurement and the dword compare stays a documented
-// one-instruction divergence: the family is internally inconsistent
-// and the three callers outvote the one callee.
+// AND THE ATTRIBUTE TESTS ARE `army::Is(n) & 1`, WHICH IS WORTH 2.7
+// (97.10 -> 99.77) AND CLOSES THE WHOLE REGISTER STORY WITH IT. The
+// header inline TRUNCATES the shifted word to a byte before the
+// caller's mask, and that truncation is what stops VC6 folding
+// `(attributes >> N) & 1` back into `test dword ptr [mem], imm`: with
+// `Is` the member is loaded ONCE into EDX and stays live across the
+// switch exactly as retail has it, `spell` falls back to its memory
+// home, and every scratch-register rename downstream disappears. A
+// hand-written `unsigned attributes = target->creatureId;` plus
+// `(attributes >> N) & 1` scores 97.10 and a named shifted local is
+// byte-identical to it - the difference is the byte truncation, not
+// the naming.
 //
-// Residual (97.10%): pure register binding, and `homm3 sema diff
-// --branches` says so outright - 61 branches and 25 returns on both
-// sides with the sequences AGREEING, so nothing structural is left.
-// Retail homes `spell` in MEMORY (re-read from [ebp+8] at every use)
-// and keeps `attributes` in EDX across the whole switch; our C2 does
-// the exact inverse, so the six attribute tests reload and mask-test
-// where retail shifts a live register, and every scratch pair
-// downstream renames (why-reg: eax->ecx x9, edx->eax x7). why-reg's
-// whole catalog was run and ELEVEN mutations all measured neutral or
-// worse - naming the shifted value in its own local is byte-identical
-// (VC6 coalesces it) and volatile on any of the four locals costs 4 to
-// 15 slots.
+// AND IT CORRECTS A RECORDED IDENTIFICATION, measured three ways.
+// cmbtmgr.h used to say slot 6 is `unsigned char creature_spell`; THIS
+// body reads it `cmp dword ptr [ebp+0x1c], 1` while reading slot 5 as
+// `mov al, byte ptr [ebp+0x18]` - two different widths in one function,
+// which is as direct as callee-side width evidence gets. Widening ONLY
+// the callee costs find_resurrection_target 100 -> 98.40,
+// SetMassSpellInfluence 100 -> 98.77 and ValidSpellTarget 88.49 ->
+// 87.31, which is what the previous reading measured and why it
+// concluded `unsigned char`. Widening the WHOLE FAMILY - this slot,
+// find_spell_target's, ValidSpellTarget's, HasValidSpellTarget's,
+// find_resurrection_target's and SetMassSpellInfluence's - leaves every
+// one of those AT 100 and gains the dword compare here. So the callers
+// are width-BLIND (both spellings compile them exact) and only the
+// callee can see the width; `long` it is, and the earlier note's
+// "the callers outvote the callee" was an artifact of changing one end
+// of the family at a time.
+//
+// Residual (99.78%): two instructions. Retail keeps `sar edx, 2` for
+// `aura_sources.size()` where our CL proves the low two bits zero and
+// folds the shift into the test's mask (`.empty()` is byte-identical to
+// `size() != 0` here, measured), and the function's trailing alignment
+// NOP is `mov edi,edi` against our `lea ecx,[ecx]`. Neither is source-
+// addressable. `homm3 sema diff --branches` agrees 61/61 and 25/25.
 VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
 float combatManager::SpellCastWorkChance(SpellID spell, long side,
                                          const army* target,
                                          unsigned char redirected,
                                          unsigned char first_target,
-                                         unsigned char creature_spell)
+                                         long creature_spell)
 {
     hero* casting_hero = heroes[side];
     hero* target_hero = target->get_controller();
@@ -3363,8 +3374,7 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
         && traits->level < target->antiMagicLevel
         && !(traits->field_c & 0x8))
         return 0.0f;
-    unsigned attributes = target->creatureId;
-    if (((attributes >> 21) & 1) && spell != SPELL_RESURRECTION
+    if ((target->Is(21) & 1) && spell != SPELL_RESURRECTION
         && spell != SPELL_ANIMATE_DEAD && spell != SPELL_SACRIFICE)
         return 0.0f;
     if (target->bAllUnitsKilled)
@@ -3401,11 +3411,11 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
             return 0.0f;
         break;
     case SPELL_ANTI_MAGIC:
-        if ((attributes >> 23) & 1)
+        if (target->Is(23) & 1)
             return 0.0f;
         break;
     case SPELL_CLONE:
-        if (((attributes >> 23) & 1) || target->iMirrorDestIndex != -1)
+        if ((target->Is(23) & 1) || target->iMirrorDestIndex != -1)
             return 0.0f;
         if (target->monInfoLevel + 1
             > akSpellTraits[SPELL_CLONE].mastery_bonus[
@@ -3435,14 +3445,14 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
         break;
     }
     case SPELL_SACRIFICE:
-        if (!((attributes >> 4) & 1))
+        if (!(target->Is(4) & 1))
             return 0.0f;
-        if ((attributes >> 22) & 1)
+        if (target->Is(22) & 1)
             return 0.0f;
         if (first_target) {
             if (target->numTroops >= target->origNumTroops)
                 return 0.0f;
-        } else if (((attributes >> 18) & 1) || target->numTroops <= 0) {
+        } else if ((target->Is(18) & 1) || target->numTroops <= 0) {
             return 0.0f;
         }
         break;
