@@ -153,6 +153,17 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
+// DECLARED, NOT DEFINED - viewarmywindow.cpp's precedent, and for the same
+// reason: retail's copy of this three-const-reference selector is a COMDAT
+// the linker parked at 0x4e6750, so the TU that emits the CALL never saw a
+// body to expand. hero::GetLuck's `apply_limits` clamp is that call
+// (fn+0x29e: `lea ecx,[ebp+8] / lea edx,[ebp+0x10] / push &[ebp+0xc] /
+// call 0x4e6750 / mov eax,[eax]`), with the two bounds materialised into
+// the DEAD otherHero and on_cursed_ground parameter homes. Giving our CL a
+// definition would make it inline the selector and lose the call - and
+// GetMorale's twin clamp IS inline in retail, so that one stays by value.
+const int& _cpp_clamp(const int& _Lo, const int& _V, const int& _Hi);
+
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -3710,12 +3721,29 @@ static void handle_artifact_click(long code, unsigned char right_mouse)
                     if (worn != ARTIFACT_NONE)
                         missing[worn] = false;
                 }
-                // MEASURED NEGATIVE, do not retry: `#pragma
-                // inline_depth(0)` on this test to chase retail's
-                // out-of-line bitset<144>::any() (base x0 vs retail x1)
-                // costs WindowHandler 74.47 -> 70.80 - the pin is
-                // statement-granular, so it also de-inlines the bitset
-                // machinery the test is built from.
+                // MEASURED NEGATIVE THREE WAYS, do not retry. Retail
+                // CALLS three bitset members in this block that our CL
+                // expands: `bitset<144>::operator[]` (0x4cef80, the
+                // 18-byte reference ctor), `reference::operator=`
+                // (0x48e9f0, which carries set()'s body inlined) and
+                // `any()` (0x4e64c0) - our compile instead calls
+                // `set(size_t,bool)` once and expands any().
+                // `#pragma inline_depth(0)` reproduces each of those
+                // calls and every variant LOSES:
+                //   pin on the whole `if (!missing.any())` statement
+                //       74.4733 -> 70.80 (recorded 2026-08-20)
+                //   pin on a HOISTED `bool = !missing.any();` alone,
+                //       so the guarded body is out of the pin's reach
+                //       74.4733 -> 70.2438 (2026-08-20)
+                //   pin on `missing[worn] = false;` alone
+                //       74.4733 -> 69.5800
+                //   both site pins together
+                //       74.4733 -> 70.3412
+                // So the hoist DOES isolate the pin - the earlier
+                // "the pin also de-inlines the guarded body" reading is
+                // wrong - and imposing retail's calls still costs four
+                // points. The cross-jumping defect below is upstream of
+                // all of them.
                 if (!missing.any()) {
                     if (gpCurrentHero->HeroFn_004D9CC0(
                             record.artifactId)
@@ -6008,7 +6036,18 @@ void hero::GiveResource(int whichRes, int howMuch)
 // `push 0x30 / call IsWieldingArtifact` - /Ob2 runs out of budget after
 // four expansions.
 //
-// Residual (75.0%): register HOMING, the twin's residual one step
+// 75.0433 -> 87.7439 (2026-08-20) ON THE FINAL CLAMP, which is an
+// OUT-OF-LINE CALL in retail. The standing note (below, kept because its
+// decode is what fixed the argument order) identified the callee exactly
+// and then declined to spell it, on the grounds that it needed "a helper
+// declared in a header, a VA claim on 0x004e6750 and a site pin". It
+// needs none of those three: viewarmywindow.cpp had already established
+// the pattern - DECLARE the selector and give it no definition, and VC6
+// emits the call because this TU never sees a body to expand. The
+// declaration sits with _cpp_min/_cpp_max at the top of this file; no
+// header moved, no claim was added, and no pragma is involved.
+//
+// Residual (87.7%): register HOMING, the twin's residual one step
 // further. Retail keeps `luck` in MEMORY throughout - the four artifact
 // bonuses are `inc dword ptr [ebp+0xc]` against the dead
 // on_cursed_ground slot - and saves EBX only once it needs a town-loop
@@ -6019,11 +6058,10 @@ void hero::GiveResource(int whichRes, int howMuch)
 // retail's ONE shared return-0 block, which is the D-lever the match
 // doctrine predicts for a sunk shared exit.
 //
-// AND THE FINAL CLAMP IS AN OUT-OF-LINE CALL IN RETAIL (identified
-// 2026-08-20, not spelled here). The call-sequence alignment says retail
-// emits TEN calls in this body and we emit nine; the extra one is at
-// fn+0x2d9 and its target is 0x004e6750, a 33-byte function the delinker
-// currently labels `THeroScreenWindow_scalar_deleting_destructor` off a
+// THE CLAMP CALL, as decoded 2026-08-20. The call-sequence alignment says
+// retail emits TEN calls in this body and we emitted nine; the extra one
+// is at fn+0x2b9 and its target is 0x004e6750, a 33-byte function the
+// delinker labels `THeroScreenWindow_scalar_deleting_destructor` off a
 // vtable sample. It is not a destructor. Decoded:
 //     f(ecx = const int& lo, edx = const int& value,
 //       [ebp+8] = const int& hi)
@@ -6035,18 +6073,13 @@ void hero::GiveResource(int whichRes, int howMuch)
 // (lo, value, hi) order, returning a REFERENCE - retail derefs the result
 // with `mov eax,[eax]`. It materialises the two bounds into the DEAD
 // PARAMETER SLOTS (`mov [ebp+8],-3`, `mov [ebp+0xc],3` - the otherHero and
-// on_cursed_ground homes) and `luck` into [ebp+0x10].
+// on_cursed_ground homes) and `luck` into [ebp+0x10]; our compile now
+// picks exactly those three homes.
 //
 // 0x004e6750 sits IMMEDIATELY AFTER std::bitset<70>::set (0x004e66f0,
 // 0x60) in this compiland's STL-COMDAT run, so it is a header inline
-// emitted as a COMDAT rather than a member: a three-const-reference
-// clamp helper whose two library calls VC6 inlined into it. Spelling it
-// needs that helper declared in a header, a VA claim on 0x004e6750 (the
-// h3_stl_comdat_anchor pattern this file already uses for five such rows)
-// and `#pragma inline_depth(0)` at the site so VC6 calls the COMDAT
-// instead of expanding it. Left undone deliberately: it is a modelling
-// decision about a shared header helper, not a GetLuck spelling, and the
-// helper almost certainly has callers outside this TU.
+// emitted as a COMDAT rather than a member. It stays UNCLAIMED - no
+// evidence names it, and the call resolves without a claim.
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
 int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                   unsigned char apply_limits)
@@ -6096,7 +6129,7 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
     if (flags & 0x400000)
         luck += 500;
     if (apply_limits)
-        return _cpp_min(_cpp_max(luck, -3), 3);
+        return _cpp_clamp(-3, luck, 3);
     return luck;
 }
 
