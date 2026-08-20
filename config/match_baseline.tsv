@@ -90,7 +90,7 @@ advmgr	?ProcessHover@advManager@@QAEHHH@Z	79.7982	79.7982	79.7982	0xe360
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	75.6482	75.6482	75.6482	0x8c40
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
-advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.4381	91.4381	92.1925	0xec90
+advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
 advmgr	?ProcessSelect@advManager@@QAEHPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x97e0
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	89.5167	89.5167	89.5167	0xdeb0
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	90.2004	90.2004	90.2004	0x137c0

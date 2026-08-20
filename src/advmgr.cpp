@@ -4151,6 +4151,23 @@ void advManager::Reseed(int targetX, int targetY)
 // RETAIL-RECONSTRUCTED 2026-08-09. Retail proves the complete dig command:
 // movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
 // split, every player's puzzle refresh and the post-action route/button cleanup.
+//
+// 91.44 -> 92.19 (2026-08-20): the frame sweep's 0x38-vs-0x30 pointed at
+// the two artifact records. Both are TWO-ARG CTOR declarations at their
+// use sites, not default-then-assign: a top-level `type_artifact grail;`
+// runs the header's defaulting ctor, and our compile spilled {-1,-1} into
+// two slots at ENTRY (`or edi,-1` + two stores) and CSE'd that -1 into
+// GetCurrHero's `cmp edx,edi` - retail compares the IMMEDIATE and writes
+// each record exactly twice at its use site ({2,-1} at [ebp-0x2c] for
+// grail, [ebp-0x24] for describedGrail). `type_artifact grail(
+// ARTIFACT_HOLY_GRAIL, -1)` inside the award arm is the faithful form.
+//
+// Residual (92.19%): flow-distance 0; a whole-body EBX/EDI role swap
+// (currHero edi on retail, ebx ours; z the reverse) why-reg --model
+// proves is C2 handle state - creation order agrees on both sides, the
+// permutation is not source-reachable, capped after one compile. The
+// frame stays 0x38 vs 0x30: our two records do not share slots with the
+// description string temp the way retail packs them.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::ProcessSearch(int x, int y, int z)
 {
@@ -4158,7 +4175,6 @@ int advManager::ProcessSearch(int x, int y, int z)
     SAMPLE2 digSample;
     int player;
     NewmapCell* currCell;
-    type_artifact grail;
 
     currHero = gpGame->GetCurrHero();
 
@@ -4255,8 +4271,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                         GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            grail.artifactId = ARTIFACT_HOLY_GRAIL;
-            grail.extra = -1;
+            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
 
             if (gpCurrentPlayer->IsHuman()) {
                 gUnnamed69950c = gNetLocalGamePos;
@@ -4272,9 +4287,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                 NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail;
-                describedGrail.artifactId = ARTIFACT_HOLY_GRAIL;
-                describedGrail.extra = -1;
+                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL, -1);
                 std::string description = describedGrail.get_description();
                 NormalDialog(description.c_str(), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
