@@ -333,6 +333,7 @@ army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0
 army	?WalkTo@army@@QAEEHE@Z	89.7721	89.7721	89.7721	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
+army	?animate_missile@army@@QAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0
 army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	89.6998	89.6998	89.6998	0x45fd0
@@ -390,7 +391,6 @@ army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
-army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
