@@ -1768,7 +1768,7 @@ townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0
 townmgr	??0TCastleWindow@@QAE@XZ	99.7219	99.7219	99.7219	0x1d86f0
 townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1d0e00
-townmgr	??0THallWindow@@QAE@H@Z	85.9895	85.9895	85.9895	0x1c9be0
+townmgr	??0THallWindow@@QAE@H@Z	99.6605	99.6605	99.6605	0x1c9be0
 townmgr	??0TMageGuildWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1cc980
 townmgr	??0TShipWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d1ef0
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0

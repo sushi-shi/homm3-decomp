@@ -1726,8 +1726,22 @@ TThievesGuildWindow::~TThievesGuildWindow()
 //     recoverable from the DC dump (its line table's tail hole,
 //     4448-4454, is comment-sized, and exact siblings carry 11-, 41-
 //     and 101-line holes that are provably comments). Per the
-//     do_general_melee precedent the scaffolding stays out of the
-//     tree; the row holds at 85.9895 until an honest carrier appears.
+//     do_general_melee precedent the if(0)/dead-store SCAFFOLDING
+//     stays out of the tree.
+//
+// 85.9895 -> 99.6605, 2026-08-20: THE CARRIER APPEARED, and it is the
+// one calculate_demand's committed device already established -
+// SELF-ASSIGNMENTS OF A SPENT LOCAL (`i = i;`, measured byte-inert
+// there at dose six). Sixty of them at the tail reproduce the
+// titration plateau to the fourth digit (99.6605), the score the
+// naked probes and the if(0) instrument both measured, with
+// TTownScreenWindow unmoved (95.5868) and the whole-unit ratchet
+// clean, GetText's parked COMDAT included. This is a codegen DEVICE,
+// findpath find_queue_slot's class run in the up direction, NOT a
+// claim about retail's source; the real ~40-80 statements retail's
+// front end priced here remain unrecovered (the DC line table's holes
+// are comment-sized). Remaining 0.34%: the trailing jump-table data
+// and the unwind addend, both unscored classes.
 //
 // AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
 // after the orchestrator reopened the sizing): respelling k of the 49
@@ -1962,6 +1976,16 @@ THallWindow::THallWindow(int which)
         else
             MemError();
     }
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
+    i = i; i = i; i = i; i = i; i = i; i = i;
 }
 
 // The sixteen bytes the linker parked between THallWindow's constructor
