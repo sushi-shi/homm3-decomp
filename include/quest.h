@@ -207,11 +207,10 @@ public:
     // it is spelled longhand in each of them here, which is what the
     // bytes have.
     virtual void Save(TAbstractFile* file);
-    // Slot 14: 0x56cf70 is the base's 13; 14 is pure. Every leaf
-    // overrides it and every leaf body back-fills the three strings
-    // above from the text table +0x04 selects. Unattested beyond that -
-    // placeholder only.
-    virtual void quest_slot_14();
+    // Slot 14, IDENTIFIED 2026-08-21: every leaf back-fills the three
+    // strings above from columns 0/1/2 of its own text group, and only
+    // where the string is still empty. NAME provisional.
+    virtual void SetDefaultText();
 
     // The one way into the two text tables above, and the shape of every
     // read: the column is the only thing that varies between the two
@@ -224,6 +223,15 @@ public:
         QUEST_TEXT_DESCRIPTION = 3,
         QUEST_TEXT_COLUMNS = 5
     };
+    // The five-column group this quest type owns, computed ONCE: slot 14
+    // fills three of the columns off one row and retail keeps the group
+    // base in a register across all three.
+    const std::string* quest_texts()
+    {
+        const std::string* row =
+            field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
+        return row + QUEST_TEXT_COLUMNS * quest_type();
+    }
     const std::string& quest_text(int column)
     {
         // The ternary is on the whole INDEXED ROW, not on the table
@@ -257,6 +265,7 @@ public:
     virtual void DoProgressDialog();
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
+    virtual void SetDefaultText();
 };
 
 // Quest type 2. The payload is four bytes read as one block by both
@@ -273,6 +282,7 @@ public:
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
+    virtual void SetDefaultText();
 };
 
 class type_defeat_hero_quest : public type_quest {
@@ -290,6 +300,7 @@ public:
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
     virtual std::string GetRequirementText();
+    virtual void SetDefaultText();
 };
 
 class type_monster_quest : public type_quest {
@@ -323,6 +334,9 @@ public:
     virtual void TakePayment(hero* current_hero);
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
+    virtual void SetDefaultText();
+    virtual void Load(TAbstractFile* file, int version);
+    virtual void LoadFromMap(TAbstractFile* file);
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
@@ -336,6 +350,9 @@ public:
     virtual void TakePayment(hero* current_hero);
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
+    virtual void SetDefaultText();
+    virtual void Load(TAbstractFile* file, int version);
+    virtual void LoadFromMap(TAbstractFile* file);
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
@@ -348,6 +365,7 @@ public:
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
+    virtual void SetDefaultText();
 };
 
 class type_be_hero_quest : public type_quest {
@@ -362,6 +380,7 @@ public:
     virtual void DoProgressDialog();
     virtual std::string GetQuestDescription();
     virtual std::string GetRequirementText();
+    virtual void SetDefaultText();
 };
 
 class type_belong_to_player_quest : public type_quest {
@@ -375,6 +394,7 @@ public:
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual void Save(TAbstractFile* file);
+    virtual void SetDefaultText();
 };
 
 #endif  // HOMM3_QUEST_H

@@ -217,6 +217,31 @@ int AI_get_value_of_artifact(const type_artifact* artifact, int player);
 // from a header - seerhut.cpp is its only consumer in this tree.
 int AI_resource_cost(int player, const int* costs);
 
+// The tree's representation-bridge idiom (townmgr.cpp's
+// building_id_from_int, ai_combat.cpp's pair): the two container quests
+// deserialize their elements as plain 16-bit serial values and the
+// vectors below them are typed on the real domains, so the edge is
+// crossed through a union rather than through a cast into an enum.
+inline TArtifact artifact_from_int(int value)
+{
+    union {
+        int value;
+        TArtifact artifact;
+    } storage;
+    storage.value = value;
+    return storage.artifact;
+}
+
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
 // misc.obj's variadic string formatter, 0x50c600 - misc.h declares it, but
 // seerhut.cpp needs exactly this one symbol out of that header and the
 // include-set residual class makes a one-line declaration the cheaper edge.
@@ -317,6 +342,26 @@ void type_experience_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// Slot 14, the family's default-text back-fill: three columns of this
+// quest type's own five-string group, each written only when the quest
+// carries no custom text of its own. The group base is computed once and
+// held across all three fills, which is what `quest_texts()` is.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d720, 0x23E)  // anchor-vtable 0x641788 slot 14 + the shared text-table shape, retail-only
+void type_experience_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                              required_level);
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                              required_level);
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                              required_level);
+}
+
 
 
 // Residual (95.67%): retail spells the argument address `lea eax,[ecx+0x40]`
@@ -406,6 +451,22 @@ void type_skill_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
+void type_skill_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    std::string requirement;
+    requirement = skill_requirement_text(required_skills);
+
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                                     requirement.c_str());
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                       requirement.c_str());
+}
+
 // Slot 6, the SHORT requirement line, and three of the leaves are a bare
 // `return <const char*>`: the whole body past the lookup is Dinkumware's
 // assign-from-C-string expanded inline, _Xlen guard and refcount and
@@ -517,6 +578,22 @@ void type_defeat_hero_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x0056e6f0, 0x29E)  // anchor-vtable 0x641800 slot 14 + the shared text-table shape, retail-only
+void type_defeat_hero_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                              gpGame->GetHero(defeated_hero)->name);
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                              gpGame->GetHero(defeated_hero)->name);
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                              gpGame->GetHero(defeated_hero)->name);
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ea30, 0xF9)  // anchor-vtable 0x64183c slot 6, retail-only
 std::string type_monster_quest::GetRequirementText()
@@ -722,6 +799,42 @@ void type_artifact_quest::TakePayment(hero* current_hero)
     for (unsigned i = 0; i < artifacts.size(); ++i)
         current_hero->remove_artifact(artifacts[i]);
 }
+// The two container leaves' deserializers, and the mirror of their own
+// slot 13: a BYTE count and then one element per trip, appended through
+// vector::push_back - which is where the bulk of each body comes from,
+// Dinkumware's reallocating insert expanded inline.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056fcb0, 0x1EE)  // anchor-vtable 0x641878 slot 11 + TAbstractFile::Read shape, retail-only
+void type_artifact_quest::Load(TAbstractFile* file, int version)
+{
+    unsigned char count;
+
+    file->Read(&count, sizeof(count));
+    for (int i = 0; i < count; i++) {
+        short id;
+
+        file->Read(&id, sizeof(id));
+        artifacts.push_back(artifact_from_int(id));
+    }
+    type_quest::Load(file, version);
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x0056fea0, 0x1FA)  // anchor-vtable 0x641878 slot 12 + TAbstractFile::Read shape, retail-only
+void type_artifact_quest::LoadFromMap(TAbstractFile* file)
+{
+    unsigned char count;
+
+    file->Read(&count, sizeof(count));
+    for (int i = 0; i < count; i++) {
+        short id;
+
+        file->Read(&id, sizeof(id));
+        artifacts.push_back(artifact_from_int(id));
+    }
+    type_quest::LoadFromMap(file);
+}
+
 // The artifact quest's serializer. The count goes out as a BYTE - and
 // as retail's own `_First == 0 ? 0 : (_Last - _First) >> 2` size()
 // expansion, guard included - and then one short per element off a
@@ -755,6 +868,24 @@ void type_artifact_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// The three CONTAINER leaves take their one vararg from slot 6, called
+// ONCE into a named local and reused across the three fills.
+// E:\gamedcs\seerhut.cpp
+VA(0x005701d0, 0x199)  // anchor-vtable 0x641878 slot 14 + the shared text-table shape, retail-only
+void type_artifact_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    std::string requirement;
+    requirement = GetRequirementText();
+
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                                     requirement.c_str());
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                       requirement.c_str());
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
@@ -805,6 +936,48 @@ void type_creature_quest::TakePayment(hero* current_hero)
         }
     }
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00570e60, 0x208)  // anchor-vtable 0x6418b4 slot 11 + TAbstractFile::Read shape, retail-only
+void type_creature_quest::Load(TAbstractFile* file, int version)
+{
+    unsigned char count;
+
+    file->Read(&count, sizeof(count));
+    for (int i = 0; i < count; i++) {
+        short type;
+        int number;
+
+        file->Read(&type, sizeof(type));
+        file->Read(&number, sizeof(number));
+        types.push_back(creature_type_from_int(type));
+        counts.push_back(number);
+    }
+    type_quest::Load(file, version);
+}
+
+// The h3m form differs from the savegame form in WIDTH and in nothing
+// else: this one reads the stack size as a short where slot 11 reads a
+// dword, which is the same split quest.h's Load/LoadFromMap note
+// already records for the hero id and the level.
+// E:\gamedcs\seerhut.cpp
+VA(0x00571070, 0x20A)  // anchor-vtable 0x6418b4 slot 12 + TAbstractFile::Read shape, retail-only
+void type_creature_quest::LoadFromMap(TAbstractFile* file)
+{
+    unsigned char count;
+
+    file->Read(&count, sizeof(count));
+    for (int i = 0; i < count; i++) {
+        short type;
+        short number;
+
+        file->Read(&type, sizeof(type));
+        file->Read(&number, sizeof(number));
+        types.push_back(creature_type_from_int(type));
+        counts.push_back(number);
+    }
+    type_quest::LoadFromMap(file);
+}
+
 // The creature quest's serializer, and the one that proves the two
 // vectors are parallel: the count comes off `types` (+0x50) and the loop
 // then indexes `counts` (+0x40) with the same subscript.
@@ -839,6 +1012,19 @@ void type_creature_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x005713c0, 0x16A)  // anchor-vtable 0x6418b4 slot 14 + the shared text-table shape, retail-only
+void type_creature_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    std::string requirement;
+    requirement = GetRequirementText();
+
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                       requirement.c_str());
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
@@ -898,6 +1084,24 @@ void type_resource_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00571cc0, 0x23E)  // anchor-vtable 0x6418f0 slot 14 + the shared text-table shape, retail-only
+void type_resource_quest::SetDefaultText()
+{
+    std::string requirement;
+    requirement = GetRequirementText();
+    const std::string* texts = quest_texts();
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                              requirement.c_str());
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                              requirement.c_str());
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                              requirement.c_str());
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
@@ -969,6 +1173,22 @@ void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
     required_hero = id;
     type_quest::LoadFromMap(file);
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00572270, 0x276)  // anchor-vtable 0x64192c slot 14 + the shared text-table shape, retail-only
+void type_be_hero_quest::SetDefaultText()
+{
+    const std::string* texts = quest_texts();
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                              gpGame->GetHero(required_hero)->name);
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                              gpGame->GetHero(required_hero)->name);
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                              gpGame->GetHero(required_hero)->name);
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
@@ -1046,6 +1266,24 @@ void type_belong_to_player_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00572940, 0x204)  // anchor-vtable 0x641968 slot 14 + the shared text-table shape, retail-only
+void type_belong_to_player_quest::SetDefaultText()
+{
+    std::string requirement;
+    requirement = GetRequirementText();
+    const std::string* texts = quest_texts();
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                              requirement.c_str());
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                              requirement.c_str());
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                              requirement.c_str());
+}
+
 
 
 // THE QUEST-GUARD TEXT BUILDERS, AND WHY THERE ARE TWO OF THEM.
