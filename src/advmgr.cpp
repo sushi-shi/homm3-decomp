@@ -4655,7 +4655,7 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
             int bottomX = xMax;
             int leftY = yMax;
             int k;
-            for (k = 0; k < edgeLength; k++) {
+            for (k = edgeLength; k != 0; k--) {
                 InsertSound(topX, yMin, z, ring, soundsType);
                 InsertSound(xMax, rightY, z, ring, soundsType);
                 InsertSound(bottomX, yMax, z, ring, soundsType);
