@@ -1648,12 +1648,17 @@ public:
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void DoEvent(NewmapCell* eventCell, type_point point);
 #endif
-#ifdef HOMM3_EVENTS_VIEW
+// advmgr.obj's own HandleNetMsg joined the gate for HeroSwap (its trade
+// arm swaps the two freshly-copied hero records). Split guard, the
+// GameFn_004CA780 pattern.
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
     // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
     // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
     // needs the declarator; the pair is (visitor, visited) in the DC's
     // own order and a call relocation's symbol name is not scored.
     void HeroSwap(class hero* leftHero, class hero* rightHero);
+#endif
+#ifdef HOMM3_EVENTS_VIEW
     void TownEvent(NewmapCell* cell, type_point point,
                    unsigned char human_player);
     // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
@@ -1807,6 +1812,12 @@ public:
     void ScreenScroll(int iDir, int bChangeMouse);
     void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
+    // Two retail-only member ordinals HandleNetMsg drives on gpAdvManager:
+    //   0x482010  the map-change record applier (the 1049..1063 batch)
+    //   0x4acd70  the combat-init hand-off
+    // Neither row is claimed here; both live outside advmgr.obj's band.
+    void AdvmgrFn_00482010(class CNetMsg* pNetMsg);
+    void AdvmgrFn_004ACD70(class CNetMsg* pNetMsg);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
     void EnableButtons();

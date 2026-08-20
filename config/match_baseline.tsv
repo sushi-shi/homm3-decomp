@@ -70,7 +70,8 @@ advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
 advmgr	?HandleGiftMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20
-advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
+advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	98.9292	98.9292	98.9292	0x5e30
+advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
 advmgr	?HeroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590
 advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
@@ -134,7 +135,6 @@ advmgr	?get_trigger_cell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.000
 advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98.0056	98.0056	0xdcc0
-advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380

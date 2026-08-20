@@ -206,6 +206,16 @@ extern const char* gLuckTexts[25];
 
 class hero : public type_obscuring_object {
 public:
+    // DECLARED, NOT DEFINED 2026-08-20: forcing the copy assignment
+    // out of line. Retail keeps ONE ??4hero body - the string-bearing
+    // memberwise copier at 0x406480 inside advmgr.obj's band, the row
+    // the HandleGiftRequestMsg withdrawal note reads instruction by
+    // instruction - and HandleNetMsg's trade arm CALLS it twice where
+    // an implicit (inline-candidate) operator= gets expanded. An
+    // undefined declaration reproduces the call without fabricating
+    // the body; the linker never runs over these objects.
+    hero& operator=(const hero& other);
+
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
         CLASS_NAME_OVERRIDE_SCENARIO = 15,

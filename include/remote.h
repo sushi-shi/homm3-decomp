@@ -44,7 +44,18 @@ public:
     void Copy(CNetMsgHandler* pOther);
     void SetAbortPopupMsg(CNetMsg* pNetMsg);
 
-private:
+    // Retail-only 0x557920, an ordinal placeholder. The dispatcher's
+    // default arm hands every unhandled message to it (the body that
+    // handles RS_NEW_HOST among others) and forwards its result to the
+    // recycler; the row is not claimed here.
+    CNetMsg* RemoteFn_00557920(CNetMsg* pNetMsg);
+
+protected:
+    // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
+    // HandleNetMsg's defer arms store the abort message DIRECTLY
+    // (`mov [this+8], msg` inline at nine sites) where SetAbortPopupMsg
+    // is an out-of-line body - the derived dispatcher touches the raw
+    // members, so retail's access let it.
     unsigned char m_inPopup;       // +0x04
     char pad_05[3];
     CNetMsg* m_pAbortPopupMsg;      // +0x08
@@ -59,7 +70,13 @@ protected:
     virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
     void HandleGiftRequestMsg(CNetMsg* pNetMsg);
     void HandleGiftMsg(CNetMsg* pNetMsg);
-    void HandleTradeRequestMsg(CNetMsg* pNetMsg);
+    // VIRTUAL (slot 4) 2026-08-20: HandleNetMsg's RS_GIFT arm calls it
+    // through the vtable (`call [edx+0x10]`), the only slot past the
+    // four CNetMsgHandler introduces - retail's class had exactly this
+    // one additional virtual. (Its NAME is still the crossed one the
+    // attribution note in src/advmgr.cpp records - the body credits a
+    // gift - and the rename stays with the netmsg owner.)
+    virtual void HandleTradeRequestMsg(CNetMsg* pNetMsg);
 };
 SIZE(CAdvMgrNetMsgHandler, 0x0c);
 
@@ -228,6 +245,31 @@ protected:
 };
 SIZE(CHourGlass, 1);
 
+// The dispatcher's out-of-TU surface, all retail-only ordinals in the
+// remote band (0x553aa0..0x5569f0); none of the rows is claimed here.
+//   0x555910  the per-message recycler every dispatch path ends in
+//   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
+//   0x556430  player-drop handling      0x5565e0  player-drop update
+//   0x556780  player-dead sweep         0x556940  player-won
+//   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
+void RemoteFn_00555910(CNetMsg* pNetMsg);
+char* RemoteFn_00553AA0(char* dst, const char* format, ...);
+void RemoteFn_00556430(int gamePos);
+void RemoteFn_005565E0(int gamePos);
+void RemoteFn_00556780(int gamePos, unsigned char bDead);
+void RemoteFn_00556940(CNetMsg* pNetMsg);
+void RemoteFn_005569A0(CNetMsg* pNetMsg);
+void RemoteFn_005569F0(CNetMsg* pNetMsg);
+
+// remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
+// dispatcher hands it the chat text in place and the sender's slot.
+void ReceiveChat(char* cChat, int fromWho);
+
+// Retail .bss 0x69d7b0, the status-line scratch RemoteFn_00553AA0 fills
+// for the turn-update and player-active banners. Ordinal name; the
+// remote band owns it.
+extern char gUnnamed69d7b0[];
+
 int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        unsigned char compressMsg,
                        unsigned char guaranteed);
@@ -243,7 +285,32 @@ extern int gNetworkActive69954c;
 // CODEVIEW(E:\gamedcs\remote.cpp:1390, dc 0x11ce14) unsigned char InitRemote(eNetGameType iMPType, const char* sUserName);
 // CODEVIEW(E:\gamedcs\remote.cpp:1411, dc 0x11ce68) void RemoteCleanup();
 // CODEVIEW(E:\gamedcs\remote.cpp:1438, dc 0x11cf34) int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:1446, dc 0x11cf64) int TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed);
+// CODEVIEW(E:\gamedcs\remote.cpp:1446, dc 0x11cf64) // The dispatcher's out-of-TU surface, all retail-only ordinals in the
+// remote band (0x553aa0..0x5569f0); none of the rows is claimed here.
+//   0x555910  the per-message recycler every dispatch path ends in
+//   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
+//   0x556430  player-drop handling      0x5565e0  player-drop update
+//   0x556780  player-dead sweep         0x556940  player-won
+//   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
+void RemoteFn_00555910(CNetMsg* pNetMsg);
+char* RemoteFn_00553AA0(char* dst, const char* format, ...);
+void RemoteFn_00556430(int gamePos);
+void RemoteFn_005565E0(int gamePos);
+void RemoteFn_00556780(int gamePos, unsigned char bDead);
+void RemoteFn_00556940(CNetMsg* pNetMsg);
+void RemoteFn_005569A0(CNetMsg* pNetMsg);
+void RemoteFn_005569F0(CNetMsg* pNetMsg);
+
+// remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
+// dispatcher hands it the chat text in place and the sender's slot.
+void ReceiveChat(char* cChat, int fromWho);
+
+// Retail .bss 0x69d7b0, the status-line scratch RemoteFn_00553AA0 fills
+// for the turn-update and player-active banners. Ordinal name; the
+// remote band owns it.
+extern char gUnnamed69d7b0[];
+
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed);
 // CODEVIEW(E:\gamedcs\remote.cpp:1454, dc 0x11cf94) void PollRemote();
 // CODEVIEW(E:\gamedcs\remote.cpp:1490, dc 0x11d020) void SendChat(const char* cChat, int toWho);
 // CODEVIEW(E:\gamedcs\remote.cpp:1529, dc 0x11d1c8) void ReceiveChat(char* cChat, int fromWho);
