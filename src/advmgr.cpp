@@ -6336,13 +6336,28 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 //                                               SetRolloverText pair)
 // 0x572e40 is 511 B, thiscall, `ret 8`, returning std::string by value
 // on one argument - the same signature as 0x573040, so arity screening
-// cannot separate them and only the caller does. The shape around the
-// site moves with it: retail emits `sprintf` BEFORE the builder call and
-// no string-temp teardown, where we emit builder / _Tidy / sprintf. So
-// this arm's source statement is not the one written here, and the
-// `_Tidy base x3 vs retail x2` row is downstream of that rather than a
-// budget decision. Naming the two callees needs their bodies read; left
-// open, but do not re-price this arm as an inliner problem first.
+// cannot separate them and only the caller does.
+//
+// FIXED AND MEASURED 2026-08-20. All four builders are now claimed,
+// reconstructed and EXACT in seerhut.cpp, and both arms here call the
+// pair the retail bytes name. The reading above was RIGHT about the
+// callees and WRONG about the consequence: swapping them is BYTE-FLAT.
+// QuickInfo scored 90.2004 before the swap and 90.2004 after, and
+// SetRolloverText 90.9026 either way. That is the standing doctrine
+// (objdiff scores a relocation whose target is a working label as
+// matching, so a reloc NAME never gates the verdict), so a wrong callee
+// can never have been this residual's cause. Do not re-open it as one.
+//
+// What the QUEST_GUARD arm really still differs by, read positionally
+// from the bytes at fn+0x9dd: retail EXPANDS the returned temporary's
+// `~basic_string` (`mov eax,[ebp-0x244] / test / lea ecx,[eax-1] /
+// refcount decrement`, with a shared `operator delete` block at
+// fn+0x1a28) where we emit `lea ecx,[ebp-0x250] / call _Tidy`. That is
+// an UNDER-inline - we call, retail expands - on a 9,632-byte caller,
+// so the lever family is GROW THE CALLER / re-price the site count, not
+// the callee identity. The identical teardown IS reachable: retail
+// expands it and we match it byte for byte inside the seerhut builders
+// themselves, so it is a budget question here and not a spelling one.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
