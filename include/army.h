@@ -866,7 +866,12 @@ public:
     // below, so no array relation is asserted here.
     int blessAmount;              // +0x458
     int curseAmount;              // +0x45c
-    char pad_460[0x4];
+    // DC army.antiMagicSpellLevel (members.csv army@1084, the slot
+    // before bloodlustBonus 1088/+0x464 on the same +0x24 shift).
+    // Byte-proven by SetSpellInfluence (0x4448f0): its ANTI_MAGIC arm
+    // stores the per-mastery amount here and then cancels every
+    // standing spell whose traits level sits below it.
+    int antiMagicSpellLevel;      // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
     int bloodlustAmount;          // +0x464
@@ -1314,16 +1319,21 @@ public:
     // The DC prototype (army.cpp:4739) names the three parameters and
     // retail's `ret 0xc` agrees.
     void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
-    // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
-    // address is not claimed here, only the declaration. spells.obj's
-    // SetMassSpellInfluence (0x5a66d0) is the located caller and its
-    // push order fixes the four slots exactly as the DC prototype has
-    // them. BEHIND A VIEW because this header is in almost every TU's
-    // include closure and its declarator count is already near an
-    // include-set boundary; src/spells.cpp is the only consumer.
+    // 0x4448f0, claimed and reconstructed in army.cpp (an earlier
+    // revision of this note said 0x4443f0 - a typo, that address is
+    // inside ProcessDeath's span; the carve row 0x4448f0/0xB99 with
+    // dc 0x499e8 = army.cpp:3816 is the body). spells.obj's
+    // SetMassSpellInfluence (0x5a66d0) and src/spells.cpp remain
+    // callers, and army.cpp now consumes the declaration too. BEHIND A
+    // VIEW because this header is in almost every TU's include closure
+    // and its declarator count is already near an include-set boundary.
 #ifdef HOMM3_ARMY_SPELLS_VIEW
-    // `mastery` is TSkillMastery, spelled int here because that typedef
-    // is not in this header's closure.
+    // `mastery` is DC's TSkillMastery, spelled int: herospec.h's enum
+    // is not in this header's closure, spells.cpp's
+    // SetMassSpellInfluence forwards a plain long into the slot, and
+    // the two spellings are byte-identical everywhere the body uses it
+    // (an index, two stores, one signed compare). Only the mangled
+    // name differs, and the VA claim owns the pairing.
     void SetSpellInfluence(int spell, int power, int mastery,
                            const hero* casting_hero);
 #endif
