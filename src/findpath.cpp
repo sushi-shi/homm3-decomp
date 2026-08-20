@@ -406,6 +406,47 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
                                CREATURE_NOMAD) > 0);
 }
 
+// PushPoint's ordering key search, lifted out of its body for the /Ob2
+// BUDGET (2026-08-20).  There is NO Dreamcast row for this - the roster runs
+// PushPoint at findpath.cpp:271 straight to TestPossibleDirections at 461 with
+// nothing between, and it does list the helpers a build inlined away (that is
+// how build_combat_path and mark_enemy are known) - so this is a codegen
+// device, in the same class as the statement pins above it and not a claim
+// about retail's source.
+//
+// What it buys: the budget is `clamp(2 * caller_cb, 1000, 35000)` and the
+// nested expansions get `budget / sites-remaining`, so a pre-inline caller
+// larger than retail's makes our CL expand callees retail keeps out of line.
+// Shrinking caller_cb by this one block takes PushPoint 74.3805 -> 81.1401
+// and brings the whole queue.insert expansion into agreement: ten calls each
+// side, matching in IDENTITY as well as count (new, _Construct, _Ufill,
+// _Ucopy, _Destroy, operator delete, size, _Ucopy, _Ufill, _Ucopy) where
+// before we called _Construct at two of the sites retail calls _Ufill and
+// _Ucopy at.  It costs no symbol: findpath.obj defines no find_queue_slot.
+//
+// The lever is DOSE-SENSITIVE, so do not just add more.  Lifting the
+// magic_forbidden block out as well - the same shape, the next block up -
+// measures 81.1401 -> 76.4357.
+static int find_queue_slot(searchArray* search, long key, long adjusted)
+{
+    int last = search->queue.size();
+    int middle = last >> 1;
+    int first = 0;
+    while (last > first) {
+        long entry_key = search->queue[middle].barrier_value;
+        if (search->queue[middle].cost > search->this_turns_movement)
+            entry_key += search->queue[middle].danger_value;
+        if (entry_key < key
+                || (entry_key == key
+                    && adjusted < search->queue[middle].adjusted_cost))
+            first = middle + 1;
+        else
+            last = middle;
+        middle = (first + last) >> 1;
+    }
+    return middle;
+}
+
 // E:\gamedcs\findpath.cpp:271
 // `ret 0x20` = eight stack arguments over the thiscall `this`, the DC
 // count exactly. The first thing the body does is `mov edx,[ebp+8];
@@ -453,33 +494,34 @@ int GetTerrainCost(hero* current_hero, type_point start, int direction, int move
 // so retail really does expand that one - the pin is only correct where
 // retail keeps the whole callee out of line.
 //
-// Residual (74.38%): 16 out-of-line calls against retail's 22 and 93
-// conditional branches against 78, so we are still expanding six callees
-// retail calls. LOCALISED 2026-08-20 by aligning the two call sequences
-// site by site, and it is NOT the queue insert - it is `visited_points`:
+// Residual (81.1401%): 74.3805 -> 81.1401 on the caller-shrink lever, and the
+// residual is now ONE of the two insert expansions rather than both.
 //
-//   queue.insert's expansion agrees in COUNT and position, ten calls each
-//   within eleven bytes end to end (new +0x570/+0x581, _Construct
-//   +0x58e/+0x59f, _Destroy +0x5e7/+0x5e5, operator delete +0x5f0/+0x5ee,
-//   size +0x60c/+0x60a, _Ucopy +0x64e/+0x64c, _Ufill +0x679/+0x677,
-//   _Ucopy +0x6aa/+0x6a4). Two of the ten differ in IDENTITY only: at
-//   +0x5ae and +0x5c8 we call _Construct where retail calls _Ufill
-//   (0x434c30) and _Ucopy (0x434bf0), i.e. we expanded those two helpers
-//   and retail did not.
+// LOCALISED 2026-08-20 by aligning the two call sequences site by site. The
+// old note said the six callees we expand and retail calls were "all of them
+// NESTED inside the first insert's own expansion". They were not - the queue
+// insert was already agreeing in count, and the six were in `visited_points`:
 //
-//   visited_points.insert's expansion is where the six go missing. Retail
-//   emits TEN calls there - new +0x763, _Construct<pathCell*> +0x77d and
-//   +0x79a, _Ucopy +0x7aa, _Destroy +0x7b9, delete +0x7c2, size +0x7d8,
-//   _Ucopy +0x800, _Ufill +0x81e, _Ucopy +0x840 - and we emit FOUR: new,
-//   delete and the two _Constructs. _Ucopy x3, _Ufill, _Destroy and
-//   size() are all expanded on our side.
+//   queue.insert's expansion: TEN calls each side, and since the caller
+//   shrink they agree in IDENTITY too - new +0x570/+0x581, _Construct
+//   +0x58e/+0x59f, _Ufill +0x5b2/+0x5c3, _Ucopy +0x5c5/+0x5d6, _Destroy
+//   +0x5d4/+0x5e5, operator delete +0x5dd/+0x5ee, size +0x5f9/+0x60a, _Ucopy
+//   +0x63b/+0x64c, _Ufill +0x666/+0x677, _Ucopy +0x69f/+0x6a4. Before the
+//   shrink we called _Construct at the two sites retail calls _Ufill
+//   (0x434c30) and _Ucopy (0x434bf0) at.
 //
-// Both are the same shape: retail expands `insert` and CALLS the helpers
-// nested inside it. `inline_depth(1..4)` is inert mid-function in VC6 and
-// a statement pin imposes at the OUTERMOST callee (which here is the
-// insert retail expands), so "expand the insert, call its helpers" is not
-// spellable from this body - it is reachable only where the container is
-// hand-modelled in the TU, the way cmbtmgr's TObstacleVector is.
+//   visited_points.insert's expansion is what is left. Retail emits TEN calls
+//   there - new +0x763, _Construct<pathCell*> +0x77d and +0x79a, _Ucopy
+//   +0x7aa, _Destroy +0x7b9, delete +0x7c2, size +0x7d8, _Ucopy +0x800,
+//   _Ufill +0x81e, _Ucopy +0x840 - and we emit SEVEN, with four _Constructs
+//   where retail has two plus a _Ucopy, and no _Destroy or size() at all.
+//
+// The shape is: retail expands `insert` and CALLS the helpers nested inside
+// it. `inline_depth(1..4)` is inert mid-function in VC6 and a statement pin
+// imposes at the OUTERMOST callee - which here is the insert retail expands -
+// so it is not spellable at the site. The BUDGET is what reaches it, which is
+// what the find_queue_slot lift proved; the next lane's move is another
+// caller-shrink of the right dose, not a pin.
 VA(0x004b1a70, 0x88D)  // anchor-bracket, dc 0x9f2a4
 void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
                             int direction, int move_cost, int limit,
@@ -573,20 +615,7 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
     if (queue.size() >= 500)
         queue.erase(queue.end() - 1);
 
-    int last = queue.size();
-    int middle = last >> 1;
-    int first = 0;
-    while (last > first) {
-        long entry_key = queue[middle].barrier_value;
-        if (queue[middle].cost > this_turns_movement)
-            entry_key += queue[middle].danger_value;
-        if (entry_key < key
-                || (entry_key == key && adjusted < queue[middle].adjusted_cost))
-            first = middle + 1;
-        else
-            last = middle;
-        middle = (first + last) >> 1;
-    }
+    int middle = find_queue_slot(this, key, adjusted);
 
     point->direction = direction;
     point->cost = static_cast<unsigned short>(cost);
