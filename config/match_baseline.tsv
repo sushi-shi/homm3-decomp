@@ -254,6 +254,7 @@ ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_d
 ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39bc0
 ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38dc0
 ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a00
+ai_tactical	?get_enchantment_function@type_AI_spellcaster@@QAEP81@AEJPBVarmy@@Utype_enchant_data@@@ZH@Z	100.0000	100.0000	100.0000	0x3b690
 ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x35dc0
 ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399d0
 ai_tactical	?get_fire_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a110
@@ -298,7 +299,6 @@ ai_tactical	type_AI_spellcaster_consider_spell	0.0000	0.0000	0.0000	0x3bb20
 ai_tactical	type_AI_spellcaster_get_caliph_value	0.0000	0.0000	0.0000	0x3c4a0
 ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000	0.0000	0.0000	0x39a80
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
-ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000	0.0000	0.0000	0x3b690
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30

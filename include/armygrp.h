@@ -364,6 +364,38 @@ enum ESpellId {
     SPELL_SUMMON_AIR_ELEMENTAL = 0x45,
     SPELL_STONE = 0x46,
     SPELL_POISON = 0x47
+    // The nine rows ai_tactical's enchantment dispatch
+    // get_enchantment_function (0x43b690) needs and this roster did
+    // not carry. Each is byte-proven by that function's own two
+    // tables: the 61-entry BYTE index table at +0x214 maps
+    // `spell - 15` onto a slot of the 39-entry dword table at +0x178,
+    // and every slot's target is a `mov eax, offset get_<x>_value`
+    // whose relocation names the handler outright. So the value ->
+    // handler pairing is READ, not inferred, and the enumerator takes
+    // the handler's spell:
+    //   15, 18 -> get_damage_spell_value, the two flanks of the
+    //             already-proven ICE_BOLT 16 / LIGHTNING_BOLT 17
+    //   53 -> get_haste_value      56 -> get_frenzy_value
+    //   65 -> get_clone_value      73 -> get_disease_value
+    //   74 -> get_blind_value      75 -> get_age_value
+    //   72 -> the table's second default slot (no pricer of its own)
+    // Four of the nine are independently corroborated by army.h's
+    // +0x198 spell-influence row, which already fixes FRENZY 0x38,
+    // BIND 0x48 and AGE 0x4b from the round-counter side and puts
+    // PARALYZE on 74. Behind a view for this header's usual measured
+    // reason.
+#ifdef HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
+    ,
+    SPELL_MAGIC_ARROW = 0xf,
+    SPELL_IMPLOSION = 0x12,
+    SPELL_HASTE = 0x35,
+    SPELL_FRENZY = 0x38,
+    SPELL_CLONE = 0x41,
+    SPELL_BIND = 0x48,
+    SPELL_DISEASE = 0x49,
+    SPELL_PARALYZE = 0x4a,
+    SPELL_AGE = 0x4b
+#endif
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven

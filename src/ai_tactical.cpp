@@ -21,6 +21,10 @@
 // jump table, so the five codes that raise a spell's mastery need
 // enumerators.
 #define HOMM3_CMBTMGR_SPELL_MASTERY_DECL
+// get_enchantment_function's dispatch names nine spell rows this
+// header's roster did not carry; its own byte/dword table pair proves
+// each of them.
+#define HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -3120,27 +3124,122 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
     return 0;
 }
 
+// E:\gamedcs\ai_tactical.cpp:2884
+// The enchantment dispatch: one pointer-to-member per priceable spell,
+// and `unimplemented` for everything else. Retail lowers it as a
+// two-level jump table - a 61-entry BYTE index over `spell - 15` at
+// +0x214 feeding a 39-entry dword table at +0x178 - so this IS a
+// jump-table switch and its ARM ORDER IS SOURCE ORDER (the standing
+// doctrine, and the reason the cases below are not sorted by value:
+// retail emits age(75) first and weakness(45) last).
+//
+// TWO SLOTS OF THE DWORD TABLE POINT AT THE SAME DEFAULT BLOCK, and
+// that is what fixes the SPELL_BIND arm below. VC6 gives every case
+// label group its own slot even when the target coincides with the
+// fall-out point, so a lone `case SPELL_BIND: break;` and the switch's
+// own out-of-range exit both resolve to the trailing return - one slot
+// each, which is exactly the 0x23/0x26 pair the byte table carries.
+//
+// The address-take is why this could not be written before: it needs
+// every handler EMITTED, not merely claimed, or the relocation names
+// the flat carve label instead of the member. Two rows are still
+// carcass stubs - get_fortune_value (0x438490) and unimplemented
+// (0x43b680, which the carve does not even cut as a row) - so their
+// two `mov eax, offset` instructions are the standing residual here.
+VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
+type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function(SpellID spell)
+{
+    switch (spell) {
+    case SPELL_AGE:
+        return &type_AI_spellcaster::get_age_value;
+    case SPELL_AIR_SHIELD:
+        return &type_AI_spellcaster::get_air_shield_value;
+    case SPELL_ANTI_MAGIC:
+        return &type_AI_spellcaster::get_antimagic_value;
+    case SPELL_MAGIC_MIRROR:
+        return &type_AI_spellcaster::get_backlash_value;
+    case SPELL_BERSERK:
+        return &type_AI_spellcaster::get_berserk_value;
+    case SPELL_BLESS:
+        return &type_AI_spellcaster::get_bless_value;
+    case SPELL_BLIND:
+    case SPELL_PARALYZE:
+        return &type_AI_spellcaster::get_blind_value;
+    case SPELL_BLOODLUST:
+        return &type_AI_spellcaster::get_blood_lust_value;
+    case SPELL_CLONE:
+        return &type_AI_spellcaster::get_clone_value;
+    case SPELL_COUNTERSTRIKE:
+        return &type_AI_spellcaster::get_counterstroke_value;
+    case SPELL_CURE:
+        return &type_AI_spellcaster::get_cure_value;
+    case SPELL_CURSE:
+        return &type_AI_spellcaster::get_curse_value;
+    case SPELL_DISPEL:
+        return &type_AI_spellcaster::get_dispel_value;
+    case SPELL_DISRUPTING_RAY:
+        return &type_AI_spellcaster::get_disruptive_ray_value;
+    case SPELL_MAGIC_ARROW:
+    case SPELL_ICE_BOLT:
+    case SPELL_LIGHTNING_BOLT:
+    case SPELL_IMPLOSION:
+    case SPELL_TITANS_LIGHTNING_BOLT:
+        return &type_AI_spellcaster::get_damage_spell_value;
+    case SPELL_DISEASE:
+        return &type_AI_spellcaster::get_disease_value;
+    case SPELL_FORGETFULNESS:
+        return &type_AI_spellcaster::get_forgetfulness_value;
+    case SPELL_FORTUNE:
+        return &type_AI_spellcaster::get_fortune_value;
+    case SPELL_FIRE_SHIELD:
+        return &type_AI_spellcaster::get_fire_shield_value;
+    case SPELL_FRENZY:
+        return &type_AI_spellcaster::get_frenzy_value;
+    case SPELL_HYPNOTIZE:
+        return &type_AI_spellcaster::get_hypnotize_value;
+    case SPELL_MIRTH:
+        return &type_AI_spellcaster::get_mirth_value;
+    case SPELL_MISFORTUNE:
+        return &type_AI_spellcaster::get_misfortune_value;
+    case SPELL_SLOW:
+        return &type_AI_spellcaster::get_muck_and_mire_value;
+    case SPELL_POISON:
+        return &type_AI_spellcaster::get_poison_value;
+    case SPELL_PRAYER:
+        return &type_AI_spellcaster::get_prayer_value;
+    case SPELL_PRECISION:
+        return &type_AI_spellcaster::get_precision_value;
+    case SPELL_PROTECTION_FROM_AIR:
+        return &type_AI_spellcaster::get_air_protection_value;
+    case SPELL_PROTECTION_FROM_EARTH:
+        return &type_AI_spellcaster::get_earth_protection_value;
+    case SPELL_PROTECTION_FROM_FIRE:
+        return &type_AI_spellcaster::get_fire_protection_value;
+    case SPELL_PROTECTION_FROM_WATER:
+        return &type_AI_spellcaster::get_water_protection_value;
+    case SPELL_SHIELD:
+        return &type_AI_spellcaster::get_shield_value;
+    case SPELL_SLAYER:
+        return &type_AI_spellcaster::get_slayer_value;
+    case SPELL_SORROW:
+        return &type_AI_spellcaster::get_sorrow_value;
+    case SPELL_HASTE:
+        return &type_AI_spellcaster::get_haste_value;
+    case SPELL_STONE_SKIN:
+        return &type_AI_spellcaster::get_tough_skin_value;
+    case SPELL_WEAKNESS:
+        return &type_AI_spellcaster::get_weakness_value;
+    case SPELL_BIND:
+        return &type_AI_spellcaster::unimplemented;
+    }
+    return &type_AI_spellcaster::unimplemented;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2876
 DC_ONLY(0x41a74, 0x8)
 long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data caster)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:2884
-// Blocked by design for this pass: the body address-takes the whole
-// get_<spell>_value family - the ~36 slots the naming layer labels
-// game_3b690_subNN between 0x373f0 and 0x3b500 - so it cannot match
-// until that roster is located, claimed AND emitted (an address-take
-// needs a real body, not a carcass stub).
-// Returns a pointer-to-member of the get_<spell>_value family; the
-// Dreamcast prototype prints as `long (*)()*`, which is not a
-// declarator the label scanner can name - spelled out here so the
-// claim carries its own name instead of the bare `long`.
-VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
-type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function(SpellID spell)
 {
     // @stub
 }
