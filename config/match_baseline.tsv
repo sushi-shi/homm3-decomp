@@ -1637,6 +1637,7 @@ spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100
 spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.2924	97.2924	97.2924	0x1a5260
 spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	90.5846	90.5846	90.5846	0x1a7560
 spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJE@Z	100.0000	100.0000	100.0000	0x1a66d0
+spells	?ShowMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	96.0966	96.0966	96.0966	0x1a67c0
 spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	98.7602	98.7602	98.7602	0x1a8950
 spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEE@Z	97.0968	97.0968	97.0968	0x1a8090
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
@@ -1657,7 +1658,6 @@ spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@
 spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810
 spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
-spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0

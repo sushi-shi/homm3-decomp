@@ -1743,7 +1743,7 @@ public:
     //     creature domain.
     //   * Earthquake's `level` indexes akSpellTraits' mastery_bonus row
     //     for the number of wall sections to bring down.
-    void ShowMassSpell(const unsigned char* bEffected, int spellEffect,
+    void ShowMassSpell(const unsigned char (*bEffected)[20], int spellEffect,
                        unsigned char bShowWince);              // 0x5a67c0
     void SummonElemental(SpellID spell, TCreatureType iMonType,
                          int iSpellPower, int level);          // 0x5a7080

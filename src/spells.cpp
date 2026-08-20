@@ -2309,16 +2309,139 @@ void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spel
     }
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:4424
+// The MASS twin of cmbtmgr's PowEffect (0x468990), and it reads as one:
+// five walks of armies[side][slot], gated on the caller's `effected` row.
+//   1. arm the pow sprite on every affected stack, and budget the frame
+//      count - the effect's own, raised to the longest wince or death
+//      sequence any affected stack will play;
+//   2. put those stacks INTO that sequence, wince or death by whether
+//      the stack still has troops;
+//   3. fire the force-feedback effect, then run the frame loop: advance
+//      every affected stack's animation, park a finished wince back on
+//      cs_wait, track the pow sprite's own frame, DrawFrame;
+//   4. disarm the pow sprite;
+//   5. after all of that - and this half runs even in QUICK COMBAT -
+//      sweep the dead, hand any siege weapon back to its hero to
+//      destroy, and redraw once if anything died.
+//
+// LoadSpellEffect (0x5a92f0, forty lines below) is EXPANDED here, not
+// called: retail carries its whole dispose/GetSprite/cache-store body
+// inline at the top, which is the /Ob2 single-TU rule doing its job.
+//
+// THREE LEVERS, 93.34 -> 96.10:
+//   * BOTH numTroops TESTS ARE `<= 0`, WITH THE DEATH ARM FIRST. Retail
+//     jumps `jg` INTO the wince arm and falls through to death in both
+//     walks, which is the arm order a `> 0` spelling cannot produce.
+//   * THE SHARED `currFrameIndex = 0` IS ONE STORE, reached by `continue`
+//     out of each arm's already-in-that-sequence test - written as two
+//     `if (t != x) { t = x; index = 0; }` blocks VC6 duplicates it.
+//   * NAMING LoadSpellEffect's RESULT is worth 2.1 on its own (94.01 ->
+//     96.10). With `if (LoadSpellEffect(...))` the `frames = 0` store is
+//     hoisted ABOVE the inlined body; with the pointer in a local it
+//     stays where retail has it, and the zero VC6 then materialises in
+//     EBX is the one retail shares across the null test, the
+//     `powSprite = 0` store and `frames = 0`.
+// Measured and REJECTED: `int frames = sprite ? sprite->GetNumFrames(0)
+// : 0` (91.54 - the ternary merges the null test into GetNumFrames' own
+// zero returns and re-shapes the whole block), and `int anyDied` in
+// place of the byte (95.99), even though retail's own latch is a dword
+// (`xor edx,edx` / `mov edx,1` / `test edx,edx`) - the low-mass
+// inversion again.
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
-void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char bShowWince)
+void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
+                                  int spellEffect, unsigned char bShowWince)
 {
-    // @stub
-}
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        CSprite* effectSprite = LoadSpellEffect(spellEffect);
+        int frames = 0;
+        if (effectSprite)
+            frames = effectSprite->GetNumFrames(cs_walk);
+        for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army& stack = armies[side][i];
+                if (bEffected[side][i] && powSprite)
+                    stack.bShowPowEffect = 1;
+                if (bShowWince && bEffected[side][i]
+                    && stack.currFrameType != cs_wince) {
+                    if (stack.numTroops <= 0) {
+                        if (stack.stdIcon->GetNumFrames(cs_death) > frames)
+                            frames = stack.stdIcon->GetNumFrames(cs_death);
+                        stack.play_sample(army::DIE_SAMPLE);
+                    } else {
+                        if (stack.stdIcon->GetNumFrames(cs_wince) > frames)
+                            frames = stack.stdIcon->GetNumFrames(cs_wince);
+                        stack.play_sample(army::WINCE_SAMPLE);
+                    }
+                }
+            }
+        }
+        { for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++) {
+                army& stack = armies[side][i];
+                if (bShowWince && bEffected[side][i]) {
+                    if (stack.numTroops <= 0) {
+                        if (stack.currFrameType == cs_death)
+                            continue;
+                        stack.currFrameType = cs_death;
+                    } else {
+                        if (stack.currFrameType == cs_wince)
+                            continue;
+                        stack.currFrameType = cs_wince;
+                    }
+                    stack.currFrameIndex = 0;
+                }
+            }
+        } }
+        PlayImmEffect(akSpellEffectTraits[spellEffect].m_immName, 1);
+        { for (int frame = 0; frame < frames; frame++) {
+            { for (int side = 0; side < 2; side++) {
+                for (int i = 0; i < numArmies[side]; i++) {
+                    army& stack = armies[side][i];
+                    if (bShowWince && bEffected[side][i]) {
+                        int sequence = stack.currFrameType;
+                        if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(sequence) - 1) {
+                            stack.currFrameIndex++;
+                        } else if (sequence == cs_wince) {
+                            stack.currFrameType = cs_wait;
+                            stack.currFrameIndex = 0;
+                        }
+                    }
+                    if (powSprite
+                        && frame + 1 < powSprite->GetNumFrames(cs_walk))
+                        powFrameIndex = frame;
+                }
+            } }
+            DrawFrame(1, 0, 0, 100, 1, 1);
+        } }
+        { for (int side = 0; side < 2; side++) {
+            for (int i = 0; i < numArmies[side]; i++)
+                armies[side][i].bShowPowEffect = 0;
+        } }
+    }
 
-#endif  // @carcass
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    unsigned char anyDied = 0;
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            army& stack = armies[side][i];
+            if (bEffected[side][i] && stack.numTroops == 0) {
+                stack.ProcessDeath(0);
+                if (stack.Is(6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        stack.creatureType);
+                anyDied = 1;
+            }
+        }
+    }
+    if (anyDied)
+        DrawFrame(1, 0, 0, 0, 1, 0);
+    if (field_13460)
+        MakeCreaturesVanish();
+    CheckRebirth();
+}
 
 // Mirror Image: find a free hex near the caster's stack, put an
 // identical clone of it there, and slide the clone out of the original's
