@@ -72,8 +72,8 @@ control-flow (why-branch)	122	77.4860	543	game	?ClaimShipyard@game@@QAEXUtype_po
 inliner (predict-inline)	117	98.1326	6268	systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (133 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	116	89.8635	1144	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (5 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	115	90.0704	1156	mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (8 name-unresolvable pair(s) discounted)
-control-flow (why-branch)	115	89.7721	1121	army	?WalkTo@army@@QAEEHE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	114	85.9771	816	town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline
+control-flow (why-branch)	114	89.8063	1121	army	?WalkTo@army@@QAEEHE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	114	81.6384	620	campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	why-branch	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	113	92.1925	1453	advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	113	94.9534	2240	army	?DrawToBuffer@army@@QAEXHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -84,7 +84,6 @@ control-flow (why-branch)	111	95.1207	2266	townmgr	?BuyBuild@townManager@@QAEHHH
 control-flow (why-branch)	110	92.0874	1395	game	?calculate_production@game@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	109	76.9111	474	mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	109	93.1695	1596	army	?animate_missile@army@@QAEXPAV1@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	108	83.5240	657	ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	107	91.5981	1278	victorylossconditions	?CheckForArtifactWin@VictoryConditionStruct@@QAEEXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	104	81.7000	570	hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	103	96.0724	2625	army	?do_post_attack@army@@QAEXPAV1@HHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -333,6 +332,7 @@ unclassified	4	99.3641	553	advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCe
 register-homing (why-reg)	4	99.0992	389	ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	3	99.7765	1444	spells	?SpellCastWorkChance@combatManager@@QAEMHJPBVarmy@@EEJ@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	3	98.4697	208	ai	?DoCompAI@combatManager@@QAEXH@Z	why-reg	run why-reg / why-branch for the full search
+register-homing (why-reg)	3	99.5673	657	ai_tactical	?consider_single_enchantment@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@J@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	3	99.4737	494	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	3	99.3103	363	mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.6447	569	game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
