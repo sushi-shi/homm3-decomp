@@ -176,7 +176,13 @@ SIZE(TownExtra, 0x88);
 //                  get_buildable_mask) widens it with movsx;
 //   +0x08 dockSite, +0x0c/+0x10 the two hero slots, +0xe0 garrison,
 //   +0x150/+0x158/+0x160 the three building masks.
+#ifdef HOMM3_TOWN_OBJ_DECLS
+// For give_event_reward's parameter below; gated with it so no other
+// view of this header gains the type name (the initialize_game_data
+// include-set canary measured exactly this forward declaration at
+// 100.0 -> 96.09 when it sat here ungated, 2026-08-20).
 class TTownEvent;
+#endif
 
 class town {
 public:

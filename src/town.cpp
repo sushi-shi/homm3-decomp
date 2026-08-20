@@ -1153,6 +1153,10 @@ void show_building_rewards(const town* this_town,
 void show_creature_rewards(const town* this_town,
                            std::vector<type_dialog_resource>* rewards);
 
+// The reward dialog flushes in batches of eight rows (the extended
+// dialog's row capacity); named per the kStartLevelCampaign precedent.
+static const int kRewardDialogBatch = 8;
+
 // E:\gamedcs\town.cpp:1793
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
@@ -1190,7 +1194,7 @@ void town::give_event_reward(const TTownEvent* thisEvent)
             reward.resource = type + 0x16;
             reward.qualifier = i;
             rewards.push_back(reward);
-            if (rewards.size() == 8)
+            if (rewards.size() == kRewardDialogBatch)
                 show_building_rewards(this, &rewards);
         }
     }
@@ -1217,7 +1221,7 @@ void town::give_event_reward(const TTownEvent* thisEvent)
                                              + i];
                 rewards.push_back(reward);
             }
-            if (rewards.size() == 8)
+            if (rewards.size() == kRewardDialogBatch)
                 show_creature_rewards(this, &rewards);
         }
     }
