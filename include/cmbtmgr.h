@@ -1683,6 +1683,10 @@ public:
     // bFlashLighten) are DEAD in the retail body - no instruction in the
     // 1474 bytes reads either slot - and are kept because the arity is
     // what the call sites push.
+    // 0x5a7560, the resurrection worker the spell arms funnel into. The
+    // DC prototype (spells.cpp:4888) supplies all three parameter names.
+    void Resurrect(army* target_army, long hit_points_resurrected,
+                   unsigned char temporary);                    // 0x5a7560
     // 0x5a6c70, the clone. The DC prototype (spells.cpp:4576) supplies
     // both parameter names; `level` is DEAD in the retail body, which
     // reads neither its slot nor anything derived from it.
