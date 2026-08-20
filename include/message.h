@@ -14,6 +14,11 @@ class heroWindow;
 // Enum NAME is homm2 lineage, unattested on DC - grow the roster as
 // consumers prove values.
 enum EMessageId {
+    // The empty-queue message. inputManager::GetEvent (0x4ec590) and its
+    // PeekEvent twin build it by hand - `id = 0; codeY = 0; codeX = 0;
+    // qualifier = 0` - whenever the ring is drained, and
+    // advManager::Main cases on it to run the idle animation frame.
+    MESSAGE_NONE = 0,
     MESSAGE_KEY_DOWN = 1,
     MESSAGE_KEY_UP = 2,
     MESSAGE_MOUSE_MOVE = 4,

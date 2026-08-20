@@ -20,6 +20,20 @@ enum EKeyCodes {
     KEYCODE_ESCAPE = 0x01,
     KEYCODE_TAB = 0x0f,
     KEYCODE_ENTER = 0x1c,
+    // The nine letter/space rows advManager::ProcessKeyPress's byte-index
+    // table names. Each value is read straight off that table (the index
+    // is codeX - 1) and the arm behind it confirms the letter: T next
+    // town, I scenario info, P puzzle map, S save, D dig, L load, V view
+    // world, N new game, SPACE trigger the cell under the hero.
+    KEYCODE_T = 0x14,
+    KEYCODE_I = 0x17,
+    KEYCODE_P = 0x19,
+    KEYCODE_S = 0x1f,
+    KEYCODE_D = 0x20,
+    KEYCODE_L = 0x26,
+    KEYCODE_V = 0x2f,
+    KEYCODE_N = 0x31,
+    KEYCODE_SPACE = 0x39,
     // The function-key band AsciiConvert singles out: F1..F10 are the
     // contiguous 0x3b..0x44 run, F11/F12 sit apart at 0x57/0x58 - all
     // four bounds byte-proven by its scan-table branch.
