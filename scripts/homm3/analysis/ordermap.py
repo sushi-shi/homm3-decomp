@@ -194,7 +194,38 @@ def align(dc, x86, anchors):
     return out
 
 
-def _anchors(dc, x86, claims, anchor_log=False):
+def dc_tag_anchors(unit, dc, x86):
+    """[(x86_index, dc_index, rva, name)] from the `dc 0x...` tags on claims.
+
+    THE STRONGEST ANCHOR AVAILABLE, and it needs no inference at all. Claims in
+    src/ are written `VA(0x004xxxxx, 0xSIZE)  // <evidence>, dc 0x<off>` - that
+    tag IS the pairing, already reviewed by whoever landed the claim. 1579 of
+    them exist across 108 TUs.
+
+    Name matching was the original anchor source and it is guesswork by
+    comparison: it discarded almost every anchor in almost every unit until
+    2026-08-20, because a class token in a mangled label collides with the
+    roster's own constructor row. Prefer the tags; fall back to names only
+    where a claim carries no tag.
+    """
+    import re
+    src = _repo() / f"src/{unit}.cpp"
+    if not src.is_file():
+        return []
+    by_dc = {d["off"]: i for i, d in enumerate(dc)}
+    by_rva = {x["rva"]: j for j, x in enumerate(x86)}
+    out = []
+    for va, off in re.findall(
+            r"VA\((0x[0-9a-fA-F]+),[^\n]*?\bdc (0x[0-9a-fA-F]+)", src.read_text()):
+        rva = int(va, 16) - 0x400000
+        i, j = by_dc.get(int(off, 16)), by_rva.get(rva)
+        if i is not None and j is not None:
+            out.append((j, i, rva, dc[i]["name"]))
+    out.sort()
+    return out
+
+
+def _anchors(dc, x86, claims, unit_name, anchor_log=False):
     """{x86_index: dc_index} for claims that identify their DC row UNAMBIGUOUSLY.
 
     An anchor is only worth having if it is certainly right, so this demands
@@ -248,6 +279,13 @@ def _anchors(dc, x86, claims, anchor_log=False):
         if len(idxs) != 1:
             continue           # overloaded - the name does not pick one
         cand.append((j, idxs[0], x["rva"], dc[idxs[0]]["name"]))
+    # dc-tag anchors are authoritative; a name guess never overrides one.
+    tagged = dc_tag_anchors(unit_name, dc, x86)
+    taken_j = {a[0] for a in tagged}
+    taken_i = {a[1] for a in tagged}
+    cand = tagged + [c for c in cand
+                     if c[0] not in taken_j and c[1] not in taken_i]
+    cand.sort()
     # longest strictly-increasing run in the dc index (patience/LIS, O(n^2) is
     # ample here) - crossing anchors are dropped, not trusted.
     best = []
@@ -321,7 +359,7 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
         return 1
     claims = claimed_rvas()
 
-    anchors, anchor_note = _anchors(dc, x86, claims, anchor_log=True)
+    anchors, anchor_note = _anchors(dc, x86, claims, unit, anchor_log=True)
 
     print(f"[ordermap] {unit}: {len(dc)} DC row(s) from {unit}.cpp, "
           f"{len(x86)} x86 carve row(s) in span, {len(anchors)} anchor(s)")

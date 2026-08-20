@@ -46,10 +46,12 @@ different questions:
   anything under 50% at all.
 - **`python3 -m homm3.analysis.ordermap <unit>`** → the DC-roster-to-x86
   alignment for claiming work, with a VERDICT from arity agreement and span
-  coverage. Verdicts as of 2026-08-20, after the anchor fix below:
-  spells 98%, advmgr 97%, town 96%, army 94%, cmbtmgr 94%, hero 93% — all
-  USABLE; townmgr 86%, game 75%, mapcell 70% — MIXED; ai_tactical 51%,
+  coverage. Verdicts as of 2026-08-20, after both anchor fixes below:
+  **spells 100%, advmgr 98%, army 98%, town 96%, townmgr 95%, cmbtmgr 94%,
+  hero 92% — all USABLE**; game 76%, mapcell 70% — MIXED; ai_tactical 51%,
   sacrifice_window 64%, tradpost 55% — DO NOT CLAIM; seerhut THIN.
+  ai_tactical's 51% is real, not an artifact: it holds 82 anchors and is
+  already fully reconstructed, so what is left genuinely does not align.
 
 **A TOOL VALIDATED ON ONE UNIT IS NOT VALIDATED** (learned the hard way,
 2026-08-20). `ordermap`'s anchor detection tokenized the mangled label and
@@ -66,6 +68,16 @@ Two lessons: **a low-anchor verdict may be an artifact of the anchor finder,
 not a property of the unit** — check the anchor count before believing a
 verdict; and validate a heuristic on the unit most likely to BREAK it, not the
 one it was written against.
+
+**ANCHOR ON THE `dc` TAGS, NOT ON NAMES.** Claims are written
+`VA(0x004xxxxx, 0xSIZE)  // <evidence>, dc 0x<off>` — that tag IS a
+DC-to-retail pairing, already reviewed by whoever landed the claim, and 1579
+of them exist across 108 TUs. `ordermap` now reads them as its primary anchor
+source and falls back to name matching only for claims with no tag. That is
+what a lane did by hand to get a 53-anchor map when the tool was offering it
+2. With tags in play `spells` reaches **100% agreement over 100% of its
+span**, army 94 -> 98%, townmgr 86 -> 95%. When you land a claim, WRITE THE
+`dc` TAG — it is not decoration, it is the next lane's anchor.
 
 **RANK ON BYTES, NOT ON COUNTS OR PERCENTAGES.** Both other rankings mislead,
 in opposite directions, and the census measured by how much (2026-08-20, 347
