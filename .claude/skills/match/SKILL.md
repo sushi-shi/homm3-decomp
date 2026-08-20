@@ -923,6 +923,42 @@ retype measured 97.48 and is banked rejected).
 a reference restores it, but it is PER-SITE: naming both vectors in one
 function returned the row to exactly baseline.
 
+**A NUMERATOR CARRIER IS AN INSTRUMENT, NOT A FIX — DO NOT SHIP `i = i;`.**
+Self-assignments of a spent local grow `caller_cb`, which grows the `/Ob2`
+budget `clamp(2*caller_cb, 1000, 35000)`, which changes inlining to match
+retail. It works: doses of 6, 30 and 60 reproduce their `if (0)` plateaus to
+the fourth digit (+13.67 on `THallWindow`, +7.30 / +5.83 on `show_*_rewards`,
+one of them reaching 100.0000). **Ship none of it.** A carrier that scores is
+telling you the real body is missing that much REAL mass — it is the `if (0)`
+instrument wearing a disguise, and the number it produces is a measurement of
+the hole, not a repair of it. Three costs: the source stops being a
+reconstruction; a banked fake sets a ratchet MAX that blocks the later real
+find (`calculate_demand` is pinned at 97.4340 behind a dose-6 block at
+`ai_player.cpp:445` for exactly this reason); and a row recorded EXACT stops
+anyone ever looking at it again. **Read the dose as a byte budget and go find
+the construct.**
+
+**CONFIRM AN INLINE DIRECTION WITH A RELOC CENSUS BEFORE ROUTING OFF
+`predict-inline`'S SIGN — ITS BASE COLUMN CAN DISAGREE WITH THE EMITTED
+OBJECT.** On `QuickInfo` the tool showed `base x3 vs retail x2`, an UNDER-inline;
+a census over the whole 0x2600 B of the emitted body found **zero** `_Tidy`
+calls against retail's two. The body is OVER-inlined and the direction is
+shrink. That wrong sign cost four lanes and three briefs, and the whole
+question was worth **under one point** (reachable spread 89.78 … 90.63 against
+a 90.20 baseline). **Price a direction before spending a lane on it.**
+
+**VC6 WILL NOT EXPAND A CALLEE THAT INTRODUCES EH STATE INTO A CALLER THAT HAS
+NO EH FRAME.** Adding one destructible local to `HeroFn_004E2840` makes
+`bitset<19>::_Xran` vanish from the call census and retail's entire throw path
+arrive: **44.93 → 51.47**. So a missing throw path can be a missing *EH frame*,
+not a missing depth or budget. The frame delta that follows is a CONSEQUENCE of
+the expansion (the throw's own temporaries) and is not independent evidence for
+a missing local.
+
+**COARSE SWEEPS MISS NARROW PEAKS.** Sweeping 8/32/128 would have hidden
+`WindowHandler`'s step at exactly 5, and `StampObject`'s peak at one-to-two.
+Sweep 1,2,3,4,5 FIRST, then widen.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
