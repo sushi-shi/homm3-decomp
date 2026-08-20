@@ -5014,6 +5014,22 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen)
 // fall beyond the hero's remaining movement are pushed into the greyed
 // bank by adding 0x19, and reaching any affordable step is what un-dims
 // the move button at the end.
+//
+// Residual (52.02%): an OVER-inline, not a missing block - the structure
+// is already close, 32 branches / 2 returns against retail's 30 / 3.
+// Retail's call multiset is 3x CompleteDraw(unsigned char) + 1x the
+// five-argument CompleteDraw + 4x UpdateScreen: it CALLS the one-argument
+// forwarder at each of the three clear tails. Our build inlines that
+// forwarder into its own five-argument call, and at one of the three
+// sites inlines UpdateScreen as well, leaking GameTime::Get,
+// Process1WindowsMessage and heroWindowManager::UpdateScreen into the
+// body. That is /Ob2 budget, so per doctrine it wants a fuller caller,
+// not a respelling.
+// Tried and rejected: writing the three clear tails LONGHAND instead of
+// as one static - the reading copy 1 suggests by having no pathTarget
+// clear - measured 29.88, far worse. So the same-TU static inlined three
+// times is the right shape, and copy 1's missing clear really is VC6
+// propagating the currHeroId == -1 it has just tested.
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
 void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 {
