@@ -129,7 +129,10 @@ struct type_dialog_resource {
     // Retail only proves a four-byte resource index in the dialog vector;
     // the DC enum name is semantic evidence, not an x86 layout requirement.
     int resource;
-    long qualifier;
+    // UNSIGNED, retyped in place 2026-08-20: show_creature_rewards
+    // splits the packed count|creature dword with `shr 16`, which a
+    // signed long cannot produce.
+    unsigned long qualifier;
 };
 SIZE(type_dialog_resource, 8);
 
@@ -173,6 +176,8 @@ SIZE(TownExtra, 0x88);
 //                  get_buildable_mask) widens it with movsx;
 //   +0x08 dockSite, +0x0c/+0x10 the two hero slots, +0xe0 garrison,
 //   +0x150/+0x158/+0x160 the three building masks.
+class TTownEvent;
+
 class town {
 public:
     // Index of this town in gpGame->towns (byte, sign-extended).
@@ -457,6 +462,11 @@ public:
     // retail reads [ebp+8] as a full dword for both band compares and
     // for the inlined get_build_cost_array row arithmetic.
     unsigned char buy_building(type_building_id building);
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x5bfeb0 (dc 0x167c3c), reconstructed in the owning TU; gated so
+    // no other view of this class gains the declarator.
+    void give_event_reward(const TTownEvent* thisEvent);
+#endif
     unsigned char can_ever_build(int building_id) const;
     __int64 get_buildable_mask() const;
     int* get_build_cost_array(type_building_id building) const;
@@ -632,6 +642,18 @@ inline unsigned char town::HasBuilding(int buildingId,
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.
 extern const char* gTownSizeNames[4];
+
+#ifdef HOMM3_TOWN_OBJ_DECLS
+// The h3m editor's 41-slot building column order, one row per town
+// type (retail .data 0x6888c0, nine 41-int rows): row content maps the
+// map-format event building index to this faction's engine
+// type_building_id (row 0 opens 11,12,13,7,8,9,5,16,... - town hall,
+// city hall, capitol, fort, citadel, castle, tavern, blacksmith).
+// give_event_reward translates TTownEvent::BuildBuildings through it.
+// Name INVENTED (no DC symbol); owner TU unlocated - extern only.
+// Gated: town.obj is the only consumer.
+extern const int gEventBuildingIds[9][41];
+#endif
 
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss

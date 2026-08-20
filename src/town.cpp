@@ -11,6 +11,7 @@
 #include "exec.h"
 #include "game.h"
 #include "misc.h"
+#include "timedevent.h"
 #include "town.h"
 #include "townmgr.h"
 #undef HOMM3_TOWN_OBJ_DECLS
@@ -1136,26 +1137,160 @@ void town::change_generator_bonus(TCreatureType creature, long change)
 // kinds cleanly: the members are `ret 4` (ecx + one stack argument),
 // the /Gr free helpers are `ret 0` with their arguments in ecx/edx
 // (check_shipyard_square's third goes on the stack).
+#endif  // @carcass
+
+// The kb.h and castle.h prototypes, repeated file-locally for the
+// reason CheckEndGame above is.
+void extended_dialog(const char* text,
+                     std::vector<type_dialog_resource>& resources,
+                     long x, long y, long timeout);
+const char* GetBuildingName(int townType, int buildingId);
+// The two /Gr helpers below are declared ahead of their caller so their
+// BODIES can follow it - retail emits each one after give_event_reward
+// (the STATIC-HELPERS-AFTER-CALLER note above).
+void show_building_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards);
+void show_creature_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards);
+
 // E:\gamedcs\town.cpp:1793
+// Translates the event's 41-bit editor building mask through this
+// faction's gEventBuildingIds row, masks away what is already active,
+// illegal for the faction, or dock-impossible, builds the survivors
+// (flushing a dialog every eight), then applies the seven generator
+// bonuses to whichever dwelling tier is active, upgraded first.
 VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
 void town::give_event_reward(const TTownEvent* thisEvent)
 {
-    // @stub
+    __int64 mask = active;
+    __int64 eventBuildings = thisEvent->BuildBuildings;
+    __int64 grantable = 0;
+    int i;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (eventBuildings & bitNumber[i])
+            grantable |= bitNumber[gEventBuildingIds[type][i]];
+    }
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (gTownEligibleBuildMask[type] & bitNumber[i]) {
+            if (grantable & bitNumber[i])
+                mask |= included_buildings[type][i];
+        } else {
+            mask |= bitNumber[i];
+        }
+    }
+    if (dockSite == TOWN_DOCK_SITE_NONE)
+        mask |= bitNumber[DOCK_ID];
+    grantable &= ~mask;
+
+    std::vector<type_dialog_resource> rewards;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (grantable & bitNumber[i]) {
+            BuildBuilding(i, 0, 1);
+            type_dialog_resource reward;
+            reward.resource = type + 0x16;
+            reward.qualifier = i;
+            rewards.push_back(reward);
+            if (rewards.size() == 8)
+                show_building_rewards(this, &rewards);
+        }
+    }
+    if (rewards.size() > 0)
+        show_building_rewards(this, &rewards);
+
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        short growth = thisEvent->generatorBonuses[i];
+        if (growth != 0) {
+            if (active & bitNumber[DWELLING_0_UPG_ID + i]) {
+                type_dialog_resource reward;
+                reward.resource = 0x15;
+                population[i + TOWN_DWELLING_COUNT] += growth;
+                reward.qualifier = (growth << 16)
+                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
+                                             + i + TOWN_DWELLING_COUNT];
+                rewards.push_back(reward);
+            } else if (active & bitNumber[DWELLING_0_ID + i]) {
+                type_dialog_resource reward;
+                reward.resource = 0x15;
+                population[i] += growth;
+                reward.qualifier = (growth << 16)
+                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
+                                             + i];
+                rewards.push_back(reward);
+            }
+            if (rewards.size() == 8)
+                show_creature_rewards(this, &rewards);
+        }
+    }
+    if (rewards.size() > 0)
+        show_creature_rewards(this, &rewards);
 }
 
 // E:\gamedcs\town.cpp:1732
+// Joins the granted building names with ", "/" and ", wraps them in the
+// town-event dialog format, raises the extended dialog for the local
+// owner, and clears the reward vector for the caller's next batch.
 VA(0x005c0220, 0x1DA)  // anchor-caller (give_event_reward), dc 0x167958
-void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+void show_building_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards)
 {
-    // @stub
+    std::string text;
+    for (int i = 0; i < rewards->size(); i++) {
+        if (i > 0) {
+            if (i == rewards->size() - 1)
+                text += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
+            else
+                text += ", ";
+        }
+        text += GetBuildingName(this_town->type, (*rewards)[i].qualifier);
+    }
+    text = format_string(gpGeneralText->GetText(GENERAL_TEXT_EVENT_BUILDINGS),
+                         this_town->cName.c_str(), text.c_str());
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gNetLocalGamePos == this_town->owner)
+        extended_dialog(text.c_str(), *rewards, -1, -1, 0);
+    rewards->erase(rewards->begin(), rewards->end());
 }
 
 // E:\gamedcs\town.cpp:1760
+// The creature twin: "<count> <name>" per reward with the same
+// separators, the count picking the singular or plural creature name,
+// and the first reward's count driving the outer format.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
-void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+void show_creature_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards)
 {
-    // @stub
+    std::string text;
+    for (int i = 0; i < rewards->size(); i++) {
+        long count = (*rewards)[i].qualifier >> 16;
+        int creature = static_cast<unsigned short>((*rewards)[i].qualifier);
+        if (i > 0) {
+            if (i == rewards->size() - 1)
+                text += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
+            else
+                text += ", ";
+        }
+        text += format_string("%d ", count);
+        const char* name;
+        if (creature >= 0 && creature <= 0x96) {
+            if (count == 1)
+                name = akCreatureTypeTraits[creature].m_name;
+            else
+                name = akCreatureTypeTraits[creature].m_plural_name;
+        } else {
+            name = "";
+        }
+        text += name;
+    }
+    long firstCount = (*rewards)[0].qualifier >> 16;
+    text = format_string(gpGeneralText->GetText(GENERAL_TEXT_EVENT_CREATURES),
+                         firstCount, text.c_str(), this_town->cName.c_str());
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gNetLocalGamePos == this_town->owner)
+        extended_dialog(text.c_str(), *rewards, -1, -1, 0);
+    rewards->erase(rewards->begin(), rewards->end());
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:2063
 // `ret 4`, and it calls initialize_buildings below. 590 B against DC's
