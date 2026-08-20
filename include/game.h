@@ -911,7 +911,13 @@ public:
     // ratchet drop, so both stay declared until game::Load carries retail's
     // caller mass; re-take this the moment it does. Declaring
     // ~SavedGameHeader to hold the same line is NOT the way - measured at
-    // the same time, it collapses game::Load to 9.88%.
+    // the same time, it collapses game::Load to 9.88%. RE-TAKEN with the
+    // tail landed: 74.6385 -> 58.8959 on Load and 79.1973 -> 55.2266 on
+    // Save, game.obj 83.6719 -> 80.1106. Much less catastrophic than
+    // 9.88% and still firmly negative, so the conclusion is unchanged
+    // and the reason is now visible - retail expands that destructor on
+    // ONE exit and calls 0x4bdf80 on the other, which a declarator
+    // cannot express either way round.
     // RE-TAKEN 2026-08-20, with game::Load's tail landed and the function
     // at 74.6385% instead of the 50.46% above: STILL net negative, and by
     // a wider margin than the caller-mass argument predicted. Implicit
