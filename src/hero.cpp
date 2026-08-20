@@ -204,6 +204,24 @@ static short kExperienceForLevel[12] = {
     8000, 10000, 12200, 14700, 17500, 20600
 };
 
+// Per-campaign disabled secondary skills, one byte per TSecondarySkill.
+// Retail .DATA at 0x679ca0, directly after kExperienceForLevel's 24 bytes
+// - hence NOT const, the same reason that table is not. Read only through
+// get_skill_award's campaign arm, where it REPLACES the scenario's own
+// gpGame->field_4e658 row. Values read from the pinned image.
+static char kCampaignDisabledSkills[kNumSecSkills] = {
+    0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 1,
+    1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0
+};
+
+// The four magic schools as a table, retail .DATA 0x679cbc. NOT const:
+// get_skill_award walks it with a live `mov eax,[esi]` each iteration,
+// which a const array would let VC6 fold away.
+static TSecondarySkill kMagicSchools[4] = {
+    eSecSkillSchoolOfFireMagic, eSecSkillSchoolOfAirMagic,
+    eSecSkillSchoolOfWaterMagic, eSecSkillSchoolOfEarthMagic
+};
+
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:219
@@ -1991,19 +2009,146 @@ void hero::CheckLevel()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:2014
 // /Gr free function: ecx = current_hero, edx = min_level, the remaining
 // two on the stack. Body reads the 64-byte-stride hero-class record
 // (akHeroClasses, 0x67dcec, indexed by hero+0x30) for the per-class
 // skill probabilities plus a campaign-specific override - exactly the
 // inputs a skill award needs - and its ONLY caller is CheckLevel.
+//
+// Three weighted draws in one body: the guaranteed-Wisdom window
+// (lastWisdom + 3 or 6 <= level), the guaranteed-magic-school window
+// (last_magic_school_level + 3 or 4 <= level) drawn out of the four-school
+// table, then the general 28-skill draw. The per-scenario disabled-skill
+// row is gpGame->field_4e658, swapped for a private campaign row under
+// the SAME campaign/hero gate hero::CheckLevel uses - which is what pins
+// LEVEL_UP_CAMPAIGN_OVERRIDE / _OVERRIDE_HERO_ID as a shared pair rather
+// than two coincidences. `min_level` is assigned in the body, so it stays
+// a by-value parameter.
+//
+// The general draw returns its loop COUNTER as a TSecondarySkill. That
+// conversion goes through a union overlay, NOT static_cast: a cast into
+// an enum domain is a cleanliness floor at zero in this tree, and the
+// overlay is byte-inert (the value is already in EAX).
 VA(0x004dad00, 0x283)  // anchor-caller + arity, dc 0xccf78
 TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
 {
-    // @stub
+    int heroClass = current_hero->heroClass;
+    const THeroClassTraits& classTraits = akHeroClasses[heroClass];
+    const char* skillDisabled = gpGame->field_4e658;
+    if (gCampaignMode &&
+        gpGame->campaign.currentCampaign == hero::LEVEL_UP_CAMPAIGN_OVERRIDE &&
+        current_hero->id == hero::LEVEL_UP_OVERRIDE_HERO_ID)
+        skillDisabled = kCampaignDisabledSkills;
+
+    if (current_hero->skillCount >= 8)
+        min_level = eMasteryBasic;
+    if (min_level >= max_level)
+        return eSecSkillNone;
+
+    int wisdomGap;
+    int magicGap;
+    if (heroClass == eClassCleric || heroClass == eClassDruid ||
+        heroClass == eClassWizard || heroClass == eClassHeretic ||
+        heroClass == eClassNecromancer || heroClass == eClassWarlock ||
+        heroClass == eClassBattleMage || heroClass == eClassWitch) {
+        wisdomGap = 3;
+        magicGap = 3;
+    } else {
+        wisdomGap = 6;
+        magicGap = 4;
+    }
+
+    int level = current_hero->level;
+    if (current_hero->lastWisdom + wisdomGap <= level &&
+        current_hero->skillLevel[eSecSkillWisdom] < max_level &&
+        current_hero->skillLevel[eSecSkillWisdom] >= min_level &&
+        excluded != eSecSkillWisdom &&
+        !skillDisabled[eSecSkillWisdom])
+        return eSecSkillWisdom;
+
+    int i;
+    if (current_hero->last_magic_school_level + magicGap <= level &&
+        excluded != eSecSkillSchoolOfFireMagic &&
+        excluded != eSecSkillSchoolOfAirMagic &&
+        excluded != eSecSkillSchoolOfWaterMagic &&
+        excluded != eSecSkillSchoolOfEarthMagic) {
+        int schoolTotal = 0;
+        for (i = 0; i < 4; i++) {
+            TSecondarySkill school = kMagicSchools[i];
+            if (current_hero->skillLevel[school] < max_level &&
+                current_hero->skillLevel[school] >= min_level &&
+                !skillDisabled[school]) {
+                if (current_hero->skillLevel[school] > 0)
+                    schoolTotal++;
+                else
+                    schoolTotal += classTraits.gainSecondarySkillChance[school];
+            }
+        }
+        if (schoolTotal > 0) {
+            int schoolRoll = Random(1, schoolTotal);
+            for (i = 0; i < 4; i++) {
+                TSecondarySkill school = kMagicSchools[i];
+                if (current_hero->skillLevel[school] < max_level &&
+                    current_hero->skillLevel[school] >= min_level &&
+                    !skillDisabled[school]) {
+                    if (current_hero->skillLevel[school] > 0)
+                        schoolRoll--;
+                    else
+                        schoolRoll -=
+                            classTraits.gainSecondarySkillChance[school];
+                    if (schoolRoll <= 0)
+                        return school;
+                }
+            }
+        }
+    }
+
+    int total = 0;
+    for (i = 0; i < kNumSecSkills; i++) {
+        if (current_hero->skillLevel[i] < max_level &&
+            current_hero->skillLevel[i] >= min_level &&
+            i != excluded) {
+            int chance;
+            if (skillDisabled[i])
+                chance = 0;
+            else
+                chance = classTraits.gainSecondarySkillChance[i];
+            if (chance == 0 && current_hero->skillLevel[i] > 0)
+                chance = 1;
+            total += chance;
+        }
+    }
+    if (total == 0)
+        return eSecSkillNone;
+
+    int roll = Random(1, total);
+    for (i = 0; i < kNumSecSkills; i++) {
+        if (current_hero->skillLevel[i] < max_level &&
+            current_hero->skillLevel[i] >= min_level &&
+            i != excluded) {
+            int chance;
+            if (skillDisabled[i])
+                chance = 0;
+            else
+                chance = classTraits.gainSecondarySkillChance[i];
+            if (chance == 0 && current_hero->skillLevel[i] > 0)
+                chance = 1;
+            roll -= chance;
+            if (roll <= 0) {
+                union {
+                    int index;
+                    TSecondarySkill skill;
+                } drawn;
+                drawn.index = i;
+                return drawn.skill;
+            }
+        }
+    }
+    return eSecSkillNone;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

@@ -1032,6 +1032,7 @@ hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0
 hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960
 hero	?get_rollover_text@type_artifact@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xdb350
+hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	94.1284	94.1284	94.1284	0xdad00
 hero	?get_special_terrain@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4fa0
 hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890
@@ -1057,7 +1058,6 @@ hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
-hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
 hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
