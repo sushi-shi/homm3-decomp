@@ -24,7 +24,6 @@
 // its +0x2dc mastery twin by spell id, which needs the row form of
 // both. Split out of army.cpp's round view so this TU does not also
 // take that view's other twenty-six declarators.
-#define HOMM3_ARMY_SPELL_ROW_VIEW
 // get_chain_lightning_value drives the chain through two spells.obj
 // leaves this TU is the only located caller of.
 #define HOMM3_CMBTMGR_AI_SIMULATION_DECL
