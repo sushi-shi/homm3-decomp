@@ -163,9 +163,19 @@ public:
     // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
     // which no mask spelling over the plain dword produces. Only that one
     // arm is carried here; the other five typed views stay events-only.
+    //
+    // readObject (0x502e00) adds two more arms of the same dword, and both
+    // are bitfield stores no mask spelling over the plain dword produces:
+    // its SHIPYARD arm clears the low byte with `and cl,0` before merging
+    // the owner in, and its SHRINE arm writes a signed ten-bit lane thirteen
+    // bits up. The shipyard's record is the one game::ClaimShipyard already
+    // reads off the CELL - the same encoding, because the object's dword is
+    // what ends up in NewmapCell::extraInfo.
     union {
         unsigned long extraInfo;
         ScholarInfo scholar_info;
+        ShipyardInfo shipyard_info;
+        ShrineInfo shrine_info;
     };
 #else
     unsigned long extraInfo;

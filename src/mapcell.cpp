@@ -2521,16 +2521,349 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3290
+// The h3m object dispatcher.  Five stream fields land in the object itself -
+// x, y, z, a FOUR-byte type index of which only the low word is kept, and
+// five discarded bytes - and each of those five reads is checked and returns
+// -1.  Everything after that is a switch on the object TYPE, read out of the
+// type record the index selects, and every arm of it returns 1: the reads
+// inside an arm that are checked at all `break` to that shared 1, they do not
+// report failure.
+//
+// The switch is a jump table over 5..218 with a 214-entry byte index, and its
+// arm order is retail's own source order - the reconstruction keeps it.
+// Twenty of the twenty-five arms are a single call; the five inlined ones are
+// HERO_PLACEHOLDER, SHIPYARD, HOLY_GRAIL, SEER, SHRINE1/2/3, QUEST_GUARD and
+// the three RANDOM_DWELLING flavours, which is what the Dreamcast roster's
+// missing readHolyGrail/readShrine/readShipyard rows mean here.
+//
+// MINE and LIGHTHOUSE share a tail: retail cross-jumps the mine's non-
+// abandoned arm into the lighthouse's `readMineData` call rather than
+// duplicating it, which is a compiler transform over two separate cases, not
+// a fallthrough in the source.
+// Residual (42.5589%): an INLINER wall, and a narrow one - twenty-one of the
+// twenty-six arms already come out at retail's exact byte length, arm for
+// arm, off the same jump table and index table:
+//   prologue 249 vs 246, then 23/27/70/27/23/27/117/23/85/23/114/27/23 all
+//   equal, SEER 122 vs 120, 74/23/31/23/23/27/155 equal, id-217 146 vs 140.
+// It breaks in the last two heavy arms: id-218 emits 574 bytes where retail
+// emits 149 and QUEST_GUARD 1048 where retail emits 91, because our CL
+// expands `vector<T>::insert(iterator, size_type, const T&)` INLINE there -
+// dragging in _Ucopy, _Ufill, _Destroy, operator new and operator delete -
+// where retail calls it.  predict-inline: base 54 out-of-line calls vs
+// retail 29, every extra one from that expansion.
+//
+// Retail's own decisions are cost-driven and this tree reproduces most of
+// them: `insert(iterator, const T&)` is expanded for the 4- and 16-byte
+// element types (its `_P - begin()` is a shift) and CALLED for TSeerHut (19)
+// and TQuestGuard (5), whose pointer difference needs a magic multiply.  We
+// expand it for all five, and then the id-218 and QUEST_GUARD sites expand
+// the big three-argument insert underneath it as well.  That expansion also
+// costs the register assignment: it forces `this` to be spilled at +0x18 and
+// swaps its register with tempObject's (ours edi/ebx, retail's ebx/edi),
+// which is what holds the arms that DO match at length below 100%.
+//
+// Tried and rejected: `#pragma inline_depth(2)` and `(1)` around the body -
+// both are ignored under /O2 /Ob2, byte-identical output at 42.5589.
+// Not tried, and the standing hypothesis: the other nine bodies of this
+// compiland are still stubs, and Load/readMapObjects/loadMapObjects add call
+// sites to these very instantiations - a multi-site inline function is
+// costed differently from a single-site one, so this arm order may only
+// settle once the TU is finished.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
-int NewfullMap::readObject(void* infile, CObject* tempObject)
+int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
+                           int mapVersion)
 {
-    // @stub
-}
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->x = value;
 
-#endif  // @carcass
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->y = value;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObject->z = value;
+
+    int typeIndex;
+    if (infile->Read(&typeIndex, sizeof(typeIndex)) < sizeof(typeIndex))
+        return -1;
+    tempObject->typeIndex = static_cast<unsigned short>(typeIndex);
+
+    char padding[5];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+
+    switch (objectTypes[tempObject->typeIndex].objectType) {
+    case ARTIFACT:
+    case RANDOM_ARTIFACT:
+    case RANDOM_ARTIFACT_1:
+    case RANDOM_ARTIFACT_2:
+    case RANDOM_ARTIFACT_3:
+    case RANDOM_ARTIFACT_4:
+        readArtifactData(infile, tempObject);
+        break;
+
+    case HERO:
+    case PRISON:
+    case RANDOM_HERO:
+        readHeroData(infile, tempObject, mapVersion);
+        break;
+
+    case BOAT: {
+        signed char boatType = static_cast<signed char>(
+            objectTypes[tempObject->typeIndex].extra);
+        int triggerX;
+        int triggerY;
+        tempObject->FindTrigger(&triggerX, &triggerY);
+        tempObject->extraInfo = gpGame->CreateBoat(
+            triggerX, triggerY, tempObject->z, -1, 1, boatType);
+        break;
+    }
+
+    case RANDOM_TOWN:
+    case TOWN:
+        readTownData(infile, tempObject, mapVersion);
+        break;
+
+    case MONSTER:
+    case RANDOM_MONSTER:
+    case RANDOM_MONSTER_1:
+    case RANDOM_MONSTER_2:
+    case RANDOM_MONSTER_3:
+    case RANDOM_MONSTER_4:
+    case RANDOM_MONSTER_5:
+    case RANDOM_MONSTER_6:
+    case RANDOM_MONSTER_7:
+        readMonsterData(infile, tempObject);
+        break;
+
+    case EVENT:
+        readEventData(infile, tempObject, mapVersion);
+        break;
+
+    case HERO_PLACEHOLDER: {
+        HeroPlaceholderData placeholder;
+        placeholder.object = tempObject;
+
+        infile->Read(&value, sizeof(value));
+        placeholder.owner = value;
+
+        infile->Read(&value, sizeof(value));
+        placeholder.heroId = value;
+        if (placeholder.heroId
+                == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
+            placeholder.heroId = -1;
+            infile->Read(&value, sizeof(value));
+            placeholder.powerRating = value;
+        }
+
+        heroPlaceholders.push_back(placeholder);
+        break;
+    }
+
+    case SPELL_SCROLL:
+        readSpellScrollData(infile, tempObject);
+        break;
+
+    case SHIPYARD: {
+        unsigned char owner;
+        if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+            break;
+        tempObject->shipyard_info.owner = owner;
+
+        char shipyardPadding[3];
+        if (infile->Read(shipyardPadding, sizeof(shipyardPadding))
+                < sizeof(shipyardPadding))
+            break;
+        tempObject->shipyard_info.boatX = 0xff;
+        tempObject->shipyard_info.boatY = 0xff;
+        break;
+    }
+
+    case RANDOM_RESOURCE:
+    case RESOURCE:
+        readResourceData(infile, tempObject);
+        break;
+
+    case HOLY_GRAIL: {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            break;
+        gpGame->ultimateArtifactX = tempObject->x;
+        gpGame->ultimateArtifactY = tempObject->y;
+        gpGame->ultimateArtifactZ = tempObject->z;
+        gpGame->field_1f695 = value;
+
+        char grailPadding[3];
+        infile->Read(grailPadding, sizeof(grailPadding));
+        break;
+    }
+
+    case BLACK_BOX:
+        readBlackBoxData(infile, tempObject, mapVersion);
+        break;
+
+    case SCHOLAR:
+        readScholarData(infile, tempObject);
+        break;
+
+    case SEER: {
+        TSeerHut tempHut;
+        tempHut.read(infile);
+        SeerHutList.push_back(tempHut);
+        tempObject->extraInfo = SeerHutList.size() - 1;
+        if (tempHut.quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(tempHut.quest)));
+        break;
+    }
+
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3: {
+        char spell;
+        if (infile->Read(&spell, sizeof(spell)) < sizeof(spell))
+            break;
+        tempObject->shrine_info.spell = spell;
+
+        char shrinePadding[3];
+        infile->Read(shrinePadding, sizeof(shrinePadding));
+        break;
+    }
+
+    case OCEAN_BOTTLE:
+    case SIGN:
+        readSignData(infile, tempObject);
+        break;
+
+    case MINE:
+        if (objectTypes[tempObject->typeIndex].extra == NUM_RESOURCES)
+            readAbandonedMineData(infile, tempObject);
+        else
+            readMineData(infile, tempObject);
+        break;
+
+    case LIGHTHOUSE:
+        readMineData(infile, tempObject);
+        break;
+
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        readGeneratorData(infile, tempObject);
+        break;
+
+    case GARRISON:
+        readGarrisonData(infile, tempObject, mapVersion);
+        break;
+
+    case RANDOM_DWELLING: {
+        RandomDwellingData dwelling;
+
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        int castleId;
+        infile->Read(&castleId, sizeof(castleId));
+        dwelling.castleId = castleId;
+        if (castleId == 0) {
+            short factionMask;
+            infile->Read(&factionMask, sizeof(factionMask));
+            dwelling.factionMask = factionMask;
+        }
+
+        infile->Read(&value, sizeof(value));
+        dwelling.minLevel = value;
+        infile->Read(&value, sizeof(value));
+        dwelling.maxLevel = value;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case RANDOM_DWELLING_LVL: {
+        RandomDwellingData dwelling;
+
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        int castleId;
+        infile->Read(&castleId, sizeof(castleId));
+        dwelling.castleId = castleId;
+        if (castleId == 0) {
+            short factionMask;
+            infile->Read(&factionMask, sizeof(factionMask));
+            dwelling.factionMask = factionMask;
+        }
+
+        unsigned char level = static_cast<unsigned char>(
+            objectTypes[tempObject->typeIndex].extra);
+        dwelling.minLevel = level;
+        dwelling.maxLevel = level;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case RANDOM_DWELLING_FACTION: {
+        RandomDwellingData dwelling;
+
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
+
+        char dwellingPadding[3];
+        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+
+        dwelling.castleId = 0;
+        dwelling.factionMask = static_cast<unsigned short>(
+            1 << objectTypes[tempObject->typeIndex].extra);
+
+        infile->Read(&value, sizeof(value));
+        dwelling.minLevel = value;
+        infile->Read(&value, sizeof(value));
+        dwelling.maxLevel = value;
+
+        dwelling.object = tempObject;
+        randomDwellings.push_back(dwelling);
+        break;
+    }
+
+    case QUEST_GUARD: {
+        TQuestGuard tempGuard;
+        tempGuard.read(infile);
+        QuestGuardList.push_back(tempGuard);
+        tempObject->extraInfo = QuestGuardList.size() - 1;
+        if (tempGuard.quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(tempGuard.quest)));
+        break;
+    }
+
+    case WITCH_HUT:
+        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            tempObject->extraInfo = 0xefbf;
+        } else {
+            int allowedSkills;
+            infile->Read(&allowedSkills, sizeof(allowedSkills));
+            tempObject->extraInfo = allowedSkills;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return 1;
+}
 
 // E:\gamedcs\mapcell.cpp:3443
 #pragma auto_inline(off)
@@ -3162,7 +3495,7 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
 // an adventure object's anchor is its bottom-right corner.
 //
 // Five object classes are filed by something other than this pass and are
-// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, RANDOM_DWELLING and BOAT.
+// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, HERO_PLACEHOLDER and BOAT.
 // EVENT is skipped too but not silently - where its trigger mask covers the
 // cell, the cell is cleared of IsBlocked and is_trigger, retyped EVENT, and
 // given the object's extraInfo.  Everything else builds a TObjectCell and
@@ -3212,7 +3545,7 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 
             if (objectClass == HOLY_GRAIL || objectClass == HERO
                 || objectClass == RANDOM_HERO
-                || objectClass == RANDOM_DWELLING || objectClass == BOAT)
+                || objectClass == HERO_PLACEHOLDER || objectClass == BOAT)
                 continue;
 
             if (objectClass == EVENT) {
