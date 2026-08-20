@@ -6,6 +6,12 @@
 // keeps behind this view: declaring it unconditionally costs initialize's
 // initialize_game_data 100.0000 -> 96.0880 (measured 2026-08-20).
 #define HOMM3_ARMYGRP_SACRIFICE_VIEW
+// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
+// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
+#define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
+// ValidSpellTarget's tail gives Force Field and Fire Wall one placement
+// rule each; armygrp.h keeps both ids behind this view.
+#define HOMM3_SPELL_WALL_DECL
 #include "armygrp.h"
 #include "spells.h"
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
@@ -20,7 +26,12 @@
 // GetNextChainLightningTarget measures screen distance with army::MidX /
 // army::MidY, which army.h keeps behind this declaration view.
 #define HOMM3_ARMY_MIDPOINT_DECL
+// ModifySpellDamage forwards army::creatureType into armygrp's free
+// modify_spell_damage, whose slot is TCreatureType; army.h keeps the
+// DC-typed arm of that field behind this view.
+#define HOMM3_ARMY_CREATURE_TYPE_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_CREATURE_TYPE_VIEW
 #undef HOMM3_ARMY_MIDPOINT_DECL
 #undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
@@ -33,17 +44,33 @@
 #define HOMM3_CMBTMGR_AREA_VIEW
 // The spells.obj-only declaration block; see cmbtmgr.h.
 #define HOMM3_CMBTMGR_SPELLS_VIEW
+// AreaEffect's tail: damage_message, PowEffect and CheckRebirth.
+#define HOMM3_CMBTMGR_MESSAGE_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
+#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
 // find_demonic_resurrection_target, declared beside its army.cpp consumer.
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
 #include "cmbtmgr.h"
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
+#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
+#undef HOMM3_CMBTMGR_ROUND_VIEW
+#undef HOMM3_CMBTMGR_MESSAGE_VIEW
 #undef HOMM3_CMBTMGR_SPELLS_VIEW
 #undef HOMM3_CMBTMGR_AREA_VIEW
 #undef HOMM3_CMBTMGR_OBSTACLE_VIEW
+#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
+#include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
+#include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
+#include "kb.h"      // gText, the shared combat-message scratch buffer
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+// ModifySpellDamage's four "the spell did more/less than the table row"
+// messages; textresource.h keeps those enumerators behind this view.
+#define HOMM3_TEXT_SPELL_DAMAGE_VIEW
+#include "textresource.h"  // gpGeneralText
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <math.h>    // sqrt, for the chain-lightning bounce search
 
@@ -68,6 +95,38 @@ inline long combatManager::get_distance(hex_point start, hex_point stop) const
     if ((dx < 0) == (dy < 0))
         return _cpp_max(abs(dx), abs(dy));
     return abs(dx) + abs(dy);
+}
+
+// army::GetName (0x440100) as retail's spells.cpp saw it - the DC roster
+// puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline this TU
+// could expand, and every message body here expands it rather than
+// calling 0x440100. Spelled file-locally for exactly the reason
+// cmbtmgr.cpp's identical copy is; static with no surviving reference,
+// so no slot is expected.
+static const char* CreatureName(int type, long count)
+{
+    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
+    // literal; the linker folds our COMDAT onto it, so the only delta is
+    // a reloc NAME (masked).
+    return "";
+}
+
+// army::get_controlling_side (0x440140) as retail's spells.cpp saw it.
+// The DC roster puts that body in Army.h too (Army.h:800), i.e. an
+// inline this TU could expand, and every site here expands it rather
+// than calling 0x440140 - army.cpp keeps the out-of-line copy that the
+// /Ob2 extern-linkage rule emits regardless. Spelled file-locally for
+// exactly the reason CreatureName above is.
+static int ControllingSide(const army* stack)
+{
+    if (stack->hypnotizeFlag)
+        return 1 - stack->combatSide;
+    return stack->combatSide;
 }
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
@@ -254,16 +313,165 @@ army* combatManager::find_spell_target(SpellID spell, long side, long hex,
     return cells[hex].get_army();
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
 // E:\gamedcs\spells.cpp:2645
+// "Could this spell be aimed at this cell", and the body is three
+// independent rules stacked on one shared pair of exits.
+//
+// THE FIRST is the stack-targeting family: akSpellTraits' flag word
+// carries bits 4/5/6 and 17 for the spells that need a live or a dead
+// stack, and for those the answer is the finder plus a non-zero work
+// chance - the same `> 0.0` against a QWORD literal ValidSpellTargetArmy
+// uses, spelled here on the caller's own first_target / creature_spell.
+//
+// THE SECOND is the obstacle family (flag bit 8), and its mastery ladder
+// is a real switch - retail emits the four-entry jump table, with
+// none/basic sharing one arm, advanced its own, and expert accepting
+// unconditionally. The advanced arm loads the cell's flag word ONCE and
+// tests two different bits out of it.
+//
+// THE THIRD is the two WALL spells, one rule each, and both walk their
+// cells through the SAME five-test screen: in range, in neither
+// invisible column, no obstacle already on the cell, and nobody standing
+// there. Force Field takes its cells from the spell obstacle-shape rows
+// in .rdata (basic/expert picked by ADDRESS, two absolute immediates
+// twenty bytes apart); Fire Wall has them hard-coded as a column at -17
+// and -34, with a row-parity nudge that keeps the wall straight across
+// the half-offset rows.
+//
+// FOUR LEVERS, 57.43 -> 88.49, and three of them are about WHERE THE
+// EXITS LIVE:
+//   * The finder four rows above is CALLED, not expanded (57.43 ->
+//     65.22) - the /Ob2 budget asymmetry cmbtmgr.cpp's mana-drain pair
+//     records, pinned the same way.
+//   * ONE SHARED `return 1` (65.22 -> 68.34). Retail's tail is a single
+//     `mov al,1` epilogue every accepting arm BREAKS to, and the three
+//     rules are an if / else-if / else-if chain over it. Written as
+//     three independent blocks each ending in its own `return 1`, VC6
+//     if-converts the mastery arms into `sete` and the whole exit
+//     structure diverges.
+//   * NESTING the two early-outs instead of laddering them (68.34 ->
+//     71.72 -> 74.50, and it is what took the exit count from 8 to
+//     retail's 6). `if (target) return ...; return 0;` and
+//     `if (field_14 >= 0) { ... } else return 0;` reach the SHARED
+//     return-0 block; the `if (!x) return 0;` ladder duplicates an
+//     epilogue at each rung. This is the skill's "one shared return 0
+//     means a nested body" rule measured twice in one function.
+//   * NAMING THE CELL POINTER ABOVE THE GUARDS IS WORTH 14 (74.50 ->
+//     88.49). Retail computes `&cells[hex]` BEFORE the range and column
+//     tests in both wall loops and keeps it in ESI across all five;
+//     written as `cells[hex].field_10` at the point of use, VC6 sinks
+//     the whole address computation past the guards and rebuilds it
+//     twice. Same shape as the army-pointer hoist in
+//     GetNextChainLightningTarget, one loop level down.
+//
+// Residual (88.49%): `targetIndex` is memory-resident in retail (EDX at
+// the guard, re-read from [ebp+0x10] at each later use) and a
+// callee-saved pseudo for us (EDI), which shifts every register in the
+// two wall loops and spills the loop index and bound that retail keeps
+// in registers. Our CL classifies the parameter as call-crossing
+// because its interval spans the finder call, even though the branch
+// that makes the call always returns; retail's does not. That is the
+// C1 interval/handle class, and the one branch-polarity flip left (the
+// none/basic mastery arm, where retail duplicates `return 1` and we
+// duplicate `return 0`) is downstream of it - flipping the test's sense
+// measures exactly neutral, and spelling the arm `return 0; return 1;`
+// instead of `return 0; break;` costs 2.3.
 VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
-unsigned char combatManager::ValidSpellTarget(SpellID spellId, TSkillMastery mastery, int targetIndex, int casting_side, unsigned char first_target, unsigned char creature_spell)
+unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
+                                              long targetIndex,
+                                              long casting_side,
+                                              unsigned char first_target,
+                                              unsigned char creature_spell)
 {
-    // @stub
+    if (!ValidHex(targetIndex))
+        return 0;
+    if (akSpellTraits[spellId].field_c & 0x20070) {
+        // Retail CALLS the finder four rows above where our /Ob2 expands
+        // it - the same budget asymmetry cmbtmgr.cpp's mana-drain pair
+        // records, and the same fix.
+#pragma inline_depth(0)
+        army* target = find_spell_target(spellId, casting_side, targetIndex,
+                                         first_target, creature_spell);
+#pragma inline_depth()
+        if (target)
+            return SpellCastWorkChance(spellId, casting_side, target, 0,
+                                       first_target, creature_spell) > 0.0;
+        return 0;
+    }
+    if (akSpellTraits[spellId].field_c & 0x100) {
+        if (cells[targetIndex].field_14 >= 0) {
+            switch (mastery) {
+            case eMasteryNone:
+            case eMasteryBasic:
+                if (cells[targetIndex].field_10 & 0x3c)
+                    return 0;
+                break;
+            case eMasteryAdvanced:
+                if (!(cells[targetIndex].field_10 & 0x3c))
+                    break;
+                if (cells[targetIndex].field_10 & 0x10)
+                    break;
+                return 0;
+            case eMasteryExpert:
+                break;
+            default:
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    } else if (spellId == SPELL_FIRE_WALL) {
+        long wall_cells = (mastery >= eMasteryAdvanced) + 2;
+        for (long i = 0; i < wall_cells; i++) {
+            long hex = targetIndex;
+            if (i == WALL_CELL_NEAR) {
+                hex = targetIndex - COMBAT_GRID_ROW_STRIDE;
+                if ((targetIndex / COMBAT_GRID_ROW_STRIDE) & 1) {
+                    if (currentSide == 1)
+                        hex--;
+                } else if (currentSide == 0) {
+                    hex++;
+                }
+            } else if (i == WALL_CELL_FAR) {
+                hex = targetIndex - 2 * COMBAT_GRID_ROW_STRIDE;
+            }
+            const hexcell* cell = &cells[hex];
+            if (!ValidHex(hex))
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
+                return 0;
+            if (cell->field_10 & 0x3f)
+                return 0;
+            if (cell->armySide >= 0)
+                return 0;
+        }
+    } else if (spellId == SPELL_FORCE_FIELD) {
+        const type_obstacle_shape* shape = &kSpellObstacleShapes[0];
+        if (mastery >= eMasteryAdvanced)
+            shape = &kSpellObstacleShapes[1];
+        long odd_row = (targetIndex / COMBAT_GRID_ROW_STRIDE) & 1;
+        long wall_cells = shape->extra_hex_count;
+        for (long i = 0; i < wall_cells; i++) {
+            long hex = targetIndex + shape->extra_hex_offsets[i];
+            if (odd_row && !((hex / COMBAT_GRID_ROW_STRIDE) & 1))
+                hex--;
+            const hexcell* cell = &cells[hex];
+            if (!ValidHex(hex))
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == 0)
+                return 0;
+            if (hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_ROW_STRIDE - 1)
+                return 0;
+            if (cell->field_10 & 0x3f)
+                return 0;
+            if (cell->armySide >= 0)
+                return 0;
+        }
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // The address cmbtmgr.h used to hand SpellCastWorks. It is the AI's
 // targeting predicate: eleven retail callers, all of them the
@@ -716,12 +924,102 @@ void combatManager::mark_area_effect(SpellID spell, long hex, long mastery,
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:3324
+#endif  // @carcass
+
+// EVERY AREA DAMAGE SPELL'S BODY. The sprite effect goes over the centre
+// hex first, the collector two rows above fills the stack list, and then
+// each stack is rolled SEPARATELY - a failed roll clears that stack's
+// `effected` byte again, which is how the caller's animation pass learns
+// the spell missed it.
+//
+// THE `victim` / `several` PAIR IS THE MESSAGE SELECTOR. Retail keeps
+// the FIRST stack it damaged and a byte saying whether there was more
+// than one, and the two arms of the tail differ in exactly two
+// arguments: with one victim the message names that stack and reports
+// the damage the loop last computed, with several it names none and
+// recomputes the damage with NO target hero and NO target - i.e. the
+// unmodified figure, since ModifySpellDamage's hero and creature
+// adjustments both need a target.
+//
+// ComputeSpellDamage (0x5a7890) is EXPANDED at both sites: the mastery
+// row and the power product appear inline and only ModifySpellDamage
+// survives as a call, which is the /Ob2 same-TU case. THE RECOMPUTED
+// FIGURE GOES THROUGH `damage` FIRST (94.06 -> 99.86): written as a
+// nested argument, VC6 pushes damage_message's own slots 5 and 4 BEFORE
+// the inner call's six, where retail finishes the inner call and only
+// then starts the outer argument list - i.e. the inner result was a
+// temporary in source, not a subexpression.
+//
+// THE ROLL IS AN UNNAMED TEMPORARY, and that is worth 10 points
+// (84.23 -> 94.06) in the direction OPPOSITE to SpellCastWorks
+// (0x5a8640), which needs `int chance = ...`. With the local named, C2
+// gives it a frame slot and `this` keeps EBX; unnamed, the roll takes
+// EBX for its one call-crossing interval and `this` is memory-homed at
+// [ebp-0x18] and reloaded at each of its four uses, which is what
+// retail does. Same lever, opposite sign, two functions apart.
+//
+// THE LOOP IS `while (i--)`, NOT `while (i-- > 0)` (+1.07 and both
+// branch kinds): retail tests the pre-decrement value with `test/je`
+// and `test/jne`, where the `> 0` form emits the signed `jle`/`jg` pair
+// its siblings two rows up genuinely have. The declaration ORDER of the
+// four accumulators is worth another 3.9 - deaths and victim are
+// initialised BEFORE casting_hero is loaded, and `damage` is never
+// initialised at all.
+//
+// Residual (99.86%): a three-register rotation (eax->edx, ecx->eax,
+// edx->ecx) across the five instructions that clear
+// `effected[side][slot]` on a failed roll, instruction-for-instruction
+// identical otherwise - retail computes `side*5` in place
+// (`lea eax,[eax+4*eax]`) where our CL takes a fresh scratch. Catalog
+// B10/B14; `homm3 vc6 why-reg` enumerated ten mutations, four neutral
+// and six worse. Tried and rejected: naming the side, naming the slot,
+// and an if/else in place of the `continue` (all exactly neutral).
 VA(0x005a4970, 0x249)  // order-map+arity, dc 0x153b60
-void combatManager::AreaEffect(int targetCell, int iSpellType, TSkillMastery mastery, int power)
+void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
+                               long mastery, long power)
 {
-    // @stub
+    SpellEffect(akSpellTraits[iSpellType].m_effect, targetCell, 100, 0);
+    std::vector<army*> targets;
+    mark_area_effect(iSpellType, targetCell, mastery, targets);
+    long deaths = 0;
+    army* victim = 0;
+    hero* casting_hero = heroes[currentSide];
+    unsigned char several = 0;
+    long damage;
+    int i = targets.size();
+    while (i--) {
+        army* target = targets[i];
+        if (Random(1, 100)
+            > static_cast<long>(SpellCastWorkChance(iSpellType, currentSide,
+                                                    target, 0, 1, 0)
+                                * 100.0f)) {
+            effected[target->combatSide][target->bitIndex] = 0;
+            continue;
+        }
+        damage = ComputeSpellDamage(iSpellType, power, mastery, casting_hero,
+                                    target->get_controller(), target, 0);
+        deaths += target->Damage(damage);
+        if (!victim)
+            victim = target;
+        else
+            several = 1;
+    }
+    if (victim) {
+        if (several) {
+            damage = ComputeSpellDamage(iSpellType, power, mastery,
+                                        casting_hero, 0, 0, 0);
+            damage_message(akSpellTraits[iSpellType].name, 1, damage, 0,
+                           deaths);
+        } else {
+            damage_message(akSpellTraits[iSpellType].name, 1, damage, victim,
+                           deaths);
+        }
+        PowEffect(-1, 1);
+        CheckRebirth();
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3389
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
@@ -1004,12 +1302,46 @@ void combatManager::remove_corpse(army* corpse)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4850
+#endif  // @carcass
+
+// The Pit Lord's raise: the corpse leaves the grid and a fresh Demon
+// stack takes its cell.
 VA(0x005a7390, 0x1CB)  // order-map+arity, dc 0x1566f8
 void combatManager::demonic_resurrection(const army* caster, army* target)
 {
-    // @stub
+    SAMPLE2 sample;
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat())
+        sample = LoadPlaySample(
+            DATA_COMPGEN(0x00660af4, resurrectSampleName, "Resurect.wav"));
+
+    remove_corpse(&cells[target->gridIndex], target->combatSide,
+                  target->bitIndex);
+    if (target->Is(0) & 1)
+        remove_corpse(&cells[target->get_second_grid_index()],
+                      target->combatSide, target->bitIndex);
+
+    long raised = caster->get_resurrection_size(target);
+    long orig_position = target->originalIndex;
+    army* demons = AddArmy(ControllingSide(caster),
+                           army::ARMY_CREATURE_DEMON, raised,
+                           target->gridIndex, 0, 1);
+    demons->originalIndex = orig_position;
+    ResetLimitCreature();
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        UpdateGrid(0, 1);
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        if (raised != 1)
+            sprintf(gText, gpGeneralText->GetText(117), raised,
+                    CreatureName(demons->creatureType, raised));
+        else
+            sprintf(gText, gpGeneralText->GetText(118), raised,
+                    CreatureName(demons->creatureType, raised));
+        combatWindow->combat_message(gText, 1, 0);
+        WaitEndSample(sample, -1);
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4888
 VA(0x005a7560, 0x32F)  // order-map+arity, dc 0x156840
@@ -1056,12 +1388,106 @@ long combatManager::ComputeSpellDamage(SpellID spell, long spell_power, long mas
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:5086
+#endif  // @carcass
+
+// THE THREE MODIFIER STAGES, in the order the pushes fix them: the
+// CASTER's own bonuses (hero::modify_spell_damage, artifacts and
+// specialities), then the TARGET's creature traits
+// (armygrp's free modify_spell_damage, keyed on creatureType), then the
+// Protection-from-<school> row two functions below. `affectedHero` is
+// DEAD - retail never reads [ebp+0x14] - which is why the parameter is
+// still in the list: it is transcribed, not used.
+//
+// The message ladder is (lowered vs raised) x (one creature vs several),
+// each arm formatting the stack's name and the ABSOLUTE difference, and
+// the two halves are asymmetric under /Ob2 in BOTH directions: the
+// LOWERED arms call army::GetName out of line where the RAISED arms
+// expand it, and only the LAST arm expands basic_string::_Tidy where
+// the other three call it. Both asymmetries are the inline budget
+// running out at a different point, exactly as cmbtmgr.cpp's mana-drain
+// pair records; the two GetName spellings here are what reproduce the
+// first of them.
+//
+// `long delta = damage - base_damage` is worth 1.3: written out three
+// times (the sign test and the two absolute differences) VC6 CSEs it
+// into a NON-destructive `mov eax,damage / sub eax,base`, where retail
+// has the destructive `sub esi,ebx` a single named difference produces.
+//
+// Residual (78.90%): TWO open classes, and no source spelling reaches
+// either.
+//   * A B1 role swap between iSpellType and targetArmy - retail binds
+//     ESI/EDI/EBX to (spell, target, base_damage) and our CL to
+//     (target, spell, base_damage), i.e. the first two call-crossing
+//     pseudos are created in the opposite order. base_damage lands on
+//     EBX on BOTH sides, so this is the C1 handle-state class
+//     docs/vc6/regalloc.md records as not source-nameable: the model
+//     path (`homm3 vc6 why-reg --model`) declines it, and the two
+//     prescribed edits - a `SpellID spell = iSpellType` parameter alias
+//     and the same for the army pointer - are both COALESCED by VC6 and
+//     measure exactly neutral.
+//   * The merged-return class. Retail has THREE epilogues where we have
+//     one: the message block's string destructor duplicates the whole
+//     `pop/fs restore/ret 0x18` tail into both of its exits and the
+//     early-out carries a third, ~15 instructions we tail-merge away.
+//     Writing an explicit `return damage;` inside the message scope is
+//     also exactly neutral - our CL re-merges it.
 VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
-int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero* castingHero, const hero* affectedHero, const army* targetArmy, unsigned char print_result)
+long combatManager::ModifySpellDamage(long base_damage, SpellID iSpellType,
+                                      const hero* castingHero,
+                                      const hero* affectedHero,
+                                      const army* targetArmy,
+                                      unsigned char print_result)
 {
-    // @stub
+    long damage = base_damage;
+    if (castingHero)
+        damage = const_cast<hero*>(castingHero)->modify_spell_damage(
+            iSpellType, base_damage, targetArmy);
+    if (!targetArmy)
+        return damage;
+    damage = modify_spell_damage(damage, iSpellType,
+                                 targetArmy->creatureType);
+    damage = ModifySpellDamageForSpells(damage, iSpellType, targetArmy);
+    if (print_result && damage != base_damage
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        std::string message;
+        long delta = damage - base_damage;
+        if (delta < 0) {
+            if (targetArmy->numTroops == 1)
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
+                    army::GetName(targetArmy->creatureType,
+                                  targetArmy->numTroops),
+                    -delta);
+            else
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
+                    army::GetName(targetArmy->creatureType,
+                                  targetArmy->numTroops),
+                    -delta);
+        } else {
+            if (targetArmy->numTroops == 1)
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
+                    CreatureName(targetArmy->creatureType,
+                                 targetArmy->numTroops),
+                    delta);
+            else
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
+                    CreatureName(targetArmy->creatureType,
+                                 targetArmy->numTroops),
+                    delta);
+        }
+        combatWindow->combat_message(message.c_str(), 1, 0);
+    }
+    return damage;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 #endif  // @carcass
 
