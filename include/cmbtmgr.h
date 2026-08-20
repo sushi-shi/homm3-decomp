@@ -1739,6 +1739,12 @@ public:
                  int iEndThickness, int iColor, int iAngleDistortMin,
                  int iAngleDistortMax, int iSegmentLength,
                  int bDistortAlways);                          // 0x5a5a90
+    // 0x59fde0 (68 B), the Enchanter's shot resolution army::
+    // animate_missile hands its volley to instead of a missile flight
+    // (three stack arguments: the launch point and the target stack).
+    // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
+    // stays spells.obj's to reconstruct.
+    void Unnamed59FDE0(int x, int y, army* target);
     void DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX,
                 int iDestY, int iSplitFrequency, int iMaxSplitLength,
                 int iStartThickness, int iEndThickness, int iColor,

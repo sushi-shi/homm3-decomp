@@ -1194,16 +1194,181 @@ void army::Walk(int direction, unsigned char end_walk,
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:1171
+// One missile, from muzzle flash to impact: aim at the target stack's
+// hex (the two-hex center shift), play the ranged pose the
+// GetMissileStartingPosition search picks, then fly it - the Enchanter
+// resolves through spells.obj's 0x59fde0 instead, the Is(11) shooters
+// throw a DoBolt lightning (Arch Mage green, the eye/psychic family
+// violet), and everyone else gets the pixel flight ShootBallisticMissile
+// also uses: a Bitmap16Bit backing store grabbed and restored per step,
+// the update rect seeded from gCombatAreaLimits, clamped to
+// gCombatDrawLimits694f18, stepped dx/nframes at a
+// gCombatSpeedFactors-scaled 33ms beat. The /GX frame covers `saved`.
+// Residual (93.1695%): a two-slot rotation and its ripple - retail
+// homes startY at -0x30 and targetY at -0x34 (missile_frame -0x58)
+// where ours swaps the pair, and the GetMissileStartingPosition
+// argument schedule moves with it; a declaration reorder is
+// byte-inert. The EH-prologue push, the combatSpeed reloc addend and
+// the bolt-table displacements are the documented masked cosmetics
+// (PlayAnimation, EXACT, carries the identical combatSpeed read).
 VA(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
 void army::animate_missile(army* armyToAttack)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    long targetX = gpCombatManager->cells[armyToAttack->gridIndex]
+                       .field_00;
+    if (armyToAttack->creatureId & 1)
+        targetX += armyToAttack->facing ? 22 : -22;
+    long targetY = gpCombatManager->cells[armyToAttack->gridIndex]
+                       .field_02
+                   - armyToAttack->image_height / 2;
+    gpCombatManager->ResetLimitCreature();
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    gpCombatManager->ComputeMaxExtent();
+
+    int startX;
+    int startY;
+    int missile_frame;
+    GetMissileStartingPosition(creatureType,
+                               gpCombatManager->cells[gridIndex].field_00,
+                               gpCombatManager->cells[gridIndex].field_02,
+                               facing, targetX, targetY, missileIcon,
+                               &startX, &startY, &currFrameType,
+                               &missile_frame);
+    currFrameIndex = 0;
+    play_sample(SHOOT_SAMPLE);
+
+    long frames;
+    if (frameInfoAttackFrames > 0)
+        frames = frameInfoAttackFrames;
+    else
+        frames = stdIcon->GetNumFrames(currFrameType);
+    long delay = frameInfoAttackStartCycleTime / frames;
+    for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
+        gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
+    }
+    currFrameIndex--;
+
+    long deltaX = targetX - startX;
+    long deltaY = targetY - startY;
+    int ARROW_TRAVEL_DIST = static_cast<int>(sqrt(
+        static_cast<double>(deltaY * deltaY + deltaX * deltaX)));
+
+    if (creatureType == ARMY_CREATURE_ENCHANTER) {
+        gpCombatManager->Unnamed59FDE0(startX, startY, armyToAttack);
+        return;
+    }
+    if (Is(11) & 1) {
+        GameTime::Delay(static_cast<long>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 115.0f));
+        long color;
+        switch (creatureType) {
+        case CREATURE_ARCH_MAGE:
+            color = BOLT_COLOR_2;
+            break;
+        case CREATURE_BEHOLDER:
+        case CREATURE_EVIL_EYE:
+        case CREATURE_PSYCHIC_ELEMENTAL:
+        case CREATURE_MAGIC_ELEMENTAL:
+            color = BOLT_COLOR_4;
+            break;
+        default:
+            color = 0;
+            break;
+        }
+        gpCombatManager->DoBolt(1, startX, startY, targetX, targetY, 0, 0,
+                                5, 4, color, 0, 0,
+                                ARROW_TRAVEL_DIST / 15 + 15, 1, 0, 10,
+                                0);
+        return;
+    }
+
+    int nframes = (ARROW_TRAVEL_DIST + 20) / 20;
+    long stepX;
+    long stepY;
+    if (nframes > 0) {
+        stepX = deltaX / nframes;
+        stepY = deltaY / nframes;
+    } else {
+        stepX = deltaX;
+        stepY = deltaY;
+    }
+    int width = missileIcon->Width;
+    int height = missileIcon->Height;
+    int x = startX - width / 2;
+    int y = startY - height / 2;
+
+    Bitmap16Bit saved(width, height);
+    TDrawbridgeBounds update_area = gCombatAreaLimits;
+    int MISSILE_PERIOD = static_cast<int>(
+        gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
+
+    long frame = 0;
+    if (nframes > 0) {
+        long right = x + width - 1;
+        long bottom = y + height - 1;
+        for (; frame < nframes; frame++) {
+            unsigned long next_frame_time =
+                GameTime::Get() + MISSILE_PERIOD;
+            if (frame != 0) {
+                saved.Draw(0, 0, width, height,
+                           gpWindowManager->screenBitmap->map, x, y,
+                           gpWindowManager->screenBitmap->Width,
+                           gpWindowManager->screenBitmap->Height,
+                           gpWindowManager->screenBitmap->Pitch, false);
+                update_area.values[0] = x;
+                update_area.values[1] = y;
+                update_area.values[2] = right;
+                update_area.values[3] = bottom;
+                x += stepX;
+                y += stepY;
+                right += stepX;
+                bottom += stepY;
+            }
+            saved.Grab(gpWindowManager->screenBitmap->map, x, y,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch);
+            unsigned char flipped = targetX < startX;
+            missileIcon->Draw(0, missile_frame, 0, 0, width, height,
+                              gpWindowManager->screenBitmap->map, x, y,
+                              gpWindowManager->screenBitmap->Width,
+                              gpWindowManager->screenBitmap->Height,
+                              gpWindowManager->screenBitmap->Pitch,
+                              flipped, 1);
+            if (update_area.values[0] > x)
+                update_area.values[0] = x;
+            if (update_area.values[1] > y)
+                update_area.values[1] = y;
+            if (update_area.values[2] < right)
+                update_area.values[2] = right;
+            if (update_area.values[3] < bottom)
+                update_area.values[3] = bottom;
+            if (update_area.values[0] < gCombatDrawLimits694f18.values[0])
+                update_area.values[0] = gCombatDrawLimits694f18.values[0];
+            if (update_area.values[1] < gCombatDrawLimits694f18.values[1])
+                update_area.values[1] = gCombatDrawLimits694f18.values[1];
+            if (update_area.values[2] > gCombatDrawLimits694f18.values[2])
+                update_area.values[2] = gCombatDrawLimits694f18.values[2];
+            if (update_area.values[3] > gCombatDrawLimits694f18.values[3])
+                update_area.values[3] = gCombatDrawLimits694f18.values[3];
+            gpWindowManager->UpdateScreen(
+                update_area.values[0], update_area.values[1],
+                update_area.values[2] - update_area.values[0] + 1,
+                update_area.values[3] - update_area.values[1] + 1);
+            GameTime::DelayTil(next_frame_time);
+        }
+    }
+    saved.Draw(0, 0, width, height, gpWindowManager->screenBitmap->map,
+               x, y, gpWindowManager->screenBitmap->Width,
+               gpWindowManager->screenBitmap->Height,
+               gpWindowManager->screenBitmap->Pitch, false);
+    gpWindowManager->UpdateScreen(x, y, width, height);
+}
 
 // DC army::WaitSample (army.cpp:109, dc 0x438a8): wait out one combat
 // sample. NO retail slot - the carve leaves no gap for it - so on this
