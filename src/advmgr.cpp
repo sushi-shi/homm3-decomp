@@ -1092,28 +1092,55 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 // cast spell, elevation toggle. Reading the arm order as a source-order
 // fact is what ProcessSelect proved one function up.
 //
-// Three shapes are transcribed exactly as retail has them:
-//   * The sleep arm calls gpGame->GetHero(currHeroId) TWICE. The second
-//     call's null arm falls into the SetSleepImage load unguarded
-//     (`xor eax,eax` then `mov dl,[eax+0x11c]`), which is retail's own
-//     latent null deref - reusing the first pointer removes the second
-//     inlined `cmp ecx,-1` and the whole arm moves.
-//   * The kingdom-overview arm's type_point local is DELIBERATELY left
-//     uninitialised. Both writers assign x/y/z only, and the second one's
-//     `and eax,0xffffc000` preserving the field's two pad bits is what
-//     proves nothing ever zeroed it - a `= { 0, 0, 0 }` adds stores that
-//     retail does not have.
-//   * The fade flag lives in EDI, the register that held localPlayer:
-//     retail materialises the 1 before the `== 2` test so the same
-//     register feeds DemobilizeCurrHero's update flag, ShowPointer's
-//     restore and SetPointer's set. localPlayer is genuinely dead from
-//     that point in this arm.
+// Four shapes are transcribed exactly as retail has them, and the last
+// three are each worth a measurement of their own (0 -> 93.79 -> 96.23 ->
+// 96.24 -> 100.0, in the order below):
+//
+//   * The sleep arm RE-FETCHES the hero, but only on the branch that just
+//     slept one: SetHeroContext has moved the player to the next hero, so
+//     `sleeper = gpGame->GetHero(currHeroId)` sits INSIDE the true arm and
+//     SetSleepImage reads whatever pointer survives. Retail's `je` at +0xdc
+//     skips the second accessor outright, which is what proves the
+//     placement - hoisting the re-fetch to the SetSleepImage argument makes
+//     that branch land one block early and costs the arm. It also carries
+//     retail's own latent null deref: the re-fetch's `xor eax,eax` arm
+//     falls straight into `mov dl,[eax+0x11c]`.
+//
+//   * The kingdom-overview arm's two type_points are SEPARATE block-scoped
+//     locals, not one function-scope one. VC6 coalesces them onto the same
+//     [ebp-8] slot (which it also shares with waitingPlayer), but a single
+//     long-lived point gets its high word enregistered into DI for the
+//     whole arm, and that steals the register retail wants for the fade
+//     flag - which then needs a third callee-saved register and a `push
+//     ebx` retail does not have. Two short live ranges, no EBX. 93.79 ->
+//     96.23.
+//
+//   * Both points are DELIBERATELY left uninitialised. Every writer assigns
+//     x/y/z only, and the second one's `and eax,0xffffc000` preserving the
+//     field's two pad bits is what proves nothing ever zeroed it - a
+//     `= { 0, 0, 0 }` adds stores retail does not have. (The opposite of
+//     ProcessRadarSelect's message local, which must enumerate every
+//     member; measure the arity per site.)
+//
+//   * The second point's three coordinates need NAMED int locals computed
+//     BEFORE any of the three bitfield stores. y and z share one 16-bit
+//     allocation unit, and VC6 merges them into a single masked store
+//     (`and eax,0xffffc000` / two xors / one `mov word`) only when both
+//     values are already in hand at the first store; assigning straight
+//     from `radarOrigin.y + 8` interleaves z's computation between the two
+//     stores and emits two read-modify-write inserts instead. 96.24 ->
+//     100.0, and it is the same lever ProcessRadarSelect's drag clamp
+//     needed four hundred lines up.
+//
+// The fade flag itself lives in EDI, the register that held localPlayer:
+// retail materialises the 1 before the `== 2` test so the same register
+// feeds DemobilizeCurrHero's update flag, ShowPointer's restore and
+// SetPointer's set. localPlayer is genuinely dead from that point on.
 VA(0x00409a70, 0x641)  // anchor-callee, dc 0x9a94
 int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
 {
     playerData* localPlayer = gpGame->GetLocalPlayer();
     unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
-    type_point viewPoint;
 
     switch (msg->codeY) {
     case TAdventureMapWindow::QUEST_LOG_ID:
@@ -1157,9 +1184,9 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
                     }
                 }
                 SetHeroContext(localPlayer->NextHero(), 0, waitingPlayer, 1);
+                sleeper = gpGame->GetHero(localPlayer->currHeroId);
             }
-            advWindow->SetSleepImage(
-                gpGame->GetHero(localPlayer->currHeroId)->field_11c);
+            advWindow->SetSleepImage(sleeper->field_11c);
             if (gpCurrentPlayer->IsLocalHuman()
                 && gpCurrentPlayer->HasMobileHero())
                 advWindow->WidgetClearStatus(
@@ -1224,10 +1251,11 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
 
     case TAdventureMapWindow::KINGDOM_OVERVIEW_ID: {
         if (gUnnamed699560) {
-            viewPoint.x = -1;
-            viewPoint.y = -1;
-            viewPoint.z = 0;
-            SetEnvironmentOrigin(viewPoint, 1);
+            type_point invalidOrigin;
+            invalidOrigin.x = -1;
+            invalidOrigin.y = -1;
+            invalidOrigin.z = 0;
+            SetEnvironmentOrigin(invalidOrigin, 1);
         }
         TrimLoopingSounds(0);
         gpGame->Overview();
@@ -1240,10 +1268,14 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
             gpGame->GetTown(gUnnamed69873c)->View(1);
             bFadeOut = 0;
         } else if (gUnnamed699560) {
-            viewPoint.x = radarOrigin.x + 9;
-            viewPoint.y = radarOrigin.y + 8;
-            viewPoint.z = radarOrigin.z;
-            SetEnvironmentOrigin(viewPoint, 1);
+            type_point viewCentre;
+            int centreX = radarOrigin.x + 9;
+            int centreY = radarOrigin.y + 8;
+            int centreZ = radarOrigin.z;
+            viewCentre.x = centreX;
+            viewCentre.y = centreY;
+            viewCentre.z = centreZ;
+            SetEnvironmentOrigin(viewCentre, 1);
         }
         RedrawAdvScreen(1, 0);
         if (bFadeOut)
