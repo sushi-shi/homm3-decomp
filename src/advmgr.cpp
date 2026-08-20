@@ -54,6 +54,7 @@
 #define HOMM3_ADVMGR_MONSTER_MOOD_DECLS
 #define HOMM3_MAPCELL_OBJECTS_VIEW
 #define HOMM3_ADVMGR_OBJ_DECLS
+#define HOMM3_ADVMGR_TURN_DECLS
 #define HOMM3_ADVMGR_OPTIONS_DECLS
 #include <va.h>
 #include <stdio.h>
@@ -8188,16 +8189,84 @@ void PopupPlayerTurnInfo()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:10898
+// The turn hand-off. The gosolo latch (gUnnamed691209 + gUnnamed69120c,
+// see their producer note in advmgr.h) is consumed here: the timed
+// dialog offers the handed-over seat back, and DECLINE re-humanizes the
+// player and re-arms the visibility bit. The CTurnUpdateMsg broadcast
+// (0x7f = everyone) and the turn-owner pair behind gUnnamed69d808 are
+// what CAdvMgrNetMsgHandler::HandleNetMsg reads back. Rows 332/333 are
+// the two once-per-session info popups behind their 0x691678/0x69167c
+// latches.
 VA(0x00419e00, 0x300)  // anchor-callee, dc 0x1d30c
 void advManager::StartLocalPlayerTurn()
 {
-    // @stub
-}
+    if (gpGame->playerDisabled[gNetLocalGamePos])
+        ComputeAdvNetControl();
 
-#endif  // @carcass
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        if (gUnnamed691209) {
+            gUnnamed691209 = 0;
+            NormalDialogTimeOut(gpGeneralText->GetText(663), 2, 2000, -1, -1,
+                                -1, 0, -1, 0, -1, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE) {
+                gpGame->players[gUnnamed69120c].isHuman = 1;
+                gpGame->players[gUnnamed69120c].isLocal = 1;
+                gUnnamed691209 = 0;
+                gMapVisibilityBit = 1 << gUnnamed69120c;
+            } else {
+                gUnnamed691209 = 1;
+            }
+        }
+
+        GameFn_004CA530(gpGame);
+        gbThisNetGotAdventureControl = 1;
+        gpSoundManager->field_84 = 0;
+
+        CTurnUpdateMsg msg(gpGame->GetLocalPlayerGamePos());
+        TransmitRemoteData(&msg, 0x7f, 0, 1);
+        gTurnDuration69d630.Start();
+        PopupPlayerTurnInfo();
+        gUnnamed69d810 = gpGame->GetLocalPlayerGamePos();
+        gUnnamed69d80e = 1;
+    }
+
+    if ((gpGame->field_1f63e != 1
+         || (gpGame->field_1f640 == 1 && gpGame->field_1f642 == 1))
+        && bVideoPaused && gpCurrentPlayer->IsLocalHuman()) {
+        gpSoundManager->field_84 = 1;
+        StartAITheme();
+        gpSoundManager->field_84 = 0;
+        gUnnamed699544 = GameTime::Get();
+    }
+    GameFn_004CC7D0(gpGame);
+
+    advWindow->UpdateHeroLocators(-1, 1, 1);
+    advWindow->UpdateTownLocators(-1, 1, 1);
+    advWindow->UpdateResourceDisplay(1, 1);
+
+    advManager* adv = gpAdvManager;
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        int mouseX;
+        int mouseY;
+        gpMouseManager->MouseCoords(&mouseX, &mouseY);
+        adv->lastHoverX = -1;
+        adv->ProcessHover(mouseX, mouseY);
+    }
+
+    gpSoundManager->field_84 = 1;
+    if (gpGame->field_1f69c && !gUnnamed691678) {
+        gUnnamed691678 = 1;
+        sprintf(gText, DATA_COMPGEN(0x0066040c, turnPopupLineFormat, "%s\n"),
+                gpGeneralText->GetText(332));
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+    if (gUnnamed6989c8 > 0 && !gUnnamed69167c) {
+        gUnnamed69167c = 1;
+        sprintf(gText, "%s\n", gpGeneralText->GetText(333));
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
 
 // E:\gamedcs\advmgr.cpp:10987
 // Saves the calendar selectors because LoadGame resets them, uses the

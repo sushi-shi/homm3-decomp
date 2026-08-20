@@ -614,6 +614,12 @@ DATA(0x00698790) extern int gUnnamed698790;
 // NOT evidence for these two addresses and are recorded, not adopted.
 DATA(0x0069120c) extern int gUnnamed69120c;
 
+// Retail .data 0x691678 / 0x69167c: once-per-session latches for the two
+// turn-start info popups (general-text rows 332 and 333). Set to 1 the
+// first time StartLocalPlayerTurn shows each dialog; nothing clears them.
+DATA(0x00691678) extern int gUnnamed691678;
+DATA(0x0069167c) extern int gUnnamed69167c;
+
 // Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
 // touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
 // once - and Main's use is the complete contract: a non-zero stamp older

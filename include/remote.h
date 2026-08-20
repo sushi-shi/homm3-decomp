@@ -206,6 +206,14 @@ SIZE(CTurnDuration, 0x14);
 
 extern CTurnDuration gTurnDuration69d630;
 
+// Retail .bss pair right behind gUnnamed69d808's pointer cell, written
+// together by advManager::StartLocalPlayerTurn (the acting player's game
+// position and an armed byte) and read back by CAdvMgrNetMsgHandler::
+// HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
+// unclaimed, so the names stay ordinal and the DATA claims wait for it.
+extern int gUnnamed69d810;
+extern unsigned char gUnnamed69d80e;
+
 // Retail's constructor/destructor pair stores and tests only this byte;
 // Dreamcast supplies the class and member names.
 class CHourGlass {
