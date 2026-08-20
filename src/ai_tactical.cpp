@@ -3195,6 +3195,33 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 //     0 the moment another of our stacks can still act, this one asks
 //     the spell's own traits word (bit 14 of +0xc) whether it is worth
 //     casting anyway. Haste overrides the whole answer to 1.
+//
+// 83.5240 -> 99.5673 (2026-08-20) on the SHAPE of that answer, in two
+// steps, and both are reusable:
+//   * `act_now = 1;` written BEFORE the loop and conditionally cleared
+//     inside it makes the flag live across the loop, and VC6 gives it a
+//     memory home in the dead `group` parameter slot
+//     (`mov byte ptr [ebp+0xf], ...` three times). Retail has NO home:
+//     it materialises the constant AFTER the loop, at a block four
+//     predecessors share (the `best == current` test, the `total <= 0`
+//     guard, the loop's own fall-through and the traits arm), and the
+//     value reaches the single `mov [ecx+0x20], al` in EAX. Moving the
+//     assignment below the loop is +10.78 on its own.
+//   * the traits arm must not be an if/else over the two constants:
+//     VC6 recognises `bit ? 1 : 0` and folds it to `shr eax,0xe /
+//     and al,1`, which retail does not have. Spelling the clear arm as
+//     `act_now = 0; goto decided;` and the set arm as a plain `break`
+//     out to the shared `act_now = 1` keeps retail's `test ah,0x40 /
+//     jne <back to the 1 block>` - the two arms are now different KINDS
+//     of control transfer, so there is nothing to fold. +5.26.
+// Tried and rejected: `long act_now` instead of `unsigned char`
+// (97.4808 - it costs the loop-exit and traits arms their byte forms
+// without buying retail's dword ones).
+// Residual (99.57%): retail materialises the two constants in the full
+// register (`mov eax,1` / `xor eax,eax`) where our byte-typed flag uses
+// `mov al,1` / `xor al,al`, and re-reads `choice->spell` through a
+// pointer copy (`mov eax,ecx / cmp dword ptr [eax],0x35`) at the Haste
+// override where we load the value once. Six bytes, register-homing.
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
 void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)
 {
@@ -3236,7 +3263,6 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
         return;
     unsigned char act_now;
     if (group == side) {
-        act_now = 1;
         const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
                                                       [gpCombatManager->actingSlot];
         if (best != current) {
@@ -3256,12 +3282,17 @@ void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice,
                 if (idle & 1)
                     continue;
                 if (other != current) {
-                    if ((akSpellTraits[choice->spell].field_c & 0x4000) == 0)
+                    if ((akSpellTraits[choice->spell].field_c & 0x4000) == 0) {
                         act_now = 0;
+                        goto decided;
+                    }
                     break;
                 }
             }
         }
+        act_now = 1;
+decided:
+        ;
     } else {
         act_now = should_attack_now(best);
     }
