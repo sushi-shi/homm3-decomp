@@ -158,32 +158,25 @@ void army::stop_sample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 //
-// Residual (0.0000%): AN INLINER WALL, NOT A MODELLING ERROR, and the
-// whole rest of the body is already byte-shaped. Retail CALLS
-// deque<>::erase out of line (0x448db0, 766 B, the COMDAT the linker
-// parked just past this unit) and inlines everything INTO it; our CL
-// inlines erase into THIS body instead and is then starved, so the
-// eight things retail folded into erase - operator-, operator+,
-// operator++, pop_front, pop_back, copy, copy_backward - come back out
-// as calls. `homm3 vc6 diagnose` classifies it exactly that way:
-// "inliner (predict-inline), 8 under-inline". Everything from the
-// spellInfluence memset to the two trailing vector clears is
-// instruction-for-instruction identical modulo one register choice
-// (retail parks the shared ZERO in EBX and homes the loop counter;
-// ours parks the counter in EBX and re-materialises the zero).
+// THE INLINER WALL IS BROKEN (0.00 -> 92.63, 2026-08-20), and not by
+// the second-call-site theory the old note here staked out. That
+// theory was tested: CancelIndividualSpell (0x444510) landed with the
+// second 0x448db0 site and our CL STILL inlined erase into this body -
+// the one-site rule was never the mechanism. What works is the
+// statement-granular `#pragma inline_depth(0)` lever (game::Load
+// precedent): spell clear() through its own body with begin()/end()
+// hoisted into UNPINNED statements - their 16-byte temps must build
+// inline, so they cannot sit inside the pinned one - and pin only the
+// erase call. Both erase sites in the TU now carry the pin and the
+// 766-byte COMDAT is called exactly where retail calls it.
 //
-// THE FIX IS THE SECOND CALL SITE, not a spelling. An E8 scan of
-// retail .text finds exactly TWO callers of 0x448db0: this body
-// (0x43d656) and CancelIndividualSpell (0x444896). VC6 inlines a
-// single-call-site function regardless of size - the rule this tree
-// already records for statics and one-site externs - so erase stays
-// out of line only once army.obj holds both sites. Tried and
-// rejected: the explicit `erase(begin(), end())` spelling in place of
-// `clear()` (identical bytes, erase still inlined), a second
-// `clear()` in this same body (changes the shape but does not stop
-// the expansion - the two sites must be in DIFFERENT callers), and
-// `#pragma inline_depth(1)` around the definition (no effect at all).
-// Do not re-grind this until CancelIndividualSpell (0x444510) lands.
+// Residual (92.6261%): the register-homing family. Retail fills the
+// two by-value iterator temps through EDI as scratch with EAX/EDX
+// holding the slot pointers; ours picks the mirror assignment, and the
+// begin/end declaration-order swap is byte-inert (measured both ways,
+// 92.6261 exactly). The GameTime store schedules one slot later than
+// retail's and the dispose vtable call uses EDX where retail uses EAX
+// - all downstream of the same homing choice, no spelling reaches it.
 VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::InitClean()
 {
@@ -195,7 +188,19 @@ void army::InitClean()
     iRoundsLeftBeforeVanish = -1;
     numSpellInfluences = 0;
     memset(spellInfluence, 0, sizeof(spellInfluence));
-    SpellInfluenceQueue.clear();
+    {
+        // clear() spelled through its own body with the erase pinned:
+        // retail expands clear and CALLS deque::erase (0x448db0), and
+        // our CL - the InitClean residual note below - inlines erase
+        // and starves. The statement-scoped depth(0) reproduces the
+        // rejection; begin()/end() build their 16-byte temps inline in
+        // the two unpinned statements exactly as retail does.
+        TSpellQueue::iterator queue_end = SpellInfluenceQueue.end();
+        TSpellQueue::iterator queue_begin = SpellInfluenceQueue.begin();
+#pragma inline_depth(0)
+        SpellInfluenceQueue.erase(queue_begin, queue_end);
+#pragma inline_depth()
+    }
     iLastFidgetTime = GameTime::Get();
     if (stdIcon)
         stdIcon->Dispose();
@@ -2431,11 +2436,154 @@ void army::adjust_hitpoints()
 }
 
 // E:\gamedcs\army.cpp:3675
+#endif  // @carcass
+
+// Take one standing spell off this stack: clear its round row, undo
+// whatever the spell had folded into the stack's own words, and pull
+// the spell's entry back out of the cast-order queue. Disrupting Ray
+// is the one spell that never comes off.
+//
+// THE SWITCH ARMS ARE IN SOURCE ORDER (jump-table switch): BIND's
+// binder teardown, HYPNOTIZE's aura rebuild, then the seven stat
+// restores. The two teardown arms are remove_binding's and
+// remove_aura's own loops written at their natural depth - the
+// erase_item and size()/clear() calls that stay out of line in the
+// HYPNOTIZE arm against the BIND arm's full expansions are the /Ob2
+// budget draining in site order, the same divisor remove_aura's note
+// records for its own two loops.
+//
+// The AGE arm re-reads spellInfluence[SPELL_AGE] AFTER the entry code
+// zeroed it, so its 0.5f halving arm is dead at runtime - the
+// uninitialized-`level` class of retail quirk: transcribe, do not fix.
+// Its rounding constant is +0.95f (read from the image at 0x63b8c8),
+// not the usual +0.5f.
+//
+// The tail is the deque surgery InitClean's note promised: std::find
+// over SpellInfluenceQueue expanded inline (the 0x1000 node-hop is
+// Dinkumware's _DEQUESIZ for a 4-byte element), then
+// `erase(it)` = `erase(it, it + 1)` with the two 16-byte iterators
+// built on the stack - the second and last call site of the
+// deque::erase COMDAT at 0x448db0.
+//
+// THE PIN LEDGER (0 -> 21.50 -> 28.72 -> 79.43 -> 84.01 -> 86.31 ->
+// 96.27), because every stall was the same wall: our CL's inline
+// budget does not drain in retail's order, so each STL site needs its
+// retail decision reproduced by hand. Statement-scoped
+// `#pragma inline_depth(0)` is the only depth that works mid-function
+// - depth(1) and depth(2) pins measured INERT here, twice - so any
+// callee retail keeps inline must be hoisted OUT of the pinned
+// statement first (the subscripts feeding erase_item, the begin/end
+// temp builds, the `next = it` copy). Retail's 0x4491c0 advance is the
+// protected iterator::_Add(1); `next += 1` pinned emits operator+=
+// with the identical push-1/lea-ecx/call site (the `it + 1` spelling
+// costs a hidden-return push, 96.27 -> 84.01-class). BIND's clear must
+// be spelled `erase(begin(), end())` UNPINNED so its copy/_Destroy
+// stay expanded-with-calls as retail has them; HYPNOTIZE's two clears
+// and second size() must be pinned to calls.
+//
+// Residual (96.2713%): (1) retail's bind-arm clear keeps std::copy
+// (0x5093c0) as a call where our CL expands the two-instruction loop
+// (and emits a vacuous `mov eax,ecx / cmp eax,ecx` it cannot fold) -
+// no pin reaches d3 alone; (2) the find-loop's iterator pieces home
+// through the mirror scratch registers, the same family as InitClean's
+// residual; (3) reloc-name-only rows on the paired STL COMDATs
+// (?clear/?size/?erase vs the target's unclaimed synth labels).
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::CancelIndividualSpell(int spell)
 {
-    // @stub
+    if (spellInfluence[spell] <= 0)
+        return;
+    if (spell == SPELL_DISRUPTING_RAY)
+        return;
+    numSpellInfluences--;
+    spellInfluence[spell] = 0;
+    switch (spell) {
+    case SPELL_BIND: {
+        unsigned i = binders.size();
+        while (i-- != 0) {
+            erase_item(binders[i]->bound_armies, this);
+        }
+        binders.erase(binders.begin(), binders.end());
+        break;
+    }
+    case SPELL_HYPNOTIZE: {
+        long i = aura_sources.size();
+        while (i-- > 0) {
+            army* source = aura_sources[i];
+#pragma inline_depth(0)
+            erase_item(source->aura_clients, this);
+#pragma inline_depth()
+        }
+#pragma inline_depth(0)
+        aura_sources.clear();
+#pragma inline_depth()
+
+#pragma inline_depth(0)
+        long j = aura_clients.size();
+#pragma inline_depth()
+        while (j-- > 0) {
+            army* client = aura_clients[j];
+#pragma inline_depth(0)
+            erase_item(client->aura_sources, this);
+#pragma inline_depth()
+        }
+#pragma inline_depth(0)
+        aura_clients.clear();
+#pragma inline_depth()
+        add_aura();
+        break;
+    }
+    case SPELL_STONE_SKIN:
+        defenseSkill -= toughskinBonus;
+        break;
+    case SPELL_WEAKNESS:
+        attackSkill += weaknessPenalty;
+        break;
+    case SPELL_PRAYER:
+        attackSkill -= prayerBonus;
+        defenseSkill -= prayerBonus;
+        if (!(Is(6) & 1))
+            field_c4 -= prayerBonus;
+        break;
+    case SPELL_HASTE:
+        if (!(Is(6) & 1)) {
+            field_c4 -= tailwindBonus;
+            frameInfoWalkCycleTime = origWalkCycleTime;
+        }
+        break;
+    case SPELL_SLOW:
+        frameInfoWalkCycleTime = origWalkCycleTime;
+        break;
+    case SPELL_AGE: {
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_DISEASE:
+        attackSkill += diseaseAttackPenalty;
+        defenseSkill += diseaseDefensePenalty;
+        break;
+    }
+    TSpellQueue::iterator it = std::find(SpellInfluenceQueue.begin(),
+                                         SpellInfluenceQueue.end(), spell);
+    if (it != SpellInfluenceQueue.end()) {
+        TSpellQueue::iterator next = it;
+#pragma inline_depth(0)
+        next += 1;
+        SpellInfluenceQueue.erase(it, next);
+#pragma inline_depth()
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3802
 DC_ONLY(0x499ac, 0x3A)
