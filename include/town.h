@@ -473,6 +473,13 @@ public:
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
     void GiveSpells(hero* forceHero);
+#endif
+// advmgr.obj joins the gate for View alone: DoAdvCommand's two town arms
+// call it, one on gpGame->GetTown(currTownId) and one on the town the
+// current hero obscures. The guard is SPLIT around the single declarator
+// so no other includer's view of this class widens.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
+    || defined(HOMM3_ADVMGR_OBJ_DECLS)
     // 0x5be210. Enters the shared town manager and restores the visiting
     // hero as the adventure-map context on return.
     void View(int bAlreadyFaded);
