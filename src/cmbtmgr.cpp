@@ -53,6 +53,7 @@
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
 #define HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
 #define HOMM3_SPELL_SLOW_DECL
+#define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
 #define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
@@ -1406,22 +1407,22 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
             break;
         case WALL_TARGET_0: {
             int slot = archers[2].armySlot;
-            field_13f9c[2] = 0;
-            field_13fe4[2] = 0;
+            wallStrength[17] = 0;
+            wallStanding[17] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_6: {
             int slot = archers[1].armySlot;
-            field_13f9c[1] = 0;
-            field_13fe4[1] = 0;
+            wallStrength[16] = 0;
+            wallStanding[16] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_7: {
             int slot = archers[0].armySlot;
-            field_13f9c[0] = 0;
-            field_13fe4[0] = 0;
+            wallStrength[15] = 0;
+            wallStanding[15] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
@@ -1599,16 +1600,195 @@ next_hex:
     goto next_hex;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2859
+// Everything the battlefield carries before the armies land: the wall
+// hitpoint tables, the castle wall's blocked column, a Tower's mined
+// moat, the two-boat naval blockade, and the random scatter of ordinary
+// obstacles. Called only from Open.
+//
+// Shapes the bytes force, all of them cheap to get wrong:
+//   * the naval branch has its OWN epilogue, so it is a real `return`
+//     and not a jump into the shared tail every other exit uses;
+//   * both obstacle-budget arms tail-merge into ONE Random call site,
+//     which is what says a single local is assigned in an if/else
+//     rather than two calls written out;
+//   * the large-obstacle guard is the De Morgan form
+//     `(fort < 2 || type != STRONGHOLD) && Random(1, 100) <= 40` -
+//     retail falls THROUGH to Random on `jl` and skips on `je`, and the
+//     positive `!(a && b)` spelling emits those two swapped;
+//   * the placement loop is `while (placed < budget)` with `placed`
+//     pre-set to 0, which VC6 folds to a `test/jle` on budget alone,
+//     and the inner re-draw is a do/while rather than a `continue` -
+//     the same shape PlaceAllObstacles already proves, and what puts
+//     the SECOND `id < 0` test in front of place_obstacle.
+//
+// Residual (64.8103%). The semantics are complete - every branch, both
+// tables, both loops and all three ComputeSpellDamage arms - and what
+// is left is ONE inliner decision that is a HEADER change, not a
+// spelling:
+//
+//   RETAIL EXPANDS TObstacleVector::insert INLINE HERE, and it is
+//   roughly 460 of this body's 1543 bytes. Our header declares insert
+//   without defining it (cmbtmgr.h), precisely so place_obstacle keeps
+//   retail's CALL, so we can only ever emit a call. The proof is in the
+//   call census: retail emits 25 out-of-line calls to our 13, and the
+//   twelve extra are exactly the pieces of an expanded Dinkumware
+//   vector::insert - _Ucopy x4 (0x46b1a0, thiscall, ret 0xc, returns
+//   the destination end), _Ufill x2 (0x46b1e0, thiscall, ret 0xc),
+//   size() x2 out-of-line (0x517750), one operator new, one Destroy
+//   (the ICF-folded `ret 8` at 0x404140) and one operator delete, with
+//   the fill/copy_backward pairs expanded as `rep movsd 6`. Retail's
+//   cmbtmgr.obj carries BOTH forms: place_obstacle calls the
+//   out-of-line copy at 0x46aeb0 while this body inlines it, which is
+//   the ordinary /Ob2 budget split (this caller is 1543 B, that one
+//   579 B). Closing it means defining insert, declaring _Ucopy/_Ufill
+//   as TObstacleVector members, and pinning place_obstacle's own call
+//   site - a header change large enough to want its own measurement
+//   pass against place_obstacle, RemoveObstacle and PlaceAllObstacles.
+//
+// TRIED AND REJECTED - the PlaceObstacle pin, twice. predict-inline
+// reports `PlaceObstacle base x0 vs retail x1` here, the identical
+// reading that paid +18.10 on place_obstacle, and the identical
+// `#pragma inline_depth(0)` LOSES 5.89 (64.8103 -> 58.9216). The
+// pragma also de-inlines the `obstacles.size() - 1` in the same
+// statement, which retail expands inline at this site; hoisting the
+// size() into a local ahead of the pragma recovers part of it and is
+// still worse (61.5917). Left unpinned. This is the second measured
+// case in this tree of a correctly-diagnosed inline divergence whose
+// documented fix ranks the wrong way - keep only what the ratchet
+// agrees with.
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
 void combatManager::SetupAndLoadObstacles()
 {
-    // @stub
-}
+    field_13ffc = 0;
+    largeObstacleId = -1;
+    if (isSurrounded)
+        return;
 
-#endif  // @carcass
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE) {
+        for (int wall = 0; wall < 18; wall++)
+            wallStrength[wall] =
+                akWallTraits[defendingTown->type][wall].hitpoints;
+        wallStrength[15] = 1;
+        wallStrength[16] = 1;
+        wallStrength[17] = 1;
+        for (int copy = 0; copy < 18; copy++)
+            wallStanding[copy] = wallStrength[copy];
+
+        if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
+            wallStrength[6]++;
+            wallStrength[8]++;
+            wallStrength[10]++;
+            wallStrength[12]++;
+        }
+
+        for (int row = 0; row < 11; row++)
+            cells[gCastleWallColumns[row]].field_10 |= 2;
+
+        // A Tower's moat is a minefield. Row 5 is the gate hex and is
+        // skipped; every other row gets one obstacle whose damage is the
+        // greater of the town's own moat figure and what the defending
+        // hero's Land Mine would do.
+        if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
+                && defendingTown->type == TOWN_TOWER) {
+            for (int row = 0; row < 11; row++) {
+                if (row == COMBAT_GATE_ROW)
+                    continue;
+                int hex = gMoatColumns[row];
+
+                long damage;
+                if (gpGame->f_1f698 >= 2) {
+                    damage = gMoatDamage[TOWN_TOWER];
+                    if (heroes[1]) {
+                        long cast = ComputeSpellDamage(
+                            SPELL_LAND_MINE, spellPower[1],
+                            heroes[1]->get_spell_level(SPELL_LAND_MINE,
+                                                       field_53c0),
+                            0, 0, 0, 0);
+                        if (cast > damage)
+                            damage = cast;
+                    }
+                } else if (heroes[1]) {
+                    damage = ComputeSpellDamage(
+                        SPELL_LAND_MINE, spellPower[1],
+                        heroes[1]->get_spell_level(SPELL_LAND_MINE,
+                                                   field_53c0),
+                        0, 0, 0, 0);
+                } else {
+                    damage = ComputeSpellDamage(SPELL_LAND_MINE, 3, 0,
+                                                0, 0, 0, 0);
+                }
+
+                TObstacle new_landmine;
+                new_landmine.sprite =
+                    ResourceManager::GetSprite(gLandMineShape.spriteName);
+                new_landmine.shape = &gLandMineShape;
+                new_landmine.hex = static_cast<unsigned char>(hex);
+                new_landmine.field_09 = 1;
+                new_landmine.field_0a = 0;
+                new_landmine.spell_damage = damage;
+                new_landmine.field_10 = 0;
+                new_landmine.field_14 = 0x3b;
+                obstacles.insert(obstacles.end, 1, new_landmine);
+                PlaceObstacle(&new_landmine, obstacles.size() - 1, hex, 8);
+            }
+        }
+
+        if (gpGame->f_1f698 >= 2)
+            return;
+        if (defendingTown->type != TOWN_STRONGHOLD)
+            return;
+        if (field_132f4 < COMBAT_FORTIFICATION_CITADEL)
+            return;
+    }
+
+    // Two boats meeting at sea: the hulls block thirty-two hexes and
+    // nothing else is placed at all.
+    if (terrainType == eTerrainWater
+            && heroes[0] && (heroes[0]->flags & 0x40000)
+            && heroes[1] && (heroes[1]->flags & 0x40000)) {
+        for (const int* hex = gBoatBlockedHexes;
+                hex < gBoatBlockedHexes + 32; hex++)
+            cells[*hex].field_10 |= 2;
+        return;
+    }
+
+    int budget;
+    if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
+            && defendingTown->type == TOWN_STRONGHOLD)
+        budget = Random(10, 16);
+    else
+        budget = Random(5, 12);
+
+    unsigned int terrain_mask = 0;
+    unsigned int special_terrain_mask = 0;
+    if (field_53c0 != -1)
+        special_terrain_mask = 1 << field_53c0;
+    else
+        terrain_mask = 1 << terrainType;
+
+    if ((field_132f4 < COMBAT_FORTIFICATION_CITADEL
+                || defendingTown->type != TOWN_STRONGHOLD)
+            && Random(1, 100) <= 40)
+        budget -= PlaceLargeObstacle(terrain_mask, special_terrain_mask) / 2;
+
+    int placed = 0;
+    TPickANumber obstacle_picker(0, 90);
+    while (placed < budget) {
+        int obstacle_id;
+        do {
+            obstacle_id = obstacle_picker.Pick();
+            if (obstacle_id < 0)
+                return;
+        } while (!(ObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
+                 && !(ObstacleInfo[obstacle_id].special_terrain_mask
+                      & special_terrain_mask));
+        if (obstacle_id < 0)
+            return;
+        if (place_obstacle(obstacle_id))
+            placed += gObstacleShapes[obstacle_id].extra_hex_count;
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3063
 // The bracket [SetupAndLoadObstacles .. PlaceObstacle] holds exactly
