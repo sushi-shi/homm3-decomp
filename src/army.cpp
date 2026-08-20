@@ -21,6 +21,7 @@
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
+#define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
 #define HOMM3_ARMY_PROTECTION_VIEW
@@ -51,6 +52,7 @@
 #include "armygrp.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
+#include "combatwindow.h"
 #include "csprite.h"
 #include "drawing.h"
 // get_berserk_targets (0x445490) seeds the combat search and then reads
@@ -65,6 +67,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
 
@@ -1304,15 +1307,186 @@ void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life
     // @stub
 }
 
+// E:\gamedcs\army.cpp:2358
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:2044
+// One swing, fully resolved: mark who gets hit (the hydra's whole
+// adjacency mask - widened by the Cerberus's two ring neighbours - or
+// the struck stack plus the dragon's-breath cell behind it), roll the
+// luck bonus, deal and apply the damage, pick the attack frame row
+// from the direction, run the on-attack special, print the damage
+// line and hand the kill accounting to do_post_attack. Returns 1 when
+// the blow incapacitated the defender (the special's own answer, or a
+// fresh full blind).
+//
+// GetName expands at the two damage_message sites and stays a call at
+// the sprintf; get_controlling_side is a CALL here (the one this TU
+// keeps out of line); MarkCreatureEffect expands three times.
+//
+// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.46 -> 95.52): the two
+// over-inlines take statement-scoped depth(0) pins with the call
+// hoisted to a local (striking_side, creature_name); the berserk
+// criteria is an IF/ELSE around two GetAttackMask calls, not a
+// ternary - retail pushes the shared -1 once and duplicates the
+// {criteria, gridIndex} pushes per arm; total_life goes through a
+// `long life` block local (+0.06 over the ternary).
+//
+// Residual (95.5202%): the register-mirror family again - the second
+// and third MarkCreatureEffect expansions home their byte-store lea
+// through the swapped ecx/ebx pair, the armyToAttack reload schedules
+// one slot later, and total_life's else arm keeps the product in EDX
+// where retail routes both arms through EAX into one store. Calls all
+// pair (23/23 after the pins).
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::do_attack(army* armyToAttack, int direction)
 {
-    // @stub
+    army* behind = 0;
+    gpCombatManager->ResetHitByCreature();
+    unsigned attackMask;
+    if (Is(19) & 1) {
+        if (berserkFlag)
+            attackMask = GetAttackMask(gridIndex, 2, -1);
+        else
+            attackMask = GetAttackMask(gridIndex, 1, -1);
+        if (creatureType == CREATURE_CERBERUS) {
+            unsigned mask = ~(1u << direction) & 0xff;
+            mask &= ~(1u << get_counter_clockwise(direction));
+            attackMask |= mask & ~(1u << get_clockwise(direction));
+        }
+    } else {
+        armyToAttack->hitByCreature = 1;
+        if (Is(3) & 1) {
+            long behind_hex = GetAdjacentCellIndex(
+                get_adjacent_hex(gridIndex, direction), direction);
+            if (behind_hex >= 0 && behind_hex < COMBAT_GRID_CELLS) {
+                behind = gpCombatManager->cells[behind_hex].get_army();
+                if (behind) {
+                    if (behind->hitByCreature)
+                        behind = 0;
+                    else
+                        behind->hitByCreature = 1;
+                }
+            }
+        }
+    }
+    gpCombatManager->ResetLimitCreature();
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    iLuckStatus = 0;
+#pragma inline_depth(0)
+    long striking_side = get_controlling_side();
+#pragma inline_depth()
+    if (gpCombatManager->heroes[striking_side] != 0 && luck > 0) {
+        if (Random(1, 24) <= _cpp_min(luck, 3)) {
+            iLuckStatus = 1;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                launch_sample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
+                                           "goodluck.82m"),
+                              -1, 3);
+                const char* creature_name;
+#pragma inline_depth(0)
+                creature_name = GetName(creatureType, numTroops);
+#pragma inline_depth()
+                sprintf(gText, gpGeneralText->GetText(46), creature_name);
+                gpCombatManager->combatWindow->combat_message(gText, 1, 0);
+                gpCombatManager->SpellEffect(
+                    combatManager::eSpellEffectFortune, this, 100, 0);
+            }
+        }
+    }
+    int damage = 0;
+    int killed = 0;
+    int damage2 = 0;
+    int killed2 = 0;
+    long fire_shield_damage = 0;
+    long total_life = 0;
+    if (Is(19) & 1) {
+        do_multi_head_attack(attackMask, &damage, &killed, &total_life);
+    } else {
+        gpCombatManager->MarkCreatureEffect(armyToAttack->combatSide,
+                                            armyToAttack->bitIndex);
+        if (behind)
+            gpCombatManager->MarkCreatureEffect(behind->combatSide,
+                                                behind->bitIndex);
+        long life;
+        if (armyToAttack->Is(23) & 1)
+            life = 1;
+        else
+            life = armyToAttack->hitPoints * armyToAttack->numTroops
+                   - armyToAttack->topCreatureDamage;
+        total_life = life;
+        long shield_charge = 0;
+        if (armyToAttack) {
+            damage = adjust_damage(armyToAttack, ComputeBaseDamage(0), 0,
+                                   0, joustBonus, &shield_charge);
+            killed = armyToAttack->Damage(damage);
+            iLuckStatus = 0;
+        }
+        fire_shield_damage = shield_charge;
+        if (shield_charge > 0)
+            armyToAttack->show_fire_shield = 1;
+        if (behind) {
+            shield_charge = 0;
+            damage2 = adjust_damage(behind, ComputeBaseDamage(0), 0, 0,
+                                    joustBonus, &shield_charge);
+            killed2 = behind->Damage(damage2);
+            iLuckStatus = 0;
+        }
+    }
+    gpCombatManager->ComputeMaxExtent();
+    bShowAttackFrames = 1;
+    if (creatureType != CREATURE_HYDRA && creatureType != CREATURE_CHAOS_HYDRA
+        && !static_cast<const combatManager*>(gpCombatManager)
+                ->IsQuickCombat()) {
+        if (direction == 6 || direction == 5 || direction == 0) {
+            if (behind && stdIcon->numSequences > cs_special_ur
+                && stdIcon->validSeqMask[cs_special_ur] != 0)
+                iShowAttackFrameType = cs_special_ur;
+            else if (creatureType == ARMY_CREATURE_BALLISTA)
+                iShowAttackFrameType = cs_range_ur;
+            else
+                iShowAttackFrameType = cs_attack_ur;
+        } else if (direction == 1 || direction == 4) {
+            if (behind && stdIcon->numSequences > cs_special_r
+                && stdIcon->validSeqMask[cs_special_r] != 0) {
+                iShowAttackFrameType = cs_special_r;
+            } else if (creatureType == ARMY_CREATURE_BALLISTA) {
+                iShowAttackFrameType = cs_range_r;
+            } else {
+                iShowAttackFrameType = cs_attack_r;
+            }
+        } else {
+            if (behind && stdIcon->numSequences > cs_special_dr
+                && stdIcon->validSeqMask[cs_special_dr] != 0)
+                iShowAttackFrameType = cs_special_dr;
+            else if (creatureType == ARMY_CREATURE_BALLISTA)
+                iShowAttackFrameType = cs_range_dr;
+            else
+                iShowAttackFrameType = cs_attack_dr;
+        }
+    } else {
+        iShowAttackFrameType = cs_attack_r;
+    }
+    unsigned char special = check_special_attack(armyToAttack);
+    gpCombatManager->PowEffect(-1, 0);
+    if (!(Is(19) & 1)) {
+        if (behind && behind->creatureType != armyToAttack->creatureType)
+            gpCombatManager->damage_message(
+                GetName(creatureType, numTroops), numTroops,
+                damage + damage2, 0, killed + killed2);
+        else
+            gpCombatManager->damage_message(
+                GetName(creatureType, numTroops), numTroops, damage,
+                armyToAttack, killed);
+    }
+    do_post_attack(armyToAttack, damage, killed, total_life);
+    if (fire_shield_damage > 0)
+        do_fire_shield(fire_shield_damage);
+    if (armyToAttack->residualBlindness && armyToAttack->blindFactor == 0.0)
+        return 1;
+    return special;
 }
-
-// E:\gamedcs\army.cpp:2358
-#endif  // @carcass
 
 // The whole melee exchange in one direction: turn the defender to face
 // the blow, land it, let the defender retaliate, take a second swing if

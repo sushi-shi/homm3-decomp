@@ -336,6 +336,7 @@ army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
+army	?do_attack@army@@QAEEPAV1@H@Z	95.5202	95.5202	95.5202	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	99.9351	99.9351	99.9351	0x40310
@@ -387,7 +388,6 @@ army	army_attack_wall_45fd0	0.0000	0.0000	0.0000	0x45fd0
 army	army_can_cast_spell	0.0000	0.0000	0.0000	0x476c0
 army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
-army	army_do_attack	0.0000	0.0000	0.0000	0x41610
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
 army	army_get_unit_combat_value	0.0000	0.0000	0.0000	0x42a50
 army	army_initialize	0.0000	0.0000	0.0000	0x3d730

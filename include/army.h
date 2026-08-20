@@ -1283,6 +1283,10 @@ public:
     // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
     // paralyze); returns 1 for the three incapacitators.
     unsigned char check_special_attack(army* target);
+    // 0x440bc0, EH-bearing carcass in army.cpp; declared for
+    // do_attack's kill-accounting tail.
+    void do_post_attack(army* target, int iDamage, int iKilled,
+                        int total_life);
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
