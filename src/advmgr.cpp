@@ -1419,6 +1419,18 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // exactly what made it right in TBottomViewTown/TBottomViewHero), where
 // this body's three tests share ONE dword already in a register. The DC
 // is an older revision; retail's bytes outrank it.
+//
+// Residual (78.80%): an INLINER decision, not a source shape. Both sides
+// emit 29 out-of-line calls and the CFGs are close - 134 blocks against
+// retail's 137 - and predict-inline narrows the whole divergence to one
+// callee: SetPointer, which we call EIGHT times and retail seven, so
+// retail expands one of those sites. Per the /Ob2 rule that wants a
+// fuller caller rather than a respelling, and confirmed by two rejected
+// attempts to make two call sites share one: routing both SetPointer(3)
+// arms through a common `town_cursor_exit` label with advCommand set
+// before the goto measured 78.32, and routing the scroll-zone arm into
+// normal_cursor_exit measured 78.02. Neither is a missing source element;
+// the extra call is simply where our budget ran out.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
