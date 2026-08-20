@@ -54,6 +54,63 @@ def _targets():
 UNCLAIMED = "unclaimed (no source binding)"
 
 
+def _in_span_unclaimed():
+    """(bytes, count) of functions inside an existing unit's inferred RVA span
+    that no baseline row claims - and a per-unit TSV alongside the census.
+
+    These are the cheapest unclaimed functions in the image: link-order has
+    already attributed them to a unit that exists, so the source file, the
+    headers and the compile profile are all in place.
+    """
+    import collections
+    base = _common.REPO / "config/match_baseline.tsv"
+    fns = _common.REPO / "evidence/link-order/functions.tsv"
+    if not base.is_file() or not fns.is_file():
+        return 0, 0
+    claimed = set()
+    for line in base.read_text().splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        p = line.split("\t")
+        if len(p) >= 6:
+            try:
+                claimed.add(int(p[5], 16))
+            except ValueError:
+                pass
+    n_by, b_by = collections.Counter(), collections.Counter()
+    hdr, total, count = None, 0, 0
+    for line in fns.read_text().splitlines():
+        if line.startswith("#"):
+            continue
+        p = line.split("\t")
+        if hdr is None:
+            hdr = p
+            continue
+        r = dict(zip(hdr, p))
+        if r.get("relation") != "in-span":
+            continue
+        try:
+            rva, size = int(r["rva"], 16), int(r["size"])
+        except (ValueError, KeyError):
+            continue
+        if rva in claimed:
+            continue
+        owner = r.get("owner_or_bracket") or "(none)"
+        n_by[owner] += 1
+        b_by[owner] += size
+        total += size
+        count += 1
+    out = _common.REPO / "evidence/unclaimed-in-span.tsv"
+    with out.open("w") as fh:
+        fh.write("# GENERATED: homm3 vc6 queue - regenerate, never hand-edit.\n")
+        fh.write("# Functions inside an EXISTING unit's inferred link-order\n"
+                 "# span that no match_baseline row claims.\n")
+        fh.write("unit\tfunctions\tbytes\n")
+        for unit, b in b_by.most_common():
+            fh.write(f"{unit}\t{n_by[unit]}\t{b}\n")
+    return total, count
+
+
 def _horizon(in_unit_bytes: float) -> None:
     """Print what this census can and cannot see.
 
@@ -85,6 +142,7 @@ def _horizon(in_unit_bytes: float) -> None:
             matched += s * (f.get("fuzzy_match_percent", 0) or 0) / 100
     outside = engine - unit_bytes
     remaining = engine - matched
+    in_span, in_span_n = _in_span_unclaimed()
     print(f"\nhorizon (filtered engine, the README's denominator: "
           f"{engine / 1024:.0f} KB):")
     print(f"  {matched / 1024:8.1f} KB  matched so far "
@@ -93,11 +151,18 @@ def _horizon(in_unit_bytes: float) -> None:
           f"units - everything this census ranks")
     print(f"  {outside / 1024:8.1f} KB  in functions NO unit claims yet - "
           "invisible to every solver")
+    if in_span:
+        print(f"    of which {in_span / 1024:.1f} KB ({in_span_n} fn) lies in "
+              "the RVA span of a unit that ALREADY EXISTS -")
+        print("    the tractable tier: the unit, its headers and its build "
+              "profile are all in place,")
+        print("    so a lane only has to claim the addresses and reconstruct "
+              "the bodies")
     if remaining:
         print(f"  -> closing the whole ranking above moves the total to "
               f"{100 * (matched + in_unit_bytes) / engine:.2f}%; the other "
-              f"{100 * outside / remaining:.0f}% of the work left needs new "
-              "units, not better matching")
+              f"{100 * outside / remaining:.0f}% of the work left is claiming "
+              "functions, not better matching")
 
 
 def run(args) -> int:

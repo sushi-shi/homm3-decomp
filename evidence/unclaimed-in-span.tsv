@@ -1,0 +1,39 @@
+# GENERATED: homm3 vc6 queue - regenerate, never hand-edit.
+# Functions inside an EXISTING unit's inferred link-order
+# span that no match_baseline row claims.
+unit	functions	bytes
+game	82	56026
+tradpost	15	45736
+army	34	31527
+townmgr	20	27184
+sacrifice_window	37	25978
+spells	38	23135
+seerhut	73	22609
+command	17	15392
+remote	55	13741
+resourcemanager	25	10984
+recruit	4	9176
+drawing	14	7743
+combatcontrolsubwindow	6	6238
+mapcell	10	3359
+hiscore	6	2978
+adventuremapwindow	5	2486
+ai_tactical	2	2263
+soundmgr	5	2149
+cmbtmgr	12	2104
+advmgr	3	2067
+town	3	1802
+ai_player	5	1390
+wingraph	2	1071
+bitmap816	5	972
+viewarmywindow	1	693
+university_window	1	541
+ai	3	514
+hero	2	456
+textwdgt	3	433
+bottomviewsubwindow	6	379
+campaignwindow	1	256
+misc	1	221
+victorylossconditions	1	69
+adventureoptionswindow	1	16
+csequence	1	15
