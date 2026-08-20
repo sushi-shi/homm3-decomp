@@ -562,6 +562,18 @@ DATA(0x0069873c) extern int gUnnamed69873c;
 //             playerData::HasMobileHero.
 DATA(0x00698778) extern int gUnnamed698778;
 
+// Retail .bss/.data, three more the hero-context switch reads. Roles are
+// exactly what SetHeroContext's branches prove and nothing wider:
+//   0x682a38  cleared for the "is this turn ours to draw" gate, tested
+//             between bVideoPaused and gCompleteDrawMessageBypass.
+DATA(0x00682a38) extern unsigned char gUnnamed682a38;
+//   0x691209  lets a NON-human acting player through that same gate
+//             without the IsLastHuman probe.
+DATA(0x00691209) extern unsigned char gUnnamed691209;
+//   0x698790  suppresses the visibility scan around the new hero when the
+//             receiving player is not the local human.
+DATA(0x00698790) extern int gUnnamed698790;
+
 // gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
 // arm answers 2 by viewing gUnnamed69873c's town and suppressing the
 // screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
@@ -1183,7 +1195,12 @@ public:
     sample* loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
     sample* heroSamples[11];       // +0x360, DC name and extent
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
-    char pad_390[4];
+    // +0x390, sliced out of the old four-byte pad by SetHeroContext: its
+    // tail gates the closing ForceMouseMove/lastHoverX reset on this byte
+    // being clear (`mov al,[esi+0x390] / test al,al / jne <return>`).
+    // Role and width are what those bytes prove; the name is ordinal.
+    unsigned char field_390;
+    char pad_391[3];
     // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
     // rebuilding the view, then stores 5 before installing the new window.
     EBottomViewType bottomViewType;
