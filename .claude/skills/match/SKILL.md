@@ -164,9 +164,16 @@ MISSING forever.
   it is VC6 optimizer state (type/symbol-table population perturbing CSE and
   addressing-mode choice), not a modelling error. The delta is real codegen:
   retail addressed a row directly (`mov [8*eax + tbl+0x160], ebx`) where our
-  CL hoisted the base into a register. Blank lines, comments, typedefs,
-  `extern int` and bare `struct X;` forward declarations do NOT move it -
-  which is why a 200-extern probe cleared the wrong hypothesis. NO local
+  CL hoisted the base into a register. Blank lines, comments and typedefs do
+  NOT move it. **CORRECTED 2026-08-20 — the trigger is the DECLARATOR COUNT
+  C1XX numbers member handles from, and `extern int` DOES move it.** The
+  cmbtmgr lane bisected `command.obj`'s GetCommand one edit at a time
+  (92.5714 -> 92.5357, three times, restored by gating each): retyping a pad
+  IN PLACE is free — three such renames landed un-gated at no cost — while
+  adding a declarator, an enumerator, *or a single file-scope `extern int`*
+  each costs 0.036. So the old "a 200-extern probe cleared the hypothesis"
+  reasoning does not generalize past the header it was run on; count
+  declarators, not type definitions, and gate anything you add. NO local
   spelling change can fix this; the match returns when the TU's include
   closure matches retail's (breaking one include edge restored it). When a
   header change moves an unrelated TU's exact function, suspect this before
