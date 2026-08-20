@@ -33,6 +33,10 @@ RATIO_LO, RATIO_HI = 0.3, 2.5
 #: cost charged for leaving a DC row unpaired (inlined away, or absent from
 #: this build). Low enough that skipping beats a wildly implausible pairing.
 SKIP_COST = 1.15
+#: cost of leaving an x86 row with no DC counterpart. Higher than SKIP_COST:
+#: an unexplained retail function is a worse outcome than an unused roster
+#: row, so the alignment should prefer a weak pairing to giving up.
+UNPAIR_COST = 2.5
 
 
 def _repo():
@@ -151,12 +155,25 @@ def align(dc, x86, anchors):
             if c < best[j + 1][i + 1]:
                 best[j + 1][i + 1] = c
                 back[j + 1][i + 1] = ("pair", j, i)
+        # leave x86[j] unpaired. Without this the DP is INFEASIBLE whenever a
+        # segment holds more x86 rows than DC rows - which happens for real
+        # (statics and COMDATs the DC roster does not carry), and made `game`
+        # crash outright rather than degrade.
+        for i in range(m + 1):
+            if best[j][i] == inf or anchors.get(j) is not None:
+                continue
+            c = best[j][i] + UNPAIR_COST
+            if c < best[j + 1][i]:
+                best[j + 1][i] = c
+                back[j + 1][i] = ("drop", j, i)
     # finish: trailing DC rows may be skipped
     end_i, end_cost = None, inf
     for i in range(m + 1):
         c = best[n][i] + SKIP_COST * (m - i)
         if c < end_cost:
             end_cost, end_i = c, i
+    if end_i is None:              # nothing feasible - report, do not crash
+        return [(None, j) for j in range(n)]
     out, j, i = [], n, end_i
     while j > 0:
         step = back[j][i]
@@ -168,29 +185,89 @@ def align(dc, x86, anchors):
         if kind == "pair":
             out.append((pi, pj))
             j, i = pj, pi
+        elif kind == "drop":
+            out.append((None, pj))
+            j, i = pj, pi
         else:
             i = pi
     out.reverse()
     return out
 
 
-def _epilogue_ret(rva: int):
-    """Bytes popped by the function's terminal `ret N`, or None.
+def _anchors(dc, x86, claims, anchor_log=False):
+    """{x86_index: dc_index} for claims that identify their DC row UNAMBIGUOUSLY.
 
-    Reads the disassembly the sema layer already produces; no compile.
+    An anchor is only worth having if it is certainly right, so this demands
+    three things a naive substring match does not:
+
+      * whole-token equality on the method name, not `in`. `game::game`
+        appears inside a dozen unrelated labels, and matching loosely pinned
+        94 of game's 175 rows to nonsense.
+      * one-to-one. Overloads share a method name, so a name matching several
+        DC rows (or several claims) identifies none of them.
+      * monotonicity. Anchors that cross each other cannot all be right and
+        make the alignment infeasible; the longest increasing run is kept.
     """
     import re
-    import subprocess
+    tok = re.compile(r"[A-Za-z_][A-Za-z_0-9]*")
+    by_name = {}
+    for i, d in enumerate(dc):
+        by_name.setdefault(d["name"].split("::")[-1], []).append(i)
+    cand = []
+    for j, x in enumerate(x86):
+        label = claims.get(x["rva"])
+        if not label:
+            continue
+        names = set(tok.findall(label))
+        hits = [(n, idxs) for n, idxs in by_name.items() if n in names]
+        if len(hits) != 1:
+            continue           # names nothing, or names several DC rows
+        name, idxs = hits[0]
+        if len(idxs) != 1:
+            continue           # overloaded - the name does not pick one
+        cand.append((j, idxs[0], x["rva"], dc[idxs[0]]["name"]))
+    # longest strictly-increasing run in the dc index (patience/LIS, O(n^2) is
+    # ample here) - crossing anchors are dropped, not trusted.
+    best = []
+    for k in range(len(cand)):
+        run = max((r for r in best if r and r[-1][1] < cand[k][1]),
+                  key=len, default=[])
+        best.append(list(run) + [cand[k]])
+    keep = max(best, key=len, default=[])
+    anchors = {j: i for j, i, _r, _n in keep}
+    note = [f"0x{r:06x} = {n}" for _j, _i, r, n in keep] if anchor_log else []
+    dropped = len(cand) - len(keep)
+    if dropped and anchor_log:
+        note.append(f"({dropped} ambiguous or crossing anchor(s) dropped)")
+    return anchors, note
+
+
+_RET = None
+
+
+def _epilogue_ret(rva: int, size: int):
+    """Bytes popped by the function's terminal `ret N`, or None.
+
+    In-process against ONE loaded image. Shelling out to `sema disasm` per
+    function re-loads and re-hashes the whole executable each time, which is
+    fine for a 40-row unit and times out on a 175-row one - the units this
+    tool exists for.
+    """
+    global _RET
+    if _RET is None:
+        import re
+        # image_text lines are "  <va>: <bytes>\tret\t<imm>" - the mnemonic is
+        # tab-delimited and the line STARTS with an address, so this cannot be
+        # anchored at ^.
+        _RET = re.compile(r"\tret\t\s*(0x[0-9a-f]+|\d+)?\s*$", re.M | re.I)
     try:
-        out = subprocess.run(
-            [sys.executable, "-m", "homm3.sema", "disasm", f"0x{rva:x}"],
-            capture_output=True, text=True, timeout=120,
-            cwd=str(_repo() / "scripts")).stdout
-    except (subprocess.SubprocessError, OSError):
+        from homm3.sema import _asm
+        from homm3.sema.context import get_context
+        text = _asm.image_text(get_context(), rva, size, f"fn_{rva:x}")
+    except (Exception, SystemExit):
         return None
     last = None
-    for m in re.finditer(r"^\s*ret(?:\s+(0x[0-9a-f]+|\d+))?\s*$",
-                         out, re.M | re.I):
+    for m in _RET.finditer(text):
         last = int(m.group(1), 0) if m.group(1) else 0
     return last
 
@@ -222,20 +299,7 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
         return 1
     claims = claimed_rvas()
 
-    # Anchors: an x86 row the baseline already claims, whose DC counterpart is
-    # identifiable by name. These pin the alignment and are why it survives
-    # long runs of skipped rows.
-    anchors, anchor_note = {}, []
-    for j, x in enumerate(x86):
-        label = claims.get(x["rva"])
-        if not label:
-            continue
-        for i, d in enumerate(dc):
-            tail = d["name"].split("::")[-1]
-            if tail and tail in label:
-                anchors[j] = i
-                anchor_note.append(f"0x{x['rva']:06x} = {d['name']}")
-                break
+    anchors, anchor_note = _anchors(dc, x86, claims, anchor_log=True)
 
     print(f"[ordermap] {unit}: {len(dc)} DC row(s) from {unit}.cpp, "
           f"{len(x86)} x86 carve row(s) in span, {len(anchors)} anchor(s)")
@@ -259,7 +323,7 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
         d = dc[i]
         ratio = x["size"] / d["size"] if d["size"] else 0
         want = _predict_ret(d)
-        got = None if no_arity else _epilogue_ret(x["rva"])
+        got = None if no_arity else _epilogue_ret(x["rva"], x["size"])
         if got is None:
             ret_col, ret_tag = "-", ""
         elif got == want:
@@ -286,6 +350,21 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
               f"{d['size']:>6}{ratio:>6.2f}{d['args']:>4}  {ret_col:>10}  "
               f"{conf}{ret_tag}")
     if agree or disagree:
+        rate = 100.0 * agree / (agree + disagree)
+        if rate >= 90:
+            verdict = ("USABLE - a run this clean is the exhaustive order-map "
+                       "the skill accepts as proof.")
+        elif rate >= 70:
+            verdict = ("MIXED - the spine is probably right but individual "
+                       "rows are not. Claim only ret-ok rows.")
+        else:
+            verdict = ("DO NOT CLAIM FROM THIS MAP. Agreement this low is "
+                       "near chance for common ret values, so the alignment "
+                       "is not carrying real information. Usual causes: many "
+                       "overloads (which no size score can separate), and "
+                       "x86 statics the DC roster never had. Anchor it with "
+                       "more claims first.")
+        print(f"\nVERDICT {rate:.0f}% arity agreement - {verdict}")
         print(f"\narity screen: {agree} agree, {disagree} disagree. Each "
               "agreement is an independent numeric\nprediction (bytes the "
               "callee pops, from the DC argument count) that came true; a\n"
