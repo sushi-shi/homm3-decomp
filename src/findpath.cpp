@@ -621,6 +621,19 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
     *dest = *point;
 }
 
+// AdvMgr.h:1254 in the Dreamcast roster (dc 0x1f084): `int
+// GetMapExtra(type_point point)`, the BY-VALUE overload of kb.h's
+// three-argument reader.  TestPossibleDirections' SECOND fog test is the one
+// site in this TU that needs it - retail loads `source->point` there as one
+// dword (`mov eax,[edi]` plus a frame copy) and pulls all three coordinates
+// out of the register, where three separate member reads give two 16-bit
+// loads instead.  Spelled file-local because no retail body has been located
+// for it and the DC roster puts it in a header this TU does not need.
+static int GetMapExtra(type_point point)
+{
+    return GetMapExtra(point.x, point.y, point.z);
+}
+
 // E:\gamedcs\findpath.cpp:461
 // `ret 0x24` = nine stack arguments over `this`, the DC count exactly.
 // The opening three instructions corroborate the second parameter:
@@ -661,6 +674,17 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point,
 // latch block), and only for a computer player does it go on to require
 // that the source square be unseen too and that the player still own a
 // town.
+//
+// THE SECOND FOG TEST TAKES ITS POINT BY VALUE, and that is worth 89.0387 ->
+// 90.1238 (2026-08-20).  Retail loads `source->point` there as ONE DWORD
+// (`mov eax,[edi]` plus a frame copy) and pulls x, y and z out of the
+// register; three separate member reads give two 16-bit loads instead.  The
+// DC roster names the spelling exactly - AdvMgr.h:1254 (dc 0x1f084) declares
+// `int GetMapExtra(type_point point)` beside kb.h's three-argument reader -
+// so the by-value overload is a source fact, not a device.  The FIRST fog
+// test is byte-FLAT either way (90.1238 both), because `candidate` is already
+// a local pathCell copy, and is left in the three-argument form the retail
+// bytes show there.
 //
 // THE 1170-STRIDE SCAN near 0x4b3861 is gpGame->heroes, not the town
 // array the earlier note named: `hero* other = gpGame->GetHero(cell->
@@ -759,8 +783,7 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                           candidate.point.z) & gMapVisibilityBit)
                 && search_type != const_AI_enemy_search
                 && (gpCurrentPlayer->IsHuman()
-                    || (!(GetMapExtra(source->point.x, source->point.y,
-                                      source->point.z) & gMapVisibilityBit)
+                    || (!(GetMapExtra(source->point) & gMapVisibilityBit)
                         && gpCurrentPlayer->numTowns > 0))) {
             blocked = 1;
             candidate.last_can_stop = 0;

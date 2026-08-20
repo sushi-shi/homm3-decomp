@@ -4624,6 +4624,20 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // operator new, the three `_Construct`s, both `_Ucopy`s and the `_Ufill` -
 // lines up one for one, which also confirms that retail EXPANDS this insert
 // exactly as we do: the readObject site-pin lever does not apply here.
+//
+// TWO MORE MEASURED NEGATIVES, 2026-08-20, both aimed at exactly that:
+//   * `insert(position, 1, *objectCell)` - the three-argument form, which
+//     lifts the capacity path's `size()` one level shallower and is the lever
+//     that opened readTownData - measures 65.1777 -> 61.3531.  The two-
+//     argument `insert(position, *objectCell)` is retail's spelling.
+//   * `short y` for the inner induction variable, which is `why-branch`'s own
+//     top D10 pick here (45 disagreements -> 43), measures 65.1777 ->
+//     63.3235.  The eighth instance of the low-mass inversion; confirm every
+//     solver pick against the real score.
+// The remaining exit delta (base 3 rets, retail 4) is INSIDE the insert
+// expansion - retail's four returns are its three arms plus the empty-vector
+// path (blocks B41/B42/B46/B51), and the whole scan above it, B0..B25, has
+// one exit on both sides.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
