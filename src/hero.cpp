@@ -25,7 +25,12 @@
 // entry, not an inlined fsqrt.
 #include <math.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
+// hero.obj owns get_morale_description / get_luck_description, so the
+// owning compiland joins their gate rather than defining armygrp's
+// wider HOMM3_ARMYGRP_DESCRIPTION_API.
+#define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
+#undef HOMM3_HERO_DESCRIPTION_DEFS
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -47,6 +52,9 @@
 #include "exec.h"
 #include "findpath.h"
 #include "town.h"
+// GetBuildingName - the Grail arm of both description bodies names the
+// building it credits.
+#include "castle.h"
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
@@ -65,6 +73,19 @@ inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
     heroId = id;
     point = location;
     playerPos = gNetLocalGamePos;
+}
+
+// The dead-hero twin, expanded inside hero::Deallocate. Same store order
+// as the teleport record above, minus the playerPos tail.
+inline CMCDeadHero::CMCDeadHero(int id, type_point location)
+{
+    field_00 = -1;
+    field_04 = 0;
+    subType = RS_DEAD_HERO;
+    size = sizeof(CMCDeadHero);
+    field_10 = 0;
+    heroId = id;
+    point = location;
 }
 
 #include "mousemgr.h"
@@ -422,14 +443,137 @@ int hero::load(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:914
-VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
-int hero::save(void* outfile)
+// The record serialiser. Three scratch locals carry every scalar into
+// the stream - retail copies each field into a stack temp and hands
+// Write() that temp's address, never the member's, which is what makes
+// the write widths independent of the member widths (the byte writes of
+// `sex`, `id`, `heroClass`, `disguiseLevel`, `flightLevel`,
+// `waterWalkLevel` and `field_129` are all truncating stores out of
+// four-byte members, emitted as plain `mov al, byte [this+off]`).
+//
+// Only the leading type_obscuring_object::save is checked; every
+// hero-level Write ignores its result and the body always returns 0.
+// The custom name goes out as its length followed by c_str()'s bytes -
+// the `test ecx,ecx / mov ecx, heroNameEmptyText` pair at +0x64 is
+// Dinkumware's c_str() null fallback inlined, the same expansion
+// HeroFn_004D8FB0 carries.
+//
+// The tail packs TownSpecialGrantedMask into six bytes a bit at a
+// time. bitset::test's range check is what the loop's `cmp edi,0x30`
+// tests: VC6 rotated the loop and merged the peeled first-iteration
+// check with the back-edge condition, so ONE compare serves both and
+// _Xran sits above the loop body rather than inside it.
+// The three scalar writers hero::save funnels every field through.
+// They carry NO retail row of their own - each is expanded at all its
+// call sites - but they are not mere convenience: a BY-VALUE parameter
+// is what puts the serialised copy in a compiler TEMPORARY instead of a
+// named local, and retail's frame is only big enough for the six-byte
+// mask buffer (`sub esp,8`) with all three temps packed into the dead
+// incoming-parameter word - the byte at [ebp+0xb], the wider two at
+// [ebp+8], overlapping. Named locals do not get that arena.
+static void WriteByteField(TAbstractFile* outfile, unsigned char value)
 {
-    // @stub
+    outfile->Write(&value, sizeof(value));
 }
 
-#endif  // @carcass
+static void WriteWordField(TAbstractFile* outfile, short value)
+{
+    outfile->Write(&value, sizeof(value));
+}
+
+static void WriteDwordField(TAbstractFile* outfile, int value)
+{
+    outfile->Write(&value, sizeof(value));
+}
+
+VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
+int hero::save(TAbstractFile* outfile)
+{
+    if (!type_obscuring_object::save(outfile))
+        return -1;
+
+
+    WriteByteField(outfile, sex);
+    WriteByteField(outfile, hasCustomName);
+
+    WriteDwordField(outfile, customName.length());
+    outfile->Write(customName.c_str(), customName.length());
+
+    WriteByteField(outfile, owner);
+    WriteByteField(outfile, patrolRadius);
+    WriteByteField(outfile, field_11a);
+    WriteByteField(outfile, field_11b);
+    WriteByteField(outfile, backpackCount);
+    WriteByteField(outfile, disguiseLevel);
+    WriteByteField(outfile, flightLevel);
+    WriteByteField(outfile, waterWalkLevel);
+    WriteByteField(outfile, dWalkSpellsCast);
+    WriteByteField(outfile, field_129);
+    WriteByteField(outfile, id);
+    WriteByteField(outfile, heroClass);
+    WriteByteField(outfile, portrait);
+    WriteByteField(outfile, patrolX);
+    WriteByteField(outfile, patrolY);
+    WriteByteField(outfile, facing);
+    WriteByteField(outfile, formation);
+    WriteByteField(outfile, pad_08f[0]);
+    WriteByteField(outfile, pad_08f[1]);
+
+    WriteDwordField(outfile, pathTargetX);
+    WriteDwordField(outfile, pathTargetY);
+    WriteWordField(outfile, pathTargetZ);
+    WriteWordField(outfile, field_03f);
+    WriteDwordField(outfile, maxMovePoints);
+    WriteDwordField(outfile, movePoints);
+    WriteDwordField(outfile, experience);
+    WriteDwordField(outfile, skillCount);
+    WriteWordField(outfile, mana);
+    WriteWordField(outfile, level);
+    WriteWordField(outfile, field_041);
+
+    WriteDwordField(outfile, TrainingGroundsFlags);
+    WriteDwordField(outfile, DefenseTowerFlags);
+    WriteDwordField(outfile, GardenOfRevelationFlags);
+    WriteDwordField(outfile, MercCampFlags);
+    WriteDwordField(outfile, PowerSchoolFlags);
+    WriteDwordField(outfile, TreeOfKnowledgeFlags);
+    WriteDwordField(outfile, LibraryFlags);
+    WriteDwordField(outfile, ArenaFlags);
+    WriteDwordField(outfile, MagicSchoolFlags);
+    WriteDwordField(outfile, WarSchoolFlags);
+    WriteDwordField(outfile, UniversityFlags);
+    WriteDwordField(outfile, Shrine1Flags);
+    WriteDwordField(outfile, Shrine2Flags);
+    WriteDwordField(outfile, Shrine3Flags);
+    WriteDwordField(outfile, flags);
+
+    army.save(outfile);
+
+    outfile->Write(name, sizeof(name));
+    outfile->Write(skillLevel, sizeof(skillLevel));
+    outfile->Write(skillOrder, sizeof(skillOrder));
+    outfile->Write(stats, sizeof(stats));
+    outfile->Write(in_spellbook, sizeof(in_spellbook));
+    outfile->Write(available_spells, sizeof(available_spells));
+    outfile->Write(equipped, sizeof(equipped));
+    outfile->Write(backpack, sizeof(backpack));
+    outfile->Write(artifactSlotCounts, sizeof(artifactSlotCounts));
+
+    WriteByteField(outfile, field_11c);
+
+    const std::bitset<48>& granted = TownSpecialGrantedMask;
+    unsigned char granted_mask[6];
+    memset(granted_mask, 0, sizeof(granted_mask));
+    for (unsigned int i = 0; i < 48; ++i) {
+        if (granted.test(i))
+            granted_mask[i >> 3] |= 1 << (i & 7);
+    }
+    outfile->Write(granted_mask, sizeof(granted_mask));
+    return 0;
+}
 
 // E:\gamedcs\hero.cpp:1208
 // The first half of the body is entirely implicit: the base and the
@@ -1115,16 +1259,123 @@ int hero::HeroFn_004D9CC0(int artifact)
     return gpWindowManager->dialogReturn;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1732
+// Retires the hero from the map. NOT EH-bearing - the prologue carries no
+// fs:[0] frame, which is a consistency constraint on CMCDeadHero: it must
+// have no user-declared destructor or VC6 would add one.
+// `restore_cell` and GetPrimarySkill are /Ob2-expanded here; the
+// intelligence factor and GetMobility are open-coded exactly as
+// hero::initialize carries them. The chained `maxMovePoints = movePoints
+// = ...` is retail's store order (movePoints first). The tavern block
+// re-derives players[owner] from a fresh byte read rather than reusing
+// `player`, because EBX has been repurposed by then.
 VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
 void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
 {
-    // @stub
-}
+    unsigned char freedTownVisitor = 0;
+    int townId = gpGame->GetTownId(x, y, z);
+    if (townId >= 0) {
+        town* visited = gpGame->GetTown(townId);
+        if (visited->garrisonHeroId == id) {
+            visited->garrisonHeroId = -1;
+            freedTownVisitor = 1;
+        }
+    }
 
-#endif  // @carcass
+    if (bGameLoaded && !remote_move) {
+        CMCDeadHero change(id, type_point(x, y, z));
+        SendMapChange(&change);
+        gpGame->GameFn_0049C720(this, -1, freedTownVisitor);
+    }
+
+    int oldOwner = owner;
+    playerData* player = &gpGame->players[oldOwner];
+    if (bGameLoaded) {
+        gpAdvManager->MobilizeCurrHero(0, 0, 1);
+        gpAdvManager->HideRoute(0, 0, 0);
+    }
+
+    if (flags & 0x40000) {
+        gpGame->GetHeroBoat(id, 1)->allocated = 0;
+        flags &= 0xfffbffff;
+    }
+
+    type_obscuring_object::restore_cell();
+
+    if (!gCombatFlag697744) {
+        for (int slot = 0; slot < 7; slot++)
+            army.Dismiss(slot);
+    }
+
+    int pos = player->FindHero(id);
+    if (pos >= 0) {
+        for (int i = pos; i < player->numHeroes - 1; i++)
+            player->heroes[i] = player->heroes[i + 1];
+        player->heroes[player->numHeroes - 1] = -1;
+        player->numHeroes--;
+    }
+    if (player->currHeroId == id) {
+        player->currHeroId = -1;
+        if (gNetLocalGamePos == owner)
+            gpAdvManager->drawCursor = 0;
+        if (oldOwner == gNetLocalGamePos)
+            gpAdvManager->inDialog = 0;
+    }
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 1);
+    gpGame->heroAvailability[id] = -1;
+
+    if (gCombatFlag6985a3 || gCombatFlag697744) {
+        int slot = Random(0, 1);
+        int other = gpGame->players[owner].recruits[slot];
+        if (other != -1) {
+            if (gpGame->heroes[other].flags & 0x20000) {
+                slot = 1 - slot;
+                other = gpGame->players[owner].recruits[slot];
+            }
+            if (other != -1 && gpGame->heroAvailability[other] == HERO_AVAILABILITY_TAVERN_POOL)
+                gpGame->heroAvailability[other] = -1;
+        }
+        gpGame->players[owner].recruits[slot] = id;
+        gpGame->heroAvailability[id] = HERO_AVAILABILITY_TAVERN_POOL;
+        flags |= 0x20000;
+    }
+
+    if (gCampaignMode) {
+        switch (gpGame->campaign.currentCampaign) {
+        case DEALLOCATE_CAMPAIGN_BY_PORTRAIT:
+            if (portrait == DEALLOCATE_KEPT_PORTRAIT)
+                gpGame->heroAvailability[id] = HERO_AVAILABILITY_TAVERN_POOL;
+            break;
+        case DEALLOCATE_CAMPAIGN_BY_HERO_ID:
+            if (id == DEALLOCATE_KEPT_HERO_ID)
+                gpGame->heroAvailability[DEALLOCATE_KEPT_HERO_ID] =
+                    HERO_AVAILABILITY_TAVERN_POOL;
+            break;
+        }
+    }
+
+    owner = -1;
+    pathTargetY = -1;
+    pathTargetX = -1;
+    if (!(flags & 0x20000)) {
+        int knowledge = GetPrimarySkill(3);
+        float intelligence =
+            kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
+        if (skillLevel[eSecSkillIntelligence] > 0) {
+            const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+            if (ability.type == eHeroAbilitySecondarySkill &&
+                ability.skill == eSecSkillIntelligence)
+                intelligence = (level * 0.05f + 1.0f) * intelligence;
+        }
+        float baseMana = static_cast<float>(knowledge * 10);
+        mana = static_cast<short>(
+            static_cast<long>((intelligence + 1.0f) * baseMana));
+        maxMovePoints = movePoints = GetMobility((flags >> 18) & 1);
+    }
+
+    if (!gCombatFlag697744)
+        gpGame->SetRandomHeroArmies(id, 0, 1);
+}
 
 // E:\gamedcs\hero.cpp:1836
 // The experience ladder. Levels 1..12 are the table; every level above
@@ -1192,9 +1443,12 @@ DC_ONLY(0xccc8c, 0x110)
 inline int hero::GetLevel(int iExperience)
 {
     int heroLevel = 1;
-    const short* threshold = kExperienceForLevel;
-    for (; threshold <= &kExperienceForLevel[11]; threshold++, heroLevel++) {
-        if (iExperience < *threshold)
+    // INDEX loop, not a pointer walk: retail closes this with `jle`, and a
+    // C++ pointer relational compare is UNSIGNED (`jbe`). VC6 strength-
+    // reduces the signed `i <= 11` into the pointer form retail emits while
+    // keeping the original compare's signedness.
+    for (int i = 0; i <= 11; i++, heroLevel++) {
+        if (iExperience < kExperienceForLevel[i])
             return heroLevel - 1;
     }
     int total = kExperienceForLevel[11];
@@ -1799,28 +2053,273 @@ void hero::HeroFn_004DC100(long slot)
         HeroFn_004DBF30(targetCombo, slot);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:2849
 // PROVEN BY CALLER: armygrp's armyGroup::get_morale_description
 // (0x44b960) calls exactly this address, and window.obj's hero-screen
 // status path (0x4f32a0) is the second site. /GX frame + hidden
 // return-UDT pointer, as the by-value std::string return needs.
+//
+// The description twin of hero::GetMorale (0x4e39b0): the same modifier
+// ladder, but each rung appends its ARRAYTXT line and accumulates what
+// it described, and the tail prints GetMorale's own answer MINUS that
+// sum as the "other modifiers" line. Every IsWieldingArtifact is
+// /Ob2-expanded exactly as in GetMorale. The Grail arm expands
+// town::HasBuilding INLINE here - `active & bitNumber[HOLY_GRAIL_ID]` -
+// where GetLuck's own arm is a real call, and it credits TOWN_CASTLE.
+// The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
+// size_type)`), it does not append.
+//
+// Residual (85.7%, and 85.7% on the luck twin): /Ob2 budget inside the
+// Dinkumware string calls, nothing source-local. `predict-inline` pairs
+// 31 of the 49 out-of-line calls off by COUNT - retail names its
+// unclaimed basic_string callees with synth labels our side can never
+// emit, so those rows are naming and not divergence - and reports
+// exactly ONE real item: `_Xlen` out of line 5 times here against
+// retail's 3, i.e. retail expands two more of the `append` grow paths.
+// That is the A8/A9 budget class the doctrine says not to chase with
+// `_Grow`/`_Tidy` spellings. Tried and rejected: `morale += 500` /
+// `luck += 500` for the constant store (byte-flat on both twins).
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
-std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_morale_description(__$ReturnUdt)
+std::string hero::get_morale_description() const
 {
-    // @stub
+    int morale = 0;
+    std::string result;
+
+    if (flags & 0x800000) {
+        result = gpGeneralText->GetText(438);
+        morale = 500;
+    }
+
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+        result += gMoraleTexts[26];
+        morale += 3;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+        result += gMoraleTexts[4];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x31)) {
+        result += gMoraleTexts[5];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x32)) {
+        result += gMoraleTexts[6];
+        morale++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x33)) {
+        result += gMoraleTexts[7];
+        morale++;
+    }
+
+    if (flags & 0x2000000) {
+        result += gMoraleTexts[8];
+        morale++;
+    }
+    if (flags & 0x4) {
+        result += gMoraleTexts[9];
+        morale++;
+    }
+    if (flags & 0x80) {
+        result += gMoraleTexts[10];
+        morale++;
+    }
+    if (flags & 0x100) {
+        result += gMoraleTexts[11];
+        morale++;
+    }
+    if (flags & 0x4000000) {
+        result += gMoraleTexts[12];
+        morale += 2;
+    }
+    if (flags & 0x400) {
+        result += gMoraleTexts[13];
+        morale--;
+    }
+    if (flags & 0x200) {
+        result += gMoraleTexts[14];
+        morale--;
+    }
+    if (flags & 0x40) {
+        result += gMoraleTexts[15];
+        morale++;
+    }
+    if (flags & 0x800) {
+        result += gMoraleTexts[16];
+        morale--;
+    }
+    if (flags & 0x10000) {
+        result += gMoraleTexts[17];
+        morale++;
+    }
+    if (flags & 0x4000) {
+        result += gMoraleTexts[18];
+        morale++;
+    }
+    if (flags & 0x200000) {
+        result += gMoraleTexts[19];
+        morale -= 3;
+    }
+
+    if (skillLevel[eSecSkillLeadership] == eMasteryBasic) {
+        result += gMoraleTexts[20];
+        morale++;
+    }
+    if (skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
+        result += gMoraleTexts[21];
+        morale += 2;
+    }
+    if (skillLevel[eSecSkillLeadership] == eMasteryExpert) {
+        result += gMoraleTexts[22];
+        morale += 3;
+    }
+
+    if (owner >= 0) {
+        playerData& player = gpGame->players[owner];
+        for (int i = 0; i < player.numTowns; i++) {
+            town* ownedTown = gpGame->GetTown(player.townIds[i]);
+            if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0
+                && ownedTown->type == TOWN_CASTLE) {
+                result += format_string(
+                    "\n%s +2",
+                    GetBuildingName(TOWN_CASTLE, HOLY_GRAIL_ID));
+                morale += 2;
+                break;
+            }
+        }
+    }
+
+    int otherModifier =
+        const_cast<hero*>(this)->GetMorale(0, 0, 0) - morale;
+    if (otherModifier < 0)
+        result += format_string(gMoraleTexts[24], abs(otherModifier));
+    else if (otherModifier > 0)
+        result += format_string(gMoraleTexts[25], abs(otherModifier));
+
+    return result;
 }
 
 // E:\gamedcs\hero.cpp:3021
 // PROVEN BY CALLER: armygrp's armyGroup::get_luck_description
 // (0x44c1c0) calls exactly this address; 0x4f3540 is the second site.
 // Same /GX + return-UDT shape as its morale twin above.
+//
+// hero::GetLuck's describer, the exact shape of the morale twin. FOUR of
+// the flag rungs carry a SIGN as a format argument instead of their own
+// line: they share ONE carrier format, gLuckTexts[10], and pass the
+// literals "-1"/"+1"/"+2"/"+3" out of hero.obj's own pool. The Grail arm
+// expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
+// hero::GetLuck's own arm, which calls it.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
-std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_luck_description(__$ReturnUdt)
+std::string hero::get_luck_description() const
 {
-    // @stub
+    int luck = 0;
+    std::string result;
+
+    if (flags & 0x400000) {
+        result = gpGeneralText->GetText(438);
+        luck = 500;
+    }
+
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x6c)) {
+        result += gLuckTexts[21];
+        luck += 3;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2d)) {
+        result += gLuckTexts[4];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2e)) {
+        result += gLuckTexts[5];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x2f)) {
+        result += gLuckTexts[6];
+        luck++;
+    }
+    if (const_cast<hero*>(this)->IsWieldingArtifact(0x30)) {
+        result += gLuckTexts[7];
+        luck++;
+    }
+
+    if (flags & 0x8) {
+        result += gLuckTexts[8];
+        luck += 2;
+    }
+    if (flags & 0x10) {
+        result += gLuckTexts[9];
+        luck++;
+    }
+    if (flags & 0x20) {
+        result += format_string(gLuckTexts[10], "-1");
+        luck--;
+    }
+    if (flags & 0x8000000) {
+        result += format_string(gLuckTexts[10], "+1");
+        luck++;
+    }
+    if (flags & 0x10000000) {
+        result += format_string(gLuckTexts[10], "+2");
+        luck += 2;
+    }
+    if (flags & 0x20000000) {
+        result += format_string(gLuckTexts[10], "+3");
+        luck += 3;
+    }
+    if (flags & 0x1000) {
+        result += gLuckTexts[11];
+        luck -= 2;
+    }
+    if (flags & 0x2000) {
+        result += gLuckTexts[12];
+        luck++;
+    }
+    if (flags & 0x8000) {
+        result += gLuckTexts[13];
+        luck++;
+    }
+    if (flags & 0x10000) {
+        result += gLuckTexts[14];
+        luck++;
+    }
+
+    if (skillLevel[eSecSkillLuck] == eMasteryBasic) {
+        result += gLuckTexts[15];
+        luck++;
+    }
+    if (skillLevel[eSecSkillLuck] == eMasteryAdvanced) {
+        result += gLuckTexts[16];
+        luck += 2;
+    }
+    if (skillLevel[eSecSkillLuck] == eMasteryExpert) {
+        result += gLuckTexts[17];
+        luck += 3;
+    }
+
+    if (owner >= 0) {
+        playerData& player = gpGame->players[owner];
+        for (int i = 0; i < player.numTowns; i++) {
+            town* ownedTown = gpGame->GetTown(player.townIds[i]);
+            if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0
+                && ownedTown->type == TOWN_RAMPART) {
+                result += format_string(
+                    "\n%s +2",
+                    GetBuildingName(TOWN_RAMPART, HOLY_GRAIL_ID));
+                luck += 2;
+                break;
+            }
+        }
+    }
+
+    int otherModifier = const_cast<hero*>(this)->GetLuck(0, 0, 0) - luck;
+    if (otherModifier < 0)
+        result += format_string(gLuckTexts[19], abs(otherModifier));
+    else if (otherModifier > 0)
+        result += format_string(gLuckTexts[20], abs(otherModifier));
+
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:3181
 DC_ONLY(0xcea3c, 0x1A4)
@@ -2424,6 +2923,12 @@ void THeroScreenWindow::UpdateHeroLocators()
 // - retail stores codeX and codeY AFTER the clamp, and only the local
 // reproduces that); and swapping _cpp_max's arms to `_Y < _X ? _X : _Y`
 // (86.07 here, and it costs hero::Fly 3.1 points - the helper is shared).
+// Re-tested 2026-08-20 against the fresh `why-branch` read, one compile
+// each, BOTH worse: writing the low clamp as a statement `if (luck < -3)
+// luck = -3;` (77.29) and swapping the call-site argument order to
+// `_cpp_max(-3, GetLuck(...))` (80.83). The `jge` is retail's SPLIT max,
+// not a comparison the source can respell - the branch-kind report names
+// the symptom here, not the lever.
 // The message frame's field order IS byte-proven: every `= 0` store
 // first, then id / codeX / extraText - the strip::DrawNumber idiom.
 VA(0x004e16d0, 0x130)  // order-map + stats-band, dc 0xd2d58
@@ -2670,13 +3175,102 @@ void hero::TransferArtifacts(hero* src)
 // hero members, both `ret 8`, and both work the 32-byte-stride artifact
 // table at 0x660b68 against the 19 equipped slots. ORDINAL PLACEHOLDER
 // names, flagged unattested.
-VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
-unsigned char hero::HeroFn_004E2550(long a, long slot)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Can `artifact` be worn in `slot` (or, with slot -1, in ANY of the 19)?
+// NOT EH-bearing: retail leaves all four bitset::_Xran sites out of line,
+// so no throw is expanded and no /GX frame is needed.
+//
+// The redundant-looking DOUBLE capacity check in each block is real. The
+// empty-mask fold at +0x321 (`test eax,eax / je <continue>`) only exists
+// because a FIRST `worn >= capacity` test precedes the `capacity -
+// occupied` one; with capacity 0 VC6 folds it to always-taken. Do not
+// simplify it away. `worn` is UNSIGNED - retail compares it with `jbe`
+// and every later bound with `jae`, which is what bitset::count()'s
+// size_t return gives.
+VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
+unsigned char hero::HeroFn_004E2550(long artifact, long slot)
+{
+    if (gpGame->f_1f698 < 2 && slot == EQUIPPED_SLOT_SOD_MISC)
+        return 0;
+
+    long remaining = 1;
+    if (slot == -1) {
+        slot = 0;
+        remaining = 19;
+    }
+
+    for (; remaining != 0; remaining--, slot++) {
+        if (equipped[slot].artifactId != ARTIFACT_NONE)
+            continue;
+        if (!aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask]
+                 .test(slot))
+            continue;
+
+        int slotClass = akArtifactSlotTraits[slot].type;
+        unsigned int worn = artifactSlotCounts[slotClass];
+        if (worn > 0) {
+            std::bitset<19> classSlots = aArtifactSlotMasks[slotClass];
+            size_t capacity = classSlots.count();
+            if (worn >= capacity)
+                continue;
+            int occupied = 0;
+            for (int i = 0; i < 19; i++) {
+                if (classSlots.test(i) &&
+                    equipped[i].artifactId != ARTIFACT_NONE)
+                    occupied++;
+            }
+            if (worn >= capacity - occupied)
+                continue;
+        }
+
+        int combination = akArtifactTraits[artifact].comboType;
+        if (combination != -1) {
+            int counts[15];
+            const unsigned char* src = artifactSlotCounts;
+            int* dst = counts;
+            for (; src != artifactSlotCounts + 15; ++dst, ++src)
+                *dst = *src;
+
+            const std::bitset<144>& components =
+                gCombinationArtifacts[combination].components;
+            bool kept_slot = false;
+            for (int component = 0; component < 144; component++) {
+                if (!components.test(component))
+                    continue;
+                int componentClass =
+                    akArtifactTraits[component].allowableSlotMask;
+                if (componentClass
+                        == akArtifactTraits[artifact].allowableSlotMask
+                    && !kept_slot) {
+                    kept_slot = true;
+                    continue;
+                }
+                std::bitset<19> classSlots =
+                    aArtifactSlotMasks[componentClass];
+                size_t capacity = classSlots.count();
+                if (counts[componentClass] >= capacity)
+                    goto next_slot;
+                {
+                    int occupied =
+                        (akArtifactTraits[artifact].allowableSlotMask
+                         == componentClass) ? 1 : 0;
+                    for (int i = 0; i < 19; i++) {
+                        if (classSlots.test(i) &&
+                            equipped[i].artifactId != ARTIFACT_NONE)
+                            occupied++;
+                    }
+                    if (counts[componentClass] >= capacity - occupied)
+                        goto next_slot;
+                }
+                counts[componentClass]++;
+            }
+        }
+        return 1;
+    next_slot:;
+    }
+    return 0;
+}
 
 // The wrapper: it validates the physical slot against the artifact's
 // allowable-slot class, then hands the real work to HeroFn_004E2550 -
@@ -2733,21 +3327,30 @@ unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 // RECURSIVE call to this same body (retail's `call 0x4e2a00` is a
 // self-reference, not a sibling).
 //
-// Residual (85.3%): two loop-shape items, both downstream of VC6's
-// induction choice. (1) The empty-slot SEARCH: retail tests `cmp
-// slot,0x13` at the TOP and jumps back to it, our CL proves the first
-// iteration runs, drops the entry test and rotates the compare to the
-// bottom, which duplicates the return-0 epilogue. (2) The 144-row
-// component sweep: retail bounds the loop on the BONUSES pointer
-// (`cmp ebx, gArtifactPrimarySkillBonusesEnd`), our CL re-derives the
-// bound as the akArtifactTraits offset (`cmp ebx, 0x1200`), so the two
-// disagree on which of the three parallel inductions survives - the
-// same class remove_artifact's note already records for its own pair of
-// four-byte loops. Tried and rejected, one compile each: the search as
-// an explicit goto loop (85.25, byte-flat - VC6 rotates it anyway);
-// routing both failure paths through one shared `reject:` label (80.31);
-// and the inner four-byte loop as an INDEXED `for` instead of the twin's
-// pointer do-while (75.08).
+// Residual (93.2%): the empty-slot SEARCH loop shape. Retail tests
+// `cmp slot,0x13` at the TOP and jumps back to it; our CL proves the
+// first iteration runs, drops the entry test and rotates the compare to
+// the bottom, which duplicates the return-0 epilogue (3 rets against
+// retail's 2).
+//
+// The 144-row component sweep is CLOSED (2026-08-20, 85.25 -> 93.21):
+// both it AND its inner four-byte loop had to become signed-INDEX loops
+// in the SAME edit. That is why the earlier note here recorded indexing
+// the inner loop alone as a REGRESSION (75.08) - with the outer walk
+// still a pointer compare, VC6 re-derived the outer bound as the
+// akArtifactTraits offset (`cmp ebx,0x1200`) instead of collapsing it
+// onto gArtifactPrimarySkillBonusesEnd. Index both and the bound lands
+// on the bonuses pointer exactly as retail has it, with the signed `jl`
+// that a pointer relational compare (unsigned, `jb`) can never produce.
+// See remove_artifact's note for the general rule.
+//
+// Tried and rejected since, one compile each: routing both failure paths
+// through one shared merged `return 0` block (93.21, byte-flat - VC6
+// re-threads it); `slot < 0` instead of `slot == -1` for the entry test,
+// chasing retail's `jge` at branch #1 (87.78, WORSE - the equality
+// spelling is right despite the branch-kind report). Earlier: the search
+// as an explicit goto loop (85.25 baseline, byte-flat - VC6 rotates it
+// anyway); both failure paths through a shared `reject:` label (80.31).
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
 {
@@ -2778,18 +3381,14 @@ slot_chosen:
         const std::bitset<144>& components =
             gCombinationArtifacts[combination_index].components;
         bool kept_slot = false;
-        int component = 0;
-        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
-        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
-            component++, bonuses += 4) {
+        // Signed-INDEX loops, remove_artifact's mirror image - see the
+        // note there: a pointer relational compare is unsigned (`jb`)
+        // and can never reproduce retail's `jl`.
+        for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
-                signed char* skill = stats;
-                const signed char* bonus = bonuses;
-                do {
-                    *skill += *bonus;
-                    skill++;
-                    bonus++;
-                } while (skill < stats + 4);
+                for (int skill = 0; skill < 4; skill++)
+                    stats[skill] +=
+                        gArtifactPrimarySkillBonuses[component][skill];
                 update_spells = update_spells
                     || akArtifactTraits[component].givesSpells;
                 int component_slot =
@@ -2820,9 +3419,28 @@ slot_chosen:
 // skill bonuses, maintains the per-slot counts (preserving the one component
 // that occupies the assembled artifact's slot), then removes the assembled
 // artifact's own bonuses. The spell list is rebuilt if either the assembled
-// artifact or any component affects it. All 23 retail basic blocks and all
-// 13 branches agree; the residual diff is register allocation in the two
-// four-byte subtraction loops.
+// artifact or any component affects it.
+//
+// All three loops are SIGNED-INDEX loops, not pointer walks - corrected
+// 2026-08-20 after `vc6 diagnose` reported flow-distance 6 with three
+// `jb`->`jl` twins, against the older note here which had claimed all 13
+// branches agreed. A C++ pointer relational compare is UNSIGNED (`jb`);
+// retail's `jl` survives because VC6 strength-reduces `i < N` into
+// pointer form while KEEPING the original comparison's signedness, which
+// is why the outer loop can end in `cmp ebx, gArtifactPrimarySkillBonuses
+// End / jl` and still have been written as an int index. Rewriting the
+// three walks as `for (int i = 0; i < N; i++)` took the row 74.49 ->
+// 90.20 and flow-distance to 0.
+//
+// Residual (90.2%): register-homing only. Retail binds the artifact id to
+// ESI as its first call-crossing pseudo and saves ESI in the prologue; our
+// CL binds `this` there and sinks the push. `why-reg --model` reports the
+// definition slots and ORDER agree on both sides with only the ebx/esi
+// bindings permuted, and that the value retail puts in ESI would have to
+// be created before `this` - which is minted between the parameters and
+// the body locals, so no declaration, include or spelling change can
+// precede it. That is C2-side handle STATE (catalog C1), not source-
+// reachable; its one model-passing candidate measured +16 (worse).
 VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
 void hero::remove_artifact(long slot)
 {
@@ -2837,18 +3455,11 @@ void hero::remove_artifact(long slot)
         const std::bitset<144>& components =
             gCombinationArtifacts[combination_index].components;
         bool kept_slot = false;
-        int component = 0;
-        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
-        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
-            component++, bonuses += 4) {
+        for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
-                signed char* skill = stats;
-                const signed char* bonus = bonuses;
-                do {
-                    *skill -= *bonus;
-                    skill++;
-                    bonus++;
-                } while (skill < stats + 4);
+                for (int skill = 0; skill < 4; skill++)
+                    stats[skill] -=
+                        gArtifactPrimarySkillBonuses[component][skill];
                 update_spells = update_spells
                     || akArtifactTraits[component].givesSpells;
                 int component_slot =
@@ -2865,14 +3476,8 @@ void hero::remove_artifact(long slot)
 
     equipped[slot].artifactId = ARTIFACT_NONE;
     equipped[slot].extra = -1;
-    signed char* skill = stats;
-    const signed char* bonus =
-        gArtifactPrimarySkillBonuses[artifact.artifactId];
-    do {
-        *skill -= *bonus;
-        skill++;
-        bonus++;
-    } while (skill < stats + 4);
+    for (int skill = 0; skill < 4; skill++)
+        stats[skill] -= gArtifactPrimarySkillBonuses[artifact.artifactId][skill];
     if (update_spells
         || akArtifactTraits[artifact.artifactId].givesSpells)
         update_spell_list();
@@ -2996,14 +3601,88 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:5044
+// Equips the artifact if a slot takes it, otherwise backpacks it, then
+// runs the combination-assembly offer and the optional end-condition
+// check. See the header for the retail-corrected signature: both flags
+// are BYTES and the function RETURNS one.
+//
+// The `else if` shape is exact - the owner-is-not-the-local-player
+// branch and the still-holding-the-combination branch BOTH fall into the
+// `!player.isHuman` arm, and a zero `bAnnounce` skips both arms while
+// still reaching the assembledCombinations store. `player` is
+// materialised BEFORE the `bAnnounce` test (retail leas it first); the
+// second half re-derives the same address inline, so it is spelled out
+// rather than reusing the reference. `owner >= 0 && owner < 8` is
+// written twice because retail tests it twice, 8-bit both times.
+// `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
+// block, not at the end of the NormalDialog full-expression.
+//
+// Residual (57.9%): the EH CLEANUP TRANSCRIPT, and it is /Ob2 budget
+// rather than spelling. `vc6 diagnose` reads our unwind states as
+// [1,0,reg,-1,3,4] against retail's [0,-1,1,2] - two cleanup regions
+// retail does not open - and pairs that with 5 under- and 1 over-inline.
+// Retail leaves `bitset<12>::test` an out-of-line CALL and inlines only
+// TWO of its three bitset bounds throws; each throw our CL expands
+// instead builds its own `invalid bitset<N> position` string temporary,
+// and each such temporary is one more cleanup region. Nothing local
+// reaches that - the lever is caller statement mass (docs/vc6/inliner.md,
+// and docs/vc6/eh-cleanup.md for the unwind map). Left at 57.88.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
-void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it)
+unsigned char hero::GiveArtifact(const type_artifact* artifact,
+                                 unsigned char bAnnounce,
+                                 unsigned char bCheckEnd)
 {
-    // @stub
+    if (equip_artifact(artifact, -1)) {
+        if (gpGame->f_1f698 >= 2) {
+            int targetCombo =
+                akArtifactTraits[artifact->artifactId].targetCombo;
+            if (targetCombo != -1 && owner >= 0 && owner < 8) {
+                std::bitset<144> missing =
+                    gCombinationArtifacts[targetCombo].components;
+                for (int i = 0; i < 19; i++) {
+                    int artifactId = equipped[i].artifactId;
+                    if (artifactId != ARTIFACT_NONE)
+                        missing.set(artifactId, false);
+                }
+                if (!missing.any()) {
+                    playerData& player = gpGame->players[owner];
+                    if (bAnnounce) {
+                        if (owner == gpGame->GetLocalPlayerGamePos() &&
+                            !player.assembledCombinations.test(targetCombo)) {
+                            int assembled =
+                                gCombinationArtifacts[targetCombo].artifactId;
+                            std::string prompt = format_string(
+                                gpGeneralText->GetText(733),
+                                akArtifactTraits[assembled].name);
+                            NormalDialog(prompt.c_str(), 2, -1, -1, 8,
+                                         assembled, -1, 0, -1, 0, -1, 0);
+                            if (gpWindowManager->dialogReturn ==
+                                DIALOG_RETURN_ACCEPT)
+                                HeroFn_004DBF30(targetCombo, -1);
+                        } else if (!player.isHuman) {
+                            HeroFn_004DBF30(targetCombo, -1);
+                        }
+                    }
+                    player.assembledCombinations.set(targetCombo);
+                }
+            }
+        }
+    } else if (!add_to_backpack(artifact, -1)) {
+        return 0;
+    }
+
+    int comboType = akArtifactTraits[artifact->artifactId].comboType;
+    if (comboType != -1 && owner >= 0 && owner < 8)
+        gpGame->players[owner].assembledCombinations.set(comboType);
+
+    if (bCheckEnd &&
+        gpGame->mapHeader.victoryCondition.CheckForArtifactWin())
+        CheckEndGame(0);
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5064
 DC_ONLY(0xd3e40, 0x46)

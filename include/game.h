@@ -460,6 +460,16 @@ public:
 #ifdef HOMM3_TOWNMGR_GRAIL_DECLS
     unsigned char CheckForGrailBuildingWin();
 #endif
+    // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
+    // hero::GiveArtifact asks it as
+    // `gpGame->mapHeader.victoryCondition.CheckForArtifactWin()` - the
+    // same `lea ecx,[gpGame+0x1f89c]` the Grail twin above emits - and
+    // calls CheckEndGame(0) when it answers yes. Gated for exactly the
+    // reason that one is: this header's declarator count is load-bearing
+    // for every unit that includes it.
+#ifdef HOMM3_HERO_OBJ_DECLS
+    unsigned char CheckForArtifactWin();
+#endif
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -1415,10 +1425,11 @@ public:
     void record_show_hero(hero* who, signed char player, type_point point,
                           unsigned char reset);
 #endif
-#ifdef HOMM3_TOWN_OBJ_DECLS
-    // Retail-only 0x49c720. SwapHeroes proves this three-argument member
-    // queues a hero-state record; no surviving name covers it, so keep the
-    // declaration ordinal and local to town.obj.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
+    // Retail-only 0x49c720. SwapHeroes and hero::Deallocate (0x4d9ec0)
+    // both prove this three-argument member queues a hero-state record;
+    // no surviving name covers it, so the declaration stays ordinal and
+    // gated to the two compilands that reach it.
     void GameFn_0049C720(hero* who, signed char owner,
                          unsigned char state);
 #endif

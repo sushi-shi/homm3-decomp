@@ -36,6 +36,13 @@ enum eRS_Messages {
 #ifdef HOMM3_EVENTS_VIEW
     RS_ERASE_OBJECT = 0x422,
 #endif
+    // GATED for exactly the reason RS_ERASE_OBJECT is, and measured the
+    // same way. The VALUE is fixed by hero::Deallocate (0x4d9ec0), whose
+    // inlined CMCDeadHero constructor stores 0x423 as the record subtype -
+    // the rung directly below RS_TELEPORT_HERO.
+#ifdef HOMM3_HERO_OBJ_DECLS
+    RS_DEAD_HERO = 0x423,
+#endif
     RS_TELEPORT_HERO = 0x424,
     RS_HIDE_HERO = 0x426
 };
@@ -210,6 +217,19 @@ public:
     CMCTeleportHero(int id, type_point location);
 };
 SIZE(CMCTeleportHero, 0x20);
+
+// DC netmsg.h:675 (dc 0xd5964, a hero.obj COMDAT); retail /Ob2-expands it
+// inside hero::Deallocate, whose 0x1c-byte frame record and 0x423 subtype
+// fix both the extent and the rung. `heroId` is an INT, not the DC row's
+// signed char: retail copies the whole dword out of hero::id.
+class CMCDeadHero : public CMapChange {
+public:
+    int heroId;
+    type_point point;
+
+    CMCDeadHero(int id, type_point location);
+};
+SIZE(CMCDeadHero, 0x1c);
 #endif
 
 #ifdef HOMM3_TOWN_OBJ_DECLS

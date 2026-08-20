@@ -156,6 +156,26 @@ SIZE(type_obscuring_object, 0x18);
 
 class boat;
 
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+// The two combat latches hero::Deallocate consults before dismissing the
+// army and before re-rolling the garrison. DECLARATION ONLY - cmbtmgr.h
+// owns the DATA claims on 0x6985a3 / 0x697744, and a second claim on the
+// same RVA is a fatal duplicate at delink time. Declared here rather than
+// by including cmbtmgr.h, which hero.obj's measured include closure does
+// not otherwise need.
+extern unsigned char gCombatFlag6985a3;
+extern unsigned char gCombatFlag697744;
+#endif
+
+#ifdef HOMM3_HERO_DESCRIPTION_DEFS
+// The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by
+// hero::get_morale_description / get_luck_description. DECLARATION ONLY -
+// viewarmywindow.cpp owns the DATA claims on 0x6a57bc / 0x6a532c, and a
+// second claim on the same RVA is a fatal duplicate at delink time.
+extern const char* gMoraleTexts[42];
+extern const char* gLuckTexts[25];
+#endif
+
 class hero : public type_obscuring_object {
 public:
     enum {
@@ -169,6 +189,30 @@ public:
         PRIMARY_STAT_RESOURCE_FIRST = 31,
         PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // The nineteenth equipped position - the one Shadow of Death added on
+    // top of the Dreamcast TArtifactSlot roster's eighteen.
+    // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
+    // engine gate reports a pre-SoD game. GATED to hero.obj's own view:
+    // an ungated enumerator is a measured include-set cost in this tree
+    // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
+    // unrelated TU), and no other compiland needs the name.
+    enum { EQUIPPED_SLOT_SOD_MISC = 18 };
+    // hero::Deallocate's domain, same gate and same reason. The
+    // availability byte's 0x40 rung is the "sits in a tavern recruit
+    // pool" sentinel game::Load memsets the whole array with; the two
+    // campaign rungs are the scenarios that keep one specific hero
+    // recruitable after death, addressed once by portrait and once by id
+    // (retail stores through a CONSTANT displacement for the second, so
+    // the id really is written twice in the source).
+    enum {
+        HERO_AVAILABILITY_TAVERN_POOL = 0x40,
+        DEALLOCATE_CAMPAIGN_BY_PORTRAIT = 8,
+        DEALLOCATE_CAMPAIGN_BY_HERO_ID = 12,
+        DEALLOCATE_KEPT_PORTRAIT = 0x9e,
+        DEALLOCATE_KEPT_HERO_ID = 150
+    };
+#endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -195,13 +239,26 @@ public:
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
     unsigned char portrait;
-    // BuildPath copies these three unaligned dwords into its packed target
-    // point. The retail load widths are narrowed by the destination
-    // bitfields, but their four-byte spacing proves the stored type.
+    // BuildPath copies this packed target point out of the record. The
+    // two leading coordinates are dwords - their four-byte spacing
+    // proves the stored type, and BuildPath's own load widths are
+    // narrowed only by the destination bitfields.
     int pathTargetX;                    // +0x35
     int pathTargetY;                    // +0x39
-    int pathTargetZ;                    // +0x3d
-    char pad_041[2];
+    // +0x3d..+0x42, three SHORTS - narrowed 2026-08-20 out of the old
+    // `int pathTargetZ; char pad_041[2];` by hero::save (0x4d80c0),
+    // which serialises this band as `mov cx, word [this+0x3d]` /
+    // `+0x3f` / `+0x41` into a 16-bit scratch and writes each with
+    // size 2. An int at +0x3d cannot produce those loads: assigning
+    // one to a short scratch would still be a 16-bit load, but there
+    // would be no lvalue at all at +0x3f, and retail reads one there.
+    // The narrowing is invisible to the only other consumer -
+    // searchArray::BuildPath (0x56a0d0) takes `mov dl, byte [eax+0x3d]`
+    // on BOTH sides because type_point's z is a four-bit bitfield.
+    // The two trailing shorts have no other reader; ORDINAL PLACEHOLDERS.
+    short pathTargetZ;                  // +0x3d
+    short field_03f;                    // +0x3f
+    short field_041;                    // +0x41
     unsigned char targetIsCritical;       // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
@@ -533,6 +590,11 @@ public:
     // DC row with NO retail body - GiveExperience carries it expanded.
 #  ifndef HOMM3_EVENTS_VIEW
     void CheckLevel();
+    // 0x4d9ec0. hero.obj OWNS the definition, so the owning compiland
+    // needs the declarator too; without one VC6 compiles the out-of-class
+    // body in a DEGRADED SCOPE and reports "undeclared identifier" from an
+    // arbitrary point onward with no error on the definition line.
+    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
 #  endif
     int GetLevel(int iExperience);
 #endif
@@ -694,8 +756,20 @@ public:
     std::string get_backpack_error(TArtifact artifact) const;
     // 0x004e3070 - gives or equips one artifact and performs the optional
     // end-condition check. ProcessSearch calls it for the Holy Grail.
-    void GiveArtifact(const type_artifact* artifact, int bCheckEnd,
-                      unsigned char equip_it);
+    // SIGNATURE CORRECTED FROM RETAIL (2026-08-20): `ret 0xc`, and BOTH
+    // flags are read as BYTES (`mov al,[ebp+0xc]` / `mov al,[ebp+0x10]`)
+    // against the dword reads GiveExperience's two `int` parameters take
+    // in its now-exact body; the inlined allocator temporary lives at
+    // [ebp+0xf], inside parameter 2's home, which only exists as padding
+    // if that parameter is one byte wide. The 0x4e3bf8 exit is
+    // `mov al,1`, so the return is an 8-bit value, not void. The DC row
+    // declares `void ... int bCheckEnd, unsigned char equip_it`; retail's
+    // SECOND flag gates the combination announcement and its THIRD gates
+    // CheckForArtifactWin, so the DC names do not carry over. `bAnnounce`
+    // is an invented spelling for a byte-proven role.
+    unsigned char GiveArtifact(const type_artifact* artifact,
+                               unsigned char bAnnounce,
+                               unsigned char bCheckEnd);
     // 0x004d8f70 - returns the campaign override or this hero class's
     // display text. Retail callers span both adventure and hero UI paths.
     const char* HeroFn_004D8F70();
@@ -724,7 +798,14 @@ public:
     // the stack); the Dreamcast port exposes the same logic as a file-local
     // two-argument helper instead.
     int ValueOfSpell(SpellID spell) const;
-#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
+// hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0), so the compiland's
+// own view joins the gate - the type_artifact::get_description precedent
+// above. A narrow macro, NOT HOMM3_ARMYGRP_DESCRIPTION_API: that one also
+// widens armygrp.h (std forward decls, akCreatureBackgrounds and the two
+// armyGroup declarators), and armygrp.h's own note measures what that
+// costs an unrelated TU.
+#if defined(HOMM3_ARMYGRP_DESCRIPTION_API) \
+    || defined(HOMM3_HERO_DESCRIPTION_DEFS)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description() const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
@@ -841,6 +922,7 @@ public:
     // owner, a type_point built from the town's map cell, and 0.
     void PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags);
     int load(TAbstractFile* infile, int saveVersion);
+    int save(TAbstractFile* outfile);
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
