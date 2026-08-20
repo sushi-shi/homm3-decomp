@@ -208,13 +208,13 @@ enum TAdventureObjectType {
     HERO_PLACEHOLDER           = 212,
     RANDOM_DWELLING_LEVEL      = 215,
 #endif
-    // 214, from the same public list, and pinned by the two neighbours
-    // above: PlaceObject skips it alongside HERO, RANDOM_HERO, BOAT and
-    // HOLY_GRAIL - the five classes something else is responsible for
-    // placing. GATED so the enum's population is unchanged elsewhere.
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
-    RANDOM_DWELLING            = 214,
-#endif
+    // 214 used to be spelled RANDOM_DWELLING here, gated to the mapcell
+    // view. readObject's (0x502e00) jump table disproved that in
+    // 2026-08-20: its 214 arm reads a hero id with an 0xff sentinel and a
+    // power rating, and the three RANDOM_DWELLING arms are 216..218. The id
+    // now lives in advmgr.h's EAdvmgrRetailObjectType as HERO_PLACEHOLDER,
+    // beside the BORDER_GATE and QUEST_GUARD of the same post-Dreamcast
+    // block, which is also where its 216..218 siblings went.
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
@@ -333,6 +333,23 @@ struct ScholarInfo {
     unsigned long tail : 9;
 };
 SIZE(ScholarInfo, 4);
+#endif
+
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+// The shrine's arm, and the only lane of it any retail body writes.
+// readObject's (0x502e00) SHRINE1/2/3 arm sign-extends the stream byte
+// (`movsx ecx, byte`), masks it to ten bits and shifts it thirteen up,
+// clearing the same window first (`and edx, 0xff801fff`) - a SIGNED ten-bit
+// field at bits 13..22, which is bit-for-bit where ScholarInfo puts its own
+// `spell`. Carried as its own arm rather than borrowed from the scholar's:
+// the two objects share a lane, not a record. GATED to the one view that
+// deserializes it, for the reason the ScholarInfo note gives.
+struct ShrineInfo {
+    unsigned long head : 13;
+    signed long spell : 10;
+    unsigned long tail : 9;
+};
+SIZE(ShrineInfo, 4);
 #endif
 
 #ifdef HOMM3_EVENTS_VIEW

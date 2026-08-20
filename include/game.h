@@ -127,6 +127,47 @@ public:
 SIZE(BlackBoxData, 0xe4);
 #endif
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+// The two map-object pools readObject (0x502e00) appends to that no other
+// claimed body reaches yet. Both are sixteen bytes wide, which is exactly
+// the pad each replaces inside NewfullMap - the class size does not move.
+//
+// The hero-placeholder record, from readObject's id-214 arm. The object
+// pointer is stored FIRST, before the first stream read; the hero id widens
+// an 0xff sentinel to -1 and only that case reads a power rating, which is
+// why the rating byte can be left uninitialised.
+struct HeroPlaceholderData {
+    // The stream's "no fixed hero" sentinel. readObject widens it to -1 in
+    // the record and only that case goes on to read the power-rating byte,
+    // which is why the rating can stay uninitialised on every other record.
+    enum { HERO_ID_BY_POWER_RATING = 0xff };
+
+    CObject* object;
+    unsigned char owner;
+    char pad_05[3];
+    int heroId;
+    unsigned char powerRating;
+    char pad_0d[3];
+};
+SIZE(HeroPlaceholderData, 0x10);
+
+// The random-dwelling record, shared by readObject's three id-216/217/218
+// arms: 216 takes both levels off the stream, 217 forces both to the object
+// type's own `extra` byte, and 218 zeroes the castle id and sets the faction
+// mask to `1 << extra`. The retail-only resolution pass at 0x502b60 walks
+// the same vector with this stride.
+struct RandomDwellingData {
+    int castleId;
+    unsigned short factionMask;
+    unsigned char owner;
+    unsigned char minLevel;
+    unsigned char maxLevel;
+    char pad_09[3];
+    CObject* object;
+};
+SIZE(RandomDwellingData, 0x10);
+#endif
+
 class NewfullMap {
 public:
 #ifdef HOMM3_EVENTS_VIEW
@@ -168,9 +209,12 @@ public:
     std::vector<TQuestGuard> QuestGuardList;
     std::vector<TTimedEvent> TimedEventList;
     std::vector<TTownEvent> TownEventList;
-    char pad_0a0[0x10];
+    // +0xa0 and +0xc0, sliced out of their pads by readObject: it appends a
+    // sixteen-byte record to each through push_back's `insert(_Last, 1, x)`,
+    // reading _Last at +0xa8 and +0xc8.
+    std::vector<HeroPlaceholderData> heroPlaceholders;
     std::vector<CMapObjectData*> mapObjectData; // +0xb0
-    char pad_0c0[0x10];
+    std::vector<RandomDwellingData> randomDwellings;
 #else
     std::vector<TreasureData> customTreasure;
     char pad_040[0x70];
@@ -260,8 +304,17 @@ public:
                       int mapVersion);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
-    int readTownData(TAbstractFile* infile, CObject* townObject);
-    int readHeroData(TAbstractFile* infile, CObject* heroObject);
+    // The map-object dispatcher. `ret 0xc`: three arguments, and the third
+    // is the map version every version-sensitive reader below takes - it is
+    // forwarded verbatim to readTownData, readHeroData, readEventData,
+    // readBlackBoxData and readGarrisonData and read nowhere else.
+    int readObject(TAbstractFile* infile, CObject* tempObject, int mapVersion);
+    // Three arguments, readGarrisonData's divergence again: readObject
+    // pushes the map version to both of these as well.
+    int readTownData(TAbstractFile* infile, CObject* townObject,
+                     int mapVersion);
+    int readHeroData(TAbstractFile* infile, CObject* heroObject,
+                     int mapVersion);
     // Three arguments: retail's `ret 0xc` against the Dreamcast's two.
     // mapVersion picks the creature field's width (1 byte at 14, 2 after).
     int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
