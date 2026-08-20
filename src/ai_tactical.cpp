@@ -2732,14 +2732,117 @@ void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2685
+// The three-argument Sacrifice pricer: given ONE stack to heal and the
+// hex it stands on, find the friendly stack that is worth the least to
+// spend on it. The victim's own combat value is subtracted from the
+// resurrection it buys, so a stack only gets sacrificed when the trade
+// is positive.
+//
+// The count it resurrects is the spell's mastery row plus the VICTIM's
+// per-creature hit points (akCreatureTypeTraits[..].hitPoints) plus the
+// caster's power, all scaled by how many of the victim there are and
+// divided by the healed stack's own hit points.
+//
+// The trailing `choice.field_20` block is the is_last_action test
+// (dc 0x3d6xx, DC_ONLY - it has no retail body because it is inlined at
+// every site): the choice is flagged when the healed stack IS the
+// acting stack, or when no OTHER stack on our side can still act. Its
+// scan is the same creatureId 0x200040 / disabled-triple / bit-26 walk
+// should_attack_now opens with, and retail memory-homes its index the
+// same way.
+//
+// Residual (89.1%): ONE callee-saved role, and everything else follows
+// from it. Retail parks `this` in ESI (spilling it to [ebp-0x4] and
+// reloading it there at each loop tail) and gives EDI to the `choice`
+// reference; our CL parks `this` in EDX - using ESI as the scratch for
+// the armies[side] address arithmetic and the count test first - and
+// then hands ESI to `choice`. Every downstream difference is that swap
+// renaming registers, including the `creature_spell` load: retail
+// `mov dl,[esi+0x1d] / test dl,dl / setne al` against our
+// `xor eax,eax / cmp byte ptr [edx+0x1d],al / setne al`. That is the
+// same "flag falls through to DL or CL" delta get_disease_value
+// documents, and its note already records that the flag's register
+// follows from surrounding pressure rather than from the spelling - so
+// naming it does not reach this. why-reg --model: bindings agree at
+// every first definition (the divergence is the DEFINITION ORDER, base
+// #0 esi@12 vs ref esi@5), and the value that must move is `this`, a
+// parameter - the model's own criterion for "no local spelling reaches
+// it". Register-homing family.
+// Tried and rejected: `&gpCombatManager->armies[side][0]` instead of
+// the sibling's `gpCombatManager->armies[side]` for the loop base
+// (byte-identical at 89.0901).
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice, const army* healed_army, long target_hex) const
 {
-    // @stub
+    const army* victim = gpCombatManager->armies[side];
+    long count = gpCombatManager->numArmies[side];
+    for (; count-- > 0; ++victim) {
+        unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(victim->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (victim == healed_army)
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->SpellCastWorks(choice.spell, side, victim, 0,
+                                             creature_cast))
+            continue;
+        long resurrected = (akSpellTraits[choice.spell].mastery_bonus[choice.mastery]
+                            + akCreatureTypeTraits[victim->creatureType].hitPoints
+                            + choice.power)
+                           * victim->numTroops / healed_army->hitPoints;
+        long missing = healed_army->origNumTroops - healed_army->numTroops;
+        if (resurrected > missing
+                && missing < healed_army->origNumTroops * 3 / 4
+                && !field_1c)
+            continue;
+        long healed = _cpp_min(resurrected, missing);
+        if (healed < 1)
+            continue;
+        long value = static_cast<long>(
+            healed_army->get_unit_combat_value(params.lowest_attack,
+                                               params.lowest_defense,
+                                               victim->can_shoot(0), 0) * healed);
+        value -= victim->get_total_combat_value(params.lowest_attack,
+                                                params.lowest_defense);
+        if (value <= 0)
+            continue;
+        if (params.our_live_value > params.enemy_live_value && params.odds <= 1)
+            value += value;
+        if (value <= choice.value)
+            continue;
+        choice.value = value;
+        choice.target = target_hex;
+        choice.field_18 = victim->gridIndex;
+        unsigned char last = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (healed_army != current && !field_1c) {
+            long total = gpCombatManager->numArmies[side];
+            for (long j = 0; j < total; j++) {
+                const army* our_army = &gpCombatManager->armies[side][j];
+                if (our_army->creatureId & 0x200040)
+                    continue;
+                if (our_army->disabled_290)
+                    continue;
+                if (our_army->disabled_2b0)
+                    continue;
+                if (our_army->disabled_2c0)
+                    continue;
+                unsigned char no_target = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+                if (no_target & 1)
+                    continue;
+                if (our_army != current) {
+                    last = 0;
+                    break;
+                }
+            }
+        }
+        choice.field_20 = last;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2751
 // Scans every surviving friendly stack that can receive Sacrifice, then
