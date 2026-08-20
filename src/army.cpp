@@ -5703,13 +5703,20 @@ void army::attack_wall(TWallTargetId wall,
 //     spellings reload gpCombatManager after every aliasing store,
 //     where retail materialises each group's base exactly once.
 //
-// Residual (89.70%): the register-homing family. Retail's frame is
+//   - the explosion bounds are computed BEFORE any of them is stored,
+//     and `bottom` is computed before `right` (89.6998 -> 91.4600).
+//     Retail's sequence is halfWidth / x / halfHeight / y / Height -
+//     halfHeight + targetY - 1 / Width - halfWidth + targetX - 1 and only
+//     then the four stores; with the last two written inline in the store
+//     statements VC6 interleaves compute and store and homes nothing.
+//     A note here recorded "precomputing right/bottom as named locals
+//     (89.47)" as rejected - it is the right edit in the wrong ORDER;
+//     `right` before `bottom` is what loses.
+//
+// Residual (91.46%): the register-homing family. Retail's frame is
 // 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
-// -0x14) and targetX carried to the explosion block in EBX; ours packs
-// the same lifetimes into 0x20 and reloads. Branch sequences AGREE
-// (25/25); tried and rejected: precomputing right/bottom as named
-// locals (89.47 - the compute/store interleave moves further off), and
-// the pre-fix longhand forms above.
+// -0x14) and targetX carried to the explosion block in EBX; ours is now
+// 0x24 and still reloads three of them. Branch sequences AGREE (25/25).
 VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
 void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -5801,12 +5808,14 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     long x = targetX - halfWidth;
     long halfHeight = explosion->Height / 2;
     long y = targetY - halfHeight;
+    long bottom = explosion->Height - halfHeight + targetY - 1;
+    long right = explosion->Width - halfWidth + targetX - 1;
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
         bounds.values[0] = x;
         bounds.values[1] = y;
-        bounds.values[2] = explosion->Width - halfWidth + targetX - 1;
-        bounds.values[3] = explosion->Height - halfHeight + targetY - 1;
+        bounds.values[2] = right;
+        bounds.values[3] = bottom;
     }
     {
         TDrawbridgeBounds& bounds = gpCombatManager->drawbridgeBounds;
