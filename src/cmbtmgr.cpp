@@ -1520,18 +1520,36 @@ static int ControllingSide(const army* stack)
 // measured and both leave the expansion in place (75.8883, flat), so
 // only 0 works.
 //
-// Residual (87.5102%): ONE divergence, and it is the pin's own price.
-// Retail's teardown emits three `operator delete` - both format_string
-// temporaries and `message`, each an inlined _Tidy(true) - and we now
-// emit two, because inline_depth(0) also de-inlines the pinned
-// statement's temporary destructor into a _Tidy CALL. 29 out-of-line
-// calls against retail's 27, 39 conditional branches against 44. The
-// trade is worth +11.62 net and a full expression is the narrowest
-// scope the pragma has. Everything else pairs 1:1 - the artifact
-// chain, the compare chain and both message arms - and what is left of
-// the register distance is the ebx/esi/edi three-cycle the prologue
-// opens with plus the IsQuickCombat lea-vs-fold shape damage_message's
-// note already argues is context rather than spelling.
+// 87.51 -> 99.65 over two edits, 2026-08-20, REOPENING the note that
+// stood here. It read "a full expression is the narrowest scope the
+// pragma has" and banked the pin's price (the pinned statement's
+// temporary destructor de-inlined into a _Tidy CALL) as unavoidable.
+// That verdict predated the statement-split lever: NAMING the plural
+// arm's format_string result in its own unpinned statement moves the
+// temporary's destructor to the closing brace, outside the pin, and it
+// re-inlines exactly as retail has it (89.91 -> 97.77; branch stream
+// 44/44 and call multiset 27 = 27 from that edit alone). The second
+// edit is the pin's DEPTH: retail expands operator= one level and
+// CALLS the three-argument assign (`mov ecx,[npos] / push / push 0 /
+// push eax`), while the pin on `message = many` cut at operator=
+// itself; spelling operator='s own expansion - `message.assign(many,
+// 0, std::string::npos)` - under the same pin puts the cut at retail's
+// level (97.77 -> 99.65). npos spelled as the static member is what
+// buys retail's `mov ecx,[npos]` load. Tried and rejected: naming the
+// SINGULAR arm's temporary the same way (97.02 - that arm's natural
+// budget expansion already matches and the named local breaks its
+// push-eax argument form), and `const` on the named local (byte-flat
+// to the digit).
+//
+// Residual (99.65%): the two string temporaries' frame slots are
+// TRANSPOSED (retail singular -0x34 / plural -0x44; ours -0x44/-0x34)
+// because the named local allocates in the named-local region while
+// retail's two unnamed temps take creation order - ~10 masked lines of
+// pure slot renumber; one `lea edx,[ebp-0x34] / push edx` where retail
+// propagates the RVO address still in eax (`push eax`); and the
+// unwind-table push addend (0x0 vs 0x8), the unscored prologue class.
+// All three are the price of the named-local device and no spelling
+// that keeps the dtor out of the pin can avoid it.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::SetNextArmy(int group, int index)
 {
@@ -1587,7 +1605,7 @@ void combatManager::SetNextArmy(int group, int index)
                             CreatureName(stack->creatureType,
                                          stack->numTroops),
                             drained->name);
-                    else
+                    else {
                         // OVER-INLINE, pinned. Retail CALLS
                         // basic_string::assign in BOTH arms; our /Ob2
                         // expands it in this one only - erase x2 plus
@@ -1596,14 +1614,20 @@ void combatManager::SetNextArmy(int group, int index)
                         // asymmetry is the inline budget running out at
                         // a different point, not a spelling difference:
                         // the two arms are written identically.
-#pragma inline_depth(0)
-                        message = format_string(
+                        // SPLIT: the temporary named in its own statement
+                        // so the pin no longer reaches its destructor -
+                        // the dtor runs at the brace, outside the pinned
+                        // statement, and stays inline as retail has it.
+                        std::string many = format_string(
                             gpGeneralText->GetText(
                                 GENERAL_TEXT_COMBAT_MANA_DRAIN_MANY),
                             CreatureName(stack->creatureType,
                                          stack->numTroops),
                             drained->name);
+#pragma inline_depth(0)
+                        message.assign(many, 0, std::string::npos);
 #pragma inline_depth()
+                    }
                     if (combatWindow)
                         combatWindow->combat_message(message.c_str(), 1, 0);
                     SpellEffect(77, stack, 100, 0);
