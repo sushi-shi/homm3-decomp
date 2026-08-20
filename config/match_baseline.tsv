@@ -1754,6 +1754,8 @@ spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEE@Z	100.0000	100.0000	1
 spells	?get_elemental_type@@YI?AW4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1a9360
 spells	?is_valid_teleport@combatManager@@QAEEPBVarmy@@J@Z	100.0000	100.0000	100.0000	0x1a3700
 spells	?mark_area_effect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4920
+spells	?mark_area_effect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4170
+spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4430
 spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a4810
 spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1a46f0
 spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	100.0000	100.0000	100.0000	0x1a7320
@@ -1777,8 +1779,6 @@ spells	combatManager_SpellTargetMessage	0.0000	0.0000	0.0000	0x1a8690
 spells	combatManager_SummonElemental	0.0000	0.0000	0.0000	0x1a7080
 spells	combatManager_ValidSpellTarget	0.0000	0.0000	0.0000	0x1a39c0
 spells	combatManager_demonic_resurrection	0.0000	0.0000	0.0000	0x1a7390
-spells	combatManager_mark_area_effect	0.0000	0.0000	0.0000	0x1a4170
-spells	combatManager_mark_berserk_area_effect	0.0000	0.0000	0.0000	0x1a4430
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0

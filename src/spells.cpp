@@ -39,6 +39,30 @@
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
+
+// VC6's own <xutility> reference-returning max, declared file-locally
+// exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
+// mark_area_effect materialises BOTH operands into stack temps and then
+// selects between their ADDRESSES, which is the signature of this
+// by-value template and not of the <xutility> `const _Ty&` one; that
+// experiment was run and refuted on the AI TUs (see ai_combat.cpp).
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
+// The third of cmbtmgr.h's axial-coordinate helpers; the other two are
+// class-body inlines there and this one lives here for _cpp_max.
+inline long combatManager::get_distance(hex_point start, hex_point stop) const
+{
+    long dx = start.x - stop.x;
+    long dy = start.y - stop.y;
+    if ((dx < 0) == (dy < 0))
+        return _cpp_max(abs(dx), abs(dy));
+    return abs(dx) + abs(dy);
+}
 
 #if 0 // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
@@ -493,19 +517,94 @@ long combatManager::get_distance(tagPOINT start, tagPOINT stop)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3159
+#endif  // @carcass
+
+// THE HEX-COLLECTING HALF, and it is where the battlefield's AXIAL
+// COORDINATES live. The grid is 17 columns by 11 rows with every other
+// row offset half a hex, so a straight (row, column) box is the wrong
+// shape for a radius. Retail converts the centre into a skewed pair -
+//     x = col - (row + 1) / 2
+//     y = col + row / 2
+// - sweeps the square [x-r, x+r] x [y-r, y+r] in that space, and
+// converts each candidate back with the inverse
+//     col = (i + j + 1) / 2      row = j - i
+// which is what makes the SAME division constants appear twice, once
+// forward and once inverted.
+//
+// THE DISTANCE IS THE AXIAL-HEX METRIC, and its two arms are exactly
+// what the sign test picks between: when the two offsets have the SAME
+// sign the walk can move diagonally and the cost is max(|dx|, |dy|);
+// when they differ it has to zig-zag and the cost is |dx| + |dy|.
+// `_cpp_max` is the by-value <xutility> template this tree already
+// carries in three other TUs - retail copies BOTH operands into stack
+// slots and selects between their ADDRESSES, which only that signature
+// does.
+//
+// Retail lowers `hex % 17` with a real `idiv` and `hex / 17` with the
+// 0x78787879 magic multiply, one after the other, discarding the idiv's
+// own quotient - so the two are independent expressions in the source,
+// not one divmod.
+//
+// The whole of vector<long>::insert is expanded INLINE here where the
+// army-vector shells two rows down get an out-of-line call: the /Ob2
+// budget is 2 * caller size, and this caller is 692 bytes against their
+// 275.
 VA(0x005a4170, 0x2B4)  // order-map+arity, dc 0x153734
-void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<long,std::allocator<long>* result)
+void combatManager::mark_area_effect(long hex, long radius,
+                                     unsigned char include_center,
+                                     std::vector<long>& hexes)
 {
-    // @stub
+    hex_point center = hex_to_point(hex);
+    hex_point point;
+    for (point.x = center.x - radius; point.x <= center.x + radius; point.x++) {
+        for (point.y = center.y - radius; point.y <= center.y + radius;
+             point.y++) {
+            if (get_distance(center, point) > radius)
+                continue;
+            long marked = point_to_hex(point);
+            if (!ValidHex(marked))
+                continue;
+            if (!include_center && marked == hex)
+                continue;
+            hexes.push_back(marked);
+        }
+    }
 }
 
-// E:\gamedcs\spells.cpp:3185
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
+
+#endif  // @carcass
+
+// Berserk's own hex sweep, and the ONLY thing that separates it from the
+// generic collector above is where the radius comes from and that it
+// never spares the centre: the four-entry table below replaces the
+// `radius` parameter, and there is no include_center test at the tail.
+//
+// The table's values are the spell's own rule - none and Basic reach
+// only the target hex, Advanced one ring, Expert two.
+DATA(0x00642264) static const long kBerserkRadius[4] = { 0, 0, 1, 2 };
+
 VA(0x005a4430, 0x2B8)  // order-map+arity, dc 0x1537d8
-void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<long,std::allocator<long>* result)
+void combatManager::mark_berserk_area_effect(long hex, long mastery,
+                                             std::vector<long>& hexes)
 {
-    // @stub
+    hex_point center = hex_to_point(hex);
+    hex_point point;
+    for (point.x = center.x - kBerserkRadius[mastery];
+         point.x <= center.x + kBerserkRadius[mastery]; point.x++) {
+        for (point.y = center.y - kBerserkRadius[mastery];
+             point.y <= center.y + kBerserkRadius[mastery]; point.y++) {
+            if (get_distance(center, point) > kBerserkRadius[mastery])
+                continue;
+            long marked = point_to_hex(point);
+            if (!ValidHex(marked))
+                continue;
+            hexes.push_back(marked);
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3214
 DC_ONLY(0x153884, 0x80)

@@ -1483,6 +1483,55 @@ public:
                           std::vector<long>& hexes);           // 0x5a4170
     void mark_berserk_area_effect(long hex, long mastery,
                                   std::vector<long>& hexes);   // 0x5a4430
+    // THE BATTLEFIELD'S AXIAL COORDINATE AND ITS THREE HELPERS. The DC
+    // roster carries all three as combatManager members immediately in
+    // front of mark_area_effect - spells.cpp:3103 hex_to_point,
+    // 3121 point_to_hex, 3138 get_distance - and NONE of them has a
+    // retail body, which is the /Ob2 inline-away case: every call site
+    // expands them. mark_area_effect (0x5a4170) is the witness, and its
+    // frame is what identifies them: two ADJACENT x/y pairs at -0x2c/
+    // -0x28 and -0x24/-0x20, both memory-homed and both re-read on every
+    // pass, which is what a pair of by-value structs looks like and is
+    // also why VC6 never strength-reduces the inner loop's index.
+    //
+    // The DC prototypes spell the coordinate `tagPOINT` - the Win32
+    // POINT, two LONGs. This nested record is that same layout under a
+    // local name: spells.obj's include closure has no <windows.h> in it,
+    // and pulling one in to gain one two-field struct would move the
+    // whole TU's declarator count for no modelling gain. If a windows.h
+    // ever lands in this closure the typedef can be swapped in place.
+    struct hex_point {
+        long x;
+        long y;
+    };
+    // The grid is 17 columns by 11 rows with every other row offset half
+    // a hex, so a straight (row, column) box is the wrong shape for a
+    // radius; these two skew it into a space where the box is right.
+    hex_point hex_to_point(long hex) const
+    {
+        long col = hex % COMBAT_GRID_ROW_STRIDE;
+        long row = hex / COMBAT_GRID_ROW_STRIDE;
+        hex_point point;
+        point.x = col - (row + 1) / 2;
+        point.y = col + row / 2;
+        return point;
+    }
+    long point_to_hex(hex_point point) const
+    {
+        long col = (point.x + point.y + 1) / 2;
+        long row = point.y - point.x;
+        if (col > 0 && col < COMBAT_GRID_LAST_COLUMN && row >= 0
+                && row < COMBAT_GRID_CELLS / COMBAT_GRID_ROW_STRIDE)
+            return GetHexIndex(col, row);
+        return -1;
+    }
+    // The axial-hex metric: when the two offsets share a sign the walk
+    // can move diagonally and the cost is the larger of them; when they
+    // differ it has to zig-zag and the cost is their sum. Defined in
+    // src/spells.cpp rather than here because it needs that file's
+    // by-value _cpp_max, whose signature retail's operand-address select
+    // proves.
+    long get_distance(hex_point start, hex_point stop) const;
 #endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
