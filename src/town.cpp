@@ -405,6 +405,12 @@ static inline void set_town_spell_bit(std::bitset<70>& bits,
 // as `spell < NUM_SPELLS` instead of `!=` keeps 32 branches but scores 82.47%.
 // The remaining one-block layout delta begins at that sentinel/bitset range
 // check; the weighted picker and the guild-level/count tail remain complete.
+// Re-swept 2026-08-20 against the diagnose signed/unsigned twin (#12 je->jb,
+// #13 jb->jl): a shared `goto assign` tail (no post-loop sentinel) 85.77,
+// the in-loop duplicated arm re-measured 83.25 (unchanged), and `unsigned
+// spell` - the jb tell, which the D10 sweep never tries - 87.67. All three
+// lose; the twin is downstream of the sentinel/bitset layout block, not a
+// source type. The 89.8561 shape stands.
 VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
 void town::initialize_spells(const TownExtra* town_setup)
 {
