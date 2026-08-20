@@ -266,6 +266,27 @@ struct type_obstacle_shape {
     const char* spriteName;           // +0x10
 };
 
+// THE FIVE SPELL-PLACED OBSTACLE SHAPES, .rdata 0x63cf18, and they are
+// type_obstacle_shape rows exactly - same 20-byte stride, same unsigned
+// count at +6 followed by that many signed byte offsets at +8, same
+// sprite name at +0x10. combatManager::ValidSpellTarget (0x5a39c0)
+// reaches rows 0 and 1 by ADDRESS (two absolute immediates 20 bytes
+// apart), which is what fixes the base; the five rows read
+//     0  minRow 3, 2 hexes { 0, -16 }       C15spE1.def
+//     1  minRow 4, 3 hexes { 0, -16, -34 }  C15spE10.def
+//     2  minRow 3, 2 hexes { 0, -16 }       C07spF1.def
+//     3  minRow 4, 3 hexes { 0, -16, -34 }  C07spF10.def
+//     4  minRow 3, 1 hex   { 0 }            C07spF61.def
+// - a basic/expert pair per wall spell plus a single-hex mine, and the
+// dwords after row 4 are a float 1.0f, so the table ends there. This is
+// NOT the big obstacle catalogue at 0x63c7c8: that one's rows sit on a
+// different 20-byte phase, so the two tables are distinct. The name is a
+// bootstrap invention, like type_obstacle_shape's own. Behind the spells
+// view because src/spells.cpp is its only consumer.
+#ifdef HOMM3_CMBTMGR_SPELLS_VIEW
+DATA(0x0063cf18) extern const type_obstacle_shape kSpellObstacleShapes[5];
+#endif
+
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
 // 20 per side - plus one spare making the 0x6ee8 side stride); the
@@ -1552,6 +1573,18 @@ public:
     // gridIndex, combatSide, bitIndex, originalIndex - is read off the
     // second.
     void demonic_resurrection(const army* caster, army* target); // 0x5a7390
+    // The three cells a WALL spell occupies, in the order
+    // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
+    // one a row above it (with a parity nudge that keeps the wall
+    // straight across the half-offset rows), then the one two rows
+    // above. Basic and Advanced reach the first two, Expert all three -
+    // retail's own count is `(mastery >= 2) + 2`. The domain is named
+    // because the walk compares the index against 2 directly.
+    enum EWallCell {
+        WALL_CELL_ANCHOR = 0,
+        WALL_CELL_NEAR = 1,
+        WALL_CELL_FAR = 2
+    };
     // 0x5a4970, the spells.obj body every AREA damage spell runs
     // through: play the spell's own sprite effect over the centre hex,
     // collect the stacks the area covers, roll each one separately and
