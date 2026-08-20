@@ -677,6 +677,11 @@ const unsigned int CTA_SIEGE_WEAPON = 0x40;
 // 0x20000 zeroes a stack's morale outright (GetArmyMorale 0x44b11e) -
 // the no-morale trait (undead/elemental/war-machine family).
 const unsigned int CTA_NO_MORALE = 0x20000;
+// Bit 4, byte-proven by army::new_turn (0x446e30): the Elixir of Life
+// regenerates a stack only when its traits row carries this bit - the
+// living-creature marker (the Elixir does nothing for the undead and
+// the war machines).
+const unsigned int CTA_ALIVE = 0x10;
 
 // Artifact ids as the IsWieldingArtifact gates surface them (NH3API
 // artifact.hpp spellings; every name is corroborated by the byte-
