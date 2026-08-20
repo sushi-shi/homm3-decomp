@@ -60,6 +60,7 @@
 #include <string.h>
 #include "herospec.h"
 #include "advmgr.h"
+#include "ai_player.h"
 #include "adventureoptionswindow.h"
 #include "university_window.h"
 #include "advmgr_objects.h"
@@ -269,13 +270,39 @@ void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
 // it renames a function that is currently EXACT and rewrites its
 // baseline row, so it belongs to whoever owns the netmsg attribution -
 // recorded here rather than done here.
+#endif  // @carcass
+
+// Reconstructed under the CURRENT claim name per the attribution note
+// above: this body is the REQUEST handler - it reads CGiftRequestMsg's
+// m_greedyGuy/m_resource pair, formats general-text row 360 with the
+// asker's name and the resource name, offers no quantity, and credits
+// nothing. The rename to HandleGiftRequestMsg (and the sibling's to
+// HandleGiftMsg) stays with the netmsg-attribution owner.
 VA(0x00406a20, 0x1C7)  // dc-bracket forced, dc 0x61cc
 void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 {
-    // @stub
-}
+    CGiftRequestMsg* pMsg = static_cast<CGiftRequestMsg*>(pNetMsg);
+    std::string text;
+    if (gpGame->players[pMsg->m_greedyGuy].IsHuman()) {
+        text = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            gpGame->players[pMsg->m_greedyGuy].cName,
+            gResourceNames[pMsg->m_resource]);
+    } else {
+        text = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+            gPlayerColorNames[pMsg->m_greedyGuy],
+            gResourceNames[pMsg->m_resource]);
+    }
 
-#endif  // @carcass
+    std::vector<type_dialog_resource> resources;
+    type_dialog_resource resource;
+    resource.resource = pMsg->m_resource;
+    resource.qualifier = 0;
+    resources.push_back(resource);
+    extended_dialog(text.c_str(), resources, -1, -1, 15000);
+    resources.clear();
+}
 
 // E:\gamedcs\advmgr.cpp:713
 VA(0x00406bf0, 0x1FA)  // dc-bracket forced, dc 0x6428
