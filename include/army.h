@@ -57,38 +57,23 @@ enum EAttackCriteria {
 // switch at 0x4444d0 independently proves the attack/damage values; the
 // zero move value is corroborated by the exact FlyTo consumer.  Names
 // follow the mature HoMM2 sibling domain, whose behavior is homologous.
-// TWO SPELL-ROW INDICES armygrp.h's ESpellId does not name, parked here
-// for the same reason the creature ids below are: ANY enumerator added
-// to that enum costs initialize.obj's initialize_game_data 100.0000 ->
-// 96.0880, and army.cpp is the only consumer of these two. Both ids are
-// fixed by arithmetic against ids ESpellId already proves and by the
-// rule ResetRound (0x447120) implements against each:
-//   - 0x3a is the slot between SPELL_TITANS_LIGHTNING_BOLT 0x39 and
-//     SPELL_BERSERK 0x3b, and the row it gates adds
-//     army::counterstrokeBonus to the round's retaliation allowance -
-//     which is Counterstrike's rule and nothing else in the roster;
-//   - 0x4b sits four past SPELL_POISON 0x47 on the creature-spell run
-//     whose first four slots army.h already pairs as Bind (+0x2b8,
-//     index 72) and the paralyze slot CancelSpellType cancels on damage
-//     (index 74), and the row it gates HALVES the stack's recomputed
-//     maximum hit points - which is Aging's rule and nothing else.
-// Behind the round view for the usual measured reason.
-#ifdef HOMM3_ARMY_ROUND_VIEW
-enum EArmySpellRowId {
-    // The one row ResetRound refuses to decrement. 0x38 is the slot
-    // between SPELL_SLAYER 0x37 and SPELL_TITANS_LIGHTNING_BOLT 0x39,
-    // and frenzyRounds below already pairs +0x278 == +0x198 + 56*4 on
-    // ComputeAttackerDamageReduction's own reading.
-    SPELL_FRENZY = 0x38,
-    SPELL_COUNTERSTRIKE = 0x3a,
-    // The row remove_binding (0x43ee10) cancels on a bound stack the
-    // moment its `binders` list empties - `push 0x48 / call
-    // CancelIndividualSpell` - which is the same index 72 the +0x2b8
-    // bindRounds field already pairs, reached from the other side.
-    SPELL_BIND = 0x48,
-    SPELL_AGE = 0x4b
-};
-#endif
+// EArmySpellRowId RETIRED 2026-08-20. It held four spell-row indices -
+// SPELL_FRENZY 0x38, SPELL_COUNTERSTRIKE 0x3a, SPELL_BIND 0x48,
+// SPELL_AGE 0x4b - as a SECOND, gate-separated copy of names armygrp.h's
+// ESpellId also carried behind a different gate; the two arms never met
+// in one TU, which is the only reason it compiled. ESpellId now carries
+// all four ungated, so this copy is a hard C2371 and had to go. The
+// evidence it recorded is preserved on ESpellId's own rows, and the
+// arithmetic it argued from is unchanged: 0x3a is the slot between
+// SPELL_TITANS_LIGHTNING_BOLT 0x39 and SPELL_BERSERK 0x3b and its row
+// adds army::counterstrokeBonus to the round's retaliation allowance;
+// 0x4b sits four past SPELL_POISON 0x47 and its row halves the stack's
+// recomputed maximum hit points; 0x48 is the row remove_binding
+// (0x43ee10) cancels the moment a bound stack's `binders` list empties,
+// the same index 72 the +0x2b8 bindRounds field pairs from the other
+// side; 0x38 is the one row ResetRound refuses to decrement, matching
+// frenzyRounds' own +0x278 == +0x198 + 56*4. Byte-inert: same names,
+// same values, one declaration.
 
 // The eight rows of cmbtmgr's gWallTargets. Retail DamageWall dispatches
 // on all eight values; names remain ordinal because no local roster names
