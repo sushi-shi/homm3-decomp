@@ -8,7 +8,14 @@
 // with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
 // inline's visibility is scoped.
 #define HOMM3_TOWN_HASBUILDING_API
+// playerData::add_garrison_hero (0x4b9fc0) needs three declarators no
+// other game.obj body reaches: game::GameFn_0049C720, and CMCHideHero
+// with the two default constructors it chains through. Held on its own
+// gate so neither townmgr.obj (the other HOMM3_GAME_OBJ_DECLS consumer)
+// nor any town.h/hero.h reader widens its include closure.
+#define HOMM3_GAME_GARRISON_HERO_DECLS
 #include "advmgr_objects.h"
+#include "advmgr.h"
 #include "terrain.h"
 #include <stdio.h>
 #include <string.h>
@@ -1046,16 +1053,72 @@ loop:
     goto loop;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1336
+// The town's visiting hero steps INTO the garrison: the reverse of
+// town::remove_garrison_hero, and a near-twin of town::SwapHeroes
+// (0x5be450) - same GameFn_0049C720 / restore_cell / roster-shift /
+// currHero-latch tail, which is why that body is the control for this
+// spelling. Three retail facts are specific to this row:
+//   * both entry gates are one-sided and OPPOSITE (`visitingHeroId < 0`
+//     bails, `garrisonHeroId >= 0` bails), each with its own return;
+//   * the hide-hero broadcast is GATED on 0x69954c here where SwapHeroes
+//     sends unconditionally - `cmp [0x69954c],ebx / je` skips the whole
+//     record;
+//   * the roster count is decremented LAST, after the currHero latch,
+//     so the sentinel store spells `heroes[numHeroes - 1]` rather than
+//     SwapHeroes' post-decrement `heroes[numHeroes]`. That store, the
+//     `currHeroId = -1` and the town's `visitingHeroId = -1` all share
+//     the single `or ecx,-1` - the signedness-CSE lever, and what keeps
+//     all three as int stores.
+// get_army is the CONST overload in retail's call
+// (?get_army@town@@QBEABVarmyGroup@@XZ), so the const_cast is retail's
+// own - the same idiom recruit.obj already carries.
+// Residual (98.9899%): one instruction, the CMCHideHero member store.
+// Retail sinks it past the five base stores; ours emits it first. That
+// position is fixed by the shared constructor and the two call sites
+// disagree - see the A/B recorded on CMCHideHero in netmsg.h. Making
+// this body exact costs town::SwapHeroes its own exactness, so the
+// spelling that keeps the larger body is the one in the tree.
 VA(0x004b9fc0, 0x167)  // anchor-global, dc 0xa4ee8
 unsigned char playerData::add_garrison_hero(town* our_town)
 {
-    // @stub
-}
+    if (our_town->visitingHeroId < 0)
+        return 0;
+    if (our_town->garrisonHeroId >= 0)
+        return 0;
 
-#endif  // @carcass
+    hero* visitingHero = gpGame->GetHero(our_town->visitingHeroId);
+    if (!visitingHero->army.Merge(
+            const_cast<armyGroup*>(&our_town->get_army())))
+        return 0;
+
+    gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
+
+    if (bVideoPaused) {
+        CMCHideHero hideHero(visitingHero->id);
+        SendMapChange(&hideHero);
+    }
+
+    int rosterIndex = FindHero(visitingHero->id);
+    visitingHero->restore_cell();
+
+    for (int i = rosterIndex; i < numHeroes - 1; ++i)
+        heroes[i] = heroes[i + 1];
+    heroes[numHeroes - 1] = -1;
+
+    if (currHeroId == visitingHero->id) {
+        currHeroId = -1;
+        if (gNetLocalGamePos == visitingHero->owner) {
+            gpAdvManager->drawCursor = 0;
+            gpAdvManager->inDialog = 0;
+        }
+    }
+    --numHeroes;
+
+    our_town->garrisonHeroId = visitingHero->id;
+    our_town->visitingHeroId = -1;
+    return 1;
+}
 
 // E:\gamedcs\game.cpp:1388
 // CLAIM CORRECTED 2026-08-08 - this row was carrying SetName (dc
