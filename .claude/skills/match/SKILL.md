@@ -64,20 +64,29 @@ only mapcell.cpp's two new VA claims and re-delinking returned it to exactly
    claim found sitting on an excluded class is WITHDRAWN back to DC_ONLY.
    Arity (`ret N` vs DC parameter count) is the highest-yield screen there is -
    eight consecutive lanes found misattributed claims, most of them this way.
-**PROMOTING A CARCASS ROW IS NOT A MECHANICAL EDIT** (measured 2026-08-20).
-The carcass signature and the hand-modelled header declaration frequently
-DISAGREE, and the compiler reports the clash as a cascade of C2065
-`undeclared identifier` errors on the PARAMETER NAMES - which reads like a
-missing type, not like a signature mismatch, and sends you looking in the
-wrong place. On spells, `ComputeSpellDamage`'s carcass row says
+**CLAIMING IS BULK WORK; RECONSTRUCTING IS NOT** (measured 2026-08-20, and
+this CORRECTS an entry written earlier the same day that said never to
+bulk-promote a roster).
+
+A `VA()` claim may sit INSIDE the `#if 0 // @carcass` block with a `// @stub`
+body. The va-claims gate is a line regex, so a carcass claim is still
+order-, size- and class-checked without ever being compiled. 54 such claims
+already existed across 13 files (ai_tactical 14, advmgr 7, town 7,
+victorylossconditions 7) before anyone wrote this down. So once an order-map
+is verified, promote the whole roster in one pass - verify every RVA against
+`config/retail-functions.tsv` offline first - and let the gate check it.
+spells went from 2 claims to 40 in a single commit that way.
+
+The compile clash only bites when you pull a row OUT of the carcass to
+reconstruct it, and then it is per-function work: the carcass signature and
+the hand-modelled header declaration frequently DISAGREE, and VC6 reports the
+clash as a cascade of C2065 `undeclared identifier` on the PARAMETER NAMES -
+which reads like a missing include, not a signature mismatch, and the first
+error can land 300 lines from the row that caused it.
+`combatManager::ComputeSpellDamage`'s carcass row says
 `int (SpellID, int, int, const hero*, const hero*, const army*, unsigned
-char)` while `cmbtmgr.h:1409` already declares
-`long ComputeSpellDamage(SpellID, long, long, ...)`. The definition matched
-no declaration, so every parameter after the first mismatch became undeclared.
-Reconcile the two signatures per function - the header is usually the better
-evidence, being hand-modelled from bytes - and never bulk-promote a whole
-roster with a script: 38 promoted at once failed to compile and the first
-error pointed at a parameter name 300 lines from the actual cause.
+char)` while `cmbtmgr.h:1409` declares `long (SpellID, long, long, ...)`.
+Reconcile per function, preferring the header - it is modelled from bytes.
 
 2. **Claim.** `VA(0x004xxxxx, 0xSIZE)  // <evidence-tag>, dc 0x<off>` above the
    declarator; absolute VAs; sizes carve-exact; strictly increasing per file
