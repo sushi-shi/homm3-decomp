@@ -5490,14 +5490,37 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
     return result;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:11684
+// The mirror of ~game below: retail's body is almost entirely the
+// compiler-generated MEMBER CONSTRUCTION, in declaration order, and this
+// class's declaration order is already right - an EMPTY body scores
+// 74.6490% on its own. What lands verbatim from the header alone:
+// scenarioTowns' inline vector constructor, the `eh vector constructor
+// iterator' over heroSetup[156] with HeroExtra's 0x334 stride and the
+// 0x4ce4b0/0x4ce520 ctor/dtor pair, SCampaign, the load-event vector,
+// SGameSetupOptions' whole loop body (difficulty 0, turnDuration 10,
+// memset(filename,0,251) at +0x39 and memset(path,0,100) at +0x134, the
+// three bytes at +0x1a0..+0x1a2), NewSMapHeader with its three strings,
+// NewfullMap, players[8], towns, heroes[156] on the 0x492 stride, the
+// five object pools, rumours and both eight-element teleport-pool
+// arrays.
+//
+// Residual (74.6490%): the EXPLICIT statements are not written yet, and
+// so are the members only they touch. Retail interleaves, in cleanup-
+// state order: a 156-iteration loop at +0x4dfb4 calling a one-argument
+// constructor on a four-byte element (0x4cff30, no matching teardown in
+// ~game, so the element is trivially destructible); zeroing sweeps over
+// the POD bands at +0x1f4d5, +0x4df18, +0x4dfb4, +0x4e224, +0x4e2b4,
+// +0x4e344, +0x4e3e9, +0x4e419 and +0x4e546; and a call to
+// initialize_game_data (0x4eb730) near the end. Each needs its member
+// modelled first; none of it is layout-neutral, so it is left rather
+// than guessed.
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
-void game::game()
+game::game()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // ---------------------------------------------------------------------
 // BRACKET game::game (0x4cdf20) .. game::~game (0x4ce5b0) - three carve
