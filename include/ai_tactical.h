@@ -200,7 +200,19 @@ struct type_AI_spellcaster {
     // and the 0x420 frame the 0x410 operator-new size predicts.
     type_AI_spellcaster(combatManager* combat, long side,
                         unsigned char creature_spell);
+    // dc 0x3d6f0. The DEPUTY's constructor - the one the public ctor
+    // reaches through `new` for the other side's caster, with `parent`
+    // landing in the deputy's own +0x48 and its owns_deputy byte left
+    // clear. Retail carries NO out-of-line body for it (the carve cuts
+    // no row between type_spell_choice's ctor at 0x436980 and the
+    // public ctor at 0x4369c0), so it is `inline` at its definition.
+    type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
+                        long side, unsigned char creature_spell);
     virtual ~type_AI_spellcaster();
+    // dc 0x425a8. "Is anything left on the other side that can still
+    // fight?" - the answer lands in field_1c and it is what the two
+    // constructors both end on. Inlined into both in retail.
+    void check_simulation();
 
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
