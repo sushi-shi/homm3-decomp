@@ -88,6 +88,16 @@ DATA(0x0063b788) const double AI_bad_morale_value = -0.0833;
 DATA(0x0063b790) const float AI_good_luck_value = 0.0173f;
 DATA(0x0063b794) const float AI_bad_luck_value = -0.0122f;
 
+// The odds ladder: how lopsided the two sides' live combat values have
+// to be before the AI shortens its planning horizon. The
+// type_AI_combat_parameters ctor (0x435ec0) walks it with
+// `fcomp qword ptr [8*odds + 0x63b798]` and stops at the first rung the
+// high/low ratio reaches, so `odds` lands in 1..7. Values read from the
+// hash-verified image at RVA 0x23b798, not from a roster.
+DATA(0x0063b798) const double AI_odds_ladder[6] = {
+    2.6, 1.9, 1.5, 1.31, 1.2, 1.13
+};
+
 // E:\gamedcs\ai_tactical.cpp:83
 // Retail emits it BEFORE value_of_luck_and_morale (the DC roster has
 // the reverse order): the 30-byte slot at the head of the TU forwards
@@ -353,22 +363,103 @@ long type_AI_combat_parameters::get_exchange_effect(const army* current_army, co
     return value;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:393
-// Blocked on one unidentified leaf: the two-side lowest-attack /
-// lowest-defense sweep calls army::get_attack_modifier (0x442550,
-// claimed) and then 0x442660, which no roster names yet - the odds
-// ladder itself is the six doubles at 0x63b798 (2.6/1.9/1.5/1.31/
-// 1.2/1.13) and the four combat-value queries are combatManager::
-// get_total_combat_value (0x41eac0, claimed in ai.cpp).
+// UNBLOCKED 2026-08-20. The old note called 0x442660 "unidentified";
+// it is army::get_defense_modifier - see the declarator in army.h for
+// the three-way proof (DC roster order, zero-argument call site, and
+// the role of its result). Nothing else here was ever missing: the odds
+// ladder is AI_odds_ladder above, and gpGame + 0x1f6d8 is simply
+// `setup.difficulty`, since SGameSetupOptions puts it at +0x38 and the
+// record starts at +0x1f6a0.
+//
+// The ctor establishes the whole AI's frame of reference for one
+// combat: the WEAKEST attack and defense modifiers on the field (both
+// sides, skipping empty stacks and the arrow tower), the four
+// combat-value totals those two numbers price, whether the AI is far
+// enough behind to start trading kills for kills, and how many turns
+// ahead it is worth planning.
+//
+// `first` is a real flag, not a sentinel: the sweep has to take the
+// FIRST stack's modifiers unconditionally because a modifier can be
+// negative, and retail proves it by testing the same `cl` twice and
+// letting both `if (first || ...)` tests share it.
+//
+// EXACT 2026-08-20 (0 -> 98.19 -> 99.00 -> 100.00) on two edits after
+// the first draft, both generalizable:
+//
+//   - COMPARE OPERAND ORDER IS VISIBLE. Retail emits
+//     `cmp dword ptr [esi], ebx / jle`, i.e. memory on the LEFT; the
+//     natural `attack < lowest_attack` gives `cmp ebx,[esi] / jge`
+//     instead. Spelling the guard the way retail reads it -
+//     `lowest_attack > attack` - is the whole 0.81. Read which side of
+//     the `cmp` the memory operand is on before choosing.
+//
+//   - DECLARATION POSITION DECIDES WHO GETS THE DEAD PARAMETER SLOT.
+//     `side` dies at `this->side = side`, freeing [ebp+0xc]. Retail
+//     puts the LOOP INDEX there and gives `first` a real negative slot;
+//     with `unsigned char first = 1;` written after the member stores,
+//     our CL hands the param slot to `first` instead and the two
+//     variables' slots swap. Moving the declaration ABOVE the member
+//     assignments swaps them back - the last 1.00, and nothing else in
+//     the body moved.
+// Tried and rejected: hoisting the loop index to function scope and
+// running the inner loop off it (byte-identical at 99.00).
 VA(0x00435ec0, 0x1F7)  // anchor-global, dc 0x3cc8c
-void type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
+type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
 {
-    // @stub
+    unsigned char first = 1;
+    this->side = side;
+    enemy_side = 1 - side;
+    lowest_attack = 0;
+    lowest_defense = 0;
+    kills_only = 0;
+    simulated = 0;
+    for (long group = 0; group < 2; group++) {
+        for (long i = 0; i < combat->numArmies[group]; i++) {
+            const army* our_army = &combat->armies[group][i];
+            if (our_army->numTroops <= 0)
+                continue;
+            if (our_army->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            unsigned char ranged = our_army->can_shoot(0);
+            long attack = our_army->get_attack_modifier(0, ranged);
+            long defense = our_army->get_defense_modifier();
+            if (first || lowest_attack > attack)
+                lowest_attack = attack;
+            if (first || lowest_defense > defense)
+                lowest_defense = defense;
+            first = 0;
+        }
+    }
+    our_value = combat->get_total_combat_value(this->side, lowest_attack,
+                                               lowest_defense, 1);
+    our_live_value = combat->get_total_combat_value(this->side, lowest_attack,
+                                                    lowest_defense, 0);
+    enemy_value = combat->get_total_combat_value(enemy_side, lowest_attack,
+                                                 lowest_defense, 1);
+    enemy_live_value = combat->get_total_combat_value(enemy_side, lowest_attack,
+                                                      lowest_defense, 0);
+    if (our_value * 2 < enemy_value
+            && (gpGame->setup.difficulty > 0
+                || gpCombatManager->sideIsAI[this->side]))
+        kills_only = 1;
+    long high = our_live_value;
+    long low = enemy_live_value;
+    if (high < low) {
+        high = enemy_live_value;
+        low = our_live_value;
+    }
+    if (low * 5 > high && high != 0) {
+        double ratio = static_cast<double>(high) / static_cast<double>(low);
+        for (odds = 0; odds < 6; odds++) {
+            if (ratio >= AI_odds_ladder[odds])
+                break;
+        }
+        odds++;
+    } else {
+        odds = 1;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:482
 VA(0x004360c0, 0xBC)  // anchor-global, dc 0x3ceb8
