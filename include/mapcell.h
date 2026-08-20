@@ -205,8 +205,17 @@ enum TAdventureObjectType {
     // 222..231 block above was taken from - GATED to the events view so
     // this enum's population is unchanged for its other consumers.
 #ifdef HOMM3_EVENTS_VIEW
-    HERO_PLACEHOLDER           = 212,
-    RANDOM_DWELLING_LEVEL      = 215,
+    // NAMES CORRECTED 2026-08-20 - the values are unchanged and were never
+    // in doubt; only the spellings were, and they contradicted advmgr.h's
+    // byte-proven EAdvmgrRetailObjectType (212 BORDER_GATE, 214
+    // HERO_PLACEHOLDER, 215 QUEST_GUARD). Those come from readObject's
+    // (0x502e00) jump table, where each arm's payload identifies its own
+    // type; these two came from an external public object-type list. The
+    // note right below already said both land on the BORDER-GUARD arm,
+    // which is what 212 is. Two enumerators cannot carry one name at two
+    // values, so the proven spellings win.
+    BORDER_GATE                = 212,
+    QUEST_GUARD                = 215,
 #endif
     // 214 used to be spelled RANDOM_DWELLING here, gated to the mapcell
     // view. readObject's (0x502e00) jump table disproved that in

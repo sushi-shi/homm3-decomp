@@ -5538,8 +5538,8 @@ void advManager::EventSound(int eventID, int extraInfo)
     case BORDER_GUARD:
     case BORDER_TENT:
     case UNDERGROUND_GATE:
-    case HERO_PLACEHOLDER:
-    case RANDOM_DWELLING_LEVEL:
+    case BORDER_GATE:
+    case QUEST_GUARD:
         sampleName = DATA_COMPGEN(0x00677844, caveHeadSampleName, "Cavehead.wav");
         break;
     case CARTOGRAPHER:
