@@ -1097,6 +1097,10 @@ public:
     unsigned char IsWinner(int this_side) const;
     void ResetHitByCreature();
     void DamageWall(TWallTargetId target_wall, int damage);
+    // The SGTWDEF explosion frame army::attack_wall (0x445fd0) lets
+    // play before it lands the DamageWall - the wall visibly breaks
+    // mid-animation, not on the last frame.
+    enum { WALL_EXPLOSION_HIT_FRAME = 0x5 };
     unsigned char is_adjacent(int first, int second) const;
     unsigned char enemy_is_adjacent(const army* current_army, int grid_index,
                                     const army* excluded) const;
@@ -1228,6 +1232,23 @@ public:
                    unsigned char bLimitDraw, int iDelay,
                    unsigned char bRefreshBackground,
                    unsigned char bDoDelayTil);
+    // 0x4953b0, drawing.obj's one-off effect blit (drawing.cpp:1804,
+    // dc 0x85d00). Declared here, unclaimed, for army::range_attack's
+    // two splash-effect loops, which call it once per frame with
+    // (sprite, frame, x, y, 0, 0); the body stays drawing's.
+    int DrawSpellEffect(const CSprite* sprite, int frame, int x, int y,
+                        unsigned char isFlipped, unsigned char isAlpha);
+    // 0x4951b0, the per-stack blit (drawing.cpp:1699, dc 0x85a48).
+    // Declared here, unclaimed, for army::DrawToBuffer; the body stays
+    // drawing's.
+    int DrawCreature(const CSprite* sprite, int sequence, int frame,
+                     int x, int y, struct SLimitData* psLimitData,
+                     int id, unsigned char isFlipped, int iColor);
+    // 0x4958e0 (drawing.obj), the three-argument rectangle clip
+    // DrawToBuffer asks before drawing the troop-count box over the
+    // combat grid bitmap. ORDINAL PLACEHOLDER name - no roster row
+    // reaches it.
+    int Unnamed4958E0(Bitmap816* grid, int x, int y);
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives
@@ -1767,6 +1788,12 @@ public:
                  int iEndThickness, int iColor, int iAngleDistortMin,
                  int iAngleDistortMax, int iSegmentLength,
                  int bDistortAlways);                          // 0x5a5a90
+    // 0x59fde0 (68 B), the Enchanter's shot resolution army::
+    // animate_missile hands its volley to instead of a missile flight
+    // (three stack arguments: the launch point and the target stack).
+    // ORDINAL PLACEHOLDER name - no roster row reaches it; the body
+    // stays spells.obj's to reconstruct.
+    void Unnamed59FDE0(int x, int y, army* target);
     void DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX,
                 int iDestY, int iSplitFrequency, int iMaxSplitLength,
                 int iStartThickness, int iEndThickness, int iColor,
@@ -1992,7 +2019,13 @@ public:
         // proves the number at army::do_attack (0x441610), which hands
         // it to SpellEffect as the good-luck sparkle over the striking
         // stack.
-        eSpellEffectFortune = 18
+        eSpellEffectFortune = 18,
+        // Retail proves the number at army::new_turn (0x446e30), which
+        // hands it to SpellEffect over a regenerating stack.
+        eSpellEffectRegeneration = 79,
+        // Proven at army::ComputeAttackerDamageBonuses (0x443840):
+        // the Dread Knight's death-blow flash over the defender.
+        eSpellEffectDeathBlow = 73
     };
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->
@@ -2253,10 +2286,25 @@ extern const type_obstacle_shape gObstacleShapes[];
 // ?akSpellEffectTraits@@3QBUTSpellEffectTraits@@B, with m_name at 0 -
 // but its own record is EIGHT bytes, so the +4 Immersion slot is a
 // retail insertion and its name is a bootstrap invention.
+// The placement nibble (flags & 0xf) of a spell-effect row: where
+// army::DrawToBuffer (0x43e140) anchors the pow sprite against the
+// target's hex. BOOTSTRAP INVENTION - the four modes are named from
+// that one decoded switch and nothing else attests spellings.
+enum TSpellEffectPlacement {
+    SPELL_EFFECT_PLACE_OVERHEAD = 0x0,
+    SPELL_EFFECT_PLACE_CENTERED = 0x1,
+    SPELL_EFFECT_PLACE_ABOVE = 0x2,
+    SPELL_EFFECT_PLACE_FLANK = 0x3
+};
+
 struct TSpellEffectTraits {
     const char* m_name;      // +0x0, the .def sprite
     const char* m_immName;   // +0x4, the Immersion effect
-    char pad_08[0x4];
+    // +0x8, retyped from pad 2026-08-20: army::DrawToBuffer (0x43e140)
+    // reads it as the pow overlay's placement word - bits 0..3 select
+    // a TSpellEffectPlacement anchor mode over the stack and bit 8 is
+    // the draw-alpha flag it hands to DrawSpellEffect.
+    unsigned int flags;      // +0x8
 };
 SIZE(TSpellEffectTraits, 0xc);
 DATA(0x00641e08) extern const TSpellEffectTraits akSpellEffectTraits[];
@@ -2387,6 +2435,9 @@ struct type_wall_target {
     // (630,506) (762,212), which is the castle wall read top to bottom
     // with the keep last, on an 800x600 field. Retyped IN PLACE out of
     // the pad; both words are SIGNED (movsx, not movzx).
+    // CORROBORATED from a second caller: army::attack_wall (0x445fd0)
+    // movsx-loads the same pair as the catapult shot's destination and
+    // the explosion centre. Two lanes, two callers, same signed shorts.
     short screenX;                    // +0x4
     short screenY;                    // +0x6
     // ID into combatManager::wallStrength / wallStanding. Retail rows are

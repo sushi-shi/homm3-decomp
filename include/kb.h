@@ -38,6 +38,10 @@ DATA(0x006989f8) extern unsigned short* gMapExtra;
 // TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
 class font;
 DATA(0x00698a14) extern font* gpCalligraphicFont;
+// The first cell of the same run: army::DrawToBuffer (0x43e140) draws
+// the troop-count box's number with it, which is the reader the note
+// above was waiting on.
+DATA(0x00698a04) extern font* gpTinyFont;
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);

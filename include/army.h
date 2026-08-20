@@ -395,7 +395,11 @@ public:
     // the whole army run.
     int monInfoTownType;          // +0x74 == sMonInfo.townType
     int monInfoLevel;             // +0x78 == sMonInfo.level
-    char pad_7c[0x8];
+    // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven
+    // by LoadResources (0x43d9f0): every one of its eight sprintf's
+    // hands this pointer to a "%s....82M" format. Pad slice.
+    const char* monInfoSamplePrefix;  // +0x7c == sMonInfo.cSamplePrefix
+    char pad_80[0x4];
     // A BITFIELD word, not an id: bit 0 is the two-hex marker in
     // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
     // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read
@@ -597,7 +601,19 @@ public:
     int field_104;                 // +0x104
     char pad_108[0x4];
     char* yModify;                // +0x10c
-    char pad_110[0x40];
+    // sMonFrameInfo.iMissileOffset (DC SMonFrameInfo@0, short[6] -
+    // monframeinfo.h carries the record), the three launch-point pairs
+    // for the ranged poses ur/r/dr. Byte-proven by attack_wall
+    // (0x445fd0): the first angle estimate reads the middle pair
+    // [2]/[3] and the aimed shot reads [2*pose]/[2*pose+1], both
+    // movsx'd shorts at +0x110..+0x11b. Sliced in the range arm only,
+    // per the band's own "read the fields you need" rule.
+    short frameInfoMissileOffset[6]; // +0x110 == sMonFrameInfo.iMissileOffset
+    char pad_11c[0x30];
+    // sMonFrameInfo.iExtraNumTroopsXOffset (+0x3c of the record):
+    // DrawToBuffer (0x43e140) shifts the troop-count box by it when the
+    // box's neighbour hex is free.
+    int frameInfoExtraNumTroopsXOffset; // +0x14c
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
     char pad_154[0x4];
 #elif defined(HOMM3_ARMY_POW_VIEW)
@@ -657,16 +673,20 @@ public:
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
     CSprite* stdIcon;             // +0x164
-    // MidY (0x446630) subtracts HALF of +0x16c from the hexcell's own y,
-    // and LoadResources (0x43dd62) writes it as `0x10b - <stdIcon frame
-    // metric>` - the stack's own vertical span on the combat field.
-    // InitClean zeroes it. Sliced behind a view because this header is
-    // included tree-wide and the slice adds a declarator (see the
-    // include-set note at the top of army.cpp); army.cpp is the only
-    // consumer.
+    // DC army.missileIcon (members.csv army@340, right between stdIcon
+    // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
+    // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
+    // missile, which is what fixes the type.
+    // image_height is DC army@344: MidY (0x446630) subtracts HALF of it
+    // from the hexcell's own y, and LoadResources (0x43dd62) writes it
+    // as `0x10b - <stdIcon frame metric>` - the stack's own vertical
+    // span on the combat field. InitClean zeroes it. Sliced behind a
+    // view because this header is included tree-wide and the slice adds
+    // declarators (see the include-set note at the top of army.cpp);
+    // army.cpp is the only consumer.
 #ifdef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
-    int field_168;                // +0x168
-    int field_16c;                // +0x16c
+    CSprite* missileIcon;         // +0x168
+    int image_height;             // +0x16c
 #else
     char pad_168[0x8];
 #endif
@@ -1060,7 +1080,13 @@ public:
     // TU already defines.
 #ifdef HOMM3_ARMY_POW_VIEW
     unsigned char field_4d8;      // +0x4d8
-    char pad_4d9[0x7];
+    char pad_4d9[0x3];
+    // The DEFEND stance's banked defense bonus: new_turn (0x446e30)
+    // subtracts it back out of defenseSkill and clears creatureId bit
+    // 27 in the same breath, so the bit is "is defending" and this word
+    // is what the stance added. Name stays ordinal - no roster row
+    // reaches it and the writer (the defend command) is not decoded.
+    int field_4dc;                // +0x4dc
 #else
     char pad_4d8[0x8];
 #endif
@@ -1331,6 +1357,9 @@ public:
 #ifdef HOMM3_ARMY_RANGE_VIEW
     void range_attack();
     void range_attack(army* armyToAttack);
+    // 0x43f2c0, EH-bearing carcass in army.cpp; declared because the
+    // volley worker above calls it once per shot.
+    void animate_missile(army* armyToAttack);
 #endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     // 0x440500, reconstructed in army.cpp: the attacker's on-attack
@@ -1625,6 +1654,20 @@ public:
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
     }
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // The DC roster's army::LeavesNoBody (Army.h:875, dc 0x4ca60) - a
+    // class-body inline; retail carries no out-of-line copy anywhere.
+    // ProcessDeath (0x444120) is the decoded consumer and its bytes fix
+    // the SHAPE as one mask test (`test dword, 0x10400000`), not two
+    // Is() shifts; the call site is also load-bearing for ProcessDeath's
+    // inline budget (a free candidate site in C2's sites-remaining
+    // divisor - measured there). Behind the round view with the rest of
+    // ProcessDeath's surface.
+    unsigned char LeavesNoBody()
+    {
+        return (creatureId & 0x10400000) != 0;
+    }
+#endif
     // The DC roster's army::get_owning_side (Army.h:795, dc 0x27d3c,
     // 8 B) - a CLASS-BODY inline, which is why retail has no
     // out-of-line copy of it anywhere while its neighbour
