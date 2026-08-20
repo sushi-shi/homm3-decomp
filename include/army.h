@@ -1201,6 +1201,34 @@ public:
 #endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
+        // The three creatures with a START-OF-TURN ability, and
+        // combatManager::SetNextArmy (0x465330) is the one body that
+        // proves all three: its compare chain answers 0x3d, 0x86 and
+        // 0x88 and nothing else. Each id follows from the arithmetic the
+        // elemental block above already fixes - Psychic / Magic
+        // Elemental on 0x78/0x79 and Ice 0x7b / Magma 0x7d / Storm 0x7f
+        // / Energy 0x81 with the four unused slots between them, which
+        // continues Firebird 0x82 / Phoenix 0x83, Azure 0x84 / Crystal
+        // 0x85 / FAERIE 0x86 / Rust 0x87, then ENCHANTER 0x88 - and
+        // 0x3d closes the Necropolis run that opens at Skeleton 0x38.
+        // The bodies corroborate each id independently:
+        //   - 0x3d drains two mana off the OTHER side's hero and plays
+        //     ManaDrai.wav, which is the wraith's rule and no other
+        //     creature's;
+        //   - 0x86 calls 0x447510, whose body picks a spell at random
+        //     out of a weighted table - the faerie dragon's rule - and
+        //     which the HD crossbuild map independently names
+        //     FaerieDragonSpell;
+        //   - 0x88 is gated on a per-side counter that must exceed 2 and
+        //     is reset to 0 on success, i.e. an ability with a cooldown
+        //     of three rounds, which is the enchanter's mass cast.
+        // Behind a view for this header's usual measured reason;
+        // cmbtmgr.cpp is the only consumer.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
+        ARMY_CREATURE_WRAITH = 0x3d,
+        ARMY_CREATURE_FAERIE_DRAGON = 0x86,
+        ARMY_CREATURE_ENCHANTER = 0x88,
+#endif
         // The two combat participants can_shoot (0x4428f0) admits as
         // shooters unconditionally, ahead of every other test - the
         // ballista and the arrow tower, which are the only war machines
@@ -1282,6 +1310,25 @@ public:
     // (`get_controlling_side() != other->group`) is also exactly what
     // is_enemy's asymmetric compare does.
     int get_controlling_side() const;        // 0x440140
+    // The two start-of-turn ability bodies combatManager::SetNextArmy
+    // (0x465330) dispatches to off creatureType. Both take `this` only
+    // and both sit in army.obj; neither is claimed here, and neither is
+    // named by the DC roster, so 0x447fe0 keeps the address-ordinal
+    // shape this tree uses for exactly that case.
+    //   FaerieDragonSpell (0x447510, 424 B) spends one of the +0xdc
+    //     counters and picks a spell out of the weighted table at
+    //     .rdata 0x63b850 with a single rand()%total draw. The NAME is
+    //     the HD crossbuild map's, adopted because the creature id that
+    //     reaches it - 0x86 - independently lands on the faerie dragon
+    //     by the elemental-block arithmetic recorded on the enumerator.
+    //   Unnamed447fe0 (638 B) answers a byte; SetNextArmy calls it only
+    //     for the enchanter and only while the per-side counter at
+    //     combatManager+0x132a0 exceeds 2, clearing that counter when
+    //     the answer is non-zero.
+#ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
+    void FaerieDragonSpell();                // 0x447510
+    unsigned char Unnamed447fe0();           // 0x447fe0
+#endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
     // combatManager::enemy_is_adjacent take a const army* as the

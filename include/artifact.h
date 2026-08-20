@@ -151,6 +151,26 @@ enum TArtifact {
     // Complete-era band armygrp.h's EArtifactId already byte-proves
     // twice (0x86 / 0x89).
     ARTIFACT_ARMAGEDDONS_BLADE = 0x80,
+    // The two combination artifacts that auto-cast at the top of their
+    // owner's combat turn, and combatManager::SetNextArmy (0x465330) is
+    // the one body that proves both. It asks hero::IsWieldingArtifact
+    // for 0x81 and casts exactly SPELL_PRAYER; it asks for 0x84 and
+    // casts exactly SPELL_SLOW, SPELL_CURSE, SPELL_WEAKNESS and
+    // SPELL_MISFORTUNE, in that order. Those two spell sets ARE the
+    // identification - the Angelic Alliance's Prayer and the Armor of
+    // the Damned's Slow/Curse/Weakness/Misfortune - and both ids fall
+    // exactly where the Complete-era combination run this header
+    // already anchors at both ends puts them: 0x80 Armageddon's Blade
+    // above, 0x82 Cloak of the Undead King and 0x83 Elixir of Life
+    // below, and 0x86 Power of the Dragon Father / 0x89 Bow of the
+    // Sharpshooter / 0x8b Ring of the Magi further on.
+    // Behind a view: artifact.h reaches every TU that includes hero.h,
+    // and an ungated enumerator counts toward the include-set threshold
+    // in all of them.
+#ifdef HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
+    ARTIFACT_ANGELIC_ALLIANCE = 0x81,
+    ARTIFACT_ARMOR_OF_THE_DAMNED = 0x84,
+#endif
     // hero::GetNecromancyCreature (0x4e3c60) gates its whole
     // Walking Dead / Wight / Lich ladder on artifact 0x82 - which is
     // precisely what the Cloak of the Undead King does in HoMM3, and
