@@ -169,7 +169,17 @@ struct THeroSpecificAbility {
     // only "the 17-byte retail getter returns +0x1c" is proof, so the
     // name here is role-derived.
     const char* shortText;      // +0x1c
+#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
+    char pad_20[0x4];
+    // +0x24, the LONG description the note above predicted. Landed
+    // 2026-08-20 by the consumer it names: THeroScreenWindow::
+    // WindowHandler's specialty arm strcpy's exactly this displacement
+    // into gText before the describe dialog. Sliced only in hero.obj's
+    // view so no other compiland's declarator count moves.
+    const char* longText;       // +0x24
+#else
     char pad_20[0x8];
+#endif
 };
 SIZE(THeroSpecificAbility, 40);
 

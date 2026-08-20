@@ -1424,6 +1424,15 @@ public:
 #ifdef HOMM3_HERO_OBJ_DECLS
     void record_show_hero(hero* who, signed char player, type_point point,
                           unsigned char reset);
+    // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
+    // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
+    // 0x74 and 0x75. Both are `ret 8` taking (hero*, dialogType); the
+    // caller loads ECX with gpGame, which is what places them on this
+    // class even though neither body dereferences `this`. Both NAMES are
+    // role-derived and PROVISIONAL - no surviving symbol covers either -
+    // and the pair is gated to the one compiland that calls them.
+    void ShowMoraleInfo(const hero* who, int dialogType);
+    void ShowLuckInfo(const hero* who, int dialogType);
 #endif
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // Retail-only 0x49c720. SwapHeroes and hero::Deallocate (0x4d9ec0)
@@ -1508,7 +1517,7 @@ public:
     // against GetHero's 36 - so this is a separate inline, not a forwarder.
     hero* GetCurrHero();
     town* GetCurrTown();
-#ifdef HOMM3_TOWNMGR_VIEWARMY_DECLS
+#if defined(HOMM3_TOWNMGR_VIEWARMY_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
     // town page opens over a troop slot; declared here for
     // townManager::DoCommand's two call sites, not reconstructed. The

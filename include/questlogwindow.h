@@ -44,6 +44,11 @@ public:
 };
 SIZE(TQuestLogWindow, 0x74);
 
+// Defined in src/questlogwindow.cpp. Declared here for its second
+// consumer: THeroScreenWindow::WindowHandler's quest-log button arm calls
+// it with the current hero's owner (/Gr, the id in ecx).
+void DoQuestLog(int player);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:34, dc 0x1165dc) void QuestSliderCallback(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:142, dc 0x116ccc) void DoQuestLog(int player);
