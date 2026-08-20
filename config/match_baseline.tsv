@@ -414,7 +414,7 @@ armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x4ab20
 armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x496a0
 armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x4ab00
 armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4ab80
-armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	79.5363	79.5363	79.5363	0x4b620
+armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	80.0168	80.0168	80.0168	0x4b620
 armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000	100.0000	100.0000	0x49e90
 armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x496c0
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60

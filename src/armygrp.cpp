@@ -1595,9 +1595,25 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // reach it (measured 2026-08-20): respelling the `!progress && a < 7` scan as
 // an explicit `dedup_scan:` label with `++a; goto dedup_scan;` at the foot -
 // the un-rotated top-tested form retail emits - is BYTE-FLAT at 79.5363. VC6
-// rotates it back. The frame slot is the live lead, not the loop form. Artificial volatile qualifiers,
+// rotates it back. Artificial volatile qualifiers,
 // alternate outer-loop indices and goto rewrites worsened the comparison and
 // were reverted.
+// WHAT DOES REACH IT IS LIFTING THE TEST OUT OF THE CONDITION (79.5363 ->
+// 80.0168, 2026-08-20).  `for (a = 1; a < 7; ++a) { if (progress) break; ... }`
+// gives retail's eighteenth conditional branch where `!progress && a < 7`
+// gives seventeen: VC6 rotates a compound loop CONDITION and cannot rotate
+// away a `break` statement that is the loop's first statement.  The goto
+// rewrite failed because it moved the same test, not because the shape was
+// unreachable.
+// THE FRAME SLOT IS STILL OPEN, and the diff now names it exactly.  Retail
+// spills BOTH walkers to negative slots (`lea ebx,[ebp-X] / lea edi,[ebp-Y]`,
+// both stored) and puts `processed` in the recycled `ag` parameter home;
+// this compile coalesces the walkers - it reads the type walker as
+// `[edi - K]` off the troop walker - and spends the parameter home on the
+// surviving walker instead.  Swapping the two walker declarations was
+// measured against that and is 0.06 WORSE (79.9609), so declaration order is
+// not the knob; what is needed is a spelling VC6 cannot fold into one
+// induction variable.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
@@ -1634,8 +1650,9 @@ unsigned char armyGroup::Merge(armyGroup* ag)
                         ag1.armies[i] = type;
                     } else {
                         unsigned char progress = 0;
-                        for (int a = 1; !progress
-                                        && a < ARMY_GROUP_SLOT_COUNT; ++a) {
+                        for (int a = 1; a < ARMY_GROUP_SLOT_COUNT; ++a) {
+                            if (progress)
+                                break;
                             int b;
                             for (b = a;
                                  b < ARMY_GROUP_SLOT_COUNT
