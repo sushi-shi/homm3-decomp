@@ -2763,7 +2763,7 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 
 // The nine-byte serialized spell set, unpacked a bit at a time.  Three sites
 // deserialize one - readTownData's two masks and readHeroData's - and all
-// three are written through this helper rather than longhand for the same
+// three are written through a helper rather than longhand for the same
 // per-caller /Ob2 reason readQuestGuardArm and resizeSeerHutList exist: a
 // function this small cannot afford the register/scheduling mass the loop
 // costs its caller, and the caller comes out closer to retail without it.
@@ -2771,17 +2771,47 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 // 82.0000 -> 82.0785, which is inside the noise and kept for uniformity
 // rather than for the score.
 //
-// It costs no symbol - mapcell.obj still carries exactly 67 functions -
-// because /Ob2 expands it at every one of the three sites.
+// They cost no symbol - mapcell.obj still carries exactly 67 functions -
+// because /Ob2 expands them at every one of the three sites.
 //
 // The `/ 8` and `% 8` are SIGNED: retail's `and ecx,0x80000007` with its
 // negative fixup, and the `cdq / and edx,7 / add / sar 3` pair, are what an
 // `int` counter produces and a shift-and-mask spelling would not.
+//
+// THE TWO CALLERS SPELL THE BIT STORE DIFFERENTLY, AND THE BYTES SAY SO
+// (2026-08-20).  A bitset<70> bit store reaches `_Xran` one level down through
+// `set(pos, val)` and two levels further through `operator[]` ->
+// `reference::operator=` -> `set`, and that DEPTH is what decides whether VC6
+// leaves `_Xran` as a call or expands its whole throw path inline.  Retail
+// readTownData CALLS bitset<70>::_Xran (0x4d1c80) exactly ONCE - one call
+// covering two mask loops, the cross-jumper having merged the two
+// argument-less throw blocks - and never reaches __CxxThrowException itself.
+// Retail readHeroData is the exact mirror: no _Xran call at all, and
+// __CxxThrowException@8 (0x617547) TWICE - one expansion for its mask loop and
+// one for the single-spell store in the Armageddon's Blade arm.  So the two
+// functions were written against different spellings and cannot share one
+// helper:
+//   readTownData   `set(i, v)`      82.0785 -> 94.3896  (+12.31)
+//   readHeroData   `(*spells)[i]=v` 83.7667; `set(i, v)` costs it 83.7528,
+//                  and `spells.set(spell, 1)` on the single-spell store costs
+//                  2.26 more (83.7528 -> 81.4958).
+// This RETIRES the "MEASURED AND REJECTED" probe readTownData used to carry:
+// that one wrote a single mask longhand to split the two range checks apart,
+// which is not what retail did - retail keeps both loops the same shape and
+// moves the whole throw out of line by LOWERING THE STORE'S DEPTH.
 static void unpackSpellMask(std::bitset<70>* spells,
                             const unsigned char* mask)
 {
     for (int i = 0; i < 70; ++i)
         (*spells)[i] = (mask[i / 8] & (1 << (i % 8))) != 0;
+}
+
+// readTownData's spelling: `set` one level down, so `_Xran` stays a CALL.
+static void unpackTownSpellMask(std::bitset<70>* spells,
+                                const unsigned char* mask)
+{
+    for (int i = 0; i < 70; ++i)
+        spells->set(i, (mask[i / 8] & (1 << (i % 8))) != 0);
 }
 
 // E:\gamedcs\mapcell.cpp:232 - TTownEvent::Read in the Dreamcast roster
@@ -2846,6 +2876,13 @@ static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
 // The tail resolves a RANDOM_TOWN's faction: the alignment byte's player slot
 // if that slot is playable at all, else the town's own owner, else a roll -
 // widened to nine alignments only when the scenario is expansion-era.
+//
+// Residual (94.3896%): 82.0785 -> 94.3896 on the bit-store depth, 2026-08-20
+// (unpackTownSpellMask's note has the derivation).  What is left is NOT the
+// inliner any more - predict-inline reports the call multisets AGREE, 24
+// against 24, where before the edit it read 23 against 24 with retail's lone
+// bitset<70>::_Xran unaccounted for.  The rest is register/scheduling:
+// why-branch still has base 50 vs retail 54 conditional branches.
 VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
@@ -2931,16 +2968,16 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         memset(spellBuf, 0, sizeof(spellBuf));
     } else {
         infile->Read(spellBuf, sizeof(spellBuf));
-        // MEASURED AND REJECTED: writing this first mask longhand so that one
-        // of the two bitset<70> range checks inlines - predict-inline says
-        // retail CALLS bitset<70>::_Xran (0x4d1c80) exactly once here and we
-        // never do, so the split looks right. 82.0785 -> 79.9793.
-        unpackSpellMask(&tempTown.fixedSpells, spellBuf);
+        // The single retail `call bitset<70>::_Xran` at 0x501dbb covers BOTH
+        // mask loops - see unpackTownSpellMask's note.  (An older probe wrote
+        // this first mask longhand to split the two range checks apart and
+        // measured 82.0785 -> 79.9793; the split was the wrong reading.)
+        unpackTownSpellMask(&tempTown.fixedSpells, spellBuf);
     }
 
     if (infile->Read(spellBuf, sizeof(spellBuf)) < sizeof(spellBuf))
         return -1;
-    unpackSpellMask(&tempTown.spells, spellBuf);
+    unpackTownSpellMask(&tempTown.spells, spellBuf);
 
     if (infile->Read(&numTownEvents, sizeof(numTownEvents))
         < sizeof(numTownEvents))
@@ -3053,6 +3090,15 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
 // writes as `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688), and
 // readObjectType's exactness proving bitset<48>::_Xran (0x41b410) is CALLED
 // on both sides.
+//
+// AND THAT FIRST ONE NOW HAS ITS CAUSE (2026-08-20).  It is not a preference:
+// retail readHeroData reaches __CxxThrowException@8 TWICE and never calls
+// bitset<70>::_Xran, so BOTH of its bit stores expand the throw inline, which
+// is what `operator[]` -> `reference::operator=` -> `set` produces and what
+// `set(pos, val)` does not.  readTownData is the mirror and needs `set` -
+// hence the two helpers.  Re-measured here: `set` in the mask helper costs
+// 83.7667 -> 83.7528, and `spells.set(spell, 1)` on the single-spell store
+// costs 83.7528 -> 81.4958.
 //
 // Moving the mask loop into unpackSpellMask is worth another two points
 // (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
