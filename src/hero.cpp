@@ -4065,6 +4065,19 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
 // source spelling of an arm can reach a decision made over all of them.
 //
+// THE NUMERATOR IS NOW SWEPT HERE TOO, AND IT CONFIRMS SHRINK
+// (2026-08-20). The `if (0)` instrument at 1/2/3/4 statements is byte-flat
+// at 74.4733, steps DOWN to 69.9163 at 5, holds there at 10, and falls
+// again to 69.1973 at 20 and 66.9696 at 128. So there is no narrow peak
+// above baseline and growth strictly hurts - the same direction the
+// earlier helper split (56.54 -> 71.10) already paid in - which means any
+// further movement has to come from SHRINKING. One more dose was tried and
+// is byte-flat: lifting the two SHIFT arms into a `wh_shift_toggle()`
+// file-static (74.4733, with SetupHeroView 99.5294 and
+// UpdateHeroScreenStatusBar 92.3601 both unmoved), so that dose sits under
+// the step. The step is worth about five statements, so the next attempt
+// should lift a block of roughly that size rather than a bigger one.
+//
 // THE C2 GENERATION IS NOW RULED OUT TOO (2026-08-20): `homm3 vc6 ab run`
 // on this function - the first Track R run outside the original corpus -
 // reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
@@ -5714,6 +5727,41 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // only other bounds-checked accessor, `at(_P)`, checks TWICE (once itself
 // and once through the `test` it forwards to) where retail checks once.
 // The depth ladder has no rung below `test`.
+//
+// FIFTH, and it finally names the MECHANISM (2026-08-20, several builds).
+// The blocker is not the budget and not the depth ladder: VC6 will not
+// expand a callee that introduces EH STATE into a caller that has NO EH
+// FRAME. Retail's body carries a full /GX frame here (`push -1 / push
+// hero_in_enum_range_e2840_unwind01 / fs:[0]`); ours carries none,
+// because nothing we wrote needs unwinding - and `_Xran`'s expansion is
+// exactly what would need it, so the decision is self-blocking.
+// PROVED by adding one destructible local (`std::string ehProbe;`) and
+// changing nothing else: `?_Xran@?$bitset@$0BD@@std@@ABEXXZ` DISAPPEARS
+// from the call census and retail's whole throw path arrives in its place
+// - the "invalid bitset<N> position" literal twice, `basic_string::assign`,
+// `??0logic_error`, `__TI3?AVout_of_range@std@@`, `??_7out_of_range` and
+// `__CxxThrowException@8` - and the row goes 44.9281 -> 51.4748, with that
+// +6.55 still carrying the probe's own ctor/dtor as noise.
+// This also retires the caller-size verdict properly. The earlier note
+// rejected it on ONE 8-statement dose; the `if (0)` instrument was run
+// here at 8/16/32/64/128/256 inert statements and EVERY one is byte-flat
+// at 44.9281, so the numerator has no reach on this row at any dose.
+// The probe is NOT shippable - it is invented source. What is still
+// missing is the faithful construct that gives retail its frame, and the
+// -52 frame delta is NOT independent evidence for one: the throw path's
+// own message string and `out_of_range` temporaries account for that
+// space, so the frame is a CONSEQUENCE of the expansion rather than a
+// separate missing local. Retail's call census outside the throw path is
+// exactly ours (HeroFn_004E2550 x2, remove_artifact, equip_artifact, two
+// data refs), so no extra statement is hiding here.
+// Also measured, one build each: `#pragma inline_depth(255)` on the guard,
+// byte-flat at 44.9281 (a clean confirmation of "depth is not budget");
+// naming the mask as a `const std::bitset<19>&` local, byte-flat; and
+// `at(slot)` for `test(slot)`, 46.2878 (+1.36) - which REFUTES this note's
+// own reasoning that at()'s second check must lose, but is NOT banked,
+// because at 45% this body is nowhere near its plateau and a 1.4-point
+// spelling delta there is exactly the low-mass inversion. Re-measure it
+// once the EH frame is solved.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {

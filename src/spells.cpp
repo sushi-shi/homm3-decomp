@@ -3142,6 +3142,10 @@ long combatManager::ModifySpellDamageForSpells(long damage, SpellID spell,
 // pick, `volatile int x`, closes 13 of its 283 slots and MEASURES
 // 84.96 -> 82.02 - the low-mass inversion for the third time in this
 // TU - and all twenty other mutations are worse still.
+// THE NUMERATOR IS ALSO RULED OUT (2026-08-20): the `if (0)` cb instrument
+// at 8, 32 and 128 inert statements is byte-flat at 84.9579, so no
+// caller-size dose re-prices this body's inline decisions and the
+// register-homing reading above stands as the whole residual.
 VA(0x005a7c80, 0x408)  // order-map+arity, dc 0x156ec4
 void combatManager::Earthquake(int level)
 {

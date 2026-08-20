@@ -6358,6 +6358,63 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // the callee identity. The identical teardown IS reachable: retail
 // expands it and we match it byte for byte inside the seerhut builders
 // themselves, so it is a budget question here and not a spelling one.
+//
+// THE WHOLE `_Tidy` LINE OF INQUIRY IS NOW CLOSED, AND IT WAS NEVER WORTH
+// MORE THAN A POINT (measured 2026-08-20, five builds). Four lanes and
+// three briefs have routed this row off `predict-inline`'s
+// `?_Tidy@... base x3 vs retail x2` UNDER-inline line. That line does not
+// describe the body:
+//   - a reloc census over the WHOLE 0x2600 B of our emitted QuickInfo
+//     finds ZERO `_Tidy` calls; retail's body has TWO, at fn+0x272 and
+//     fn+0x3f3, both on `[ebp-0x30]` = `cellDescription`. In the body the
+//     direction is therefore OVER-inline (we expand, retail calls) - the
+//     OPPOSITE of the label the tool prints and of the "grow the caller"
+//     verdict written above. Whatever the tool's base column counts, it is
+//     not what is emitted here; do not route this row off its sign again.
+//   - GROW was titrated end to end with the `if (0)` instrument: 0..24
+//     inert statements 90.2004, 28..64 -> 90.6343, 128 -> 90.6075,
+//     256/512 -> 88.4786. The numerator's entire reach on this row is
+//     +0.43, and collecting it needs 28 statements of real mass.
+//   - SHRINK works and is the correct direction: lifting the coordinate/
+//     sizing/NormalDialog tail into a single-call-site static flips the
+//     census from 0 `_Tidy` calls to 3, and OUR FIRST TWO LAND EXACTLY ON
+//     RETAIL'S - fn+0x21d and fn+0x39d against retail's fn+0x272 and
+//     fn+0x3f3, same `[ebp-0x30]` receiver. The third, at fn+0x99a on
+//     `[ebp-0x258]`, is the QUEST_GUARD temp that retail EXPANDS at
+//     fn+0x9dd - so the positional reading above was right about that one
+//     site and wrong about the direction of the other two. Net -0.42
+//     (89.7827); re-growing 4..24 inert statements on top holds the census
+//     at 3 and the score at 90.2154, so the three sites are priced
+//     together and no dose separates them.
+// The reachable spread over this whole family is 89.78 .. 90.63 against a
+// 90.20 baseline. The residual is NOT the string surface. Retail emits
+// 3055 instructions here against our 3160; the extra 105 are spread over
+// ~50 hunks, and the two largest real deltas both sit in the entry block:
+// retail takes THREE callee-saved registers (`push ebx` in the prologue,
+// `playerBit` living in ebx) where we take two and spill it, and
+// `GetHero` has the opposite arm polarity - retail `cmp eax,-1 /
+// je <null-arm>` with the null arm placed LAST and its 0 materialised
+// unconditionally in edi BEFORE the branch, against our `cmp ecx,-1 /
+// jne <hero-arm>` with an immediate `mov [ebp-B],0` falling through.
+// Route those, not the inliner.
+//
+// THE GetHero ARM ORDER IS REAL AT THIS SITE AND THE ACCESSOR IS STILL
+// RIGHT - both measured, 2026-08-20, and the pair is the useful part.
+// Writing the test longhand HERE with retail's polarity
+// (`if (player->currHeroId != -1) currHero = &gpGame->heroes[...]; else
+// currHero = 0;`) is worth **+0.20** (90.2004 -> 90.4033), which confirms
+// the byte read. But flipping `game::GetHero` itself to the `!= -1`
+// order - the honest version of the same change - costs the tree
+// **26 exact functions** (1526 -> 1500, 95.80 -> 95.65 fuzzy), so
+// game.h:1955's recorded order is correct and is NOT to be touched:
+// HasCapitol and TBottomViewKingdom prove it, and this measurement is
+// the third proof. That leaves QuickInfo's site as a genuine ANOMALY -
+// either its source reaches the hero through some accessor we have not
+// identified (it is NOT GetCurrHero: retail loads the id as a DWORD here,
+// where GetCurrHero's tell is a CHAR compare), or VC6 flipped the arms
+// on context. The +0.20 longhand is deliberately NOT shipped: it
+// hand-expands an accessor that is proven correct everywhere else, and
+// entrenching that would be worse than the fifth of a point is worth.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
