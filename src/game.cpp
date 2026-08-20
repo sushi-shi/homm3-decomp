@@ -3144,12 +3144,26 @@ int game::Load(TAbstractFile* infile)
 // frame slot; spelled as an array, and declared INSIDE the hero loop
 // rather than at function scope, it coalesces the way retail's does.
 //
-// Residual (85.4129%): three things, all measured.
-//   * `sub esp,0x5b8` against retail's 0x5c0, two slots. Retail spends
-//     SEVEN dwords between -0x10 and -0x28 with byte temps at -0xd and
-//     -0x15; we spend FIVE, packing three byte temps into the -0x10
-//     dword. No spelling tried moves it.
-//   * ONE guarded-return teardown still has the wrong destructor shape.
+// 85.4129 -> 89.1864, 2026-08-20 (cold-combatpath lane), two of the three
+// residual items below closed:
+//   * THE FRAME IS RETAIL'S NOW (sub esp,0x5c0 both sides): the two
+//     missing dwords were the five BLOCK-scoped serialization buffers
+//     (four `char char_buffer` blocks and one `short short_buffer`)
+//     sharing slots; promoting them to two more FUNCTION-scope locals
+//     (`char char_buffer; short short_buffer;`) is retail's seven-dword
+//     temp pool exactly (+0.10 alone - the frame is the enabler, not
+//     the win; the doses-combine rule in person).
+//   * THE towns.size() OVER-INLINE IS SPELLABLE, +3.68: a statement pin
+//     covers a whole `for` including its body, but PRAGMA STATE IS
+//     PER-SITE AT COLLECTION - so `i = 0; #pragma inline_depth(0)
+//     while (i < towns.size()) { #pragma inline_depth() <body>; ++i; }`
+//     confines the pin to the loop CONDITION: size() goes out of line
+//     (retail's call) while towns[i].save's receiver subscript stays
+//     inline. New lever: PIN A LOOP CONDITION ALONE by resetting the
+//     pragma as the first body line.
+// Residual (89.1864%): one item, measured and bounded.
+//   * ONE guarded-return teardown still has the wrong destructor shape
+//     (predict-inline: `_Tidy base x35 vs retail x36`).
 //     Retail splits the two pool loops: the lithPools failure expands
 //     ~SavedGameHeader and CALLS `_Tidy` (site 0x48 at 0x556e, falling
 //     through into the shared tail), while the lithExitPools failure
@@ -3173,8 +3187,10 @@ int game::Save(TAbstractFile* outfile)
 {
     char byteValue;
     char extraByteValue;
+    char char_buffer;
     short shortValue;
     short extraShortValue;
+    short short_buffer;
     int zero;
     SavedGameHeader saved;
     saved.Reset();
@@ -3182,7 +3198,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = gUnnamed69950c;
+        char_buffer = gUnnamed69950c;
         outfile->Write(&char_buffer, sizeof(char_buffer));
     }
     outfile->Write(artifactDisabled, sizeof(artifactDisabled));
@@ -3193,7 +3209,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = field_1f680.size();
+        char_buffer = field_1f680.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
             return -1;
@@ -3231,7 +3247,7 @@ int game::Save(TAbstractFile* outfile)
 
     int i;
     {
-        short short_buffer = generators.size();
+        short_buffer = generators.size();
         if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
             sizeof(short_buffer)) {
         generators_failed:
@@ -3249,7 +3265,7 @@ int game::Save(TAbstractFile* outfile)
         return -1;
 
     {
-        char char_buffer = field_4e3e8;
+        char_buffer = field_4e3e8;
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
             goto obelisk_failed;
@@ -3267,15 +3283,19 @@ int game::Save(TAbstractFile* outfile)
     }
 
     {
-        char char_buffer = towns.size();
+        char_buffer = towns.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
         towns_failed:
             return -1;
         }
-        for (i = 0; i < towns.size(); ++i) {
+        i = 0;
+#pragma inline_depth(0)
+        while (i < towns.size()) {
+#pragma inline_depth()
             if (towns[i].save(outfile) < 0)
                 goto towns_failed;
+            ++i;
         }
     }
 
