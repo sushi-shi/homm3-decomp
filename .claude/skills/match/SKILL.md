@@ -31,11 +31,12 @@ only mapcell.cpp's two new VA claims and re-delinking returned it to exactly
 - a cross-unit "regression" after a merge that added claims MAY be this
   rather than a code change — check whether the unit's source and headers
   actually moved before hunting a spelling. But do not assume it: of the
-  three observed instances, only one was the delink generation. The other
-  two were `recruitUnit::Update` again, both caused by real ungated `game.h`
+  FOUR observed instances it is two and two. Two were real ungated `game.h`
   additions (a `type_point` member that made a class non-POD, and a nested
-  enum), both diagnosed and restored to 90.8376 by gating them. Rule out the
-  source FIRST — it is cheap, and it is the more common cause;
+  enum), both restored by gating; two were the delink generation, each PROVEN
+  by a revert control — stash the lane's source and headers, re-delink, and
+  see the row return to its old value exactly. Rule out the source FIRST
+  because it is cheap, then run the revert control rather than assuming;
 - the newer, more-claimed reference is the more ACCURATE one, so the lower
   number is generally the honest one. Accept it with the cause recorded, do
   not chase it;
@@ -214,6 +215,31 @@ candidate (cross-TU ones never are).
 (byte-inert A/B). Reordering the init list changes nothing. But a member
 assigned as the FIRST BODY STATEMENT schedules after the later members'
 default construction - worth +7.3 on `advManager::advManager`.
+
+**THE SWITCH/IF-CHAIN TELL IS THE LOWERING, NOT THE COMPARE ORDER**
+(2026-08-20, measured both directions in one lane). VC6 lowers a `switch`
+with `dec/je` and SUNK arm bodies; an if-chain with `cmp/jne` and INLINE arms.
+`DoVictory` needed an if-chain where a switch was written; `ViewArmy` needed a
+switch where an if-chain was written. Read the lowering, do not guess from how
+the conditions look.
+
+**DECLARATION ORDER BEATS SCHEDULING.** When retail's loads sit in FRONT of a
+constructor call, that is declaration order, not a scheduler decision - no
+scheduler may move a load across an opaque call. Moving a loop iterator's
+declaration AND initialiser above the string/vector locals took
+`show_looted_artifacts` 97.41 -> 100.
+
+**SMALL SPELLINGS THAT ARE NOT INTERCHANGEABLE** (same lane):
+- `std::_cpp_min`, NOT `std::min` — windows.h's macro breaks the latter.
+- A const-ref argument needs a REAL LOCAL: `_cpp_min(member, cast)` binds the
+  member lvalue directly where retail copies to a temp. Landing the result in
+  a third `int` local rather than assigning into a `short` stopped a
+  re-narrowed load (+3.5).
+- `= {0}`, NOT `= ""`, for a zeroed char buffer — `= ""` makes VC6 LOAD the
+  literal's first byte.
+- A dead store retail keeps needs `volatile`; a plain local is dead-stored
+  away (+0.8). Flag it in-source as a codegen claim, not a proven token.
+- **A wider load than the store means an int-parameter inline between them.**
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 
