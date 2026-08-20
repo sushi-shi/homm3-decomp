@@ -1155,6 +1155,10 @@ DATA(0x00698a84) extern int gHeroScreenHeroPosition;
 // stays dead" latch, a full DWORD. The name is role-derived from
 // HeroView's own parameter and is PROVISIONAL.
 DATA(0x00698a90) extern int gHeroScreenNoDismiss;
+// HeroView's FIRST argument, stashed on entry beside the one above
+// (0x4e1805 stores ECX straight into this cell). Role-derived from that
+// parameter and PROVISIONAL for the same reason.
+DATA(0x00698a50) extern int gHeroScreenHeroId;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot

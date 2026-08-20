@@ -41,7 +41,11 @@
 #define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_HERO_OBJ_DECLS
+// advManager::FizzleCenter - HeroView's dismiss path calls it. The one
+// declarator, not the whole events view; advmgr.h's own note records why.
+#define HOMM3_HERO_FIZZLE_API
 #include "advmgr.h"
+#undef HOMM3_HERO_FIZZLE_API
 #include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
@@ -205,6 +209,19 @@ static const SpellID kSpellHaste = 0x35;
 // and the level are not, and nothing else in the image wants either.
 static const SpellID kSpellScuttleBoat = 0x1;
 static const int kFifthLevelSpell = 5;
+// HeroView's two remaining bare numbers. 0x81 is the hero screen's
+// "dismiss" result, the only dialogReturn that reaches hero::Deallocate;
+// winmgr.h's DIALOG_RETURN_* band is 0x78xx and does not carry it, and
+// that header's own note measures what growing it costs. 6 is the text
+// bank SetWinText loads for this window.
+static const int kDialogReturnDismissHero = 0x81;
+static const int kHeroScreenWinText = 6;
+
+// window.obj's text setter, retail 0x5ffa30, a /Gr free function
+// (heroWindow* in ecx, the text id in edx). Same declaration townmgr.cpp
+// already carries; hero.obj is the second claimed consumer, and the pair
+// moves to window.h when a third arrives.
+void SetWinText(heroWindow* win, int which);
 
 // Experience needed to REACH each level, levels 1..12. Retail keeps it
 // in .DATA at 0x679c88 (not .rdata - hence no `const`), immediately
@@ -3874,20 +3891,85 @@ void hero::UpdateStats()
     gpHeroScreenWindow->BroadcastMessage(&msg);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4273
 // /Gr FREE function - it reads ecx AND edx and stashes them into the
 // hero-view globals (0x698a50 = iHeroID, 0x698a90 = second argument)
 // before calling advManager::TrimLoopingSounds; a member would leave edx
 // alone. That arity is HeroView's, not any THeroScreenWindow method's.
+//
+// The whole hero screen, open to close. Four decoding notes, all byte-forced:
+//  - `gpGame->GetHero(iHeroID)` is the game.h INLINE accessor, not an
+//    open-coded index: retail's own `cmp esi,-1 / null` arm in front of
+//    the 1170-byte stride IS that accessor's -1 test expanded here.
+//  - the three position stores are FIELD assignments into an uninitialized
+//    type_point, not its (x,y,z) constructor - retail XORs against the
+//    slot's existing contents, which is MSVC's bitfield read-modify-write,
+//    and it merges y and z into ONE word RMW because they share the second
+//    short (y bits 0..9, z bits 10..13).
+//  - the mobility store is GetMobility()'s no-argument wrapper EXPANDED,
+//    which is why the shifted flag bit is written out here; hero.cpp:1715
+//    already open-codes the same idiom for the same reason.
+//  - slot 6 of the window vtable is heroWindow::DoModal and slot 0 the
+//    scalar deleting destructor, so the tail `push 1 / call [eax]` is a
+//    plain `delete`.
+// `localPlayer` is a NAMED TEMPORARY on purpose and is the last 3.6%:
+// written as the one-liner `gpGame->GetLocalPlayer()->FindHero(...)` VC6
+// pushes the argument first and calls GetLocalPlayer second (96.43%),
+// where retail evaluates the object expression first. Splitting the
+// call out forces retail's order and takes it to 100%.
 VA(0x004e1800, 0x24F)  // arity (/Gr, 2 register args) + order-map, dc 0xd2e80
 int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView)
 {
-    // @stub
-}
+    gHeroScreenNoDismiss = bNoDismiss;
+    gHeroScreenHeroId = iHeroID;
+    gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+    gHeroScreenArmyStripLive = 0;
+    gpAdvManager->TrimLoopingSounds(4);
 
-#endif  // @carcass
+    gpCurrentHero = gpGame->GetHero(iHeroID);
+
+    gpHeroScreenWindow = new THeroScreenWindow();
+    if (!gpHeroScreenWindow)
+        MemError();
+    SetWinText(gpHeroScreenWindow, kHeroScreenWinText);
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gpCurrentPlayer->currHeroId == gpCurrentHero->id) {
+        type_point position;
+        position.x = gpCurrentHero->x;
+        position.y = gpCurrentHero->y;
+        position.z = gpCurrentHero->z;
+        NewmapCell* cell = gpAdvManager->GetCell(position);
+        if (cell->type != HERO || !cell->is_trigger)
+            gpAdvManager->DemobilizeCurrHero(0, 0);
+    }
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    gHeroScreenHeroPosition = localPlayer->FindHero(gpCurrentHero->id);
+    gpHeroScreenWindow->SetupHeroView();
+
+    if (bQuickView) {
+        gpWindowManager->DoQuickView(gpHeroScreenWindow);
+    } else {
+        gpHeroScreenWindow->DoModal(0);
+        gpAdvManager->Reseed(0, 0);
+    }
+    delete gpHeroScreenWindow;
+
+    if (gpWindowManager->dialogReturn == kDialogReturnDismissHero) {
+        gpCurrentHero->Deallocate(1, 0);
+        if (!bAlreadyFaded) {
+            gpAdvManager->FizzleCenter(0);
+            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+            gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        }
+        return 1;
+    }
+    gpCurrentHero->maxMovePoints =
+        gpCurrentHero->GetMobility((gpCurrentHero->flags >> 18) & 1);
+    gpCurrentHero = 0;
+    return 0;
+}
 
 // E:\gamedcs\hero.cpp:4349
 // Repaints the whole hero screen from gpCurrentHero. thiscall, no

@@ -1355,8 +1355,14 @@ public:
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);
-    void FizzleCenter(int whichSound);
 #endif  /* HOMM3_EVENTS_VIEW */
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_HERO_FIZZLE_API)
+    // HeroView (0x4e1800) calls this on the dismiss path. hero.obj takes
+    // the ONE declarator through its own gate rather than joining the
+    // whole events view, whose other three members it never names -
+    // declarator count is what moves the include-set class here.
+    void FizzleCenter(int whichSound);
+#endif
     // 0x4183d0, reconstructed in advmgr.cpp; the Dreamcast roster gives
     // the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller that
     // needs the declarator, and advmgr.cpp is the DEFINER - without a
