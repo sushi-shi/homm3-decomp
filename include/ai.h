@@ -15,24 +15,26 @@ struct type_AI_combat_parameters;
 enum EAreaAttackCreature {
     CREATURE_MAGOG = 45,
     CREATURE_POWER_LICH = 65,
-    // The three creature CASTERS this TU names that armygrp.h's roster
-    // does not already carry, kept here for exactly the reason the two
-    // above are. choose_spell_action's jump table (0x421280) proves the
-    // set: creature ids 0x0d and 0x33 route to the resurrect chooser,
-    // 0x25 and 0x5b to the generic creature-spell chooser, 0x86 to the
-    // Faerie Dragon one - and 0x0d / 0x86 are already
-    // CREATURE_ARCHANGEL / CREATURE_FAERIE_DRAGON there. Complete
-    // numbering puts the other three exactly at the dwelling-run tops
-    // the ids demand: Master Genie above Genie 0x24, Pit Lord above Pit
-    // Fiend 0x32, Dragon Fly above Serpent Fly 0x5a. NH3API spellings.
-    CREATURE_MASTER_GENIE = 0x25,
+    // CORRECTED 2026-08-20: this run used to declare MASTER_GENIE and a
+    // `CREATURE_DRAGON_FLY = 0x5b` here. army::cast_spell (0x448260)
+    // refutes the 0x5b name: its creature switch actively casts
+    // SPELL_BLOODLUST for 0x5b, which is the OGRE MAGE's cast (dragon
+    // flies never actively cast; their Weakness is an on-attack
+    // effect), and the Complete numbering agrees - the Stronghold run
+    // Goblin 0x54 .. Ogre 0x5a puts Ogre Mage on 0x5b, while Serpent
+    // Fly is 0x69 in the Fortress run. Both casters now live in
+    // armygrp.h's roster (CREATURE_MASTER_GENIE / CREATURE_OGRE_MAGE),
+    // which every consumer of this enum already includes; only the two
+    // names armygrp.h still lacks stay here. choose_spell_action's jump table (0x421280)
+    // remains the witness for the SET: 0x0d and 0x33 route to the
+    // resurrect chooser, 0x25 and 0x5b to the generic creature-spell
+    // chooser, 0x86 to the Faerie Dragon one.
     // The creature a Pit Lord's Animate Dead raises: choose_resurrect_
     // action (0x421000) builds a scratch army of exactly this type to
     // price the raise with, and only on the Pit Lord arm. 0x30 is the
     // plain Demon, two slots below Pit Fiend in the same run.
     CREATURE_DEMON = 0x30,
     CREATURE_PIT_LORD = 0x33,
-    CREATURE_DRAGON_FLY = 0x5b,
     // The one pair choose_melee_target names: 0x421680 compares
     // current_army->creatureType against 0x48 and 0x49 back to back and
     // gives both the same arm - take the raw hex value instead of adding

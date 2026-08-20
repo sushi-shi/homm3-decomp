@@ -361,11 +361,15 @@ public:
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
 #ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.origWalkCycleTime (members.csv army@104), the slot the
+    // iLuckStatus note below always placed here. Sliced 2026-08-20 by
+    // CancelIndividualSpell (0x444510): its HASTE and SLOW arms both
+    // restore frameInfoWalkCycleTime (+0x158) from this word.
+    int origWalkCycleTime;         // +0x68
     // DC army.origHitPoints (members.csv army@108), the third of the
     // orig* trio after origPos 92/+0x5c and origSpeed 100/+0x64 that
     // this class already carries unshifted. ResetRound recomputes
     // hitPoints from it every round rather than from the live word.
-    char pad_68[0x4];
     int origHitPoints;             // +0x6c
     // DC army.iLuckStatus (members.csv army@112), UNSHIFTED in this band
     // exactly like origHitPoints 108/+0x6c above and origWalkCycleTime
@@ -640,8 +644,12 @@ public:
     char pad_154[0x4];
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
-    int frameInfoAttackStartCycleTime;
-                                  // +0x15c == sMonFrameInfo.iAttackStartCycleTime
+    // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
+    // iWalkCycleTime@72 and iFlightPixelSpan@80 exactly as the two
+    // proven neighbours sit here). Byte-proven by cast_spell (0x448260):
+    // the cast loop's per-frame delay is this word over the sequence's
+    // frame count.
+    int frameInfoAttackStartCycleTime; // +0x15c
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which
@@ -902,12 +910,28 @@ public:
     // below, so no array relation is asserted here.
     int blessAmount;              // +0x458
     int curseAmount;              // +0x45c
-    char pad_460[0x4];
+    // DC army.antiMagicSpellLevel (members.csv army@1084, the slot
+    // before bloodlustBonus 1088/+0x464 on the same +0x24 shift).
+    // Byte-proven by SetSpellInfluence (0x4448f0): its ANTI_MAGIC arm
+    // stores the per-mastery amount here and then cancels every
+    // standing spell whose traits level sits below it.
+    int antiMagicSpellLevel;      // +0x460
     // The two attack amounts get_adjusted_attack pairs with the
     // Bloodlust and Precision round counters above.
     int bloodlustAmount;          // +0x464
     int precisionAmount;          // +0x468
-    char pad_46c[0x10];
+    // Three more of the DC amounts run (members.csv army@1096/1100/1108
+    // weaknessPenalty / toughskinBonus / prayerBonus, on the same +0x24
+    // shift slayerLevel 1128/+0x48c below anchors), each byte-proven by
+    // CancelIndividualSpell (0x444510): its WEAKNESS arm adds +0x46c
+    // back onto attackSkill, its STONE_SKIN arm subtracts +0x470 from
+    // defenseSkill, and its PRAYER arm subtracts +0x478 from attack,
+    // defense and speed. The slot between them, DC 1104
+    // disruptiverayPenalty/+0x474, stays a pad until a body reads it.
+    int weaknessPenalty;          // +0x46c
+    int toughskinBonus;           // +0x470
+    char pad_474[0x4];
+    int prayerBonus;              // +0x478
     int moraleBonus;              // +0x47c
     int moralePenalty;            // +0x480
     int luckBonus;                // +0x484
@@ -1009,7 +1033,16 @@ public:
     int forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
     float slowFactor;             // +0x4c8
-    char pad_4cc[0xc];
+    // The tail of the DC amounts run on the +0x20 shift this band
+    // carries (DC 1188 forgetfulness_level -> +0x4c4 and DC 1192
+    // slowPenalty -> +0x4c8 anchor it): 1196 tailwindBonus, 1200
+    // diseaseDefensePenalty, 1204 diseaseAttackPenalty. Byte-proven by
+    // CancelIndividualSpell (0x444510): its HASTE arm subtracts +0x4cc
+    // from the speed word and its DISEASE arm adds +0x4d0/+0x4d4 back
+    // onto defenseSkill/attackSkill.
+    int tailwindBonus;            // +0x4cc
+    int diseaseDefensePenalty;    // +0x4d0
+    int diseaseAttackPenalty;     // +0x4d4
     // +0x4d8. combatManager::InitNonVisualVars (0x463c60) is the one
     // decoded reader: its closing walk scans each side's stacks and
     // raises the per-side latch at combatManager+0x1329c the moment it
@@ -1285,6 +1318,14 @@ public:
     void range_attack(army* armyToAttack);
 #endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
+    // 0x440500, reconstructed in army.cpp: the attacker's on-attack
+    // debuff roll (bind/blind/disease/curse/age/stone/poison/acid/
+    // paralyze); returns 1 for the three incapacitators.
+    unsigned char check_special_attack(army* target);
+    // 0x440bc0, EH-bearing carcass in army.cpp; declared for
+    // do_attack's kill-accounting tail.
+    void do_post_attack(army* target, int iDamage, int iKilled,
+                        int total_life);
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
@@ -1330,16 +1371,21 @@ public:
     // The DC prototype (army.cpp:4739) names the three parameters and
     // retail's `ret 0xc` agrees.
     void Cure(int level, int iSpellPower, const hero* casting_hero);  // 0x446500
-    // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
-    // address is not claimed here, only the declaration. spells.obj's
-    // SetMassSpellInfluence (0x5a66d0) is the located caller and its
-    // push order fixes the four slots exactly as the DC prototype has
-    // them. BEHIND A VIEW because this header is in almost every TU's
-    // include closure and its declarator count is already near an
-    // include-set boundary; src/spells.cpp is the only consumer.
+    // 0x4448f0, claimed and reconstructed in army.cpp (an earlier
+    // revision of this note said 0x4443f0 - a typo, that address is
+    // inside ProcessDeath's span; the carve row 0x4448f0/0xB99 with
+    // dc 0x499e8 = army.cpp:3816 is the body). spells.obj's
+    // SetMassSpellInfluence (0x5a66d0) and src/spells.cpp remain
+    // callers, and army.cpp now consumes the declaration too. BEHIND A
+    // VIEW because this header is in almost every TU's include closure
+    // and its declarator count is already near an include-set boundary.
 #ifdef HOMM3_ARMY_SPELLS_VIEW
-    // `mastery` is TSkillMastery, spelled int here because that typedef
-    // is not in this header's closure.
+    // `mastery` is DC's TSkillMastery, spelled int: herospec.h's enum
+    // is not in this header's closure, spells.cpp's
+    // SetMassSpellInfluence forwards a plain long into the slot, and
+    // the two spellings are byte-identical everywhere the body uses it
+    // (an index, two stores, one signed compare). Only the mangled
+    // name differs, and the VA claim owns the pairing.
     void SetSpellInfluence(int spell, int power, int mastery,
                            const hero* casting_hero);
 #endif
@@ -1616,6 +1662,10 @@ public:
 #ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
     void FaerieDragonSpell();                // 0x447510
     unsigned char Unnamed447fe0();           // 0x447fe0
+    // 0x448260, reconstructed in army.cpp: the animated creature-cast
+    // dispatcher. combatManager::SetNextArmy-family code is the retail
+    // caller; declared with its family here.
+    void cast_spell(long hex);
 #endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
