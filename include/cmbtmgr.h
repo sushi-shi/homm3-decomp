@@ -1617,6 +1617,11 @@ public:
     // gridIndex, combatSide, bitIndex, originalIndex - is read off the
     // second.
     void demonic_resurrection(const army* caster, army* target); // 0x5a7390
+    // 0x5a7560, carcass in spells.cpp; declared here because
+    // army::cast_spell's Archangel arm calls it (the carcass stub is a
+    // good-enough callee - the reloc pairs).
+    void Resurrect(army* target_army, long hit_points_resurrected,
+                   unsigned char temporary);
     // The three cells a WALL spell occupies, in the order
     // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
     // one a row above it (with a parity nudge that keeps the wall

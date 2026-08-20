@@ -605,7 +605,12 @@ public:
     char pad_fc[0x5c];
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
-    char pad_15c[0x4];
+    // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
+    // iWalkCycleTime@72 and iFlightPixelSpan@80 exactly as the two
+    // proven neighbours sit here). Byte-proven by cast_spell (0x448260):
+    // the cast loop's per-frame delay is this word over the sequence's
+    // frame count.
+    int frameInfoAttackStartCycleTime; // +0x15c
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which
@@ -1610,6 +1615,10 @@ public:
 #ifdef HOMM3_ARMY_TURN_ABILITY_VIEW
     void FaerieDragonSpell();                // 0x447510
     unsigned char Unnamed447fe0();           // 0x447fe0
+    // 0x448260, reconstructed in army.cpp: the animated creature-cast
+    // dispatcher. combatManager::SetNextArmy-family code is the retail
+    // caller; declared with its family here.
+    void cast_spell(long hex);
 #endif
     // Const on the DC roster's own mangling
     // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets

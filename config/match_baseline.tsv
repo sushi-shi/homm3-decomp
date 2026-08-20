@@ -332,6 +332,7 @@ army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
+army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
@@ -383,7 +384,6 @@ army	army_WalkTo	0.0000	0.0000	0.0000	0x41fa0
 army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
 army	army_attack_wall_45fd0	0.0000	0.0000	0.0000	0x45fd0
 army	army_can_cast_spell	0.0000	0.0000	0.0000	0x476c0
-army	army_cast_spell	0.0000	0.0000	0.0000	0x48260
 army	army_check_special_attack	0.0000	0.0000	0.0000	0x40500
 army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
@@ -1406,7 +1406,12 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # generation, and the newer, more-claimed reference is the more
 # accurate one. 88.24 is the honest number against today's target;
 # 90.84 was measured against a coarser one.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
+# RE-ACCEPTED 2026-08-20 (lane/army-recon2): the same 90.8376 <->
+# 88.2360 flip fired again when army.cpp's session landed new claims
+# and reconstructions (cast_spell exact among them) - the delink
+# generation moved, recruit.cpp and its headers untouched by the
+# regression commit. Same mechanism as above; hist keeps the peak.
+recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
