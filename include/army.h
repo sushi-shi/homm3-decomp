@@ -790,10 +790,15 @@ public:
     // the corroborating pair, not the proof.
     int morale;                   // +0x4e8
     int luck;                     // +0x4ec
-#ifdef HOMM3_ARMY_ROUND_VIEW
+// HOMM3_ARMY_RESET_LATCH_DECL admits field_4f0 ALONE, without the aura
+// vectors or army.cpp's round view: combatManager::NextArmy (0x465080)
+// gates its three disabled_* tests on this latch and needs nothing else
+// from either block. Both arms below still describe the same bytes.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_RESET_LATCH_DECL)
     // A per-round latch ResetRound clears before anything else. No
     // roster attests it and ResetRound is the only writer located so
-    // far, so the name is an address ordinal.
+    // far, so the name is an address ordinal. (DC calls it
+    // reset_this_round - see the aura-vector note below.)
     unsigned char field_4f0;       // +0x4f0
     // The four army-to-army relationship lists, and the retail layout
     // is fixed from BOTH ends: the DC roster carries exactly four
@@ -1525,6 +1530,30 @@ public:
     }
 #else
     unsigned char IsIncapacitated() const;                      // 0x41f380
+#endif
+    // 0x446e30 (737 B), the DC roster's army::new_turn (army.cpp:5177,
+    // dc 0x4ba88), attributed to army.obj by link order. Void and
+    // argument-less: combatManager::NextArmy (0x465080) calls it with
+    // the selected stack in ecx and nothing on the stack, once per stack
+    // as that stack comes up. Behind its own gate, and at the END of the
+    // class, because a bare declarator on a header this widely included
+    // is the include-set wall's trigger shape and C1XX numbers member
+    // handles in declaration order; cmbtmgr.cpp is the only consumer so
+    // far. Declared, not claimed - army.cpp owns the body.
+#ifdef HOMM3_ARMY_NEW_TURN_DECL
+    void new_turn();
+#endif
+    // 0x43d5c0 (358 B) <- army::InitClean (dc 0x438e8, 200 B, 1 param =
+    // `this` only; SH4->x86 ratio 1.79, in band). LoadArmies (0x463600)
+    // calls it on each of the twenty slots it has just blanked, and the
+    // DC order InitClean < Init < LoadResources holds in retail too -
+    // 0x43d5c0 < 0x43d8b0 < 0x43d9f0 - which is what corroborates the
+    // arity match. The Init/LoadResources pair above was located
+    // independently from AddArmy and needs no gate; this row is gated
+    // only because it is a NEW declarator on a header this widely
+    // included. Declared, not claimed - army.cpp owns the body.
+#ifdef HOMM3_ARMY_COMBAT_INIT_DECL
+    void InitClean();
 #endif
 };
 SIZE(army, 0x548);
