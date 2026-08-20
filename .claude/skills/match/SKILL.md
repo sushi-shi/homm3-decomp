@@ -28,9 +28,14 @@ you never touched. `recruit::Update` fell 90.8376 -> 88.2360 at an
 integration with recruit.cpp and all its headers byte-identical; reverting
 only mapcell.cpp's two new VA claims and re-delinking returned it to exactly
 90.83756, and restoring them returned it to 88.23604. So:
-- a cross-unit "regression" after a merge that added claims is usually THIS,
-  not a code change — check whether the unit's source and headers actually
-  moved before hunting a spelling;
+- a cross-unit "regression" after a merge that added claims MAY be this
+  rather than a code change — check whether the unit's source and headers
+  actually moved before hunting a spelling. But do not assume it: of the
+  three observed instances, only one was the delink generation. The other
+  two were `recruitUnit::Update` again, both caused by real ungated `game.h`
+  additions (a `type_point` member that made a class non-POD, and a nested
+  enum), both diagnosed and restored to 90.8376 by gating them. Rule out the
+  source FIRST — it is cheap, and it is the more common cause;
 - the newer, more-claimed reference is the more ACCURATE one, so the lower
   number is generally the honest one. Accept it with the cause recorded, do
   not chase it;
