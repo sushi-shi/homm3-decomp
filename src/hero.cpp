@@ -979,6 +979,12 @@ void hero::initialize(short index)
     dWalkSpellsCast = 0;
     field_129 = eMasteryInvalid;
     hasCustomName = 0;
+    // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` on this
+    // assignment costs 82.86 -> 62.31. The identical pin on the identical
+    // spelling in HeroFn_004D8B30 pays +38.93 there, so the assign pin is
+    // NOT a general lever for this TU's string stores - retail inlines the
+    // assign HERE and calls it THERE, and the two must be spelled
+    // differently even though both read `customName = <char const*>`.
     customName = emptyRolloverText;
     field_11c = 0;
     formation = 2;
@@ -1046,18 +1052,31 @@ static void apply_setup_artifacts(hero* who, const HeroExtra* setup)
 // +0x301 where retail puts it. The DC counterpart is the free function
 // initialize_hero(hero*, const HeroExtra*) (dc 0xb6c84); retail made it
 // a member and moved it into hero.cpp.
-// Residual (55.74%): an A8/A12 inliner wall. Retail's census is ten calls
-// and exactly ONE is a string call, basic_string::assign; our CL inlines
-// assign as well and spills its internals (_Grow x2, _Split x2, _Eos,
-// memmove, operator delete) into this body, which is the whole remaining
-// branch gap (base 53 against retail's 37). Tried and rejected, both
-// no-ops at 55.74: `customName = setup->name` against
-// `customName.assign(setup->name, 0, std::string::npos)` - game.h's own
-// note already records that operator= collapses onto the same assign -
-// and `#pragma inline_depth(1)` around the body, which does not reach the
-// decision. Splitting apply_setup_artifacts out DID work (49.03 ->
-// 55.74), so the budget is the right lever; what is missing is one more
-// pre-inline caller reduction, not a spelling.
+// 55.74 -> 94.67 (2026-08-20) ON ONE `#pragma inline_depth(0)` AT THE
+// `customName = setup->name` SITE, and that CORRECTS this note's old
+// conclusion. The diagnosis was right and had been right for a while -
+// retail's census is ten calls and exactly ONE is a string call,
+// basic_string::assign, which our CL expanded, spilling _Grow x2,
+// _Split x2, _Eos, memmove and operator delete into this body and
+// accounting for the whole branch gap (base 53 against retail's 37). What
+// was wrong was the KNOB. The old text recorded `#pragma inline_depth(1)`
+// around the body as not reaching the decision and concluded "what is
+// missing is one more pre-inline caller reduction, not a spelling".
+// inline_depth is STATEMENT-granular in VC6 and only bites at 0: pinning
+// the single assign site reproduces retail's census exactly - base 10
+// calls against retail 10, and flow-distance 0.
+// Still true and still worth keeping: splitting apply_setup_artifacts out
+// paid 49.03 -> 55.74 before this.
+// NOT a general lever for this TU - measure per site. The identical pin on
+// the identical `customName = <char const*>` spelling in hero::initialize
+// costs 82.86 -> 62.31, because retail inlines the assign THERE and calls
+// it HERE.
+//
+// Residual (94.67%): register-homing only, and why-reg v2's model CAPS it -
+// "bindings agree at every first definition, the divergence is past the
+// first defs", i.e. not the B1 minimum slice and no creation-order edit
+// reaches it. The schedule is aligned and flow-distance is 0; what is left
+// is edi->ecx x7 / ecx->edx x5 over 54 register-visible slots.
 VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
 void hero::HeroFn_004D8B30(const HeroExtra* setup)
 {
@@ -1127,7 +1146,13 @@ void hero::HeroFn_004D8B30(const HeroExtra* setup)
 
     if (setup->customName) {
         hasCustomName = 1;
+        // Retail keeps basic_string::assign an out-of-line CALL here; our
+        // CL expanded it and spilled its internals (_Grow x2, _Split x2,
+        // _Eos, memmove, operator delete) into this body. inline_depth(0)
+        // is STATEMENT-granular in VC6, so it pins this one site.
+#pragma inline_depth(0)
         customName = setup->name;
+#pragma inline_depth()
     }
 
     if (setup->bCustomExperience) {

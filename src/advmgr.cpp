@@ -7030,7 +7030,19 @@ void advManager::TownQuickView(int townId, int x, int y,
         return;
 
     int localPos = gpGame->GetLocalPlayerGamePos();
-    town* thisTown = &gpGame->towns[townId];
+    // CONST, and the bytes require it: retail's four get_army() calls below
+    // are ?get_army@town@@QBEABVarmyGroup@@XZ, the const overload, which is
+    // a DIFFERENT function at a different address from the non-const one a
+    // plain `town*` binds (town.h models both; DC 0x168bf8 / 0x168bd0).
+    // `predict-inline` reports the pair as get_army base x0 vs retail x4 -
+    // a mangled-name divergence its OVER-inline bucket cannot tell apart
+    // from an inlining decision. TQuickTownWindow's ctor already takes
+    // `const town*`, so this costs no extra declarator. MEASURED BYTE-FLAT
+    // (85.3187 either way): objdiff does not gate on the reloc's symbol
+    // name, so this is a fidelity fix - it makes the object reference the
+    // function retail references - and it retires a false OVER-inline row
+    // that would otherwise send the next lane after an inliner knob.
+    const town* thisTown = &gpGame->towns[townId];
     type_point point(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
 
     int identifyLevel = get_identify_level(point);
