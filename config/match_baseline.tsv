@@ -303,6 +303,7 @@ ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	1
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
+army	?CancelIndividualSpell@army@@QAEXH@Z	96.2713	96.2713	96.2713	0x44510
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
 army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
@@ -313,7 +314,7 @@ army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?GoBerserk@army@@QAEXXZ	86.0096	86.0096	86.0096	0x456d0
 army	?Init@army@@QAEXHHPBVhero@@HHHH@Z	100.0000	100.0000	100.0000	0x3d8b0
-army	?InitClean@army@@QAEXXZ	0.0000	0.0000	0.0000	0x3d5c0
+army	?InitClean@army@@QAEXXZ	92.6261	92.6261	92.6261	0x3d5c0
 army	?MidX@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46660
 army	?MidY@army@@QBEHXZ	100.0000	100.0000	100.0000	0x46630
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
@@ -371,7 +372,6 @@ army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
-army	army_CancelIndividualSpell	0.0000	0.0000	0.0000	0x44510
 army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
 army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510

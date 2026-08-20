@@ -361,11 +361,15 @@ public:
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
 #ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.origWalkCycleTime (members.csv army@104), the slot the
+    // iLuckStatus note below always placed here. Sliced 2026-08-20 by
+    // CancelIndividualSpell (0x444510): its HASTE and SLOW arms both
+    // restore frameInfoWalkCycleTime (+0x158) from this word.
+    int origWalkCycleTime;         // +0x68
     // DC army.origHitPoints (members.csv army@108), the third of the
     // orig* trio after origPos 92/+0x5c and origSpeed 100/+0x64 that
     // this class already carries unshifted. ResetRound recomputes
     // hitPoints from it every round rather than from the live word.
-    char pad_68[0x4];
     int origHitPoints;             // +0x6c
     // DC army.iLuckStatus (members.csv army@112), UNSHIFTED in this band
     // exactly like origHitPoints 108/+0x6c above and origWalkCycleTime
@@ -867,7 +871,18 @@ public:
     // Bloodlust and Precision round counters above.
     int bloodlustAmount;          // +0x464
     int precisionAmount;          // +0x468
-    char pad_46c[0x10];
+    // Three more of the DC amounts run (members.csv army@1096/1100/1108
+    // weaknessPenalty / toughskinBonus / prayerBonus, on the same +0x24
+    // shift slayerLevel 1128/+0x48c below anchors), each byte-proven by
+    // CancelIndividualSpell (0x444510): its WEAKNESS arm adds +0x46c
+    // back onto attackSkill, its STONE_SKIN arm subtracts +0x470 from
+    // defenseSkill, and its PRAYER arm subtracts +0x478 from attack,
+    // defense and speed. The slot between them, DC 1104
+    // disruptiverayPenalty/+0x474, stays a pad until a body reads it.
+    int weaknessPenalty;          // +0x46c
+    int toughskinBonus;           // +0x470
+    char pad_474[0x4];
+    int prayerBonus;              // +0x478
     int moraleBonus;              // +0x47c
     int moralePenalty;            // +0x480
     int luckBonus;                // +0x484
@@ -969,7 +984,16 @@ public:
     int forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
     float slowFactor;             // +0x4c8
-    char pad_4cc[0xc];
+    // The tail of the DC amounts run on the +0x20 shift this band
+    // carries (DC 1188 forgetfulness_level -> +0x4c4 and DC 1192
+    // slowPenalty -> +0x4c8 anchor it): 1196 tailwindBonus, 1200
+    // diseaseDefensePenalty, 1204 diseaseAttackPenalty. Byte-proven by
+    // CancelIndividualSpell (0x444510): its HASTE arm subtracts +0x4cc
+    // from the speed word and its DISEASE arm adds +0x4d0/+0x4d4 back
+    // onto defenseSkill/attackSkill.
+    int tailwindBonus;            // +0x4cc
+    int diseaseDefensePenalty;    // +0x4d0
+    int diseaseAttackPenalty;     // +0x4d4
     // +0x4d8. combatManager::InitNonVisualVars (0x463c60) is the one
     // decoded reader: its closing walk scans each side's stacks and
     // raises the per-side latch at combatManager+0x1329c the moment it
