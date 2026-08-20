@@ -44,17 +44,27 @@ enum ECombatCommand {
 };
 
 
-// The two constants show_looted_artifacts (0x4772b0) carries, both read
-// straight off its bytes: the extended dialog's row KIND for an artifact
-// (`mov dword ptr [ebp-0x14], 8` into type_dialog_resource::resource,
-// one past NUM_RESOURCES, and the qualifier stored beside it packs
-// `extra<<16 | artifactId` rather than a resource amount), and the batch
-// size at which the loot sweep raises a dialog and starts a new page
-// (`and al,-8 / cmp eax,0x40` over the eight-byte element, i.e.
-// size() == 8).
-enum ELootDialog {
-    LOOT_DIALOG_ARTIFACT_ROW = 8,
-    LOOT_DIALOG_PAGE_SIZE = 8
+// The extended-dialog row vocabulary the two victory presentations
+// carry, all of it read straight off their bytes.
+//
+// The ROW KINDS continue EGameResource past NUM_RESOURCES: 8 is the
+// artifact row show_looted_artifacts (0x4772b0) stores with
+// `mov dword ptr [ebp-0x14], 8`, and 9 the spell row show_eagle_eye
+// (0x476fe0) stores with `mov dword ptr [ebp-0x1c], 9`. In both cases
+// the qualifier beside the kind is NOT a resource amount - the artifact
+// row packs `extra<<16 | artifactId`, the spell row carries the bare
+// SpellID.
+//
+// PAGE_SIZE is the batch at which either sweep raises a dialog and
+// starts a new page: `and al,-8 / cmp eax,0x40` over the eight-byte
+// element in show_looted_artifacts, `and ecx,-8 / cmp ecx,0x40` in
+// show_eagle_eye. show_eagle_eye's list separator turns into " and " one
+// row EARLIER (`cmp eax,7` against a size taken before the push), which
+// is PAGE_SIZE - 1 and is spelled that way.
+enum EVictoryDialog {
+    VICTORY_DIALOG_ARTIFACT_ROW = 8,
+    VICTORY_DIALOG_SPELL_ROW = 9,
+    VICTORY_DIALOG_PAGE_SIZE = 8
 };
 
 
