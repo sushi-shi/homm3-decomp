@@ -256,7 +256,8 @@ public:
                      int mapVersion);
     int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
                          int mapVersion);
-    int readEventData(TAbstractFile* infile, CObject* eventObject);
+    int readEventData(TAbstractFile* infile, CObject* eventObject,
+                      int mapVersion);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
     int readTownData(TAbstractFile* infile, CObject* townObject);
