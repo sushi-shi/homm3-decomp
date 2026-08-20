@@ -331,6 +331,7 @@ army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
+army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	89.6998	89.6998	89.6998	0x45fd0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?can_cast_spell@army@@QBEEJ@Z	99.0409	99.0409	99.0409	0x476c0
 army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
@@ -386,7 +387,6 @@ army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
 army	army_LoadResources	0.0000	0.0000	0.0000	0x3d9f0
 army	army_Unnamed447fe0	0.0000	0.0000	0.0000	0x47fe0
 army	army_animate_missile	0.0000	0.0000	0.0000	0x3f2c0
-army	army_attack_wall_45fd0	0.0000	0.0000	0.0000	0x45fd0
 army	army_compute_attacker_bonus	0.0000	0.0000	0.0000	0x43320
 army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 army	army_do_post_attack	0.0000	0.0000	0.0000	0x40bc0
