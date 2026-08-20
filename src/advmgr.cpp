@@ -903,8 +903,6 @@ NewmapCell* NewfullMap::cell(int x, int y, int z)
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:1497
 // SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
 // `virtual int Main(message& msg) = 0` - and the DC mangling
@@ -912,11 +910,184 @@ NewmapCell* NewfullMap::cell(int x, int y, int z)
 // `message*` spelling this stub used to carry would not have overridden
 // anything, and would have tripped the declaration trap the moment a body
 // was written against it.
+//
+// The adventure screen's per-message pump, and the whole family's
+// entry point: the four Process* dispatchers below are all reached from
+// this switch. Four gates run BEFORE it, in retail's order - the
+// suspended-manager verdict, the game-over latch, the multiplayer turn
+// timer and the net-message poll - and then either the acting player is
+// not ours to drive (the end-of-turn path, which returns CONSUME) or the
+// message is dispatched and the shared tail runs the pending event.
+//
+// Three shapes are transcribed as retail has them:
+//   * The "is this turn ours" predicate reads gUnnamed691209 and the
+//     gNetLocalGamePos/gUnnamed69120c pair FOUR times without caching
+//     the conjunction, reloading both globals at every site. That is the
+//     standing "do not cache what retail reloads" rule, and here it is
+//     also what keeps the two halves of the && chain independent.
+//   * gUnnamed699544 is READ INTO A LOCAL before GameTime::Get(), the
+//     same hoist dimensiondoorwindow's animation gate needs: retail
+//     parks the stamp in EDI and subtracts against the register, which
+//     only a preceding statement produces. Left inside the subtraction
+//     VC6 reloads the global after the call.
+//   * The ambient re-centre's three coordinates are NAMED int locals
+//     computed BEFORE any of the three bitfield stores, so y and z merge
+//     into the single masked word store at +0x1de. Same lever, same
+//     shape, as ProcessDeSelect's kingdom-overview arm; the point itself
+//     is DELIBERATELY left uninitialised, which retail proves by
+//     inserting x with an XOR-merge against the slot's existing bits.
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
 int advManager::Main(message& msg)
 {
-    // @stub
+    if (status == STATUS_SUSPENDED)
+        return 0;
+
+    if (gbGameOver) {
+        msg.id = MESSAGE_EXECUTIVE;
+        msg.codeX = EXECUTIVE_COMMAND_TERMINATE_LOOP;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+
+    if (gTurnDuration69d630.IsExpired()) {
+        // Row 202 of the general text, the turn-timer expiry notice. No
+        // surviving symbol names the row.
+        NormalDialogTimeOut(gpGeneralText->GetText(202), 1, 15000, -1, -1,
+                            -1, 0, -1, 0, -1, -1, 0);
+        gTurnDuration69d630.Clear();
+        gpGame->NextPlayer();
+        return 0;
+    }
+
+    if (pNetMsgHandler)
+        pNetMsgHandler->CheckHandleNet(0, 0);
+
+    if ((!gpCurrentPlayer->IsHuman()
+         || (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c))
+        && (!bVideoPaused
+            || gpGame->IsLastHuman(gpGame->GetLocalPlayerGamePos())
+            || (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c))) {
+        if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c) {
+            gpCurrentPlayer->isHuman = 0;
+            gpCurrentPlayer->isLocal = 0;
+        }
+        gpUnnamed69928c->StartPlayerTurn(gNetLocalGamePos);
+        if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c) {
+            gpCurrentPlayer->isHuman = 1;
+            gpCurrentPlayer->isLocal = 1;
+            if (!bVideoPaused)
+                gMapVisibilityBit = 0xff;
+        }
+        gpGame->NextPlayer();
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (bForegroundApp)
+        CheckScreenScroll();
+
+    if (!gbNoSound && gUnk698760) {
+        unsigned long ambientStamp = gUnnamed699544;
+        if (ambientStamp
+            && static_cast<long>(GameTime::Get() - ambientStamp) > 6000) {
+            gUnnamed699544 = 0;
+            gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+
+            type_point ambientCentre;
+            int centreX = radarOrigin.x + 9;
+            int centreY = radarOrigin.y + 8;
+            int centreZ = radarOrigin.z;
+            ambientCentre.x = centreX;
+            ambientCentre.y = centreY;
+            ambientCentre.z = centreZ;
+            SetEnvironmentOrigin(ambientCentre, 1);
+        }
+    }
+
+    unsigned char exitFlag = 0;
+    type_point trigger_point;
+    NewmapCell* eventCell = 0;
+    int result = MESSAGE_DISPATCH_CONSUME;
+
+    if (msg.id != MESSAGE_NONE) {
+        switch (msg.id) {
+        case MESSAGE_KEY_DOWN:
+            result = ProcessKeyPress(&msg, &exitFlag, &trigger_point,
+                                     &eventCell);
+            break;
+
+        case MESSAGE_MOUSE_MOVE:
+            result = ProcessHover(msg.mouseX, msg.mouseY);
+            break;
+
+        case MESSAGE_WIDGET:
+            switch (msg.codeX) {
+            case widget::WIDGET_SELECT:
+                result = ProcessSelect(&msg, &trigger_point, &eventCell);
+                break;
+
+            case widget::WIDGET_DESELECT:
+                if (!(msg.qualifier & MESSAGE_MODIFIER_RIGHT))
+                    result = ProcessDeSelect(&msg, &exitFlag, &trigger_point,
+                                             &eventCell);
+                break;
+
+            case widget::WIDGET_RIGHT_SELECT:
+                if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
+                    if (!advWindow->ProcessRightSelect(&msg))
+                        result = ProcessSelect(&msg, &trigger_point,
+                                               &eventCell);
+                }
+                break;
+
+            default:
+                break;
+            }
+            break;
+
+        default:
+            break;
+        }
+    } else {
+        unsigned long lastFrame =
+            glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+            cursorFrameCount = 0;
+            CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+            gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                          ADVENTURE_SCREEN_Y,
+                                          ADVENTURE_SCREEN_WIDTH,
+                                          ADVENTURE_SCREEN_HEIGHT);
+
+            unsigned long curTime = GameTime::Get();
+            if (static_cast<long>(
+                    curTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                    >= 0
+                && !animCtrPaused) {
+                ++animFrame;
+                long elapsedTime =
+                    curTime
+                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                    _cpp_max(elapsedTime,
+                             static_cast<long>(
+                                 ADVENTURE_ANIMATION_MAX_ELAPSED));
+            }
+            Process1WindowsMessage();
+        }
+    }
+
+    if (eventCell)
+        DoEvent(eventCell, trigger_point);
+
+    if (gbGameOver || exitFlag) {
+        msg.id = MESSAGE_EXECUTIVE;
+        msg.codeX = EXECUTIVE_COMMAND_TERMINATE_LOOP;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1688
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70

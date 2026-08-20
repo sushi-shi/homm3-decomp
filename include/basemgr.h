@@ -29,7 +29,13 @@ class message;
 // INTRO says they must be.
 class baseManager {
 public:
-    enum { STATUS_ACTIVE = 1 };
+    // STATUS_SUSPENDED is executive::CallManager's own suspend mode: the
+    // arm that keeps the adventure manager on the stack writes 2 and
+    // sleeps its widgets, and both restore arms write 1 back (exec.cpp,
+    // 0x4b0c70). advManager::Main reads it on entry and answers a
+    // suspended manager with the CONTINUE verdict - the only COMPARE
+    // against the value anywhere in the tree.
+    enum { STATUS_ACTIVE = 1, STATUS_SUSPENDED = 2 };
 
     baseManager* nextManager;
     baseManager* prevManager;

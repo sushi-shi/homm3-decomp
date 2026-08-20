@@ -574,6 +574,52 @@ DATA(0x00691209) extern unsigned char gUnnamed691209;
 //             receiving player is not the local human.
 DATA(0x00698790) extern int gUnnamed698790;
 
+// gUnnamed691209's PRODUCER, found while decoding advManager::Main: the
+// "gosolo" console handler at 0x4022e0 sets the byte to 1 and stores
+// `gpGame->GetLocalPlayerGamePos()` into the int at 0x69120c in the same
+// breath (and, when bVideoPaused is clear, forces gMapVisibilityBit to
+// 0xff - the identical three-line block Main's end-of-turn path repeats).
+// So the pair is "this machine handed its turns to the AI" plus "the game
+// position it handed over", and every consumer tests them together as
+// `gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c`. Main reads that
+// conjunction FOUR times without caching it, reloading both globals each
+// time. NAMES REMAIN ORDINAL: evidence/ida/names.csv does carry
+// ?gbGoSolo@@3_NA / ?giSoloPos@@3HA, but it puts them at 0x691259 and
+// 0x69125c, a different pair fifty bytes up, so the mangled spellings are
+// NOT evidence for these two addresses and are recorded, not adopted.
+DATA(0x0069120c) extern int gUnnamed69120c;
+
+// Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
+// touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
+// once - and Main's use is the complete contract: a non-zero stamp older
+// than six seconds clears itself, re-arms the terrain ambient track and
+// re-centres the environment origin. Name is an address ordinal.
+extern unsigned long gUnnamed699544;
+
+// Retail .bss 0x69928c and the manager that lives there. InitMainClasses
+// (0x4edb40) allocates it LAST, immediately after gpSearchArray, and
+// ShutDown (0x4f3690) releases it; advManager::Main is this compiland's
+// only consumer. The body at 0x525e80 takes one stack argument, indexes
+// the 152-byte type_AI_player array at 0x692950 with it and calls
+// type_AI_player::start_turn, so the parameter is a player GAME POSITION
+// and the class is the AI turn driver. BOTH names are address ordinals.
+// The Dreamcast global band that fixes gpMouseManager/gpAdvManager/
+// gpWindowManager/gpSearchArray onto retail 0x699260/0x699268/0x699280/
+// 0x699284 (a flat +0x66b010) has NOTHING at the matching DC 0x2e27c, so
+// no surviving symbol reaches this slot.
+class CAITurnDriver69928c {
+public:
+    void StartPlayerTurn(int gamePos);  // 0x525e80
+};
+extern CAITurnDriver69928c* gpUnnamed69928c;
+
+// Retail .bss 0x6972b8, kb.cpp's game-over latch. kb.h publishes it as
+// gbGameOver behind HOMM3_EVENTS_VIEW, which advmgr.obj does not open
+// (that view drags in a much wider surface); advManager::Main tests it
+// twice - once on entry and once after the dispatch - and turns a set
+// latch into the executive's terminate-loop message.
+extern int gbGameOver;
+
 // gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
 // arm answers 2 by viewing gUnnamed69873c's town and suppressing the
 // screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
@@ -985,6 +1031,11 @@ public:
     void draw_bottom_view(unsigned char update);
     void animate_bottom_view(unsigned char in_background);
     unsigned char ProcessHover(int hx, int hy);
+    // Retail 0x402e70, `ret 4` over one message pointer and answering in
+    // AL - the hero-locator note above already reads its id normalisation.
+    // advManager::Main's WIDGET_RIGHT_SELECT arm is the only caller: a
+    // false answer there falls through to ProcessSelect.
+    unsigned char ProcessRightSelect(const message* msg);
     void ClearBottomView();
     void set_bottom_view(class type_bottom_view_window* new_view);
 };
