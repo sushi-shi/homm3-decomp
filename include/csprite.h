@@ -28,12 +28,8 @@ enum creature_seqid {
     // when a stack's bAllUnitsKilled is up, budgets that sequence's
     // frame count into the same wince slot, and excludes 5 alongside
     // cs_wait from the frames that fall back to idle - a dead stack
-    // holds its last frame. Behind a view because csprite.h reaches
-    // most of the tree and an ungated enumerator counts toward the
-    // include-set threshold in every consumer.
-#ifdef HOMM3_CSPRITE_DEATH_SEQ_DECL
+    // holds its last frame.
     cs_death = 5,
-#endif
     cs_attack_ur = 11,
     cs_attack_r = 12,
     cs_attack_dr = 13,

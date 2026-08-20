@@ -83,11 +83,9 @@ enum hero_seqid {
 // unaligned dword loads). Names provisional.
 #pragma pack(push, 1)
 
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 enum EHeroBackpackLimit {
     HERO_BACKPACK_CAPACITY = 64
 };
-#endif
 
 // The 8-byte artifact record - what an equipped slot or a backpack
 // slot actually holds. NAME CORRECTED 2026-08-08: this header used to
@@ -105,26 +103,15 @@ struct type_artifact {
     int artifactId;
     int extra;
 
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     type_artifact() : artifactId(-1), extra(-1) {}
     type_artifact(int id, int extraValue)
         : artifactId(id), extra(extraValue) {}
-#endif
 
 // townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
-// copy of the war machine's artifact record, so that compiland needs the
-// declarator too. It gets its own narrow gate rather than
-// HOMM3_ADVMGR_QUICKINFO_VIEW: that macro also widens game.h, mapcell.h
-// and advmgr.h, and a compiland's include closure is load-bearing here
-// (the initialize_game_data precedent).
-// hero.obj owns the DEFINITION (0x4db3e0) and its own consumers need
-// the declarator too, so the compiland's view joins the gate.
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) \
-    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS) \
-    || defined(HOMM3_GAME_HERO_EXTRA_VIEW)
+// copy of the war machine's artifact record; hero.obj owns the
+// DEFINITION (0x4db3e0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
-#endif
     void get_rollover_text(char* buffer);
 };
 
@@ -156,7 +143,6 @@ SIZE(type_obscuring_object, 0x18);
 
 class boat;
 
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
 // The two combat latches hero::Deallocate consults before dismissing the
 // army and before re-rolling the garrison. DECLARATION ONLY - cmbtmgr.h
 // owns the DATA claims on 0x6985a3 / 0x697744, and a second claim on the
@@ -193,16 +179,13 @@ extern int gUnnamed6aa9d8;
 // fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
 // arm, the third reader that fixes its role.
 extern int gStablesMovementBonus;
-#endif
 
-#ifdef HOMM3_HERO_DESCRIPTION_DEFS
 // The two ARRAYTXT.TXT runs text.obj's loader (0x5b9cc0) fills, read by
 // hero::get_morale_description / get_luck_description. DECLARATION ONLY -
 // viewarmywindow.cpp owns the DATA claims on 0x6a57bc / 0x6a532c, and a
 // second claim on the same RVA is a fatal duplicate at delink time.
 extern const char* gMoraleTexts[42];
 extern const char* gLuckTexts[25];
-#endif
 
 class hero : public type_obscuring_object {
 public:
@@ -227,7 +210,6 @@ public:
         PRIMARY_STAT_RESOURCE_FIRST = 31,
         PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // The nineteenth equipped position - the one Shadow of Death added on
     // top of the Dreamcast TArtifactSlot roster's eighteen.
     // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
@@ -281,7 +263,6 @@ public:
     // retail-proven; the spelling follows the h3m roster (0 pacifist,
     // 1 friendly, 2 aggressive, 3 explorer) and is PROVISIONAL.
     enum { AI_PERSONALITY_AGGRESSIVE = 2 };
-#endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -593,14 +574,12 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     // DC-attested inline helper; SetShrineHelpText proves the direct
     // byte-indexed availability read in retail.
     unsigned char SpellIsAvailable(SpellID spell) const
     {
         return available_spells[spell];
     }
-#endif
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
@@ -651,7 +630,6 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
-#ifdef HOMM3_EVENTS_VIEW
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
@@ -677,22 +655,10 @@ public:
     // combat it starts. Declared only; the body is not reconstructed and
     // the row is not claimed from here.
     void CheckLevel();
-#endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // hero.obj's own view of the same two. GiveExperience calls
     // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
     // DC row with NO retail body - GiveExperience carries it expanded.
-#  ifndef HOMM3_EVENTS_VIEW
-    void CheckLevel();
-    // 0x4d9ec0. hero.obj OWNS the definition, so the owning compiland
-    // needs the declarator too; without one VC6 compiles the out-of-class
-    // body in a DEGRADED SCOPE and reports "undeclared identifier" from an
-    // arbitrary point onward with no error on the definition line.
-    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
-#  endif
     int GetLevel(int iExperience);
-#endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
     // The hero screen's yes/no prompt for taking a combination artifact
     // apart: it builds `<artifact description>\n\n<general text 734>`
@@ -731,8 +697,6 @@ public:
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
-#endif
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // Gated to hero.obj's own view: these five are used only inside
     // hero.cpp, and declaring them unconditionally moved an UNRELATED
     // compiland's score (recruitUnit::Update 90.84 -> 88.24) through the
@@ -749,7 +713,6 @@ public:
     // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
     // member. ORDINAL PLACEHOLDER name.
     unsigned char HeroFn_004E2840(long artifact, long slot);
-#endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
@@ -899,19 +862,11 @@ public:
     // the stack); the Dreamcast port exposes the same logic as a file-local
     // two-argument helper instead.
     int ValueOfSpell(SpellID spell) const;
-// hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0), so the compiland's
-// own view joins the gate - the type_artifact::get_description precedent
-// above. A narrow macro, NOT HOMM3_ARMYGRP_DESCRIPTION_API: that one also
-// widens armygrp.h (std forward decls, akCreatureBackgrounds and the two
-// armyGroup declarators), and armygrp.h's own note measures what that
-// costs an unrelated TU.
-#if defined(HOMM3_ARMYGRP_DESCRIPTION_API) \
-    || defined(HOMM3_HERO_DESCRIPTION_DEFS)
+// hero.obj OWNS both definitions (0x4dc320 / 0x4dcac0).
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description() const;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_luck_description() const;
-#endif
     int GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                 unsigned char apply_limits);
     // Claimed in src/hero.cpp (0x4e39b0); declared here because
@@ -1004,7 +959,6 @@ public:
     TCreatureType GetNecromancyCreature();
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
-#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // Same gate and same reason as the equip pair above.
     // 0x4dbf30, the two-argument member of the combination family:
     // strips every worn component of `combination` (plus whatever sits
@@ -1016,7 +970,6 @@ public:
     // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
     // ORDINAL PLACEHOLDER.
     void HeroFn_004DC100(long slot);
-#endif
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
@@ -1157,7 +1110,6 @@ DATA(0x0067dce8) extern const THeroTraits (&akHeroTraits)[156];
 // CODEVIEW(E:\gamedcs\hero.cpp:2726, dc 0xcdf30) void handle_artifact_click(long code, unsigned char right_mouse);
 // CODEVIEW(E:\gamedcs\hero.cpp:3181, dc 0xcea3c) void handle_backpack_click(long code, unsigned char right_mouse);
 // CODEVIEW(E:\gamedcs\hero.cpp:4273, dc 0xd2e80) int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView);
-#if defined(HOMM3_TOWNMGR_HEROVIEW_DECLS) || defined(HOMM3_ADVMGR_OBJ_DECLS)
 // Retail 0x4e1800. The full hero screen; declared for the town page's
 // view-hero command and for advmgr's own ADV_COMMAND_VIEW_HERO arm,
 // which reaches it with /Gr's ecx/edx pair plus two pushed zeroes.
@@ -1165,7 +1117,6 @@ DATA(0x0067dce8) extern const THeroTraits (&akHeroTraits)[156];
 // rides in a great many closures.
 int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded,
              unsigned char bQuickView);
-#endif
 
 // --- CMCDeadHero ---
 // CODEVIEW(E:\gamedcs\netmsg.h:675, dc 0xd5964) void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point);

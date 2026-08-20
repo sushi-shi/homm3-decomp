@@ -19,7 +19,6 @@
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.
-#define HOMM3_TOWN_HASBUILDING_API
 #include <va.h>
 #include <algorithm>
 #include <functional>
@@ -109,9 +108,8 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // not (a whole struct return), so it cannot constant-fold away.
 // E:\gamedcs\Town.h:311, dc 0x1fdac - a header inline whose out-of-line copy
 // lands in advmgr.obj, where it is still carcassed. Kept file-local (a free
-// static over the same body rather than the `town::` member it is in retail)
-// so this lane leaves town.h's include closure alone; promoting it into town.h
-// behind HOMM3_TOWN_OBJ_DECLS is the obvious follow-up, and quicktownwindow's
+// static over the same body rather than the `town::` member it is in retail);
+// promoting it into town.h's declaration is the obvious follow-up, and quicktownwindow's
 // and armygrp's `town::HasBuilding` rows are the neighbours that would pay for
 // the same edit.
 // 2026-08-14, town.h OPENED and the follow-up was surveyed before spending the

@@ -8,7 +8,6 @@
 // explicit `#include "town.h"`), and it stays defined for the whole
 // compiland: includes are TU-local, so no other object sees it. town.h's
 // own note measures what declaring it unconditionally would cost.
-#define HOMM3_TOWN_HASBUILDING_API
 #include <va.h>
 // VC6's own shipped Dinkumware headers - retail links Dinkumware, NOT
 // STLport (P2.3, answered 2026-08-07 and now byte-proven: see the COMDAT
@@ -24,13 +23,10 @@
 // sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
 // entry, not an inlined fsqrt.
 #include <math.h>
-#define HOMM3_GAME_HERO_EXTRA_VIEW
 // hero.obj owns get_morale_description / get_luck_description, so the
 // owning compiland joins their gate rather than defining armygrp's
 // wider HOMM3_ARMYGRP_DESCRIPTION_API.
-#define HOMM3_HERO_DESCRIPTION_DEFS
 #include "hero.h"
-#undef HOMM3_HERO_DESCRIPTION_DEFS
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
@@ -40,24 +36,17 @@
 // HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
 // to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
 // HeroExtra, and that class lives behind this same gate in game.h.
-#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
-#undef HOMM3_HERO_OBJ_DECLS
-#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
 // declarator, not the whole events view; advmgr.h's own note records why.
-#define HOMM3_HERO_FIZZLE_API
 #include "advmgr.h"
-#undef HOMM3_HERO_FIZZLE_API
 #include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
 // The creature arm of THeroSpecificAbility's +0x04 union: hero::GetMobility
 // reads the specialty subject as a TCreatureType. hero.h above already
 // pulled armygrp.h, so TCreatureType is in scope by the time this is read.
-#define HOMM3_HEROSPEC_CREATURE_VIEW
 #include "herospec.h"
-#undef HOMM3_HEROSPEC_CREATURE_VIEW
 // UpgradedCreatureType - GetMobility's creature-specialty check asks for
 // the specialty stack's upgrade; the cmbtmgr / hillfortwindow precedent.
 #include "creaturetype.h"

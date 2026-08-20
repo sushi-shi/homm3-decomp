@@ -9,11 +9,9 @@
 // 0.0357 with no semantic change; the two arms spell the same thirteen
 // bytes, so opening it here changes the NAME this TU sees and nothing
 // about the layout.
-#define HOMM3_ARMY_SPELLCAST_VIEW
 // army::initialize and army::is_adjacent(int), which
 // choose_resurrect_action and choose_defense_hex call. Declaring either
 // for every unit moves GetCommand by the same 0.0357.
-#define HOMM3_ARMY_AI_VIEW
 #include "ai.h"
 #include "ai_spellvalue.h"
 #include "ai_tactical.h"
@@ -21,8 +19,6 @@
 #include "game.h"
 #include "hero.h"
 #include "misc.h"
-#undef HOMM3_ARMY_AI_VIEW
-#undef HOMM3_ARMY_SPELLCAST_VIEW
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
 // (0x422440) homes both operands in dead argument slots and selects

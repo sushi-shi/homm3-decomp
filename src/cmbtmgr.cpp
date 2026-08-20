@@ -40,10 +40,6 @@
 #include <stdlib.h>
 
 #include <va.h>
-#define HOMM3_ARMY_NEW_TURN_DECL     // army::new_turn, for NextArmy
-#define HOMM3_ARMY_RESET_LATCH_DECL  // army::field_4f0, for NextArmy
-#define HOMM3_ARMY_COMBAT_INIT_DECL  // InitClean/Init/LoadResources, LoadArmies
-#define HOMM3_ARMY_MIDPOINT_DECL     // army::MidX / MidY, for KeepAttack
 // The three start-of-turn creature ids and their two army.obj bodies,
 // and the two auto-cast combination artifacts - all five reached from
 // SetNextArmy and nowhere else in this tree. SPELL_SLOW joins them
@@ -51,35 +47,15 @@
 // defines sit here, ahead of every header, because armygrp.h and
 // artifact.h both arrive transitively (cmbtmgr.h -> armygrp.h,
 // hero.h -> artifact.h) and a view define has to precede its header.
-#define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
-#define HOMM3_SPELL_SLOW_DECL
-#define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
-#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
-#define HOMM3_CMBTMGR_ROUND_VIEW
-#define HOMM3_ARMY_POW_VIEW
-#define HOMM3_CSPRITE_DEATH_SEQ_DECL
-#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
-#define HOMM3_CMBTMGR_ICONS_VIEW
-#define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
-#define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
-#define HOMM3_CMBTMGR_OPEN_VIEW      // the two GameTime stamps Open takes
-#define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
                                      // it in InitNonVisualVars' siege arms
-#define HOMM3_CMBTMGR_MORALE_VIEW
-#define HOMM3_CMBTMGR_OBSTACLE_VIEW
-#define HOMM3_CMBTMGR_SETUP_VIEW
-#define HOMM3_CMBTMGR_TURN_VIEW
 #include "cmbtmgr.h"
-#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
-#undef HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
@@ -100,11 +76,7 @@
 #include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "remote.h"
 #include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
-#define HOMM3_TEXT_COMBAT_MORALE_VIEW
-#define HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #include "textresource.h"
-#undef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
-#undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
 #include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open

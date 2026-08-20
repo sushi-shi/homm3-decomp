@@ -14,52 +14,13 @@
 // those ENUMERATORS to every consumer costs the same 0.0357 on the same
 // function (measured 2026-08-14, bisected against the field slicing in
 // the same change, which is innocent).
-#define HOMM3_ARMY_MULTI_HEAD_VIEW
-#define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
-#define HOMM3_ARMY_MOVE_VIEW
-#define HOMM3_ARMY_SPELLCAST_VIEW
-#define HOMM3_ARMY_BERSERK_VIEW
-#define HOMM3_ARMY_WALL_VIEW
-#define HOMM3_ARMY_ROUND_VIEW
-#define HOMM3_ARMY_CALIPH_VIEW
-#define HOMM3_ARMY_RANGE_VIEW
-#define HOMM3_ARMY_AURA_VIEW
-#define HOMM3_ARMY_MIDPOINT_DECL
-#define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
-#define HOMM3_ARMY_AI_VIEW
+#define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
 #include "army.h"
-#undef HOMM3_ARMY_AI_VIEW
-#undef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
-#undef HOMM3_ARMY_MIDPOINT_DECL
-#undef HOMM3_ARMY_AURA_VIEW
-#undef HOMM3_ARMY_RANGE_VIEW
-#undef HOMM3_ARMY_CALIPH_VIEW
-#undef HOMM3_ARMY_ROUND_VIEW
-#undef HOMM3_ARMY_WALL_VIEW
-#undef HOMM3_ARMY_BERSERK_VIEW
-#undef HOMM3_ARMY_SPELLCAST_VIEW
-#undef HOMM3_ARMY_MOVE_VIEW
-#undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
-#undef HOMM3_ARMY_MULTI_HEAD_VIEW
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
-#define HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "armygrp.h"
-#undef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "bitmap16.h"
-#define HOMM3_CMBTMGR_MOVE_VIEW
-#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-#define HOMM3_CMBTMGR_RESURRECT_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
-#define HOMM3_CMBTMGR_CALIPH_VIEW
-#define HOMM3_CMBTMGR_TOWER_VIEW
 #include "cmbtmgr.h"
-#undef HOMM3_CMBTMGR_TOWER_VIEW
-#undef HOMM3_CMBTMGR_CALIPH_VIEW
-#undef HOMM3_CMBTMGR_ROUND_VIEW
-#undef HOMM3_CMBTMGR_RESURRECT_VIEW
-#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-#undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "csprite.h"
 #include "drawing.h"
 // get_berserk_targets (0x445490) seeds the combat search and then reads

@@ -22,29 +22,19 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
     GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
     GENERAL_TEXT_RECRUIT_TITLE = 17,
-#ifdef HOMM3_TEXT_COMBAT_MORALE_VIEW
     // The two combat morale lines, both "%s" formats over the affected
     // stack's name: combatManager::CheckApplyGoodMorale (0x464920) folds
     // [Text._First + 0x88] and CheckApplyBadMorale (0x464b40)
-    // [Text._First + 0x8c]. Gated for the reason GENERAL_TEXT_SKELETON_
-    // GOLD below is - an ungated enumerator counts toward the include-set
-    // threshold in every consumer.
+    // [Text._First + 0x8c].
     GENERAL_TEXT_GOOD_MORALE = 34,
     GENERAL_TEXT_BAD_MORALE = 35,
-#endif
-#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
     // The singular partner of GENERAL_TEXT_MIXED_ARMY below, and the one
     // consumer that proves the pair is a pair: combatManager::
     // damage_message (0x469a90) picks between the folded
     // [Text._First + 0xac] and [Text._First + 0xb0] on `deaths == 1`
     // when the dying stack has no army record to name itself from.
-    // Gated for the reason GENERAL_TEXT_GOOD_MORALE above is - an
-    // ungated enumerator counts toward the include-set threshold in
-    // every consumer.
     GENERAL_TEXT_MIXED_ARMY_ONE = 43,
-#endif
     GENERAL_TEXT_MIXED_ARMY = 44,
-#ifdef HOMM3_EVENTS_VIEW
     // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
     // image does. The index is the folded `[Text._First + 0xbc]` load at
     // 0x4a5540, and a scan of every such load reachable from a
@@ -55,7 +45,6 @@ enum EGeneralTextIndex {
     // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
-#endif
     GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
     GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
     GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
@@ -119,7 +108,6 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_AI_GIFT_RECEIVED = 359,
     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
-#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
     // The tactics-phase help dialog combatManager::Open (0x462a20)
     // raises once per player, behind that player's own
     // placement_help_enabled flag which it then clears - a folded
@@ -151,9 +139,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS = 378,
     GENERAL_TEXT_COMBAT_ONE_DEATH = 379,
     GENERAL_TEXT_COMBAT_MANY_DEATHS = 380,
-#endif
     GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
-#ifdef HOMM3_EVENTS_VIEW
     // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
     // the image does. The index is the folded `[Text._First + 0x6a4]` load
     // at 0x4a2183, and a scan of every `mov r32,[r32+0x6a4]` in .text finds
@@ -167,12 +153,10 @@ enum EGeneralTextIndex {
     // include-set threshold - winmgr.h's DIALOG_RETURN_DECLINE sets that
     // precedent.
     GENERAL_TEXT_DRAGON_CITY_EMPTIED = 425,
-#endif
     GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
-#ifdef HOMM3_TEXT_SPELL_DAMAGE_VIEW
     // The four rows combatManager::ModifySpellDamage (0x5a78e0) prints
     // when a hero bonus, a creature trait or a Protection-from-<school>
     // counter has moved a spell's damage off its table value. The four
@@ -186,7 +170,6 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY = 546,
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE = 547,
     GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY = 548,
-#endif
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell
     // icons print, all folded [Text._First + N] loads in its
@@ -195,15 +178,13 @@ enum EGeneralTextIndex {
     // 0xaa4/0xaa8/0xaac are that descriptor for the three spells whose
     // effect has no turn count.
     GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT = 611,
-#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
     // damage_message's third death clause, and the only [Text._First +
     // 0xa70] load in the image. It replaces the one/many pair above
     // when the defending stack carries creatureId bit 6 - the same bit
     // SideIsWipedOut (0x465830) and IsWinner (0x4658b0) read as "this
     // stack is out of the fight" - and it takes the stack's name alone,
-    // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE is.
+    // with no count.
     GENERAL_TEXT_COMBAT_STACK_WIPED_OUT = 668,
-#endif
     GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
     GENERAL_TEXT_ARMY_SPELL_BIND = 681,
     GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,

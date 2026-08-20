@@ -74,11 +74,8 @@ extern TRecruitWindow* gpRecruitWindow;
 // recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
 // before switching to the default one, and the menu ::Close puts back.
 // Spelled through the HMENU handle tag rather than HMENU so this header
-// keeps its promise not to drag <windows.h> into its five consumers;
-// gated because recruit.cpp is the only one that reads it.
-#ifdef HOMM3_RECRUIT_DECLS
+// keeps its promise not to drag <windows.h> into its five consumers.
 extern struct HMENU__* gRecruitSavedMenu;
-#endif
 
 // Provisional view of the unnamed drawing-side object at .bss
 // 0x6aacb0 (34 refs image-wide, from advManager::UpdateRadar,
@@ -181,11 +178,6 @@ public:
         TCreatureType _MonType2, short* _numMon2,
         TCreatureType _MonType3, short* _numMon3,
         TCreatureType _MonType4, short* _numMon4);
-    // Gated so the four other TUs that include recruit.h (advmgr,
-    // ai_player, levelupwindow, textwdgt) keep the symbol handles they
-    // have today: recruit.obj is knife-edge on handle position and its
-    // includers are live lanes. recruit.cpp is the only consumer.
-#ifdef HOMM3_RECRUIT_DECLS
     // What opened this recruit. The two dialog flavours above leave -1;
     // only the town constructor tags itself, and ::Close tests the tag
     // before it refreshes the town page behind the dialog. The 0x62
@@ -200,28 +192,14 @@ public:
     // The three baseManager slots of vtable 0x640c70. Only Close is
     // reconstructed; the other two are declared so the class is
     // concrete, which is what `new recruitUnit(...)` at the fort page's
-    // buy button needs.
+    // buy button and the refugee camp's frame-built one in events.obj
+    // (0x4a4600) both need.
     virtual int Open(int newPriority) OVERRIDE;      // slot 0, 0x54fea0
     virtual void Close() OVERRIDE;                   // slot 1, 0x5502d0
     virtual int Main(message& msg) OVERRIDE;         // slot 2, 0x550940
-#endif
 
     void Update(unsigned char new_monster, long slot);
 
-#ifdef HOMM3_EVENTS_VIEW
-    // events.obj CONSTRUCTS a recruitUnit - the refugee camp (0x4a4600)
-    // builds one on its frame and hands it to executive::DoDialog - so the
-    // class has to be concrete there, and baseManager's three slots are
-    // pure. recruitUnit overrides all three: the Dreamcast publishes
-    // Open/Close/Main and retail has a body for each (0x54fea0 / 0x5502d0 /
-    // 0x550940). DECLARED only, and only under the events view: recruit.cpp
-    // still carries Open and Close in its carcass, a TU that merely calls
-    // the external constructor needs no vtable of its own, and every other
-    // consumer of this header sees it unchanged.
-    virtual int Open(int newPriority);
-    virtual void Close();
-    virtual int Main(message& msg);
-#endif
 
     // Defined here, not in recruit.cpp, because retail HAS NO
     // out-of-line body for it: the recruit band's carve rows are all

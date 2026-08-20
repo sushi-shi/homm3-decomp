@@ -7,7 +7,6 @@
 // TBottomViewKingdom's hall census calls town::HasBuilding three times
 // (dc 0x563b8 lines 531/533/535), so this compiland gets the Town.h
 // inline; see town.h for why the visibility is scoped.
-#define HOMM3_TOWN_HASBUILDING_API
 #include "bottomviewsubwindow.h"
 #include "border.h"
 #include "game.h"

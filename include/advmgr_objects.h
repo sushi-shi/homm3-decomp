@@ -152,7 +152,6 @@ DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
 
 class CObjectType;
 
-#ifdef HOMM3_MAPCELL_TYPEMASK_VIEW
 // readObjectType's two success answers. It returns 1 normally and 100 when
 // the object's own .msk resource was missing and default.msk stood in -
 // `neg bl / sbb ebx,ebx / and ebx,0x63 / inc ebx` at its tail, 0x63 + 1.
@@ -162,19 +161,15 @@ enum EReadObjectTypeResult {
     READ_OBJECT_TYPE_OK = 1,
     READ_OBJECT_TYPE_DEFAULT_MASK = 100
 };
-#endif
 
 // The gate is widened with CObject's constructor below, whose body names
 // Random: an in-class member body's non-dependent names are looked up at the
 // closing brace of the class, and mapcell.cpp reaches misc.h only later in
 // its include list.
-#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 int __fastcall Random(int minimum, int maximum);
-#endif
 
 class CObject {
 public:
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // readScholarData reaches the scholar lanes of this dword directly -
     // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
     // which no mask spelling over the plain dword produces. Only that one
@@ -193,9 +188,6 @@ public:
         ShipyardInfo shipyard_info;
         ShrineInfo shrine_info;
     };
-#else
-    unsigned long extraInfo;
-#endif
     unsigned char x;
     unsigned char y;
     unsigned char z;
@@ -204,7 +196,6 @@ public:
     unsigned char animationOffset;
     unsigned char pad_0b;
 
-#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     // MapCell.h:595. game::InsertObject byte-proves this header body: the
     // coordinates narrow to bytes, type starts at zero, extra info remains a
     // dword, and each dynamic object receives a random animation phase.
@@ -227,7 +218,6 @@ public:
         extraInfo = newExtraInfo;
         animationOffset = static_cast<unsigned char>(Random(0, 255));
     }
-#endif
 
     CObjectType* get_object_type_ptr();
     void FindTrigger(int* resultX, int* resultY);
@@ -269,15 +259,8 @@ public:
     //
     // The mask's MEANING is unproven and its name is deliberately ordinal:
     // no serializer in this compiland reads or writes it, readObjectType
-    // included. GATED to the single TU that needs the constructor shape,
-    // not to HOMM3_MAPCELL_OBJECTS_VIEW, which advmgr/game/puzzlewindow
-    // also define - this header's own objectType note records what an
-    // ungated extra declarator cost events.obj.
-#ifdef HOMM3_MAPCELL_TYPEMASK_VIEW
+    // included.
     std::bitset<10> mask_34;
-#else
-    char pad_34[4];
-#endif
     // loadObjectType stores the serialized type as a FULL DWORD - the
     // stream carries two bytes and retail widens them into all four of
     // +0x38..+0x3b. Overlaid rather than cast, exactly as NewmapCell's own
@@ -288,14 +271,10 @@ public:
     // the extra declarator moved events.obj's monsters_sell_out 100.0 ->
     // 99.95 through the include-set sensitivity class (measured 2026-08-20)
     // with no semantic change anywhere; the layout is identical either way.
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     union {
         TAdventureObjectType objectType;
         unsigned long objectTypeValue;
     };
-#else
-    TAdventureObjectType objectType;
-#endif
     int extra;
     unsigned char suppressDraw;
     char pad_41[3];

@@ -11,7 +11,6 @@
 #include "kbwin.h"
 // GameUnsaved polls the town manager's baseManager status, so kb.obj is
 // one of the consumers that needs townmgr.h's guarded class prefix.
-#define HOMM3_TOWN_OBJ_DECLS
 #include "townmgr.h"
 
 #if 0  // @carcass

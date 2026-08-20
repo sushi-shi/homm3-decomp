@@ -5,13 +5,6 @@
 // find_spell_target's third arm needs SPELL_SACRIFICE, which armygrp.h
 // keeps behind this view: declaring it unconditionally costs initialize's
 // initialize_game_data 100.0000 -> 96.0880 (measured 2026-08-20).
-#define HOMM3_ARMYGRP_SACRIFICE_VIEW
-// AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
-// hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
-#define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
-// ValidSpellTarget's tail gives Force Field and Fire Wall one placement
-// rule each; armygrp.h keeps both ids behind this view.
-#define HOMM3_SPELL_WALL_DECL
 #include "armygrp.h"
 #include "spells.h"
 // ModifySpellDamageForSpells reads the four Protection-from-<school>
@@ -19,46 +12,23 @@
 // (+0x4a8..+0x4b4); army.h keeps both runs behind this view because each
 // half, sliced on its own, costs command.obj's GetCommand
 // 92.5714 -> 92.5357 (measured 2026-08-20).
-#define HOMM3_ARMY_PROTECTION_VIEW
 // SetMassSpellInfluence calls army::SetSpellInfluence, whose declarator
 // army.h keeps behind this view.
-#define HOMM3_ARMY_SPELLS_VIEW
 // GetNextChainLightningTarget measures screen distance with army::MidX /
 // army::MidY, which army.h keeps behind this declaration view.
-#define HOMM3_ARMY_MIDPOINT_DECL
 // ModifySpellDamage forwards army::creatureType into armygrp's free
 // modify_spell_damage, whose slot is TCreatureType; army.h keeps the
 // DC-typed arm of that field behind this view.
-#define HOMM3_ARMY_CREATURE_TYPE_VIEW
 #include "army.h"
-#undef HOMM3_ARMY_CREATURE_TYPE_VIEW
-#undef HOMM3_ARMY_MIDPOINT_DECL
-#undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
-#define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
-#define HOMM3_CMBTMGR_OBSTACLE_VIEW
 // mark_area_effect's berserk arm calls mark_berserk_area_effect, whose
 // bare declarator costs command.obj's GetCommand 92.5714 -> 92.5357 when
 // it is unconditional (measured 2026-08-20).
-#define HOMM3_CMBTMGR_AREA_VIEW
-// The spells.obj-only declaration block; see cmbtmgr.h.
-#define HOMM3_CMBTMGR_SPELLS_VIEW
-// AreaEffect's tail: damage_message, PowEffect and CheckRebirth.
-#define HOMM3_CMBTMGR_MESSAGE_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
-#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-// find_demonic_resurrection_target, declared beside its army.cpp consumer.
-#define HOMM3_CMBTMGR_RESURRECT_VIEW
+// The axial get_distance overload hides cmbtmgr.cpp's file-scope
+// get_distance(long,long); only this TU wants it. Compile-required.
+#define HOMM3_CMBTMGR_HEX_DISTANCE_DECL
 #include "cmbtmgr.h"
-#undef HOMM3_CMBTMGR_RESURRECT_VIEW
-#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
-#undef HOMM3_CMBTMGR_ROUND_VIEW
-#undef HOMM3_CMBTMGR_MESSAGE_VIEW
-#undef HOMM3_CMBTMGR_SPELLS_VIEW
-#undef HOMM3_CMBTMGR_AREA_VIEW
-#undef HOMM3_CMBTMGR_OBSTACLE_VIEW
-#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
 #include "resourcemanager.h"   // ResourceManager::GetSprite
@@ -69,7 +39,6 @@
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
-#define HOMM3_TEXT_SPELL_DAMAGE_VIEW
 #include "textresource.h"  // gpGeneralText
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <math.h>    // sqrt, for the chain-lightning bounce search

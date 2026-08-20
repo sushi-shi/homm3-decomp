@@ -24,9 +24,7 @@ struct type_point {
 
     type_point() {}
     type_point(short new_x, short new_y, short new_z);
-#ifdef HOMM3_TYPE_POINT_EQUALITY
     unsigned char operator==(const type_point* arg);
-#endif
     unsigned char is_valid();
 };
 

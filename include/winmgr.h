@@ -27,7 +27,6 @@ enum EDialogReturnType {
     DIALOG_RETURN_OK = 0x7802,
     DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
     DIALOG_RETURN_ACCEPT = 0x7805,
-#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
     // ACCEPT's partner in the iMBType-2 yes/no pair, byte-proven by the
     // two wandering-stack refusals: advManager::monsters_join (0x4a7000)
     // and monsters_sell_out (0x4a7250) both ask with iMBType 2 and take
@@ -38,7 +37,6 @@ enum EDialogReturnType {
     // (advmgr's turn view joined 2026-08-20: StartLocalPlayerTurn takes
     // the DECLINE arm of the gosolo hand-back dialog on the same value.)
     DIALOG_RETURN_DECLINE = 0x7806,
-#endif
     // The two picture-choice replies of the iMBType-10 dialog, byte-proven
     // by advManager::DoEventWarSchool (0x4a7a40): it offers the two
     // primary-skill pictures 0x1f and 0x20 as iResType1/iResType2 and then
