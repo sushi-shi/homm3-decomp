@@ -487,6 +487,11 @@ enum ESpellId {
     // value is fixed at both ends by the same table: 0x4b AGE is the
     // last already-proven rung below it, and the window closes at 0x4e.
     SPELL_DISPEL_HELPFUL = 0x4e,
+    // The Mighty Gorgon's pseudo-spell row: army::do_post_attack
+    // (0x440bc0) plays akSpellTraits[0x4f].m_sample over its death
+    // stare, exactly as the Rust Dragon plays row 0x50's below.
+    // Bracketed by the proven 0x4e above and 0x50 below.
+    SPELL_DEATH_STARE = 0x4f,
     // 80, the one row Complete's 81-wide influence table carries past
     // the Dreamcast build's kNumSpellsAndCreatureEffects = 80: the
     // Rust Dragon's acid. Byte-proven by check_special_attack
