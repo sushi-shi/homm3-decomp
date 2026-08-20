@@ -582,7 +582,9 @@ public:
     unsigned long iLastFidgetTime; // +0xfc
     char pad_100[0xc];
     char* yModify;                // +0x10c
-    char pad_110[0x48];
+    char pad_110[0x40];
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #elif defined(HOMM3_ARMY_POW_VIEW)
     // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
     // flat +0x14 the band above carries). PowEffect clears it for every
@@ -596,12 +598,25 @@ public:
     // `mov dword ptr [esi+0x108],1` - where a char field would emit
     // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
     int bPowSequenceComplete;            // +0x108
-    char pad_10c[0x4c];
+    char pad_10c[0x44];
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #else
-    char pad_fc[0x5c];
+    char pad_fc[0x54];
+    // Two more fields sliced out of the embedded animation-traits row,
+    // both byte-proven by DoBolt (0x5a5c20): its reset tail guards the
+    // whole attack-animation flush on +0x150 and divides +0x15c by the
+    // sequence's frame count for the per-frame delay, which is exactly
+    // SMonFrameInfo's iAttackFrames (+0x40 of the row) and
+    // iAttackStartCycleTime (+0x4c). The pair is sliced the same way
+    // army::Fly's two already are, and in the same band comment's terms:
+    // read the fields you need, do not model the record.
+    int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+    char pad_154[0x4];
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
-    char pad_15c[0x4];
+    int frameInfoAttackStartCycleTime;
+                                  // +0x15c == sMonFrameInfo.iAttackStartCycleTime
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which

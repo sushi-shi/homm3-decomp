@@ -39,17 +39,27 @@
 #include "cmbtmgr.h"
 #include "combatwindow.h"      // TCombatWindow::combat_message
 #include "csprite.h"           // CSprite::Dispose, LoadSpellEffect's release
+// DoBolt scales its inter-frame delay by gCombatSpeedFactors, exactly as
+// army::Fly does; drawing.h is where this tree parks that unowned table.
+#include "drawing.h"           // gCombatSpeedFactors
 #include "resourcemanager.h"   // ResourceManager::GetSprite
 #include "hero.h"
 #include "herospec.h"  // TSkillMastery, for ValidSpellTarget's mastery ladder
 #include "kb.h"      // gText, the shared combat-message scratch buffer
+// DoBolt paces its draw loop with GameTime::DelayTil + the NextFrameTime
+// header inline, the same pair army::Fly's flight loop uses.
+#include "kbwin.h"   // GameTime
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
+#include "mousemgr.h"  // gpMouseManager, DoBolt's pointer hide/show
+#include "prefs.h"     // gUnnamed698758.combatSpeed, DoBolt's speed index
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
 // ModifySpellDamage's four "the spell did more/less than the table row"
 // messages; textresource.h keeps those enumerators behind this view.
 #include "textresource.h"  // gpGeneralText
+#include "winmgr.h"  // gpWindowManager, DoBolt's per-pass UpdateScreen
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
-#include <math.h>    // sqrt, for the chain-lightning bounce search
+#include <math.h>    // sqrt for the chain-lightning bounce search;
+                     // sin/cos for DoBolt's fork heading
 
 // VC6's own <xutility> reference-returning max, declared file-locally
 // exactly as ai_combat.cpp / findpath.cpp / diff.cpp already do. Retail's
@@ -1229,45 +1239,255 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
     ResetBoltAngle(psBolt);
 }
 
-#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
-
-// E:\gamedcs\spells.cpp:3940
-// DECODED BUT NOT WRITTEN (2026-08-20). What its bytes already prove,
-// banked here so the next lane does not redo the reading:
-//   * It allocates the working set with `new SBolt[25]` - `push 0xbb8 /
-//     operator new`, no array cookie because SBolt has no destructor -
-//     and frees it with a plain `operator delete`. That is the second
-//     proof of the 0x78 stride.
-//   * `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
-//     padding, and it is spelled with THIS FILE'S by-value _cpp_max:
-//     retail writes both operands back into their own parameter slots
-//     and then selects between their ADDRESSES, which is that template
-//     and not the <xutility> reference one.
-//   * The shape is `do { for (pass) { draw; UpdateScreen; if (every
-//     bolt bAtDestination) break; split; } for (each) ResetBoltAngle;
-//     } while (!allDone)`, with the pass count computed as
-//     `(iSegmentLength - 1) / iSegmentLength + 1` - which is 1 for every
-//     positive segment length, i.e. a latent retail bug, transcribe it.
-//   * The fork rule: a bolt forks when it is not at its destination,
-//     fewer than 25 bolts exist, its remaining manhattan distance is
-//     more than twice the segment length, `Random(0, iSplitFrequency *
-//     100 / iSegmentLength) < 100`, and it has travelled at least
-//     `iSplitFrequency * 0.75` from its last fork. The fork's heading is
-//     the parent's fDistortedAngle plus `+-Random(50, 80) / 100.0f`
-//     (the sign from `Random(0, 1)`), its length `min(Random(maxSplit /
-//     2, maxSplit), remaining / 2)`, and its distortion band is widened
-//     to `min * 0.66 - 20` .. `max * 0.66 + 20`.
-//   * Its two CRT helpers are 0x61a124 and 0x61a1d4 (sin / cos through
-//     __ctrandisp1), and the delay is scaled by a float table at
-//     0x63cf7c indexed by the int global at 0x6987ec - the combat-speed
-//     setting, which no header in this tree models yet.
+// The bolt ANIMATOR: seed one bolt from the thirteen shape parameters,
+// then repeatedly draw every live bolt, push the union of what moved to
+// the screen, fork the bolts that still have room, and re-aim them all,
+// until every one of them has reached its destination.
+//
+// EVERY LOCAL NAME HERE IS THE DREAMCAST ROSTER'S OWN
+// (evidence/dreamcast/variables.csv, the ten `combatManager::DoBolt`
+// local rows, dc 0x154c50): iMaxBolt, bComplete, j, iDelayTil,
+// iHalfThickness, iDrawsPerSeg, iMaxBoltForThisCycle,
+// iSplitChanceTimes100, iAbsDist, iDrawLength and iUpdBRY are all
+// attested there. iUpdBRY is what fixes the dirty-rect reading: the
+// four extremes are an UPDATE RECTANGLE in top-left/bottom-right terms,
+// so its three siblings are spelled iUpdTLX/iUpdTLY/iUpdBRX. The three
+// fork values SH4 kept in registers (fOffset, fAngle, the split's x/y
+// and thickness) have no roster row and are named from their use.
+//
+// THE PASS COUNT IS A LATENT RETAIL BUG, transcribed as written:
+// `(iSegmentLength - 1) / iSegmentLength + 1` is 1 for every positive
+// segment length, so the inner loop always runs exactly once. The
+// codegen is unambiguous - `lea eax,[esi-1] / cdq / idiv esi / inc eax`
+// on the segment length itself, not on any other quantity.
+//
+// TWO PARAMETERS ARE DEAD (iDrawsPerSegment at [ebp+0x3c] and
+// bFlashLighten at [ebp+0x48]): no instruction in the 1474 bytes touches
+// either slot. That is retail's own shape, not a mis-read arity - the
+// `ret 0x44` fixes seventeen arguments and the DC roster names all
+// seventeen in this order.
+//
+// THE WORKING SET is `new SBolt[25]` - `push 0xbb8` into operator new,
+// no array cookie because SBolt has no destructor - and it is the second
+// independent proof of the 0x78 stride (the first is the five separate
+// `add r32,0x78` walks below).
+//
+// `_cpp_max(iStartThickness, iEndThickness) >> 1` is the dirty-rect
+// padding, and it is THIS FILE'S by-value _cpp_max: retail writes both
+// operands back into their own parameter slots and then selects between
+// their ADDRESSES, which is that template and not the <xutility>
+// reference one.
+//
+// THE PACING PAIR is GameTime::DelayTil followed by kbwin.h's
+// NextFrameTime inline - the identical two-line shape army::Fly's
+// flight loop uses, and the `cmp interval, lag; jle` clamp inside it is
+// exactly what appears here at [ebp+0x44] against the elapsed time.
+//
+// atan2's (dx, dy) convention next door does NOT carry into the fork:
+// the split's x offset comes from COS and its y offset from SIN, read
+// straight off which product is added to iX and which to iY.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
-void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
+void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
+                           int iDestX, int iDestY, int iSplitFrequency,
+                           int iMaxSplitLength, int iStartThickness,
+                           int iEndThickness, int iColor,
+                           int iAngleDistortMin, int iAngleDistortMax,
+                           int iSegmentLength, int iDrawsPerSegment,
+                           int bDistortAlways, int iDelay, int bFlashLighten)
 {
-    // @stub
-}
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
 
-#endif  // @carcass
+    if (bHandleResets)
+        gpMouseManager->HidePointer();
+
+    int bComplete = 0;
+    long iDrawsPerSeg = (iSegmentLength - 1) / iSegmentLength + 1;
+    long iSplitChanceTimes100 = iSplitFrequency * 100 / iSegmentLength;
+
+    // A bolt fired leftwards wanders the other way, and the band is
+    // normalised so the Random() below always gets a low-high pair.
+    if (iSourceX > iDestX) {
+        iAngleDistortMin = -iAngleDistortMin;
+        iAngleDistortMax = -iAngleDistortMax;
+    }
+    if (iAngleDistortMin > iAngleDistortMax) {
+        int iSwap = iAngleDistortMax;
+        iAngleDistortMax = iAngleDistortMin;
+        iAngleDistortMin = iSwap;
+    }
+
+    SBolt* psBolts = new SBolt[25];
+    long iHalfThickness = _cpp_max(iStartThickness, iEndThickness) >> 1;
+
+    AddBolt(psBolts, iSourceX, iSourceY, iDestX, iDestY, iSplitFrequency,
+            iStartThickness, iEndThickness, iColor, iAngleDistortMin,
+            iAngleDistortMax, iSegmentLength, bDistortAlways);
+
+    iDelay = static_cast<long>(
+        static_cast<float>(iDelay)
+        * gCombatSpeedFactors[gUnnamed698758.combatSpeed]);
+    long iMaxBolt = 1;
+    unsigned long iDelayTil = GameTime::Get() + iDelay;
+
+    long i;
+    do {
+        { for (long j = 0; j < iDrawsPerSeg; j++) {
+            long iUpdTLX = 9999;
+            long iUpdTLY = 9999;
+            long iUpdBRX = -1;
+            long iUpdBRY = -1;
+            bComplete = 1;
+
+            // The extremes are taken BOTH SIDES of the draw because
+            // DrawBolt advances the pen: the segment just drawn runs
+            // from where the bolt was to where it now is, so both ends
+            // have to enter the union.
+            for (i = 0; i < iMaxBolt; i++) {
+                if (!psBolts[i].bAtDestination) {
+                    if (psBolts[i].iX > iUpdBRX)
+                        iUpdBRX = psBolts[i].iX;
+                    if (psBolts[i].iX < iUpdTLX)
+                        iUpdTLX = psBolts[i].iX;
+                    if (psBolts[i].iY > iUpdBRY)
+                        iUpdBRY = psBolts[i].iY;
+                    if (psBolts[i].iY < iUpdTLY)
+                        iUpdTLY = psBolts[i].iY;
+                    DrawBolt(&psBolts[i], iSegmentLength);
+                    if (psBolts[i].iX > iUpdBRX)
+                        iUpdBRX = psBolts[i].iX;
+                    if (psBolts[i].iX < iUpdTLX)
+                        iUpdTLX = psBolts[i].iX;
+                    if (psBolts[i].iY > iUpdBRY)
+                        iUpdBRY = psBolts[i].iY;
+                    if (psBolts[i].iY < iUpdTLY)
+                        iUpdTLY = psBolts[i].iY;
+                }
+            }
+
+            iUpdTLX -= iHalfThickness;
+            iUpdTLY -= iHalfThickness;
+            iUpdBRX += iHalfThickness;
+            iUpdBRY += iHalfThickness;
+            if (iUpdTLX < 0)
+                iUpdTLX = 0;
+            if (iUpdTLY < 0)
+                iUpdTLY = 0;
+            if (iUpdBRX > 799)
+                iUpdBRX = 799;
+            if (iUpdBRY > 555)
+                iUpdBRY = 555;
+
+            GameTime::DelayTil(iDelayTil);
+            iDelayTil = GameTime::NextFrameTime(iDelayTil, iDelay);
+            gpWindowManager->UpdateScreen(iUpdTLX, iUpdTLY,
+                                          iUpdBRX - iUpdTLX + 1,
+                                          iUpdBRY - iUpdTLY + 1);
+
+            for (i = 0; i < iMaxBolt; i++)
+                if (!psBolts[i].bAtDestination)
+                    bComplete = 0;
+            if (bComplete)
+                goto done;
+
+            if (iSplitFrequency) {
+                // The bound is SNAPSHOT and the cap is LIVE: the sweep
+                // visits only the bolts that existed when it started,
+                // while the 25-bolt ceiling is tested against the count
+                // this very sweep is growing.
+                long iMaxBoltForThisCycle = iMaxBolt;
+                for (i = 0; i < iMaxBoltForThisCycle; i++) {
+                    if (!psBolts[i].bAtDestination) {
+                        long iAbsDist = abs(psBolts[i].iDestX - psBolts[i].iX)
+                            + abs(psBolts[i].iDestY - psBolts[i].iY);
+                        if (iMaxBolt < 25 && iAbsDist > iSegmentLength * 2
+                            && Random(0, iSplitChanceTimes100) < 100) {
+                            // iStartX is the last fork's position, so the
+                            // second test throttles how often one bolt can
+                            // fork; a bolt that has never forked from the
+                            // screen's left edge skips it outright.
+                            if (psBolts[i].iStartX == 0
+                                || abs(psBolts[i].iStartY - psBolts[i].iY)
+                                        + abs(psBolts[i].iStartX
+                                              - psBolts[i].iX)
+                                    >= iSplitFrequency * 0.75) {
+                                psBolts[i].iStartX = psBolts[i].iX;
+                                psBolts[i].iStartY = psBolts[i].iY;
+                                float fOffset =
+                                    static_cast<float>(Random(50, 80))
+                                    / 100.0f;
+                                if (Random(0, 1))
+                                    fOffset = -fOffset;
+                                float fAngle = psBolts[i].fDistortedAngle;
+                                fAngle += fOffset;
+                                long iDrawLength = Random(iMaxSplitLength >> 1,
+                                                          iMaxSplitLength);
+                                if (iDrawLength > (iAbsDist >> 1))
+                                    iDrawLength = iAbsDist >> 1;
+                                long iSplitX = static_cast<long>(
+                                    cos(static_cast<double>(fAngle))
+                                        * iDrawLength
+                                    + psBolts[i].iX);
+                                long iSplitY = static_cast<long>(
+                                    sin(static_cast<double>(fAngle))
+                                        * iDrawLength
+                                    + psBolts[i].iY);
+                                long iSplitThickness = psBolts[i].iThickness;
+                                if (psBolts[i].iEndThickness
+                                    < psBolts[i].iStartThickness)
+                                    iSplitThickness--;
+                                AddBolt(&psBolts[iMaxBolt], psBolts[i].iX,
+                                        psBolts[i].iY, iSplitX, iSplitY,
+                                        iSplitFrequency, iSplitThickness, 1,
+                                        iColor,
+                                        static_cast<long>(
+                                            iAngleDistortMin * 0.66 - 20),
+                                        static_cast<long>(
+                                            iAngleDistortMax * 0.66 + 20),
+                                        iSegmentLength,
+                                        psBolts[i].bDistortAlways);
+                                iMaxBolt++;
+                            }
+                        }
+                    }
+                }
+            }
+        } }
+
+        for (i = 0; i < iMaxBolt; i++)
+            if (!psBolts[i].bAtDestination)
+                ResetBoltAngle(&psBolts[i]);
+    } while (!bComplete);
+
+done:
+    delete [] psBolts;
+
+    if (bHandleResets) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        // The caster's own attack animation is flushed to its last
+        // frame before the pointer comes back, so the stack is not
+        // left frozen mid-swing behind the bolt.
+        army* pArmy = get_current_army();
+        if (pArmy->frameInfoAttackFrames) {
+            long iFrames = pArmy->stdIcon->GetNumFrames(pArmy->currFrameType);
+            long iFrameDelay = pArmy->frameInfoAttackStartCycleTime / iFrames;
+            while (pArmy->currFrameIndex < iFrames) {
+                // Written as two calls, not as a ternary argument: retail
+                // BRANCHES over the one differing push and shares the other
+                // five, where a ternary gives our CL a setne (why-branch
+                // D8/D13, the TPickANumber clamp shape).
+                if (pArmy->currFrameIndex == iFrames - 1)
+                    DrawFrame(0, 1, 0, iFrameDelay, 1, 1);
+                else
+                    DrawFrame(1, 1, 0, iFrameDelay, 1, 1);
+                pArmy->currFrameIndex++;
+            }
+            pArmy->currFrameIndex =
+                pArmy->stdIcon->GetNumFrames(pArmy->currFrameType) - 1;
+        }
+        gpMouseManager->ShowPointer(false);
+    }
+}
 
 // Chain Lightning's bounce search: of every stack the `effected` row has
 // not already recorded, take the one nearest the stack the bolt just
