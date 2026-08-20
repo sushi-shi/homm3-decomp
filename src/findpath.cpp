@@ -532,8 +532,40 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // `_Ucopy` walk and a `_Construct` fill that retail EXPANDS and we call.
 // That is the UNDER-inline direction, i.e. the opposite of the three
 // caller-shrink doses below, so the sequential spend has been pushed past
-// its optimum at these late sites rather than the lever being wrong.  Next
-// lane: re-titrate the third dose rather than adding a fourth.
+// its optimum at these late sites rather than the lever being wrong.
+//
+// TITRATED 2026-08-20 WITH THE `if (0)` cb INSTRUMENT, AND THE DIRECTION IS
+// CONFIRMED - BUT NO REAL CARRIER REACHES IT.  Wrapping N dead arithmetic
+// statements in `if (0)` at the top of the body grows caller_cb without
+// touching the candidate-site count, and the curve is:
+//   N=  0    8   12   16   20   24   26   28   30   32   40   80
+//     87.55 88.62 86.31 90.80 91.64 91.95 91.05 91.97 91.97 90.81 88.54 82.19
+// The peak is +4.42 (87.5488 -> 91.9730 at N=28..30), and at that dose the
+// branch count crosses retail's: 73 at N=0, 78 in retail, 80 at N=28.  So
+// the body genuinely wants a caller roughly 28 statements LARGER and the
+// wall is the /Ob2 NUMERATOR, not the divisor.
+//
+// EVERY REAL CARRIER MEASURED WORSE, and they are recorded so the next lane
+// does not re-spend them.  Un-lifting a dose adds its cb but also REMOVES a
+// candidate site, and the divisor change dominates: fill_path_cell 87.10,
+// terrain_forbids_magic 79.70, find_queue_slot 85.87, the last two together
+// 75.78.  Handing budget forward with an early statement pin fails too -
+// `inline_depth(0)` on the erase 86.08, on find_queue_slot 75.53, on
+// fill_path_cell 81.66, on terrain_forbids_magic 86.36, on the
+// `queue.size() >= 500` test 85.96.  So do NOT re-try "pin an early site to
+// free budget for the later ones" here; it is measured five ways.
+// Container spellings are also already optimal: `queue.pop_back()` for the
+// erase 86.89, the single-element `insert(pos, val)` 57.80,
+// `visited_points.push_back(dest)` 75.94, and passing
+// terrain_forbids_magic three longs instead of a type_point 81.30.
+// Re-titrating the third dose as a SMALLER slice (a helper returning the
+// TAdventureObjectType with the two comparisons left in the caller) is
+// 87.4589 - exactly the pre-`NewfullMap::cell` value, i.e. the granularity
+// step is below /Ob2's threshold and only the accessor's +0.09 moves.
+// What is still unexplored: a real statement or block that PushPoint is
+// missing.  It would have to be worth ~28 statements of cb, and the score
+// at N=0 (87.55) is too high for that much real code to be absent, so the
+// honest reading is that this is a codegen-device wall, not a source one.
 // The `terrain_forbids_magic` helper now reads the map through
 // `NewfullMap::cell` (+0.09 here; +10.58 on GetTerrainCost, +5.62 on
 // TestPossibleDirections - see those bodies).
