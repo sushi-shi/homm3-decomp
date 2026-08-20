@@ -1044,7 +1044,14 @@ public:
     // pushes exactly them in exactly that order - the attacker's
     // GetName, its numTroops, the accumulated damage, the ONE stack it
     // hit (null when the sweep caught more than one creature type) and
-    // the accumulated kill count. Its own body is not claimed here.
+    // the accumulated kill count.
+#endif
+    // Split out of the multi-head view 2026-08-20 so cmbtmgr.cpp, which
+    // now DEFINES this body, can see its declarator without also taking
+    // CheckRebirth and MarkCreatureEffect - two declarators it has no
+    // use for and would pay the include-set threshold for.
+#if defined(HOMM3_CMBTMGR_MULTI_HEAD_VIEW) \
+        || defined(HOMM3_CMBTMGR_MESSAGE_VIEW)
     void damage_message(const char* attacker, long attacker_qty,
                         long damage, const army* defender,
                         long deaths);                         // 0x469a90

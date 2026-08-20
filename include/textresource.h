@@ -32,6 +32,17 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_GOOD_MORALE = 34,
     GENERAL_TEXT_BAD_MORALE = 35,
 #endif
+#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
+    // The singular partner of GENERAL_TEXT_MIXED_ARMY below, and the one
+    // consumer that proves the pair is a pair: combatManager::
+    // damage_message (0x469a90) picks between the folded
+    // [Text._First + 0xac] and [Text._First + 0xb0] on `deaths == 1`
+    // when the dying stack has no army record to name itself from.
+    // Gated for the reason GENERAL_TEXT_GOOD_MORALE above is - an
+    // ungated enumerator counts toward the include-set threshold in
+    // every consumer.
+    GENERAL_TEXT_MIXED_ARMY_ONE = 43,
+#endif
     GENERAL_TEXT_MIXED_ARMY = 44,
 #ifdef HOMM3_EVENTS_VIEW
     // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
@@ -108,6 +119,19 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_AI_GIFT_RECEIVED = 359,
     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
+#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
+    // The four rows combatManager::damage_message (0x469a90) builds its
+    // line out of, every index a folded [Text._First + N] load in that
+    // one body: 0x5e4/0x5e8 are the damage clause, selected on
+    // `attacker_qty == 1` and both fed (attacker name, damage); 0x5ec is
+    // the one-death clause, fed the dying stack's name alone, and 0x5f0
+    // the many-death clause, fed (deaths, name). Gated for the reason
+    // GENERAL_TEXT_GOOD_MORALE above is.
+    GENERAL_TEXT_COMBAT_DAMAGE_ONE_ATTACKER = 377,
+    GENERAL_TEXT_COMBAT_DAMAGE_MANY_ATTACKERS = 378,
+    GENERAL_TEXT_COMBAT_ONE_DEATH = 379,
+    GENERAL_TEXT_COMBAT_MANY_DEATHS = 380,
+#endif
     GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
 #ifdef HOMM3_EVENTS_VIEW
     // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
@@ -136,6 +160,15 @@ enum EGeneralTextIndex {
     // 0xaa4/0xaa8/0xaac are that descriptor for the three spells whose
     // effect has no turn count.
     GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT = 611,
+#ifdef HOMM3_TEXT_COMBAT_DAMAGE_VIEW
+    // damage_message's third death clause, and the only [Text._First +
+    // 0xa70] load in the image. It replaces the one/many pair above
+    // when the defending stack carries creatureId bit 6 - the same bit
+    // SideIsWipedOut (0x465830) and IsWinner (0x4658b0) read as "this
+    // stack is out of the fight" - and it takes the stack's name alone,
+    // with no count. Gated for the reason GENERAL_TEXT_GOOD_MORALE is.
+    GENERAL_TEXT_COMBAT_STACK_WIPED_OUT = 668,
+#endif
     GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
     GENERAL_TEXT_ARMY_SPELL_BIND = 681,
     GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,
