@@ -1309,7 +1309,7 @@ inline void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
 // does in get_area_effect_value above.
 //
 // The hop itself is combatManager's: mark the stack in the
-// chainLightningHit block, ask GetNextChainLightningTarget for the
+// `effected` block, ask GetNextChainLightningTarget for the
 // next hex, and stop the moment it answers off-field. ClearEffects
 // wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
@@ -1328,7 +1328,7 @@ long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery ma
         else
             enemy_damage += get_damage_value(SPELL_CHAIN_LIGHTNING, damage,
                                              enemy_hero, target);
-        gpCombatManager->chainLightningHit[target->combatSide][target->bitIndex] = 1;
+        gpCombatManager->effected[target->combatSide][target->bitIndex] = 1;
         long hex = gpCombatManager->GetNextChainLightningTarget(target, 0);
         if (hex < 0)
             break;
