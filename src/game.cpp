@@ -75,6 +75,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "puzzlewindow.h"
 #include "resourcemanager.h"
 #include "herospec.h"
+#include "savegame.h"
 #include "imm_mouse.h"
 
 inline type_point::type_point(short new_x, short new_y, short new_z)
@@ -2499,7 +2500,7 @@ int game::Load(TAbstractFile* infile)
     gpGame->setup = saved.mapSetup;
     gbUnk69774c = saved.campaignGame;
     gpGame->campaign = saved.campaign;
-    strcpy(gpGame->pad_1f4d5, saved.fileName.c_str());
+    strcpy(gpGame->saveFileName, saved.fileName.c_str());
     gpGame->difficultyRating = saved.difficultyRating;
     gpGame->field_1f635 = saved.numDeadPlayers;
     memcpy(gpGame->playerDisabled, saved.deadPlayer,
@@ -3160,17 +3161,106 @@ int compare_heroes(const void* arg1, const void* arg2)
 // game::Save is compiled above; the exact SavedGameHeader::Save serializer
 // at 0x4bc5d0 supersedes the old SaveBlackMarkets attribution.
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:3667
 // ARITY: `ret 0x14` = five stack arguments + `this`, i.e. p=6, and this
 // is the only p=6 prototype in the whole span. The body composes a path
 // from '.\GAMES\' with '%s%s' and opens it with the 'wb0+' / 'wb6+'
 // compression modes - a save-file writer - and it sits after game::Save
 // exactly as the DC line order (3667 > 3311) requires.
+// RECONSTRUCTED 2026-08-20. Compose the file name, screen it against the
+// two reserved general-text names, and write the game through a zlib
+// stream.
+//
+// THE TWO timeGetTime CALLS ARE DEAD, and both are transcribed: retail
+// stamps one on entry and one after the stream closes, stores each to
+// its own stack slot and reads neither. Wall-clock instrumentation left
+// in the shipped build - the standing "dead args and stray calls are
+// real" rule. game::Save's int return is discarded too; this body always
+// answers 1.
+//
+// THE TWO TIMING LOCALS ARE `volatile`, AND THAT IS A CODEGEN CLAIM, NOT
+// A SOURCE TOKEN THIS TREE CAN PROVE. Written as plain unsigned longs,
+// VC6 dead-stores both away (nothing ever reads them) and the two
+// `mov [ebp-0x24], eax` / `mov [ebp-0x20], eax` retail carries vanish;
+// `volatile` is the only spelling tried that restores them, and it is
+// the ordinary idiom for a timing probe a programmer does not want
+// optimised out. Worth 93.0265 -> 93.8148.
+//
+// Residual (93.8148%): branches agree 8/8 with one ret on both sides.
+// Two things left. Retail homes ESP at [ebp-0x10] - the /GX unwind esp
+// slot - and our CL does not emit that store at all, which also shifts
+// nothing else; and retail loads `compressIt` into CL where we use AL,
+// so that the `mov eax, <mode>` ahead of the test does not clobber it.
+// Tried and rejected: hoisting the ternary into a named `const char*
+// mode` local ahead of the constructor (93.8148 either way, byte-inert).
+// Every other row of the diff is a reloc NAME on a datum the delinker
+// carries no symbol for.
 VA(0x004beea0, 0x267)  // arity (ret 0x14 = p6, unique in span) + '.\GAMES\' write modes, dc 0xa99d0
 unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffix, unsigned char bCampaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
-    // @stub
+    char nameNoExtension[351] = {0};
+    char saveName[351] = {0};
+    char fullPath[351];
+    volatile unsigned long startTime;
+    volatile unsigned long endTime;
+
+    startTime = timeGetTime();
+    if (!bCampaignWinMode)
+        gpAdvManager->DemobilizeCurrHero(0, 1);
+
+    if (bDetermineSuffix) {
+        strcpy(nameNoExtension, filename);
+        strtok(nameNoExtension,
+               DATA_COMPGEN(0x006603ec, saveExtensionDot, "."));
+        if (gbUnk69774c)
+            sprintf(saveName,
+                    DATA_COMPGEN(0x00677d98, nameWithExtensionFormat, "%s.%s"),
+                    nameNoExtension,
+                    DATA_COMPGEN(0x00677da4, campaignSaveSuffix, "CGM"));
+        else if (field_1f69d)
+            sprintf(saveName,
+                    DATA_COMPGEN(0x00677d98, nameWithExtensionFormat, "%s.%s"),
+                    nameNoExtension,
+                    DATA_COMPGEN(0x00677da0, tutorialSaveSuffix, "TGM"));
+        else
+            sprintf(saveName,
+                    DATA_COMPGEN(0x00677d90, saveSlotNameFormat, "%s.GM%d"),
+                    nameNoExtension, gUnnamed699274);
+    } else {
+        strcpy(saveName, filename);
+    }
+
+    if (xferFile) {
+        sprintf(fullPath,
+                DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
+                DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
+                saveName);
+    } else {
+        sprintf(fullPath,
+                DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
+                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                saveName);
+        // General text 77 and 109 are the two reserved auto-save names;
+        // a save under either of them does not become the remembered one.
+        if (_strnicmp(saveName, gpGeneralText->GetText(77), 8)
+            && _strnicmp(saveName, gpGeneralText->GetText(109), 8))
+            strcpy(gpGame->saveFileName, filename);
+    }
+
+    {
+        TGzFile outfile(
+            fullPath,
+            compressIt ? DATA_COMPGEN(0x00677d80, gzDeflateWriteMode, "wb6+")
+                       : DATA_COMPGEN(0x00677d78, gzStoreWriteMode, "wb0+"));
+        Save(&outfile);
+    }
+    endTime = timeGetTime();
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:3790
 DC_ONLY(0xa9e88, 0x246)

@@ -1442,7 +1442,19 @@ public:
     char pad_1f456[2];
     SCampaign campaign;                    // +0x1f458
     unsigned char field_1f4d4;
-    char pad_1f4d5[0x15f];
+    // +0x1f4d5. RETYPED IN PLACE 2026-08-20 (no declarator added, so the
+    // include-set population is unchanged): game::SaveGame (0x4beea0)
+    // strcpy's its `filename` argument here through gpGame whenever the
+    // composed name is neither of the two general-text rows it screens
+    // against, i.e. this is the remembered save name. The 0x15f extent
+    // is the pad's, not proven for the string - but 351 is exactly the
+    // width of SaveGame's own two stack buffers and of misc.h's
+    // gcRegAppPath, so the whole pad reading as one name buffer is the
+    // economical hypothesis rather than a stretch. CORROBORATED FROM THE
+    // OTHER SIDE: game::Load's already-matched header copy-out strcpy's
+    // SavedGameHeader::fileName into this exact offset, so the writer
+    // and the reader agree on what the field is.
+    char saveFileName[0x15f];
     unsigned char field_1f634;
     unsigned char field_1f635;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
