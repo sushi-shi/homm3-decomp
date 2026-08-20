@@ -656,7 +656,24 @@ command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 # the four slice groups did not restore it while it was down, and adding
 # further evidenced slices (+0x28c, +0xd8) in either combination did not
 # either - only the later batch, as a whole, did.
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+# GetCommand ACCEPTED 92.5714 -> 92.5357 AGAIN (2026-08-20, spells lane),
+# the same two-instruction swap, in the same never-matching region, for
+# the same reason. THE CHANGE: the ESpellId roster in armygrp.h was
+# FLATTENED - six view gates retired (LAND_MINE, the WALL pair,
+# SACRIFICE, SLOW, COUNTERSTRIKE, the nine-row enchantment tail) plus
+# artifact.h's two auto-cast combination ids - so that spells.obj's
+# message bodies can name every case label they need. Nothing in
+# command.cpp moved.
+# WHAT THE FLATTENING COST, measured as one change over all 131 units:
+# this row and nothing else. It also GAINED one exact function
+# elsewhere (1495 -> 1496), which is the class being non-monotonic in
+# the other direction. `max` and `hist` keep 92.5714.
+# Compile-required fallout of the same change, recorded here because it
+# is the only place the two meet: army.h's EArmySpellRowId and
+# viewarmywindow.cpp's `const int SPELL_BIND` were duplicate copies of
+# four ESpellId names that only ever compiled because their gates never
+# opened together. Both retired; same names, same values, byte-inert.
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
@@ -814,7 +831,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # a later lane, not lost work. Do NOT hunt a local spelling: see the
 # initialize_game_data block further down for the sweep that
 # established the class is non-monotonic and not source-nameable.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	99.9517	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
@@ -1398,7 +1415,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # this class: two enumerators moved the row by the same amount one
 # enumerator did on 2026-08-08, which is what a population threshold
 # looks like and not what a per-declarator penalty looks like.
-initialize	?initialize_game_data@@YIXXZ	96.0880	96.0880	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	97.0370	97.0370	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540

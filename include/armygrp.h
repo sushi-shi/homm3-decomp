@@ -260,10 +260,7 @@ enum ESpellId {
     // i.e. the Tower's moat IS a minefield, which is what identifies
     // the spell. The id also sits one below SPELL_EARTHQUAKE 0xe in the
     // battlefield-obstacle run this enum already anchors at that end.
-    // Behind a view for this header's usual measured reason.
-#ifdef HOMM3_SPELL_LAND_MINE_DECL
     SPELL_LAND_MINE = 0xb,
-#endif
     // The two WALL spells, byte-proven by combatManager::ValidSpellTarget
     // (0x5a39c0): its tail tests the spell against 0xc and then 0xd and
     // gives each one its own placement rule - 0xc walks the two spell
@@ -273,11 +270,8 @@ enum ESpellId {
     // battlefield-obstacle run this enum already anchors at both ends
     // (LAND_MINE 0xb above, EARTHQUAKE 0xe below), which is what fixes
     // WHICH is which: 0xc is one below Fire Wall, i.e. Force Field.
-    // Behind a view for this header's usual measured reason.
-#ifdef HOMM3_SPELL_WALL_DECL
     SPELL_FORCE_FIELD = 0xc,
     SPELL_FIRE_WALL = 0xd,
-#endif
     // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
     // corresponding 0x88-byte traits row's per-mastery mana-cost band.
     SPELL_FLY = 0x6,
@@ -327,18 +321,12 @@ enum ESpellId {
     // that arm is the one gated on `first_target` before it reaches
     // find_resurrection_target - the sacrifice beneficiary lookup.
     //
-    // BEHIND A VIEW, AND THAT IS A MEASUREMENT, NOT CAUTION. Declared
-    // unconditionally this ONE enumerator costs initialize.obj's
-    // initialize_game_data 100.0000 -> 96.0880 - the include-set class
-    // this header has fired before, at the same two values, when three
-    // ESpellId enumerators were added and withdrawn on 2026-08-08. The
-    // value is explicit and every neighbour's value is explicit too, so
-    // the two arms describe the same domain; only the count of
-    // enumerators visible to a TU differs. spells.cpp is the only
-    // consumer.
-#ifdef HOMM3_ARMYGRP_SACRIFICE_VIEW
+    // Corroborated independently by ai_tactical's consider_spell, whose
+    // 56-entry byte table sends `spell - 14 == 26` to the arm that calls
+    // type_AI_spellcaster::consider_sacrifice and nothing else, and a
+    // third time by combatManager::SpellTargetMessage (0x5a8690), whose
+    // 0x28 arm is the one gated on `first_target`.
     SPELL_SACRIFICE = 0x28,
-#endif
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
     // The 41..52 enchantment ladder, byte-proven end to end 2026-08-08
@@ -374,22 +362,18 @@ enum ESpellId {
     // the four spells the Armor of the Damned auto-casts - Slow, Curse,
     // Weakness, Misfortune - which is also what corroborates it, since
     // the other three are already byte-proven enumerators above.
-    // Behind a view for this header's usual measured reason: armygrp.h
-    // reaches most of the combat tree and an ungated enumerator counts
-    // toward the include-set threshold in every consumer.
-#ifdef HOMM3_SPELL_SLOW_DECL
+    // Corroborated a third time by combatManager::ShowSpellMessage
+    // (0x5a8950): its artifact arm groups exactly 0x36 with CURSE 0x2a,
+    // WEAKNESS 0x2d and MISFORTUNE 0x34 onto one Armor-of-the-Damned
+    // line, which is the same four-spell set from the other side.
     SPELL_SLOW = 0x36,
-#endif
     SPELL_SLAYER = 0x37,
     SPELL_TITANS_LIGHTNING_BOLT = 0x39,
     // 58, byte-proven by ai_tactical's get_counterstroke_value
     // (0x439e80), which folds the row into the displacement as
     // `[akSpellTraits + 4*mastery + 0x1f04]` = 58*136 + 0x34 - the
-    // constant form, so the enumerator is what the source names. Behind
-    // a view for the same measured reason as SPELL_SLOW below.
-#ifdef HOMM3_SPELL_COUNTERSTRIKE_DECL
+    // constant form, so the enumerator is what the source names.
     SPELL_COUNTERSTRIKE = 0x3a,
-#endif
     SPELL_BERSERK = 0x3b,
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
@@ -424,7 +408,7 @@ enum ESpellId {
     SPELL_SUMMON_WATER_ELEMENTAL = 0x44,
     SPELL_SUMMON_AIR_ELEMENTAL = 0x45,
     SPELL_STONE = 0x46,
-    SPELL_POISON = 0x47
+    SPELL_POISON = 0x47,
     // The nine rows ai_tactical's enchantment dispatch
     // get_enchantment_function (0x43b690) needs and this roster did
     // not carry. Each is byte-proven by that function's own two
@@ -443,15 +427,9 @@ enum ESpellId {
     // Four of the nine are independently corroborated by army.h's
     // +0x198 spell-influence row, which already fixes FRENZY 0x38,
     // BIND 0x48 and AGE 0x4b from the round-counter side and puts
-    // PARALYZE on 74. Behind a view for this header's usual measured
-    // reason.
-#ifdef HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
-    ,
+    // PARALYZE on 74. (SPELL_SACRIFICE 0x28 belongs to this set too and
+    // is declared once, in value order, above.)
     SPELL_MAGIC_ARROW = 0xf,
-    // 40, byte-proven by consider_spell's own dispatch: its 56-entry
-    // byte table sends `spell - 14 == 26` to the arm that calls
-    // type_AI_spellcaster::consider_sacrifice and nothing else.
-    SPELL_SACRIFICE = 0x28,
     SPELL_IMPLOSION = 0x12,
     SPELL_HASTE = 0x35,
     SPELL_FRENZY = 0x38,
@@ -459,8 +437,15 @@ enum ESpellId {
     SPELL_BIND = 0x48,
     SPELL_DISEASE = 0x49,
     SPELL_PARALYZE = 0x4a,
-    SPELL_AGE = 0x4b
-#endif
+    SPELL_AGE = 0x4b,
+    // 78, byte-proven by combatManager::ShowSpellMessage (0x5a8950).
+    // Its creature-spell dispatch is a jump table over 0x2a..0x4e and
+    // 0x4e is the TOP entry, with an arm of its own that prints one
+    // text row over the affected stack's name and nothing else - the
+    // shape every other creature-ability arm in that table has. The
+    // value is fixed at both ends by the same table: 0x4b AGE is the
+    // last already-proven rung below it, and the window closes at 0x4e.
+    SPELL_DISPEL_HELPFUL = 0x4e
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
