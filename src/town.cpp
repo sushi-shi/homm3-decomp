@@ -215,10 +215,10 @@ void town::GiveSpells(hero* forceHero)
             currentHero = forceHero;
         } else {
             int heroId;
-            if (heroIndex)
-                heroId = garrisonHeroId;
-            else
+            if (heroIndex == 0)
                 heroId = visitingHeroId;
+            else
+                heroId = garrisonHeroId;
             currentHero = gpGame->GetHero(heroId);
         }
 
@@ -236,7 +236,7 @@ void town::GiveSpells(hero* forceHero)
             } else {
                 for (int level = 0;
                      level < currentHero->wisdomLevel + 2
-                         && level <= static_cast<signed char>(field_14);
+                         && level <= field_14;
                      ++level) {
                     for (int slot = 0;
                          slot < mageGuildSpellCounts[level]; ++slot)
