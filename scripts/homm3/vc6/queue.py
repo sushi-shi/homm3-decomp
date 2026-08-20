@@ -54,6 +54,52 @@ def _targets():
 UNCLAIMED = "unclaimed (no source binding)"
 
 
+def _horizon(in_unit_bytes: float) -> None:
+    """Print what this census can and cannot see.
+
+    Everything above ranks work INSIDE the units the build compiles. That is
+    a small fraction of the engine, and a ranking that does not say so invites
+    reading `queue`'s total as the distance to 100%. Uses the same filtered
+    universe the README scores against, so the two never disagree.
+    """
+    try:
+        from homm3.match import universe
+        _cat, sizes, tally = universe.summary()
+    except Exception as e:
+        print(f"[queue] (horizon unavailable: {type(e).__name__}: {e})")
+        return
+    engine = tally.get("target", (0, 0))[1] + tally.get("zlib", (0, 0))[1]
+    try:
+        rep = json.loads(
+            (_common.REPO / "build/objdiff/report.json").read_text())
+    except Exception:
+        return
+    unit_bytes = matched = 0.0
+    for u in rep["units"]:
+        for f in u.get("functions", []):
+            try:
+                s = int(f.get("size", 0) or 0)
+            except (TypeError, ValueError):
+                s = 0
+            unit_bytes += s
+            matched += s * (f.get("fuzzy_match_percent", 0) or 0) / 100
+    outside = engine - unit_bytes
+    remaining = engine - matched
+    print(f"\nhorizon (filtered engine, the README's denominator: "
+          f"{engine / 1024:.0f} KB):")
+    print(f"  {matched / 1024:8.1f} KB  matched so far "
+          f"({100 * matched / engine:.2f}%)")
+    print(f"  {in_unit_bytes / 1024:8.1f} KB  recoverable INSIDE compiled "
+          f"units - everything this census ranks")
+    print(f"  {outside / 1024:8.1f} KB  in functions NO unit claims yet - "
+          "invisible to every solver")
+    if remaining:
+        print(f"  -> closing the whole ranking above moves the total to "
+              f"{100 * (matched + in_unit_bytes) / engine:.2f}%; the other "
+              f"{100 * outside / remaining:.0f}% of the work left needs new "
+              "units, not better matching")
+
+
 def run(args) -> int:
     only = set(filter(None, (args.unit or "").split(",")))
     rows, failed = [], []
@@ -107,8 +153,10 @@ def run(args) -> int:
         by_class[r["class"]].append(r)
         by_unit[r["unit"]] += r["recoverable"]
 
+    in_unit = sum(r["recoverable"] for r in rows)
     print(f"\n[queue] {len(rows)} unmatched function(s), "
-          f"{sum(r['recoverable'] for r in rows) / 1024:.1f} KB recoverable")
+          f"{in_unit / 1024:.1f} KB recoverable")
+    _horizon(in_unit)
     if failed:
         print(f"[queue] {len(failed)} of those have no source claim, so the "
               f"router cannot see them; they are counted as {UNCLAIMED!r} "
