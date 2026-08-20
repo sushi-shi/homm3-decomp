@@ -416,7 +416,7 @@ void combatManager::ChainLightning(int index, int level, int power)
 VA(0x005a66b0, 0x14)  // order-map+arity, dc 0x155a08
 void combatManager::ClearEffects()
 {
-    memset(pad_547c, 0, sizeof(pad_547c));
+    memset(chainLightningHit, 0, sizeof(chainLightningHit));
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows

@@ -12,16 +12,41 @@
 // literal 0x36 into SpellCastWorkChance - so it needs the enumerator
 // armygrp.h already carries behind this view for cmbtmgr.cpp.
 #define HOMM3_SPELL_SLOW_DECL
-// consider_teleport pushes the literal 0x3f into SpellCastWorks, and
+// consider_teleport pushes the literal 0x3f into ValidSpellTargetArmy, and
 // reads combatManager's pending-order code back as a domain member.
 #define HOMM3_SPELL_TELEPORT_DECL
 #define HOMM3_CMBTMGR_AI_ORDER_DECL
+// The creature-spell pricers get_ogre_mage_value / get_caliph_value
+// switch on combatManager+0x53c0's spell-restriction code with a
+// jump table, so the five codes that raise a spell's mastery need
+// enumerators.
+#define HOMM3_CMBTMGR_SPELL_MASTERY_DECL
+// get_enchantment_function's dispatch names nine spell rows this
+// header's roster did not carry; its own byte/dword table pair proves
+// each of them.
+#define HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
+// The enchantment pricers walk army's +0x198 spell-influence row and
+// its +0x2dc mastery twin by spell id, which needs the row form of
+// both. Split out of army.cpp's round view so this TU does not also
+// take that view's other twenty-six declarators.
+#define HOMM3_ARMY_SPELL_ROW_VIEW
+// get_chain_lightning_value drives the chain through two spells.obj
+// leaves this TU is the only located caller of.
+#define HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
+// check_adjacent_hexes breaks a tie toward the LONGER approach for the
+// two jousters.
+#define HOMM3_CREATURE_JOUST_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
 #include "ai_tactical.h"
 #include "findpath.h"
 #include "game.h"
+// consider_spell's summon arm asks get_elemental_type which creature
+// the spell would put on the field.
+#include "spells.h"
+// cast_spell jitters the chosen spell's value through Random().
+#include "misc.h"
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -50,6 +75,17 @@
 // get_breath_bonus) while raising nothing. Declared file-locally so
 // the TU does not pull the STL surface in; ai_combat.cpp carries the
 // same pair.
+// Artifact 83, the id cast_spell (0x43c800) asks
+// hero::IsWieldingArtifact for on BOTH heroes before refusing every
+// spell above traits level 2 - Recanter's Cloak's rule and no other
+// artifact's. TU-LOCAL for the reason ai_combat.cpp's identical
+// constant is (and this is the third TU to carry it): adding an
+// enumerator to armygrp.h's artifact roster measurably perturbs
+// unrelated units through the shared type environment, and this one
+// would also collide with ai_spellvalue.h's own file-scope constant in
+// every TU that takes both.
+const int ARTIFACT_RECANTERS_CLOAK = 0x53;
+
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -541,19 +577,149 @@ long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:575
+// How many turns this stack needs to reach the hex `cell` describes.
+// No retail body - the carve cuts nothing between the chooser's
+// constructor at 0x4360c0 and check_adjacent_hexes at 0x436300 - so it
+// is `inline`, and the RETURN is what the caller's shape needs: retail
+// leaves the answer in EAX across all four exits and stores it ONCE,
+// where the same statements written out in the caller store to the
+// slot at every assignment.
 DC_ONLY(0x3d154, 0x8E)
-long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
+inline long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
 {
-    // @stub
+    if (speed == 0)
+        return 0 < cell->cost ? 100 : 1;
+    long turns = (cell->cost + speed - 1) / speed;
+    if (search_data->bIsMoatSlowed[cell->point.x])
+        turns++;
+    if (turns < 1)
+        turns = 1;
+    return turns;
 }
 
 // E:\gamedcs\ai_tactical.cpp:599
+// The hex chooser's inner sweep: try the enemy's neighbouring hexes
+// over one direction range and keep the best place to attack from.
+//
+// The per-hex time is get_attack_time (dc 0x3d154) INLINED - a stack
+// with no speed at all is charged a flat 100 turns for any hex that
+// costs anything, everyone else pays `ceil(cost / speed)` plus one for
+// a moat hex, floored at 1 - and a hex that takes MORE turns than the
+// standing best is refused outright.
+//
+// The two seven-parameter statics below are added for the attacker's
+// own multi-head and breath sweeps and SUBTRACTED for the enemy's
+// retaliation, but only while the side is actually being played by the
+// computer or the difficulty is above the lowest rung. The same gate
+// guards the tie-break, where a JOUSTER (creatureType 10 or 11) breaks
+// a tie toward the hex that costs MORE to reach - its charge bonus
+// grows with distance - and everything else toward the cheaper hex.
+//
+// A double-wide attacker scores BOTH of its hexes: the second is one
+// step in the direction it faces, its attack value is added, and the
+// enemy threat taken is the SMALLER of the two hexes'.
 VA(0x00436300, 0x31C)  // anchor-global, dc 0x3d1e4
 void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)
 {
-    // @stub
+    for (long direction = start_direction; direction < stop_direction; direction++) {
+        long hex = gpCombatManager->adjacentCells[enemy_hex][direction];
+        if (hex < 0)
+            continue;
+        if (hex >= COMBAT_GRID_CELLS)
+            continue;
+        const pathCell* cell;
+        if (search_data->cellData == 0)
+            cell = 0;
+        else
+            cell = &search_data->cellData[hex];
+        if (!cell->visited)
+            continue;
+        if (cell->flight_cost > 0)
+            continue;
+        long turns = get_attack_time(cell);
+        if (best_hex >= 0) {
+            if (field_24 < turns)
+                continue;
+        }
+        long checked = 0;
+        long value = get_hex_attack_value(hex, &checked);
+        if (gpGame->setup.difficulty > 0
+                || gpCombatManager->sideIsAI[data->side]) {
+            unsigned char heads = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 19);
+            if (heads & 1)
+                value += get_multi_head_bonus(gpCombatManager->currentSide,
+                                              attack_army, hex, our_troops,
+                                              enemy_army, enemy_army->gridIndex,
+                                              data);
+            unsigned char breath = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 3);
+            if (breath & 1)
+                value += get_breath_bonus(gpCombatManager->currentSide,
+                                          attack_army, hex, our_troops,
+                                          enemy_army, enemy_army->gridIndex,
+                                          data);
+            unsigned char no_retaliation = static_cast<unsigned char>(
+                static_cast<unsigned>(attack_army->creatureId) >> 16);
+            if (!(no_retaliation & 1) && !enemy_army->disabled_2b0
+                    && enemy_army->retaliationCount > 0) {
+                unsigned char enemy_heads = static_cast<unsigned char>(
+                    static_cast<unsigned>(enemy_army->creatureId) >> 19);
+                if (enemy_heads & 1)
+                    value -= get_multi_head_bonus(enemy_army->combatSide,
+                                                  enemy_army,
+                                                  enemy_army->gridIndex,
+                                                  enemy_troops_left,
+                                                  attack_army, hex, data);
+                unsigned char enemy_breath = static_cast<unsigned char>(
+                    static_cast<unsigned>(enemy_army->creatureId) >> 3);
+                if (enemy_breath & 1)
+                    value -= get_breath_bonus(enemy_army->combatSide,
+                                              enemy_army,
+                                              enemy_army->gridIndex,
+                                              enemy_troops_left,
+                                              attack_army, hex, data);
+            }
+        }
+        long threat = enemy_attack_array[hex];
+        if (attack_army->creatureId & 1) {
+            long other_hex = hex + (attack_army->facing ? 1 : -1);
+            value += get_hex_attack_value(other_hex, &checked);
+            threat = _cpp_min(enemy_attack_array[other_hex], threat);
+        }
+        value += threat;
+        if (best_hex >= 0 && turns == field_24) {
+            if (value < best_value)
+                continue;
+            if (value == best_value) {
+                const pathCell* best_cell;
+                if (search_data->cellData == 0)
+                    best_cell = 0;
+                else
+                    best_cell = &search_data->cellData[best_hex];
+                long difference = cell->cost - best_cell->cost;
+                if ((attack_army->creatureType == CREATURE_CAVALIER
+                            || attack_army->creatureType == CREATURE_CHAMPION)
+                        && (gpGame->setup.difficulty > 0
+                            || gpCombatManager->sideIsAI[data->side])) {
+                    if (difference <= 0)
+                        continue;
+                } else {
+                    if (difference >= 0)
+                        continue;
+                }
+            }
+        }
+        best_value = value;
+        best_hex = hex;
+        field_24 = turns;
+    }
 }
+
+#if 0  // @carcass
 
 // THE TWO SEVEN-PARAMETER STATICS, moved here from their DC line
 // positions (109 and 155). Retail emits them immediately after
@@ -722,23 +888,101 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
     // @stub
 }
 
-// E:\gamedcs\ai_tactical.cpp:793
-// EH-bearing (P2.2): push -1 / push 0x627efb / mov eax,fs:[0] frame
-// around the operator-new of the 0x410-byte deputy caster.
-VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
-void type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side, unsigned char creature_spell)
+#endif  // @carcass
+
+// E:\gamedcs\ai_tactical.cpp:3377 - OUT OF FILE ORDER ON PURPOSE.
+// check_simulation and the deputy constructor below are both INLINED
+// into the public constructor and carry no retail body of their own,
+// so they are `inline` here and defined ahead of their one caller
+// rather than at their Dreamcast line numbers.
+//
+// The scan itself: walk the OTHER side's stacks and answer "the fight
+// is already decided" in field_1c unless some enemy is still magic-
+// vulnerable (creature bit 21 clear), still alive, and still able to
+// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
+// pointer form, the same one consider_teleport carries.
+DC_ONLY(0x425a8, 0x68)
+inline void type_AI_spellcaster::check_simulation()
 {
-    // @stub
+    const army* enemy = gpCombatManager->armies[enemy_side];
+    long count = gpCombatManager->numArmies[enemy_side];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->get_total_hit_points(1) <= 0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 6);
+        if (idle & 1)
+            continue;
+        field_1c = 0;
+        return;
+    }
+    field_1c = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
-void type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creature_spell)
+inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
+                                                combatManager* combat, long side,
+                                                unsigned char creature_spell)
+    : params(combat, side)
 {
-    // @stub
+    long enemy = 1 - side;
+    this->creature_spell = creature_spell;
+    this->side = side;
+    enemy_side = enemy;
+    our_hero = combat->heroes[side];
+    enemy_hero = combat->heroes[enemy];
+    field_1c = 0;
+    deputy = parent;
+    owns_deputy = 0;
+    check_simulation();
+    find_enemy_attacks();
 }
 
-#endif  // @carcass
+// E:\gamedcs\ai_tactical.cpp:793
+// EH-bearing (P2.2): push -1 / push 0xb / mov eax,fs:[0] frame around
+// the operator-new of the 0x410-byte deputy caster - the ONE state the
+// funclet cleans is that raw allocation, so the frame is the `new`
+// expression's, not a local's.
+//
+// The body is the public caster's whole setup: the two heroes off
+// combat->heroes[], the combat manager's own move order and simulation
+// pass, this side's decided-fight check, both groups' AI targets, the
+// melee census, and finally the DEPUTY - a second caster for the other
+// side, owned by this one (owns_deputy = 1), whose constructor is
+// inlined here in full.
+//
+// `1 - side` is a LOCAL, not a re-read of the member: retail spills it
+// into the dead `combat` parameter slot at [ebp+8] and feeds the
+// deputy from there. The member would have to be reloaded, since
+// find_move_order / simulate_combat / find_AI_targets all sit between
+// the store and the use and none of them lets VC6 assume `this` is
+// unaliased.
+VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
+type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
+                                         unsigned char creature_spell)
+    : params(combat, side)
+{
+    long enemy = 1 - side;
+    this->creature_spell = creature_spell;
+    this->side = side;
+    enemy_side = enemy;
+    our_hero = combat->heroes[side];
+    enemy_hero = combat->heroes[enemy];
+    field_1c = 0;
+    combat->find_move_order(0);
+    combat->simulate_combat(side, 0);
+    check_simulation();
+    for (long group = 0; group < 2; group++)
+        gpCombatManager->find_AI_targets(group, 0, 0, &params, 0);
+    find_enemy_attacks();
+    deputy = new type_AI_spellcaster(this, combat, enemy, creature_spell);
+    owns_deputy = 1;
+}
 
 // type_AI_spellcaster::`scalar deleting destructor' (dc 0x42a74).
 // Retail places it BEFORE the dtor, and the one-slot vftable at
@@ -754,16 +998,39 @@ type_AI_spellcaster::~type_AI_spellcaster()
         delete deputy;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:837
+// "Is this the last stack on our side that can still act this round?"
+// No retail body - the carve cuts nothing between the destructor at
+// 0x436c30 and should_attack_now at 0x436c60 - so it is `inline`, and
+// its three callers all reach it the same way: compute the acting
+// stack once, and ask only when the stack being priced is not itself
+// the acting one. VC6 CSEs the two `armies[actingSide][actingSlot]`
+// computations back into one.
 DC_ONLY(0x3d7b0, 0x86)
-unsigned char type_AI_spellcaster::is_last_action()
+inline unsigned char type_AI_spellcaster::is_last_action()
 {
-    // @stub
+    const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                  [gpCombatManager->actingSlot];
+    long total = gpCombatManager->numArmies[side];
+    for (long j = 0; j < total; j++) {
+        const army* other = &gpCombatManager->armies[side][j];
+        if (other->creatureId & 0x200040)
+            continue;
+        if (other->disabled_290)
+            continue;
+        if (other->disabled_2b0)
+            continue;
+        if (other->disabled_2c0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(other->creatureId) >> 26);
+        if (idle & 1)
+            continue;
+        if (other != current)
+            return 0;
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:862
 // Residual (85.6%): retail MEMORY-HOMES the first loop's counter
@@ -924,16 +1191,29 @@ long type_AI_spellcaster::get_damage_spell_value(const army* enemy, type_enchant
     return get_damage_value(caster.spell, base_damage, enemy_hero, enemy);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:965
+// The per-GROUP half of every mass-damage pricer: sum get_damage_value
+// over one side's stacks, walking BACKWARDS. No retail body - the
+// carve cuts nothing between get_damage_spell_value (0x436f60, 69 B)
+// and get_mass_damage_effect (0x436fb0) - so it is `inline`, and its
+// two PARAMETERS are what let VC6 hoist the group index and the hero
+// out of the loop: consider_spell's mass arm homes them at [ebp+8] and
+// [ebp-0x10] before the walk and strength-reduces the army address
+// into a single decrementing byte offset. Spelling the same two loops
+// out in the caller instead re-reads `this->enemy_side` every
+// iteration and re-derives the whole 1352-byte stride each time, which
+// is what capped consider_spell at 79.84.
 DC_ONLY(0x3dabc, 0x6E)
-long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage, long group, hero* target_hero)
+inline long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage,
+                                                        long group, hero* target_hero)
 {
-    // @stub
+    long total = 0;
+    long count = gpCombatManager->numArmies[group];
+    while (count--)
+        total += get_damage_value(spell, base_damage, target_hero,
+                                  &gpCombatManager->armies[group][count]);
+    return total;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:986
 VA(0x00436fb0, 0x8A)  // anchor-global, dc 0x3db2c
@@ -991,33 +1271,79 @@ long type_AI_spellcaster::get_area_effect_value(SpellID spell, long base_damage,
     return get_mass_damage_effect(enemy_damage, friendly_damage);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1035
+// The area-effect sweep, inlined into consider_spell and carrying no
+// retail body of its own. It tries every hex on the field and keeps
+// the best get_area_effect_value, skipping only the two off-field
+// margin columns - and it re-tests the 0..187 range in front of that
+// column test, which is why retail emits a range guard the loop bound
+// already guarantees.
 DC_ONLY(0x3dc50, 0x72)
-void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
+inline void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
 {
-    // @stub
+    long base_damage = akSpellTraits[choice->spell].power_factor * choice->power
+                       + akSpellTraits[choice->spell].mastery_bonus[choice->mastery];
+    for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (hex >= 0 && hex < COMBAT_GRID_CELLS) {
+            long column = hex % COMBAT_GRID_ROW_STRIDE;
+            if (column == 0)
+                continue;
+            if (column == COMBAT_GRID_LAST_COLUMN)
+                continue;
+        }
+        long value = get_area_effect_value(choice->spell, base_damage,
+                                           choice->mastery, hex);
+        if (value > choice->value) {
+            choice->target = hex;
+            choice->value = value;
+            choice->field_20 = 1;
+        }
+    }
 }
 
-#endif  // @carcass
-
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1059
+// The chain walked forward: price the bolt on each stack it will hop
+// to, halving the damage at every hop, and close on
+// get_mass_damage_effect - which retail INLINES here exactly as it
+// does in get_area_effect_value above.
+//
+// The hop itself is combatManager's: mark the stack in the
+// chainLightningHit block, ask GetNextChainLightningTarget for the
+// next hex, and stop the moment it answers off-field. ClearEffects
+// wipes the marks before the walk starts.
 VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
 long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery mastery, army* target)
 {
-    // @stub
+    long count = akChainLightningTargets[mastery];
+    long enemy_damage = 0;
+    long friendly_damage = 0;
+    gpCombatManager->ClearEffects();
+    long damage = akSpellTraits[SPELL_CHAIN_LIGHTNING].mastery_bonus[mastery]
+                  + akSpellTraits[SPELL_CHAIN_LIGHTNING].power_factor * power;
+    while (count--) {
+        if (target->combatSide == side)
+            friendly_damage += get_damage_value(SPELL_CHAIN_LIGHTNING, damage,
+                                                our_hero, target);
+        else
+            enemy_damage += get_damage_value(SPELL_CHAIN_LIGHTNING, damage,
+                                             enemy_hero, target);
+        gpCombatManager->chainLightningHit[target->combatSide][target->bitIndex] = 1;
+        long hex = gpCombatManager->GetNextChainLightningTarget(target, 0);
+        if (hex < 0)
+            break;
+        if (hex >= COMBAT_GRID_CELLS)
+            break;
+        target = gpCombatManager->cells[hex].get_army();
+        damage = damage / 2;
+    }
+    return get_mass_damage_effect(enemy_damage, friendly_damage);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1094
 // EXACT 2026-08-11. The enemy-side walk is the ordinary
 // `1 - side` / numArmies / armies loop. Retail's one unusual edge is
 // source-natural short circuiting: creature bit 21 rejects the stack
-// before SpellCastWorks, preserving the side/global registers across
+// before ValidSpellTargetArmy, preserving the side/global registers across
 // that arm, while a successful value replaces all three choice fields.
 VA(0x00437310, 0xD1)  // anchor-callee, dc 0x3dde8
 void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
@@ -1029,7 +1355,7 @@ void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
             static_cast<unsigned>(target->creatureId) >> 21);
         long creature_cast = creature_spell != 0;
         if (!(immune & 1)
-                && gpCombatManager->SpellCastWorks(SPELL_CHAIN_LIGHTNING,
+                && gpCombatManager->ValidSpellTargetArmy(SPELL_CHAIN_LIGHTNING,
                                                    side, target, 1,
                                                    creature_cast)) {
             long value = get_chain_lightning_value(choice->power,
@@ -1046,6 +1372,10 @@ void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1126
+// NOT REACHABLE AS A FUNCTION: consider_spell's mass-damage arm is
+// this body, but VC6 refuses to inline it at that one call site even
+// marked `inline` (measured: the arm becomes a CALL and consider_spell
+// falls 79.84 -> 56.93), so it stays written out in the caller.
 DC_ONLY(0x3de90, 0x98)
 void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
 {
@@ -1412,35 +1742,139 @@ long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data 
     return static_cast<long>(total * scale * effect);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1370
-// SURVEYED 2026-08-08, NOT the luck/morale family's shape and NOT
-// unblocked by the clamp work: 0x438490 contains ZERO stack-address
-// selections (`lea reg,[ebp+disp]` count is 0 over all 811 bytes), so
-// no _cpp_clamp / _cpp_min / _cpp_max call site exists in it. The
-// [-3, 3] handling is open-coded integer arithmetic instead -
-// `cmp luck,3` for the upper bail, `lea ecx,[luck+change]` then
-// `cmp ecx,-3` for the lower, and `mov ecx,3 / sub ecx,luck` for the
-// trim - i.e. value_of_luck_and_morale's own body specialised inline
-// rather than called (the out-of-line pricer is never reached from
-// here).
-// It is also the only member of the group that INLINES
-// get_defense_boost_value (0x4387c0), TWICE - once per luck arm - so
-// the body carries two full copies of that function's
-// can_shoot / get_average_damage / get_total_hit_points head, its
-// params.odds scale block, its slow-flag subtraction and its
-// `(sqrt(x) - 1.0) * total * scale` tail, plus a `* 2 / 3` weighting
-// (imul by 0x2aaaaaab, sar 2) between them. Reconstructing it is an
-// independent job the size of get_defense_boost_value plus
-// value_of_luck_and_morale, not a variation on get_mirth_value.
+// Fortune is priced through the DAMAGE-RATIO ladder, not the
+// luck/morale value pricer - which is what the 2026-08-08 survey note
+// this replaces got half right: it correctly found ZERO
+// `lea reg,[ebp+disp]` stack-address selections (so no
+// _cpp_clamp / _cpp_min / _cpp_max call site exists in it) and
+// correctly read the open-coded [-3, 3] handling, but it named the
+// inlined body get_defense_boost_value. It is not: the two blocks
+// carry the SLOW-FLAG subtraction that get_defense_boost_value has no
+// trace of, and none of that function's three census guards. They are
+// get_fire_shield_value's ladder, twice.
+//
+// The doubling is HoMM3's luck rule read backwards. Bad luck halves a
+// strike and good luck doubles it, so the pricer runs the same
+// `(sqrt(factor) - 1) * total * scale` tail twice: once over the HALF
+// damage the stack's standing NEGATIVE luck is costing it, once over
+// the FULL damage its resulting POSITIVE luck would add - each
+// weighted by how many luck points that arm actually moves and
+// divided by 24, which is the per-point chance a lucky strike fires.
+//
+// Three shape edits took it 76.37 -> 96.06 and all three are standing
+// rules: ONE shared `return 0` epilogue means the whole body is nested
+// (four guards jump to it, so they are not four `return 0`
+// statements); a `long gain; if (cond) gain = 0; else {...}` is not
+// the same as `long gain = 0; if (!cond) {...}` (retail falls THROUGH
+// to the zero and jumps to the work); and `luck` is read before the
+// traits row, not after the damage call.
+//
+// Residual (96.06%): the ZERO REGISTER. Retail materialises 0 into EDX
+// once and spends it on the `value = 0` store and both `< 0` / `> 0`
+// compares (`cmp ebx,edx`); ours stores the immediate and uses
+// `test ebx,ebx`, which also flips the `lea ecx,[luck+bonus]` operand
+// order and moves one slot of the second block into a parameter slot.
 VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
 long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* target = our_army->AI_target;
+    if (target != 0
+            && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+        long luck = our_army->luck;
+        long bonus = akSpellTraits[SPELL_FORTUNE].mastery_bonus[caster.mastery];
+        long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                                   our_army->numTroops, 0, 0);
+        long value = 0;
+        if (luck < 3 && bonus + luck > -3) {
+            if (bonus + luck > 3)
+                bonus = 3 - luck;
+            if (luck < 0) {
+                long strikes;
+                if (bonus + luck > 0)
+                    strikes = -luck;
+                else
+                    strikes = bonus;
+                long unlucky = damage / 2;
+                double factor = 2.0;
+                long boosted = static_cast<long>(unlucky * factor);
+                long enemy_hits = target->get_total_hit_points(0);
+                if (boosted > enemy_hits) {
+                    factor = static_cast<double>(enemy_hits)
+                             / static_cast<double>(unlucky);
+                    boosted = enemy_hits;
+                }
+                long gain;
+                if (boosted <= unlucky) {
+                    gain = 0;
+                } else {
+                    double portion;
+                    if (caster.duration >= params.odds)
+                        portion = 1.0;
+                    else
+                        portion = static_cast<double>(caster.duration)
+                                  / static_cast<double>(params.odds);
+                    unsigned char slow_flag = static_cast<unsigned char>(
+                        static_cast<unsigned>(our_army->creatureId) >> 26);
+                    double scale;
+                    if ((slow_flag & 1)
+                            && (portion = portion
+                                          - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                        scale = 0.0;
+                    else
+                        scale = portion;
+                    double total = static_cast<double>(
+                        our_army->get_total_combat_value(params.lowest_attack,
+                                                         params.lowest_defense));
+                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+                }
+                value = gain * strikes / 24;
+            }
+            if (bonus + luck > 0) {
+                long strikes;
+                if (luck < 0)
+                    strikes = bonus + luck;
+                else
+                    strikes = bonus;
+                double factor = 2.0;
+                long boosted = static_cast<long>(damage * factor);
+                long enemy_hits = target->get_total_hit_points(0);
+                if (boosted > enemy_hits) {
+                    factor = static_cast<double>(enemy_hits)
+                             / static_cast<double>(damage);
+                    boosted = enemy_hits;
+                }
+                long gain;
+                if (boosted <= damage) {
+                    gain = 0;
+                } else {
+                    double portion;
+                    if (caster.duration >= params.odds)
+                        portion = 1.0;
+                    else
+                        portion = static_cast<double>(caster.duration)
+                                  / static_cast<double>(params.odds);
+                    unsigned char slow_flag = static_cast<unsigned char>(
+                        static_cast<unsigned>(our_army->creatureId) >> 26);
+                    double scale;
+                    if ((slow_flag & 1)
+                            && (portion = portion
+                                          - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                        scale = 0.0;
+                    else
+                        scale = portion;
+                    double total = static_cast<double>(
+                        our_army->get_total_combat_value(params.lowest_attack,
+                                                         params.lowest_defense));
+                    gain = static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+                }
+                value += gain * strikes / 24;
+            }
+            return value;
+        }
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1429
 // EXACT 2026-08-08 (96.2 -> 100.0): the dead `lea this+i*16` and the
@@ -2166,7 +2600,7 @@ long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchoo
             continue;
         if (!enemy_hero->available_spells[i])
             continue;
-        if (!gpCombatManager->SpellCastWorks(i, enemy_side, our_army, 1, 0))
+        if (!gpCombatManager->ValidSpellTargetArmy(i, enemy_side, our_army, 1, 0))
             continue;
         long mastery = enemy_hero->get_spell_level(i, gpCombatManager->field_53c0);
         if (enemy_hero->GetManaCost(i, group, gpCombatManager->field_53c0)
@@ -2269,17 +2703,64 @@ double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_tu
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2136
-// Blocked on the enchantment dispatch: the loop calls through the
-// member pointer that get_enchantment_function (0x43b690) returns,
-// walking akSpellTraits by 0x88 from 0x550 to 0x2b08 (spells 10..81).
+// What it is worth to strip the spells standing on `current_army` -
+// and it CANCELS THEM AS IT GOES, on the caller's copy, which is why
+// every member of the family builds a real army copy on the stack
+// first (see get_dispel_value below).
+//
+// Each standing spell is re-priced through the enchantment dispatch
+// with a type_enchant_data rebuilt from the two parallel rows: the
+// duration out of +0x198 and the mastery it was cast at out of the
+// +0x2dc twin. Retail walks ONE pointer over the second row and reads
+// the first through it at a constant -0x144, which is what fixes the
+// two rows as adjacent 81-dword bands.
+//
+// The sign is the interesting half: the value is ADDED through the
+// DEPUTY caster when the spell's alignment matches the stack's side
+// (a bad spell on ours, a good spell on theirs - both worth removing)
+// and SUBTRACTED through this caster otherwise. Both flags are int
+// locals, not the byte the field is: retail zeroes EAX/EDX and does
+// `sete al` / `setl dl` then a DWORD `cmp edx,eax`, and the order of
+// the two setcc's is the order the locals are declared in.
+//
+// The `field_10 = 0` after the constructor is real: the two ctors seed
+// it to 1 and this call site clears it, so the pricers' work-chance
+// arm (get_sorrow_value's `if (caster.field_10)`) is skipped for an
+// already-standing spell. VC6 drops the dead 1 store.
 VA(0x00439a80, 0x135)  // anchor-global, dc 0x40248
 long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad_spells_only)
 {
-    // @stub
+    long value = 0;
+    for (long spell = 10; spell < 81; spell++) {
+        long duration = current_army->spellInfluence[spell];
+        if (duration == 0)
+            continue;
+        if (bad_spells_only) {
+            if (akSpellTraits[spell].field_0 >= 0)
+                continue;
+        } else {
+            if (spell == SPELL_POISON)
+                continue;
+        }
+        TEnchantValue value_of = get_enchantment_function(spell);
+        if (value_of == 0)
+            continue;
+        type_enchant_data caster(spell, current_army->spell_level[spell],
+                                 duration, duration);
+        caster.field_10 = 0;
+        current_army->CancelIndividualSpell(spell);
+        long ours = current_army->combatSide == side;
+        long bad = akSpellTraits[spell].field_0 < 0;
+        if (bad == ours)
+            value += (deputy->*value_of)(current_army, caster);
+        else
+            value -= (this->*value_of)(current_army, caster);
+    }
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2180
 // THE SPELL-VALUE FAMILY'S SHAPE (2026-08-07): "what would this stack
@@ -2708,21 +3189,150 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2455
+// The SINGLE-TARGET half: same eligibility sweep as
+// consider_enchantment below, but it keeps the BEST stack rather than
+// a sum, and then answers "should the caster spend this action now?"
+// in choice->field_20.
+//
+// Two things the mass version does not have:
+//   - the MAGIC MIRROR discount. A positive value aimed at the ENEMY
+//     group is scaled by `(50 - target->get_mirror_effect()) * 2 / 100`
+//     while the target's mirror is standing - Dispel excepted, since
+//     dispelling the mirror is not something the mirror can reflect.
+//   - the acting-stack test, which is consider_teleport's inlined
+//     is_last_action with a different fallback: where teleport answers
+//     0 the moment another of our stacks can still act, this one asks
+//     the spell's own traits word (bit 14 of +0xc) whether it is worth
+//     casting anyway. Haste overrides the whole answer to 1.
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
 void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)
 {
-    // @stub
+    TEnchantValue value_of = get_enchantment_function(choice->spell);
+    const army* best = 0;
+    for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
+        const army* target = &gpCombatManager->armies[group][i];
+        if (target->disabled_290)
+            continue;
+        if (target->disabled_2b0)
+            continue;
+        if (target->disabled_2c0)
+            continue;
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (target->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (target->creatureType == CREATURE_AMMO_CART)
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->ValidSpellTargetArmy(choice->spell, side, target, 1,
+                                             creature_cast))
+            continue;
+        if (target->spellInfluence[choice->spell])
+            continue;
+        long value = (this->*value_of)(target, *choice);
+        if (target->magicMirrorRounds && group != side && value > 0
+                && choice->spell != SPELL_DISPEL)
+            value = (50 - target->get_mirror_effect()) * value * 2 / 100;
+        if (value > choice->value) {
+            best = target;
+            choice->value = value;
+            choice->target = target->gridIndex;
+        }
+    }
+    if (best == 0)
+        return;
+    unsigned char act_now;
+    if (group == side) {
+        act_now = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (best != current) {
+            long total = gpCombatManager->numArmies[side];
+            for (long j = 0; j < total; j++) {
+                const army* other = &gpCombatManager->armies[side][j];
+                if (other->creatureId & 0x200040)
+                    continue;
+                if (other->disabled_290)
+                    continue;
+                if (other->disabled_2b0)
+                    continue;
+                if (other->disabled_2c0)
+                    continue;
+                unsigned char idle = static_cast<unsigned char>(
+                    static_cast<unsigned>(other->creatureId) >> 26);
+                if (idle & 1)
+                    continue;
+                if (other != current) {
+                    if ((akSpellTraits[choice->spell].field_c & 0x4000) == 0)
+                        act_now = 0;
+                    break;
+                }
+            }
+        }
+    } else {
+        act_now = should_attack_now(best);
+    }
+    choice->field_20 = act_now;
+    if (choice->spell == SPELL_HASTE)
+        choice->field_20 = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:2513
+// The MASS half of the enchantment pricer: a single-target spell is
+// handed straight to consider_single_enchantment, and everything else
+// is summed over every stack in `group` that the spell can actually
+// land on. The seven skips are the enchantment eligibility rule -
+// three "cannot act" round counters, creature bit 21 (magic immune),
+// the two non-combatant war machines, and a stack that already carries
+// the spell - and then ValidSpellTargetArmy has the last word.
+//
+// The per-stack value goes through get_enchantment_function's
+// pointer-to-member, so `*choice` is SLICED by value onto the stack
+// exactly as in get_caliph_value: the family's second parameter is a
+// type_enchant_data, and a type_spell_choice derives from it.
+//
+// The +0x198 row is read HERE by spell id, which is what the split of
+// army.h's spell-row view out of the round view exists for.
 VA(0x0043a910, 0x150)  // anchor-global, dc 0x40dc8
 void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long group)
 {
-    // @stub
+    if (SpellTargetsASingleArmy(choice->spell, choice->mastery)) {
+        consider_single_enchantment(choice, group);
+        return;
+    }
+    TEnchantValue value_of = get_enchantment_function(choice->spell);
+    long value = 0;
+    for (long i = 0; i < gpCombatManager->numArmies[group]; i++) {
+        const army* target = &gpCombatManager->armies[group][i];
+        if (target->disabled_290)
+            continue;
+        if (target->disabled_2b0)
+            continue;
+        if (target->disabled_2c0)
+            continue;
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (target->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (target->creatureType == CREATURE_AMMO_CART)
+            continue;
+        if (target->spellInfluence[choice->spell])
+            continue;
+        long creature_cast = creature_spell != 0;
+        if (gpCombatManager->ValidSpellTargetArmy(choice->spell, side, target, 1,
+                                            creature_cast))
+            value += (this->*value_of)(target, *choice);
+    }
+    choice->field_20 = 1;
+    choice->value = value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2553
 // Teleport is priced by SIMULATION, not by a formula: for each of our
@@ -2762,6 +3372,10 @@ void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long g
 // still homed). A shared static helper would give retail's
 // two-paths-merge-in-EAX shape, but the two call sites test different
 // conditions, so there is no single helper to write.
+// RE-TESTED 2026-08-20 with the is_last_action() helper this TU now
+// carries (it is what takes consider_resurrect 94.46 -> 97.10): here
+// it costs 10.7 points, 95.5486 -> 84.8629, so retail's teleport arm
+// really does spell the walk out. Two call sites, two shapes.
 VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
 {
@@ -2776,7 +3390,7 @@ void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
         if (no_target & 1)
             continue;
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(SPELL_TELEPORT, side, our_army, 1,
+        if (!gpCombatManager->ValidSpellTargetArmy(SPELL_TELEPORT, side, our_army, 1,
                                              creature_cast))
             continue;
         if (our_army->can_shoot(0))
@@ -2827,16 +3441,79 @@ void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:2608
+// Resurrection and Animate Dead share one pricer: for each of our own
+// stacks the spell would land on, how many creatures come back and
+// what are they worth. The two lookups are cmbtmgr.h's own
+// find_resurrection_target SELECTOR inlined - the header already
+// records that retail expands it rather than emitting it - and the
+// second one exists because a DOUBLE-WIDE stack (creature bit 0)
+// occupies two hexes and the lookup may name the other one.
+//
+// Two refusals shaped by the AI's own caution: a stack that has lost
+// less than three quarters of its troops is not worth healing unless
+// the fight is already decided, and BASIC Resurrection is refused
+// outright in a decided fight. A won fight (our live value ahead and
+// the odds ladder at its bottom rung) doubles the value.
+//
+// The trailing choice->field_20 is consider_teleport's inlined
+// is_last_action once more, here with `field_1c` standing in for the
+// disabled triple.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
 {
-    // @stub
+    const army* our_army = gpCombatManager->armies[side];
+    long count = gpCombatManager->numArmies[side];
+    for (; count-- > 0; ++our_army) {
+        long creature_cast = creature_spell != 0;
+        if (!gpCombatManager->ValidSpellTargetArmy(choice->spell, side, our_army, 1,
+                                             creature_cast))
+            continue;
+        long hex = our_army->gridIndex;
+        if (gpCombatManager->find_resurrection_target(choice->spell, side, hex, 0)
+                != our_army) {
+            if ((our_army->creatureId & 1) == 0)
+                continue;
+            hex = our_army->get_second_grid_index();
+            if (gpCombatManager->find_resurrection_target(choice->spell, side, hex, 0)
+                    != our_army)
+                continue;
+        }
+        long healable = (akSpellTraits[choice->spell].power_factor * choice->power
+                         + akSpellTraits[choice->spell].mastery_bonus[choice->mastery])
+                        / our_army->hitPoints;
+        long dead = our_army->origNumTroops - our_army->numTroops;
+        if (healable > dead) {
+            if (dead < our_army->origNumTroops * 3 / 4) {
+                if (!field_1c)
+                    continue;
+            }
+        }
+        long healed = _cpp_min(healable, dead);
+        if (healed < 1)
+            continue;
+        if (choice->spell == SPELL_RESURRECTION
+                && choice->mastery < SKILL_MASTERY_ADVANCED && field_1c)
+            continue;
+        long value = static_cast<long>(
+            our_army->get_unit_combat_value(params.lowest_attack,
+                                            params.lowest_defense,
+                                            our_army->can_shoot(0), 0)
+            * healed);
+        if (params.our_live_value > params.enemy_live_value && params.odds <= 1)
+            value += value;
+        if (value <= choice->value)
+            continue;
+        choice->value = value;
+        choice->target = hex;
+        unsigned char last = 1;
+        const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                      [gpCombatManager->actingSlot];
+        if (our_army != current && !field_1c)
+            last = is_last_action();
+        choice->field_20 = last;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2685
 // The three-argument Sacrifice pricer: given ONE stack to heal and the
@@ -2890,7 +3567,7 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice, const ar
         if (victim == healed_army)
             continue;
         long creature_cast = creature_spell != 0;
-        if (!gpCombatManager->SpellCastWorks(choice.spell, side, victim, 0,
+        if (!gpCombatManager->ValidSpellTargetArmy(choice.spell, side, victim, 0,
                                              creature_cast))
             continue;
         long resurrected = (akSpellTraits[choice.spell].mastery_bonus[choice.mastery]
@@ -3115,6 +3792,208 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
     return 0;
 }
 
+// E:\gamedcs\ai_tactical.cpp:2884
+// The enchantment dispatch: one pointer-to-member per priceable spell,
+// and `unimplemented` for everything else. Retail lowers it as a
+// two-level jump table - a 61-entry BYTE index over `spell - 15` at
+// +0x214 feeding a 39-entry dword table at +0x178 - so this IS a
+// jump-table switch and its ARM ORDER IS SOURCE ORDER (the standing
+// doctrine, and the reason the cases below are not sorted by value:
+// retail emits age(75) first and weakness(45) last).
+//
+// TWO SLOTS OF THE DWORD TABLE POINT AT THE SAME DEFAULT BLOCK, and
+// that is what fixes the SPELL_BIND arm below. VC6 gives every case
+// label group its own slot even when the target coincides with the
+// fall-out point, so a lone `case SPELL_BIND: break;` and the switch's
+// own out-of-range exit both resolve to the trailing return - one slot
+// each, which is exactly the 0x23/0x26 pair the byte table carries.
+//
+// The address-take is why this could not be written before: it needs
+// every handler EMITTED, not merely claimed, or the relocation names
+// the flat carve label instead of the member. Two rows are still
+// carcass stubs - get_fortune_value (0x438490) and unimplemented
+// (0x43b680, which the carve does not even cut as a row) - so their
+// two `mov eax, offset` instructions are the standing residual here.
+VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
+type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function(SpellID spell)
+{
+    switch (spell) {
+    case SPELL_AGE:
+        return &type_AI_spellcaster::get_age_value;
+    case SPELL_AIR_SHIELD:
+        return &type_AI_spellcaster::get_air_shield_value;
+    case SPELL_ANTI_MAGIC:
+        return &type_AI_spellcaster::get_antimagic_value;
+    case SPELL_MAGIC_MIRROR:
+        return &type_AI_spellcaster::get_backlash_value;
+    case SPELL_BERSERK:
+        return &type_AI_spellcaster::get_berserk_value;
+    case SPELL_BLESS:
+        return &type_AI_spellcaster::get_bless_value;
+    case SPELL_BLIND:
+    case SPELL_PARALYZE:
+        return &type_AI_spellcaster::get_blind_value;
+    case SPELL_BLOODLUST:
+        return &type_AI_spellcaster::get_blood_lust_value;
+    case SPELL_CLONE:
+        return &type_AI_spellcaster::get_clone_value;
+    case SPELL_COUNTERSTRIKE:
+        return &type_AI_spellcaster::get_counterstroke_value;
+    case SPELL_CURE:
+        return &type_AI_spellcaster::get_cure_value;
+    case SPELL_CURSE:
+        return &type_AI_spellcaster::get_curse_value;
+    case SPELL_DISPEL:
+        return &type_AI_spellcaster::get_dispel_value;
+    case SPELL_DISRUPTING_RAY:
+        return &type_AI_spellcaster::get_disruptive_ray_value;
+    case SPELL_MAGIC_ARROW:
+    case SPELL_ICE_BOLT:
+    case SPELL_LIGHTNING_BOLT:
+    case SPELL_IMPLOSION:
+    case SPELL_TITANS_LIGHTNING_BOLT:
+        return &type_AI_spellcaster::get_damage_spell_value;
+    case SPELL_DISEASE:
+        return &type_AI_spellcaster::get_disease_value;
+    case SPELL_FORGETFULNESS:
+        return &type_AI_spellcaster::get_forgetfulness_value;
+    case SPELL_FORTUNE:
+        return &type_AI_spellcaster::get_fortune_value;
+    case SPELL_FIRE_SHIELD:
+        return &type_AI_spellcaster::get_fire_shield_value;
+    case SPELL_FRENZY:
+        return &type_AI_spellcaster::get_frenzy_value;
+    case SPELL_HYPNOTIZE:
+        return &type_AI_spellcaster::get_hypnotize_value;
+    case SPELL_MIRTH:
+        return &type_AI_spellcaster::get_mirth_value;
+    case SPELL_MISFORTUNE:
+        return &type_AI_spellcaster::get_misfortune_value;
+    case SPELL_SLOW:
+        return &type_AI_spellcaster::get_muck_and_mire_value;
+    case SPELL_POISON:
+        return &type_AI_spellcaster::get_poison_value;
+    case SPELL_PRAYER:
+        return &type_AI_spellcaster::get_prayer_value;
+    case SPELL_PRECISION:
+        return &type_AI_spellcaster::get_precision_value;
+    case SPELL_PROTECTION_FROM_AIR:
+        return &type_AI_spellcaster::get_air_protection_value;
+    case SPELL_PROTECTION_FROM_EARTH:
+        return &type_AI_spellcaster::get_earth_protection_value;
+    case SPELL_PROTECTION_FROM_FIRE:
+        return &type_AI_spellcaster::get_fire_protection_value;
+    case SPELL_PROTECTION_FROM_WATER:
+        return &type_AI_spellcaster::get_water_protection_value;
+    case SPELL_SHIELD:
+        return &type_AI_spellcaster::get_shield_value;
+    case SPELL_SLAYER:
+        return &type_AI_spellcaster::get_slayer_value;
+    case SPELL_SORROW:
+        return &type_AI_spellcaster::get_sorrow_value;
+    case SPELL_HASTE:
+        return &type_AI_spellcaster::get_haste_value;
+    case SPELL_STONE_SKIN:
+        return &type_AI_spellcaster::get_tough_skin_value;
+    case SPELL_WEAKNESS:
+        return &type_AI_spellcaster::get_weakness_value;
+    case SPELL_BIND:
+        return &type_AI_spellcaster::unimplemented;
+    }
+    return &type_AI_spellcaster::unimplemented;
+}
+
+// E:\gamedcs\ai_tactical.cpp:3016
+// Earthquake is priced ENTIRELY as a siege tool, so the body opens
+// with three refusals: the DEFENDER never wants it (side 1 owns the
+// castle), a decided fight does not want it, and an unwalled field has
+// nothing to bring down.
+//
+// The value is then "what would our shooters be worth if the wall were
+// not in the way", and it is proportional: `damage / (3 * total)` of
+// each blocked shooter's combat value, where `total` is the whole
+// castle's remaining strength summed over gWallTargets and `damage` is
+// what one cast takes off, capped at that total. A shooter with NO
+// target at all counts its FULL value instead, but only while some
+// segment is already at zero strength - which is what the running
+// minimum is for.
+//
+// The gWallTargets walk is an INT INDEX, not a pointer walk: retail
+// ends it on `cmp ecx,<end> / jl`, and a pointer relational compare is
+// unsigned and could only produce `jb`. VC6 strength-reduced the index
+// into a pointer biased by +8 so `wall_id` sits at displacement zero.
+VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
+void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
+{
+    if (side == 1)
+        return;
+    if (field_1c)
+        return;
+    if (gpCombatManager->field_132f4 == COMBAT_FORTIFICATION_NONE)
+        return;
+    long lowest = 0x7fff;
+    long total = 0;
+    for (long i = 0; i < WALL_TARGET_COUNT; i++) {
+        long strength = gpCombatManager->wallStrength[gWallTargets[i].wall_id];
+        total += strength;
+        lowest = _cpp_min(lowest, strength);
+    }
+    if (total == 0)
+        return;
+    const army* enemy = gpCombatManager->armies[enemy_side];
+    long count = gpCombatManager->numArmies[enemy_side];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (InCastle(enemy->gridIndex))
+            break;
+    }
+    if (count < 0)
+        return;
+    long value = 0;
+    const army* our_army = gpCombatManager->armies[side];
+    long damage = _cpp_min<long>(
+        akSpellTraits[choice->spell].mastery_bonus[choice->mastery], total);
+    long remaining = gpCombatManager->numArmies[side];
+    for (; remaining-- > 0; ++our_army) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(our_army->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (our_army->disabled_290)
+            continue;
+        if (our_army->disabled_2b0)
+            continue;
+        if (our_army->disabled_2c0)
+            continue;
+        if (our_army->creatureType == CREATURE_FIRST_AID_TENT)
+            continue;
+        if (our_army->creatureType == CREATURE_AMMO_CART)
+            continue;
+        const army* target = our_army->AI_target;
+        if (target == 0) {
+            if (lowest > 0)
+                value += our_army->get_total_combat_value(params.lowest_attack,
+                                                          params.lowest_defense);
+            continue;
+        }
+        if (!our_army->can_shoot(0))
+            continue;
+        if (!gpCombatManager->ShotIsThroughWall(our_army, our_army->gridIndex,
+                                                target->gridIndex))
+            continue;
+        value += our_army->get_total_combat_value(params.lowest_attack,
+                                                  params.lowest_defense)
+                 * damage / (total * 3);
+    }
+    choice->value = value;
+    choice->field_20 = 1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2876
@@ -3124,44 +4003,125 @@ long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data cas
     // @stub
 }
 
-// E:\gamedcs\ai_tactical.cpp:2884
-// Blocked by design for this pass: the body address-takes the whole
-// get_<spell>_value family - the ~36 slots the naming layer labels
-// game_3b690_subNN between 0x373f0 and 0x3b500 - so it cannot match
-// until that roster is located, claimed AND emitted (an address-take
-// needs a real body, not a carcass stub).
-// Returns a pointer-to-member of the get_<spell>_value family; the
-// Dreamcast prototype prints as `long (*)()*`, which is not a
-// declarator the label scanner can name - spelled out here so the
-// claim carries its own name instead of the bare `long`.
-VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
-type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function(SpellID spell)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:3016
-VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
-void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_tactical.cpp:3093
+// Same case as consider_mass_damage above: consider_spell's summon arm
+// is this body, VC6 will not fold it in even marked `inline`, so it
+// stays written out at the one call site.
 DC_ONLY(0x41e5c, 0x78)
 void type_AI_spellcaster::consider_summon(type_spell_choice* choice)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:3114
+// The pricing dispatch: every spell the caster might cast lands here
+// and is routed by id. Retail lowers it as a two-level jump table over
+// `spell - 14` (56 byte entries, ten dword targets), so ARM ORDER IS
+// SOURCE ORDER again - and note that the Dispel arm is the only one
+// that BREAKS instead of returning, which is why retail emits the
+// after-the-switch tail physically between the Dispel arm and the
+// Earthquake arm.
+//
+// Three arms carry real bodies of their own:
+//   - the MASS-DAMAGE arm walks both sides BACKWARDS, summing
+//     get_damage_value per stack, and closes on get_mass_damage_effect
+//     exactly as get_area_effect_value does;
+//   - the AREA arm sweeps all 187 hexes and keeps the best
+//     get_area_effect_value, skipping only the two off-field margin
+//     columns (the `hex % 17` test), with the redundant 0..187 range
+//     guard retail carries in front of it;
+//   - the SUMMON arm prices the elemental it would put on the field:
+//     a kills-only estimate is worth a flat 1000 per power point, and
+//     otherwise the summoned creature's own AI_value scales it.
 VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
 void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
 {
-    // @stub
+    switch (choice->spell) {
+    case SPELL_RESURRECTION:
+    case SPELL_ANIMATE_DEAD:
+        consider_resurrect(choice);
+        return;
+    case SPELL_CHAIN_LIGHTNING:
+        consider_chain_lightning(choice);
+        return;
+    case SPELL_DEATH_RIPPLE:
+    case SPELL_DESTROY_UNDEAD:
+    case SPELL_ARMAGEDDON: {
+        long base_damage =
+            akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
+            + akSpellTraits[choice->spell].power_factor * choice->power;
+        long enemy_damage = get_group_damage_value(choice->spell, base_damage,
+                                                   enemy_side, enemy_hero);
+        long friendly_damage = get_group_damage_value(choice->spell, base_damage,
+                                                      side, our_hero);
+        // Retail CALLS the effect leaf here where get_area_effect_value
+        // (0x437040) inlines it; our CL inlines it in both, and the
+        // expansion is the whole fild/fdiv/fcompp block plus its four
+        // duplicated epilogues (62.72 -> 79.84 on the pin alone).
+        // Pinned at the SITE, not the function.
+#pragma inline_depth(0)
+        choice->value = get_mass_damage_effect(enemy_damage, friendly_damage);
+#pragma inline_depth()
+        choice->field_20 = 1;
+        return;
+    }
+    case SPELL_DISPEL: {
+        consider_enchantment(choice, side);
+        if (choice->mastery == SKILL_MASTERY_ADVANCED)
+            consider_enchantment(choice, enemy_side);
+        if (choice->mastery == SKILL_MASTERY_EXPERT) {
+            type_spell_choice mirror = *choice;
+            consider_enchantment(&mirror, enemy_side);
+            choice->value += mirror.value;
+        }
+        break;
+    }
+    case SPELL_EARTHQUAKE:
+        consider_earthquake(choice);
+        return;
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+        consider_area_effect(choice);
+        return;
+    case SPELL_SACRIFICE:
+        consider_sacrifice(*choice);
+        return;
+    case SPELL_SUMMON_FIRE_ELEMENTAL:
+    case SPELL_SUMMON_EARTH_ELEMENTAL:
+    case SPELL_SUMMON_WATER_ELEMENTAL:
+    case SPELL_SUMMON_AIR_ELEMENTAL: {
+        if (field_1c)
+            return;
+        if (!gpCombatManager->AbleToSummonElemental(choice->spell, side))
+            return;
+        long power = akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
+                     * choice->power;
+        if (params.kills_only) {
+            choice->field_20 = 1;
+            choice->value = power * 1000;
+            return;
+        }
+        TCreatureType summoned = get_elemental_type(choice->spell);
+        choice->field_20 = 1;
+        choice->value = akCreatureTypeTraits[summoned].AI_value * power;
+        return;
+    }
+    case SPELL_TELEPORT:
+        consider_teleport(choice);
+        return;
+    }
+    const SSpellTraits* traits = &akSpellTraits[choice->spell];
+    if ((traits->field_c & 0x70) == 0)
+        return;
+    if (traits->field_0 >= 0)
+        consider_enchantment(choice, side);
+    if (traits->field_0 <= 0)
+        consider_enchantment(choice, enemy_side);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3191
 // Residual (95.3%): register assignment inside the census loop -
@@ -3316,28 +4276,121 @@ void type_AI_spellcaster::find_enemy_attacks()
     } }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:3311
+// The Ogre Mage's own cast: it puts Bloodlust on a friendly stack, so
+// the pricing is Bloodlust's - and the whole body is
+// get_blood_lust_value INLINED behind a locally built choice, which is
+// why the `rep movsd` slices the type_spell_choice down to the
+// type_enchant_data that function's by-value parameter is.
+//
+// THE BATTLEFIELD MASTERY PREAMBLE (shared verbatim with
+// get_caliph_value below): a creature cast is priced at ADVANCED
+// unless the combat's spell-restriction code raises it. Code 1 raises
+// everything; codes 6/7/8/9 raise only the matching school, tested off
+// the spell's own school mask a bit at a time - which is why retail
+// tail-merges the four arms into one `and al,1 / test al,al / je /
+// mov edx,3` block and why the Air arm loads a BYTE where the other
+// three shift a dword first.
 VA(0x0043c330, 0x16C)  // anchor-callee, dc 0x423f4
 long type_AI_spellcaster::get_ogre_mage_value(const army* target)
 {
-    // @stub
+    if (target->bloodlustRounds)
+        return 0;
+    TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+    unsigned char expert = 0;
+    switch (gpCombatManager->field_53c0) {
+    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+        expert = 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 2) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 1) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits >> 3) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[SPELL_BLOODLUST].schoolBits) & 1;
+        break;
+    }
+    if (expert)
+        mastery = SKILL_MASTERY_EXPERT;
+    type_spell_choice choice(SPELL_BLOODLUST, mastery, 6, 6);
+    if (SpellTargetsASingleArmy(SPELL_BLOODLUST, mastery))
+        return get_blood_lust_value(target, choice);
+    consider_enchantment(&choice, side);
+    return choice.value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:3335
+// The Master Genie's cast: it has no spell of its own, so the value is
+// the AVERAGE over every spell it may legally cast on this stack -
+// hence the running total, the running count and the closing `idiv`
+// behind a zero guard. `is_valid_caliph_spell` is the filter; the
+// mastery preamble is get_ogre_mage_value's, verbatim, only reading
+// the CURRENT spell's school mask instead of Bloodlust's constant row.
+//
+// The per-spell value comes back through the enchantment dispatch's
+// pointer-to-member, which is also why the choice is sliced by-value
+// onto the stack (`sub esp,0x14 / rep movsd`) rather than passed as a
+// reference: the family's parameter is a type_enchant_data BY VALUE.
 VA(0x0043c4a0, 0x180)  // anchor-callee, dc 0x424c4
 long type_AI_spellcaster::get_caliph_value(const army* target)
 {
-    // @stub
+    long total = 0;
+    long count = 0;
+    for (long spell = 10; spell < 70; spell++) {
+        if (!is_valid_caliph_spell(spell, target))
+            continue;
+        TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+        unsigned char expert = 0;
+        switch (gpCombatManager->field_53c0) {
+        case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+            expert = 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 2) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 1) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits >> 3) & 1;
+            break;
+        case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+            expert = static_cast<unsigned char>(
+                akSpellTraits[spell].schoolBits) & 1;
+            break;
+        }
+        if (expert)
+            mastery = SKILL_MASTERY_EXPERT;
+        count++;
+        TEnchantValue value_of = get_enchantment_function(spell);
+        if (value_of != 0) {
+            type_spell_choice choice(spell, mastery, 6, 6);
+            if (SpellTargetsASingleArmy(spell, mastery)) {
+                total += (this->*value_of)(target, choice);
+            } else {
+                consider_enchantment(&choice, side);
+                total += choice.value;
+            }
+        }
+    }
+    if (count == 0)
+        return 0;
+    return total / count;
 }
 
-// E:\gamedcs\ai_tactical.cpp:3377
-DC_ONLY(0x425a8, 0x68)
-void type_AI_spellcaster::check_simulation()
-{
-    // @stub
-}
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3398
 DC_ONLY(0x42610, 0xA0)
@@ -3346,12 +4399,118 @@ unsigned char type_AI_spellcaster::spells_not_required()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:3420
+// The top of the spell AI: walk every spell the hero actually knows,
+// price it through consider_spell, jitter the price, and keep the
+// best - then hand the winner to combatManager's pending-order slots.
+//
+// Four refusals before the pricing, and two of them corroborate
+// domains this tree already carries. `field_53c0 == 2` refuses every
+// spell above traits level 1 - which is Cursed Ground's published
+// rule and the same code cmbtmgr.h already records as refusing
+// creature casts. Either hero wearing artifact 83 refuses every spell
+// above level 2 - Recanter's Cloak. The other two are the spell's own
+// traits bits: bit 0 gates it at all, and bit 9 marks the spells that
+// still make sense while RETREATING.
+//
+// The value is scaled by how much mana is left: with seven casts or
+// more in the pool the spell keeps 5/2 of its value, and below that it
+// is scaled by `sqrt(mana / cost)`. Then Random(75, 100) percent of
+// that is what actually competes.
 VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
 unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
 {
-    // @stub
+    type_spell_choice best;
+    long power = gpCombatManager->spellPower[side];
+    long duration = power;
+    const armyGroup* enemy_group = gpCombatManager->armyGroups[enemy_side];
+    unsigned char inhibited = 0;
+    if (our_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+        inhibited = 1;
+    if (enemy_hero) {
+        if (enemy_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+            inhibited = 1;
+    }
+    unsigned char healing_only = 1;
+    if (!field_1c) {
+        healing_only = 0;
+    } else {
+        const army* our_army = gpCombatManager->armies[side];
+        long count = gpCombatManager->numArmies[side];
+        for (; count-- > 0; ++our_army) {
+            unsigned char immune = static_cast<unsigned char>(
+                static_cast<unsigned>(our_army->creatureId) >> 21);
+            if (immune & 1)
+                continue;
+            if (our_army->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (our_army->AI_expected_damage + our_army->topCreatureDamage
+                    >= our_army->hitPoints) {
+                healing_only = 0;
+                break;
+            }
+        }
+    }
+    if (our_hero)
+        duration = our_hero->GetSpellDurationBonus() + power;
+    if (retreating)
+        params.kills_only = 1;
+    for (long spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (!our_hero->available_spells[spell])
+            continue;
+        if ((akSpellTraits[spell].field_c & 1) == 0)
+            continue;
+        if (retreating) {
+            if ((akSpellTraits[spell].field_c & 0x200) == 0)
+                continue;
+        }
+        if (gpCombatManager->field_53c0
+                == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS) {
+            if (akSpellTraits[spell].level > 1)
+                continue;
+        }
+        if (inhibited) {
+            if (akSpellTraits[spell].level > 2)
+                continue;
+        }
+        long mastery = our_hero->get_spell_level(spell,
+                                                 gpCombatManager->field_53c0);
+        long cost = our_hero->GetManaCost(spell, enemy_group,
+                                          gpCombatManager->field_53c0);
+        if (cost > our_hero->mana)
+            continue;
+        if (healing_only) {
+            if (spell != SPELL_RESURRECTION && spell != SPELL_ANIMATE_DEAD)
+                continue;
+        }
+        type_spell_choice choice(spell, mastery, power, duration);
+        consider_spell(&choice);
+        if (choice.value <= 0)
+            continue;
+        if (our_hero->mana >= cost * 7)
+            choice.value = choice.value * 5 / 2;
+        else
+            choice.value = static_cast<long>(
+                sqrt(static_cast<double>(our_hero->mana / cost)) * choice.value);
+        choice.value = Random(75, 100) * choice.value / 100;
+        if (choice.value > best.value)
+            best = choice;
+    }
+    if (best.spell != -1) {
+        if (best.field_20 || retreating) {
+            gpCombatManager->field_3c = 1;
+            gpCombatManager->field_40 = best.spell;
+            gpCombatManager->field_44 = best.target;
+            gpCombatManager->field_48 = best.field_18;
+            return 1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // ..\stlport\stl_deque.h:128
 DC_ONLY(0x42994, 0x2C)

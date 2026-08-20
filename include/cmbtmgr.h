@@ -66,8 +66,34 @@ extern const TMissileStartInfo* gMissileStartInfo;
 // it while still allowing a hero cast. BOOTSTRAP INVENTION - no roster
 // attests the domain or the spelling, and the other nine codes stay
 // unnamed until one of the 0x4643b0 branches is decoded.
+//
+// FIVE MORE CODES DECODED 2026-08-20 from the other side, by
+// ai_tactical's creature-spell pricers get_ogre_mage_value (0x43c330)
+// and get_caliph_value (0x43c4a0). Both open with the same
+// jump-table switch over this word, and each arm's only effect is to
+// raise the mastery the spell is priced at from ADVANCED to EXPERT:
+// code 1 raises it unconditionally, and codes 6/7/8/9 raise it only
+// when the spell's own school mask (`akSpellTraits[spell].school`,
+// +0x1c) carries bit 2 / bit 1 / bit 3 / bit 0 - i.e. eSchoolWater,
+// eSchoolFire, eSchoolEarth and eSchoolAir respectively. The
+// enumerators are named after that measured EFFECT rather than after
+// the battlefield that sets the code, so no roster is being invented;
+// for the record the effects are the five spell-affecting special
+// battlefields' published rules, and code 2's already-recorded
+// "creature casts refused" is the sixth.
+// Behind a view because cmbtmgr.h reaches most of the combat tree and
+// an ungated enumerator counts toward the include-set threshold in
+// every consumer.
 enum ECombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
+#ifdef HOMM3_CMBTMGR_SPELL_MASTERY_DECL
+    ,
+    COMBAT_SPELL_RESTRICTION_ALL_EXPERT = 0x1,
+    COMBAT_SPELL_RESTRICTION_WATER_EXPERT = 0x6,
+    COMBAT_SPELL_RESTRICTION_FIRE_EXPERT = 0x7,
+    COMBAT_SPELL_RESTRICTION_EARTH_EXPERT = 0x8,
+    COMBAT_SPELL_RESTRICTION_AIR_EXPERT = 0x9
+#endif
 };
 
 // Combat-grid geometry, byte-proven wherever a cmbtmgr or findpath body
@@ -458,7 +484,12 @@ public:
     // reason its two neighbours are.
     int field_40;                     // +0x40
     int field_44;                     // +0x44
-    char pad_0048[0x4];
+    // The order's fourth slot, and ai_tactical's cast_spell (0x43c800)
+    // is the writer that slices it out of the pad: it stamps the
+    // chosen spell into field_40, its target hex into field_44 and the
+    // choice's own field_18 here, all three behind field_3c = 1.
+    // Address ordinal for the same reason its neighbours are.
+    int field_48;                     // +0x48
     // Two 187-byte per-hex rows, both cleared by Open (0x462a20) with
     // `mov ecx,0x2e / xor eax,eax / rep stosd / stosw / stosb` - 0x2e
     // dwords plus a word plus a byte is exactly COMBAT_GRID_CELLS, and
@@ -574,11 +605,17 @@ public:
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
     TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
-    // ClearEffects (0x5a66b0) zeroes exactly this pad as ten dwords - a
-    // `rep stosd` with ecx=10 over [this+0x547c]. That proves the extent and
-    // the dword granularity; it does not name the elements, so the pad stays
-    // a pad until a reader slices it.
-    char pad_547c[0x28];
+    // Per-stack "this stack has already been hit by the chain" marks,
+    // indexed [combatSide][army::bitIndex]: ai_tactical's
+    // get_chain_lightning_value (0x437190) raises
+    // `[this + bitIndex + 20*combatSide + 0x547c]` before asking
+    // GetNextChainLightningTarget for the next hop, and ClearEffects
+    // (0x5a66b0) is what it calls to wipe the whole block first. The
+    // 20-wide row and the 40-byte extent are the pad's own, so this is
+    // a retype in place and no byte moves.
+    // Corroborated from the writer side: ClearEffects zeroes exactly this
+    // extent as ten dwords, a `rep stosd` with ecx=10 over [this+0x547c].
+    unsigned char chainLightningHit[2][20];  // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -1335,6 +1372,40 @@ public:
                          unsigned char melee_only,
                          const type_AI_combat_parameters* data,
                          searchArray* search_array);          // 0x422b20
+    // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
+    // both sides: DC's own ai.obj roster puts
+    // combatManager::simulate_combat (ai.cpp:2584, dc 0x277f4, 146 B,
+    // three parameters counting `this`) immediately before
+    // find_AI_targets (ai.cpp:2608, dc 0x27888) in exactly the same
+    // way, and the DC xref graph lists simulate_combat as a callee of
+    // type_AI_spellcaster's constructor - which is where retail's
+    // 0x422a40 is called from, with `this` = the combatManager and two
+    // stack arguments. Declared so that constructor can spell the
+    // call; not claimed, and the body belongs to the ai.obj lane.
+    void simulate_combat(long side, unsigned char simulated);  // 0x422a40
+    // 0x5a93a0, the row IMMEDIATELY AFTER get_elemental_type (0x5a9360)
+    // in spells.obj - which is exactly where DC's own spells.cpp
+    // roster puts combatManager::AbleToSummonElemental (spells.cpp:5912,
+    // dc 0x1580c4, three parameters counting `this`) against
+    // get_elemental_type (spells.cpp:5890, dc 0x158090). ai_tactical's
+    // consider_spell (0x43bb20) gates its whole summon arm on it, with
+    // the spell and this caster's side on the stack. Declared for that
+    // call site; not claimed.
+    unsigned char AbleToSummonElemental(SpellID spell, long side);
+    // The two spells.obj leaves ai_tactical's get_chain_lightning_value
+    // (0x437190) drives the chain with. Both are named by the DC xref
+    // graph, which records exactly these two as callees of that body,
+    // and both land where DC's spells.obj order puts them:
+    // GetNextChainLightningTarget (spells.cpp:4202, dc 0x15547c, three
+    // parameters counting `this`) and ClearEffects (spells.cpp:4387,
+    // dc 0x155a08, 24 B and `this` only). Declared for that call site;
+    // neither is claimed. Behind a view because cmbtmgr.h reaches most
+    // of the combat tree.
+#ifdef HOMM3_CMBTMGR_CHAIN_LIGHTNING_DECL
+    long GetNextChainLightningTarget(const army* target, long excluded);
+                                                              // 0x5a61f0
+    void ClearEffects();                                      // 0x5a66b0
+#endif
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     unsigned char should_stay_in_castle(
@@ -1410,7 +1481,7 @@ public:
     // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
     // same eight - and its source line 5065 sits just before
     // ModifySpellDamage's 5086, which is the retail order exactly.
-    // spells.cpp:4387, dc 0x155a08 - clears pad_547c.
+    // spells.cpp:4387, dc 0x155a08 - clears chainLightningHit.
     void ClearEffects();
 
     long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,

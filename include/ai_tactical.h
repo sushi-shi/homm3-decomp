@@ -14,6 +14,9 @@
 
 class hero;
 class searchArray;
+// findpath.h's cell record; get_attack_time takes one by pointer and
+// this header does not need the definition.
+struct pathCell;
 
 // PROVEN (2026-08-07) by set_melee_enemies (0x43bf20): a 16-byte record
 // written as {army*, damage, 1, damage} at this+0x50 + i*0x10, with the
@@ -146,6 +149,9 @@ struct type_AI_attack_hex_chooser {
                                const long* attack_array, searchArray* search,
                                const type_AI_combat_parameters* combat_data);
     long get_hex_attack_value(long hex, long* checked);
+    // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
+    // retail body of its own.
+    long get_attack_time(const pathCell* cell);
     void check_adjacent_hexes(long enemy_hex, long start_direction,
                               long stop_direction);
     unsigned char find_attack_hex();
@@ -200,7 +206,23 @@ struct type_AI_spellcaster {
     // and the 0x420 frame the 0x410 operator-new size predicts.
     type_AI_spellcaster(combatManager* combat, long side,
                         unsigned char creature_spell);
+    // dc 0x3d6f0. The DEPUTY's constructor - the one the public ctor
+    // reaches through `new` for the other side's caster, with `parent`
+    // landing in the deputy's own +0x48 and its owns_deputy byte left
+    // clear. Retail carries NO out-of-line body for it (the carve cuts
+    // no row between type_spell_choice's ctor at 0x436980 and the
+    // public ctor at 0x4369c0), so it is `inline` at its definition.
+    type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat,
+                        long side, unsigned char creature_spell);
     virtual ~type_AI_spellcaster();
+    // dc 0x425a8. "Is anything left on the other side that can still
+    // fight?" - the answer lands in field_1c and it is what the two
+    // constructors both end on. Inlined into both in retail.
+    void check_simulation();
+    // dc 0x3d7b0. "Is this the last stack on our side that can still
+    // act?" - inlined into consider_teleport, consider_resurrect and
+    // consider_single_enchantment, with no retail body of its own.
+    unsigned char is_last_action();
 
     // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
     // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
@@ -268,6 +290,37 @@ struct type_AI_spellcaster {
     long get_hypnotize_value(const army* enemy, type_enchant_data caster);
     long get_berserk_value(const army* enemy, type_enchant_data caster);
     long get_traitor_value(const army* enemy, const army* target);
+    // The luck twin of get_mirth_value / get_sorrow_value below;
+    // get_enchantment_function (0x43b690) address-takes it for the
+    // SPELL_FORTUNE row of its dispatch.
+    long get_fortune_value(const army* our_army, type_enchant_data caster);
+    // 0x43b680 (16 B), the row get_enchantment_function hands back for
+    // every spell it does not price. Its only evidence is that
+    // address-take plus the carve slot; the DC roster spells the name.
+    long unimplemented(const army* enemy, type_enchant_data caster);
+    // The shape of every row in get_enchantment_function's table, and
+    // the shape get_cancel_value (0x439a80) and get_caliph_value
+    // (0x43c4a0) call back through: retail's `call dword ptr [ebp-x]`
+    // with the object in ECX and no this-adjust is a single-inheritance
+    // pointer-to-member-function, which is one code address wide.
+    typedef long (type_AI_spellcaster::*TEnchantValue)(const army*,
+                                                       type_enchant_data);
+    TEnchantValue get_enchantment_function(SpellID spell);
+    void consider_single_enchantment(type_spell_choice* choice, long group);
+    void consider_enchantment(type_spell_choice* choice, long group);
+    // Four pricers with NO retail body of their own: /Ob2 folds each
+    // into consider_spell (0x43bb20), which is their only call site,
+    // and the carve cuts no row for any of them. Defined `inline` in
+    // ai_tactical.cpp for that reason.
+    long get_group_damage_value(SpellID spell, long base_damage, long group,
+                                hero* target_hero);
+    void consider_area_effect(type_spell_choice* choice);
+    void consider_mass_damage(type_spell_choice* choice);
+    void consider_summon(type_spell_choice* choice);
+    void consider_earthquake(type_spell_choice* choice);
+    void consider_resurrect(type_spell_choice* choice);
+    void consider_spell(type_spell_choice* choice);
+    unsigned char cast_spell(unsigned char retreating);
     void consider_teleport(type_spell_choice* choice);
     void consider_sacrifice(type_spell_choice& choice,
                             const army* healedArmy, long targetHex) const;
@@ -284,6 +337,15 @@ SIZE(type_AI_spellcaster, 0x410);
 // literal pool right behind a string, so the owning TU is unproven -
 // no DATA claim until it is.
 extern const long akHypnotizeTurns[4];
+// Retail 0x63b7c8, four dwords {4, 4, 5, 5} read as [mastery]: how
+// many stacks a chain lightning at that mastery bounces through.
+// get_chain_lightning_value (0x437190) is its only consumer and the
+// slot sits in this TU's own .rdata, immediately before the class
+// vftable at 0x63b7d8 - but it is left DECLARED, not defined, for the
+// same reason akHypnotizeTurns above is: emitting it here would put a
+// fresh .rdata allocation in our object whose placement retail's
+// section layout does not have to agree with.
+extern const long akChainLightningTargets[4];
 
 double value_of_luck_and_morale(long value, long change,
                                 double good_value_multiplier,
@@ -293,8 +355,18 @@ double AI_value_of_luck(long luck, long change);
 long AI_get_attack_damage(const army* current_army, long our_hits,
                           const army* enemy, unsigned char ranged,
                           long distance);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:109, dc 0x3c608) long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:155, dc 0x3c708) long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
+// The two seven-parameter statics. DECLARED rather than left as
+// CODEVIEW rows because check_adjacent_hexes (0x436300) calls both and
+// retail emits them AFTER their caller - the static-after-caller
+// inversion recorded above their definitions - so the call sites need
+// a prototype the definitions cannot supply.
+// dc 0x3c608 (ai_tactical.cpp:109) / dc 0x3c708 (ai_tactical.cpp:155).
+long get_multi_head_bonus(long our_group, const army* our_army, long our_hex,
+                          long troop_count, const army* enemy, long enemy_hex,
+                          const type_AI_combat_parameters* estimate);
+long get_breath_bonus(long our_group, const army* our_army, long our_hex,
+                      long troop_count, const army* enemy, long enemy_hex,
+                      const type_AI_combat_parameters* estimate);
 
 // --- army ---
 // CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);
