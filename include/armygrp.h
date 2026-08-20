@@ -38,6 +38,19 @@ template<class E, class Tr, class A> class basic_string;
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
     CREATURE_NONE = -1,
+    // The two griffins, byte-proven by ai_tactical's
+    // get_counterstroke_value (0x439e80): it doubles the counterstrike
+    // multiplier for 4 and refuses the spell outright for 5, which is
+    // exactly the retaliation ladder (the Griffin retaliates twice, the
+    // Royal Griffin already retaliates without limit, so buying it more
+    // retaliations is worth nothing). Behind a view for this header's
+    // usual measured reason - armygrp.h reaches most of the combat tree
+    // and an ungated enumerator counts toward the include-set threshold
+    // in every consumer.
+#ifdef HOMM3_CREATURE_GRIFFIN_DECL
+    CREATURE_GRIFFIN = 0x4,
+    CREATURE_ROYAL_GRIFFIN = 0x5,
+#endif
     // The four base elementals (NH3API enum spellings; IDs proven by
     // GetAlignments' compare chain at 0x44ac08).
     CREATURE_AIR_ELEMENTAL = 0x70,
@@ -323,10 +336,25 @@ enum ESpellId {
 #endif
     SPELL_SLAYER = 0x37,
     SPELL_TITANS_LIGHTNING_BOLT = 0x39,
+    // 58, byte-proven by ai_tactical's get_counterstroke_value
+    // (0x439e80), which folds the row into the displacement as
+    // `[akSpellTraits + 4*mastery + 0x1f04]` = 58*136 + 0x34 - the
+    // constant form, so the enumerator is what the source names. Behind
+    // a view for the same measured reason as SPELL_SLOW below.
+#ifdef HOMM3_SPELL_COUNTERSTRIKE_DECL
+    SPELL_COUNTERSTRIKE = 0x3a,
+#endif
     SPELL_BERSERK = 0x3b,
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
     SPELL_BLIND = 0x3e,
+    // 63, byte-proven by ai_tactical's consider_teleport (0x43aa60),
+    // which pushes the literal 0x3f into SpellCastWorks as the spell it
+    // is pricing. Behind a view for this header's usual measured
+    // reason, as SPELL_SLOW above.
+#ifdef HOMM3_SPELL_TELEPORT_DECL
+    SPELL_TELEPORT = 0x3f,
+#endif
     // get_elemental_type's 0x5a9360 jump table independently proves this
     // contiguous summon family and its mapping to the four base elementals.
     // Dreamcast CodeView supplies the enumerator spellings.
