@@ -2986,12 +2986,34 @@ int game::Load(TAbstractFile* infile)
 //    guide warns about: a local win elsewhere in the body changed the
 //    inline decisions here.
 //
-// Residual (73.7978%): `sub esp,0x5b8` against retail's 0x5c0, two
-// slots. VC6 packs byteValue, extraByteValue and poolBits into ONE dword
-// (-0xd/-0xe/-0xf) where retail spends two slots plus the parameter home
-// (-0xd, -0x15, [ebp+0xb]). The hero-pool pin is what moves poolBits out
-// of the parameter home; narrowing that pin to the inner loop alone was
-// measured and changes neither the score nor the frame.
+// 80.0926 -> 82.6492, 2026-08-20, with game::Load's `return`-pin lever:
+// `#pragma inline_depth(0)` on a `return` statement reaches the LOCAL'S
+// SCOPE-EXIT DESTRUCTOR. Retail calls ~SavedGameHeader out of line at
+// THREE exits and expands it at only one; the two at the foot of this
+// body - `if (!save_recorded_events(...)) return -1;` and `return 0;` -
+// are the pair retail emits as `lea ecx,[ebp-0x5cc] / call 0x4bdf80`
+// twice over, once behind the `jne` and once on the fall-through.
+//
+// Residual (82.6492%): TWO things, and neither is a spelling.
+//   * `sub esp,0x5b8` against retail's 0x5c0, two slots. VC6 packs
+//     byteValue, extraByteValue and poolBits into ONE dword
+//     (-0xd/-0xe/-0xf) where retail spends two slots plus the parameter
+//     home (-0xd, -0x15, [ebp+0xb]). The hero-pool pin is what moves
+//     poolBits out of the parameter home; narrowing that pin to the inner
+//     loop alone was measured and changes neither the score nor the frame.
+//   * the merged-return class, exactly as in game::Load. Retail reaches
+//     one unwind state from two conditions in several places - the town
+//     COUNT write shares its cleanup site with the town::save guard
+//     (state 0x1a at 0x5041), and there are two more - and the shared
+//     sites are SUNK, so retail branches `jb <teardown>` forward where we
+//     emit `jae <next>` with the teardown inline. Our _Tidy census is 38
+//     against retail's 36. Same statements, different cleanup-site
+//     allocation.
+//   * one over-inline the pin cannot reach: retail CALLS
+//     vector<town>::size() (0x4cf6c0) in the town loop's CONDITION while
+//     inlining the same size() for the byte count two statements earlier.
+//     A statement pin on the `for` would also de-inline the `towns[i]`
+//     subscript, which retail keeps inline.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
@@ -3040,6 +3062,12 @@ int game::Save(TAbstractFile* outfile)
     // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
     // function: inline_depth(0) is statement-granular in VC6, and
     // SaveMinePool immediately below is expanded on BOTH sides.
+    // NARROWING THE PIN TO THE CALL ALONE WAS MEASURED AND IS WORSE
+    // (82.6492 -> 82.4641). With the whole `if` inside the pin, this
+    // exit's ~SavedGameHeader also goes out of line and grows its own
+    // epilogue where retail emits `_Tidy / jmp shared-tail`; landing the
+    // result in an `int signPoolResult` local first fixes that and costs
+    // more than it buys, because the local takes a frame slot.
 #pragma inline_depth(0)
     if (SaveSignPool(outfile) < 0)
         return -1;
@@ -3242,10 +3270,17 @@ int game::Save(TAbstractFile* outfile)
     save_object_vector(outfile, &creatureBanks);
 #pragma inline_depth()
 
+    // Retail CALLS ~SavedGameHeader out of line at BOTH of these exits -
+    // `lea ecx,[ebp-0x5cc] / call 0x4bdf80` twice over, once behind the
+    // `jne` and once on the fall-through - and expands it only at the
+    // early-return sites. The pin on a `return` statement is what reaches
+    // a local's scope-exit destructor (game::Load's precedent).
+#pragma inline_depth(0)
     if (!save_recorded_events(outfile))
         return -1;
 
     return 0;
+#pragma inline_depth()
 }
 
 #if 0  // @carcass
