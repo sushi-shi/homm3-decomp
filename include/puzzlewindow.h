@@ -56,7 +56,11 @@ public:
         DIALOG_ACCEPT_KEY = 28,
         BACKGROUND_ID = 200,
         ROLLOVER_ID = 201,
-        NWIDGETS = 5
+        NWIDGETS = 5,
+        // UpdatePuzzle's return domain: the count of pieces still down.
+        // 48 = the full board (puzzlePieces' extent) - ViewPuzzle skips
+        // the reveal fizzle when every piece is already removed.
+        PUZZLE_PIECE_COUNT = 48
     };
 
     char numPieces;
