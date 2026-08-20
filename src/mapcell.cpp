@@ -887,9 +887,24 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // it" - was WRONG. The budget being per-caller is exactly what makes it
 // reachable: move the resize into a function small enough to be starved of
 // budget and it stays a call, then let the single-call-site static inline
-// back. resizeSeerHutList above does that, 72.8624 -> 77.3789. What remains
-// is the mapObjectData half, which does NOT respond to the same treatment
-// (77.2574, measured).
+// back. resizeSeerHutList above does that, 72.8624 -> 77.3789.
+//
+// 77.3789 -> 82.8043 (2026-08-20) ON ONE MORE PIN, and it is NOT the
+// mapObjectData half the old text expected. Retail CALLS
+// vector<TSeerHut>::size (0x5066b0) in the seer-hut loop's CONDITION, twice
+// - once at loop entry and once on the back edge, at fn+0x2b9 and fn+0x313 -
+// where our CL expanded both. `#pragma inline_depth(0)` is LEXICAL, so
+// putting it in front of the `for` header and restoring the depth before the
+// body's opening brace covers the condition alone and leaves the body's own
+// decisions untouched. The index has to be hoisted out of the `for` init for
+// that placement to be legal.
+//
+// MEASURED NEGATIVE while landing it, do not retry: the mapObjectData half
+// really is different. Spelling it as an explicit two-argument
+// `insert(dataEnd, questData)` with a statement pin - the edit that is worth
+// points in readObject's QUEST_GUARD arm on the identical instantiation -
+// costs 82.8043 -> 82.4190 here. Also still true from the old note: the
+// budget-starved-helper treatment on the same site scores 77.2574.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
@@ -938,7 +953,15 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
         return -1;
 
     resizeSeerHutList(this, count);
-    for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
+    // Retail CALLS vector<TSeerHut>::size (0x5066b0) in this loop's
+    // condition - twice, once at entry and once on the back edge - where our
+    // CL expands it. The pin is lexical, so restoring the depth before the
+    // body leaves the body's own decisions alone.
+    unsigned int i;
+#pragma inline_depth(0)
+    for (i = 0; i < SeerHutList.size(); ++i)
+#pragma inline_depth()
+    {
         SeerHutList[i].load(infile, saveVersion);
         if (SeerHutList[i].quest)
             mapObjectData.push_back(static_cast<CMapObjectData*>(
