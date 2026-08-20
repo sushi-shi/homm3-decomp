@@ -72,6 +72,7 @@
 #include "creature_bank.h"
 #include "exec.h"
 #include "findpath.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -4586,14 +4587,80 @@ void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9476
+// Makes a town the adventure view's subject: drop any mobile hero, clear
+// the current-hero slot, centre the radar on the town and repoint the
+// locator strip, the spell/sleep buttons and the ambient music at it.
+// Retail asks `waitingPlayer ? GetLocalPlayer() : gpCurrentPlayer` TWICE
+// and caches neither, and it reaches RedrawAdvScreen through the
+// gpAdvManager global rather than through `this`.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
-    // @stub
+    DemobilizeCurrHero(waitingPlayer, 0);
+
+    playerData* heroOwner = waitingPlayer ? gpGame->GetLocalPlayer()
+                                          : gpCurrentPlayer;
+    heroOwner->currHeroId = -1;
+
+    playerData* player = waitingPlayer ? gpGame->GetLocalPlayer()
+                                       : gpCurrentPlayer;
+    player->currTownId = townId;
+
+    town* currTown = gpGame->GetTown(player->currTownId);
+    radarOrigin.x = currTown->mapX - 9;
+    radarOrigin.y = currTown->mapY - 8;
+    radarOrigin.z = currTown->mapZ;
+
+    advWindow->SetElevationToggleImage(radarOrigin.z);
+
+    int townSlot = 0;
+    int i;
+    for (i = 0; i < player->numTowns; i++) {
+        if (player->townIds[i] == townId)
+            townSlot = i;
+    }
+
+    if (waitingPlayer || gpCurrentPlayer->IsLocalHuman()) {
+        advWindow->UpdateTownLocators(townSlot, 1, 0);
+        advWindow->UpdateHeroLocators(-1, 1, 0);
+        advWindow->UpdateSpellButton(0);
+        advWindow->UpdateSleepButton(0);
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+        gpWindowManager->BroadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            TAdventureMapWindow::MOVE_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        if (bShowRoute)
+            bShowRoute = 0;
+    }
+
+    gpAdvManager->RedrawAdvScreen(update, 0);
+
+    type_point point;
+    point.x = radarOrigin.x + 9;
+    point.y = radarOrigin.y + 8;
+    point.z = radarOrigin.z;
+    SetEnvironmentOrigin(point, 1);
+
+    point.x = currTown->mapX;
+    point.y = currTown->mapY;
+    point.z = currTown->mapZ;
+
+    int ground = GetCell(point)->GroundSet;
+    if (ground != field_58) {
+        field_58 = ground;
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[ground]);
+    }
+
+    gpInputManager->ForceMouseMove();
+    lastHoverX = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9544
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
