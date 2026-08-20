@@ -1472,10 +1472,17 @@ public:
                                long level, long power,
                                long casting_side,
                                unsigned char creature_spell);  // 0x5a66d0
-    // 0x5a3e40, the third corpse finder and the only one that rolls no
-    // chance - the Vampire Lord's drain. Same (side, hex) shape as
-    // find_animate_dead_target above.
-    army* find_demonic_resurrection_target(int side, int hex);  // 0x5a3e40
+    // The two spells.obj area collectors that fill a vector of HEXES -
+    // the inner halves of the two vector<army*> collectors declared far
+    // below, which call these and then map each hex to its stack. The
+    // element type is what separates the overloads; the DC roster names
+    // both pairs identically (spells.cpp:3159/3185 for these two,
+    // 3227/3265 for the army-vector pair).
+    void mark_area_effect(long hex, long radius,
+                          unsigned char include_center,
+                          std::vector<long>& hexes);           // 0x5a4170
+    void mark_berserk_area_effect(long hex, long mastery,
+                                  std::vector<long>& hexes);   // 0x5a4430
 #endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before
