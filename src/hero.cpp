@@ -2410,6 +2410,13 @@ void THeroScreenWindow::update_slot(long slot)
 }
 
 // E:\gamedcs\hero.cpp:2383
+// NOT PINNED, and the attempt is recorded so it is not repeated: retail
+// CALLS this three times from WindowHandler's artifact and backpack arms
+// while our CL expands it (23 bytes of loop is under any budget), but
+// `#pragma auto_inline(off)` here is too blunt - it also stops the
+// expansion in SetupHeroView, which retail DOES inline, and the ratchet
+// caught the cost (WindowHandler 71.10 -> 72.89 but SetupHeroView 99.53
+// -> 98.69). A per-call-site lever would be needed; VC6 has none.
 VA(0x004db1d0, 0x17)  // anchor-callee (update_slot), dc 0xcd740
 void THeroScreenWindow::update_all_slots()
 {
@@ -3368,6 +3375,226 @@ void THeroScreenWindow::show_skills()
 
 #endif  // @carcass
 
+// The three bodies the Dreamcast build keeps as their own functions and
+// retail expands into WindowHandler: handle_artifact_click (dc 0xcdf30),
+// handle_backpack_click (dc 0xcea3c) and show_skills (dc 0xcf3ac). None
+// has a retail row, so each is a file-static with ONE call site, which
+// /Ob2 expands unconditionally and emits no out-of-line copy for.
+//
+// They are BYTE-FORCED, not tidiness. Written longhand inside
+// WindowHandler the caller carries so much /Ob2 budget that it also
+// expands update_all_slots, HeroFn_004D9A00, HeroFn_004E2840 and
+// bitset<144>::any(), every one of which retail CALLS. Moving these three
+// arms back out is what restores retail's own inline census.
+//
+// The two click handlers keep the Dreamcast names and their `(long code,
+// unsigned char right_mouse)` arity. show_skills does NOT: the DC row is
+// zero-argument and this body needs the widget id, the same arity
+// divergence the block note above already records for five other
+// hero-screen rows, so it takes a descriptive local name instead.
+static void handle_artifact_click(long code, unsigned char right_mouse)
+{
+    long slot = code;
+    type_artifact record = gpCurrentHero->equipped[slot];
+
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
+        if (right_mouse)
+            return;
+        if (!gpCurrentHero->HeroFn_004E2840(
+                gHeroScreenDraggedArtifact.artifactId, slot))
+            return;
+        if (record.artifactId != ARTIFACT_NONE) {
+            gpCurrentHero->remove_artifact(slot);
+            gpCurrentHero->equip_artifact(
+                &gHeroScreenDraggedArtifact, slot);
+            if (gpGame->f_1f698 >= 2)
+                gpCurrentHero->HeroFn_004DC100(slot);
+            gpCurrentHero->UpdateStats();
+            gHeroScreenDraggedArtifact = record;
+            gpHeroScreenWindow->update_all_slots();
+            gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            gpMouseManager->SetPointer(
+                gHeroScreenDraggedArtifact.artifactId,
+                mouseManager::ARTIFACT_SET);
+        } else {
+            gpCurrentHero->equip_artifact(
+                &gHeroScreenDraggedArtifact, slot);
+            if (gpGame->f_1f698 >= 2)
+                gpCurrentHero->HeroFn_004DC100(slot);
+            gpCurrentHero->UpdateStats();
+            gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+            gpHeroScreenWindow->update_all_slots();
+            gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+            gpMouseManager->SetPointer(0,
+                                       mouseManager::DEFAULT_SET);
+        }
+        return;
+    }
+
+    if (record.artifactId == ARTIFACT_NONE)
+        return;
+
+    if (right_mouse) {
+        if (gpGame->f_1f698 >= 2) {
+            if (akArtifactTraits[record.artifactId].comboType
+                != -1) {
+                if (gpCurrentHero->HeroFn_004D9B30(
+                        record.artifactId)
+                    == DIALOG_RETURN_ACCEPT) {
+                    gpCurrentHero->HeroFn_004DC070(slot);
+                    gpCurrentHero->UpdateStats();
+                    for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+                         i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+                        gpHeroScreenWindow->update_slot(i);
+                    gpHeroScreenWindow->DrawWindow(1, 0xffff0001,
+                                                   0xffff);
+                }
+                return;
+            }
+            int targetCombo =
+                akArtifactTraits[record.artifactId].targetCombo;
+            if (targetCombo != -1) {
+                std::bitset<144> missing =
+                    gCombinationArtifacts[targetCombo].components;
+                for (int k = 0; k < 19; k++) {
+                    int worn =
+                        gpCurrentHero->equipped[k].artifactId;
+                    if (worn != ARTIFACT_NONE)
+                        missing[worn] = false;
+                }
+                if (!missing.any()) {
+                    if (gpCurrentHero->HeroFn_004D9CC0(
+                            record.artifactId)
+                        == DIALOG_RETURN_ACCEPT) {
+                        gpCurrentHero->HeroFn_004DBF30(targetCombo,
+                                                       slot);
+                        gpCurrentHero->UpdateStats();
+                        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+                             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+                            gpHeroScreenWindow->update_slot(i);
+                        gpHeroScreenWindow->DrawWindow(
+                            1, 0xffff0001, 0xffff);
+                    }
+                    return;
+                }
+            }
+        }
+        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        return;
+    }
+
+    if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
+        TSpellbookWindow spellbook(
+            gpCurrentHero, 0, TSpellbookWindow::eContextNeither,
+            gpCurrentHero->get_special_terrain());
+        spellbook.DoModal(0);
+        return;
+    }
+    if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
+        NormalDialog(gpGeneralText->GetText(313), 1, -1, -1, 8, 3,
+                     -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+    gHeroScreenDraggedArtifact = record;
+    gpCurrentHero->remove_artifact(slot);
+    gpCurrentHero->UpdateStats();
+    gpHeroScreenWindow->update_all_slots();
+    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    gpMouseManager->SetPointer(
+        gHeroScreenDraggedArtifact.artifactId,
+        mouseManager::ARTIFACT_SET);
+}
+
+static void handle_backpack_click(long code, unsigned char right_mouse)
+{
+    long index = code;
+    type_artifact record = gpCurrentHero->backpack[index];
+
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
+        if (right_mouse)
+            return;
+        if (!gpCurrentHero->add_to_backpack(
+                &gHeroScreenDraggedArtifact, index)) {
+            NormalDialog(
+                gpCurrentHero
+                    ->get_backpack_error(artifact_from_int(
+                        gHeroScreenDraggedArtifact.artifactId))
+                    .c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        UpdateBackpack();
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        for (long i = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+             i < THeroScreenWindow::ARTIFACT_SLOT_COUNT; i++)
+            gpHeroScreenWindow->update_slot(i);
+        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+        return;
+    }
+
+    if (record.artifactId == ARTIFACT_NONE)
+        return;
+
+    if (right_mouse) {
+        gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
+        return;
+    }
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+    gHeroScreenDraggedArtifact = record;
+    short i = static_cast<short>(index);
+    if (gpCurrentHero->backpack[i].artifactId != ARTIFACT_NONE) {
+        long last = gpCurrentHero->get_last_backpack_index();
+        for (; i < last; i++)
+            gpCurrentHero->backpack[i] =
+                gpCurrentHero->backpack[i + 1];
+        gpCurrentHero->backpack[i].artifactId = ARTIFACT_NONE;
+        gpCurrentHero->backpackCount--;
+    }
+    UpdateBackpack();
+    for (long j = THeroScreenWindow::ARTIFACT_SLOT_FIRST;
+         j < THeroScreenWindow::ARTIFACT_SLOT_COUNT; j++)
+        gpHeroScreenWindow->update_slot(j);
+    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
+    gpMouseManager->SetPointer(
+        gHeroScreenDraggedArtifact.artifactId,
+        mouseManager::ARTIFACT_SET);
+}
+
+static void show_hero_skills(int code, unsigned char right_mouse)
+{
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
+        return;
+    int nth;
+    if (code >= THeroScreenWindow::SKILL_ICON_FIRST_ID
+        && code <= THeroScreenWindow::SKILL_ICON_LAST_ID)
+        nth = code - THeroScreenWindow::SKILL_ICON_FIRST_ID;
+    else if (code >= THeroScreenWindow::SKILL_NAME_FIRST_ID
+             && code <= THeroScreenWindow::SKILL_NAME_LAST_ID)
+        nth = code - THeroScreenWindow::SKILL_NAME_FIRST_ID;
+    else if (code < THeroScreenWindow::SKILL_LEVEL_FIRST_ID
+             || code > THeroScreenWindow::SKILL_LEVEL_LAST_ID)
+        return;
+    else
+        nth = code - THeroScreenWindow::SKILL_LEVEL_FIRST_ID;
+    if (nth >= gpCurrentHero->skillCount)
+        return;
+    int skill = gpCurrentHero->GetNthSS(nth);
+    strcpy(gText,
+           akSSkillTraits[skill]
+               .levelNames[gpCurrentHero->skillLevel[skill] - 1]);
+    NormalDialog(gText,
+                 right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
+                             : hero::PRIMARY_STAT_DIALOG_TYPE,
+                 -1, -1, 0x14,
+                 3 * skill + gpCurrentHero->skillLevel[skill] + 2,
+                 -1, 0, -1, 0, -1, 0);
+}
+
 // E:\gamedcs\hero.cpp:3486
 // The hero screen's message pump, 5182 B against DC's 3128: the two
 // free click handlers (handle_artifact_click 526 B, handle_backpack_click
@@ -3387,6 +3614,22 @@ void THeroScreenWindow::show_skills()
 // icon/label/value: {0x6b,0x76,0x8b} specialty, {0x6c,0x70,0x77}
 // experience, {0x6d,0x71,0x78} spell points. SetupHeroView corroborates
 // each one independently.
+// Residual (71.10%): an A12 INLINER wall, not spelling. `predict-inline`
+// now agrees on most of the census, and what is left is four callees our
+// CL still expands where retail keeps a call - update_all_slots (x1 vs
+// x3, and the two extra update_slot calls that follow from it),
+// HeroFn_004E2840, get_last_backpack_index and TQuickHeroWindow::
+// QuickWindowWait - plus HeroFn_004D97F0 at x3 vs x4. The knob the solver
+// names is `#pragma auto_inline(off)` on the callee; for update_all_slots
+// that was MEASURED and REJECTED (see its own note above): it buys
+// WindowHandler 71.10 -> 72.89 but costs SetupHeroView 99.53 -> 98.69,
+// and SetupHeroView's own residual is a single data-phase reloc addend,
+// i.e. that function is otherwise finished. The ratchet's max for this
+// row was accepted back down to 71.10 with hist kept at 72.89.
+// One more open item, NOT yet explained: retail emits 15 NormalDialog
+// call instructions where we emit 6. The source has ~14 sites, so our CL
+// is cross-jumping the identical right-click help arms and retail is not.
+// Read that before assuming any arm is missing.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -3649,180 +3892,15 @@ int THeroScreenWindow::WindowHandler(message* msg)
         case ARTIFACT_SLOT_14_ID: case ARTIFACT_SLOT_15_ID:
         case ARTIFACT_SLOT_16_ID: case ARTIFACT_SLOT_17_ID:
         case ARTIFACT_SLOT_18_ID:
-            {
-                long slot = msg->codeY - ARTIFACT_SLOT_0_ID;
-                type_artifact record = gpCurrentHero->equipped[slot];
-
-                if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
-                    if (right_mouse)
-                        break;
-                    if (!gpCurrentHero->HeroFn_004E2840(
-                            gHeroScreenDraggedArtifact.artifactId, slot))
-                        break;
-                    if (record.artifactId != ARTIFACT_NONE) {
-                        gpCurrentHero->remove_artifact(slot);
-                        gpCurrentHero->equip_artifact(
-                            &gHeroScreenDraggedArtifact, slot);
-                        if (gpGame->f_1f698 >= 2)
-                            gpCurrentHero->HeroFn_004DC100(slot);
-                        gpCurrentHero->UpdateStats();
-                        gHeroScreenDraggedArtifact = record;
-                        gpHeroScreenWindow->update_all_slots();
-                        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
-                        gpMouseManager->SetPointer(
-                            gHeroScreenDraggedArtifact.artifactId,
-                            mouseManager::ARTIFACT_SET);
-                    } else {
-                        gpCurrentHero->equip_artifact(
-                            &gHeroScreenDraggedArtifact, slot);
-                        if (gpGame->f_1f698 >= 2)
-                            gpCurrentHero->HeroFn_004DC100(slot);
-                        gpCurrentHero->UpdateStats();
-                        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
-                        gpHeroScreenWindow->update_all_slots();
-                        gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
-                        gpMouseManager->SetPointer(0,
-                                                   mouseManager::DEFAULT_SET);
-                    }
-                    break;
-                }
-
-                if (record.artifactId == ARTIFACT_NONE)
-                    break;
-
-                if (right_mouse) {
-                    if (gpGame->f_1f698 >= 2) {
-                        if (akArtifactTraits[record.artifactId].comboType
-                            != -1) {
-                            if (gpCurrentHero->HeroFn_004D9B30(
-                                    record.artifactId)
-                                == DIALOG_RETURN_ACCEPT) {
-                                gpCurrentHero->HeroFn_004DC070(slot);
-                                gpCurrentHero->UpdateStats();
-                                for (long i = ARTIFACT_SLOT_FIRST;
-                                     i < ARTIFACT_SLOT_COUNT; i++)
-                                    gpHeroScreenWindow->update_slot(i);
-                                gpHeroScreenWindow->DrawWindow(1, 0xffff0001,
-                                                               0xffff);
-                            }
-                            break;
-                        }
-                        int targetCombo =
-                            akArtifactTraits[record.artifactId].targetCombo;
-                        if (targetCombo != -1) {
-                            std::bitset<144> missing =
-                                gCombinationArtifacts[targetCombo].components;
-                            for (int k = 0; k < 19; k++) {
-                                int worn =
-                                    gpCurrentHero->equipped[k].artifactId;
-                                if (worn != ARTIFACT_NONE)
-                                    missing[worn] = false;
-                            }
-                            if (!missing.any()) {
-                                if (gpCurrentHero->HeroFn_004D9CC0(
-                                        record.artifactId)
-                                    == DIALOG_RETURN_ACCEPT) {
-                                    gpCurrentHero->HeroFn_004DBF30(targetCombo,
-                                                                   slot);
-                                    gpCurrentHero->UpdateStats();
-                                    for (long i = ARTIFACT_SLOT_FIRST;
-                                         i < ARTIFACT_SLOT_COUNT; i++)
-                                        gpHeroScreenWindow->update_slot(i);
-                                    gpHeroScreenWindow->DrawWindow(
-                                        1, 0xffff0001, 0xffff);
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
-                    break;
-                }
-
-                if (slot == hero::EQUIPPED_SLOT_SPELLBOOK) {
-                    TSpellbookWindow spellbook(
-                        gpCurrentHero, 0, TSpellbookWindow::eContextNeither,
-                        gpCurrentHero->get_special_terrain());
-                    spellbook.DoModal(0);
-                    break;
-                }
-                if (slot == hero::EQUIPPED_SLOT_WAR_MACHINE_4) {
-                    NormalDialog(gpGeneralText->GetText(313), 1, -1, -1, 8, 3,
-                                 -1, 0, -1, 0, -1, 0);
-                    break;
-                }
-                if (!gpCurrentPlayer->IsLocalHuman())
-                    break;
-                gHeroScreenDraggedArtifact = record;
-                gpCurrentHero->remove_artifact(slot);
-                gpCurrentHero->UpdateStats();
-                gpHeroScreenWindow->update_all_slots();
-                gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
-                gpMouseManager->SetPointer(
-                    gHeroScreenDraggedArtifact.artifactId,
-                    mouseManager::ARTIFACT_SET);
-            }
+            handle_artifact_click(msg->codeY - ARTIFACT_SLOT_0_ID,
+                                  right_mouse);
             break;
 
         case BACKPACK_SLOT_0_ID: case BACKPACK_SLOT_1_ID:
         case BACKPACK_SLOT_2_ID: case BACKPACK_SLOT_3_ID:
         case BACKPACK_SLOT_4_ID:
-            {
-                long index = msg->codeY - BACKPACK_SLOT_0_ID;
-                type_artifact record = gpCurrentHero->backpack[index];
-
-                if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
-                    if (right_mouse)
-                        break;
-                    if (!gpCurrentHero->add_to_backpack(
-                            &gHeroScreenDraggedArtifact, index)) {
-                        NormalDialog(
-                            gpCurrentHero
-                                ->get_backpack_error(artifact_from_int(
-                                    gHeroScreenDraggedArtifact.artifactId))
-                                .c_str(),
-                            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-                        break;
-                    }
-                    UpdateBackpack();
-                    gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
-                    for (long i = ARTIFACT_SLOT_FIRST;
-                         i < ARTIFACT_SLOT_COUNT; i++)
-                        gpHeroScreenWindow->update_slot(i);
-                    gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
-                    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
-                    break;
-                }
-
-                if (record.artifactId == ARTIFACT_NONE)
-                    break;
-
-                if (right_mouse) {
-                    gpCurrentHero->HeroFn_004D9A00(&record, right_mouse);
-                    break;
-                }
-
-                if (!gpCurrentPlayer->IsLocalHuman())
-                    break;
-                gHeroScreenDraggedArtifact = record;
-                short i = static_cast<short>(index);
-                if (gpCurrentHero->backpack[i].artifactId != ARTIFACT_NONE) {
-                    long last = gpCurrentHero->get_last_backpack_index();
-                    for (; i < last; i++)
-                        gpCurrentHero->backpack[i] =
-                            gpCurrentHero->backpack[i + 1];
-                    gpCurrentHero->backpack[i].artifactId = ARTIFACT_NONE;
-                    gpCurrentHero->backpackCount--;
-                }
-                UpdateBackpack();
-                for (long j = ARTIFACT_SLOT_FIRST;
-                     j < ARTIFACT_SLOT_COUNT; j++)
-                    gpHeroScreenWindow->update_slot(j);
-                gpHeroScreenWindow->DrawWindow(1, 0xffff0001, 0xffff);
-                gpMouseManager->SetPointer(
-                    gHeroScreenDraggedArtifact.artifactId,
-                    mouseManager::ARTIFACT_SET);
-            }
+            handle_backpack_click(msg->codeY - BACKPACK_SLOT_0_ID,
+                                  right_mouse);
             break;
 
         case HERO_LOCATOR_0_ID: case HERO_LOCATOR_1_ID:
@@ -3883,34 +3961,7 @@ int THeroScreenWindow::WindowHandler(message* msg)
             break;
 
         default:
-            {
-                if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE)
-                    break;
-                int nth;
-                if (msg->codeY >= SKILL_ICON_FIRST_ID
-                    && msg->codeY <= SKILL_ICON_LAST_ID)
-                    nth = msg->codeY - SKILL_ICON_FIRST_ID;
-                else if (msg->codeY >= SKILL_NAME_FIRST_ID
-                         && msg->codeY <= SKILL_NAME_LAST_ID)
-                    nth = msg->codeY - SKILL_NAME_FIRST_ID;
-                else if (msg->codeY < SKILL_LEVEL_FIRST_ID
-                         || msg->codeY > SKILL_LEVEL_LAST_ID)
-                    break;
-                else
-                    nth = msg->codeY - SKILL_LEVEL_FIRST_ID;
-                if (nth >= gpCurrentHero->skillCount)
-                    break;
-                int skill = gpCurrentHero->GetNthSS(nth);
-                strcpy(gText,
-                       akSSkillTraits[skill]
-                           .levelNames[gpCurrentHero->skillLevel[skill] - 1]);
-                NormalDialog(gText,
-                             right_mouse ? hero::PRIMARY_STAT_QUICK_DIALOG_TYPE
-                                         : hero::PRIMARY_STAT_DIALOG_TYPE,
-                             -1, -1, 0x14,
-                             3 * skill + gpCurrentHero->skillLevel[skill] + 2,
-                             -1, 0, -1, 0, -1, 0);
-            }
+            show_hero_skills(msg->codeY, right_mouse);
             break;
         }
         break;
