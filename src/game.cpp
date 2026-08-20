@@ -83,6 +83,16 @@ inline TArtifact artifact_from_int(int value)
 }
 
 const int SAVED_CREATURE_NONE = 0xff;
+// The on-disk hero-id domain playerData::load reads. 0xff is the "no
+// hero" sentinel the roster stores as -1. Saves older than version 25
+// spell two heroes 0x80/0x81 where the shipped roster carries them at
+// 0x92/0x9c, so the reader rewrites them on the way in - the retail
+// bytes prove the remap, not the two heroes' identities.
+const int SAVED_HERO_NONE = 0xff;
+const int SAVED_HERO_PRE25_FIRST = 0x80;
+const int SAVED_HERO_PRE25_SECOND = 0x81;
+const int HERO_PRE25_FIRST_REMAP = 0x92;
+const int HERO_PRE25_SECOND_REMAP = 0x9c;
 const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
@@ -1096,21 +1106,237 @@ void playerData::ClearNetInfo()
     isLocal = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1409
+// The hero-id slots carry a save-version remap that no other reader in
+// this file has: 0xff means "none" (-1), and saves older than 25 spell
+// two of the campaign heroes 0x80/0x81 where the shipped tables have
+// 0x92/0x9c. It is inlined at all three sites (currHeroId, the roster
+// loop, the tavern pair) - the roster and recruit reads DISCARD the
+// Read result, which is why only the scalar reads carry a `< size`
+// guard.
 VA(0x004ba260, 0x401)  // anchor-global, dc 0xa51b0
-int playerData::load(void* infile)
+int playerData::load(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    color = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    numHeroes = value;
+
+    int heroId;
+    infile->Read(&heroId, sizeof(unsigned char));
+    heroId &= 0xff;
+    if (heroId == SAVED_HERO_NONE) {
+        heroId = -1;
+    } else if (saveVersion < 25) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            heroId = HERO_PRE25_FIRST_REMAP;
+        else if (heroId == SAVED_HERO_PRE25_SECOND)
+            heroId = HERO_PRE25_SECOND_REMAP;
+    }
+    currHeroId = heroId;
+
+    int i;
+    for (i = 0; i < 8; i++) {
+        int id;
+        infile->Read(&id, sizeof(unsigned char));
+        id &= 0xff;
+        if (id == SAVED_HERO_NONE) {
+            id = -1;
+        } else if (saveVersion < 25) {
+            if (id == SAVED_HERO_PRE25_FIRST)
+                id = HERO_PRE25_FIRST_REMAP;
+            else if (id == SAVED_HERO_PRE25_SECOND)
+                id = HERO_PRE25_SECOND_REMAP;
+        }
+        heroes[i] = id;
+    }
+
+    for (i = 0; i < 2; i++) {
+        int id;
+        infile->Read(&id, sizeof(unsigned char));
+        id &= 0xff;
+        if (id == SAVED_HERO_NONE) {
+            id = -1;
+        } else if (saveVersion < 25) {
+            if (id == SAVED_HERO_PRE25_FIRST)
+                id = HERO_PRE25_FIRST_REMAP;
+            else if (id == SAVED_HERO_PRE25_SECOND)
+                id = HERO_PRE25_SECOND_REMAP;
+        }
+        recruits[i] = id;
+    }
+
+    unsigned char flag;
+    if (infile->Read(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+    startingNumHeroes = flag;
+
+    int number;
+    if (infile->Read(&number, sizeof(number)) < sizeof(number))
+        return -1;
+    personality = number;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    extraPuzzlePieces = value;
+
+    if (infile->Read(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+        return -1;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    iDeathCountDown = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    numTowns = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    currTownId = value;
+
+    for (i = 0; i < 0x48; i++) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        townIds[i] = value;
+    }
+
+    for (i = 0; i < 7; i++) {
+        if (infile->Read(&number, sizeof(number)) < sizeof(number))
+            return -1;
+        resources[i] = number;
+    }
+
+    unsigned long flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    MysticalGardenFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    MagicSpringFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    DeadGuyFlags = flags;
+    if (infile->Read(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    LeanToFlags = flags;
+
+    if (infile->Read(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+    placement_help_enabled = flag != 0;
+
+    if (saveVersion >= 37) {
+        unsigned char bits[2];
+        infile->Read(bits, sizeof(bits));
+        int combos = 0;
+        for (unsigned int bit = 0; bit < 12; bit++) {
+            if ((bits[bit >> 3] & (1 << (bit & 7))) != 0)
+                combos |= 1 << bit;
+            else
+                combos &= ~(1 << bit);
+        }
+        aiField_e8 = combos;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:1548
+// The write side of load, minus the version remap: a saver only ever
+// emits the current format. The tavern pair is written longhand here
+// where load loops over it, and the trailing combination-artifact word
+// is unconditional.
 VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
-int playerData::save(void* outfile)
+int playerData::save(TAbstractFile* outfile)
 {
-    // @stub
+    char value = color;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = numHeroes;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = static_cast<char>(currHeroId);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    int i;
+    for (i = 0; i < 8; i++) {
+        value = static_cast<char>(heroes[i]);
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+    }
+
+    value = static_cast<char>(recruits[0]);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = static_cast<char>(recruits[1]);
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    unsigned char flag = startingNumHeroes;
+    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+
+    int number = personality;
+    if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+        return -1;
+
+    value = extraPuzzlePieces;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    if (outfile->Write(puzzle_guess, sizeof(puzzle_guess)) < sizeof(puzzle_guess))
+        return -1;
+
+    value = iDeathCountDown;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = numTowns;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    value = currTownId;
+    if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    for (i = 0; i < 0x48; i++) {
+        value = townIds[i];
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+    }
+
+    for (i = 0; i < 7; i++) {
+        number = resources[i];
+        if (outfile->Write(&number, sizeof(number)) < sizeof(number))
+            return -1;
+    }
+
+    unsigned long flags = MysticalGardenFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = MagicSpringFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = DeadGuyFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+    flags = LeanToFlags;
+    if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
+        return -1;
+
+    flag = placement_help_enabled;
+    if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
+        return -1;
+
+    unsigned char bits[2] = {0, 0};
+    for (unsigned int bit = 0; bit < 12; bit++) {
+        if ((aiField_e8 & (1 << bit)) != 0)
+            bits[bit >> 3] |= static_cast<unsigned char>(1 << (bit & 7));
+    }
+    outfile->Write(bits, sizeof(bits));
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1668
 DC_ONLY(0xa5998, 0x54)
