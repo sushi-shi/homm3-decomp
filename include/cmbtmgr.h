@@ -1652,11 +1652,11 @@ public:
     unsigned char ValidSpellTarget(SpellID spellId, long mastery,
                                    long targetIndex, long casting_side,
                                    unsigned char first_target,
-                                   unsigned char creature_spell); // 0x5a39c0
+                                   long creature_spell); // 0x5a39c0
     unsigned char HasValidSpellTarget(SpellID spellId, long mastery,
                                       long casting_side,
                                       unsigned char first_target,
-                                      unsigned char creature_spell); // 0x5a40d0
+                                      long creature_spell); // 0x5a40d0
     // 0x5a7320, the hexcell-taking one of the DC roster's two
     // remove_corpse overloads (spells.cpp:4815; the other, 4838, takes an
     // army* and has no located retail body). Like
@@ -1704,7 +1704,7 @@ public:
     void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
                                long level, long power,
                                long casting_side,
-                               unsigned char creature_spell);  // 0x5a66d0
+                               long creature_spell);  // 0x5a66d0
     // The lightning-bolt animator, all four bodies. All take the SBolt
     // record declared above; the DC prototypes (spells.cpp:3572 / 3702 /
     // 3864 / 3940) supply every parameter name, and AddBolt's thirteen
@@ -1863,7 +1863,7 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               unsigned char redirected,
                               unsigned char first_target,
-                              unsigned char creature_spell);   // 0x5a8090
+                              long creature_spell);   // 0x5a8090
     // 0x5a8640, CORRECTED AGAIN 2026-08-20 and now BYTE-PROVEN: the body
     // at 0x5a8640 is reconstructed exact in src/spells.cpp. This line has
     // carried two wrong addresses. 0x5a8950 went first (refuted by arity -
@@ -1892,7 +1892,7 @@ public:
                                        unsigned char firstTarget,
                                        long creatureSpell);    // 0x5a3c80
     army* find_resurrection_target(int armyGroup, int targetIndex,
-                                   unsigned char creatureSpell);
+                                   long creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
     // 0x5a3950, the selector in front of the two rows above: it bounds the
     // hex against the 187-cell grid, routes Resurrection and the gated
@@ -1902,7 +1902,7 @@ public:
     // class because this run of spells.obj leaves is already unconditional.
     army* find_spell_target(SpellID spell, long side, long hex,
                             unsigned char first_target,
-                            unsigned char creature_spell);   // 0x5a3950
+                            long creature_spell);   // 0x5a3950
     // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
     // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
     // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
