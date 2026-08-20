@@ -493,6 +493,16 @@ DATA(0x00678288) extern const int gMineCharacteristics[7];
 // so it takes the event name. PROVISIONAL on that ground alone.
 DATA(0x006a5e20) extern const char* const gMineEventText[];
 #endif
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+// Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
+// bytes read as [previous step direction][current step direction], both
+// in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
+// the result, clearing the two non-directional frames. The orientation is
+// fixed by the matrix itself - the straight-through diagonal runs
+// 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
+// unrelated float data.
+DATA(0x006782ac) extern const signed char gRouteArrowFrames[8][8];
+#endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
@@ -1336,10 +1346,20 @@ public:
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);
     void FizzleCenter(int whichSound);
-    // 0x4183d0, claimed (still @stub) in advmgr.cpp; the Dreamcast roster
-    // gives the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller
-    // that needs the declarator here.
+#endif  /* HOMM3_EVENTS_VIEW */
+    // 0x4183d0, reconstructed in advmgr.cpp; the Dreamcast roster gives
+    // the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller that
+    // needs the declarator, and advmgr.cpp is the DEFINER - without a
+    // visible declaration VC6 compiles the out-of-class definition in a
+    // DEGRADED SCOPE, where members silently become undeclared identifiers
+    // from an arbitrary point onward and no error is reported on the
+    // definition line itself. The gate is widened rather than dropped, and
+    // the declarator keeps its exact position, so no other view sees a
+    // reordered class.
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void SetEnvironmentOrigin(type_point point, int reset);
+#endif
+#ifdef HOMM3_EVENTS_VIEW
     void do_event_lith_one_way(class hero* current_hero, NewmapCell* cell,
                                bool human_player);
     void do_event_lith_two_way(class hero* current_hero, NewmapCell* cell,

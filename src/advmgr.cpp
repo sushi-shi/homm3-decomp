@@ -72,6 +72,7 @@
 #include "creature_bank.h"
 #include "exec.h"
 #include "findpath.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -341,6 +342,50 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 }
 
 // E:\gamedcs\advmgr.cpp:1253
+// DECODED, NOT YET RECONSTRUCTED. Recorded here so it is not re-derived.
+// The body is `switch (advCommand)` over a jump table at VA 0x00408750
+// (fn+0xBD0, the last 32 bytes of the function, preceded by two bytes of
+// 8b ff alignment filler), indexed by advCommand - 1 over the domain 1..8;
+// default falls to the epilogue at fn+0xBB0. advCommand is a raw int here,
+// so the labels are the same literals ProcessHover already assigns.
+//
+// Cases in SOURCE (body emission) order, with the producer of each:
+//   1  fn+0x057  set the hero path target from lastMapHover, FALLS THROUGH
+//   7  fn+0x09A  walk the route: BuildPath, then a step loop over
+//                gpSearchArray->result counting DOWN, with an inner message
+//                pump that aborts on key/LMB/RMB/widget
+//   6  fn+0x64E  hero standing on a town -> get_obscured_town()->View(0)
+//   3  fn+0x684  town, currTownId != -1  -> town::View(0)
+//   2  fn+0x781  hero, currHeroId != -1  -> HeroView
+//   4  fn+0x88B  hero, currHeroId == -1  -> SetHeroContext
+//   5  fn+0x95B  town, currTownId == -1  -> SetTownContext
+//   8  fn+0xA28  shipyard                -> DoEventShipyard
+//
+// Blocked on six declarators the tree does not carry:
+//   advManager::MoveHero             retail 0x004805e0, ret 0x1c (7 args)
+//   advManager::DoEventShipyard      retail 0x0049e2e0, ret 0x0c
+//   TAdventureMapWindow::SetSleepImage(int)   retail 0x00403cc0
+//   .bss 0x006968e0  ds_memsample*, the walk sample MemorySample returns
+//   .bss 0x0069777c  int, breaks the step loop when nonzero
+//   .bss 0x00699560  int, gates both SetEnvironmentOrigin calls in case 2
+// town::get_location exists (town.h:342) but is gated behind
+// HOMM3_TOWN_LOCATION_DECLS, which this TU does not define.
+//
+// Three findings worth keeping:
+//   - The two route-teardown blocks are LONGHAND, not calls. Retail leaves
+//     no call relocation at either; the block at fn+0x493 uses the ONE-arg
+//     CompleteDraw(0) plus advManager::UpdateScreen(0,0) where HideRoute's
+//     own body uses the five-arg CompleteDraw plus the window manager's
+//     UpdateScreen; and both callees are DEFINED LATER in this file, so
+//     VC6 cannot have inlined them. ForceNewHover is longhand likewise.
+//   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
+//     and const-qualified/defined at :1498, so calling it from a non-const
+//     member binds the undefined overload and would emit a call where
+//     retail inlines. Resolve that before using the accessor spelling for
+//     the four `radarOrigin + lastHover` sites.
+//   - CONTRADICTION, not silently patched: retail stores pathTargetZ
+//     SIXTEEN bits wide (`mov word ptr [esi+0x3d], dx`) where hero.h:200
+//     declares `int pathTargetZ; // +0x3d`.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -481,13 +526,23 @@ void type_cell_adjuster::type_cell_adjuster()
 
 #endif  // @carcass
 
-// RETAIL-RECONSTRUCTED 2026-08-09 (54.9494%). The body consolidates repeated
-// creature slots before choosing either a detailed seven-slot list or one
-// approximate size/name pair. The detailed form stops at the first empty
-// consolidated slot and shares its guarded creature-name append. All retail
-// operations are represented; the residual is Dinkumware append inlining/EH
-// state. Its caller set is the creature-bank help group and QuickInfo; no
+// RETAIL-RECONSTRUCTED 2026-08-09. The body consolidates repeated creature
+// slots before choosing either a detailed seven-slot list or one approximate
+// size/name pair. The detailed form stops at the first empty consolidated
+// slot. Its caller set is the creature-bank help group and QuickInfo; no
 // Dreamcast standalone copy survives, so the name is role-derived.
+//
+// Both creature-name sites go through the TU's own GetArmyName helper and
+// pass the REAL count - numTroops[i] in the detailed list, the consolidated
+// total in the approximate form - so a stack of one takes the singular name.
+// Writing the bounds guard longhand against m_plural_name instead cost 28
+// points (64.73 against 93.21): it duplicated a guard retail shares and
+// dropped the count test retail folds, which is what put our body at 57
+// blocks / 32 branches against retail's 42 / 23.
+//
+// Residual (93.21%): Dinkumware append inlining. Tried and rejected:
+// spelling the single-space appends as char appends (`+= ' '`) rather than
+// append(" ") - measured 61.45.
 VA(0x0040abe0, 0x37D)
 std::string get_army_help_text(const armyGroup* source,
                               unsigned char show_full_list)
@@ -515,23 +570,14 @@ std::string get_army_help_text(const armyGroup* source,
             result += armyGroup::GetArmySizeName(
                 consolidated_army.numTroops[i], 2);
             result += " ";
-            int creature = consolidated_army.armies[i];
-            const char* creature_name;
-            if (creature >= 0 && creature <= 150)
-                creature_name = akCreatureTypeTraits[creature].m_plural_name;
-            else
-                creature_name = "";
-            result += creature_name;
+            result += GetArmyName(consolidated_army.armies[i],
+                                  consolidated_army.numTroops[i]);
         }
     } else {
         int amount = consolidated_army.get_creature_total();
         const char* army_name;
         if (consolidated_army.armies[1] == CREATURE_NONE) {
-            int creature = consolidated_army.armies[0];
-            if (creature >= 0 && creature <= 150)
-                army_name = akCreatureTypeTraits[creature].m_plural_name;
-            else
-                army_name = "";
+            army_name = GetArmyName(consolidated_army.armies[0], amount);
         } else {
             army_name = gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
         }
@@ -682,9 +728,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 
 #define APPEND_VISIT_TEXT(isVisited)                                      \
     visited = (isVisited);                                                \
-    sprintf(tempText, visitedFormat,                                     \
-        visited ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)     \
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT)); \
+    if (visited)                                                          \
+        sprintf(tempText, visitedFormat,                                  \
+                gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));     \
+    else                                                                  \
+        sprintf(tempText, visitedFormat,                                  \
+                gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));   \
     strcat(gText, tempText)
 
 #define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \
@@ -955,6 +1004,11 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         SetShrineHelpText(gText, currentHero, cell, Shrine3Info,
                           separator, separator);
         break;
+    // These two invoke APPEND_VISIT_TEXT under an UNBRACED `if`, so only
+    // the `visited = ...` assignment is guarded and the sprintf/strcat run
+    // unconditionally. That reads like a bug and is NOT one to fix: retail
+    // really does emit those two calls outside the guard here, and bracing
+    // both arms was measured at 89.28 against the unbraced 89.82.
     case SIREN:
         strcpy(gText, gAdventureObjectNames[SIREN]);
         if (cell->is_trigger && currentHero)
@@ -1411,6 +1465,18 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // exactly what made it right in TBottomViewTown/TBottomViewHero), where
 // this body's three tests share ONE dword already in a register. The DC
 // is an older revision; retail's bytes outrank it.
+//
+// Residual (78.80%): an INLINER decision, not a source shape. Both sides
+// emit 29 out-of-line calls and the CFGs are close - 134 blocks against
+// retail's 137 - and predict-inline narrows the whole divergence to one
+// callee: SetPointer, which we call EIGHT times and retail seven, so
+// retail expands one of those sites. Per the /Ob2 rule that wants a
+// fuller caller rather than a respelling, and confirmed by two rejected
+// attempts to make two call sites share one: routing both SetPointer(3)
+// arms through a common `town_cursor_exit` label with advCommand set
+// before the goto measured 78.32, and routing the scroll-zone arm into
+// normal_cursor_exit measured 78.02. Neither is a missing source element;
+// the extra call is simply where our budget ran out.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -3342,6 +3408,43 @@ NewmapCell* advManager::GetCell(type_point point)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7037
+// DECODED, NOT YET RECONSTRUCTED. bPartialUpdate is DEAD in retail - zero
+// references in the body - and updateFlag is read exactly once, at the end.
+// Shape: four widget rect locals off advWindow->RadarWidget (+0x18/+0x1a/
+// +0x1c/+0x1e, which InMapArea already proves are x/y/width/height, the
+// vptr putting x at +0x18); the CompleteDraw guard chain; an AI-shield
+// paint; then a row loop over the map with THREE separate switches on
+// gMapHeight - one to advance the destination row (jump table 0x4135d0,
+// index 0x4135e4), one to write the pixel block (table 0x413700, index
+// 0x413714), and one for the sprite frame/scale. The 108 arms carry the
+// 4/3 stretch: advance 1,1,2 rows per 3 map rows, and 2,1,1 pixels wide.
+// The per-cell colour switch is a jump table at 0x413654 with a byte index
+// at 0x413670 over [0x11,0xa0] and six bodies - terrain decorations (21
+// values) taking groundTileset[GroundSet]->p->data[9], then TOWN, the
+// LIGHTHOUSE/MINE pair, the two CREATURE_GENERATORs, GARRISON and
+// SHIPYARD each taking playerColors indexed by their own owner byte.
+// Row-to-row advance uses the LIVE screenBitmap->Pitch while the writes
+// inside a block use a hardcoded 0x640-byte stride; that inconsistency is
+// retail's, not a misread.
+//
+// Blocked on three declarations:
+//   gUnnamed6aac3c is declared WITH its DATA claim further down this file,
+//     below this function - the claim has to be hoisted above it.
+//   .data 0x68c6b8, the view-world tile scale (16.0f / 11.84f / 7.68f,
+//     paired with the int at 0x68c6bc). Proven FLOAT by its writers and by
+//     the fsub at 0x5f73b0 / fdiv at 0x5fc274; viewwrld.obj owns it, so a
+//     declaration only, no DATA claim. No attested name.
+//   game::GameFn_004CA780, retail 0x4ca780, 180 B - loads aishield.pcx,
+//     blits it over the radar rect, calls UpdateScreen and sets
+//     gpAdvManager->field_38c. Ordinal placeholder, GameFn_004CA410's
+//     convention.
+//
+// Two annotation contradictions found while decoding, neither acted on:
+//   - advmgr.h:657 claims gMapVisibilityBit at DATA(0x0069ccc4), but this
+//     body AND the exact GetCloudLookup both relocate against 0x69ccbc.
+//   - soundmgr.h:191 says gbUnk691209 is read only as the second half of
+//     the sound-is-on guard; this body reads it twice as a radar/AI
+//     visibility gate, as do Main, SetHeroContext and StartLocalPlayerTurn.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
@@ -3366,6 +3469,25 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // map coordinates, sizing, screen-edge clamps and dialog invocation.
 // Retail proves the control flow, constants, field offsets and helper calls;
 // Dreamcast CodeView supplies only the function and local identities.
+//
+// The case SET and case ORDER are pinned by the retail tables themselves:
+// the 216-byte case->arm byte index at 0x00415C88 (fn+0x24C8, and
+// 0x24C8+0xD8 == the function size, so the extent is unambiguous) is now
+// byte-identical on both sides, and the 57-entry jump table at 0x00415BA4
+// agrees in length and target order. No arm is missing, extra or misplaced.
+//
+// Residual (90.20%): diagnose reports 373 vs 372 blocks and 197 vs 200
+// conditional branches - i.e. structurally converged, against 242 vs 372
+// and 131 vs 200 before this work - with ONE under-inline left. That one
+// is the std::string surface in the NOTHING/QUEST_GUARD arms: retail
+// open-codes both `append` overloads, `_Eos` and the dtor refcount
+// decrement where we still call them. It is /Ob2 budget, not spelling -
+// dropping the `#pragma inline_depth(0)` that used to wrap
+// cellDescription was worth +0.10 once the body had grown ~2.9 KB, and
+// the rest should follow the same way. Do NOT chase _Tidy/append
+// spellings. The remainder is tail-merge cosmetics: retail shares the
+// no-owner strcpy between CREATURE_GENERATOR_1 and the default arm where
+// we duplicate it, and narrows PlayerKnowsCell's compare to `test al, dl`.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -3408,27 +3530,74 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 0x006603bc, quickInfoNewLine, "\n");
             const char* visitFormat = DATA_COMPGEN(
                 0x006603c4, quickInfoVisitFormat, "\n\n%s");
+            const char* knownFormat = DATA_COMPGEN(
+                0x006603c0, quickInfoKnownFormat, "\n%s");
+            // LEAN_TO alone hangs its visit line off a leading SPACE
+            // rather than the two newlines every other arm uses; the
+            // literal is read straight from the retail image, where
+            // 0x0066034c follows the "%s %s" border format at 0x00660344.
+            const char* leanToFormat = DATA_COMPGEN(
+                0x0066034c, quickInfoLeanToFormat, " %s");
 
+// Retail's shape for every object that owns a GlobalInfoFlags row: the
+// "you know what this does" line is gated on the PLAYER's global info
+// flag, not on the cell, and it is emitted before the per-hero visited
+// line. Both live inside one `is_trigger` guard. The flag lands in the
+// third parameter `z`, which retail reuses as a scratch int once
+// mapPoint.z has been read out of it - that is what produces the byte
+// store into the parameter slot followed by the zero-extend in place.
+#define SET_KNOWN_VISITED_QUICKINFO(objectType, infoFlag, condition)     \
+            case objectType:                                             \
+                strcpy(gText, gAdventureObjectNames[objectType]);         \
+                if (cell->is_trigger) {                                   \
+                    z = gpGame->GetInfoFlag(infoFlag, iPlayer);           \
+                    if (z) {                                              \
+                        sprintf(tempText, knownFormat,                    \
+                                gGlobalInfoFlagNames[infoFlag]);          \
+                        strcat(gText, tempText);                          \
+                    }                                                     \
+                    if (currHero) {                                       \
+                        z = (condition);                                  \
+                        if (z)                                            \
+                            sprintf(tempText, visitFormat,                \
+                                    gpGeneralText->GetText(               \
+                                        GENERAL_TEXT_VISITED_OBJECT));    \
+                        else                                              \
+                            sprintf(tempText, visitFormat,                \
+                                    gpGeneralText->GetText(               \
+                                        GENERAL_TEXT_UNVISITED_OBJECT));  \
+                        strcat(gText, tempText);                          \
+                    }                                                     \
+                }                                                         \
+                break
+
+// The same visited/unvisited tail for objects with no info-flag row.
+// Retail does NOT use a ternary here: it emits two complete sprintf calls
+// and shares only the strcat tail, and it stores the tested flag into `z`
+// first rather than testing the field in place.
 #define SET_VISITED_QUICKINFO(objectType, condition)                     \
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
                 if (cell->is_trigger && currHero) {                       \
-                    sprintf(tempText, visitFormat,                        \
-                        (condition)                                       \
-                            ? gpGeneralText->GetText(                    \
-                                  GENERAL_TEXT_VISITED_OBJECT)           \
-                            : gpGeneralText->GetText(                    \
-                                  GENERAL_TEXT_UNVISITED_OBJECT));       \
+                    z = (condition);                                      \
+                    if (z)                                                \
+                        sprintf(tempText, visitFormat,                    \
+                                gpGeneralText->GetText(                   \
+                                    GENERAL_TEXT_VISITED_OBJECT));        \
+                    else                                                  \
+                        sprintf(tempText, visitFormat,                    \
+                                gpGeneralText->GetText(                   \
+                                    GENERAL_TEXT_UNVISITED_OBJECT));      \
                     strcat(gText, tempText);                              \
                 }                                                         \
                 break
 
             switch (cell->type) {
             case NOTHING:
-            case ANCHOR_POINT: {
-#pragma inline_depth(0)
+            case ANCHOR_POINT:
+            case EVENT:
+            case HOLY_GRAIL: {
                 std::string cellDescription;
-#pragma inline_depth()
                 TAdventureObjectType specialTerrain =
                     cell->get_special_terrain();
                 if (specialTerrain == NOTHING)
@@ -3460,6 +3629,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case BORDER_GUARD:
+            case BORDER_GATE:
                 sprintf(gText, DATA_COMPGEN(
                     0x00660344, rolloverBorderFormat, "%s %s"),
                     gBorderColorNames[cell->objectIndex],
@@ -3481,30 +3651,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            case BUOY:
-                strcpy(gText, gAdventureObjectNames[BUOY]);
-                if (cell->is_trigger && currHero) {
-                    sprintf(tempText, visitFormat,
-                        currHero->flags & 0x4
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(gText, tempText);
-                }
-                break;
-            case CLOVER_FIELD:
-                strcpy(gText, gAdventureObjectNames[CLOVER_FIELD]);
-                if (cell->is_trigger && currHero) {
-                    sprintf(tempText, visitFormat,
-                        currHero->flags & 0x8
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                    strcat(gText, tempText);
-                }
-                break;
+            SET_KNOWN_VISITED_QUICKINFO(BUOY, BuoyInfo,
+                currHero->flags & 0x4);
+            SET_KNOWN_VISITED_QUICKINFO(CLOVER_FIELD, CloverFieldInfo,
+                currHero->flags & 0x8);
             case CREATURE_BANK: {
                 union {
                     int value;
@@ -3551,9 +3701,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             }
             SET_VISITED_QUICKINFO(DEAD_GUY,
-                player->DeadGuyFlags
+                gpCurrentPlayer->DeadGuyFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(DEFENSE_TOWER,
+            SET_KNOWN_VISITED_QUICKINFO(DEFENSE_TOWER, DefenseTowerInfo,
                 currHero->DefenseTowerFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case DERELICT_SHIP:
@@ -3561,19 +3711,33 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     gText, cell, CREATURE_BANK_DERELICT,
                     gUnnamed69778c, separator, 1);
                 break;
+            case SEPULCHER:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SEPULCHER,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHIPWRECK:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SHIPWRECK,
+                    gUnnamed69778c, separator, 1);
+                break;
             case DRAGON_CITY:
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_DRAGON,
                     gUnnamed69778c, separator, 1);
                 break;
-            SET_VISITED_QUICKINFO(FAERIE_RING,
+            case QUEST_GUARD:
+                strcpy(gText,
+                    fullMap->QuestGuardList[cell->extraInfo]
+                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
+                break;
+            SET_KNOWN_VISITED_QUICKINFO(FAERIE_RING, FaerieRingInfo,
                 currHero->flags & 0x2000);
             case FOUNTAIN_OF_FORTUNE:
                 strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
                 if (cell->is_trigger) {
                     if (cell->PlayerKnowsCell(gUnnamed69778c)) {
-                        sprintf(tempText, DATA_COMPGEN(
-                            0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        sprintf(tempText, knownFormat,
                             gGlobalInfoFlagNames[FountainOfFortuneInfo]);
                         strcat(gText, tempText);
                     }
@@ -3593,18 +3757,20 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     }
                 }
                 break;
-            SET_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH,
+            SET_KNOWN_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
                 currHero->flags & 0x4000);
-            SET_VISITED_QUICKINFO(GARDEN_OF_REVELATION,
+            SET_KNOWN_VISITED_QUICKINFO(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
                 currHero->GardenOfRevelationFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case HILL_FORT:
                 strcpy(gText, gAdventureObjectNames[HILL_FORT]);
-                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
-                    sprintf(tempText, DATA_COMPGEN(
-                        0x006603c0, quickInfoKnownFormat, "\n%s"),
-                        gGlobalInfoFlagNames[HillFortInfo]);
-                    strcat(gText, tempText);
+                if (cell->is_trigger) {
+                    z = gpGame->GetInfoFlag(HillFortInfo, iPlayer);
+                    if (z) {
+                        sprintf(tempText, knownFormat,
+                                gGlobalInfoFlagNames[HillFortInfo]);
+                        strcat(gText, tempText);
+                    }
                 }
                 break;
             case HERO: {
@@ -3615,18 +3781,32 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                         mapHero->name, mapHero->HeroFn_004D8F70());
                 break;
             }
-            SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
-                currHero->flags & (0x02000000UL | 0x10UL));
-            SET_VISITED_QUICKINFO(LEAN_TO,
-                player->LeanToFlags
-                    & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(LIBRARY,
+            SET_KNOWN_VISITED_QUICKINFO(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
+                (currHero->flags & 0x02000000UL)
+                    + (currHero->flags & 0x10UL));
+            case LEAN_TO:
+                strcpy(gText, gAdventureObjectNames[LEAN_TO]);
+                if (cell->is_trigger && currHero) {
+                    z = gpCurrentPlayer->LeanToFlags
+                        & (1UL << (cell->extraInfo & 0x1f));
+                    if (z)
+                        sprintf(tempText, leanToFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, leanToFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                    strcat(gText, tempText);
+                }
+                break;
+            SET_KNOWN_VISITED_QUICKINFO(LIBRARY, LibraryInfo,
                 currHero->LibraryFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case LIGHTHOUSE:
                 strcpy(gText, gAdventureObjectNames[LIGHTHOUSE]);
                 if (cell->is_trigger) {
-                    int owner =
+                    char owner =
                         gpGame->mines[cell->extraInfo].playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
@@ -3635,19 +3815,19 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     }
                 }
                 break;
-            SET_VISITED_QUICKINFO(MAGIC_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SCHOOL, MagicSchoolInfo,
                 currHero->MagicSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(MAGIC_SPRING,
-                (player->MagicSpringFlags
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_SPRING, MagicSpringInfo,
+                (gpCurrentPlayer->MagicSpringFlags
                     & (1UL << (cell->extraInfo & 0x1f)))
-                    && !(cell->extraInfo & 0x40));
-            SET_VISITED_QUICKINFO(MAGIC_WELL,
+                    && !((cell->extraInfo >> 6) & 1));
+            SET_KNOWN_VISITED_QUICKINFO(MAGIC_WELL, MagicWellInfo,
                 currHero->flags & 0x1);
-            SET_VISITED_QUICKINFO(MERC_CAMP,
+            SET_KNOWN_VISITED_QUICKINFO(MERC_CAMP, MercCampInfo,
                 currHero->MercCampFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
-            SET_VISITED_QUICKINFO(MERMAID,
+            SET_KNOWN_VISITED_QUICKINFO(MERMAID, MermaidInfo,
                 currHero->flags & 0x8000);
             case MINE:
                 AdvmgrFn_0040D670(gText, cell, iPlayer, newLine, 1);
@@ -3657,17 +3837,20 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger) {
                     unsigned long gardenBit =
                         1UL << (cell->extraInfo & 0x1f);
-                    sprintf(tempText, visitFormat,
-                        (player->MysticalGardenFlags & gardenBit)
-                            && !(cell->extraInfo & 0x400)
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
+                    z = (gpCurrentPlayer->MysticalGardenFlags & gardenBit)
+                        && !((cell->extraInfo >> 10) & 1);
+                    if (z)
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
-            SET_VISITED_QUICKINFO(OASIS,
+            SET_KNOWN_VISITED_QUICKINFO(OASIS, OasisInfo,
                 currHero->flags & 0x80);
             case OBELISK:
                 strcpy(gText, gAdventureObjectNames[OBELISK]);
@@ -3681,7 +3864,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            SET_VISITED_QUICKINFO(POWER_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(POWER_SCHOOL, PowerSchoolInfo,
                 currHero->PowerSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case PYRAMID:
@@ -3696,7 +3879,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                                   GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(RALLY_FLAG,
+            SET_KNOWN_VISITED_QUICKINFO(RALLY_FLAG, RallyFlagInfo,
                 currHero->flags & 0x10000);
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
@@ -3705,16 +3888,6 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 strcpy(gText,
                     fullMap->SeerHutList[cell->extraInfo]
                         .SeerHutFn_005741B0(iPlayer).c_str());
-                break;
-            case SEPULCHER:
-                get_creature_bank_help_text(
-                    gText, cell, CREATURE_BANK_SEPULCHER,
-                    gUnnamed69778c, separator, 1);
-                break;
-            case SHIPWRECK:
-                get_creature_bank_help_text(
-                    gText, cell, CREATURE_BANK_SHIPWRECK,
-                    gUnnamed69778c, separator, 1);
                 break;
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
@@ -3732,9 +3905,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 currHero->flags & 0x100000);
             SET_VISITED_QUICKINFO(STABLES,
                 currHero->flags & 0x2);
-            SET_VISITED_QUICKINFO(TEMPLE,
-                currHero->flags & (0x04000000UL | 0x100UL));
-            SET_VISITED_QUICKINFO(TRAINING_GROUNDS,
+            SET_KNOWN_VISITED_QUICKINFO(TEMPLE, TempleInfo,
+                (currHero->flags & 0x04000000UL)
+                    + (currHero->flags & 0x100UL));
+            SET_KNOWN_VISITED_QUICKINFO(TRAINING_GROUNDS, TrainingGroundsInfo,
                 currHero->TrainingGroundsFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case TREE_OF_KNOWLEDGE:
@@ -3743,11 +3917,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             case UNIVERSITY:
                 strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
-                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
-                    sprintf(tempText, DATA_COMPGEN(
-                        0x006603c0, quickInfoKnownFormat, "\n%s"),
-                        gGlobalInfoFlagNames[UniversityInfo]);
-                    strcat(gText, tempText);
+                if (cell->is_trigger) {
+                    z = gpGame->GetInfoFlag(UniversityInfo, iPlayer);
+                    if (z) {
+                        sprintf(tempText, knownFormat,
+                                gGlobalInfoFlagNames[UniversityInfo]);
+                        strcat(gText, tempText);
+                    }
                 }
                 break;
             case WAGON:
@@ -3762,7 +3938,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                                   GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(WAR_SCHOOL,
+            SET_KNOWN_VISITED_QUICKINFO(WAR_SCHOOL, WarSchoolInfo,
                 currHero->WarSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case WARRIOR_TOMB:
@@ -3782,33 +3958,34 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
-                    strcat(gText, (cell->extraInfo & 0x1f) == 0
-                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                        : gpGeneralText->GetText(
-                              GENERAL_TEXT_UNVISITED_OBJECT));
+                    short wheelGold = (cell->extraInfo & 0x1f) * 500;
+                    if (wheelGold == 0)
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
-            SET_VISITED_QUICKINFO(WATERING_HOLE,
+            SET_KNOWN_VISITED_QUICKINFO(WATERING_HOLE, WateringHoleInfo,
                 currHero->flags & 0x40);
             case WINDMILL:
                 strcpy(gText, gAdventureObjectNames[WINDMILL]);
                 if (cell->is_trigger
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
-                    strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                        : gpGeneralText->GetText(
-                              GENERAL_TEXT_UNVISITED_OBJECT));
+                    unsigned long windmillAmount = cell->extraInfo >> 13;
+                    if ((windmillAmount & 0xf) == 0)
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
                                         newLine, separator);
-                break;
-            case QUEST_GUARD:
-                strcpy(gText,
-                    fullMap->QuestGuardList[cell->extraInfo]
-                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
                 break;
             default:
                 strcpy(gText, gAdventureObjectNames[cell->type]);
@@ -4491,14 +4668,88 @@ void advManager::DemobilizeCurrHero(unsigned char waitingPlayer,
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9476
+// Makes a town the adventure view's subject: drop any mobile hero, clear
+// the current-hero slot, centre the radar on the town and repoint the
+// locator strip, the spell/sleep buttons and the ambient music at it.
+// Retail resolves the acting player TWICE and caches neither, but spells
+// the two differently, which the bytes insist on: the first is a ternary,
+// the second an if-assignment over a gpCurrentPlayer default, re-reading
+// the parameter off the stack (85.39 -> 88.13 for that one line). It also
+// reaches RedrawAdvScreen through the gpAdvManager global, not `this`.
+//
+// Residual (88.13%): instruction selection only - branch sequences agree
+// mnemonic-for-mnemonic (14 branches, 1 return) and the call multisets are
+// identical; what is left is the register choice in the GetTown index
+// chain and reloc-name-only rows on data.
 VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
 void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
 {
-    // @stub
+    DemobilizeCurrHero(waitingPlayer, 0);
+
+    playerData* heroOwner = waitingPlayer ? gpGame->GetLocalPlayer()
+                                          : gpCurrentPlayer;
+    heroOwner->currHeroId = -1;
+
+    playerData* player = gpCurrentPlayer;
+    if (waitingPlayer)
+        player = gpGame->GetLocalPlayer();
+    player->currTownId = townId;
+
+    town* currTown = gpGame->GetTown(player->currTownId);
+    radarOrigin.x = currTown->mapX - 9;
+    radarOrigin.y = currTown->mapY - 8;
+    radarOrigin.z = currTown->mapZ;
+
+    advWindow->SetElevationToggleImage(radarOrigin.z);
+
+    int townSlot = 0;
+    int i;
+    for (i = 0; i < player->numTowns; i++) {
+        if (player->townIds[i] == townId)
+            townSlot = i;
+    }
+
+    if (waitingPlayer || gpCurrentPlayer->IsLocalHuman()) {
+        advWindow->UpdateTownLocators(townSlot, 1, 0);
+        advWindow->UpdateHeroLocators(-1, 1, 0);
+        advWindow->UpdateSpellButton(0);
+        advWindow->UpdateSleepButton(0);
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+        gpWindowManager->BroadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            TAdventureMapWindow::MOVE_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        if (bShowRoute)
+            bShowRoute = 0;
+    }
+
+    gpAdvManager->RedrawAdvScreen(update, 0);
+
+    type_point point;
+    point.x = radarOrigin.x + 9;
+    point.y = radarOrigin.y + 8;
+    point.z = radarOrigin.z;
+    SetEnvironmentOrigin(point, 1);
+
+    point.x = currTown->mapX;
+    point.y = currTown->mapY;
+    point.z = currTown->mapZ;
+
+    int ground = GetCell(point)->GroundSet;
+    if (ground != field_58) {
+        field_58 = ground;
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[ground]);
+    }
+
+    gpInputManager->ForceMouseMove();
+    lastHoverX = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9544
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
@@ -4514,12 +4765,118 @@ unsigned char SaveGame(unsigned char bCampaignWinMode)
     // @stub
 }
 
+#endif  // @carcass
+
+// Per-priority playback volume for the adventure ambience. The row is
+// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
+// pattern). It sits HERE, ahead of SetEnvironmentOrigin, because that is
+// the first of its two readers in retail's source order (advmgr.cpp:9785
+// against InsertSound's 10372) - it cannot have been declared any later.
+DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
+                                                        3,  2,  1,  0 };
+
 // E:\gamedcs\advmgr.cpp:9785
+// The adventure ambience re-seed. Retail proves all three phases: a
+// priority reset over the four active slots (silencing them outright when
+// `reset` is set), a square-ring scan that feeds InsertSound the ring
+// index as its priority, and a settle pass that drops anything left above
+// priority 5 and re-volumes whatever InsertSound touched. The scan runs
+// twice, soundsType 1 then 2 - pass 1 only re-prioritises sounds already
+// playing (InsertSound returns early on soundsType 1), pass 2 is the one
+// allowed to claim a free slot. The four running edge counters are what
+// make retail emit inc/inc/dec/dec rather than indexed addressing.
+//
+// Residual (63.94%): register-homing only. The function is branch-for-
+// branch identical to retail - 15 branches, 1 return, identical call
+// multiset - and why-reg v2 confirms the definition slots and their order
+// agree on BOTH sides, with only the ebx/edi bindings permuted: retail
+// holds `this` in edi and hoists the 0x7f idle priority into ebx, we hold
+// `this` in ebx and spend edi on the loop counter that retail memory-homes.
+// Since the value that must move first is `this` - a parameter - no local
+// spelling reaches it; this is C1 front-end handle state, the bounded
+// class. The one lever the model did find (creating `y` before `x`) is
+// applied above and is worth 16 slots / +0.27.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
-    // @stub
+    if (!gpSoundManager->field_84)
+        return;
+
+    int i;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID) {
+            if (reset) {
+                gpSoundManager->StopSample(
+                    loopedSample[soundArray[i].soundId]->field_1c);
+                soundArray[i].soundId = LOOPING_SOUND_INVALID;
+            }
+            soundArray[i].priority = 0x7f;
+        }
+    }
+
+    if (point.x == -1)
+        return;
+
+    if (!gUnk698764)
+        return;
+
+    touchedSounds = 0;
+
+    int y = point.y;
+    int x = point.x;
+    int z = point.z;
+
+    int soundsType;
+    for (soundsType = 1; soundsType <= 2; soundsType++) {
+        InsertSound(x, y, z, 0, soundsType);
+
+        int xMin = x;
+        int yMin = y;
+        int xMax = x;
+        int yMax = y;
+        int ring;
+        int edgeLength;
+        for (ring = 0, edgeLength = 0; edgeLength < 8;
+             ring++, edgeLength += 2) {
+            int topX = xMin;
+            int rightY = yMin;
+            int bottomX = xMax;
+            int leftY = yMax;
+            int k;
+            for (k = edgeLength; k != 0; k--) {
+                InsertSound(topX, yMin, z, ring, soundsType);
+                InsertSound(xMax, rightY, z, ring, soundsType);
+                InsertSound(bottomX, yMax, z, ring, soundsType);
+                InsertSound(xMin, leftY, z, ring, soundsType);
+                topX++;
+                rightY++;
+                bottomX--;
+                leftY--;
+            }
+            xMax++;
+            yMax++;
+            xMin--;
+            yMin--;
+        }
+    }
+
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID
+            && soundArray[i].priority > 5) {
+            gpSoundManager->StopSample(
+                loopedSample[soundArray[i].soundId]->field_1c);
+            soundArray[i].soundId = LOOPING_SOUND_INVALID;
+        }
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID
+            && (touchedSounds & (1 << soundArray[i].soundId))) {
+            gpSoundManager->ModifySample(
+                loopedSample[soundArray[i].soundId]->field_1c, 100,
+                akSoundVolumes[soundArray[i].priority]);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9929
 DC_ONLY(0x1b520, 0x88)
@@ -4744,12 +5101,6 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 // nearest consumer declares (name provisional, role byte-proven).
 DATA(0x0065f794) extern const char* const gLoopingSoundNames[LOOPING_SOUND_COUNT];
 
-// Per-priority playback volume for the adventure ambience. The row is
-// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
-// pattern).
-DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
-                                                        3,  2,  1,  0 };
-
 // E:\gamedcs\advmgr.cpp:10372
 VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
 void advManager::InsertSound(int x, int y, int z, int soundPriority,
@@ -4808,14 +5159,144 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
     touchedSounds ^= 1 << soundArray[iBest].soundId;
 }
 
-#if 0  // @carcass
+// The "no route to draw" tail, inlined at all three of ShowRoute's exits
+// where the arrow overlay has to come down: dim the move button, forget
+// the hero's path target, and repaint only if the overlay was actually up.
+// Retail expands it three times with the pathTarget clear folded away in
+// the copy reached with currHeroId already known to be -1, which is what a
+// same-TU static under /Ob2 does.
+static void clear_adventure_route(advManager* manager, int bUpdateScreen)
+{
+    if (!gpCurrentPlayer->IsLocalHuman()
+        && (!gUnnamed6989c8 || !gUnnamed69ccd4))
+        return;
+
+    gpWindowManager->BroadcastMessage(
+        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+        TAdventureMapWindow::MOVE_ID,
+        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+
+    int heroId = gpCurrentPlayer->currHeroId;
+    if (heroId != -1) {
+        hero* currentHero = &gpGame->heroes[heroId];
+        currentHero->pathTargetX = -1;
+        currentHero->pathTargetY = -1;
+    }
+
+    if (!manager->bShowRoute)
+        return;
+    manager->bShowRoute = 0;
+    if (!bUpdateScreen)
+        return;
+
+    manager->CompleteDraw(0);
+    manager->UpdateScreen(0, 0);
+}
 
 // E:\gamedcs\advmgr.cpp:10436
+// Rebuilds the adventure-map route overlay. Retail runs the path search
+// from the hero's stored target, then walks the resulting cell list BACK
+// TO FRONT writing one arrow frame per step into routeArray: the final
+// step gets frame 1 (the target marker) and every other step indexes
+// gRouteArrowFrames[previous direction][this direction] + 2. Steps that
+// fall beyond the hero's remaining movement are pushed into the greyed
+// bank by adding 0x19, and reaching any affordable step is what un-dims
+// the move button at the end.
+//
+// Residual (52.02%): an OVER-inline, not a missing block - the structure
+// is already close, 32 branches / 2 returns against retail's 30 / 3.
+// Retail's call multiset is 3x CompleteDraw(unsigned char) + 1x the
+// five-argument CompleteDraw + 4x UpdateScreen: it CALLS the one-argument
+// forwarder at each of the three clear tails. Our build inlines that
+// forwarder into its own five-argument call, and at one of the three
+// sites inlines UpdateScreen as well, leaking GameTime::Get,
+// Process1WindowsMessage and heroWindowManager::UpdateScreen into the
+// body. That is /Ob2 budget, so per doctrine it wants a fuller caller,
+// not a respelling.
+// Tried and rejected: writing the three clear tails LONGHAND instead of
+// as one static - the reading copy 1 suggests by having no pathTarget
+// clear - measured 29.88, far worse. So the same-TU static inlined three
+// times is the right shape, and copy 1's missing clear really is VC6
+// propagating the currHeroId == -1 it has just tested.
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
 void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 {
-    // @stub
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    int heroId = gpCurrentPlayer->currHeroId;
+    if (heroId == -1) {
+        clear_adventure_route(this, bUpdateScreen);
+        return;
+    }
+
+    hero* currentHero = &gpGame->heroes[heroId];
+    if (currentHero->pathTargetX == -1) {
+        clear_adventure_route(this, bUpdateScreen);
+        return;
+    }
+
+    SeedTo(type_point(currentHero->pathTargetX, currentHero->pathTargetY,
+                      currentHero->pathTargetZ));
+
+    int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
+    if (gpSearchArray->result.size() <= 0 || pathLength <= 0) {
+        clear_adventure_route(this, bUpdateScreen);
+    } else {
+        memset(routeArray, 0,
+               (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
+                   * sizeof(unsigned short));
+        bShowRoute = 1;
+
+        int movePoints = currentHero->movePoints;
+        type_point step;
+        step.x = currentHero->x;
+        step.y = currentHero->y;
+        step.z = currentHero->z;
+
+        currentHero->army.GetNativeTerrain();
+
+        int routeAffordable = 0;
+        int i;
+        for (i = gpSearchArray->result.size() - 1; i >= 0; i--) {
+            int dir = gpSearchArray->result[i]->direction;
+            movePoints -= GetTerrainCost(currentHero, step, dir, movePoints);
+            step.x = step.x + gStepDeltaX[4 * dir];
+            step.y = step.y + gStepDeltaY[4 * dir];
+
+            unsigned short* arrow =
+                &routeArray[(step.z * gMapHeight + step.y) * gMapWidth
+                            + step.x];
+            if (i == 0) {
+                *arrow = 1;
+            } else {
+                int prevDir = gpSearchArray->result[i - 1]->direction;
+                *arrow = gRouteArrowFrames[prevDir][dir] + 2;
+            }
+
+            if (movePoints < 0)
+                *arrow += 0x19;
+            else
+                routeAffordable = 1;
+        }
+
+        if (bChangeButton) {
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET,
+                routeAffordable ? widget::WIDGET_CLEAR_STATUS
+                                : widget::WIDGET_SET_STATUS,
+                TAdventureMapWindow::MOVE_ID,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        }
+    }
+
+    if (bUpdateScreen) {
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        UpdateScreen(0, 0);
+    }
 }
+
+#if 0  // @carcass
 
 // The packed-coordinate body once mistaken for HideRoute is the type_point
 // constructor below. HideRoute itself follows that COMDAT at retail 0x419300.
@@ -5119,15 +5600,68 @@ int advManager::MouseInScrollZone()
     // @stub
 }
 
+// E:\gamedcs\advmgr.cpp:10842
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:10778
+// Centres the adventure view at the start of a turn. Retail picks the
+// anchor in four tiers - the current player's own current town, an
+// unstarted human turn (which just mobilises the hero and leaves), then
+// the local player's first hero and first town, and finally the map
+// corner. The -9/-8 bias converts a map cell to a viewport origin, and
+// both town tiers share one emitted block because retail's source repeats
+// the same three assignments (VC6 cross-jumps them). gpCurrentPlayer's
+// IsLocalHuman is asked three separate times; retail does not cache it.
 VA(0x00419990, 0x2E3)  // linkorder, dc 0x1cd68
 void advManager::SetInitialMapOrigin()
 {
-    // @stub
-}
+    lastHoverX = lastHoverY = 0;
 
-// E:\gamedcs\advmgr.cpp:10842
-#endif  // @carcass
+    if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->currTownId != -1) {
+        town* startTown = &gpGame->towns[gpCurrentPlayer->currTownId];
+        radarOrigin.x = startTown->mapX - 9;
+        radarOrigin.y = startTown->mapY - 8;
+        radarOrigin.z = startTown->mapZ;
+    } else if (gpCurrentPlayer->IsLocalHuman()) {
+        MobilizeCurrHero(0, 0, 0);
+    } else {
+        playerData* player = gpCurrentPlayer->IsLocalHuman()
+                                 ? gpCurrentPlayer
+                                 : gpGame->GetLocalPlayer();
+        if (player->numHeroes > 0) {
+            hero* startHero = &gpGame->heroes[player->heroes[0]];
+            radarOrigin.x = startHero->x - 9;
+            radarOrigin.y = startHero->y - 8;
+            radarOrigin.z = startHero->z;
+        } else if (player->numTowns > 0) {
+            town* startTown = &gpGame->towns[player->townIds[0]];
+            radarOrigin.x = startTown->mapX - 9;
+            radarOrigin.y = startTown->mapY - 8;
+            radarOrigin.z = startTown->mapZ;
+        } else {
+            radarOrigin.x = 0;
+            radarOrigin.y = 0;
+            radarOrigin.z = 0;
+        }
+    }
+
+    advWindow->SetElevationToggleImage(radarOrigin.z);
+
+    type_point center;
+    center.x = radarOrigin.x + 9;
+    center.y = radarOrigin.y + 8;
+    center.z = radarOrigin.z;
+
+    field_58 = GetCell(center)->GroundSet;
+    gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    SetEnvironmentOrigin(center, 1);
+    seedingValid = 0;
+
+    if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->HasMobileHero())
+        advWindow->WidgetClearStatus(11, 0x4008);
+    else
+        advWindow->WidgetSetStatus(11, 0x4008);
+}
 
 VA(0x00419c80, 0x171)  // anchor-callee, dc 0x1d0bc
 void PopupPlayerTurnInfo()
@@ -5557,14 +6091,79 @@ unsigned char advManager::DoSystemOptions()
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:11444
+// Retail proves the whole shape: a 7x7 neighbourhood clamped to the world
+// extents, a 47-entry jump table over the contiguous decorative-terrain
+// block TERRAIN_BRUSH(0x72)..TERRAIN_YUCCA_TREE(0xa0) collapsed into three
+// counted groups, and a three-way majority vote. The 0/1/2 result indexes
+// gTerrainCombatBackgrounds[combatTerrain][.] at the cmbtmgr call site,
+// so group 0 is the dead-vegetation background, 1 the mountain one and 2
+// the wooded default. type_point's `short x:10, y:10, z:4` packing puts y
+// and z in the second allocation unit, which is why retail walks the loop
+// variable through `xor word ptr [p+2]` bitfield writes.
+// Residual (99.10%): the two lower clamps only. Retail tests `value < 0`
+// and yields the zero (`jl`), where this TU's `_cpp_max` spelling
+// (`_X > _Y ? _X : _Y`) tests `value > 0` and yields the value (`jg`).
+// Swapping to `_cpp_max(0, value)` DOES buy the retail polarity but costs
+// the shared zero: retail materialises one `xor esi, esi` feeding both
+// clamps, while the swapped order creates the constant first, parks it in
+// edx and re-emits an immediate 0 for the second clamp - measured 98.73,
+// strictly worse, so the higher-scoring order stands. The template itself
+// is NOT the knob: FindAdjacentMonster four functions up uses the same
+// `_cpp_max(value, 0)` idiom and retail emits `jg` there, so this TU's
+// spelling is byte-proven and MoreTreesNear's source genuinely differed.
+// What remains beyond the polarity is frame-slot coalescing (arg-slot
+// [ebp+8] vs a negative scratch slot), the documented class.
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
 int advManager::MoreTreesNear(type_point point)
 {
-    // @stub
+    int trees = 0;
+    int dead = 0;
+    int mountains = 0;
+
+    int minY = _cpp_max(point.y - 3, 0);
+    int maxY = _cpp_min(point.y + 4, gMapHeight);
+    int minX = _cpp_max(point.x - 3, 0);
+    int maxX = _cpp_min(point.x + 4, gMapWidth);
+
+    type_point p;
+    p.z = point.z;
+    for (p.y = minY; p.y < maxY; p.y++) {
+        for (p.x = minX; p.x < maxX; p.x++) {
+            NewmapCell* cell = GetCell(p);
+            switch (cell->type) {
+            case TERRAIN_BRUSH:
+            case TERRAIN_BUSH:
+            case TERRAIN_OAK_TREE:
+            case TERRAIN_PINE_TREE:
+            case TERRAIN_TREE:
+            case TERRAIN_WILLOW_TREE:
+            case TERRAIN_YUCCA_TREE:
+                trees++;
+                break;
+            case TERRAIN_DEAD_VEGETATION:
+                dead++;
+                break;
+            case TERRAIN_HILL:
+            case TERRAIN_MOUND:
+            case TERRAIN_MOUNTAIN:
+            case TERRAIN_OUTCROPPING:
+            case TERRAIN_VOLCANIC_VENT:
+            case TERRAIN_VOLCANO:
+                mountains++;
+                break;
+            }
+        }
+    }
+
+    if (dead > trees && dead > mountains)
+        return 0;
+    if (mountains > trees && mountains > dead)
+        return 1;
+    return 2;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11501
 DC_ONLY(0x1eb78, 0x40)
