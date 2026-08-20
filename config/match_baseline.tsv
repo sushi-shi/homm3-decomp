@@ -1263,7 +1263,7 @@ mapcell	?cell_is_trigger@NewmapCell@@QAEEXZ	100.0000	100.0000	100.0000	0xfcc80
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
 mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4848	93.4848	0xfcbd0
 mapcell	?get_object_type_ptr@CObject@@QAEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
-mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.0935	79.0935	79.0935	0xfce20
+mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.8598	79.8598	79.8598	0xfce20
 mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
 mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	89.8635	89.8635	89.8635	0x100430

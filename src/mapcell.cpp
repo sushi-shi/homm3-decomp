@@ -532,6 +532,26 @@ const unsigned char NewmapCell::HasTriggerableEvent()
 // E:\gamedcs\mapcell.cpp:490
 #endif  // @carcass
 
+// The reverse scan is `i = objects.size() - 1; i >= 0` and indexes
+// `objects[i]`, NOT `i = size(); i > 0` indexing `objects[i - 1]`
+// (79.0935 -> 79.8598).  The bytes tell the two apart at both ends of the
+// loop: retail keeps size in EDX and size-1 in ESI (`mov edx,esi / dec esi`)
+// so the entry guard can be `test edx,edx / jle` on the SIZE while the body
+// subscripts with ESI, and the back edge tests the PRE-decrement index
+// (`mov eax,esi / dec esi / test eax,eax / jg`).  Writing it the other way
+// lets VC6 fold `size() == 0` into the loop guard, which also collapses the
+// null-pointer arm of the inlined `vector::size()` - retail keeps that arm
+// as a real join (`xor esi,esi / jmp`), and that is the ten-instruction
+// difference the count showed.
+//
+// Residual (79.8598%): the two `cellFlags & 0x1000` tests.  Retail hoists
+// the mask into EBX before the first compare and tests the WORD twice
+// (`mov ebx,0x1000` + `test word ptr [ecx+0xc],bx`); this compile narrows
+// both to `test byte ptr [ecx+0xd],0x10`.  Same field, same bit - what is
+// missing is whatever stops VC6 narrowing.  `(cellFlags & 0x1000) != 0` is
+// byte-flat (measured), so it is not the comparison form; a mask that
+// arrives as an inlined parameter would do it, but no NewmapCell flag-test
+// helper appears anywhere in the DC roster to justify inventing one.
 VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
 TAdventureObjectType NewmapCell::get_special_terrain() const
 {
@@ -552,9 +572,9 @@ TAdventureObjectType NewmapCell::get_special_terrain() const
             && objectIndex == 1)
         return cellType;
 
-    for (int i = objects.size(); i > 0; --i) {
+    for (int i = objects.size() - 1; i >= 0; --i) {
         CObject* object =
-            &currentGame->worldMap.objects[objects[i - 1].objectIndex];
+            &currentGame->worldMap.objects[objects[i].objectIndex];
         CObjectType* objectType =
             &currentGame->worldMap.objectTypes[object->typeIndex];
         if (objectType->objectType == CURSED_GROUND
