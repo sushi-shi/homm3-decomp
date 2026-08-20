@@ -24,7 +24,13 @@
 #define HOMM3_ARMY_CALIPH_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_AURA_VIEW
+#define HOMM3_ARMY_MIDPOINT_DECL
+#define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#define HOMM3_ARMY_AI_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_AI_VIEW
+#undef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#undef HOMM3_ARMY_MIDPOINT_DECL
 #undef HOMM3_ARMY_AURA_VIEW
 #undef HOMM3_ARMY_RANGE_VIEW
 #undef HOMM3_ARMY_CALIPH_VIEW
@@ -142,28 +148,33 @@ void army::WaitSample(army::TSampleID which)
 }
 
 // E:\gamedcs\army.cpp:117
-DC_ONLY(0x438e8, 0xC8)
+// The four slots between stop_sample and SetLuck pop 0 / 0x18 / 0x1c / 0
+// stack bytes, i.e. 0 / 6 / 7 / 0 arguments, and the six DC rows that could
+// occupy them take 1 / 0 / 6 / 7 / 0 / 0 - so InitClean, initialize, Init
+// and LoadResources fit in order and WaitSample (one argument) cannot.
+VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::InitClean()
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:150
-DC_ONLY(0x439b0, 0x3EA)
+VA(0x0043d730, 0x17D)  // anchor-bracket + arity (ret 0x18 = 6 args), dc 0x439b0
 void army::initialize(TCreatureType type, long number, const hero* owner, long new_group, long new_index, long new_grid_index)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:261
-DC_ONLY(0x43d9c, 0xE4)
+VA(0x0043d8b0, 0x135)  // anchor-bracket + arity (ret 0x1c = 7 args), dc 0x43d9c
 void army::Init(int armyId, int newNumTroops, const hero* owner, int side, int inIndex, int iGridIndex, int iOrigPos)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:288
-DC_ONLY(0x43e80, 0x3CA)
+VA(0x0043d9f0, 0x525)  // anchor-bracket + dc-callgraph (GetSprite,
+                       // IsQuickCombat) + arity, dc 0x43e80
 void army::LoadResources()
 {
     // @stub
@@ -345,7 +356,7 @@ evil_done:
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:596
-// RETAIL_LOCATED(0x0043e140, 0x8C0)  // anchor-global, dc 0x444a8
+VA(0x0043e140, 0x8C0)  // anchor-global, dc 0x444a8
 void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
 {
     // @stub
@@ -552,7 +563,8 @@ void army::remove_binding()
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1034
-DC_ONLY(0x45164, 0xA0)
+VA(0x0043efe0, 0xCF)  // anchor-bracket (the EndWalk note below proves
+                      // this slot) + arity ret 4, dc 0x45164
 unsigned char army::set_inside_area_effect(unsigned char arg)
 {
     // @stub
@@ -667,14 +679,14 @@ void army::Walk(int direction, unsigned char end_walk,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1171
-// RETAIL_LOCATED(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
+VA(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
 void army::animate_missile(army* armyToAttack)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:1356
-// RETAIL_LOCATED(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
+VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::range_attack(army* armyToAttack)
 {
     // @stub
@@ -926,7 +938,7 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1717
-// RETAIL_LOCATED(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
+VA(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
 unsigned char army::check_special_attack(army* target)
 {
     // @stub
@@ -997,14 +1009,14 @@ void army::do_fire_shield(long damage)
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1896
-// RETAIL_LOCATED(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
+VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
 void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:2044
-// RETAIL_LOCATED(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
+VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::do_attack(army* armyToAttack, int direction)
 {
     // @stub
@@ -1134,7 +1146,7 @@ unsigned char army::check_obstacle_attacks(unsigned char is_walking)
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2386
-// RETAIL_LOCATED(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
+VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 {
     // @stub
@@ -1230,14 +1242,22 @@ long army::get_adjusted_defense(const army* enemy,
     return defense;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2670
-DC_ONLY(0x478c8, 0x32)
+// The defense twin of get_attack_modifier above: how far this stack's
+// current defense has drifted from its creature type's baseline. The
+// frenzy flag is passed 1 and the enemy 0, so a Frenzied stack reports
+// the whole baseline as its (negative) modifier.
+//
+// anchor-callee (its ONE callee is get_adjusted_defense, matching the
+// DC row's one callee) + arity ret 0.
+VA(0x00442660, 0x29)  // anchor-callee + arity, dc 0x478c8
 long army::get_defense_modifier() const
 {
-    // @stub
+    return get_adjusted_defense(0, 1)
+        - akCreatureTypeTraits[creatureType].defenseSkill;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2680
 DC_ONLY(0x478fc, 0x8)
@@ -1637,7 +1657,7 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2820
-// RETAIL_LOCATED(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
+VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
 double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded) const
 {
     // @stub
@@ -1677,7 +1697,7 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
 // note above. RETIRING 0x447a80's reconstruction retires the pragma
 // and makes 0x442e60 claimable in the same change.
 #pragma inline_depth(0)
-// RETAIL_LOCATED(0x00442e60, 0x169)  // anchor-global, dc 0x48168
+VA(0x00442e60, 0x169)  // anchor-global, dc 0x48168
 long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
     if (numTroops <= 0)
@@ -1818,8 +1838,34 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
 
 #if 0  // @carcass
 
+// RETAIL-ONLY, no roster row anywhere: the numeric half of
+// ComputeAttackerDamageBonuses (0x443840, immediately below), carrying the
+// SAME five arguments - offense/archery factors, the hero spell bonus and
+// the get_adjusted_attack / get_adjusted_defense pair. The DC build has all
+// of this INSIDE its single 1410-byte ComputeAttackerDamageBonuses; retail
+// split it out because get_estimated_damage (0x443e30) needs the number
+// without the combat message and sound the wrapper adds. NAME IS A
+// BOOTSTRAP INVENTION, same class as get_estimated_damage below.
+VA(0x00443320, 0x514)  // anchor-callee (0x443840 and 0x443e30 are its only
+                       // callers) + arity ret 0x14, retail-only slot
+int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
+                                 army* defender, unsigned char simulate_only,
+                                 long distance) const
+{
+    // @stub
+}
+
 // E:\gamedcs\army.cpp:3076
-// RETAIL_LOCATED(0x00443840, 0x344)  // anchor-global, dc 0x4868c
+// CONFIRMED against 0x443320, which has the SAME arity (ret 0x14) and a
+// better size ratio, and which an order-map alone picks instead. The DC
+// callgraph settles it: DC ComputeAttackerDamageBonuses has exactly ONE
+// caller, adjust_damage, and retail's 0x443f40 (adjust_damage, claimed)
+// calls 0x443840 and never 0x443320; DC's row also calls LoadPlaySample /
+// WaitEndSample / GetName, which 0x443840 does and 0x443320 does not.
+// 0x443320 (0x514 B) is a RETAIL-ONLY worker split out of this body -
+// the offense/archery/spell-bonus arithmetic, same five arguments - and
+// it is called from here and from the retail-only 0x443e30.
+VA(0x00443840, 0x344)  // anchor-global + dc-callgraph, dc 0x4868c
 int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance) const
 {
     // @stub
@@ -1919,6 +1965,28 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
         reduction *= casting_hero->GetDefenseFactor();
     return reduction;
 }
+
+#if 0  // @carcass
+
+// RETAIL-ONLY: UNNAMED in the DC dump, the HD name map and IDA alike, and
+// its two callers are both in ai_tactical - get_attack_skill_value
+// (0x437800) and get_defense_skill_value (0x438910), each asking what a
+// hypothetical stack of ours would do to a target. Four stack arguments
+// (ret 0x10); it runs compute_attacker_bonus, then
+// ComputeAttackerDamageReduction, then the defender's own shield /
+// petrify / hero-defense-factor chain, and floors the answer at 1. It is
+// NOT DamageEnemy: that row takes (army*, int*, int*, bool) on the DC
+// roster and calls ComputeBaseDamage / adjust_damage / Damage, none of
+// which appear here. Name declared in army.h as a bootstrap invention.
+VA(0x00443e30, 0x101)  // anchor-callee (ai_tactical's two skill-value
+                       // functions) + arity ret 0x10, retail-only slot
+long army::get_estimated_damage(const army* target, long amount,
+                                unsigned char ranged, long distance) const
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\army.cpp:3356
 // The whole damage pipeline between one stack's raw swing and what the
@@ -2107,7 +2175,7 @@ unsigned long army::Strength()
 //     LeavesNoBody class-body inline.
 //   - CancelAllSpells written at this call site, EndWalk-style.
 //   - Random(1,100) is misc.h's 0x50b230, already declared.
-// RETAIL_LOCATED(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
+VA(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
 void army::ProcessDeath(int bFadeElementals)
 {
     // @stub
@@ -2141,7 +2209,7 @@ void army::adjust_hitpoints()
 }
 
 // E:\gamedcs\army.cpp:3675
-// RETAIL_LOCATED(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
+VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::CancelIndividualSpell(int spell)
 {
     // @stub
@@ -2155,7 +2223,7 @@ void army::CancelAllSpells()
 }
 
 // E:\gamedcs\army.cpp:3816
-// RETAIL_LOCATED(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
+VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
 void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero)
 {
     // @stub
@@ -2716,74 +2784,6 @@ void army::AttackWall(int iTargetGridIndex)
     gpCombatManager->lastMovedArmy = this;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4577
-// RETAIL_LOCATED(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
-void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4739
-DC_ONLY(0x4b070, 0xDA)
-void army::Cure(int level, int iSpellPower, const hero* casting_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4773
-DC_ONLY(0x4b14c, 0x24)
-int army::MidY() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4779
-DC_ONLY(0x4b170, 0x20)
-int army::TopY() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4784
-DC_ONLY(0x4b190, 0x16)
-int army::BottomY() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4790
-DC_ONLY(0x4b1a8, 0x64)
-int army::MidX() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4800
-DC_ONLY(0x4b20c, 0x6C)
-int army::RightX() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4812
-DC_ONLY(0x4b278, 0x6C)
-int army::LeftX() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4825
-DC_ONLY(0x4b2e4, 0x6E)
-int army::FrontX() const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:4839
-#endif  // @carcass
-
 // One catapult shot: how much of the aimed segment it takes down, and
 // whether it lands on that segment at all.
 //
@@ -2836,6 +2836,93 @@ void army::attack_wall(TWallTargetId wall,
     attack_wall(wall, levels);
 }
 
+#if 0  // @carcass
+
+// E:\gamedcs\army.cpp:4577
+VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
+void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4739
+VA(0x00446500, 0x126)  // anchor-callee (GetHeroSpellBonus) + arity
+                       // ret 0xc = 3 args, dc 0x4b070
+void army::Cure(int level, int iSpellPower, const hero* casting_hero)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// E:\gamedcs\army.cpp:4773
+// The vertical MIDpoint of this stack on the combat field. Of the seven
+// coordinate accessors the DC roster carries, only this one and MidX keep
+// an out-of-line body in retail; every one of the ten call sites calls
+// them together as an (x, y) pair, which is what names the pair.
+VA(0x00446630, 0x2E)  // anchor-global (body) + call-site pairing, dc 0x4b14c
+int army::MidY() const
+{
+    return gpCombatManager->cells[gridIndex].field_02 - field_16c / 2;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\army.cpp:4779
+DC_ONLY(0x4b170, 0x20)
+int army::TopY() const
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4784
+DC_ONLY(0x4b190, 0x16)
+int army::BottomY() const
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// E:\gamedcs\army.cpp:4790
+// The horizontal MIDpoint: the hexcell's own x, shifted by half a hex
+// toward the stack's front when - and only when - the stack is two hexes
+// wide. An edge accessor would shift a one-hex stack as well.
+VA(0x00446660, 0x35)  // anchor-global (body) + call-site pairing, dc 0x4b1a8
+int army::MidX() const
+{
+    int x = gpCombatManager->cells[gridIndex].field_00;
+    if (creatureId & 1)
+        x += facing ? 22 : -22;
+    return x;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\army.cpp:4800
+DC_ONLY(0x4b20c, 0x6C)
+int army::RightX() const
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4812
+DC_ONLY(0x4b278, 0x6C)
+int army::LeftX() const
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4825
+DC_ONLY(0x4b2e4, 0x6E)
+int army::FrontX() const
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4839
+#endif  // @carcass
+
 // The 30-byte slot immediately before is_adjacent (0x4466c0), the same
 // neighbour the DC roster has, and the body is the two-hex second cell
 // verbatim: bit 0 of creatureId gates it, then gridIndex plus
@@ -2849,14 +2936,39 @@ int army::get_second_grid_index() const
     return gridIndex + OffsetToFront(-1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:4850
-DC_ONLY(0x4b398, 0x4E)
-unsigned char army::is_adjacent(int arg) const
+// WHICH OVERLOAD, decided by the call site: combatManager::choose_defense_hex
+// reaches this at 0x4206bb having just computed `gridIndex + (facing ? 1 : -1)`
+// into eax and pushed it - an int hex index, not an army reference - so this
+// is `is_adjacent(int)` (dc 0x4b398) and not `is_adjacent(const army&)`
+// (dc 0x4b3e8). Its only callee is combatManager::is_adjacent, which is also
+// what the DC row calls.
+//
+// TWO LEVERS, both worth their points here. The two-hex arm is a POSITIVE
+// `if` with the `return 0` falling out at the end - retail's `je` goes
+// FORWARD past the second call to a trailing zero block, which the
+// negative `if (!(creatureId & 1)) return 0;` cannot produce (67.3750 ->
+// 93.8750). The remainder was the second hex living in the wrong
+// register: written inline as an argument our CL pairs {facing, hex} in
+// ECX/EDX and has to push the sum before it can load `this`, where retail
+// computes into EAX and loads ECX first; hoisting it to a NAMED LOCAL
+// closes that (93.8750 -> 100.0). Operand order inside the sum is
+// byte-flat, and `OffsetToFront(-1)` in place of the ternary is worse
+// (93.2500) even though get_second_grid_index directly above is exact
+// with it.
+VA(0x004466c0, 0x5A)  // anchor-callee + call-site argument type, dc 0x4b398
+unsigned char army::is_adjacent(int hex) const
 {
-    // @stub
+    if (gpCombatManager->is_adjacent(gridIndex, hex))
+        return 1;
+    if (creatureId & 1) {
+        int second_hex = gridIndex + (facing ? 1 : -1);
+        return gpCombatManager->is_adjacent(second_hex, hex);
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4864
 DC_ONLY(0x4b3e8, 0x3E)
@@ -3110,7 +3222,7 @@ int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex) const
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5177
-// RETAIL_LOCATED(0x00446e30, 0x2E1)  // linkorder, dc 0x4ba88
+VA(0x00446e30, 0x2E1)  // linkorder, dc 0x4ba88
 void army::new_turn()
 {
     // @stub
@@ -3238,9 +3350,42 @@ unsigned char army::can_cast_resurrect(long hex) const
 
 #if 0  // @carcass
 
+// RETAIL-ONLY, no DC row in this run: a member with NO arguments (bare
+// `ret`), which none of the three DC rows left in the bracket
+// (can_cast_spell / cast_resurrect / cast_demonic_resurrect, one argument
+// each) can be. combatManager::SetNextArmy (0x465330) calls it and
+// 0x447fe0 at the top of a stack's turn; it walks the +0xdc spell list
+// against the table at 0x63b850 and picks one with `rand`. Name is
+// army.h's, provisional.
+VA(0x00447510, 0x1A8)  // anchor-callee (SetNextArmy 0x46553e) + arity
+                       // ret 0, retail-only slot
+void army::FaerieDragonSpell()
+{
+    // @stub
+}
+
 // E:\gamedcs\army.cpp:5359
-// RETAIL_LOCATED(0x004476c0, 0x3BA)  // anchor-global, dc 0x4beec
+// A PREDICATE, not a caster: every callee is a validity test
+// (combatManager::can_cast_spells, ValidSpellTargetArmy,
+// find_resurrection_target, get_resurrection_size, hexcell::get_army),
+// it switches on the spell id through a jump table, and both of its
+// callers ask a question - combatManager::choose_creature_spell and
+// combatManager::GetCommand.
+VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
+{
+    // @stub
+}
+
+// RETAIL-ONLY: the shared spell-validity worker army.h describes -
+// is_valid_caliph_spell (0x447eb0) TAIL-JUMPS to it, can_cast_spell above
+// calls it, and Unnamed447fe0 calls it twice. Two fastcall register
+// arguments and a bare `ret`, so it is a free function, which rules out
+// the three one-argument group_has_* statics the DC roster has left in
+// this bracket. Name is army.h's, a bootstrap invention.
+VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
+                       // tail-jump from 0x447eb0), retail-only slot
+unsigned char spell_is_valid_on_target(int spell, const army* target)
 {
     // @stub
 }
@@ -3281,7 +3426,10 @@ unsigned char group_has_dragons(long group)
 }
 
 // E:\gamedcs\army.cpp:5488
-// RETAIL_LOCATED(0x00447a80, 0x429)  // dc-callgraph unique, dc 0x4c210
+// WITHDRAWN 2026-08-20: 0x447a80 is NOT this function. It takes TWO
+// fastcall register arguments and is the shared worker described below,
+// reached by tail-jump from 0x447eb0 - which is where
+// is_valid_caliph_spell is actually claimed. The row has no DC name.
 unsigned char is_valid_caliph_spell(SpellID spell, const army* target)
 {
     // @stub
@@ -3350,8 +3498,21 @@ void army::cast_caliph_spell(long hex)
 
 #if 0  // @carcass
 
+// RETAIL-ONLY: the second of SetNextArmy's two turn-start abilities (it
+// calls this at 0x465519 and FaerieDragonSpell at 0x46553e). A member
+// with no arguments answering a byte; it gates on
+// combatManager::can_cast_spells, picks through spell_is_valid_on_target
+// twice, and ends in PowEffect + a sample. No roster names it, so the
+// address ordinal stands as army.h records.
+VA(0x00447fe0, 0x27E)  // anchor-callee (SetNextArmy 0x465519) + arity
+                       // ret 0, retail-only slot
+unsigned char army::Unnamed447fe0()
+{
+    // @stub
+}
+
 // E:\gamedcs\army.cpp:5601
-// RETAIL_LOCATED(0x00448260, 0x582)  // anchor-global, dc 0x4c468
+VA(0x00448260, 0x582)  // anchor-global, dc 0x4c468
 void army::cast_spell(long hex)
 {
     // @stub
@@ -3402,6 +3563,23 @@ inline long army::get_counter_clockwise(long direction) const
             (akWideDirectionRingIndex[direction] + 7) % 8];
     return (direction + 5) % COMBAT_DIRECTION_COUNT;
 }
+
+#if 0  // @carcass
+
+// E:\gamedcs\army.cpp:5717
+// The AI's "keep the best attack seen this round" sink: the three
+// arguments are stored verbatim into the AI target / value / time
+// triple at +0x538 / +0x53c / +0x540 (the fields army::get_AI_target,
+// get_AI_target_value and get_AI_target_time read back), guarded by a
+// `value > AI_target_value` test - which is what identifies the row.
+VA(0x00448840, 0x26F)  // anchor-global (body: the AI-target triple store)
+                       // + arity ret 0xc, dc 0x4c778
+void army::consider_attack(const army* enemy, long value, long attack_distance)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\army.cpp:5757
 // The Cerberus fan: which directions a three-headed swing at `enemy`
@@ -3504,13 +3682,6 @@ long army::get_AI_target_time(long speed) const
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\army.cpp:5717
-DC_ONLY(0x4c778, 0xB4)
-void army::consider_attack(const army* enemy, long value, long attack_distance)
-{
-    // @stub
-}
 
 // E:\gamedcs\army.cpp:5790
 #endif  // @carcass
