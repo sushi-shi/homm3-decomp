@@ -460,6 +460,16 @@ public:
 #ifdef HOMM3_TOWNMGR_GRAIL_DECLS
     unsigned char CheckForGrailBuildingWin();
 #endif
+    // Retail 0x5f1610 (dc 0x18fdf8), thiscall, no arguments.
+    // hero::GiveArtifact asks it as
+    // `gpGame->mapHeader.victoryCondition.CheckForArtifactWin()` - the
+    // same `lea ecx,[gpGame+0x1f89c]` the Grail twin above emits - and
+    // calls CheckEndGame(0) when it answers yes. Gated for exactly the
+    // reason that one is: this header's declarator count is load-bearing
+    // for every unit that includes it.
+#ifdef HOMM3_HERO_OBJ_DECLS
+    unsigned char CheckForArtifactWin();
+#endif
 };
 SIZE(VictoryConditionStruct, 0x4C);
 

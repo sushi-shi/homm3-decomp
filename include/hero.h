@@ -726,8 +726,20 @@ public:
     std::string get_backpack_error(TArtifact artifact) const;
     // 0x004e3070 - gives or equips one artifact and performs the optional
     // end-condition check. ProcessSearch calls it for the Holy Grail.
-    void GiveArtifact(const type_artifact* artifact, int bCheckEnd,
-                      unsigned char equip_it);
+    // SIGNATURE CORRECTED FROM RETAIL (2026-08-20): `ret 0xc`, and BOTH
+    // flags are read as BYTES (`mov al,[ebp+0xc]` / `mov al,[ebp+0x10]`)
+    // against the dword reads GiveExperience's two `int` parameters take
+    // in its now-exact body; the inlined allocator temporary lives at
+    // [ebp+0xf], inside parameter 2's home, which only exists as padding
+    // if that parameter is one byte wide. The 0x4e3bf8 exit is
+    // `mov al,1`, so the return is an 8-bit value, not void. The DC row
+    // declares `void ... int bCheckEnd, unsigned char equip_it`; retail's
+    // SECOND flag gates the combination announcement and its THIRD gates
+    // CheckForArtifactWin, so the DC names do not carry over. `bAnnounce`
+    // is an invented spelling for a byte-proven role.
+    unsigned char GiveArtifact(const type_artifact* artifact,
+                               unsigned char bAnnounce,
+                               unsigned char bCheckEnd);
     // 0x004d8f70 - returns the campaign override or this hero class's
     // display text. Retail callers span both adventure and hero UI paths.
     const char* HeroFn_004D8F70();
