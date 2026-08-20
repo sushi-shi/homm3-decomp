@@ -2362,6 +2362,18 @@ void army::do_fire_shield(long damage)
 // residual), and retail carries SIX returns against our five - the
 // merged-return / stale-CL-generation class. Branch counts 74 vs 71,
 // all inside those two deltas; every arm's calls pair.
+//
+// THE FRAME DELTA IS NOW READ OFF THE SLOT MAPS AND IT NAMES THE SAME FACT
+// (2026-08-20).  Our 0x78 against retail's 0x84 is not three scattered
+// locals: retail owns FOUR sixteen-byte string objects at [ebp-0x60],
+// [ebp-0x70], [ebp-0x80] and [ebp-0x90] where this compile owns THREE, at
+// [ebp-0x64], [ebp-0x74] and [ebp-0x84], plus one extra dword at [ebp-0x54]
+// that retail does not have.  -16 for the missing string +4 for the surplus
+// dword is exactly the 12.  The four `std::string text;` locals in the
+// vampire / gorgon / thunderbird / rust arms are mutually exclusive and VC6
+// overlapped one pair; retail did not.  So the lead is which of those four
+// declarations has the lifetime that stops the overlap - NOT the `_cpp_min`
+// operand, which was measured at -0.26 and does not move the frame at all.
 VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
 void army::do_post_attack(army* target, int iDamage, int iKilled,
                           int total_life)

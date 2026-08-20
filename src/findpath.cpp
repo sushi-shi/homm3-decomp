@@ -524,7 +524,21 @@ static int find_queue_slot(searchArray* search, long key, long adjusted)
 // so retail really does expand that one - the pin is only correct where
 // retail keeps the whole callee out of line.
 //
-// Residual (87.4589%): 74.3805 -> 81.1401 -> 83.7018 -> 87.4589 on the
+// THE BRANCH COUNT SAYS THE INLINE STORY IS NOT FINISHED (2026-08-20).
+// `why-branch` prices this body at base 73 conditional branches against
+// retail's 78 - FIVE short, on a call multiset that pairs 23/22 - and the
+// target-only runs in the unmasked diff are all vector-insert internals:
+// a capacity computation (`sub ecx,edx / sar ecx / cmp ecx,<max> / ja`), a
+// `_Ucopy` walk and a `_Construct` fill that retail EXPANDS and we call.
+// That is the UNDER-inline direction, i.e. the opposite of the three
+// caller-shrink doses below, so the sequential spend has been pushed past
+// its optimum at these late sites rather than the lever being wrong.  Next
+// lane: re-titrate the third dose rather than adding a fourth.
+// The `terrain_forbids_magic` helper now reads the map through
+// `NewfullMap::cell` (+0.09 here; +10.58 on GetTerrainCost, +5.62 on
+// TestPossibleDirections - see those bodies).
+//
+// Residual (87.5488%): 74.3805 -> 81.1401 -> 83.7018 -> 87.4589 on the
 // caller-shrink lever, in THREE doses, and the call multiset now sits at 23
 // out-of-line calls against retail's 22 with every name pairing by count.
 // What is left is the register-homing family (retail binds the map-cell base

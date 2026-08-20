@@ -3177,6 +3177,28 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // spending anything on the throw paths below - a frame delta shifts every
 // deep local and reads as a score hole on its own.
 //
+// THE 32 BYTES ARE NOW READ OFF THE SLOT MAPS, AND THEY ARE THE THROW PATH
+// ITSELF (2026-08-20), so the two paragraphs are one problem and not two.
+// Retail's Armageddon's-Blade spell arm builds exactly TWO objects - the
+// "invalid bitset<N> position" string at [ebp-0x40] and the out_of_range at
+// [ebp-0x5c] - and calls out to construct the second from the first.  Ours
+// builds FOUR: the string at [ebp-0x4c], an intermediate at [ebp-0x70], the
+// thrown object at [ebp-0x7c], and a fourth constructed out of the recycled
+// [ebp+0xc] parameter home.  That is the `logic_error(const string&)` base
+// construction expanded in place, and its objects are what push `padding`
+// from retail's [ebp-0x6c] down to our [ebp-0x8c].  Two doses measured
+// against it and BOTH lose, so record them before re-trying:
+//   * `hero_data->spells.set(spell, 1)` instead of `spells[spell] = 1`
+//     costs 1.26 (88.5042 -> 87.2472).  Note the direction: `[i] = 1` runs
+//     operator[] -> reference::operator= -> set -> _Xran, one level DEEPER
+//     than `set(i,v)`, and deeper is what keeps the throw out of line here.
+//   * lifting the whole artifacts block into a single-call-site static -
+//     the caller-shrink that paid +12.20 on armygrp's get_morale_description
+//     the same round - costs 1.96 (-> 86.5417).  This body is not starved of
+//     budget the way that one was.
+// Retail's own slot map also puts `noSpells` shallow (its three dwords at
+// [ebp-0x24]/[ebp-0x20]/[ebp-0x1c]) where ours sits deep at [ebp-0x60].
+//
 // Under that: the two inlined bitset<70>::_Xran throw paths, and
 // specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
 // retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
