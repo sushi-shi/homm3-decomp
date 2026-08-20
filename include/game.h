@@ -182,13 +182,56 @@ SIZE(RandomDwellingData, 0x10);
 //     destroying. That non-trivial destructor is also why Read's `clear()`
 //     is a CALL at all: a trivially destructible element would have let VC6
 //     fold erase(begin(),end()) down to a single store.
-// Only those two fields are named. Everything between and after them stays
-// padding - no retail byte in this lane reaches it.
+// Only those two fields are named in the DEFAULT view. Everything between and
+// after them stays padding there - no retail byte in that lane reaches it.
+//
+// readTownData (0x5019f0) does reach the rest, and the gated view below is
+// its evidence. The Dreamcast field list names this record TownExtra and
+// gives every member; retail widens three of them - it inserts the leading
+// castleId dword, promotes cName to a std::string and townType to a DWORD,
+// and carries a SECOND bitset<70> the Dreamcast record has not got. Each
+// offset below is a store readTownData issues, and the member constructors
+// it runs at entry - armyGroup at +0x1c, string _Tidy at +0x58, then
+// bitset<70> _Tidy at +0x70 and again at +0x7c - fix the declaration ORDER
+// independently of the stores.
+//
+// GATED, and to its OWN macro rather than to HOMM3_MAPCELL_OBJECTS_VIEW,
+// which advmgr/game/puzzlewindow also define: this header is shared with
+// live work and the include-set class this tree documents is real. The
+// layout is identical in both arms - 0x88 either way, with armyGroup's 56
+// bytes landing exactly on the string at +0x58 - and the addition was
+// measured with zero per-function deltas across all 1810 rows before any
+// body used it.
 struct TScenarioTown {
     int castleId;
+#ifdef HOMM3_MAPCELL_TOWNEXTRA_VIEW
+    char playerOwner;
+    char bCustomBuildings;
+    char pad_06[2];
+    // Six bytes of stream reach each of these two; the record keeps eight.
+    __int64 BuildingBuiltMask;
+    __int64 BuildingDisabledMask;
+    char HasFort;
+    char bCustomArmies;
+    char pad_1a[2];
+    armyGroup townArmy;
+    char bCustomName;
+    char pad_55[3];
+#else
     char pad_04[0x54];
+#endif
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
+#ifdef HOMM3_MAPCELL_TOWNEXTRA_VIEW
+    // A char in the Dreamcast record, a DWORD here: readTownData assigns it
+    // from CObjectType::extra and from setup.alignment[], both int.
+    int townType;
+    char bIsGrouped;
+    char pad_6d[3];
+    std::bitset<70> spells;
+    std::bitset<70> fixedSpells;
+#else
     char pad_68[0x20];
+#endif
 };
 SIZE(TScenarioTown, 0x88);
 #endif
