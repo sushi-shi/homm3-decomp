@@ -2511,6 +2511,16 @@ void game::setup_shipyards()
 // retail certainly wrote `resize(n)` - and it is semantically identical
 // because type_point's default constructor is empty, so both leave the
 // fill value uninitialised.
+// OUTSIDE THE PIN MEANS OUTSIDE, AND THE DECLARATION HAD DRIFTED BACK IN
+// (restored 2026-08-20, 90.9797 -> 91.8624). All five sites read
+// `#pragma inline_depth(0) / type_point emptyPoint; / X.resize(...)`,
+// which puts the declaration INSIDE the pinned region and de-inlines the
+// empty constructor again - `??0type_point@@QAE@XZ` came out as five
+// out-of-line calls at fn+0xc6d, +0xcc8, +0xd13, +0xd57 and +0xd9b that
+// retail does not make. Moving the declaration above the pragma is the
+// whole fix, and it lands exactly on the 91.8624 this note already
+// quotes: the note survived a merge that the code did not. If this row
+// ever reads 90.98 again, look here FIRST.
 //
 // Two knobs measured and REJECTED, so they are not re-tried:
 //   * `#pragma inline_depth(0)` scoped to the whole function: 50.46 ->
@@ -2913,8 +2923,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             lithPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithPools[i].begin(),
@@ -2925,8 +2935,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             lithExitPools[i].resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(lithExitPools[i].begin(),
@@ -2938,8 +2948,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             whirlpools.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(whirlpools.begin(),
@@ -2950,8 +2960,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             undergroundGateExits.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGateExits.begin(),
@@ -2962,8 +2972,8 @@ int game::Load(TAbstractFile* infile)
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
-#pragma inline_depth(0)
             type_point emptyPoint;
+#pragma inline_depth(0)
             undergroundGatePairs.resize(short_buffer, emptyPoint);
 #pragma inline_depth()
             infile->Read(undergroundGatePairs.begin(),
