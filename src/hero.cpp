@@ -3265,16 +3265,27 @@ void hero::HeroFn_004DC070(long slot)
 //     records for depths 2/3/4 - so the pragmas were removed rather than
 //     left as inert noise.
 //
-// Residual (65.97%): retail calls the bitset _Xran helper x3 where we
-// still expand its _THROW(out_of_range, "invalid bitset<N> position")
-// body at two of the three bitset<12> sites (we emit ??0out_of_range x2
-// + ??0basic_string x2 against retail's x3 calls). That expansion sits
-// at depth 2 underneath set/test, which retail inlines, and inline_depth
-// cannot express "inline the parent, not the child" here. The remaining
-// delta beyond it is the esi/edi/ebx role permutation plus the
-// prologue's unwind-table addend, which is a reloc addend and not a
-// state count. The DC roster has NO row for this function at all, so its
-// call census cannot be consulted.
+// 65.9718 -> 87.2712 (2026-08-20), AND THE NOTE BELOW NAMED THE WALL AND
+// THEN DECLARED IT UNSPELLABLE. It was right that retail calls the
+// bitset<12> `_Xran` helper at all three sites (fn+0x61, +0xb7, +0x13a,
+// each `cmp <idx>,0xc / jb / call 0x4d4eb0`) with set/test themselves
+// INLINE, and right that our CL expanded the throw body at two of the
+// three. Its conclusion - "inline_depth cannot express 'inline the
+// parent, not the child'" - is true of the PRAGMA and false of the match.
+//
+// The lever is DEPTH, spelled in the source. VC6's <bitset> defines
+//     bool operator[](size_t _P) const   { return (test(_P)); }
+//     reference operator[](size_t _P)    { return reference(*this,_P); }
+//     reference& reference::operator=(bool _X) { _Pbs->set(_Off,_X); }
+// so `b[i]` and `b[i] = true` reach test/set one level DEEPER than
+// `b.test(i)` and `b.set(i)` do, which puts `_Xran` at depth 3 instead of
+// 2 - past what /Ob2 expands here. All three sites are written that way
+// and all three throws collapse into retail's calls.
+//
+// Residual (87.3%): the esi/edi/ebx role permutation plus the prologue's
+// unwind-table addend, which is a reloc addend and not a state count. The
+// DC roster has NO row for this function at all, so its call census
+// cannot be consulted.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC100(long slot)
 {
@@ -3283,14 +3294,14 @@ void hero::HeroFn_004DC100(long slot)
         akArtifactTraits[equipped[slot].artifactId];
 
     if (traits.comboType != -1) {
-        player.assembledCombinations.set(traits.comboType);
+        player.assembledCombinations[traits.comboType] = true;
         return;
     }
 
     int targetCombo = traits.targetCombo;
     if (targetCombo == -1)
         return;
-    if (player.assembledCombinations.test(targetCombo))
+    if (player.assembledCombinations[targetCombo])
         return;
 
     std::bitset<144> missing =
@@ -3307,7 +3318,7 @@ void hero::HeroFn_004DC100(long slot)
 #pragma inline_depth()
         return;
 
-    player.assembledCombinations.set(targetCombo);
+    player.assembledCombinations[targetCombo] = true;
 
     int assembled = gCombinationArtifacts[targetCombo].artifactId;
     std::string prompt = format_string(gpGeneralText->GetText(733),
@@ -5913,15 +5924,28 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // regions it blamed are DOWNSTREAM of those expansions - each inlined
 // bounds throw builds its own `invalid bitset<N> position` string
 // temporary - so removing the expansions removes the regions.
-// The old note's other claim did NOT survive measurement: it said retail
-// leaves `bitset<12>::test` an out-of-line CALL, and pinning that site
-// costs 64.63 -> 59.86. See the anchored note at the site itself.
+// The old note's other claim was half right, and the OTHER half is worth
+// 64.6316 -> 75.1012 (2026-08-20). It said retail leaves bitset<12>'s
+// bounds path out of line at the `assembledCombinations` test - true, but
+// the callee is `_Xran`, not `test`: retail emits `cmp ebx,0xc / jb /
+// call bitset<12>::_Xran` at fn+0x8f0, i.e. `test` INLINE with only its
+// throw out of line. That is why the site pin (which takes `test` itself
+// out of line, and GetLocalPlayerGamePos with it) measured 64.63 ->
+// 59.86 and stays rejected.
 //
-// Residual (64.63%): `predict-inline` now shows NO over-inline at all and
-// exactly one under-inline, basic_string::_Tidy at base x3 vs retail x2 -
-// budget starvation, i.e. this caller's body is still leaner than
-// retail's (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the
-// unwind map).
+// The lever is DEPTH, not a pragma. VC6's <bitset> defines
+// `bool operator[](size_t _P) const { return (test(_P)); }`, so writing
+// the site as `!player.assembledCombinations[targetCombo]` puts `test` at
+// depth 2 and `_Xran` at depth 3 instead of 1 and 2 - one level past what
+// /Ob2 will expand here - and the call appears with retail's registers.
+// Nothing else about the statement changes.
+// Retail EXPANDS the throw at this function's other two bitset<12> sites
+// (fn+0x9c5 and fn+0xa51, both `cmp ,0xc` followed by an inline
+// out_of_range construction), so those two deliberately stay `.set(...)`.
+//
+// Residual (75.1%): basic_string::_Tidy at base x3 vs retail x2 - budget
+// starvation, i.e. this caller's body is still leaner than retail's
+// (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the unwind map).
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
@@ -5952,7 +5976,7 @@ unsigned char hero::GiveArtifact(const type_artifact* artifact,
                         // 64.63 -> 59.86 - the statement pin also
                         // de-inlines GetLocalPlayerGamePos beside it.
                         if (owner == gpGame->GetLocalPlayerGamePos() &&
-                            !player.assembledCombinations.test(targetCombo)) {
+                            !player.assembledCombinations[targetCombo]) {
                             int assembled =
                                 gCombinationArtifacts[targetCombo].artifactId;
                             std::string prompt = format_string(
