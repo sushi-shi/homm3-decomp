@@ -1081,6 +1081,13 @@ public:
     unsigned char load(TAbstractFile* infile);
     unsigned char save(TAbstractFile* outfile);
     void update_bonus();
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+    // update_bonus's negative twin. Retail has no out-of-line row for it
+    // (nothing fits between generator::save's end at 0x4b8791 and
+    // update_bonus at 0x4b87a0), so it is inline-only - the same shape
+    // set_owner below carries.
+    inline void remove_bonus();
+#endif
     inline void set_owner(long owner);
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter
@@ -1588,6 +1595,35 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+    // record_claim_mine's sibling, and the same ~500-byte shape: retail
+    // inlines the whole `new type_record_claim_*` / push_back /
+    // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is
+    // 96 B against retail's 510). game::ClaimTown is the caller that
+    // needs the declarator; the row is a carcass stub in
+    // event_record.cpp and is not claimed here.
+    void record_claim_town(long id, long new_owner);          // 0x49c190
+    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
+    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
+    // retail's out-of-line copy lands in game.obj rather than a .cpp
+    // row). Spelled `int`, not TTownType, for the reason
+    // GetStartingHeroId's parameter is: the body RETURNS -1 for a
+    // base-set elemental and every caller compares the result against
+    // town::type, so the enum would put a cast on both crossings.
+    // The Dreamcast parameter name is `player_id` and is STALE - the
+    // retail argument is unambiguously a creature type (it tests
+    // CREATURE_AIR/EARTH/FIRE/WATER_ELEMENTAL and then indexes
+    // akCreatureTypeTraits), which is also what armygrp.h's note on
+    // f_1f698 describes: nonzero keeps elementals on their town
+    // alignment, zero censuses them as neutral.
+    int get_alignment(int creature) const;
+    // 0x42b9e0 (bracket ai_player..ai_tactical, 69 B). Returns bool -
+    // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
+    // ClaimTown's `test al,al / sete al` is the !bool shape, against the
+    // `unsigned char` the CODEVIEW line in ai_player.h carries. Declared
+    // for ClaimTown; the body is a carcass stub in ai_player.cpp.
+    bool is_human_ally(int player_number) const;
+#endif
 #ifdef HOMM3_EVENTS_VIEW
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
@@ -1892,6 +1928,15 @@ DATA(0x0069774c) extern unsigned char gbUnk69774c;
 // Holy Grail. Its wider role is not yet byte-proven.
 DATA(0x0069950c) extern int gUnnamed69950c;
 extern playerData* gpCurrentPlayer;
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+// hero.cpp owns the DATA claim on 0x698400 (name unattested,
+// address-ordinal placeholder) and game.obj is a second reader, so this
+// is an extern-only declaration - the gMapWidth/gpCurrentPlayer pattern.
+// hero.cpp's note already records THIS call site: every reader treats
+// nonzero as "suppress the interactive path", and game::ClaimTown skips
+// its notify call.
+extern int gbInSetup698400;
+#endif
 
 inline int game::GetCurrHeroId()
 {
