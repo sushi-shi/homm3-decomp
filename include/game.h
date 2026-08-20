@@ -649,7 +649,12 @@ enum EVictoryConditionType {
     // every consumer of this header.
     VICTORY_CONDITION_TOTAL_CREATURES = 1,
     VICTORY_CONDITION_UPGRADE_TOWN = 3,
+#endif
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
+    // town.obj joins for initialize_buildings' Grail-slot gate.
     VICTORY_CONDITION_BUILD_GRAIL = 4,
+#endif
+#ifdef HOMM3_VLC_CHECKS_VIEW
     // 0x5f2390 CheckForDefeatedMonsterWin dispatches on both: 7 is the
     // map-format defeat-monster ordinal, 11 the engine's
     // every-monster-dead sweep of the same routine.
