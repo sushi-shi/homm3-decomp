@@ -94,6 +94,12 @@ enum THeroAbilityKind {
     // requires kind 0 and then matches the record's second dword
     // against its OWN TSecondarySkill id.
     eHeroAbilitySecondarySkill = 0,
+    // Byte-proven by hero::GetMobility (0x4e4990): kind 1 with the
+    // subject dword equal to a stack's creature type - or to that
+    // creature's UPGRADE - adds one to the stack's speed, i.e. the
+    // CREATURE specialty. The subject shares the dword `skill` occupies
+    // for kind 0.
+    eHeroAbilityCreature = 1,
     // Byte-proven by hero::GetEstatesBonus (0x4e4390): kind 2 with the
     // subject dword equal to 6 - town.h's EGameResource GOLD - is
     // worth a flat +350 gold a day, i.e. the RESOURCE specialty.
@@ -111,7 +117,20 @@ enum THeroAbilityKind {
 
 struct THeroSpecificAbility {
     int type;                   // +0x00 - a THeroAbilityKind
+#ifdef HOMM3_HEROSPEC_CREATURE_VIEW
+    // +0x04 under TWO domains. hero::GetMobility reads it as a CREATURE
+    // for kind 1 and hands it to UpgradedCreatureType, which takes a
+    // TCreatureType - so that arm needs a real lvalue of that type, not
+    // a cast into an enum (a cleanliness floor at zero here). GATED
+    // because herospec.h does not include armygrp.h and findpath.cpp
+    // reaches this header before any armygrp.h is guaranteed.
+    union {
+        TSecondarySkill skill;  // +0x04 - valid for kind 0
+        TCreatureType creature; // +0x04 - valid for kind 1
+    };
+#else
     TSecondarySkill skill;      // +0x04 - valid for kind 0
+#endif
     char pad_08[0x14];
     // +0x1c, the one-line specialty label. Retail's own 17-byte getter at
     // 0x4d7220 is nothing but `return akHeroSpecificAbilities[id].<+0x1c>;`,

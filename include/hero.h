@@ -188,6 +188,11 @@ extern int bVideoPaused;
 // reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
 // SetupHeroView treats it as the "hero list is suppressed" latch.
 extern int gUnnamed6aa9d8;
+// movement.txt row 6 column 5, DECLARATION ONLY - include/events.h:439
+// owns the DATA claim on 0x698a94, and a second claim on one RVA is a
+// fatal duplicate at delink. hero::GetMobility adds it on the flag-bit-1
+// arm, the third reader that fixes its role.
+extern int gStablesMovementBonus;
 #endif
 
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
@@ -251,6 +256,12 @@ public:
         LEVEL_UP_OVERRIDE_HERO_ID = 45,
         LEVEL_UP_SKILL_CHOICES = 2
     };
+    // playerData::personality (+0x34) as hero::GetMobility reads it: an
+    // AI player above the difficulty threshold gets +75 movement, and +50
+    // more when its h3m AI tactic is the aggressive one. The VALUE is
+    // retail-proven; the spelling follows the h3m roster (0 pacifist,
+    // 1 friendly, 2 aggressive, 3 explorer) and is PROVISIONAL.
+    enum { AI_PERSONALITY_AGGRESSIVE = 2 };
 #endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
