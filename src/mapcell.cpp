@@ -3105,17 +3105,150 @@ int NewfullMap::loadObject(TAbstractFile* infile, CObject* tempObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:3514
-VA(0x00503780, 0x4C0)  // order-map: calls strrev + sprintf + ReadFromBitmapResource 0x55d0d0 (DC: strrev + sprite-resource reads); called by readMapObjects, dc 0xf1cd8
-int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
+// The h3m object-TYPE record, and the only reader in this compiland that
+// draws on TWO streams at once.  The map file carries the record, but the
+// PLACEMENT and SHADOW footprints come out of the object's own .msk
+// resource, and retail interleaves them: msk mask -> drawCells, stream mask
+// -> passableCells, msk mask -> shadowCells, stream mask -> triggerCells.
+// Only the stream's two are checked; the resource reads discard their
+// result, which is why the msk halves have no error path.
+//
+// The resource name is built from the image name IN PLACE, and the way it
+// is built is retail's: `_strrev`, overwrite the first three characters
+// with "ksm", `_strrev` back.  That replaces whatever extension the name
+// carried without ever measuring it.  The 100-byte buffer and its `= ""`
+// initializer are byte-proven - one explicit zero store followed by a
+// 99-byte rep stos.
+//
+// When the object's own mask is missing, "default.msk" stands in, the
+// player is told through a message box, and the function answers 100
+// instead of 1: the tail's `neg bl / sbb ebx,ebx / and 0x63 / inc` is that
+// ternary, and readMapObjects cases on it to collect the offending type
+// indices.  The caption is the SAME pooled "Error!" that readMapObjects
+// claims at 0x67fb08 - this is its first use in the TU, so the literal is
+// written bare here and the DATA_COMPGEN claim stays at the one site.
+//
+// The type word the stream carries is not the one that survives: retail
+// stores it, then RE-READS it out of the record and remaps it through the
+// 16-byte adventure-object trait rows at 0x660428, taking the DWORD at +8.
+// That is a second live field of that table - byte +0 and byte +1 are the
+// ones findpath/advmgr/hero already read - proven here by
+// `shl eax,4 / mov edx,[eax+ecx+8]`.  It is spelled as a four-byte copy
+// rather than a pointer cast on purpose: 0x660428 already carries its one
+// admitted extern as `unsigned char (*)[16]` and the single-view gate is
+// what keeps it that way, so refining the row into a struct is a change
+// that has to move findpath.cpp, hero.cpp and advmgr.cpp with it, not a
+// second view bolted on from here.  VC6 expands the copy to exactly
+// retail's `mov edx,[eax+ecx+8] / mov [edi+0x38],edx`.
+//
+// Four of the record's fields are read and thrown away - two 2-byte
+// landscape masks into one slot, and the object-group byte before the
+// overlay flag - and the record ends with sixteen discarded bytes.
+VA(0x00503780, 0x4C0)  // order-map: calls _strrev + sprintf + PointToSpriteResource 0x55cf50 x2 + the 0x55d0d0 resource reader x4 (DC call counts match exactly); called by readMapObjects, dc 0xf1cd8
+int NewfullMap::readObjectType(TAbstractFile* infile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    char imageName[100] = { 0 };
+    int value;
+    char byteValue;
+    unsigned char packed[6];
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    infile->Read(imageName, value);
+    tempObjectType->ImageName = imageName;
+
+    _strrev(imageName);
+    imageName[0] = 'k';
+    imageName[1] = 's';
+    imageName[2] = 'm';
+    _strrev(imageName);
+
+    unsigned char usedDefaultMask = 0;
+    LODFile* maskFile = ResourceManager::PointToSpriteResource(imageName);
+    if (maskFile == 0) {
+        usedDefaultMask = 1;
+        maskFile = ResourceManager::PointToSpriteResource(
+            DATA_COMPGEN(0x0067fb3c, readObjectTypeDefaultMask,
+                         "default.msk"));
+        if (maskFile == 0)
+            return -1;
+    }
+
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+                                            sizeof(byteValue));
+    tempObjectType->width = byteValue;
+    ResourceManager::ReadFromBitmapResource(maskFile, &byteValue,
+                                            sizeof(byteValue));
+    tempObjectType->height = byteValue;
+
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->drawCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->passableCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    ResourceManager::ReadFromBitmapResource(maskFile, packed, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->shadowCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->triggerCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    short landscape;
+    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+        return -1;
+    if (infile->Read(&landscape, sizeof(landscape)) < sizeof(landscape))
+        return -1;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->objectTypeValue = value;
+    if (usedDefaultMask) {
+        sprintf(gText,
+                DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
+                             "Could not load mask file for %s! - Type: %s"),
+                tempObjectType->ImageName.c_str(),
+                gAdventureObjectNames[value]);
+        MessageBoxA(hwndApp, gText, "Error!", 0);
+    }
+
+    memcpy(&tempObjectType->objectTypeValue,
+           &gAdventureObjectTraits[tempObjectType->objectTypeValue][8],
+           sizeof(tempObjectType->objectTypeValue));
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->extra = value;
+
+    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+        return -1;
+    if (infile->Read(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+        return -1;
+    tempObjectType->suppressDraw = byteValue != 0;
+
+    char unused[16];
+    if (infile->Read(unused, sizeof(unused)) < sizeof(unused))
+        return -1;
+    return usedDefaultMask ? READ_OBJECT_TYPE_DEFAULT_MASK : 1;
 }
 
 // E:\gamedcs\mapcell.cpp:3658
-#endif  // @carcass
 
 // The object-type record: the image name, the placement footprint, then the
 // FOUR 48-cell masks - the DC field list names them PlacementMask,
