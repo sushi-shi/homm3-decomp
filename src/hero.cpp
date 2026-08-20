@@ -199,6 +199,12 @@ static const int kSlayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
 static const SpellID kSpellFireWall = 0xd;
 static const SpellID kSpellMagicArrow = 0xf;
 static const SpellID kSpellHaste = 0x35;
+// Source-private for the same reason: mark_spells' Sea Captain's Hat arm
+// grants spells 0 and 1, and its Spellbinder's Hat arm sweeps akSpellTraits
+// for level 5. SPELL_SUMMON_BOAT is already named in armygrp.h; its partner
+// and the level are not, and nothing else in the image wants either.
+static const SpellID kSpellScuttleBoat = 0x1;
+static const int kFifthLevelSpell = 5;
 
 // Experience needed to REACH each level, levels 1..12. Retail keeps it
 // in .DATA at 0x679c88 (not .rdata - hence no `const`), immediately
@@ -1206,60 +1212,115 @@ void hero::AddSpell(int whichSpell)
     available_spells[whichSpell] = 1;
 }
 
-#if 0  // @carcass
+// Every spell of one magic school, the body the four Tome arms of
+// mark_spells share. A file-static with four call sites: /Ob2 expands it
+// into each arm, which is why no retail row exists for it.
+static std::bitset<70> spells_of_school(TSpellSchool school)
+{
+    std::bitset<70> granted(0);
+    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (akSpellTraits[spell].schoolBits & school)
+            granted[spell] = true;
+    }
+    return granted;
+}
+
+// The Spellbinder's Hat sweep. One call site, so /Ob2 expands it
+// unconditionally and no retail row exists for it.
+static void mark_spells_of_level(std::bitset<70>& target, int level)
+{
+    for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+        if (akSpellTraits[spell].level == level)
+            target.set(spell, true);
+    }
+}
 
 // E:\gamedcs\hero.cpp:1527
-// DECODED 2026-08-20 but NOT landed - recorded here so the next lane does
-// not repeat the extraction. Shape:
+// The artifact -> granted-spells map, and NOT the DC row's
+// `(unsigned char*, TSpellSchool)`: it is a /Gr FREE function returning
+// bitset<70> BY VALUE - the hidden return pointer arrives in ECX and the
+// artifact id in EDX (`lea ecx,[ebp-0x50] / mov edx,<id> / call`), and
+// each caller copies exactly three dwords out of the result, which is
+// bitset<70>'s whole storage. Two call sites image-wide, so /Ob2's
+// single-call-site rule never threatened it.
 //
-//   std::bitset<70> result(0);
-//   switch (artifactId) { ... }          // see the table below
-//   if (artifactId == 0x87) { ... }      // a second, post-switch arm
-//   return result;
+// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default` over a
+// 50-byte index table at +0x240 selecting a nine-entry dword jump table
+// at +0x21c. Read out of the image the 50 index bytes collapse to EIGHT
+// real cases; every other id in 0x56..0x87 falls to the bare epilogue.
+// The arm order below is the EMITTED order, hence source order.
 //
-// The dispatch is `lea eax,[id-0x56] / cmp eax,0x31 / ja default`, a byte
-// index table at +0x240 and a nine-entry dword jump table at +0x21c. Read
-// straight out of the image, the 50 index bytes collapse to EIGHT real
-// cases; every other id in 0x56..0x87 falls to the default (case 8, the
-// bare epilogue):
-//   0x56 -> school mask 2      0x57 -> school mask 1
-//   0x58 -> school mask 4      0x59 -> school mask 8
-//   0x7b -> set(0) and set(1)  0x7c -> every spell whose level == 5
-//   0x80 -> set(0x1a)          0x87 -> set(0x39)
+// Two shape facts are in the bytes rather than inferred. First, the four
+// Tome arms build a SEPARATE bitset at [ebp-0x28] and copy-assign all
+// three dwords into the result, while the level arm and the four literal
+// arms write the result in place at [ebp-0x1c] - the asymmetry is in the
+// addressing, not in inlining. Second, `granted[spell] = true` is
+// bitset::operator[] plus reference::operator=(bool), and the first
+// three Tome arms inline operator[] where the fourth calls it out of
+// line: that is purely the /Ob2 budget running out mid-switch, so all
+// four arms are written identically here.
 //
-// The four school-mask cases each build a SEPARATE bitset temporary at
-// [ebp-0x28], fill it with `tmp[i] = true` over the 70-entry
-// akSpellTraits table (stride 0x88, bound 0x2530, flag byte at +0x1c),
-// and then copy all three dwords into the result - they do NOT write the
-// result directly. The level case and the four set() cases DO write the
-// result in place through bitset<70>::set(size_t,bool). That asymmetry is
-// in the bytes, not an artifact of inlining: the mask cases address
-// [ebp-0x28] and the others [ebp-0x1c].
+// The TWO HELPERS above are byte-forced, not tidiness. Retail's callee
+// census is _Tidy x5 / reference::operator= x5 / operator[] x2 / set x3,
+// i.e. retail inlines almost no STL here at all - and with the four Tome
+// loops and the level loop written out longhand in this function our CL
+// has enough /Ob2 budget to inline ALL of it (84.29%). Moving them into
+// file-statics shrinks the pre-inline caller, drops the budget, and each
+// step bought back exactly the calls the census predicts: the school
+// helper (four call sites) restored operator= x5 and operator[] x2 and
+// took it to 88.79%, and the level helper (one call site, so expanded
+// unconditionally) restored the level arm instruction-for-instruction at
+// 92.71%.
 //
-// Blockers before this can land, both cheap but neither done here:
-//  - the eight case labels are raw artifact ids and WILL trip the
-//    magic-case-label floor; they need named enumerators (artifact.h
-//    already carries the ARTIFACT_* domain, so extend it there);
-//  - the spell ids 0, 1, 0x1a and 0x39 want SpellID names for the same
-//    reason.
+// Residual (92.71%): the FIRST TWO constant-index sets - Armageddon's
+// Blade and the Sea Captain's set(SPELL_SUMMON_BOAT) - still fold to
+// `or dword ptr [result], imm` where retail calls set; the two constant
+// sets AFTER them (Scuttle Boat, Titan's Lightning Bolt) already come
+// out as retail's calls, so the budget is running out two decisions too
+// late and nothing later in the function is left to drain it. Everything
+// else - both loops, the jump tables, the tail-merged set chain, the
+// `result[SPELL_TITANS_LIGHTNING_BOLT] = false` epilogue and its
+// registers - agrees. Tried and rejected: the DEFAULT bitset ctor, which
+// is what retail's `_Tidy` calls actually prove the source used, but
+// which frees enough budget to lose the operator[] pair (90.49%, and
+// 84.86% before the level helper); its call shape is identical to the
+// `(0)` ctor's at all five sites, so no byte is given up by spelling it
+// this way.
 VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
 std::bitset<70> mark_spells(int artifactId)
 {
-    // @stub
+    std::bitset<70> result(0);
+    switch (artifactId) {
+    case ARTIFACT_TOME_OF_AIR_MAGIC:
+        result = spells_of_school(eSchoolAir);
+        break;
+    case ARTIFACT_TOME_OF_FIRE_MAGIC:
+        result = spells_of_school(eSchoolFire);
+        break;
+    case ARTIFACT_TOME_OF_WATER_MAGIC:
+        result = spells_of_school(eSchoolWater);
+        break;
+    case ARTIFACT_TOME_OF_EARTH_MAGIC:
+        result = spells_of_school(eSchoolEarth);
+        break;
+    case ARTIFACT_SPELLBINDERS_HAT:
+        mark_spells_of_level(result, kFifthLevelSpell);
+        break;
+    case ARTIFACT_ARMAGEDDONS_BLADE:
+        result.set(SPELL_ARMAGEDDON, true);
+        break;
+    case ARTIFACT_SEA_CAPTAINS_HAT:
+        result.set(SPELL_SUMMON_BOAT, true);
+        result.set(kSpellScuttleBoat, true);
+        break;
+    case ARTIFACT_TITANS_THUNDER:
+        result.set(SPELL_TITANS_LIGHTNING_BOLT, true);
+        break;
+    }
+    if (artifactId != ARTIFACT_TITANS_THUNDER)
+        result[SPELL_TITANS_LIGHTNING_BOLT] = false;
+    return result;
 }
-
-#endif  // @carcass
-
-// 0x004d9350, still unwritten, but its SIGNATURE is settled from the
-// retail call sites and is NOT the DC row's `(unsigned char*,
-// TSpellSchool)`: it is a /Gr free function returning a bitset<70> BY
-// VALUE (hidden return pointer in ECX, artifact id pushed out to EDX -
-// `lea ecx,[ebp-0x50] / mov edx,<artifact id> / call`), and the caller
-// copies exactly three dwords out of the result, which is bitset<70>'s
-// storage. Declared here so update_spell_list emits the CALL retail
-// emits; mark_spells has two call sites image-wide, so /Ob2's
-// single-call-site rule does not threaten it.
-std::bitset<70> mark_spells(int artifactId);
 
 // E:\gamedcs\hero.cpp:1542
 // Rebuilds available_spells from the spellbook plus every spell-granting

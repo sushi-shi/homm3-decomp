@@ -127,6 +127,29 @@ enum TArtifact {
     ARTIFACT_ORB_OF_SILT = 0x50,
     ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE = 0x51,
     ARTIFACT_ORB_OF_DRIVING_RAIN = 0x52,
+    // The four Tomes, byte-proven by mark_spells (0x4d9350): each of
+    // these ids selects an arm that sweeps the whole 70-entry
+    // akSpellTraits table and grants every spell whose SCHOOL MASK at
+    // +0x1c carries one specific bit - 0x57 tests bit 1 (eSchoolAir),
+    // 0x56 bit 2 (eSchoolFire), 0x58 bit 4 (eSchoolWater), 0x59 bit 8
+    // (eSchoolEarth). "Grants every spell of exactly one school" is the
+    // Tome of <school> Magic and nothing else, and the bit -> school
+    // pairing is itself already byte-proven by hero::GetHighestSchool
+    // (see spellschool.h). That fixes all four against HoMM3's own
+    // 86/87/88/89 fire/air/water/earth ordering.
+    ARTIFACT_TOME_OF_FIRE_MAGIC = 0x56,
+    ARTIFACT_TOME_OF_AIR_MAGIC = 0x57,
+    ARTIFACT_TOME_OF_WATER_MAGIC = 0x58,
+    ARTIFACT_TOME_OF_EARTH_MAGIC = 0x59,
+    // Two more mark_spells arms, identified by what they grant rather
+    // than by any roster: 0x7b grants exactly spells 0 and 1 - Summon
+    // Boat and Scuttle Boat, the Sea Captain's Hat's whole effect - and
+    // 0x7c grants every spell whose traits level is 5, which is the
+    // Spellbinder's Hat and only it. 123/124 is where HoMM3's numbering
+    // puts that pair, just below Armageddon's Blade at 128, which this
+    // enum already byte-proves.
+    ARTIFACT_SEA_CAPTAINS_HAT = 0x7b,
+    ARTIFACT_SPELLBINDERS_HAT = 0x7c,
     // hero::get_hit_point_bonus (0x4e5b80) gates +1 / +1 / +2 hit
     // points on 0x5e / 0x5f / 0x60 and a further quarter of the
     // creature's own hit points on 0x83. DC 94/95/96 are
