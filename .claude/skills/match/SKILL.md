@@ -309,6 +309,30 @@ from an inlining decision.** `TownQuickView` reported `get_army base x0 vs
 retail x4` because retail calls the CONST overload - a different function at a
 different address. Check the overload before reaching for a knob.
 
+**WIDEN A PARAMETER FAMILY, NOT ONE END** (2026-08-20 — a method correction
+that had produced a wrong recorded identification). A callee's parameter width
+is invisible to width-blind callers, so widening the CALLEE ALONE can cost
+several exact functions and look refuted, while widening the WHOLE family
+leaves every one at 100 and gains the right compare.
+`SpellCastWorkChance`'s slot 6 was recorded as `unsigned char` on exactly that
+mistake; the body reads it `cmp dword ptr [ebp+0x1c], 1`. Six declarators
+widened together, six rows migrated, nothing else moved.
+
+**`army::Is(n) & 1` IS THE ATTRIBUTE-TEST SPELLING, AND IT CLOSES REGISTER
+WALLS.** The header inline truncates the shifted word to a byte before the
+caller's mask, and that truncation is what stops VC6 folding the test back
+into `test dword ptr [mem], imm` on the member. `SpellCastWorkChance`
+97.10 -> **99.78**: the member stays live in EDX across a 40-arm switch, the
+other value falls back to its memory home, and every downstream scratch rename
+disappears. The lever is the TRUNCATION — a hand-written
+`unsigned a = x; (a >> N) & 1` scores 97.10, and naming the shifted value is
+byte-identical.
+
+**GOTO LOOPS ARE WORTH TWELVE POINTS** where retail's back edge is
+`cmp / jle <exit> / jmp <head>` and a `for(;;)`+`break` gives one inverted
+`jg <head>` (`SummonElemental` 81.26 -> 93.38). A do/while scored 85.69. The
+same edit also splits an inlined destructor into retail's two copies.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
