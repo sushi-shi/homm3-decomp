@@ -307,6 +307,7 @@ army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
 army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
+army	?Cure@army@@QAEXHHPBVhero@@@Z	100.0000	100.0000	100.0000	0x46500
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
@@ -389,7 +390,6 @@ army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 army	army_CancelIndividualSpell	0.0000	0.0000	0.0000	0x44510
 army	army_ComputeAttackerDamageBonuses	0.0000	0.0000	0.0000	0x43840
-army	army_Cure	0.0000	0.0000	0.0000	0x46500
 army	army_DrawToBuffer	0.0000	0.0000	0.0000	0x3e140
 army	army_FaerieDragonSpell	0.0000	0.0000	0.0000	0x47510
 army	army_Init	0.0000	0.0000	0.0000	0x3d8b0

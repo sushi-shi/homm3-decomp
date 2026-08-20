@@ -2963,15 +2963,67 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:4739
+// The Cure spell, and its fourteen CancelIndividualSpell calls ARE the
+// negative-influence roster: CURSE 42, WEAKNESS 45, SORROW 50,
+// MISFORTUNE 52, SLOW 54, BERSERK 59, HYPNOTIZE 60, FORGETFULNESS 61,
+// BLIND 62, STONE 70, POISON 71, DISEASE 73, PARALYZE 74, AGE 75. Every
+// one of those ids is already independently fixed in armygrp.h's
+// ladder, so the list corroborates the enum rather than the other way
+// round, and the two the body ALSO touches by hand - poisonPenalty back
+// to 1.0 and the AGE halving - are exactly the two whose effect is a
+// stored factor rather than a round counter.
+//
+// THE AGE READ HAPPENS BEFORE THE CANCEL, and that is retail's own
+// order, not a misread: [+0x2c4] is loaded in the prologue and
+// CancelIndividualSpell(SPELL_AGE) is the fourteenth call. So a stack
+// cured while Aged gets its hit points recomputed on the HALVED maximum
+// and the halving is only lifted afterwards.
+//
+// The clamp is the TU's `_cpp_min` with the by-value orientation
+// findpath byte-proved: the operand in the HIGHER stack slot is _Y, and
+// here [ebp-4] holds `hitPoints - 1` while [ebp-8] holds
+// topCreatureDamage, so the call is min(topCreatureDamage,
+// hitPoints - 1) in that argument order. `hitPoints - 1` reuses the
+// ftol result still in EAX - retail does NOT reload the field it has
+// just written.
 VA(0x00446500, 0x126)  // anchor-callee (GetHeroSpellBonus) + arity
                        // ret 0xc = 3 args, dc 0x4b070
 void army::Cure(int level, int iSpellPower, const hero* casting_hero)
 {
-    // @stub
+    poisonPenalty = 1.0f;
+    if (spellInfluence[SPELL_AGE])
+        hitPoints = static_cast<int>(
+            static_cast<float>(origHitPoints) * 0.5f + 0.95f);
+    else
+        hitPoints = static_cast<int>(
+            static_cast<float>(origHitPoints) + 0.95f);
+    topCreatureDamage = _cpp_min(topCreatureDamage, hitPoints - 1);
+    CancelIndividualSpell(SPELL_CURSE);
+    CancelIndividualSpell(SPELL_WEAKNESS);
+    CancelIndividualSpell(SPELL_SORROW);
+    CancelIndividualSpell(SPELL_MISFORTUNE);
+    CancelIndividualSpell(SPELL_SLOW);
+    CancelIndividualSpell(SPELL_BERSERK);
+    CancelIndividualSpell(SPELL_HYPNOTIZE);
+    CancelIndividualSpell(SPELL_FORGETFULNESS);
+    CancelIndividualSpell(SPELL_BLIND);
+    CancelIndividualSpell(SPELL_STONE);
+    CancelIndividualSpell(SPELL_POISON);
+    CancelIndividualSpell(SPELL_DISEASE);
+    CancelIndividualSpell(SPELL_PARALYZE);
+    CancelIndividualSpell(SPELL_AGE);
+    int healed = akSpellTraits[SPELL_CURE].mastery_bonus[level]
+                 + akSpellTraits[SPELL_CURE].power_factor * iSpellPower;
+    if (casting_hero)
+        healed += casting_hero->GetHeroSpellBonus(SPELL_CURE, monInfoLevel,
+                                                  healed);
+    topCreatureDamage -= healed;
+    if (topCreatureDamage < 0)
+        topCreatureDamage = 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\army.cpp:4773
 // The vertical MIDpoint of this stack on the combat field. Of the seven
