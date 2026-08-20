@@ -34,6 +34,14 @@
 #include <string.h>
 #include <ctype.h>
 #include <va.h>
+#define HOMM3_GAME_CLAIM_TOWN_DECLS
+#define HOMM3_GAME_GARRISON_HERO_DECLS
+#define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_GAME_LOAD_TAIL_DECLS
+#define HOMM3_GAME_OBJ_DECLS
+#define HOMM3_GAME_RANDOM_OBJECTS_DECLS
+#define HOMM3_GAME_TOWN_HEROES_DECLS
+#define HOMM3_MAPCELL_OBJECTS_VIEW
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;

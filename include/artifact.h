@@ -54,6 +54,26 @@ enum TArtifact {
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
     ARTIFACT_FIRST_AID_TENT = 6,
+    // The two campaign combination-quest triples CheckForArtifactWin
+    // (0x5f1610) collects into its piece vector: the Armor of the
+    // Damned components on campaign 7 map 1, and the two Angelic
+    // Alliance triples on campaign 18 maps 8/9. Ids are the canonical
+    // artifact ordinals; gated with the rest of the VLC view.
+    ARTIFACT_SWORD_OF_HELLFIRE = 0xb,
+    ARTIFACT_SHIELD_OF_THE_DAMNED = 0x11,
+    ARTIFACT_BREASTPLATE_OF_BRIMSTONE = 0x1d,
+    ARTIFACT_ARMOR_OF_WONDER = 0x1f,
+    ARTIFACT_SANDALS_OF_THE_SAINT = 0x20,
+    ARTIFACT_CELESTIAL_NECKLACE_OF_BLISS = 0x21,
+    ARTIFACT_LIONS_SHIELD_OF_COURAGE = 0x22,
+    ARTIFACT_SWORD_OF_JUDGEMENT = 0x23,
+    ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT = 0x24,
+    // CheckForDefeatedHeroLoss's quest-artifact compares (0x5f2a40):
+    // the two Shadow of Death necromancy accessories the Gem campaign
+    // escorts. Canonical ordinals, same gate. (The fifth orb the same
+    // arm tests is armygrp.h's ungated ARTIFACT_ORB_OF_INHIBITION.)
+    ARTIFACT_VAMPIRES_COWL = 0x37,
+    ARTIFACT_DEAD_MANS_BOOTS = 0x38,
     // hero::GetVisibility (0x4e4070) adds one tile of scouting radius
     // for each of 0x34/0x35; DC 52/53 are eArtifactSpeculum and
     // eArtifactSpyglass, HoMM3's two scouting artifacts.
@@ -187,6 +207,9 @@ enum TArtifact {
     // above, 0x82 Cloak of the Undead King and 0x83 Elixir of Life
     // below, and 0x86 Power of the Dragon Father / 0x89 Bow of the
     // Sharpshooter / 0x8b Ring of the Magi further on.
+    // Behind a view: artifact.h reaches every TU that includes hero.h,
+    // and an ungated enumerator counts toward the include-set threshold
+    // in all of them.
     ARTIFACT_ANGELIC_ALLIANCE = 0x81,
     ARTIFACT_ARMOR_OF_THE_DAMNED = 0x84,
     // hero::GetNecromancyCreature (0x4e3c60) gates its whole

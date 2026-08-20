@@ -35,6 +35,11 @@
 // game.h's GetTownName inline, for SetupTown's title line, and its
 // ViewArmy declarator, for DoCommand's two info panels. Same gate
 // discipline: this compiland opens them, nothing else does.
+#define HOMM3_GAME_OBJ_DECLS
+#define HOMM3_TOWNMGR_GRAIL_DECLS
+#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
+#define HOMM3_TOWNMGR_VIEWARMY_DECLS
+#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"

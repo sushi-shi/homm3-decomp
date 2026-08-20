@@ -8,8 +8,10 @@
 #include "advmgr.h"
 #include "cursor.h"
 #include "exec.h"
+#define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "misc.h"
+#include "timedevent.h"
 #include "town.h"
 #include "townmgr.h"
 
@@ -212,10 +214,10 @@ void town::GiveSpells(hero* forceHero)
             currentHero = forceHero;
         } else {
             int heroId;
-            if (heroIndex)
-                heroId = garrisonHeroId;
-            else
+            if (heroIndex == 0)
                 heroId = visitingHeroId;
+            else
+                heroId = garrisonHeroId;
             currentHero = gpGame->GetHero(heroId);
         }
 
@@ -233,7 +235,7 @@ void town::GiveSpells(hero* forceHero)
             } else {
                 for (int level = 0;
                      level < currentHero->wisdomLevel + 2
-                         && level <= static_cast<signed char>(field_14);
+                         && level <= field_14;
                      ++level) {
                     for (int slot = 0;
                          slot < mageGuildSpellCounts[level]; ++slot)
@@ -483,17 +485,83 @@ void town::set_spells_available()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1226
-// ORs the 64-bit building bit for the argument out of the pair table at
-// 0x66cd98 into the town's built mask at +0x150/+0x154, then walks the
-// dependent-building fixups - `create_building` exactly.
+// ORs the building's 64-bit bit into `built` and strips the buildings
+// its included_buildings row supersedes, then walks the four horde
+// columns: building a horde over an upgraded dwelling (or upgrading the
+// dwelling under a built horde) swaps the argument for the next slot's
+// upgraded horde. A base dwelling seeds its population column from the
+// creature's growth rate; an upgraded dwelling moves the base count
+// into the upgraded column. Rampart/Necropolis/Conflux hall tiers
+// recursively raise their EXTRA building.
+// Residual (85.9771%): the CFG agrees 14/14; retail memory-homes the
+// mutated `building` argument in its param slot (storing every swap
+// back to [ebp+8]) and keeps both table cursors in frame slots, while
+// our CL enregisters building in ESI - the whole delta is that homing
+// choice rippling. why-reg v2 classifies the pair as front-end handle
+// state (C1); an int-for-enum signature A/B measured byte-identical,
+// and direct subscripts beat an effect-cursor local 85.98 vs 81.55.
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::create_building(type_building_id building)
 {
-    // @stub
-}
+    built |= bitNumber[building];
+    built &= ~included_buildings[type][building];
 
-#endif  // @carcass
+    for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
+        short dw = const_horde_effects[type][slot].dwelling;
+        if (building == gHordeBuildings[slot]) {
+            built &= ~bitNumber[DWELLING_0_ID + dw];
+            if (dw < TOWN_DWELLING_COUNT
+                && (built & bitNumber[DWELLING_0_UPG_ID + dw])) {
+                built &= ~bitNumber[building];
+                built &= ~bitNumber[DWELLING_0_UPG_ID + dw];
+                building = gHordeBuildings[slot + 1];
+                built |= bitNumber[building];
+            }
+        }
+        if (built & bitNumber[gHordeBuildings[slot]]) {
+            if (building == DWELLING_0_UPG_ID + dw) {
+                built &= ~bitNumber[building];
+                built &= ~bitNumber[gHordeBuildings[slot]];
+                building = gHordeBuildings[slot + 1];
+                built |= bitNumber[building];
+            }
+        }
+    }
+
+    if (building >= DWELLING_0_ID && building <= DWELLING_6_ID) {
+        short slot = building - DWELLING_0_ID;
+        population[slot] = akCreatureTypeTraits[gTownDwellingCreatures[
+            type * (2 * TOWN_DWELLING_COUNT) + slot]].growthRate;
+    }
+    if (building >= DWELLING_0_UPG_ID && building <= DWELLING_6_UPG_ID) {
+        short slot = building - DWELLING_0_UPG_ID;
+        short upgraded = building - DWELLING_0_ID;
+        population[upgraded] = population[slot];
+        population[slot] = 0;
+    }
+
+    if (type == TOWN_RAMPART || type == TOWN_NECROPOLIS
+        || type == TOWN_CONFLUX) {
+        switch (building) {
+        case HALL_VILLAGE_ID:
+            create_building(EXTRA_2_ID);
+            break;
+        case HALL_TOWN_ID:
+            create_building(EXTRA_3_ID);
+            break;
+        case HALL_CITY_ID:
+            create_building(EXTRA_4_ID);
+            break;
+        case HALL_CAPITOL_ID:
+            create_building(EXTRA_5_ID);
+            break;
+        }
+    }
+    return building;
+}
 
 // E:\gamedcs\town.cpp:1313
 // Masks the same +0x150/+0x154 built mask against the capitol pair at
@@ -542,16 +610,114 @@ void town::destroy_extra_capitol()
     }
 }
 
-#if 0  // @carcass
+// The kb.h prototype; town.cpp must not widen its include closure for
+// one free-function call (the include-set class), so the declaration is
+// repeated here the way the import-thunk precedent repeats declarations
+// per-TU.
+void CheckEndGame(int bForceWin);
 
 // E:\gamedcs\town.cpp:1340
+// The public build entry: snapshots the fort-line/Capitol state,
+// delegates to create_building, sets the ownership flag on real builds
+// (not the boat dock), rebuilds `active` from the included_buildings
+// rows, recomputes mage-guild spell counts (twice-over when the Tower
+// Library lands), refreshes the adventure object when the fort line or
+// Capitol first appears, runs the upgrade victory check, applies the
+// Tower Lookout/Skyship visibility, and re-applies special building
+// effects to both resident heroes.
+// Residual (99.3036%): one `teamInfo[team]` SIB base/index swap
+// (base ecx+eax, retail eax+ecx) - the B18 encoder tie-break class -
+// plus reloc-name cosmetics on the bitNumber loads.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
-type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag, unsigned char apply_special_effect)
+type_building_id town::BuildBuilding(int buildingId,
+                                     unsigned char SetBuiltFlag,
+                                     unsigned char apply_special_effect)
 {
-    // @stub
-}
+    unsigned char had_fort = (built & bitNumber[CASTLE_FORT_ID])
+        || HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
+    unsigned char had_capitol = (built & bitNumber[HALL_CAPITOL_ID]) != 0;
+    // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
+    // HEE@Z`) and required by the townmgr call sites - while
+    // create_building's domain is the enum; the conversion is the
+    // boundary between retail's own two spellings of the id.
+    type_building_id result = create_building(type_building_id(buildingId));
 
-#endif  // @carcass
+    if (SetBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
+        if (gpGame->setup.difficulty < 2) {
+            int team = owner;
+            if (team >= 0)
+                team = gpGame->mapHeader.teamInfo[team];
+            if (!gpGame->is_human_ally(team))
+                field_02 = 2;
+            else
+                field_02 = 1;
+        } else {
+            field_02 = 1;
+        }
+    }
+
+    active = built;
+    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (built & bitNumber[i])
+            active |= included_buildings[type][i];
+    }
+
+    if (buildingId <= MAGE_GUILD5_ID) {
+        field_14 = buildingId + 1;
+        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+        for (int level = 1; level <= field_14; level++) {
+            int count = gMageGuildBaseSpellCounts[level - 1];
+            if (type == TOWN_TOWER && (active & bitNumber[EXTRA_1_ID]))
+                count++;
+            while (count > 0
+                   && mageGuildSpells[level - 1][count - 1] == -1)
+                count--;
+            mageGuildSpellCounts[level - 1] = count;
+        }
+    }
+    if (type == TOWN_TOWER && buildingId == EXTRA_1_ID) {
+        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+        for (int level = 1; level <= field_14; level++) {
+            int count = gMageGuildBaseSpellCounts[level - 1];
+            if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+                count++;
+            while (count > 0
+                   && mageGuildSpells[level - 1][count - 1] == -1)
+                count--;
+            mageGuildSpellCounts[level - 1] = count;
+        }
+    }
+    GiveSpells(0);
+
+    if ((HasBuilding(HALL_CAPITOL_ID, 0) && !had_capitol)
+        || ((HasBuilding(CASTLE_FORT_ID, 0)
+             || HasBuilding(CASTLE_CITADEL_ID, 0)
+             || HasBuilding(CASTLE_CASTLE_ID, 0))
+            && !had_fort)) {
+        gpGame->ConvertObject(gpGame->worldMap.cell(mapX, mapY, mapZ));
+    }
+    if (gpGame->mapHeader.victoryCondition.CheckForUpgradedTown())
+        CheckEndGame(0);
+
+    if (type == TOWN_TOWER) {
+        if (buildingId == EXTRA_0_ID) {
+            gpGame->SetVisibility(mapX, mapY, mapZ, owner, 20, 0);
+        } else if (buildingId == HOLY_GRAIL_ID) {
+            gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0, owner,
+                                  gMapWidth, 0);
+            if (gpGame->worldMap.GetNumLevels() > 1)
+                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
+                                      owner, gMapWidth, 0);
+        }
+    }
+
+    if (garrisonHeroId != -1 && apply_special_effect)
+        ApplySpecialBuildingEffect(gpGame->GetHero(garrisonHeroId));
+    if (visitingHeroId != -1 && apply_special_effect)
+        ApplySpecialBuildingEffect(gpGame->GetHero(visitingHeroId));
+    return result;
+}
 
 // E:\gamedcs\town.cpp:1417
 // The dock square is relevant only while the normal Dock building is
@@ -970,46 +1136,343 @@ void town::change_generator_bonus(TCreatureType creature, long change)
 // kinds cleanly: the members are `ret 4` (ecx + one stack argument),
 // the /Gr free helpers are `ret 0` with their arguments in ecx/edx
 // (check_shipyard_square's third goes on the stack).
+#endif  // @carcass
+
+// The kb.h and castle.h prototypes, repeated file-locally for the
+// reason CheckEndGame above is.
+void extended_dialog(const char* text,
+                     std::vector<type_dialog_resource>& resources,
+                     long x, long y, long timeout);
+const char* GetBuildingName(int townType, int buildingId);
+// The two /Gr helpers below are declared ahead of their caller so their
+// BODIES can follow it - retail emits each one after give_event_reward
+// (the STATIC-HELPERS-AFTER-CALLER note above).
+void show_building_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards);
+void show_creature_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards);
+
+// The reward dialog flushes in batches of eight rows (the extended
+// dialog's row capacity); named per the kStartLevelCampaign precedent.
+static const int kRewardDialogBatch = 8;
+
 // E:\gamedcs\town.cpp:1793
+// Residual (86.7%): branch topology #12 lands one block off (the D3
+// jump-threading class - why-branch's catalog found no applicable
+// lever) and a 15-slot edx/ecx register permutation follows from it.
+// Tried and rejected: the eligible mask hoisted into a local (85.7),
+// event-field re-reads instead of the short growth local (85.8),
+// resource-store reordering (neutral).
+// Translates the event's 41-bit editor building mask through this
+// faction's gEventBuildingIds row, masks away what is already active,
+// illegal for the faction, or dock-impossible, builds the survivors
+// (flushing a dialog every eight), then applies the seven generator
+// bonuses to whichever dwelling tier is active, upgraded first.
 VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
 void town::give_event_reward(const TTownEvent* thisEvent)
 {
-    // @stub
+    __int64 mask = active;
+    __int64 eventBuildings = thisEvent->BuildBuildings;
+    __int64 grantable = 0;
+    int i;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (eventBuildings & bitNumber[i])
+            grantable |= bitNumber[gEventBuildingIds[type][i]];
+    }
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (gTownEligibleBuildMask[type] & bitNumber[i]) {
+            if (grantable & bitNumber[i])
+                mask |= included_buildings[type][i];
+        } else {
+            mask |= bitNumber[i];
+        }
+    }
+    if (dockSite == TOWN_DOCK_SITE_NONE)
+        mask |= bitNumber[DOCK_ID];
+    grantable &= ~mask;
+
+    std::vector<type_dialog_resource> rewards;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (grantable & bitNumber[i]) {
+            BuildBuilding(i, 0, 1);
+            type_dialog_resource reward;
+            reward.resource = type + 0x16;
+            reward.qualifier = i;
+            rewards.push_back(reward);
+            if (rewards.size() == kRewardDialogBatch)
+                show_building_rewards(this, &rewards);
+        }
+    }
+    if (rewards.size() > 0)
+        show_building_rewards(this, &rewards);
+
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        short growth = thisEvent->generatorBonuses[i];
+        if (growth != 0) {
+            if (active & bitNumber[DWELLING_0_UPG_ID + i]) {
+                type_dialog_resource reward;
+                reward.resource = 0x15;
+                population[i + TOWN_DWELLING_COUNT] += growth;
+                reward.qualifier = (growth << 16)
+                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
+                                             + i + TOWN_DWELLING_COUNT];
+                rewards.push_back(reward);
+            } else if (active & bitNumber[DWELLING_0_ID + i]) {
+                type_dialog_resource reward;
+                reward.resource = 0x15;
+                population[i] += growth;
+                reward.qualifier = (growth << 16)
+                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
+                                             + i];
+                rewards.push_back(reward);
+            }
+            if (rewards.size() == kRewardDialogBatch)
+                show_creature_rewards(this, &rewards);
+        }
+    }
+    if (rewards.size() > 0)
+        show_creature_rewards(this, &rewards);
 }
 
 // E:\gamedcs\town.cpp:1732
+// Residual (92.7%): retail expands the format_string temporary's
+// destructor inline (the refcount arms) where our CL calls _Tidy(1) -
+// the sequential-inline-budget class; a scoped named local measured
+// 92.0. Joins the granted building names with ", "/" and ", wraps them in the
+// town-event dialog format, raises the extended dialog for the local
+// owner, and clears the reward vector for the caller's next batch.
 VA(0x005c0220, 0x1DA)  // anchor-caller (give_event_reward), dc 0x167958
-void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+void show_building_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards)
 {
-    // @stub
+    std::string text;
+    for (int i = 0; i < rewards->size(); i++) {
+        if (i > 0) {
+            if (i == rewards->size() - 1)
+                text += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
+            else
+                text += ", ";
+        }
+        text += GetBuildingName(this_town->type, (*rewards)[i].qualifier);
+    }
+    text = format_string(gpGeneralText->GetText(GENERAL_TEXT_EVENT_BUILDINGS),
+                         this_town->cName.c_str(), text.c_str());
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gNetLocalGamePos == this_town->owner)
+        extended_dialog(text.c_str(), *rewards, -1, -1, 0);
+    rewards->erase(rewards->begin(), rewards->end());
 }
 
 // E:\gamedcs\town.cpp:1760
+// Residual (93.2%): the same temporary-destructor inline-vs-call class
+// as show_building_rewards, plus slot cosmetics around the "%d "
+// format call. The creature twin: "<count> <name>" per reward with the same
+// separators, the count picking the singular or plural creature name,
+// and the first reward's count driving the outer format.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
-void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+void show_creature_rewards(const town* this_town,
+                           std::vector<type_dialog_resource>* rewards)
 {
-    // @stub
+    std::string text;
+    for (int i = 0; i < rewards->size(); i++) {
+        long count = (*rewards)[i].qualifier >> 16;
+        int creature = static_cast<unsigned short>((*rewards)[i].qualifier);
+        if (i > 0) {
+            if (i == rewards->size() - 1)
+                text += gpGeneralText->GetText(GENERAL_TEXT_LIST_AND);
+            else
+                text += ", ";
+        }
+        text += format_string("%d ", count);
+        const char* name;
+        if (creature >= 0 && creature <= 0x96) {
+            if (count == 1)
+                name = akCreatureTypeTraits[creature].m_name;
+            else
+                name = akCreatureTypeTraits[creature].m_plural_name;
+        } else {
+            name = "";
+        }
+        text += name;
+    }
+    long firstCount = (*rewards)[0].qualifier >> 16;
+    text = format_string(gpGeneralText->GetText(GENERAL_TEXT_EVENT_CREATURES),
+                         firstCount, text.c_str(), this_town->cName.c_str());
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gNetLocalGamePos == this_town->owner)
+        extended_dialog(text.c_str(), *rewards, -1, -1, 0);
+    rewards->erase(rewards->begin(), rewards->end());
 }
+
+// Forward declarations for the two bodies that follow their callers in
+// link order (check_shipyard_square's definition sits after
+// initialize_buildings at 0x5c0c90).
+void initialize_buildings(town* current_town, const TownExtra* town_setup);
+unsigned char check_shipyard_square(town* current_town, long x, long y);
 
 // E:\gamedcs\town.cpp:2063
 // `ret 4`, and it calls initialize_buildings below. 590 B against DC's
 // 102 because initialize_army (dc 0x168330, 252 B) has no retail row
 // and is inlined here; update_full_building_mask (dc 0x168494) has no
-// row either.
+// row either. The custom-garrison walk re-evaluates the
+// hero-or-garrison ternary at every access - three times per slot -
+// exactly as retail does; the empty-slot arm and the whole default
+// path go through the non-const get_army() instead.
 VA(0x005c0670, 0x24E)  // anchor-callgraph + arity (ret 4), dc 0x16842c
 void town::initialize(const TownExtra* town_setup)
 {
-    // @stub
+    type = town_setup->type;
+    owner = -1;
+    memset(generatorBonus, 0, sizeof(generatorBonus));
+    gpGame->ClaimTown(id, town_setup->owner, 0, 0);
+    if (town_setup->hasCustomGarrison) {
+#pragma inline_depth(0)
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             slot++) {
+            (garrisonHeroId < 0 ? garrison
+                                : gpGame->GetHero(garrisonHeroId)->army)
+                .numTroops[slot] = town_setup->garrisonCounts[slot];
+            if ((garrisonHeroId < 0
+                     ? garrison
+                     : gpGame->GetHero(garrisonHeroId)->army)
+                    .numTroops[slot] > 0) {
+                int troop = town_setup->garrisonTypes[slot];
+                if (troop <= -2) {
+                    int tier = (-2 - troop) / 2;
+                    if (troop & 1)
+                        tier += TOWN_DWELLING_COUNT;
+                    troop = gTownDwellingCreatures[
+                        type * (2 * TOWN_DWELLING_COUNT) + tier];
+                }
+                (garrisonHeroId < 0
+                     ? garrison
+                     : gpGame->GetHero(garrisonHeroId)->army)
+                    .armies[slot] = troop;
+            } else {
+                get_army().armies[slot] = -1;
+            }
+        }
+#pragma inline_depth()
+    } else {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             slot++) {
+            get_army().armies[slot] = -1;
+            get_army().numTroops[slot] = 0;
+        }
+        if (owner < 0) {
+            for (int tier = 0; tier < 4; tier++) {
+                if (Random(1, 100) <= gTownInitArmyChance[tier]) {
+                    int creature = gTownDwellingCreatures[
+                        type * (2 * TOWN_DWELLING_COUNT) + tier];
+                    get_army().Add(creature,
+                                    Random(gTownInitArmyLow[tier],
+                                           gTownInitArmyHigh[tier]),
+                                    -1);
+                }
+            }
+        }
+    }
+    initialize_buildings(this, town_setup);
+    active = built;
+    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (built & bitNumber[i])
+            active |= included_buildings[type][i];
+    }
+    spells = town_setup->spells;
+    initialize_spells(town_setup);
 }
 
 // E:\gamedcs\town.cpp:1914
 // /Gr free function - `ret 0` with the town in ecx and the setup record
 // homed out of edx - called by town::initialize above and calling
-// check_shipyard_square below.
+// check_shipyard_square below. Clears the build state, raises the
+// village hall, computes `available` (minus an unearned Grail slot and
+// a dock with no usable square), then either replays the h3m custom
+// building set - the disabled mask translated through
+// gEventBuildingIds with the horde upgrades rolled up, the built mask
+// expanded through included_buildings and pruned to what is available -
+// or raises the default fort/tavern/dwelling openers.
+// Residual (90.2%): the CFG agrees 23/23; what is left is the
+// register/slot family (bitNumber addend cosmetics, AND-operand load
+// order, two hoisted-mask slot swaps). Operand flips measured neutral.
 VA(0x005c08c0, 0x3CE)  // anchor-callgraph + arity (ret 0, /Gr), dc 0x167ff4
 void initialize_buildings(town* current_town, const TownExtra* town_setup)
 {
-    // @stub
+    int i;
+    memset(current_town->population, 0, sizeof(current_town->population));
+    current_town->built = 0;
+    current_town->active = 0;
+    for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (current_town->built & bitNumber[i])
+            current_town->active |=
+                town::included_buildings[current_town->type][i];
+    }
+    current_town->create_building(HALL_VILLAGE_ID);
+
+    __int64 unavailable = 0;
+    if (gpGame->mapHeader.victoryCondition.Type
+            == VICTORY_CONDITION_BUILD_GRAIL
+        && !gpGame->mapHeader.victoryCondition.IsGrailTarget(current_town))
+        unavailable = bitNumber[HOLY_GRAIL_ID];
+
+    current_town->dockSite = -1;
+    current_town->dockSiteY = -1;
+    if (!(gTownEligibleBuildMask[current_town->type] & bitNumber[DOCK_ID])
+        || (!check_shipyard_square(current_town, current_town->mapX - 1,
+                                   current_town->mapY + 2)
+            && !check_shipyard_square(current_town, current_town->mapX + 1,
+                                      current_town->mapY + 2)))
+        unavailable |= bitNumber[DOCK_ID];
+
+    if (town_setup->hasCustomBuildings) {
+        __int64 disabled = town_setup->disabledMask;
+        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if (disabled & bitNumber[i])
+                unavailable |= bitNumber[
+                    gEventBuildingIds[current_town->type][i]];
+        }
+        if (unavailable & bitNumber[HORDE_ID])
+            unavailable |= bitNumber[HORDE_UPG_ID];
+        if (unavailable & bitNumber[HORDE_2_ID])
+            unavailable |= bitNumber[HORDE_2_UPG_ID];
+        current_town->available =
+            gTownEligibleBuildMask[current_town->type] & ~unavailable;
+
+        __int64 toBuild = 0;
+        __int64 setupBuilt = town_setup->builtMask;
+        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if (setupBuilt & bitNumber[i])
+                toBuild |= town::included_buildings[current_town->type][
+                        gEventBuildingIds[current_town->type][i]]
+                    | bitNumber[gEventBuildingIds[current_town->type][i]];
+        }
+        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if ((toBuild & bitNumber[i])
+                && !(current_town->available & bitNumber[i]))
+                toBuild &= ~bitNumber[i];
+        }
+        for (i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if (toBuild & bitNumber[i])
+                current_town->create_building(type_building_id(i));
+        }
+        return;
+    }
+
+    current_town->available =
+        gTownEligibleBuildMask[current_town->type] & ~unavailable;
+    if (town_setup->hasFort)
+        current_town->create_building(CASTLE_FORT_ID);
+    if (current_town->owner >= 0) {
+        current_town->create_building(TAVERN_ID);
+        if (current_town->built & bitNumber[CASTLE_FORT_ID]) {
+            current_town->create_building(DWELLING_0_ID);
+            if (Random(1, 100) <= 30)
+                current_town->create_building(DWELLING_1_ID);
+        }
+    } else {
+        current_town->create_building(DWELLING_0_ID);
+        current_town->create_building(DWELLING_1_ID);
+    }
 }
 
 // E:\gamedcs\town.cpp:1889
@@ -1017,7 +1480,6 @@ void initialize_buildings(town* current_town, const TownExtra* town_setup)
 // edx = x, [ebp+8] = y, and the first thing it does is bounds-check
 // edx and [ebp+8] against the two map-extent globals 0x6783c8 /
 // 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
-#endif  // @carcass
 
 // NewmapCell's +0xc flags word, read WHOLE. mapcell.h models those 16
 // bits as three bitfields, because mapcell.cpp's cell_is_trigger and
