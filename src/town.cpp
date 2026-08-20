@@ -1189,12 +1189,38 @@ void show_creature_rewards(const town* this_town,
 static const int kRewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Residual (86.7%): branch topology #12 lands one block off (the D3
+// Residual (90.8287%): 86.7098 -> 90.8287 on 2026-08-20, and the fix
+// CONTRADICTS the "tried and rejected" line that stood here. That line
+// recorded "event-field re-reads instead of the short growth local
+// (85.8)" as refuted. The re-read IS retail's spelling; what was missing
+// beside it is the TYPE. `TTownEvent::generatorBonuses` is
+// `unsigned short[7]` (timedevent.h), so a `short growth` local converts
+// it to SIGNED and every use came out `movsx`. Retail's three reads of
+// that field are all ZERO-extended - `mov ax,[ebx] / test ax,ax` for the
+// guard, a reload for `add word ptr [edi+0xe],ax`, and a third
+// `xor eax,eax / mov ax,[ebx]` for the packed qualifier - and the
+// creature half is a WORD read out of a DWORD-strided table
+// (`mov dx, word ptr [4*ecx]` against gTownDwellingCreatures' 4-byte
+// elements). So the pack is
+// `((unsigned short)bonus << 16) | (unsigned short)creature`, which is
+// MAKELONG's exact shape. Spell the re-reads AND both truncations and
+// the row moves 4.1 points; EITHER ALONE IS A LOSS - the truncations
+// with the local still in place measure 86.2972, below the old baseline.
+// This is "do not cache what retail reloads" with a type error hiding
+// under it: the re-read looked refuted because the operands were signed.
+// What is LEFT, read off the unmasked pair: retail materialises the
+// guard operand (`mov ax,[ebx] / test ax,ax`) where we compare in memory
+// (`cmp word ptr [ebx],0`); retail CROSS-JUMPS the two arms' shared
+// push_back tail into one block where we emit both copies, so retail's
+// two arms share the [ebp-0x20]/[ebp-0x1c] pair and ours take two.
+// Measured against exactly that and rejected: one
+// `type_dialog_resource reward;` hoisted to cover both arms (-0.007),
+// and an `unsigned short growth` local used ONLY by the zero test
+// (byte-flat - VC6 folds it back into the memory compare).
+// Still open: branch topology #12 lands one block off (the D3
 // jump-threading class - why-branch's catalog found no applicable
-// lever) and a 15-slot edx/ecx register permutation follows from it.
-// Tried and rejected: the eligible mask hoisted into a local (85.7),
-// event-field re-reads instead of the short growth local (85.8),
-// resource-store reordering (neutral).
+// lever). Tried and rejected earlier: the eligible mask hoisted into a
+// local (85.7), resource-store reordering (neutral).
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1239,23 +1265,26 @@ void town::give_event_reward(const TTownEvent* thisEvent)
         show_building_rewards(this, &rewards);
 
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
-        short growth = thisEvent->generatorBonuses[i];
-        if (growth != 0) {
+        if (thisEvent->generatorBonuses[i] != 0) {
             if (active & bitNumber[DWELLING_0_UPG_ID + i]) {
                 type_dialog_resource reward;
                 reward.resource = 0x15;
-                population[i + TOWN_DWELLING_COUNT] += growth;
-                reward.qualifier = (growth << 16)
-                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
-                                             + i + TOWN_DWELLING_COUNT];
+                population[i + TOWN_DWELLING_COUNT] +=
+                    thisEvent->generatorBonuses[i];
+                reward.qualifier = (thisEvent->generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          gTownDwellingCreatures[
+                              type * (2 * TOWN_DWELLING_COUNT)
+                              + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (active & bitNumber[DWELLING_0_ID + i]) {
                 type_dialog_resource reward;
                 reward.resource = 0x15;
-                population[i] += growth;
-                reward.qualifier = (growth << 16)
-                    | gTownDwellingCreatures[type * (2 * TOWN_DWELLING_COUNT)
-                                             + i];
+                population[i] += thisEvent->generatorBonuses[i];
+                reward.qualifier = (thisEvent->generatorBonuses[i] << 16)
+                    | static_cast<unsigned short>(
+                          gTownDwellingCreatures[
+                              type * (2 * TOWN_DWELLING_COUNT) + i]);
                 rewards.push_back(reward);
             }
             if (rewards.size() == kRewardDialogBatch)

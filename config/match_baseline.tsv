@@ -1750,7 +1750,7 @@ town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
 town	?get_legion_bonus@town@@QAEJJ@Z	81.7262	81.7262	81.7262	0x1bf810
 town	?get_silo_income@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280
-town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	86.7098	86.7098	86.7098	0x1bfeb0
+town	?give_event_reward@town@@QAEXPBVTTownEvent@@@Z	90.8287	90.8287	90.8287	0x1bfeb0
 town	?hire@town@@QAEXPAVhero@@J@Z	100.0000	100.0000	100.0000	0x1c12e0
 town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.0000	0x1bfdd0
 town	?initialize@town@@QAEXPBVTownExtra@@@Z	100.0000	100.0000	100.0000	0x1c0670
