@@ -270,6 +270,45 @@ member, **at a line number that MOVES as you edit unrelated code**. It reads
 exactly like a VC6 capacity limit and is not one. Check the class declaration
 first; a 20-line probe TU isolates it in one compile.
 
+**STATEMENT-SCOPED `#pragma inline_depth(0)` IS THE LEVER FOR THE
+"MODEL-REFUTING" CLASS** (2026-08-20, found INDEPENDENTLY by two lanes in one
+round). Where retail refuses an expansion the RE'd /Ob2 budget rule must
+accept, you do not need to explain the refusal - you can impose it. The pragma
+is STATEMENT-granular, so pin the SITE.
+`advManager::Open` 52.72 -> **97.80** (two pins), `hero::HeroFn_004D8B30`
+55.74 -> **94.67** (one line), `CancelIndividualSpell` 21.50 -> **96.27**,
+`InitClean` 0 -> **92.63**. Route it with `predict-inline`'s OVER-inline
+column.
+
+Everything previously recorded as unreachable in this class had aimed at
+moving the BUDGET - spellings, pragma-on-instantiation, 100/200/300-statement
+dose titration, an RTM-vs-SP3 compiler A/B. Those measurements were right and
+their conclusion was wrong.
+
+**Bounds, all measured:**
+- **Only N=0 bites.** Mid-function `inline_depth(1|2|3|4)` is inert - measured
+  twice in one function and four times in another. So "inline the parent, call
+  the child" is NOT spellable.
+- Consequently, anything retail keeps INLINE must be hoisted out of the pinned
+  statement first - subscripts, `begin()`/`end()`, the call result into a
+  named local.
+- **It backfires when retail keeps only a nested CHILD out of line**, and
+  hard: `BVResMsg` 93.33 -> 26.42, `BVMessage` 92.68 -> 21.28,
+  `hero::initialize` 82.86 -> 62.31, `hero::hero()` 70.99 -> 53.99. Use it
+  only where retail keeps the WHOLE callee out of line.
+- The pin DOES reach a member-initialiser expansion (contra the eh-cleanup
+  caveat), and pinning a later site does NOT shrink the
+  `budget / sites-remaining` divisor for an earlier one.
+- A pin can retire a `#pragma inline_depth(0)` SCAFFOLD elsewhere: pinning the
+  two rejected sites in `spell_is_valid_on_target` let
+  `get_total_combat_value` drop its scaffold and go 46.91 -> 94.74 with four
+  neighbouring rows holding.
+
+**predict-inline's OVER-inline bucket cannot tell a mangled-name divergence
+from an inlining decision.** `TownQuickView` reported `get_army base x0 vs
+retail x4` because retail calls the CONST overload - a different function at a
+different address. Check the overload before reaching for a knob.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
