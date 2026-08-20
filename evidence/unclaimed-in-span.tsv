@@ -2,12 +2,11 @@
 # Functions inside an EXISTING unit's inferred link-order
 # span that no match_baseline row claims.
 unit	functions	bytes
-game	82	56026
+game	81	55959
 tradpost	15	45736
 army	34	31527
 townmgr	20	27184
 sacrifice_window	37	25978
-spells	38	23135
 seerhut	73	22609
 command	17	15392
 remote	55	13741
