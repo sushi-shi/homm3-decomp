@@ -1637,24 +1637,24 @@ std::bitset<70> mark_spells(int artifactId)
 // a D8 arm-order item the catalog has no lever for on a pointer-guarded
 // loop.
 //
-// CORRECTION 2026-08-20 - do NOT act on the paragraph above as if the
-// residual were scheduling-only. Retail's FRAME IS 20 BYTES LARGER THAN
-// OURS (`sub esp,0x5c` against our `sub esp,0x48`), so this body is
-// missing source elements, and the branch-kind transposition is a
-// downstream symptom. Two independent witnesses of the same gap, both
-// in the first grant arm:
-//  - retail loads `slot->extra` EAGERLY, before the ARTIFACT_NONE test
-//    (`mov edx,[eax] / mov eax,[eax+4] / cmp edx,-1`), where our CL sinks
-//    the load into the scroll arm because that is the only path using it.
-//    Something else in retail's source reads `extra` on another path.
-//  - retail's scroll store is `mov [ebx+eax+0x430], dl`, reusing the
-//    register still holding the artifact id (provably 1 there), where we
-//    materialize the immediate.
-// The locals we do not have are 16 bytes between the scalar band and the
-// first bitset temp plus one more dword at [ebp-0x4] (which retail uses
-// to memory-home the `dst` pointer). Find those 20 bytes before touching
-// loop spelling again; `predict-inline` says the call multisets AGREE, so
-// this is not the /Ob2 budget.
+// 78.04 -> 80.93 (2026-08-20), two of the three witnesses above CLOSED:
+//  - the eager two-dword load IS a struct copy: `type_artifact current =
+//    *slot;` reproduces retail's `mov edx,[eax] / mov eax,[eax+4] /
+//    cmp edx,-1` exactly, and it also lands the scroll store - dl still
+//    holds the id (ARTIFACT_SPELL_SCROLL == 1), so `[ebx+eax+0x430],dl`
+//    now byte-matches without materializing the immediate. (+1.43)
+//  - the paired jne<->jb transpositions in BOTH copy loops were the ||
+//    OPERAND ORDER: retail evaluates `granted.test(spell) || *dst`, the
+//    bounds check ahead of the short-circuit. flow-distance 2 -> 0.
+//    (+1.46)
+// STILL OPEN - the 20-byte frame gap (retail sub esp,0x5c vs our 0x48):
+// every deep local sits 0x14 higher on retail's side (its first bitset
+// temp at -0x50, ours at -0x3c) plus the dst memory-home at [ebp-0x4].
+// MEASURED NEGATIVE: a by-value `std::bitset<144> components` copy is
+// exactly 20 bytes but adds copy code retail lacks, 80.93 -> 76.59.
+// Best remaining hypothesis: retail's two bitset<70> `granted` temps do
+// NOT share a slot (12+12 > our one coalesced 12), the class of slot
+// packing why-reg cannot reach. Call multisets AGREE - not /Ob2.
 VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
@@ -1663,8 +1663,9 @@ void hero::update_spell_list()
     int remaining = 19;
     const type_artifact* slot = equipped;
     do {
-        int artifactId = slot->artifactId;
-        long extra = slot->extra;
+        type_artifact current = *slot;
+        int artifactId = current.artifactId;
+        long extra = current.extra;
         if (artifactId != ARTIFACT_NONE) {
             if (artifactId == ARTIFACT_SPELL_SCROLL) {
                 available_spells[extra] = 1;
@@ -1674,7 +1675,7 @@ void hero::update_spell_list()
                     unsigned char* dst = available_spells;
                     unsigned int spell = 0;
                     while (dst != available_spells + NUM_SPELLS) {
-                        *dst = *dst || granted.test(spell);
+                        *dst = granted.test(spell) || *dst;
                         ++dst;
                         ++spell;
                     }
@@ -1690,7 +1691,7 @@ void hero::update_spell_list()
                             unsigned char* dst = available_spells;
                             unsigned int spell = 0;
                             while (dst != available_spells + NUM_SPELLS) {
-                                *dst = *dst || granted.test(spell);
+                                *dst = granted.test(spell) || *dst;
                                 ++dst;
                                 ++spell;
                             }
@@ -3376,16 +3377,29 @@ void hero::HeroFn_004DC100(long slot)
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
 //
-// Residual (85.7%, and 85.7% on the luck twin): /Ob2 budget inside the
-// Dinkumware string calls, nothing source-local. `predict-inline` pairs
-// 31 of the 49 out-of-line calls off by COUNT - retail names its
-// unclaimed basic_string callees with synth labels our side can never
-// emit, so those rows are naming and not divergence - and reports
-// exactly ONE real item: `_Xlen` out of line 5 times here against
-// retail's 3, i.e. retail expands two more of the `append` grow paths.
-// That is the A8/A9 budget class the doctrine says not to chase with
-// `_Grow`/`_Tidy` spellings. Tried and rejected: `morale += 500` /
-// `luck += 500` for the constant store (byte-flat on both twins).
+// 85.71 -> 91.65 (2026-08-20): the old note's "_Xlen x5 vs x3 = retail
+// expands two more grow paths" read the census BACKWARDS - a fn-level
+// `call _Xlen` reloc marks a site where the APPEND ITSELF was expanded
+// (its throw left as the call), so five _Xlen on our side against three
+// meant WE expand two appends retail keeps out of line. Walking the
+// sites by their gMoraleTexts addends: retail CALLS append(const char*,
+// size_type) at the Basic-leadership rung [20] (fn+0x454, repne scasb +
+// call) and expands [21],[22] as we do; the TownQuickView lever (spell
+// append(p, strlen-local), then the statement pin) imposed exactly that
+// call. The luck twin's [14] rung was the same shape: +7.97 there.
+//
+// Residual (91.65%): ONE ledger row left - the tail. Retail CALLS
+// append(const basic_string&, 0, npos) in the NEGATIVE otherModifier arm
+// (fn+0x651: push npos-global/0/temp) and EXPANDS the identical append
+// in the positive arm (_Xlen fn+0x6c1); we expand both. MEASURED
+// NEGATIVE, do not retry as spelled: the named-temp + 3-arg append + pin
+// form in that arm costs 91.65 -> 81.81 - the pin's A9 cascade flips the
+// downstream dtor/_Tidy ledger, the same failure the luck twin's [15]
+// probe showed. The residual class is "imposition reachable, imposition
+// net-negative": each remaining site needs its call WITHOUT the pin's
+// side effects, which no measured spelling provides.
+// Also tried and rejected earlier: `morale += 500` / `luck += 500` for
+// the constant store (byte-flat on both twins).
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::get_morale_description() const
 {
@@ -3468,7 +3482,17 @@ std::string hero::get_morale_description() const
     }
 
     if (skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        result += gMoraleTexts[20];
+        // Retail CALLS append(const char*, size_type) at THIS rung only -
+        // its `repne scasb` strlen + `call` sit at fn+0x454 where our CL
+        // expanded the append (the extra _Xlen/_Grow/_Eos exposure) - and
+        // expands the Advanced and Expert rungs exactly as we do. The
+        // TownQuickView lever: spell the site at the depth retail stops
+        // at, then the statement pin imposes exactly retail's call.
+        const char* basicText = gMoraleTexts[20];
+        size_t basicTextLen = strlen(basicText);
+#pragma inline_depth(0)
+        result.append(basicText, basicTextLen);
+#pragma inline_depth()
         morale++;
     }
     if (skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
@@ -3516,6 +3540,20 @@ std::string hero::get_morale_description() const
 // literals "-1"/"+1"/"+2"/"+3" out of hero.obj's own pool. The Grail arm
 // expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
 // hero::GetLuck's own arm, which calls it.
+//
+// 85.74 -> 93.71 (2026-08-20): retail CALLS append(const char*,
+// size_type) at the [14] mist rung (fn+0x485's run of four scasb+call
+// rungs ends there) and expands [15],[16],[17]; the imposed-call lever
+// on [14] alone is the whole gain.
+//
+// Residual (93.71%): retail ALSO calls append at the Basic-luck rung
+// [15] (guarded by the eMasteryBasic cmp at fn+0x465) - the census is
+// _Xlen x4 ours vs x3 retail's. MEASURED NEGATIVE both ways, do not
+// retry as spelled: pinning [15] flips the four gLuckTexts[10] carrier
+// rungs' format_string-temp dtors from inline to `call _Tidy` (x5) and
+// costs 93.71 -> 85.95; the unpinned append(p,len) spelling costs
+// 93.71 -> 78.66. Imposition reachable, imposition net-negative - the
+// same coupling the morale twin's tail shows.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::string hero::get_luck_description() const
 {
@@ -3585,7 +3623,15 @@ std::string hero::get_luck_description() const
         luck++;
     }
     if (flags & 0x10000) {
-        result += gLuckTexts[14];
+        // Retail CALLS append(const char*, size_type) at THIS rung -
+        // four `repne scasb`+call rungs end at fn+0x486 and [14] is the
+        // last of them - then expands [15],[16],[17] as we do. Same
+        // TownQuickView lever as the morale twin's [20] rung.
+        const char* mistText = gLuckTexts[14];
+        size_t mistTextLen = strlen(mistText);
+#pragma inline_depth(0)
+        result.append(mistText, mistTextLen);
+#pragma inline_depth()
         luck++;
     }
 
@@ -4018,6 +4064,16 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // docs/vc6/optimization-scope.md puts cross-jumping in the WHOLE-FUNCTION
 // CFG family and docs/vc6/control-flow.md lists A17 as an open class; no
 // source spelling of an arm can reach a decision made over all of them.
+//
+// THE C2 GENERATION IS NOW RULED OUT TOO (2026-08-20): `homm3 vc6 ab run`
+// on this function - the first Track R run outside the original corpus -
+// reports the RTM 8168 back end BYTE-IDENTICAL to SP3 (1089+327 on both
+// sides, sp3_vs_rtm 0; evidence/vc6/c2-generation-verdicts.tsv). If the
+// merge-set flip is generational at all, it is the FRONT END: retail's
+// Rich header carries 26 RTM-stamped C++ objects, hero.obj is a
+// candidate, and rtm-generation.md Â§4 already names the C1XX+C2 overlay
+// as the one unexplored generation lever - staged, hash-recorded, NOT
+// admitted; running it is a separate decision, not a lane action.
 //
 // ONE MORE SHAPE IS NOW READ OFF THE BYTES, and the spelling for it is a
 // MEASURED NEGATIVE (2026-08-20). Retail's two army-strip arms do NOT pass
@@ -6008,9 +6064,25 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // (fn+0x9c5 and fn+0xa51, both `cmp ,0xc` followed by an inline
 // out_of_range construction), so those two deliberately stay `.set(...)`.
 //
-// Residual (75.1%): basic_string::_Tidy at base x3 vs retail x2 - budget
-// starvation, i.e. this caller's body is still leaner than retail's
-// (docs/vc6/inliner.md, and docs/vc6/eh-cleanup.md for the unwind map).
+// Residual (75.1%), RE-DERIVED FROM TODAY'S BYTES (2026-08-20): the
+// remaining structural row is the FIRST bitset<12> site itself - base
+// EXPANDS the `invalid bitset<N> position` throw at fn+0x104..0x13d
+// (string ctor + logic_error ctor + CxxThrow, one extra EH state, the
+// 27-vs-23 branch surplus) where retail emits `cmp ebx,0xc /
+// lea esi,[edi+0xe8] / jb / mov ecx,esi / call bitset<12>::_Xran`
+// (fn+0xffff..0x10e). Retail expands sites 2 and 3 exactly as we do.
+// The depth ladder is EXHAUSTED here: the site already reads through
+// operator[] (the note above), retail's shape needs _Xran-ONLY out of
+// line (test stays inline), the statement pin takes test and
+// GetLocalPlayerGamePos with it (measured 59.86), and <bitset> has no
+// deeper rung. READ THE QUOTIENT: retail REFUSES the early site and
+// accepts the two later ones - the A9 `budget / sites-remaining`
+// shape - and our two `inline_depth(0)` pins above this site REMOVE
+// candidate sites from that denominator, raising our quotient at site 1
+// past the throw's cost. The pins bought +6.75 and cannot be traded
+// back; the site is priced as bounded until a knob exists that imposes
+// a call WITHOUT shrinking the candidate set. basic_string::_Tidy x3
+// vs x2 is the same story's tail.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
@@ -6734,6 +6806,22 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 // as retail emits it; treat it as a retail quirk, not a decode gap.
 // The `owner < 6` cap on the AI bonus is likewise anomalous (players run
 // to 8 everywhere else) and is likewise literal.
+//
+// Residual (81.76%, diagnosed 2026-08-20): the AI tail is a
+// TWO-predecessor join RETAIL KEEPS IN PLACE - it sits right after the
+// sea half with the one final ret at fn+0x211, and the land half reaches
+// it with a BACKWARD `jmp fn+0x1c8` (fn+0x2ab) - while our CL sinks the
+// join past the land half and duplicates an exit (3 rets vs retail's 2;
+// four sea-half guards land on br47 instead of br23). This is the same
+// kept-in-place-join layout class as ProcessKeyPress's walk block in
+// advmgr, now seen in a second function and a second TU.
+// MEASURED NEGATIVE, both banked so they are not respent:
+//   * nested single-return (mobility=1000000 in an else-wrap, one
+//     `return mobility`): 81.76 -> 65.91.
+//   * WRITE IT TWICE (the viewarmywindow join lever - AI tail duplicated
+//     into both halves): 81.76 -> 74.13; the cross-jumper merges only
+//     the epilogue, still 3 rets, and the join still sinks. The lever
+//     that cracked viewarmywindow does NOT generalise to this class.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {

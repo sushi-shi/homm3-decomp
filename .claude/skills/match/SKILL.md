@@ -585,6 +585,34 @@ a −42 B trade into **+9.50** with the sibling row back at 100.0000.
 against a note predicting −2.10 from a "split the range check" fix that was
 the wrong mechanism entirely.
 
+**A FN-LEVEL `_Xlen` / `_Xran` RELOC CENSUS COUNTS *EXPANDED* WRAPPERS, NOT
+CALLED ONES.** When the append is EXPANDED only its throw survives as a call,
+so a surplus of those relocs on our side means WE over-expanded — the opposite
+of how it reads. A note that had it backwards left 564 B sitting recoverable;
+reading it correctly closed two twins for **+13.9 combined**.
+
+**A FRAME TOO LARGE PLUS AN ENTRY-TIME CONSTANT THE SOURCE NEVER NAMES THERE
+= A DEFAULTING DEFAULT CTOR.** The lever is the LOCAL'S DECLARATION FORM, not
+the header: declare it with the real ctor at first use instead of default-then-
+assign. `ProcessSearch` +0.75, and the frame became retail's exactly.
+
+**A DWORD SELF-STORE IS A STRUCT COPY THE ALLOCATOR COALESCED** — spell the
+copy (`type_point step = heroPos;`). `ShowRoute` +2.56.
+
+**ADJACENT `jne` <-> `jb` PAIRS SWAPPING ACROSS SITES = `||` OPERAND ORDER**,
+with the bounds-checked operand moved sides. `update_spell_list` +1.46.
+
+**A GUARDED `do/while` SPLITS THE TOP-GUARD SIGNEDNESS FROM THE BACK-EDGE
+FORM**, so each end can match retail independently —
+`if (n > 0) do { … } while (--k != 0);` matched a `jle` guard AND a `jne` back
+edge where a plain `k > 0` loop could only do one.
+
+**AN IMPOSED CALL THAT IS BYTE-RIGHT AT ITS OWN SITE CAN STILL LOSE THE
+FUNCTION.** The pin re-prices every LATER site and SHRINKS THE A9 DENOMINATOR,
+pushing the quotient past a throw's cost at an earlier one (−7.76 pinned,
+−15.05 unpinned, −9.84 on a third). That is the pin's second side effect and
+it is why a locally-correct pin can measure negative.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)

@@ -4151,6 +4151,23 @@ void advManager::Reseed(int targetX, int targetY)
 // RETAIL-RECONSTRUCTED 2026-08-09. Retail proves the complete dig command:
 // movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
 // split, every player's puzzle refresh and the post-action route/button cleanup.
+//
+// 91.44 -> 92.19 (2026-08-20): the frame sweep's 0x38-vs-0x30 pointed at
+// the two artifact records. Both are TWO-ARG CTOR declarations at their
+// use sites, not default-then-assign: a top-level `type_artifact grail;`
+// runs the header's defaulting ctor, and our compile spilled {-1,-1} into
+// two slots at ENTRY (`or edi,-1` + two stores) and CSE'd that -1 into
+// GetCurrHero's `cmp edx,edi` - retail compares the IMMEDIATE and writes
+// each record exactly twice at its use site ({2,-1} at [ebp-0x2c] for
+// grail, [ebp-0x24] for describedGrail). `type_artifact grail(
+// ARTIFACT_HOLY_GRAIL, -1)` inside the award arm is the faithful form.
+//
+// Residual (92.19%): flow-distance 0; a whole-body EBX/EDI role swap
+// (currHero edi on retail, ebx ours; z the reverse) why-reg --model
+// proves is C2 handle state - creation order agrees on both sides, the
+// permutation is not source-reachable, capped after one compile. The
+// frame stays 0x38 vs 0x30: our two records do not share slots with the
+// description string temp the way retail packs them.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::ProcessSearch(int x, int y, int z)
 {
@@ -4158,7 +4175,6 @@ int advManager::ProcessSearch(int x, int y, int z)
     SAMPLE2 digSample;
     int player;
     NewmapCell* currCell;
-    type_artifact grail;
 
     currHero = gpGame->GetCurrHero();
 
@@ -4255,8 +4271,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                         GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            grail.artifactId = ARTIFACT_HOLY_GRAIL;
-            grail.extra = -1;
+            type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
 
             if (gpCurrentPlayer->IsHuman()) {
                 gUnnamed69950c = gNetLocalGamePos;
@@ -4272,9 +4287,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                 NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
 
-                type_artifact describedGrail;
-                describedGrail.artifactId = ARTIFACT_HOLY_GRAIL;
-                describedGrail.extra = -1;
+                type_artifact describedGrail(ARTIFACT_HOLY_GRAIL, -1);
                 std::string description = describedGrail.get_description();
                 NormalDialog(description.c_str(), 1, -1, -1, -1, 0,
                              -1, 0, -1, 0, -1, 0);
@@ -7908,8 +7921,9 @@ DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
 // allowed to claim a free slot. The four running edge counters are what
 // make retail emit inc/inc/dec/dec rather than indexed addressing.
 //
-// Residual (63.94%): register-homing only. The function is branch-for-
-// branch identical to retail - 15 branches, 1 return, identical call
+// Residual (63.94%): register-homing only (flow-distance 0 as of
+// 2026-08-20, the k-loop guard now byte-matches). The function is branch-
+// for-branch identical to retail - 15 branches, 1 return, identical call
 // multiset - and why-reg v2 confirms the definition slots and their order
 // agree on BOTH sides, with only the ebx/edi bindings permuted: retail
 // holds `this` in edi and hoists the 0x7f idle priority into ebx, we hold
@@ -7965,18 +7979,28 @@ void advManager::SetEnvironmentOrigin(type_point point, int reset)
             int bottomX = xMax;
             int leftY = yMax;
             int k;
-            // MEASURED NEGATIVE, do not retry: `k > 0` here, to chase
-            // diagnose's `#6 je->jle`, costs 63.94 -> 57.54. The `jle`
-            // it names is not this guard.
-            for (k = edgeLength; k != 0; k--) {
-                InsertSound(topX, yMin, z, ring, soundsType);
-                InsertSound(xMax, rightY, z, ring, soundsType);
-                InsertSound(bottomX, yMax, z, ring, soundsType);
-                InsertSound(xMin, leftY, z, ring, soundsType);
-                topX++;
-                rightY++;
-                bottomX--;
-                leftY--;
+            // The `jle` diagnose names IS this guard after all - the
+            // earlier note drew the wrong conclusion from the right
+            // probe. `k > 0` as the for-condition costs 63.94 -> 57.54
+            // because it also changes the BOTTOM test away from retail's
+            // `dec/jne`; the form that has BOTH ends right is the
+            // explicit-guard do/while below: `if (edgeLength > 0)` gives
+            // retail's `test eax,eax / jle` top and `--k != 0` keeps the
+            // `jne` back edge. Byte-flat on the fuzzy score (the register
+            // permutation dominates at this size) but flow-distance goes
+            // 2 -> 0 and the opcode now matches retail's 0x7e.
+            k = edgeLength;
+            if (edgeLength > 0) {
+                do {
+                    InsertSound(topX, yMin, z, ring, soundsType);
+                    InsertSound(xMax, rightY, z, ring, soundsType);
+                    InsertSound(bottomX, yMax, z, ring, soundsType);
+                    InsertSound(xMin, leftY, z, ring, soundsType);
+                    topX++;
+                    rightY++;
+                    bottomX--;
+                    leftY--;
+                } while (--k != 0);
             }
             xMax++;
             yMax++;
@@ -8343,7 +8367,27 @@ static void clear_adventure_route(advManager* manager, int bUpdateScreen,
 // retail refuses the site. advManager::Open's two vector::insert sites,
 // the other member of this family, went 52.72 -> 97.80 the same way.
 //
-// Residual (79.97%): the register/slot cascade downstream of that call.
+// 79.97 -> 82.85 (2026-08-20) on two source facts the frame/flow sweep
+// found: (1) the path-length gate compares size() SIGNED - retail emits
+// `sub edx,ecx / test edx,0xfffffffc / jle` (the /4 quotient folded into a
+// masked test), ours was `sar edx,2 / je`, so the source casts:
+// `static_cast<int>(result.size()) <= 0`. (2) the walk start is a COPY of
+// a separately-built hero point (`mov ecx,[ebp-0x1c] / mov [ebp-0x1c],ecx`
+// - a self-store, i.e. a type_point copy VC6 coalesced onto one slot, the
+// same shape ProcessKeyPress's SPACE arm carries), so the source builds
+// heroPos.x/y/z and then `type_point step = heroPos;`. Our copy picks a
+// SEPARATE slot (edi via [ebp-0x20]) where retail coalesces; brace-scoping
+// the copy is byte-inert, so the coalesce is allocator state, not scope.
+//
+// Residual (82.85%): flow-distance 0; the mass is ONE whole-body ESI/EBX
+// role swap (this/currentHero in esi on retail, ebx on ours; ~20 slots
+// each way) plus the un-coalesced copy slot and the frame (0x28 vs 0x1c).
+// why-reg --model calls the swap C2-side handle STATE, not handle order -
+// its proposed heroPos.y-first store order measures 82.85 -> 79.65 and
+// delaying routeAffordable's `= 0` below the IsLocalHuman early-out
+// measures 82.85 -> 81.23, so the creation-order lever is spent both ways
+// and the swap is not source-reachable.
+//
 // The earlier over-inline reading of this function was wrong twice over:
 // the "missing" CompleteDraw/UpdateScreen calls were VC6 cross-jumping
 // copy 1's tail into copy 2's (identical bytes), not inlining, and copy
@@ -8389,7 +8433,8 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
     SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
-    if (gpSearchArray->result.size() <= 0 || pathLength <= 0) {
+    if (static_cast<int>(gpSearchArray->result.size()) <= 0
+        || pathLength <= 0) {
         clear_adventure_route(this, bUpdateScreen, 1);
     } else {
         memset(routeArray, 0,
@@ -8398,10 +8443,11 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         bShowRoute = 1;
 
         int movePoints = currentHero->movePoints;
-        type_point step;
-        step.x = currentHero->x;
-        step.y = currentHero->y;
-        step.z = currentHero->z;
+        type_point heroPos;
+        heroPos.x = currentHero->x;
+        heroPos.y = currentHero->y;
+        heroPos.z = currentHero->z;
+        type_point step = heroPos;
 
         currentHero->army.GetNativeTerrain();
 
