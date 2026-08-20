@@ -98,6 +98,14 @@ inline TArtifact artifact_from_int(int value)
 // declared here so game::Save's pool writes call it out of line.
 unsigned char save_vector(TAbstractFile* outfile,
                           std::vector<type_point>* src_vector);
+// The other two instantiations game::Save's tail reaches, both also
+// defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
+// one is a plain block write like the type_point overload; the creature
+// bank one serialises each element, hence the different name.
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_university>* src_vector);
+unsigned char save_object_vector(TAbstractFile* outfile,
+                                 std::vector<type_creature_bank>* src_vector);
 
 const int SAVED_CREATURE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
@@ -2729,17 +2737,56 @@ int game::Load(TAbstractFile* infile)
 // so the tail is UNBLOCKED - but it must be spelled with exactly the
 // five temps below and no more, or the frame overshoots again.
 //
-// The tail's own temps, for whoever writes it: the twelve scalar writes
-// use exactly FIVE temps in retail, in this grouping - byte temp at
-// -0xd for writes 1,2 then again for 7,8,9; a dword temp at -0x20 for
-// the two shorts 3,4; a SECOND byte temp at -0x15 for writes 5,6; and
-// a dword temp at -0x1c for the last three shorts. The byte temp
-// switching away to -0x15 for two writes and back is the signature of
-// a second, separately scoped char local - not of one reused variable.
-// Residual (42.2312%): missing tail above, gated on the frame delta.
+// TAIL LANDED 2026-08-20: 42.3069 -> 73.7978. Three things had to be
+// right at once, and each was measured on its own.
+//
+// 1. PLACEMENT. The earlier note here put the missing block after the
+//    five type_point pool writes. It goes BEFORE them - retail's order
+//    is heroPoolMap loop, then the twelve scalars, six arrays, literal
+//    zero and gMapExtra, and only THEN lithPools. Three independent
+//    proofs: linear disassembly order; the EH-state counter running
+//    0x1f..0x48 consecutively over exactly 21 guarded sites, with the
+//    lithPools loop numbered LAST at 0x47/0x48; and the base compile's
+//    own adjacency of heroPoolMap to lithPools. Only universities,
+//    creatureBanks and save_recorded_events append at the end.
+// 2. THE TEMPS. Four scalar temps plus the literal-zero int, declared at
+//    FUNCTION scope, not in a block. Block-scoped they get coalesced
+//    into the parameter home and the frame lands 12 bytes short; hoisted
+//    they take five real slots and `sub esp` reaches retail's 0x5c0 with
+//    the slot map matching offset for offset and use-count for
+//    use-count. The two shorts must be `short`, not `int`: retail loads
+//    16 bits and stores 32, which is VC6's narrow-local/widened-store
+//    idiom, where an int local would sign- or zero-extend on the load.
+// 3. TWO INLINE PINS, and this is the part that is easy to get wrong.
+//    Adding ~600 bytes of correct code RAISES this function's /Ob2
+//    budget (clamp(2*caller_cb,...)), which then pulls in two expansions
+//    retail does not have. Both had to be pinned back out:
+//      * std::bitset<8>::test in the heroPoolMap loop - retail emits
+//        `push edi / call`. Inlined, it drags its _Xran throw path with
+//        it, and a whole std::out_of_range plus its "invalid bitset<N>
+//        position" string lands on the frame: 28 bytes retail has not.
+//        Removing this pin alone costs 73.7978 -> 43.8831.
+//      * the seven save_vector / save_object_vector sites - retail calls
+//        every one. Inlined, each contributes a vector-size shl/sar and
+//        a `setae`. Adding this pin alone gave 37.4763 -> 73.7978.
+//    This is the /Ob2-budget lever running in the direction the module
+//    guide warns about: a local win elsewhere in the body changed the
+//    inline decisions here.
+//
+// Residual (73.7978%): `sub esp,0x5b8` against retail's 0x5c0, two
+// slots. VC6 packs byteValue, extraByteValue and poolBits into ONE dword
+// (-0xd/-0xe/-0xf) where retail spends two slots plus the parameter home
+// (-0xd, -0x15, [ebp+0xb]). The hero-pool pin is what moves poolBits out
+// of the parameter home; narrowing that pin to the inner loop alone was
+// measured and changes neither the score nor the frame.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
+    char byteValue;
+    char extraByteValue;
+    short shortValue;
+    short extraShortValue;
+    int zero;
     SavedGameHeader saved;
     saved.Reset();
     if (saved.Save(outfile) < 0)
@@ -2831,16 +2878,126 @@ int game::Save(TAbstractFile* outfile)
         return -1;
     }
 
+    // PINNED: retail CALLS std::bitset<8>::test here (`push edi / call`),
+    // it does not inline it. Once the tail below landed, this body grew
+    // past the /Ob2 budget that had been keeping the expansion out, and
+    // VC6 inlined test together with its _Xran throw path - which drags
+    // a whole std::out_of_range and its "invalid bitset<N> position"
+    // string onto the frame, 28 bytes that retail's frame does not have.
     for (i = 0; i < HERO_COUNT; ++i) {
         unsigned char poolBits = 0;
         unsigned int player;
+#pragma inline_depth(0)
         for (player = 0; player < 8; ++player) {
             if (heroPoolMap[i].test(player))
                 poolBits |= 1 << player;
         }
+#pragma inline_depth()
         outfile->Write(&poolBits, sizeof(poolBits));
     }
 
+    // The twelve guarded scalar writes. Retail carries FOUR temps for
+    // them, not one: a char reused across writes 1-2 and 7-9, a second
+    // char for 5-6, a short for 3-4 and a second short for 10-12. Those
+    // four plus the literal-zero dword below are exactly the five slots
+    // that take `sub esp` from our 0x5ac to retail's 0x5c0.
+    // The shorts must be `short` locals, not `int`: retail loads 16 bits
+    // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
+    // which is VC6's narrow-local/widened-store idiom - an int local
+    // would sign- or zero-extend on the load instead.
+    {
+        byteValue = field_1f4d4;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        byteValue = field_1f634;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+
+        shortValue = ultimateArtifactX;
+        if (outfile->Write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+            return -1;
+        shortValue = ultimateArtifactY;
+        if (outfile->Write(&shortValue, sizeof(shortValue)) < sizeof(shortValue))
+            return -1;
+
+        extraByteValue = ultimateArtifactZ;
+        if (outfile->Write(&extraByteValue, sizeof(extraByteValue)) <
+            sizeof(extraByteValue))
+            return -1;
+        extraByteValue = field_1f695;
+        if (outfile->Write(&extraByteValue, sizeof(extraByteValue)) <
+            sizeof(extraByteValue))
+            return -1;
+
+        byteValue = ultimateArtifactPresent;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        // f_1f698 is an int member and retail writes only its low byte.
+        byteValue = static_cast<char>(f_1f698);
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+        byteValue = field_1f69c;
+        if (outfile->Write(&byteValue, sizeof(byteValue)) < sizeof(byteValue))
+            return -1;
+
+        extraShortValue = field_1f63e;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+        extraShortValue = field_1f640;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+        extraShortValue = field_1f642;
+        if (outfile->Write(&extraShortValue, sizeof(extraShortValue)) <
+            sizeof(extraShortValue))
+            return -1;
+    }
+
+    // Six array writes. The first is retail's own inconsistency: it ASKS
+    // for sizeof(field_1f644) == 0x20 and accepts 8. The compare is
+    // unsigned (`jae`), so the bound has to be an unsigned expression;
+    // sizeof(borderTentVisitFlags) is the one in scope that equals 8.
+    // The original expression is not recoverable from the bytes - only
+    // its value and its unsignedness are.
+    if (outfile->Write(field_1f644, sizeof(field_1f644)) <
+        sizeof(borderTentVisitFlags))
+        return -1;
+    if (outfile->Write(field_1f664, sizeof(field_1f664)) < sizeof(field_1f664))
+        return -1;
+    if (outfile->Write(globalInfoFlags, sizeof(globalInfoFlags)) <
+        sizeof(globalInfoFlags))
+        return -1;
+    if (outfile->Write(borderTentVisitFlags, sizeof(borderTentVisitFlags)) <
+        sizeof(borderTentVisitFlags))
+        return -1;
+    if (outfile->Write(cartographerMask, sizeof(cartographerMask)) <
+        sizeof(cartographerMask))
+        return -1;
+    if (outfile->Write(cartographerFlags, sizeof(cartographerFlags)) <
+        sizeof(cartographerFlags))
+        return -1;
+
+    zero = 0;
+    if (outfile->Write(&zero, sizeof(zero)) < sizeof(zero))
+        return -1;
+
+    // The map-extra plane. HasTwoLevels is read through the GLOBAL gpGame,
+    // not through this->worldMap, and the *2 is applied LAST - retail's
+    // `lea edi,[eax+eax]` follows both imuls. The count is computed once
+    // into one local because a virtual call sits between its two uses.
+    unsigned int mapExtraBytes =
+        (gpGame->worldMap.HasTwoLevels + 1) * gMapWidth * gMapHeight *
+        sizeof(unsigned short);
+    if (outfile->Write(gMapExtra, mapExtraBytes) < mapExtraBytes)
+        return -1;
+
+    // PINNED for the same reason the heroPoolMap bitset test above is:
+    // retail CALLS every one of these seven helpers out of line, and once
+    // the tail landed this body grew past the /Ob2 budget that had been
+    // keeping them out, so VC6 began expanding save_vector in place -
+    // the vector-size shl/sar and a `setae` per site.
+#pragma inline_depth(0)
     for (i = 0; i < 8; ++i) {
         if (!save_vector(outfile, &lithPools[i]))
             return -1;
@@ -2853,6 +3010,14 @@ int game::Save(TAbstractFile* outfile)
     save_vector(outfile, &whirlpools);
     save_vector(outfile, &undergroundGateExits);
     save_vector(outfile, &undergroundGatePairs);
+
+    // Unguarded, like the three pool writes above them.
+    save_vector(outfile, &universities);
+    save_object_vector(outfile, &creatureBanks);
+#pragma inline_depth()
+
+    if (!save_recorded_events(outfile))
+        return -1;
 
     return 0;
 }

@@ -1569,6 +1569,11 @@ public:
     // constructor uses its byte result to enable the End Turn button.
     void play_recorded_events();
     unsigned char replay_available() const;
+    // 0x49dc60 (dc 0x8ebc4, event_record.cpp:1426). game::Save's last
+    // operation and the only guarded one in its tail: it writes the
+    // eventRecords count as a dword and then each record through the
+    // vtable. Body belongs to event_record.obj.
+    unsigned char save_recorded_events(TAbstractFile* outfile);
     void ShowScenInfo();
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
