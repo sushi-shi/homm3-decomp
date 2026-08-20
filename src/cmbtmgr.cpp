@@ -1107,6 +1107,29 @@ unsigned char combatManager::NextArmy(unsigned char checking_for_bad_morale)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2364
+// SURVEYED 2026-08-20 (head only, +0x00..+0x155 of 0x4F6). What is
+// byte-verified: the first three stores are field_132b8 = group and
+// field_132bc = index - the acting (side, slot) pair KeepAttack reads
+// back - and then field_132c0 = the side the turn EFFECTS apply to,
+// formed as `armies[group][index].field_288 ? 1 - .field_f4 : .field_f4`.
+// The whole remainder is skipped when the byte at +0x13d68 is set (one
+// `jne` straight to the epilogue), so that byte is the "no per-turn
+// effects" latch and wants slicing before anyone opens this.
+//
+// The body after that is one repeated four-statement idiom, which is
+// what makes it worth its 1270 bytes: for each of a run of artifact ids
+// (0x81 and 0x84 decoded so far) test hero::IsWieldingArtifact on
+// heroes[field_132c0], then call 0x5a40d0 with (spell, 3, side, 1, 2),
+// and if that returns true call 0x59fe30 with (spell, -1, 2, -1, 3,
+// delay). Spell ids 0x30, 0x36 and 0x2a appear in the decoded head with
+// delays 0xa, 0x32 and 0x32. NEITHER CALLEE IS DECLARED YET: 0x5a40d0
+// and 0x59fe30 are spells.obj leaves in the same family cmbtmgr.h
+// already parks ComputeSpellDamage and ModifySpellDamage in, and both
+// need naming before this compiles.
+//
+// COST TO OPEN: four pad slices (+0x132b8, +0x132bc, +0x132c0, +0x13d68)
+// plus those two declarations. field_54b0[2] is already modelled and is
+// the per-side gate the effect chain sits behind.
 VA(0x00465330, 0x4F6)  // anchor-global, dc 0x5f934
 void combatManager::SetNextArmy(int group, int index)
 {
@@ -1275,6 +1298,30 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2603
+// SURVEYED 2026-08-20 (head only, +0x00..+0x15f of 0x443), and the
+// survey starts with a PROTOTYPE CORRECTION. The DC roster calls the
+// parameter `combatManager::TArcherID iTowerPos`; retail uses it as a
+// FLAT ARMY ORDINAL. It is scaled by 169 and added to +0x54cc, i.e.
+// `&armies[0][0] + param * sizeof(army)`, so its domain is 0..41 over
+// the flattened armies[2][21] run and not the three-valued archer id.
+//
+// The archer id is derived instead, and from a different army: the body
+// reads the ACTING pair (+0x132b8, +0x132bc) that SetNextArmy stored,
+// forms `&armies[group][index]`, and maps that stack's gridIndex through
+// the same three-way switch mark_tower_army uses - but to an INDEX
+// rather than a latch, 0xfb -> 1, 0xfe -> 0, 0xff -> 2. That index then
+// selects a 36-byte record in the array at +0x13d78, which is where the
+// archers[3] this header already models must live.
+//
+// One more thing decoded: the record's first dword indexes a table with
+// an 84-BYTE STRIDE reached through the stored pointer at .data
+// 0x67ff24. Identify that table before writing the body - the stride is
+// what will name it.
+//
+// After the inlined IsQuickCombat guard the body calls
+// army::PlayAnimation, then 0x446630, then GetMissileStartingPosition
+// with four out-parameter addresses, which is the shape the missile
+// trio's callers all have.
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac
 void combatManager::KeepAttack(combatManager::TArcherID iTowerPos)
 {
