@@ -189,6 +189,16 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
+    // this class - and retail keeps no out-of-line row for it either.
+    // advManager::ProcessDeSelect's elevation-toggle arm expands it in
+    // place: `movzx edx,[gpGame+0x1fc48] / inc edx / cmp edx,1 / jle`, the
+    // zero-extended flag plus one, tested against one. Gated to the one
+    // compilation personality whose call site proves the expansion.
+    int GetNumLevels() { return HasTwoLevels + 1; }
+#endif
+
 #if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // Header inline in the original map class. InsertObject expands this
     // three-dimensional row-major lookup, and so does advManager::EraseObj
@@ -1527,6 +1537,23 @@ public:
     void play_recorded_events();
     unsigned char replay_available() const;
     void ShowScenInfo();
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
+    // ORDER-MAPPED, not claimed here: overview.obj's DC roster runs
+    // SetupNewOverviewType (dc 0x1069fc) -> UpdateFlaggableIcon ->
+    // UpdateFlaggableIcons -> DoFlaggableButtons -> Overview (dc 0x106e90),
+    // and the five carve rows above the claimed 0x51e330
+    // SetupNewOverviewType run 0x51e670 / 0x51e7c0 / 0x51e7f0 / 0x51e8d0 in
+    // exactly that order. advManager::ProcessDeSelect's KINGDOM_OVERVIEW arm
+    // is the caller, which is the role corroboration.
+    void Overview();
+    // The end-turn body, game.obj's own at 0x4c6fe0. Also ORDER-MAPPED: it
+    // abuts the claimed TurnOffAIMusic (0x4c6fd0, 0x10 B) exactly, and
+    // game::NextPlayer (dc 0xb1fd0) is the very next DC roster row after
+    // TurnOffAIMusic (dc 0xb1fc0). ProcessDeSelect's END_TURN arm calls it
+    // once the "heroes can still move" confirm is past.
+    void NextPlayer();
+#endif
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header, which is exactly

@@ -95,6 +95,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "quickherowindow.h"
 #include "quicktownwindow.h"
 #include "quickinfowindow.h"
+#include "questlogwindow.h"
 #include "systemoptionswindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -1073,14 +1074,249 @@ void advManager::ProcessAdvMenu(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
+// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
+// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
+// consumer declares - and that is now ProcessDeSelect below, which latches
+// SYSOPT_QUIT into it from the adventure-options arm.
+DATA(0x006976d8) extern int gUnnamed6976d8;
+
 // E:\gamedcs\advmgr.cpp:2152
+// ProcessSelect's twin: the same dispatcher for the buttons that act on
+// RELEASE rather than on press. Its fourteen arms are written in the order
+// retail's jump table lays them out, which is NOT id order - the byte-index
+// table at +0x624 sends ids 3..31 through a fifteen-entry dword table whose
+// targets rise quest-log, hero up/down, town up/down, sleep, move,
+// adventure options, system options, end turn, next hero, kingdom overview,
+// cast spell, elevation toggle. Reading the arm order as a source-order
+// fact is what ProcessSelect proved one function up.
+//
+// Four shapes are transcribed exactly as retail has them, and the last
+// three are each worth a measurement of their own (0 -> 93.79 -> 96.23 ->
+// 96.24 -> 100.0, in the order below):
+//
+//   * The sleep arm RE-FETCHES the hero, but only on the branch that just
+//     slept one: SetHeroContext has moved the player to the next hero, so
+//     `sleeper = gpGame->GetHero(currHeroId)` sits INSIDE the true arm and
+//     SetSleepImage reads whatever pointer survives. Retail's `je` at +0xdc
+//     skips the second accessor outright, which is what proves the
+//     placement - hoisting the re-fetch to the SetSleepImage argument makes
+//     that branch land one block early and costs the arm. It also carries
+//     retail's own latent null deref: the re-fetch's `xor eax,eax` arm
+//     falls straight into `mov dl,[eax+0x11c]`.
+//
+//   * The kingdom-overview arm's two type_points are SEPARATE block-scoped
+//     locals, not one function-scope one. VC6 coalesces them onto the same
+//     [ebp-8] slot (which it also shares with waitingPlayer), but a single
+//     long-lived point gets its high word enregistered into DI for the
+//     whole arm, and that steals the register retail wants for the fade
+//     flag - which then needs a third callee-saved register and a `push
+//     ebx` retail does not have. Two short live ranges, no EBX. 93.79 ->
+//     96.23.
+//
+//   * Both points are DELIBERATELY left uninitialised. Every writer assigns
+//     x/y/z only, and the second one's `and eax,0xffffc000` preserving the
+//     field's two pad bits is what proves nothing ever zeroed it - a
+//     `= { 0, 0, 0 }` adds stores retail does not have. (The opposite of
+//     ProcessRadarSelect's message local, which must enumerate every
+//     member; measure the arity per site.)
+//
+//   * The second point's three coordinates need NAMED int locals computed
+//     BEFORE any of the three bitfield stores. y and z share one 16-bit
+//     allocation unit, and VC6 merges them into a single masked store
+//     (`and eax,0xffffc000` / two xors / one `mov word`) only when both
+//     values are already in hand at the first store; assigning straight
+//     from `radarOrigin.y + 8` interleaves z's computation between the two
+//     stores and emits two read-modify-write inserts instead. 96.24 ->
+//     100.0, and it is the same lever ProcessRadarSelect's drag clamp
+//     needed four hundred lines up.
+//
+// The fade flag itself lives in EDI, the register that held localPlayer:
+// retail materialises the 1 before the `== 2` test so the same register
+// feeds DemobilizeCurrHero's update flag, ShowPointer's restore and
+// SetPointer's set. localPlayer is genuinely dead from that point on.
 VA(0x00409a70, 0x641)  // anchor-callee, dc 0x9a94
 int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
-}
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
 
-#endif  // @carcass
+    switch (msg->codeY) {
+    case TAdventureMapWindow::QUEST_LOG_ID:
+        DoQuestLog(gpGame->GetLocalPlayerGamePos());
+        break;
+
+    case TAdventureMapWindow::HERO_UP_ID:
+        advWindow->DoHeroKnob(1);
+        break;
+
+    case TAdventureMapWindow::HERO_DOWN_ID:
+        advWindow->DoHeroKnob(0);
+        break;
+
+    case TAdventureMapWindow::TOWN_UP_ID:
+        advWindow->DoTownKnob(1);
+        break;
+
+    case TAdventureMapWindow::TOWN_DOWN_ID:
+        advWindow->DoTownKnob(0);
+        break;
+
+    case TAdventureMapWindow::SLEEP_ID: {
+        hero* sleeper = gpGame->GetHero(localPlayer->currHeroId);
+        if (sleeper) {
+            sleeper->field_11c = !sleeper->field_11c;
+            if (sleeper->field_11c) {
+                if (!waitingPlayer) {
+                    if (gpCurrentPlayer->IsLocalHuman()
+                        || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                        gpWindowManager->BroadcastMessage(
+                            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                            TAdventureMapWindow::MOVE_ID,
+                            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                        if (bShowRoute) {
+                            bShowRoute = 0;
+                            CompleteDraw(radarOrigin.x, radarOrigin.y,
+                                         radarOrigin.z, 0, 1);
+                            UpdateScreen(0, 0);
+                        }
+                    }
+                }
+                SetHeroContext(localPlayer->NextHero(), 0, waitingPlayer, 1);
+                sleeper = gpGame->GetHero(localPlayer->currHeroId);
+            }
+            advWindow->SetSleepImage(sleeper->field_11c);
+            if (gpCurrentPlayer->IsLocalHuman()
+                && gpCurrentPlayer->HasMobileHero())
+                advWindow->WidgetClearStatus(
+                    TAdventureMapWindow::NEXT_HERO_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            else
+                advWindow->WidgetSetStatus(
+                    TAdventureMapWindow::NEXT_HERO_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        }
+        break;
+    }
+
+    case TAdventureMapWindow::MOVE_ID:
+        advCommand = ADV_COMMAND_WALK_ROUTE;
+        *peventCell = DoAdvCommand(trigger_point);
+        break;
+
+    case TAdventureMapWindow::ADVENTURE_OPTIONS_ID:
+        DoAdventureOptions();
+        if (gpWindowManager->dialogReturn == SYSOPT_COMMAND_111) {
+            NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+                gUnnamed6976d8 = SYSOPT_QUIT;
+                *exitFlag = 1;
+            }
+        }
+        break;
+
+    case TAdventureMapWindow::SYSTEM_OPTIONS_ID:
+        *exitFlag = DoSystemOptions();
+        break;
+
+    case TAdventureMapWindow::END_TURN_ID:
+        if (!gpGame->field_1f69d && gpCurrentPlayer->HasMobileHero()
+            && gUnnamed698778) {
+            // Row 56 of the general text, the "you still have heroes who
+            // can move" confirm. No surviving symbol names the row.
+            NormalDialog(gpGeneralText->GetText(56), 2, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                break;
+        }
+        gpGame->NextPlayer();
+        break;
+
+    case TAdventureMapWindow::NEXT_HERO_ID:
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    UpdateScreen(0, 0);
+                }
+            }
+        }
+        SetHeroContext(gpCurrentPlayer->NextHero(), 0, waitingPlayer, 1);
+        break;
+
+    case TAdventureMapWindow::KINGDOM_OVERVIEW_ID: {
+        if (gUnnamed699560) {
+            type_point invalidOrigin;
+            invalidOrigin.x = -1;
+            invalidOrigin.y = -1;
+            invalidOrigin.z = 0;
+            SetEnvironmentOrigin(invalidOrigin, 1);
+        }
+        TrimLoopingSounds(0);
+        gpGame->Overview();
+
+        int bFadeOut = 1;
+        if (gUnnamed6985c0 == OVERVIEW_EXIT_TOWN) {
+            DemobilizeCurrHero(0, 1);
+            gpMouseManager->ShowPointer(1);
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpGame->GetTown(gUnnamed69873c)->View(1);
+            bFadeOut = 0;
+        } else if (gUnnamed699560) {
+            type_point viewCentre;
+            int centreX = radarOrigin.x + 9;
+            int centreY = radarOrigin.y + 8;
+            int centreZ = radarOrigin.z;
+            viewCentre.x = centreX;
+            viewCentre.y = centreY;
+            viewCentre.z = centreZ;
+            SetEnvironmentOrigin(viewCentre, 1);
+        }
+        RedrawAdvScreen(1, 0);
+        if (bFadeOut)
+            gpWindowManager->FadeScreen(0, 4, 0);
+        break;
+    }
+
+    case TAdventureMapWindow::CAST_SPELL_ID:
+        CheckCastSpell();
+        break;
+
+    case TAdventureMapWindow::ELEVATION_TOGGLE_ID:
+        if (gpGame->worldMap.GetNumLevels() > 1) {
+            DemobilizeCurrHero(0, 1);
+            radarOrigin.z = 1 - radarOrigin.z;
+            advWindow->SetElevationToggleImage(radarOrigin.z);
+            RedrawAdvScreen(1, 0);
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (msg->codeY >= ADV_HELP_ID_FIRST && msg->codeY <= ADV_HELP_ID_LAST) {
+        if (bottomViewOverride == BOTTOM_VIEW_2) {
+            bottomViewOverride = BOTTOM_VIEW_1;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        } else if (bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
+            bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+        } else if (bottomViewType == BOTTOM_VIEW_2) {
+            bottomViewOverride = BOTTOM_VIEW_1;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        } else {
+            bottomViewOverride = BOTTOM_VIEW_2;
+            bottomViewDeadline = GameTime::Get() + 3000;
+        }
+        UpdBottomView(1, 1, 1);
+    }
+    return 1;
+}
 
 // E:\gamedcs\advmgr.cpp:2307
 // The radar drag. A right-click is answered with one general-text row and
@@ -1250,14 +1486,186 @@ void advManager::ProcessRadarSelect(const message* msg)
     } while (event.id != MESSAGE_LEFT_BUTTON_UP);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:2434
+// The map widget's own click handler, split down the middle by the right
+// mouse button: a right click is a quick view of whatever the cursor is
+// over, a left click either retargets the current hero's path or selects
+// the object under the pointer.
+//
+// Both halves lean on accessors that retail CALLS rather than expands -
+// type_point::is_valid and advManager::GetCell are out-of-line members, so
+// the is_valid/cell pair is spelled longhand here exactly as DoAdvCommand's
+// arms already spell it eight hundred lines up. searchArray::get_cell IS a
+// header inline and does expand, flying = 0 folding `(z*2+0)*gMapHeight`
+// into the single `lea edi,[eax+2*edi]`.
+//
+// The LEFT-click object dispatch below is an IF-CHAIN and not a switch, and
+// that is a byte fact rather than a taste call: retail compares HERO(34),
+// TOWN(98), SHIPYARD(87) in SOURCE order, where a switch makes VC6 sort the
+// three compares ascending and relocate the whole hero arm past the town
+// arm. 77.76 -> 90.90 on that one edit.
+//
+// Residual (90.90%): three shapes, all measured, none closed.
+//   * Retail reads the MEMBER lastMapHover for every comparison in the
+//     left-click half (`mov ax,[esi+0xea]`) where we read the local copy
+//     (`mov eax,[ebp-0xa]`). Spelling those four sites on lastMapHover
+//     matches those instructions and CUTS the raw instruction-level
+//     disagreement from 166 rows to 126 - but costs 2.5 points of fuzzy
+//     (90.90 -> 88.33), because it perturbs the allocation around them.
+//     Measured both ways with and without the currHeroId guard below:
+//     member/guard 87.94, member/no-guard 88.33, local/no-guard 90.89,
+//     local/guard 90.90. Kept the highest; the delta is real and the
+//     spelling above is NOT retail's. SetHeroContext's frame-shrinking
+//     lever does NOT rescue it either: block-scoping hoverPoint/cellPoint
+//     forces the left half onto the member (the local is out of scope) and
+//     lands at 87.95, so the two findings are independent.
+//   * We spill `cell` to [ebp-8] where retail keeps it in EDI for the whole
+//     body, so our frame is 0x1c against retail's 0x14 and localPlayer and
+//     heroMobile fail to share retail's one [ebp-4] slot.
+//   * Retail keeps its ONE `advCommand = VIEW_HERO; DoAdvCommand` block at
+//     the FIRST of the two sites and jumps back into it from the hero arm;
+//     our CL cross-jumps the same pair the other way and keeps the second.
+//     Same block count, mirrored placement.
+// The redundant `currHeroId != -1` guard is retail's own: its inlined
+// GetHero re-tests the id off the same flags and leaves a dead
+// `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
+// but does not pay (see the four measurements above).
 VA(0x0040a5d0, 0x606)  // anchor-callee, dc 0xa88c
 void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
+    int visibilityBit = 1 << gpGame->GetLocalPlayerGamePos();
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+
+    type_point hoverPoint = lastMapHover;
+    if (!hoverPoint.is_valid())
+        return;
+
+    lastHoverX = lastMapHover.x - radarOrigin.x;
+    lastHoverY = lastMapHover.y - radarOrigin.y;
+
+    unsigned char visible =
+        (GetMapExtra(hoverPoint.x, hoverPoint.y, hoverPoint.z)
+         & visibilityBit) != 0;
+
+    // The cell lookup's point is copied from the MEMBER, not from
+    // hoverPoint, and it is block-scoped: taking it off hoverPoint keeps
+    // that local alive across the whole body and costs the frame a slot.
+    NewmapCell* cell;
+    {
+        type_point cellPoint = lastMapHover;
+        if (!cellPoint.is_valid())
+            cell = fullMap->cellData;
+        else
+            cell = fullMap->cell(cellPoint);
+    }
+
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (!visible) {
+            QuickInfo(lastHoverX, lastHoverY, lastMapHover.z);
+            return;
+        }
+
+        TAdventureObjectType objType;
+        int objIndex;
+        if (gpCurrentPlayer == localPlayer && lastHoverX == HERO_VIEW_TILE_X
+            && lastHoverY == HERO_VIEW_TILE_Y
+            && gpCurrentPlayer->currHeroId != -1 && inDialog) {
+            objIndex = gpCurrentPlayer->currHeroId;
+            objType = HERO;
+        } else {
+            objType = cell->type;
+            objIndex = cell->extraInfo;
+        }
+
+        switch (objType) {
+        case HERO:
+            HeroQuickView(objIndex, lastHoverX * 32, lastHoverY * 32, 1);
+            return;
+        case GARRISON:
+            garrison_quick_view(objIndex, lastHoverX * 32, lastHoverY * 32);
+            return;
+        case TOWN:
+            TownQuickView(objIndex, lastHoverX * 32, lastHoverY * 32, 1);
+            return;
+        case MONSTER:
+            MonsterQuickView(cell, lastHoverX, lastHoverY);
+            return;
+        default:
+            QuickInfo(lastHoverX, lastHoverY, lastMapHover.z);
+            return;
+        }
+    }
+
+    if (!visible)
+        return;
+
+    int currHeroId = gpGame->GetLocalPlayer()->currHeroId;
+    if (currHeroId != -1) {
+        hero* currHero = gpGame->GetHero(currHeroId);
+        int heroMobile = currHero->IsMobile();
+        if (currHero && currHero->z == hoverPoint.z) {
+            if (currHero->x == hoverPoint.x && currHero->y == hoverPoint.y) {
+                advCommand = ADV_COMMAND_VIEW_HERO;
+                DoAdvCommand(trigger_point);
+                return;
+            }
+
+            pathCell* pathAt = gpSearchArray->get_cell(lastMapHover, 0);
+            if (gpCurrentPlayer->IsLocalHuman() && pathAt && pathAt->visited) {
+                if (!heroMobile
+                    || (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS)
+                    || (gUnnamed698774
+                        && (currHero->pathTargetX != hoverPoint.x
+                            || currHero->pathTargetY != hoverPoint.y))) {
+                    currHero->pathTargetX = hoverPoint.x;
+                    currHero->pathTargetY = hoverPoint.y;
+                    currHero->pathTargetZ = lastMapHover.z;
+                    ShowRoute(1, 1, 1);
+                    return;
+                }
+            }
+            *peventCell = DoAdvCommand(trigger_point);
+            return;
+        }
+    }
+
+    int myPos = gpGame->GetLocalPlayerGamePos();
+    TAdventureObjectType clickedType = cell->type;
+    int clickedIndex = cell->extraInfo;
+
+    if (clickedType == HERO) {
+        if (clickedIndex == gpGame->GetLocalPlayer()->currHeroId) {
+            advCommand = ADV_COMMAND_VIEW_HERO;
+            DoAdvCommand(trigger_point);
+            return;
+        }
+        if (myPos != gpGame->GetHero(clickedIndex)->owner)
+            return;
+        SetHeroContext(clickedIndex, 0, !gpCurrentPlayer->IsLocalHuman(), 1);
+        return;
+    }
+
+    if (clickedType == TOWN) {
+        if (clickedIndex == gpGame->GetLocalPlayer()->currTownId) {
+            advCommand = ADV_COMMAND_VIEW_TOWN;
+            *peventCell = DoAdvCommand(trigger_point);
+            return;
+        }
+        if (clickedIndex == -1)
+            return;
+        town* clickedTown = &gpGame->towns[clickedIndex];
+        unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+        if (gpGame->OnSameTeam(gUnnamed69778c, clickedTown->owner)
+            || DebugViewAll)
+            SetTownContext(clickedIndex, waitingPlayer, 1);
+        return;
+    }
+
+    if (clickedType == SHIPYARD)
+        *peventCell = DoAdvCommand(trigger_point);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2624
 DC_ONLY(0xaf3c, 0x2CA)
@@ -5923,14 +6331,194 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
     lastHoverX = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9544
+// Makes a hero the acting one: drops the old town and hero selection,
+// recentres the view on the new hero, refreshes the whole button strip and
+// reseeds his route. ProcessSelect, ProcessDeSelect and ProcessMapSelect are
+// its three callers in this file and they fix the parameter roles.
+//
+// Two shapes are worth naming:
+//   * retail INLINES MapExtraPosAndAdjacentsSet (0x41a750, reconstructed
+//     further down this file) for the visibility probe around the hero -
+//     the whole `GetMapExtra` + 3x3 neighbour double loop is expanded in
+//     place, and its out-of-line body still exists because the callee has
+//     extern linkage.
+//   * The three points are THREE SEPARATE block-scoped type_points, even
+//     though retail writes all of them through the same [ebp-0x20] slot.
+//     One function-scope point keeps that slot live across the visibility
+//     scan, so the scan's loop bound needs a slot of its own (frame 0x2c
+//     against retail's 0x28) and the spill cascades from there: heroSlot
+//     loses EBX to the parameter slot and the scan's x loses its register
+//     too. Scoping the three lets VC6 coalesce them onto one slot AND
+//     overlap the loop bound on it, exactly as retail does. 90.56 -> 99.27.
+//
+// Residual (99.27%): two instructions in the route-target write, and the
+// cause is a CSE our CL makes and retail does not. Both sides load
+// pathTargetX as a DWORD for the `>= 0` guard. Retail then loads the
+// point's old word into AX first, clobbering that register, so the x
+// insert has to re-read pathTargetX from memory
+// (`mov ax,[ebp-0x20] / ... / mov cx,ax / xor cx,[edi+0x35]`); our CL
+// schedules `mov cx,ax` first and keeps the guard's value, then loads the
+// old word (`mov cx,ax / mov ax,[ebp-0x20] / xor cx,ax`). Commutative and
+// identical in effect - it is the SCHEDULE, not the operand order, that
+// differs. Nine spellings measured and rejected: named int locals for the
+// three coordinates (96.14), the same as shorts (99.27), y/x/z order
+// (96.89), z/y/x order (96.73), an explicit short cast (99.27), sharing one
+// point between the route target and the view centre (99.27), a `!= -1`
+// guard (99.02), a `!(x < 0)` guard (99.27), and hoisting the point's
+// declaration above the guard (99.27).
 VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
 void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
 {
-    // @stub
+    if (heroId == -1)
+        return;
+
+    if (waitingPlayer) {
+        gpGame->GetLocalPlayer()->currTownId = -1;
+    } else {
+        gpCurrentPlayer->currTownId = -1;
+        if (draw_changes) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute)
+                    bShowRoute = 0;
+            }
+        }
+    }
+
+    DemobilizeCurrHero(waitingPlayer, 0);
+
+    if (waitingPlayer)
+        gpGame->GetLocalPlayer()->currHeroId = -1;
+    else
+        gpCurrentPlayer->currHeroId = -1;
+
+    playerData* player = gpCurrentPlayer;
+    if (waitingPlayer)
+        player = gpGame->GetLocalPlayer();
+    else
+        inDialog = 1;
+
+    player->currHeroId = heroId;
+
+    hero* newHero = &gpGame->heroes[heroId];
+    NewmapCell* heroCell;
+    {
+        type_point heroPoint;
+        heroPoint.x = newHero->x;
+        heroPoint.y = newHero->y;
+        heroPoint.z = newHero->z;
+
+        type_point cellPoint = heroPoint;
+        if (!cellPoint.is_valid())
+            heroCell = fullMap->cellData;
+        else
+            heroCell = fullMap->cell(cellPoint);
+    }
+
+    if (!waitingPlayer) {
+        cursorType = (newHero->flags & 0x40000) ? CURSOR_TYPE_8
+                                                : CURSOR_TYPE_34;
+        cursorDirection = newHero->facing;
+        cursorSequence = newHero->GetStandSequence();
+        cursorFrameCount = 0;
+        if (bVideoPaused && !gUnnamed682a38 && !gCompleteDrawMessageBypass) {
+            if (gpCurrentPlayer->IsHuman()) {
+                if (!gpCurrentPlayer->IsLocalHuman())
+                    return;
+            } else if (!gUnnamed691209) {
+                if (!gpGame->IsLastHuman(gpGame->GetLocalPlayerGamePos()))
+                    return;
+            }
+        }
+        newHero->restore_cell();
+    }
+
+    if ((player->IsLocalHuman() || !gUnnamed698790)
+        && MapExtraPosAndAdjacentsSet(newHero->x, newHero->y, newHero->z,
+                                      gMapVisibilityBit)) {
+        if (draw_changes)
+            gCompleteDrawEnabled = 1;
+        if (!waitingPlayer && draw_changes)
+            drawCursor = 1;
+        radarOrigin.x = newHero->x - 9;
+        radarOrigin.y = newHero->y - 8;
+        radarOrigin.z = newHero->z;
+        if (advWindow->SetElevationToggleImage(radarOrigin.z))
+            gpAdvManager->RedrawAdvScreen(0, 0);
+    }
+
+    int heroSlot = player->FindHero(heroId);
+    if (heroSlot == -1)
+        heroSlot = 0;
+
+    if (waitingPlayer
+        || (draw_changes && gpCurrentPlayer->IsLocalHuman()
+            && !gCompleteDrawMessageBypass)) {
+        advWindow->UpdateHeroLocators(heroSlot, draw_changes, 0);
+        advWindow->UpdateTownLocators(-1, draw_changes, 0);
+        advWindow->UpdateSpellButton(newHero);
+        advWindow->SetSleepImage(newHero->field_11c);
+        advWindow->UpdateSleepButton(newHero);
+        advWindow->UpdateResourceDisplay(1, 0);
+        advWindow->DrawWindow(0, -65535, 65535);
+    }
+
+    if (draw_changes && !bInMove
+        && (status == STATUS_ACTIVE || gpCurrentPlayer->IsLocalHuman())) {
+        seedingValid = 0;
+        if (newHero->pathTargetX >= 0) {
+            type_point routeTarget;
+            routeTarget.x = newHero->pathTargetX;
+            routeTarget.y = newHero->pathTargetY;
+            routeTarget.z = newHero->pathTargetZ;
+            SeedTo(routeTarget);
+        }
+        ShowRoute(0, 0, 1);
+    }
+
+    if (player->IsLocalHuman() && draw_changes && !gCompleteDrawMessageBypass)
+        UpdBottomView(1, 1, 0);
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        drawCursor = 1;
+
+    if (draw_changes && gCompleteDrawEnabled) {
+        UpdateRadar(radarOrigin, 0, 1, 0, 0, 0);
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        gpWindowManager->UpdateScreen(0, 0, HOVER_SCREEN_WIDTH,
+                                      HOVER_SCREEN_HEIGHT);
+    }
+
+    // The same merged y|z store ProcessDeSelect's kingdom-overview arm
+    // needs: both values have to be in hand before the first bitfield
+    // write or VC6 emits two read-modify-write inserts instead of one
+    // masked store.
+    type_point viewCentre;
+    int centreX = radarOrigin.x + 9;
+    int centreY = radarOrigin.y + 8;
+    int centreZ = radarOrigin.z;
+    viewCentre.x = centreX;
+    viewCentre.y = centreY;
+    viewCentre.z = centreZ;
+    SetEnvironmentOrigin(viewCentre, 1);
+
+    if (heroCell->GroundSet != field_58 && draw_changes) {
+        field_58 = heroCell->GroundSet;
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    }
+
+    if (!field_390 && draw_changes) {
+        gpInputManager->ForceMouseMove();
+        lastHoverX = 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9693
 VA(0x00418160, 0x270)  // linkorder, dc 0x1ae38
@@ -7211,11 +7799,6 @@ void advManager::DoAdvMenu()
 }
 
 #endif  // @carcass
-
-// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
-// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
-// consumer declares.
-DATA(0x006976d8) extern int gUnnamed6976d8;
 
 // This TU's own free saver (advmgr.cpp:9693, retail 0x418160), defined
 // further down; forward-declared for the option dispatch above it.
