@@ -5834,22 +5834,124 @@ void army::cast_caliph_spell(long hex)
     }
 }
 
-#if 0  // @carcass
+// The Enchanter's per-turn mass-cast roster: (spell, weight) pairs,
+// -1-terminated, read from the hash-verified image at 0x6608b8 (.data,
+// so the source array was NOT const). Every id lands on an enumerator
+// the tree already proves; the weights are the cast's lottery tickets.
+DATA(0x006608b8)
+static int gEnchanterSpells[] = {
+    SPELL_HASTE,      15,
+    SPELL_AIR_SHIELD, 10,
+    SPELL_SLOW,       10,
+    SPELL_STONE_SKIN, 15,
+    SPELL_BLOODLUST,  5,
+    SPELL_BLESS,      15,
+    SPELL_CURE,       10,
+    SPELL_WEAKNESS,   4,
+    -1,
+};
 
 // RETAIL-ONLY: the second of SetNextArmy's two turn-start abilities (it
 // calls this at 0x465519 and FaerieDragonSpell at 0x46553e). A member
-// with no arguments answering a byte; it gates on
-// combatManager::can_cast_spells, picks through spell_is_valid_on_target
-// twice, and ends in PowEffect + a sample. No roster names it, so the
+// with no arguments answering a byte. No roster names it, so the
 // address ordinal stands as army.h records.
+//
+// The Enchanter's turn: weigh every table spell that is still valid on
+// SOME stack of its target side (negative akSpellTraits field_0 means
+// a curse, so the enemy side is scanned), lottery one out by weight,
+// pose every able Enchanter on the controlling side for the cast, and
+// CastSpell it as a monster cast at expert mastery.
+//
+// TWO FAITHFUL ARTIFACTS, transcribed: both validity scans pass
+// &armies[side][0] - the ARRAY DECAY, never indexed by the countdown -
+// so each scan really asks numArmies[side] times about slot 0; and the
+// lottery loop leaves `spell` holding whatever pair it stopped on, so
+// an exhausted table (roll never below zero) casts the LAST row.
+// Residual (66.9952%): a whole-body register ROTATION - branch
+// sequences agree 26/26 after the `while (n-- != 0)` spelling (the
+// count-copy guard emits je/jne; `> 0` emitted jle/jg), but ours binds
+// p->EDI/spell->ESI where retail binds p->ESI/spell->EBX and homes
+// `this` one slot higher, and every line downstream renames with it.
+// why-reg's sweep tops out at volatile hacks (206 -> 184 slots, not
+// exact, not faithful); the class is the register-homing family and
+// the score is alignment-noisy (the structurally-worse `> 0` spelling
+// scored 68.12 - the low-mass inversion memory applies).
 VA(0x00447fe0, 0x27E)  // anchor-callee (SetNextArmy 0x465519) + arity
                        // ret 0, retail-only slot
 unsigned char army::Unnamed447fe0()
 {
-    // @stub
-}
+    if (!gpCombatManager->can_cast_spells(gpCombatManager->currentSide,
+                                          0))
+        return 0;
 
-#endif  // @carcass
+    long total = 0;
+    const int* p = gEnchanterSpells;
+    while (*p >= 0) {
+        long spell = *p++;
+        long side = gpCombatManager->currentSide;
+        if (akSpellTraits[spell].field_0 < 0)
+            side = 1 - side;
+        long n = gpCombatManager->numArmies[side];
+        while (n-- != 0) {
+            if (spell_is_valid_on_target(spell,
+                                         gpCombatManager
+                                             ->armies[side])) {
+                total += *p;
+                break;
+            }
+        }
+        p++;
+    }
+    if (total == 0)
+        return 0;
+
+    long roll = rand() % total;
+    long spell;
+    for (p = gEnchanterSpells; *p >= 0; p += 2) {
+        spell = *p;
+        long side = gpCombatManager->currentSide;
+        if (akSpellTraits[spell].field_0 < 0)
+            side = 1 - side;
+        long n = gpCombatManager->numArmies[side];
+        while (n-- != 0) {
+            if (spell_is_valid_on_target(spell,
+                                         gpCombatManager
+                                             ->armies[side])) {
+                roll -= p[1];
+                break;
+            }
+        }
+        if (roll < 0)
+            break;
+    }
+
+    if (!static_cast<const combatManager*>(gpCombatManager)
+             ->IsQuickCombat()) {
+        long side = get_controlling_side();
+        for (long i = 0; i < gpCombatManager->numArmies[side]; i++) {
+            if (gpCombatManager->armies[side][i].creatureType
+                    == ARMY_CREATURE_ENCHANTER
+                && gpCombatManager->armies[side][i]
+                           .spellInfluence[SPELL_BLIND]
+                       == 0
+                && gpCombatManager->armies[side][i]
+                           .spellInfluence[SPELL_STONE]
+                       == 0
+                && gpCombatManager->armies[side][i]
+                           .spellInfluence[SPELL_PARALYZE]
+                       == 0
+                && !(gpCombatManager->armies[side][i].Is(21) & 1)) {
+                gpCombatManager->armies[side][i].bShowAttackFrames = 1;
+                gpCombatManager->armies[side][i].iShowAttackFrameType =
+                    cs_range_r;
+            }
+        }
+        play_sample(SHOOT_SAMPLE);
+        gpCombatManager->PowEffect(-1, 1);
+    }
+    gpCombatManager->CastSpell(spell, -1, 1, -1, 3, 3);
+    return 1;
+}
 
 // E:\gamedcs\army.cpp:5601
 // One creature-cast, animated and dispatched: face the target, play
