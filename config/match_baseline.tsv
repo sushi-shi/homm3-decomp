@@ -34,6 +34,7 @@ advmgr	?BVMessage@advManager@@QAEXPBD@Z	92.6829	92.6829	92.6829	0x16210
 advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	93.3333	93.3333	93.3333	0x16060
 advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450
 advmgr	?CheckScreenScroll@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19820
+advmgr	?Close@advManager@@UAEXXZ	86.3656	86.3656	86.3656	0x77e0
 advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
 advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?ComputeAdvNetControl@@YIXXZ	100.0000	100.0000	100.0000	0x1a660
@@ -124,7 +125,6 @@ advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
-advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
 advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
 advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
 advmgr	advManager_ProcessDeSelect	0.0000	0.0000	0.0000	0x9a70

@@ -11,6 +11,8 @@
 #include "window.h"
 
 class BlackBoxData;
+class CNetMsgHandler;
+class resource;
 class sample;
 class ds_memsample;
 class TreasureData;
@@ -1015,7 +1017,16 @@ public:
         ADVENTURE_XLARGE_MAP_WIDTH = 144
     };
 
-    char pad_038[4];
+    // +0x38, the townManager::netMsgHandler counterpart. Retail proves the
+    // identity across three bodies: the constructor nulls the slot, Open
+    // allocates the handler (its inlined ctor calls ??0CNetMsgHandler@@QAE@XZ
+    // for the base), stores it here and hands it to
+    // CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler*), and Close deletes it
+    // through vtable slot 0 - the same scalar-deleting-destructor slot
+    // townManager::Close uses on its own CTownNetMsgHandler. Dreamcast
+    // supplies the name and types the slot as the BASE pointer, which is
+    // what retail's delete needs: the destructor is CNetMsgHandler's.
+    CNetMsgHandler* pNetMsgHandler;
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
     unsigned char DebugViewAll;  // +0x3d, bypasses hover ownership checks
     char pad_03e[2];
@@ -1048,7 +1059,21 @@ public:
     CSprite* starTileset;        // +0xc4
     CSprite* radarIcons;         // +0xc8
     CSprite* cloudIcons;         // +0xcc
-    char pad_0d0[0x10];
+    // +0xd0, sixteen bytes. Close proves the Dinkumware vector shape
+    // directly: it reads _First at +0xd4 and _Last at +0xd8, derives
+    // size() as VC6 spells it (`_First == 0 ? 0 : _Last - _First`, the
+    // `cmp eax,0 / je` guard ahead of the `sub/sar 2`), indexes
+    // `_First[i]` off +0xd4 to Dispose every element, then inlines
+    // erase(begin(), end()) - the provably empty `copy(_L, end(), _F)`
+    // loop, the out-of-line `_Destroy(_S, _Last)` COMDAT and
+    // `_Last = _S`. The four-byte element stride proves a pointer
+    // element and Dispose() proves it is a resource. Dreamcast supplies
+    // the name and the element type - `std::vector<resource*>
+    // CachedGraphics`, its member 191, sitting between cloudIcons and
+    // monAttackSprites exactly as retail does. DC's STL makes the vector
+    // twelve bytes against Dinkumware's sixteen, which is the whole of
+    // the 232->244 versus 0xd0->0xe0 drift.
+    std::vector<resource*> CachedGraphics;
     CSprite* movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
@@ -1650,6 +1675,18 @@ public:
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
+
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+// Two town.obj-owned globals advManager::Close reads. town::View holds the
+// sole DATA claims for both (retail .data 0x6aa5f0 and 0x699548) because it
+// is the only body that WRITES them; these are consumer declarations, the
+// gpTownManager pattern. town::View raises 0x6aa5f0 for as long as a town
+// screen is up and parks the map's size band in 0x699548, which is exactly
+// the nesting Close tests: it skips the ambient-music switch and keeps the
+// shared tile and cursor sprite sets alive while a town is open.
+extern int gUnnamed6aa5f0;
+extern int gUnnamed699548;
+#endif
 
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 void ComputeAdvNetControl();

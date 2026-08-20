@@ -283,6 +283,8 @@ int advManager::Open(int newPriority)
     // @stub
 }
 
+#endif  // @carcass
+
 // The admitted retail vtable inventory bounds advManager at exactly three
 // slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.
 // The old generated-dtor claim at 0x4077b0 was false. That address is the
@@ -291,14 +293,126 @@ int advManager::Open(int newPriority)
 // Keep it unclaimed until that network-handler class is admitted.
 
 // E:\gamedcs\advmgr.cpp:1092
+// The sprite teardown, gated on the town-nesting depth. Retail's own
+// grouping is preserved statement for statement: the two river and road
+// tilesets start at index 1 (slot 0 is the "no river"/"no road" entry that
+// is never loaded), the ground tileset and the hero sample run share ONE
+// counted loop - the bytes walk both off a single induction pointer at
+// +0x360 with a -0x300 displacement - and the four gem icons are four
+// statements rather than a loop, which is why their null stores sink past
+// the following Dispose calls into one batch.
+//
+// Residual (86.37%): ONE over-inline, and the whole rest of the delta is
+// its cascade. predict-inline reports exactly one divergence - retail
+// emits an out-of-line call to the Dinkumware destroy-range helper that
+// clear() -> erase(begin(), end()) reaches (`mov ecx,ebx; push [ebx+8];
+// push edi; call`, the ICF-folded empty pointer-destroy body the delinked
+// object labels sample_vslot03), where this compile elides it entirely.
+// That call is what pins retail's EBX to `lea ebx,[esi+0xd0]`, which in
+// turn evicts the element counter into [ebp-4], frees EDI to walk
+// boatFlagIcons (so retail spells the movingObjectSprite null store as an
+// immediate where ours reuses the EDI zero), and flips the EAX/EDX scratch
+// parity for every `mov <scratch>,[ecx]; call [<scratch>+4]` pair after
+// it. Our body is eight bytes shorter than retail's, which is that one
+// call plus its argument setup. Same family as mainmenu's TMainMenu ctor
+// and viewarmywindow's create_upgrade_widget; per docs/vc6/inliner.md the
+// knob is caller body mass, not a vector spelling.
+//
+// Tried and rejected: `erase(begin(), end())` spelled longhand instead of
+// clear() (83.93392 - byte-identical to clear(), the forwarder inlines
+// away and the budget accounting does not move); binding a
+// `std::vector<resource*>&` local to CachedGraphics so the address is
+// materialised once the way retail's does (83.80 - it does buy the pinned
+// register but costs more than it pays, because operator[] then indexes
+// through the reference where retail keeps indexing off ESI at +0xd4).
 VA(0x004077e0, 0x2D1)  // anchor-vtable, dc 0x74ec
 void advManager::Close()
 {
-    // @stub
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_DEFAULT;
+    if (gUnnamed6aa5f0 == 0) {
+        gpSoundManager->SwitchAmbientMusic(-1);
+        gpSoundManager->StopAllSamples(1);
+    } else {
+        gpSoundManager->StopAllSamples(0);
+    }
+
+    if (gUnnamed699548 <= 0) {
+        radarIcons->Dispose();
+        radarIcons = 0;
+        cloudIcons->Dispose();
+        cloudIcons = 0;
+        for (int cursor = 0; cursor < 18; cursor++) {
+            cursorIcons[cursor]->Dispose();
+            cursorIcons[cursor] = 0;
+        }
+        for (unsigned int cached = 0; cached < CachedGraphics.size(); cached++)
+            CachedGraphics[cached]->Dispose();
+        CachedGraphics.clear();
+        movingObjectSprite->Dispose();
+        movingObjectSprite = 0;
+        for (int boat = 0; boat < 3; boat++) {
+            boatIcons[boat]->Dispose();
+            boatIcons[boat] = 0;
+            boatFrothIcons[boat]->Dispose();
+            boatFrothIcons[boat] = 0;
+            for (int boatOwner = 0; boatOwner < 8; boatOwner++) {
+                boatFlagIcons[boat][boatOwner]->Dispose();
+                boatFlagIcons[boat][boatOwner] = 0;
+            }
+        }
+        for (int owner = 0; owner < 8; owner++) {
+            flagIcons[owner]->Dispose();
+            flagIcons[owner] = 0;
+        }
+    }
+
+    for (int looping = 0; looping < LOOPING_SOUND_COUNT; looping++) {
+        if (loopedSample[looping]) {
+            loopedSample[looping]->Dispose();
+            loopedSample[looping] = 0;
+        }
+    }
+    for (int river = 1; river < 5; river++) {
+        riverTileset[river]->Dispose();
+        riverTileset[river] = 0;
+    }
+    for (int road = 1; road < 4; road++) {
+        roadTileset[road]->Dispose();
+        roadTileset[road] = 0;
+    }
+    borderTileset->Dispose();
+    borderTileset = 0;
+    arrowTileset->Dispose();
+    arrowTileset = 0;
+    gemIcons[0]->Dispose();
+    gemIcons[1]->Dispose();
+    gemIcons[2]->Dispose();
+    gemIcons[3]->Dispose();
+    gemIcons[0] = 0;
+    gemIcons[1] = 0;
+    gemIcons[2] = 0;
+    gemIcons[3] = 0;
+    for (int ground = 0; ground < 10; ground++) {
+        groundTileset[ground]->Dispose();
+        groundTileset[ground] = 0;
+        heroSamples[ground]->Dispose();
+        heroSamples[ground] = 0;
+    }
+
+    gpWindowManager->RemoveWindow(advWindow);
+    delete advWindow;
+    advWindow = 0;
+    delete routeArray;
+    routeArray = 0;
+    status = 0;
+    if (pNetMsgHandler) {
+        delete pNetMsgHandler;
+        pNetMsgHandler = 0;
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:1217
-#endif  // @carcass
 
 VA(0x00407ac0, 0x44)  // anchor-global, dc 0x793c
 int advManager::InMapArea(int x, int y)
