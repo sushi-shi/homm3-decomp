@@ -39,7 +39,27 @@ struct type_AI_puzzle_tile {
     unsigned char pad_0c : 5;
     char pad_0d[3];
 
-    type_AI_puzzle_tile();
+    // Retail keeps NO out-of-line body for the default constructor - the
+    // carve leaves three bytes of padding between UpdatePuzzle's end
+    // (0x52c76d) and the two-argument constructor at 0x52c770, so there is
+    // no slot it could occupy, and AI_attempt_puzzle_guess expands it
+    // verbatim into its 323-iteration array-construction loop at
+    // 0x52cb13. The Dreamcast port moved it into puzzlewindow.cpp:279;
+    // retail's is a class-body inline. Every store is byte-proven by that
+    // loop: `and eax,0xfffffc00` (object_type), `mov byte ptr,0xff`
+    // (both four-bit offsets), `and eax,0xffffe01f` + `or al,0x1f`
+    // (terrain -1, river and road 0), `and al,0xfb` + `or al,1`.
+    type_AI_puzzle_tile()
+    {
+        object_type = 0;
+        object_x = -1;
+        object_y = -1;
+        terrain = -1;
+        river = 0;
+        road = 0;
+        diggable = 1;
+        visible = 0;
+    }
     type_AI_puzzle_tile(NewmapCell* cell, type_point point);
     unsigned char operator==(const type_AI_puzzle_tile* arg) const;
 };
@@ -84,6 +104,19 @@ extern short puzzlePieceOrder[];
 extern char puzzlePieceX[];
 extern char puzzlePieceY[];
 extern const char* puzzleFilePrefixes[];
+// 0x6822c8: five doubles - 1.1, 0.5, 0.25, 0.0, 0.0 - read from the
+// image, indexed by SGameSetupOptions::difficulty and compared against
+// the fraction of the puzzle the AI has uncovered. 1.1 on the easiest
+// setting is unreachable, i.e. that AI never guesses. NAME PROVISIONAL:
+// nothing attests it, the table sits immediately below this TU's string
+// pool and only AI_attempt_puzzle_guess reads it.
+extern double puzzleGuessThreshold[];
+// 0x52cf10, 1460 B - bracketed puzzlewindow..questlogwindow and reached
+// only from AI_attempt_puzzle_guess, which hands it the hidden result
+// pointer in ECX and the player in EDX under /Gr. Declared, not defined:
+// VC6 cannot inline a body it cannot see, which is what retail's call
+// needs. dc 0x115be8.
+type_point match_puzzle(long player, type_AI_puzzle_tile (*puzzleMap)[17]);
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);

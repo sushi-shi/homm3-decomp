@@ -4,6 +4,7 @@
 #include <va.h>
 #include <bitset>
 #include <stdio.h>
+#include <stdlib.h>
 #include "advmgr_objects.h"
 #include "bitmap816.h"
 #include "button.h"
@@ -177,15 +178,11 @@ int TPuzzleWindow::UpdatePuzzle(int full)
     return piecesNotFound;
 }
 
-#if 0  // @carcass: remaining AI/puzzle helpers are not reconstructed yet
-// E:\gamedcs\puzzlewindow.cpp:279
-DC_ONLY(0x1154c4, 0x74)
-void type_AI_puzzle_tile::type_AI_puzzle_tile()
-{
-    // @stub
-}
-
-#endif  // @carcass
+// E:\gamedcs\puzzlewindow.cpp:279 - the default constructor the Dreamcast
+// carries out of line (dc 0x1154c4, 0x74 B). Retail has no slot for it:
+// UpdatePuzzle ends at 0x52c76d and the two-argument constructor starts at
+// 0x52c770. It is a class-body inline in puzzlewindow.h, expanded verbatim
+// into AI_attempt_puzzle_guess's array-construction loop.
 
 // E:\gamedcs\puzzlewindow.cpp:294
 // Residual (98.843%): the object_type bitfield assignment uses EAX where
@@ -296,29 +293,135 @@ long check_match(long player, long first_x, long first_y, type_point origin, []*
     // @stub
 }
 
-// E:\gamedcs\puzzlewindow.cpp:520
+// E:\gamedcs\puzzlewindow.cpp:520 - retail keeps this one out of line at
+// 0x52cf10 (1460 B) and AI_attempt_puzzle_guess calls it; the declaration
+// lives in puzzlewindow.h.
 DC_ONLY(0x115be8, 0x37C)
 type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\puzzlewindow.cpp:614
-// Dependency frontier (audited 2026-08-12): this 1,371-byte retail body is
-// genuine, but retail inlines the DC roster's mark_AI_puzzle and
-// create_AI_puzzle_map helpers plus a large part of the matching search.
-// Its 0x15d4-byte frame holds the 19x17 array of 16-byte puzzle tiles, and
-// the body reaches SetupPuzzlePieces/get_puzzle_origin, player AI settings,
-// the 323-byte visibility mask, puzzle-coordinate tables and Bitmap816::
-// mark_puzzle before calling the separate 0x52cf10 match_puzzle. Reconstruct
-// those helper semantics and the remaining game-field names first; retaining
-// a zero-match body here would add no evidence.
-// E:\gamedcs\puzzlewindow.cpp:614
+// Retail expands the Dreamcast roster's mark_AI_puzzle (dc 0x115838) and
+// create_AI_puzzle_map (dc 0x115944) here - both are file statics with a
+// single call site, so /Ob2 leaves no out-of-line body for either - and
+// calls only match_puzzle. The 0x15d4-byte frame is exactly the two
+// arrays: 19x17 sixteen-byte tiles at ebp-0x15d4 (0x1430) followed by the
+// 17x19 visibility mask at ebp-0x1a4 (0x143) and get_puzzle_bitmap's
+// forty-byte name buffer at ebp-0x60.
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
 type_point AI_attempt_puzzle_guess(long player)
 {
-    // @stub
+    type_point result;
+
+    int found = gpGame->SetupPuzzlePieces(player, 1);
+    if (puzzleGuessThreshold[gpGame->setup.difficulty] <=
+        found / static_cast<double>(TPuzzleWindow::PUZZLE_PIECE_COUNT)) {
+        long puzzle;
+        if (player < 0 || (puzzle = gpGame->setup.alignment[player]) == -1)
+            puzzle = 0;
+
+        if (gpGame->ultimateArtifactX >= 0 &&
+            gpGame->ultimateArtifactPresent &&
+            gpGame->SetupPuzzlePieces(player, 0)) {
+            unsigned char visible[17][19];
+            memset(visible, 1, sizeof(visible));
+
+            for (int i = 0; i < 48; ++i) {
+#pragma inline_depth(0)
+                if (puzzlePiecesRemoved.test(i))
+                    continue;
+#pragma inline_depth()
+                int piece = puzzlePieceOrder[puzzle * 48 + i];
+                Bitmap816* bitmap = get_puzzle_bitmap(puzzle, piece);
+                int position = puzzle * 96 + piece;
+                position <<= 1;
+                TPuzzleCoordinatePointer xCoordinate;
+                TPuzzleCoordinatePointer yCoordinate;
+                xCoordinate.bytes = puzzlePieceX + position;
+                yCoordinate.bytes = puzzlePieceY + position;
+
+                bitmap->mark_puzzle(visible[0], xCoordinate.values[0] - 8,
+                                    yCoordinate.values[0] - 8);
+                bitmap->Dispose();
+            }
+
+            type_point origin = gpGame->get_puzzle_origin();
+            type_AI_puzzle_tile puzzleMap[19][17];
+
+            type_point point;
+            point.z = gpGame->ultimateArtifactZ;
+            short originX = origin.x;
+            short originY = origin.y;
+
+            for (int row = 0; row < 17; ++row) {
+                point.y = originY + row;
+                for (int col = 0; col < 19; ++col) {
+                    point.x = originX + col;
+                    if (point.is_valid() && visible[row][col]) {
+#pragma inline_depth(0)
+                        NewmapCell* mapCell = gpGame->worldMap.cell(
+                            point.x, point.y, point.z);
+#pragma inline_depth()
+                        puzzleMap[col][row] =
+                            type_AI_puzzle_tile(mapCell, point);
+                    }
+                }
+            }
+
+            type_point guess = match_puzzle(player, puzzleMap);
+            if (guess.x < 0)
+                return guess;
+
+            result.x = -1;
+            result.y = -1;
+            result.z = -1;
+
+            int best = 0x7fff;
+            short firstX = guess.x;
+            short firstY = guess.y;
+
+            type_point current;
+            current.z = guess.z;
+            for (current.x = firstX - 2; current.x <= firstX + 2;
+                 ++current.x) {
+                for (current.y = firstY - 2; current.y <= firstY + 2;
+                     ++current.y) {
+                    if (!current.is_valid())
+                        continue;
+                    if (!gpGame->worldMap.cell(current)->is_diggable())
+                        continue;
+
+                    guess.x = current.x - firstX + 9;
+                    guess.y = current.y - firstY + 8;
+
+                    if (puzzleMap[guess.x][guess.y].terrain < 0) {
+                        int distance = abs(firstY - current.y)
+                                       + abs(firstX - current.x);
+                        if (result.x < 0 || distance < best) {
+                            best = distance;
+                            result = current;
+                        }
+                    } else if (puzzleMap[guess.x][guess.y].has_grail) {
+                        return current;
+                    }
+                }
+            }
+
+            return result;
+        }
+    }
+
+    result.x = -1;
+    result.y = -1;
+    result.z = -1;
+    return result;
 }
+
+#if 0  // @carcass: the compiler-generated deleting destructor thunk
 
 // E:\gamedcs\puzzlewindow.cpp:159
 DC_ONLY(0x116348, 0x34)
