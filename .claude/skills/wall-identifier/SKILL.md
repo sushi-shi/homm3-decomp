@@ -254,3 +254,36 @@ tree-wide transcript table) · `inliner.md` (the `/Ob2` rule + address ledger) �
 capture + the include-set verdict) · `driver-passes.md` (the CL spec table) ·
 `c2-atlas.md` (C2 module RVAs) · `rtm-generation.md` (Track R). The full picture:
 `~/.claude/plans/good-now-onto-the-lexical-allen.md`.
+
+## CLAIMING BEATS MATCHING BY AN ORDER OF MAGNITUDE — AND FUZZY % WILL FALL WHILE YOU DO IT
+
+Measured 2026-08-20/21. Closing the ENTIRE intra-unit backlog tree-wide — all 359
+functions, every wall, perfectly — is worth **+1.53 pp** (35.77 → 37.30). One
+claiming lane, in one session, moved the tree **+0.78 pp**: 54 functions, 17,521 B
+of new denominator, banked at 93.4% mean. That is half of what all remaining
+matching work put together is worth, from one lane.
+
+**Tree fuzzy % DROPS when you claim, and that is correct.** The same merge read
+95.84% → **95.68%** fuzzy while executable-matched went 35.78% → **36.56%**. New
+rows at 93% mean dilute an average standing at 95.8; the absolute matched bytes
+rose by 17.5 KB. **Judge a claiming lane on `executable matched` and row count,
+never on tree fuzzy** — the two move in opposite directions by construction.
+
+**THE CARCASS BLOCK IS A NAMING AUTHORITY THAT `ordermap` IS NOT.** A unit's
+`#if 0 // @carcass` region carries the DC prototype — signature, parameter names,
+dc offset — for rows still unclaimed in that unit. On townmgr it settled two rows
+outright and **corrected two dc tags taken off `ordermap`** (0x171118, 0x171320).
+Read it before running the order-map on any unit that has one.
+
+**A DELINKER WORKING LABEL OF THE FORM `type_<X>_quest_vslotNN` HANDS YOU THE
+CLASS AND THE VTABLE SLOT.** Where those exist the claiming job is reading bodies,
+not locating them — 45 seerhut rows fell that way in one pass. **The vtable
+outranks `ordermap`**: on seerhut the order-map scored 28% arity agreement over
+17% of the span, announced its own thinness, and was wrong at least once
+(pairing 0x56e6f0 with `InitializeSeerHutText` where the vtable says
+`type_defeat_hero_quest` slot 14). Believe the tool's self-doubt.
+
+**A UNIT WHOSE GAP ROWS CARRY ONLY FLAT CARVE NAMES NEEDS A LOCATE PASS, NOT A
+MATCHER.** sacrifice_window's 37 rows (25.4 KB) have no vtable slot and no DC
+pairing — a different job, and briefing it as claiming work wasted the slot.
+
