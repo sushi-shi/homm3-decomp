@@ -346,6 +346,7 @@ army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	92.2095	92.2095	92.2095	0x43320
+army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840
 army	?do_attack@army@@QAEEPAV1@H@Z	95.5202	95.5202	95.5585	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
@@ -392,7 +393,6 @@ army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
-army	army_consider_attack	0.0000	0.0000	0.0000	0x48840
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80

@@ -1943,6 +1943,8 @@ public:
     unsigned char is_adjacent(int hex) const;
 #endif
     int get_mirror_effect() const;                              // 0x4487f0
+    void consider_attack(const army* enemy, long value,
+                         long attack_distance);                 // 0x448840
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,
                                 long lowest_defense) const;     // 0x442e60
