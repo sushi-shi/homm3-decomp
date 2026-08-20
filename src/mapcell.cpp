@@ -25,7 +25,9 @@
 // by calling pick_alignment - a random-dwelling resolution pass.
 //
 #include <va.h>
+#include <windows.h>
 #include "advmgr_objects.h"
+#include "csprite.h"
 #include "advmgr.h"
 #include "game.h"
 #include "kb.h"
@@ -320,13 +322,79 @@ CObject* NewmapCell::TObjectCell::get_object()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:361
+// Resolves a cell that merely OVERLAPS an object to the cell the object is
+// actually triggered from.  A cell that is itself a trigger answers with
+// itself; four object types never delegate (the empty type, the anchor point,
+// the event and the holy grail); everything else looks the owning object up in
+// the world map's object pool and asks it where its trigger sits.
+//
+// The two range guards are retail's own and they are not the same test: the
+// index is read as a SIGNED short and rejected when negative, then compared
+// against objects.size() as an UNSIGNED value (`movsx eax,di` then `jae`),
+// which is what an int-versus-size_type comparison compiles to.
+//
+// The trigger point is assembled into a type_point rather than three ints, and
+// the packing is legible in the bytes: `xor word ptr` for x's ten bits, then
+// one 16-bit read-modify-write carrying BOTH y (ten bits) and z (four) because
+// MSVC starts a fresh short allocation unit when y will not fit beside x.
+// That is also why `point.x = triggerX` compiles to a self-xor - VC6 overlays
+// the point on triggerX's now-dead stack slot, so the merge reads back the
+// value it is about to write.
+//
+// The tail is the packed-point cell() overload verbatim: z*Size + y, times
+// Size, plus x, scaled by the 38-byte NewmapCell stride.  No header change was
+// needed - that overload is already unguarded, and it extracts the three
+// bitfields in exactly retail's order.
+//
+// Residual (90.8763%): the CFG is exact - `sema diff --branches` reports nine
+// branches and two rets on both sides with mnemonics and targets agreeing, so
+// nothing structural is left.  What differs is one bitfield merge FORM.  Both
+// fields of the second short allocation unit are written from one word store
+// on both sides, but retail clears y and z together with a single
+// `and eax,0xffffc000` and then ORs each value in, where this compile emits
+// the generic xor-merge for y and a separate `and ch` for z - VC6 combined
+// two adjacent bitfield writes on retail's input and did not on ours.  The
+// two gpGame reloc rows are cosmetic (the delinked side spells it
+// `bss_2994e8` because the global is unclaimed - the DoDialog precedent).
+// Tried and rejected: assigning z before y, which un-combines the pair
+// further and costs 5 points (90.8763 -> 86.1134); hoisting `object->z` into
+// a local ahead of the point, which is byte-flat at 90.8763.
 VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
 NewmapCell* NewmapCell::get_trigger_cell()
 {
-    // @stub
+    if (is_trigger)
+        return this;
+
+    if (type == NOTHING || type == ANCHOR_POINT || type == EVENT
+        || type == HOLY_GRAIL)
+        return 0;
+
+    short index = object_type_index;
+    if (index < 0)
+        return 0;
+    if (index >= gpGame->worldMap.objects.size())
+        return 0;
+
+    CObject* object = &gpGame->worldMap.objects[index];
+
+    int triggerX;
+    int triggerY;
+    object->FindTrigger(&triggerX, &triggerY);
+
+    type_point point;
+    point.x = triggerX;
+    point.y = triggerY;
+    point.z = object->z;
+
+    if (point.x < 0)
+        return 0;
+    return gpGame->worldMap.cell(point);
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
 #endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:387
@@ -1343,21 +1411,219 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1524
+// The map-file twin of loadBlackBox (0x500430), field for field, and the
+// blocker recorded against it - "BlackBoxData is only forward-declared" - was
+// wrong: saveBlackBox and loadBlackBox have been dereferencing the modelled
+// type in game.h all along.
+//
+// Two things separate it from the save-file reader.  readTreasureData is
+// CALLED where loadBlackBox inlines its twin, and the two narrow/wide width
+// tests read from DIFFERENT sources: the artifact ids consult
+// gpGame->mapHeader.version while the creature ids consult the mapVersion
+// PARAMETER.  Both gates are retail's, and the asymmetry is the same one
+// readGarrisonData carries.
+//
+// The two width tests also do not spell their store the same way, and the
+// bytes are explicit about it: the artifact arms each write
+// `Artifacts[i]` themselves (`mov [edx+4*edi],ecx` in one arm,
+// `mov [eax+4*edi],edx` in the other), while the creature arms join first and
+// store once (`mov [ebx-0x1c],eax`) so the loop's induction pointer anchors on
+// numTroops rather than armies - the exact induction-base lesson that took
+// readGarrisonData from 97.53 to 99.96.  Both width tests read UNCHECKED; only
+// the troop count that follows is checked.
+//
+// The record ends with eight discarded bytes whose short count is folded into
+// the return by `cmp eax,8 / sbb eax,eax`.
+//
+// EACH OF THE THREE LISTS CARRIES AN EXPLICIT ZERO TEST that loadBlackBox does
+// NOT, and it is worth 38 points.  A plain `resize(count)` scores 54.6528 and
+// leaves the CFG one branch short; retail spells the empty case separately -
+// `if (count == 0) list.clear(); else { list.resize(count); <read loop> }` -
+// which is 93.0057.  This is a real source difference, not a codegen artifact:
+// retail's own loadBlackBox (0x500430) reaches the same resize with NO zero
+// test, and our plain `resize(count)` reproduces THAT shape exactly, so the
+// two readers genuinely disagree.  The restructuring also repaired the
+// prologue's esi/edi binding for free - with the extra statements in place
+// `infile` is again the first-created call-crossing pseudo and lands in ESI,
+// and the frame is retail's `sub esp,0x1c` with the dead parameter slot
+// reclaimed as the byte read buffer.
+//
+// Residual (93.0057%): TWO STL inline decisions, mirrored, and nothing else -
+// branch counts agree 55/55 and every read, every field and every list is
+// retail's.  Retail CALLS vector<SecondarySkillData>::_Destroy out of the
+// first clear() and CALLS vector<int>::erase out of the artifact resize, then
+// INLINES erase in the spell resize; this compile does the exact opposite at
+// all three sites.  That is the /Ob2 budget spent sequentially - ours has more
+// left late, retail more early - and the artifact list's `count` losing EDI to
+// the inlined erase is a consequence of it, not a separate wall.  Tried and
+// rejected: spelling the empty case `erase(begin(), end())` rather than
+// `clear()`, which removes one nesting level from the budget division and
+// costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
+// and `clear()` is already the deepest spelling available.
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
-int NewfullMap::readBlackBox(void* infile, BlackBoxData* thisBox)
+int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                             int mapVersion)
 {
-    // @stub
+    signed char value;
+    int dwordValue;
+    int count;
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->HasCustomTreasure = value != 0;
+    if (thisBox->HasCustomTreasure) {
+        if (readTreasureData(infile, thisBox) != 0)
+            return -1;
+    }
+
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ExperienceBonus = dwordValue;
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ManaBonus = dwordValue;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->MoraleBonus = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->LuckBonus = value;
+
+    for (i = 0; i < 7; ++i) {
+        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+            return -1;
+        thisBox->ResQty[i] = dwordValue;
+    }
+    for (i = 0; i < 4; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->PrimarySkillBonus[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->SecondarySkills.clear();
+    } else {
+        thisBox->SecondarySkills.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->SecondarySkills[i].type = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->SecondarySkills[i].level = value;
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->Artifacts.clear();
+    } else {
+        thisBox->Artifacts.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                thisBox->Artifacts[i] = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                thisBox->Artifacts[i] = wide;
+            }
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->Spells.clear();
+    } else {
+        thisBox->Spells.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->Spells[i] = value;
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Creatures.Initialize();
+    for (i = 0; i < count; ++i) {
+        int creature;
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            creature = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            creature = wide;
+        }
+        thisBox->Creatures.armies[i] = creature;
+
+        short troops;
+        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+            return -1;
+        thisBox->Creatures.numTroops[i] = troops;
+    }
+
+    unsigned char padding[8];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
 
 // E:\gamedcs\mapcell.cpp:1708
+// The custom-record wrapper around readBlackBox, and the same three-part shape
+// readSpellScrollData and readResourceData have: take the list's current size
+// as the record index, zero the object's extraInfo, fill a stack temporary,
+// then publish it only if the pool has room.
+//
+// The cap here is 400, not the 4000 the treasure readers use, and the index
+// lands in extraInfo's LOW TEN BITS rather than the 19..30 custom-record field
+// - `xor / and 0x3ff / xor` is the read-modify-write of a 10-bit lane.
+//
+// `BlackBoxData tempBox;` is the whole preamble: retail expands the
+// constructor inline as the string's ctor, the HasCustomGuardians zero, the
+// Guardians armyGroup, the HasCustomTreasure zero, three vector ctors (two
+// written out as four stores each, the third called) and the Creatures
+// armyGroup.  The destructor is likewise inlined at BOTH exits, which is why
+// the -1 epilogue is a full copy of the success one rather than a jump into
+// it.  The out-of-line ~BlackBoxData at 0x4ffdf0 survives for the vector
+// machinery, not for this frame.
+//
+// mapVersion is carried purely to hand to readBlackBox - this body never
+// inspects it, which is why the third parameter looks unused here.
 VA(0x004ffbf0, 0x1F5)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor (BlackBoxData ctor inlined); called by readObject; EH-bearing, dc 0xeea60
-int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject)
+int NewfullMap::readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
+                                 int mapVersion)
 {
-    // @stub
+    int boxIndex = blackBoxes.size();
+
+    blackboxObject->extraInfo = 0;
+
+    BlackBoxData tempBox;
+    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+        return -1;
+
+    if (boxIndex < 400) {
+        blackBoxes.push_back(tempBox);
+        blackboxObject->extraInfo ^= (blackboxObject->extraInfo ^ boxIndex)
+            & 0x3ff;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1729
 DC_ONLY(0xeeb3c, 0xA0)
@@ -1649,14 +1915,62 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:2073
+// The map event shares the pandora's-box record outright: same
+// blackBoxes.size() index, same BlackBoxData temporary, same readBlackBox,
+// same 400-entry cap and the same 10-bit index lane in extraInfo.  What the
+// event adds is three bytes of its own, and they land in the bits directly
+// above that lane - an eight-bit player mask at 10..17, then two one-bit
+// flags at 18 and 19.
+//
+// The publish block sits BETWEEN the flag reads and the four discarded tail
+// bytes, not at the end: retail reads all three bytes, then tests the cap,
+// then reads the padding.
+//
+// Retail routes most failures into ONE shared destructor chain (every early
+// exit `jmp`s to the same `lea ecx,[ebp-0x68]` cleanup) but duplicates a
+// partial copy for the first byte read.  That asymmetry is the EH scope
+// machinery's, not a source shape - the body below is plain early returns.
 VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor; called by readObject; EH-bearing, dc 0xef5dc
-int NewfullMap::readEventData(void* infile, CObject* eventObject)
+int NewfullMap::readEventData(TAbstractFile* infile, CObject* eventObject,
+                              int mapVersion)
 {
-    // @stub
+    int boxIndex = blackBoxes.size();
+
+    eventObject->extraInfo = 0;
+
+    BlackBoxData tempBox;
+    if (readBlackBox(infile, &tempBox, mapVersion) != 0)
+        return -1;
+
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfffc03ff)
+        | ((value & 0xff) << 10);
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfffbffff)
+        | ((value & 1) << 18);
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    eventObject->extraInfo = (eventObject->extraInfo & 0xfff7ffff)
+        | ((value & 1) << 19);
+
+    if (boxIndex < 400) {
+        blackBoxes.push_back(tempBox);
+        eventObject->extraInfo ^= (eventObject->extraInfo ^ boxIndex) & 0x3ff;
+    }
+
+    unsigned char padding[4];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2124
 DC_ONLY(0xef7c8, 0x3F0)
@@ -2471,28 +2785,332 @@ int NewfullMap::loadMapObjects(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:4018
+// Builds the per-cell stacking depth an object's sprite occupies, as an 8x6
+// byte grid.  The grid is zeroed wholesale (`rep stosd` of twelve dwords), the
+// object's type record supplies the extent, and a type flagged suppressDraw
+// contributes nothing at all.
+//
+// The WIDTH index is the outer loop and the height index the inner one - the
+// grid pointer advances by six per outer iteration while the inner one indexes
+// single bytes, which fixes the orientation as heightMap[width][height].  Both
+// loop bounds are re-read from the type record on every iteration, so neither
+// is hoisted.
+//
+// The mask is passableCells, addressed as a 6x8 bit grid packed most
+// significant bit first: cell (col,row) is bit 47 - row*8 - col.  The two
+// neighbour probes fall out of that arithmetic - 55 - row*8 - col is the cell
+// one ROW up, 48 - row*8 - col the cell one COLUMN left - which is why the
+// two guards are `row > 0` and `col > 0` respectively.  bitset::test is the
+// spelling, not operator[]: retail carries the `pos >= 48` bounds check and
+// its out-of-line _Xran call at all four sites.
+//
+// THE BODY DOES NOT CACHE A CObjectType POINTER, and that is worth 29 points.
+// Hoisting `CObjectType* objectType = &objectTypes[typeIndex];` and reaching
+// every field through it scores 68.1677; re-subscripting `objectTypes[
+// typeIndex]` at each of the seven uses scores 96.7484.  The bytes say why:
+// retail keeps only the BYTE OFFSET 68*typeIndex live in EBX and reloads
+// `objectTypes._First` from `this` on every loop iteration
+// (`mov eax,[edx+4] / add eax,ebx`), which is what VC6 emits when it cannot
+// prove the vector's base is loop-invariant.  A cached pointer removes those
+// reloads and takes `this` out of its stack slot with it.  Measured on the
+// way: hoisting only `object->typeIndex` above the memset (retail computes the
+// index before the `rep stosd` and the vector base after) is worth another
+// 1.5 points, 66.6581 -> 68.1677, while hoisting the whole subscript
+// expression above the memset goes backwards to 64.8903.
+//
+// Residual (96.7484%): four reloc NAME rows plus one scheduling block.  The
+// four are the bitset _Xran calls, which the delinked side spells
+// `game_invalid_bitset_n_positio_1b410` because that helper is unclaimed - the
+// readGarrisonData/DoDialog cosmetic class.  The one real delta is the third
+// bitset probe's block, where retail loads `this` a slot earlier and lands
+// col/this/_First in ecx/eax/edx against this compile's eax/eax/ecx: same
+// instructions, same order of effects, one schedule apart.  Branch counts and
+// targets agree 15/15 with a single ret, so nothing structural is left.
 VA(0x00505060, 0x1CD)  // order-map: callers exactly StampObject 0x505230 + PlaceObject 0x505b20 (DC-isomorphic); bitset<48> ops, dc 0xf33fc
-void NewfullMap::GenerateHeightMap(const CObject* obj, []* map)
+void NewfullMap::GenerateHeightMap(const CObject* object,
+                                   signed char heightMap[8][6])
 {
-    // @stub
+    int typeIndex = object->typeIndex;
+
+    memset(heightMap, 0, 48);
+
+    if (objectTypes[typeIndex].suppressDraw)
+        return;
+
+    for (int col = 0; col < objectTypes[typeIndex].width; ++col) {
+        int depth = 1;
+        for (int row = 0; row < objectTypes[typeIndex].height; ++row) {
+            if (row > 0) {
+                if (!objectTypes[typeIndex].passableCells.test(
+                        47 - row * 8 - col)
+                    && objectTypes[typeIndex].passableCells.test(
+                        55 - row * 8 - col))
+                    depth = 1;
+            }
+            if (col > 0) {
+                if (objectTypes[typeIndex].passableCells.test(
+                        47 - row * 8 - col)
+                    && !objectTypes[typeIndex].passableCells.test(
+                        48 - row * 8 - col))
+                    depth = heightMap[col - 1][row];
+            }
+            heightMap[col][row] = static_cast<signed char>(depth);
+            ++depth;
+        }
+    }
 }
 
 // E:\gamedcs\mapcell.cpp:4053
+// Files one object cell into a map cell's draw list at its correct depth.
+// The list is kept sorted by layer and the search runs BACKWARDS from the
+// end, so a new cell sinks only as far as it has to.
+//
+// The comparison has two levels.  Layers that differ settle it outright - a
+// higher one wins the position, a lower one sinks past.  Equal layers go to a
+// footprint test: both objects' extents become RECTs anchored at their
+// bottom-right tile (left = x - width + 1, right = x + 1, likewise for y),
+// intersected with IntersectRect and clamped to the world with
+// gMapWidth/gMapHeight.  Every cell of that overlap is then looked up in its
+// OWN draw list - by a linear scan bounded by nothing but the match, which is
+// retail's and not a transcription slip - and if the cell already sitting
+// there is above this object's height map at the corresponding grid position,
+// the new cell sinks past.  The height map is indexed
+// [newObject->x - x][newObject->y - y], the orientation GenerateHeightMap
+// fills.
+//
+// Everything from the insertion point on is one INLINED
+// vector<TObjectCell>::insert(iterator, const T&) - all three Dinkumware
+// paths: the reallocating one with its operator new/delete pair, the
+// room-at-the-end one, and the shift-up one.  There is no source knob there.
+//
+// windows.h joins this TU's include closure for RECT and IntersectRect, and
+// was measured include-set NEUTRAL first: adding it alone moved no function
+// in this unit (41/67 exact, 60.1933 fuzzy before and after, zero per-row
+// deltas).  That measurement is the reason this row is reachable at all, and
+// it is worth keeping: the same experiment on csprite.h a function earlier
+// was also flat, so mapcell.obj tolerates both.
+//
+// Residual (61.5553%): the OVERLAP SCAN's loop shape, and it is a
+// strength-reduction difference rather than a spelling one.  Retail
+// recomputes `(z*Size + y)*Size + x` and its 38-byte scale on every inner
+// iteration, holding only Size and cellData in the inner loop's preheader;
+// this compile additionally precomputes 38*Size and turns the y loop into an
+// induction-variable add, which costs two branches and one exit against
+// retail (base 30 branches / 3 rets, retail 32 / 4).  This is the same class
+// GenerateHeightMap's 29-point re-subscripting lesson sits in - retail's
+// input does NOT let VC6 hoist the map geometry - but there the lever was a
+// cached pointer that could simply be removed, and here the expression is
+// already written out longhand with nothing left to un-cache.  Measured on
+// the way: computing `thisCell->objects.end()` BEFORE the GenerateHeightMap
+// call rather than after is worth 0.3 points (61.2480 -> 61.5553) and is
+// retail's order - it reclaims the first parameter slot for `&objects` the
+// way retail does.  NOT yet tried, and the next thing to try: giving the
+// scan its own `worldMap` reference so the geometry loads land where retail
+// puts them.
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
-void NewfullMap::StampObject(NewmapCell* thisCell, NewmapCell::TObjectCell* objCell)
+void NewfullMap::StampObject(NewmapCell* thisCell,
+                             NewmapCell::TObjectCell* objectCell)
 {
-    // @stub
+    std::vector<NewmapCell::TObjectCell>::iterator position
+        = thisCell->objects.end();
+    CObject* newObject = &objects[objectCell->objectIndex];
+
+    signed char heightMap[8][6];
+    GenerateHeightMap(newObject, heightMap);
+
+    while (position != thisCell->objects.begin()) {
+        if (objectCell->layer > (position - 1)->layer)
+            break;
+
+        if (objectCell->layer == (position - 1)->layer) {
+            CObject* belowObject = &objects[(position - 1)->objectIndex];
+            CObjectType* newType = &objectTypes[newObject->typeIndex];
+            CObjectType* belowType = &objectTypes[belowObject->typeIndex];
+
+            RECT newRect;
+            newRect.left = newObject->x - newType->width + 1;
+            newRect.top = newObject->y - newType->height + 1;
+            newRect.right = newObject->x + 1;
+            newRect.bottom = newObject->y + 1;
+
+            RECT belowRect;
+            belowRect.left = belowObject->x - belowType->width + 1;
+            belowRect.top = belowObject->y - belowType->height + 1;
+            belowRect.right = belowObject->x + 1;
+            belowRect.bottom = belowObject->y + 1;
+
+            RECT overlap;
+            IntersectRect(&overlap, &newRect, &belowRect);
+            if (overlap.left < 0)
+                overlap.left = 0;
+            if (overlap.top < 0)
+                overlap.top = 0;
+            if (overlap.right > gMapWidth)
+                overlap.right = gMapWidth;
+            if (overlap.bottom > gMapHeight)
+                overlap.bottom = gMapHeight;
+
+            for (int x = overlap.left; x < overlap.right; ++x) {
+                for (int y = overlap.top; y < overlap.bottom; ++y) {
+                    NewmapCell* cell = &gpGame->worldMap.cellData[
+                        (newObject->z * gpGame->worldMap.Size + y)
+                            * gpGame->worldMap.Size
+                        + x];
+                    std::vector<NewmapCell::TObjectCell>::iterator scan
+                        = cell->objects.begin();
+                    while (scan->objectIndex != (position - 1)->objectIndex)
+                        ++scan;
+                    if (scan->layer
+                        > heightMap[newObject->x - x][newObject->y - y])
+                        goto sinkPast;
+                }
+            }
+            break;
+        }
+
+    sinkPast:
+        --position;
+    }
+
+    thisCell->objects.insert(position, *objectCell);
 }
 
 // E:\gamedcs\mapcell.cpp:4167
+// Recomputes everything a cell derives from the objects standing on it.  The
+// cell is first reset to bare terrain - rock blocks, and a beach border that
+// is not water becomes an ANCHOR_POINT - and then FIVE reverse passes over
+// the cell's object list decide what it actually is.  Each pass walks the
+// list from the top down, so the object added last wins, and each of the last
+// four RETURNS on its first hit; only the animation pass runs to completion.
+//
+// The passes in retail's order: mark the cell animated if any object's sprite
+// has more than one frame; take the first object whose TRIGGER mask covers
+// the cell (that one also sets is_trigger); then the first FLAGGED object
+// whose passable mask leaves the cell blocked; then the same test without the
+// flag; and finally the first object of type TERRAIN_HOLE.
+//
+// The animation test is `GetNumFrames(0) > 1`, the CSprite header inline
+// expanded in place: retail's three-test chain is that guard verbatim -
+// numSequences > 0, validSeqMask[0] != 0, s[0]->numFrames > 1 - with the else
+// arm's literal 0 folded away against the `> 1`.  csprite.h joins this TU's
+// include closure for it, and was measured include-set NEUTRAL first: adding
+// it alone moved no function in this unit (40/67 exact, 57.3982 fuzzy before
+// and after, zero per-row deltas).
+//
+// The cell coordinate inside the object comes back out of TObjectCell's
+// packed `offsets` byte as two SIGNED nibbles (`sar cl,4` for the row,
+// `shl al,4 / sar al,4` for the column), giving the same 47 - row*8 - col bit
+// index GenerateHeightMap and PlaceObject use.
+//
+// The last byte was a statement ORDER, not a spelling.  In the trigger pass
+// `is_trigger = 1` has to be written AFTER `type_value`, not between it and
+// the index store: retail schedules the `or byte ptr [cell+0xd],0x10` between
+// the load of objectType->objectType and the store of it, and only that
+// source order puts it there.  Setting it first holds the row at 99.4366.
 VA(0x00505610, 0x3F8)  // order-map: calls hasFlag 0x40fca0 (DC-unique callee); sole caller CalculateCellExtra 0x505a10 (DC-isomorphic); reverse_iterator templates inlined, dc 0xf3a24
 void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
 {
-    // @stub
-}
+    if (bSetExtraInfo) {
+        short storedIndex = thisCell->object_type_index;
+        if (storedIndex >= 0 && storedIndex < objects.size())
+            objects[storedIndex].extraInfo = thisCell->extraInfo;
+    }
 
-#endif  // @carcass -- located/reconstruction-pending bodies
+    thisCell->IsBlocked = 0;
+    thisCell->object_type_index = -1;
+    if (thisCell->GroundSet == eTerrainRock)
+        thisCell->IsBlocked = 1;
+
+    thisCell->type_value = NOTHING;
+    thisCell->is_trigger = 0;
+    thisCell->Passable = 1;
+    if (thisCell->IsBeachBorder && thisCell->GroundSet != eTerrainWater)
+        thisCell->type_value = ANCHOR_POINT;
+
+    std::vector<NewmapCell::TObjectCell>::reverse_iterator it;
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        if (sprites[object->typeIndex]->GetNumFrames(0) > 1)
+            thisCell->Animated = 1;
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        signed char packed = it->offsets;
+        int row = packed >> 4;
+        int col = static_cast<signed char>(packed << 4) >> 4;
+        if (objectType->triggerCells.test(47 - row * 8 - col)) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->is_trigger = 1;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            return;
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        if (hasFlag(objectType->objectType)) {
+            signed char packed = it->offsets;
+            int row = packed >> 4;
+            int col = static_cast<signed char>(packed << 4) >> 4;
+            if (!objectType->passableCells.test(47 - row * 8 - col)) {
+                thisCell->object_type_index = it->objectIndex;
+                thisCell->type_value = objectType->objectType;
+                thisCell->objectIndex = static_cast<short>(objectType->extra);
+                if (bSetExtraInfo)
+                    thisCell->extraInfo = object->extraInfo;
+                thisCell->Passable = 0;
+                thisCell->IsBlocked = 1;
+                return;
+            }
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        signed char packed = it->offsets;
+        int row = packed >> 4;
+        int col = static_cast<signed char>(packed << 4) >> 4;
+        if (!objectType->passableCells.test(47 - row * 8 - col)) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            thisCell->Passable = 0;
+            thisCell->IsBlocked = 1;
+            return;
+        }
+    }
+
+    for (it = thisCell->objects.rbegin(); it != thisCell->objects.rend();
+         ++it) {
+        CObject* object = &objects[it->objectIndex];
+        CObjectType* objectType = &objectTypes[object->typeIndex];
+        if (objectType->objectType == TERRAIN_HOLE) {
+            thisCell->object_type_index = it->objectIndex;
+            thisCell->type_value = objectType->objectType;
+            thisCell->objectIndex = static_cast<short>(objectType->extra);
+            if (bSetExtraInfo)
+                thisCell->extraInfo = object->extraInfo;
+            return;
+        }
+    }
+}
 
 // E:\gamedcs\mapcell.cpp:4310
 // Retail temporarily restores a hero or boat, recalculates the underlying
@@ -2536,14 +3154,90 @@ void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtr
             BOAT, obscuringBoat->id);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:4346
+// Walks the footprint of one placed object and files it into every cell it
+// covers.  The extent and the height map come from the object's type record,
+// the same 8x6 grid GenerateHeightMap fills, and the footprint is traversed
+// from the object's own tile BACKWARDS - cell(x - col, y - row, z) - because
+// an adventure object's anchor is its bottom-right corner.
+//
+// Five object classes are filed by something other than this pass and are
+// skipped outright: HOLY_GRAIL, HERO, RANDOM_HERO, RANDOM_DWELLING and BOAT.
+// EVENT is skipped too but not silently - where its trigger mask covers the
+// cell, the cell is cleared of IsBlocked and is_trigger, retyped EVENT, and
+// given the object's extraInfo.  Everything else builds a TObjectCell and
+// hands it to StampObject, then recalculates the cell's derived extra.
+//
+// The two bounds tests are not the same test twice: the x test guards the
+// whole inner loop (it `continue`s the OUTER one) while the y test guards a
+// single cell.  Both compare against the world extents gMapWidth/gMapHeight
+// that game::SetMapSize writes.
+//
+// The offsets byte is packed in EIGHT-BIT arithmetic - `mov cl,bl / shl cl,4 /
+// and dl,0xf / or cl,dl` - so the row and column halves are narrowed before
+// they are combined, not after.  The OPERAND ORDER of that `|` is the last
+// byte in the function: retail accumulates into the shifted row half (`or
+// cl,dl`), which is what `(col & 0xf) | (row << 4)` compiles to.  Writing it
+// the other way round as `(row << 4) | (col & 0xf)` accumulates into the
+// column half instead (`or dl,cl`) and holds the row at 96.7976.
 VA(0x00505b20, 0x1F2)  // anchor-global, dc 0xf43e8
-int NewfullMap::PlaceObject(int ObjectIndex, unsigned char setExtraInfo)
+int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
 {
-    // @stub
+    CObject* object = &objects[objectIndex];
+    CObjectType* objectType = &objectTypes[object->typeIndex];
+
+    signed char heightMap[8][6];
+    GenerateHeightMap(object, heightMap);
+
+    TAdventureObjectType objectClass =
+        gpGame->worldMap.objectTypes[object->typeIndex].objectType;
+
+    for (int col = 0; col < objectType->width; ++col) {
+        if (object->x - col < 0 || object->x - col >= gMapWidth)
+            continue;
+
+        for (int row = 0; row < objectType->height; ++row) {
+            if (object->y - row < 0 || object->y - row >= gMapHeight)
+                continue;
+
+            // The row-major lookup is expanded here rather than routed
+            // through NewfullMap::cell: retail reads Size and cellData off
+            // gpGame->worldMap - not off `this` - and reloads gpGame between
+            // them, and mapcell.obj cannot take the header's inline copy
+            // because advmgr.obj owns that function's out-of-line body.
+            NewmapCell* cell = &gpGame->worldMap.cellData[
+                (object->z * gpGame->worldMap.Size + (object->y - row))
+                    * gpGame->worldMap.Size
+                + (object->x - col)];
+
+            if (objectClass == HOLY_GRAIL || objectClass == HERO
+                || objectClass == RANDOM_HERO
+                || objectClass == RANDOM_DWELLING || objectClass == BOAT)
+                continue;
+
+            if (objectClass == EVENT) {
+                if (objectType->triggerCells.test(47 - row * 8 - col)) {
+                    cell->IsBlocked = 0;
+                    cell->is_trigger = 0;
+                    cell->type_value = EVENT;
+                    cell->extraInfo = object->extraInfo;
+                }
+                continue;
+            }
+
+            NewmapCell::TObjectCell objectCell;
+            objectCell.objectIndex = static_cast<unsigned short>(objectIndex);
+            objectCell.offsets = static_cast<unsigned char>((col & 0xf)
+                                                            | (row << 4));
+            objectCell.layer = heightMap[col][row];
+            StampObject(cell, &objectCell);
+            CalculateCellExtra(cell, setExtraInfo);
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:4404
 DC_ONLY(0xf4740, 0x50)
