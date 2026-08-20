@@ -308,7 +308,8 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
-#if defined(HOMM3_ADVMGR_OBJ_DECLS) || defined(HOMM3_VLC_CHECKS_VIEW)
+#if defined(HOMM3_ADVMGR_OBJ_DECLS) || defined(HOMM3_VLC_CHECKS_VIEW) \
+    || defined(HOMM3_TOWN_OBJ_DECLS)
     // MapCell.h:769 in the DC roster (dc 0x2e48), i.e. a header inline of
     // this class - and retail keeps no out-of-line row for it either.
     // advManager::ProcessDeSelect's elevation-toggle arm expands it in
@@ -321,7 +322,7 @@ public:
 #endif
 
 #if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
-    || defined(HOMM3_VLC_CHECKS_VIEW)
+    || defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
     // Header inline in the original map class. InsertObject expands this
     // three-dimensional row-major lookup, and so does advManager::EraseObj
     // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
@@ -749,9 +750,10 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
-#ifdef HOMM3_VLC_CHECKS_VIEW
+#if defined(HOMM3_VLC_CHECKS_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
     // 0x5f1d40 (dc 0x190038), reconstructed in the owning TU. Kept out
-    // of the EVENTS view so events.obj's declarator count is untouched.
+    // of the EVENTS view so events.obj's declarator count is untouched;
+    // town.obj joins for BuildBuilding's post-build check (2026-08-20).
     unsigned char CheckForUpgradedTown();
 #endif
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_VLC_CHECKS_VIEW)
@@ -1774,7 +1776,7 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
-#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+#if defined(HOMM3_GAME_CLAIM_TOWN_DECLS) || defined(HOMM3_TOWN_OBJ_DECLS)
     // record_claim_mine's sibling, and the same ~500-byte shape: retail
     // inlines the whole `new type_record_claim_*` / push_back /
     // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is

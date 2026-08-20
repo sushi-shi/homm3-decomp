@@ -610,16 +610,114 @@ void town::destroy_extra_capitol()
     }
 }
 
-#if 0  // @carcass
+// The kb.h prototype; town.cpp must not widen its include closure for
+// one free-function call (the include-set class), so the declaration is
+// repeated here the way the import-thunk precedent repeats declarations
+// per-TU.
+void CheckEndGame(int bForceWin);
 
 // E:\gamedcs\town.cpp:1340
+// The public build entry: snapshots the fort-line/Capitol state,
+// delegates to create_building, sets the ownership flag on real builds
+// (not the boat dock), rebuilds `active` from the included_buildings
+// rows, recomputes mage-guild spell counts (twice-over when the Tower
+// Library lands), refreshes the adventure object when the fort line or
+// Capitol first appears, runs the upgrade victory check, applies the
+// Tower Lookout/Skyship visibility, and re-applies special building
+// effects to both resident heroes.
+// Residual (99.3036%): one `teamInfo[team]` SIB base/index swap
+// (base ecx+eax, retail eax+ecx) - the B18 encoder tie-break class -
+// plus reloc-name cosmetics on the bitNumber loads.
 VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
-type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag, unsigned char apply_special_effect)
+type_building_id town::BuildBuilding(int buildingId,
+                                     unsigned char SetBuiltFlag,
+                                     unsigned char apply_special_effect)
 {
-    // @stub
-}
+    unsigned char had_fort = (built & bitNumber[CASTLE_FORT_ID])
+        || HasBuilding(CASTLE_CITADEL_ID, 0)
+        || HasBuilding(CASTLE_CASTLE_ID, 0);
+    unsigned char had_capitol = (built & bitNumber[HALL_CAPITOL_ID]) != 0;
+    // The parameter is int - DC-attested (`...QAA?AW4type_building_id@@
+    // HEE@Z`) and required by the townmgr call sites - while
+    // create_building's domain is the enum; the conversion is the
+    // boundary between retail's own two spellings of the id.
+    type_building_id result = create_building(type_building_id(buildingId));
 
-#endif  // @carcass
+    if (SetBuiltFlag && buildingId != DOCK_WITH_BOAT_ID) {
+        if (gpGame->setup.difficulty < 2) {
+            int team = owner;
+            if (team >= 0)
+                team = gpGame->mapHeader.teamInfo[team];
+            if (!gpGame->is_human_ally(team))
+                field_02 = 2;
+            else
+                field_02 = 1;
+        } else {
+            field_02 = 1;
+        }
+    }
+
+    active = built;
+    for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+        if (built & bitNumber[i])
+            active |= included_buildings[type][i];
+    }
+
+    if (buildingId <= MAGE_GUILD5_ID) {
+        field_14 = buildingId + 1;
+        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+        for (int level = 1; level <= field_14; level++) {
+            int count = gMageGuildBaseSpellCounts[level - 1];
+            if (type == TOWN_TOWER && (active & bitNumber[EXTRA_1_ID]))
+                count++;
+            while (count > 0
+                   && mageGuildSpells[level - 1][count - 1] == -1)
+                count--;
+            mageGuildSpellCounts[level - 1] = count;
+        }
+    }
+    if (type == TOWN_TOWER && buildingId == EXTRA_1_ID) {
+        memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+        for (int level = 1; level <= field_14; level++) {
+            int count = gMageGuildBaseSpellCounts[level - 1];
+            if (type == TOWN_TOWER && HasBuilding(EXTRA_1_ID, 1))
+                count++;
+            while (count > 0
+                   && mageGuildSpells[level - 1][count - 1] == -1)
+                count--;
+            mageGuildSpellCounts[level - 1] = count;
+        }
+    }
+    GiveSpells(0);
+
+    if ((HasBuilding(HALL_CAPITOL_ID, 0) && !had_capitol)
+        || ((HasBuilding(CASTLE_FORT_ID, 0)
+             || HasBuilding(CASTLE_CITADEL_ID, 0)
+             || HasBuilding(CASTLE_CASTLE_ID, 0))
+            && !had_fort)) {
+        gpGame->ConvertObject(gpGame->worldMap.cell(mapX, mapY, mapZ));
+    }
+    if (gpGame->mapHeader.victoryCondition.CheckForUpgradedTown())
+        CheckEndGame(0);
+
+    if (type == TOWN_TOWER) {
+        if (buildingId == EXTRA_0_ID) {
+            gpGame->SetVisibility(mapX, mapY, mapZ, owner, 20, 0);
+        } else if (buildingId == HOLY_GRAIL_ID) {
+            gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0, owner,
+                                  gMapWidth, 0);
+            if (gpGame->worldMap.GetNumLevels() > 1)
+                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
+                                      owner, gMapWidth, 0);
+        }
+    }
+
+    if (garrisonHeroId != -1 && apply_special_effect)
+        ApplySpecialBuildingEffect(gpGame->GetHero(garrisonHeroId));
+    if (visitingHeroId != -1 && apply_special_effect)
+        ApplySpecialBuildingEffect(gpGame->GetHero(visitingHeroId));
+    return result;
+}
 
 // E:\gamedcs\town.cpp:1417
 // The dock square is relevant only while the normal Dock building is
