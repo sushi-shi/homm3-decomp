@@ -106,6 +106,7 @@ advmgr	?UpdBottomViewNewTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?UpdBottomViewResMsg@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x16160
 advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
+advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.1844	90.1844	90.1844	0x12c40
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80
@@ -133,7 +134,6 @@ advmgr	advManager_ProcessRadarSelect	0.0000	0.0000	0.0000	0xa0c0
 advmgr	advManager_ProcessSelect	0.0000	0.0000	0.0000	0x97e0
 advmgr	advManager_SetHeroContext	0.0000	0.0000	0.0000	0x17b20
 advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
-advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
