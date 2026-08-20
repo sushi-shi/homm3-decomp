@@ -737,10 +737,17 @@ public:
     // Raised to 1 by SetupCombat before it has touched anything else about
     // the two sides, and by nothing else in the located span. Reads like a
     // "combat is being set up / is live" latch, but no reader is decoded
-    // yet, so the name is an address ordinal. It is the last byte of the
-    // class either way - adding it does not move sizeof, which stays
-    // 0x14030 under the class's 4-byte alignment. Gated for the
+    // yet, so the name is an address ordinal. Gated for the
     // declarator-count reason spelled out at field_132a0.
+    //
+    // CORRECTION 2026-08-20: when this row landed its comment claimed the
+    // byte was the LAST of the class and could not move sizeof. That was
+    // wrong - it was inferred from this header stopping here, not from
+    // retail. InitNonVisualVars (0x463c60) stores a byte at +0x14030, so
+    // the class runs at least one byte further than anything modelled
+    // here. Nothing depends on the old claim (no SIZE assert covers
+    // combatManager), but do not read the end of this list as the end of
+    // the object.
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
     unsigned char field_1402f;         // +0x1402f
 #endif
