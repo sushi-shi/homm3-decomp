@@ -1111,6 +1111,17 @@ public:
     // above already documents. show_eagle_eye and show_looted_artifacts
     // are `private` on the Dreamcast; the access specifier is not
     // codegen, and this class body is public throughout.
+    // 0x4639e0, cmbtmgr.obj (it sits between 0x463600's row and
+    // SetupCombat at 0x4639f0). Fourteen bytes: `gpSoundManager->
+    // StopAllSamples(1)` and nothing else, with `this` unused. RETAIL
+    // ONLY - no DC roster row covers it - and a full .text scan finds
+    // exactly ONE caller, DoVictory at 0x4777c7. DECLARED, NOT DEFINED,
+    // and that is load-bearing rather than laziness: /Ob2 would inline a
+    // fourteen-byte single-call-site body, and retail CALLS it, so the
+    // declaration is what forces the call. The name is a bootstrap
+    // invention; only the behaviour is proven. Its VA claim belongs to
+    // src/cmbtmgr.cpp when that lane reaches the row.
+    void StopCombatSounds();
     void show_eagle_eye(int winning_group, int dialog_timeout);
     void show_looted_artifacts(std::vector<type_artifact>& looted_artifacts,
                                int dialog_timeout);

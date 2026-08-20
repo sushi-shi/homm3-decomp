@@ -72,6 +72,16 @@ SIZE(TCombatResultsWindow, 0x4c);
 // define it - and the declaration moves to the real owner's header as soon as
 // 0x477470's compiland is located.
 extern int gCombatResultFlag695014;
+// Retail .data 0x6701a8, the six MP3 names the flag above selects,
+// READ FROM THE IMAGE in order: "win battle", "losecombat",
+// "defend castle", "retreat battle", "surrender battle", "losecastle" -
+// which is exactly the 0..5 domain this file's own body assigns. The
+// only proven reader is command.obj's DoVictory (0x477470), which loads
+// `[4*gCombatResultFlag695014 + 0x6701a8]` straight into
+// soundManager::StartMP3; declared here beside its index rather than in
+// command.h because the two are one datum. DECLARATION ONLY - no TU in
+// this tree defines it yet, so no DATA claim.
+extern const char* const gCombatResultMusic[6];
 
 // Retail /Gr passes the message in ECX, matching DoDialog's callback shape.
 int CombatResultsWindowHandler(message& msg);

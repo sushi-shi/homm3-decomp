@@ -621,6 +621,7 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
+command	?DoVictory@combatManager@@QAEXH@Z	99.4634	99.4634	99.4634	0x77470
 command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
@@ -629,7 +630,6 @@ command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	
 command	?show_eagle_eye@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0
 command	?show_looted_artifacts@combatManager@@QAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
-command	combatManager_DoVictory	0.0000	0.0000	0.0000	0x77470
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0
@@ -1406,7 +1406,22 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # generation, and the newer, more-claimed reference is the more
 # accurate one. 88.24 is the honest number against today's target;
 # 90.84 was measured against a coarser one.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
+# recruitUnit::Update ACCEPTED 90.8376 -> 88.2360 (2026-08-20, game/command
+# lane). NOT A CODE CHANGE - recruit.cpp and its ENTIRE include closure are
+# byte-identical across the two measurements, and the closure provably does
+# not contain cmbtmgr.h, combatresultswindow.h or command.h (the only headers
+# this lane touched besides hero.h). It is the delink generation the match
+# skill documents: naming combatManager::DoVictory (0x477470) adds symbols to
+# the synth PDB, vostok re-delinks EVERY unit against it, and recruit.obj's
+# TARGET half moves. PROVEN BY A REVERT CONTROL, not by argument: stashing
+# only this lane's src/command.cpp + headers and re-delinking returns the row
+# to exactly 90.8376, and restoring them returns it to exactly 88.2360 - the
+# same two numbers, on the same row, as the precedent in the skill.
+# The bisect ALSO cleared the obvious suspect: hero.h gained a
+# SetPrimarySkill inline in this lane, and deleting that alone leaves the row
+# at 88.2360. Per doctrine the more-claimed reference is the more accurate
+# one, so the lower number is the honest one; hist keeps 90.8376.
+recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
