@@ -244,12 +244,60 @@ void army::initialize(TCreatureType type, long number, const hero* owner, long n
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:261
+// Everything `initialize` does, plus the three things only a stack that
+// is actually GOING INTO a battle needs: its occupancy written into the
+// combat grid, its aura published, and its retaliation allowance set.
+//
+// THE SECOND HEX IS SPELLED OUT rather than routed through
+// get_second_grid_index (0x4466a0), and the bytes say so: the enclosing
+// `if` has already tested `Is(0) & 1` and retail's second-hex block
+// carries NO second copy of that test - only the bare
+// `gridIndex + OffsetToFront(-1)` the accessor's own tail is. gridIndex
+// is reloaded there too, and gpCombatManager is loaded a SECOND time
+// for the second cell, so neither is cached across the block.
+//
+// THE RETALIATION TAIL IS set_retaliation_count (dc 0x437ac) WRITTEN
+// LONGHAND, exactly as ResetRound (0x447120) already writes it and for
+// the same reason: retail emits no out-of-line body for it anywhere, so
+// a same-TU helper would produce a fourth one. The two Griffin rules
+// are two independent `if`s over one load of creatureType, not an
+// else-if chain - retail compares the same EAX twice.
 VA(0x0043d8b0, 0x135)  // anchor-bracket + arity (ret 0x1c = 7 args), dc 0x43d9c
-void army::Init(int armyId, int newNumTroops, const hero* owner, int side, int inIndex, int iGridIndex, int iOrigPos)
+void army::Init(int armyId, int newNumTroops, const hero* owner, int side,
+                int inIndex, int iGridIndex, int iOrigPos)
 {
-    // @stub
+    initialize(armyId, newNumTroops, owner, side, inIndex, iGridIndex);
+    if (gpCombatManager->ValidHex(gridIndex)) {
+        hexcell* cell = &gpCombatManager->cells[gridIndex];
+        cell->armySide = static_cast<signed char>(combatSide);
+        cell->armySlot = static_cast<signed char>(bitIndex);
+        cell->field_1a = -1;
+        if (Is(0) & 1) {
+            hexcell* second =
+                &gpCombatManager->cells[gridIndex + OffsetToFront(-1)];
+            second->armySide = static_cast<signed char>(combatSide);
+            second->armySlot = static_cast<signed char>(bitIndex);
+            second->field_1a = facing != 0;
+            cell->field_1a = facing == 0;
+        }
+        add_aura();
+    }
+    originalIndex = iOrigPos;
+    retaliationCount = 1;
+    if (creatureType == ARMY_CREATURE_GRIFFIN)
+        retaliationCount = 2;
+    if (creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
+        retaliationCount = 5000;
+    if (spellInfluence[SPELL_COUNTERSTRIKE])
+        retaliationCount += counterstrokeBonus;
+    if (Is(6) & 1)
+        retaliationCount = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:288
 VA(0x0043d9f0, 0x525)  // anchor-bracket + dc-callgraph (GetSprite,
