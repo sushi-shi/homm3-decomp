@@ -3751,7 +3751,16 @@ int advManager::ProcessWaitingHover(int mouseX, int mouseY)
                 else
                     currCell = fullMap->cell(point.x, point.y, point.z);
 
-                SetRolloverText(currCell, mouseX, mouseY);
+                // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
+                // coordinates here, exactly as ProcessHover does. At
+                // fn+0x246 it pushes ebx and edi, and edi is built at
+                // fn+0x28 as `mov eax,edi / cdq / and edx,0x1f / add
+                // eax,edx / sar edi,5` from [ebp+8] - the same value it
+                // then stores into lastHoverX at [esi+0xec]. Passing the
+                // raw pixel coordinates kept both parameters live to this
+                // point and cost VC6 the two dead parameter homes retail
+                // spills into (`mov [ebp+8],eax` right at this call).
+                SetRolloverText(currCell, rx, ry);
                 switch (currCell->type) {
                 case TOWN: {
                     class town* town = gpGame->GetTown(currCell->extraInfo);
