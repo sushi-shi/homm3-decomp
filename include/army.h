@@ -200,7 +200,25 @@ public:
     // been re-placed in the grid - i.e. the draw order a moving stack
     // takes against the row it is entering. Pad slice, behind the move
     // view with the rest of Walk's surface.
-#ifdef HOMM3_ARMY_MOVE_VIEW
+    // The five animation-state bytes that open the record, all proven by
+    // combatManager::PowEffect (0x468990) and named from the Dreamcast
+    // members.csv run army@0..army@4. PowEffect's first walk writes
+    // bShowRangeFrames from the current sequence, picks iNextFrameType
+    // (-1 = nothing to play), loads iRemainingFramesToPlay out of
+    // CSprite::GetNumFrames and raises iDrawPriority to at least 5; its
+    // animation loop then drives all five. They arrive as their own view
+    // rather than by widening the move view because that one carries
+    // twenty declarators cmbtmgr.obj has no use for.
+#ifdef HOMM3_ARMY_POW_VIEW
+    unsigned char bShowAttackFrames;     // +0x00
+    unsigned char bShowRangeFrames;      // +0x01
+    signed char iShowAttackFrameType;    // +0x02
+    signed char iNextFrameType;          // +0x03
+    signed char iRemainingFramesToPlay;  // +0x04
+    char pad_05[0x3];
+    int iDrawPriority;            // +0x08
+    char pad_0c[0x4];
+#elif defined(HOMM3_ARMY_MOVE_VIEW)
     char pad_00[0x8];
     int iDrawPriority;            // +0x08
     char pad_0c[0x4];
@@ -236,6 +254,13 @@ public:
     unsigned char bShowPowEffect;  // +0x20
     char pad_21[0xb];
     int iRoundsLeftBeforeVanish;   // +0x2c
+#elif defined(HOMM3_ARMY_POW_VIEW)
+    // PowEffect needs only the first of that pair - it scans every stack
+    // for a raised bShowPowEffect to decide whether to load the effect
+    // sprite at all, and clears it in the closing walk - so the pow view
+    // takes one declarator where the round view takes three.
+    unsigned char bShowPowEffect;  // +0x20
+    char pad_21[0xf];
 #else
     char pad_20[0x10];
 #endif
@@ -485,7 +510,19 @@ public:
     // rename cannot move it (GetCommand held 92.5714 across it).
     unsigned char bSomeUnitsDamaged; // +0xe9
     unsigned char bAllUnitsKilled;   // +0xea
+    // DC army.iPostPowSpellToCast (members.csv army@216, a SpellID -
+    // retail sits a flat +0x14 above the DC record from hitByCreature
+    // onward, so DC 216 lands on +0xec). PowEffect's post-animation
+    // walk is its only decoded reader: any stack whose value is not -1
+    // gets that spell cast on its own hex, and the slot is reset to -1
+    // straight after. Spelled int because SpellID's enum lives in a
+    // header this one does not include.
+#ifdef HOMM3_ARMY_POW_VIEW
+    char pad_eb[0x1];
+    int iPostPowSpellToCast;         // +0xec
+#else
     char pad_eb[0x5];
+#endif
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // The side that OWNS this stack, written once by Init and never by
@@ -526,6 +563,20 @@ public:
     char pad_fc[0x10];
     char* yModify;                // +0x10c
     char pad_110[0x48];
+#elif defined(HOMM3_ARMY_POW_VIEW)
+    // +0x108, the DC roster's `bPowSequenceComplete` (army@244, the same
+    // flat +0x14 the band above carries). PowEffect clears it for every
+    // stack before the animation loop and raises it the frame a stack
+    // falls back to cs_wait, which is what stops that stack advancing
+    // for the rest of the sequence.
+    char pad_fc[0xc];
+    // An INT, not the byte the name suggests (byte-proven 2026-08-20):
+    // PowEffect both TESTS and STORES it a dword wide -
+    // `mov eax,[esi+0x108] / test eax,eax` and
+    // `mov dword ptr [esi+0x108],1` - where a char field would emit
+    // `mov al` / `mov byte ptr`. Measured +0.03 on that body.
+    int bPowSequenceComplete;            // +0x108
+    char pad_10c[0x4c];
 #else
     char pad_fc[0x5c];
 #endif
@@ -1473,11 +1524,16 @@ public:
     // rounds: retaliations restored, spell rounds decremented, poison
     // applied, and the summon countdown that ends in ProcessDeath.
     void ResetRound();
+#endif
     // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
     // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
     // argument, which is what the DC roster's two-parameter row and the
     // body's `ret 4` both say. Declared here so ResetRound can spell the
-    // call; the BODY is still a carcass.
+    // call; the BODY is still a carcass. Split out of the round view
+    // 2026-08-20 so combatManager::PowEffect, whose death sweep is its
+    // second decoded caller, can reach it without also taking
+    // ResetRound and the round view's other twenty-six declarators.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_POW_VIEW)
     void ProcessDeath(int bFadeElementals);
 #endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: this pair is the FOURTH

@@ -649,7 +649,15 @@ public:
     int field_132d8;                  // +0x132d8
     char pad_132dc[0x4];
     int field_132e0;                  // +0x132e0
-    char pad_132e4[0x10];
+    // Sliced in place 2026-08-20 (a retype, not new declarators) off two
+    // bodies that agree field for field: LoadSpellEffect (0x5a92f0)
+    // disposes powSprite, refills it from akSpellEffectTraits and stores
+    // the effect id it cached, and PowEffect (0x468990) asks powSprite
+    // for its frame count and drives powFrameIndex across the animation.
+    char pad_132e4[0x4];
+    CSprite* powSprite;               // +0x132e8
+    int powSpellEffect;               // +0x132ec
+    int powFrameIndex;                // +0x132f0
     // "This combat is fought over a walled town": HexIsBlocked
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
@@ -677,7 +685,10 @@ public:
 #ifdef HOMM3_CMBTMGR_SETUP_VIEW
     char pad_13304[0x134];
     unsigned char field_13438[2][20]; // +0x13438
-    char pad_13460[0x4];
+    // Sliced in place off PowEffect, which zeroes it beside field_13438
+    // and then asks it, after the death sweep, whether MakeCreaturesVanish
+    // needs running. A retype, not a new declarator.
+    int field_13460;                  // +0x13460
     const char* backgroundName;       // +0x13464
 #else
     char pad_13304[0x134];
@@ -1090,7 +1101,17 @@ public:
     // 0x46a4a0) but the DC roster has no row for it there, so both the
     // NAME and the parameter's constness are PROVISIONAL and its claim
     // waits for the lane that reconstructs the body.
-    CSprite* LoadCreatureSprite(int creatureType);             // 0x5a92f0
+    // 0x5a92f0, RENAMED 2026-08-20 - it was `LoadCreatureSprite(int
+    // creatureType)` and the retail body refutes that outright: it
+    // caches on [this + 0x132ec], disposes [this + 0x132e8] and, for any
+    // argument other than -1, indexes the TWELVE-byte
+    // akSpellEffectTraits row at 0x641e08 for a sprite name. That is a
+    // SPELL EFFECT sprite, not a creature's. The DC roster settles the
+    // name and the compiland: combatManager::LoadSpellEffect(int
+    // effect), spells.obj, E:\gamedcs\spells.cpp:5858, dc 0x15802c.
+    // Close's existing `LoadSpellEffect(-1)` call is the sentinel arm
+    // that just clears the cache. Body stays spells.cpp's; not claimed.
+    CSprite* LoadSpellEffect(int effect);                      // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
                                 long lowest_defense,
@@ -1591,6 +1612,25 @@ DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
 // the rva is the shorts view above, so this alias carries none - the only
 // delta it can produce is a reloc NAME.
 extern const type_obstacle_shape gObstacleShapes[];
+
+// One spell-effect row, at .rdata 0x641e08 with a TWELVE-byte stride.
+// Two retail bodies fix the layout between them and neither needs the
+// other: LoadSpellEffect (0x5a92f0) forms `[12*effect + 0x641e08]` and
+// hands +0 to ResourceManager::GetSprite, so +0 is a .def sprite name;
+// PowEffect (0x468990) forms the same row and hands +4 to the
+// Immersion helper at 0x4b69f0, so +4 is a force-feedback effect name.
+// The remaining dword is unread by anything decoded here and stays a
+// pad. The Dreamcast roster supplies the TYPE and the array name -
+// ?akSpellEffectTraits@@3QBUTSpellEffectTraits@@B, with m_name at 0 -
+// but its own record is EIGHT bytes, so the +4 Immersion slot is a
+// retail insertion and its name is a bootstrap invention.
+struct TSpellEffectTraits {
+    const char* m_name;      // +0x0, the .def sprite
+    const char* m_immName;   // +0x4, the Immersion effect
+    char pad_08[0x4];
+};
+SIZE(TSpellEffectTraits, 0xc);
+DATA(0x00641e08) extern const TSpellEffectTraits akSpellEffectTraits[];
 
 // The moat's per-town base damage, at .rdata 0x63bd18 and indexed by
 // town type: SetupAndLoadObstacles folds [0x63bd20] for the Tower,

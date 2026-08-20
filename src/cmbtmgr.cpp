@@ -55,6 +55,14 @@
 #define HOMM3_SPELL_SLOW_DECL
 #define HOMM3_SPELL_LAND_MINE_DECL   // the Tower moat mine, SetupAndLoadObstacles
 #define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
+// PowEffect's own surface: its declarator and TSpellEffectID from
+// cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
+// and bPowSequenceComplete from army.h, the death sequence from
+// csprite.h and the Immersion hook from game.h.
+#define HOMM3_CMBTMGR_ROUND_VIEW
+#define HOMM3_ARMY_POW_VIEW
+#define HOMM3_CSPRITE_DEATH_SEQ_DECL
+#define HOMM3_GAME_IMM_EFFECT_DECL
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_ICONS_VIEW
@@ -283,7 +291,7 @@ void combatManager::FreeIcons()
             heroFlagSprites[side]->Dispose();
     }
 
-    LoadCreatureSprite(-1);
+    LoadSpellEffect(-1);
     combatGridBitmap->Dispose();
     combatCellGridBitmap->Dispose();
     combatShadowBitmap->Dispose();
@@ -2905,16 +2913,314 @@ void combatManager::ViewArmy(army* thisArmy, int isQuickView)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\cmbtmgr.cpp:4158
-VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
-void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature)
+// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
+// homes both operands to the frame, selects an ADDRESS with lea/lea and
+// dereferences it - which is what a const-reference-in, const-reference-
+// out select inlines to and what neither a by-value helper nor an
+// inline ternary produces (both enregister; 93.3%). VC6's own
+// <algorithm> does not export `max` into namespace std, so the template
+// is written out here rather than included.
+//
+// MOVED AHEAD OF PowEffect 2026-08-20: that body performs seven of these
+// selects and a static has to be defined before its first use. get_distance,
+// the other consumer, is measured after every move.
+static const long& MaxOf(const long& x, const long& y)
 {
-    // @stub
+    return x < y ? y : x;
 }
 
-#endif  // @carcass
+// E:\gamedcs\cmbtmgr.cpp:4158
+// The whole combat animation frame pump: one spell effect's worth of
+// attack, wince, death and defend sequences played across every stack
+// at once, then the deaths resolved.
+//
+// The body is NOT a switch - `spellEffect` is only ever compared with
+// -1 and used as a twelve-byte index into akSpellEffectTraits. What it
+// is instead is eleven `for(side) for(slot)` walks over armies[2][21],
+// split by three separately inlined IsQuickCombat guards: the first
+// skips the entire animation half, the second gates the per-stack
+// samples, the third gates the wind-down loop.
+//
+// Shapes worth keeping:
+//   * the frame budget is four chained MaxOf selects ending on
+//     `wince + attack - 1`, which retail forms with one
+//     `lea eax,[esi+edi-1]`;
+//   * `iNextFrameType = cs_wince + (Is(27) & 1)` is ARITHMETIC, not a
+//     ternary - retail emits `setne cl` straight into `add ecx,3`;
+//   * walk 4 is MakeCreaturesVanish's own first walk verbatim, down to
+//     the three-way arrow-tower switch on gridIndex;
+//   * the wind-down is a `for(;;)` with a bFramesChanged latch, not a
+//     counted loop - retail has no bound to test.
+//
+// Two measured refinements on top of the first compile (96.1134):
+//   * army::bPowSequenceComplete is an INT, not the byte its name
+//     suggests. Retail both tests and stores it a dword wide, and
+//     retyping it is worth +0.03 (96.1134 -> 96.1439). The field note
+//     in army.h carries the bytes.
+//   * the attack-frame skip is a GOTO, not a nested if. Retail spells
+//     `cmp frameCount, attack_frames-1 / jge <play> / jmp <continue>`,
+//     i.e. it tests the POSITIVE and falls through to the continue,
+//     which the plain `if (frameCount < attack_frames - 1) continue;`
+//     emits with both arms the other way round. +0.055, and it takes
+//     the branch-shape distance from 3 to 1. Swapping the enclosing
+//     `if (attack_frames)` arms instead was measured and is much worse
+//     (94.90) - the flip is on the inner test alone.
+//
+// Residual (96.1988%): ONE block, 819 instructions against retail's
+// 820, one unpaired branch that matches no cataloged D signature, and
+// predict-inline reports the call multisets AGREE exactly (14 and 14).
+// why-branch's six guided candidates all measure +0 or worse.
+VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
+void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
+{
+    int side;
+    int slot;
+
+    if (!IsQuickCombat()) {
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                stack.bShowRangeFrames = static_cast<unsigned char>(
+                    stack.currFrameType == cs_range_ur
+                    || stack.currFrameType == cs_range_r
+                    || stack.currFrameType == cs_range_dr);
+                stack.iNextFrameType = -1;
+                if (stack.bSomeUnitsDamaged || stack.bShowAttackFrames) {
+                    if (stack.bShowAttackFrames)
+                        stack.iNextFrameType = stack.iShowAttackFrameType;
+                    else if (stack.bAllUnitsKilled)
+                        stack.iNextFrameType = cs_death;
+                    else
+                        stack.iNextFrameType = static_cast<signed char>(
+                            cs_wince + ((stack.Is(27) & 1) != 0));
+                    stack.iRemainingFramesToPlay = static_cast<signed char>(
+                        stack.stdIcon->GetNumFrames(stack.iNextFrameType));
+                    if (stack.iNextFrameType == stack.currFrameType)
+                        stack.iRemainingFramesToPlay--;
+                    if (stack.iDrawPriority < 5)
+                        stack.iDrawPriority = 5;
+                }
+                stack.bPowSequenceComplete = 0;
+            }
+        }
+
+        unsigned char bShowSomePowEffect = 0;
+        if (spellEffect != -1) {
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    if (armies[side][slot].bShowPowEffect) {
+                        bShowSomePowEffect = 1;
+                        break;
+                    }
+                }
+            }
+            if (bShowSomePowEffect && !LoadSpellEffect(spellEffect))
+                bShowSomePowEffect = 0;
+        }
+
+        int numFrames = 0;
+        if (bShowSomePowEffect)
+            numFrames = powSprite->GetNumFrames(0);
+
+        int attack_frames = 0;
+        int wince_frames = 0;
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                if (stack.bShowAttackFrames)
+                    attack_frames = MaxOf(attack_frames,
+                        stack.stdIcon->GetNumFrames(
+                            stack.iShowAttackFrameType));
+                else if (stack.bAllUnitsKilled)
+                    wince_frames = MaxOf(wince_frames,
+                        stack.stdIcon->GetNumFrames(cs_death));
+                else if (stack.bSomeUnitsDamaged)
+                    wince_frames = MaxOf(wince_frames,
+                        stack.stdIcon->GetNumFrames(cs_wince));
+            }
+        }
+        numFrames = MaxOf(numFrames, wince_frames);
+        numFrames = MaxOf(numFrames, attack_frames);
+        numFrames = MaxOf(numFrames, wince_frames + attack_frames - 1);
+
+        if (bResetLimitCreature)
+            ResetLimitCreature();
+
+        for (side = 0; side < 2; side++) {
+            for (slot = 0; slot < numArmies[side]; slot++) {
+                army& stack = armies[side][slot];
+                if (stack.Is(21) & 1)
+                    continue;
+                if (!stack.bSomeUnitsDamaged && !stack.bShowAttackFrames
+                        && !stack.bShowRangeFrames)
+                    continue;
+                if (stack.creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
+                    switch (stack.gridIndex) {
+                    case COMBAT_HEX_LOWER_TOWER:
+                        field_1402d = 1;
+                        break;
+                    case COMBAT_HEX_KEEP:
+                        field_1402c = 1;
+                        break;
+                    case COMBAT_HEX_UPPER_TOWER:
+                        field_1402e = 1;
+                        break;
+                    }
+                } else {
+                    field_14000[side][slot] = 1;
+                }
+            }
+        }
+
+        ComputeMaxExtent();
+        if (spellEffect != -1)
+            PlayImmEffect(akSpellEffectTraits[spellEffect].m_immName, 1);
+
+        for (int frameCount = 0; frameCount < numFrames; frameCount++) {
+            int wince_start_offset = numFrames - 1 - frameCount;
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    army& stack = armies[side][slot];
+
+                    if (stack.bShowRangeFrames
+                            && stack.currFrameType != cs_wait) {
+                        if (stack.currFrameIndex
+                                < stack.stdIcon->GetNumFrames(
+                                    stack.currFrameType) - 1) {
+                            stack.currFrameIndex++;
+                        } else {
+                            stack.currFrameType = cs_wait;
+                            stack.currFrameIndex = 0;
+                        }
+                    }
+                    if (stack.iNextFrameType == -1)
+                        continue;
+                    if (stack.bPowSequenceComplete)
+                        continue;
+
+                    if (!stack.bShowAttackFrames
+                            && wince_start_offset
+                                > stack.iRemainingFramesToPlay) {
+                        if (attack_frames) {
+                            if (frameCount >= attack_frames - 1)
+                                goto play_frame;
+                            continue;
+                        } else if (stack.currFrameType == cs_wince
+                                && stack.currFrameIndex
+                                    >= stack.stdIcon->GetNumFrames(
+                                        stack.currFrameType) - 1) {
+                            continue;
+                        }
+                    }
+
+play_frame:
+                    if (stack.currFrameType != stack.iNextFrameType) {
+                        if (!IsQuickCombat()) {
+                            if (stack.bShowAttackFrames)
+                                stack.play_sample(army::ATTACK_SAMPLE);
+                            else if (stack.iNextFrameType == cs_wince)
+                                stack.play_sample(army::WINCE_SAMPLE);
+                            else if (stack.iNextFrameType == cs_death)
+                                stack.play_sample(army::DIE_SAMPLE);
+                            else if (stack.iNextFrameType == cs_defend)
+                                stack.play_sample(army::DEFEND_SAMPLE);
+                        }
+                        stack.currFrameType = stack.iNextFrameType;
+                        stack.currFrameIndex = 0;
+                    } else if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(
+                                stack.currFrameType) - 1) {
+                        stack.currFrameIndex++;
+                    } else if (stack.currFrameType != cs_wait
+                            && stack.currFrameType != cs_death) {
+                        stack.currFrameType = cs_wait;
+                        stack.currFrameIndex = 0;
+                        stack.bPowSequenceComplete = 1;
+                    }
+                }
+            }
+
+            if (bShowSomePowEffect
+                    && frameCount < powSprite->GetNumFrames(0))
+                powFrameIndex = frameCount;
+
+            DrawFrame(0, 1, 0, 100, 1, 1);
+            gpWindowManager->UpdateScreen(
+                drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+                drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+                drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+        }
+    }
+
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            if (stack.iPostPowSpellToCast != -1) {
+                if (stack.numTroops > 0)
+                    CastSpell(stack.iPostPowSpellToCast, stack.gridIndex,
+                              1, -1, 0, 3);
+                stack.iPostPowSpellToCast = -1;
+            }
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        for (;;) {
+            int bFramesChanged = 0;
+            for (side = 0; side < 2; side++) {
+                for (slot = 0; slot < numArmies[side]; slot++) {
+                    army& stack = armies[side][slot];
+                    if (stack.currFrameType == cs_wait)
+                        continue;
+                    if (stack.currFrameIndex
+                            < stack.stdIcon->GetNumFrames(
+                                stack.currFrameType) - 1) {
+                        stack.currFrameIndex++;
+                    } else if (stack.currFrameType == cs_death) {
+                        continue;
+                    } else {
+                        stack.currFrameType = cs_wait;
+                        stack.currFrameIndex = 0;
+                    }
+                    bFramesChanged = 1;
+                }
+            }
+            if (!bFramesChanged)
+                break;
+            DrawFrame(1, 1, 0, 100, 1, 1);
+        }
+        if (bResetLimitCreature)
+            ResetLimitCreature();
+    }
+
+    memset(field_13438, 0, sizeof(field_13438));
+    field_13460 = 0;
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            if (stack.bAllUnitsKilled) {
+                stack.ProcessDeath(0);
+                if (stack.Is(6) & 1)
+                    heroes[side]->DestroySiegeWeaponArtifact(
+                        stack.creatureType);
+            }
+        }
+    }
+    if (field_13460)
+        MakeCreaturesVanish();
+
+    for (side = 0; side < 2; side++) {
+        for (slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            stack.bShowPowEffect = 0;
+            stack.bSomeUnitsDamaged = 0;
+            stack.iDrawPriority = 4;
+            stack.bShowAttackFrames = 0;
+            stack.numTroopsToShowOverride = -1;
+        }
+    }
+    DrawFrame(1, 0, 0, 0, 1, 0);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4497
 // `current_army` KEEPS the DC roster's const (corrected 2026-08-14). The
@@ -2942,18 +3248,6 @@ unsigned char combatManager::enemy_is_adjacent(const army* current_army, int gri
 #if 0  // @carcass
 
 #endif  // @carcass
-
-// The Dinkumware std::max SHAPE, spelled locally: retail's max arm
-// homes both operands to the frame, selects an ADDRESS with lea/lea and
-// dereferences it - which is what a const-reference-in, const-reference-
-// out select inlines to and what neither a by-value helper nor an
-// inline ternary produces (both enregister; 93.3%). VC6's own
-// <algorithm> does not export `max` into namespace std, so the template
-// is written out here rather than included.
-static const long& MaxOf(const long& x, const long& y)
-{
-    return x < y ? y : x;
-}
 
 // E:\gamedcs\cmbtmgr.cpp:4519
 // Free __fastcall, not the DC roster's method: retail takes start in
