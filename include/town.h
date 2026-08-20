@@ -713,8 +713,12 @@ extern const signed char gMageGuildBaseSpellCounts[5];
 // {HORDE_ID, HORDE_UPG_ID, HORDE_2_ID, HORDE_2_UPG_ID} -
 // get_horde_effect's scan turns a building id into the
 // const_horde_effects column. Name INVENTED (no DC symbol); the four
-// values are read from the pinned image.
-extern const int gHordeBuildings[4];
+// values are read from the pinned image. Retyped in place 2026-08-20
+// (int -> type_building_id, an identical 4-byte load): create_building
+// assigns a row entry back into its type_building_id argument, which
+// the enum element type carries without a cast, while every int reader
+// (get_horde's return, the bitNumber indexes) narrows implicitly.
+extern const type_building_id gHordeBuildings[4];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);
