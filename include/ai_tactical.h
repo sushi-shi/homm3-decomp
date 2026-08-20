@@ -262,6 +262,7 @@ struct type_AI_spellcaster {
     long get_cure_value(const army* our_army, type_enchant_data caster);
     long get_antimagic_value(const army* our_army, type_enchant_data caster);
     long get_backlash_value(const army* our_army, type_enchant_data caster);
+    long get_muck_and_mire_value(const army* enemy, type_enchant_data caster);
     long get_counterstroke_value(const army* our_army, type_enchant_data caster);
     long get_fire_shield_value(const army* our_army, type_enchant_data caster);
     long get_hypnotize_value(const army* enemy, type_enchant_data caster);
