@@ -69,6 +69,12 @@ enum TArtifact {
     ARTIFACT_LIONS_SHIELD_OF_COURAGE = 0x22,
     ARTIFACT_SWORD_OF_JUDGEMENT = 0x23,
     ARTIFACT_HELM_OF_HEAVENLY_ENLIGHTENMENT = 0x24,
+    // CheckForDefeatedHeroLoss's quest-artifact compares (0x5f2a40):
+    // the two Shadow of Death necromancy accessories the Gem campaign
+    // escorts. Canonical ordinals, same gate. (The fifth orb the same
+    // arm tests is armygrp.h's ungated ARTIFACT_ORB_OF_INHIBITION.)
+    ARTIFACT_VAMPIRES_COWL = 0x37,
+    ARTIFACT_DEAD_MANS_BOOTS = 0x38,
 #endif
     // hero::GetVisibility (0x4e4070) adds one tile of scouting radius
     // for each of 0x34/0x35; DC 52/53 are eArtifactSpeculum and
@@ -206,7 +212,8 @@ enum TArtifact {
     // Behind a view: artifact.h reaches every TU that includes hero.h,
     // and an ungated enumerator counts toward the include-set threshold
     // in all of them.
-#ifdef HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW
+#if defined(HOMM3_ARTIFACT_TURN_AUTOCAST_VIEW) \
+    || defined(HOMM3_VLC_CHECKS_VIEW)
     ARTIFACT_ANGELIC_ALLIANCE = 0x81,
     ARTIFACT_ARMOR_OF_THE_DAMNED = 0x84,
 #endif
