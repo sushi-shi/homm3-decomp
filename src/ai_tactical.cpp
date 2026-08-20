@@ -688,26 +688,40 @@ unsigned char type_AI_spellcaster::is_last_action()
 // words at 0x132b8/0x132bc are the acting stack's (side, slot) pair -
 // the flattened index side*21 + slot is the same one hexcell::get_army
 // uses. Nothing here needed a new leaf.
-// Re-swept 2026-08-08 (85.6): retail MEMORY-HOMES the first loop index
+// Residual (86.7%): retail MEMORY-HOMES the first loop index
 // (`mov [ebp-X],0` before `current` is even computed, then reload /
 // inc / store each iteration) and spends the register it frees on
-// loading each disabled counter before testing it; ours enregisters
-// the index and compares against memory. Tried and rejected: dropping
-// either cached `numArmies[side]` local (no change - unlike
-// get_speed_value, this cache is not what crowds the allocator),
-// initialising `i` above `current` (86.68 - the store moves to the
-// right place but nothing else follows it), declaring `i` without an
-// initialiser (no change), hoisting the count above `current` (81.0),
-// and both together (81.7).
+// LOADING each disabled counter before testing it; ours enregisters the
+// index in EBX and folds the tests into memory operands. That retail
+// loads only TWO of the three disabled counters and still folds
+// `disabled_2b0` into a `cmp dword ptr [eax],0` is what says this is
+// allocator noise and not a source distinction. Register-homing family;
+// `vc6 diagnose` agrees (flow-distance 0, "callee-saved role swap,
+// schedule aligned: ebx->ecx x6, edi->ebx x6") and why-reg --model puts
+// the divergence past the B1 minimum slice.
+//
+// CORRECTION 2026-08-20 (85.5822 -> 86.6781). The 2026-08-08 note
+// listed `i = 0` above `current` under "tried and rejected" WITH ITS
+// SCORE, 86.68 - which is 1.10 ABOVE the row it left banked. MAX is the
+// only ledger, so that spelling should have been kept when it was
+// measured; it is now in the source and in the baseline. Re-measured
+// here at 86.6781, matching the old note's number exactly.
+// Tried and rejected: dropping either cached `numArmies[side]` local
+// (no change - unlike get_speed_value, this cache is not what crowds
+// the allocator), declaring `i` without an initialiser (no change),
+// hoisting the count above `current` (81.0), both together (81.7), and
+// reusing the single `i` for the second loop as old C would
+// (byte-identical at 86.6781).
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
 unsigned char type_AI_spellcaster::should_attack_now(const army* enemy)
 {
     if (params.kills_only)
         return 1;
+    long i = 0;
     const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
                                                   [gpCombatManager->actingSlot];
     long count = gpCombatManager->numArmies[side];
-    for (long i = 0; i < count; i++) {
+    for (; i < count; i++) {
         const army* our_army = &gpCombatManager->armies[side][i];
         if (our_army->creatureId & 0x200040)
             continue;
