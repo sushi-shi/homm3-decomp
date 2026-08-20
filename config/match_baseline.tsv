@@ -900,6 +900,7 @@ game	?calculate_production@game@@QAEXXZ	88.1659	88.1659	88.1659	0xb8af0
 game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
+game	?get_random_lith@game@@QAEEPBV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@PAUtype_point@@JJ@Z	99.8756	99.8756	99.8756	0xcdb80
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40
@@ -921,7 +922,6 @@ game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
-game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860

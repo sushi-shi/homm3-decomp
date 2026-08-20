@@ -3767,14 +3767,89 @@ void game::CheckForTownEvent()
     // @stub
 }
 
-// E:\gamedcs\game.cpp:11571
-VA(0x004cdb80, 0x231)  // anchor-bracket, dc 0xbb0e4
-unsigned char game::get_random_lith(const std::vector<type_point,std::allocator<type_point>* points, type_point* result, long cell_type, long excluded)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\game.cpp:11571
+// Two passes over the same pool with the SAME predicate: count the
+// eligible squares, roll Random(1, count), then walk again and hand back
+// the count-th one. The predicate is one short-circuit OR, and retail's
+// branch ladder gives both arms exactly:
+//   A: the square holds a trigger HERO who is NOT on the local player's
+//      team (`cmp type,0x22` / `test [cell+0xd],0x10` / the inlined
+//      OnSameTeam, whose FALSE arm is the one that counts);
+//   B: the square is the requested lith type, is not the excluded
+//      object, and is a trigger.
+// `type` is loaded once into a register and reused by both arms, while
+// is_trigger is tested twice - one test per arm, which is why the
+// spelling repeats it rather than hoisting it.
+// The cell lookup is NewfullMap::cell(x,y,z) expanded in place: the point
+// is copied to a stack local first (retail reads the second bitfield unit
+// back off that copy at ebp-0x1a), so the local is material.
+//
+// The two arms are `if / else if`, NOT `A || B`, and the second loop is
+// what proves it: retail DUPLICATES the whole `--pick == 0` tail, giving
+// each arm its own decrement and its own return site (the first returns
+// the point out of memory, the second out of ESI). `A || B` joins the
+// arms before the tail and cannot produce that; it measured 86.04 where
+// this spelling measures 99.88. The first loop still shows a SINGLE
+// `inc count` under the same source - a bare increment tail-merges where
+// the five-instruction return tail does not, which is why the two loops
+// look structurally different in retail while sharing one spelling.
+// `int n` is declared BEFORE `int count`: retail emits `count = 0`
+// between the size computation and the loop guard (86.04 -> 97.38 for
+// the arms, 97.38 -> 99.88 for this swap).
+// Residual (99.8757%): two rows, both the same cosmetic data-reloc name -
+// the target side spells 0x69cca8 `bss_29cca8` because no data phase has
+// named it yet. A DATA claim on the declaration does NOT change that
+// (gpGame carries one and is still `bss_2994e8` on the target side);
+// measured 2026-08-20, whole-tree fuzzy identical with and without.
+// Every instruction matches.
+VA(0x004cdb80, 0x231)  // anchor-bracket, dc 0xbb0e4
+unsigned char game::get_random_lith(const std::vector<type_point>* points,
+                                    type_point* result, long cell_type,
+                                    long excluded)
+{
+    int n = points->size();
+    int count = 0;
+    int i;
+
+    for (i = 0; i < n; ++i) {
+        type_point point = (*points)[i];
+        NewmapCell* cell = &worldMap.cellData[
+            (point.z * worldMap.Size + point.y) * worldMap.Size + point.x];
+        if (cell->type == HERO && cell->is_trigger
+            && !OnSameTeam(heroes[cell->extraInfo].owner, gNetLocalGamePos)) {
+            ++count;
+        } else if (cell->type == cell_type && cell->extraInfo != excluded
+                   && cell->is_trigger) {
+            ++count;
+        }
+    }
+
+    if (count == 0)
+        return 0;
+
+    int pick = Random(1, count);
+    for (i = 0; i < n; ++i) {
+        type_point point = (*points)[i];
+        NewmapCell* cell = &worldMap.cellData[
+            (point.z * worldMap.Size + point.y) * worldMap.Size + point.x];
+        if (cell->type == HERO && cell->is_trigger
+            && !OnSameTeam(heroes[cell->extraInfo].owner, gNetLocalGamePos)) {
+            if (--pick == 0) {
+                *result = point;
+                return 1;
+            }
+        } else if (cell->type == cell_type && cell->extraInfo != excluded
+                   && cell->is_trigger) {
+            if (--pick == 0) {
+                *result = point;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\game.cpp:11635
 // Three one-line wrappers around the four-argument get_random_lith.
