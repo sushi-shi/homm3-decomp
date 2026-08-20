@@ -697,7 +697,26 @@ public:
         short legalAlignments;
         unsigned char HasRandomAlignment;
         unsigned char GenerateHero;
+        // +0x14. CreateTownHeroes (0x4ca040) walks the eight slots with a
+        // 0x44-stride induction pointer and feeds three fields of this
+        // dword to GetTownId: `word[+0x14] << 6 >> 6`, `word[+0x16] << 6
+        // >> 6` and `word[+0x16] << 2 >> 12` - the exact 10/10/4 signed
+        // bitfield triple type_point already carries. Dreamcast names the
+        // member CastleLoc at its own +0x0c; retail's eight extra bytes
+        // above shift it and everything after it by 8.
+        //
+        // Sliced out of the pad behind a gate, not outright: type_point
+        // has a user-declared default constructor, so naming it here
+        // makes TPlayerSlotAttributes non-POD for every game.h includer.
+        // Doing that unguarded measured recruitUnit::Update 90.84 ->
+        // 88.24 while changing no offset, so the slice is scoped to the
+        // one TU that reads the field. Both arms are 12 bytes at +0x0c.
+#ifdef HOMM3_GAME_TOWN_HEROES_DECLS
+        char pad_0c[8];
+        type_point CastleLoc;
+#else
         char pad_0c[0xc];
+#endif
         signed char hasRandomHero;
         char pad_19[3];
         int nonRandomHeroId;
@@ -1474,7 +1493,15 @@ public:
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250
-    int GetStartingHeroId(TTownType alignment, int playerPos,
+    // `alignment` is spelled int, not TTownType, for the reason
+    // armyGroup::armies and MonsterData::Artifact are: every caller feeds
+    // it straight out of SGameSetupOptions::alignment[], an eight-element
+    // array that game::Load deserializes and quickherowindow compares
+    // against -1, so an enum in the parameter would put a cast on every
+    // crossing. The switch inside still dispatches on named TOWN_*
+    // enumerators. The Dreamcast declarator's enum is preserved in the
+    // CODEVIEW line below.
+    int GetStartingHeroId(int alignment, int playerPos,
                           int mapPosition);                     // 0x4bb400
     int GetNewHeroId(int playerPos, THeroClass excludedClass,
                      unsigned char preferAlignment,
@@ -1543,6 +1570,15 @@ public:
 #endif
     int ExperienceValueOfStack(const armyGroup* whichGroup,
                                const hero* whichHero);       // 0x4ca3b0
+#ifdef HOMM3_GAME_TOWN_HEROES_DECLS
+    // 0x4ca040. Retail carries a parameter the Dreamcast declarator
+    // (`?CreateTownHeroes@game@@QAAXXZ`, no arguments) does not: the body
+    // ends `ret 4`, tests [ebp+8] for null once per slot and separately
+    // strength-reduces it into a four-byte-stride walker it dereferences,
+    // i.e. an eight-entry int array of pre-chosen starting heroes that
+    // overrides GetStartingHeroId for human players.
+    void CreateTownHeroes(int* startingHeroIds);
+#endif
     void ClaimTown(int townId, int newPlayerOwner,
                    unsigned char bIsRemoteMove,
                    unsigned char check_end_game);            // 0x4c61e0

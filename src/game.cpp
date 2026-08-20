@@ -19,6 +19,13 @@
 // which town.obj already declares behind its own gate. Held together
 // here so townmgr.obj gains no member of class game.
 #define HOMM3_GAME_RANDOM_OBJECTS_DECLS
+// game::CreateTownHeroes (0x4ca040) needs its own declarator plus
+// town::GiveSpells, which it closes each starting town with. Held on its
+// own gate: a bare member declarator on class game is the include-set
+// wall's trigger shape (a first attempt that hung both off
+// HOMM3_GAME_OBJ_DECLS cost recruitUnit::Update 90.84 -> 88.24), and
+// townmgr.obj shares that macro.
+#define HOMM3_GAME_TOWN_HEROES_DECLS
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "terrain.h"
@@ -29,6 +36,7 @@
 #define HOMM3_GAME_HERO_EXTRA_VIEW
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_GAME_TOWN_HEROES_DECLS
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -130,6 +138,21 @@ const int CAMPAIGN_ARMY_OVERRIDE_TRAITS = 96;
 // campaignwindow.h is not in this TU's closure, so the value lives here as a
 // local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
 const int FIRST_SHADOW_OF_DEATH_CAMPAIGN = 13;
+// game::CreateTownHeroes carries the SAME start-level override
+// hero.cpp's HeroFn_004D8B30 does, on the same campaign/scenario pair
+// and the same donor hero - both bodies spell `campaign == 8 &&
+// currentMap == 3` and then read gpGame + 0x4c893, which IS
+// heroes[151].level. The names mirror hero.cpp's kStartLevel* block so
+// the two readers of the pair stay recognisably one rule; the values are
+// retail's literals. The campaign's identity is now more than inference:
+// gCampaignFileNames at 0x66cadc holds 'blood.h3c' at ordinal 8 (IDA
+// names it aBlood_h3c), and hero.cpp's own kArtifactVialOfDragonBlood
+// sits in the same block - but the ordinal is what retail compares, so
+// the constants stay role-named rather than importing a title.
+const int START_LEVEL_CAMPAIGN = 8;
+const int START_LEVEL_SCENARIO = 3;
+const int START_LEVEL_HERO_ID = 151;
+const int START_LEVEL_BONUS = 5;
 // The map's full obelisk roster and the puzzle it uncovers are the same
 // 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
 // std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
@@ -1872,7 +1895,7 @@ int game::RandomScan(signed char* whichList, int start, int length, signed char 
 
 // E:\gamedcs\game.cpp:2190
 VA(0x004bb400, 0x1DC)  // anchor-global, dc 0xa68d8
-int game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
+int game::GetStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
     int heroClass1 = 0;
@@ -4131,18 +4154,50 @@ void game::ProcessRandomObjects()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:9455
+// The town-search loop is game::GetTownId (0x4bb870) inlined: on a hit it
+// falls into the caller's own `== -1` test with the index still live in
+// esi, and on loop exhaustion VC6 constant-folds that test against the
+// -1 return and jumps straight to the null pointer.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
-void game::CreateTownHeroes()
+void game::CreateTownHeroes(int* startingHeroIds)
 {
-    // @stub
+    for (int i = 0; i < 8; i++) {
+        if (!mapHeader.playerSlotAttributes[i].GenerateHero)
+            continue;
+
+        int townId =
+            GetTownId(mapHeader.playerSlotAttributes[i].CastleLoc.x,
+                      mapHeader.playerSlotAttributes[i].CastleLoc.y,
+                      mapHeader.playerSlotAttributes[i].CastleLoc.z);
+        town* whichTown = townId == -1 ? NULL : &towns[townId];
+
+        int heroId;
+        if (startingHeroIds != NULL && players[i].isHuman
+            && startingHeroIds[i] != -1)
+            heroId = startingHeroIds[i];
+        else if (gbUnk69774c)
+            heroId = GetStartingHeroId(setup.alignment[i], i, 0);
+        else
+            heroId = GetStartingHeroId(setup.alignment[i], i, 0);
+
+        if (setup.startingHero[i] == -1)
+            setup.startingHero[i] = heroId;
+        heroAvailability[heroId] = static_cast<char>(i);
+        whichTown->PlaceInMap(heroId, i, 1);
+        whichTown->GiveSpells(NULL);
+
+        if (gbUnk69774c
+            && gpGame->campaign.currentCampaign == START_LEVEL_CAMPAIGN
+            && gpGame->campaign.currentMap == START_LEVEL_SCENARIO)
+            heroes[heroId].GiveExperience(
+                hero::GetExperience(gpGame->heroes[START_LEVEL_HERO_ID].level
+                                    + START_LEVEL_BONUS),
+                1, 0);
+    }
 }
 
 // E:\gamedcs\game.cpp:9516
-#endif  // @carcass
-
 VA(0x004ca240, 0xF6)  // anchor-global, dc 0xb5f80
 void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 {

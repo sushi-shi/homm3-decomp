@@ -479,7 +479,12 @@ public:
     // include-set wall's own trigger shape.
     int save(TAbstractFile* outfile);
 #endif
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
+// game.obj joins the gate for GiveSpells alone: CreateTownHeroes
+// (0x4ca040) closes each starting town with `GiveSpells(NULL)` right
+// after PlaceInMap. Widening the existing guard rather than adding a
+// second declarator keeps every other includer's view of town unchanged.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW) \
+    || defined(HOMM3_GAME_TOWN_HEROES_DECLS)
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff, and advManager::TownEvent closes every
     // successful visit with it.
