@@ -298,16 +298,80 @@ their conclusion was wrong.
   only where retail keeps the WHOLE callee out of line.
 - The pin DOES reach a member-initialiser expansion (contra the eh-cleanup
   caveat), and pinning a later site does NOT shrink the
-  `budget / sites-remaining` divisor for an earlier one.
+  `budget / sites-remaining` divisor for an earlier one — **but that does not
+  run backwards: pinning an EARLY site ENLARGES the divisor for later ones**,
+  so an early pin can produce retail's call exactly and still lose points to a
+  knock-on over-inline (measured −6.6 on `~NewfullMap`).
+- **On a `return` statement the pin reaches the local's scope-exit
+  destructor** — `game::Load` +1.85, `game::Save` +2.56, matching retail's
+  census exactly (3 out-of-line `~SavedGameHeader`, 1 expansion). **Only for a
+  FUNCTION-scoped local**: on block-scoped ones the identical `predict-inline`
+  signal loses hard (−6.4 and −5.9 on two others).
 - A pin can retire a `#pragma inline_depth(0)` SCAFFOLD elsewhere: pinning the
   two rejected sites in `spell_is_valid_on_target` let
   `get_total_combat_value` drop its scaffold and go 46.91 -> 94.74 with four
   neighbouring rows holding.
+- **THE PIN REACHES A `return` STATEMENT'S SCOPE-EXIT DESTRUCTOR** (game lane,
+  2026-08-20). `#pragma inline_depth(0)` on `return 0;` alone forces the
+  FUNCTION-SCOPED local's destructor out of line at that exit and leaves the
+  early-return exits expanded - which is exactly the split retail has when it
+  calls a big `~T()` at the normal exit and expands it elsewhere. `game::Load`
+  83.30 -> 85.15 on the one line, and the same lever on `game::Save`'s two
+  tail exits took it 80.09 -> 82.65 and matched retail's census exactly (3
+  out-of-line `~SavedGameHeader` calls, 1 expansion).
+  **BUT ONLY FOR A FUNCTION-SCOPED LOCAL.** On a BLOCK-scoped one the same
+  pin reaches a different cleanup and loses hard - `readMonsterData`
+  96.47 -> 90.04, `TTimedEvent::Read` 72.92 -> 67.03 - even though
+  predict-inline's `_Tidy` census names the identical `base x0 vs retail x1`
+  shape in all four cases. Check where the local is declared first.
+- **PINNING AN EARLY SITE ENLARGES THE BUDGET FOR THE LATER ONES.** The rule
+  recorded above - that pinning a later site does not shrink an earlier one's
+  `budget / sites-remaining` divisor - DOES NOT RUN BACKWARDS. `~NewfullMap`:
+  `inline_depth(0)` on the leading `delete[]` produces retail's
+  `call ??_ENewmapCell` exactly and still LOSES 6.6 points (95.88 -> 89.29),
+  because the freed budget is then spent over-inlining `~vector<BlackBoxData>`
+  further down, which retail calls. After a pin, re-read the WHOLE call
+  multiset, not just the site you aimed at.
 
 **predict-inline's OVER-inline bucket cannot tell a mangled-name divergence
 from an inlining decision.** `TownQuickView` reported `get_army base x0 vs
 retail x4` because retail calls the CONST overload - a different function at a
 different address. Check the overload before reaching for a knob.
+**And the const-overload case has a source cause worth knowing**: three game
+rows wrote `const_cast<armyGroup&>(town->get_army())` on a NON-const `town*`,
+so the call resolved to the non-const overload and the const_cast was a no-op.
+`static_cast<const town*>` on the RECEIVER selects retail's overload; the
+bytes do not move (/OPT:ICF folded the two onto one row) but the divergence
+row disappears, so the lead stops costing builds.
+
+**A `_Tidy` COUNT IS A COUNT OF GUARDED `return`s, NOT AN INLINING DECISION**
+(game lane, 2026-08-20, and it CORRECTS a diagnosis banked as fact). A
+function holding one `std::string` local emits, at every guarded early
+return, `push 1 / lea ecx,<string> / mov [ebp-4],state / call _Tidy / jmp
+shared-tail` - one cleanup site per return, each with its own unwind-state
+pair. So `_Tidy base x37 vs retail x39` did NOT mean two inlining decisions;
+it meant TWO MISSING STATEMENTS. Segment both call sequences by the anchors
+that resolve identically on both sides, count `_Tidy` per span, and the
+missing code localises to a span you can then read straight out of retail.
+`game::Load` 74.77 -> 86.75 that way, on four statements the census pointed
+at (a version if/else that duplicates a guarded read, a separately-read byte,
+a read-and-discard dword, and a whole gMapExtra plane).
+Two consequences: a span where OUR count is HIGHER is retail sharing one
+cleanup site between two conditions - the merged-return class, and an `||`
+spelling does NOT reproduce it (measured, -2.5); and the mirror serializer is
+the best oracle there is for what the missing statement says.
+
+**A CROWD OF `basic_string` INTERNALS IN THE UNMATCHED COLUMN IS ONE INLINED
+STRING MEMBER.** `readHeroData` showed `_Grow x4`, `_Split x2`, `_Eos`,
+`memmove`, `char_traits::assign`, the free `std::_Xran` and the
+`exception`/`logic_error` constructors - fifteen unmatched calls against
+retail's eight - and the standing note read them as a `bitset<70>::_Xran`
+throw path and concluded the wall was unreachable because "auto_inline cannot
+reach a library template this TU never defines". They were the guts of ONE
+`basic_string::assign(const basic_string&, size_t, size_t)` that retail calls
+and we expanded. A statement pin on the assign took it 71.91 -> 83.77 on one
+line. `auto_inline` genuinely cannot reach such a callee; `inline_depth(0)`
+does not need to, because it suppresses expansion at the CALL SITE.
 
 **WIDEN A PARAMETER FAMILY, NOT ONE END** (2026-08-20 — a method correction
 that had produced a wrong recorded identification). A callee's parameter width
