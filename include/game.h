@@ -127,6 +127,72 @@ public:
 SIZE(BlackBoxData, 0xe4);
 #endif
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+// The two map-object pools readObject (0x502e00) appends to that no other
+// claimed body reaches yet. Both are sixteen bytes wide, which is exactly
+// the pad each replaces inside NewfullMap - the class size does not move.
+//
+// The hero-placeholder record, from readObject's id-214 arm. The object
+// pointer is stored FIRST, before the first stream read; the hero id widens
+// an 0xff sentinel to -1 and only that case reads a power rating, which is
+// why the rating byte can be left uninitialised.
+struct HeroPlaceholderData {
+    // The stream's "no fixed hero" sentinel. readObject widens it to -1 in
+    // the record and only that case goes on to read the power-rating byte,
+    // which is why the rating can stay uninitialised on every other record.
+    enum { HERO_ID_BY_POWER_RATING = 0xff };
+
+    CObject* object;
+    unsigned char owner;
+    char pad_05[3];
+    int heroId;
+    unsigned char powerRating;
+    char pad_0d[3];
+};
+SIZE(HeroPlaceholderData, 0x10);
+
+// The random-dwelling record, shared by readObject's three id-216/217/218
+// arms: 216 takes both levels off the stream, 217 forces both to the object
+// type's own `extra` byte, and 218 zeroes the castle id and sets the faction
+// mask to `1 << extra`. The retail-only resolution pass at 0x502b60 walks
+// the same vector with this stride.
+struct RandomDwellingData {
+    int castleId;
+    unsigned short factionMask;
+    unsigned char owner;
+    unsigned char minLevel;
+    unsigned char maxLevel;
+    char pad_09[3];
+    CObject* object;
+};
+SIZE(RandomDwellingData, 0x10);
+
+// The scenario's town-definition pool, the vector at game+0x94. Byte-proven
+// from three independent sides:
+//   * NewfullMap::Read and ::Load clear it through the out-of-line
+//     vector<T>::erase COMDAT at 0x508730, whose copy loop strides 0x88 -
+//     136 bytes per record;
+//   * the random-dwelling resolution pass at 0x502b60 walks the same _First
+//     at game+0x98 with the same 136-byte stride (`shl eax,4 / add eax,edx /
+//     lea eax,[ecx+eax*8]`) and matches on the record's FIRST DWORD against
+//     a RandomDwellingData's castleId, which is what types that field;
+//   * the element destructor at 0x4d4450 is 62 bytes long and releases
+//     exactly ONE Dinkumware string, whose _Ptr it reads at +0x5c - so the
+//     record carries a std::string at +0x58 and nothing else that needs
+//     destroying. That non-trivial destructor is also why Read's `clear()`
+//     is a CALL at all: a trivially destructible element would have let VC6
+//     fold erase(begin(),end()) down to a single store.
+// Only those two fields are named. Everything between and after them stays
+// padding - no retail byte in this lane reaches it.
+struct TScenarioTown {
+    int castleId;
+    char pad_04[0x54];
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
+    char pad_68[0x20];
+};
+SIZE(TScenarioTown, 0x88);
+#endif
+
 class NewfullMap {
 public:
 #ifdef HOMM3_EVENTS_VIEW
@@ -168,9 +234,12 @@ public:
     std::vector<TQuestGuard> QuestGuardList;
     std::vector<TTimedEvent> TimedEventList;
     std::vector<TTownEvent> TownEventList;
-    char pad_0a0[0x10];
+    // +0xa0 and +0xc0, sliced out of their pads by readObject: it appends a
+    // sixteen-byte record to each through push_back's `insert(_Last, 1, x)`,
+    // reading _Last at +0xa8 and +0xc8.
+    std::vector<HeroPlaceholderData> heroPlaceholders;
     std::vector<CMapObjectData*> mapObjectData; // +0xb0
-    char pad_0c0[0x10];
+    std::vector<RandomDwellingData> randomDwellings;
 #else
     std::vector<TreasureData> customTreasure;
     char pad_040[0x70];
@@ -226,6 +295,37 @@ public:
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
 #endif
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // `ret 0x10`: FOUR arguments, one more than Save's three. The fourth is
+    // the map version, and Read forwards it verbatim to readMapObjects and
+    // readTimedEventList and reads it nowhere else.
+    int Read(TAbstractFile* infile, int size, unsigned char twoLayers,
+             int mapVersion);
+    int readMapObjects(TAbstractFile* infile, int mapVersion);
+    // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
+    // carries no map version.
+    int loadMapObjects(TAbstractFile* infile);
+    // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
+    // span audit already flags as having no Dreamcast counterpart; Load
+    // reaches it, and only when the save version is at least 25.
+    void NewfullMapFn_004FD950(TAbstractFile* infile, int saveVersion);
+    // 0x5042c0, nullary. Reached by BOTH readMapObjects and loadMapObjects,
+    // right after the object-type list is deserialized. It rebuilds the
+    // per-class object-type index: the 232-entry array of vectors at
+    // NewfullMap+0xdc that this tree does not model yet. Named for its
+    // address on NewfullMapFn_00505F20's precedent - the Dreamcast mapcell
+    // roster runs loadObjectType -> $E482..$E485 -> readMapObjects with
+    // nothing between, so no surviving symbol names it.
+    void NewfullMapFn_005042C0();
+    // Two retail-only members with no Dreamcast counterpart, both reached
+    // only from Read's tail and named for their addresses on this tree's
+    // NewfullMapFn_00505F20 precedent.
+    //   0x502b60 resolves every randomDwellings entry to a town alignment,
+    //     matching its castleId against the scenarioTowns pool at game+0x94
+    //     and falling back on a `generator`;
+    //   0x500de0 walks the map one more time - its first read is
+    //     `[this+0xd8]`, HasTwoLevels, which is what proves it is a member.
+    void NewfullMapFn_00502B60();
+    void NewfullMapFn_00500DE0();
     void Init(int size, unsigned char twoLayers);
     int loadObject(TAbstractFile* infile, CObject* object);
     int saveObject(TAbstractFile* outfile, CObject* object);
@@ -270,8 +370,17 @@ public:
                       int mapVersion);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
-    int readTownData(TAbstractFile* infile, CObject* townObject);
-    int readHeroData(TAbstractFile* infile, CObject* heroObject);
+    // The map-object dispatcher. `ret 0xc`: three arguments, and the third
+    // is the map version every version-sensitive reader below takes - it is
+    // forwarded verbatim to readTownData, readHeroData, readEventData,
+    // readBlackBoxData and readGarrisonData and read nowhere else.
+    int readObject(TAbstractFile* infile, CObject* tempObject, int mapVersion);
+    // Three arguments, readGarrisonData's divergence again: readObject
+    // pushes the map version to both of these as well.
+    int readTownData(TAbstractFile* infile, CObject* townObject,
+                     int mapVersion);
+    int readHeroData(TAbstractFile* infile, CObject* heroObject,
+                     int mapVersion);
     // Three arguments: retail's `ret 0xc` against the Dreamcast's two.
     // mapVersion picks the creature field's width (1 byte at 14, 2 after).
     int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
@@ -1204,7 +1313,16 @@ public:
     // clear and picking one.
     unsigned char spellDisabled[70];
     unsigned char field_90;
+    // +0x94, sliced out of the pad for NewfullMap::Read and ::Load, which
+    // clear it. The guard is SPLIT around these three declarators rather
+    // than moved, so the preprocessed text town.obj sees is unchanged.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    char pad_00091[3];
+    std::vector<TScenarioTown> scenarioTowns;
+    char pad_000a4[0x1f3b0];
+#else
     char pad_00091[0x1f3c3];
+#endif
 #else
     char pad_00000[0x1f454];
 #endif
