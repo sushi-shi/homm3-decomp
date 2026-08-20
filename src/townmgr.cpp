@@ -15,15 +15,12 @@
 // first inclusion count.
 #define HOMM3_TOWNMGR_HEROVIEW_DECLS
 #define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
-#define HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
 #define HOMM3_TOWN_SUMMONING_DECLS
 #include "townmgr.h"
 #undef HOMM3_TOWN_OBJ_DECLS
-#undef HOMM3_TOWNMGR_WINDOW_DECLS
-#define HOMM3_RECRUIT_DECLS
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
 // widens; measured free on this compiland (1121/1504 unmoved).
@@ -88,9 +85,7 @@
 // DoUniversity, which puts one of these windows on the STACK and so needs
 // its real size and its implicit destructor. Gated so the two TUs that
 // already include that header keep the narrow view they are measured on.
-#define HOMM3_TOWNMGR_UNIVERSITY_DECLS
 #include "university_window.h"
-#undef HOMM3_TOWNMGR_UNIVERSITY_DECLS
 #include "widget.h"
 #include "winmgr.h"
 

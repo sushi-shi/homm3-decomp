@@ -27,10 +27,6 @@ enum EThievesGuildStat {
     TG_STAT_INCOME = 8
 };
 
-// Gated for the same reason townManager below is: townmgr.h is pulled in by
-// advmgr.h and by town.cpp, and a class definition visible there widens
-// their include closure for no benefit. townmgr.cpp is the only consumer.
-#ifdef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "advmgr_popup.h"
 #include "remote.h"
 
@@ -497,14 +493,7 @@ public:
     void Recruit(int i);
     virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
 };
-#endif
 
-// HOMM3_TOWNMGR_MGR_DECLS is the same gate under a second name, for
-// consumers that need townManager but NOT town.h's own
-// HOMM3_TOWN_OBJ_DECLS members (the two gates share a macro; recruit.cpp
-// wants the manager and must leave `class town` in its narrow form,
-// because town.h is already in its include closure through game.h).
-#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_TOWNMGR_MGR_DECLS)
 #include "basemgr.h"
 
 class town;
@@ -652,13 +641,9 @@ public:
     void CycleOutline(int objectIndex, int x, int y, int w, int h);
     // Retail 0x5d6ef0. Fills the mage guild page: five guild levels of
     // six slots each, over two widget runs (frames 10..39, scrolls
-    // 40..69). Nested behind the window gate for the same reason
-    // town.h nests HasBuilding: townmgr.cpp is the only definer and the
-    // only caller, and recruit.cpp - which opens the manager gate for
-    // the class itself - is the tree's include-set canary here. Adding
-    // this ONE declarator to the view recruit.cpp sees took
-    // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
-#ifdef HOMM3_TOWNMGR_WINDOW_DECLS
+    // 40..69). Include-set note, measured 2026-08: making this declarator
+    // visible to recruit.cpp took recruitUnit::Update 90.84 -> 88.24 with
+    // no semantic change (hist holds the peak).
     void SetupMage(heroWindow* mageWin);
     // Retail 0x5c8080 (dc 0x16d0dc). Latches the clicked troop slot and
     // writes the status line for it.
@@ -742,14 +727,12 @@ public:
     // note gives: recruit.cpp opens HOMM3_TOWNMGR_MGR_DECLS, not this
     // one, so a declarator added here is invisible to the canary.
     void SetHeroCommand();
-#endif
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
     virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240
 };
 
 extern townManager* gpTownManager;  // retail .bss 0x6994fc
-#endif
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5180, dc 0x17320c) void DoEventGarrison(hero* inHero, garrison* thisGarrison);

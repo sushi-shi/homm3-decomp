@@ -78,12 +78,7 @@ public:
     unsigned long size;
     int field_10;
 
-#if defined(HOMM3_TOWN_OBJ_DECLS) \
-        || defined(HOMM3_SYSTEMOPTIONSWINDOW_OBJ_DECLS) \
-        || defined(HOMM3_HERO_OBJ_DECLS) \
-        || defined(HOMM3_GAME_GARRISON_HERO_DECLS)
     CNetMsg() {}
-#endif
     CNetMsg(int new_sub_type, unsigned long new_size)
     {
         subType = new_sub_type;
@@ -134,10 +129,6 @@ public:
     int m_gamePos;
 };
 
-class CCombatTypeMsg : public CNetMsg {
-public:
-    int m_combatType;
-};
 #endif
 
 class CTradeRequestMsg : public CNetMsg {
@@ -148,7 +139,6 @@ public:
 };
 SIZE(CTradeRequestMsg, 0x20);
 
-#ifdef HOMM3_SYSTEMOPTIONSWINDOW_OBJ_DECLS
 // Dreamcast CodeView names this one-dword CNetMsg derivative and its
 // `m_quick` member. Retail DoModal independently proves the 0x18-byte
 // extent, RS_COMBAT_TYPE subtype and member at +0x14.
@@ -167,7 +157,6 @@ public:
     }
 };
 SIZE(CCombatTypeMsg, 0x18);
-#endif
 
 class CMapChange : public CNetMsg {
 public:
