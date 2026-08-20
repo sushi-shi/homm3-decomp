@@ -2868,8 +2868,14 @@ int game::Save(TAbstractFile* outfile)
 
     if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
         return -1;
+    // predict-inline: SaveSignPool base x0 vs retail x1 - our CL expands
+    // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
+    // function: inline_depth(0) is statement-granular in VC6, and
+    // SaveMinePool immediately below is expanded on BOTH sides.
+#pragma inline_depth(0)
     if (SaveSignPool(outfile) < 0)
         return -1;
+#pragma inline_depth()
     if (SaveMinePool(outfile) < 0)
         return -1;
 
