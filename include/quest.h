@@ -58,6 +58,22 @@ DATA(0x006a7b38) extern const char* gSeerName;
 // bracket, so the datum is that compiland's own.
 DATA(0x0069fab8) extern std::vector<std::string>* gpSeerHutNames;
 
+// The family's TWO text tables, .data pointer cells at 0x68320c and
+// 0x683210. Every quest body that reads either one picks between them on
+// type_quest::field_04 and on nothing else, and reaches a string through
+// the SAME two strides: 832 bytes per row (field_04's partner +0x38,
+// scaled by 13 and then by 64) and 16 bytes per column, taking the text
+// from the column's +4 behind the same `_Ptr ? _Ptr : _Nullstr` guard
+// every other string read in this compiland carries. That is Dinkumware
+// basic_string's own c_str(), so the columns ARE std::strings; there are
+// five per quest type (`5 * quest_type()` scaled by 16 is exactly
+// retail's `lea eax,[eax+eax*4] / shl eax,4`), and a row is 832/16 == 52
+// of them - ten quest types' worth plus two no body here reaches.
+// Nothing in the admitted surface writes either cell, so both are
+// declared rather than claimed.
+DATA(0x0068320c) extern std::string (*gQuestTextA)[52];
+DATA(0x00683210) extern std::string (*gQuestTextB)[52];
+
 // The packed map position the defeat-monster quest carries at +0x44 and
 // compares field by field in slot 10. The three widths are read straight off
 // that body: it xors the low word against the argument's and masks 0x3ff,
@@ -197,6 +213,29 @@ public:
     // placeholder only.
     virtual void quest_slot_14();
 
+    // The one way into the two text tables above, and the shape of every
+    // read: the column is the only thing that varies between the two
+    // slots that use it. Written as a member rather than repeated
+    // because retail expands it at every one of its eighteen sites.
+    enum {
+        QUEST_TEXT_PROPOSAL = 0,
+        QUEST_TEXT_PROGRESS = 1,
+        QUEST_TEXT_COMPLETION = 2,
+        QUEST_TEXT_DESCRIPTION = 3,
+        QUEST_TEXT_COLUMNS = 5
+    };
+    const std::string& quest_text(int column)
+    {
+        // The ternary is on the whole INDEXED ROW, not on the table
+        // pointer: retail duplicates the `field_38 * 13 << 6` product
+        // into both arms and adds the base inside each one, which is
+        // what this spelling produces and what hoisting the pointer out
+        // does not.
+        const std::string* row =
+            field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
+        return row[QUEST_TEXT_COLUMNS * quest_type() + column];
+    }
+
     // Retail 0x56d240 and 0x56d310, the two string getters the dialog
     // pair above calls - both thiscall with a hidden return buffer and
     // no argument, both BELOW this compiland's first claimed row, and
@@ -217,6 +256,7 @@ public:
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
 };
 
 // Quest type 2. The payload is four bytes read as one block by both
@@ -232,6 +272,7 @@ public:
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
 };
 
 class type_defeat_hero_quest : public type_quest {
@@ -247,6 +288,8 @@ public:
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
+    virtual std::string GetRequirementText();
 };
 
 class type_monster_quest : public type_quest {
@@ -262,6 +305,8 @@ public:
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
+    virtual std::string GetRequirementText();
 };
 
 // Quest type 5: the artifacts the hero must hand over. The vector at +0x40
@@ -277,6 +322,7 @@ public:
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
 };
 
 // Quest type 6: parallel creature-type and creature-count vectors.
@@ -289,6 +335,7 @@ public:
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
@@ -300,6 +347,7 @@ public:
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void Save(TAbstractFile* file);
+    virtual std::string GetQuestDescription();
 };
 
 class type_be_hero_quest : public type_quest {
@@ -312,6 +360,8 @@ public:
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
+    virtual std::string GetQuestDescription();
+    virtual std::string GetRequirementText();
 };
 
 class type_belong_to_player_quest : public type_quest {

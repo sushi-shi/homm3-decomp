@@ -5,6 +5,9 @@
 #include "seerhut.h"
 #include "hero.h"
 #include "quest.h"
+// game.h for game::GetHero, which two of the slot-7 descriptions below
+// name their hero through. MEASURED on this compiland 2026-08-21.
+#include "game.h"
 #include "textresource.h"
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
@@ -240,6 +243,18 @@ std::string type_experience_quest::GetRequirementText()
     return format_string(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                          required_level);
 }
+// Slot 7, the long player-facing description, and the family writes it
+// the same way nine times over: one format off the quest's own
+// DESCRIPTION column, with whatever that quest type has to name as the
+// single vararg.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d410, 0x72)  // anchor-vtable 0x641788 slot 7 + the shared text-table shape, retail-only
+std::string type_experience_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         required_level);
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
@@ -318,6 +333,17 @@ std::string type_skill_quest::GetRequirementText()
 {
     return skill_requirement_text(required_skills);
 }
+// The skill leaf reaches its own requirement line through the free
+// builder rather than through slot 6 - retail calls 0x56dfa0 directly
+// where the three container leaves below go through the vtable.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056d990, 0xD3)  // anchor-vtable 0x6417c4 slot 7 + the shared text-table shape, retail-only
+std::string type_skill_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         skill_requirement_text(required_skills).c_str());
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
@@ -380,6 +406,25 @@ void type_skill_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// Slot 6, the SHORT requirement line, and three of the leaves are a bare
+// `return <const char*>`: the whole body past the lookup is Dinkumware's
+// assign-from-C-string expanded inline, _Xlen guard and refcount and
+// all, which is what a std::string return of a char* compiles to here.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056e240, 0xF2)  // anchor-vtable 0x641800 slot 6, retail-only
+std::string type_defeat_hero_quest::GetRequirementText()
+{
+    return gpGame->GetHero(defeated_hero)->name;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x0056e340, 0x8B)  // anchor-vtable 0x641800 slot 7 + the shared text-table shape, retail-only
+std::string type_defeat_hero_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         gpGame->GetHero(defeated_hero)->name);
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
@@ -472,6 +517,31 @@ void type_defeat_hero_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x0056ea30, 0xF9)  // anchor-vtable 0x64183c slot 6, retail-only
+std::string type_monster_quest::GetRequirementText()
+{
+    const char* name = monster_id >= 0 && monster_id <= 0x96
+                           ? akCreatureTypeTraits[monster_id].m_name
+                           : emptyRolloverText;
+    return name;
+}
+
+// The creature name is spelled against the traits row's own bound as
+// the literal retail compares - armygrp.h's ARMY_CREATURE_LAST is a
+// member of `army`, and this compiland's include closure must not grow
+// to reach it.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056eb30, 0x90)  // anchor-vtable 0x64183c slot 7 + the shared text-table shape, retail-only
+std::string type_monster_quest::GetQuestDescription()
+{
+    return format_string(
+        quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+        monster_id >= 0 && monster_id <= 0x96
+            ? akCreatureTypeTraits[monster_id].m_name
+            : emptyRolloverText);
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
@@ -620,6 +690,18 @@ int type_artifact_quest::GetAIValue(int player)
     }
     return total;
 }
+// The three CONTAINER leaves take their vararg from slot 6 - a real
+// virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
+// in each of them is - and destroy the returned temporary on the way
+// out.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056f730, 0xCF)  // anchor-vtable 0x641878 slot 7 + the shared text-table shape, retail-only
+std::string type_artifact_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         GetRequirementText().c_str());
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056f800, 0x58)  // anchor-vtable 0x641878 slot 2, retail-only
@@ -685,6 +767,14 @@ int type_creature_quest::GetAIValue(int player)
         total += akCreatureTypeTraits[types[i]].AI_value * counts[i];
     return total;
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
+std::string type_creature_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         GetRequirementText().c_str());
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x00570760, 0x60)  // anchor-vtable 0x6418b4 slot 2, retail-only
@@ -757,6 +847,14 @@ int type_resource_quest::GetAIValue(int player)
 {
     return AI_resource_cost(player, resources);
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
+std::string type_resource_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         GetRequirementText().c_str());
+}
+
 
 // E:\gamedcs\seerhut.cpp
 VA(0x00571b80, 0x29)  // anchor-vtable 0x6418f0 slot 11, retail-only
@@ -823,6 +921,21 @@ void type_be_hero_quest::DoProgressDialog()
     NormalDialog(GetProgressDialogText().c_str(), 1, -1, -1, -1,
                  0, -1, 0, -1, 0, -1, 0);
 }
+// E:\gamedcs\seerhut.cpp
+VA(0x00572060, 0xF2)  // anchor-vtable 0x64192c slot 6, retail-only
+std::string type_be_hero_quest::GetRequirementText()
+{
+    return gpGame->GetHero(required_hero)->name;
+}
+
+// E:\gamedcs\seerhut.cpp
+VA(0x00572160, 0x8B)  // anchor-vtable 0x64192c slot 7 + the shared text-table shape, retail-only
+std::string type_be_hero_quest::GetQuestDescription()
+{
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         gpGame->GetHero(required_hero)->name);
+}
+
 
 
 // E:\gamedcs\seerhut.cpp
