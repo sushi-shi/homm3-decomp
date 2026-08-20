@@ -24,7 +24,13 @@
 #define HOMM3_ARMY_CALIPH_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_AURA_VIEW
+#define HOMM3_ARMY_MIDPOINT_DECL
+#define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#define HOMM3_ARMY_AI_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_AI_VIEW
+#undef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#undef HOMM3_ARMY_MIDPOINT_DECL
 #undef HOMM3_ARMY_AURA_VIEW
 #undef HOMM3_ARMY_RANGE_VIEW
 #undef HOMM3_ARMY_CALIPH_VIEW
@@ -1236,16 +1242,22 @@ long army::get_adjusted_defense(const army* enemy,
     return defense;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2670
-VA(0x00442660, 0x29)  // anchor-callee (its ONE callee is
-                      // get_adjusted_defense, matching the DC row's one
-                      // callee) + arity ret 0, dc 0x478c8
+// The defense twin of get_attack_modifier above: how far this stack's
+// current defense has drifted from its creature type's baseline. The
+// frenzy flag is passed 1 and the enemy 0, so a Frenzied stack reports
+// the whole baseline as its (negative) modifier.
+//
+// anchor-callee (its ONE callee is get_adjusted_defense, matching the
+// DC row's one callee) + arity ret 0.
+VA(0x00442660, 0x29)  // anchor-callee + arity, dc 0x478c8
 long army::get_defense_modifier() const
 {
-    // @stub
+    return get_adjusted_defense(0, 1)
+        - akCreatureTypeTraits[creatureType].defenseSkill;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2680
 DC_ONLY(0x478fc, 0x8)
@@ -2802,17 +2814,20 @@ void army::Cure(int level, int iSpellPower, const hero* casting_hero)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:4773
-// The body is the vertical MIDpoint: the hexcell's y at +0x1c6 minus half
-// this stack's sprite height. Of the seven DC coordinate accessors only two
-// keep an out-of-line body in retail, and all ten call sites of this one
-// also call 0x446660 within a few instructions - an (x, y) pair, which is
-// what makes these two MidY and MidX rather than any of the edge accessors.
+// The vertical MIDpoint of this stack on the combat field. Of the seven
+// coordinate accessors the DC roster carries, only this one and MidX keep
+// an out-of-line body in retail; every one of the ten call sites calls
+// them together as an (x, y) pair, which is what names the pair.
 VA(0x00446630, 0x2E)  // anchor-global (body) + call-site pairing, dc 0x4b14c
 int army::MidY() const
 {
-    // @stub
+    return gpCombatManager->cells[gridIndex].field_02 - field_16c / 2;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4779
 DC_ONLY(0x4b170, 0x20)
@@ -2828,15 +2843,22 @@ int army::BottomY() const
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:4790
-// The horizontal MIDpoint: the hexcell's x at +0x1c4, shifted by half a hex
-// (0x16) toward the stack's facing ONLY when it is two hexes wide. An edge
-// accessor would shift a one-hex stack too. Paired with MidY at every site.
+// The horizontal MIDpoint: the hexcell's own x, shifted by half a hex
+// toward the stack's front when - and only when - the stack is two hexes
+// wide. An edge accessor would shift a one-hex stack as well.
 VA(0x00446660, 0x35)  // anchor-global (body) + call-site pairing, dc 0x4b1a8
 int army::MidX() const
 {
-    // @stub
+    int x = gpCombatManager->cells[gridIndex].field_00;
+    if (creatureId & 1)
+        x += facing ? 22 : -22;
+    return x;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4800
 DC_ONLY(0x4b20c, 0x6C)
@@ -2875,8 +2897,6 @@ int army::get_second_grid_index() const
     return gridIndex + OffsetToFront(-1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:4850
 // WHICH OVERLOAD, decided by the call site: combatManager::choose_defense_hex
 // reaches this at 0x4206bb having just computed `gridIndex + (facing ? 1 : -1)`
@@ -2884,11 +2904,32 @@ int army::get_second_grid_index() const
 // is `is_adjacent(int)` (dc 0x4b398) and not `is_adjacent(const army&)`
 // (dc 0x4b3e8). Its only callee is combatManager::is_adjacent, which is also
 // what the DC row calls.
+//
+// TWO LEVERS, both worth their points here. The two-hex arm is a POSITIVE
+// `if` with the `return 0` falling out at the end - retail's `je` goes
+// FORWARD past the second call to a trailing zero block, which the
+// negative `if (!(creatureId & 1)) return 0;` cannot produce (67.3750 ->
+// 93.8750). The remainder was the second hex living in the wrong
+// register: written inline as an argument our CL pairs {facing, hex} in
+// ECX/EDX and has to push the sum before it can load `this`, where retail
+// computes into EAX and loads ECX first; hoisting it to a NAMED LOCAL
+// closes that (93.8750 -> 100.0). Operand order inside the sum is
+// byte-flat, and `OffsetToFront(-1)` in place of the ternary is worse
+// (93.2500) even though get_second_grid_index directly above is exact
+// with it.
 VA(0x004466c0, 0x5A)  // anchor-callee + call-site argument type, dc 0x4b398
-unsigned char army::is_adjacent(int arg) const
+unsigned char army::is_adjacent(int hex) const
 {
-    // @stub
+    if (gpCombatManager->is_adjacent(gridIndex, hex))
+        return 1;
+    if (creatureId & 1) {
+        int second_hex = gridIndex + (facing ? 1 : -1);
+        return gpCombatManager->is_adjacent(second_hex, hex);
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4864
 DC_ONLY(0x4b3e8, 0x3E)
