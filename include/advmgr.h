@@ -613,6 +613,14 @@ public:
 };
 extern CAITurnDriver69928c* gpUnnamed69928c;
 
+// smackmgr.obj's video-pump bracket (0x5977a0 / 0x597850), the pair
+// ProcessKeyPress's ESC arm puts around its exit confirm. Declared here
+// rather than by including smackmgr.h: advmgr.obj needs exactly these two
+// declarators out of that header, and this tree's include-set sensitivity
+// makes widening a compiland's closure a measured cost, not a free one.
+void VideoPause();
+void VideoResume();
+
 // Retail .bss 0x6972b8, kb.cpp's game-over latch. kb.h publishes it as
 // gbGameOver behind HOMM3_EVENTS_VIEW, which advmgr.obj does not open
 // (that view drags in a much wider surface); advManager::Main tests it
@@ -1810,6 +1818,20 @@ public:
                          type_point* trigger_point, int* bNoMove,
                          unsigned char bComputerMove, int* bFoughtBattle,
                          unsigned char bIsRemoteMove);
+    // cursor.obj's 0x481be0 (cursor.cpp:1027, dc 0x7bee4), reached the
+    // same way and located by an EXHAUSTIVE order-map over the whole
+    // cursor.obj tail: DC GetMoveShowIt/end_move_hero/
+    // handle_stop_on_trigger/animate_move/MoveHero/CheckAdjacentMon/
+    // ValidMoveWithEvent/ValidMove pair onto retail 0x480000/0x480090/
+    // 0x480240/0x480380/0x4805e0/0x481900/0x481ad0/0x481be0 in one run,
+    // with handle_stop_on_trigger 305/304, animate_move 604/606 (and it
+    // is the timeGetTime caller), ValidMoveWithEvent 269/278 and
+    // ValidMove 749/756 all inside a percent. DC parameter count 5 =
+    // four stack arguments = retail's `ret 0x10`, and ProcessKeyPress's
+    // keypad arms are the call site: the hero, the step direction, and
+    // the two flags that decide whether a flier may leave the water.
+    int ValidMove(class hero* who, int direction, int bComputerMove,
+                  unsigned char bLandOnly);
     // events.obj's 0x49e2e0 (events.cpp:317, dc 0x903b4). `ret 0xc` =
     // three stack arguments, matching the DC prototype; the shipyard arm
     // hands it the trigger cell, a second copy of the map point and

@@ -1087,16 +1087,441 @@ int advManager::Main(message& msg)
     return result;
 }
 
-#if 0  // @carcass
+// This TU's own free saver (advmgr.cpp:9693, retail 0x418160), defined far
+// below; forward-declared for the S arm of the key dispatcher.
+unsigned char SaveGame(unsigned char bCampaignWinMode);
+
+// The exit-command latch DoSystemOptions fills; owner TU unlocated, nearest
+// consumer declares - and that is now ProcessKeyPress below, whose N, L,
+// ESC and I arms each latch a different command into it, with
+// ProcessDeSelect's adventure-options arm latching SYSOPT_QUIT further on.
+DATA(0x006976d8) extern int gUnnamed6976d8;
 
 // E:\gamedcs\advmgr.cpp:1688
+// The adventure map's keyboard dispatcher, and the largest switch in this
+// compiland. Retail lowers it to a byte-index table at fn+0xb4c over
+// `codeX - 1` in 0..0x50 and a nineteen-target dword table at fn+0xafc, and
+// that index table IS the hotkey map. It decodes to PC scan codes:
+//   0x39 SPACE, then the keypad ring 0x48/0x49/0x4d/0x51/0x50/0x4f/0x4b/
+//   0x47, then 0x20 D, 0x19 P, 0x2f V, 0x31 N, 0x26 L, 0x01 ESC, 0x1f S,
+//   0x17 I, 0x14 T, 0x1c ENTER.
+//
+// ARM ORDER IS SOURCE ORDER, and here that is a real lever rather than a
+// coincidence: this is a JUMP TABLE, so the physical layout is the source
+// layout - the exact opposite of advManager::Main's compare chain one
+// function up, whose bodies are ordered by case VALUE and carry no
+// source-order information at all. The order the table gives is the list
+// above, and the eight keypad arms come out in the engine's own
+// clockwise-from-north order: UP, PGUP, RIGHT, PGDN, DOWN, END, LEFT, HOME
+// = gStepDelta directions 0..7.
+//
+// The eight keypad arms share ONE body, and it is a GOTO, not a tail
+// merge: retail keeps the whole walk block inside the first arm (UP),
+// immediately after that arm's `direction = 0`, and the other seven reach
+// it with `mov ebx,<dir>; jmp` - so each arm's own ctrl-scroll early-out
+// stays private ahead of the join.
+//
+// Four shapes are transcribed as retail has them:
+//   * CheckDimNextHeroBut is EXPANDED here, where DoAdvCommand calls it -
+//     retail loads gpAdvManager into ESI ahead of BOTH IsLocalHuman and
+//     HasMobileHero, which no reload of a global across two calls can
+//     produce. The pinned `auto_inline(off)` on that member is what
+//     DoAdvCommand needs, so the body is written longhand here with the
+//     manager hoisted into a local, which is the same code.
+//   * The SPACE arm's cell lookup takes a COPY of the hero point
+//     (`mov edx,[ebp-0xc] / mov [ebp-0xc],edx` - a copy VC6 coalesced
+//     onto one slot), the same shape ProcessMapSelect's block-scoped
+//     cellPoint carries.
+//   * Both of that arm's points are DELIBERATELY left uninitialised: the
+//     x field goes in with an XOR-merge against whatever the slot already
+//     holds, which is only emitted when nothing zeroed it.
+//   * The D arm keeps retail's own redundant pair - `currHeroId == -1`
+//     threaded straight to the tail AND a null test on the resulting
+//     pointer - which is what an inlined game::GetHero whose null arm got
+//     branch-threaded leaves behind.
+//
+// Residual (75.65%): ONE defect, and it is block PLACEMENT, not content.
+// The two streams are 952 against 948 instructions with 63 branches and 24
+// rets on BOTH sides, and every block from the D arm on lands within twelve
+// bytes of retail (the shared tail is exact) - but retail keeps the shared
+// walk block at +0x259, immediately after the UP arm's `xor ebx,ebx`, where
+// our CL sinks it past all eight keypad arms and pays a `jmp`. That
+// misaligns 0x23a..0x6a0 and is the whole of the missing quarter.
+// Measured and rejected:
+//   * Writing the body out EIGHT times, once per arm, on the theory that
+//     retail cross-jumped identical tails: VC6 does not merge them at all
+//     (952 -> 2208 instructions, 71.36 -> 0.00), which retires that
+//     reading of the `mov ebx,<dir>; jmp` shape.
+//   * Cutting the goto predecessors from seven to one: the block STILL
+//     sinks to the end of the arm list, so the sink is unconditional and
+//     no arrangement of gotos can produce retail's layout.
+//   * Putting the label inside the ctrl-check's else scope: byte-inert.
+// What DID pay was removing the brace scope around the shared block's
+// locals - 71.36 -> 75.65, purely through register allocation inside the
+// body, with the layout unchanged.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
 int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
 {
-    // @stub
-}
+    if (advWindow->chatEdit->bHasFocus)
+        return 0;
 
-#endif  // @carcass
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
+    // NOT game::GetHero: that header inline tests `== -1` first, so VC6
+    // emits its null arm ahead of the address computation. Retail has the
+    // computation first and jumps AWAY for the null, which is the opposite
+    // arm order and therefore the opposite source spelling.
+    hero* currHero;
+    if (localPlayer->currHeroId != -1)
+        currHero = &gpGame->heroes[localPlayer->currHeroId];
+    else
+        currHero = 0;
+
+    int walkDir;
+    hero* walker;
+
+    switch (msg->codeX) {
+    case KEYCODE_SPACE: {
+        if (!currHero)
+            break;
+        if (waitingPlayer)
+            break;
+
+        if (!inDialog) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    UpdateScreen(0, 0);
+                }
+            }
+            SetHeroContext(localPlayer->currHeroId, 0, 0, 1);
+        }
+
+        type_point heroPoint;
+        heroPoint.x = currHero->x;
+        heroPoint.y = currHero->y;
+        heroPoint.z = currHero->z;
+
+        NewmapCell* standingOn;
+        {
+            type_point cellPoint = heroPoint;
+            if (!cellPoint.is_valid())
+                standingOn = fullMap->cellData;
+            else
+                standingOn = fullMap->cell(cellPoint.x, cellPoint.y,
+                                           cellPoint.z);
+        }
+        if (!standingOn->is_trigger)
+            break;
+        if (standingOn->type == ANCHOR_POINT)
+            break;
+
+        type_point eventPoint;
+        eventPoint.x = currHero->x;
+        eventPoint.y = currHero->y;
+        eventPoint.z = currHero->z;
+        DoEvent(standingOn, eventPoint);
+        return 1;
+    }
+
+    case KEYCODE_KP_8:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(0, 0);
+            return 1;
+        }
+        walkDir = 0;
+    walk_hero:
+        if (waitingPlayer)
+            break;
+        if (gpCurrentPlayer->currHeroId == -1)
+            break;
+        walker = &gpGame->heroes[gpCurrentPlayer->currHeroId];
+        if (!ValidMove(walker, walkDir, 0, 1))
+            break;
+
+        if (gpCurrentPlayer->IsLocalHuman()
+            || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                TAdventureMapWindow::MOVE_ID,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+            int heroId = gpCurrentPlayer->currHeroId;
+            if (heroId != -1) {
+                hero* pathHero = &gpGame->heroes[heroId];
+                pathHero->pathTargetX = -1;
+                pathHero->pathTargetY = -1;
+            }
+            if (bShowRoute) {
+                bShowRoute = 0;
+                CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                             0, 1);
+                gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X,
+                                              ADVENTURE_SCREEN_Y,
+                                              ADVENTURE_SCREEN_WIDTH,
+                                              ADVENTURE_SCREEN_HEIGHT);
+
+                unsigned long curTime = GameTime::Get();
+                if (static_cast<long>(
+                        curTime
+                        - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
+                        >= 0
+                    && !animCtrPaused) {
+                    ++animFrame;
+                    long elapsedTime =
+                        curTime
+                        - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+                    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+                        _cpp_max(elapsedTime,
+                                 static_cast<long>(
+                                     ADVENTURE_ANIMATION_MAX_ELAPSED));
+                }
+                Process1WindowsMessage();
+            }
+        }
+
+        gpMouseManager->HidePointer();
+        walker->pathTargetX = walker->x + gStepDeltaX[4 * walkDir];
+        walker->pathTargetY = walker->y + gStepDeltaY[4 * walkDir];
+        walker->pathTargetZ = walker->z;
+
+        {
+        type_point walkTrigger;
+        int bNoMove;
+        int bFoughtBattle;
+        *peventCell = MoveHero(walkDir, 1, &walkTrigger, &bNoMove, 0,
+                               &bFoughtBattle, 0);
+        advWindow->UpdateHeroLocator(-1, 1, 1);
+        gpMouseManager->ShowPointer(1);
+        gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+
+        if (*peventCell) {
+            StopCursor(1);
+            DoEvent(*peventCell, walkTrigger);
+            *peventCell = 0;
+        }
+        seedingValid = 0;
+
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            int hoverX;
+            int hoverY;
+            gpMouseManager->MouseCoords(&hoverX, &hoverY);
+            lastHoverX = -1;
+            ProcessHover(hoverX, hoverY);
+        }
+        UpdBottomView(1, 1, 1);
+
+        if (!gpCurrentPlayer->IsLocalHuman())
+            break;
+        if (gpCurrentPlayer->currHeroId == -1)
+            break;
+        if (gpGame->heroes[gpCurrentPlayer->currHeroId].IsMobile())
+            break;
+        ShowRoute(1, 0, 0);
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+
+        advManager* dimTarget = gpAdvManager;
+        if (gpCurrentPlayer->IsLocalHuman()
+            && gpCurrentPlayer->HasMobileHero())
+            dimTarget->advWindow->WidgetClearStatus(
+                TAdventureMapWindow::NEXT_HERO_ID,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        else
+            dimTarget->advWindow->WidgetSetStatus(
+                TAdventureMapWindow::NEXT_HERO_ID,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        return 1;
+        }
+
+    case KEYCODE_KP_9:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(1, 0);
+            return 1;
+        }
+        walkDir = 1;
+        goto walk_hero;
+
+    case KEYCODE_KP_6:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(2, 0);
+            return 1;
+        }
+        walkDir = 2;
+        goto walk_hero;
+
+    case KEYCODE_KP_3:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(3, 0);
+            return 1;
+        }
+        walkDir = 3;
+        goto walk_hero;
+
+    case KEYCODE_KP_2:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(4, 0);
+            return 1;
+        }
+        walkDir = 4;
+        goto walk_hero;
+
+    case KEYCODE_KP_1:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(5, 0);
+            return 1;
+        }
+        walkDir = 5;
+        goto walk_hero;
+
+    case KEYCODE_KP_4:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(6, 0);
+            return 1;
+        }
+        walkDir = 6;
+        goto walk_hero;
+
+    case KEYCODE_KP_7:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(7, 0);
+            return 1;
+        }
+        walkDir = 7;
+        goto walk_hero;
+
+    case KEYCODE_D:
+        if (waitingPlayer)
+            break;
+        if (!gpGame->GetHero(gpCurrentPlayer->currHeroId))
+            break;
+        ProcessSearch(-1, -1, -1);
+        return 1;
+
+    case KEYCODE_P:
+        ViewPuzzle();
+        return 1;
+
+    case KEYCODE_V:
+        ViewWorld(0, eMasteryNone);
+        return 1;
+
+    case KEYCODE_N:
+        if (gpGame->IsMultiplayer())
+            break;
+        // Rows 68/69/70 of the general text, the new-game, load-game and
+        // exit confirms. No surviving symbol names any of the three.
+        NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            break;
+        *exitFlag = 1;
+        gUnnamed6976d8 = SYSOPT_COMMAND_101;
+        return 1;
+
+    case KEYCODE_L:
+        if (gpGame->IsMultiplayer())
+            break;
+        NormalDialog(gpGeneralText->GetText(69), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            break;
+        *exitFlag = 1;
+        gUnnamed6976d8 = SYSOPT_COMMAND_102;
+        return 1;
+
+    case KEYCODE_ESCAPE:
+        VideoPause();
+        NormalDialog(gpGeneralText->GetText(70), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        VideoResume();
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            break;
+        *exitFlag = 1;
+        gUnnamed6976d8 = SYSOPT_COMMAND_108;
+        return 1;
+
+    case KEYCODE_S:
+        SaveGame(0);
+        return 1;
+
+    case KEYCODE_I:
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpGame->ShowScenInfo();
+        if (gpWindowManager->dialogReturn != SYSOPT_COMMAND_111)
+            break;
+        NormalDialog(gpGeneralText->GetText(68), 2, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            break;
+        gUnnamed6976d8 = SYSOPT_QUIT;
+        *exitFlag = 1;
+        return 1;
+
+    case KEYCODE_T: {
+        int townId = localPlayer->NextTown();
+        if (townId == -1)
+            break;
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    UpdateScreen(0, 0);
+                }
+            }
+        }
+        SetTownContext(townId, waitingPlayer, 1);
+        return 1;
+    }
+
+    case KEYCODE_ENTER:
+        if (localPlayer->currTownId != -1) {
+            advCommand = ADV_COMMAND_VIEW_TOWN;
+            DoAdvCommand(trigger_point);
+            return 1;
+        }
+        if (localPlayer->currHeroId == -1)
+            break;
+        if (inDialog) {
+            advCommand = ADV_COMMAND_VIEW_HERO;
+            DoAdvCommand(trigger_point);
+            return 1;
+        }
+        if (!waitingPlayer) {
+            if (gpCurrentPlayer->IsLocalHuman()
+                || (gUnnamed6989c8 && gUnnamed69ccd4)) {
+                gpWindowManager->BroadcastMessage(
+                    MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                    TAdventureMapWindow::MOVE_ID,
+                    widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+                if (bShowRoute) {
+                    bShowRoute = 0;
+                    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                                 0, 1);
+                    UpdateScreen(0, 0);
+                }
+            }
+        }
+        SetHeroContext(localPlayer->currHeroId, 0, waitingPlayer, 1);
+        return 1;
+
+    default:
+        break;
+    }
+    return 1;
+}
 
 // E:\gamedcs\advmgr.cpp:1939
 // The left-select dispatcher. Retail switches on msg->codeY - not
@@ -1246,12 +1671,6 @@ void advManager::ProcessAdvMenu(message* msg)
 }
 
 #endif  // @carcass
-
-// The exit-command latch DoSystemOptions fills and ProcessKeyPress's
-// dispatcher also touches (RVA 0x93b6 band); owner TU unlocated, nearest
-// consumer declares - and that is now ProcessDeSelect below, which latches
-// SYSOPT_QUIT into it from the adventure-options arm.
-DATA(0x006976d8) extern int gUnnamed6976d8;
 
 // E:\gamedcs\advmgr.cpp:2152
 // ProcessSelect's twin: the same dispatcher for the buttons that act on
