@@ -23,7 +23,12 @@
 // GetNextChainLightningTarget measures screen distance with army::MidX /
 // army::MidY, which army.h keeps behind this declaration view.
 #define HOMM3_ARMY_MIDPOINT_DECL
+// ModifySpellDamage forwards army::creatureType into armygrp's free
+// modify_spell_damage, whose slot is TCreatureType; army.h keeps the
+// DC-typed arm of that field behind this view.
+#define HOMM3_ARMY_CREATURE_TYPE_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_CREATURE_TYPE_VIEW
 #undef HOMM3_ARMY_MIDPOINT_DECL
 #undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
@@ -58,6 +63,9 @@
 #include "kb.h"      // gText, the shared combat-message scratch buffer
 #include "misc.h"    // Random, for SpellCastWorks' dice roll
 #include "soundmgr.h"      // SAMPLE2 / LoadPlaySample / WaitEndSample
+// ModifySpellDamage's four "the spell did more/less than the table row"
+// messages; textresource.h keeps those enumerators behind this view.
+#define HOMM3_TEXT_SPELL_DAMAGE_VIEW
 #include "textresource.h"  // gpGeneralText
 #include <stdlib.h>  // abs, the signed intrinsic mark_area_effect uses
 #include <math.h>    // sqrt, for the chain-lightning bounce search
@@ -1227,12 +1235,106 @@ long combatManager::ComputeSpellDamage(SpellID spell, long spell_power, long mas
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:5086
+#endif  // @carcass
+
+// THE THREE MODIFIER STAGES, in the order the pushes fix them: the
+// CASTER's own bonuses (hero::modify_spell_damage, artifacts and
+// specialities), then the TARGET's creature traits
+// (armygrp's free modify_spell_damage, keyed on creatureType), then the
+// Protection-from-<school> row two functions below. `affectedHero` is
+// DEAD - retail never reads [ebp+0x14] - which is why the parameter is
+// still in the list: it is transcribed, not used.
+//
+// The message ladder is (lowered vs raised) x (one creature vs several),
+// each arm formatting the stack's name and the ABSOLUTE difference, and
+// the two halves are asymmetric under /Ob2 in BOTH directions: the
+// LOWERED arms call army::GetName out of line where the RAISED arms
+// expand it, and only the LAST arm expands basic_string::_Tidy where
+// the other three call it. Both asymmetries are the inline budget
+// running out at a different point, exactly as cmbtmgr.cpp's mana-drain
+// pair records; the two GetName spellings here are what reproduce the
+// first of them.
+//
+// `long delta = damage - base_damage` is worth 1.3: written out three
+// times (the sign test and the two absolute differences) VC6 CSEs it
+// into a NON-destructive `mov eax,damage / sub eax,base`, where retail
+// has the destructive `sub esi,ebx` a single named difference produces.
+//
+// Residual (78.90%): TWO open classes, and no source spelling reaches
+// either.
+//   * A B1 role swap between iSpellType and targetArmy - retail binds
+//     ESI/EDI/EBX to (spell, target, base_damage) and our CL to
+//     (target, spell, base_damage), i.e. the first two call-crossing
+//     pseudos are created in the opposite order. base_damage lands on
+//     EBX on BOTH sides, so this is the C1 handle-state class
+//     docs/vc6/regalloc.md records as not source-nameable: the model
+//     path (`homm3 vc6 why-reg --model`) declines it, and the two
+//     prescribed edits - a `SpellID spell = iSpellType` parameter alias
+//     and the same for the army pointer - are both COALESCED by VC6 and
+//     measure exactly neutral.
+//   * The merged-return class. Retail has THREE epilogues where we have
+//     one: the message block's string destructor duplicates the whole
+//     `pop/fs restore/ret 0x18` tail into both of its exits and the
+//     early-out carries a third, ~15 instructions we tail-merge away.
+//     Writing an explicit `return damage;` inside the message scope is
+//     also exactly neutral - our CL re-merges it.
 VA(0x005a78e0, 0x2CD)  // anchor-callee+arity, dc 0x156c30
-int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero* castingHero, const hero* affectedHero, const army* targetArmy, unsigned char print_result)
+long combatManager::ModifySpellDamage(long base_damage, SpellID iSpellType,
+                                      const hero* castingHero,
+                                      const hero* affectedHero,
+                                      const army* targetArmy,
+                                      unsigned char print_result)
 {
-    // @stub
+    long damage = base_damage;
+    if (castingHero)
+        damage = const_cast<hero*>(castingHero)->modify_spell_damage(
+            iSpellType, base_damage, targetArmy);
+    if (!targetArmy)
+        return damage;
+    damage = modify_spell_damage(damage, iSpellType,
+                                 targetArmy->creatureType);
+    damage = ModifySpellDamageForSpells(damage, iSpellType, targetArmy);
+    if (print_result && damage != base_damage
+        && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        std::string message;
+        long delta = damage - base_damage;
+        if (delta < 0) {
+            if (targetArmy->numTroops == 1)
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_ONE),
+                    army::GetName(targetArmy->creatureType,
+                                  targetArmy->numTroops),
+                    -delta);
+            else
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_LOWERED_MANY),
+                    army::GetName(targetArmy->creatureType,
+                                  targetArmy->numTroops),
+                    -delta);
+        } else {
+            if (targetArmy->numTroops == 1)
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_ONE),
+                    CreatureName(targetArmy->creatureType,
+                                 targetArmy->numTroops),
+                    delta);
+            else
+                message = format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_COMBAT_SPELL_DAMAGE_RAISED_MANY),
+                    CreatureName(targetArmy->creatureType,
+                                 targetArmy->numTroops),
+                    delta);
+        }
+        combatWindow->combat_message(message.c_str(), 1, 0);
+    }
+    return damage;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 #endif  // @carcass
 

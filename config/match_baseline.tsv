@@ -1745,6 +1745,7 @@ spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HasValidSpellTarget@combatManager@@QAEEHJJEE@Z	100.0000	100.0000	100.0000	0x1a40d0
 spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	89.6774	89.6774	89.6774	0x1a92f0
+spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
 spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJE@Z	100.0000	100.0000	100.0000	0x1a66d0
 spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1a8640
@@ -1770,7 +1771,6 @@ spells	combatManager_DoBolt	0.0000	0.0000	0.0000	0x1a5c20
 spells	combatManager_DrawBolt	0.0000	0.0000	0.0000	0x1a5440
 spells	combatManager_Earthquake	0.0000	0.0000	0.0000	0x1a7c80
 spells	combatManager_MirrorImage	0.0000	0.0000	0.0000	0x1a6c70
-spells	combatManager_ModifySpellDamage	0.0000	0.0000	0.0000	0x1a78e0
 spells	combatManager_ResetBoltAngle	0.0000	0.0000	0.0000	0x1a5260
 spells	combatManager_Resurrect	0.0000	0.0000	0.0000	0x1a7560
 spells	combatManager_ShowMassSpell	0.0000	0.0000	0.0000	0x1a67c0

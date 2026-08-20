@@ -294,7 +294,23 @@ public:
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
     // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).
+    //
+    // THE TYPED ARM IS THE DC's OWN (members.csv `army,52,TCreatureType,
+    // armyType`), and combatManager::ModifySpellDamage (0x5a78e0) is the
+    // retail witness: it hands `[army + 0x34]` straight into armygrp's
+    // free modify_spell_damage, whose S_PUB32 mangling
+    // (?modify_spell_damage@@YIJJHW4TCreatureType@@@Z) types that slot
+    // TCreatureType - so the field is that enum in the original source
+    // or the call would not compile. It stays behind a view because
+    // TCreatureType lives in armygrp.h and this header does NOT include
+    // it: a consumer that wants the typed arm includes armygrp.h first,
+    // as src/spells.cpp already does. Both arms are ONE declarator of
+    // the same width, so no consumer's include-set or layout moves.
+#ifdef HOMM3_ARMY_CREATURE_TYPE_VIEW
+    TCreatureType creatureType;   // +0x34, DC army::armyType
+#else
     int creatureType;             // +0x34
+#endif
     // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
     // feeds it straight into check_adjacent_hexes as the enemy hex,
     // and the type_AI_spellcaster ctor walks armies by it.
