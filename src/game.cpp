@@ -3956,6 +3956,33 @@ bool game::IsMultiplayer() const
     return false;
 }
 
+// E:\gamedcs\game.cpp:2716
+// The pool writer game::Save uses five times over its type_point
+// vectors (the eight lithPools, the eight lithExitPools, then
+// whirlpools / undergroundGateExits / undergroundGatePairs).
+// A free function, so /Gr makes it fastcall: outfile in ecx, the
+// vector in edx, no stack args.
+// Two details the bytes fix. The count is an INT local written with
+// sizeof(short) - the same "wide local, narrow write" idiom
+// LoadGarrisonPool uses on the read side - and the payload length is
+// the SHORT re-read of that same slot, computed twice rather than
+// CSE'd (retail emits `movsx word [ebp-4]` then `shl eax,2` on both
+// sides of the compare). Dinkumware's size() supplies the leading
+// `_First == 0 ? 0 : _Last - _First` null test.
+VA(0x004d2ac0, 0x60)  // anchor-callee (game::Save pool writes), dc 0xc1dd4
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_point>* src_vector)
+{
+    int count = src_vector->size();
+    if (outfile->Write(&count, sizeof(short)) < sizeof(short))
+        return 0;
+    unsigned char written = outfile->Write(
+        src_vector->begin(),
+        static_cast<short>(count) * sizeof(type_point))
+        >= static_cast<short>(count) * sizeof(type_point);
+    return written;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11869
