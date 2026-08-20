@@ -1357,6 +1357,17 @@ public:
                          unsigned char melee_only,
                          const type_AI_combat_parameters* data,
                          searchArray* search_array);          // 0x422b20
+    // 0x422a40 (224 B), the row IMMEDIATELY BEFORE find_AI_targets on
+    // both sides: DC's own ai.obj roster puts
+    // combatManager::simulate_combat (ai.cpp:2584, dc 0x277f4, 146 B,
+    // three parameters counting `this`) immediately before
+    // find_AI_targets (ai.cpp:2608, dc 0x27888) in exactly the same
+    // way, and the DC xref graph lists simulate_combat as a callee of
+    // type_AI_spellcaster's constructor - which is where retail's
+    // 0x422a40 is called from, with `this` = the combatManager and two
+    // stack arguments. Declared so that constructor can spell the
+    // call; not claimed, and the body belongs to the ai.obj lane.
+    void simulate_combat(long side, unsigned char simulated);  // 0x422a40
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
     unsigned char should_stay_in_castle(

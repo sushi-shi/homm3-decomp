@@ -736,23 +736,101 @@ void type_AI_spellcaster::initialize(combatManager* combat, long side)
     // @stub
 }
 
-// E:\gamedcs\ai_tactical.cpp:793
-// EH-bearing (P2.2): push -1 / push 0x627efb / mov eax,fs:[0] frame
-// around the operator-new of the 0x410-byte deputy caster.
-VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
-void type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side, unsigned char creature_spell)
+#endif  // @carcass
+
+// E:\gamedcs\ai_tactical.cpp:3377 - OUT OF FILE ORDER ON PURPOSE.
+// check_simulation and the deputy constructor below are both INLINED
+// into the public constructor and carry no retail body of their own,
+// so they are `inline` here and defined ahead of their one caller
+// rather than at their Dreamcast line numbers.
+//
+// The scan itself: walk the OTHER side's stacks and answer "the fight
+// is already decided" in field_1c unless some enemy is still magic-
+// vulnerable (creature bit 21 clear), still alive, and still able to
+// act (creature bit 6 clear). The walk is the TU's `count-- > 0`
+// pointer form, the same one consider_teleport carries.
+DC_ONLY(0x425a8, 0x68)
+inline void type_AI_spellcaster::check_simulation()
 {
-    // @stub
+    long count = gpCombatManager->numArmies[enemy_side];
+    const army* enemy = gpCombatManager->armies[enemy_side];
+    for (; count-- > 0; ++enemy) {
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 21);
+        if (immune & 1)
+            continue;
+        if (enemy->get_total_hit_points(1) <= 0)
+            continue;
+        unsigned char idle = static_cast<unsigned char>(
+            static_cast<unsigned>(enemy->creatureId) >> 6);
+        if (idle & 1)
+            continue;
+        field_1c = 0;
+        return;
+    }
+    field_1c = 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:817
 DC_ONLY(0x3d6f0, 0x72)
-void type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creature_spell)
+inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
+                                                combatManager* combat, long side,
+                                                unsigned char creature_spell)
+    : params(combat, side)
 {
-    // @stub
+    long enemy = 1 - side;
+    this->creature_spell = creature_spell;
+    this->side = side;
+    enemy_side = enemy;
+    our_hero = combat->heroes[side];
+    enemy_hero = combat->heroes[enemy];
+    field_1c = 0;
+    deputy = parent;
+    owns_deputy = 0;
+    check_simulation();
+    find_enemy_attacks();
 }
 
-#endif  // @carcass
+// E:\gamedcs\ai_tactical.cpp:793
+// EH-bearing (P2.2): push -1 / push 0xb / mov eax,fs:[0] frame around
+// the operator-new of the 0x410-byte deputy caster - the ONE state the
+// funclet cleans is that raw allocation, so the frame is the `new`
+// expression's, not a local's.
+//
+// The body is the public caster's whole setup: the two heroes off
+// combat->heroes[], the combat manager's own move order and simulation
+// pass, this side's decided-fight check, both groups' AI targets, the
+// melee census, and finally the DEPUTY - a second caster for the other
+// side, owned by this one (owns_deputy = 1), whose constructor is
+// inlined here in full.
+//
+// `1 - side` is a LOCAL, not a re-read of the member: retail spills it
+// into the dead `combat` parameter slot at [ebp+8] and feeds the
+// deputy from there. The member would have to be reloaded, since
+// find_move_order / simulate_combat / find_AI_targets all sit between
+// the store and the use and none of them lets VC6 assume `this` is
+// unaliased.
+VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
+type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
+                                         unsigned char creature_spell)
+    : params(combat, side)
+{
+    long enemy = 1 - side;
+    this->creature_spell = creature_spell;
+    this->side = side;
+    enemy_side = enemy;
+    our_hero = combat->heroes[side];
+    enemy_hero = combat->heroes[enemy];
+    field_1c = 0;
+    combat->find_move_order(0);
+    combat->simulate_combat(side, 0);
+    check_simulation();
+    for (long group = 0; group < 2; group++)
+        gpCombatManager->find_AI_targets(group, 0, 0, &params, 0);
+    find_enemy_attacks();
+    deputy = new type_AI_spellcaster(this, combat, enemy, creature_spell);
+    owns_deputy = 1;
+}
 
 // type_AI_spellcaster::`scalar deleting destructor' (dc 0x42a74).
 // Retail places it BEFORE the dtor, and the one-slot vftable at
