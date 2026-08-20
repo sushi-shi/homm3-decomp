@@ -1417,6 +1417,7 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
+    game();
     ~game();
     game& __fastcall operator=(const game& that);
 
@@ -1604,6 +1605,19 @@ public:
     // Recorded adventure actions. Retail clear/replay/load/save methods
     // prove the Dinkumware pointer-vector at +0x4e7ac.
     std::vector<type_event_record*> eventRecords;
+    // +0x4e7bc, and it is the LAST member: game::~game (0x4ce5b0) opens
+    // its teardown here, at the highest offset it touches, with the bare
+    // `operator delete(_First)` plus the three-word zeroing that a
+    // Dinkumware vector of a trivially destructible element emits - no
+    // `_Destroy` loop at all. The element pair is what
+    // record_monster_identifier (0x4ced40) appends; the eight-byte width
+    // is the note on that declarator's, and the destructor is width-blind,
+    // so the widths are hypothesis while the MEMBER is byte-proven.
+    struct MonsterIdentifier {
+        int identifier;
+        type_point point;
+    };
+    std::vector<MonsterIdentifier> monsterIdentifiers;
 
     NewfullMap* GetWorldMapData();
     int get_new_boat_id();                    // 0x4bb170
@@ -1826,7 +1840,16 @@ public:
                            unsigned char xferFile);
     int Save(TAbstractFile* outfile);             // 0x4be3f0
     int ComputeDailyGold(int player, unsigned char includeSilo);
-    void clear_event_records();                   // 0x4a0f10
+    // 0x0049d630, 140 B. CORRECTED 2026-08-20: the address recorded here
+    // was 0x4a0f10, which is not a function entry at all - it
+    // disassembles mid-instruction. 0x49d630 walks eventRecords
+    // (+0x4e7ac) backwards calling each element's virtual deleting
+    // destructor and then clears the range, it is the very next carve
+    // row after the located ResetVisibility (0x49d3d0 + 0x260), and the
+    // Dreamcast roster's next row after ResetVisibility is
+    // clear_event_records (dc 0x8e730, 74 B against 140, 1.89x).
+    // game::~game (0x4ce5b0) opens with a call to it.
+    void clear_event_records();
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the

@@ -652,6 +652,35 @@ no matrix: it closed at **100.0000 on the first spelling**, 623 B, and nothing
 else moved. If a note warns you off without showing a measurement, treat it as
 unexplored, not as closed.
 
+**A CARCASS CTOR/DTOR OF A WELL-MODELLED CLASS IS NEARLY FREE.** The
+compiler-generated member construction and teardown IS the body: `game::game()
+{}` scored **74.65** written empty, and `game::~game() { clear_event_records(); }`
+scored **78.84** as one line. Read the class layout before writing anything —
+on a well-modelled class most of the work is already done for you.
+
+**FOLD N GUARDS INTO NESTED IFS OVER ONE SHARED TAIL** — worth more than the
+guards themselves: **63.76 -> 81.63** on one edit, merging nine duplicated
+epilogues, and it flipped a float compare to retail's `<=` polarity.
+
+**NAMED `short` COPIES OF A BITFIELD READ ARE COMPILER TEMPS, NOT SOURCE
+VARIABLES** — retail stores them as WORDS and RELOADS them each iteration.
+Naming four cost four stack slots and 16 frame bytes; reading through gave the
+hoist for free. And **if retail hoists a field read out of a loop that stores
+to that slot, the store targets a DIFFERENT variable** — the hoist is only
+legal then.
+
+**UNDER `/Op`, A QUOTIENT FEEDING A COMPARISON HAS A HOME.** Naming the double
+reproduces retail's `fstp t / fld table / fcomp t`; left anonymous it folds to
+`fcomp table[8*eax]` with the operands swapped.
+
+**WHICH ARM FALLS THROUGH IS A SOURCE FACT** — retail's `js` to the distance
+block means the OTHER arm is the `if` (95.66 -> 97.16).
+
+**A "WANTS A LEANER SPELLING" VERDICT CAN BE A LOCAL MAX.** `BuyBuild`'s own
+note predicted the leaner direction; hoisting as it suggested costs **4.01**.
+Both directions are now measured worse — 68.08 is a local maximum. Measure
+both before acting on a directional verdict.
+
 ## The proven levers (all byte-verified in this tree — try in this order)
 
 - **Adjacent early-out guards**: retail merges `if (a<0) return E; if (a>=N)
