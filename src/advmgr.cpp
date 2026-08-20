@@ -7176,10 +7176,32 @@ void advManager::TownQuickView(int townId, int x, int y,
             if ((thisTown->built & bitNumber[building])
                 && thisTown->is_legal_building(
                        building_id_from_int(building))) {
-                if (!first)
-                    text += ", ";
+                // Retail CALLS basic_string::append(const char*,
+                // size_type) at BOTH of this arm's appends - fn+0x349 for
+                // the separator and fn+0x371 for the name - with the
+                // strlen expanded in front of each as `repne scasb`, and
+                // our CL expanded the append too. `operator+=` reaches
+                // append(const char*) which reaches this two-argument one,
+                // so the site has to be spelled at the depth retail stops
+                // at before a statement pin can impose the call.
+                // MEASURED NEGATIVE, do not extend: the same treatment on
+                // the other seven `text += <literal>` sites in this block
+                // costs 90.9834 -> 73.8082. Retail calls append at THESE
+                // two and expands it at the rest.
+                if (!first) {
+                    const char* sep = ", ";
+                    size_t sepLen = strlen(sep);
+#pragma inline_depth(0)
+                    text.append(sep, sepLen);
+#pragma inline_depth()
+                }
                 first = 0;
-                text += GetBuildingName(thisTown->type, building);
+                const char* buildingName =
+                    GetBuildingName(thisTown->type, building);
+                size_t buildingNameLen = strlen(buildingName);
+#pragma inline_depth(0)
+                text.append(buildingName, buildingNameLen);
+#pragma inline_depth()
             }
         }
 
