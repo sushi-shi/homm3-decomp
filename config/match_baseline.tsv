@@ -998,6 +998,7 @@ hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0
 hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	99.9540	99.9540	99.9540	0xd7900
 hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0
+hero	?SetupHeroView@THeroScreenWindow@@QAEXXZ	99.5294	99.5294	99.5294	0xe1a50
 hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250
 hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658	97.9658	97.9658	0xe23d0
 hero	?UpdateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0
@@ -1054,7 +1055,6 @@ hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	?update_spell_list@hero@@QAEXXZ	78.0400	78.0400	78.0400	0xd95d0
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
-hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00

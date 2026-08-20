@@ -3412,12 +3412,250 @@ int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuic
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:4349
+// Repaints the whole hero screen from gpCurrentHero. thiscall, no
+// arguments, NOT virtual (absent from vtable 0x63eae8), and it
+// dereferences NO THeroScreenWindow member - `this` only ever feeds
+// member calls, which is why the class layout needed nothing for it.
+//
+// Store-order facts below are byte-proven; do not tidy them:
+//  - the experience broadcast (widget 0x70) and the third broadcast of
+//    each skill-loop arm (widget i+0x5f) store ONLY codeY. Retail emits
+//    no `extraText` store at either site even though a sprintf and a
+//    BroadcastMessage intervene; every other site does emit one.
+//  - `msg.extra = WIDGET_DRAWN` really is written three times per arm.
+//  - the message init order (id, qualifier, mouseX, mouseY, extra,
+//    window, then codeX, then codeY) is fixed and DIFFERS from
+//    hero::UpdateStats' - do not copy that one here.
+//  - both formation arms and both tactics arms tail-merge onto one
+//    shared call site, so WIDGET_HIGHLIGHTED is stored inside each arm.
+//  - the skill loop closes on the UNREDUCED bound (`lea ecx,[edi-0x4f] /
+//    cmp ecx,8 / jl`): the counter is `i` with `i + 0x4f` as the widget
+//    id, NOT a loop from 0x4f to 0x57.
 VA(0x004e1a50, 0x7BB)  // order-map, dc 0xd30b0
 void THeroScreenWindow::SetupHeroView()
 {
-    // @stub
+    int bNoDismiss = gHeroScreenNoDismiss;
+    if (gpCurrentHero->valid && gpCurrentHero->was_trigger &&
+        gpCurrentHero->obscuredType == TOWN)
+        bNoDismiss = 1;
+    if (gpGame->mapHeader.lossCondition.CheckForDefeatedHeroLoss(gpCurrentHero))
+        bNoDismiss = 1;
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    BroadcastMessage(&msg);
+
+    strcpy(gText, gpCurrentHero->name);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x1;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    sprintf(gText,
+            gpGeneralText->GetText(GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT),
+            gpCurrentHero->level, gpCurrentHero->HeroFn_004D8F70());
+    msg.codeY = 0x8c;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gUnnamed6aa9d8) {
+        WidgetClearStatus(0x8a, widget::WIDGET_DRAWN);
+    } else {
+        WidgetClearStatus(0x8a, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        for (int locator = 0; locator < 8; locator++)
+            UpdateHeroLocator(locator);
+    }
+
+    msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    msg.extra = widget::WIDGET_DRAWN;
+    for (int slotIcon = 0; slotIcon < 7; slotIcon++) {
+        msg.codeY = slotIcon + 0x44;
+        BroadcastMessage(&msg);
+    }
+
+    if (!bNoDismiss && !gUnnamed6aa9d8 &&
+        (localPlayer->numTowns || localPlayer->numHeroes != 1)) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x81,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x81,
+                         widget::WIDGET_DIMMED_NODRAW);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x81,
+                         widget::WIDGET_DIMMED_NODRAW);
+    }
+
+    union {
+        const char* pointer;
+        int value;
+    } portraitMessage;
+    portraitMessage.pointer =
+        akHeroTraits[gpCurrentHero->portrait].largePortraitName;
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_IMAGE, 0x2d,
+                     portraitMessage.value);
+
+    gpCurrentHero->UpdateStats();
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 0x76;
+    msg.extra = gpCurrentHero->id;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, akHeroSpecificAbilities[gpCurrentHero->id].shortText);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x8b;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, "%d", gpCurrentHero->experience);
+    msg.codeY = 0x70;
+    BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    if (gpCurrentHero->formation & 1) {
+        msg.codeY = 0x7c;
+        msg.extra = widget::WIDGET_HIGHLIGHTED;
+        BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x7a;
+        BroadcastMessage(&msg);
+    } else {
+        msg.codeY = 0x7a;
+        msg.extra = widget::WIDGET_HIGHLIGHTED;
+        BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x7c;
+        BroadcastMessage(&msg);
+    }
+
+    if (gpCurrentHero->skillOrder[eSecSkillBattleTactics]) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x7e,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x7e,
+                         widget::WIDGET_DIMMED_NODRAW);
+        if (gpCurrentHero->formation & 2)
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x7e,
+                             widget::WIDGET_HIGHLIGHTED);
+        else
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x7e,
+                             widget::WIDGET_HIGHLIGHTED);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x7e,
+                         widget::WIDGET_DIMMED_NODRAW);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x7e,
+                         widget::WIDGET_HIGHLIGHTED);
+    }
+
+    int knowledge = gpCurrentHero->GetPrimarySkill(3);
+    float intelligence =
+        kIntelligenceFactors[gpCurrentHero->skillLevel[eSecSkillIntelligence]];
+    if (gpCurrentHero->skillLevel[eSecSkillIntelligence] > 0) {
+        const THeroSpecificAbility& ability =
+            akHeroSpecificAbilities[gpCurrentHero->id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillIntelligence)
+            intelligence = (gpCurrentHero->level * 0.05f + 1.0f) * intelligence;
+    }
+    float baseMana = static_cast<float>(knowledge * 10);
+    sprintf(gText, "%d/%d", gpCurrentHero->mana,
+            static_cast<long>((intelligence + 1.0f) * baseMana));
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x71;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 0x8d;
+    if (gpCurrentHero->owner == -1)
+        msg.extra = 8;
+    else
+        msg.extra = gpCurrentHero->owner;
+    BroadcastMessage(&msg);
+
+    gpCurrentHero->HeroFn_004D97F0();
+
+    for (int i = 0; i < 8; i++) {
+        if (i < gpCurrentHero->skillCount) {
+            int skill = gpCurrentHero->GetNthSS(i);
+
+            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.codeY = i + 0x4f;
+            msg.extra = skill * 3 + gpCurrentHero->skillLevel[skill] + 2;
+            BroadcastMessage(&msg);
+
+            strcpy(gText, akSSkillTraits[skill].name);
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = i + 0x57;
+            msg.extraText = gText;
+            BroadcastMessage(&msg);
+
+            strcpy(gText,
+                   gSkillMasteryNames[gpCurrentHero->skillLevel[skill] - 1]);
+            msg.codeY = i + 0x5f;
+            BroadcastMessage(&msg);
+
+            msg.codeX = widget::WIDGET_SET_STATUS;
+            msg.codeY = i + 0x4f;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+            msg.codeY = i + 0x57;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+            msg.codeY = i + 0x5f;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+        } else {
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = i + 0x4f;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+            msg.codeY = i + 0x57;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+            msg.codeY = i + 0x5f;
+            msg.extra = widget::WIDGET_DRAWN;
+            BroadcastMessage(&msg);
+        }
+    }
+
+    update_all_slots();
+    UpdateBackpack();
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.codeY = 0x7f;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    BroadcastMessage(&msg);
+
+    if (!gpCurrentPlayer->IsLocalHuman()) {
+        GetWidget(0x44)->enable(0);
+        GetWidget(0x45)->enable(0);
+        GetWidget(0x46)->enable(0);
+        GetWidget(0x47)->enable(0);
+        GetWidget(0x48)->enable(0);
+        GetWidget(0x49)->enable(0);
+        GetWidget(0x4a)->enable(0);
+        GetWidget(0x7f)->enable(0);
+        GetWidget(0x81)->enable(0);
+        GetWidget(0x7a)->enable(0);
+        GetWidget(0x7c)->enable(0);
+        GetWidget(0x7e)->enable(0);
+        GetWidget(0x7800)->enable(1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4589
 // The SS trio 0x004e2210 / 0x004e2250 / 0x004e22d0 is byte-decoded and
@@ -5456,13 +5694,13 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 // `ebx+0x74` as the stat block. Name is an ORDINAL PLACEHOLDER flagged
 // unattested (WIDGET_RETURN_32 precedent); `reset_artifacts` returns to
 // the DC_ONLY roster below.
-VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
 // Signature aligned with the header declarator 2026-08-20: the second
 // argument is a caller-owned TCreatureTypeTraits row (army embeds one at
 // +0x74, where hitPoints/attackSkill/defenseSkill are +0x4c/+0x54/+0x58 -
 // exactly the three fields this body writes), and the member is const.
 // The carcass text had drifted to `(int, void*)` non-const, which would
 // not have compiled had the block ever been enabled.
+VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
 void hero::HeroFn_004E6120(int creature_type,
                            TCreatureTypeTraits* traits) const
 {

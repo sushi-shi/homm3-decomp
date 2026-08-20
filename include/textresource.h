@@ -84,6 +84,11 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER = 257,
     GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
     GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
+    // The hero screen's "Level %d %s" line (widget 0x8c): a folded
+    // [Text._First + 0x55c] in THeroScreenWindow::SetupHeroView, fed the
+    // hero's level and the class name HeroFn_004D8F70 picks. The INDEX is
+    // byte-proven; the NAME describes the two arguments retail feeds it.
+    GENERAL_TEXT_HERO_LEVEL_CLASS_FORMAT = 343,
     GENERAL_TEXT_VISITED_OBJECT = 353,
     GENERAL_TEXT_UNVISITED_OBJECT = 354,
     GENERAL_TEXT_KNOWN_SHRINE_SPELL = 355,

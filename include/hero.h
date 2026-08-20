@@ -183,6 +183,11 @@ std::string ReadLengthPrefixedString(TAbstractFile* infile);
 // kbwin.h / philai.h, whose closures hero.obj does not otherwise need.
 extern const char* gSkillMasteryNames[3];
 extern int bVideoPaused;
+// 0x6aa9d8. DECLARATION ONLY - src/townmgr.cpp:163 owns the DATA claim,
+// and a second claim on one RVA is a fatal duplicate at delink. hero.obj
+// reads it at 0x4db7d3, 0x4dd9f1, 0x4dda8d, 0x4e1bad and 0x4e1c13;
+// SetupHeroView treats it as the "hero list is suppressed" latch.
+extern int gUnnamed6aa9d8;
 #endif
 
 #ifdef HOMM3_HERO_DESCRIPTION_DEFS
@@ -1134,6 +1139,11 @@ DATA(0x00698b20) extern hero* gpCurrentHero;
 // HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
 // SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
 DATA(0x00698a84) extern int gHeroScreenHeroPosition;
+// HeroView's second argument, stashed on entry (0x4e1809 stores EDX
+// straight into this cell). SetupHeroView reads it as the "dismiss button
+// stays dead" latch, a full DWORD. The name is role-derived from
+// HeroView's own parameter and is PROVISIONAL.
+DATA(0x00698a90) extern int gHeroScreenNoDismiss;
 
 // The vtable and destructor prove direct CAdvPopup inheritance. Complete
 // carries nineteen equipped positions, one more than the DC TArtifactSlot
@@ -1161,6 +1171,11 @@ public:
     void update_slot(long slot);
     void update_all_slots();
     void UpdateHeroLocator(int iWhich);
+    // 0x4e1a50, thiscall with no arguments and NOT virtual (absent from
+    // vtable 0x63eae8). It dereferences no THeroScreenWindow member at
+    // all - `this` only ever feeds member calls - so the layout above
+    // needs nothing for it.
+    void SetupHeroView();
     virtual int ExitDialog(class message* msg);
 };
 SIZE(THeroScreenWindow, 0x68);
