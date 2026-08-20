@@ -395,7 +395,11 @@ public:
     // the whole army run.
     int monInfoTownType;          // +0x74 == sMonInfo.townType
     int monInfoLevel;             // +0x78 == sMonInfo.level
-    char pad_7c[0x8];
+    // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven
+    // by LoadResources (0x43d9f0): every one of its eight sprintf's
+    // hands this pointer to a "%s....82M" format. Pad slice.
+    const char* monInfoSamplePrefix;  // +0x7c == sMonInfo.cSamplePrefix
+    char pad_80[0x4];
     // A BITFIELD word, not an id: bit 0 is the two-hex marker in
     // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
     // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read

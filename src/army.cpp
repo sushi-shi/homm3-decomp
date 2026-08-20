@@ -47,6 +47,12 @@
 // the same change, which is innocent).
 #define HOMM3_ARMY_ISINCAPACITATED_DEF  // header-inline body; ai.cpp owns the 0x41f380 out-of-line copy
 #include "army.h"
+// ai.h: the narrow EAreaAttackCreature roster - LoadResources' missile
+// switch needs its ARCHER/MAGOG/POWER_LICH, which deliberately live
+// there rather than in armygrp.h's wide enum (see ai.h's own note).
+// Include-set canaries measured after this edge was added: initialize/
+// events/recruit all unmoved.
+#include "ai.h"
 // SSpellTraits' m_sample slice: army.cpp is its only consumer and this
 // header sits inside initialize.cpp's include closure (see the field).
 #include "armygrp.h"
@@ -54,6 +60,7 @@
 #include "cmbtmgr.h"
 #include "combatwindow.h"
 #include "csprite.h"
+#include "cspriteframe.h"   // CroppedY for LoadResources' image_height
 #include "drawing.h"
 // get_berserk_targets (0x445490) seeds the combat search and then reads
 // the cost back out of cellData by hand; includes are TU-local and cost
@@ -64,6 +71,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
+#include "monframeinfo.h"   // gMonFrameInfo for LoadResources' traits copy
 #include "prefs.h"
 #include "resourcemanager.h"   // GetSprite for attack_wall's explosion
 #include "sample.h"
@@ -325,15 +333,256 @@ void army::Init(int armyId, int newNumTroops, const hero* owner, int side,
         retaliationCount = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:288
+// Everything a stack needs on screen: the creature's animation-traits
+// row copied into the embedded sMonFrameInfo, the eight combat samples
+// sprintf'd from the traits' sample prefix ("%smove.82M" family, built
+// in kb.cpp's shared gText scratch), the standing sprite, the derived
+// image_height, and - for shooters - the projectile sprite off a
+// per-creature switch. A quick combat needs none of it.
+//
+// The missile switch's byte map and jump table were read from the
+// hash-verified image (fn+0x494 / fn+0x450): sixteen named projectile
+// .defs plus a default that leaves `missileName` UNASSIGNED - retail
+// reads the uninitialised [ebp-4] for any shooter the table does not
+// name (the ProcessDeath/AttackWall faithful-artifact class; do not
+// initialise it). Case bodies are emitted in SOURCE order, which is
+// what fixes the order below (halfling between gremlin and gog,
+// ballista before catapult, the mage family late).
+// Residual (98.6224%): the register-homing/scheduling family. Six
+// single-instruction transpositions - ours hoists the next arm's
+// [ebx+0x7c]/[ebx+0x84] load ONE slot above the `armySample[i] = s`
+// store where retail keeps source order - plus the image_height chain's
+// register naming (retail copies the new stdIcon into EAX before
+// walking s[2]->f[0], ours walks off ESI directly). Unifying the eight
+// per-slot locals into one `s` was byte-inert (measured, kept as the
+// likelier source); no spelling reached the transpositions.
 VA(0x0043d9f0, 0x525)  // anchor-bracket + dc-callgraph (GetSprite,
                        // IsQuickCombat) + arity, dc 0x43e80
 void army::LoadResources()
 {
-    // @stub
+    if (static_cast<const combatManager*>(gpCombatManager)
+            ->IsQuickCombat())
+        return;
+
+    memcpy(frameInfoMissileOffset, &gMonFrameInfo[creatureType],
+           sizeof(SMonFrameInfo));
+    origWalkCycleTime = frameInfoWalkCycleTime;
+
+    sample* s;
+    if (!(Is(6) & 1)) {
+        sprintf(gText, DATA_COMPGEN(0x00660a10, moveSampleFormat,
+                                    "%smove.82M"),
+                monInfoSamplePrefix);
+        s = LoadSampleResource(gText);
+        if (armySample[WALK_SAMPLE])
+            armySample[WALK_SAMPLE]->Dispose();
+        armySample[WALK_SAMPLE] = s;
+    } else {
+        if (armySample[WALK_SAMPLE])
+            armySample[WALK_SAMPLE]->Dispose();
+        armySample[WALK_SAMPLE] = 0;
+    }
+
+    if (creatureType == CREATURE_BALLISTA)
+        sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
+                                    "%sshot.82M"),
+                monInfoSamplePrefix);
+    else if (Is(6) & 1)
+        sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
+                                    "%swnce.82M"),
+                monInfoSamplePrefix);
+    else
+        sprintf(gText, DATA_COMPGEN(0x006609ec, attackSampleFormat,
+                                    "%sattk.82M"),
+                monInfoSamplePrefix);
+    s = LoadSampleResource(gText);
+    if (armySample[ATTACK_SAMPLE])
+        armySample[ATTACK_SAMPLE]->Dispose();
+    armySample[ATTACK_SAMPLE] = s;
+
+    sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
+                                "%swnce.82M"),
+            monInfoSamplePrefix);
+    s = LoadSampleResource(gText);
+    if (armySample[WINCE_SAMPLE])
+        armySample[WINCE_SAMPLE]->Dispose();
+    armySample[WINCE_SAMPLE] = s;
+
+    sprintf(gText, DATA_COMPGEN(0x006609e0, killSampleFormat,
+                                "%skill.82M"),
+            monInfoSamplePrefix);
+    s = LoadSampleResource(gText);
+    if (armySample[DIE_SAMPLE])
+        armySample[DIE_SAMPLE]->Dispose();
+    armySample[DIE_SAMPLE] = s;
+
+    if (Is(6) & 1)
+        sprintf(gText, DATA_COMPGEN(0x006609f8, winceSampleFormat,
+                                    "%swnce.82M"),
+                monInfoSamplePrefix);
+    else
+        sprintf(gText, DATA_COMPGEN(0x006609d4, defendSampleFormat,
+                                    "%sdfnd.82M"),
+                monInfoSamplePrefix);
+    s = LoadSampleResource(gText);
+    if (armySample[DEFEND_SAMPLE])
+        armySample[DEFEND_SAMPLE]->Dispose();
+    armySample[DEFEND_SAMPLE] = s;
+
+    if ((Is(2) & 1) || creatureType == CREATURE_MASTER_GENIE
+        || creatureType == CREATURE_OGRE_MAGE) {
+        sprintf(gText, DATA_COMPGEN(0x00660a04, shotSampleFormat,
+                                    "%sshot.82M"),
+                monInfoSamplePrefix);
+        s = LoadSampleResource(gText);
+        if (armySample[SHOOT_SAMPLE])
+            armySample[SHOOT_SAMPLE]->Dispose();
+        armySample[SHOOT_SAMPLE] = s;
+    } else {
+        if (armySample[SHOOT_SAMPLE])
+            armySample[SHOOT_SAMPLE]->Dispose();
+        armySample[SHOOT_SAMPLE] = 0;
+    }
+
+    if (creatureType == CREATURE_VAMPIRE
+        || creatureType == CREATURE_VAMPIRE_LORD
+        || creatureType == CREATURE_DEVIL
+        || creatureType == CREATURE_ARCH_DEVIL) {
+        sprintf(gText, DATA_COMPGEN(0x006609c8, ext1SampleFormat,
+                                    "%sext1.82M"),
+                monInfoSamplePrefix);
+        s = LoadSampleResource(gText);
+        if (armySample[PRE_WALK_SAMPLE])
+            armySample[PRE_WALK_SAMPLE]->Dispose();
+        armySample[PRE_WALK_SAMPLE] = s;
+        sprintf(gText, DATA_COMPGEN(0x006609bc, ext2SampleFormat,
+                                    "%sext2.82M"),
+                monInfoSamplePrefix);
+        s = LoadSampleResource(gText);
+        if (armySample[POST_WALK_SAMPLE])
+            armySample[POST_WALK_SAMPLE]->Dispose();
+        armySample[POST_WALK_SAMPLE] = s;
+    } else {
+        if (armySample[PRE_WALK_SAMPLE])
+            armySample[PRE_WALK_SAMPLE]->Dispose();
+        armySample[PRE_WALK_SAMPLE] = 0;
+        if (armySample[POST_WALK_SAMPLE])
+            armySample[POST_WALK_SAMPLE]->Dispose();
+        armySample[POST_WALK_SAMPLE] = 0;
+    }
+
+    for (int i = 0; i < 8; i++) {
+        if (armySample[i]) {
+            armySample[i]->field_2c = 64;
+            armySample[i]->field_28 = 3;
+            armySample[i]->field_30 = i != 0;
+        }
+    }
+
+    CSprite* icon =
+        ResourceManager::GetSprite(akCreatureTypeTraits[creatureType]
+                                       .m_sprite_name);
+    if (stdIcon)
+        stdIcon->Dispose();
+    stdIcon = icon;
+    image_height = 267 - stdIcon->s[cs_wait]->f[0]->CroppedY;
+
+    if (Is(2) & 1) {
+        const char* missileName;
+        switch (creatureType) {
+        case CREATURE_ARCHER:
+        case CREATURE_MARKSMAN:
+            missileName = DATA_COMPGEN(0x006609b0, crossbowMissileName,
+                                       "plcbowx.def");
+            break;
+        case CREATURE_MONK:
+        case CREATURE_ZEALOT:
+            missileName = DATA_COMPGEN(0x006609a4, zealotMissileName,
+                                       "cprzeax.def");
+            break;
+        case CREATURE_WOOD_ELF:
+        case CREATURE_GRAND_ELF:
+        case CREATURE_SHARPSHOOTER:
+            missileName = DATA_COMPGEN(0x00660998, elfMissileName,
+                                       "pelfx.def");
+            break;
+        case CREATURE_MASTER_GREMLIN:
+            missileName = DATA_COMPGEN(0x0066098c, gremlinMissileName,
+                                       "cprgre.def");
+            break;
+        case CREATURE_HALFLING:
+            missileName = DATA_COMPGEN(0x00660980, halflingMissileName,
+                                       "Phalf.def");
+            break;
+        case CREATURE_GOG:
+        case CREATURE_MAGOG:
+            missileName = DATA_COMPGEN(0x00660974, gogMissileName,
+                                       "cprgog.def");
+            break;
+        case CREATURE_LICH:
+        case CREATURE_POWER_LICH:
+            missileName = DATA_COMPGEN(0x00660968, lichMissileName,
+                                       "PLICH.def");
+            break;
+        case CREATURE_MEDUSA:
+        case CREATURE_MEDUSA_QUEEN:
+            missileName = DATA_COMPGEN(0x0066095c, medusaMissileName,
+                                       "pmedusx.def");
+            break;
+        case CREATURE_ORC:
+        case CREATURE_ORC_CHIEFTAIN:
+            missileName = DATA_COMPGEN(0x00660950, orcMissileName,
+                                       "porchx.def");
+            break;
+        case ARMY_CREATURE_CYCLOPS:
+        case ARMY_CREATURE_CYCLOPS_KING:
+            missileName = DATA_COMPGEN(0x00660944, cyclopsMissileName,
+                                       "PCYCLBX.def");
+            break;
+        case CREATURE_LIZARDMAN:
+        case CREATURE_LIZARD_WARRIOR:
+            missileName = DATA_COMPGEN(0x00660938, lizardMissileName,
+                                       "pplizax.def");
+            break;
+        case CREATURE_BALLISTA:
+            missileName = DATA_COMPGEN(0x0066092c, ballistaMissileName,
+                                       "SMBalx.def");
+            break;
+        case CREATURE_CATAPULT:
+            missileName = DATA_COMPGEN(0x00660920, catapultMissileName,
+                                       "SMCatx.def");
+            break;
+        case CREATURE_MAGE:
+        case CREATURE_ARCH_MAGE:
+        case CREATURE_BEHOLDER:
+        case CREATURE_EVIL_EYE:
+        case CREATURE_ENCHANTER:
+            missileName = DATA_COMPGEN(0x00660914, mageMissileName,
+                                       "pmagex.def");
+            break;
+        case CREATURE_ICE_ELEMENTAL:
+            missileName = DATA_COMPGEN(0x00660908, iceMissileName,
+                                       "PiceE.def");
+            break;
+        case CREATURE_TITAN:
+        case CREATURE_STORM_ELEMENTAL:
+            missileName = DATA_COMPGEN(0x006608fc, titanMissileName,
+                                       "cprgtix.def");
+            break;
+        }
+        CSprite* missile = ResourceManager::GetSprite(missileName);
+        if (missileIcon)
+            missileIcon->Dispose();
+        missileIcon = missile;
+    } else {
+        if (missileIcon)
+            missileIcon->Dispose();
+        missileIcon = 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:477
 DC_ONLY(0x4424c, 0xCC)
