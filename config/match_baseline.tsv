@@ -1368,6 +1368,7 @@ mapcell	?FindTrigger@CObject@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0xfec30
 mapcell	?GenerateHeightMap@NewfullMap@@QAEXPBVCObject@@QAY05C@Z	96.7484	96.7484	96.7484	0x105060
 mapcell	?HasTriggerableEvent@NewmapCell@@QAE?BEXZ	100.0000	100.0000	100.0000	0xfcdc0
 mapcell	?Init@NewfullMap@@QAEXHE@Z	100.0000	100.0000	100.0000	0xfd4f0
+mapcell	?Load@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	72.8624	72.8624	72.8624	0xfdbc0
 mapcell	?Load@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc6a0
 mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z	100.0000	100.0000	100.0000	0x105b20
 mapcell	?Read@NewfullMap@@QAEHPAVTAbstractFile@@HEH@Z	93.7029	93.7029	93.7029	0xfd690
@@ -1419,7 +1420,6 @@ mapcell	?saveObjectType@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObjectType@@@Z	100
 mapcell	?saveTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc390
 mapcell	?saveTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfc770
 mapcell	?saveTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfef10
-mapcell	NewfullMap_Load	0.0000	0.0000	0.0000	0xfdbc0
 mapcell	NewfullMap_NewfullMap	0.0000	0.0000	0.0000	0xfd060
 mapcell	NewfullMap_NewfullMap_fd1e0	0.0000	0.0000	0.0000	0xfd1e0
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70

@@ -734,16 +734,103 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:679
+// The savegame twin of Read, and the differences from it are the interesting
+// part.  It clears NINE map pools where Read clears eleven - the hero
+// placeholders at +0xa0 and the random dwellings at +0xc0 are NOT emptied
+// here, because a save has already resolved both away - and it skips the
+// game's own +0x1f680 list, which Read does empty.  It then reads the pools
+// back through the load* family instead of readMapObjects/readTimedEventList
+// alone, and the seer huts it deserializes itself.
+//
+// That seer-hut loop is this compiland's do-not-cache shape at its purest:
+// retail keeps ONLY a byte offset live across the body, adds it to a freshly
+// reloaded _First for the load call, and reloads _First AGAIN for the quest
+// test on the very next line.  Writing it as a subscript twice is what
+// produces that; hoisting a row pointer does not.
+// Residual (72.8624%): the same over-inline family readObject and Read hit,
+// twice over.  Retail CALLS vector<TSeerHut>::resize (two arguments, the
+// count and the default-argument temporary); our CL expands it into its
+// size()/insert/size()/erase body, which is the whole of the branch-count
+// gap `sema diff --branches` reports (base 17 vs target 14).  Retail also
+// reaches mapObjectData through the TWO-argument insert(iterator, const T&)
+// where we expand that wrapper and call the three-argument one underneath -
+// character for character the divergence readObject's QUEST_GUARD arm shows
+// on the same two instantiations.
+//
+// It is NOT element size: the already-exact loadMonsterList expands resize
+// for a 48-byte element, which needs the same magic multiply, so retail's
+// inliner is not simply refusing awkward strides.  Both divergences sit
+// AFTER eighteen inlined clear() expansions, which is the one thing Load has
+// that loadMonsterList does not - consistent with a per-caller /Ob2 budget
+// that retail had already spent by the time it reached the resize and ours
+// had not.  No source spelling reached it; recorded rather than ground on.
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
-int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
+int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
+                     int saveVersion)
 {
-    // @stub
-}
+    Init(size, two_layers);
 
-#endif  // @carcass
+    if (loadMapLayer(infile, size, 0, saveVersion) < 0)
+        return -1;
+    if (two_layers) {
+        if (loadMapLayer(infile, size, 1, saveVersion) < 0)
+            return -1;
+    }
+
+    AdvanceLoadingBarFn_004ED2A0(1);
+
+    objectTypes.clear();
+    objects.clear();
+    customTreasure.clear();
+    CustomMonsterList.clear();
+    blackBoxes.clear();
+    SeerHutList.clear();
+    QuestGuardList.clear();
+    TimedEventList.clear();
+    TownEventList.clear();
+    gpGame->towns.clear();
+    gpGame->scenarioTowns.clear();
+    gpGame->signs.clear();
+    gpGame->mines.clear();
+    gpGame->generators.clear();
+    gpGame->garrisons.clear();
+    gpGame->boats.clear();
+    gpGame->universities.clear();
+    gpGame->creatureBanks.clear();
+
+    if (loadMapObjects(infile) < 0)
+        return -1;
+    if (loadBlackBoxList(infile, saveVersion) < 0)
+        return -1;
+    if (loadTreasureList(infile) < 0)
+        return -1;
+    if (loadMonsterList(infile) < 0)
+        return -1;
+
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    SeerHutList.resize(count);
+    for (unsigned int i = 0; i < SeerHutList.size(); ++i) {
+        SeerHutList[i].load(infile, saveVersion);
+        if (SeerHutList[i].quest)
+            mapObjectData.push_back(static_cast<CMapObjectData*>(
+                static_cast<void*>(SeerHutList[i].quest)));
+    }
+
+    if (saveVersion >= 25)
+        NewfullMapFn_004FD950(infile, saveVersion);
+
+    if (loadTimedEventList(infile, saveVersion) < 0)
+        return -1;
+    if (loadTownEventList(infile, saveVersion) < 0)
+        return -1;
+
+    AdvanceLoadingBarFn_004ED2A0(1);
+    return 0;
+}
 
 // E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
 // three are members of NewfullMap. Retail inlines each at its only call

@@ -291,7 +291,13 @@ public:
     int Read(TAbstractFile* infile, int size, unsigned char twoLayers,
              int mapVersion);
     int readMapObjects(TAbstractFile* infile, int mapVersion);
-    int loadMapObjects(TAbstractFile* infile, int saveVersion);
+    // `ret 4`: ONE argument, unlike readMapObjects' two - the save stream
+    // carries no map version.
+    int loadMapObjects(TAbstractFile* infile);
+    // 0x4fd950, `ret 8`. One of the four retail-only rows this compiland's
+    // span audit already flags as having no Dreamcast counterpart; Load
+    // reaches it, and only when the save version is at least 25.
+    void NewfullMapFn_004FD950(TAbstractFile* infile, int saveVersion);
     // Two retail-only members with no Dreamcast counterpart, both reached
     // only from Read's tail and named for their addresses on this tree's
     // NewfullMapFn_00505F20 precedent.
