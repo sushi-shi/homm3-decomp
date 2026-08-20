@@ -194,9 +194,16 @@ unsigned char combatManager::LoadWallTraitsTable()
 // quick-combat case as the IF arm and the window construction as the
 // ELSE arm reproduces retail's layout: +2.35.
 //
-// Residual (99.4306%): one scheduling slot - retail sinks
-// `mov dword ptr [ebx+13de4h], 0` one instruction later, past the
-// `lea edx,[ebx+...]` that feeds the following call.
+// Residual (99.4306%): one scheduling slot, in the inlined `strcpy` of
+// cMgrName. Retail emits BOTH of the block's immediate dword stores
+// back to back ahead of the `or ecx,-1 / xor eax,eax / repne scasb`
+// strlen and puts `lea edx,[ebx+cMgrName]` after `sub edi,ecx`; our CL
+// keeps the first store, hoists the `lea` ahead of the scasb and sinks
+// the second store past the copy. Not source-addressable: swapping the
+// `id = 0x200` and `priority = newPriority` statements so the two
+// immediate stores are adjacent in source measures byte-identical at
+// 99.4306, so VC6 schedules this block independently of the order it
+// is written in.
 //
 // TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
 // of the flat `&&`, which is how the branch graph first reads. Measured
