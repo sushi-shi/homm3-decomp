@@ -1714,7 +1714,28 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 //     sinks to the end of the arm list, so the sink is unconditional and
 //     no arrangement of gotos can produce retail's layout.
 //   * Putting the label inside the ctrl-check's else scope: byte-inert.
-// What DID pay was removing the brace scope around the shared block's
+// 75.6482 -> 80.4012 (2026-08-20): HOISTING THE CTRL-SCROLL TEST INTO THE
+// SHARED BLOCK. The eight arms each carried their own
+// `if (ctrl) { ScreenScroll(n, 0); return 1; }` and VC6 emitted all eight
+// of those blocks BEFORE the sunk walk block (fn+0x246..0x359, with
+// ValidMove not reached until 0x3ad); retail reaches ScreenScroll at
+// 0x244 and ValidMove at 0x295. Setting walkDir first and testing the
+// qualifier once behind the label puts the first call and the whole walk
+// at retail's offsets and re-aligns everything downstream.
+//
+// BE HONEST ABOUT WHAT THIS IS: retail emits EIGHT ScreenScroll calls -
+// one at 0x244 and seven SUNK to 0x581..0x677, spaced 0x29 apart - so
+// retail's source keeps the per-arm test and this spelling does not.
+// It is a PLACEMENT DEVICE that is semantically identical (walkDir
+// already carries the same 0..7 the arm passed) and it wins because the
+// mis-placed blocks cost more than the seven missing calls do. The shape
+// that would be BOTH right and better is the sunk-join lever: retail's
+// layout is exactly "KP_8's copy of the walk block falls through, the
+// other seven jump to a second copy", i.e. WRITE THE WALK BLOCK TWICE,
+// not eight times. The rejected experiment below wrote it eight times
+// and measured the wrong dose.
+//
+// What ALSO paid was removing the brace scope around the shared block's
 // locals - 71.36 -> 75.65, purely through register allocation inside the
 // body, with the layout unchanged.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
@@ -1790,12 +1811,12 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
     }
 
     case KEYCODE_KP_8:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(0, 0);
-            return 1;
-        }
         walkDir = 0;
     walk_hero:
+        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
+            ScreenScroll(walkDir, 0);
+            return 1;
+        }
         if (waitingPlayer)
             break;
         if (gpCurrentPlayer->currHeroId == -1)
@@ -1898,58 +1919,30 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         }
 
     case KEYCODE_KP_9:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(1, 0);
-            return 1;
-        }
         walkDir = 1;
         goto walk_hero;
 
     case KEYCODE_KP_6:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(2, 0);
-            return 1;
-        }
         walkDir = 2;
         goto walk_hero;
 
     case KEYCODE_KP_3:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(3, 0);
-            return 1;
-        }
         walkDir = 3;
         goto walk_hero;
 
     case KEYCODE_KP_2:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(4, 0);
-            return 1;
-        }
         walkDir = 4;
         goto walk_hero;
 
     case KEYCODE_KP_1:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(5, 0);
-            return 1;
-        }
         walkDir = 5;
         goto walk_hero;
 
     case KEYCODE_KP_4:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(6, 0);
-            return 1;
-        }
         walkDir = 6;
         goto walk_hero;
 
     case KEYCODE_KP_7:
-        if (msg->qualifier & MESSAGE_MODIFIER_CONTROL_KEYS) {
-            ScreenScroll(7, 0);
-            return 1;
-        }
         walkDir = 7;
         goto walk_hero;
 
