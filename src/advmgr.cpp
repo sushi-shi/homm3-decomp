@@ -342,6 +342,50 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 }
 
 // E:\gamedcs\advmgr.cpp:1253
+// DECODED, NOT YET RECONSTRUCTED. Recorded here so it is not re-derived.
+// The body is `switch (advCommand)` over a jump table at VA 0x00408750
+// (fn+0xBD0, the last 32 bytes of the function, preceded by two bytes of
+// 8b ff alignment filler), indexed by advCommand - 1 over the domain 1..8;
+// default falls to the epilogue at fn+0xBB0. advCommand is a raw int here,
+// so the labels are the same literals ProcessHover already assigns.
+//
+// Cases in SOURCE (body emission) order, with the producer of each:
+//   1  fn+0x057  set the hero path target from lastMapHover, FALLS THROUGH
+//   7  fn+0x09A  walk the route: BuildPath, then a step loop over
+//                gpSearchArray->result counting DOWN, with an inner message
+//                pump that aborts on key/LMB/RMB/widget
+//   6  fn+0x64E  hero standing on a town -> get_obscured_town()->View(0)
+//   3  fn+0x684  town, currTownId != -1  -> town::View(0)
+//   2  fn+0x781  hero, currHeroId != -1  -> HeroView
+//   4  fn+0x88B  hero, currHeroId == -1  -> SetHeroContext
+//   5  fn+0x95B  town, currTownId == -1  -> SetTownContext
+//   8  fn+0xA28  shipyard                -> DoEventShipyard
+//
+// Blocked on six declarators the tree does not carry:
+//   advManager::MoveHero             retail 0x004805e0, ret 0x1c (7 args)
+//   advManager::DoEventShipyard      retail 0x0049e2e0, ret 0x0c
+//   TAdventureMapWindow::SetSleepImage(int)   retail 0x00403cc0
+//   .bss 0x006968e0  ds_memsample*, the walk sample MemorySample returns
+//   .bss 0x0069777c  int, breaks the step loop when nonzero
+//   .bss 0x00699560  int, gates both SetEnvironmentOrigin calls in case 2
+// town::get_location exists (town.h:342) but is gated behind
+// HOMM3_TOWN_LOCATION_DECLS, which this TU does not define.
+//
+// Three findings worth keeping:
+//   - The two route-teardown blocks are LONGHAND, not calls. Retail leaves
+//     no call relocation at either; the block at fn+0x493 uses the ONE-arg
+//     CompleteDraw(0) plus advManager::UpdateScreen(0,0) where HideRoute's
+//     own body uses the five-arg CompleteDraw plus the window manager's
+//     UpdateScreen; and both callees are DEFINED LATER in this file, so
+//     VC6 cannot have inlined them. ForceNewHover is longhand likewise.
+//   - get_map_center() is declared TWICE in advmgr.h, undefined at :1445
+//     and const-qualified/defined at :1498, so calling it from a non-const
+//     member binds the undefined overload and would emit a call where
+//     retail inlines. Resolve that before using the accessor spelling for
+//     the four `radarOrigin + lastHover` sites.
+//   - CONTRADICTION, not silently patched: retail stores pathTargetZ
+//     SIXTEEN bits wide (`mov word ptr [esi+0x3d], dx`) where hero.h:200
+//     declares `int pathTargetZ; // +0x3d`.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -3364,6 +3408,43 @@ NewmapCell* advManager::GetCell(type_point point)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7037
+// DECODED, NOT YET RECONSTRUCTED. bPartialUpdate is DEAD in retail - zero
+// references in the body - and updateFlag is read exactly once, at the end.
+// Shape: four widget rect locals off advWindow->RadarWidget (+0x18/+0x1a/
+// +0x1c/+0x1e, which InMapArea already proves are x/y/width/height, the
+// vptr putting x at +0x18); the CompleteDraw guard chain; an AI-shield
+// paint; then a row loop over the map with THREE separate switches on
+// gMapHeight - one to advance the destination row (jump table 0x4135d0,
+// index 0x4135e4), one to write the pixel block (table 0x413700, index
+// 0x413714), and one for the sprite frame/scale. The 108 arms carry the
+// 4/3 stretch: advance 1,1,2 rows per 3 map rows, and 2,1,1 pixels wide.
+// The per-cell colour switch is a jump table at 0x413654 with a byte index
+// at 0x413670 over [0x11,0xa0] and six bodies - terrain decorations (21
+// values) taking groundTileset[GroundSet]->p->data[9], then TOWN, the
+// LIGHTHOUSE/MINE pair, the two CREATURE_GENERATORs, GARRISON and
+// SHIPYARD each taking playerColors indexed by their own owner byte.
+// Row-to-row advance uses the LIVE screenBitmap->Pitch while the writes
+// inside a block use a hardcoded 0x640-byte stride; that inconsistency is
+// retail's, not a misread.
+//
+// Blocked on three declarations:
+//   gUnnamed6aac3c is declared WITH its DATA claim further down this file,
+//     below this function - the claim has to be hoisted above it.
+//   .data 0x68c6b8, the view-world tile scale (16.0f / 11.84f / 7.68f,
+//     paired with the int at 0x68c6bc). Proven FLOAT by its writers and by
+//     the fsub at 0x5f73b0 / fdiv at 0x5fc274; viewwrld.obj owns it, so a
+//     declaration only, no DATA claim. No attested name.
+//   game::GameFn_004CA780, retail 0x4ca780, 180 B - loads aishield.pcx,
+//     blits it over the radar rect, calls UpdateScreen and sets
+//     gpAdvManager->field_38c. Ordinal placeholder, GameFn_004CA410's
+//     convention.
+//
+// Two annotation contradictions found while decoding, neither acted on:
+//   - advmgr.h:657 claims gMapVisibilityBit at DATA(0x0069ccc4), but this
+//     body AND the exact GetCloudLookup both relocate against 0x69ccbc.
+//   - soundmgr.h:191 says gbUnk691209 is read only as the second half of
+//     the sound-is-on guard; this body reads it twice as a radar/AI
+//     visibility gate, as do Main, SetHeroContext and StartLocalPlayerTurn.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
