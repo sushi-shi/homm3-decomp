@@ -1518,7 +1518,7 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
     type_point cellPoint = hoverPoint;
     NewmapCell* cell;
     if (!cellPoint.is_valid())
-        cell = fullMap->cell(0, 0, 0);
+        cell = fullMap->cellData;
     else
         cell = fullMap->cell(cellPoint);
 
@@ -1565,7 +1565,7 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
     int currHeroId = gpGame->GetLocalPlayer()->currHeroId;
     if (currHeroId != -1) {
         hero* currHero = gpGame->GetHero(currHeroId);
-        unsigned char heroMobile = currHero->IsMobile();
+        int heroMobile = currHero->IsMobile();
         if (currHero && currHero->z == hoverPoint.z) {
             if (currHero->x == hoverPoint.x && currHero->y == hoverPoint.y) {
                 advCommand = ADV_COMMAND_VIEW_HERO;
@@ -1596,8 +1596,7 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
     TAdventureObjectType clickedType = cell->type;
     int clickedIndex = cell->extraInfo;
 
-    switch (clickedType) {
-    case HERO:
+    if (clickedType == HERO) {
         if (clickedIndex == gpGame->GetLocalPlayer()->currHeroId) {
             advCommand = ADV_COMMAND_VIEW_HERO;
             DoAdvCommand(trigger_point);
@@ -1607,8 +1606,9 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
             return;
         SetHeroContext(clickedIndex, 0, !gpCurrentPlayer->IsLocalHuman(), 1);
         return;
+    }
 
-    case TOWN: {
+    if (clickedType == TOWN) {
         if (clickedIndex == gpGame->GetLocalPlayer()->currTownId) {
             advCommand = ADV_COMMAND_VIEW_TOWN;
             *peventCell = DoAdvCommand(trigger_point);
@@ -1618,22 +1618,14 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
             return;
         town* clickedTown = &gpGame->towns[clickedIndex];
         unsigned char waitingPlayer = !gpCurrentPlayer->IsLocalHuman();
-        unsigned char sameTeam = 0;
-        if (gUnnamed69778c >= 0 && clickedTown->owner >= 0)
-            sameTeam = gpGame->GetTeam(gUnnamed69778c)
-                       == gpGame->GetTeam(clickedTown->owner);
-        if (sameTeam || DebugViewAll)
+        if (gpGame->OnSameTeam(gUnnamed69778c, clickedTown->owner)
+            || DebugViewAll)
             SetTownContext(clickedIndex, waitingPlayer, 1);
         return;
     }
 
-    case SHIPYARD:
+    if (clickedType == SHIPYARD)
         *peventCell = DoAdvCommand(trigger_point);
-        return;
-
-    default:
-        return;
-    }
 }
 
 #if 0  // @carcass
