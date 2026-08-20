@@ -9,6 +9,45 @@
 
 TCreatureType get_elemental_type(SpellID spell);
 
+// The SECOND live 16-bit channel-mask triple, .data 0x68c860..0x68c868,
+// declared here rather than in bitmap16.h next to the 0x694d6x one for
+// a MEASURED reason: three declarators in bitmap16.h cost recruit.obj's
+// recruitUnit::Update 90.84 -> 88.24 (the include-set class), and this
+// header has two consumers where that one has twenty-one. mousemgr.cpp
+// owns the 0x68c864/0x68c868 definitions; 0x68c860 has no other reader
+// in the image, so its claim is here.
+//
+// The channels sit in a DIFFERENT order from bitmap16.h's triple - here
+// it is 0x68c860 = R, 0x68c864 = G, 0x68c868 = B ascending - and two
+// independent retail witnesses inside DrawBolt (0x5a5440) fix that:
+//   * its green span table (.data 0x68833c) ends on the triple
+//     `00 60 00`, only the middle byte non-zero, and that middle byte
+//     is the one multiplied by 0x68c864;
+//   * its Chain Lightning arm walks (255,255,255) -> (240,240,255) ->
+//     ... -> (192,192,255), i.e. the 0x68c868 channel stays saturated
+//     while the other two fade, and a bolt fading toward its own
+//     0x68c868 channel is the blue-white one the spell draws.
+// The NAMES stay address-based because no retail symbol survives for
+// them and mousemgr.cpp already carries two of the three that way.
+DATA(0x0068c860) extern unsigned long gColorMask68c860;
+extern unsigned long gColorMask68c864;
+extern unsigned long gColorMask68c868;
+
+// DrawBolt's Chain Lightning arm is the one bolt colour shaded
+// PROCEDURALLY instead of from a span table: it steps red and green
+// down 255 -> 240 -> 224 -> 216 -> 200 -> 192 with depth into the drawn
+// span while blue stays saturated, and retail spells all six steps out
+// one at a time rather than through a table (each arm re-expands
+// RGBto16 in full; only the last channel term is tail-merged). Depth 0
+// is the span's outer rim, and anything deeper than four is the floor.
+enum EBoltSpanDepth {
+    BOLT_SPAN_DEPTH_0 = 0,
+    BOLT_SPAN_DEPTH_1 = 1,
+    BOLT_SPAN_DEPTH_2 = 2,
+    BOLT_SPAN_DEPTH_3 = 3,
+    BOLT_SPAN_DEPTH_4 = 4
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spells.cpp:1862, dc 0x151e94) int handle_sacrifice_beneficiary(message* msg);
 // CODEVIEW(E:\gamedcs\spells.cpp:1961, dc 0x15205c) int HandleCastSacrifice(message* msg);
