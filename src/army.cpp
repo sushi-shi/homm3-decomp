@@ -21,12 +21,18 @@
 #define HOMM3_ARMY_MIDPOINT_FIELD_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
+#define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
+#define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLCAST_VIEW
+#define HOMM3_ARMY_SPELLS_VIEW
+#define HOMM3_ARMY_SPELL_ROW_VIEW
+#define HOMM3_ARMY_TURN_ABILITY_VIEW
 #define HOMM3_ARMY_WALL_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #include <algorithm>
+#include <math.h>
 #include <stdlib.h>
 
 #include <va.h>
@@ -46,6 +52,7 @@
 #include "armygrp.h"
 #include "bitmap16.h"
 #include "cmbtmgr.h"
+#include "combatwindow.h"
 #include "csprite.h"
 #include "drawing.h"
 // get_berserk_targets (0x445490) seeds the combat search and then reads
@@ -60,6 +67,7 @@
 #include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
+#include "textresource.h"
 #include "town.h"
 #include "winmgr.h"
 
@@ -158,32 +166,25 @@ void army::stop_sample(army::TSampleID id)
 // register - that slot is then reused for the two dead erase
 // iterators at the bottom.
 //
-// Residual (0.0000%): AN INLINER WALL, NOT A MODELLING ERROR, and the
-// whole rest of the body is already byte-shaped. Retail CALLS
-// deque<>::erase out of line (0x448db0, 766 B, the COMDAT the linker
-// parked just past this unit) and inlines everything INTO it; our CL
-// inlines erase into THIS body instead and is then starved, so the
-// eight things retail folded into erase - operator-, operator+,
-// operator++, pop_front, pop_back, copy, copy_backward - come back out
-// as calls. `homm3 vc6 diagnose` classifies it exactly that way:
-// "inliner (predict-inline), 8 under-inline". Everything from the
-// spellInfluence memset to the two trailing vector clears is
-// instruction-for-instruction identical modulo one register choice
-// (retail parks the shared ZERO in EBX and homes the loop counter;
-// ours parks the counter in EBX and re-materialises the zero).
+// THE INLINER WALL IS BROKEN (0.00 -> 92.63, 2026-08-20), and not by
+// the second-call-site theory the old note here staked out. That
+// theory was tested: CancelIndividualSpell (0x444510) landed with the
+// second 0x448db0 site and our CL STILL inlined erase into this body -
+// the one-site rule was never the mechanism. What works is the
+// statement-granular `#pragma inline_depth(0)` lever (game::Load
+// precedent): spell clear() through its own body with begin()/end()
+// hoisted into UNPINNED statements - their 16-byte temps must build
+// inline, so they cannot sit inside the pinned one - and pin only the
+// erase call. Both erase sites in the TU now carry the pin and the
+// 766-byte COMDAT is called exactly where retail calls it.
 //
-// THE FIX IS THE SECOND CALL SITE, not a spelling. An E8 scan of
-// retail .text finds exactly TWO callers of 0x448db0: this body
-// (0x43d656) and CancelIndividualSpell (0x444896). VC6 inlines a
-// single-call-site function regardless of size - the rule this tree
-// already records for statics and one-site externs - so erase stays
-// out of line only once army.obj holds both sites. Tried and
-// rejected: the explicit `erase(begin(), end())` spelling in place of
-// `clear()` (identical bytes, erase still inlined), a second
-// `clear()` in this same body (changes the shape but does not stop
-// the expansion - the two sites must be in DIFFERENT callers), and
-// `#pragma inline_depth(1)` around the definition (no effect at all).
-// Do not re-grind this until CancelIndividualSpell (0x444510) lands.
+// Residual (92.6261%): the register-homing family. Retail fills the
+// two by-value iterator temps through EDI as scratch with EAX/EDX
+// holding the slot pointers; ours picks the mirror assignment, and the
+// begin/end declaration-order swap is byte-inert (measured both ways,
+// 92.6261 exactly). The GameTime store schedules one slot later than
+// retail's and the dispose vtable call uses EDX where retail uses EAX
+// - all downstream of the same homing choice, no spelling reaches it.
 VA(0x0043d5c0, 0x166)  // anchor-bracket + arity, dc 0x438e8
 void army::InitClean()
 {
@@ -195,7 +196,19 @@ void army::InitClean()
     iRoundsLeftBeforeVanish = -1;
     numSpellInfluences = 0;
     memset(spellInfluence, 0, sizeof(spellInfluence));
-    SpellInfluenceQueue.clear();
+    {
+        // clear() spelled through its own body with the erase pinned:
+        // retail expands clear and CALLS deque::erase (0x448db0), and
+        // our CL - the InitClean residual note below - inlines erase
+        // and starves. The statement-scoped depth(0) reproduces the
+        // rejection; begin()/end() build their 16-byte temps inline in
+        // the two unpinned statements exactly as retail does.
+        TSpellQueue::iterator queue_end = SpellInfluenceQueue.end();
+        TSpellQueue::iterator queue_begin = SpellInfluenceQueue.begin();
+#pragma inline_depth(0)
+        SpellInfluenceQueue.erase(queue_begin, queue_end);
+#pragma inline_depth()
+    }
     iLastFidgetTime = GameTime::Get();
     if (stdIcon)
         stdIcon->Dispose();
@@ -1118,12 +1131,111 @@ void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1717
+#endif  // @carcass
+
+// The on-attack debuff roll: does THIS attacker's special land on
+// `target`? The switch is over the ATTACKER's creatureType (source
+// order = layout order for the jump table), each arm rolls its chance,
+// runs SpellCastWorks for the real spells, and parks the landed effect
+// in the target's iPostPowSpellToCast for the post-animation pow to
+// apply. Returns 1 only for the three incapacitators - blind, stone,
+// paralyze - which is what suppresses the retaliation.
+//
+// The dendroid arm is TWO add_item calls (the static above, inlined
+// whole with its std::find and its push_back's insert COMDAT), the
+// first one guarded: an already-bound target returns without
+// re-raising the pending spell or the mirror link.
+//
+// The living-targets gate is the target's creature bit 4 (undead and
+// war machines shrug off disease, poison and aging); blind, curse,
+// stone, paralyze and bind roll without it. Chances are 20% except the
+// knights'/mummy's curse at 25% and the wyvern monarch's poison at
+// 30%; the rust dragon's acid applies with NO roll whenever the
+// victim has defense left to eat.
 VA(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
 unsigned char army::check_special_attack(army* target)
 {
-    // @stub
+    switch (creatureType) {
+    case CREATURE_GHOST_DRAGON:
+        if (target->Is(4) & 1 && Random(1, 100) <= 20
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_AGE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_AGE;
+        return 0;
+    case CREATURE_ZOMBIE:
+        if (target->Is(4) & 1 && Random(1, 100) <= 20
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_DISEASE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_DISEASE;
+        return 0;
+    case ARMY_CREATURE_UNICORN:
+    case ARMY_CREATURE_WAR_UNICORN:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_BLIND,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_BLIND;
+            return 1;
+        }
+        return 0;
+    case CREATURE_DENDROID_GUARD:
+    case CREATURE_DENDROID_SOLDIER:
+        if (!add_item(target->binders, this))
+            return 0;
+        target->iPostPowSpellToCast = SPELL_BIND;
+        add_item(bound_armies, target);
+        return 0;
+    case CREATURE_BLACK_KNIGHT:
+    case CREATURE_DREAD_KNIGHT:
+    case CREATURE_MUMMY:
+        if (Random(1, 100) <= 25 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_CURSE,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_CURSE;
+        return 0;
+    case CREATURE_MEDUSA:
+    case CREATURE_MEDUSA_QUEEN:
+    case CREATURE_BASILISK:
+    case CREATURE_GREATER_BASILISK:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_STONE,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_STONE;
+            return 1;
+        }
+        return 0;
+    case CREATURE_RUST_DRAGON:
+        if (target->numTroops > 0 && target->defenseSkill > 0)
+            target->iPostPowSpellToCast = SPELL_ACID_BREATH_DEFENSE;
+        return 0;
+    case CREATURE_WYVERN_MONARCH:
+        if (target->Is(4) & 1 && Random(1, 100) <= 30
+            && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_POISON,
+                                               get_controlling_side(),
+                                               target, 1, 1))
+            target->iPostPowSpellToCast = SPELL_POISON;
+        return 0;
+    case CREATURE_SCORPICORE:
+        if (Random(1, 100) <= 20 && target->numTroops > 0
+            && gpCombatManager->SpellCastWorks(SPELL_PARALYZE,
+                                               get_controlling_side(),
+                                               target, 1, 1)) {
+            target->iPostPowSpellToCast = SPELL_PARALYZE;
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
 }
 
+#if 0  // @carcass
 #endif  // @carcass
 
 // The retaliation a Fire Shield charges the attacker, and the one body
@@ -1195,15 +1307,189 @@ void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life
     // @stub
 }
 
+// E:\gamedcs\army.cpp:2358
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:2044
+// One swing, fully resolved: mark who gets hit (the hydra's whole
+// adjacency mask - widened by the Cerberus's two ring neighbours - or
+// the struck stack plus the dragon's-breath cell behind it), roll the
+// luck bonus, deal and apply the damage, pick the attack frame row
+// from the direction, run the on-attack special, print the damage
+// line and hand the kill accounting to do_post_attack. Returns 1 when
+// the blow incapacitated the defender (the special's own answer, or a
+// fresh full blind).
+//
+// GetName expands at the two damage_message sites and stays a call at
+// the sprintf; get_controlling_side is a CALL here (the one this TU
+// keeps out of line); MarkCreatureEffect expands three times.
+//
+// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.46 -> 95.52): the two
+// over-inlines take statement-scoped depth(0) pins with the call
+// hoisted to a local (striking_side, creature_name); the berserk
+// criteria is an IF/ELSE around two GetAttackMask calls, not a
+// ternary - retail pushes the shared -1 once and duplicates the
+// {criteria, gridIndex} pushes per arm; total_life goes through a
+// `long life` block local (+0.06 over the ternary).
+//
+// Residual (95.5202%): the register-mirror family again - the second
+// and third MarkCreatureEffect expansions home their byte-store lea
+// through the swapped ecx/ebx pair, the armyToAttack reload schedules
+// one slot later, and total_life's else arm keeps the product in EDX
+// where retail routes both arms through EAX into one store. Calls all
+// pair (23/23 after the pins).
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::do_attack(army* armyToAttack, int direction)
 {
-    // @stub
+    army* behind = 0;
+    gpCombatManager->ResetHitByCreature();
+    unsigned attackMask;
+    if (Is(19) & 1) {
+        if (berserkFlag)
+            attackMask = GetAttackMask(gridIndex, 2, -1);
+        else
+            attackMask = GetAttackMask(gridIndex, 1, -1);
+        if (creatureType == CREATURE_CERBERUS) {
+            unsigned mask = ~(1u << direction) & 0xff;
+            mask &= ~(1u << get_counter_clockwise(direction));
+            attackMask |= mask & ~(1u << get_clockwise(direction));
+        }
+    } else {
+        armyToAttack->hitByCreature = 1;
+        if (Is(3) & 1) {
+            long behind_hex = GetAdjacentCellIndex(
+                get_adjacent_hex(gridIndex, direction), direction);
+            if (behind_hex >= 0 && behind_hex < COMBAT_GRID_CELLS) {
+                behind = gpCombatManager->cells[behind_hex].get_army();
+                if (behind) {
+                    if (behind->hitByCreature)
+                        behind = 0;
+                    else
+                        behind->hitByCreature = 1;
+                }
+            }
+        }
+    }
+    gpCombatManager->ResetLimitCreature();
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    iLuckStatus = 0;
+#pragma inline_depth(0)
+    long striking_side = get_controlling_side();
+#pragma inline_depth()
+    if (gpCombatManager->heroes[striking_side] != 0 && luck > 0) {
+        if (Random(1, 24) <= _cpp_min(luck, 3)) {
+            iLuckStatus = 1;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat()) {
+                launch_sample(DATA_COMPGEN(0x00660a20, goodLuckSampleName,
+                                           "goodluck.82m"),
+                              -1, 3);
+                const char* creature_name;
+#pragma inline_depth(0)
+                creature_name = GetName(creatureType, numTroops);
+#pragma inline_depth()
+                sprintf(gText, gpGeneralText->GetText(46), creature_name);
+                gpCombatManager->combatWindow->combat_message(gText, 1, 0);
+                gpCombatManager->SpellEffect(
+                    combatManager::eSpellEffectFortune, this, 100, 0);
+            }
+        }
+    }
+    int damage = 0;
+    int killed = 0;
+    int damage2 = 0;
+    int killed2 = 0;
+    long fire_shield_damage = 0;
+    long total_life = 0;
+    if (Is(19) & 1) {
+        do_multi_head_attack(attackMask, &damage, &killed, &total_life);
+    } else {
+        gpCombatManager->MarkCreatureEffect(armyToAttack->combatSide,
+                                            armyToAttack->bitIndex);
+        if (behind)
+            gpCombatManager->MarkCreatureEffect(behind->combatSide,
+                                                behind->bitIndex);
+        long life;
+        if (armyToAttack->Is(23) & 1)
+            life = 1;
+        else
+            life = armyToAttack->hitPoints * armyToAttack->numTroops
+                   - armyToAttack->topCreatureDamage;
+        total_life = life;
+        long shield_charge = 0;
+        if (armyToAttack) {
+            damage = adjust_damage(armyToAttack, ComputeBaseDamage(0), 0,
+                                   0, joustBonus, &shield_charge);
+            killed = armyToAttack->Damage(damage);
+            iLuckStatus = 0;
+        }
+        fire_shield_damage = shield_charge;
+        if (shield_charge > 0)
+            armyToAttack->show_fire_shield = 1;
+        if (behind) {
+            shield_charge = 0;
+            damage2 = adjust_damage(behind, ComputeBaseDamage(0), 0, 0,
+                                    joustBonus, &shield_charge);
+            killed2 = behind->Damage(damage2);
+            iLuckStatus = 0;
+        }
+    }
+    gpCombatManager->ComputeMaxExtent();
+    bShowAttackFrames = 1;
+    if (creatureType != CREATURE_HYDRA && creatureType != CREATURE_CHAOS_HYDRA
+        && !static_cast<const combatManager*>(gpCombatManager)
+                ->IsQuickCombat()) {
+        if (direction == COMBAT_DIRECTION_WIDE_UPPER
+            || direction == COMBAT_DIRECTION_5
+            || direction == COMBAT_DIRECTION_0) {
+            if (behind && stdIcon->numSequences > cs_special_ur
+                && stdIcon->validSeqMask[cs_special_ur] != 0)
+                iShowAttackFrameType = cs_special_ur;
+            else if (creatureType == ARMY_CREATURE_BALLISTA)
+                iShowAttackFrameType = cs_range_ur;
+            else
+                iShowAttackFrameType = cs_attack_ur;
+        } else if (direction == COMBAT_DIRECTION_1
+                   || direction == COMBAT_DIRECTION_4) {
+            if (behind && stdIcon->numSequences > cs_special_r
+                && stdIcon->validSeqMask[cs_special_r] != 0) {
+                iShowAttackFrameType = cs_special_r;
+            } else if (creatureType == ARMY_CREATURE_BALLISTA) {
+                iShowAttackFrameType = cs_range_r;
+            } else {
+                iShowAttackFrameType = cs_attack_r;
+            }
+        } else {
+            if (behind && stdIcon->numSequences > cs_special_dr
+                && stdIcon->validSeqMask[cs_special_dr] != 0)
+                iShowAttackFrameType = cs_special_dr;
+            else if (creatureType == ARMY_CREATURE_BALLISTA)
+                iShowAttackFrameType = cs_range_dr;
+            else
+                iShowAttackFrameType = cs_attack_dr;
+        }
+    } else {
+        iShowAttackFrameType = cs_attack_r;
+    }
+    unsigned char special = check_special_attack(armyToAttack);
+    gpCombatManager->PowEffect(-1, 0);
+    if (!(Is(19) & 1)) {
+        if (behind && behind->creatureType != armyToAttack->creatureType)
+            gpCombatManager->damage_message(
+                GetName(creatureType, numTroops), numTroops,
+                damage + damage2, 0, killed + killed2);
+        else
+            gpCombatManager->damage_message(
+                GetName(creatureType, numTroops), numTroops, damage,
+                armyToAttack, killed);
+    }
+    do_post_attack(armyToAttack, damage, killed, total_life);
+    if (fire_shield_damage > 0)
+        do_fire_shield(fire_shield_damage);
+    if (armyToAttack->residualBlindness && armyToAttack->blindFactor == 0.0)
+        return 1;
+    return special;
 }
-
-// E:\gamedcs\army.cpp:2358
-#endif  // @carcass
 
 // The whole melee exchange in one direction: turn the defender to face
 // the blow, land it, let the defender retaliate, take a second swing if
@@ -1323,14 +1609,162 @@ unsigned char army::check_obstacle_attacks(unsigned char is_walking)
     return gpCombatManager->check_obstacle_attacks(this, is_walking);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2386
+// The whole walk: path to the destination, tear the stack out of the
+// aura and bind graphs, then step the path cell by cell - lowering the
+// drawbridge when the next cell asks for it, stopping dead (result 0)
+// on a moat-slowed cell or a hidden trap it reveals, charging up the
+// Champion's joustBonus with the step count - and re-wire auras and
+// facing at the end.
+//
+// WHAT IS INLINE AND WHAT IS NOT, read off the bytes: GetSpeed expands
+// at both of its sites (the slowRounds float re-time with its floor at
+// 1), remove_aura expands whole (both teardown loops with erase_item
+// CALLS kept), remove_binding stays a call, play_sample(POST_WALK)
+// expands with its own IsQuickCombat re-test under the outer one, and
+// the WALK_SAMPLE stop is written straight through gpSoundManager -
+// stop_sample's inline would re-test IsQuickCombat a third time and
+// retail has exactly two. Walk's direction argument re-reads the path
+// cell's bitfield rather than the `direction` local the two adjacency
+// calls share - do not cache what retail reloads.
+//
+// `stop` doubles as the loop bound: a moat or trap RAISES it to the
+// current index so the walk ends on this step. The explicit-else
+// spelling and the `(stop = ...) < 0` condition-assignment measure
+// IDENTICALLY (89.7721) - both give retail's shared zero-store block -
+// and the `long stop = 0;` pre-initialized form is 1.0 WORSE
+// (88.7607); the init store must not exist ahead of the branch.
+//
+// Residual (89.7721%): the register-mirror family. Retail homes
+// gpSearchArray in EBX and the counts in EDI for the whole body; our
+// C2 picks the mirror image at the first definition and every
+// downstream pairing follows, plus the `stop` slot takes its zero from
+// an immediate store where ours routes a zeroed register. Same B1
+// handle-state class as attack_hex's direction-search note. Calls,
+// call order, and every block pair off (24/24 calls after the
+// remove_aura longhand below).
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 {
-    // @stub
+    side = slot = -1;
+    if (!FindPath(destIndex, GetSpeed(), 0, 0))
+        return 0;
+    long original_facing = facing;
+    // remove_aura()'s body, spelled through so the two erase_item
+    // sites can carry the pins retail's own expansion decisions need:
+    // both stay CALLS here (our CL otherwise inlines one), the first
+    // size() and clear() expand, the second size() and clear() stay
+    // out of line.
+    long source_count = aura_sources.size();
+    while (source_count-- > 0) {
+        army* source = aura_sources[source_count];
+#pragma inline_depth(0)
+        erase_item(source->aura_clients, this);
+#pragma inline_depth()
+    }
+    {
+        army** first = aura_sources.begin();
+        army** end = aura_sources.end();
+#pragma inline_depth(0)
+        aura_sources.erase(first, end);
+#pragma inline_depth()
+    }
+#pragma inline_depth(0)
+    long client_count = aura_clients.size();
+#pragma inline_depth()
+    while (client_count-- > 0) {
+        army* client = aura_clients[client_count];
+#pragma inline_depth(0)
+        erase_item(client->aura_sources, this);
+#pragma inline_depth()
+    }
+#pragma inline_depth(0)
+    aura_clients.clear();
+#pragma inline_depth()
+    remove_binding();
+    unsigned char succeeded = 1;
+    long stop;
+    if (!gpCombatManager->bCreaturePlacement) {
+        stop = gpSearchArray->result.size() - GetSpeed();
+        if (stop < 0)
+            stop = 0;
+    } else {
+        stop = 0;
+    }
+    long last = gpSearchArray->result.size() - 1;
+    unsigned char at_rest = 1;
+    IsMoving = 1;
+    joustBonus = last - stop + 1;
+    for (long i = last; i >= stop; i--) {
+        long direction = gpSearchArray->result[i]->direction;
+        long next_hex = GetAdjacentCellIndex(gridIndex, direction);
+        if (gpCombatManager->should_lower_door(this, next_hex)) {
+            if (!at_rest) {
+                if (!static_cast<const combatManager*>(gpCombatManager)
+                         ->IsQuickCombat()) {
+                    play_sample(POST_WALK_SAMPLE);
+                    if (armySample[WALK_SAMPLE])
+                        gpSoundManager->StopSample(
+                            armySample[WALK_SAMPLE]->field_1c);
+                    PlayAnimation(cs_postwalk, -1, 0);
+                    PlayAnimation(cs_wait, 1, 0);
+                }
+                currFrameType = cs_wait;
+                currFrameIndex = 0;
+                gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+            }
+            gpCombatManager->LowerDoor();
+            gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+            at_rest = 1;
+        }
+        if (gpSearchArray->bIsMoatSlowed[static_cast<short>(next_hex)]) {
+            stop = i;
+            succeeded = 0;
+        } else if (gpCombatManager->cells[next_hex].field_10 & 4) {
+            gpCombatManager->obstacles
+                .begin[gpCombatManager->cells[next_hex].field_14]
+                .field_0a = 1;
+            stop = i;
+            succeeded = 0;
+        }
+        if (creatureId & 1) {
+            long second_hex = GetAdjacentCellIndex(gridIndex, direction)
+                              + (facing ? 1 : -1);
+            if (gpSearchArray
+                    ->bIsMoatSlowed[static_cast<short>(second_hex)]) {
+                stop = i;
+                succeeded = 0;
+            } else if (gpCombatManager->cells[second_hex].field_10 & 4) {
+                gpCombatManager->obstacles
+                    .begin[gpCombatManager->cells[second_hex].field_14]
+                    .field_0a = 1;
+                stop = i;
+                succeeded = 0;
+            }
+        }
+        Walk(gpSearchArray->result[i]->direction, i == stop, at_rest);
+        at_rest = 0;
+        if (creatureType != ARMY_CREATURE_ARROW_TOWER)
+            gpCombatManager->check_obstacle_attacks(this, i != stop);
+        if (numTroops <= 0) {
+            succeeded = 0;
+            break;
+        }
+    }
+    if (numTroops > 0) {
+        if (facing != original_facing && restore_facing)
+            Turn(1);
+        add_aura();
+        currFrameType = cs_wait;
+        currFrameIndex = 0;
+    }
+    IsMoving = 0;
+    gpCombatManager->DrawFrame(1, 0, 0, 0, 1, 0);
+    gpCombatManager->RaiseDoor();
+    return succeeded;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2528
 DC_ONLY(0x475ec, 0xA4)
@@ -1836,14 +2270,150 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
 
 #if 0  // @carcass
 
-// E:\gamedcs\army.cpp:2820
-VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
-double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded) const
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// The Artillery multipliers get_unit_combat_value's ballista arm
+// indexes by the controller's skill level, at .rdata 0x63b7f0 -
+// {1.0, 1.5, 1.5, 2.0} read from the hash-verified image. Name is a
+// source-facing invention; no roster row reaches the table.
+DATA(0x0063b7f0)
+static const double kArtilleryFactors[4] = { 1.0, 1.5, 1.5, 2.0 };
+
+// E:\gamedcs\army.cpp:2820
+// What ONE creature of this stack is worth to the AI: the attack and
+// defense edges over the battlefield floor at 5% a point, the shield/
+// air-shield and petrification factors, the enemy hero's defense
+// factor, the ranged-viability re-check (the army::enemy_is_adjacent
+// WRAPPER's second real call site - the pragma on 0x4429f0 predicted
+// it), the ballista's artillery scaling, the bless/curse re-average,
+// the double-damage bit, then sqrt(attack * defense) times the
+// creature's baseFightValue - and for the two flag classes in
+// 0x400040, scaled by this stack's share of its own side's living
+// mass (0.1 outright for a dead stack).
+//
+// get_controlling_side is a CALL at the ranged re-check (pinned - our
+// CL expands it) and INLINE (three separate hypnotize-ternary
+// expansions) in the ballista arm's three heroes[] reads - transcribed
+// as three full accessor calls, do-not-cache.
+//
+// SPELLING LEDGER (0 -> 86.87 -> 89.95 -> 92.16): the pin bought 3.1,
+// and naming the two adjusted-stat call results (`adjusted_attack` /
+// `adjusted_defense`) another 2.2 - without the locals our C2 parks
+// each result in ECX and runs the traits subtraction in EAX, the
+// mirror of retail. The artillery read goes through hero::skillLevel's
+// ARRAY arm (eSecSkillBattlefieldBallistics): slicing a named +0xdd
+// field instead costs events' monsters_sell_out 100.0000 -> 99.9517
+// tree-wide (include-set class, measured and reverted).
+//
+// Residual (92.1581%): the register-mirror family end to end - the
+// remaining rows differ only in which of EAX/ECX (and EBX/EDI in the
+// own-side mass loop) each side homes, with every operation, constant
+// and call paired. Same B1 handle-state class as WalkTo's note.
+VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
+double army::get_unit_combat_value(long lowest_attack, long lowest_defense,
+                                   unsigned char ranged,
+                                   const army* excluded) const
+{
+    long adjusted_attack = get_adjusted_attack(0, ranged);
+    long attack_diff = adjusted_attack
+                       - akCreatureTypeTraits[creatureType].attackSkill
+                       - lowest_attack;
+    long adjusted_defense = get_adjusted_defense(0, 1);
+    long defense_diff = adjusted_defense
+                        - akCreatureTypeTraits[creatureType].defenseSkill
+                        - lowest_defense;
+    double factor = 1.0;
+    if (ranged) {
+        if (airShieldRounds)
+            factor = airShieldFactor;
+    } else {
+        if (shieldRounds)
+            factor = shieldFactor;
+    }
+    if (disabled_2b0)
+        factor = factor * 0.5;
+    hero* controller = get_controller();
+    if (controller)
+        factor = controller->GetDefenseFactor() * factor;
+    double defense_value = (defense_diff * 0.05 + 1.0) * factor;
+    if (ranged) {
+        if (creatureType != ARMY_CREATURE_BALLISTA
+            && creatureType != ARMY_CREATURE_ARROW_TOWER) {
+            if (!(Is(2) & 1) || shotsLeft <= 0) {
+                ranged = 0;
+            } else {
+#pragma inline_depth(0)
+                long shooter_side = get_controlling_side();
+#pragma inline_depth()
+                hero* h = gpCombatManager->heroes[shooter_side];
+                if (!(h
+                      && h->IsWieldingArtifact(
+                             ARTIFACT_BOW_OF_THE_SHARPSHOOTER))
+                    && enemy_is_adjacent(0))
+                    ranged = 0;
+                else if (forgetfulnessRounds && forgetfulnessLevel >= 2)
+                    ranged = 0;
+            }
+        }
+    }
+    double attack_value = attack_diff * 0.05 + 1.0;
+    if (!ranged && (Is(2) & 1))
+        attack_value = attack_value * 0.5;
+    if (creatureType == ARMY_CREATURE_BALLISTA) {
+        if (gpCombatManager->heroes[get_controlling_side()]) {
+            if (gpCombatManager->heroes[get_controlling_side()]
+                    ->skillLevel[eSecSkillBattlefieldBallistics] > 1)
+                attack_value = attack_value + attack_value;
+            attack_value =
+                attack_value
+                * kArtilleryFactors[gpCombatManager
+                                        ->heroes[get_controlling_side()]
+                                        ->skillLevel
+                                            [eSecSkillBattlefieldBallistics]];
+        }
+    }
+    if (blessRounds || curseRounds) {
+        long damage_range = minDamage + maxDamage;
+        double base_average = damage_range / 2.0;
+        double average = base_average;
+        if (blessRounds)
+            average = blessAmount + maxDamage;
+        else if (curseRounds)
+            average = _cpp_max(minDamage - curseAmount, 1);
+        else
+            average = base_average;
+        attack_value = average / base_average * attack_value;
+    }
+    if (ranged && (Is(15) & 1))
+        attack_value = attack_value + attack_value;
+    double value = sqrt(attack_value * defense_value)
+                   * akCreatureTypeTraits[creatureType].baseFightValue;
+    if (creatureId & 0x400040) {
+        long total;
+        if (Is(23) & 1)
+            total = 1;
+        else
+            total = hitPoints * numTroops - topCreatureDamage;
+        long sum = 0;
+        for (long i = 0; i < gpCombatManager->numArmies[combatSide]; i++) {
+            if (!(gpCombatManager->armies[combatSide][i].creatureId
+                  & 0x1d0)) {
+                if (gpCombatManager->armies[combatSide][i].Is(23) & 1)
+                    sum += 1;
+                else
+                    sum += gpCombatManager->armies[combatSide][i].hitPoints
+                               * gpCombatManager->armies[combatSide][i]
+                                     .numTroops
+                           - gpCombatManager->armies[combatSide][i]
+                                 .topCreatureDamage;
+            }
+        }
+        if (total == 0)
+            return 0.1;
+        value = sum * value / (total + sum);
+    }
+    return value;
+}
 
 // E:\gamedcs\army.cpp:2910
 // RECONSTRUCTED AND WITHDRAWN 2026-08-14 with can_shoot; UN-CARCASSED
@@ -1876,7 +2446,13 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
 // the inliner stands between it and exact. Full matrix in can_shoot's
 // note above. RETIRING 0x447a80's reconstruction retires the pragma
 // and makes 0x442e60 claimable in the same change.
-#pragma inline_depth(0)
+//
+// SCAFFOLD RETIRED 2026-08-20: spell_is_valid_on_target (0x447a80) is
+// reconstructed and its two loop arms carry the statement-scoped
+// can_shoot pins - the same two rejected sites retail's object has -
+// so can_shoot's out-of-line copy no longer needs this body's
+// inline_depth(0) to exist, and this body compiles in its expanded
+// form exactly as the paragraph above predicted.
 VA(0x00442e60, 0x169)  // anchor-global, dc 0x48168
 long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
@@ -1890,7 +2466,6 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
     return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
                              * value / hitPoints);
 }
-#pragma inline_depth()
 
 #if 0  // @carcass
 
@@ -2426,11 +3001,154 @@ void army::adjust_hitpoints()
 }
 
 // E:\gamedcs\army.cpp:3675
+#endif  // @carcass
+
+// Take one standing spell off this stack: clear its round row, undo
+// whatever the spell had folded into the stack's own words, and pull
+// the spell's entry back out of the cast-order queue. Disrupting Ray
+// is the one spell that never comes off.
+//
+// THE SWITCH ARMS ARE IN SOURCE ORDER (jump-table switch): BIND's
+// binder teardown, HYPNOTIZE's aura rebuild, then the seven stat
+// restores. The two teardown arms are remove_binding's and
+// remove_aura's own loops written at their natural depth - the
+// erase_item and size()/clear() calls that stay out of line in the
+// HYPNOTIZE arm against the BIND arm's full expansions are the /Ob2
+// budget draining in site order, the same divisor remove_aura's note
+// records for its own two loops.
+//
+// The AGE arm re-reads spellInfluence[SPELL_AGE] AFTER the entry code
+// zeroed it, so its 0.5f halving arm is dead at runtime - the
+// uninitialized-`level` class of retail quirk: transcribe, do not fix.
+// Its rounding constant is +0.95f (read from the image at 0x63b8c8),
+// not the usual +0.5f.
+//
+// The tail is the deque surgery InitClean's note promised: std::find
+// over SpellInfluenceQueue expanded inline (the 0x1000 node-hop is
+// Dinkumware's _DEQUESIZ for a 4-byte element), then
+// `erase(it)` = `erase(it, it + 1)` with the two 16-byte iterators
+// built on the stack - the second and last call site of the
+// deque::erase COMDAT at 0x448db0.
+//
+// THE PIN LEDGER (0 -> 21.50 -> 28.72 -> 79.43 -> 84.01 -> 86.31 ->
+// 96.27), because every stall was the same wall: our CL's inline
+// budget does not drain in retail's order, so each STL site needs its
+// retail decision reproduced by hand. Statement-scoped
+// `#pragma inline_depth(0)` is the only depth that works mid-function
+// - depth(1) and depth(2) pins measured INERT here, twice - so any
+// callee retail keeps inline must be hoisted OUT of the pinned
+// statement first (the subscripts feeding erase_item, the begin/end
+// temp builds, the `next = it` copy). Retail's 0x4491c0 advance is the
+// protected iterator::_Add(1); `next += 1` pinned emits operator+=
+// with the identical push-1/lea-ecx/call site (the `it + 1` spelling
+// costs a hidden-return push, 96.27 -> 84.01-class). BIND's clear must
+// be spelled `erase(begin(), end())` UNPINNED so its copy/_Destroy
+// stay expanded-with-calls as retail has them; HYPNOTIZE's two clears
+// and second size() must be pinned to calls.
+//
+// Residual (96.2713%): (1) retail's bind-arm clear keeps std::copy
+// (0x5093c0) as a call where our CL expands the two-instruction loop
+// (and emits a vacuous `mov eax,ecx / cmp eax,ecx` it cannot fold) -
+// no pin reaches d3 alone; (2) the find-loop's iterator pieces home
+// through the mirror scratch registers, the same family as InitClean's
+// residual; (3) reloc-name-only rows on the paired STL COMDATs
+// (?clear/?size/?erase vs the target's unclaimed synth labels).
 VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
 void army::CancelIndividualSpell(int spell)
 {
-    // @stub
+    if (spellInfluence[spell] <= 0)
+        return;
+    if (spell == SPELL_DISRUPTING_RAY)
+        return;
+    numSpellInfluences--;
+    spellInfluence[spell] = 0;
+    switch (spell) {
+    case SPELL_BIND: {
+        unsigned i = binders.size();
+        while (i-- != 0) {
+            erase_item(binders[i]->bound_armies, this);
+        }
+        binders.erase(binders.begin(), binders.end());
+        break;
+    }
+    case SPELL_HYPNOTIZE: {
+        long i = aura_sources.size();
+        while (i-- > 0) {
+            army* source = aura_sources[i];
+#pragma inline_depth(0)
+            erase_item(source->aura_clients, this);
+#pragma inline_depth()
+        }
+#pragma inline_depth(0)
+        aura_sources.clear();
+#pragma inline_depth()
+
+#pragma inline_depth(0)
+        long j = aura_clients.size();
+#pragma inline_depth()
+        while (j-- > 0) {
+            army* client = aura_clients[j];
+#pragma inline_depth(0)
+            erase_item(client->aura_sources, this);
+#pragma inline_depth()
+        }
+#pragma inline_depth(0)
+        aura_clients.clear();
+#pragma inline_depth()
+        add_aura();
+        break;
+    }
+    case SPELL_STONE_SKIN:
+        defenseSkill -= toughskinBonus;
+        break;
+    case SPELL_WEAKNESS:
+        attackSkill += weaknessPenalty;
+        break;
+    case SPELL_PRAYER:
+        attackSkill -= prayerBonus;
+        defenseSkill -= prayerBonus;
+        if (!(Is(6) & 1))
+            field_c4 -= prayerBonus;
+        break;
+    case SPELL_HASTE:
+        if (!(Is(6) & 1)) {
+            field_c4 -= tailwindBonus;
+            frameInfoWalkCycleTime = origWalkCycleTime;
+        }
+        break;
+    case SPELL_SLOW:
+        frameInfoWalkCycleTime = origWalkCycleTime;
+        break;
+    case SPELL_AGE: {
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_DISEASE:
+        attackSkill += diseaseAttackPenalty;
+        defenseSkill += diseaseDefensePenalty;
+        break;
+    }
+    TSpellQueue::iterator it = std::find(SpellInfluenceQueue.begin(),
+                                         SpellInfluenceQueue.end(), spell);
+    if (it != SpellInfluenceQueue.end()) {
+        TSpellQueue::iterator next = it;
+#pragma inline_depth(0)
+        next += 1;
+        SpellInfluenceQueue.erase(it, next);
+#pragma inline_depth()
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3802
 DC_ONLY(0x499ac, 0x3A)
@@ -2440,11 +3158,305 @@ void army::CancelAllSpells()
 }
 
 // E:\gamedcs\army.cpp:3816
+#endif  // @carcass
+
+// Put one spell ON this stack: pick how many rounds it stands (255 for
+// the three that never time out on their own, "until your next turn"
+// for Frenzy, the caster's power for everything else), raise-or-return
+// if the spell is already standing, otherwise record it, fold its
+// per-mastery traits amount into the stack's own words, and append it
+// to the cast-order queue. The exact inverse of CancelIndividualSpell
+// above, arm for arm.
+//
+// SPELLING LEDGER (0 -> 87.51 -> 93.75 -> 94.70): the HYPNOTIZE arm's
+// two teardown loops must be erase_item's body written LONGHAND with
+// the size() and erase(iterator) sites pinned - retail expands
+// erase_item here but keeps ITS internals out of line (the 0x423110
+// size COMDAT and the 0x448d30 one-arg vector erase), the exact
+// opposite granularity of CancelIndividualSpell's arm, and no pin can
+// reach inside a real call's expansion; the two clears are pinned
+// erase(begin, end) exactly as there. Poison's clamp must round
+// through a NAMED DOUBLE local (`double clamped`) before the float
+// conversion or the reference-return dereference folds the copy retail
+// keeps (+0.95).
+//
+// Residual (94.6999%): all inside push_back's expansion and the
+// register-homing family. Retail's push_back keeps one std::copy
+// (0x5093c0) and the map-iterator constructor (0x5586d0) as calls
+// inside its OWN expansion - one statement, unreachable by
+// statement-scoped pins - where our CL writes the copy loop out and
+// inlines the ctor; the remainder is scratch-register mirroring in
+// the entry and the deque-grow paths. Reloc-name-only rows on the
+// paired float pool and STL COMDATs are cosmetic.
+//
+// The float constants are read from the image: the factor arms divide
+// the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
+// by 1.5, Poison steps poisonPenalty down 0.1f with a 0.5 floor
+// (_cpp_max over doubles - the 0.5 literal builds its slot from
+// immediates while the compare uses the pooled copy), and both HP
+// recomputes carry the same +0.95f rounding CancelIndividualSpell's
+// AGE arm has. The AGE arm reads its OWN just-set round row (always
+// non-zero -> always the 0.5 halving path) - retail-faithful, do not
+// "fix" - and its topCreatureDamage clamp is written TWICE in a row,
+// the second min re-reading the first's store; transcribed as the two
+// statements they were.
 VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
-void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero)
+void army::SetSpellInfluence(int spell, int power, int mastery,
+                             const hero* casting_hero)
 {
-    // @stub
+    long rounds;
+    switch (spell) {
+    case SPELL_DISRUPTING_RAY:
+    case SPELL_BERSERK:
+    case SPELL_BIND:
+        rounds = 255;
+        break;
+    case SPELL_FRENZY:
+        rounds = (this != gpCombatManager->get_current_army()) + 1;
+        break;
+    default:
+        rounds = power;
+        break;
+    }
+    if (spellInfluence[spell] > 0) {
+        if (rounds > spellInfluence[spell])
+            spellInfluence[spell] = rounds;
+        if (mastery > spell_level[spell])
+            spell_level[spell] = mastery;
+        return;
+    }
+    numSpellInfluences++;
+    spellInfluence[spell] = rounds;
+    spell_level[spell] = mastery;
+    long amount = akSpellTraits[spell].mastery_bonus[mastery];
+    switch (spell) {
+    case SPELL_SHIELD:
+        shieldFactor = amount / 100.0;
+        break;
+    case SPELL_AIR_SHIELD:
+        airShieldFactor = amount / 100.0;
+        break;
+    case SPELL_FIRE_SHIELD:
+        fireShieldStrength = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_AIR:
+        protectionFromAirFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_FIRE:
+        protectionFromFireFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_WATER:
+        protectionFromWaterFactor = amount / 100.0;
+        break;
+    case SPELL_PROTECTION_FROM_EARTH:
+        protectionFromEarthFactor = amount / 100.0;
+        break;
+    case SPELL_ANTI_MAGIC: {
+        antiMagicSpellLevel = amount;
+        for (int j = 0; j < 81; j++) {
+            if (akSpellTraits[j].level < antiMagicSpellLevel
+                && akSpellTraits[j].field_0 < 0
+                && !(akSpellTraits[j].field_c & 8))
+                CancelIndividualSpell(j);
+        }
+        break;
+    }
+    case SPELL_BLESS:
+        CancelIndividualSpell(SPELL_CURSE);
+        blessAmount = amount;
+        break;
+    case SPELL_CURSE:
+        CancelIndividualSpell(SPELL_BLESS);
+        curseAmount = amount;
+        break;
+    case SPELL_BLOODLUST:
+        bloodlustAmount = amount;
+        if (casting_hero)
+            bloodlustAmount += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_PRECISION:
+        precisionAmount = amount;
+        if (casting_hero)
+            precisionAmount += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_WEAKNESS:
+        weaknessPenalty = amount;
+        if (casting_hero)
+            weaknessPenalty += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        if (attackSkill < weaknessPenalty)
+            weaknessPenalty = attackSkill;
+        attackSkill = attackSkill - weaknessPenalty;
+        break;
+    case SPELL_STONE_SKIN:
+        toughskinBonus = amount;
+        if (casting_hero)
+            toughskinBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        defenseSkill = defenseSkill + toughskinBonus;
+        break;
+    case SPELL_PRAYER:
+        prayerBonus = amount;
+        if (casting_hero)
+            prayerBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        attackSkill = attackSkill + prayerBonus;
+        defenseSkill = defenseSkill + prayerBonus;
+        if (!(Is(6) & 1))
+            field_c4 = field_c4 + prayerBonus;
+        break;
+    case SPELL_MIRTH:
+        moraleBonus = amount;
+        break;
+    case SPELL_SORROW:
+        moralePenalty = amount;
+        break;
+    case SPELL_FORTUNE:
+        luckBonus = amount;
+        if (casting_hero)
+            luckBonus += casting_hero->GetHeroSpellBonus(
+                spell, monInfoLevel, amount);
+        break;
+    case SPELL_MISFORTUNE:
+        luckPenalty = amount;
+        break;
+    case SPELL_HASTE:
+        if (!(Is(6) & 1)) {
+            CancelIndividualSpell(SPELL_SLOW);
+            tailwindBonus = amount;
+            if (casting_hero)
+                tailwindBonus += casting_hero->GetHeroSpellBonus(
+                    spell, monInfoLevel, amount);
+            field_c4 = field_c4 + tailwindBonus;
+            frameInfoWalkCycleTime =
+                static_cast<long>(origWalkCycleTime * 0.65);
+        }
+        break;
+    case SPELL_SLOW:
+        if (!(Is(6) & 1)) {
+            CancelIndividualSpell(SPELL_HASTE);
+            slowFactor = amount / 100.0;
+            frameInfoWalkCycleTime =
+                static_cast<long>(origWalkCycleTime * 1.5);
+        }
+        break;
+    case SPELL_SLAYER:
+        slayerLevel = mastery;
+        break;
+    case SPELL_FRENZY:
+        frenzyFactor = amount / 100.0;
+        break;
+    case SPELL_COUNTERSTRIKE:
+        counterstrokeBonus = amount;
+        retaliationCount = retaliationCount + amount;
+        break;
+    case SPELL_BERSERK:
+        CancelIndividualSpell(SPELL_HYPNOTIZE);
+        break;
+    case SPELL_HYPNOTIZE: {
+        CancelIndividualSpell(SPELL_BERSERK);
+        long i = aura_sources.size();
+        while (i-- > 0) {
+            std::vector<army*>& clients = aura_sources[i]->aura_clients;
+#pragma inline_depth(0)
+            unsigned n = clients.size();
+#pragma inline_depth()
+            while (n-- != 0) {
+                if (clients[n] == this) {
+                    army** pos = clients.begin() + n;
+#pragma inline_depth(0)
+                    clients.erase(pos);
+#pragma inline_depth()
+                    break;
+                }
+            }
+        }
+        {
+            army** first = aura_sources.begin();
+            army** last = aura_sources.end();
+#pragma inline_depth(0)
+            aura_sources.erase(first, last);
+#pragma inline_depth()
+        }
+        long j = aura_clients.size();
+        while (j-- > 0) {
+            std::vector<army*>& sources = aura_clients[j]->aura_sources;
+#pragma inline_depth(0)
+            unsigned n = sources.size();
+#pragma inline_depth()
+            while (n-- != 0) {
+                if (sources[n] == this) {
+                    army** pos = sources.begin() + n;
+#pragma inline_depth(0)
+                    sources.erase(pos);
+#pragma inline_depth()
+                    break;
+                }
+            }
+        }
+        {
+            army** first = aura_clients.begin();
+            army** last = aura_clients.end();
+#pragma inline_depth(0)
+            aura_clients.erase(first, last);
+#pragma inline_depth()
+        }
+        add_aura();
+        break;
+    }
+    case SPELL_BLIND:
+        blindFactor = amount / 100.0;
+        break;
+    case SPELL_DISEASE:
+        diseaseDefensePenalty = _cpp_min(2, defenseSkill);
+        diseaseAttackPenalty = _cpp_min(2, attackSkill);
+        attackSkill = attackSkill - diseaseAttackPenalty;
+        defenseSkill = defenseSkill - diseaseDefensePenalty;
+        break;
+    case SPELL_POISON: {
+        double clamped =
+            _cpp_max(static_cast<double>(poisonPenalty - 0.1f), 0.5);
+        float penalty = static_cast<float>(clamped);
+        poisonPenalty = penalty;
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * penalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * penalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_AGE: {
+        long hp;
+        if (spellInfluence[SPELL_AGE]) {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+        } else {
+            float base = origHitPoints;
+            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+        }
+        hitPoints = hp;
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
+        break;
+    }
+    case SPELL_MAGIC_MIRROR:
+        backlashChance = amount;
+        break;
+    case SPELL_FORGETFULNESS:
+        forgetfulnessLevel = mastery;
+        break;
+    }
+    SpellInfluenceQueue.push_back(spell);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4129
 DC_ONLY(0x4a2e8, 0x5E)
@@ -3634,16 +4646,86 @@ void army::FaerieDragonSpell()
 }
 
 // E:\gamedcs\army.cpp:5359
-// A PREDICATE, not a caster: every callee is a validity test
-// (combatManager::can_cast_spells, ValidSpellTargetArmy,
-// find_resurrection_target, get_resurrection_size, hexcell::get_army),
-// it switches on the spell id through a jump table, and both of its
-// callers ask a question - combatManager::choose_creature_spell and
-// combatManager::GetCommand.
+#endif  // @carcass
+
+// A PREDICATE, not a caster: could this creature's cast do anything at
+// `hex` right now? The resurrecters answer through can_cast_resurrect
+// (INLINED whole, its own can_cast_spells re-check included), the
+// Master Genie counts the caliph roster over the target exactly as
+// cast_caliph_spell's first pass does, and the fixed-spell casters ask
+// ValidSpellTargetArmy - whose argument setup the inlined
+// get_controlling_side ternary tail-duplicates into both hypnotize
+// arms, which is retail's own shape. Its callers ask the question:
+// combatManager::choose_creature_spell and GetCommand.
+//
+// The fixed-spell arms RETURN THE && - `target && ValidSpellTargetArmy`
+// - which is what buys retail's dword 0/1 materialization pair
+// (96.46 -> 99.04 over the if/return spelling, the sivot case-2 lever
+// again).
+//
+// Residual (99.0409%): ONE materialization. The Genie arm's
+// `count > 0` return if-converts to `setg al` under our CL where
+// retail branches to its own `mov eax,1` epilogue; `count <= 0`
+// inverted, ternary and `!`-spellings all reconverge on the setg.
+// Four instructions, merged-return family.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
-    // @stub
+    if (numSpellCasts == 0)
+        return 0;
+    if (!gpCombatManager->can_cast_spells(get_controlling_side(), 0))
+        return 0;
+    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        return 0;
+    army* target = gpCombatManager->cells[hex].get_army();
+    switch (creatureType) {
+    case CREATURE_ARCHANGEL:
+    case ARMY_CREATURE_PIT_LORD:
+        return can_cast_resurrect(hex);
+    case CREATURE_MASTER_GENIE: {
+        if (!target)
+            return 0;
+        long count = 0;
+        for (SpellID spell = 10; spell < 70; spell++) {
+            if (is_valid_caliph_spell(spell, target))
+                count++;
+        }
+        if (count <= 0)
+            return 0;
+        return 1;
+    }
+    case CREATURE_FAERIE_DRAGON:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(field_4e0,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_STORM_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_PROTECTION_FROM_AIR,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_ICE_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(
+                SPELL_PROTECTION_FROM_WATER, get_controlling_side(), target,
+                1, 1);
+    case CREATURE_ENERGY_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_PROTECTION_FROM_FIRE,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    case CREATURE_MAGMA_ELEMENTAL:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(
+                SPELL_PROTECTION_FROM_EARTH, get_controlling_side(), target,
+                1, 1);
+    case CREATURE_OGRE_MAGE:
+        return target
+               && gpCombatManager->ValidSpellTargetArmy(SPELL_BLOODLUST,
+                                                  get_controlling_side(),
+                                                  target, 1, 1);
+    }
+    return 0;
 }
 
 // RETAIL-ONLY: the shared spell-validity worker army.h describes -
@@ -3652,12 +4734,159 @@ unsigned char army::can_cast_spell(long hex) const
 // arguments and a bare `ret`, so it is a free function, which rules out
 // the three one-argument group_has_* statics the DC roster has left in
 // this bracket. Name is army.h's, a bootstrap invention.
+//
+// Would the Genie's roll actually CHANGE anything for the target it
+// landed on? A spell already standing on the stack is never re-cast,
+// ValidSpellTargetArmy answers the immunity/first-target half, and the
+// switch is the per-spell "would it matter" test: protections and the
+// mirror only matter while the enemy hero can cast (wields the
+// spellbook slot), Cure needs damage to heal, the two melee-side
+// screens need a live shooter (Air Shield) or a live melee attacker
+// (Shield / Fire Shield) among the enemy stacks, Precision needs the
+// target itself shooting and Bloodlust the opposite.
+//
+// THIS BODY IS WHY can_shoot HAS AN OUT-OF-LINE COPY AT ALL (the note
+// on 0x4428f0): the two loop sites below are the sites VC6 declines,
+// while the Precision/Bloodlust tail sites expand - Bloodlust's only
+// partially, leaving the OffsetToFront COMDAT call and the
+// army::enemy_is_adjacent wrapper call retail shows.
+//
+// WHAT EACH SPELLING MEASURED (0.00 -> 41.65 -> 85.84 -> 87.41 ->
+// 91.07): the switch arms are laid out in SOURCE order exactly as
+// written; the two loop arms carry statement-scoped
+// `#pragma inline_depth(0)` pins on their can_shoot calls because our
+// CL otherwise expands both (retail declines them - the pins are what
+// force can_shoot's out-of-line COMDAT exactly as retail's own
+// rejected sites do); the loop idiom is `i = n; while (i-- > 0)`
+// (the `for (i=n-1; i>=0; i--)` spelling emits dec/js and loses the
+// count-copy retail has); `1 - side` must be a NAMED LOCAL `group` in
+// all three loop arms or the front end folds numArmies/armies into
+// two different displacement constants where retail indexes both off
+// one register; Prayer needs the uchar cast `(uchar)~Is(26) & 1` for
+// retail's `not al` (bare `~Is(26)&1` emits `not eax`); the
+// protections arm must RETURN the `&&` expression (the int
+// materialization `mov eax,1`/`xor eax,eax` retail has - the
+// early-return spelling emits byte `xor al,al` and a private
+// epilogue); Precision is `return can_shoot(0);` EXPANDED (writing
+// the same tests longhand duplicates five zero-exits retail shares,
+// 91.07 -> 87.41-class); Bloodlust longhand-with-flag beats
+// `return !can_shoot(0);` (87.02) because our expansion of the
+// negated call diverges harder than the flag form's exits.
+//
+// Residual (91.0744%): the stale-CL flag-threading class, same family
+// as can_shoot's own 92.00. (1) In the two expanded tail arms retail
+// THREADS bCanShoot's constant stores into two cloned sete epilogues
+// (`xor al,al`/`mov al,1` + `sete cl; mov al,cl`) where our CL
+// materializes the flag in EBX (`mov ebx,1`/`mov bl,1`, `xor ebx,ebx`)
+// and funnels one merged `mov al,bl` exit. (2) Precision's depth-3
+// OffsetToFront(-1) site: retail REJECTS it (`push -1 / call` on the
+// 0x445cd0 COMDAT), ours expands the neg/sbb longhand; no
+// statement-scoped pin can reach inside can_shoot's expansion without
+// also de-inlining the accessors retail keeps inline. (3) The three
+// loop-guard `jle` exits target retail's shared zero block at +0x32d
+// where ours picks each arm's local copy - displacement-only. Tried
+// and rejected: longhand Precision with pinned OffsetToFront (87.41),
+// `return !can_shoot(0)` Bloodlust (87.02). Not tried:
+// `inline_depth(2)` over the tail arms - it would reject
+// get_controlling_side's depth-3 expansion retail keeps, trading a
+// 5-instruction gap for a 10-instruction one.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spell_is_valid_on_target(int spell, const army* target)
 {
-    // @stub
+    if (target->spellInfluence[spell])
+        return 0;
+    long side = gpCombatManager->currentSide;
+    if (!gpCombatManager->ValidSpellTargetArmy(spell, side, target, 1, 1))
+        return 0;
+    switch (spell) {
+    case SPELL_PROTECTION_FROM_AIR:
+    case SPELL_PROTECTION_FROM_FIRE:
+    case SPELL_PROTECTION_FROM_WATER:
+    case SPELL_PROTECTION_FROM_EARTH:
+    case SPELL_ANTI_MAGIC:
+    case SPELL_MAGIC_MIRROR: {
+        hero* enemy_hero = gpCombatManager->heroes[1 - side];
+        return enemy_hero
+               && enemy_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK);
+    }
+    case SPELL_CURE:
+        return target->topCreatureDamage > 0;
+    case SPELL_PRAYER:
+        return static_cast<unsigned char>(~target->Is(26)) & 1;
+    case SPELL_SLAYER: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            if (gpCombatManager->armies[group][i].Is(7) & 1)
+                return 1;
+        }
+        return 0;
+    }
+    case SPELL_SHIELD:
+    case SPELL_FIRE_SHIELD: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            army* enemy = &gpCombatManager->armies[group][i];
+            if (!enemy->disabled_290 && !enemy->disabled_2b0
+                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && enemy->creatureType != CREATURE_FIRST_AID_TENT
+                && enemy->creatureType != CREATURE_AMMO_CART) {
+#pragma inline_depth(0)
+                if (!enemy->can_shoot(0))
+                    return 1;
+#pragma inline_depth()
+            }
+        }
+        return 0;
+    }
+    case SPELL_AIR_SHIELD: {
+        long group = 1 - side;
+        long i = gpCombatManager->numArmies[group];
+        while (i-- > 0) {
+            army* enemy = &gpCombatManager->armies[group][i];
+            if (!enemy->disabled_290 && !enemy->disabled_2b0
+                && !enemy->disabled_2c0 && !(enemy->Is(21) & 1)
+                && enemy->creatureType != CREATURE_FIRST_AID_TENT
+                && enemy->creatureType != CREATURE_AMMO_CART) {
+#pragma inline_depth(0)
+                if (enemy->can_shoot(0))
+                    return 1;
+#pragma inline_depth()
+            }
+        }
+        return 0;
+    }
+    case SPELL_PRECISION:
+        return target->can_shoot(0);
+    case SPELL_BLOODLUST: {
+        unsigned char shoots;
+        if (target->creatureType == army::ARMY_CREATURE_BALLISTA
+            || target->creatureType == army::ARMY_CREATURE_ARROW_TOWER) {
+            shoots = 1;
+        } else if (!(target->Is(2) & 1) || target->shotsLeft <= 0) {
+            shoots = 0;
+        } else {
+            hero* controller = target->get_controller();
+            shoots = 1;
+            if (!controller
+                || !controller->IsWieldingArtifact(
+                       ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
+                if (target->enemy_is_adjacent(0))
+                    shoots = 0;
+            }
+            if (shoots && target->forgetfulnessRounds
+                && target->forgetfulnessLevel >= 2)
+                shoots = 0;
+        }
+        return !shoots;
+    }
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5396
 DC_ONLY(0x4c004, 0x80)
@@ -3780,14 +5009,143 @@ unsigned char army::Unnamed447fe0()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:5601
+// One creature-cast, animated and dispatched: face the target, play
+// the cast (cs_special_*) sequence - or the attack triple when the
+// sprite has no cast frames - spend one of the stack's casts, route
+// the effect by creature (the Archangel's resurrection, the Pit Lord's
+// demon-raise, the Master Genie's random boon, the Faerie Dragon's
+// pre-chosen spell, the four upgraded elementals' protections and the
+// Ogre Mage's Bloodlust), then wait out the shoot sample and restore
+// the combat draw extent and the caster's facing.
+//
+// The angle machinery is animate_missile's (cmbtmgr.cpp precedent):
+// atan(dy/dx) through two double slots, scaled by the shared
+// missileRadiansToDegrees pool double, against the +-25-degree float
+// thresholds at 0x63b76c/0x63b8e8. The frame-delay division runs
+// BEFORE the frame count is tested - a zero-frame cast divides by
+// zero in retail too; transcribe, do not guard.
 VA(0x00448260, 0x582)  // anchor-global, dc 0x4c468
 void army::cast_spell(long hex)
 {
-    // @stub
+    long original_facing = facing;
+    if (!static_cast<const combatManager*>(gpCombatManager)
+             ->IsQuickCombat()) {
+        long targetX = gpCombatManager->cells[hex].field_00;
+        long targetY = gpCombatManager->cells[hex].field_02;
+        long myX = MidX();
+        long myY = MidY();
+        unsigned char bTurn = 0;
+        SetupAnimation();
+        if (targetX > myX && facing == 0)
+            bTurn = 1;
+        if ((targetX < myX && facing == 1) || bTurn)
+            Turn(1);
+        gpCombatManager->ResetLimitCreature();
+        gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+        gpCombatManager->ComputeMaxExtent();
+        long dx = targetX - myX;
+        long dy = targetY - myY;
+        if (dx < 0)
+            dx = -dx;
+        float angle;
+        if (dx == 0) {
+            angle = (dy > 0) ? -90 : 90;
+        } else {
+            angle = static_cast<float>(
+                atan(static_cast<double>(dy) / dx)
+                * DATA_COMPGEN(0x0063b8f0, missileRadiansToDegrees,
+                               57.2957763671875));
+        }
+        if (angle > 25.0f)
+            currFrameType = cs_special_ur;
+        else if (angle > -25.0f)
+            currFrameType = cs_special_r;
+        else
+            currFrameType = cs_special_dr;
+        long frames = stdIcon->GetNumFrames(currFrameType);
+        if (frames == 0) {
+            if (angle > 25.0f)
+                currFrameType = cs_attack_ur;
+            else if (angle > -25.0f)
+                currFrameType = cs_attack_r;
+            else
+                currFrameType = cs_attack_dr;
+            frames = stdIcon->GetNumFrames(currFrameType);
+        }
+        play_sample(SHOOT_SAMPLE);
+        long delay = frameInfoAttackStartCycleTime / frames;
+        for (currFrameIndex = 0; currFrameIndex < frames;
+             currFrameIndex++) {
+            gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);
+        }
+        currFrameIndex = frames - 1;
+    }
+    numSpellCasts--;
+    switch (creatureType) {
+    case CREATURE_ARCHANGEL: {
+        army* target = gpCombatManager->find_resurrection_target(
+            get_controlling_side(), hex, 1);
+        if (target) {
+            SAMPLE2 sample;
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat())
+                sample = LoadPlaySample(DATA_COMPGEN(
+                    0x00660af4, resurrectSampleName, "Resurect.wav"));
+            gpCombatManager->Resurrect(target, numTroops * 100, 0);
+            if (!static_cast<const combatManager*>(gpCombatManager)
+                     ->IsQuickCombat())
+                WaitEndSample(sample, -1);
+        }
+        break;
+    }
+    case ARMY_CREATURE_PIT_LORD: {
+        army* target = gpCombatManager->find_demonic_resurrection_target(
+            get_controlling_side(), hex);
+        if (target)
+            gpCombatManager->demonic_resurrection(this, target);
+        break;
+    }
+    case CREATURE_MASTER_GENIE:
+        cast_caliph_spell(hex);
+        break;
+    case CREATURE_FAERIE_DRAGON:
+        if (hex >= 0 && hex < COMBAT_GRID_CELLS)
+            gpCombatManager->CastSpell(field_4e0, hex, 1, -1, 2,
+                                       numTroops * 5);
+        break;
+    case CREATURE_STORM_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_AIR, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_ICE_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_WATER, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_ENERGY_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_FIRE, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_MAGMA_ELEMENTAL:
+        gpCombatManager->CastSpell(SPELL_PROTECTION_FROM_EARTH, hex, 1, -1,
+                                   2, 6);
+        break;
+    case CREATURE_OGRE_MAGE:
+        gpCombatManager->CastSpell(SPELL_BLOODLUST, hex, 1, -1, 2, 6);
+        break;
+    }
+    if (!static_cast<const combatManager*>(gpCombatManager)
+             ->IsQuickCombat()
+        && armySample[SHOOT_SAMPLE])
+        gpSoundManager->WaitSample(armySample[SHOOT_SAMPLE]->field_1c, -1);
+    gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+    if (original_facing != facing
+        && !static_cast<const combatManager*>(gpCombatManager)
+                ->IsQuickCombat())
+        Turn(1);
 }
-
-#endif  // @carcass
 
 // Complete-only helper: retail first takes the active Magic Mirror backlash
 // percentage, then floors Faerie Dragons at the spell's base mastery value.

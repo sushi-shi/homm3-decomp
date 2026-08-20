@@ -450,6 +450,14 @@ public:
             char pad_0d1[0x2];
             signed char ballisticsLevel;// +0xd3 == skillLevel[10]
             signed char eagleEyeLevel;  // +0xd4 == skillLevel[11]
+            // +0xdd, skillLevel[eSecSkillBattlefieldBallistics], is the
+            // Artillery mastery: army::get_unit_combat_value (0x442a50)
+            // doubles a ballista's value above 1 and scales it by the
+            // level-indexed factor table at 0x63b7f0. Read through the
+            // ARRAY arm rather than sliced - the slice's two extra
+            // declarators alone cost events' monsters_sell_out
+            // 100.0000 -> 99.9517 (measured 2026-08-20, include-set
+            // class) and the array spelling is byte-identical.
             char pad_0d5[0x10];
         };
     };

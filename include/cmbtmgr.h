@@ -1665,6 +1665,11 @@ public:
     // gridIndex, combatSide, bitIndex, originalIndex - is read off the
     // second.
     void demonic_resurrection(const army* caster, army* target); // 0x5a7390
+    // 0x5a7560, carcass in spells.cpp; declared here because
+    // army::cast_spell's Archangel arm calls it (the carcass stub is a
+    // good-enough callee - the reloc pairs).
+    void Resurrect(army* target_army, long hit_points_resurrected,
+                   unsigned char temporary);
     // The three cells a WALL spell occupies, in the order
     // ValidSpellTarget (0x5a39c0) walks them: the aimed hex, then the
     // one a row above it (with a parity nudge that keeps the wall
@@ -1709,8 +1714,6 @@ public:
     // what the call sites push.
     // 0x5a7560, the resurrection worker the spell arms funnel into. The
     // DC prototype (spells.cpp:4888) supplies all three parameter names.
-    void Resurrect(army* target_army, long hit_points_resurrected,
-                   unsigned char temporary);                    // 0x5a7560
     // 0x5a6c70, the clone. The DC prototype (spells.cpp:4576) supplies
     // both parameter names; `level` is DEAD in the retail body, which
     // reads neither its slot nor anything derived from it.
@@ -1950,7 +1953,12 @@ public:
     // zero; the rest of the enum waits for the lane that reconstructs
     // PowEffect's own body.
     enum TSpellEffectID {
-        eSpellEffectFireShield = 11
+        eSpellEffectFireShield = 11,
+        // Dreamcast TSpellEffectID.eSpellEffectFortune = 18; retail
+        // proves the number at army::do_attack (0x441610), which hands
+        // it to SpellEffect as the good-luck sparkle over the striking
+        // stack.
+        eSpellEffectFortune = 18
     };
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->

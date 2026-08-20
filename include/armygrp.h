@@ -103,6 +103,47 @@ enum TCreatureType {
     // a live fireShieldRounds counter. NH3API spelling, Complete
     // numbering (0x34 is the plain Efreeti).
     CREATURE_EFREET_SULTAN = 0x35,
+    // The two remaining creature CASTERS, byte-proven by
+    // army::cast_spell (0x448260): its creature switch routes 0x25 to
+    // cast_caliph_spell - the Master Genie's random-beneficial roll -
+    // and 0x5b to CastSpell(SPELL_BLOODLUST, ...), the Ogre Mage's one
+    // spell. NH3API spellings, Complete numbering (0x24 the plain
+    // Genie, 0x5a the plain Ogre).
+    CREATURE_MASTER_GENIE = 0x25,
+    CREATURE_OGRE_MAGE = 0x5b,
+    // The on-attack debuff roster, byte-proven in one function:
+    // army::check_special_attack (0x440500) switches over the
+    // ATTACKER's creatureType and applies BIND for the dendroids,
+    // BLIND for the unicorns, DISEASE for the zombie, CURSE for the
+    // two knights and the mummy, AGE for the ghost dragon, STONE for
+    // the medusas and basilisks, PARALYZE for the scorpicore, POISON
+    // for the wyvern monarch and the SoD acid effect (spell id 80) for
+    // the rust dragon. Every id lands where the Complete dwelling runs
+    // this enum already anchors put it (POWER_LICH 65 and
+    // BONE/GHOST_DRAGON 0x44/0x45 pin the Necropolis run, the
+    // TROGLODYTE/MINOTAUR pairs pin Dungeon, HALFLING/ROGUE pin the
+    // neutrals). NH3API spellings.
+    // Three more of do_attack's own witnesses (0x441610): 0x2f takes
+    // the Cerberus arm - the three-headed cleave that widens the
+    // attack mask by the two ring neighbours - and 0x6e/0x6f are the
+    // two ids its attack-frame chooser pins to cs_attack_r, the
+    // hydras, at the Fortress top exactly where the Complete run ends.
+    // NH3API spellings.
+    CREATURE_CERBERUS = 0x2f,
+    CREATURE_HYDRA = 0x6e,
+    CREATURE_CHAOS_HYDRA = 0x6f,
+    CREATURE_DENDROID_GUARD = 0x16,
+    CREATURE_DENDROID_SOLDIER = 0x17,
+    CREATURE_ZOMBIE = 0x3b,
+    CREATURE_BLACK_KNIGHT = 0x42,
+    CREATURE_DREAD_KNIGHT = 0x43,
+    CREATURE_MEDUSA = 0x4c,
+    CREATURE_MEDUSA_QUEEN = 0x4d,
+    CREATURE_SCORPICORE = 0x51,
+    CREATURE_BASILISK = 0x6a,
+    CREATURE_GREATER_BASILISK = 0x6b,
+    CREATURE_WYVERN_MONARCH = 0x6d,
+    CREATURE_MUMMY = 0x8d,
     // Retail army::get_mirror_effect floors this creature's backlash chance
     // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
     CREATURE_FAERIE_DRAGON = 0x86,
@@ -438,7 +479,15 @@ enum ESpellId {
     // shape every other creature-ability arm in that table has. The
     // value is fixed at both ends by the same table: 0x4b AGE is the
     // last already-proven rung below it, and the window closes at 0x4e.
-    SPELL_DISPEL_HELPFUL = 0x4e
+    SPELL_DISPEL_HELPFUL = 0x4e,
+    // 80, the one row Complete's 81-wide influence table carries past
+    // the Dreamcast build's kNumSpellsAndCreatureEffects = 80: the
+    // Rust Dragon's acid. Byte-proven by check_special_attack
+    // (0x440500), whose rust-dragon arm stores 0x50 into the pending
+    // iPostPowSpellToCast gated on the victim's defenseSkill being
+    // positive - the defense-eating half of Acid Breath. NH3API
+    // spelling.
+    SPELL_ACID_BREATH_DEFENSE = 0x50
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
