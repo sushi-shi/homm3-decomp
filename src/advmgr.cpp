@@ -308,14 +308,90 @@ void CAdvMgrNetMsgHandler::HandleTradeRequestMsg(CNetMsg* pNetMsg)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:734
+// The adventure manager's big zero fill, in retail's own statement
+// grouping: the ground tileset and hero sample rows share one counted
+// loop (the bytes walk both off a single induction pointer at +0x360
+// with a -0x300 displacement, as in Close), the river and road rows are
+// small memsets starting at index 1 (slot 0 is the never-loaded "none"
+// entry, and each memset zeroes its own scratch register - the xor
+// eax/xor ecx pair), the boat and froth rows share a second counted
+// loop, and the four dword-array fills past the 16-byte unroll cutoff
+// (cursorIcons, flagIcons, boatFlagIcons, loopedSample) are rep-stosd
+// memsets. radarIcons is nulled twice - both stores are retail's.
+// radarOrigin is a BODY assignment from a type_point(0,0,0) temporary
+// (the masked ebp-0x14 temp copied as one dword), not an init-list item:
+// as an init-list item VC6 emits it in declaration order between the
+// vector and the string (83.04), as the first body statement it lands
+// after the string exactly as retail schedules it (90.30). Listing
+// members out of declaration order in the init list is byte-inert -
+// VC6 initializes in declaration order regardless (measured). The
+// implicit vector and string defaults carry the two EH states;
+// advCommand and the moving-object pair share one or-edx,-1.
+//
+// Residual (90.30%): the river/road fill form. Retail materializes TWO
+// fresh zero pseudos (xor eax / xor ecx, one per group) and stores
+// direct [esi+disp32]; our memsets share one fill pseudo and address
+// through a lea'd base. Tried and rejected: individual statements and
+// chained assignments (both 79.32 - they reuse the ebx zero), road as
+// a chain beside a river memset (87.94), &arr[1] vs arr+1 spellings
+// (no movement). why-reg v2 caps after its one model edit - the
+// creation-order lever is copy-propagated (C1 class); the downstream
+// lea/mov-ecx transpositions around the flagIcons/boatFlagIcons
+// rep-stosd pairs are the same cascade.
 VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
-void advManager::advManager()
+advManager::advManager()
 {
-    // @stub
+    radarOrigin = type_point(0, 0, 0);
+    radarIcons = 0;
+    mapOriginX = 0;
+    mapOriginY = 0;
+    field_fc = 0;
+    animFrame = 0;
+    field_108 = 0;
+    advCommand = -1;
+    drawCursor = 0;
+    DebugShowFPS = 0;
+    DebugViewAll = 0;
+    field_390 = 0;
+
+    for (int i = 0; i < 10; i++) {
+        groundTileset[i] = 0;
+        heroSamples[i] = 0;
+    }
+    memset(&riverTileset[1], 0, 4 * sizeof(CSprite*));
+    memset(&roadTileset[1], 0, 3 * sizeof(CSprite*));
+    borderTileset = 0;
+    arrowTileset = 0;
+    gemIcons[0] = 0;
+    gemIcons[1] = 0;
+    gemIcons[2] = 0;
+    gemIcons[3] = 0;
+    starTileset = 0;
+    cloudIcons = 0;
+    memset(cursorIcons, 0, sizeof(cursorIcons));
+    for (int boat = 0; boat < 3; boat++) {
+        boatIcons[boat] = 0;
+        boatFrothIcons[boat] = 0;
+    }
+    memset(flagIcons, 0, sizeof(flagIcons));
+    memset(boatFlagIcons, 0, sizeof(boatFlagIcons));
+    memset(loopedSample, 0, sizeof(loopedSample));
+    radarIcons = 0;
+    advWindow = 0;
+    routeArray = 0;
+    inDialog = 0;
+    field_210 = 0;
+    gCompleteDrawEnabled = 1;
+    movingObjectIndex = -1;
+    movingObjectSequence = -1;
+    fullMap = gpGame->GetWorldMapData();
+    cursorFrameCount = 0;
+    cursorTurning = 0;
+    pNetMsgHandler = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:837
 VA(0x00406fd0, 0x7D6)  // anchor-vtable, dc 0x6b24

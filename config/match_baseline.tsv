@@ -28,6 +28,7 @@ adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	99.9367	99.9367	99.9367	0x5730
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040
+advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
 advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60
 advmgr	?BVMessage@advManager@@QAEXPBD@Z	92.6829	92.6829	92.6829	0x16210
@@ -134,7 +135,6 @@ advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
 advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
-advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
