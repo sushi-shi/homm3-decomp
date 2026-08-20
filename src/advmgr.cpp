@@ -1547,12 +1547,17 @@ void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point,
         (GetMapExtra(hoverPoint.x, hoverPoint.y, hoverPoint.z)
          & visibilityBit) != 0;
 
-    type_point cellPoint = hoverPoint;
+    // The cell lookup's point is copied from the MEMBER, not from
+    // hoverPoint, and it is block-scoped: taking it off hoverPoint keeps
+    // that local alive across the whole body and costs the frame a slot.
     NewmapCell* cell;
-    if (!cellPoint.is_valid())
-        cell = fullMap->cellData;
-    else
-        cell = fullMap->cell(cellPoint);
+    {
+        type_point cellPoint = lastMapHover;
+        if (!cellPoint.is_valid())
+            cell = fullMap->cellData;
+        else
+            cell = fullMap->cell(cellPoint);
+    }
 
     if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (!visible) {
