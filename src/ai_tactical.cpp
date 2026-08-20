@@ -1856,16 +1856,118 @@ long type_AI_spellcaster::get_haste_value(const army* our_army, type_enchant_dat
                            caster.duration);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1975
+// The protection family's pricer, and the one member that looks at the
+// fight from the OTHER side: it asks what the ENEMY hero could still
+// throw at this stack, and prices the school's damage reduction as the
+// worst single loss it prevents. Everything upstream of the ladder is
+// read off the enemy: can_cast_spells(enemy_side), the enemy hero's
+// available_spells row, its mana against GetManaCost, and the enemy
+// side's cached spellPower.
+//
+// Retail's own inconsistency, transcribed as found: ModifySpellDamage
+// is handed (our_hero, enemy_hero) as (casting_hero, target_hero) even
+// though the spell being priced is the ENEMY's - the same argument
+// order get_damage_value uses when WE are the caster. The bytes leave
+// no room to read it the other way (`push [edi+8]` then `push [edi+4]`
+// puts our_hero first).
+//
+// The work chance stays FLOAT to __ftol here exactly as in
+// get_damage_value - `fild dword / fstp DWORD / fmul dword` - while the
+// closing odds ladder is the TU's usual double one.
+//
+// Residual (80.2%): ONE live-range decision, and everything else in the
+// body follows from it. Every guard, every call, every argument push,
+// every immediate and the whole closing ladder agree; the prologue and
+// the loop TAIL (`add eax,0x22 / inc ebx / add ...,0x88 /
+// cmp eax,0x94c`) are byte-identical. The difference is what owns ESI
+// across the loop: retail parks the akSpellTraits BYTE-OFFSET induction
+// variable there and re-reads `our_army` from [ebp+8] at each of its
+// four in-loop uses, then SPLITS that live range - reusing ESI for the
+// ModifySpellDamage result and restoring the offset from [ebp-0x8] on
+// the way out. Our CL instead enregisters `our_army` in ESI for the
+// whole body and gives the offset EDX, which leaves no scratch register,
+// so the single-use traits reads fold into memory operands
+// (`test dword ptr [edx+ecx+0x1c], eax` where retail loads to a register
+// first) and the eax/edx pair stays transposed through the tail - down
+// to the ladder's zero arm, where retail merges the double's high-half
+// store out of both arms and we store both halves twice.
+// why-reg --model: bindings agree at every first definition (edi<-this,
+// esi<-our_army, ebx<-value), so this is NOT the B1 minimum slice; the
+// two values that would have to move are a PARAMETER and a CALL RESULT,
+// which is the model's own criterion for "no local spelling reaches it".
+// Register-homing family.
+// Tried and rejected: binding the single-use traits reads
+// (`schoolBits`, `level`) to named locals first - the lever that closed
+// the earth/water wrappers below - byte-identical at 80.2110; and this
+// TU's scoped-`for` idiom `{ for (...) { ... } }` around the loop, also
+// byte-identical at 80.2110.
 VA(0x004396e0, 0x2BC)  // anchor-global, dc 0x3fde4
 long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, long level, long duration, long amount)
 {
-    // @stub
+    if (!gpCombatManager->can_cast_spells(enemy_side, 1))
+        return 0;
+    if (field_1c)
+        return 0;
+    unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 23);
+    if (immune & 1)
+        return 0;
+    long power = gpCombatManager->spellPower[enemy_side];
+    long value = 0;
+    unsigned char ranged = our_army->can_shoot(0);
+    long our_hits = our_army->get_total_hit_points(0);
+    armyGroup* group = gpCombatManager->armyGroups[enemy_side];
+    for (long i = 0; i < hero::NUM_SPELLS; i++) {
+        if ((school & akSpellTraits[i].schoolBits) == 0)
+            continue;
+        if ((akSpellTraits[i].field_c & 0x200) == 0)
+            continue;
+        if ((akSpellTraits[i].field_c & 1) == 0)
+            continue;
+        if (akSpellTraits[i].level > level)
+            continue;
+        if (!enemy_hero->available_spells[i])
+            continue;
+        if (!gpCombatManager->SpellCastWorks(i, enemy_side, our_army, 1, 0))
+            continue;
+        long mastery = enemy_hero->get_spell_level(i, gpCombatManager->field_53c0);
+        if (enemy_hero->GetManaCost(i, group, gpCombatManager->field_53c0)
+                > enemy_hero->mana)
+            continue;
+        long damage = gpCombatManager->ModifySpellDamage(
+            akSpellTraits[i].mastery_bonus[mastery]
+            + akSpellTraits[i].power_factor * power,
+            i, our_hero, enemy_hero, our_army, 0);
+        if (damage == 0)
+            continue;
+        long reduction = damage * amount / 100;
+        if (damage > our_hits)
+            damage = our_hits;
+        if (reduction >= damage)
+            continue;
+        long blocked = static_cast<long>(
+            gpCombatManager->SpellCastWorkChance(i, enemy_side, our_army, 0, 1, 0)
+            * (damage - reduction));
+        long loss = our_army->get_loss_combat_value(params.lowest_attack,
+                                                    params.lowest_defense,
+                                                    ranged, blocked, 0);
+        if (loss > value)
+            value = loss;
+    }
+    double portion;
+    if (duration >= params.odds)
+        portion = 1.0;
+    else
+        portion = static_cast<double>(duration) / static_cast<double>(params.odds);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+    double scale;
+    if ((slow_flag & 1)
+            && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+        scale = 0.0;
+    else
+        scale = portion;
+    return static_cast<long>(static_cast<double>(value) * scale);
 }
-
-#endif  // @carcass
 
 // The four protection wrappers, all one `return get_protection_value(
 // ...)` with school 1/2/4/8 and level 5. Retail is INCONSISTENT about
