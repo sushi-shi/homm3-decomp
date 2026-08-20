@@ -14,7 +14,11 @@
 // half, sliced on its own, costs command.obj's GetCommand
 // 92.5714 -> 92.5357 (measured 2026-08-20).
 #define HOMM3_ARMY_PROTECTION_VIEW
+// SetMassSpellInfluence calls army::SetSpellInfluence, whose declarator
+// army.h keeps behind this view.
+#define HOMM3_ARMY_SPELLS_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_SPELLS_VIEW
 // LoadSpellEffect reads akSpellEffectTraits, which cmbtmgr.h keeps behind
 // this view; spells.obj is its second consumer after cmbtmgr.obj.
 #define HOMM3_CMBTMGR_OBSTACLE_VIEW
@@ -268,12 +272,47 @@ army* combatManager::find_animate_dead_target(int iArmyGroup, int targetIndex)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:3078
+#endif  // @carcass
+
+// The sweep in front of ValidSpellTarget: "is there ANY cell on the grid
+// this spell could be aimed at". It is also what fixes ValidSpellTarget's
+// parameter ORDER - the six pushes here are the caller's own five
+// parameters with the cell index spliced into slot 3, which is exactly
+// where the DC prototype (spells.cpp:2645) puts targetIndex.
+//
+// THE GRID GUARD IS cmbtmgr.h's OWN InInvisibleColumn, INLINED, and the
+// polarity is what identifies it. Retail jumps PAST the modulo when the
+// hex is out of range and skips the cell only when the column test
+// fires - i.e. out-of-range means "not an invisible column", which is
+// what that predicate's `if (!ValidHex(index)) return 0;` head does. A
+// plain bounds check would have to skip on the out-of-range arm. The
+// header already carried the inline (a DC header inline at
+// cmbtmgr.h:1525) for mark_teleport; this is its second retail witness,
+// and the expansion here is byte-for-byte the one recorded there.
+//
+// The Chain Lightning arm skips a cell already holding one of the
+// CASTER'S OWN stacks: the spell is the one that walks from target to
+// target, so a friendly occupant is not an aim point.
 VA(0x005a40d0, 0x9B)  // order-map+arity, dc 0x153580
-unsigned char combatManager::HasValidSpellTarget(SpellID spellId, TSkillMastery mastery, int casting_side, unsigned char first_target, unsigned char creature_spell)
+unsigned char combatManager::HasValidSpellTarget(SpellID spellId, long mastery,
+                                                 long casting_side,
+                                                 unsigned char first_target,
+                                                 unsigned char creature_spell)
 {
-    // @stub
+    for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (InInvisibleColumn(hex))
+            continue;
+        if (spellId == SPELL_CHAIN_LIGHTNING && cells[hex].armySide >= 0
+            && cells[hex].get_army()->combatSide == casting_side)
+            continue;
+        if (ValidSpellTarget(spellId, mastery, hex, casting_side, first_target,
+                             creature_spell))
+            return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:3103
 DC_ONLY(0x153638, 0x54)
@@ -425,17 +464,71 @@ void combatManager::ChainLightning(int index, int level, int power)
 VA(0x005a66b0, 0x14)  // order-map+arity, dc 0x155a08
 void combatManager::ClearEffects()
 {
-    memset(pad_547c, 0, sizeof(pad_547c));
+    memset(effected, 0, sizeof(effected));
 }
 
 #if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
-// E:\gamedcs\spells.cpp:4399
+#endif  // @carcass
+
+// The mass-spell applier ClearEffects clears `effected` for, and the
+// body is what slices that row: it rolls the cast SEPARATELY per stack -
+// the same `Random(1, 100) <= chance * 100.0f` SpellCastWorks uses on a
+// single target - and records the ones that took it.
+//
+// Hypnotized stacks are skipped outright. The flag flips a stack's
+// effective side, so a mass spell aimed at one side would otherwise
+// reach it twice or not at all; retail tests it before rolling anything.
+//
+// THE NAMED-LOCAL LEVER RUNS BACKWARDS HERE, and it was the whole
+// residual: 80.14 -> 100.0. `int chance = SpellCastWorkChance(...) *
+// 100.0f; if (Random(1, 100) <= chance)` - the spelling SpellCastWorks
+// (0x5a8640) needs to be exact - mints a NAMED pseudo for the roll, and
+// C2 hands out ESI/EDI/EBX to call-crossing pseudos in creation order,
+// so `chance` takes EDI ahead of the loop index and the index falls to
+// the frame. Retail's order is armies-pointer/index/`this`, with the
+// roll sharing `this`'s EBX across its dead half. Leaving the roll an
+// unnamed temporary inside the `if` restores exactly that, and nothing
+// else in the body changed. Two sibling functions, opposite levers: the
+// local is load-bearing in one and disqualifying in the other, so the
+// question is never "is a named local better" but "how many
+// call-crossing pseudos does retail have, and in what order".
+//
+// `creature_spell` IS A DWORD, NOT THE DC PROTOTYPE'S `unsigned char`
+// (73.37 -> 80.14 on the retype alone). Retail forwards it into
+// SpellCastWorkChance's slot 6 as a raw `mov eax, dword ptr [ebp+0x1c]`
+// with no widening, and that slot is settled dword-sized by
+// ai_tactical's get_damage_value (0x436e30), which materialises its own
+// argument for it as `xor eax,eax / test dl,dl / setne al` - while
+// pushing a genuinely char-sized argument to a DIFFERENT callee twelve
+// instructions later as a dirty `mov dl,[edi+0x28] / push edx`. One
+// function, both idioms, so the zeroing is deliberate. A char parameter
+// here would have to be widened on the way out and retail never is.
 VA(0x005a66d0, 0xE5)  // order-map+arity, dc 0x155a20
-void combatManager::SetMassSpellInfluence(const hero* casting_hero, int spell, TSkillMastery level, int power, int casting_side, unsigned char creature_spell)
+void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
+                                          long level, long power,
+                                          long casting_side,
+                                          long creature_spell)
 {
-    // @stub
+    memset(effected, 0, sizeof(effected));
+    for (int side = 0; side < 2; side++) {
+        for (int i = 0; i < numArmies[side]; i++) {
+            if (armies[side][i].hypnotizeFlag)
+                continue;
+            if (Random(1, 100)
+                <= static_cast<long>(SpellCastWorkChance(spell, casting_side,
+                                                         &armies[side][i], 0, 1,
+                                                         creature_spell)
+                                     * 100.0f)) {
+                armies[side][i].SetSpellInfluence(spell, power, level,
+                                                  casting_hero);
+                effected[side][i] = 1;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4424
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
@@ -465,12 +558,46 @@ void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
     // @stub
 }
 
-// E:\gamedcs\spells.cpp:4815
+#endif  // @carcass
+
+// The corpse-list compactor, and it is what proves hexcell's third dead
+// row: retail shifts +0x20, +0x2e AND +0x3c down together, one byte per
+// slot per pass, so the pad at +0x3c is a fourteen-entry parallel array
+// - the DC dump's deadPartOfDouble.
+//
+// TWO LOOPS OVER ONE INDEX, and retail's two bounds are spelled the same
+// way even though it compiles them differently: the SEARCH loop hoists
+// iBodiesInHex into a register because its body only reads, while the
+// SHIFT loop reloads it every pass because its body writes through the
+// same pointer and VC6 cannot prove no alias. One `hex->iBodiesInHex` in
+// both conditions gives exactly that pair; caching it into a local would
+// flatten the second one.
+//
+// The tail is transcribed as retail has it, INCLUDING the not-found
+// case: when the scan runs off the end, `i` is the count, and retail
+// still stamps -1 at [count] and decrements. Only the two sentinel rows
+// take the -1, and they take it from one register (`or dl,-1` then two
+// byte stores), which is the signed-char CSE - an unsigned row would
+// split the constant.
 VA(0x005a7320, 0x68)  // order-map+arity, RET-MISMATCH resolved, dc 0x1565e4
-void combatManager::remove_corpse(hexcell* hex, long group, long index)
+void combatManager::remove_corpse(hexcell* hex, long side, long slot)
 {
-    // @stub
+    int i;
+    for (i = 0; i < hex->iBodiesInHex; i++) {
+        if (hex->deadArmySide[i] == side && hex->deadArmySlot[i] == slot)
+            break;
+    }
+    for (; i < hex->iBodiesInHex; i++) {
+        hex->deadArmySide[i] = hex->deadArmySide[i + 1];
+        hex->deadArmySlot[i] = hex->deadArmySlot[i + 1];
+        hex->deadPartOfDouble[i] = hex->deadPartOfDouble[i + 1];
+    }
+    hex->deadArmySide[i] = -1;
+    hex->deadArmySlot[i] = -1;
+    hex->iBodiesInHex--;
 }
+
+#if 0  // @carcass - unlocated/unreconstructed Dreamcast roster rows
 
 // E:\gamedcs\spells.cpp:4838
 DC_ONLY(0x15668c, 0x6A)

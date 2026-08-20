@@ -16,7 +16,7 @@ hexcell::hexcell()
     armySide = none;
     armySlot = none;
     field_1a = none;
-    field_1c = 0;
+    iBodiesInHex = 0;
     field_4c = 0;
     field_4d = none;
 }

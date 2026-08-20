@@ -574,11 +574,15 @@ public:
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
     TCombatEagleEyeSide eagleEyeData[2]; // +0x545c; set roots at +0x5460
-    // ClearEffects (0x5a66b0) zeroes exactly this pad as ten dwords - a
-    // `rep stosd` with ecx=10 over [this+0x547c]. That proves the extent and
-    // the dword granularity; it does not name the elements, so the pad stays
-    // a pad until a reader slices it.
-    char pad_547c[0x28];
+    // ClearEffects (0x5a66b0) zeroes exactly this row as ten dwords - a
+    // `rep stosd` with ecx=10 over [this+0x547c]. That proves the extent
+    // and the dword granularity.
+    // SLICED, IN PLACE, 2026-08-20 - same one declarator, real shape.
+    // SetMassSpellInfluence (0x5a66d0) writes a 1 into it per stack that
+    // took the spell, walking it with a row pointer that advances 0x14
+    // per SIDE and is indexed by the army slot, which is exactly the
+    // [2][20] the `rep stosd` of 10 dwords already bounded.
+    unsigned char effected[2][20];    // +0x547c
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -1410,7 +1414,7 @@ public:
     // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
     // same eight - and its source line 5065 sits just before
     // ModifySpellDamage's 5086, which is the retail order exactly.
-    // spells.cpp:4387, dc 0x155a08 - clears pad_547c.
+    // spells.cpp:4387, dc 0x155a08 - clears `effected`.
     void ClearEffects();
 
     long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
@@ -1438,6 +1442,38 @@ public:
     // against, scales the damage by that school's factor.
     long ModifySpellDamageForSpells(long damage, SpellID spell,
                                     const army* target);       // 0x5a7bb0
+    // 0x5a39c0 and its 0x5a40d0 driver. HasValidSpellTarget sweeps the
+    // 187-cell grid and answers whether ANY cell passes ValidSpellTarget;
+    // the two share every parameter but the cell index, which is what
+    // fixes the parameter ORDER of the callee from the caller's push
+    // sequence. Both parameter lists are the DC roster's
+    // (spells.cpp:2645 / 3078); `mastery` is their TSkillMastery,
+    // spelled long here for the same reason mark_area_effect's is - the
+    // typedef lives in the header that includes this one.
+    unsigned char ValidSpellTarget(SpellID spellId, long mastery,
+                                   long targetIndex, long casting_side,
+                                   unsigned char first_target,
+                                   unsigned char creature_spell); // 0x5a39c0
+    unsigned char HasValidSpellTarget(SpellID spellId, long mastery,
+                                      long casting_side,
+                                      unsigned char first_target,
+                                      unsigned char creature_spell); // 0x5a40d0
+    // 0x5a7320, the hexcell-taking one of the DC roster's two
+    // remove_corpse overloads (spells.cpp:4815; the other, 4838, takes an
+    // army* and has no located retail body). Like
+    // ModifySpellDamageForSpells above it never touches `this` and is
+    // still a member - retail reads all three arguments off the stack
+    // behind a thiscall `ret 0xc`, where a static would be __fastcall.
+    void remove_corpse(hexcell* hex, long side, long slot);    // 0x5a7320
+    // 0x5a66d0, the mass-spell applier ClearEffects (0x5a66b0) clears
+    // `effected` for. It rolls SpellCastWorkChance separately per stack
+    // on both sides and records which ones took the spell.
+    // `creature_spell` is a DWORD here and the DC prototype's
+    // `unsigned char` is CONTRADICTED by retail bytes - see the body.
+    void SetMassSpellInfluence(const hero* casting_hero, SpellID spell,
+                               long level, long power,
+                               long casting_side,
+                               long creature_spell);           // 0x5a66d0
 #endif
     // The last parameter is NOT a char: get_damage_value materialises
     // `creature_spell != 0` with xor/setne into a full dword before

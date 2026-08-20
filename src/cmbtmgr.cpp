@@ -1002,7 +1002,7 @@ void combatManager::GenerateMap()
             cell->field_08 = static_cast<short>(
                 x * 44 + lower_offset + 14 + 44);
             cell->field_10 = 0;
-            cell->field_1c = 0;
+            cell->iBodiesInHex = 0;
             cell->field_4c = 0;
         }
     }
@@ -2554,14 +2554,14 @@ void combatManager::RaiseDoor()
     if (!defendingTown || drawbridgeState != DRAWBRIDGE_DOWN)
         return;
     if (cells[COMBAT_HEX_GATE].armySide >= 0
-            || cells[COMBAT_HEX_GATE].field_1c)
+            || cells[COMBAT_HEX_GATE].iBodiesInHex)
         return;
     if (cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
-            || cells[COMBAT_HEX_GATE_MOAT].field_1c)
+            || cells[COMBAT_HEX_GATE_MOAT].iBodiesInHex)
         return;
     if (defendingTown->type == TOWN_FORTRESS
             && (cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
-                || cells[COMBAT_HEX_OUTER_MOAT].field_1c))
+                || cells[COMBAT_HEX_OUTER_MOAT].iBodiesInHex))
         return;
 
     if (IsQuickCombat()) {
@@ -3768,7 +3768,7 @@ unsigned char combatManager::DoorCanBeLowered()
 // The two literal cell reads are cells[95] and cells[94] - the gate's
 // moat hex and the one outside it - byte-proven by the manager offsets
 // 0x2b6c/0x2b70 and 0x2afc/0x2b00 landing exactly on cells[95].armySide
-// / .field_1c and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
+// / .iBodiesInHex and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
 VA(0x00469a10, 0x80)  // anchor-global, dc 0x632c4
 unsigned char combatManager::HexIsBlocked(int index) const
 {
@@ -3778,9 +3778,9 @@ unsigned char combatManager::HexIsBlocked(int index) const
             goto not_blocked;
         if (currentSide != 1
                 || cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
-                || cells[COMBAT_HEX_GATE_MOAT].field_1c != 0
+                || cells[COMBAT_HEX_GATE_MOAT].iBodiesInHex != 0
                 || cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
-                || cells[COMBAT_HEX_OUTER_MOAT].field_1c != 0)
+                || cells[COMBAT_HEX_OUTER_MOAT].iBodiesInHex != 0)
             return 1;
         goto not_blocked;
     }

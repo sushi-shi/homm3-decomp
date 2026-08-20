@@ -1175,6 +1175,19 @@ public:
     void DrawToBuffer(int x, int y, int bNumBoxOnly);
     void CancelSpellType(int iSpellType);    // 0x4444d0
     void CancelIndividualSpell(int spell);   // 0x444510
+    // 0x4443f0 per the DC roster line below (army.cpp:3816); the retail
+    // address is not claimed here, only the declaration. spells.obj's
+    // SetMassSpellInfluence (0x5a66d0) is the located caller and its
+    // push order fixes the four slots exactly as the DC prototype has
+    // them. BEHIND A VIEW because this header is in almost every TU's
+    // include closure and its declarator count is already near an
+    // include-set boundary; src/spells.cpp is the only consumer.
+#ifdef HOMM3_ARMY_SPELLS_VIEW
+    // `mastery` is TSkillMastery, spelled int here because that typedef
+    // is not in this header's closure.
+    void SetSpellInfluence(int spell, int power, int mastery,
+                           const hero* casting_hero);
+#endif
     // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
     // reads, and both callees it drives on `this` are already const.
     unsigned char ValidFlight(int destIndex,
