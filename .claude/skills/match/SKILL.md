@@ -737,7 +737,15 @@ body where the whole search turned on it):
   byte-flat to the digit. That kills the folded-constant respelling family
   everywhere — it is not a dose, it is nothing.
 - **Statements under `if (0)` carry FULL cb, byte-inertly.** Sixty wrapped
-  probes reproduced the naked plateau exactly. This is the clean carrier.
+  probes reproduced the naked plateau exactly. This is the clean carrier —
+  **and therefore a MEASURING INSTRUMENT. Titrate with it BEFORE writing any
+  real edit.** On `readMapObjects` the curve showed a narrow 5-to-9-statement
+  plateau (87.28 → 94.29); knowing the target was that SMALL is what pointed
+  at a variable's scope rather than a lifted block, and the real spelling then
+  BEAT the synthetic carrier (**+7.58** vs +7.01). It also settled three
+  functions' directions in one build each, before anything was spent:
+  two monotone-down (shrink), one up (grow). Measure the dose, then go
+  looking for a real construct of that size.
 - **…UNLESS the `if (0)` block contains candidate CALL SITES**, which inverts
   it (84.46 and 79.91 against a 99.66 plateau) — dead sites still enter the
   collector.
@@ -813,6 +821,21 @@ LINE.** `advmgr.cpp` defines `HOMM3_NEWFULLMAP_CELL_OUTOFLINE` — one of the
 three surviving compile-required gates — so writing `cell(x,y,z)` there emits
 a CALL rather than the reload pattern. Check whether the TU opts out before
 converting a longhand subscript.
+
+**A `_Tidy` / `operator delete` CENSUS NAMES THE DIRECTION, AND "THE DOSE WAS
+TOO BIG" IS NOT "THE LEVER IS WRONG".** `do_post_attack`'s note read
+`_Tidy 5 vs 6, delete 4 vs 3` and called it a hard class — that census IS the
+over-inline signal, and two shrink doses closed the multiset (**+3.43**).
+`readHeroData`'s banked "artifacts-block caller-shrink LOSES 1.96" was the
+wrong dose SIZE: the four-iteration primary-skills loop pays **+0.82** and
+brings `logic_error(const string&)` out of line at both throw sites.
+
+**A LOOP COUNTER RETAIL STORES IN THE PROLOGUE BELONGS IN THE PROLOGUE.** A
+banked note read "budget must be declared next to its use" (78.30 → 78.54);
+the bytes say retail stores `mov [ebp-0x30], 0x7f` at fn+0x2d and reuses that
+slot for a later loop counter. It only pays PAIRED with moving the `memset`
+below the initialiser run — retail emits six zero-stores then `rep stosd` —
+and the memset move alone is −0.35. Two knobs, neither of which works alone.
 
 ## The proven levers (all byte-verified in this tree — try in this order)
 
