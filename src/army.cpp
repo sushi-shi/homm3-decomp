@@ -2084,8 +2084,6 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
     return reduction;
 }
 
-#if 0  // @carcass
-
 // RETAIL-ONLY: UNNAMED in the DC dump, the HD name map and IDA alike, and
 // its two callers are both in ai_tactical - get_attack_skill_value
 // (0x437800) and get_defense_skill_value (0x438910), each asking what a
@@ -2096,15 +2094,54 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
 // NOT DamageEnemy: that row takes (army*, int*, int*, bool) on the DC
 // roster and calls ComputeBaseDamage / adjust_damage / Damage, none of
 // which appear here. Name declared in army.h as a bootstrap invention.
+//
+// THE DEFENDER'S WHOLE CHAIN IS ComputeDefenderDamageReduction INLINED,
+// which is what identifies the tail: the +0x208/+0x4bc and
+// +0x204/+0x4b8 shield pair, the +0x2b0 petrify halving and the
+// heroes[get_controlling_side()] defense factor arrive here in exactly
+// that body's order, including its inlined `1 - combatSide` hypnotize
+// flip. Retail keeps an out-of-line copy at 0x443d90 and expands it
+// here - /Ob2 on a same-TU body defined above the call site.
+//
+// The attacker's two reductions are NOT symmetric, and the byte order
+// says why: ComputeAttackerDamageReduction is CALLED and multiplies
+// `reduction * amount` (the double is the left operand, the int is
+// filed into a temp and multiplied in), while the defender's inlined
+// factor multiplies `amount * factor` the other way round. Both
+// orientations are transcribed as retail has them.
+//
+// `amount` is assigned back into its own parameter slot [ebp+0xc]
+// three times over, so the source updates the parameter rather than
+// introducing locals.
 VA(0x00443e30, 0x101)  // anchor-callee (ai_tactical's two skill-value
                        // functions) + arity ret 0x10, retail-only slot
 long army::get_estimated_damage(const army* target, long amount,
                                 unsigned char ranged, long distance) const
 {
-    // @stub
+    if (!target)
+        return 0;
+    // Residual (98.5227%): ONE instruction pair. Retail accumulates
+    // INTO the call's return register (`add eax, ecx` /
+    // `mov [amount], eax`); our C2 loads `amount` into ECX and
+    // accumulates the other way (`add ecx, eax` / `mov [amount], ecx`).
+    // Everything else in the body is byte-identical and the remaining
+    // diff rows are reloc names on unclaimed rows. VC6 CANONICALISES
+    // this add, so the written operand order does not reach it - tried
+    // and rejected: `amount += compute_attacker_bonus(...)` (identical
+    // bytes) and a named `long bonus` local, which is strictly worse
+    // (it sinks the add past the ComputeAttackerDamageReduction call
+    // and spills the bonus to a stack slot first).
+    amount = compute_attacker_bonus(amount, ranged, const_cast<army*>(target),
+                                    0, distance)
+             + amount;
+    amount = static_cast<long>(
+        ComputeAttackerDamageReduction(target, ranged) * amount);
+    amount = static_cast<long>(
+        amount * target->ComputeDefenderDamageReduction(ranged));
+    if (amount <= 0)
+        amount = 1;
+    return amount;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\army.cpp:3356
 // The whole damage pipeline between one stack's raw swing and what the

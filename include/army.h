@@ -1693,6 +1693,26 @@ public:
                                      long distance) const;
     double ComputeAttackerDamageReduction(const army* defender,
                                           unsigned char is_shooting) const;
+    // 0x443320, the retail-only numeric half of the row above: the
+    // offense / archery / spell-bonus arithmetic with no combat
+    // message and no sound, so that get_estimated_damage (0x443e30)
+    // can price a blow without playing one. Same five parameters and
+    // the same `ret 0x14`, and its `defender` stays NON-const for the
+    // same reason adjust_damage's does - the const caller casts, the
+    // declaration does not drop it. Declared, not claimed here;
+    // army.cpp owns the body.
+    //
+    // BEHIND THE ELEMENTAL-RULE VIEW - which is this family's own view,
+    // named for ComputeAttackerDamageReduction's creature ids - because
+    // ungated this ONE declarator costs command.obj's GetCommand
+    // 92.5714 -> 92.5357, the third time today the same canary has
+    // fired at the same value for a single new declarator on this
+    // header. army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
+    int compute_attacker_bonus(int base_damage, unsigned char is_shooting,
+                               army* defender, unsigned char simulate_only,
+                               long distance) const;
+#endif
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const
