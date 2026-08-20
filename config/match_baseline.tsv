@@ -28,6 +28,7 @@ adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	99.9367	99.9367	99.9367	0x5730
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040
+advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
 advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60
 advmgr	?BVMessage@advManager@@QAEXPBD@Z	92.6829	92.6829	92.6829	0x16210
@@ -68,7 +69,9 @@ advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
 advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
-advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
+advmgr	?HandleGiftMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20
+advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	98.9292	98.9292	98.9292	0x5e30
+advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
 advmgr	?HeroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590
 advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
@@ -79,10 +82,11 @@ advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
 advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.9576	0x17150
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	99.0975	99.0975	99.0975	0x1adb0
+advmgr	?Open@advManager@@UAEHH@Z	52.7156	52.7156	52.7156	0x6fd0
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60
 advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessDeSelect@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9a70
-advmgr	?ProcessHover@advManager@@QAEHHH@Z	78.8021	78.8021	78.8021	0xe360
+advmgr	?ProcessHover@advManager@@QAEHHH@Z	79.7982	79.7982	79.7982	0xe360
 advmgr	?ProcessKeyPress@advManager@@QAEHPBVmessage@@PAEPAUtype_point@@PAPAVNewmapCell@@@Z	75.6482	75.6482	75.6482	0x8c40
 advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	91.1006	91.1006	91.1006	0xa5d0
 advmgr	?ProcessRadarSelect@advManager@@QAEXPBVmessage@@@Z	100.0000	100.0000	100.0000	0xa0c0
@@ -92,6 +96,7 @@ advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	80.9400	80.9400	80.9400	0xdeb0
 advmgr	?QuickInfo@advManager@@QAEXHHH@Z	90.2004	90.2004	90.2004	0x137c0
 advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
+advmgr	?SaveGame@@YIEE@Z	100.0000	100.0000	100.0000	0x18160
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?ScreenScroll@advManager@@QAEXHH@Z	97.8177	97.8177	97.8177	0x195c0
 advmgr	?SeedTo@advManager@@QAEXUtype_point@@@Z	100.0000	100.0000	100.0000	0x194a0
@@ -102,7 +107,8 @@ advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	90.0426	90.0426	90.0
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTownContext@advManager@@QAEXHEE@Z	88.1312	88.1312	88.1312	0x17830
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
-advmgr	?ShowRoute@advManager@@QAEXHHH@Z	65.2654	65.2654	65.2654	0x18dd0
+advmgr	?ShowRoute@advManager@@QAEXHHH@Z	73.8204	73.8204	73.8204	0x18dd0
+advmgr	?StartLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00
 advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	85.3187	85.3187	85.3187	0x167a0
 advmgr	?TrimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0
 advmgr	?UpdBottomView@advManager@@QAEXEEE@Z	100.0000	100.0000	100.0000	0x15de0
@@ -114,8 +120,9 @@ advmgr	?UpdBottomViewNewTurn@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x15
 advmgr	?UpdBottomViewResMsg@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x16160
 advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
-advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.1844	90.1844	90.1844	0x12c40
+advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.6495	90.6495	90.6495	0x12c40
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
+advmgr	?ViewPuzzle@advManager@@QAEXXZ	83.3125	83.3125	83.3125	0x1a7f0
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80
 advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0
@@ -128,13 +135,6 @@ advmgr	?get_trigger_cell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.000
 advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98.0056	98.0056	0xdcc0
-advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
-advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
-advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
-advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
-advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
-advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
-advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
@@ -1557,7 +1557,7 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # generation, and the newer, more-claimed reference is the more
 # accurate one. 88.24 is the honest number against today's target;
 # 90.84 was measured against a coarser one.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50

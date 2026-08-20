@@ -102,6 +102,10 @@ extern int bWindowedMode;               // 0x6987b8
 extern int bVideoPaused;                // 0x69954c
 extern HMENU dfltMenu;                  // 0x6989e4 (CallManager's resume
                                         // arm restores it; name provisional)
+// .bss 0x698a34, the single-player menu gate advmgr's Open tests: when
+// clear, the non-multiplayer LoadMenu pair (0x6f/0x71) is skipped
+// entirely. Role wider than that is unattested; ordinal name.
+extern int gUnnamed698a34;
 extern HMENU gameMenu;                  // 0x6989e8 (dfltMenu's .bss
                                         // neighbour: kb's InitMainClasses
                                         // loads the pair, kb's CleanUpMenus

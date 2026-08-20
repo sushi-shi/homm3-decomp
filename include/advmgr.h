@@ -592,6 +592,12 @@ DATA(0x00698778) extern int gUnnamed698778;
 //   0x682a38  cleared for the "is this turn ours to draw" gate, tested
 //             between bVideoPaused and gCompleteDrawMessageBypass.
 DATA(0x00682a38) extern unsigned char gUnnamed682a38;
+//   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
+//             cleared right after - a draw-pass mode latch by role.
+DATA(0x006989f4) extern int gUnnamed6989f4;
+//   0x6993dc  set to 1 on Open's two hotseat arms alongside the
+//             gCompleteDrawEnabled refresh.
+DATA(0x006993dc) extern int gUnnamed6993dc;
 //   0x691209  lets a NON-human acting player through that same gate
 //             without the IsLastHuman probe.
 DATA(0x00691209) extern unsigned char gUnnamed691209;
@@ -613,6 +619,12 @@ DATA(0x00698790) extern int gUnnamed698790;
 // 0x69125c, a different pair fifty bytes up, so the mangled spellings are
 // NOT evidence for these two addresses and are recorded, not adopted.
 DATA(0x0069120c) extern int gUnnamed69120c;
+
+// Retail .data 0x691678 / 0x69167c: once-per-session latches for the two
+// turn-start info popups (general-text rows 332 and 333). Set to 1 the
+// first time StartLocalPlayerTurn shows each dialog; nothing clears them.
+DATA(0x00691678) extern int gUnnamed691678;
+DATA(0x0069167c) extern int gUnnamed69167c;
 
 // Retail .bss 0x699544, an ambient-sound resume stamp. The whole image
 // touches it from advmgr.obj alone - Main twice and StartLocalPlayerTurn
@@ -1031,6 +1043,7 @@ public:
     class type_bottom_view_window* bottomView;
     char pad_09c[4];
 
+    TAdventureMapWindow();
     ~TAdventureMapWindow();
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
@@ -1185,6 +1198,13 @@ public:
         ADVENTURE_XLARGE_MAP_WIDTH = 144
     };
 
+    // Open's load-bar pacing: the two mid-batch IncProgressBar ticks fire
+    // at the halfway index of the cached-graphics and cursor-icon loops.
+    enum EAdventureOpenProgress {
+        CACHED_GRAPHIC_TICK = 19,
+        CURSOR_ICON_TICK = 9
+    };
+
     // +0x38, the townManager::netMsgHandler counterpart. Retail proves the
     // identity across three bodies: the constructor nulls the slot, Open
     // allocates the handler (its inlined ctor calls ??0CNetMsgHandler@@QAE@XZ
@@ -1251,12 +1271,17 @@ public:
     int lastHoverY;                // +0xf0
     int mapOriginX;               // +0xf4, adventure viewport origin
     int mapOriginY;               // +0xf8
-    char pad_0fc[4];
+    // +0xfc, a dword the constructor zeroes alongside the map origin pair.
+    // Role unattested; the width is what the ctor's dword store proves.
+    int field_fc;
     int animFrame;                  // +0x100, sprite-frame modulo source
     // +0x104. UpdateScreen skips both the frame increment and timer catch-up
     // while this byte is set. Dreamcast supplies the surviving member name.
     unsigned char animCtrPaused;
-    char pad_105[7];
+    char pad_105[3];
+    // +0x108, a dword the constructor zeroes right after animFrame.
+    // Role unattested; the width is what the ctor's dword store proves.
+    int field_108;
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
     CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
@@ -1277,7 +1302,11 @@ public:
     int cursorTurning;            // +0x204
     int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
-    char pad_20d[0xb];
+    char pad_20d[3];
+    // +0x210, a dword the constructor zeroes between inDialog and the
+    // moving-object pair. Role unattested; width per the ctor's store.
+    int field_210;
+    char pad_214[4];
     int movingObjectIndex;        // +0x218, transient object-pool index
     int movingObjectSequence;     // +0x21c
     int movingObjectFrame;        // +0x220
@@ -1619,12 +1648,17 @@ public:
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     void DoEvent(NewmapCell* eventCell, type_point point);
 #endif
-#ifdef HOMM3_EVENTS_VIEW
+// advmgr.obj's own HandleNetMsg joined the gate for HeroSwap (its trade
+// arm swaps the two freshly-copied hero records). Split guard, the
+// GameFn_004CA780 pattern.
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_TURN_DECLS)
     // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
     // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
     // needs the declarator; the pair is (visitor, visited) in the DC's
     // own order and a call relocation's symbol name is not scored.
     void HeroSwap(class hero* leftHero, class hero* rightHero);
+#endif
+#ifdef HOMM3_EVENTS_VIEW
     void TownEvent(NewmapCell* cell, type_point point,
                    unsigned char human_player);
     // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
@@ -1778,6 +1812,12 @@ public:
     void ScreenScroll(int iDir, int bChangeMouse);
     void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
+    // Two retail-only member ordinals HandleNetMsg drives on gpAdvManager:
+    //   0x482010  the map-change record applier (the 1049..1063 batch)
+    //   0x4acd70  the combat-init hand-off
+    // Neither row is claimed here; both live outside advmgr.obj's band.
+    void AdvmgrFn_00482010(class CNetMsg* pNetMsg);
+    void AdvmgrFn_004ACD70(class CNetMsg* pNetMsg);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
     void EnableButtons();
