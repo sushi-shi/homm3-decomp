@@ -351,7 +351,17 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
               f"{conf}{ret_tag}")
     if agree or disagree:
         rate = 100.0 * agree / (agree + disagree)
-        if rate >= 90:
+        # COVERAGE MATTERS AS MUCH AS THE RATE. A unit where the aligner
+        # explained 5 of 27 rows can still agree on all five; that is a map of
+        # almost nothing, not a good map. resourcemanager scored 100% on five
+        # pairings while leaving 22 unexplained.
+        covered = 100.0 * (agree + disagree) / len(x86) if x86 else 0.0
+        if covered < 60:
+            verdict = (f"THIN - only {covered:.0f}% of the span's functions "
+                       "got a pairing at all, so this rate is computed on a "
+                       "handful of rows. The unpaired ones are the work, and "
+                       "the map does not address them.")
+        elif rate >= 90:
             verdict = ("USABLE - a run this clean is the exhaustive order-map "
                        "the skill accepts as proof.")
         elif rate >= 70:
@@ -364,7 +374,7 @@ def run(unit: str, show_skipped: bool, no_arity: bool = False) -> int:
                        "overloads (which no size score can separate), and "
                        "x86 statics the DC roster never had. Anchor it with "
                        "more claims first.")
-        print(f"\nVERDICT {rate:.0f}% arity agreement - {verdict}")
+        print(f"\nVERDICT {rate:.0f}% arity agreement over {covered:.0f}% of the span - {verdict}")
         print(f"\narity screen: {agree} agree, {disagree} disagree. Each "
               "agreement is an independent numeric\nprediction (bytes the "
               "callee pops, from the DC argument count) that came true; a\n"
