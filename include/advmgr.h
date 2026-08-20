@@ -545,6 +545,43 @@ DATA(0x00698774) extern int gUnnamed698774;
 //             calls, and UpdateRadar's own AI-shield paint.
 DATA(0x00699560) extern int gUnnamed699560;
 
+// Retail .bss, three more unattested slots the de-select dispatcher reads.
+// The first two are game::Overview's reply pair - ProcessDeSelect's
+// kingdom-overview arm calls Overview (0x51e8d0) and then reads them back
+// to back, and both are written inside that body (relocs at 0x11e8ff and
+// 0x11e904) - and the third gates the end-turn warning dialog.
+//   0x6985c0  the overview screen's exit action; see EOverviewExit.
+DATA(0x006985c0) extern int gUnnamed6985c0;
+//   0x69873c  the town the overview screen exited on, in game::GetTown's
+//             domain: ProcessDeSelect feeds it straight to the accessor
+//             and the -1 arm is emitted, so it carries the same "no town"
+//             sentinel townIds does.
+DATA(0x0069873c) extern int gUnnamed69873c;
+//   0x698778  third of the three gates on the "you still have heroes who
+//             can move" end-turn confirm, after game::field_1f69d and
+//             playerData::HasMobileHero.
+DATA(0x00698778) extern int gUnnamed698778;
+
+// Retail .bss/.data, three more the hero-context switch reads. Roles are
+// exactly what SetHeroContext's branches prove and nothing wider:
+//   0x682a38  cleared for the "is this turn ours to draw" gate, tested
+//             between bVideoPaused and gCompleteDrawMessageBypass.
+DATA(0x00682a38) extern unsigned char gUnnamed682a38;
+//   0x691209  lets a NON-human acting player through that same gate
+//             without the IsLastHuman probe.
+DATA(0x00691209) extern unsigned char gUnnamed691209;
+//   0x698790  suppresses the visibility scan around the new hero when the
+//             receiving player is not the local human.
+DATA(0x00698790) extern int gUnnamed698790;
+
+// gUnnamed6985c0's domain. ONE value is byte-proven - the kingdom-overview
+// arm answers 2 by viewing gUnnamed69873c's town and suppressing the
+// screen fade - so the label is an ORDINAL PLACEHOLDER carrying only that
+// role. This enum exists so the compare is named rather than magic.
+enum EOverviewExit {
+    OVERVIEW_EXIT_TOWN = 2
+};
+
 // Retail .data 0x68c6b8, the view-world tile scale. DECLARATION ONLY - no
 // DATA claim, because viewwrld.obj owns the definition (its own writers,
 // plus the fsub at 0x5f73b0 and the fdiv at 0x5fc274, are what prove the
@@ -1003,6 +1040,25 @@ public:
         COMPLETE_DRAW_LAST_Y = 17
     };
 
+    // The view-relative tile the acting hero is always parked on. The
+    // adventure view is COMPLETE_DRAW_LAST_X+1 by COMPLETE_DRAW_LAST_Y+1
+    // tiles and every recentring path derives radarOrigin as
+    // `mapX - 9 / mapY - 8` (ProcessRadarSelect and the kingdom-overview
+    // arm of ProcessDeSelect both spell it out), so this pair is that
+    // offset read back: ProcessMapSelect compares lastHoverX/lastHoverY
+    // against it to recognise a click on the hero's own square.
+    // Gated to advmgr.obj's own view for the standing include-set reason,
+    // exactly as EAdvCommand is: ProcessMapSelect is the only reader, and
+    // an ungated nested enum is a type DEFINITION in the closure of every
+    // TU that includes this header. MEASURED score-neutral in both
+    // positions today - the gate is prophylaxis, not a repair.
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+    enum EHeroViewTile {
+        HERO_VIEW_TILE_X = 9,
+        HERO_VIEW_TILE_Y = 8
+    };
+#endif
+
     enum EHoverBounds {
         HOVER_SCREEN_WIDTH = 800,
         HOVER_SCREEN_HEIGHT = 600,
@@ -1146,7 +1202,12 @@ public:
     sample* loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
     sample* heroSamples[11];       // +0x360, DC name and extent
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
-    char pad_390[4];
+    // +0x390, sliced out of the old four-byte pad by SetHeroContext: its
+    // tail gates the closing ForceMouseMove/lastHoverX reset on this byte
+    // being clear (`mov al,[esi+0x390] / test al,al / jne <return>`).
+    // Role and width are what those bytes prove; the name is ordinal.
+    unsigned char field_390;
+    char pad_391[3];
     // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
     // rebuilding the view, then stores 5 before installing the new window.
     EBottomViewType bottomViewType;
