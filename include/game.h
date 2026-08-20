@@ -754,7 +754,26 @@ public:
         short legalAlignments;
         unsigned char HasRandomAlignment;
         unsigned char GenerateHero;
+        // +0x14. CreateTownHeroes (0x4ca040) walks the eight slots with a
+        // 0x44-stride induction pointer and feeds three fields of this
+        // dword to GetTownId: `word[+0x14] << 6 >> 6`, `word[+0x16] << 6
+        // >> 6` and `word[+0x16] << 2 >> 12` - the exact 10/10/4 signed
+        // bitfield triple type_point already carries. Dreamcast names the
+        // member CastleLoc at its own +0x0c; retail's eight extra bytes
+        // above shift it and everything after it by 8.
+        //
+        // Sliced out of the pad behind a gate, not outright: type_point
+        // has a user-declared default constructor, so naming it here
+        // makes TPlayerSlotAttributes non-POD for every game.h includer.
+        // Doing that unguarded measured recruitUnit::Update 90.84 ->
+        // 88.24 while changing no offset, so the slice is scoped to the
+        // one TU that reads the field. Both arms are 12 bytes at +0x0c.
+#ifdef HOMM3_GAME_TOWN_HEROES_DECLS
+        char pad_0c[8];
+        type_point CastleLoc;
+#else
         char pad_0c[0xc];
+#endif
         signed char hasRandomHero;
         char pad_19[3];
         int nonRandomHeroId;
@@ -949,7 +968,22 @@ public:
     // ratchet drop, so both stay declared until game::Load carries retail's
     // caller mass; re-take this the moment it does. Declaring
     // ~SavedGameHeader to hold the same line is NOT the way - measured at
-    // the same time, it collapses game::Load to 9.88%.
+    // the same time, it collapses game::Load to 9.88%. RE-TAKEN with the
+    // tail landed: 74.6385 -> 58.8959 on Load and 79.1973 -> 55.2266 on
+    // Save, game.obj 83.6719 -> 80.1106. Much less catastrophic than
+    // 9.88% and still firmly negative, so the conclusion is unchanged
+    // and the reason is now visible - retail expands that destructor on
+    // ONE exit and calls 0x4bdf80 on the other, which a declarator
+    // cannot express either way round.
+    // RE-TAKEN 2026-08-20, with game::Load's tail landed and the function
+    // at 74.6385% instead of the 50.46% above: STILL net negative, and by
+    // a wider margin than the caller-mass argument predicted. Implicit
+    // costs game::Load 74.6385 -> 58.5009 and game::Save 79.1973 ->
+    // 61.0073, i.e. game.obj 83.6719 -> 80.5175, against campaignwindow
+    // at 89.7220. Caller mass was NOT the whole story - both bodies still
+    // expand the pair where retail calls the COMDATs - so they stay
+    // declared and this line is now a measured result rather than a
+    // deferred one.
     SCampaign();
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
@@ -1119,6 +1153,13 @@ public:
     unsigned char load(TAbstractFile* infile);
     unsigned char save(TAbstractFile* outfile);
     void update_bonus();
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+    // update_bonus's negative twin. Retail has no out-of-line row for it
+    // (nothing fits between generator::save's end at 0x4b8791 and
+    // update_bonus at 0x4b87a0), so it is inline-only - the same shape
+    // set_owner below carries.
+    inline void remove_bonus();
+#endif
     inline void set_owner(long owner);
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter
@@ -1545,7 +1586,15 @@ public:
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250
-    int GetStartingHeroId(TTownType alignment, int playerPos,
+    // `alignment` is spelled int, not TTownType, for the reason
+    // armyGroup::armies and MonsterData::Artifact are: every caller feeds
+    // it straight out of SGameSetupOptions::alignment[], an eight-element
+    // array that game::Load deserializes and quickherowindow compares
+    // against -1, so an enum in the parameter would put a cast on every
+    // crossing. The switch inside still dispatches on named TOWN_*
+    // enumerators. The Dreamcast declarator's enum is preserved in the
+    // CODEVIEW line below.
+    int GetStartingHeroId(int alignment, int playerPos,
                           int mapPosition);                     // 0x4bb400
     int GetNewHeroId(int playerPos, THeroClass excludedClass,
                      unsigned char preferAlignment,
@@ -1614,6 +1663,15 @@ public:
 #endif
     int ExperienceValueOfStack(const armyGroup* whichGroup,
                                const hero* whichHero);       // 0x4ca3b0
+#ifdef HOMM3_GAME_TOWN_HEROES_DECLS
+    // 0x4ca040. Retail carries a parameter the Dreamcast declarator
+    // (`?CreateTownHeroes@game@@QAAXXZ`, no arguments) does not: the body
+    // ends `ret 4`, tests [ebp+8] for null once per slot and separately
+    // strength-reduces it into a four-byte-stride walker it dereferences,
+    // i.e. an eight-entry int array of pre-chosen starting heroes that
+    // overrides GetStartingHeroId for human players.
+    void CreateTownHeroes(int* startingHeroIds);
+#endif
     void ClaimTown(int townId, int newPlayerOwner,
                    unsigned char bIsRemoteMove,
                    unsigned char check_end_game);            // 0x4c61e0
@@ -1623,24 +1681,68 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+    // record_claim_mine's sibling, and the same ~500-byte shape: retail
+    // inlines the whole `new type_record_claim_*` / push_back /
+    // SendMapChange chain the Dreamcast kept out of line (dc 0x8e058 is
+    // 96 B against retail's 510). game::ClaimTown is the caller that
+    // needs the declarator; the row is a carcass stub in
+    // event_record.cpp and is not claimed here.
+    void record_claim_town(long id, long new_owner);          // 0x49c190
+    // 0x4c6690, and the Dreamcast's own `?get_alignment@game@@QBA?AW4
+    // TTownType@@H@Z` (game.h:1375, i.e. a header inline - which is why
+    // retail's out-of-line copy lands in game.obj rather than a .cpp
+    // row). Spelled `int`, not TTownType, for the reason
+    // GetStartingHeroId's parameter is: the body RETURNS -1 for a
+    // base-set elemental and every caller compares the result against
+    // town::type, so the enum would put a cast on both crossings.
+    // The Dreamcast parameter name is `player_id` and is STALE - the
+    // retail argument is unambiguously a creature type (it tests
+    // CREATURE_AIR/EARTH/FIRE/WATER_ELEMENTAL and then indexes
+    // akCreatureTypeTraits), which is also what armygrp.h's note on
+    // f_1f698 describes: nonzero keeps elementals on their town
+    // alignment, zero censuses them as neutral.
+    int get_alignment(int creature) const;
+    // 0x42b9e0 (bracket ai_player..ai_tactical, 69 B). Returns bool -
+    // the Dreamcast decoration is `?is_human_ally@game@@QBA_NH@Z` and
+    // ClaimTown's `test al,al / sete al` is the !bool shape, against the
+    // `unsigned char` the CODEVIEW line in ai_player.h carries. Declared
+    // for ClaimTown; the body is a carcass stub in ai_player.cpp.
+    bool is_human_ally(int player_number) const;
+#endif
 #ifdef HOMM3_EVENTS_VIEW
     // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
     // EraseObj is its caller and pins the retail row: a 0x18-byte record
     // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
     // copied into it, reached with the cell and the point on the stack.
     void record_erase_object(NewmapCell* cell, type_point point); // 0x49c390
-    // Retail-only 0x4ca410, an ordinal placeholder. A no-argument sweep of
-    // the whole map (it reads gMapWidth/gMapHeight and the level count at
-    // +0x1fc48) that advManager::EraseObj runs once the object is gone.
-    // No surviving symbol names it; the row is not claimed here.
-    void GameFn_004CA410();
+#endif
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_GAME_LOAD_TAIL_DECLS)
+    // 0x4ca410. NAMED 2026-08-20, correcting this entry: it used to read
+    // "Retail-only ... no surviving symbol names it", and the Dreamcast
+    // dump does name it - `?SetupAdjacentMons@game@@QAAXXZ`, public,
+    // void, no arguments, dc 0xb61d0, E:\gamedcs\game.cpp:9596. Four
+    // things agree. The DC callee set is GetNumMapLevels +
+    // advManager::FindAdjacentMonster + GetMapExtraPtr, and retail
+    // 0x4ca410 calls FindAdjacentMonster once and GetMapExtraPtr twice
+    // while reading the level count at +0x1fc48. The DC caller set is
+    // advManager::EraseObj, game::Load, game::NewMap and game::PerMonth -
+    // the first two are exactly the retail call sites, and Load's is the
+    // one this gate now serves. evidence/ida carries the HD twin under
+    // the same mangled name. The body sets bit 0x100 in the map-extra
+    // word when a monster is adjacent and clears it otherwise, which is
+    // what the old ordinal note described without a name. The row is
+    // still not claimed here.
+    void SetupAdjacentMons();
+#endif
+#ifdef HOMM3_EVENTS_VIEW
 // advmgr.obj joins the gate for the one declarator below. The guard is
 // SPLIT around it rather than moved, so the preprocessed text every
 // events-view consumer sees is unchanged, line for line.
 #endif /* HOMM3_EVENTS_VIEW */
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_ADVMGR_OBJ_DECLS)
     // Retail-only 0x4ca780, 180 B, an ordinal placeholder on
-    // GameFn_004CA410's convention. Loads aishield.pcx, blits it over the
+    // GameFn_004C7C50's convention. Loads aishield.pcx, blits it over the
     // radar rect, calls UpdateScreen and latches gpAdvManager->field_38c;
     // advManager::UpdateRadar is the caller that needs the declarator and
     // the row is not claimed here.
@@ -1653,8 +1755,7 @@ public:
     // declarator; the row is claimed as a carcass stub in event_record.cpp.
     void ResetVisibility(int startX, int startY, int z,
                          int whichPlayer, int range);          // 0x49d3d0
-    // Retail-only 0x4c7c50, an ordinal placeholder like GameFn_004CA410
-    // above. A no-argument sweep of all 156 hero records (stride 0x492)
+    // Retail-only 0x4c7c50, an ordinal placeholder. A no-argument sweep of all 156 hero records (stride 0x492)
     // that re-runs game::SetVisibility for every hero still on the map -
     // which is what has to happen after ResetVisibility blanks a disc.
     // No surviving symbol names it; the row is not claimed here.
@@ -1775,6 +1876,22 @@ public:
     // eventRecords count as a dword and then each record through the
     // vtable. Body belongs to event_record.obj.
     unsigned char save_recorded_events(TAbstractFile* outfile);
+#ifdef HOMM3_GAME_LOAD_TAIL_DECLS
+    // 0x49dac0, save_recorded_events' mirror - and ASYMMETRIC with it.
+    // save ends `ret 4`; this one ends `ret 8` at both exits, because
+    // retail added a save-version parameter it forwards to every
+    // record's own Load through the vtable's +8 slot. The Dreamcast
+    // declarator (`?load_recorded_events@game@@AAA_NPAX@Z`, private,
+    // one void*) is stale on that arity. game::Load is the only caller.
+    unsigned char load_recorded_events(TAbstractFile* infile, int version);
+    // 0x4bcb30 (dc 0xa8144, E:\gamedcs\game.cpp:2975,
+    // `?setup_shipyards@game@@AAAXXZ`). Clears all eight
+    // players[i].shipyards and re-derives them by sweeping the map,
+    // temporarily restoring any hero or boat obscuring a cell so the
+    // shipyard underneath is visible. game::Load's tail is the caller
+    // the Dreamcast xref graph records.
+    void setup_shipyards();
+#endif
     void ShowScenInfo();
 #ifdef HOMM3_ADVMGR_OBJ_DECLS
     // The kingdom-overview screen, overview.obj's own body at 0x51e8d0.
@@ -1938,6 +2055,37 @@ DATA(0x0069950c) extern int gUnnamed69950c;
 // gUnnamed69950c's precedent rather than inventing a role name.
 DATA(0x0069fb24) extern int gUnnamed69fb24[8];
 extern playerData* gpCurrentPlayer;
+#ifdef HOMM3_GAME_LOAD_TAIL_DECLS
+// Retail .bss 0x69ccc4, and the SIBLING of advmgr.h's gMapVisibilityBit
+// (0x69ccbc) rather than an alias of it - it has 38 relocation sites of
+// its own, and advManager::ProcessHover gates fog on it with the same
+// `test byte ptr [...], al` shape. game::Load's tail writes the pair one
+// after the other and that is what separates them: 0x69ccbc takes
+// `1 << gUnnamed69778c` (the acting player) while this one takes
+// `1 << gNetLocalGamePos` (this machine's own seat). NAME UNATTESTED -
+// address-ordinal placeholder, as gUnnamed69778c is.
+DATA(0x0069ccc4) extern unsigned char gUnnamed69ccc4;
+// 0x69954c, extern-only here: kbwin.cpp owns the DATA claim under the
+// name bVideoPaused, which recruit.cpp already records as CONTRADICTED
+// with the storage correct. remote.h spells the same word
+// gNetworkActive69954c and game::Load's use agrees with remote.h - not
+// networked means the acting player IS the local seat.
+extern int gNetworkActive69954c;
+// philai.obj owns the body (0x52b9c0, dc 0x1147ac,
+// E:\gamedcs\philai.cpp:4126, `?AI_examine_map@@YAXXZ`); declared here
+// because game::Load is the caller that needs it and philai.h is not in
+// this TU's include closure. Declared, not claimed.
+void AI_examine_map();
+#endif
+#ifdef HOMM3_GAME_CLAIM_TOWN_DECLS
+// hero.cpp owns the DATA claim on 0x698400 (name unattested,
+// address-ordinal placeholder) and game.obj is a second reader, so this
+// is an extern-only declaration - the gMapWidth/gpCurrentPlayer pattern.
+// hero.cpp's note already records THIS call site: every reader treats
+// nonzero as "suppress the interactive path", and game::ClaimTown skips
+// its notify call.
+extern int gbInSetup698400;
+#endif
 
 inline int game::GetCurrHeroId()
 {

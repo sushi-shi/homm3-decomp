@@ -19,6 +19,22 @@
 // which town.obj already declares behind its own gate. Held together
 // here so townmgr.obj gains no member of class game.
 #define HOMM3_GAME_RANDOM_OBJECTS_DECLS
+// game::CreateTownHeroes (0x4ca040) needs its own declarator plus
+// town::GiveSpells, which it closes each starting town with. Held on its
+// own gate: a bare member declarator on class game is the include-set
+// wall's trigger shape (a first attempt that hung both off
+// HOMM3_GAME_OBJ_DECLS cost recruitUnit::Update 90.84 -> 88.24), and
+// townmgr.obj shares that macro.
+#define HOMM3_GAME_TOWN_HEROES_DECLS
+// game::ClaimTown (0x4c61e0) needs four declarators no other game.obj
+// body reaches: record_claim_town, game::get_alignment, is_human_ally
+// and generator::remove_bonus. Held on its own gate for the same reason
+// the town-heroes group is - townmgr.obj shares HOMM3_GAME_OBJ_DECLS.
+#define HOMM3_GAME_CLAIM_TOWN_DECLS
+// game::Load's tail needs load_recorded_events and setup_shipyards, and
+// neither is reached by any other body here. Same gate discipline as the
+// two groups above.
+#define HOMM3_GAME_LOAD_TAIL_DECLS
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "terrain.h"
@@ -29,6 +45,9 @@
 #define HOMM3_GAME_HERO_EXTRA_VIEW
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_GAME_TOWN_HEROES_DECLS
+#undef HOMM3_GAME_CLAIM_TOWN_DECLS
+#undef HOMM3_GAME_LOAD_TAIL_DECLS
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -107,6 +126,10 @@ unsigned char save_vector(TAbstractFile* outfile,
                           std::vector<type_university>* src_vector);
 unsigned char save_object_vector(TAbstractFile* outfile,
                                  std::vector<type_creature_bank>* src_vector);
+// The Load mirror of save_object_vector (retail 0x4d2870), reached only
+// by game::Load's tail. Same /Gr shape: file in ecx, vector in edx.
+unsigned char load_object_vector(TAbstractFile* infile,
+                                 std::vector<type_creature_bank>* dest_vector);
 
 const int SAVED_CREATURE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
@@ -130,6 +153,21 @@ const int CAMPAIGN_ARMY_OVERRIDE_TRAITS = 96;
 // campaignwindow.h is not in this TU's closure, so the value lives here as a
 // local constant, exactly as CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN does.
 const int FIRST_SHADOW_OF_DEATH_CAMPAIGN = 13;
+// game::CreateTownHeroes carries the SAME start-level override
+// hero.cpp's HeroFn_004D8B30 does, on the same campaign/scenario pair
+// and the same donor hero - both bodies spell `campaign == 8 &&
+// currentMap == 3` and then read gpGame + 0x4c893, which IS
+// heroes[151].level. The names mirror hero.cpp's kStartLevel* block so
+// the two readers of the pair stay recognisably one rule; the values are
+// retail's literals. The campaign's identity is now more than inference:
+// gCampaignFileNames at 0x66cadc holds 'blood.h3c' at ordinal 8 (IDA
+// names it aBlood_h3c), and hero.cpp's own kArtifactVialOfDragonBlood
+// sits in the same block - but the ordinal is what retail compares, so
+// the constants stay role-named rather than importing a title.
+const int START_LEVEL_CAMPAIGN = 8;
+const int START_LEVEL_SCENARIO = 3;
+const int START_LEVEL_HERO_ID = 151;
+const int START_LEVEL_BONUS = 5;
 // The map's full obelisk roster and the puzzle it uncovers are the same
 // 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
 // std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
@@ -323,16 +361,38 @@ unsigned char generator::save(TAbstractFile* outfile)
     return saved;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:503
+// update_bonus's negative twin, and retail keeps NO out-of-line row for
+// it: generator::save ends at 0x4b8791 and update_bonus opens at
+// 0x4b87a0, fifteen bytes later, so every retail caller expands it.
+// game::ClaimTown is the caller that proves the body - its first
+// generator sweep IS this function inlined, down to the `-1`.
+//
+// The one place it differs from update_bonus is the elemental gate:
+// this side CALLS game::get_alignment (0x4c6690) where update_bonus
+// writes the four CREATURE_*_ELEMENTAL compares and the traits lookup
+// out longhand. Two retail bodies differing means two sources
+// differing, so the call stays a call - and stays pinned, because our
+// CL inlines a 67-byte callee here that retail does not.
 DC_ONLY(0xa30c4, 0xB2)
-void generator::remove_bonus()
+inline void generator::remove_bonus()
 {
-    // @stub
-}
+    if (playerOwner < 0)
+        return;
 
-#endif  // @carcass
+    playerData* player = &gpGame->players[playerOwner];
+#pragma inline_depth(0)
+    int townType = gpGame->get_alignment(type[0]);
+#pragma inline_depth()
+    if (townType == -1)
+        return;
+
+    for (int index = 0; index < player->numTowns; index++) {
+        town* currentTown = gpGame->GetTown(player->townIds[index]);
+        if (currentTown->type == townType)
+            currentTown->change_generator_bonus(type[0], -1);
+    }
+}
 
 // E:\gamedcs\game.cpp:530
 VA(0x004b87a0, 0xB8)  // anchor-global, dc 0xa3178
@@ -622,7 +682,7 @@ void game::calculate_production()
 
     for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
         hero* currentHero = &heroes[heroId];
-        if (currentHero->owner < 0)
+        if (currentHero->owner == -1)
             continue;
         if (currentHero->army.get_creature_total(
                 creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)
@@ -1872,7 +1932,7 @@ int game::RandomScan(signed char* whichList, int start, int length, signed char 
 
 // E:\gamedcs\game.cpp:2190
 VA(0x004bb400, 0x1DC)  // anchor-global, dc 0xa68d8
-int game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
+int game::GetStartingHeroId(int alignment, int playerPos, int mapPosition)
 {
     int heroArray[HERO_COUNT];
     int heroClass1 = 0;
@@ -2434,16 +2494,23 @@ int game::Load(TAbstractFile* infile)
     if (saved.Load(infile))
         return -1;
 
+    // Every store in this block goes through gpGame, RELOADED from the
+    // global for each one, not through the implicit `this` retail
+    // already has in a register: `mov ecx,[gpGame] / mov [ecx+0x1f698],
+    // edx`, then `mov ecx,[gpGame]` again for mapHeader, again for
+    // setup, again for campaign, again for the filename. Do not cache
+    // what retail reloads.
     int saveVersion = saved.version;
-    f_1f698 = saved.gameVersion;
-    mapHeader = saved.mapHeader;
-    setup = saved.mapSetup;
+    gpGame->f_1f698 = saved.gameVersion;
+    gpGame->mapHeader = saved.mapHeader;
+    gpGame->setup = saved.mapSetup;
     gbUnk69774c = saved.campaignGame;
-    campaign = saved.campaign;
-    strcpy(pad_1f4d5, saved.fileName.c_str());
-    difficultyRating = saved.difficultyRating;
-    field_1f635 = saved.numDeadPlayers;
-    memcpy(playerDisabled, saved.deadPlayer, sizeof(playerDisabled));
+    gpGame->campaign = saved.campaign;
+    strcpy(gpGame->pad_1f4d5, saved.fileName.c_str());
+    gpGame->difficultyRating = saved.difficultyRating;
+    gpGame->field_1f635 = saved.numDeadPlayers;
+    memcpy(gpGame->playerDisabled, saved.deadPlayer,
+           sizeof(gpGame->playerDisabled));
 
     char char_buffer;
     short short_buffer;
@@ -2673,6 +2740,37 @@ int game::Load(TAbstractFile* infile)
                      short_buffer * sizeof(type_point));
     }
 
+    // The tail, mirroring game::Save's: universities as a plain block
+    // read, creatureBanks element by element, then the event log.
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+        sizeof(short_buffer)) {
+        type_university emptyUniversity;
+#pragma inline_depth(0)
+        universities.resize(short_buffer, emptyUniversity);
+#pragma inline_depth()
+        infile->Read(universities.begin(),
+                     short_buffer * sizeof(type_university));
+    }
+    load_object_vector(infile, &creatureBanks);
+
+    if (!load_recorded_events(infile, saveVersion))
+        return -1;
+
+    gpAdvManager->inDialog = 0;
+    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+    gUnnamed69ccc4 = 1 << gNetLocalGamePos;
+    if (!gNetworkActive69954c)
+        gUnnamed69778c = gNetLocalGamePos;
+    setup_shipyards();
+    gMapVisibilityBit = 1 << gUnnamed69778c;
+    // predict-inline: IsLocalHuman base x0 vs retail x1. Pinned at the
+    // site - retail emits `push eax / mov ecx,[gpGame] / call`.
+#pragma inline_depth(0)
+    gCompleteDrawEnabled = gpGame->IsLocalHuman(gNetLocalGamePos);
+#pragma inline_depth()
+    SetupAdjacentMons();
+    AI_examine_map();
+
     return 0;
 }
 
@@ -2810,15 +2908,28 @@ int game::Save(TAbstractFile* outfile)
             sizeof(char_buffer)) {
             return -1;
         }
-        int eventBytes = char_buffer * sizeof(LoadEventRecord);
-        if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
+        // Length recomputed on BOTH sides of the compare, not cached:
+        // retail re-widens the count byte and rebuilds `n * 28` as
+        // `lea edx,[8*ecx] / sub edx,ecx / shl edx,2` for the test,
+        // exactly as save_vector re-reads its short. An `eventBytes`
+        // local CSEs the two and compares SIGNED (`cmp eax,edi / jge`)
+        // where retail compares UNSIGNED (`cmp eax,edx / jae`).
+        if (outfile->Write(field_1f680.begin(),
+                           char_buffer * sizeof(LoadEventRecord)) <
+            char_buffer * sizeof(LoadEventRecord))
             return -1;
     }
 
     if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
         return -1;
+    // predict-inline: SaveSignPool base x0 vs retail x1 - our CL expands
+    // a 0x1b3-byte callee retail CALLS. Pinned at the SITE, not the
+    // function: inline_depth(0) is statement-granular in VC6, and
+    // SaveMinePool immediately below is expanded on BOTH sides.
+#pragma inline_depth(0)
     if (SaveSignPool(outfile) < 0)
         return -1;
+#pragma inline_depth()
     if (SaveMinePool(outfile) < 0)
         return -1;
 
@@ -3306,14 +3417,154 @@ int NewSMapHeader::readString(void* infile, std::basic_string<char,std::char_tra
     // @stub
 }
 
+#endif  // @carcass
+
+// victorylossconditions.cpp's `get_team` under a TU-local name: the
+// negative arm returns the player number itself, which is what lets VC6
+// thread `owner < 0` straight through the caller's `>= 0` test instead
+// of branching twice. That file's applies_to_player (0x5f15a0, exact)
+// is the shape ClaimTown's team block repeats.
+static int claim_town_team(game* thisGame, int playerNum)
+{
+    if (playerNum < 0)
+        return playerNum;
+    return thisGame->mapHeader.teamInfo[playerNum];
+}
+
 // E:\gamedcs\game.cpp:7289
+// The two generator sweeps are generator::remove_bonus and
+// generator::update_bonus INLINED - both keep the owner re-read that
+// their own `if (playerOwner < 0) return;` produces, which is why the
+// byte at +0x57 is loaded twice per candidate.
+//
+// The team block is applies_to_player's shape: get_team threaded so the
+// negative arm falls straight through the `>= 0` test, then
+// game::IsHuman (0x4ce940) expanded with its out-of-range CLAMP intact -
+// VC6 cannot prove `player` in-range across the inline even though the
+// loop bounds it to 0..7, so the dead `>= 8 || < 0` clamp survives.
 VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
 void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
 {
-    // @stub
+    town* whichTown = &towns[townId];
+    int oldOwner = whichTown->owner;
+    if (oldOwner == newPlayerOwner)
+        return;
+
+    if (!gbInSetup698400 && !bIsRemoteMove)
+        record_claim_town(townId, newPlayerOwner);
+
+    whichTown->field_32 = 0;
+
+    if (!bIsRemoteMove) {
+        for (unsigned i = 0; i < generators.size(); i++) {
+            if (generators[i].playerOwner == oldOwner
+                || generators[i].playerOwner == newPlayerOwner)
+                generators[i].remove_bonus();
+        }
+    }
+
+    if (whichTown->owner != -1) {
+        int team = claim_town_team(this, whichTown->owner);
+        if (team >= 0 && !is_human_ally(team)) {
+            int newTeam = claim_town_team(this, newPlayerOwner);
+            if (newTeam >= 0) {
+                int player = 0;
+                signed char* teams = mapHeader.teamInfo;
+                for (; player < 8; ++player) {
+                    if (teams[player] == newTeam
+                        && gpGame->IsHuman(player)) {
+                        whichTown->field_02 = 0;
+                        break;
+                    }
+                }
+            }
+        }
+        gpGame->GetTown(townId)->Deallocate();
+    }
+
+    whichTown->owner = newPlayerOwner;
+    if (bIsRemoteMove)
+        return;
+
+    // The const overload, const_cast to reach a non-const method,
+    // exactly as calculate_production and add_garrison_hero already
+    // spell it in this TU: /OPT:ICF folded the DC's const and non-const
+    // get_army onto one row, so the const mangling is what the target
+    // side names and the codegen is identical either way.
+    const_cast<armyGroup&>(whichTown->get_army()).Initialize();
+    if (whichTown->owner != -1) {
+        players[newPlayerOwner].townIds[players[newPlayerOwner].numTowns] =
+            static_cast<char>(townId);
+        players[newPlayerOwner].numTowns++;
+
+        if (check_end_game
+            && mapHeader.victoryCondition.IsTownCaptureTarget(whichTown)
+            && mapHeader.victoryCondition.CheckForTownCaptureWin())
+            CheckEndGame(0);
+
+        SetVisibility(towns[townId].mapX, towns[townId].mapY,
+                      towns[townId].mapZ, newPlayerOwner, 5, 0);
+
+        if (whichTown->type == TOWN_TOWER) {
+            if (whichTown->HasBuilding(EXTRA_0_ID, 0))
+                gpGame->SetVisibility(whichTown->mapX, whichTown->mapY,
+                                      whichTown->mapZ, newPlayerOwner,
+                                      20, 0);
+            if (whichTown->HasBuilding(HOLY_GRAIL_ID, 0)) {
+                gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
+                                      newPlayerOwner, gMapWidth, 0);
+                if (gpGame->worldMap.HasTwoLevels + 1 > 1)
+                    gpGame->SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
+                                          newPlayerOwner, gMapWidth, 0);
+            }
+        }
+    }
+
+    for (unsigned i = 0; i < generators.size(); i++) {
+        if (generators[i].playerOwner == oldOwner
+            || generators[i].playerOwner == newPlayerOwner) {
+            generator* thisGenerator = &generators[i];
+            if (thisGenerator->playerOwner < 0)
+                continue;
+
+            playerData* player = &gpGame->players[thisGenerator->playerOwner];
+            int creature = thisGenerator->type[0];
+            if (!gpGame->f_1f698 &&
+                (creature == CREATURE_AIR_ELEMENTAL ||
+                 creature == CREATURE_EARTH_ELEMENTAL ||
+                 creature == CREATURE_FIRE_ELEMENTAL ||
+                 creature == CREATURE_WATER_ELEMENTAL))
+                continue;
+
+            int townType = akCreatureTypeTraits[creature].townType;
+            if (townType == -1)
+                continue;
+
+            for (int index = 0; index < player->numTowns; index++) {
+                town* currentTown = gpGame->GetTown(player->townIds[index]);
+                if (currentTown->type == townType)
+                    currentTown->change_generator_bonus(
+                        thisGenerator->type[0], 1);
+            }
+        }
+    }
 }
 
-#endif  // @carcass
+// The Dreamcast keeps this a header inline (game.h:1375); retail's
+// out-of-line copy therefore lands in game.obj, between ClaimTown and
+// ClaimMine. generator::remove_bonus is the only body in this TU that
+// calls it - update_bonus writes the same logic out longhand.
+VA(0x004c6690, 0x43)  // link-order (game span) + body identity, dc 0x2000c
+int game::get_alignment(int creature) const
+{
+    if (!f_1f698
+        && (creature == CREATURE_AIR_ELEMENTAL
+            || creature == CREATURE_EARTH_ELEMENTAL
+            || creature == CREATURE_FIRE_ELEMENTAL
+            || creature == CREATURE_WATER_ELEMENTAL))
+        return -1;
+    return akCreatureTypeTraits[creature].townType;
+}
 
 // E:\gamedcs\game.cpp:7379
 VA(0x004c66e0, 0xCB)  // anchor-global, dc 0xb1748
@@ -3377,6 +3628,28 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7461
+// Residual (77.4860%): TWO branches short, 13 against retail's 15, and
+// the missing pair is KNOWN - retail RE-EVALUATES shipyards.size()
+// before the erase and guards it (`_First == 0`, then `index >= size`),
+// i.e. `if (index < oldPlayer->shipyards.size()) erase(begin() + index)`.
+// Writing that guard makes the branch sequences agree 15/15 and drops
+// fuzzy to 72.0950 - so the guard is right and something around it is
+// still wrong. Banked here rather than kept, since MAX is the ledger.
+// Tried and rejected, each measured against 77.4860:
+//   * `gpGame->GetHero(cell->extraInfo)` instead of `GetHero(...)` -
+//     76.5363, even though retail DOES load gpGame for the heroes base
+//     (`mov eax,[gpGame] / lea ecx,[eax+2*edx+0x21620]` against our
+//     `lea ecx,[ebx+2*eax+0x21620]`). The base is right; the cost is
+//     elsewhere.
+//   * re-subscripting `players[oldPlayerOwner]` instead of the cached
+//     `oldPlayer` pointer - 77.2011. The do-not-cache lever does NOT pay
+//     here, unlike ClaimTown, where the same change was worth 6.4.
+//   * `shipyards[index] == &location` through type_point::operator==
+//     (with HOMM3_TYPE_POINT_EQUALITY defined for this TU) - 58.4525,
+//     and it cost the whole unit 0.3 points as well. Retail's
+//     XOR-and-mask chain (`xor bx,[eax] / and ebx,0x3ff`) is what VC6
+//     emits for the three short:10 / short:4 BITFIELD compares written
+//     out longhand, not for the operator.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
@@ -4131,18 +4404,50 @@ void game::ProcessRandomObjects()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:9455
+// The town-search loop is game::GetTownId (0x4bb870) inlined: on a hit it
+// falls into the caller's own `== -1` test with the index still live in
+// esi, and on loop exhaustion VC6 constant-folds that test against the
+// -1 return and jumps straight to the null pointer.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
-void game::CreateTownHeroes()
+void game::CreateTownHeroes(int* startingHeroIds)
 {
-    // @stub
+    for (int i = 0; i < 8; i++) {
+        if (!mapHeader.playerSlotAttributes[i].GenerateHero)
+            continue;
+
+        int townId =
+            GetTownId(mapHeader.playerSlotAttributes[i].CastleLoc.x,
+                      mapHeader.playerSlotAttributes[i].CastleLoc.y,
+                      mapHeader.playerSlotAttributes[i].CastleLoc.z);
+        town* whichTown = townId == -1 ? NULL : &towns[townId];
+
+        int heroId;
+        if (startingHeroIds != NULL && players[i].isHuman
+            && startingHeroIds[i] != -1)
+            heroId = startingHeroIds[i];
+        else if (gbUnk69774c)
+            heroId = GetStartingHeroId(setup.alignment[i], i, 0);
+        else
+            heroId = GetStartingHeroId(setup.alignment[i], i, 0);
+
+        if (setup.startingHero[i] == -1)
+            setup.startingHero[i] = heroId;
+        heroAvailability[heroId] = static_cast<char>(i);
+        whichTown->PlaceInMap(heroId, i, 1);
+        whichTown->GiveSpells(NULL);
+
+        if (gbUnk69774c
+            && gpGame->campaign.currentCampaign == START_LEVEL_CAMPAIGN
+            && gpGame->campaign.currentMap == START_LEVEL_SCENARIO)
+            heroes[heroId].GiveExperience(
+                hero::GetExperience(gpGame->heroes[START_LEVEL_HERO_ID].level
+                                    + START_LEVEL_BONUS),
+                1, 0);
+    }
 }
 
 // E:\gamedcs\game.cpp:9516
-#endif  // @carcass
-
 VA(0x004ca240, 0xF6)  // anchor-global, dc 0xb5f80
 void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 {

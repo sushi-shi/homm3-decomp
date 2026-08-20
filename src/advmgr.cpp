@@ -5221,7 +5221,7 @@ NewmapCell* advManager::GetCell(type_point point)
 // All three of the decode's blockers are now declared: gUnnamed6aac3c's
 // DATA claim is hoisted above this function, the view-world tile scale at
 // .data 0x68c6b8 is declared (no claim - viewwrld.obj owns it), and
-// game::GameFn_004CA780 takes GameFn_004CA410's ordinal-placeholder
+// game::GameFn_004CA780 takes the ordinal-placeholder
 // convention.
 //
 // The three switches the decode describes are all `switch (gMapHeight)`
