@@ -31,9 +31,38 @@ homm3 vc6 diagnose 'ai_combat:?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z
 ```
 
 `<unit:fn>` is `unit:mangled-name` (the mangled name from the objdiff report /
-`homm3 status`). For a whole-tree triage instead of one function:
-`homm3 vc6 report` → `evidence/vc6/plateau-diagnosis.md` (every plateau bucketed
-by wall class + the knob to try).
+`homm3 status`).
+
+For a whole-tree triage instead of one function, two sweeps, and they answer
+different questions:
+
+- **`homm3 vc6 queue`** → `evidence/wall-census.tsv`. Every unmatched function
+  in the tree, routed exactly as `diagnose` routes it, ranked by **recoverable
+  bytes** = `size * (1 - fuzzy/100)`. Use this to decide WHAT TO WORK ON.
+- **`homm3 vc6 report`** → `evidence/vc6/plateau-diagnosis.md`. A per-function
+  markdown table of plateaus at ≥ `--lo` (default 50%), with reg/flow distances
+  and the knob. Use this to READ a unit's plateaus in detail. It reports the
+  raw classifier, not the routed answer, and by default cannot see stubs or
+  anything under 50% at all.
+
+**RANK ON BYTES, NOT ON COUNTS OR PERCENTAGES.** Both other rankings mislead,
+in opposite directions, and the census measured by how much (2026-08-20, 300
+unmatched functions, 37.2 KB recoverable):
+
+```
+    25.4 KB    84 fn   inliner (predict-inline)
+     6.2 KB    58 fn   control-flow (why-branch)
+     5.3 KB   136 fn   register-homing (why-reg)
+```
+
+Counting functions says register-homing is the dominant wall — it is the most
+common and the least valuable, 136 functions holding 40 bytes each on average.
+The inliner is a third as many functions and five times the mass. Percentage
+misleads the same way per function: advmgr's `QuickInfo` sits at 90.20% and is
+the single largest prize in its unit at 944 recoverable bytes, while
+`SetEnvironmentOrigin` at 63.94% is worth 210. Work the low-percentage ones
+because one structural error is often behind them, not because the number
+looks worse.
 
 ## The wall taxonomy (what `diagnose` reports, and the lever for each)
 

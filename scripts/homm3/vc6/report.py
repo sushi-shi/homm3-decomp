@@ -200,5 +200,16 @@ def main(argv=None) -> int:
     return 0
 
 
+def run(args) -> int:
+    """`homm3 vc6 report` adapter - the skill has documented this command all
+    along, but it was reachable only as `python3 -m homm3.vc6.report`."""
+    argv = [f"--lo={args.lo}"]
+    if args.unit:
+        argv.append(f"--unit={args.unit}")
+    if args.limit:
+        argv.append(f"--limit={args.limit}")
+    return main(argv)
+
+
 if __name__ == "__main__":
     sys.exit(main())
