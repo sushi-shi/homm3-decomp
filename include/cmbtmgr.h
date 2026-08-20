@@ -1470,6 +1470,15 @@ public:
     army* find_resurrection_target(int armyGroup, int targetIndex,
                                    unsigned char creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
+    // 0x5a3950, the selector in front of the two rows above: it bounds the
+    // hex against the 187-cell grid, routes Resurrection and the gated
+    // Sacrifice arm to find_resurrection_target and Animate Dead to
+    // find_animate_dead_target, and otherwise answers cells[hex].get_army().
+    // Declared beside the leaves it calls rather than at the end of the
+    // class because this run of spells.obj leaves is already unconditional.
+    army* find_spell_target(SpellID spell, long side, long hex,
+                            unsigned char first_target,
+                            unsigned char creature_spell);   // 0x5a3950
     // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
     // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
     // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
