@@ -250,8 +250,13 @@ public:
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
     int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
     int readResourceData(TAbstractFile* infile, CObject* resourceObject);
-    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox);
-    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject);
+    // Three arguments, readGarrisonData's divergence again: retail's `ret 0xc`
+    // against the Dreamcast's two, and mapVersion again picks the creature
+    // field's width. readBlackBoxData carries it only to pass it through.
+    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                     int mapVersion);
+    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject,
+                         int mapVersion);
     int readEventData(TAbstractFile* infile, CObject* eventObject);
     int readScholarData(TAbstractFile* infile, CObject* scholarObject);
     int readMonsterData(TAbstractFile* infile, CObject* monsterObject);

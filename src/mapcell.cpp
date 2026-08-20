@@ -1343,18 +1343,183 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1524
+// The map-file twin of loadBlackBox (0x500430), field for field, and the
+// blocker recorded against it - "BlackBoxData is only forward-declared" - was
+// wrong: saveBlackBox and loadBlackBox have been dereferencing the modelled
+// type in game.h all along.
+//
+// Two things separate it from the save-file reader.  readTreasureData is
+// CALLED where loadBlackBox inlines its twin, and the two narrow/wide width
+// tests read from DIFFERENT sources: the artifact ids consult
+// gpGame->mapHeader.version while the creature ids consult the mapVersion
+// PARAMETER.  Both gates are retail's, and the asymmetry is the same one
+// readGarrisonData carries.
+//
+// The two width tests also do not spell their store the same way, and the
+// bytes are explicit about it: the artifact arms each write
+// `Artifacts[i]` themselves (`mov [edx+4*edi],ecx` in one arm,
+// `mov [eax+4*edi],edx` in the other), while the creature arms join first and
+// store once (`mov [ebx-0x1c],eax`) so the loop's induction pointer anchors on
+// numTroops rather than armies - the exact induction-base lesson that took
+// readGarrisonData from 97.53 to 99.96.  Both width tests read UNCHECKED; only
+// the troop count that follows is checked.
+//
+// The record ends with eight discarded bytes whose short count is folded into
+// the return by `cmp eax,8 / sbb eax,eax`.
+//
+// EACH OF THE THREE LISTS CARRIES AN EXPLICIT ZERO TEST that loadBlackBox does
+// NOT, and it is worth 38 points.  A plain `resize(count)` scores 54.6528 and
+// leaves the CFG one branch short; retail spells the empty case separately -
+// `if (count == 0) list.clear(); else { list.resize(count); <read loop> }` -
+// which is 93.0057.  This is a real source difference, not a codegen artifact:
+// retail's own loadBlackBox (0x500430) reaches the same resize with NO zero
+// test, and our plain `resize(count)` reproduces THAT shape exactly, so the
+// two readers genuinely disagree.  The restructuring also repaired the
+// prologue's esi/edi binding for free - with the extra statements in place
+// `infile` is again the first-created call-crossing pseudo and lands in ESI,
+// and the frame is retail's `sub esp,0x1c` with the dead parameter slot
+// reclaimed as the byte read buffer.
+//
+// Residual (93.0057%): TWO STL inline decisions, mirrored, and nothing else -
+// branch counts agree 55/55 and every read, every field and every list is
+// retail's.  Retail CALLS vector<SecondarySkillData>::_Destroy out of the
+// first clear() and CALLS vector<int>::erase out of the artifact resize, then
+// INLINES erase in the spell resize; this compile does the exact opposite at
+// all three sites.  That is the /Ob2 budget spent sequentially - ours has more
+// left late, retail more early - and the artifact list's `count` losing EDI to
+// the inlined erase is a consequence of it, not a separate wall.  Tried and
+// rejected: spelling the empty case `erase(begin(), end())` rather than
+// `clear()`, which removes one nesting level from the budget division and
+// costs 27 points (93.0057 -> 66.1138) - the gradient wants DEEPER nesting,
+// and `clear()` is already the deepest spelling available.
 VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
-int NewfullMap::readBlackBox(void* infile, BlackBoxData* thisBox)
+int NewfullMap::readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                             int mapVersion)
 {
-    // @stub
+    signed char value;
+    int dwordValue;
+    int count;
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->HasCustomTreasure = value != 0;
+    if (thisBox->HasCustomTreasure) {
+        if (readTreasureData(infile, thisBox) != 0)
+            return -1;
+    }
+
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ExperienceBonus = dwordValue;
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ManaBonus = dwordValue;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->MoraleBonus = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->LuckBonus = value;
+
+    for (i = 0; i < 7; ++i) {
+        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+            return -1;
+        thisBox->ResQty[i] = dwordValue;
+    }
+    for (i = 0; i < 4; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->PrimarySkillBonus[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->SecondarySkills.clear();
+    } else {
+        thisBox->SecondarySkills.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->SecondarySkills[i].type = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->SecondarySkills[i].level = value;
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->Artifacts.clear();
+    } else {
+        thisBox->Artifacts.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (gpGame->mapHeader.version
+                == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                signed char narrow;
+                infile->Read(&narrow, sizeof(narrow));
+                thisBox->Artifacts[i] = narrow;
+            } else {
+                short wide;
+                infile->Read(&wide, sizeof(wide));
+                thisBox->Artifacts[i] = wide;
+            }
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    if (count == 0) {
+        thisBox->Spells.clear();
+    } else {
+        thisBox->Spells.resize(count);
+        for (i = 0; i < count; ++i) {
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisBox->Spells[i] = value;
+        }
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Creatures.Initialize();
+    for (i = 0; i < count; ++i) {
+        int creature;
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            creature = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            creature = wide;
+        }
+        thisBox->Creatures.armies[i] = creature;
+
+        short troops;
+        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+            return -1;
+        thisBox->Creatures.numTroops[i] = troops;
+    }
+
+    unsigned char padding[8];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1708
 VA(0x004ffbf0, 0x1F5)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor (BlackBoxData ctor inlined); called by readObject; EH-bearing, dc 0xeea60
-int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject)
+int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject,
+                                 int mapVersion)
 {
     // @stub
 }
