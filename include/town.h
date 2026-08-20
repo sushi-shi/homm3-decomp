@@ -151,7 +151,26 @@ SIZE(type_horde_effect, 8);
 // first 70-bit set into the town and uses the second as forced guild picks.
 class TownExtra {
 public:
-    char pad_000[0x70];
+    char pad_000[4];
+    // +0x04, the ClaimTown player argument town::initialize widens
+    // with movsx.
+    signed char owner;
+    // +0x05, the has-custom-buildings byte; +0x08/+0x10 the two h3m
+    // building qwords (built, then disabled - initialize_buildings
+    // proves the order: the +0x10 mask feeds the availability NOT, the
+    // +0x08 mask drives the create_building walk).
+    unsigned char hasCustomBuildings;
+    char pad_006[2];
+    __int64 builtMask;
+    __int64 disabledMask;
+    unsigned char hasFort;             // +0x18
+    unsigned char hasCustomGarrison;   // +0x19
+    char pad_01a[2];
+    int garrisonTypes[7];              // +0x1c
+    int garrisonCounts[7];             // +0x38
+    char pad_054[0x14];
+    signed char type;                  // +0x68
+    char pad_069[7];
     std::bitset<70> spells;
     std::bitset<70> fixedSpells;
 };
@@ -469,9 +488,11 @@ public:
     // for the inlined get_build_cost_array row arithmetic.
     unsigned char buy_building(type_building_id building);
 #ifdef HOMM3_TOWN_OBJ_DECLS
-    // 0x5bfeb0 (dc 0x167c3c), reconstructed in the owning TU; gated so
-    // no other view of this class gains the declarator.
+    // 0x5bfeb0 (dc 0x167c3c) and 0x5c0670 (dc 0x16842c), reconstructed
+    // in the owning TU; gated so no other view of this class gains the
+    // declarators.
     void give_event_reward(const TTownEvent* thisEvent);
+    void initialize(const TownExtra* town_setup);
 #endif
     unsigned char can_ever_build(int building_id) const;
     __int64 get_buildable_mask() const;
@@ -551,7 +572,7 @@ public:
     // and only ONE retail row exists for the two - /OPT:ICF folded the
     // identical bodies.
     const class armyGroup& get_army() const;
-#if defined(HOMM3_TOWN_SUMMONING_DECLS)
+#if defined(HOMM3_TOWN_SUMMONING_DECLS) || defined(HOMM3_TOWN_OBJ_DECLS)
     // The NON-const half of that DC pair, declared 2026-08-14 for
     // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
     // hands the town's garrison straight to a `recruitUnit`, whose first
@@ -650,6 +671,15 @@ inline unsigned char town::HasBuilding(int buildingId,
 extern const char* gTownSizeNames[4];
 
 #ifdef HOMM3_TOWN_OBJ_DECLS
+// The three int[4] columns behind town::initialize's random starting
+// garrison (retail .data 0x688e84/0x688e94/0x688ea4): per dwelling
+// tier 0..3, a percent chance and the low/high Random bounds. Names
+// INVENTED (no DC symbols); owner TU unlocated - extern only, gated:
+// town.obj is the only consumer.
+extern const int gTownInitArmyChance[4];
+extern const int gTownInitArmyLow[4];
+extern const int gTownInitArmyHigh[4];
+
 // The h3m editor's 41-slot building column order, one row per town
 // type (retail .data 0x6888c0, nine 41-int rows): row content maps the
 // map-format event building index to this faction's engine
