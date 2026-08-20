@@ -503,6 +503,11 @@ void town::set_spells_available()
 // choice rippling. why-reg v2 classifies the pair as front-end handle
 // state (C1); an int-for-enum signature A/B measured byte-identical,
 // and direct subscripts beat an effect-cursor local 85.98 vs 81.55.
+// A tail-local live-range split (`type_building_id result = building;`
+// after the horde loop, tail reads result) measured byte-flat to the
+// digit 2026-08-20 - VC6 copy-propagates the plain copy, so the
+// two-pseudo shape behind retail's EDX-then-EDI homing has no plain-
+// assignment spelling either. The C1 verdict stands.
 VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::create_building(type_building_id building)
 {
