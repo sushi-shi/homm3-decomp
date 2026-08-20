@@ -1910,7 +1910,7 @@ viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	90.8074	90.8074	90.8074	0x
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
-viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	73.6288	73.6288	73.6288	0x1f4850
+viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	74.4096	74.4096	74.4096	0x1f4850
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	96.4286	96.4286	96.4286	0x1f5860
