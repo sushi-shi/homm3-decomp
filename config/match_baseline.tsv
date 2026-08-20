@@ -329,7 +329,7 @@ army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194
 army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	94.6999	94.6999	94.6999	0x448f0
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
-army	?Unnamed447fe0@army@@QAEEXZ	66.9952	66.9952	66.9952	0x47fe0
+army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0
 army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0
 army	?WalkTo@army@@QAEEHE@Z	89.7721	89.7721	89.7721	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
@@ -805,14 +805,14 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
-findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	47.8289	47.8289	47.8289	0xb3400
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	78.9419	78.9419	78.9419	0xb3400
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
-findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	75.7383	75.7383	75.7383	0xb3bb0
-findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	74.3805	74.3805	74.3805	0xb1a70
+findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
+findpath	?PushPoint@searchArray@@QAEXPBUpathCell@@PAU2@HHHJUtype_point@@H@Z	83.7018	83.7018	83.7018	0xb1a70
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0
-findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	89.0387	89.0387	89.0387	0xb2300
+findpath	?TestPossibleDirections@searchArray@@QAEXPAVhero@@PAUpathCell@@JJEUtype_point@@JW4type_search_type@@J@Z	90.1238	90.1238	90.1238	0xb2300
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20
 findpath	?is_valid@type_point@@QAEEXZ	100.0000	100.0000	100.0000	0xb1330
@@ -1283,7 +1283,7 @@ mapcell	?readBlackBoxData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.
 mapcell	?readEventData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x1008b0
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
-mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	83.7667	83.7667	83.7667	0x1021c0
+mapcell	?readHeroData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	86.7264	86.7264	86.7264	0x1021c0
 mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220
 mapcell	?readMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	78.4070	78.4070	78.4070	0x104470
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
@@ -1295,7 +1295,7 @@ mapcell	?readScholarData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	95.695
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270
 mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	93.3240	93.3240	93.3240	0xff2f0
 mapcell	?readTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc000
-mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	82.0785	82.0785	82.0785	0x1019f0
+mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	94.3896	94.3896	94.3896	0x1019f0
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50
 mapcell	?saveBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@@Z	100.0000	100.0000	100.0000	0xffea0
 mapcell	?saveMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	100.0000	100.0000	100.0000	0xfe490
