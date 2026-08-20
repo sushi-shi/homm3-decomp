@@ -843,6 +843,7 @@ game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
 game	??0SavedGameHeader@@QAE@XZ	96.4326	96.4326	96.4326	0xbc0e0
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
@@ -951,7 +952,6 @@ game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	97.8099	97.8099	97.8099	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
-game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860
