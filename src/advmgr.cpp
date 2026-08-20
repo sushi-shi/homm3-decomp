@@ -751,8 +751,14 @@ NewmapCell* NewfullMap::cell(int x, int y, int z)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
+// SIGNATURE CORRECTED: this OVERRIDES baseManager::Main, which is
+// `virtual int Main(message& msg) = 0` - and the DC mangling
+// (?Main@...@@UAAHAAUmessage@@@Z, AAUmessage = reference) agrees. The
+// `message*` spelling this stub used to carry would not have overridden
+// anything, and would have tripped the declaration trap the moment a body
+// was written against it.
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
-int advManager::Main(message* msg)
+int advManager::Main(message& msg)
 {
     // @stub
 }
@@ -3789,6 +3795,20 @@ NewmapCell* advManager::GetCell(type_point point)
 // Retail's own inconsistency, transcribed rather than tidied: the row
 // advance uses the LIVE screenBitmap->Pitch while the writes inside a
 // pixel block use a hardcoded 0x640-byte stride.
+//
+// Residual (90.18%): why-branch reports 164 vs 167 blocks and 94 vs 95
+// conditional branches - one compare site and three blocks short on a
+// 2881-byte body, i.e. structurally converged. Its D6 "reference has MORE
+// exits (2 rets vs 1)" line is an ARTIFACT, not a lever: both sides have
+// exactly one `ret 0x18`, and the second one the tool counts is the
+// trailing jump-table data being decoded as instructions. The guided
+// search moved fifteen catalogued D9/D10/D13 mutations (case-block order,
+// induction-variable width, rect-local width) and NONE changed the
+// distance; five made it worse. The most likely remaining element is the
+// destRow preamble: retail reaches it as an if/else chain whose 36/72 arm
+// FALLS THROUGH into the shared tail while the 108 arm duplicates that
+// tail to zero the two phase counters, where this body spells one switch
+// with three arms. Not yet tried.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
