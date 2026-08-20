@@ -73,6 +73,20 @@ enum TCreatureType {
     // group subtract 1 (0x44afd1) - exactly the Angel/Archangel and
     // Bone/Ghost Dragon morale rules, at the Complete ids those rules
     // belong to (NH3API spellings).
+    // The two JOUSTERS, byte-proven by ai_tactical's
+    // check_adjacent_hexes (0x436300): when the attacker's creatureType
+    // is 10 or 11 AND the side is being played by the AI, a tie between
+    // two candidate hexes is broken toward the one that costs MORE to
+    // reach, and toward the cheaper one for every other creature. That
+    // is the Champion's per-hex charge bonus and nothing else's - the
+    // same joustBonus army.h already carries at +0x490 - and 10/11 is
+    // where the Castle dwelling order puts the pair, immediately below
+    // the Angel/Archangel 0xc/0xd this enum already proves.
+    // Behind a view for this header's usual measured reason.
+#ifdef HOMM3_CREATURE_JOUST_DECL
+    CREATURE_CAVALIER = 0xa,
+    CREATURE_CHAMPION = 0xb,
+#endif
     CREATURE_ANGEL = 0xc,
     CREATURE_ARCHANGEL = 0xd,
     CREATURE_BONE_DRAGON = 0x44,
@@ -382,6 +396,42 @@ enum ESpellId {
     SPELL_SUMMON_AIR_ELEMENTAL = 0x45,
     SPELL_STONE = 0x46,
     SPELL_POISON = 0x47
+    // The nine rows ai_tactical's enchantment dispatch
+    // get_enchantment_function (0x43b690) needs and this roster did
+    // not carry. Each is byte-proven by that function's own two
+    // tables: the 61-entry BYTE index table at +0x214 maps
+    // `spell - 15` onto a slot of the 39-entry dword table at +0x178,
+    // and every slot's target is a `mov eax, offset get_<x>_value`
+    // whose relocation names the handler outright. So the value ->
+    // handler pairing is READ, not inferred, and the enumerator takes
+    // the handler's spell:
+    //   15, 18 -> get_damage_spell_value, the two flanks of the
+    //             already-proven ICE_BOLT 16 / LIGHTNING_BOLT 17
+    //   53 -> get_haste_value      56 -> get_frenzy_value
+    //   65 -> get_clone_value      73 -> get_disease_value
+    //   74 -> get_blind_value      75 -> get_age_value
+    //   72 -> the table's second default slot (no pricer of its own)
+    // Four of the nine are independently corroborated by army.h's
+    // +0x198 spell-influence row, which already fixes FRENZY 0x38,
+    // BIND 0x48 and AGE 0x4b from the round-counter side and puts
+    // PARALYZE on 74. Behind a view for this header's usual measured
+    // reason.
+#ifdef HOMM3_SPELL_ENCHANTMENT_TABLE_DECL
+    ,
+    SPELL_MAGIC_ARROW = 0xf,
+    // 40, byte-proven by consider_spell's own dispatch: its 56-entry
+    // byte table sends `spell - 14 == 26` to the arm that calls
+    // type_AI_spellcaster::consider_sacrifice and nothing else.
+    SPELL_SACRIFICE = 0x28,
+    SPELL_IMPLOSION = 0x12,
+    SPELL_HASTE = 0x35,
+    SPELL_FRENZY = 0x38,
+    SPELL_CLONE = 0x41,
+    SPELL_BIND = 0x48,
+    SPELL_DISEASE = 0x49,
+    SPELL_PARALYZE = 0x4a,
+    SPELL_AGE = 0x4b
+#endif
 };
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
