@@ -1681,7 +1681,19 @@ static void WaitSample_(army* that, army::TSampleID which)
 // The three creature-name selections are GetName's body inlined where
 // the luck message got a call - the same budget drain LoadResources'
 // note records; spelled as calls at all four sites.
-// Residual (88.9058%): the register-homing family, three shapes deep.
+// Residual (95.7033%): 88.9058 -> 90.9874 -> 93.3846 -> 95.7033, and TWO of
+// the three shapes the old note filed as register-homing were source facts
+// (2026-08-20).  Declaration order: `slot` is read BEFORE `side` in BOTH scan
+// loops - retail's `movsx edx,byte [ecx+0x1b]` lands ahead of the `movsx
+// ebx,al` that reuses the already-tested armySide byte - worth +2.08 in the
+// Magog loop and +2.32 in the Lich loop.  And the damage_message target is an
+// IF, not a ternary: retail branches over the argument where
+// `multiple != 0 ? 0 : first` makes VC6 if-convert to neg/sbb/not/and, +2.40.
+//
+// What is genuinely left is the first shape, and the frame still says so
+// (0x24 against retail's 0x20).
+//
+// Old text, still true of what remains:
 // (1) In both effect blocks retail spills the CELL BASE to the dead
 // [ebp+8] arg slot and keeps x in ECX where ours homes x immediately
 // and keeps the base registered - downstream, our x -= Width/2 becomes
@@ -1690,7 +1702,11 @@ static void WaitSample_(army* that, army::TSampleID which)
 // byte-inert, measured). (3) Retail reuses the armySlot temp's slot
 // for fire_damage (sub esp 0x20 vs our 0x24); neither dropping the
 // side/slot locals for longhand re-reads (88.63) nor closing them in a
-// nested block (88.89) reaches it. Branch structure and the call
+// nested block (88.89) reaches it.  Naming the target cell is measured
+// NEGATIVE in the new structure too, both spellings: `const hexcell&`
+// 88.9058 -> 86.9294 before the declaration-order fix, `hexcell*`
+// 95.7033 -> 93.2700 after it.  Splitting `y` into three statements is
+// byte-flat. Branch structure and the call
 // multiset agree in full.
 VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::range_attack(army* armyToAttack)
@@ -1766,8 +1782,13 @@ void army::range_attack(army* armyToAttack)
                 continue;
             if (cell->armySide < 0)
                 continue;
-            long side = cell->armySide;
+            // SLOT IS DECLARED FIRST, in both of this body's two scan
+            // loops: retail's `movsx edx,byte [ecx+0x1b]` for the slot lands
+            // AHEAD of the `movsx ebx,al` that reuses the already-tested
+            // armySide byte.  Worth +2.08 here and +2.32 in the Lich loop
+            // below.
             long slot = cell->armySlot;
+            long side = cell->armySide;
             army* a = cell->get_army();
             if (gpCombatManager->effected[side][slot] != 0)
                 continue;
@@ -1788,10 +1809,19 @@ void army::range_attack(army* armyToAttack)
             killed += killedNow;
         }
         if (damage > 0) {
+            // NOT the ternary `multiple != 0 ? 0 : first` this used to be:
+            // retail branches over the argument (`test al,al / je / xor
+            // ecx,ecx / jmp`) where a ternary makes VC6 if-convert it to
+            // `neg/sbb/not/and`.  Worth +2.40.  The fuller `army* reported;
+            // if (multiple) reported = 0; else reported = first;` is NOT
+            // better - it measures 95.7033 -> 93.3328, because retail loads
+            // `first` unconditionally and only the zero arm is branched.
+            army* reported = first;
+            if (multiple)
+                reported = 0;
             gpCombatManager->damage_message(GetName(creatureType,
                                                     numTroops),
-                                            numTroops, damage,
-                                            multiple != 0 ? 0 : first,
+                                            numTroops, damage, reported,
                                             killed);
             gpCombatManager->PowEffect(effect, 1);
         }
@@ -1840,8 +1870,8 @@ void army::range_attack(army* armyToAttack)
                 continue;
             if (cell->armySide < 0)
                 continue;
-            long side = cell->armySide;
             long slot = cell->armySlot;
+            long side = cell->armySide;
             army* a = cell->get_army();
             if (i != COMBAT_DIRECTION_COUNT && !(a->Is(4) & 1))
                 continue;
