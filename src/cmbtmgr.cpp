@@ -69,6 +69,7 @@
 #define HOMM3_CMBTMGR_ICONS_VIEW
 #define HOMM3_CMBTMGR_MESSAGE_VIEW   // damage_message, defined here
 #define HOMM3_CMBTMGR_TOWER_VIEW     // KeepAttack, defined here
+#define HOMM3_CMBTMGR_OPEN_VIEW      // the two GameTime stamps Open takes
 #define HOMM3_TOWN_HASBUILDING_API   // the INLINE body - retail expands
                                      // it in InitNonVisualVars' siege arms
 #define HOMM3_CMBTMGR_MORALE_VIEW
@@ -89,13 +90,16 @@
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
 #include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
+#include "inputmgr.h" // gpInputManager, for Open
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "monframeinfo.h" // gMonFrameInfo, the shot table KeepAttack times from
 #include "prefs.h"  // the local quick-combat preference
 #include "mapcell.h"
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "mousemgr.h" // gpMouseManager / SetPointer / ShowPointer, for Open
 #include "remote.h"
+#include "remotedlg.h" // CNetMsgHandlerPause, the pause handler Open installs
 #define HOMM3_TEXT_COMBAT_MORALE_VIEW
 #define HOMM3_TEXT_COMBAT_DAMAGE_VIEW
 #include "textresource.h"
@@ -103,6 +107,7 @@
 #undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
+#include "widget.h"  // WIDGET_DIMMED / WIDGET_UPDATE, for Open
 #include "winmgr.h"
 
 // E:\gamedcs\cmbtmgr.cpp:510
@@ -174,14 +179,166 @@ unsigned char combatManager::LoadWallTraitsTable()
     }
     return 1;
 }
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:594
+// baseManager's virtual Open: bring the whole combat up. Five separate
+// inline expansions of IsQuickCombat structure it, and the quick path
+// skips the window, the music, the fades and the menu entirely.
+//
+// Two asymmetries in the bytes that are real and not transcription
+// slips: showCombatMouseHex is saved and cleared UNCONDITIONALLY at the
+// top but restored only inside the last !IsQuickCombat() block, and
+// gpMouseManager->field_38 is raised unconditionally and lowered only
+// there too. A quick combat therefore leaves both changed.
+//
+// EH states run 0..4, one per `new`, with -1 between them - the frame
+// exists only to run operator delete if a constructor throws, since
+// there is no STL and no string anywhere in the body.
+//
+// Residual (82.9093%): predict-inline reports the call multisets EQUAL,
+// 45 against 45, and the branch COUNTS equal at 60 - so nothing is
+// missing and nothing extra is expanded. The 18 branch-shape
+// disagreements are dominated by ONE divergence repeated across all six
+// inlined IsQuickCombat expansions: retail forms both player-record
+// addresses with `lea` and holds zero in EDI to compare memory against,
+// where our CL folds +0xe4 into the load and picks a different zero
+// register. That is the same shape damage_message's note argues is
+// context rather than spelling - retail's own LowerDoor expands the
+// identical source into the FOLDED form - so the shared inline must not
+// be retuned for it here either. why-branch's three guided candidates
+// (D13 on the two tactics locals and the side flag) all measure +0.
+//
+// TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
+// of the flat `&&`, which is how the branch graph first reads. Measured
+// byte-flat (82.9093 either way) - VC6 folds the two forms together -
+// so the flatter source is kept.
 VA(0x00462a20, 0x83F)  // anchor-vtable, dc 0x5d60c
 int combatManager::Open(int newPriority)
 {
-    // @stub
+    SAMPLE2 sample;
+
+    gpMouseManager->field_38 = 1;
+    int savedShowMouseHex = gUnnamed698758.showCombatMouseHex;
+    gUnnamed698758.showCombatMouseHex = 0;
+    field_13300 = 0;
+    gpSoundManager->StopAllSamples(1);
+
+    if (!IsQuickCombat()) {
+        char cName[20];
+        sprintf(cName,
+                DATA_COMPGEN(0x0066fee8, battleSampleFormat,
+                             "battle%02d.wav"),
+                Random(1, 8) - 1);
+        sample = LoadPlaySample(cName);
+        gpWindowManager->FadeScreen(1, 4, 1);
+    }
+
+    field_53ac = new Bitmap16Bit(683, 472);
+    field_53b0 = new Bitmap16Bit(800, 600);
+    field_53b4 = new Bitmap16Bit(855, 52);
+
+    LoadIcons();
+    InitializeArchers();
+    InitNonVisualVars();
+    SetupAndLoadObstacles();
+
+    memset(field_004c, 0, COMBAT_GRID_CELLS);
+    memset(field_0107, 0, COMBAT_GRID_CELLS);
+
+    field_53b8 = 0;
+    gCombatActive698a18 = field_539c;
+    powSprite = 0;
+    powSpellEffect = -1;
+
+    int leftTactics = heroes[0] ? heroes[0]->skillLevel[19] : 0;
+    int rightTactics = heroes[1] ? heroes[1]->skillLevel[19] : 0;
+    int tacticsSide = rightTactics > leftTactics;
+    placementBoundaryDepth = leftTactics - rightTactics;
+    bCreaturePlacement = placementBoundaryDepth != 0 && !isSurrounded;
+    if (bCreaturePlacement && !IsQuickCombat() && sideIsAI[tacticsSide]
+            && !(heroes[tacticsSide]->formation & 2))
+        bCreaturePlacement = 0;
+
+    field_13d6c = 0;
+    currentSide = 1;
+    actingSide = 1;
+    actingSlot = 0;
+    chatMan.PauseTimeOuts();
+    field_13300 = 1;
+
+    if (!IsQuickCombat()) {
+        combatWindow = new TCombatWindow(bCreaturePlacement);
+        if (!combatWindow)
+            MemError();
+        gpWindowManager->AddWindow(combatWindow, -1, 1);
+    } else {
+        combatWindow = 0;
+    }
+
+    UpdateArmyLuckAndMorale();
+    field_13de4 = 0;
+    if (bCreaturePlacement && !IsQuickCombat()) {
+        currentSide = placementBoundaryDepth <= 0;
+        if (!gpGame->IsLocalHuman(playerIds[currentSide])) {
+            combatWindow->WidgetSetStatus(
+                0x7d9, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+            combatWindow->WidgetSetStatus(
+                0x7802, widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+        }
+    }
+
+    if (!IsQuickCombat()) {
+        DrawFrame(1, 0, 0, 0, 1, 0);
+        combatWindow->DrawWindow(1, -65535, 65535);
+        gCombatStamp698998 = GameTime::Get();
+        KBChangeMenu(gameMenu);
+        CheckMenuItem(activeMenu, 0xb798, 0);
+        CheckMenuItem(activeMenu, 0xb79c, 0);
+        CheckMenuItem(activeMenu, 0xb79b, 0);
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+        gUnnamed698758.showCombatMouseHex = savedShowMouseHex;
+        gpMouseManager->field_38 = 0;
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        gpMouseManager->ShowPointer(0);
+        gpWindowManager->FadeScreen(0, 4, 0);
+        WaitEndSample(sample, 10000);
+
+        char cMusic[100];
+        sprintf(cMusic,
+                DATA_COMPGEN(0x0066fedc, combatMusicFormat, "combat%02d"),
+                Random(1, 4));
+        gpSoundManager->StartMP3(cMusic, 0, 1);
+    }
+
+    gCombatStamp6989b8 = GameTime::Get();
+    Unnamed479f30();
+    gpInputManager->Flush();
+    Unnamed478890();
+
+    field_132e0 = 0;
+    priority = newPriority;
+    id = 0x200;
+    strcpy(cMgrName,
+           DATA_COMPGEN(0x0066fecc, combatManagerName, "combatManager"));
+    status = 1;
+
+    if (bCreaturePlacement
+            && gpGame->IsLocalHuman(playerIds[currentSide])
+            && gpGame->players[playerIds[currentSide]]
+                   .placement_help_enabled
+            && !IsQuickCombat()) {
+        NormalDialogTimeOut(
+            gpGeneralText->GetText(GENERAL_TEXT_COMBAT_PLACEMENT_HELP),
+            1, 10000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
+        gpGame->players[playerIds[currentSide]].placement_help_enabled = 0;
+    }
+
+    chatMan.ResumeTimeOuts();
+    field_38 = new CNetMsgHandlerPause();
+    NextArmy(0);
+    return 0;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
