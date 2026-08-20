@@ -3376,16 +3376,29 @@ void hero::HeroFn_004DC100(long slot)
 // The opening flag arm ASSIGNS (Dinkumware `assign(const char*,
 // size_type)`), it does not append.
 //
-// Residual (85.7%, and 85.7% on the luck twin): /Ob2 budget inside the
-// Dinkumware string calls, nothing source-local. `predict-inline` pairs
-// 31 of the 49 out-of-line calls off by COUNT - retail names its
-// unclaimed basic_string callees with synth labels our side can never
-// emit, so those rows are naming and not divergence - and reports
-// exactly ONE real item: `_Xlen` out of line 5 times here against
-// retail's 3, i.e. retail expands two more of the `append` grow paths.
-// That is the A8/A9 budget class the doctrine says not to chase with
-// `_Grow`/`_Tidy` spellings. Tried and rejected: `morale += 500` /
-// `luck += 500` for the constant store (byte-flat on both twins).
+// 85.71 -> 91.65 (2026-08-20): the old note's "_Xlen x5 vs x3 = retail
+// expands two more grow paths" read the census BACKWARDS - a fn-level
+// `call _Xlen` reloc marks a site where the APPEND ITSELF was expanded
+// (its throw left as the call), so five _Xlen on our side against three
+// meant WE expand two appends retail keeps out of line. Walking the
+// sites by their gMoraleTexts addends: retail CALLS append(const char*,
+// size_type) at the Basic-leadership rung [20] (fn+0x454, repne scasb +
+// call) and expands [21],[22] as we do; the TownQuickView lever (spell
+// append(p, strlen-local), then the statement pin) imposed exactly that
+// call. The luck twin's [14] rung was the same shape: +7.97 there.
+//
+// Residual (91.65%): ONE ledger row left - the tail. Retail CALLS
+// append(const basic_string&, 0, npos) in the NEGATIVE otherModifier arm
+// (fn+0x651: push npos-global/0/temp) and EXPANDS the identical append
+// in the positive arm (_Xlen fn+0x6c1); we expand both. MEASURED
+// NEGATIVE, do not retry as spelled: the named-temp + 3-arg append + pin
+// form in that arm costs 91.65 -> 81.81 - the pin's A9 cascade flips the
+// downstream dtor/_Tidy ledger, the same failure the luck twin's [15]
+// probe showed. The residual class is "imposition reachable, imposition
+// net-negative": each remaining site needs its call WITHOUT the pin's
+// side effects, which no measured spelling provides.
+// Also tried and rejected earlier: `morale += 500` / `luck += 500` for
+// the constant store (byte-flat on both twins).
 VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::string hero::get_morale_description() const
 {
@@ -3468,7 +3481,17 @@ std::string hero::get_morale_description() const
     }
 
     if (skillLevel[eSecSkillLeadership] == eMasteryBasic) {
-        result += gMoraleTexts[20];
+        // Retail CALLS append(const char*, size_type) at THIS rung only -
+        // its `repne scasb` strlen + `call` sit at fn+0x454 where our CL
+        // expanded the append (the extra _Xlen/_Grow/_Eos exposure) - and
+        // expands the Advanced and Expert rungs exactly as we do. The
+        // TownQuickView lever: spell the site at the depth retail stops
+        // at, then the statement pin imposes exactly retail's call.
+        const char* basicText = gMoraleTexts[20];
+        size_t basicTextLen = strlen(basicText);
+#pragma inline_depth(0)
+        result.append(basicText, basicTextLen);
+#pragma inline_depth()
         morale++;
     }
     if (skillLevel[eSecSkillLeadership] == eMasteryAdvanced) {
@@ -3516,6 +3539,20 @@ std::string hero::get_morale_description() const
 // literals "-1"/"+1"/"+2"/"+3" out of hero.obj's own pool. The Grail arm
 // expands town::HasBuilding INLINE against TOWN_RAMPART, unlike
 // hero::GetLuck's own arm, which calls it.
+//
+// 85.74 -> 93.71 (2026-08-20): retail CALLS append(const char*,
+// size_type) at the [14] mist rung (fn+0x485's run of four scasb+call
+// rungs ends there) and expands [15],[16],[17]; the imposed-call lever
+// on [14] alone is the whole gain.
+//
+// Residual (93.71%): retail ALSO calls append at the Basic-luck rung
+// [15] (guarded by the eMasteryBasic cmp at fn+0x465) - the census is
+// _Xlen x4 ours vs x3 retail's. MEASURED NEGATIVE both ways, do not
+// retry as spelled: pinning [15] flips the four gLuckTexts[10] carrier
+// rungs' format_string-temp dtors from inline to `call _Tidy` (x5) and
+// costs 93.71 -> 85.95; the unpinned append(p,len) spelling costs
+// 93.71 -> 78.66. Imposition reachable, imposition net-negative - the
+// same coupling the morale twin's tail shows.
 VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::string hero::get_luck_description() const
 {
@@ -3585,7 +3622,15 @@ std::string hero::get_luck_description() const
         luck++;
     }
     if (flags & 0x10000) {
-        result += gLuckTexts[14];
+        // Retail CALLS append(const char*, size_type) at THIS rung -
+        // four `repne scasb`+call rungs end at fn+0x486 and [14] is the
+        // last of them - then expands [15],[16],[17] as we do. Same
+        // TownQuickView lever as the morale twin's [20] rung.
+        const char* mistText = gLuckTexts[14];
+        size_t mistTextLen = strlen(mistText);
+#pragma inline_depth(0)
+        result.append(mistText, mistTextLen);
+#pragma inline_depth()
         luck++;
     }
 
