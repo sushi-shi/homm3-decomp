@@ -3481,14 +3481,77 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:5044
+// Equips the artifact if a slot takes it, otherwise backpacks it, then
+// runs the combination-assembly offer and the optional end-condition
+// check. See the header for the retail-corrected signature: both flags
+// are BYTES and the function RETURNS one.
+//
+// The `else if` shape is exact - the owner-is-not-the-local-player
+// branch and the still-holding-the-combination branch BOTH fall into the
+// `!player.isHuman` arm, and a zero `bAnnounce` skips both arms while
+// still reaching the assembledCombinations store. `player` is
+// materialised BEFORE the `bAnnounce` test (retail leas it first); the
+// second half re-derives the same address inline, so it is spelled out
+// rather than reusing the reference. `owner >= 0 && owner < 8` is
+// written twice because retail tests it twice, 8-bit both times.
+// `prompt` must be a NAMED local: its _Tidy runs AFTER the dialogReturn
+// block, not at the end of the NormalDialog full-expression.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
-void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it)
+unsigned char hero::GiveArtifact(const type_artifact* artifact,
+                                 unsigned char bAnnounce,
+                                 unsigned char bCheckEnd)
 {
-    // @stub
+    if (equip_artifact(artifact, -1)) {
+        if (gpGame->f_1f698 >= 2) {
+            int targetCombo =
+                akArtifactTraits[artifact->artifactId].targetCombo;
+            if (targetCombo != -1 && owner >= 0 && owner < 8) {
+                std::bitset<144> missing =
+                    gCombinationArtifacts[targetCombo].components;
+                for (int i = 0; i < 19; i++) {
+                    int artifactId = equipped[i].artifactId;
+                    if (artifactId != ARTIFACT_NONE)
+                        missing.set(artifactId, false);
+                }
+                if (!missing.any()) {
+                    playerData& player = gpGame->players[owner];
+                    if (bAnnounce) {
+                        if (owner == gpGame->GetLocalPlayerGamePos() &&
+                            !player.assembledCombinations.test(targetCombo)) {
+                            int assembled =
+                                gCombinationArtifacts[targetCombo].artifactId;
+                            std::string prompt = format_string(
+                                gpGeneralText->GetText(733),
+                                akArtifactTraits[assembled].name);
+                            NormalDialog(prompt.c_str(), 2, -1, -1, 8,
+                                         assembled, -1, 0, -1, 0, -1, 0);
+                            if (gpWindowManager->dialogReturn ==
+                                DIALOG_RETURN_ACCEPT)
+                                HeroFn_004DBF30(targetCombo, -1);
+                        } else if (!player.isHuman) {
+                            HeroFn_004DBF30(targetCombo, -1);
+                        }
+                    }
+                    player.assembledCombinations.set(targetCombo);
+                }
+            }
+        }
+    } else if (!add_to_backpack(artifact, -1)) {
+        return 0;
+    }
+
+    int comboType = akArtifactTraits[artifact->artifactId].comboType;
+    if (comboType != -1 && owner >= 0 && owner < 8)
+        gpGame->players[owner].assembledCombinations.set(comboType);
+
+    if (bCheckEnd &&
+        gpGame->mapHeader.victoryCondition.CheckForArtifactWin())
+        CheckEndGame(0);
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5064
 DC_ONLY(0xd3e40, 0x46)
