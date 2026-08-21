@@ -4046,6 +4046,11 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // UpdateHeroScreenStatusBar 92.3601 both unmoved), so that dose sits under
 // the step. The step is worth about five statements, so the next attempt
 // should lift a block of roughly that size rather than a bigger one.
+// Lifting the hero-locator select arm's six simple statements into a
+// single-use file-static has now tested that dose too (2026-08-21): it is
+// byte-flat at the current 75.4051 baseline, with the same 129 branches
+// and 87 calls. Caller segmentation is therefore exhausted at both the
+// two-arm and six-statement scales.
 //
 // THE C2 GENERATION IS NOW RULED OUT TOO (2026-08-20): `homm3 vc6 ab run`
 // on this function - the first Track R run outside the original corpus -
