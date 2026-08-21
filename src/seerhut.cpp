@@ -891,15 +891,18 @@ void type_artifact_quest::TakePayment(hero* current_hero)
 // The two container leaves' deserializers, and the mirror of their own
 // slot 13: a BYTE count and then one element per trip, appended through
 // vector::push_back - which is where the bulk of each body comes from,
-// Dinkumware's reallocating insert expanded inline.
+// Dinkumware's reallocating insert expanded inline. The raw count is an int
+// even though only its low byte is read; retail masks that byte into a
+// descending loop index. The h3m reader also marks each requirement in
+// game::artifactDisabled so random artifact placement cannot consume it.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056fcb0, 0x1EE)  // anchor-vtable 0x641878 slot 11 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::Load(TAbstractFile* file, int version)
 {
-    unsigned char count;
+    int count;
 
-    file->Read(&count, sizeof(count));
-    for (int i = 0; i < count; i++) {
+    file->Read(&count, sizeof(unsigned char));
+    for (int i = count & 0xff; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
@@ -912,14 +915,16 @@ void type_artifact_quest::Load(TAbstractFile* file, int version)
 VA(0x0056fea0, 0x1FA)  // anchor-vtable 0x641878 slot 12 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::LoadFromMap(TAbstractFile* file)
 {
-    unsigned char count;
+    int count;
 
-    file->Read(&count, sizeof(count));
-    for (int i = 0; i < count; i++) {
+    file->Read(&count, sizeof(unsigned char));
+    for (int i = count & 0xff; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
-        artifacts.push_back(artifact_from_int(id));
+        TArtifact artifact = artifact_from_int(id);
+        artifacts.push_back(artifact);
+        gpGame->artifactDisabled[artifact] = 1;
     }
     type_quest::LoadFromMap(file);
 }
@@ -1040,17 +1045,20 @@ void type_creature_quest::TakePayment(hero* current_hero)
 VA(0x00570e60, 0x208)  // anchor-vtable 0x6418b4 slot 11 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::Load(TAbstractFile* file, int version)
 {
-    unsigned char count;
+    int count;
 
-    file->Read(&count, sizeof(count));
-    for (int i = 0; i < count; i++) {
-        short type;
+    file->Read(&count, sizeof(unsigned char));
+    int i = count & 0xff;
+    while (i--) {
+        int type;
         int number;
 
-        file->Read(&type, sizeof(type));
+        file->Read(&type, sizeof(short));
+        TCreatureType creature = creature_type_from_int(type & 0xffff);
         file->Read(&number, sizeof(number));
-        types.push_back(creature_type_from_int(type));
-        counts.push_back(number);
+        int amount = number;
+        counts.push_back(amount);
+        types.push_back(creature);
     }
     type_quest::Load(file, version);
 }
@@ -1058,22 +1066,27 @@ void type_creature_quest::Load(TAbstractFile* file, int version)
 // The h3m form differs from the savegame form in WIDTH and in nothing
 // else: this one reads the stack size as a short where slot 11 reads a
 // dword, which is the same split quest.h's Load/LoadFromMap note
-// already records for the hero id and the level.
+// already records for the hero id and the level. Both readers use a
+// post-decrement count and append the normalized amount before the creature;
+// that order decides which vector insertion VC6 expands inline.
 // E:\gamedcs\seerhut.cpp
 VA(0x00571070, 0x20A)  // anchor-vtable 0x6418b4 slot 12 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::LoadFromMap(TAbstractFile* file)
 {
-    unsigned char count;
+    int count;
 
-    file->Read(&count, sizeof(count));
-    for (int i = 0; i < count; i++) {
-        short type;
-        short number;
+    file->Read(&count, sizeof(unsigned char));
+    int i = count & 0xff;
+    while (i--) {
+        int type;
+        int number;
 
-        file->Read(&type, sizeof(type));
-        file->Read(&number, sizeof(number));
-        types.push_back(creature_type_from_int(type));
-        counts.push_back(number);
+        file->Read(&type, sizeof(short));
+        TCreatureType creature = creature_type_from_int(type & 0xffff);
+        file->Read(&number, sizeof(short));
+        int amount = number & 0xffff;
+        counts.push_back(amount);
+        types.push_back(creature);
     }
     type_quest::LoadFromMap(file);
 }
