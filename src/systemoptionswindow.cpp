@@ -463,6 +463,8 @@ void TSystemOptionsWindow::DoModal()
 __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
     unsigned char bFirstUpdate)
 {
+    if (!bFirstUpdate)
+        bPrefsChanged = 1;
     volatile message updateMessage;
     updateMessage.codeX = 0;
     updateMessage.codeY = 0;
@@ -472,12 +474,31 @@ __forceinline void TSystemOptionsWindow::UpdateSystemOptions(
     updateMessage.extra = 0;
     updateMessage.window = 0;
     updateMessage.id = MESSAGE_WIDGET;
-    if (!bFirstUpdate)
-        bPrefsChanged = 1;
     DrawWindow(1, 0xffff0001, 0xffff);
 }
 
 // E:\gamedcs\systemoptionswindow.cpp:260
+// 91.9193 -> 92.5000, 2026-08-21: two statement-order facts from the
+// unmasked retail stream. UpdateSystemOptions sets bPrefsChanged BEFORE it
+// initializes the otherwise-unused message (91.9193 -> 92.0354), and the
+// command tail saves codeY, writes msg->id, then latches the saved command in
+// dialogReturn (-> 92.5000). The latter now agrees in instruction order; only
+// its EAX/ECX versus retail EDX/EAX allocation remains.
+//
+// Residual (92.5000%): all 32 out-of-line calls agree. The dominant CFG delta
+// is the inlined convertID2HelpID block. Retail tests the 201..242 range
+// first, jumps over a command switch, and joins once before the caller's
+// `helpID >= 0` test. This compiler puts the switch first at the current
+// 92.5000 maximum; range-first early-return, assigned-result if/else, De
+// Morgan, and explicit-goto spellings all canonicalize to the SAME 86.3110
+// layout with the switch outlined after the right-click return. This is the
+// merged-block/compiler-generation class, not another condition spelling.
+// In the redraw tail retail also hoists the DrawWindow vtable load and three
+// argument pushes ahead of the volatile message stores; this compiler leaves
+// them after. Removing volatile or using an aggregate initializer eliminates
+// all eight real stores (91.4016), so the retained spelling is closest. The
+// final findWidget and click-sample deltas are register rotations over the
+// same loads/stores and calls.
 VA(0x005b3140, 0x61E)  // vtable slot 9 + inlined help switch, dc 0x160770
 int TSystemOptionsWindow::WindowHandler(message* msg)
 {
@@ -690,11 +711,14 @@ confirm_command:
         goto consume;
 
 translate_command:
-    gpWindowManager->dialogReturn = msg->codeY;
-    msg->id = MESSAGE_WIDGET;
-    msg->codeY = widget::WIDGET_END_DIALOG;
-    msg->codeX = widget::WIDGET_END_DIALOG;
-    return MESSAGE_DISPATCH_FORWARD;
+    {
+        int command = msg->codeY;
+        msg->id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = command;
+        msg->codeY = widget::WIDGET_END_DIALOG;
+        msg->codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
 
 handle_select:
     {
