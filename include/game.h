@@ -1036,12 +1036,19 @@ public:
     // costs game::Load 74.6385 -> 58.5009 and game::Save 79.1973 ->
     // 61.0073, i.e. game.obj 83.6719 -> 80.5175, against campaignwindow
     // at 89.7220. Caller mass was NOT the whole story - both bodies still
-    // expand the pair where retail calls the COMDATs - so they stay
-    // declared and this line is now a measured result rather than a
-    // deferred one.
+    // expand the pair where retail calls the COMDATs.
+    // LANDED 2026-08-21 through the narrow declaration view below. A global
+    // implicit re-test at the current baselines still costs game::Load
+    // 92.3721 -> 66.6252 and Save 93.5676 -> 78.2887, but campaignwindow.obj
+    // alone needs the compiler-generated members and rises 82.5365 ->
+    // 91.1679. HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN exposes that faithful
+    // view only to the proving TU; every other consumer retains the declared
+    // COMDAT calls retail uses there.
     SCampaign();
+#ifndef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
+#endif
     // Retail 0x489590, thiscall on gpGame->campaign with the selected
     // campaign's ordinal and its data-file name; CampaignWindowHandler's
     // deselect arm is the caller that proves the shape. Provisional name.
