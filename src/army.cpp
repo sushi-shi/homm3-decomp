@@ -728,10 +728,8 @@ no_clover_bonus:
         ;
     }
 
-    if (creatureType == CREATURE_HALFLING && value < 1) {
-        luck = 1;
-        return;
-    }
+    if (creatureType == CREATURE_HALFLING && value < 1)
+        value = 1;
 store_luck:
     luck = value;
 }
@@ -745,12 +743,15 @@ store_luck:
 // the sole live caller passes it after the magic-terrain mode and the body
 // forwards it to armyGroup::GetMorale. The two compressed switch tables at
 // 0x43e10c/0x43e124 match GetArmyMorale's Holy Ground / Evil Fog partition.
-// Residual (97.5194%): every branch, call, member access and both selector
-// tables agree. The two executable deltas are instruction-selection twins:
-// `cmp ownerGroup,0` vs retail's `test`, and `mov [morale],0` vs retail's
-// `xor eax,eax; mov [morale],eax`. A branch-result local merges the retail-
-// duplicated exits (91.75%), a four-byte memset is worse (95.81%), and `false`
-// plus `value-value` both fold byte-identically to the retained direct zero.
+// CLOSED 97.5194 -> 100.0000 (2026-08-21), the SetLuck mechanism: the
+// early exit and the oppression arm both GOTO one shared
+// `morale = value;` store instead of writing their own. VC6
+// tail-duplicates the shared store into each path and MATERIALIZES the
+// propagated constant (`xor eax,eax; mov [morale],eax`), which no
+// direct `morale = 0;` spelling can produce - the note that stood here
+// had measured four constant spellings (branch-result local 91.75,
+// memset 95.81, `false` and `value-value` byte-flat) without trying
+// the join shape.
 VA(0x0043e000, 0x139)  // dc-bracket forced + body/caller proof, dc 0x443b4
 void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
@@ -758,10 +759,8 @@ void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      unsigned char groupAlignments)
 {
     int value = 0;
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(17) & 1)) {
-        morale = value;
-        return;
-    }
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(17) & 1))
+        goto store_morale;
 
     if (ownerGroup) {
         value = const_cast<armyGroup*>(ownerGroup)->GetMorale(
@@ -829,10 +828,10 @@ evil_done:
         && const_cast<hero*>(otherHero)->IsWieldingArtifact(
             ARTIFACT_SPIRIT_OF_OPPRESSION)
         && value > 0) {
-        morale = 0;
-    } else {
-        morale = value;
+        value = 0;
     }
+store_morale:
+    morale = value;
 }
 
 // E:\gamedcs\army.cpp:596
