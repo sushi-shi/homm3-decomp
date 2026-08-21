@@ -233,6 +233,15 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 
 // E:\gamedcs\armygrp.cpp:90
 // Residual (99.9912%): a background-phase creature snapshot recovers retail's
+// [2026-08-21] Re-measured against a fresh delink: the ONLY row the unmasked
+// compare shows is the EH-funcinfo prologue push, `push 0` here against
+// retail's `push 0xb`, and that immediate is a RELOCATION ADDEND - our
+// `$L30648` against the delinker's `SplitSliderCallback_unwind13 + 0xb`,
+// which is a synthesized-symbol boundary and not a compiler decision. Every
+// other byte, immediate and displacement in the 1627-byte body agrees.
+// Note the addend is NOT what holds the row down on its own: townmgr's
+// DoHall reached 100.0000 in the same round with the identical `push 0` vs
+// `push 0xb` row still present. Do not reopen this one on the prologue.
 // ESI/EDI allocation, and the destination entry's byte-proven back-link is 4.
 // A depth-zero inline append scaffold keeps only the final vector::insert call
 // out of line; all 57 blocks and 25 branches then agree. The remaining deltas
@@ -713,6 +722,25 @@ const std::bitset<9>& ArmyGrpFn_0044A460()
 // is byte-flat at 88.50714%, both once at the common artifact label and once
 // in each of the six source arms. VERIFY remains possible source history, but
 // it cannot select retail's early pushes or its four additional return bodies.
+// Residual (88.5071%): a TAIL-MERGE DEGREE difference, measured both ways.
+// Retail emits 19 `ret 8` exits against our 15 and 63 branches against our
+// 57, and every surplus retail exit is a full inline `fld <0.0f> / pop edi /
+// pop esi / pop ebx / mov esp,ebp / pop ebp / ret 8` where this compile
+// cross-jumps to one shared copy. Both sides share the same jump table
+// (byte selector + `cmp eax,0x36 / ja`), the same arm layout, and the same
+// per-arm tests; the only structural difference is how many of the
+// `return 0.0f;` epilogues C2 chose to merge.
+// The six protection-artifact arms show the second half of the same fact:
+// retail ends each with `push <artifact> / jmp <shared call>` while the
+// shared `protectionArtifact` variable used here ends them with
+// `mov eax,<artifact> / jmp` and pushes the register once at the join.
+// TRIED AND REJECTED (2026-08-21): rewriting all six arms as their own
+// `if (target_hero && ...IsWieldingArtifact(<literal>)) return 0.0f;` -
+// which does produce retail's per-arm `push <literal>` - costs 3.60
+// (88.5071 -> 84.9089), because VC6 then declines to cross-jump ANY of the
+// six call+test tails and duplicates the whole return path six times, and
+// it moves target_hero out of EBX into EDI for the rest of the body. The
+// shared-variable form is the closer of the two.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero)
 {
@@ -1897,6 +1925,15 @@ source_stack_merges:
 // is measured as OUR /Ob2 budget being too large, so the lever is the
 // caller's own pre-inline mass.  Lifted verbatim - one call site, so /Ob2
 // puts it straight back and the emitted statements are unchanged.
+//
+// [2026-08-21] +1.68 (91.3771 -> 93.0566) from dropping the caller's
+// `const TCreatureTypeTraits&` row reference - see the note at the use site.
+// The residual after it is the same parameter-home family the luck twin
+// carries: our frame is 0x54 against retail's 0x50 because retail recycles
+// TWO dead parameter homes ([ebp+0x24] for the 116-byte traits offset and
+// [ebp+0x28] for GetMorale's result) where we recycle one and give the
+// offset a stack slot of its own, and the empty-allocator scratch byte again
+// sits at [ebp+0xf] against retail's [ebp+0x13].
 static void apply_morale_magic_terrain(int magicTerrain, TCreatureType creature,
                                        int townType, int& currentMorale,
                                        std::string& result)
@@ -2173,6 +2210,19 @@ std::string armyGroup::get_morale_description(
 // (2026-08-21): four `limit` candidates in the lifted clover helper regress
 // 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
 // VERIFY family is not the remaining lever at the retained source shape.
+//
+// [2026-08-21] +5.69 (84.5060 -> 90.1916) from the nine-town switch routing
+// below, and the two sides' instruction counts now agree exactly (332 = 332,
+// one `ret` each). What is left is a parameter-home family: retail spills
+// `currentLuck` into the dead `ourHero` parameter slot ([ebp+0x14]) the
+// moment GetLuck returns while this compile keeps it in EBX for the whole
+// body, and retail's empty-allocator scratch byte sits in the [ebp+0x10]
+// slot's high byte ([ebp+0x13]) where ours sits in the [ebp+0xc] slot's
+// ([ebp+0xf]). By the recorded scratch-slot rule that second fact reads as
+// retail's SECOND parameter being narrower than the `int luck` modelled
+// here - worth testing, but it is a non-additive change to a declarator
+// viewarmywindow.cpp also calls, so it needs an owner who can re-measure
+// that unit's rows in the same build.
 static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
                                      int& currentLuck, std::string& result)
 {
