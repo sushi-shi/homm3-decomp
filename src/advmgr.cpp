@@ -4057,6 +4057,9 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // bucket suggests here. Release-elided TRACE carriers at 1/3/5/8/10
 // sites are byte-flat at the improved 83.50 baseline as well, so dormant
 // call candidates do not move this particular parent/child boundary.
+// Conventional release VERIFY accessors after clear_path are now bounded too
+// (2026-08-21): both one and all three `result.empty()` sites are byte-flat at
+// 83.50 with the same 28-vs-29 call and 92-vs-91 branch counts.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
