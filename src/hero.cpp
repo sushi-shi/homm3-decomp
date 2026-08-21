@@ -2852,6 +2852,10 @@ static inline const char* GetArmyName(int type, int count)
 // hero::GetNthSS are all /Ob2-expanded here; the hero-exchange twin at
 // 0x5b08b0 CALLS all three, which is what proves the inline is retail's
 // and not ours. GetMorale and GetLuck really are called TWICE each.
+// The army-slot chain follows the HoMM2 Buka twin's statement order:
+// repeated direct army-array expressions and non-empty-first tests are
+// byte-significant here, giving VC6 the same shared format blocks as retail.
+// Naming `creature` / `selected` values instead changes that merge set.
 //
 // PINNED: the one caller is WindowHandler, and /Ob2 expands a
 // single-call-site extern regardless of size, where retail keeps a real
@@ -2907,44 +2911,41 @@ void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg)
     case ARMY_SLOT_6_ID: {
         int slot = msg->codeY - ARMY_SLOT_0_ID;
         if (gHeroScreenArmySlot == HERO_SCREEN_NO_ARMY_SLOT) {
-            int creature = gpCurrentHero->army.armies[slot];
-            if (creature == CREATURE_NONE)
-                strcpy(gText, gEmptyArtifactRolloverText);
-            else
+            if (gpCurrentHero->army.armies[slot] != CREATURE_NONE)
                 sprintf(gText, gHeroScreenArmySlotFormat,
-                        GetArmyName(creature, 1));
+                        GetArmyName(gpCurrentHero->army.armies[slot], 1));
+            else
+                strcpy(gText, gEmptyArtifactRolloverText);
         } else if (gHeroScreenArmySlot == slot) {
             sprintf(gText, gHeroScreenArmySlotFormat,
                     GetArmyName(gpCurrentHero->army.armies[slot], 1));
-        } else if (gUnnamed6aa9d8) {
-            int creature = gpCurrentHero->army.armies[slot];
-            if (creature == CREATURE_NONE)
-                strcpy(gText, gEmptyArtifactRolloverText);
-            else
+        } else if (gUnnamed6aa9d8 != 0) {
+            if (gpCurrentHero->army.armies[slot] != CREATURE_NONE)
                 sprintf(gText, gHeroScreenArmySlotFormat,
-                        GetArmyName(creature, 1));
+                        GetArmyName(gpCurrentHero->army.armies[slot], 1));
+            else
+                strcpy(gText, gEmptyArtifactRolloverText);
+        } else if (gpCurrentHero->army.armies[slot] == CREATURE_NONE) {
+            if (gHeroScreenArmyStripLive)
+                sprintf(gText, gHeroScreenArmyMoveFormat,
+                        GetArmyName(gpCurrentHero->army.armies[
+                                        gHeroScreenArmySlot],
+                                    2));
+            else
+                sprintf(gText, gHeroScreenArmySlotIdleFormat,
+                        GetArmyName(gpCurrentHero->army.armies[
+                                        gHeroScreenArmySlot],
+                                    2));
+        } else if (gpCurrentHero->army.armies[slot]
+                   == gpCurrentHero->army.armies[gHeroScreenArmySlot]) {
+            sprintf(gText, gHeroScreenArmyMergeFormat,
+                    GetArmyName(gpCurrentHero->army.armies[slot], 2));
         } else {
-            int creature = gpCurrentHero->army.armies[slot];
-            if (creature == CREATURE_NONE) {
-                int selected =
-                    gpCurrentHero->army.armies[gHeroScreenArmySlot];
-                if (gHeroScreenArmyStripLive)
-                    sprintf(gText, gHeroScreenArmyMoveFormat,
-                            GetArmyName(selected, 2));
-                else
-                    sprintf(gText, gHeroScreenArmySlotIdleFormat,
-                            GetArmyName(selected, 2));
-            } else {
-                int selected =
-                    gpCurrentHero->army.armies[gHeroScreenArmySlot];
-                if (creature == selected)
-                    sprintf(gText, gHeroScreenArmyMergeFormat,
-                            GetArmyName(creature, 2));
-                else
-                    sprintf(gText, gHeroScreenArmySwapFormat,
-                            GetArmyName(selected, 1),
-                            GetArmyName(creature, 1));
-            }
+            sprintf(gText, gHeroScreenArmySwapFormat,
+                    GetArmyName(gpCurrentHero->army.armies[
+                                    gHeroScreenArmySlot],
+                                1),
+                    GetArmyName(gpCurrentHero->army.armies[slot], 1));
         }
         break;
     }
