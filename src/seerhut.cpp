@@ -1043,17 +1043,22 @@ void type_creature_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// EXACT (55.2734 -> 100%): completionText's empty guard owns every temporary.
+// GetRequirementText constructs its named result directly, quest_texts is
+// then held as a pointer, and the selected table string is copied into a
+// second named local before format_string. Calling quest_text() through its
+// equivalent wrapper leaves the CFG exact but changes the address schedule.
 // E:\gamedcs\seerhut.cpp
 VA(0x005713c0, 0x16A)  // anchor-vtable 0x6418b4 slot 14 + the shared text-table shape, retail-only
 void type_creature_quest::SetDefaultText()
 {
-    const std::string* texts = quest_texts();
-    std::string requirement;
-    requirement = GetRequirementText();
-
-    if (completionText.length() == 0)
-        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+    if (completionText.length() == 0) {
+        std::string requirement = GetRequirementText();
+        const std::string* texts = quest_texts();
+        std::string text = texts[QUEST_TEXT_COMPLETION];
+        completionText = format_string(text.c_str(),
                                        requirement.c_str());
+    }
 }
 
 
