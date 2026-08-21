@@ -543,11 +543,17 @@ public:
     unsigned long get_map_extraInfo();
     unsigned char cell_is_trigger();
     unsigned char is_diggable();
+    // The AND result is BYTE-typed in retail, and it is byte-load-bearing at
+    // every inlined site: both operands stay dword (`mov eax,1 / shl eax,cl`
+    // and `mov ecx,[cell] / shr ecx,5`) and retail then tests only their low
+    // halves - `test cl,al`, not `test ecx,eax`. Landing the mask in an
+    // `unsigned char` is what tells VC6 the upper 24 bits are dead. The value
+    // is unchanged: player is already range-checked to 0..7 above.
     unsigned char PlayerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)
             return 0;
-        return ((extraInfo >> 5) & (1UL << player)) != 0;
+        return (((extraInfo >> 5) & 0xff) & (1UL << player)) != 0;
     }
     // MapCell.h:923 in the DC roster, `?IsCustomized@ExtraInfoUnion@@QBA_NXZ`
     // - a const, no-argument, BOOL-returning accessor for the top bit.

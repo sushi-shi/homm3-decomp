@@ -3753,12 +3753,15 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
 }
 
 // E:\gamedcs\advmgr.cpp:2835
-// RETAIL-RECONSTRUCTED 2026-08-09 (99.3641%). Retail proves the complete
-// operation set: object-name copy, trigger/knowledge and global-visit gates,
-// signed shrine spell extraction, formatted spell name, and the current hero's
-// availability annotation. Dreamcast CodeView supplies the surviving
-// function/domain names. All nine branches and both returns agree; the residual
-// is one byte-width bit test and one redundant buffer reload in retail.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete operation set: object-name copy, trigger/knowledge and global-visit
+// gates, signed shrine spell extraction, formatted spell name, and the current
+// hero's availability annotation. Dreamcast CodeView supplies the surviving
+// function/domain names. The last residual - "one byte-width bit test" - was
+// NewmapCell::PlayerKnowsCell's mask: the visibility lane is an EIGHT-BIT
+// field, so retail's `test cl,al` is legal and our dword `test ecx,eax` was
+// not. Spelling the field read as `(extraInfo >> 5) & 0xff` in mapcell.h
+// closed this row, SetTreeHelpText and set_witch_hut_help_text together.
 VA(0x0040d8d0, 0x229)  // dc-bracket forced, dc 0xb788
 void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, GlobalInfoFlags type, const char* separator_1, const char* separator_2)
 {
@@ -3788,10 +3791,13 @@ void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, Globa
 }
 
 // E:\gamedcs\advmgr.cpp:2878
-// RETAIL-RECONSTRUCTED 2026-08-09 (99.7414%). Retail proves the complete
-// name/trigger, global-visit, cell-knowledge, price and hero-visit paths. All
-// nine branches and the return agree; the residual is register allocation and
-// PlayerKnowsCell's dword bit-test where retail selects the low bytes.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete name/trigger, global-visit, cell-knowledge, price and hero-visit
+// paths. The residual read as "register allocation and PlayerKnowsCell's
+// dword bit-test"; the register story was downstream of the test width.
+// Narrowing the visibility-lane read to its true eight bits in mapcell.h
+// (`(extraInfo >> 5) & 0xff`) produced retail's `test cl,al` AND its EDI
+// register choice for the cell in one edit.
 VA(0x0040db00, 0x1BD)  // dc-bracket forced, dc 0xb930
 void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
@@ -3827,12 +3833,13 @@ void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const c
 }
 
 // E:\gamedcs\advmgr.cpp:3002
-// RETAIL-RECONSTRUCTED 2026-08-09 (98.0056%). Retail proves the complete
-// object-name, trigger/sentinel, cell-knowledge, secondary-skill and
-// current-hero paths. All ten branches and the return agree; the residual is
-// register allocation and PlayerKnowsCell's dword mask where retail narrows
-// both operands to their low bytes. Dreamcast CodeView supplies the surviving
-// function, enum and traits names.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete object-name, trigger/sentinel, cell-knowledge, secondary-skill and
+// current-hero paths. The residual - "PlayerKnowsCell's dword mask where
+// retail narrows both operands to their low bytes" - named its own answer:
+// the visibility lane is eight bits wide, and reading it as such in mapcell.h
+// closed all three help-text builders at once. Dreamcast CodeView supplies
+// the surviving function, enum and traits names.
 VA(0x0040dcc0, 0x1E4)  // dc-bracket forced, dc 0xbd84
 void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
