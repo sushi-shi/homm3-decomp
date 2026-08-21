@@ -579,6 +579,22 @@ const unsigned char NewmapCell::HasTriggerableEvent()
 // byte-flat (measured), so it is not the comparison form; a mask that
 // arrives as an inlined parameter would do it, but no NewmapCell flag-test
 // helper appears anywhere in the DC roster to justify inventing one.
+// ALSO MEASURED (2026-08-21): naming the mask in a `register unsigned short`
+// local used at both sites is byte-flat too - VC6 constant-propagates it
+// straight back into the folded byte test, so no source spelling of the
+// CONSTANT reaches this; retail's `mov ebx,0x1000` is a constant-CSE the
+// allocator made under different pressure.
+// Two further readings of the tail, both rejected the same day. Retail keeps
+// `size` AND `size-1` live across the reverse scan (`mov edx,esi / dec esi`)
+// and guards on `test edx,edx / jle`, where we test `size-1` with
+// `lea edi,[eax-1] / test edi,edi / jl`: naming the size in an `int count`
+// ahead of the loop is byte-flat (VC6 folds it back), and wrapping the loop
+// in an explicit `if (count > 0)` costs 79.8598 -> 76.0093. Retail also keeps
+// the HERO and GARRISON returns as SEPARATE exits because one returns the
+// literal GARRISON and the other returns `cellType`; our compile proves them
+// equal on that path and merges both onto one `mov eax,0x21`. The source
+// already spells them differently, so that merge is constant propagation, not
+// a missing statement.
 VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
 TAdventureObjectType NewmapCell::get_special_terrain() const
 {
