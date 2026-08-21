@@ -2617,17 +2617,31 @@ void game::setup_shipyards()
 // named block-scoped local is retail's shape), and the poolCount
 // ternary flipped to `>= 32 ? 8 : 3` is -0.75, so the setl lowering is
 // not the operand order.
-// Residual (91.8624%):
-//   * ONE cleanup site short of retail's 39, and it is not a missing
-//     statement: at the gMapExtra guard alone VC6 expands `_Tidy` inline
-//     (base 0xc0e) where retail calls it (site 0x4b at 0x48e8). Pinning
-//     that `return -1` forces the WHOLE ~SavedGameHeader out of line
-//     instead, which is not retail's shape and measures 90.0926 ->
-//     89.0988. Retail's shape is depth-1, and `#pragma inline_depth(1)`
-//     is byte-flat in VC6.
-//   * the poolCount ternary lowers inverted - retail `setl al / and
-//     eax,5 / add eax,3`, ours `setge al / and al,-5 / add eax,8` - and
-//     reads saveVersion from [ebp+8] where retail reads [ebp-0x5cc].
+// 91.8624 -> 92.3721, 2026-08-21: the pool count is retail's exact
+// `setl al / dec eax / and eax,5 / add eax,3` idiom. Keeping that
+// expression in this one-call static helper is an honest CODEGEN DEVICE,
+// not a DC-attested source helper: VC6 inlines it, emits no separate body,
+// and also moves the gMapExtra failure cleanup across the inliner threshold
+// so it calls `_Tidy` at retail's state 0x4b. Directly embedding the same
+// bit expression gets the local idiom but perturbs the whole function to
+// 90.4374. `(version < 32 ? 0 : 5) + 3` is 91.8536; a named bool inside
+// the helper is 91.0300; adding `inline` is byte-flat.
+//
+// Residual (92.3721%): base now has 37 `_Tidy` calls against retail's 39
+// and 73 conditional branches against 72. The two remaining depth-one
+// destructor sites are the default `town` temporary after towns.resize
+// and the failed load_recorded_events exit. A named town temporary with a
+// depth-1 scope exit does produce retail's local `_Tidy` call, but changes
+// VC6's whole-function optimizer state to 90.2707 and 76 branches; normal
+// scope exit lands on the same score. `#pragma inline_depth(1)` at the
+// event-record return is byte-flat, while depth 0 calls the whole
+// ~SavedGameHeader and is the already-rejected shape. This is an inliner-
+// threshold residual; do not grind the same spellings again.
+static int load_lith_pool_count(int version)
+{
+    return (((version < 32) - 1) & 5) + 3;
+}
+
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
@@ -2918,7 +2932,7 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(gMapExtra, mapExtraBytes) < mapExtraBytes)
         return -1;
 
-    int poolCount = saved.version < 32 ? 3 : 8;
+    int poolCount = load_lith_pool_count(saved.version);
     for (i = 0; i < poolCount; ++i) {
         short short_buffer;
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
