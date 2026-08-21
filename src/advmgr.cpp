@@ -5099,9 +5099,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 // both counts match exactly. This copy survives only for the
                 // drawCells bit and is named for that.
                 //
-                // NOT a family rule - measured, not assumed. The same edit
-                // applied to DrawAdvObjShadow's three arms costs it 83.2068
-                // -> 82.4938, so it keeps the hoisted form. DrawUnderlay's
+                // NOT a family rule - measured, not assumed. Shadow's old
+                // isolated re-derivation loss was superseded once its cases
+                // were grouped into retail's selector-table source shape;
+                // that function now keeps per-arm copies too. DrawUnderlay's
                 // arms already spell their own.
                 //
                 // Residual (87.5901%): a whole-function callee-saved
@@ -5390,109 +5391,114 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
             mapObjects->objects[objCell->objectIndex].typeIndex];
 
         signed char offsets = objCell->offsets;
-        // MEASURED NEGATIVE (2026-08-20), and the evidence is worth more
-        // than the verdict, so do not re-derive it. Retail keeps BOTH of
-        // these shifts 8-BIT and widens at USE - at fn+0x21b it emits
-        // `mov dl,al / sar dl,4 / movsx edx,dl` for y and `shl al,4 /
-        // sar al,4 / movsx eax,al` for x - which is the `signed char`
-        // spelling, not this one; the int spelling promotes first and
-        // shifts 32-bit. Writing both as `signed char` reproduces retail's
-        // byte shifts AND takes the frame from `sub esp,0x100` to retail's
-        // exact `sub esp,0xfc`, i.e. it removes the one extra dword local
-        // that shifts every slot in this body by 4. It still costs
-        // 83.2095 -> 78.7790, because the slot COLOURING then re-permutes
-        // (retail's two type_points land at -0x28/-0x34, ours at
-        // -0x24/-0x3c) and the body grows five instructions. Respelling
-        // the sum as retail's `neg / shl 3 / sub / add 0x2f` order
-        // (`-yOffset * 8 - xOffset + 47`) is byte-flat on top of that.
-        // The next lever here is decl-order/slot-colouring (B5/B6), not
-        // the operand types.
-        int yOffset = offsets >> 4;
+        // Retail keeps BOTH shifts 8-BIT and widens at use: `mov dl,al /
+        // sar dl,4 / movsx edx,dl`, then `shl al,4 / sar al,4 / movsx`.
+        // The packed offset is re-derived in each draw arm below, shortening
+        // these locals' live range. Grouping the allowed terrain cases under
+        // one shared break is equally material: it makes VC6 emit retail's
+        // byte selector plus two-entry jump table instead of a 48-entry
+        // pointer table. Together those two source shapes raise the max from
+        // 83.2068% to 85.2335% and restore `this` in EDI.
+        //
+        // Residual (85.2335%): the 42 conditional branches and sole return
+        // agree exactly. Retail uses a 0xfc frame, keeps objCell in EBX and
+        // spills `bit` at -0x38 across _Xran; ours uses 0xf8, keeps `bit` in
+        // EBX and homes objCell. Its type_point slots are -0x28/-0x34 versus
+        // ours -0x28/-0x38. Tried and rejected: signed offsets hoisted across
+        // the arms (79.2763), grouped switch with promoted int offsets
+        // (84.7451), function-scope numObj (byte-flat), and the DC pointer
+        // declaration order SprPtr/ObjCell/ObjType (byte-flat).
+        signed char yOffset = offsets >> 4;
         offsets <<= 4;
-        int xOffset = offsets >> 4;
-        int bit = 47 - yOffset * 8 - xOffset;
+        signed char xOffset = offsets >> 4;
+        int bit = -yOffset * 8 - xOffset + 47;
         if (!objType->shadowCells[bit] || objType->suppressDraw)
             continue;
 
         if (gbInViewWorld) {
             switch (objType->objectType) {
-            case TERRAIN_BRUSH:             break;
-            case TERRAIN_BUSH:              break;
-            case TERRAIN_CACTUS:            break;
-            case TERRAIN_CANYON:            break;
-            case TERRAIN_CRATER:            break;
-            case TERRAIN_DEAD_VEGETATION:   break;
-            case TERRAIN_FLOWER:            break;
-            case TERRAIN_FROZEN_LAKE:       break;
-            case TERRAIN_HEDGE:             break;
-            case TERRAIN_HILL:              break;
-            case TERRAIN_HOLE:              continue;
-            case TERRAIN_KELP:              break;
-            case TERRAIN_LAKE:              break;
-            case TERRAIN_LAVA_FLOW:         break;
-            case TERRAIN_LAVA_LAKE:         break;
-            case TERRAIN_MUSHROOM:          break;
-            case TERRAIN_LOG:               break;
-            case TERRAIN_MANDRAKE:          break;
-            case TERRAIN_MOSS:              break;
-            case TERRAIN_MOUND:             break;
-            case TERRAIN_MOUNTAIN:          break;
-            case TERRAIN_OAK_TREE:          break;
-            case TERRAIN_OUTCROPPING:       break;
-            case TERRAIN_PINE_TREE:         break;
-            case TERRAIN_PLANT:             break;
-            case TERRAIN_RIVER_1:           continue;
-            case TERRAIN_RIVER_2:           continue;
-            case TERRAIN_RIVER_3:           continue;
-            case TERRAIN_RIVER_4:           continue;
-            case TERRAIN_RIVER_DELTA:       continue;
-            case TERRAIN_ROAD_1:            continue;
-            case TERRAIN_ROAD_2:            continue;
-            case TERRAIN_ROAD_3:            continue;
-            case TERRAIN_ROCK:              break;
-            case TERRAIN_SAND_DUNE:         break;
-            case TERRAIN_SAND_PIT:          break;
-            case TERRAIN_SHRUB:             break;
-            case TERRAIN_SKULL:             break;
-            case TERRAIN_STALAGMITE:        break;
-            case TERRAIN_STUMP:             break;
-            case TERRAIN_TAR_PIT:           break;
-            case TERRAIN_TREE:              break;
-            case TERRAIN_VINE:              break;
-            case TERRAIN_VOLCANIC_VENT:     break;
-            case TERRAIN_VOLCANO:           break;
-            case TERRAIN_WILLOW_TREE:       break;
-            case TERRAIN_YUCCA_TREE:        break;
-            case TERRAIN_REEF:              break;
-            default:                        continue;
+            case TERRAIN_BRUSH:
+            case TERRAIN_BUSH:
+            case TERRAIN_CACTUS:
+            case TERRAIN_CANYON:
+            case TERRAIN_CRATER:
+            case TERRAIN_DEAD_VEGETATION:
+            case TERRAIN_FLOWER:
+            case TERRAIN_FROZEN_LAKE:
+            case TERRAIN_HEDGE:
+            case TERRAIN_HILL:
+            case TERRAIN_KELP:
+            case TERRAIN_LAKE:
+            case TERRAIN_LAVA_FLOW:
+            case TERRAIN_LAVA_LAKE:
+            case TERRAIN_MUSHROOM:
+            case TERRAIN_LOG:
+            case TERRAIN_MANDRAKE:
+            case TERRAIN_MOSS:
+            case TERRAIN_MOUND:
+            case TERRAIN_MOUNTAIN:
+            case TERRAIN_OAK_TREE:
+            case TERRAIN_OUTCROPPING:
+            case TERRAIN_PINE_TREE:
+            case TERRAIN_PLANT:
+            case TERRAIN_ROCK:
+            case TERRAIN_SAND_DUNE:
+            case TERRAIN_SAND_PIT:
+            case TERRAIN_SHRUB:
+            case TERRAIN_SKULL:
+            case TERRAIN_STALAGMITE:
+            case TERRAIN_STUMP:
+            case TERRAIN_TAR_PIT:
+            case TERRAIN_TREE:
+            case TERRAIN_VINE:
+            case TERRAIN_VOLCANIC_VENT:
+            case TERRAIN_VOLCANO:
+            case TERRAIN_WILLOW_TREE:
+            case TERRAIN_YUCCA_TREE:
+            case TERRAIN_REEF:
+                break;
+            default:
+                continue;
             }
+            signed char drawOffsets = objCell->offsets;
+            signed char drawY = drawOffsets >> 4;
+            drawOffsets <<= 4;
+            signed char drawX = drawOffsets >> 4;
             int frame = (animFrame
                          + mapObjects->objects[objCell->objectIndex]
                                .animationOffset)
                         % sprite->GetNumFrames(0);
             sprite->DrawAdvObjShadow(
                 frame,
-                tilex + (objType->width - xOffset - 1) * 32,
-                tiley + (objType->height - yOffset - 1) * 32,
+                tilex + (objType->width - drawX - 1) * 32,
+                tiley + (objType->height - drawY - 1) * 32,
                 tilew, tileh, gpWindowManager->screenBitmap,
                 baseX, baseY + 8, false);
         } else {
             if (objCell->objectIndex == movingObjectIndex) {
+                signed char drawOffsets = objCell->offsets;
+                signed char drawY = drawOffsets >> 4;
+                drawOffsets <<= 4;
+                signed char drawX = drawOffsets >> 4;
                 movingObjectSprite->DrawAdvObjShadow(
                     movingObjectSequence * 2 + movingObjectFrame,
-                    tilex + (objType->width - xOffset - 1) * 32,
-                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilex + (objType->width - drawX - 1) * 32,
+                    tiley + (objType->height - drawY - 1) * 32,
                     tilew, tileh, gpWindowManager->screenBitmap,
                     baseX, baseY + 8, false);
             } else {
+                signed char drawOffsets = objCell->offsets;
+                signed char drawY = drawOffsets >> 4;
+                drawOffsets <<= 4;
+                signed char drawX = drawOffsets >> 4;
                 int frame = (animFrame
                              + mapObjects->objects[objCell->objectIndex]
                                    .animationOffset)
                             % sprite->GetNumFrames(0);
                 sprite->DrawAdvObjShadow(
                     frame,
-                    tilex + (objType->width - xOffset - 1) * 32,
-                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilex + (objType->width - drawX - 1) * 32,
+                    tiley + (objType->height - drawY - 1) * 32,
                     tilew, tileh, gpWindowManager->screenBitmap,
                     baseX, baseY + 8, false);
             }
