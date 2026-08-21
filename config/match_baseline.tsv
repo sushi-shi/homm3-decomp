@@ -48,7 +48,7 @@ advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	77.3765	77.
 advmgr	?DoAdventureOptions@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1ab00
 advmgr	?DoSystemOptions@advManager@@QAEEXZ	100.0000	100.0000	100.0000	0x1ac00
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	87.5901	87.5901	87.5901	0x10c00
-advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.2068	83.2068	83.2068	0x11590
+advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	85.2335	85.2335	85.2335	0x11590
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0
 advmgr	?DrawArrow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x120b0
 advmgr	?DrawArrowShadow@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11f50
