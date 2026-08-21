@@ -393,6 +393,15 @@ CObject* NewmapCell::TObjectCell::get_object()
 // Tried and rejected: assigning z before y, which un-combines the pair
 // further and costs 5 points (90.8763 -> 86.1134); hoisting `object->z` into
 // a local ahead of the point, which is byte-flat at 90.8763.
+// ALSO TRIED AND REJECTED (2026-08-21): the three-argument type_point
+// CONSTRUCTOR. In advmgr.cpp that spelling IS what produces retail's
+// `and eax,0xffffc000` merge - it closed SetInitialMapOrigin outright and
+// paid +2.5 to +5.7 on four more rows - so the same `mask t=1 b=0` census
+// reading points here. It does not transfer: the ctor costs 17.8 points here
+// (90.8763 -> 73.0309), 5.4 on readHeroData (91.6097 -> 86.1750) and 5.0 on
+// readMonsterData (96.4729 -> 91.5043). mapcell.obj's point builds want the
+// field-assignment form; the merge census identifies the DIVERGENCE, not the
+// spelling that fixes it.
 VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
 NewmapCell* NewmapCell::get_trigger_cell()
 {
