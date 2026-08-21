@@ -3957,11 +3957,13 @@ int advManager::ProcessWaitingHover(int mouseX, int mouseY)
                 point.y = radarOrigin.y + lastHoverY;
                 point.z = radarOrigin.z;
 
+                type_point cellPoint = point;
                 NewmapCell* currCell;
-                if (!point.is_valid())
+                if (!cellPoint.is_valid())
                     currCell = fullMap->cellData;
                 else
-                    currCell = fullMap->cell(point.x, point.y, point.z);
+                    currCell = fullMap->cell(cellPoint.x, cellPoint.y,
+                                             cellPoint.z);
 
                 // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
                 // coordinates here, exactly as ProcessHover does. At
@@ -9347,10 +9349,15 @@ void advManager::SetInitialMapOrigin()
 
     advWindow->SetElevationToggleImage(radarOrigin.z);
 
-    type_point center;
-    center.x = radarOrigin.x + 9;
-    center.y = radarOrigin.y + 8;
-    center.z = radarOrigin.z;
+    // EXACT via the CONSTRUCTOR, not field assignment (92.1202 -> 100.0000,
+    // 2026-08-21). Setting x/y/z as three separate member assignments makes
+    // VC6 read-modify-write the packed word once per field
+    // (`xor word ptr [ebp-6], cx` twice); the three-argument ctor builds the
+    // whole y|z word in a register, masks the old one with
+    // `and eax, 0xffffc000` and stores it ONCE. Retail's mask-and-single-store
+    // is the ctor's signature. It also retires the by-value copy VC6 was
+    // making for GetCell's parameter, which retail does not have.
+    type_point center(radarOrigin.x + 9, radarOrigin.y + 8, radarOrigin.z);
 
     field_58 = GetCell(center)->GroundSet;
     gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
