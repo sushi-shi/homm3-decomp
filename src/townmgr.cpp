@@ -2854,6 +2854,14 @@ type_garrison_base_window::~type_garrison_base_window()
 // parameter-recycling idiom this tree already records.
 
 // E:\gamedcs\townmgr.cpp
+// Residual (95.6856%): a whole-arm EAX/EDX binding mirror. Retail carries
+// `qualifier` in EDX and the strip in EAX; this compile has them the other
+// way round, which is also why retail needs an explicit `xor eax,eax` for
+// the zero argument where we reuse the just-tested register. Tried and
+// rejected: declaring `thisStrip` (and its `mgr`) BEFORE `qualifier` so the
+// strip pseudo is created first - 95.6856 -> 95.4367, so creation order is
+// not what selects this pair. The `field_19c` sentinel store and the
+// isOwnerCell spill also sit one slot earlier than retail schedules them.
 VA(0x005d05f0, 0x31B)  // anchor-caller(the page's WindowHandler 0x5d0910, its only caller) + anchor-callee(SetArmyCommand/select_army) + arity(ret 4), dc 0x172af0
 void type_garrison_base_window::SetCommandAndText(message* msg)
 {
@@ -2877,10 +2885,12 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
                 && mgr->field_12c->owner == gNetLocalGamePos) {
                 mgr->field_134 = thisStrip;
                 mgr->field_138 = slot;
-                if (mgr->field_1c4 || qualifier)
-                    mgr->SetArmyCommand(1, isOwnerCell);
-                else
-                    mgr->SetArmyCommand(0, isOwnerCell);
+                // ONE call site: retail materialises the flag in EAX
+                // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
+                // pushes the register, which is tail DUPLICATION of a single
+                // computed argument - two written call sites push the
+                // immediates instead.
+                mgr->SetArmyCommand(mgr->field_1c4 || qualifier, isOwnerCell);
             } else {
                 mgr->select_army(thisStrip, slot, isOwnerCell);
             }
@@ -2911,10 +2921,12 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
                 && mgr->field_12c->owner == gNetLocalGamePos) {
                 mgr->field_134 = thisStrip;
                 mgr->field_138 = slot;
-                if (mgr->field_1c4 || qualifier)
-                    mgr->SetArmyCommand(1, isOwnerCell);
-                else
-                    mgr->SetArmyCommand(0, isOwnerCell);
+                // ONE call site: retail materialises the flag in EAX
+                // (`xor eax,eax` in one arm, `mov eax,1` in the other) and
+                // pushes the register, which is tail DUPLICATION of a single
+                // computed argument - two written call sites push the
+                // immediates instead.
+                mgr->SetArmyCommand(mgr->field_1c4 || qualifier, isOwnerCell);
             } else {
                 mgr->select_army(thisStrip, slot, isOwnerCell);
             }
