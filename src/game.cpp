@@ -849,6 +849,8 @@ int game::SaveSignPool(TAbstractFile* outfile)
 // already-dead infile argument slot ([ebp+8]). Explicitly naming the default
 // mine and narrowing the counter to the for-init both compile identically.
 // This is a two-instruction stack-slot allocation tie with no semantic delta.
+// why-reg 2026-08-21 corroborates: routed B4 (param-slot), all 10 catalog
+// mutations flat or worse - the spill-home choice is C2 state, not source.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 {
