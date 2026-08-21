@@ -2577,8 +2577,15 @@ void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
 // and it drags the placement-block bindings with it (`ebx`/`edi` swapped
 // for the source stack and the clone's cell base). Tried and rejected:
 // all eight of why-branch's D10 induction mutations - the best,
-// reversing the direction order, is worth two masked slots and would
-// change which hex the clone lands in.
+// reversing the direction order, MEASURES +0.22 fuzzy (82.56) but is
+// REJECTED on semantics: it changes which hex the clone lands in, and
+// a reconstruction must not trade behavior for bytes. Also tried
+// 2026-08-21: hoisting iDir's declaration one scope out (byte-flat),
+// and why-reg's model finds the first ESI/EDI/EBX definitions agreeing
+// on both sides, so the homing flip is past the model's reach. Retail
+// memory-homes iDir, iDirCount AND iHexCount (ebx/ecx/edx are per-use
+// reloads there), so its pressure came from values ours never
+// materializes - not a source-order fact anyone has named yet.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {

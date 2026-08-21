@@ -2364,9 +2364,9 @@ void combatManager::SetupAndLoadObstacles()
         for (int wall = 0; wall < 18; wall++)
             wallStrength[wall] =
                 akWallTraits[defendingTown->type][wall].hitpoints;
-        wallStrength[15] = 1;
-        wallStrength[16] = 1;
         wallStrength[17] = 1;
+        wallStrength[16] = 1;
+        wallStrength[15] = 1;
         for (int copy = 0; copy < 18; copy++)
             wallStanding[copy] = wallStrength[copy];
 
@@ -4114,10 +4114,14 @@ not_blocked:
 // copy from 0x469c34 straight into the singular arm because it already
 // knows the answer there.
 //
-// Residual (89.6402%), 263 instructions against retail's 264, flow-
-// distance 0 - the CFG is identical and predict-inline reports the call
-// multisets AGREE, so nothing structural is left. Three register/PRE
-// decisions remain, and the first two are NOT source-addressable:
+// Residual (98.8371% as of 2026-08-21; the 89.64 this note was written
+// at has since closed to the second bullet alone - the unmasked diff
+// now shows ONLY the Text._First cluster below, plus the EH-prologue
+// push addend). Original analysis, still the correct account:
+// 263 instructions against retail's 264, flow-distance 0 - the CFG is
+// identical and predict-inline reports the call multisets AGREE, so
+// nothing structural is left. Register/PRE decisions remain,
+// NOT source-addressable:
 //   * the inlined IsQuickCombat forms both player-record addresses with
 //     `lea` and then loads .quickCombat from each, where we fold the
 //     +0xe4 into the load. DO NOT RETUNE THE SHARED INLINE FOR THIS -

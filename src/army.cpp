@@ -2951,6 +2951,18 @@ unsigned char army::check_obstacle_attacks(unsigned char is_walking)
 // handle-state class as attack_hex's direction-search note. Calls,
 // call order, and every block pair off (24/24 calls after the
 // remove_aura longhand below).
+// 89.8063 -> 93.3162 (2026-08-21): the two blocked-hex else-arms must
+// write `succeeded = 0; stop = i;` in THAT order while the moat arms
+// write `stop = i; succeeded = 0;` - the asymmetry is what stops our
+// CL cross-jumping the four arm tails into one shared block, which
+// retail keeps duplicated per arm (why-branch's D8 jne->je pair, and
+// the whole 343-vs-351 instruction gap). Residual (93.32): the walk
+// region's ebx/edi roles and the stop/conversion-temp slots are
+// permuted - retail homes `stop` at [ebp-0x4] and reloads it per
+// iteration where we keep it in EBX; why-reg's model reads the first
+// ESI/EBX/EDI definitions as agreeing on both sides, so the flip is
+// mid-function creation order past the model's reach. Global-load
+// census agrees 23=23, so it is not a cache-vs-reload spelling.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 {
@@ -3042,8 +3054,8 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
             gpCombatManager->obstacles
                 .begin[gpCombatManager->cells[next_hex].field_14]
                 .field_0a = 1;
-            stop = i;
             succeeded = 0;
+            stop = i;
         }
         if (creatureId & 1) {
             long second_hex = GetAdjacentCellIndex(gridIndex, direction)
@@ -3056,8 +3068,8 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
                 gpCombatManager->obstacles
                     .begin[gpCombatManager->cells[second_hex].field_14]
                     .field_0a = 1;
-                stop = i;
                 succeeded = 0;
+                stop = i;
             }
         }
         Walk(gpSearchArray->result[i]->direction, i == stop, at_rest);
