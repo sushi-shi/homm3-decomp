@@ -1956,6 +1956,12 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 // counter (81.70), an address-carried budget (79.64), and moving a named
 // enemy_side down beside the loop (76.38).  Naming/typing the side carrier
 // as volatile-long or unsigned-char changes diagnostics but is score-flat.
+// The direct address-carrier variants are exhausted too (2026-08-21): an
+// unused `long* = &i`, incrementing through that pointer, and spelling `i`
+// as a one-element stack array are all byte-flat at 89.6892; naming the
+// 21-stack row offset explicitly regresses to 88.1274 and still strength-
+// reduces the enemy pointer. The missing dword is not reachable by those
+// obvious address-taken spellings.
 //
 // Three spellings ARE byte-load-bearing and were measured one at a time:
 //   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said
