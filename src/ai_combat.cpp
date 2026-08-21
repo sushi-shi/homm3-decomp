@@ -777,6 +777,32 @@ inline void type_AI_combat_data::cast_mass_damage_spell(
     }
 }
 
+// Caller-specific copy for cast_spell's defender-side expansion: retail
+// inlines the mass-damage loop there but leaves its nested take_damage call.
+// This restores the exact 55-branch CFG and raises cast_spell from 85.4316%
+// to 87.0391%. Residual: retail keeps the defender in ESI, the monster offset
+// in EBX and accumulated damage in EDI; SP3 instead keeps the named monster
+// in ESI, the defender in EDI and homes accumulated damage. Tried and
+// rejected: call-site inline_depth(1) (byte-flat), caller-local longhand
+// (86.6484; `register` was byte-flat), and repeated monsters[i] spelling
+// (82.9043; emitted a second vector::operator[] call and signed loop branch).
+inline void type_AI_combat_data::cast_mass_damage_spell_with_damage_call(
+    type_spell_choice& choice,
+    const hero* casting_hero)
+{
+    long damage = choice.get_mastery_value()
+                  + akSpellTraits[choice.spell].power_factor * choice.power;
+    long value = 0;
+    for (long i = get_total(); i-- > 0; ) {
+        type_monster_data& monster = monsters[i];
+#pragma inline_depth(0)
+        value += monster.get_spell_damage(
+            choice.spell, casting_hero, my_hero, damage);
+        total_hit_points -= monster.take_damage(value);
+#pragma inline_depth()
+    }
+}
+
 // E:\gamedcs\ai_combat.cpp:768
 // RECONSTRUCTED FROM ITS FOUR INLINED COPIES (dc 0x2ace4) - no retail
 // row: /Ob2 inlined all four call sites in the two-side overload below
@@ -1018,7 +1044,8 @@ void type_AI_combat_data::cast_spell(
         return;
     case AI_SPELL_MASS_DAMAGE:
         cast_mass_damage_spell(best_choice, my_hero);
-        defender.cast_mass_damage_spell(best_choice, my_hero);
+        defender.cast_mass_damage_spell_with_damage_call(
+            best_choice, my_hero);
         return;
     case AI_SPELL_ENCHANTMENT:
         cast_enchantment(best_choice, defender);

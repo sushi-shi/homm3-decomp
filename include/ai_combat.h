@@ -201,6 +201,8 @@ public:
                                type_AI_combat_data& defender);
     void cast_mass_damage_spell(type_spell_choice& choice,
                                 const hero* casting_hero);
+    void cast_mass_damage_spell_with_damage_call(
+        type_spell_choice& choice, const hero* casting_hero);
     long inflict_melee_damage(long damage, long start, long speed_limit);
     void kill();
     void inflict_damage(long damage, long blocker_speed);
