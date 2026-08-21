@@ -8265,6 +8265,19 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9945
+// 89.50 -> 93.76 (2026-08-21): the DC line table proves two source shapes
+// that combine non-linearly on x86. The MINE arm declares `type` and
+// `abandoned` from two separate `mines[extraInfo]` expressions; that makes
+// the mine load/test sequence instruction-exact. The non-trigger tail is a
+// switch on object type with a nested switch on special terrain, not an if
+// chain; that prevents VC6 from lowering both decisions to branchless
+// arithmetic and gives retail's test/cmp control flow. The mine locals alone
+// are slightly negative (89.44), and the nested switches alone reach 92.88;
+// together they reach 93.76. Replacing the two two-value nested switches
+// (GARRISON and CREATURE_GENERATOR_4) with their DC-looking if chains was
+// also measured and rejected on the pre-tail shape (88.37). Residual: base
+// has 16 conditional branches / 72 returns against retail's 17 / 71; one
+// duplicated exit and the remaining switch-block placement are C2 choices.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8288,11 +8301,12 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             default: return LOOPING_SOUND_INVALID;
             }
         case MINE: {
-            int extraInfo = thisCell->extraInfo;
-            mine* currentMine = &gpGame->mines[extraInfo];
-            if (currentMine->field_02)
+            int type = gpGame->mines[thisCell->extraInfo].type;
+            unsigned char abandoned =
+                gpGame->mines[thisCell->extraInfo].field_02;
+            if (abandoned)
                 return LOOPING_SOUND_7;
-            switch (currentMine->type) {
+            switch (type) {
             case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
             case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
             case GET_SOUND_MINE_2:
@@ -8455,17 +8469,18 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
         }
     }
 
-    if (thisCell->type != NOTHING) {
-        if (thisCell->type != TERRAIN_VOLCANO)
-            return LOOPING_SOUND_INVALID;
+    switch (thisCell->type) {
+    case NOTHING:
+        switch (thisCell->get_special_terrain()) {
+        case CURSED_GROUND:
+            return LOOPING_SOUND_48;
+        case MAGIC_PLAINS:
+            return LOOPING_SOUND_25;
+        }
+        break;
+    case TERRAIN_VOLCANO:
         return LOOPING_SOUND_45;
     }
-
-    TAdventureObjectType specialTerrain = thisCell->get_special_terrain();
-    if (specialTerrain == CURSED_GROUND)
-        return LOOPING_SOUND_48;
-    if (specialTerrain == MAGIC_PLAINS)
-        return LOOPING_SOUND_25;
     return LOOPING_SOUND_INVALID;
 }
 
