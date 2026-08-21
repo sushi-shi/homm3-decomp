@@ -3060,13 +3060,105 @@ void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell,
 void set_witch_hut_help_text(char* buffer, hero* current_hero,
     NewmapCell* cell, const char* separator_1, const char* separator_2);
 
+static void set_town_help(char* buffer, const NewmapCell* cell)
+{
+    const town* mapTown = gpGame->GetTown(cell->extraInfo);
+    const char* townTypeName = gUnnamed6a74f4[cell->objectIndex];
+    const char* townName = mapTown->cName.begin();
+    if (!townName)
+        townName = DATA_COMPGEN(0x0063a608, townRolloverEmptyText, "");
+    sprintf(buffer, DATA_COMPGEN(
+        0x0065f3d4, rolloverTownFormat, "%s, %s"),
+        townName, townTypeName);
+}
+
+static void set_hero_help(char* buffer, const NewmapCell* cell)
+{
+    hero* mapHero = gpGame->GetHero(cell->extraInfo);
+    sprintf(buffer,
+            gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+            mapHero->name, mapHero->HeroFn_004D8F70());
+}
+
+static void set_pyramid_help(
+    char* buffer, const NewmapCell* cell, const hero* currentHero,
+    const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[PYRAMID]);
+    if (cell->is_trigger && currentHero) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(currentHero->owner)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_wagon_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WAGON]);
+    if (cell->is_trigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(gNetLocalGamePos)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_tomb_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WARRIOR_TOMB]);
+    if (cell->is_trigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(gNetLocalGamePos)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_water_wheel_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WATER_WHEEL]);
+    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        strcat(buffer, separator);
+        short gold = (cell->extraInfo & 0x1f) * 500;
+        if (gold == 0)
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_windmill_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WINDMILL]);
+    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        strcat(buffer, separator);
+        unsigned long amount = cell->extraInfo >> 13;
+        if ((amount & 0xf) == 0)
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
 // E:\gamedcs\advmgr.cpp:3146
 // 90.0426 -> 90.9026 (2026-08-20) on the explicit type_cell_adjuster
 // restore at the foot of the body - see the comment at that site for why
 // the obscure_cell/restore_cell census is exactly 2x ours and why the
 // first copy is a STATEMENT, not a scope exit.
 //
-// Residual (90.9026%): CROSS-JUMPING of the SET_VISITED_ROLLOVER /
+// HISTORICAL 90.9026% plateau: CROSS-JUMPING of SET_VISITED_ROLLOVER /
 // APPEND_VISIT_TEXT macro bodies, in BOTH directions, plus one genuinely
 // missing sprintf. The call-sequence alignment (base 65 out-of-line calls
 // against retail's 66) localises it exactly, between anchors that resolve
@@ -3083,17 +3175,43 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero,
 // non-cross-jump row is the QuestGuard string temporary: retail expands
 // basic_string::_Tidy there and calls operator delete, we call _Tidy,
 // which is an A8/A9 under-inline (budget), not a spelling.
+//
+// CURRENT 2026-08-21 (93.938970%, from 90.902565%). Dreamcast CodeView's
+// function-scope roster is visited, player, iThisPlayer, currHero,
+// tempText[500], adjuster, playerbit, and infolevel. Restoring that roster
+// exposes the decisive negative evidence: the four per-case arena/dead-guy/
+// lean-to/garden bit temporaries were invented. Feeding their shifts straight
+// into the shared visited carrier raises this body by 2.82 points. Routing
+// HILL_FORT and UNIVERSITY through the separate infolevel carrier adds another
+// 0.21. The DC-proven set_town_help/set_hero_help/set_pyramid_help source
+// carriers inline away and are byte-flat here; the four 3-parameter helper
+// calls regress because this retail caller uses its local player index while
+// QuickInfo's inlined copies use gNetLocalGamePos, so those arms stay direct.
+//
+// The out-of-line call census is now exact (66 each). predict-inline's only
+// positional residue is the QuestGuard string teardown: our side calls _Tidy
+// and operator delete once, retail retains one fewer _Tidy call and calls
+// operator delete twice. Naming the returned string scores 93.931694 and is
+// rejected. Duplicating MONSTER's sprintf arms also supplies the historical
+// missing call but re-lays out the switch and falls to 93.674760; call counts
+// already agree after the carrier fix, so that older lead is closed.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
     if (advWindow->chatEdit->bHasFocus)
         return;
 
-    char tempText[500];
-    int player = gpGame->GetLocalPlayerGamePos();
-    playerData* thisPlayer = gpGame->GetLocalPlayer();
-    int playerBit = 1 << player;
+    int visited;
+    playerData* thisPlayer;
+    int player;
     hero* currentHero;
+    char tempText[500];
+    int playerBit;
+    int infolevel;
+
+    player = gpGame->GetLocalPlayerGamePos();
+    thisPlayer = gpGame->GetLocalPlayer();
+    playerBit = 1 << player;
     if (thisPlayer->currHeroId != -1)
         currentHero = &gpGame->heroes[thisPlayer->currHeroId];
     else
@@ -3105,7 +3223,6 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         0x00660330, rolloverSpaceSeparator, " ");
     const char* visitedFormat = DATA_COMPGEN(
         0x0066034c, rolloverVisitedFormat, " %s");
-    int visited;
 
 #define APPEND_VISIT_TEXT(isVisited)                                      \
     visited = (isVisited);                                                \
@@ -3121,8 +3238,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     case objectType:                                                      \
         strcpy(gText, gAdventureObjectNames[objectType]);                 \
         if (cell->is_trigger) {                                           \
-            visited = gpGame->GetInfoFlag(infoType, player);              \
-            if (visited) {                                                \
+            infolevel = gpGame->GetInfoFlag(infoType, player);            \
+            if (infolevel) {                                              \
                 sprintf(tempText, visitedFormat,                          \
                         gGlobalInfoFlagNames[infoType]);                   \
                 strcat(gText, tempText);                                  \
@@ -3149,8 +3266,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     case ARENA:
         strcpy(gText, gAdventureObjectNames[ARENA]);
         if (cell->is_trigger && currentHero) {
-            unsigned long arenaBit = 1UL << (cell->extraInfo & 0x1f);
-            APPEND_VISIT_TEXT(currentHero->ArenaFlags & arenaBit);
+            APPEND_VISIT_TEXT(currentHero->ArenaFlags
+                & (1UL << (cell->extraInfo & 0x1f)));
         }
         break;
     case BORDER_GATE:
@@ -3214,8 +3331,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     case DEAD_GUY:
         strcpy(gText, gAdventureObjectNames[DEAD_GUY]);
         if (cell->is_trigger && currentHero) {
-            unsigned long deadGuyBit = 1UL << (cell->extraInfo & 0x1f);
-            APPEND_VISIT_TEXT(thisPlayer->DeadGuyFlags & deadGuyBit);
+            APPEND_VISIT_TEXT(thisPlayer->DeadGuyFlags
+                & (1UL << (cell->extraInfo & 0x1f)));
         }
         break;
     SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
@@ -3266,26 +3383,25 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         & (1UL << (cell->extraInfo & 0x1f)));
     case HILL_FORT:
         strcpy(gText, gAdventureObjectNames[HILL_FORT]);
-        if (cell->is_trigger && gpGame->GetInfoFlag(HillFortInfo, player)) {
-            sprintf(tempText, visitedFormat,
-                    gGlobalInfoFlagNames[HillFortInfo]);
-            strcat(gText, tempText);
+        if (cell->is_trigger) {
+            infolevel = gpGame->GetInfoFlag(HillFortInfo, player);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        gGlobalInfoFlagNames[HillFortInfo]);
+                strcat(gText, tempText);
+            }
         }
         break;
-    case HERO: {
-        hero* mapHero = gpGame->GetHero(cell->extraInfo);
-        sprintf(gText,
-                gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                mapHero->name, mapHero->HeroFn_004D8F70());
+    case HERO:
+        set_hero_help(gText, cell);
         break;
-    }
     SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
         currentHero->flags & (0x02000000UL | 0x10UL));
     case LEAN_TO:
         strcpy(gText, gAdventureObjectNames[LEAN_TO]);
         if (cell->is_trigger && currentHero) {
-            unsigned long leanToBit = 1UL << (cell->extraInfo & 0x1f);
-            APPEND_VISIT_TEXT(thisPlayer->LeanToFlags & leanToBit);
+            APPEND_VISIT_TEXT(thisPlayer->LeanToFlags
+                & (1UL << (cell->extraInfo & 0x1f)));
         }
         break;
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
@@ -3336,8 +3452,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     case MYSTICAL_GARDEN:
         strcpy(gText, gAdventureObjectNames[MYSTICAL_GARDEN]);
         if (cell->is_trigger) {
-            unsigned long gardenBit = 1UL << (cell->extraInfo & 0x1f);
-            APPEND_VISIT_TEXT((thisPlayer->MysticalGardenFlags & gardenBit)
+            APPEND_VISIT_TEXT(
+                (thisPlayer->MysticalGardenFlags
+                 & (1UL << (cell->extraInfo & 0x1f)))
                 && !(cell->extraInfo & 0x400));
         }
         break;
@@ -3354,13 +3471,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         currentHero->PowerSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
     case PYRAMID:
-        strcpy(gText, gAdventureObjectNames[PYRAMID]);
-        if (cell->is_trigger && currentHero) {
-            strcat(gText, separator);
-            strcat(gText, cell->PlayerKnowsCell(currentHero->owner)
-                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-        }
+        set_pyramid_help(gText, cell, currentHero, separator);
         break;
     SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
         currentHero->flags & 0x10000);
@@ -3402,19 +3513,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
         currentHero->flags & (0x04000000UL | 0x100UL));
-    case TOWN: {
-        const town* mapTown = gpGame->GetTown(cell->extraInfo);
-        const char* townTypeName = gUnnamed6a74f4[cell->objectIndex];
-        const char* townName = mapTown->cName.begin();
-        if (!townName) {
-            townName = DATA_COMPGEN(
-                0x0063a608, townRolloverEmptyText, "");
-        }
-        sprintf(gText, DATA_COMPGEN(
-            0x0065f3d4, rolloverTownFormat, "%s, %s"),
-            townName, townTypeName);
+    case TOWN:
+        set_town_help(gText, cell);
         break;
-    }
     SET_VISITED_ROLLOVER(TRAINING_GROUNDS, TrainingGroundsInfo,
         currentHero->TrainingGroundsFlags
         & (1UL << (cell->extraInfo & 0x1f)));
@@ -3423,11 +3524,14 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     case UNIVERSITY:
         strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
-        if (cell->is_trigger && gpGame->GetInfoFlag(UniversityInfo, player)) {
-            sprintf(tempText, visitedFormat,
-                    gGlobalInfoFlagNames[UniversityInfo]);
-            strcat(gText, tempText);
-            APPEND_VISIT_TEXT(0);
+        if (cell->is_trigger) {
+            infolevel = gpGame->GetInfoFlag(UniversityInfo, player);
+            if (infolevel) {
+                sprintf(tempText, visitedFormat,
+                        gGlobalInfoFlagNames[UniversityInfo]);
+                strcat(gText, tempText);
+                APPEND_VISIT_TEXT(0);
+            }
         }
         break;
     case WAGON:
@@ -6442,86 +6546,6 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // measured regression is retained. Branch counters that include the bytes
 // after RET are invalid here: those bytes are the 57-dword jump table and
 // 216-byte case-index table, and happen to decode as bogus jcc opcodes.
-static void set_hero_help(char* buffer, const NewmapCell* cell)
-{
-    hero* mapHero = gpGame->GetHero(cell->extraInfo);
-    sprintf(buffer,
-            gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-            mapHero->name, mapHero->HeroFn_004D8F70());
-}
-
-static void set_pyramid_help(
-    char* buffer, const NewmapCell* cell, const hero* currentHero,
-    const char* separator)
-{
-    strcpy(buffer, gAdventureObjectNames[PYRAMID]);
-    if (cell->is_trigger && currentHero) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->PlayerKnowsCell(currentHero->owner)
-                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-static void set_wagon_help_text(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, gAdventureObjectNames[WAGON]);
-    if (cell->is_trigger) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->PlayerKnowsCell(gNetLocalGamePos)
-                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-static void set_tomb_help_text(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, gAdventureObjectNames[WARRIOR_TOMB]);
-    if (cell->is_trigger) {
-        strcat(buffer, separator);
-        strcat(buffer,
-               cell->PlayerKnowsCell(gNetLocalGamePos)
-                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-static void set_water_wheel_help_text(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, gAdventureObjectNames[WATER_WHEEL]);
-    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-        strcat(buffer, separator);
-        short gold = (cell->extraInfo & 0x1f) * 500;
-        if (gold == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
-static void set_windmill_help_text(
-    char* buffer, NewmapCell* cell, const char* separator)
-{
-    strcpy(buffer, gAdventureObjectNames[WINDMILL]);
-    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-        strcat(buffer, separator);
-        unsigned long amount = cell->extraInfo >> 13;
-        if ((amount & 0xf) == 0)
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
-        else
-            strcat(buffer,
-                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
-    }
-}
-
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
