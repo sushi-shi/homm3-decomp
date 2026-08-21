@@ -175,6 +175,12 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     //     partial count (4 -> 96.97, 8 -> 96.09, 12 -> 95.08, 24 -> 85.67).
     //     Naming a value that is already a temp adds no front-end mass;
     //     splitting `push_back(new X(...))` into two statements does.
+    // A release-elided call-shaped diagnostic sweep (2026-08-21) also does
+    // not supply the missing mass: one, two and four dead `MemError()` arms
+    // at function entry are byte-flat at 98.1326, while eight regress to
+    // 97.7430. The branch census stays 105 against retail's 107 throughout.
+    // Unlike the artifact/THall optimizer ghosts, this caller does not price
+    // that carrier in its winning window.
     // The DC xref census for this constructor otherwise MATCHES ours exactly
     // once the Dreamcast platform delta is subtracted (DC has no window-scroll
     // group: DC 16 buttons / 12 texts / 12 TTextResource::operator[] / 25
