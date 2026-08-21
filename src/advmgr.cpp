@@ -9731,8 +9731,6 @@ int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
 void advManager::ViewPuzzle()
 {
-    type_point centre;
-
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
     DemobilizeCurrHero(0, 1);
     int pos = gpGame->GetLocalPlayerGamePos();
@@ -9745,7 +9743,7 @@ void advManager::ViewPuzzle()
 
     if (gpGame->field_4e3e8 > 0) {
         gpWindowManager->SaveFizzleSourceX(8, 8, 592, 544);
-        centre = gpGame->get_puzzle_origin();
+        type_point centre = gpGame->get_puzzle_origin();
         int grailY = gpGame->ultimateArtifactY;
         int grailX = gpGame->ultimateArtifactX;
         gUnnamed6989f4 = 1;
@@ -9774,14 +9772,16 @@ void advManager::ViewPuzzle()
     if (!gUnnamed6aac3c) {
         RedrawAdvScreen(1, 0);
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
-        // SetHeroContext's merged y|z store idiom: both values in hand
-        // before the first bitfield write.
-        int centreX = radarOrigin.x + 9;
-        int centreY = radarOrigin.y + 8;
-        int centreZ = radarOrigin.z;
-        centre.x = centreX;
-        centre.y = centreY;
-        centre.z = centreZ;
+        // Two BLOCK-SCOPED points, and the tail one CONSTRUCTED (83.3125 ->
+        // 85.6339, 2026-08-21, frame 0x148 -> retail's 0x140 exactly). The
+        // single function-scope `centre` shared by the puzzle-origin block
+        // and this one held its slot live across the whole body; separate
+        // block-scoped locals coalesce. The ctor is the same lever that
+        // closed SetInitialMapOrigin: it merges the y|z bitfield word into
+        // one masked store where the named-int form the previous note
+        // reached for still emitted per-field read-modify-writes.
+        type_point centre(radarOrigin.x + 9, radarOrigin.y + 8,
+                          radarOrigin.z);
         SetEnvironmentOrigin(centre, 1);
     }
 }

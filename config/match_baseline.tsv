@@ -123,7 +123,7 @@ advmgr	?UpdBottomViewTown@advManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x164f0
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
 advmgr	?UpdateRadar@advManager@@QAEXUtype_point@@EEEEE@Z	90.6495	90.6495	90.6495	0x12c40
 advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
-advmgr	?ViewPuzzle@advManager@@QAEXXZ	83.3125	83.3125	83.3125	0x1a7f0
+advmgr	?ViewPuzzle@advManager@@QAEXXZ	85.6339	85.6339	85.6339	0x1a7f0
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	96.6429	96.6429	96.6429	0x16f80
 advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	93.2089	93.2089	93.2089	0xabe0
