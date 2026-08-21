@@ -8489,9 +8489,25 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // are slightly negative (89.44), and the nested switches alone reach 92.88;
 // together they reach 93.76. Replacing the two two-value nested switches
 // (GARRISON and CREATURE_GENERATOR_4) with their DC-looking if chains was
-// also measured and rejected on the pre-tail shape (88.37). Residual: base
-// has 16 conditional branches / 72 returns against retail's 17 / 71; one
-// duplicated exit and the remaining switch-block placement are C2 choices.
+// also measured and rejected on the pre-tail shape (88.37).
+//
+// 93.7570 -> 94.5074 (2026-08-21): THAT REJECTION EXPIRED WITH THE TAIL
+// REWRITE. Re-measured on the current shape, the two two-value if-chains now
+// PAY. The bytes name them directly: retail dispatches GARRISON with
+// `mov cx, word ptr [ecx+0x22] / test cx,cx / jne / cmp cx,1`, a word-width
+// if-chain with INLINE arms, where a `switch` forces `movsx eax,word / sub /
+// je / dec` because a jump table needs the index sign-extended. Equality
+// against a short compares at 16 bits; a switch cannot.
+//
+// Residual (94.51%): CROSS-JUMPER BLOCK SHARING, and the direction is ours.
+// Retail lays the CREATURE_GENERATOR_1 arm bodies out in exact source order
+// (0x21, 0x03, 0x15, 0x2e, 0x25, 0x09, 0x17, 0x32 ...); our compile omits the
+// 0x15/0x25/0x17 copies there and shares them with the identical-valued
+// blocks in the CREATURE_BANK switch, and does the same with 0x3c. Retail
+// keeps a private copy per arm. Same mnemonics, same values, one fewer
+// return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
+// source lever, since the duplicate blocks are duplicate BY VALUE and no
+// spelling can make two `return LOOPING_SOUND_23;` differ.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8532,11 +8548,11 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             }
         }
         case GARRISON:
-            switch (thisCell->objectIndex) {
-            case GET_SOUND_GARRISON_0: return LOOPING_SOUND_41;
-            case GET_SOUND_GARRISON_1: return LOOPING_SOUND_25;
-            default: return LOOPING_SOUND_INVALID;
-            }
+            if (thisCell->objectIndex == GET_SOUND_GARRISON_0)
+                return LOOPING_SOUND_41;
+            if (thisCell->objectIndex == GET_SOUND_GARRISON_1)
+                return LOOPING_SOUND_25;
+            return LOOPING_SOUND_INVALID;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8645,11 +8661,11 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             default: return LOOPING_SOUND_42;
             }
         case CREATURE_GENERATOR_4:
-            switch (thisCell->objectIndex) {
-            case GET_SOUND_GENERATOR4_0: return LOOPING_SOUND_43;
-            case GET_SOUND_GENERATOR4_1: return LOOPING_SOUND_12;
-            default: return LOOPING_SOUND_INVALID;
-            }
+            if (thisCell->objectIndex == GET_SOUND_GENERATOR4_0)
+                return LOOPING_SOUND_43;
+            if (thisCell->objectIndex == GET_SOUND_GENERATOR4_1)
+                return LOOPING_SOUND_12;
+            return LOOPING_SOUND_INVALID;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
