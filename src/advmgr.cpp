@@ -1099,17 +1099,29 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     provably false and retail still emits the compare - VC6 does not
 //     constant-propagate the switch value into an arm. Kept.
 //
-// Residual (77.17%): why-branch reports 123 vs 122 blocks and 80 vs 80
+// 77.1683 -> 77.3765 (2026-08-21): Dreamcast CodeView records a
+// function-scope `town* newTown`, and retail likewise materialises the
+// get_obscured_town result before the View call. Restoring that named
+// temporary is the measured gain below. Moving the also-attested
+// `bSaveShowRoute` and `msg` declarations to function scope is byte-flat
+// with and without newTown, so their narrower existing scopes are kept.
+// Release-elided TRACE carriers at 1/3/5/10 sites are byte-flat too: unlike
+// the town constructors, this body's already-exact call ledger does not
+// cross an optimizer threshold from those dormant call candidates.
+//
+// Residual (77.38%): why-branch reports 123 vs 122 blocks and 80 vs 80
 // branches - structurally converged - with exactly TWO polarity flips left
 // and no size or count divergence anywhere.
 //   #15 (+0x211) is the BuildPath budget select: retail lays the 0xea5f
 //     arm out as the fall-through, ours lays out movePoints. Three
 //     spellings were measured and ALL THREE emit byte-identical code
-//     (77.17 each), so VC6 normalises this block pair itself and the
+//     (now 77.38 each), so VC6 normalises this block pair itself and the
 //     order is not source-addressable here: the positive
 //     `if (F1 || F2) movePoints else 0xea5f` kept below, its De Morgan
 //     twin `if (!F1 && !F2) 0xea5f else movePoints`, and the same
-//     condition as a ternary feeding one initialiser.
+//     condition as a ternary feeding one initialiser. A fourth spelling,
+//     initialising to 0xea5f and conditionally assigning movePoints,
+//     adds a branch and regresses 77.3765 -> 76.9612.
 //   #46 (+0x46d) is the step loop's back edge: retail exits with `js`
 //     and returns with an UNCONDITIONAL `jmp` because it keeps
 //     gpSearchArray live in eax across the edge and reloads it at the
@@ -1117,9 +1129,12 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     rematerialisation half of the register-homing family, not a loop
 //     form - why-branch's own guided search moved all six D1/D2 loop
 //     mutations and none changed the distance (two made it far worse).
+//     Rechecking a hand-written top-tested `while (i >= 0)` after the
+//     newTown gain adds two branches and regresses 77.3765 -> 77.2027.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
+    town* newTown;
     NewmapCell* eventCell = 0;
     trigger_point->x = -1;
     hero* currHero = gpGame->GetHero(gpCurrentPlayer->currHeroId);
@@ -1319,7 +1334,8 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     case ADV_COMMAND_VIEW_OBSCURED_TOWN:
         DemobilizeCurrHero(0, 1);
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-        currHero->get_obscured_town()->View(0);
+        newTown = currHero->get_obscured_town();
+        newTown->View(0);
         eventCell = 0;
         break;
 
