@@ -9907,19 +9907,33 @@ unsigned char advManager::DoSystemOptions()
 // the wooded default. type_point's `short x:10, y:10, z:4` packing puts y
 // and z in the second allocation unit, which is why retail walks the loop
 // variable through `xor word ptr [p+2]` bitfield writes.
-// Residual (99.10%): the two lower clamps only. Retail tests `value < 0`
+// CASE ARM ORDER IS SOURCE ORDER HERE (99.0975 -> 99.1483, 2026-08-21).
+// This dispatches through a jump table (`jmp dword ptr [4*edx + tbl]`), so
+// the arm BODIES emerge in source order, and retail's run is
+// `inc [trees] / inc [mountains] / inc [dead]` against our
+// `trees / dead / mountains`. The counters' own slots are NOT the tell and
+// do not move - the majority vote at the bottom reads trees at -0xc, dead
+// at -0x8 and mountains at -0x4 identically on both sides, which is what
+// identifies each arm. Retail's source simply wrote DEAD_VEGETATION last.
+//
+// Residual (99.15%): the two lower clamps only. Retail tests `value < 0`
 // and yields the zero (`jl`), where this TU's `_cpp_max` spelling
 // (`_X > _Y ? _X : _Y`) tests `value > 0` and yields the value (`jg`).
-// Swapping to `_cpp_max(0, value)` DOES buy the retail polarity but costs
-// the shared zero: retail materialises one `xor esi, esi` feeding both
-// clamps, while the swapped order creates the constant first, parks it in
-// edx and re-emits an immediate 0 for the second clamp - measured 98.73,
-// strictly worse, so the higher-scoring order stands. The template itself
-// is NOT the knob: FindAdjacentMonster four functions up uses the same
+// RE-MEASURED at this plateau, both combinations. `_cpp_max(0, value)` buys
+// the retail polarity AND retail's whole temp-slot numbering (-0x1c value,
+// -0x14 zero, and the counter-init store order) - but it costs the shared
+// zero. Retail materialises one `xor esi, esi` that is STILL LIVE at the
+// minX clamp; the swapped order picks edx instead, loses it to the
+// gMapHeight load in the maxY clamp sitting between the two lower clamps,
+// and re-emits an immediate 0. Measured 98.7331 alone and 98.7839 with the
+// arm reorder, against 99.1483 for the order that stands. The template is
+// NOT the knob: FindAdjacentMonster four functions up uses the same
 // `_cpp_max(value, 0)` idiom and retail emits `jg` there, so this TU's
 // spelling is byte-proven and MoreTreesNear's source genuinely differed.
-// What remains beyond the polarity is frame-slot coalescing (arg-slot
-// [ebp+8] vs a negative scratch slot), the documented class.
+// Beyond the polarity, exactly one dword: our frame is 0x2c against
+// retail's 0x30 because retail gives maxX a real slot (-0x28) and spends
+// the recycled parameter home [ebp+8] on the loop's shifted-point temp,
+// where we do the reverse.
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
 int advManager::MoreTreesNear(type_point point)
 {
@@ -9947,9 +9961,6 @@ int advManager::MoreTreesNear(type_point point)
             case TERRAIN_YUCCA_TREE:
                 trees++;
                 break;
-            case TERRAIN_DEAD_VEGETATION:
-                dead++;
-                break;
             case TERRAIN_HILL:
             case TERRAIN_MOUND:
             case TERRAIN_MOUNTAIN:
@@ -9957,6 +9968,9 @@ int advManager::MoreTreesNear(type_point point)
             case TERRAIN_VOLCANIC_VENT:
             case TERRAIN_VOLCANO:
                 mountains++;
+                break;
+            case TERRAIN_DEAD_VEGETATION:
+                dead++;
                 break;
             }
         }
