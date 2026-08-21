@@ -8916,11 +8916,13 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         return;
     }
 
+    // The point is a TEMPORARY, not a named local: retail reads it back
+    // through the constructor's returned `this` (`call ??0type_point /
+    // mov eax,[eax]`), where naming it re-reads the frame slot instead.
 #pragma inline_depth(0)
-    type_point seedTarget(currentHero->pathTargetX, currentHero->pathTargetY,
-                          currentHero->pathTargetZ);
+    SeedTo(type_point(currentHero->pathTargetX, currentHero->pathTargetY,
+                      currentHero->pathTargetZ));
 #pragma inline_depth()
-    SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
     if (static_cast<int>(gpSearchArray->result.size()) <= 0

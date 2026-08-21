@@ -108,7 +108,7 @@ advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	93.9598	93.9598	93.9
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	100.0000	100.0000	100.0000	0xd8d0
 advmgr	?SetTownContext@advManager@@QAEXHEE@Z	88.1312	88.1312	88.1312	0x17830
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	100.0000	100.0000	100.0000	0xdb00
-advmgr	?ShowRoute@advManager@@QAEXHHH@Z	82.8525	82.8525	82.8525	0x18dd0
+advmgr	?ShowRoute@advManager@@QAEXHHH@Z	83.0188	83.0188	83.0188	0x18dd0
 advmgr	?StartLocalPlayerTurn@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19e00
 advmgr	?TownQuickView@advManager@@QAEXHHHE@Z	92.9411	92.9411	92.9411	0x167a0
 advmgr	?TrimLoopingSounds@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1a1e0
