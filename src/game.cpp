@@ -2643,6 +2643,12 @@ void game::setup_shipyards()
 // event-record return is byte-flat, while depth 0 calls the whole
 // ~SavedGameHeader and is the already-rejected shape. This is an inliner-
 // threshold residual; do not grind the same spellings again.
+// A release-elided diagnostic carrier is also MEASURED AND REJECTED
+// (2026-08-21). Call-shaped sites at function entry score 90.89 for doses
+// one and two, 91.99 for four, and 90.44 for eight, all below 92.37; one
+// site at either residual cleanup, or one at both, scores the same 90.89
+// with 76 branches. The carrier does move VC6's inliner, but never toward
+// retail's 72-branch phase, so it is not the missing source-history mass.
 static int load_lith_pool_count(int version)
 {
     return (((version < 32) - 1) & 5) + 3;
