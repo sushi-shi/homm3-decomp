@@ -145,7 +145,7 @@ public:
     void DoModal();
 
     TUpgradeSlot slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
-    int totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];       // +0x27c
+    long totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
     int UpgradeAllButtonState;                             // +0x298
     widget* RolloverWidget;                                // +0x29c
 
@@ -159,7 +159,7 @@ SIZE(THillFortWindow, 0x2a0);
 int HillFortWindowHandler(message& msg);
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) unsigned char CanAfford(const long* cost, const long* playerRes);
+// CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) bool CanAfford(const long* cost, const long* playerRes);
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:612, dc 0xd7458) int HillFortWindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:763, dc 0xd76ec) void UpdateHillFort(unsigned char bFirstUpdate);
 
