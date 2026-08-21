@@ -1937,24 +1937,25 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     gCastleWallColumns by the mover's row (gridIndex / 17), then scan
 //     DOWN from that hex for the first one that is both reachable and
 //     out of the moat, pricing BOTH cells of a two-hex stack.
-// Residual (82.20%): ONE register binding, and everything else follows
-// from it. Retail parks `estimate` in EBX for the whole enemy walk and
-// re-reads `current_army` from its parameter slot [ebp+8] at every use;
-// this compile does the reverse, reloading `estimate` from [ebp+0x14].
-// That is also why retail can RECYCLE the estimate parameter home as a
-// scratch slot for `max_ref`'s first operand at the tail
-// (`mov [ebp+0x14],eax / lea eax,[ebp+0x14]`) and we cannot. The CFG is
-// otherwise identical - 118 branches and 10 rets on both sides -
-// and `predict-inline` reports the call multisets AGREE (29 vs 29), so
-// there is no inliner lever here at all.
-// Two knock-on effects of the same binding, neither separately fixable:
-//   * our `enemy` pointer is BIASED +0x38 (`lea [ecx+8*eax+0x5504]`,
-//     then `[edi-0x4]`/`[edi+0x4c]`/`lea ecx,[edi-0x38]` for the call)
-//     where retail leas the unbiased `[esi+8*eax+0x54cc]` and reads the
-//     Is(21) word through the index expression instead;
-//   * retail expands the incapacitated triple SIX times (0x290 at t+78,
-//     197, 264, 373, 383, 391) and we expand it FIVE - VC6 CSE'd the
-//     enemy/best_enemy pair that retail re-tests.
+// CURRENT (89.69%, from 82.20% on 2026-08-21): two excess source carriers
+// caused the old whole-body register wall.  Leaving `estimate->enemy_side`
+// at its three uses lets VC6 CSE it into a home without creating the early
+// named pseudo; `estimate` then remains in EBX and `this` in ESI as retail
+// requires (88.91%).  Leaving `chooser.best_value` at its uses removes the
+// second unnecessary pseudo and reaches 89.69%.  Both are semantic no-ops,
+// but their front-end creation order is byte-load-bearing in VC6.
+//
+// The remaining plateau is mixed.  Both sides still have 118 branches and
+// 10 returns, but the base has 164 CFG blocks against retail's 166 and a
+// 0x348 frame against 0x350.  `predict-inline` localises one difference:
+// our CL expands the FINAL move_toward call while retail emits all three;
+// a statement-granular `inline_depth(0)` at that site is byte-flat, so the
+// ordinary inliner knob cannot reproduce the decision.  The rest is a
+// 337-slot scratch-register/scheduling residue, especially the loop-index
+// home and the max_ref tail.  Measured negative probes: a volatile loop
+// counter (81.70), an address-carried budget (79.64), and moving a named
+// enemy_side down beside the loop (76.38).  Naming/typing the side carrier
+// as volatile-long or unsigned-char changes diagnostics but is score-flat.
 //
 // Three spellings ARE byte-load-bearing and were measured one at a time:
 //   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said
@@ -1968,11 +1969,12 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     (six `mov [ebp-N],eax` stores THEN `rep stosd`): the two together
 //     are +1.89 (80.3043 -> 82.1977), while the memset move ALONE is
 //     -0.35. Doses are not independent; do not re-split this pair.
-//     Residual on this pair: budget still lands in ESI (frame 0x34c)
+//     At the old 82.20 plateau, budget still landed in ESI (frame 0x34c)
 //     where retail memory-homes it at [ebp-0x30] and keeps `this` in
 //     ESI - that 4-byte frame deficit is the register wall above, not a
 //     missing local.
-//     QUALIFIED 2026-08-20 by counting the slots on both sides, and the
+//     HISTORICALLY QUALIFIED 2026-08-20 by counting the slots on both sides,
+//     before the two unnamed-carrier corrections above. The
 //     "not a missing local" half does not survive the count. Both frames
 //     carry the same three byte locals and the same 48-byte
 //     type_AI_attack_hex_chooser (retail [ebp-0x64], ours [ebp-0x60] -
@@ -2019,7 +2021,6 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
     long enemy_attacks[COMBAT_GRID_CELLS];
 
     long side = estimate->side;
-    long enemy_side = estimate->enemy_side;
     const army* best_enemy = 0;
     long best_value = 0;
     long best_troops = 0;
@@ -2051,8 +2052,8 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                                           bCreaturePlacement, -1);
     unsigned char stay_in_castle = should_stay_in_castle(estimate);
 
-    for (long i = 0; i < numArmies[enemy_side]; i++) {
-        const army* enemy = &armies[enemy_side][i];
+    for (long i = 0; i < numArmies[estimate->enemy_side]; i++) {
+        const army* enemy = &armies[estimate->enemy_side][i];
         if (enemy->Is(21) & 1)
             continue;
         if (enemy->creatureType == CREATURE_ARROW_TOWER)
@@ -2109,25 +2110,24 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
                                                          distance);
         }
 
-        long value = chooser.best_value;
-        if (value <= 0 || (current_army->Is(22) & 1)
+        if (chooser.best_value <= 0 || (current_army->Is(22) & 1)
                 || (gpGame->setup.difficulty == 0 && !sideIsAI[side])) {
-            change += value;
+            change += chooser.best_value;
         } else if (current_army->creatureType == CREATURE_HARPY
                    || current_army->creatureType == CREATURE_HARPY_HAG) {
-            if (change < value) {
+            if (change < chooser.best_value) {
                 flag = 1;
-                change = value;
+                change = chooser.best_value;
             }
         } else if (change < 0 && has_ranged_advantage(estimate)) {
-            change = value;
+            change = chooser.best_value;
             flag = 1;
         } else {
-            change += value;
+            change += chooser.best_value;
         }
         if (change < 0
                 && (gpGame->setup.difficulty > 0 || sideIsAI[side])
-                && value < enemy_attacks[chooser.best_hex])
+                && chooser.best_value < enemy_attacks[chooser.best_hex])
             continue;
 
         long random = Random(75, 100);
@@ -2237,7 +2237,8 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
 
     *action_value = 0;
     if (!estimate->simulated
-            && get_area_effect(enemy_side, current_army, dangerous_enemies,
+            && get_area_effect(estimate->enemy_side, current_army,
+                               dangerous_enemies,
                                estimate) == 0
             && attempt_shooter_defense(current_army, gpSearchArray, estimate))
         return 1;
