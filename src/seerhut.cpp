@@ -672,8 +672,12 @@ void type_defeat_hero_quest::SetDefaultText()
 VA(0x0056ea30, 0xF9)  // anchor-vtable 0x64183c slot 6, retail-only
 std::string type_monster_quest::GetRequirementText()
 {
+    // The PLURAL name, byte-proven: retail loads the traits row at +0x18
+    // (m_plural_name), not +0x14 (m_name). A monster quest names a whole
+    // guarding stack, so the requirement line reads "Griffins", not
+    // "Griffin".
     const char* name = monster_id >= 0 && monster_id <= 0x96
-                           ? akCreatureTypeTraits[monster_id].m_name
+                           ? akCreatureTypeTraits[monster_id].m_plural_name
                            : emptyRolloverText;
     return name;
 }
@@ -689,7 +693,7 @@ std::string type_monster_quest::GetQuestDescription()
     return format_string(
         quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
         monster_id >= 0 && monster_id <= 0x96
-            ? akCreatureTypeTraits[monster_id].m_name
+            ? akCreatureTypeTraits[monster_id].m_plural_name
             : emptyRolloverText);
 }
 
@@ -902,6 +906,18 @@ void type_artifact_quest::Load(TAbstractFile* file, int version)
     int count;
 
     file->Read(&count, sizeof(unsigned char));
+    // Residual (99.9482%): our frame is 0x20 against retail's 0x1c and every
+    // dword local sits 4 lower. The missing fact is decoded: retail reads the
+    // byte into [ebp-0x10] and stores the running loop index straight back
+    // into THAT SAME slot, so `count` and the loop counter are one variable,
+    // not two. Spelling the merge (`for (count &= 0xff; count > 0; --count)`)
+    // does give retail's 0x1c frame exactly - and then lands the merged local
+    // at [ebp-0xc] where retail has a push_back temp, pushing one temp down
+    // and transposing ecx/edx through the whole grow path: 99.9482 -> 97.3938.
+    // Retail carries TWO temps above the counter (-0x8 and -0xc) where our
+    // expansion makes only one, so the residual after the merge is a
+    // temp-allocation-order divergence inside the inlined insert, not the
+    // loop. Keeping the two-variable form, which is closer.
     for (int i = count & 0xff; i > 0; --i) {
         short id;
 
@@ -918,6 +934,9 @@ void type_artifact_quest::LoadFromMap(TAbstractFile* file)
     int count;
 
     file->Read(&count, sizeof(unsigned char));
+    // Residual (99.9485%): same merged-counter class as slot 11 above, and
+    // the same measurement - spelling the merge fixes the frame and costs
+    // 2.54 points to the temp reshuffle.
     for (int i = count & 0xff; i > 0; --i) {
         short id;
 
@@ -1048,6 +1067,11 @@ void type_creature_quest::Load(TAbstractFile* file, int version)
     int count;
 
     file->Read(&count, sizeof(unsigned char));
+    // Residual (99.9310%): frame 0x28 against retail's 0x24 - the same
+    // merged-counter fact the artifact quest's readers carry. Retail masks
+    // the byte in place at [ebp-0xc] and reuses that slot for the running
+    // index; spelling the merge gives the 0x24 frame and costs 2.44 points
+    // to the temp reshuffle inside the inlined push_back.
     int i = count & 0xff;
     while (i--) {
         int type;
@@ -1076,6 +1100,7 @@ void type_creature_quest::LoadFromMap(TAbstractFile* file)
     int count;
 
     file->Read(&count, sizeof(unsigned char));
+    // Residual (99.9307%): same merged-counter class as slot 11 above.
     int i = count & 0xff;
     while (i--) {
         int type;
@@ -1589,6 +1614,19 @@ int TQuestGuard::read(TAbstractFile* infile)
     quest = create_quest(questType, 0);
     if (quest)
         quest->LoadFromMap(infile);
+    // Residual (96.2963%): ONE surplus instruction, the `xor eax,eax` this
+    // `return 0` emits between `pop edi` and `pop esi`. Every other byte of
+    // the body is exact, including retail's recycled parameter home - the
+    // type byte is read straight into [ebp+8] over the now-dead `infile`
+    // slot and reloaded as a masked dword. Retail sets NO return register
+    // here: it falls off the end and ships whatever the last call left in
+    // EAX (create_quest's pointer on the null path, LoadFromMap's leftovers
+    // otherwise). VC6 makes that a hard C4716 error in C++, not a warning,
+    // so the shape is only reachable by retyping this declarator - either to
+    // `void`, or by making quest slot 12 int-valued so the tail can read
+    // `return quest->LoadFromMap(infile);`. Both are non-additive edits to a
+    // header mapcell.cpp and game.cpp also include, so they are out of a
+    // matcher lane's reach; noted for whoever owns the quest vtable model.
     return 0;
 }
 
@@ -1608,9 +1646,12 @@ int TQuestGuard::save(TAbstractFile* outfile)
         quest->Save(outfile);
     }
 
-    unsigned char visited = visitedPlayers;
-    outfile->Write(&visited, sizeof(visited));
-    return 0;
+    // Retail returns the trailing Write's own result - there is no
+    // `xor eax,eax` in the epilogue, and TAbstractFile::Write is int-valued.
+    {
+        unsigned char visited = visitedPlayers;
+        return outfile->Write(&visited, sizeof(visited));
+    }
 }
 
 
