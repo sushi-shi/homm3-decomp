@@ -2982,7 +2982,7 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
     int delta_y = destIndex / COMBAT_GRID_ROW_STRIDE - source_y;
     if (delta_y == 0 && delta_x == 0)
         return 1;
-    int sample = 0;
+    int sample;
     int abs_y = abs(delta_y);
     int abs_x = abs(delta_x);
     float step_x;
@@ -2993,9 +2993,9 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
         step_y = static_cast<float>(delta_y) / static_cast<float>(abs_x);
         distance = abs_x;
     } else {
+        distance = abs_y;
         step_y = delta_y > 0 ? 1.0 : -1.0;
         step_x = static_cast<float>(delta_x) / static_cast<float>(abs_y);
-        distance = abs_y;
     }
 
     step_x /= 17.0f;
@@ -3003,7 +3003,7 @@ unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
     float x = static_cast<float>(source_x);
     float y = static_cast<float>(source_y);
     int samples = distance * COMBAT_GRID_ROW_STRIDE;
-    for (; sample < samples; sample++) {
+    for (sample = 0; sample < samples; sample++) {
         x += step_x;
         y += step_y;
         int hex = static_cast<int>(y) * COMBAT_GRID_ROW_STRIDE

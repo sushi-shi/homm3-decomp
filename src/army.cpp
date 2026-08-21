@@ -3528,6 +3528,15 @@ unsigned char army::is_enemy(const army* arg) const
 // depth 3 on a twice-divided budget. Retail's arithmetic only closes
 // with the two combatManager calls written here.
 VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
+// MEASURED AND REJECTED 2026-08-21: respelling the bCanShoot flag as
+// direct `return 0;`s (to chase the literal stores retail's INLINED
+// copy shows in get_total_combat_value) moves FOUR consumers the wrong
+// way at once - can_shoot 92.00 -> 73.54, get_total_combat_value
+// 94.74 -> 87.25, get_berserk_targets 92.52 -> 91.70,
+// spell_is_valid_on_target 91.07 -> 89.25. The flag is retail's own
+// source; the literal-store diamond in the get_total_combat_value
+// expansion is C2 folding the flag into control flow AT THAT SITE
+// (ours keeps one arm in EBX there), not a source shape.
 inline unsigned char army::can_shoot(const army* excluded) const
 {
     if (creatureType == ARMY_CREATURE_BALLISTA
