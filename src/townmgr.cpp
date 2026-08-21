@@ -1222,12 +1222,12 @@ void townManager::SetupTown(unsigned char fade)
 // sit here and why the compiland's four `push 0x78 / call exe_new` pairs
 // are what identify this row against the Dreamcast roster's NewStrips.
 //
-// Every hero-bearing arm reads its hero through game::GetHero TWICE -
-// once for the `!= -1` test the if already made and once for the
-// argument - and the null arm of the second expansion is left
-// unreachable behind it. That dead `xor edi,edi / jmp` is retail's own
-// and is what the inline getter costs; writing the hero into a local
-// removes it and the shape with it.
+// The garrison arm materialises one hero pointer before the allocation and
+// uses it for the hero/group arguments, then performs one fresh lookup for
+// the portrait.  The visiting arm materialises one pointer and reuses it for
+// all four hero-derived arguments.  In both cases VC6 coalesces the outer
+// id test with the first inline GetHero test but retains GetHero's unreachable
+// null arm (`jne / xor / jmp`).
 //
 // The garrison strip's icon set is 0xa1 when nobody is standing in the
 // slot and 0xa2 when somebody is, and the icon FRAME is the town's
@@ -1244,29 +1244,32 @@ VA(0x005c6e10, 0x29B)  // anchor-callee(strip ctor x4 + town::get_army/GiveSpell
 void townManager::NewStrips()
 {
     if (townToView->garrisonHeroId != -1) {
+        hero* garrisonHero = gpGame->GetHero(townToView->garrisonHeroId);
         field_11c = new strip(
             0xf1, 0x183, 0, 0xa2,
             gpGame->GetHero(townToView->garrisonHeroId)->portrait,
             townToView->owner,
-            gpGame->GetHero(townToView->garrisonHeroId),
-            &gpGame->GetHero(townToView->garrisonHeroId)->army,
+            garrisonHero, &garrisonHero->army,
             0x64, 0, TownWindow);
+        if (!field_11c)
+            MemError();
     } else {
         field_11c = new strip(
             0xf1, 0x183, 0, 0xa1,
             townToView->owner, townToView->owner, 0,
-            &townToView->get_army(), 0x64, 0, TownWindow);
+            const_cast<armyGroup*>(
+                &static_cast<const town*>(townToView)->get_army()),
+            0x64, 0, TownWindow);
+        if (!field_11c)
+            MemError();
     }
-    if (!field_11c)
-        MemError();
 
     if (townToView->visitingHeroId != -1) {
+        hero* visitingHero = gpGame->GetHero(townToView->visitingHeroId);
         field_120 = new strip(
             0xf1, 0x1e3, 1, 0xa2,
-            gpGame->GetHero(townToView->visitingHeroId)->portrait,
-            gpGame->GetHero(townToView->visitingHeroId)->owner,
-            gpGame->GetHero(townToView->visitingHeroId),
-            &gpGame->GetHero(townToView->visitingHeroId)->army,
+            visitingHero->portrait, visitingHero->owner,
+            visitingHero, &visitingHero->army,
             0x7c, 0, TownWindow);
         if (!field_120)
             MemError();

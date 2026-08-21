@@ -1874,7 +1874,7 @@ townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220
-townmgr	?NewStrips@townManager@@QAEXXZ	54.0837	54.0837	54.0837	0x1c6e10
+townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
