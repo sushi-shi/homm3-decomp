@@ -1962,6 +1962,12 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 // 21-stack row offset explicitly regresses to 88.1274 and still strength-
 // reduces the enemy pointer. The missing dword is not reachable by those
 // obvious address-taken spellings.
+// The Dreamcast function-scope roster is now exhausted too (2026-08-21):
+// widening `random_factor`, `i`, and `is_blocking_action` from their current
+// loop scopes is byte-flat individually, and widening all three together is
+// still exactly 89.6892 with the same 0x348 frame, 118 branches / 10 returns,
+// and sole polarity row. Lexical lifetime of the attested locals therefore
+// cannot supply retail's extra scalar home.
 //
 // Three spellings ARE byte-load-bearing and were measured one at a time:
 //   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said

@@ -947,13 +947,15 @@ SIZE(SGameSetupOptions, 0x1cc);
 // SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
 // +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
 // inner elements are trivially destroyed and its element type stays
-// unidentified. Modelled as opaque objects with the two operations
+// unidentified. Modelled as four-dword opaque objects (rather than byte
+// arrays) because the nested vectors have four-byte alignment; that alignment
+// is what makes SCampaign's +0x39..+0x3b gap implicit. The two operations are
 // declared out of line, which is exactly the code retail emits; spelling
 // the real nested vectors would instantiate them in every game.h consumer
 // for no gain.
 class SCampaignHeroPools {
 public:
-    char pad_00[0x10];
+    int pad_00[4];
 
     ~SCampaignHeroPools();
     SCampaignHeroPools& operator=(const SCampaignHeroPools& that);
@@ -962,7 +964,7 @@ SIZE(SCampaignHeroPools, 0x10);
 
 class SCampaignPools4c {
 public:
-    char pad_00[0x10];
+    int pad_00[4];
 
     ~SCampaignPools4c();
     SCampaignPools4c& operator=(const SCampaignPools4c& that);
@@ -979,14 +981,30 @@ public:
         char pad_0c[8];
     };
 
+#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
+    // TU-local layout views for retail's split nested teardown boundary.
+    // Retail calls the map-score vector destructor but expands the int-vector
+    // destructor while retaining its nested _Destroy call. The first declared
+    // destructor and the second implicit derived destructor reproduce exactly
+    // that call/cleanup ledger in the one TU that expands ~SCampaign.
+    class InlineInts : public std::vector<int> {
+    };
+    class OutOfLineMapScores : public std::vector<MapScore> {
+    public:
+        ~OutOfLineMapScores();
+    };
+#endif
+
     unsigned char isCheater;
     unsigned char secretActive;
     signed char currentMap;
-    char pad_03;
+    // The alignment gaps after currentMap, crossoverArrayIndex and
+    // campaignCompleted are deliberately IMPLICIT. Retail's generated
+    // assignment does not copy them; naming them as char members created two
+    // extra byte-copy loops in TCampaignWindow's constructor.
     int currentCampaign;
     int numMapRegions;
     signed char crossoverArrayIndex;
-    char pad_0d[3];
     int briefingChoice;
     // +0x14, and a std::string rather than the char[0x10] this was: the
     // memberwise assignment in TCampaignWindow's constructor drives the
@@ -996,16 +1014,23 @@ public:
     // after it moves.
     std::string campaignFilename;
     unsigned char campaignCompleted[21];
-    char pad_39[3];
     SCampaignHeroPools carryOverHeroes;
     SCampaignPools4c field_4c;
+#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
+    OutOfLineMapScores mapScores;
+#else
     std::vector<MapScore> mapScores;
+#endif
     // +0x6c, the fourth assignable sub-object. Its operator= is the
     // four-byte-element vector::operator= at 0x50ac00 and its teardown is
     // INLINE in the same constructor - _Destroy over [_First, _Last),
     // operator delete on _First, then all three words zeroed - so the slot
     // is a std::vector over a 4-byte element whose identity is unproven.
+#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
+    InlineInts field_6c;
+#else
     std::vector<int> field_6c;
+#endif
 
     // Retail's copy assignment and destructor are COMPILER-GENERATED, and
     // the image proves it from both sides of the /Ob2 split:
@@ -1041,9 +1066,11 @@ public:
     // implicit re-test at the current baselines still costs game::Load
     // 92.3721 -> 66.6252 and Save 93.5676 -> 78.2887, but campaignwindow.obj
     // alone needs the compiler-generated members and rises 82.5365 ->
-    // 91.1679. HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN exposes that faithful
-    // view only to the proving TU; every other consumer retains the declared
-    // COMDAT calls retail uses there.
+    // 91.1679. The completed narrow view also models the nested vector split
+    // and implicit padding above, taking that constructor to 98.4726 with an
+    // exact 39/39 call ledger and flow-distance zero.
+    // HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN exposes it only to the proving
+    // TU; every other consumer retains the declared COMDAT calls retail uses.
     SCampaign();
 #ifndef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
     ~SCampaign();

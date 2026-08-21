@@ -524,7 +524,7 @@ campaignbrief	??1TCampaignBrief@@UAE@XZ	98.2083	98.2083	98.2083	0x5afb0
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
-campaignwindow	??0TCampaignWindow@@QAE@EH@Z	91.1679	91.1679	91.1679	0x5ea40
+campaignwindow	??0TCampaignWindow@@QAE@EH@Z	98.4726	98.4726	98.4726	0x5ea40
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0
 campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	81.6384	81.6384	81.6384	0x5f2f0

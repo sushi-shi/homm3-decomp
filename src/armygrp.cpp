@@ -2142,7 +2142,10 @@ std::string armyGroup::get_morale_description(
 // this one and BOTH lose - the whole devil block -7.6 (-> 76.8563) and the
 // devil member pick alone as the thinner slice -6.4 (-> 78.1018) - so this
 // body, like its twin, wants exactly one lift and it is the magic-terrain
-// arm.  The +4-site probe above is NOT re-measured against this baseline.
+// arm.  The old +4-site probe has now been re-measured against this baseline
+// (2026-08-21): four `limit` candidates in the lifted clover helper regress
+// 84.5060 -> 74.7246.  The helper changed the budget phase; a hidden four-call
+// VERIFY family is not the remaining lever at the retained source shape.
 static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
                                      int& currentLuck, std::string& result)
 {
