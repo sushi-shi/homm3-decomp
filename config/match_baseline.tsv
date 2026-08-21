@@ -560,7 +560,7 @@ cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	99.3528	99.3528	99.3528	0x63600
 cmbtmgr	?LoadIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63370
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
-cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	0.0000	0.0000	33.3711	0x6a070
+cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x6a070
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?MakeCreaturesVanish@combatManager@@QAEXXZ	96.8312	96.8312	96.8312	0x66e00
 cmbtmgr	?NextArmy@combatManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x65080

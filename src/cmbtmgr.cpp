@@ -4309,16 +4309,13 @@ void combatManager::LearnSpellFromEagleEye(int side)
 #endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
-// RECONSTRUCTED 2026-08-20. The previous lane's survey named two
-// blockers; both are gone. hero::GiveArtifact already returns
-// `unsigned char` in hero.h and hero.cpp (a sibling lane landed that
-// retype), so no coordination was needed, and the STL question answers
-// itself - <vector> is already in cmbtmgr.h's closure through army.h,
-// so the real Dinkumware std::vector<type_artifact> costs no include
-// edge and its own headers decide where insert expands. They decide it
-// the way retail did: the first loop's append becomes an out-of-line
-// call and the second loop's expands inline, which is why our 243
-// instructions sit against retail's 256 rather than 243 against ~600.
+// RECONSTRUCTED 2026-08-20, CLOSED AT 100.0000 2026-08-21. The previous
+// lane's survey named two blockers; both are gone. hero::GiveArtifact
+// already returns `unsigned char` in hero.h and hero.cpp (a sibling
+// lane landed that retype), so no coordination was needed, and the STL
+// question answers itself - <vector> is already in cmbtmgr.h's closure
+// through army.h, so the real Dinkumware std::vector<type_artifact>
+// costs no include edge.
 //
 // The parameter is a REFERENCE. The DC roster text renders it
 // `std::vector<...>* looted_artifacts`, but the S_PUB32 mangling is
@@ -4327,24 +4324,40 @@ void combatManager::LearnSpellFromEagleEye(int side)
 // rendering and not a pointer parameter. Codegen is identical either
 // way; the mangling is the only witness, and it is unambiguous.
 //
-// UNSCORED, AND NOT BECAUSE OF THIS BODY. objdiff declines to diff this
-// function at all - report.json carries the entry with its size and
-// demangled name but no fuzzy_match_percent, which sema/context.py
-// documents as "absent = not diffed, NOT 100". Ruled out by
-// measurement, not by argument: the base and target symbol name strings
-// are byte-identical in both the raw and the normalized objects; the
-// mnemonic sets are identical; name length is not it (a 180-character
-// template name in textresource scores 100); and switching the
-// parameter from pointer to reference did not move it. The NEGATIVE
-// CONTROL is exact - delete only the two `insert` calls, changing
-// nothing else, and the same function scores 33.3711%. So the trigger
-// is this object emitting the std::vector<type_artifact> template
-// COMDATs (?insert@, ?size@, ?_Ucopy@, ?_Ufill@), which appear in the
-// base and have no counterpart in the delinked target.
+// THE 0.0000 THIS ROW SAT AT WAS AN objdiff CLAMP, NOT A DIFF REFUSAL.
+// A prior revision of this block claimed objdiff "declines to diff"
+// the function and blamed the std::vector<type_artifact> template
+// COMDATs. Both claims were wrong (measured with objdiff-cli one-shot
+// diff + objdiff v3.7.3 source, objdiff-core/src/diff/code.rs): the
+// symbols pair fine and the diff runs - 387 aligned rows, prologue and
+// epilogue matching - but the middle fully desynced (144 DELETE + 131
+// INSERT rows) because our compile expanded the FIRST loop's insert
+// where retail keeps a call, so the expansions never aligned. objdiff's
+// max_score counts only the target side (256 instructions x
+// PENALTY_INSERT_DELETE) while diff_score adds the penalty for BOTH
+// sides' unmatched rows (275 x 100), then clamps - hence exactly 0.0,
+// and protobuf-JSON drops the 0.0-default field from report.json. The
+// surviving valid measurement from that revision is the negative
+// control: delete the two inserts and the score is 33.3711% - fewer
+// unmatched rows, no clamp - which proved the body itself was sound.
 //
-// The body is kept complete rather than trimmed to the 33% that scores:
-// dropping the append would be a semantic defect banked for a number.
-// When the diff tool learns this case, the row banks on its own.
+// WHAT ACTUALLY CLOSED IT: retail CALLS the equipped loop's insert
+// (0x54d330) and EXPANDS the backpack loop's, keeping the expansion
+// SHALLOW (_Ucopy x3, _Ufill x2, operator new, _Destroy, delete out of
+// line). That is the /Ob2 budget at its 1000 floor: retail's caller is
+// small enough pre-inline that site 1 gets budget/2 < cost (call) and
+// site 2 gets the remainder (shallow expand). Our monolithic body sat
+// above the floor, so the decisions came out inverted and deeper. Three
+// moves reproduce retail exactly, closing 0.0 -> 67.89 -> 84.56 ->
+// 91.55 -> 100.0000: a statement-scoped inline_depth(0) pin on the
+// equipped loop's insert (with end() hoisted to an iterator local so
+// the pin cannot de-inline it), then the three statics below - the
+// guard chain, then each loop body as a single-call-site static
+// (inlined back regardless of size) - which drop the caller's
+// pre-inline cb, the budget numerator, to the floor. The ESI/EDI
+// transposition and the 4-byte frame surplus the intermediate scores
+// showed were downstream of the inline structure and dissolved with
+// the last dose; no register spelling was needed.
 //
 // The body is hero::TransferArtifacts with GiveArtifact swapped in for
 // add_to_backpack and the append added. The seven-way refusal chain is
@@ -4353,6 +4366,58 @@ void combatManager::LearnSpellFromEagleEye(int side)
 // artifact.h's values reproduce retail's compare order (-1, 2, 0, 3, 4,
 // 5, 6) with no reordering, which is the corroboration that the two
 // bodies really are one source shape written twice.
+// /Ob2 budget shaping: the guard chain lifted into a static keeps
+// LootDeadHero's own pre-inline mass down; VC6 inlines it straight back
+// at both sites, so the emitted bytes are the chain longhand.
+static int is_unlootable_artifact(int artifactId)
+{
+    return artifactId == ARTIFACT_NONE ||
+           artifactId == ARTIFACT_HOLY_GRAIL ||
+           artifactId == ARTIFACT_SPELLBOOK ||
+           artifactId == ARTIFACT_CATAPULT ||
+           artifactId == ARTIFACT_BALLISTA ||
+           artifactId == ARTIFACT_AMMO_CART ||
+           artifactId == ARTIFACT_FIRST_AID_TENT;
+}
+
+// Second /Ob2 dose, same direction: the whole equipped-loop body in a
+// single-call-site static (inlined back regardless of size), so the
+// caller's pre-inline cb - the budget numerator - falls further and the
+// backpack loop's insert expansion goes shallow like retail's.
+static int loot_equipped_slot(hero* winner, hero* dead, int slot,
+                              std::vector<type_artifact>* loot)
+{
+    type_artifact artifact = dead->equipped[slot];
+    if (is_unlootable_artifact(artifact.artifactId))
+        return 1;
+    if (!winner->GiveArtifact(&artifact, 1, 0))
+        return 0;
+    dead->remove_artifact(slot);
+    std::vector<type_artifact>::iterator where = loot->end();
+#pragma inline_depth(0)
+    loot->insert(where, 1, artifact);
+#pragma inline_depth()
+    return 1;
+}
+
+// Third dose, symmetric: the backpack-loop body in its own
+// single-call-site static. No pin inside - retail EXPANDS this loop's
+// insert - but the lift keeps the caller at the budget floor so the
+// expansion's helpers (_Ucopy/_Ufill/_Destroy/delete) stay out of line
+// the way retail's do.
+static int loot_backpack_slot(hero* winner, hero* dead, int index,
+                              std::vector<type_artifact>* loot)
+{
+    type_artifact artifact = dead->backpack[index];
+    if (is_unlootable_artifact(artifact.artifactId))
+        return 1;
+    if (!winner->GiveArtifact(&artifact, 1, 0))
+        return 0;
+    dead->remove_backpack_artifact(index);
+    loot->insert(loot->end(), 1, artifact);
+    return 1;
+}
+
 VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
 void combatManager::LootDeadHero(int side,
                                  std::vector<type_artifact>& looted_artifacts)
@@ -4364,36 +4429,15 @@ void combatManager::LootDeadHero(int side,
     hero* dead = heroes[1 - side];
     if (!dead)
         return;
+    std::vector<type_artifact>* loot = &looted_artifacts;
     hero* winner = heroes[side];
     for (int slot = 0; slot < 19; slot++) {
-        type_artifact artifact = dead->equipped[slot];
-        if (artifact.artifactId == ARTIFACT_NONE ||
-            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
-            artifact.artifactId == ARTIFACT_SPELLBOOK ||
-            artifact.artifactId == ARTIFACT_CATAPULT ||
-            artifact.artifactId == ARTIFACT_BALLISTA ||
-            artifact.artifactId == ARTIFACT_AMMO_CART ||
-            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
-            continue;
-        if (!winner->GiveArtifact(&artifact, 1, 0))
+        if (!loot_equipped_slot(winner, dead, slot, loot))
             return;
-        dead->remove_artifact(slot);
-        looted_artifacts.insert(looted_artifacts.end(), 1, artifact);
     }
     for (int index = 63; index >= 0; index--) {
-        type_artifact artifact = dead->backpack[index];
-        if (artifact.artifactId == ARTIFACT_NONE ||
-            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
-            artifact.artifactId == ARTIFACT_SPELLBOOK ||
-            artifact.artifactId == ARTIFACT_CATAPULT ||
-            artifact.artifactId == ARTIFACT_BALLISTA ||
-            artifact.artifactId == ARTIFACT_AMMO_CART ||
-            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
-            continue;
-        if (!winner->GiveArtifact(&artifact, 1, 0))
+        if (!loot_backpack_slot(winner, dead, index, loot))
             return;
-        dead->remove_backpack_artifact(index);
-        looted_artifacts.insert(looted_artifacts.end(), 1, artifact);
     }
 }
 
