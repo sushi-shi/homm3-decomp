@@ -1557,6 +1557,7 @@ seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU
 seerhut	?GetRequirementText@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e240
 seerhut	?GetRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0
 seerhut	?GetRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	99.9903	99.9903	99.9903	0x16ea30
+seerhut	?GetRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580
 seerhut	?GetRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	95.6667	95.6667	95.6667	0x16d960
 seerhut	?Load@type_artifact_quest@@UAEXPAVTAbstractFile@@H@Z	92.4041	92.4041	92.4041	0x16fcb0
 seerhut	?Load@type_be_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172200
@@ -1593,7 +1594,7 @@ seerhut	?SetDefaultText@type_belong_to_player_quest@@UAEXXZ	74.9421	74.9421	74.9
 seerhut	?SetDefaultText@type_creature_quest@@UAEXXZ	55.2734	55.2734	55.2734	0x1713c0
 seerhut	?SetDefaultText@type_defeat_hero_quest@@UAEXXZ	73.8583	73.8583	73.8583	0x16e6f0
 seerhut	?SetDefaultText@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d720
-seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	46.2429	46.2429	46.2429	0x171cc0
+seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0
 seerhut	?SetDefaultText@type_skill_quest@@UAEXXZ	83.1269	83.1269	83.1269	0x16e0d0
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860
 seerhut	?TakePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0
