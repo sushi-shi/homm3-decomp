@@ -236,6 +236,10 @@ public:
             field_04 ? gQuestTextA[field_38] : gQuestTextB[field_38];
         return row + QUEST_TEXT_COLUMNS * quest_type();
     }
+    // The row-selecting half of quest_texts(), emitted out of line at
+    // 0x52e6b0.  Large callers use this body while the smaller slot-14
+    // functions inline the same field_04/field_38 calculation.
+    const std::string* quest_text_row();
     const std::string& quest_text(int column)
     {
         // The ternary is on the whole INDEXED ROW, not on the table
@@ -365,6 +369,7 @@ public:
     int resources[7];  // +0x40
 
     virtual int GetAIValue(int player);
+    virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
     virtual void Save(TAbstractFile* file);

@@ -253,6 +253,18 @@ type_quest* create_quest(int questType, unsigned char flags);
 // include-set residual class makes a one-line declaration the cheaper edge.
 std::string format_string(const char* format, ...);
 
+// The seven localized resource names.  The resource-quest string builders
+// walk this array in lockstep with their seven-dword payload.
+DATA(0x006a5e64) extern const char* gResourceNames[7];
+
+// seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
+// localized final separator and returns the result through the usual hidden
+// std::string return buffer (ECX), with the vector reference in EDX under
+// this compiland's /Gr profile.  Unclaimed - declared so the three container
+// quest requirement builders can name the shared operation.
+std::string join_quest_requirements(
+    const std::vector<std::string>& requirements);
+
 // kb.obj's centred message box, 0x4f6570 - kb.h declares it, but the ten
 // quest dialog bodies below are this compiland's only consumers of that
 // header and the include-set residual class makes a one-line declaration
@@ -1039,6 +1051,26 @@ int type_resource_quest::GetAIValue(int player)
 {
     return AI_resource_cost(player, resources);
 }
+// Slot 6 builds one localized `count name` fragment for every nonzero
+// resource and hands the vector to seerhut.obj's shared list formatter.
+// The `%d %s` datum at 0x6778a4 and the lockstep walks of resources and
+// gResourceNames identify both arguments directly.
+// E:\gamedcs\seerhut.cpp
+VA(0x00571580, 0x15A)  // anchor-vtable 0x6418f0 slot 6, retail-only
+std::string type_resource_quest::GetRequirementText()
+{
+    std::vector<std::string> requirements;
+    std::string requirement;
+    for (int i = 0; i <= 6; i++) {
+        if (resources[i] > 0) {
+            requirement = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                resources[i], gResourceNames[i]);
+            requirements.push_back(requirement);
+        }
+    }
+    return join_quest_requirements(requirements);
+}
 // E:\gamedcs\seerhut.cpp
 VA(0x005716e0, 0xCF)  // anchor-vtable 0x6418f0 slot 7 + the shared text-table shape, retail-only
 std::string type_resource_quest::GetQuestDescription()
@@ -1094,14 +1126,21 @@ void type_resource_quest::Save(TAbstractFile* file)
 VA(0x00571cc0, 0x23E)  // anchor-vtable 0x6418f0 slot 14 + the shared text-table shape, retail-only
 void type_resource_quest::SetDefaultText()
 {
+    std::vector<std::string> requirements;
     std::string requirement;
-    requirement = GetRequirementText();
-    const std::string* texts = quest_texts();
+    const std::string* texts =
+        quest_text_row() + QUEST_TEXT_COLUMNS * quest_type();
+    for (int i = 0; i <= 6; i++) {
+        if (resources[i] > 0) {
+            requirement = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                resources[i], gResourceNames[i]);
+            requirements.push_back(requirement);
+        }
+    }
+    requirement = join_quest_requirements(requirements);
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
-                              requirement.c_str());
-    if (progressText.length() == 0)
-        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
                               requirement.c_str());
     if (completionText.length() == 0)
         completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
