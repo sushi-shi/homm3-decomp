@@ -2725,6 +2725,15 @@ void combatManager::MirrorImage(int targetIndex, int level)
 // decision and no spelling tried moved it; the rest is scratch-register
 // renaming around the 0-in-EDI the loop exits leave behind.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
+// Residual (93.44%, re-read 2026-08-21): two clusters plus the EH push
+// addend. (1) Our compile DUPLICATES the try_next_row header (Pick +
+// candidate arithmetic, 10 instructions) into the goto edge where
+// retail jumps back to one shared copy - the same duplicated-header
+// class place_obstacle measured unreachable through every loop
+// spelling (goto form already in use here). (2) Ours caches `hex` in
+// ESI at the exit test where retail re-reads its frame slot; the
+// homing rides on the duplication. Not re-ground on the place_obstacle
+// precedent.
 void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
                                     int iSpellPower, int level)
 {
