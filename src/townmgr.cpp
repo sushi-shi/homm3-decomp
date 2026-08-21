@@ -560,33 +560,44 @@ void townManager::SetupExtraStuff()
 // state table, which is also why /OPT:ICF could not fold them.
 // ---------------------------------------------------------------------
 
-// Residual (95.59%): a stack-slot count, and one /Ob2 candidate site
-// under it. Every widget, literal, id, font, frame, coordinate, branch
-// and the resource loop's whole shape are retail's - the two bodies
-// agree instruction for instruction and both expand exactly nine vector
-// inserts inline. What differs is the frame: retail reserves SIX scalar
-// dwords (`sub esp, 0x18`) and ours five, because our CL folds the
-// reserve expansion's dead buffer temp onto the slot that later carries
-// the raw `new` pointer and the push_back value, where retail keeps them
-// apart. Every later slot is renamed by one position, and that rename is
-// the whole delta. A byte-inert single-call-site probe placed at the end
-// of the body - one /Ob2 candidate site - lifts it to 97.05%, so the
-// site count is one short here as well, but even then the frame does not
-// grow, so the slot fold is a separate cause and no legitimate spelling
-// for that site was found. Tried and rejected: named locals for the two
-// loop widgets (95.50), a named local for the off-screen buffer (95.54),
-// a function-scope `int i` (95.59, byte-identical), and retail's own
-// induction variable - the text widget id counting 172..179 with the
-// icon id spelled `id - 8` (95.53).
+// Residual (98.95%): one final /Ob2 boundary and one C2 stack-slot tie.
+// Every widget, literal, id, font, frame, coordinate and branch is retail's.
+// The optimizer-elided diagnostic at the tail is the missing source-history
+// carrier: its Widgets.size() argument adds one inlinable accessor candidate
+// without emitting the call, string or accessor. That moves the widget-vector
+// insertion boundary to retail's position (54 out-of-line insert calls on both
+// sides) and makes all 165 branch mnemonics and symbolic targets agree.
 //
-// Also measured and rejected: byte-inert front-end mass, the
-// `budget = 2*caller_cb` lever that took THallWindow's constructor from
-// 85.99% to 99.66%. Here it only makes things worse - 40 dead statements
-// 95.54%, 70 of them 93.20% - so this caller's cb is already past the
-// knife edge and the slot fold is not budget starvation. What our CL
-// does differ on is the reserve's `_Construct` (`predict-inline`: ours
-// calls it once, retail zero times), which is precisely the expansion
-// that owns the folded buffer temp.
+// The carrier class is independently evidenced in this TU: three analogous
+// TRACE-shaped sites make TCastleWindow's constructor exact, while the
+// Dreamcast image contains both dreamprintf and OutputDebugStringW. Its macro
+// name, text and exact placement are unattested and explicitly provisional;
+// none survives in the object. Controls separate the useful accessor site
+// from printf-shaped mass: one no-argument TRACE at the tail, one at entry,
+// and three at entry all score 95.54. The accessor-bearing tail site alone
+// raises the body from 95.5868 to 98.9497.
+//
+// Conventional release VERIFY shapes are close but distinguishable:
+// `(void)Widgets.size()`, `(void)!Widgets.empty()` and the natural 79-widget
+// equality invariant all score 98.83. VERIFY therefore remains historically
+// possible, but none of the evidenced forms reproduces the best codegen.
+//
+// Two compiler-state differences remain. First, our first of the final three
+// Widgets.push_back calls still expands where retail calls it; ours therefore
+// emits 318 calls to retail's 319, although the later two push_back calls and
+// the final begin/end sweep agree. Second, retail reserves six scalar dwords
+// (`sub esp,0x18`) while ours reserves five (`sub esp,0x14`). The reserve
+// expansion itself is instruction-identical, but retail homes (new buffer,
+// limit) at (-0x18,-0x1c) where ours swaps them, then gives the old-First temp
+// a fresh -0x24 slot; ours reuses -0x14 and later -0x1c. The diagnostic fixes
+// the insertion phase but cannot reach this temp-allocation tie.
+//
+// Other bounded negatives: named locals for the two loop widgets (95.50), a
+// named off-screen buffer (95.54), a function-scope `int i` (byte-identical),
+// the text-widget induction variable with icon id `id-8` (95.53), 4/8/16
+// self-assign probes (byte-identical), 40 dead statements (95.54), and 70
+// (93.20). Local spelling and undifferentiated budget mass are closed; the
+// remaining slot and single-call boundary wait on broader TU-state evidence.
 
 // The town screen itself - the one window in the compiland that is a
 // plain heroWindow rather than a CAdvPopup, which is what its nine-slot
@@ -598,45 +609,9 @@ void townManager::SetupExtraStuff()
 // and by a bare `ret`.
 
 // E:\gamedcs\townmgr.cpp:2261
-// CLASSIFIED 2026-08-14, so lane 15 need not re-derive it: this row is
-// the same /Ob2 POSITIONAL class as BuyBuild and THallWindow, not a
-// shape row. `sema diff --branches` reports 165 branches and 1 ret on
-// BOTH sides and then refuses to pair them ("more than 4 rows differ"),
-// which reads like a differently-shaped body and is not one. Aligning
-// the two branch-mnemonic streams directly puts the first 115 branches
-// in exact agreement, then a TWO-BRANCH phase shift, then agreement
-// again to the last: at the widget whose `new` lands at +0x141c retail
-// CALLS the push_back's insert (`push edx / push 1 / push eax /
-// mov ecx,esi / call`) and expands the NEXT one, while we expand that
-// one and call a later one. Equal counts, one site of shift. The frame
-// slot for the temp moves with it ([ebp-0x24] against our [ebp-0x1c]),
-// which is what smears the rest. Nothing here is unreconstructed.
-//
-// RE-DERIVED 2026-08-20 (cold-combatpath lane), and it CORRECTS two
-// standing claims:
-//   * "our CL calls the reserve's _Construct once, retail zero times"
-//     is WRONG. Retail's 0x404dc0 IS std::_Construct(widget**,...)
-//     (test ecx,ecx / je / mov eax,[edx] / mov [ecx],eax / ret) and
-//     retail CALLS it here exactly as we do - the whole call multiset
-//     of this constructor is IDENTICAL, so this row shares NOTHING
-//     with THallWindow's under-inline.
-//   * The residual is not positional either. sub esp is 0x14 against
-//     retail's 0x18, and the reserve expansions are INSTRUCTION-FOR-
-//     INSTRUCTION identical with only the temp SLOTS assigned
-//     differently: retail homes (new-buffer, limit) at (-0x18, -0x1c)
-//     where we swap them, and retail allocates a FRESH -0x24 dword for
-//     the old-_First-before-delete temp (then reuses it for all 71
-//     widget temporaries) where we reuse the dead copy-cursor slot
-//     -0x14 (then home the widget temps in the dead buffer slot
-//     -0x1c). Semantics identical; C2 temp-slot allocation state only.
-//   * The budget axis is closed at BOTH ends now: 4/8/16 self-assign
-//     probes are byte-flat at 95.5868 to the digit, 40 was 95.54 and
-//     70 was 93.20 (the old titration), so no positive dose shifts the
-//     one-site insert phase boundary the earlier note found, and the
-//     slot divergence begins at the RESERVE, before any widget site -
-//     upstream of the phase shift, not downstream of it. No local body
-//     knob reaches a C2 temp-allocator tie; this row waits on TU-state
-//     convergence, not on a spelling.
+#define HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC(text, value) \
+    (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
+
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
@@ -805,7 +780,11 @@ TTownScreenWindow::TTownScreenWindow()
         else
             MemError();
     }
+    HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC("TTownScreenWindow widgets: %u\n",
+                                          Widgets.size());
 }
+
+#undef HOMM3_TTOWN_SCREEN_RELEASE_DIAGNOSTIC
 
 VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
 
