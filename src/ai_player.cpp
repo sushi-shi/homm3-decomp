@@ -553,8 +553,9 @@ void type_AI_player::end_turn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (79.8885%): the 0x7c frame, local offsets, player-id lifetime,
-// threshold block, network payload layouts, dialog flow and timeout tail
+// Residual (80.5192%; older measurement 79.8885): the 0x7c frame, local
+// offsets, player-id lifetime, threshold block, network payload layouts,
+// dialog flow and timeout tail
 // agree. The local-human gift and single-resource request now use retail's
 // called three-argument string append overload; the multi-resource request
 // assigns its formatted result, reproducing retail's inlined
@@ -566,6 +567,11 @@ void type_AI_player::end_turn()
 // broader override probes regress or are byte-inert and were reverted. Other
 // residuals are register permutations in the transfer loops and one
 // deliberately retained retail gate after the human transfer.
+// Release-elided diagnostic carriers at one, two, four and eight entry sites
+// are byte-flat at 80.5192 with the same 52-vs-55 branch count (2026-08-21).
+// The destructor threshold is governed by the explicit inline-depth region,
+// not by this caller-mass family.
+
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
