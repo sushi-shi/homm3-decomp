@@ -1241,7 +1241,7 @@ mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0
-mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	90.0704	90.0704	90.0704	0xfb710
+mainmenu	?MainMenuHandler@@YIHAAVmessage@@@Z	93.1606	93.1606	93.1606	0xfb710
 mapcell	??0NewfullMap@@QAE@XZ	100.0000	100.0000	100.0000	0xfd060
 mapcell	??0NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd650
 mapcell	??1BlackBoxData@@QAE@XZ	100.0000	100.0000	100.0000	0xffdf0
