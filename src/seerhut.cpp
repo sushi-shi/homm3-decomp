@@ -330,7 +330,10 @@ void type_experience_quest::Load(TAbstractFile* file, int version)
 }
 // The type_experience_quest serializer. Payload first, then the base run
 // the whole family shares - inlined here, as retail inlines it into
-// every one of the eight leaves.
+// every one of the eight leaves. The nested scalar scopes below are
+// load-bearing across the family: once `file` is held in ESI, retail's VC6
+// colors each dead scratch over the incoming argument slot. Keeping the
+// locals in the outer function scope instead grows the frame by 8-16 bytes.
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d630, 0xE1)  // anchor-vtable 0x641788 slot 13 + TAbstractFile::Write shape, retail-only
@@ -339,22 +342,33 @@ void type_experience_quest::Save(TAbstractFile* file)
     short level = required_level;
     file->Write(&level, sizeof(level));
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // Slot 14, the family's default-text back-fill: three columns of this
 // quest type's own five-string group, each written only when the quest
@@ -444,22 +458,33 @@ void type_skill_quest::Save(TAbstractFile* file)
 {
     file->Write(required_skills, sizeof(required_skills));
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -581,25 +606,38 @@ void type_defeat_hero_quest::Save(TAbstractFile* file)
 {
     short id = defeated_hero;
     file->Write(&id, sizeof(id));
-    unsigned char mask = static_cast<unsigned char>(satisfied_mask);
-    file->Write(&mask, sizeof(mask));
+    {
+        unsigned char mask = static_cast<unsigned char>(satisfied_mask);
+        file->Write(&mask, sizeof(mask));
+    }
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // Retail resolves the save/map quest identifier at +0x40 back to the live
 // hero-array index before filling any text: it scans 155..0 through
@@ -756,27 +794,42 @@ VA(0x0056ee20, 0xFE)  // anchor-vtable 0x64183c slot 13 + TAbstractFile::Write s
 void type_monster_quest::Save(TAbstractFile* file)
 {
     file->Write(&position, sizeof(position));
-    short id = monster_id;
-    file->Write(&id, sizeof(id));
-    unsigned char killer = static_cast<unsigned char>(defeated_by);
-    file->Write(&killer, sizeof(killer));
+    {
+        short id = monster_id;
+        file->Write(&id, sizeof(id));
+    }
+    {
+        unsigned char killer = static_cast<unsigned char>(defeated_by);
+        file->Write(&killer, sizeof(killer));
+    }
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 
 
@@ -887,22 +940,33 @@ void type_artifact_quest::Save(TAbstractFile* file)
         file->Write(&id, sizeof(id));
     }
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // The three CONTAINER leaves take their one vararg from slot 6, called
 // ONCE into a named local and reused across the three fills.
@@ -1017,6 +1081,13 @@ void type_creature_quest::LoadFromMap(TAbstractFile* file)
 // The creature quest's serializer, and the one that proves the two
 // vectors are parallel: the count comes off `types` (+0x50) and the loop
 // then indexes `counts` (+0x40) with the same subscript.
+// Residual (99.9632%): retail loads the type through AX but spills the whole
+// EAX scratch; the real union below emits the same slot overlay with a word
+// spill. An int scratch sign-extends (99.5588), assigning the int union member
+// widens the load (99.9632), separate scoped locals keep two homes (99.4853),
+// and an inline short writer is byte-identical to that last shape. Aliasing a
+// short local through int* is exact, but was rejected by the zero-debt
+// reinterpret_cast gate rather than admitted as false type modelling.
 
 // E:\gamedcs\seerhut.cpp
 VA(0x00571280, 0x137)  // anchor-vtable 0x6418b4 slot 13 + TAbstractFile::Write shape, retail-only
@@ -1025,28 +1096,43 @@ void type_creature_quest::Save(TAbstractFile* file)
     unsigned char count = static_cast<unsigned char>(types.size());
     file->Write(&count, sizeof(count));
     for (unsigned int i = 0; i < types.size(); i++) {
-        short type = types[i];
-        file->Write(&type, sizeof(type));
-        int number = counts[i];
-        file->Write(&number, sizeof(number));
+        union save_value {
+            short type;
+            int number;
+        } value;
+        value.type = types[i];
+        file->Write(&value.type, sizeof(value.type));
+        value.number = counts[i];
+        file->Write(&value.number, sizeof(value.number));
     }
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // EXACT (55.2734 -> 100%): completionText's empty guard owns every temporary.
 // GetRequirementText constructs its named result directly, quest_texts is
@@ -1128,22 +1214,33 @@ void type_resource_quest::Save(TAbstractFile* file)
 {
     file->Write(resources, sizeof(resources));
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // E:\gamedcs\seerhut.cpp
 VA(0x00571cc0, 0x23E)  // anchor-vtable 0x6418f0 slot 14 + the shared text-table shape, retail-only
@@ -1321,22 +1418,33 @@ void type_belong_to_player_quest::Save(TAbstractFile* file)
     unsigned char owner = static_cast<unsigned char>(required_owner);
     file->Write(&owner, sizeof(owner));
 
-    unsigned char flag = field_04;
-    file->Write(&flag, sizeof(flag));
-    unsigned char row = static_cast<unsigned char>(field_38);
-    file->Write(&row, sizeof(row));
-    int extra = field_3c;
-    file->Write(&extra, sizeof(extra));
-
-    int length = proposalText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(proposalText.c_str(), proposalText.length());
-    length = progressText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(progressText.c_str(), progressText.length());
-    length = completionText.length();
-    file->Write(&length, sizeof(length));
-    file->Write(completionText.c_str(), completionText.length());
+    {
+        unsigned char flag = field_04;
+        file->Write(&flag, sizeof(flag));
+    }
+    {
+        unsigned char row = static_cast<unsigned char>(field_38);
+        file->Write(&row, sizeof(row));
+    }
+    {
+        int extra = field_3c;
+        file->Write(&extra, sizeof(extra));
+    }
+    {
+        int length = proposalText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(proposalText.c_str(), proposalText.length());
+    }
+    {
+        int length = progressText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(progressText.c_str(), progressText.length());
+    }
+    {
+        int length = completionText.length();
+        file->Write(&length, sizeof(length));
+        file->Write(completionText.c_str(), completionText.length());
+    }
 }
 // EXACT (74.9421 -> 100%): the vararg is the lower-case player color name,
 // constructed directly from gPlayerColorNames and transformed in place. The
