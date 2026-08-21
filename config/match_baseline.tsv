@@ -1056,7 +1056,7 @@ hero	?HeroView@@YIHHHHE@Z	100.0000	100.0000	100.0000	0xe1800
 hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10
 hero	?IsMobile@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5f30
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0
-hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	99.9540	99.9540	99.9540	0xd7900
+hero	?PlaceInMap@hero@@QAEXHUtype_point@@E@Z	100.0000	100.0000	100.0000	0xd7900
 hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0
 hero	?SetupHeroView@THeroScreenWindow@@QAEXXZ	99.5294	99.5294	99.5294	0xe1a50
