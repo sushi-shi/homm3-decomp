@@ -502,6 +502,14 @@ army* combatManager::find_spell_target(SpellID spell, long side, long hex,
 // measures exactly neutral, and spelling the arm `return 0; return 1;`
 // instead of `return 0; break;` costs 2.3.
 VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
+// Residual (88.49, diagnosed 2026-08-21): why-branch reads one je->jne
+// flip and one D3 threading row; the byte diff shows the root - ours
+// PROMOTES targetIndex into EDI for the whole body while retail keeps
+// it in scratch EDX and RE-READS [ebp+0x10] per region, handing EDI to
+// the akSpellTraits base instead. The whole register cascade (138
+// slots) and the 6-instruction surplus follow from that one promotion.
+// A parameter's caching is C2's promotion choice, not a spelling; no
+// catalog mutation moves the branch shape (guided search exhausted).
 unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
                                               long casting_side,
