@@ -4078,11 +4078,11 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
 DATA(0x0063b810)
 static const int kArtilleryDoubleChances[4] = { 0, 50, 75, 100 };
 
-// Residual (98.9804%): register naming only - the mastery load lands
-// in EDX against retail's EAX and the ballista's += pair rotates with
-// it, plus the string-ctor allocator byte store scheduling one slot
-// apart; the EH-prologue push immediate is the documented reloc-addend
-// cosmetic. THE STRUCTURAL FINDING THIS BODY BANKED: the switch's TEST
+// CLOSED 98.9804 -> 100.0000 (2026-08-21): the "register naming only"
+// residual was one named local away. Naming the ballista arm's hero
+// (`hero* controlling = gpCombatManager->heroes[...]`) makes the load
+// reuse EAX in place exactly as retail does, and the += pair rotation
+// and the string-ctor byte store all fall in line behind it. THE STRUCTURAL FINDING THIS BODY BANKED: the switch's TEST
 // chain is value-sorted regardless of source, but the EH STATE NUMBERS
 // follow SOURCE case order - retail's ballista-arm strings carry
 // states 0/1 and the death-blow arm 2/3/4, which pins the ballista
@@ -4110,9 +4110,10 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                                         simulate_only == 0, distance);
     switch (creatureType) {
     case ARMY_CREATURE_BALLISTA: {
+        hero* controlling =
+            gpCombatManager->heroes[get_controlling_side()];
         long mastery =
-            gpCombatManager->heroes[get_controlling_side()]
-                ->skillLevel[eSecSkillBattlefieldBallistics];
+            controlling->skillLevel[eSecSkillBattlefieldBallistics];
         if (!simulate_only
             && Random(1, 100) <= kArtilleryDoubleChances[mastery]) {
             result += base_damage;
