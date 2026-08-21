@@ -576,6 +576,19 @@ void TMainMenu::DoModal()
 }
 
 // E:\gamedcs\mainmenu.cpp:135
+// 90.0704 -> 93.1606: both CD-dialog arms pass format_string's temporary
+// directly to NormalDialog, so VC6 reuses one EH slot; caching gpGeneralText
+// or naming either std::string creates the wrong live ranges/stack slots.
+// The hover call also really passes Y then X here - retail loads +0x10 first,
+// pushes it, then loads/pushes +0x14 as findWidget's first stack argument.
+//
+// Residual (93.1606%): base has 38 branches to retail's 37 because retail
+// cross-jumps the two string temporaries' delete tails. This compile clears
+// the earlier temporary's three fields instead, materializes zero in ESI,
+// and reuses that zero through the rest of the handler; the downstream
+// register delta is one consequence of that cleanup choice. Tried and
+// rejected: two named string values (90.0704), two const-reference bindings
+// (90.2141), and data() in place of c_str() (byte-identical at 93.1606).
 VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
 int MainMenuHandler(message& msg)
 {
@@ -593,8 +606,7 @@ int MainMenuHandler(message& msg)
     }
 
     if (gpMainMenu->bShowCDMessage && !updatePlease) {
-        TTextResource* text = gpGeneralText;
-        const char* fill = text->GetText(
+        const char* fill = gpGeneralText->GetText(
             GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
 
         gpMainMenu->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
@@ -602,19 +614,19 @@ int MainMenuHandler(message& msg)
         if (gCDDriveNumber == CD_DRIVE_NUMBER_5 ||
             gCDDriveNumber == CD_DRIVE_NUMBER_6) {
             const char* drive = gCDDriveNumber == CD_DRIVE_NUMBER_5
-                ? text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
-                : text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
-            std::string notice = format_string(
-                text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
-                                                drive, fill, fill, fill, fill);
-            NormalDialog(notice.c_str(), 1, -1, -1, -1, 0, -1, 0,
-                         -1, 0, -1, 0);
+                ? gpGeneralText->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
+                : gpGeneralText->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+            NormalDialog(format_string(
+                gpGeneralText->GetText(
+                    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
+                drive, fill, fill, fill, fill).c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
-            std::string notice = format_string(
-                text->GetText(GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
-                                                fill, fill, fill, fill);
-            NormalDialog(notice.c_str(), 1, -1, -1, -1, 0, -1, 0,
-                         -1, 0, -1, 0);
+            NormalDialog(format_string(
+                gpGeneralText->GetText(
+                    GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
+                fill, fill, fill, fill).c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
         cdMessageShown = 1;
         gpMainMenu->bShowCDMessage = 0;
@@ -663,7 +675,7 @@ int MainMenuHandler(message& msg)
             gpWindowManager->dialogReturn = msg.codeY;
         }
     } else if (msg.id == MESSAGE_MOUSE_MOVE) {
-        int hoverID = gpMainMenu->findWidget(msg.mouseX, msg.mouseY);
+        int hoverID = gpMainMenu->findWidget(msg.mouseY, msg.mouseX);
         if (hoverID != lastIMHoverID) {
             hoverChanged = 1;
             lastIMHoverID = hoverID;
