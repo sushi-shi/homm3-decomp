@@ -1064,7 +1064,7 @@ hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250
 hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658	97.9658	97.9658	0xe23d0
 hero	?UpdateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0
 hero	?UpdateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1600
-hero	?UpdateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	92.3601	92.3601	92.3601	0xdb660
+hero	?UpdateHeroScreenStatusBar@THeroScreenWindow@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdb660
 hero	?UpdateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0
 hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
 hero	?UseSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0
