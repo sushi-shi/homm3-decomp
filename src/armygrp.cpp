@@ -1963,9 +1963,14 @@ std::string armyGroup::get_morale_description(
     if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
         return gCursedGroundMoraleText;
 
-    const TCreatureTypeTraits& creatureTraits =
-        akCreatureTypeTraits[creature];
-    if (creatureTraits.attributes & CTA_NO_MORALE)
+    // NOT a named `const TCreatureTypeTraits&`: retail's CSE keeps the
+    // 116-byte OFFSET (it stores the `shl eax,2` result, not an address)
+    // and re-adds the table base at each use through base+index
+    // addressing (`test [eax+edx+0x10], mask`). Naming the row as a
+    // reference makes VC6 materialise the ADDRESS instead - one extra
+    // `add` per use, a stack slot of its own, and the table base loaded
+    // BEFORE the index chain rather than after it.
+    if (akCreatureTypeTraits[creature].attributes & CTA_NO_MORALE)
         return gNoMoraleCreatureText;
 
     int currentMorale = const_cast<armyGroup*>(this)->GetMorale(
@@ -1976,7 +1981,8 @@ std::string armyGroup::get_morale_description(
     if (ownerHero)
         result = ownerHero->get_morale_description();
 
-    apply_morale_magic_terrain(magicTerrain, creature, creatureTraits.townType,
+    apply_morale_magic_terrain(magicTerrain, creature,
+                               akCreatureTypeTraits[creature].townType,
                                currentMorale, result);
 
     unsigned char alignments[10];
@@ -2172,6 +2178,14 @@ static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
 {
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (gpGame->f_1f698 != 0 || !is_base_elemental(creature))) {
+        // Nine town values routed to NAMED exits, the recipe GetArmyMorale
+        // (0x44b100) already carries: retail lowers this arm through a
+        // compressed byte selector - `cmp eax,8 / ja <default> / xor ecx,ecx
+        // / mov cl,[bytetable] / jmp [4*ecx + jumptable]` - and that only
+        // survives if every arm names its own exit. Spelled with `return`
+        // in the no-op arms VC6 sees two outcomes, collapses the whole
+        // switch, and emits the range test `cmp 6 / jl` + `cmp 8 / jg`
+        // instead of the tables.
         switch (akCreatureTypeTraits[creature].townType) {
         case TOWN_CASTLE:
         case TOWN_RAMPART:
@@ -2179,16 +2193,19 @@ static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
         case TOWN_INFERNO:
         case TOWN_NECROPOLIS:
         case TOWN_DUNGEON:
-            return;
+            goto clover_done;
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-            break;
+            goto clover_apply;
         default:
-            return;
+            goto clover_done;
         }
+    clover_apply:
         currentLuck -= 2;
         result.append(gCloverFieldLuckText);
+    clover_done:
+        ;
     }
 }
 
