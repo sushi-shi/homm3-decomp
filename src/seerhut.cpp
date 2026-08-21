@@ -596,20 +596,33 @@ void type_defeat_hero_quest::Save(TAbstractFile* file)
     file->Write(&length, sizeof(length));
     file->Write(completionText.c_str(), completionText.length());
 }
+// Retail resolves the save/map quest identifier at +0x40 back to the live
+// hero-array index before filling any text: it scans 155..0 through
+// hero::field_01e, stores the winning index at +0x44, and retains the hero
+// pointer for all three names. The `> -1` loop condition and three repeated
+// field guards are load-bearing: together they keep -1 in EBX and produce
+// retail's cmp/jg loop and text-row spill. This took the row 73.8583 -> 100%.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056e6f0, 0x29E)  // anchor-vtable 0x641800 slot 14 + the shared text-table shape, retail-only
 void type_defeat_hero_quest::SetDefaultText()
 {
     const std::string* texts = quest_texts();
-    if (proposalText.length() == 0)
+    hero* defeatedHero;
+    for (defeated_hero = game::HERO_COUNT - 1; defeated_hero > -1;
+         --defeated_hero) {
+        defeatedHero = gpGame->GetHero(defeated_hero);
+        if (defeatedHero->field_01e == map_hero)
+            break;
+    }
+    if (defeated_hero != -1 && proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
-                              gpGame->GetHero(defeated_hero)->name);
-    if (progressText.length() == 0)
+                              defeatedHero->name);
+    if (defeated_hero != -1 && progressText.length() == 0)
         progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
-                              gpGame->GetHero(defeated_hero)->name);
-    if (completionText.length() == 0)
+                              defeatedHero->name);
+    if (defeated_hero != -1 && completionText.length() == 0)
         completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
-                              gpGame->GetHero(defeated_hero)->name);
+                              defeatedHero->name);
 }
 
 // E:\gamedcs\seerhut.cpp
@@ -1218,20 +1231,24 @@ void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
     required_hero = id;
     type_quest::LoadFromMap(file);
 }
+// EXACT: retail computes the required hero pointer once, before quest_texts,
+// and reuses it across all three format calls. The named pointer restores its
+// [ebp-0x10] home and took this row from 69.6903% to 100%.
 // E:\gamedcs\seerhut.cpp
 VA(0x00572270, 0x276)  // anchor-vtable 0x64192c slot 14 + the shared text-table shape, retail-only
 void type_be_hero_quest::SetDefaultText()
 {
+    hero* requiredHero = gpGame->GetHero(required_hero);
     const std::string* texts = quest_texts();
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
-                              gpGame->GetHero(required_hero)->name);
+                              requiredHero->name);
     if (progressText.length() == 0)
         progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
-                              gpGame->GetHero(required_hero)->name);
+                              requiredHero->name);
     if (completionText.length() == 0)
         completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
-                              gpGame->GetHero(required_hero)->name);
+                              requiredHero->name);
 }
 
 
