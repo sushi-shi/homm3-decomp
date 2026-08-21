@@ -284,6 +284,11 @@ class type_skill_quest : public type_quest {
 public:
     signed char required_skills[4];  // +0x40
 
+    // seerhut.obj's shared primary-skill list builder, called with this in
+    // ecx and the four-byte payload as its explicit stack argument.
+    std::string skill_requirement_text(
+        const signed char (&skills)[4]);
+
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
