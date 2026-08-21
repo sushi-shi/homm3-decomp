@@ -1818,8 +1818,8 @@ town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
 # honest carrier-free plateau. Same withdrawal for the sibling row
 # (dose 30, 99.0596). The dose reads as a byte budget: the real
 # missing mass is ~60/~30 statement-units in these bodies.
-town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	92.6954	92.6954	92.6954	0x1c0220
-town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	93.2294	93.2294	93.2294	0x1c0400
+town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	92.6954	92.6954	100.0000	0x1c0220
+town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	93.2294	93.2294	99.0596	0x1c0400
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340
