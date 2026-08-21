@@ -5705,45 +5705,49 @@ unsigned char hero::HeroFn_004E2550(long artifact, long slot)
 // and once through the `test` it forwards to) where retail checks once.
 // The depth ladder has no rung below `test`.
 //
-// FIFTH, and it finally names the MECHANISM (2026-08-20, several builds).
-// The blocker is not the budget and not the depth ladder: VC6 will not
-// expand a callee that introduces EH STATE into a caller that has NO EH
-// FRAME. Retail's body carries a full /GX frame here (`push -1 / push
-// hero_in_enum_range_e2840_unwind01 / fs:[0]`); ours carries none,
-// because nothing we wrote needs unwinding - and `_Xran`'s expansion is
-// exactly what would need it, so the decision is self-blocking.
-// PROVED by adding one destructible local (`std::string ehProbe;`) and
-// changing nothing else: `?_Xran@?$bitset@$0BD@@std@@ABEXXZ` DISAPPEARS
-// from the call census and retail's whole throw path arrives in its place
-// - the "invalid bitset<N> position" literal twice, `basic_string::assign`,
-// `??0logic_error`, `__TI3?AVout_of_range@std@@`, `??_7out_of_range` and
-// `__CxxThrowException@8` - and the row goes 44.9281 -> 51.4748, with that
-// +6.55 still carrying the probe's own ctor/dtor as noise.
-// This also retires the caller-size verdict properly. The earlier note
-// rejected it on ONE 8-statement dose; the `if (0)` instrument was run
-// here at 8/16/32/64/128/256 inert statements and EVERY one is byte-flat
-// at 44.9281, so the numerator has no reach on this row at any dose.
-// The probe is NOT shippable - it is invented source. What is still
-// missing is the faithful construct that gives retail its frame, and the
-// -52 frame delta is NOT independent evidence for one: the throw path's
-// own message string and `out_of_range` temporaries account for that
-// space, so the frame is a CONSEQUENCE of the expansion rather than a
-// separate missing local. Retail's call census outside the throw path is
-// exactly ours (HeroFn_004E2550 x2, remove_artifact, equip_artifact, two
-// data refs), so no extra statement is hiding here.
-// Also measured, one build each: `#pragma inline_depth(255)` on the guard,
-// byte-flat at 44.9281 (a clean confirmation of "depth is not budget");
-// naming the mask as a `const std::bitset<19>&` local, byte-flat; and
-// `at(slot)` for `test(slot)`, 46.2878 (+1.36) - which REFUTES this note's
-// own reasoning that at()'s second check must lose, but is NOT banked,
-// because at 45% this body is nowhere near its plateau and a 1.4-point
-// spelling delta there is exactly the low-mass inversion. Re-measure it
-// once the EH frame is solved.
+// FIFTH named the mechanism (2026-08-20): VC6 would not expand `_Xran`
+// into a caller which did not already own an EH frame. A destructible
+// string probe proved that by making the throw path appear, but its own
+// construction/destruction was invented noise.
+//
+// CLOSED STRUCTURALLY 2026-08-21 (44.93 -> 78.86): spell Dinkumware's
+// `bitset<19>::test` body explicitly - its unsigned range guard followed
+// by the same dword-indexed bit test. This is not a different algorithm;
+// bitset<19> is one unsigned-long word in the installed VC6 header. It
+// gives the caller the required /GX frame without duplicating `_Xran`.
+// The branch sequence is now exact: 4 conditional branches and 3 returns
+// on both sides.
+//
+// Residual (78.9%): optimizer state inside the inlined range throw. Retail
+// leaves string::_Eos as a call and allocates a 0x3c frame with two EH
+// homes; our direct expansion inlines _Eos and uses 0x34. The ordinary
+// body after the throw has the same calls and bit-test instruction family;
+// the remaining tail-order/state stores follow from that EH layout.
+// Tried and rejected after the structural gain, one compile each unless
+// noted: explicit guard plus the original `test` (two throw paths, 57.60);
+// one-use inline/forceinline range helper (stays a call, 44.38); one-use
+// string-return helper (stays a call, 56.58); local unused type-count
+// probes at 1, 2 and 8 definitions (44.93, byte-flat); empty-destructor
+// carrier (55.53); optimizer-elided contradictory throw carrier (58.29),
+// and the same with a string local (53.21). The NH3API wrapper's
+// `in_enum_range` checks are outside the game method; retail has no extra
+// artifact-enum branch here, so they are not a compiled-out ASSERT/TRACE
+// carrier for this body.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
-    if (!aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask]
-             .test(slot))
+    const std::bitset<19>& allowable =
+        aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask];
+    if (static_cast<unsigned long>(slot) >= 19)
+        throw std::out_of_range("invalid bitset<N> position");
+
+    union bitset19_view {
+        const std::bitset<19>* bits;
+        const unsigned long* words;
+    } view;
+    view.bits = &allowable;
+    if (!(view.words[static_cast<unsigned long>(slot) / 32]
+          & (1UL << (static_cast<unsigned long>(slot) % 32))))
         return 0;
 
     if (equipped[slot].artifactId == ARTIFACT_NONE)
