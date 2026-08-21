@@ -4883,14 +4883,27 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:5688
-// Residual (98.1667%): all 16 branches and both returns agree. The only real
-// code delta is the third boat-sprite call: retail keeps GetNumFrames' zero
-// fallback/divisor in ECX (`xor ecx,ecx; idiv ecx`), while this VC6 build
-// spills it to the frame and therefore emits one extra instruction. Dreamcast
-// lists exactly currHero, currBoat, HeroCellY and HeroCellX as locals. A
-// release VERIFY-shaped currHero invariant, discarded GetNumFrames value and
-// `GetNumFrames(...) > 0` invariant are byte-flat; naming the divisor is also
-// flat, while naming the remainder regresses to 98.1571%.
+// Residual (98.1667%): all 16 branches and both returns agree - `vc6 diagnose`
+// reads flow-distance 0, register-distance 15, and why-reg --model finds NO
+// register-binding divergence in its slice, i.e. this is scheduling, not
+// allocation. LOCALISED 2026-08-21 to a single instruction at the THIRD boat
+// call (boatIcons), nine bytes, and the first two calls are byte-identical:
+//
+//   retail  ... cmp bl,4 / mov ebx,[eax+0x40] / seta dl
+//               mov byte ptr [ebp+0x18], dl / cdq / idiv ecx / mov ecx, esi
+//   ours    ... cmp bl,4 / MOV ECX, ESI / mov ebx,[eax+0x40] / seta dl
+//               mov byte ptr [ebp+8], dl / cdq / idiv dword ptr [ebp+0x18]
+//
+// Our CL slots the GetStandSequence receiver setup (`mov ecx,esi`) into the
+// scheduling gap BEFORE the divide, which evicts the frame count from ECX and
+// forces the whole `xor ecx,ecx` / `idiv ecx` pair into memory - three extra
+// stores plus the wider idiv. Retail issues the same move one instruction
+// later. Sites one and two prove our source shape is right; only this site's
+// schedule differs. Dreamcast lists exactly currHero, currBoat, HeroCellY and
+// HeroCellX as locals. Byte-flat probes: a release VERIFY-shaped currHero
+// invariant, a discarded GetNumFrames value, a `GetNumFrames(...) > 0`
+// invariant, and naming the divisor; naming the remainder regresses to
+// 98.1571%.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -4959,11 +4972,15 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 }
 
 // E:\gamedcs\advmgr.cpp:5773
-// Residual (98.1840%): all 18 branches and both returns agree, with the same
-// one-instruction third-boat-call divisor spill as DrawHeroPart above. The
-// Dreamcast four-local roster and the VERIFY/accessor/named-local probes are
-// identical, so this is the shared compiler scheduling residual rather than
-// an independently source-nameable shadow-path difference.
+// Residual (98.1840%): all 18 branches and both returns agree, with exactly
+// the same nine-byte third-boat-call divisor spill as DrawHeroPart above -
+// see that body for the instruction-level localisation. The Dreamcast
+// four-local roster and the VERIFY/accessor/named-local probes are identical,
+// so this is the shared scheduling residual (flow-distance 0, why-reg --model
+// reports no binding divergence) rather than an independently source-nameable
+// shadow-path difference. The twins are a free in-compile A/B: any candidate
+// spelling should be tried in ONE of them first, since a real fix must move
+// both.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
