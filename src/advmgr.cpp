@@ -1099,7 +1099,18 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
 //     zero-argument arm tail-merged onto the real one. No such function
 //     exists in the DC roster and NewfullMap::cell(type_point) already
-//     models a different, unguarded body, so these are written longhand.
+//     models a different, unguarded body, so these are written longhand -
+//     BUT LONGHAND MEANS THE HELPER'S BODY, INCLUDING ITS BY-VALUE
+//     PARAMETER (77.3765 -> 84.1883, 2026-08-21). Retail emits
+//     `mov ecx,[ebp-0x20] / mov dword ptr [ebp-0x20],ecx` before the first
+//     is_valid call: a dword SELF-store, i.e. a struct copy whose source
+//     and destination the allocator coalesced onto one slot. That is a
+//     by-value `type_point` parameter, and the fullMap load sitting
+//     BETWEEN the is_valid call and its `test al,al` is the helper's own
+//     `NewfullMap* map = manager->fullMap;` - exactly the shape of this
+//     file's DrawHeroCell static. Four sites converted (+6.81 combined);
+//     the fifth already carried the copy, and adding the map/valid locals
+//     there is byte-flat because its invalid arm returns `cellData`.
 //   - `advCommand != ADV_COMMAND_WALK_ROUTE` inside the WALK_ROUTE arm is
 //     provably false and retail still emits the compare - VC6 does not
 //     constant-propagate the switch value into an arm. Kept.
@@ -1172,12 +1183,22 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
             heroPoint.x = currHero->x;
             heroPoint.y = currHero->y;
             heroPoint.z = currHero->z;
+            // The BY-VALUE copy is retail's, not decoration: it emits
+            // `mov ecx,[ebp-0x20] / mov [ebp-0x20],ecx`, a dword self-store,
+            // which is a struct copy whose source and destination the
+            // allocator coalesced onto one slot. Together with the fullMap
+            // load sitting BETWEEN the is_valid call and its test, that is
+            // the signature of this file's own by-value DrawHeroCell helper
+            // being expanded here.
+            type_point cellPoint = heroPoint;
+            unsigned char valid = cellPoint.is_valid();
+            NewfullMap* map = fullMap;
             NewmapCell* standingOn;
-            if (!heroPoint.is_valid())
-                standingOn = fullMap->cell(0, 0, 0);
+            if (!valid)
+                standingOn = map->cell(0, 0, 0);
             else
-                standingOn = fullMap->cell(heroPoint.x, heroPoint.y,
-                                           heroPoint.z);
+                standingOn = map->cell(cellPoint.x, cellPoint.y,
+                                       cellPoint.z);
             // Artifact ids 0x48 and 0x5a are spelled as literals for the
             // reason findpath's GetTerrainCost records: armygrp.h's
             // EArtifactId rides in initialize.cpp's measured include
@@ -1365,11 +1386,16 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         townPoint.y = viewedTown->mapY;
         townPoint.z = viewedTown->mapZ;
         // The lookup's result is DISCARDED - retail makes the call and
-        // never reads eax. Transcribed as retail wrote it.
-        if (!townPoint.is_valid())
-            fullMap->cell(0, 0, 0);
+        // never reads eax. Transcribed as retail wrote it, through the
+        // by-value cell helper (see the WALK_ROUTE site for the self-store
+        // that proves the copy).
+        type_point cellPoint = townPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
+        if (!valid)
+            map->cell(0, 0, 0);
         else
-            fullMap->cell(townPoint.x, townPoint.y, townPoint.z);
+            map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         viewedTown->View(0);
         eventCell = 0;
         break;
@@ -1412,11 +1438,14 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         mapPoint.x = radarOrigin.x + lastHoverX;
         mapPoint.y = radarOrigin.y + lastHoverY;
         mapPoint.z = radarOrigin.z;
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* heroCell;
-        if (!mapPoint.is_valid())
-            heroCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            heroCell = map->cell(0, 0, 0);
         else
-            heroCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            heroCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         SetHeroContext(heroCell->extraInfo, 0,
                        !gpCurrentPlayer->IsLocalHuman(), 1);
         break;
@@ -1427,11 +1456,14 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         mapPoint.x = radarOrigin.x + lastHoverX;
         mapPoint.y = radarOrigin.y + lastHoverY;
         mapPoint.z = radarOrigin.z;
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* townCell;
-        if (!mapPoint.is_valid())
-            townCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            townCell = map->cell(0, 0, 0);
         else
-            townCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            townCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         SetTownContext(townCell->extraInfo,
                        !gpCurrentPlayer->IsLocalHuman(), 1);
         break;
@@ -1444,15 +1476,14 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         dockPoint.x = radarOrigin.x + lastHoverX;
         dockPoint.y = radarOrigin.y + lastHoverY;
         dockPoint.z = radarOrigin.z;
-        type_point mapPoint;
-        mapPoint.x = radarOrigin.x + lastHoverX;
-        mapPoint.y = radarOrigin.y + lastHoverY;
-        mapPoint.z = radarOrigin.z;
+        type_point mapPoint = dockPoint;
+        unsigned char valid = mapPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* dockCell;
-        if (!mapPoint.is_valid())
-            dockCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            dockCell = map->cell(0, 0, 0);
         else
-            dockCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            dockCell = map->cell(mapPoint.x, mapPoint.y, mapPoint.z);
         DoEventShipyard(dockCell, dockPoint,
                         gpCurrentPlayer->IsLocalHuman());
         UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
