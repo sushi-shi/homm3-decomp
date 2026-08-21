@@ -1759,6 +1759,13 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 // What ALSO paid was removing the brace scope around the shared block's
 // locals - 71.36 -> 75.65, purely through register allocation inside the
 // body, with the layout unchanged.
+// 2026-08-21 NEGATIVE CONTROLS: the DC top-local order
+// `waitingPlayer, player, iMoveDir, currHero` costs 80.4012 -> 79.2233 on
+// x86; nesting the movement hero is byte-flat on that regressed shape.
+// Release-elided TRACE carriers at 1/3/5/8/10 entry sites, plus 1/8
+// carriers directly at `walk_hero`, are byte-flat at 80.4012, so dormant
+// call candidates do not move this block-placement threshold in the
+// measured range.
 VA(0x00408c40, 0xB9D)  // anchor-callee, dc 0x8b70
 int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
 {
