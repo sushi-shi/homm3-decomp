@@ -6675,11 +6675,19 @@ void army::FaerieDragonSpell()
 // (96.46 -> 99.04 over the if/return spelling, the sivot case-2 lever
 // again).
 //
-// Residual (99.0409%): ONE materialization. The Genie arm's
-// `count > 0` return if-converts to `setg al` under our CL where
-// retail branches to its own `mov eax,1` epilogue; `count <= 0`
-// inverted, ternary and `!`-spellings all reconverge on the setg.
-// Four instructions, merged-return family.
+// 99.0409 -> 99.7059 (2026-08-21): the Genie arm's failure exit is a
+// `break` to the switch's shared return-0 tail, not its own
+// `return 0;` - the asymmetric control transfer is what stops the
+// whole diamond if-converting to `setg al` (the same lever as the
+// shr/and fold note in the skill doctrine). With the break in place
+// the arm's CFG, its [ebp+8]-homed count and the jle all match.
+// Residual (99.7059%): ONE instruction width - our true path emits
+// `mov al,1` where retail has `mov eax,1`. Tried and rejected: an int
+// local returned (copy-propagated back to al), `return count > 0;`
+// with the guard (folds to the same al constant), without the guard
+// (reconverges on setg, 99.13). C2 narrows every constant-foldable
+// return to the byte; only a genuine int-bool materialization keeps
+// eax and no honest spelling produces one here.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
@@ -6703,7 +6711,7 @@ unsigned char army::can_cast_spell(long hex) const
                 count++;
         }
         if (count <= 0)
-            return 0;
+            break;
         return 1;
     }
     case CREATURE_FAERIE_DRAGON:
