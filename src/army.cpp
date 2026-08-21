@@ -5527,6 +5527,16 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
 // definition, so this is the B1 handle-state class rather than
 // anything statement-local.
 VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
+// Residual (94.0790, probed 2026-08-21): one owner inversion. Retail
+// caches gridIndex in EBX across the direction loop and homes
+// `direction` at [ebp+8] ONLY (in-loop guard reads memory, spelled
+// `cmp [ebp+8],-1 / jne` - an == -1 compare); ours gives EBX to
+// `direction` and reloads gridIndex per iteration. Probed: the
+// `== -1` guard spelling alone (93.94 - the compare becomes cmp
+// ebx,-1, register still wrong) and naming gridIndex in a pre-loop
+// local (91.31 - the local takes a frame slot, direction keeps EBX,
+// frame grows). C2 prefers the loop-carried value for the register;
+// no spelling tried hands it the invariant instead.
 unsigned char army::attack_hex(int hex, unsigned char restore_facing)
 {
     side = -1;
