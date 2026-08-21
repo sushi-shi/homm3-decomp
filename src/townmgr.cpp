@@ -2621,6 +2621,12 @@ void townManager::handle_mage_guild_click()
 // (`predict-inline`: ours calls it once, retail zero times) - the same
 // expansion THallWindow's note describes - and mass cannot buy it here
 // without overshooting everything after it.
+// A release-elided diagnostic tail sweep (2026-08-21) separates those two
+// currencies explicitly: one, two and four dead `printf` arms are byte-flat
+// at 98.2932, while ten regress to 97.6239, and the branch census remains 142
+// against retail's 140. These dormant calls can perturb caller mass but do not
+// become the LIVE candidate site that made the synthetic helper exact. The
+// one-site deficit therefore remains real; diagnostic ghosts cannot fill it.
 
 // The garrison base window, shared by the plain garrison dialog, the
 // monster-join prompt and the town garrison: two seven-slot army rows -
