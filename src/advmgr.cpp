@@ -7767,12 +7767,16 @@ void advManager::garrison_quick_view(int id, int x, int y)
 long AI_approximate_strength(const hero* current_hero);
 
 // E:\gamedcs\advmgr.cpp:9284
-// Residual (99.96%): frame-slot coalescing only - retail parks the
-// type_point and the like modifier in one slot (-0x24), our CL gives the
-// point its own (-0x28); every instruction pairs masked. Tried and
-// rejected: closing the point's scope with a goto-identified restructure
-// (77.47 - the flow shape collapses). predict-inline's over-inline row is
-// the folded QuickWindowWait label, not a real wall.
+// EXACT. The last 0.04 was frame-slot coalescing: retail parks the
+// type_point, the like modifier AND limit()'s upper-bound temp in the SINGLE
+// slot -0x24 (frame 0x18), where we gave the point its own -0x28 (frame
+// 0x1c). VC6 only overlaps two locals whose blocks are SIBLINGS, and with the
+// point declared in the `if (currHero)` block the like/limit block nests
+// INSIDE its scope. Closing the point's block around the IsInIdentifyRange
+// call - landing the answer in `inIdentifyRange` - makes the two blocks
+// siblings, the slot is reused, and the frame becomes retail's exactly.
+// (The earlier note's rejected goto restructure at 77.47 was collapsing the
+// flow shape; the scope close alone keeps the flow and pays the whole delta.)
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
@@ -7785,9 +7789,13 @@ void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
     TQuickCreatureWindow* window;
     hero* currHero = gpGame->GetHero(localPlayer->currHeroId);
     if (currHero) {
-        type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
-                         radarOrigin.z);
-        if ((currHero->IsInIdentifyRange(&point)
+        unsigned char inIdentifyRange;
+        {
+            type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
+                             radarOrigin.z);
+            inIdentifyRange = currHero->IsInIdentifyRange(&point);
+        }
+        if ((inIdentifyRange
              && currHero->HeroFn_004E5DE0() != eMasteryInvalid)
             || DebugViewAll) {
             int like = get_like_modifier(currHero, type);

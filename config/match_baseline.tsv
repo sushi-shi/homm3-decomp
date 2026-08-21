@@ -81,7 +81,7 @@ advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100
 advmgr	?Main@advManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x87b0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?MobilizeCurrHero@advManager@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x175e0
-advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	99.9576	99.9576	99.9576	0x17150
+advmgr	?MonsterQuickView@advManager@@QAEXPBVNewmapCell@@HH@Z	100.0000	100.0000	100.0000	0x17150
 advmgr	?MoreTreesNear@advManager@@QAEHUtype_point@@@Z	99.0975	99.0975	99.0975	0x1adb0
 advmgr	?Open@advManager@@UAEHH@Z	97.7989	97.7989	97.7989	0x6fd0
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.0000	100.0000	0x15d60
