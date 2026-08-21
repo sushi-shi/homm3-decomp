@@ -15,6 +15,13 @@
 // jump table, so the five codes that raise a spell's mastery need
 // enumerators.
 #define HOMM3_CMBTMGR_SPELL_MASTERY_DECL
+// Restore the two source-level get_group() calls recorded for
+// check_adjacent_hexes by the Dreamcast inline-site census.
+#define HOMM3_AI_COMBAT_PARAMS_GROUP_ACCESSOR
+// Likewise for the two inline searchArray::get_hex() sites in that body.
+#define HOMM3_SEARCHARRAY_GET_HEX_VIEW
+// Army.h:847's const inline, used once in check_adjacent_hexes.
+#define HOMM3_ARMY_CAN_RETALIATE_VIEW
 // The enchantment pricers walk army's +0x198 spell-influence row and
 // its +0x2dc mastery twin by spell id, which needs the row form of
 // both. Split out of army.cpp's round view so this TU does not also
@@ -513,26 +520,35 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 }
 
 // E:\gamedcs\ai_tactical.cpp:511
-// Residual (84.4%): retail keeps the `checked` pointer in ebx (pushing
-// ebx only after the AI-control early-out) and re-reads this->data
-// before each get_unit_combat_value call; our CL enregisters `this` in
-// ebx instead and CSEs data into a spill slot, costing one extra
-// dword of frame. Tried and rejected: naming the two combat values as
-// separate doubles, and hoisting data->lowest_attack/defense into
-// locals. Register-homing family - and specifically the ORDER OF THE
-// FIRST CALLEE-SAVED PUSH, which no source order reaches: retail pushes
-// EDI first and parks `this` there, our CL pushes EBX first. Re-read
-// unmasked 2026-08-08; the loop-entry `jmp` we emit and retail does not
-// is a consequence of the same allocation, not a separate rotation.
+// Residual (84.375%): the CFG is exact (12 branches, two returns). Retail
+// keeps the `checked` reference in EBX (pushing it only after the AI-control
+// early-out) and re-reads this->data before each get_unit_combat_value call;
+// our CL enregisters `this` in EBX instead and CSEs data into a spill slot,
+// costing one extra frame word. The first callee-saved choice is the root:
+// retail pushes EDI and parks `this` there, while this compiler pushes EBX.
+// The loop-entry jump we emit is a consequence of that allocation, not a
+// separate rotation.
+//
+// Source audit 2026-08-21 closes the remaining honest levers. Dreamcast type
+// 0x1c37 and public `...IAAJJAAJ` prove `checked` is a long reference and the
+// method is protected; its locals prove one function-scoped double named
+// combat_value beside value. Restoring all three facts is byte-flat, as are
+// its attested get_group/ValidHex inline boundaries. A conventional release
+// `VERIFY(gpCombatManager->ValidHex(hex))` carrier at entry is also byte-flat.
+// Earlier rejected forms remain bounded: two separate combat-value doubles
+// and hoisted lowest_attack/lowest_defense locals. This is register homing,
+// not missing control flow or a compiled-out diagnostic.
 VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
-long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
+long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long& checked)
 {
+    double combat_value;
     long value = 0;
-    if (!gpGame->setup.difficulty && !gpCombatManager->sideIsAI[data->side])
+    if (!gpGame->setup.difficulty
+        && !gpCombatManager->sideIsAI[data->get_group()])
         return 0;
     for (long direction = 0; direction < 6; direction++) {
         long index = gpCombatManager->adjacentCells[hex][direction];
-        if (index < 0 || index >= 187)
+        if (!gpCombatManager->ValidHex(index))
             continue;
         army* enemy = gpCombatManager->cells[index].get_army();
         if (!enemy)
@@ -542,19 +558,20 @@ long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
         if (enemy == attack_army)
             continue;
         long mask = 1 << enemy->bitIndex;
-        if (mask & *checked)
+        if (mask & checked)
             continue;
-        *checked |= mask;
+        checked |= mask;
         if (!enemy->can_shoot(attack_army))
             continue;
         long hits = enemy->get_total_hit_points(data->simulated);
         if (hits == 0)
             continue;
-        double gain = enemy->get_unit_combat_value(data->lowest_attack,
-                                                   data->lowest_defense, 1, attack_army)
-                      - enemy->get_unit_combat_value(data->lowest_attack,
-                                                     data->lowest_defense, 0, 0);
-        long share = static_cast<long>(static_cast<double>(hits) * gain
+        combat_value = enemy->get_unit_combat_value(
+                           data->lowest_attack, data->lowest_defense, 1,
+                           attack_army)
+                       - enemy->get_unit_combat_value(
+                           data->lowest_attack, data->lowest_defense, 0, 0);
+        long share = static_cast<long>(static_cast<double>(hits) * combat_value
                                        / static_cast<double>(enemy->hitPoints));
         if (share < 1)
             share = 1;
@@ -609,20 +626,26 @@ inline long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
 // A double-wide attacker scores BOTH of its hexes: the second is one
 // step in the direction it faces, its attack value is added, and the
 // enemy threat taken is the SMALLER of the two hexes'.
+//
+// EXACT 2026-08-21 (99.10182 -> 99.174545 -> 100.0). The Dreamcast inline-
+// site census names ValidHex x1, searchArray::get_hex x2, get_group x2 and
+// army::can_retaliate x1 in this body. Restoring the two get_hex boundaries
+// fixes the best-cell address schedule; restoring can_retaliate fixes the
+// attacker-attribute/enemy-pointer schedule. The latter also corrected the
+// shared header model: SH4 0x27dd8 tests only attacker Is(16), disabled_2b0
+// and retaliationCount, while the public symbol proves a const-reference
+// argument and const receiver. army::do_attack's preceding numTroops test is
+// outside that helper and remains exact after the split. ValidHex/get_group
+// are byte-flat source-fidelity restorations. The final branch streams agree
+// 34/34 plus one return; masked asm differs only in flat relocation names.
 VA(0x00436300, 0x31C)  // anchor-global, dc 0x3d1e4
 void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)
 {
     for (long direction = start_direction; direction < stop_direction; direction++) {
         long hex = gpCombatManager->adjacentCells[enemy_hex][direction];
-        if (hex < 0)
+        if (!gpCombatManager->ValidHex(hex))
             continue;
-        if (hex >= COMBAT_GRID_CELLS)
-            continue;
-        const pathCell* cell;
-        if (search_data->cellData == 0)
-            cell = 0;
-        else
-            cell = &search_data->cellData[hex];
+        const pathCell* cell = search_data->get_hex(hex);
         if (!cell->visited)
             continue;
         if (cell->flight_cost > 0)
@@ -633,9 +656,9 @@ void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start
                 continue;
         }
         long checked = 0;
-        long value = get_hex_attack_value(hex, &checked);
+        long value = get_hex_attack_value(hex, checked);
         if (gpGame->setup.difficulty > 0
-                || gpCombatManager->sideIsAI[data->side]) {
+                || gpCombatManager->sideIsAI[data->get_group()]) {
             unsigned char heads = static_cast<unsigned char>(
                 static_cast<unsigned>(attack_army->creatureId) >> 19);
             if (heads & 1)
@@ -650,10 +673,7 @@ void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start
                                           attack_army, hex, our_troops,
                                           enemy_army, enemy_army->gridIndex,
                                           data);
-            unsigned char no_retaliation = static_cast<unsigned char>(
-                static_cast<unsigned>(attack_army->creatureId) >> 16);
-            if (!(no_retaliation & 1) && !enemy_army->disabled_2b0
-                    && enemy_army->retaliationCount > 0) {
+            if (enemy_army->can_retaliate(*attack_army)) {
                 unsigned char enemy_heads = static_cast<unsigned char>(
                     static_cast<unsigned>(enemy_army->creatureId) >> 19);
                 if (enemy_heads & 1)
@@ -675,7 +695,7 @@ void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start
         long threat = enemy_attack_array[hex];
         if (attack_army->creatureId & 1) {
             long other_hex = hex + (attack_army->facing ? 1 : -1);
-            value += get_hex_attack_value(other_hex, &checked);
+            value += get_hex_attack_value(other_hex, checked);
             threat = _cpp_min(enemy_attack_array[other_hex], threat);
         }
         value += threat;
@@ -683,16 +703,12 @@ void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start
             if (value < best_value)
                 continue;
             if (value == best_value) {
-                const pathCell* best_cell;
-                if (search_data->cellData == 0)
-                    best_cell = 0;
-                else
-                    best_cell = &search_data->cellData[best_hex];
+                const pathCell* best_cell = search_data->get_hex(best_hex);
                 long difference = cell->cost - best_cell->cost;
                 if ((attack_army->creatureType == CREATURE_CAVALIER
                             || attack_army->creatureType == CREATURE_CHAMPION)
                         && (gpGame->setup.difficulty > 0
-                            || gpCombatManager->sideIsAI[data->side])) {
+                            || gpCombatManager->sideIsAI[data->get_group()])) {
                     if (difference <= 0)
                         continue;
                 } else {
@@ -1357,20 +1373,25 @@ void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1126
-// NOT REACHABLE AS A FUNCTION: consider_spell's mass-damage arm is
-// this body, but VC6 refuses to inline it at that one call site even
-// marked `inline` (measured: the arm becomes a CALL and consider_spell
-// falls 79.84 -> 56.93), so it stays written out in the caller.
-DC_ONLY(0x3de90, 0x98)
-void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
+// Retail carries this helper only as an expansion in consider_spell. Ordinary
+// `inline` is rejected by VC6's cost model, so force the source-proven helper
+// boundary while retaining the retail no-body result.
+__forceinline void type_AI_spellcaster::consider_mass_damage(
+    type_spell_choice* choice)
 {
-    // @stub
+    long base_damage =
+        akSpellTraits[choice->spell].power_factor * choice->power
+        + choice->get_mastery_value();
+    long enemy_damage = get_group_damage_value(choice->spell, base_damage,
+                                               enemy_side, enemy_hero);
+    long friendly_damage = get_group_damage_value(choice->spell, base_damage,
+                                                  side, our_hero);
+#pragma inline_depth(0)
+    choice->value = get_mass_damage_effect(enemy_damage, friendly_damage);
+#pragma inline_depth()
+    choice->field_20 = 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1142
 // Age halves a stack's hit points, so the AI prices it as a flat third
@@ -4054,6 +4075,21 @@ void type_AI_spellcaster::consider_summon(type_spell_choice* choice)
 //   - the SUMMON arm prices the elemental it would put on the field:
 //     a kills-only estimate is worth a flat 1000 per power point, and
 //     otherwise the summoned creature's own AI_value scales it.
+//
+// Residual (98.19268%): the CFG is exact (19 branches, 10 returns) and the
+// remaining semantic instructions agree. Dreamcast line 3107 proves that the
+// summon helper writes field_20 once after its kills-only split; restoring that
+// source order raised 97.41219 -> 98.19268 and removed the whole summon delta.
+// What remains is register scheduling inside the two inlined group-damage
+// walks, plus EAX/EDX scratch choices on the first two Dispel calls. The VC6
+// allocator model reports identical first definitions (choice=EBX, spell=EDI,
+// this=ESI), so there is no minimum-slice creation-order edit to make. The
+// Dreamcast-proven `choice->get_mastery_value()` spelling and the original
+// forced-inline consider_mass_damage boundary are byte-flat at the maximum.
+// Tried and rejected as explanations: the former direct mastery-table
+// expression, the former longhand mass body, and IL-order modeling (the symbol
+// scanner exposes no later actionable pseudo). Do not invent locals merely to
+// perturb this register-homing plateau.
 VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
 void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
 {
@@ -4067,25 +4103,9 @@ void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
         return;
     case SPELL_DEATH_RIPPLE:
     case SPELL_DESTROY_UNDEAD:
-    case SPELL_ARMAGEDDON: {
-        long base_damage =
-            akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
-            + akSpellTraits[choice->spell].power_factor * choice->power;
-        long enemy_damage = get_group_damage_value(choice->spell, base_damage,
-                                                   enemy_side, enemy_hero);
-        long friendly_damage = get_group_damage_value(choice->spell, base_damage,
-                                                      side, our_hero);
-        // Retail CALLS the effect leaf here where get_area_effect_value
-        // (0x437040) inlines it; our CL inlines it in both, and the
-        // expansion is the whole fild/fdiv/fcompp block plus its four
-        // duplicated epilogues (62.72 -> 79.84 on the pin alone).
-        // Pinned at the SITE, not the function.
-#pragma inline_depth(0)
-        choice->value = get_mass_damage_effect(enemy_damage, friendly_damage);
-#pragma inline_depth()
-        choice->field_20 = 1;
+    case SPELL_ARMAGEDDON:
+        consider_mass_damage(choice);
         return;
-    }
     case SPELL_DISPEL: {
         consider_enchantment(choice, side);
         if (choice->mastery == SKILL_MASTERY_ADVANCED)
@@ -4120,13 +4140,12 @@ void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
         long power = akSpellTraits[choice->spell].mastery_bonus[choice->mastery]
                      * choice->power;
         if (params.kills_only) {
-            choice->field_20 = 1;
             choice->value = power * 1000;
-            return;
+        } else {
+            TCreatureType summoned = get_elemental_type(choice->spell);
+            choice->value = akCreatureTypeTraits[summoned].AI_value * power;
         }
-        TCreatureType summoned = get_elemental_type(choice->spell);
         choice->field_20 = 1;
-        choice->value = akCreatureTypeTraits[summoned].AI_value * power;
         return;
     }
     case SPELL_TELEPORT:

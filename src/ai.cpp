@@ -1969,6 +1969,19 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 // and sole polarity row. Lexical lifetime of the attested locals therefore
 // cannot supply retail's extra scalar home.
 //
+// The two header accessors and conventional release VERIFY are bounded
+// separately (2026-08-21). Dreamcast lines 1899/1900 call `get_group()` and
+// `get_enemy_group()` into the named `our_group`/`enemy_group` locals, and
+// retail's prologue likewise loads +0x20 and +0x24 before the zero stores.
+// Restoring both inline accessors, declaring those two locals in that order,
+// and using them at every site does create another home (frame 0x348 ->
+// 0x34c), but rotates `this` out of ESI, adds polarity differences #42/#76,
+// and falls to 82.88036; retail still has a 0x350 frame. On that exact
+// source shape, release-style evaluations of `this != 0`, `estimate != 0`,
+// and `current_army != 0` are individually byte-flat at 82.88036. Thus a
+// conventional VERIFY is possible history but cannot select the retail
+// allocator phase here; no fabricated macro is retained.
+//
 // Three spellings ARE byte-load-bearing and were measured one at a time:
 //   * MEASURED AND REFUTED 2026-08-20, with bytes: an earlier note said
 //     `long budget = 127;` must be declared NEXT TO ITS USE, "declared

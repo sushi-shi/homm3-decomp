@@ -1197,10 +1197,18 @@ void combatManager::AreaEffect(long targetCell, SpellID iSpellType,
 // no creation-order edit is proposed. Scheduling verdicts are
 // provisional; if this reopens, look for a missing source element in
 // the damage argument first.
+//
+// DC-local audit (2026-08-21): CodeView type 0x1F67 proves `spell_traits`
+// is an lvalue reference to const TSpellTraits, not a pointer; restoring that
+// source type is byte-flat and retained. Naming the damaged army plus its
+// controller regresses slightly to 93.8827%. Naming only the controller, or
+// naming both controller and current-side caster in source evaluation order,
+// is byte-flat at 93.9013%. C1 coalesces those handles before the scheduler,
+// so none moves the outstanding push/imul order.
 VA(0x005a4bc0, 0x699)  // order-map+arity, dc 0x153d2c
 void combatManager::Armageddon(int level, int power)
 {
-    const SSpellTraits* spell_traits = &akSpellTraits[SPELL_ARMAGEDDON];
+    const SSpellTraits& spell_traits = akSpellTraits[SPELL_ARMAGEDDON];
     unsigned char bDamageDone;
     memset(effected, 0, sizeof(effected));
     bDamageDone = 0;
@@ -1222,7 +1230,7 @@ void combatManager::Armageddon(int level, int power)
     } }
 
     if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
-        LoadSpellEffect(spell_traits->m_effect);
+        LoadSpellEffect(spell_traits.m_effect);
         long iMaxFrames;
         if (powSprite)
             iMaxFrames = powSprite->GetNumFrames(0);
@@ -1845,6 +1853,16 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
 // atan2's (dx, dy) convention next door does NOT carry into the fork:
 // the split's x offset comes from COS and its y offset from SIN, read
 // straight off which product is added to iX and which to iY.
+//
+// 98.2205 -> 99.9961 (2026-08-21): four source-order facts close every
+// instruction delta. iDelayTil is declared before iMaxBolt, bComplete is
+// reset before the update rectangle, the two maxima are declared BRY then
+// BRX, and the padding statements run TLX/BRX/BRY/TLY. The two short icon
+// aliases at the tail likewise make retail's inlined GetNumFrames evaluate
+// stdIcon before currFrameType. Branches agree 51/51 plus one return and the
+// flat instruction streams now agree completely. The non-100 residue is only
+// relocation identity naming (working retail labels versus admitted source
+// names), so there is no remaining C++ hypothesis here.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
                            int iDestX, int iDestY, int iSplitFrequency,
@@ -1886,17 +1904,17 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
     iDelay = static_cast<long>(
         static_cast<float>(iDelay)
         * gCombatSpeedFactors[gUnnamed698758.combatSpeed]);
-    long iMaxBolt = 1;
     unsigned long iDelayTil = GameTime::Get() + iDelay;
+    long iMaxBolt = 1;
 
     long i;
     do {
         { for (long j = 0; j < iDrawsPerSeg; j++) {
+            bComplete = 1;
             long iUpdTLX = 9999;
             long iUpdTLY = 9999;
-            long iUpdBRX = -1;
             long iUpdBRY = -1;
-            bComplete = 1;
+            long iUpdBRX = -1;
 
             // The extremes are taken BOTH SIDES of the draw because
             // DrawBolt advances the pen: the segment just drawn runs
@@ -1925,9 +1943,9 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
             }
 
             iUpdTLX -= iHalfThickness;
-            iUpdTLY -= iHalfThickness;
             iUpdBRX += iHalfThickness;
             iUpdBRY += iHalfThickness;
+            iUpdTLY -= iHalfThickness;
             if (iUpdTLX < 0)
                 iUpdTLX = 0;
             if (iUpdTLY < 0)
@@ -2028,7 +2046,11 @@ done:
         // left frozen mid-swing behind the bolt.
         army* pArmy = get_current_army();
         if (pArmy->frameInfoAttackFrames) {
-            long iFrames = pArmy->stdIcon->GetNumFrames(pArmy->currFrameType);
+            long iFrames;
+            {
+                CSprite* icon = pArmy->stdIcon;
+                iFrames = icon->GetNumFrames(pArmy->currFrameType);
+            }
             long iFrameDelay = pArmy->frameInfoAttackStartCycleTime / iFrames;
             while (pArmy->currFrameIndex < iFrames) {
                 // Written as two calls, not as a ternary argument: retail
@@ -2041,8 +2063,11 @@ done:
                     DrawFrame(1, 1, 0, iFrameDelay, 1, 1);
                 pArmy->currFrameIndex++;
             }
-            pArmy->currFrameIndex =
-                pArmy->stdIcon->GetNumFrames(pArmy->currFrameType) - 1;
+            {
+                CSprite* icon = pArmy->stdIcon;
+                pArmy->currFrameIndex =
+                    icon->GetNumFrames(pArmy->currFrameType) - 1;
+            }
         }
         gpMouseManager->ShowPointer(false);
     }
@@ -2391,21 +2416,38 @@ void combatManager::SetMassSpellInfluence(const hero* casting_hero, SpellID spel
 //     stays where retail has it, and the zero VC6 then materialises in
 //     EBX is the one retail shares across the null test, the
 //     `powSprite = 0` store and `frames = 0`.
+//   * iMaxFrames uses an IF/ELSE, not a preinitialised local (96.0966 ->
+//     96.3708). Retail writes the slot in both arms of the sprite null
+//     test; `int frames = 0; if (sprite) ...` emits one earlier redundant
+//     store. The ternary remains the wrong, merged CFG family below.
 // Measured and REJECTED: `int frames = sprite ? sprite->GetNumFrames(0)
 // : 0` (91.54 - the ternary merges the null test into GetNumFrames' own
 // zero returns and re-shapes the whole block), and `int anyDied` in
 // place of the byte (95.99), even though retail's own latch is a dword
 // (`xor edx,edx` / `mov edx,1` / `test edx,edx`) - the low-mass
 // inversion again.
+//
+// Residual (96.3708%): all 60 branches and the return agree. In the second
+// animation walk retail shares an EBX zero between `numTroops <= 0` and the
+// currFrameIndex store, while this CL loads numTroops/currFrameType through
+// EBX and stores an immediate zero. A scoped named zero is byte-flat; direct
+// army subscripting collapses to 81.8094%. In the death sweep retail carries
+// the anyDied latch as dword EDX while the closest source type remains a byte
+// in AL: retesting `int anyDied` with the landed if/else scores 96.2663%, and
+// direct subscripting scores 84.1279%. why-reg reports identical first
+// bindings and a past-first-def divergence, so neither remainder is a B1
+// creation-order edit.
 VA(0x005a67c0, 0x4AC)  // order-map+arity, dc 0x155b28
 void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
                                   int spellEffect, unsigned char bShowWince)
 {
     if (!static_cast<const combatManager*>(this)->IsQuickCombat()) {
         CSprite* effectSprite = LoadSpellEffect(spellEffect);
-        int frames = 0;
+        int frames;
         if (effectSprite)
             frames = effectSprite->GetNumFrames(cs_walk);
+        else
+            frames = 0;
         for (int side = 0; side < 2; side++) {
             for (int i = 0; i < numArmies[side]; i++) {
                 army& stack = armies[side][i];
@@ -3659,20 +3701,18 @@ void combatManager::SpellTargetMessage(SpellID spellId, int targetIndex,
 // written as army::GetName and one as this file's CreatureName - the
 // third instance of the lever in this TU.
 //
-// Residual (98.76%): SEVEN instructions, all in the artifact arm, and
-// one cause. Retail RELOADS `[ebp+0xc]` at that arm's default label
-// where our CL keeps the switch selector live from the dispatch - so
-// retail's selector dies in EDX and ours is promoted to ESI, and the
-// six instructions around the akArtifactTraits subscript re-schedule
-// behind that. This is the "do not cache what retail reloads" class
-// with no source lever found: three spellings were measured and all
-// three are worse -
+// EXACT (100%, 0x999 bytes, 2026-08-21): the last seven instructions
+// were all in the artifact arm. Retail RELOADS `[ebp+0xc]` at that arm's
+// default label where plain source lets CL keep the switch selector live
+// from the dispatch, promoting it from EDX to ESI and rescheduling the
+// akArtifactTraits subscript. A volatile reference bound to the parameter
+// is a zero-storage source alias but makes that one default-arm read
+// observable, forcing the retail stack reload and closing the function.
+// Earlier spellings measured before that fix were all neutral or worse:
 //   `int artifact = spellId;` with no default arm            88.90
 //   the three format_string calls written out per arm        70.97
 //   `int artifact;` hoisted to function scope       98.76 (neutral)
-// The last one is the tell: the promotion is not about where the
-// variable is declared, it is VC6's global CSE joining the dispatch
-// block's load to the default block's, which no scoping reaches.
+// The last one proved the promotion was global CSE rather than scope.
 //
 // Everything else in the body is byte-exact, INCLUDING both /Ob2
 // asymmetries this function carries: of the nineteen
@@ -3695,6 +3735,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
     else
         targetName = 0;
     const char* spellName = akSpellTraits[spellId].name;
+    volatile SpellID& reloadSpellId = spellId;
     std::string message;
     switch (bIsMonsterSpell) {
     case SPELL_CASTER_CREATURE:
@@ -3788,7 +3829,7 @@ void combatManager::ShowSpellMessage(int bIsMonsterSpell, SpellID spellId,
             artifact = ARTIFACT_ARMOR_OF_THE_DAMNED;
             break;
         default:
-            artifact = spellId;
+            artifact = reloadSpellId;
             break;
         }
         message = format_string(gpGeneralText->GetText(197),

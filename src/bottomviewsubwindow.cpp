@@ -968,8 +968,14 @@ static const int gTownArmyCoords[7][2] = {
 // own. Tried and rejected on that basis: `quantity_text.rdbuf()->str()` plus
 // `rdbuf()->freeze(false)`, the historical strstream idiom, which is
 // byte-neutral in itself and nets only ONE extra site (97.36 -> 97.16, the
-// same number the +1 probe gives). The sibling DC compilands are no help
-// either: TQuickTownWindow::initialize_army_display (dc 0x118564) and
+// same number the +1 probe gives). Conventional release VERIFY accessors are
+// bounded too (2026-08-21, at the landed 98.7476 baseline): one
+// `(void)quantity_text.rdbuf()` and one `(void)quantity_text.good()` both
+// select the same 95.7705 phase; two `rdbuf()` expressions fall to 94.9034.
+// All three builds have 39 branches against retail's 41, so these are not
+// equivalent to the two genuinely free candidate sites measured above. The
+// sibling DC compilands are no help either:
+// TQuickTownWindow::initialize_army_display (dc 0x118564) and
 // TQuickHeroWindow (dc 0x1170bc) both format their counts with
 // `memset`+`sprintf` into a char buffer in the Dreamcast revision - the
 // S_REGREL32 record even names that buffer `quantity_text` - so the

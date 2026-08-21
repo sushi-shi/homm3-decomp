@@ -63,10 +63,12 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// Residual (96.2%): register homing only, and the extra frame temp that
-// drove most of it is GONE. Every widget, literal, id, coordinate, text
-// index and branch shape below is retail's; what differs now is only WHERE
-// a handful of values live.
+// CURRENT (99.845184%, from 96.37881% on 2026-08-21): every widget, literal,
+// id, coordinate and text index below is retail's, and the branch and call
+// structure now agrees exactly: 147 conditional branches, one return and 154
+// out-of-line calls on both sides. The old "register homing only" diagnosis at
+// 96.38% was premature; six structural branches remained in the two hotkey
+// vector-growth paths. The correction is recorded below.
 //
 // Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
 // VC6's induction-variable machinery reads the SPELLING, not the value:
@@ -94,17 +96,58 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // value was absent "because it had no free register, not because it spelled
 // the subtraction differently". It was the spelling.
 //
-// What is left: a frame-slot permutation ([ebp-0x10]/[ebp-0x18] and
-// [ebp+0xc]/[ebp+0x10] swapped against retail), the first text[100] buffer
-// sitting 0x34 higher than retail's [ebp-0xcc], and the last two organic
-// vector<widget*>::insert expansions scheduling their capacity arithmetic
-// differently. Retail recycles DEAD PARAMETER SLOTS ([ebp+0x14] for `row`,
-// [ebp+0x1c] for `rowX`), so the [ebp-]/[ebp+] choice follows the frame
-// rather than causing it. Tried and rejected: `row++, rowX += 42` in the
+// What is left is stack coloring only. Both sides allocate the exact 0x1cc
+// frame and use the same arrays at [ebp-0x1d8], [ebp-0xd4] and [ebp-0x34],
+// but the early, dead-before-the-arrays text[100] buffer aliases [ebp-0x98]
+// here against retail's [ebp-0xcc]. The loss walk consequently permutes
+// [ebp-0x10]/[ebp-0x1c] and dead parameter homes [ebp+0xc]/[ebp+0x10]. The
+// compiled body has 2066 instructions against retail's 2067; why-reg's 48
+// source mutations find no improvement. Retail recycles dead parameter slots
+// ([ebp+0x14] for `row`, [ebp+0x1c] for `rowX`), so the [ebp-]/[ebp+] choice
+// follows the coloring rather than causing it. Tried and rejected:
+// `row++, rowX += 42` in the
 // for-increment clause (92.77%, keeps the basic IV); naming `int creature`
 // in the loss aggregation walk (spills the running maximum, -0.7%);
 // `my_side ? defender : attacker` for the narrated hero (inverts the
-// branch, -0.16%).
+// branch, -0.16%). The DC local roster's distinct `cText[100]` and
+// `cTemp[100]` were also restored at function entry and at their first-use
+// region, in both declaration orders: every form scores 96.37397%, slightly
+// below the two scoped buffers at 96.37881%. Release-elided call-shaped
+// diagnostics are not the honest mass supply here either: 1/2/3 entry sites
+// score 95.50169/96.11950/95.41026%. Conventional ASSERT/TRACE history is
+// therefore bounded independently of the earlier byte-inert pad sweep.
+// Parameter-home forcing is bounded too (2026-08-21). Moving `our_hero`
+// after the portrait arms falls to 94.33672%. An explicit entry if/else
+// reproduces retail's branch-and-store prologue byte-for-byte but changes the
+// later inline phase and scores 95.50169%. Reusing the attacker parameter
+// home explicitly, with the original pointer held for the portrait, scores
+// 95.18916% as a ternary and 95.35462% as if/else. The compiler removes the
+// self-store in both parameter-reuse forms; forcing the early home is not a
+// whole-function win.
+// A release VERIFY of `Widgets.size()` is bounded separately from the
+// elided TRACE/ASSERT-shaped carrier sweep (2026-08-21). Placing the retained
+// inline accessor before the last two inserts, between them, or immediately
+// before the final insert scores 89.66957%, 88.85438%, and 90.499275%
+// respectively. All three perturb the /Ob2 phase far below 96.37881%.
+//
+// The remaining DC-roster type/scope leads are bounded too (2026-08-21).
+// Spelling both strongest-stack accumulators as DC's `long amount` regresses
+// to 95.335266; sharing one function-scope int accumulator/index pair across
+// the mirrored attacker/defender arms scores 96.251090. Retail x86 already
+// uses the slot index in ESI after each walk, so DC's TCreatureType `type`
+// local is a port-specific source difference, not a compatible x86 type.
+// The hotkey spelling was the remaining structural lever. The DC xref graph's
+// one edge to the header-inline `button::set_hotkey` is an OUT-OF-LINE edge,
+// not a source-call census; treating it as proof that retail used the wrapper
+// once was wrong. Retail x86 passes zero as the button constructor's hotkey
+// and its two growth paths are selected by direct
+// `hotKeyCodes.push_back(28/1)`. With both wrappers the body was 96.37881%,
+// 153 branches and 152 calls. Making only 28 direct reached 98.01112% /
+// 150 / 153; the reversed one-direct spelling reached 97.33962% / 151;
+// making both direct reaches 99.845184% and retail's exact 147 / 154 ledger.
+// Moving either key into the constructor remains byte-disproved. The local
+// declarations below now follow DC's creature/count/total/text record order;
+// that order is byte-flat at 99.845184% but is the evidence-backed tie-break.
 //
 // The compiland's DC roster carries no helper members beyond the six
 // already landed, re-checked 2026-08-14: no HighlightX-style extraction is
@@ -324,10 +367,10 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     // Losses, aggregated per side into (creature, count) rows: the display
     // is data-driven, so every icon and every count text it emits carries
     // BACKGROUND_ID rather than one of the Dreamcast-only LOSS ids.
-    int lossRows[2];
     int lossCreature[2][20];
-    char text[100];
     int lossCount[2][20];
+    int lossRows[2];
+    char text[100];
 
     for (int side = 0; side < 2; side++) {
         lossRows[side] = 0;
@@ -380,8 +423,8 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
         0, 1, 0, 0, 2);
-    accept->set_hotkey(28);
-    accept->set_hotkey(1);
+    accept->hotKeyCodes.push_back(28);
+    accept->hotKeyCodes.push_back(1);
     Widgets.push_back(accept);
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {

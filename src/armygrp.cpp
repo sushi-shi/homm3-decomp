@@ -699,6 +699,20 @@ const std::bitset<9>& ArmyGrpFn_0044A460()
 // tail where retail falls through, and the otherwise equivalent prologue
 // differs only in instruction scheduling. All selector semantics and the
 // 104-block retail action ordering are recovered.
+// Selector-source audit (2026-08-21): `int` in place of EArtifactId is
+// byte-flat, including when declared at the top of the function; `volatile
+// int` forces a stack home but regresses to 83.2375%. A file-static inline
+// artifact-check helper at all six arms is normalized to the already-tested
+// unshared spelling and reproduces its 84.9089% score. The type, declaration
+// placement and a source helper therefore cannot select retail's earlier
+// `push imm` cross-jump boundary.
+// Register/source-carrier audit (2026-08-21): the DC body has no named locals,
+// and why-reg's two apparent homing wins do not survive the byte verdict:
+// `volatile spellFlags` scores 87.26071% and `volatile chance` 87.685715%.
+// A conventional release VERIFY of the natural `target_hero != 0` invariant
+// is byte-flat at 88.50714%, both once at the common artifact label and once
+// in each of the six source arms. VERIFY remains possible source history, but
+// it cannot select retail's early pushes or its four additional return bodies.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero)
 {
@@ -1605,15 +1619,21 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // away a `break` statement that is the loop's first statement.  The goto
 // rewrite failed because it moved the same test, not because the shape was
 // unreachable.
-// THE FRAME SLOT IS STILL OPEN, and the diff now names it exactly.  Retail
-// spills BOTH walkers to negative slots (`lea ebx,[ebp-X] / lea edi,[ebp-Y]`,
-// both stored) and puts `processed` in the recycled `ag` parameter home;
-// this compile coalesces the walkers - it reads the type walker as
-// `[edi - K]` off the troop walker - and spends the parameter home on the
-// surviving walker instead.  Swapping the two walker declarations was
-// measured against that and is 0.06 WORSE (79.9609), so declaration order is
-// not the knob; what is needed is a spelling VC6 cannot fold into one
-// induction variable.
+// 2026-08-21: making the merge scan bottom-tested raises 80.0168 -> 81.1899
+// and gives the retail 36-block skeleton.  Grouping the two walkers in a
+// tiny aggregate prevents VC6 from folding their fixed displacement into
+// one induction variable: the frame becomes retail's 0x8c and the score
+// rises to 84.0950.  Initializing type-walker, then troop-walker, in retail
+// order raises that to 84.8268.
+// Residual (84.8268%): the opening scan is structurally exact through both
+// walker homes, but our CL assigns type/count to edx/esi where retail uses
+// esi/edx.  The dedup tail still routes three adjacent tests differently.
+// The source-looking zero-based forms (`a=0`, `b=a+1`) were tested both with
+// the explicit progress break (77.0559) and with
+// `!progress && a < SLOT_COUNT-1` (78.5251), so the retained one-based view
+// is the closest compiler spelling.  Declaration swap (79.9609), volatile,
+// alternate indices and goto forms were already lower; this register/CFG
+// family is bounded after four fresh hypotheses.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
@@ -1626,13 +1646,14 @@ unsigned char armyGroup::Merge(armyGroup* ag)
         ag2.armies[i] = ag->armies[i];
         ag2.numTroops[i] = ag->numTroops[i];
     }
-    int* wTroops = ag2.numTroops;
-    int* wTypes = ag2.armies;
+    int* walkers[2];
     int processed = 0;
-    while (processed < ARMY_GROUP_SLOT_COUNT) {
-        int type = *wTypes;
+    walkers[1] = ag2.armies;
+    walkers[0] = ag2.numTroops;
+    do {
+        int type = *walkers[1];
         if (type != -1) {
-            int count = *wTroops;
+            int count = *walkers[0];
             if (count > 0) {
                 for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
                     if (ag1.armies[i] == type)
@@ -1670,14 +1691,14 @@ unsigned char armyGroup::Merge(armyGroup* ag)
                         continue;
                     }
                 }
-                *wTroops = 0;
-                *wTypes = CREATURE_NONE;
+                *walkers[0] = 0;
+                *walkers[1] = CREATURE_NONE;
             }
         }
         processed++;
-        wTroops++;
-        wTypes++;
-    }
+        walkers[0]++;
+        walkers[1]++;
+    } while (processed < ARMY_GROUP_SLOT_COUNT);
     for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
         armies[i] = ag1.armies[i];
         ag->armies[i] = ag2.armies[i];

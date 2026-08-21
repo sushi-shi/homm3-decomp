@@ -220,6 +220,9 @@ type_university* ExtraInfoUnion::get_university() const
 // RS_GIFT_REQUEST calls its sibling direct, the two visibility arms are
 // deliberate longhand duplicates, and the session-lost arm's else falls
 // into the same new-host hand-off as default (VC6 cross-jumps them).
+// Each visibility arm gives gpAdvManager a short local lifetime immediately
+// before UpdateScreen; that is retail's EDI cache for the later animation
+// fields. With that lifetime restored the complete 0x64b-byte body is exact.
 // The common tail recycles whatever message pointer survived.
 VA(0x00405e30, 0x64B)  // dc-bracket forced, dc 0x58f0
 CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
@@ -324,6 +327,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         gpAdvManager->CompleteDraw(gpAdvManager->radarOrigin.x,
                                    gpAdvManager->radarOrigin.y,
                                    gpAdvManager->radarOrigin.z, 0, 1);
+        advManager* manager = gpAdvManager;
         gpWindowManager->UpdateScreen(advManager::ADVENTURE_SCREEN_X,
                                       advManager::ADVENTURE_SCREEN_Y,
                                       advManager::ADVENTURE_SCREEN_WIDTH,
@@ -332,8 +336,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         if (static_cast<long>(
                 curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
                 >= 0
-            && !gpAdvManager->animCtrPaused) {
-            ++gpAdvManager->animFrame;
+            && !manager->animCtrPaused) {
+            ++manager->animFrame;
             long elapsedTime =
                 curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
             glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
@@ -353,6 +357,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         gpAdvManager->CompleteDraw(gpAdvManager->radarOrigin.x,
                                    gpAdvManager->radarOrigin.y,
                                    gpAdvManager->radarOrigin.z, 0, 1);
+        advManager* manager = gpAdvManager;
         gpWindowManager->UpdateScreen(advManager::ADVENTURE_SCREEN_X,
                                       advManager::ADVENTURE_SCREEN_Y,
                                       advManager::ADVENTURE_SCREEN_WIDTH,
@@ -361,8 +366,8 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         if (static_cast<long>(
                 curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT])
                 >= 0
-            && !gpAdvManager->animCtrPaused) {
-            ++gpAdvManager->animFrame;
+            && !manager->animCtrPaused) {
+            ++manager->animFrame;
             long elapsedTime =
                 curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
             glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
@@ -1516,6 +1521,12 @@ NewmapCell* NewfullMap::cell(int x, int y, int z)
 //     shape, as ProcessDeSelect's kingdom-overview arm; the point itself
 //     is DELIBERATELY left uninitialised, which retail proves by
 //     inserting x with an XOR-merge against the slot's existing bits.
+//   * The four tail locals follow the DC CodeView roster exactly:
+//     exitFlag, iReturn, eventCell, trigger_point. Their initialization is
+//     intentionally separate and ordered iReturn, exitFlag, eventCell;
+//     retail materializes EBX=1 before the two zero stores. Keeping the
+//     initializers on the declarations reverses those first two operations.
+// With that last local-order correction the complete 0x487-byte body is exact.
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
 int advManager::Main(message& msg)
 {
@@ -1582,10 +1593,13 @@ int advManager::Main(message& msg)
         }
     }
 
-    unsigned char exitFlag = 0;
+    unsigned char exitFlag;
+    int result;
+    NewmapCell* eventCell;
     type_point trigger_point;
-    NewmapCell* eventCell = 0;
-    int result = MESSAGE_DISPATCH_CONSUME;
+    result = MESSAGE_DISPATCH_CONSUME;
+    exitFlag = 0;
+    eventCell = 0;
 
     if (msg.id != MESSAGE_NONE) {
         switch (msg.id) {
@@ -1753,14 +1767,12 @@ DATA(0x006976d8) extern int gUnnamed6976d8;
 // mis-placed blocks cost more than the seven missing calls do.
 // Retail's layout reads as the sunk-join shape - "KP_8's copy of the
 // walk block falls through, the other seven jump to a second copy" - so
-// WRITE IT TWICE is the obvious next lever, and it is ALREADY REFUTED
-// HERE by the eight-copy experiment recorded below: that run reported
-// VC6 merging NONE of the copies (952 -> 2208 instructions), and a
-// cross-jumper that declines eight identical tails will decline two.
-// The block is ~110 source lines, so an unmerged second copy is roughly
-// +250 instructions against retail's 948. Do not spend a round on it
-// without first finding a case where this body's cross-jumper merges
-// anything at all.
+// WRITE IT TWICE was the obvious next lever and is now directly measured
+// (2026-08-21), not merely inferred from the eight-copy experiment. One
+// fall-through copy after KP_8 plus one shared copy for the other seven
+// restores retail's 24 exits, but VC6 leaves both bodies unmerged: 79 branches
+// against retail's 63 and 70.7284% against the retained 80.4012%. The result
+// confirms the cross-jumper declines two copies just as it declined eight.
 //
 // What ALSO paid was removing the brace scope around the shared block's
 // locals - 71.36 -> 75.65, purely through register allocation inside the
@@ -2699,8 +2711,15 @@ void advManager::ProcessRadarSelect(const message* msg)
 //     heroMobile fail to share retail's one [ebp-4] slot.
 //   * Retail keeps its ONE `advCommand = VIEW_HERO; DoAdvCommand` block at
 //     the FIRST of the two sites and jumps back into it from the hero arm;
-//     our CL cross-jumps the same pair the other way and keeps the second.
-//     Same block count, mirrored placement.
+//     our CL emits both source sites. An explicit backward `goto` with the
+//     DC-roster locals hoisted to make the label legal does recover retail's
+//     25-call/12-return census, but leaves 37 branches/60 blocks against
+//     retail's 38/64 and regresses 91.10057 -> 88.463%. The source-directed
+//     merge is therefore not the missing shape under VC6 SP3. Putting the
+//     label at the SECOND site canonicalizes to the same 88.463% object, so
+//     block polarity is bounded too. Hoisting only the three DC-roster locals
+//     while retaining both bodies is byte-flat at 91.10057%, so lifetime alone
+//     is not the remaining lever either.
 // The redundant `currHeroId != -1` guard is retail's own: its inlined
 // GetHero re-tests the id off the same flags and leaves a dead
 // `xor ebx,ebx` arm behind. Dropping the guard reproduces that dead block
@@ -3228,7 +3247,22 @@ static void set_windmill_help_text(
 // carriers (2026-08-21): release-elided diagnostic doses 1/2/4/8 at entry
 // and one beside QUEST_GUARD are all byte-flat at 93.938970 with the same
 // 184 branches, and routing the returned string through an inline
-// const-reference copier is byte-flat too. Neither family is retained.
+// const-reference copier is byte-flat too. A conventional release VERIFY
+// carrier that evaluates `QuestGuardList.size()` at the actual case is also
+// byte-flat, so VERIFY-shaped source is possible but does not select retail's
+// object phase here.
+//
+// The real-code branch deficit is now completely localized: ours has 184
+// conditionals before RET against retail's 188. Three are the retail-inlined
+// QUEST_GUARD temporary destructor (retail keeps the returned string in a
+// dedicated [ebp-0x4c] EH local; ours uses the outgoing [ebp-0x240] area and
+// calls _Tidy), and the fourth is retail's separate OBELISK visit test where
+// ours jumps into a shared test. Four bounded source probes do not recover
+// that phase: reversing the special-terrain condition scores 93.910890;
+// binding the returned string through a const reference canonicalizes to the
+// already-rejected named-string 93.931694 object; a one-call inline helper
+// around the QuestGuard copy scores 93.894590; and the real size() VERIFY is
+// byte-flat. None is retained.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -4842,6 +4876,14 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:5688
+// Residual (98.1667%): all 16 branches and both returns agree. The only real
+// code delta is the third boat-sprite call: retail keeps GetNumFrames' zero
+// fallback/divisor in ECX (`xor ecx,ecx; idiv ecx`), while this VC6 build
+// spills it to the frame and therefore emits one extra instruction. Dreamcast
+// lists exactly currHero, currBoat, HeroCellY and HeroCellX as locals. A
+// release VERIFY-shaped currHero invariant, discarded GetNumFrames value and
+// `GetNumFrames(...) > 0` invariant are byte-flat; naming the divisor is also
+// flat, while naming the remainder regresses to 98.1571%.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -4910,6 +4952,11 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 }
 
 // E:\gamedcs\advmgr.cpp:5773
+// Residual (98.1840%): all 18 branches and both returns agree, with the same
+// one-instruction third-boat-call divisor spill as DrawHeroPart above. The
+// Dreamcast four-local roster and the VERIFY/accessor/named-local probes are
+// identical, so this is the shared compiler scheduling residual rather than
+// an independently source-nameable shadow-path difference.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
@@ -5401,12 +5448,14 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
 
     TDrawParts heroParts[6];
     TDrawParts boatParts[6];
-    bool foundHero = ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
-    bool foundBoat = ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+    unsigned char foundHero =
+        ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    unsigned char foundBoat =
+        ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
 
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
-    for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
+    for (int numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
         AdvObjectCellView* objCell = &cellObjects->objects[numObj];
         AdvFullMapObjectsView* mapObjects =
             static_cast<AdvFullMapObjectsView*>(static_cast<void*>(fullMap));
@@ -5434,7 +5483,16 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         // (84.7451), function-scope numObj (byte-flat), and the DC pointer
         // declaration order SprPtr/ObjCell/ObjType (byte-flat). The DC-backed
         // final-loop `part`/`partHigh`/`partLow` spelling is also byte-flat and
-        // does not supply retail's missing frame dword.
+        // does not supply retail's missing frame dword. The DC-proven source
+        // types (`unsigned char` foundHero/foundBoat and signed `int numObj`)
+        // are retained above; both are byte-flat. Restoring the DC-attested
+        // static CObjectType::_getBitPos call with its
+        // `8 * (6-y) - x - 1` body is byte-flat here, but exposing the inline
+        // through the shared header regresses an unrelated exact function via
+        // include-set sensitivity, so the equivalent expression stays local.
+        // A semantics-preserving unnamed-yOffset spelling is byte-flat too;
+        // why-reg's apparent -75 automatic mutation used the already-shifted
+        // byte for y and was therefore not a valid candidate.
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
@@ -5832,22 +5890,41 @@ draw_stars:
 }
 
 // E:\gamedcs\advmgr.cpp:6805
+// Residual (92.7034%): register homing/scheduling only. The two streams have
+// exactly 22 branches and one return with identical symbolic targets; why-reg
+// measures flow distance 0 and 223 register-visible slots, while its allocator
+// model finds the initial ESI/EDI/EBX definitions identical and the divergence
+// entirely past those first definitions. Dreamcast's lexical scopes were
+// restored and retained: the top roster `tilew, tileh, tilex, tiley, baseX,
+// baseY, thisCell`; signed `numObj` plus `SprPtr, ObjCell, ObjType`; and the
+// flag arm's `triggerCell, triggerY, triggerX, Obj, owner`. All three changes
+// are byte-flat at 92.7034%, including the attested Obj temporary used only by
+// FindTrigger. With exact flow and no extra evaluated expression in retail,
+// there is no byte evidence for manufacturing a release VERIFY carrier here.
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
     if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
         return;
 
+    int tilew;
+    int tileh;
+    int tilex;
+    int tiley;
+    int baseX;
+    int baseY;
+    NewmapCell* thisCell;
+
     type_point point;
     point = type_point(srcX, srcY, z);
-    NewmapCell* thisCell = DrawHeroCell(this, point);
+    thisCell = DrawHeroCell(this, point);
 
-    int baseX = mapOriginX + destX * 32;
-    int baseY = mapOriginY + destY * 32;
-    int tilex = 0;
-    int tiley = 0;
-    int tilew = 32;
-    int tileh = 32;
+    baseX = mapOriginX + destX * 32;
+    baseY = mapOriginY + destY * 32;
+    tilex = 0;
+    tiley = 0;
+    tilew = 32;
+    tileh = 32;
 
     if (baseX < 8) {
         tilex = 8 - baseX;
@@ -5867,12 +5944,15 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     if (thisCell->objects.size() > 0) {
-        for (unsigned numObj = 0; numObj < thisCell->objects.size();
+        for (int numObj = 0; numObj < thisCell->objects.size();
              ++numObj) {
-            NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
-            CObjectType* objType = &fullMap->objectTypes[
+            CSprite* sprite;
+            NewmapCell::TObjectCell* objCell;
+            CObjectType* objType;
+            objCell = &thisCell->objects[numObj];
+            objType = &fullMap->objectTypes[
                 fullMap->objects[objCell->objectIndex].typeIndex];
-            CSprite* sprite = fullMap->sprites[
+            sprite = fullMap->sprites[
                 fullMap->objects[objCell->objectIndex].typeIndex];
             if (!objType->suppressDraw)
                 continue;
@@ -5886,13 +5966,15 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             case RANDOM_TOWN:
             case SHIPYARD:
             case TOWN: {
-                int triggerX;
+                NewmapCell* triggerCell;
                 int triggerY;
-                fullMap->objects[objCell->objectIndex].FindTrigger(
-                    &triggerX, &triggerY);
+                int triggerX;
+                CObject* Obj;
+                int owner;
+                Obj = &fullMap->objects[objCell->objectIndex];
+                Obj->FindTrigger(&triggerX, &triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
-                NewmapCell* triggerCell;
                 // The `valid` and `map` locals are the file's own
                 // trigger-cell idiom (DrawHeroCell, DrawAdvObjShadow), and
                 // both halves are measured here: 92.2180 bare, 92.5775 with
@@ -5907,7 +5989,7 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 else
                     triggerCell = map->cell(
                         triggerPoint.x, triggerPoint.y, triggerPoint.z);
-                int owner = GetFlaggedObjectOwner(triggerCell);
+                owner = GetFlaggedObjectOwner(triggerCell);
                 int frame = (animFrame
                              + fullMap->objects[objCell->objectIndex]
                                    .animationOffset)
@@ -6097,7 +6179,24 @@ NewmapCell* advManager::GetCell(type_point point)
 // duplicated tail) measured 90.18 -> 90.65 and is kept below; the SAME
 // chain spelling for the in-loop row-advance measured 78.75 - that one
 // really is a switch - and is reverted. One compare site and ~3 blocks
-// remain, plus the jump-table-data ret artifact.
+// remain, plus the jump-table-data ret artifact.  The Dreamcast xref graph
+// names one game::GetHero call here, and retail's opening x86 has both the
+// currHeroId == -1 null arm and a second test of the selected pointer.  Four
+// source-shape probes bounded that discrepancy on 2026-08-21: an accessor
+// inside the outer guard emitted 95 branches but fell to 88.90459%; an
+// unguarded accessor and its explicitly-spelled body both emitted 94 branches,
+// 165/167 blocks and scored 90.60734%; a single-use inline wrapper emitted the
+// same bytes.  VC6 proves the address arm non-null and removes retail's second
+// test in every accessor-shaped form.  The manual guarded address below remains
+// the score winner at 90.64954%, despite its one missing compare/~3 blocks.
+// The DC local roster is now audited too (2026-08-21). Function-scope
+// `ulX/ulY/brX/brY` recovers the 95th branch but adds a second real polarity
+// mismatch and scores 88.83211%; tail-scoped `brX/brY` scores 89.27523% and
+// leaves the branch deficit. Its attested 32-bit `playerBit` nearly ties at
+// 90.63027% and also recovers branch 95, but introduces the same extra
+// polarity mismatch. Finally, removing the unattested last-row/last-column
+// caches in favour of direct `< gMapHeight/gMapWidth` loops scores 88.90550%
+// with several new CFG differences. All four were reverted.
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
 void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
 {
@@ -6594,33 +6693,37 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // keeping playerBit in EBX. This remains a site-specific retail divergence;
 // the proven Game.h accessor itself stays untouched.
 //
-// CURRENT 2026-08-21 (94.804726%, from 90.200386%). Dreamcast CodeView
+// CURRENT 2026-08-21 (94.85162%, from 90.200386%). Dreamcast CodeView
 // supplies the full local roster and proves six named text helpers in this
 // caller: set_hero_help, set_pyramid_help, and the wagon/tomb/water-wheel/
 // windmill quartet. Reconstructing those helpers here lets VC6 inline their
 // source-shaped bodies and removes the misleading `_Tidy` discrepancy.
 // Restoring the DC `testFlag`, `visited`, and `infolevel` carriers, plus
 // retail's two complete sprintf arms for BORDER_TENT and OBELISK, supplies
-// the rest of the gain. The emitted out-of-line call multiset now agrees
-// with retail (78 calls on each side), and the CFG renderer reports 372
-// blocks on both sides.
+// the rest of the gain. The emitted out-of-line call multiset now agrees with
+// retail (78 calls on each side).
 //
-// Remaining measured residue: our frame is 0x2b8 against retail's 0x2b0;
-// deleting the copied type_point closes the frame but falls to 93.27, while
-// calling the exact out-of-line GetCell falls to 90.12 because retail's
-// inlined invalid arm retains `fullMap->cell(0,0,0)` where the standalone
-// exact GetCell folds to `fullMap->cellData`. In real code before the RET,
-// ours has 198 conditional branches against retail's 197. The sole extra is
-// localized to BUOY: retail cross-jumps its final visit test into ARENA's
-// duplicated sprintf tail. Spelling ARENA with duplicated calls coerces the
-// share but globally re-lays out the switch and falls to 92.45, so neither
-// measured regression is retained. An explicit source-level join is rejected
-// too (2026-08-21): labels on ARENA's two sprintf blocks with BUOY gotos to
-// them score 93.571790 and emit 203 decoded branches against retail's 200.
-// Forcing the local graph re-lays out the switch globally just as duplication
-// does. Branch counters that include the bytes after RET are invalid here:
-// those bytes are the 57-dword jump table and 216-byte case-index table, and
+// The last retained gain is local to BUOY (94.804726 -> 94.85162): spelling
+// its visited/unvisited argument with ARENA's one-source-call ternary improves
+// byte alignment without changing the call ledger. It does not complete
+// retail's cross-jump, however. Counting only code before RET, this candidate
+// has 199 conditional branches and 372 blocks against retail's 197 and 368.
+// Spelling ARENA with duplicated calls coerces the share but globally re-lays
+// out the switch and falls to 92.45. Explicit labels on ARENA's two sprintf
+// blocks with BUOY gotos score 93.571790 and emit 203 decoded branches against
+// retail's 200. Branch counters that include the bytes after RET are invalid:
+// those bytes are the 57-dword jump table and 216-byte case-index table and
 // happen to decode as bogus jcc opcodes.
+//
+// The frame remains 0x2b8 against retail's 0x2b0. Deleting the copied
+// type_point closes it but falls to 93.27; a non-const reference alias, which
+// preserves the inlined-parameter surface while removing the same eight
+// bytes, scores 93.34301. Calling the exact out-of-line GetCell falls to 90.12
+// because retail's inlined invalid arm retains `fullMap->cell(0,0,0)` where
+// standalone GetCell folds to `fullMap->cellData`. Conventional release
+// VERIFY is bounded separately on the preceding 94.804726 shape: discarded
+// `cellDescription.empty()` and `cellDescription.size()` accessors are both
+// byte-flat. Neither enters the residual cross-jump or frame decision.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -6813,8 +6916,27 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
-            SET_KNOWN_VISITED_QUICKINFO(BUOY, BuoyInfo,
-                currHero->flags & 0x4);
+            case BUOY:
+                strcpy(gText, gAdventureObjectNames[BUOY]);
+                if (cell->is_trigger) {
+                    infolevel = gpGame->GetInfoFlag(BuoyInfo, iPlayer);
+                    if (infolevel) {
+                        sprintf(tempText, knownFormat,
+                                gGlobalInfoFlagNames[BuoyInfo]);
+                        strcat(gText, tempText);
+                    }
+                    if (currHero) {
+                        visited = currHero->flags & 0x4;
+                        sprintf(tempText, visitFormat,
+                            visited
+                                ? gpGeneralText->GetText(
+                                      GENERAL_TEXT_VISITED_OBJECT)
+                                : gpGeneralText->GetText(
+                                      GENERAL_TEXT_UNVISITED_OBJECT));
+                        strcat(gText, tempText);
+                    }
+                }
+                break;
             SET_KNOWN_VISITED_QUICKINFO(CLOVER_FIELD, CloverFieldInfo,
                 currHero->flags & 0x8);
             case CREATURE_BANK: {
@@ -7427,15 +7549,42 @@ void advManager::HeroQuickView(int heroId, int x, int y,
 // AI_approximate_strength precedent).
 const char* GetBuildingName(int townType, int buildingId);
 
+// One-call /Ob2 depth devices for TownQuickView. The DC roster has no helper
+// rows here, so these are not source-boundary claims; VC6 expands both and
+// emits no standalone functions. Their measured effect is recorded below.
+static inline void append_town_quick_view_resource(
+    std::string& text, int amount, const char* resourceName)
+{
+    text += format_string("%i %s", amount, resourceName);
+}
+
+static inline void append_town_quick_view_income_header(std::string& text)
+{
+    text += "\n\nIncome:\n";
+}
+
 // E:\gamedcs\advmgr.cpp:9115
-// Residual (85.32%): whole-body callee-saved rotation (ours
-// townId=ESI/point=EDI/thisTown=EBX, retail EDI/EBX/ESI - one step), the
-// DrawAdvObj family's wall. why-reg v2: definition slots and order agree,
-// bindings permuted; its model-proposed edit (owner as long local) measured
-// +48 worse and it capped the pair as front-end handle state (params <
-// this < locals is parse-FIXED, handle-order.md). Declaration-order swap
-// of first/ownerPlayer measured flat. The base-only spill surplus is
-// downstream of the rotation, not a second wall.
+// 90.98338 -> 92.75378 -> 92.941086 (2026-08-21), after the two pinned
+// building-name appends had already raised the older 85.32 plateau. The
+// resource helper adds one source nesting level around the formatted-string
+// temporary. That makes VC6 CALL its `_Tidy` where the direct statement
+// expanded `_Tidy` and exposed one extra operator delete, and closes the
+// whole CFG: 55 branches, 3 returns and 100 blocks on both sides. The income
+// header helper similarly restores one of retail's two later `_Eos` calls.
+// Statement-local inline_depth(1) and (2) on the direct resource append are
+// byte-flat, so the helper depth rather than a pragma is the reachable lever.
+//
+// Residual (92.941086%): flow is exact and base is 663 instructions against
+// retail's 662. Retail still calls `_Eos` after the income-loop separator
+// where this compile expands the terminator store, and the remaining aligned
+// regions differ by volatile-register scheduling. One- and two-level
+// one-call helpers at that separator are byte-flat, as is a helper carrying a
+// release-VERIFY-style discarded `text.size()` accessor. why-reg v2 now sees
+// the same first three callee-saved definitions and bindings on both sides;
+// this supersedes the earlier whole-body-rotation diagnosis. Reusing the DC
+// roster's one function-scope `long i` for all three non-building loops is
+// also byte-flat both before and after the resource helper, so the original
+// scoped counters remain.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
 void advManager::TownQuickView(int townId, int x, int y,
                                unsigned char display_drop_shadow)
@@ -7523,11 +7672,11 @@ void advManager::TownQuickView(int townId, int x, int y,
         for (int res = 0; res < 7; res++) {
             if (res > 0)
                 text += ", ";
-            text += format_string("%i %s", ownerPlayer->resources[res],
-                                  gResourceNames[res]);
+            append_town_quick_view_resource(
+                text, ownerPlayer->resources[res], gResourceNames[res]);
         }
 
-        text += "\n\nIncome:\n";
+        append_town_quick_view_income_header(text);
         gpGame->calculate_production();
         first = 1;
         for (int inc = 0; inc < 7; inc++) {
@@ -9421,27 +9570,51 @@ void advManager::EnableButtons()
 }
 
 // E:\gamedcs\advmgr.cpp:11125
+// EXACT 2026-08-21 (82.00565 -> 82.14124 -> 96.38418 -> 100). The DC
+// local roster is literal source evidence here: RECT rect, int x/y, and one
+// NewmapCell* map_cell. Restoring that shape supplies retail's 0x24-byte frame
+// and four contiguous bound slots. The decisive step is the inline accessor
+// boundary below. A flat cellData subscript lets C2 strength-reduce the inner
+// walk (191 instructions); retail recomputes the header-inline cell lookup on
+// every iteration (177). advmgr's shared NewfullMap personality deliberately
+// exposes cell(x,y,z) out of line for its other call sites, so this two-site
+// surrogate recreates the original inline depth without emitting a standalone
+// helper. Finally, `_cpp_min` is symmetric semantically but VC6 evaluates its
+// operands in source-sensitive scratch-register order; width/height first is
+// the exact retail schedule. Calls, 16 branches, two returns, 24 blocks and all
+// 177 instructions now agree.
+static inline NewmapCell* find_adjacent_map_cell(
+    NewfullMap* map, int x, int y, int z)
+{
+    return &map->cellData[(z * map->Size + y) * map->Size + x];
+}
+
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
-    int min_x = _cpp_max<int>(point.x - 1, 0);
-    int min_y = _cpp_max<int>(point.y - 1, 0);
-    int max_x = _cpp_min<int>(point.x + 2, gMapWidth);
-    int max_y = _cpp_min<int>(point.y + 2, gMapHeight);
+    RECT rect;
+    int x;
+    int y;
+    NewmapCell* map_cell;
 
-    NewmapCell* center = &fullMap->cellData[
-        (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
-    unsigned char center_is_water = center->GroundSet == eTerrainWater;
-    if (center->cell_is_trigger()
-        && !gAdventureObjectTraits[center->get_map_object()][1])
-        min_y = point.y;
+    rect.left = _cpp_max<int>(point.x - 1, 0);
+    rect.top = _cpp_max<int>(point.y - 1, 0);
+    rect.right = _cpp_min<int>(gMapWidth, point.x + 2);
+    rect.bottom = _cpp_min<int>(gMapHeight, point.y + 2);
 
-    for (int x = min_x; x < max_x; ++x) {
-        for (int y = min_y; y < max_y; ++y) {
-            NewmapCell* cell = &fullMap->cellData[
-                (point.z * fullMap->Size + y) * fullMap->Size + x];
-            if (cell->type == MONSTER && cell->is_trigger
-                && (cell->GroundSet == eTerrainWater) == center_is_water
+    map_cell = find_adjacent_map_cell(
+        fullMap, point.x, point.y, point.z);
+    unsigned char center_is_water = map_cell->GroundSet == eTerrainWater;
+    if (map_cell->cell_is_trigger()
+        && !gAdventureObjectTraits[map_cell->get_map_object()][1])
+        rect.top = point.y;
+
+    for (x = rect.left; x < rect.right; ++x) {
+        for (y = rect.top; y < rect.bottom; ++y) {
+            map_cell = find_adjacent_map_cell(
+                fullMap, x, y, point.z);
+            if (map_cell->type == MONSTER && map_cell->is_trigger
+                && (map_cell->GroundSet == eTerrainWater) == center_is_water
                 && (x != excluded.x || y != excluded.y
                     || point.z != excluded.z)) {
                 result->x = x;

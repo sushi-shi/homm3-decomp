@@ -176,6 +176,16 @@ public:
     // get_travel_time and SeedCombatPosition both spell by hand; the
     // null arm answers 0 and the caller still dereferences it.
     pathCell* getCellData(long pos);
+#ifdef HOMM3_SEARCHARRAY_GET_HEX_VIEW
+    // FindPath.h:194, dc 0x27fe8. The ai_tactical inline-site census records
+    // two expansions in check_adjacent_hexes and no retained retail call.
+    pathCell* get_hex(long x)
+    {
+        if (cellData == 0)
+            return 0;
+        return &cellData[x];
+    }
+#endif
     // 0x4b1a70 / 0x4b2300, the adventure-map half of the search. The DC
     // roster spells both first parameters const; they are spelled non-const
     // here because every hero call the bodies make (get_creature_total,

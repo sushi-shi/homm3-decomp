@@ -142,6 +142,25 @@ const int SAVED_HERO_PRE25_FIRST = 0x80;
 const int SAVED_HERO_PRE25_SECOND = 0x81;
 const int HERO_PRE25_FIRST_REMAP = 0x92;
 const int HERO_PRE25_SECOND_REMAP = 0x9c;
+
+// The PC-only save-version remap is a real inline source boundary. Retail's
+// three expansions read through an unsigned dword buffer, keep the decoded id
+// in EAX, and join each direct-return arm at the caller's destination store.
+static inline int load_saved_hero_id(TAbstractFile* infile, int saveVersion)
+{
+    unsigned long uint_buffer;
+    infile->Read(&uint_buffer, sizeof(unsigned char));
+    int heroId = uint_buffer & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (saveVersion < 25) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
+}
 const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
@@ -1314,7 +1333,10 @@ void playerData::ClearNetInfo()
 // 0x92/0x9c. It is inlined at all three sites (currHeroId, the roster
 // loop, the tavern pair) - the roster and recruit reads DISCARD the
 // Read result, which is why only the scalar reads carry a `< size`
-// guard.
+// guard. Direct returns from the helper avoid six non-retail writes back
+// into its input slot. The version-37 bitset is declared before its two-byte
+// input buffer is read, putting retail's zero store before that call. With
+// those source boundaries restored the complete 0x401-byte body is exact.
 VA(0x004ba260, 0x401)  // anchor-global, dc 0xa51b0
 int playerData::load(TAbstractFile* infile, int saveVersion)
 {
@@ -1326,48 +1348,15 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
         return -1;
     numHeroes = value;
 
-    int heroId;
-    infile->Read(&heroId, sizeof(unsigned char));
-    heroId &= 0xff;
-    if (heroId == SAVED_HERO_NONE) {
-        heroId = -1;
-    } else if (saveVersion < 25) {
-        if (heroId == SAVED_HERO_PRE25_FIRST)
-            heroId = HERO_PRE25_FIRST_REMAP;
-        else if (heroId == SAVED_HERO_PRE25_SECOND)
-            heroId = HERO_PRE25_SECOND_REMAP;
-    }
-    currHeroId = heroId;
+    currHeroId = load_saved_hero_id(infile, saveVersion);
 
     int i;
     for (i = 0; i < 8; i++) {
-        int id;
-        infile->Read(&id, sizeof(unsigned char));
-        id &= 0xff;
-        if (id == SAVED_HERO_NONE) {
-            id = -1;
-        } else if (saveVersion < 25) {
-            if (id == SAVED_HERO_PRE25_FIRST)
-                id = HERO_PRE25_FIRST_REMAP;
-            else if (id == SAVED_HERO_PRE25_SECOND)
-                id = HERO_PRE25_SECOND_REMAP;
-        }
-        heroes[i] = id;
+        heroes[i] = load_saved_hero_id(infile, saveVersion);
     }
 
     for (i = 0; i < 2; i++) {
-        int id;
-        infile->Read(&id, sizeof(unsigned char));
-        id &= 0xff;
-        if (id == SAVED_HERO_NONE) {
-            id = -1;
-        } else if (saveVersion < 25) {
-            if (id == SAVED_HERO_PRE25_FIRST)
-                id = HERO_PRE25_FIRST_REMAP;
-            else if (id == SAVED_HERO_PRE25_SECOND)
-                id = HERO_PRE25_SECOND_REMAP;
-        }
-        recruits[i] = id;
+        recruits[i] = load_saved_hero_id(infile, saveVersion);
     }
 
     unsigned char flag;
@@ -1429,8 +1418,8 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 
     if (saveVersion >= 37) {
         unsigned char bits[2];
-        infile->Read(bits, sizeof(bits));
         std::bitset<12> combos;
+        infile->Read(bits, sizeof(bits));
         for (unsigned int bit = 0; bit < 12; bit++)
             combos.set(bit, (bits[bit >> 3] & (1 << (bit & 7))) != 0);
         assembledCombinations = combos;
@@ -2649,6 +2638,21 @@ void game::setup_shipyards()
 // site at either residual cleanup, or one at both, scores the same 90.89
 // with 76 branches. The carrier does move VC6's inliner, but never toward
 // retail's 72-branch phase, so it is not the missing source-history mass.
+//
+// VERIFY AUDIT (2026-08-21): conventional release VERIFY is not the
+// 73-versus-72 explanation. Positional branch alignment accounts for the
+// total as TWO retail-only conditions (the 128/156 hero-count selection and
+// the empty-range guard in the legacy-availability fill) versus THREE
+// base-only conditional tests inside the inlined string cleanup at the
+// failed load_recorded_events exit. Every call-result failure guard has a
+// retail mate; changing one to VERIFY would remove a branch retail has.
+// VERIFY around one of the already-unguarded Read calls is release-byte
+// indistinguishable and therefore cannot be proved from this image.
+// A one-call hero-count helper is byte-flat; explicit initialize/overwrite
+// reaches the missing branch but drops to 90.9683 with 77 branches.
+// `std::fill(first,last,0x40)` and an explicit guarded runtime-size memset
+// both reach the retail-style empty-range guard but select the same 91.7116,
+// 77-branch inliner phase. All three lower spellings were reverted.
 static int load_lith_pool_count(int version)
 {
     return (((version < 32) - 1) & 5) + 3;
@@ -2681,7 +2685,7 @@ int game::Load(TAbstractFile* infile)
     char byteValue;
     char extraByteValue;
     short shortValue;
-    short extraShortValue;
+    unsigned short extraShortValue;
     int zero;
     unsigned char poolBits[1];
 
@@ -3224,11 +3228,37 @@ int game::Load(TAbstractFile* infile)
 //     subscript, which retail keeps inline.
 //   * the heroes loop's teardown is emitted after the heroAvailability
 //     write's (0x1e before 0x1c) where retail emits them in order.
+//
+// CURRENT 2026-08-21 (94.4495%, from 93.5676%): the two field_1f680
+// writes share one failure teardown in retail.  Its first unsigned failure
+// branch jumps forward into the second write's fall-through cleanup block;
+// our two direct returns opened one extra EH region.  The forward goto below
+// restores that exact source topology, drops register-distance 471 -> 279,
+// and is the measured gain.  The resulting whole-function phase exposes the
+// last structural delta cleanly: on the first lithPools failure retail
+// expands ~SavedGameHeader but calls its nested string::_Tidy, while this C1
+// expands _Tidy, accounting for all three surplus branches (58 vs 55).
+// `inline_depth(1)` on that return is byte-flat, as are one and two
+// release-elided call-shaped diagnostic carriers immediately before the
+// pool loop.  Both keep _Tidy x35 against retail's x36, so the depth and
+// minimum carrier families are bounded at this plateau.
+// Genuine release VERIFY-style evaluation is bounded separately: three and
+// four discarded `saved.fileName.size()` expressions immediately before the
+// pool loop are all byte-flat at 94.4495%. The accessor emits no runtime bytes
+// but also never reprices this nested destructor decision.
+// The DC scalar-local types were re-audited on 2026-08-21. Its second byte
+// and word buffers are unsigned (`uchar_buffer`, `ushort_buffer`), while the
+// first pair are signed/plain (`char_buffer`, `short_buffer`). Restoring the
+// two unsigned buffer types individually is byte-flat at 94.4495%, so they
+// are retained as source evidence but do not move `_Tidy`. DC also calls the
+// map-extra size an `int`; that spelling on top of the neutral buffer pair
+// regresses this function to 94.38246%, so the winning unsigned source form
+// remains in place.
 VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
 int game::Save(TAbstractFile* outfile)
 {
     char byteValue;
-    char extraByteValue;
+    unsigned char extraByteValue;
     char char_buffer;
     short shortValue;
     short extraShortValue;
@@ -3254,7 +3284,7 @@ int game::Save(TAbstractFile* outfile)
         char_buffer = field_1f680.size();
         if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
             sizeof(char_buffer)) {
-            return -1;
+            goto load_events_failed;
         }
         // Length recomputed on BOTH sides of the compare, not cached:
         // retail re-widens the count byte and rebuilds `n * 28` as
@@ -3264,8 +3294,10 @@ int game::Save(TAbstractFile* outfile)
         // where retail compares UNSIGNED (`cmp eax,edx / jae`).
         if (outfile->Write(field_1f680.begin(),
                            char_buffer * sizeof(LoadEventRecord)) <
-            char_buffer * sizeof(LoadEventRecord))
+            char_buffer * sizeof(LoadEventRecord)) {
+        load_events_failed:
             return -1;
+        }
     }
 
     if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
@@ -3378,11 +3410,11 @@ int game::Save(TAbstractFile* outfile)
     }
 
     // The twelve guarded scalar writes. Retail carries FOUR temps for
-    // them, not one: a char reused across writes 1-2 and 7-9, a second
-    // char for 5-6, a short for 3-4 and a second short for 10-12. Those
+    // them, not one: a char reused across writes 1-2 and 7-9, an unsigned
+    // char for 5-6, a short for 3-4 and an unsigned short for 10-12. Those
     // four plus the literal-zero dword below are exactly the five slots
     // that take `sub esp` from our 0x5ac to retail's 0x5c0.
-    // The shorts must be `short` locals, not `int`: retail loads 16 bits
+    // The word buffers must stay narrow, not `int`: retail loads 16 bits
     // (`mov dx, word ptr`) and stores 32 (`mov dword ptr [ebp-N], edx`),
     // which is VC6's narrow-local/widened-store idiom - an int local
     // would sign- or zero-extend on the load instead.
@@ -3911,11 +3943,28 @@ static int claim_town_team(game* thisGame, int playerNum)
 // game::IsHuman (0x4ce940) expanded with its out-of-range CLAMP intact -
 // VC6 cannot prove `player` in-range across the inline even though the
 // loop bounds it to 0..7, so the dead `>= 8 || < 0` clamp survives.
+//
+// Dreamcast's only function local beyond thisTown/old_owner is one `long i`.
+// Reusing that single index for both generator sweeps fixes the second
+// sweep's frame slot and raises 97.8269 -> 97.9199.
+//
+// Residual (97.9199%): both sides have 50 branches and one return. Retail
+// materialises the negated is_human_ally result (`test/sete/test/je`) where
+// this CL folds it to `test/jne`; `== false`, scoped bool/unsigned-char
+// result locals, and redeclaring the return unsigned char are byte-flat.
+// Retail's eight-player search also ends its miss path with `jge exit; jmp
+// loop`, against our equivalent `jl loop; jmp exit`; a top-tested `while`
+// is byte-flat. The remaining instruction-order rows are the two inlined
+// HasBuilding masks (built words versus constant masks loaded first).
+// Dreamcast proves exactly two HasBuilding calls, and why-reg finds identical
+// first bindings with a past-first-def divergence, so those are scheduler
+// transpositions rather than a license to replace the calls with mask tests.
 VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
 void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
 {
     town* whichTown = &towns[townId];
     int oldOwner = whichTown->owner;
+    long i;
     if (oldOwner == newPlayerOwner)
         return;
 
@@ -3925,7 +3974,7 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
     whichTown->field_32 = 0;
 
     if (!bIsRemoteMove) {
-        for (unsigned i = 0; i < generators.size(); i++) {
+        for (i = 0; i < generators.size(); i++) {
             if (generators[i].playerOwner == oldOwner
                 || generators[i].playerOwner == newPlayerOwner)
                 generators[i].remove_bonus();
@@ -3990,7 +4039,7 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
         }
     }
 
-    for (unsigned i = 0; i < generators.size(); i++) {
+    for (i = 0; i < generators.size(); i++) {
         if (generators[i].playerOwner == oldOwner
             || generators[i].playerOwner == newPlayerOwner) {
             generator* thisGenerator = &generators[i];
@@ -4126,6 +4175,18 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 //     combination measures 5-7 under the guardless 77.4860, so the
 //     "something around it is still wrong" element is not either of
 //     those two; the pair search is closed on them.
+//   * 2026-08-21, an explicit `if (index >= size()) goto skip_erase`
+//     spelling canonicalises to the structured guard's same 72.0950 and
+//     15-branch object. Control syntax cannot retain the known-right guard
+//     without selecting the lower register phase.
+//   * 2026-08-21, release VERIFY was paired with the known-right guard at
+//     three positions. `VERIFY(location.is_valid())` at entry scores 70.0447;
+//     immediately before the guard it makes all 15 branch mnemonics/targets
+//     agree but scores 67.3073; immediately after the erase also makes the
+//     branch sequence exact and is the best guarded form at 73.9721. The
+//     narrower loop postcondition `VERIFY(index <= shipyards.size())` is
+//     byte-flat on the guard-only 72.0950 object. None recovers the retained
+//     guardless register phase, so both guard and carriers remain unshipped.
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
@@ -5581,16 +5642,22 @@ type_point game::get_underground_gate_exit(const NewmapCell* cell)
 // five object pools, rumours and both eight-element teleport-pool
 // arrays.
 //
-// Residual (74.6490%): the EXPLICIT statements are not written yet, and
-// so are the members only they touch. Retail interleaves, in cleanup-
-// state order: a 156-iteration loop at +0x4dfb4 calling a one-argument
-// constructor on a four-byte element (0x4cff30, no matching teardown in
-// ~game, so the element is trivially destructible); zeroing sweeps over
-// the POD bands at +0x1f4d5, +0x4df18, +0x4dfb4, +0x4e224, +0x4e2b4,
-// +0x4e344, +0x4e3e9, +0x4e419 and +0x4e546; and a call to
-// initialize_game_data (0x4eb730) near the end. Each needs its member
-// modelled first; none of it is layout-neutral, so it is left rather
-// than guessed.
+// Residual (87.8496%, 2026-08-21): the explicit initialization is now
+// complete. The remaining structural delta is the compiler-generated
+// construction of heroPoolMap[156]. Retail emits a 156-trip loop calling
+// bitset<8>::_Tidy(0); our CL expands `_Tidy` and folds the loop to one
+// `rep stosd`, leaving us one branch and one call short.
+//
+// A constructor-scoped `#pragma inline_depth(1)` proves that exact boundary:
+// it raises this body to 91.0059 and makes the 2-branch/1-ret CFG exact. It
+// cannot be retained because the same scope compiles the address-taken
+// HeroExtra constructor with its two type_artifact constructors out of line,
+// dropping that exact row to 64.4444. Restoring depth at the opening brace
+// preserves HeroExtra but is byte-flat here, and a game-TU `__forceinline`
+// on type_artifact cannot override the depth cap. A layout-identical derived
+// heroPoolMap element is also byte-flat here and regresses game::Load from
+// 92.3721 to 92.2795. The implicit-member boundary is therefore bounded
+// without sacrificing an exact function.
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
 game::game()
 {
@@ -5732,7 +5799,12 @@ playerData::~playerData()
 // teardown puts it), while `#pragma inline_depth(0)` DOES reach the
 // teardown - it de-inlines `~vector()` itself and costs 36.8 points
 // (-> 42.0349) - which proves the pragma is applied and the boundary
-// simply is not depth.
+// simply is not depth. Release-elided call-shaped diagnostics do not reach
+// the implicit teardown boundary either (2026-08-21): 1/2/4 sites are
+// byte-flat at 78.8428%, while 8 overshoots to 75.33624%. The optimizer
+// prices those carriers too late to recover retail's seven nested `_Destroy`
+// calls.
+
 VA(0x004ce5b0, 0x346)  // anchor-global, dc 0xbbd28
 game::~game()
 {

@@ -111,6 +111,10 @@ struct type_AI_combat_parameters {
     long side;                  // +0x20
     long enemy_side;            // +0x24
 
+#ifdef HOMM3_AI_COMBAT_PARAMS_GROUP_ACCESSOR
+    long get_group() const { return side; }
+#endif
+
     type_AI_combat_parameters(const combatManager* combat, long side);
     void simulate_single_attack(const army* current_army, long* our_hits,
                                 const army* enemy, long* enemy_hits,
@@ -148,12 +152,16 @@ struct type_AI_attack_hex_chooser {
     type_AI_attack_hex_chooser(const army* attacker, const army* defender,
                                const long* attack_array, searchArray* search,
                                const type_AI_combat_parameters* combat_data);
-    long get_hex_attack_value(long hex, long* checked);
+protected:
+    long get_hex_attack_value(long hex, long& checked);
+public:
     // dc 0x3d154. Inlined into check_adjacent_hexes and carrying no
     // retail body of its own.
     long get_attack_time(const pathCell* cell);
+protected:
     void check_adjacent_hexes(long enemy_hex, long start_direction,
                               long stop_direction);
+public:
     unsigned char find_attack_hex();
 };
 
@@ -412,7 +420,7 @@ long get_breath_bonus(long our_group, const army* our_army, long our_hex,
 
 // --- type_AI_attack_hex_chooser ---
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:482, dc 0x3ceb8) void type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters* data);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:511, dc 0x3cf50) long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked);
+// CODEVIEW(E:\gamedcs\ai_tactical.cpp:511, dc 0x3cf50) long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long& checked);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:575, dc 0x3d154) long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:599, dc 0x3d1e4) void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:706, dc 0x3d440) unsigned char type_AI_attack_hex_chooser::find_attack_hex();

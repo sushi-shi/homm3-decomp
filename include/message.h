@@ -100,4 +100,26 @@ public:
 };
 SIZE(message, 32);
 
+#ifdef HOMM3_TOWNMGR_MESSAGE_CTOR_CARRIER
+// Compiler-history carrier for townManager::SetupMage. Dreamcast proves the
+// original source called message::message(), whose body zeroes this complete
+// base plus its two DC-only tail fields. Giving message itself a default ctor
+// would change every reconstructed POD-style site in the include closure, so
+// this layout-identical subtype isolates the one retail-proven call site.
+class mage_message : public message {
+public:
+    mage_message()
+    {
+        id = 0;
+        codeX = 0;
+        codeY = 0;
+        qualifier = 0;
+        mouseX = 0;
+        mouseY = 0;
+        extra = 0;
+        window = 0;
+    }
+};
+#endif
+
 #endif  /* HOMM3_MESSAGE_H */

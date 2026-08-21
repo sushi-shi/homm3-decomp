@@ -2002,21 +2002,21 @@ public:
         return static_cast<unsigned char>(disabled_290 || disabled_2b0
                                           || disabled_2c0);
     }
-    // The other Army.h inline of the same family (DC Army.h:847, dc
-    // 0x27dd8), RECONSTRUCTED 2026-08-15 from the ONE retail expansion
-    // that exists: army::do_attack (0x441cb0) emits its four tests in
-    // this order and nothing else - the defender still has creatures,
-    // the ATTACKER does not carry creature bit 16 (the
-    // no-retaliation ability), the defender is not disabled_2b0, and
-    // its retaliation allowance is not spent. No retail out-of-line
-    // copy has been located; ai.cpp still carries the row as DC_ONLY.
-    unsigned char can_retaliate(const army* attacker)
-    {
-        return numTroops > 0 && !(attacker->Is(16) & 1) && !disabled_2b0
-               && retaliationCount > 0;
-    }
 #else
     unsigned char IsIncapacitated() const;                      // 0x41f380
+#endif
+    // The other Army.h inline of the same family (DC Army.h:847, dc
+    // 0x27dd8), corrected from the Dreamcast bytes: it calls Is(16) on
+    // the attacker, then tests this->disabled_2b0 and retaliationCount.
+    // The numTroops test seen in army::do_attack is an enclosing source
+    // condition, not part of this helper. The public symbol proves both
+    // the const-reference parameter and the const-qualified receiver.
+#if defined(HOMM3_ARMY_MOVE_VIEW) || defined(HOMM3_ARMY_CAN_RETALIATE_VIEW)
+    unsigned char can_retaliate(const army& attacker) const
+    {
+        return !(attacker.Is(16) & 1) && !disabled_2b0
+               && retaliationCount > 0;
+    }
 #endif
     // 0x446e30 (737 B), the DC roster's army::new_turn (army.cpp:5177,
     // dc 0x4ba88), attributed to army.obj by link order. Void and

@@ -686,7 +686,12 @@ static const int kLossPortrait146 = 0x92;
 // stays inline at the head where retail jumps far. The merged-return
 // class (path.obj/kbwin); polarity flips, a goto spelling, a trailing
 // default arm, and solver-proposed case swaps all measured equal or
-// worse.
+// worse. Conventional release VERIFY carriers are bounded too
+// (2026-08-21): one and four `TownSpecialGrantedMask.size()` invariants,
+// one `SpellIsAvailable(SPELL_SUMMON_BOAT)` accessor, and the larger pure
+// `GetPrimarySkill(0) >= 0` invariant are all byte-flat at 75.8636%. They
+// enter C2 as real inline expressions and then disappear, but none changes
+// this function's cross-jump phase.
 // E:\gamedcs\victorylossconditions.cpp:463
 VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
 unsigned char LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser)

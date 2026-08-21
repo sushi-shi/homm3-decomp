@@ -3655,10 +3655,16 @@ static const long& MaxOf(const long& x, const long& y)
 //     `if (attack_frames)` arms instead was measured and is much worse
 //     (94.90) - the flip is on the inner test alone.
 //
-// Residual (96.1988%): ONE block, 819 instructions against retail's
-// 820, one unpaired branch that matches no cataloged D signature, and
+// CURRENT (96.2232%): all 134 branches and the single return agree, and
 // predict-inline reports the call multisets AGREE exactly (14 and 14).
-// why-branch's six guided candidates all measure +0 or worse.
+// The remainder is instruction/slot selection. New negative controls on
+// 2026-08-21: DC's wince_frames-before-attack_frames declaration order
+// regresses to 96.21098; explicit clear/conditional-set of
+// bShowRangeFrames regresses to 95.7939 and flips one branch polarity; a
+// 1:0 ternary is byte-identical to the retained boolean assignment; and a
+// named bool for the special-wince bit is byte-flat, still folding retail's
+// `test/setne/add` to our `and/add`. The earlier six why-branch candidates
+// likewise measured +0 or worse.
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
 void combatManager::PowEffect(int spellEffect, int bResetLimitCreature)
 {

@@ -15,6 +15,7 @@
 // first inclusion count.
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
 // constructor, and only for it: town.cpp never defines this.
+#define HOMM3_TOWNMGR_MESSAGE_CTOR_CARRIER
 #include "townmgr.h"
 // advspells.obj's TeleportTo declarator, for the MoveHero that
 // DoTownGate expands inline. Gated so no other includer of advmgr.h
@@ -596,8 +597,16 @@ void townManager::SetupExtraStuff()
 // named off-screen buffer (95.54), a function-scope `int i` (byte-identical),
 // the text-widget induction variable with icon id `id-8` (95.53), 4/8/16
 // self-assign probes (byte-identical), 40 dead statements (95.54), and 70
-// (93.20). Local spelling and undifferentiated budget mass are closed; the
-// remaining slot and single-call boundary wait on broader TU-state evidence.
+// (93.20).
+//
+// The final-site boundary is bounded directly too (2026-08-21). Naming the
+// exit button scores 98.94819; `inline_depth(0)` around its complete
+// push_back statement overshoots to 96.87186. Moving the proven diagnostic
+// immediately before that site scores 98.65389, while placing it between the
+// exit button and the two final widgets is byte-identical at 98.94972. Thus
+// neither a source pseudo, an imposed call, nor candidate ordering recovers
+// retail's 319th call or sixth scalar slot. Local spelling and undifferentiated
+// budget mass are closed; the residual waits on broader TU-state evidence.
 
 // The town screen itself - the one window in the compiland that is a
 // plain heroWindow rather than a CAdvPopup, which is what its nine-slot
@@ -1905,6 +1914,10 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // 85.98953. Retaining evaluation through a tiny TU-visible validation helper
 // does enter the inliner, but 10, 11 and 16 such VERIFY sites all plateau at
 // 93.212166 with 177 branches and one return, against retail's 179 and two.
+// The accessor-bearing form proven exact in TCastleWindow was checked here
+// too: one entry `static_cast<void>(Widgets.size() == 0)` is byte-flat at
+// 85.98953. The release-VERIFY carrier therefore does not transfer to this
+// caller.
 // The TRACE-shaped carrier below alone reaches the retail CFG and 99.66054;
 // this is compiler evidence, not a choice based on the macro's name.
 //
@@ -2560,7 +2573,6 @@ void townManager::handle_mage_guild_click()
     delete hallWindow;
 }
 
-
 // Residual (98.29%): one /Ob2 candidate-call-site short, and the cost of
 // buying that site back. Retail leaves the first FORTY-TWO push_backs
 // out of line and expands the last seven inline (eight inline vector
@@ -2614,6 +2626,16 @@ void townManager::handle_mage_guild_click()
 // exact synthetic probe measures. Only a custom VERIFY wrapper that itself
 // contributes that empty candidate could be equivalent, and the bytes cannot
 // attest such a macro or wrapper.
+//
+// The DC-attested `message::message()` site after the widgets is bounded as
+// well (2026-08-21). Its 0x1a-byte SH4 body is directly decoded as ten zero
+// stores; the first eight are exactly retail message's offsets 0..0x1c and
+// the last two are the DC-only oldX/oldY tail. Giving this caller the real
+// eight-store member constructor, or an isolated local subtype with the same
+// constructor, canonicalizes to 94.08108; a free inline initializer scores
+// 88.65841. The live constructor costs more than the one byte-inert candidate
+// this caller lacks. The same evidenced carrier is exact in SetupMage below,
+// but it is not the missing garrison site.
 
 // The garrison base window, shared by the plain garrison dialog, the
 // monster-join prompt and the town garrison: two seven-slot army rows -
@@ -4932,23 +4954,21 @@ void townManager::BuildObj(int buildingId)
 // Grail is the one override: every scroll shows frame 70 rather than
 // its own spell.
 //
-// Residual (99.93%): ONE SIB byte. Retail encodes the per-level count
-// read as `movsx eax, byte ptr [edx + ecx + 0xbc]` - loop variable as
-// the base register, object pointer as the index - where our CL picks
-// the opposite roles for the same two registers, `[ecx + edx + 0xbc]`.
-// Every other byte of the body, both jump structures and all six
-// broadcasts included, is retail's. Tried and rejected: the pointer form
-// `*(townToView->mageGuildSpellCounts + level)` (99.93, identical SIB),
-// the reversed-subscript form `level[townToView->mageGuildSpellCounts]`
-// (99.93, identical), and swapping the compare to
-// `mageGuildSpellCounts[level] > slot` (99.42 - that one also flips the
-// branch). An encoder tie-break, not a source lever.
+// EXACT 2026-08-21 (99.927536 -> 100). The DC xref graph records one
+// `message::message()` call here. Its 0x1a-byte SH4 body is ten ordered zero
+// stores: offsets 0..0x1c are the retail message layout and 0x20/0x24 are the
+// DC-only oldX/oldY tail. The aggregate-zero spelling emitted the right live
+// stores but denied C2 the constructor candidate. The header-gated subtype
+// below restores that evidenced source history without changing every message
+// site in the compiland, and it flips the last SIB byte to retail's encoding.
+// The previously tried pointer/reversed-subscript spellings were byte-identical
+// at 99.927536; reversing the compare scored 99.42.
 
 // E:\gamedcs\townmgr.cpp:7693
 VA(0x005d6ef0, 0x1BD)  // linkorder(dc row after BuildObj) + arity(ret 4) + is_legal_building edge, dc 0x179e74
 void townManager::SetupMage(heroWindow* mageWin)
 {
-    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    mage_message msg;
 
     msg.id = MESSAGE_WIDGET;
     msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
@@ -5099,6 +5119,19 @@ TTavernWindow::~TTavernWindow()
 // cross-jumps two of them onto a shared expansion and leaves the tail
 // (`and ecx,3 / rep movsb`) shared by all of them. That merge is the
 // compiler's, not a source shape.
+//
+// Residual (81.4136%): calls (6/6), branches (14/14), returns (1/1) and
+// blocks (28/28) agree; base has 161 instructions against retail's 162.
+// Both emit four full intrinsic copy bodies and one shared `rep movsb` tail,
+// but C2 chooses different representatives for one full-copy join: retail
+// shares gold/rumour/default and leaves town-occupied open, while this compile
+// shares town-occupied/rumour/default and leaves gold open. An explicit join
+// over retail's predecessor set raises fuzzy to 83.6975 only by collapsing all
+// four copies to one (139 instructions), so that structurally wrong family is
+// rejected. One-call inline wrappers at either the gold or town site are
+// byte-flat. Removing the DC-unattested named `recruit` pointer regresses to
+// 76.8086; the remaining scratch-register swaps follow the same block-choice
+// tie. This is the merged-block/compiler-generation class.
 
 // E:\gamedcs\townmgr.cpp
 VA(0x005d7920, 0x20A)  // anchor-caller(TTavernWindow::WindowHandler 0x5d7b30 hover arm) + anchor-callee(rolloverText slot 13) + arity(ret 4), dc 0x17a7a0
@@ -6290,28 +6323,27 @@ void* TTownMenu::`scalar deleting destructor'(unsigned __flags)
 // vector insertion boundary from 71 expansions to retail's 70, taking
 // the body to 99.911385 with its 227-branch graph still identical.
 //
-// The remaining source mass is diagnostic-shaped. One or two dormant
-// printf call sites reach 99.95; THREE make the full 17,498-byte body
-// exact and align all 600 emitted calls. A release `assert` negative
-// control, represented by plain `(void)0` statements exactly as VC6's
-// assert.h expands NDEBUG, plateaus at 99.95 for 3/4/8/10 statements:
-// it lacks the dormant call candidates the inliner counted. The DC
-// image independently contains dreamprintf and OutputDebugStringW, so
-// optimizer-elided TRACE sites are an honest carrier class here. The
-// original macro name, placement and format text are not attested; the
-// local name/string below are explicitly provisional, and neither calls
-// nor string bytes survive into the object.
-#define HOMM3_TCASTLE_RELEASE_TRACE(text) \
-    (1 ? static_cast<void>(0) : static_cast<void>(printf(text)))
+// The remaining source mass is one conventional release VERIFY at entry.
+// `static_cast<void>(Widgets.size() == 0)` is the release expansion of the
+// natural empty-vector invariant and makes the full 17,498-byte body exact,
+// aligning all 600 emitted calls. This is distinguishable from both earlier
+// hypotheses. A release `assert` negative control, represented by plain
+// `(void)0` statements exactly as VC6's assert.h expands NDEBUG, plateaus at
+// 99.95 for 3/4/8/10 statements because it is erased before inliner pricing.
+// One or two dormant printf-shaped TRACE sites also reach only 99.95 and
+// THREE happen to reach exact; the one-site VERIFY is the smaller and
+// source-plausible carrier. Dose controls confirm the boundary: three
+// `empty()` VERIFY evaluations fall to 95.59475 and three `size()==0`
+// evaluations fall to 95.524025. The exact macro spelling remains unattested;
+// the retained statement emits neither a runtime check nor string bytes.
 
 // E:\gamedcs\townmgr.cpp:8254
 VA(0x005d86f0, 0x445A)  // anchor-vtable 0x6439bc + anchor-string TPCastl8.pcx, dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
-    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
-    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
-    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
+    // Conventional release expansion of VERIFY(Widgets.size() == 0).
+    static_cast<void>(Widgets.size() == 0);
     Widgets.reserve(156);
 
     if (gpTownManager->townToView->type == TOWN_DUNGEON
@@ -6822,8 +6854,6 @@ TCastleWindow::TCastleWindow()
             MemError();
     }
 }
-
-#undef HOMM3_TCASTLE_RELEASE_TRACE
 
 VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
 

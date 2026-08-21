@@ -347,9 +347,38 @@ inline type_speed_catagory type_AI_combat_data::get_catagory(
 // E:\gamedcs\ai_combat.cpp:221
 // Retail has no out-of-line get_catagory row: the helper below expands into
 // this function and OPT:REF removes its body.
+//
+// Residual (91.0075%, 2026-08-21): structure is closed - 58 branches, two
+// returns and ten out-of-line calls agree exactly. The 334-slot register
+// distance starts with retail binding this/zero/enemy_hero to EDI/EBX/ESI
+// against our EBX/EDI/ESI and propagates through the loop. why-reg's model
+// classifies it as C1 front-end handle state; its prescribed first-created
+// enemy_hero alias is byte-flat.
+//
+// Dreamcast CodeView directly places `unit`, `speed_bonus`, `hit_points`,
+// `force_modifier`, `archery_modifier` and `hit_bonus` in the outer lexical
+// scope, in that order, so the reconstruction now preserves that source
+// evidence. VC6 makes the scope restoration byte-flat, as it does an outer
+// loop-index declaration and removal of the creature enum alias. The traits
+// reference is not optional codegen mass: spelling its uses as direct table
+// subscripts regresses 91.0075 -> 81.3842. With the evidenced locals restored
+// and all four C1 levers bounded, the remaining permutation is not presently
+// source-nameable.
+// The 2026-08-21 carrier/homing follow-up closes the obvious remaining probes:
+// release `VERIFY(my_army != 0)` falls to 81.713745%, a volatile loop creature
+// id to 88.56874%, and swapping the adjacent unit.creature/unit.slot stores to
+// 90.92844%. why-branch still sees the same 58 conditional branches and two
+// returns, with only a 101-vs-103 block partition; none of these selects it.
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
 {
+    type_monster_data unit;
+    long speed_bonus;
+    double hit_points;
+    double force_modifier;
+    double archery_modifier;
+    long hit_bonus;
+
     tactics_advantage = 0;
     if (my_hero)
         tactics_advantage = my_hero->skillLevel[SECONDARY_SKILL_TACTICS];
@@ -359,7 +388,7 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
             tactics_advantage = 0;
     }
 
-    double force_modifier = base_modifier;
+    force_modifier = base_modifier;
     if (my_hero) {
         long attack = my_hero->GetPrimarySkill(0);
         long defense = my_hero->GetPrimarySkill(1);
@@ -374,11 +403,11 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
                          * base_modifier;
     }
 
-    double archery_modifier = 0.2;
+    archery_modifier = 0.2;
     if (my_hero)
         archery_modifier = my_hero->GetArcheryFactor() / 5.0;
 
-    long speed_bonus = 0;
+    speed_bonus = 0;
     if (my_hero)
         speed_bonus = my_hero->get_combat_speed_bonus();
 
@@ -390,13 +419,12 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
 
         TCreatureType creature = creature_type_from_int(creature_id);
         const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature_id];
-        double hit_points = traits.hitPoints;
+        hit_points = traits.hitPoints;
         if (my_hero) {
-            long hit_bonus = my_hero->get_hit_point_bonus(creature_id);
+            hit_bonus = my_hero->get_hit_point_bonus(creature_id);
             hit_points += hit_bonus;
         }
 
-        type_monster_data unit;
         unit.slot = i;
         unit.creature = creature;
         unit.count = my_army->numTroops[i];
@@ -950,6 +978,15 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 // Reconstructed from the complete retail body. The Dreamcast contributes
 // the local/helper names and the by-reference signature only; spell gates,
 // dispatch classes, loop directions and all arithmetic come from retail.
+// Residual (87.0391%): branch structure agrees exactly at 55 conditionals
+// and four returns. Retail gives the spell loop EDI and mastery ESI; this CL
+// gives them ESI/EDI, and that callee-saved permutation cascades through the
+// three large damage/resurrection loops. why-reg --model finds identical
+// first definitions and classifies the split as past-first-def allocator
+// state. Tried and byte-flat: `register` mastery, an optimizer-dead mastery
+// initializer, a function-scope spell counter declared after mastery, and
+// moving the mastery declaration ahead of spell_power. No source-reachable
+// register-order lever was found in the bounded pass.
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::cast_spell(
     type_AI_combat_data& defender,
