@@ -1131,6 +1131,12 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //     mutations and none changed the distance (two made it far worse).
 //     Rechecking a hand-written top-tested `while (i >= 0)` after the
 //     newTown gain adds two branches and regresses 77.3765 -> 77.2027.
+// Dreamcast's local records put bBreak, bNoMove, bFoughtBattle and i in
+// the same enclosing route block, in that order. Transplanting that scope
+// to x86 is MEASURED AND REJECTED (2026-08-21): 77.3765 -> 77.2780, 82
+// branches against retail's 80, with both polarity flips unchanged. The
+// narrower per-iteration output-flag scope below is the retail-byte winner;
+// DC local scopes are name/type evidence, not x86 allocation evidence.
 VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
 NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 {
@@ -3218,6 +3224,11 @@ static void set_windmill_help_text(
 // rejected. Duplicating MONSTER's sprintf arms also supplies the historical
 // missing call but re-lays out the switch and falls to 93.674760; call counts
 // already agree after the carrier fix, so that older lead is closed.
+// The remaining destructor threshold does not respond to source-history
+// carriers (2026-08-21): release-elided diagnostic doses 1/2/4/8 at entry
+// and one beside QUEST_GUARD are all byte-flat at 93.938970 with the same
+// 184 branches, and routing the returned string through an inline
+// const-reference copier is byte-flat too. Neither family is retained.
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
@@ -6600,9 +6611,13 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // localized to BUOY: retail cross-jumps its final visit test into ARENA's
 // duplicated sprintf tail. Spelling ARENA with duplicated calls coerces the
 // share but globally re-lays out the switch and falls to 92.45, so neither
-// measured regression is retained. Branch counters that include the bytes
-// after RET are invalid here: those bytes are the 57-dword jump table and
-// 216-byte case-index table, and happen to decode as bogus jcc opcodes.
+// measured regression is retained. An explicit source-level join is rejected
+// too (2026-08-21): labels on ARENA's two sprintf blocks with BUOY gotos to
+// them score 93.571790 and emit 203 decoded branches against retail's 200.
+// Forcing the local graph re-lays out the switch globally just as duplication
+// does. Branch counters that include the bytes after RET are invalid here:
+// those bytes are the 57-dword jump table and 216-byte case-index table, and
+// happen to decode as bogus jcc opcodes.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {

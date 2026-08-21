@@ -4097,6 +4097,12 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // why-branch's current `right_mouse`-as-int suggestion is also rejected:
 // it costs 75.4051 -> 71.9404, and retail homes the normalized flag as a
 // byte, agreeing with the unsigned-char source and the DC helper arities.
+// Consolidating the three duplicated army-refresh tails into a tiny inline
+// helper is a second six-statement shrink control (2026-08-21). Passing the
+// status as an argument is byte-flat at 75.4051 with 129 branches and 87
+// calls; selecting it inside the helper from gHeroScreenArmySlot regresses
+// to 74.13 with 128 branches. The shared-tail helper therefore cannot move
+// the whole-function cross-jump phase either, and is not retained.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {

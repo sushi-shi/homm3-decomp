@@ -895,6 +895,10 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // IDENTICAL to the digit. The scorer does not see the addend, so the
 // array model (which text.obj's loader proves) stays and the block
 // placement really is the whole of it.
+// Release-elided diagnostic mass is also bounded and rejected (2026-08-21):
+// 1/3/5 call-shaped entry sites are byte-flat at 74.4096 with 60 branches;
+// eight sites cross the wrong threshold and fall to 71.7264 with 63. The
+// dormant-call family cannot select retail's one-head placement phase.
 // E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
