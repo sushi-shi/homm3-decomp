@@ -1476,14 +1476,18 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         dockPoint.x = radarOrigin.x + lastHoverX;
         dockPoint.y = radarOrigin.y + lastHoverY;
         dockPoint.z = radarOrigin.z;
-        type_point mapPoint = dockPoint;
-        unsigned char valid = mapPoint.is_valid();
+        type_point mapPoint;
+        mapPoint.x = radarOrigin.x + lastHoverX;
+        mapPoint.y = radarOrigin.y + lastHoverY;
+        mapPoint.z = radarOrigin.z;
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
         NewfullMap* map = fullMap;
         NewmapCell* dockCell;
         if (!valid)
             dockCell = map->cell(0, 0, 0);
         else
-            dockCell = map->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            dockCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         DoEventShipyard(dockCell, dockPoint,
                         gpCurrentPlayer->IsLocalHuman());
         UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
