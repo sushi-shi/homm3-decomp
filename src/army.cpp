@@ -3526,7 +3526,6 @@ unsigned char army::is_enemy(const army* arg) const
 // 92.52 -> 14.41, because the wrapper's own callees then sit at
 // depth 3 on a twice-divided budget. Retail's arithmetic only closes
 // with the two combatManager calls written here.
-VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 // MEASURED AND REJECTED 2026-08-21: respelling the bCanShoot flag as
 // direct `return 0;`s (to chase the literal stores retail's INLINED
 // copy shows in get_total_combat_value) moves FOUR consumers the wrong
@@ -3536,6 +3535,8 @@ VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 // source; the literal-store diamond in the get_total_combat_value
 // expansion is C2 folding the flag into control flow AT THAT SITE
 // (ours keeps one arm in EBX there), not a source shape.
+// (The ADJACENCY flag stays; the TAIL is the &&-return - see below.)
+VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 inline unsigned char army::can_shoot(const army* excluded) const
 {
     if (creatureType == ARMY_CREATURE_BALLISTA
@@ -5555,7 +5556,6 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
 // why-reg's model agrees the bindings are identical at every first
 // definition, so this is the B1 handle-state class rather than
 // anything statement-local.
-VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 // Residual (94.0790, probed 2026-08-21): one owner inversion. Retail
 // caches gridIndex in EBX across the direction loop and homes
 // `direction` at [ebp+8] ONLY (in-loop guard reads memory, spelled
@@ -5566,6 +5566,7 @@ VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 // local (91.31 - the local takes a frame slot, direction keeps EBX,
 // frame grows). C2 prefers the loop-carried value for the register;
 // no spelling tried hands it the invariant instead.
+VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 unsigned char army::attack_hex(int hex, unsigned char restore_facing)
 {
     side = -1;
@@ -6870,6 +6871,15 @@ unsigned char army::can_cast_spell(long hex) const
 // `inline_depth(2)` over the tail arms - it would reject
 // get_controlling_side's depth-3 expansion retail keeps, trading a
 // 5-instruction gap for a 10-instruction one.
+// Residual (92.6970, 2026-08-21): the shooter arm's can_shoot expansion
+// computes the wide second hex inline (`neg/sbb/and 2/dec/add`, the
+// folded get_second_grid_index) where retail's expansion CALLS the
+// OffsetToFront COMDAT (`push -1 / call ?OffsetToFront / add gridIndex`).
+// Respelling can_shoot's second hex as `gridIndex + OffsetToFront(-1)`
+// reaches that shape here but breaks the shared body's other sites
+// (can_shoot 100 -> 96.59, get_total_combat_value 100 -> 97.80,
+// consider_attack 100 -> 98.22 - measured and reverted); the depth
+// split is per-site budget state the one source cannot carry.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spell_is_valid_on_target(int spell, const army* target)
