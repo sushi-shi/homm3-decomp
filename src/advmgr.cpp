@@ -6882,6 +6882,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
 // Retail does NOT use a ternary here: it emits two complete sprintf calls
 // and shares only the strcat tail, and it stores the tested flag into `z`
 // first rather than testing the field in place.
+// THAT IS SPECIFIC TO THIS MACRO - the ARENA and BUOY cases below keep their
+// ternaries, and the bytes say so (2026-08-21). Retail reaches BUOY's tail
+// with `mov ecx,[hero+0x105] / and ecx,4 / mov [ebp+0x10],ecx / jmp <shared>`,
+// i.e. it stores the flag and JUMPS to one shared visited/unvisited selector
+// that it also uses for ARENA; our compile expands the same ternary inline at
+// each. Rewriting those two to this macro's two-sprintf form does NOT recover
+// the sharing and makes it worse - BUOY alone 94.8708 -> 94.8239, BUOY and
+// ARENA together 92.6688. The ternary is retail's source at those two sites;
+// only the cross-jump that merges their tails is a C2 choice we do not get.
 #define SET_VISITED_QUICKINFO(objectType, condition)                     \
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
