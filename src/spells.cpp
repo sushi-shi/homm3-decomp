@@ -1859,10 +1859,14 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
 // reset before the update rectangle, the two maxima are declared BRY then
 // BRX, and the padding statements run TLX/BRX/BRY/TLY. The two short icon
 // aliases at the tail likewise make retail's inlined GetNumFrames evaluate
-// stdIcon before currFrameType. Branches agree 51/51 plus one return and the
-// flat instruction streams now agree completely. The non-100 residue is only
-// relocation identity naming (working retail labels versus admitted source
-// names), so there is no remaining C++ hypothesis here.
+// stdIcon before currFrameType.
+// 99.9961 -> 100.0000 (2026-08-21): the earlier note here blamed the last
+// fraction on relocation naming; the unmasked byte diff refuted that (an
+// exact sibling carries the same reloc-name mismatches) and showed one
+// real delta - the two 9999 stores into the recycled parameter homes were
+// swapped. Retail initialises iUpdTLY BEFORE iUpdTLX (slot proof: the scan
+// compares TLX at [ebp+0x28] and TLY at [ebp+0x14] on both sides), so the
+// minima are declared TLY then TLX even though the padding runs TLX first.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
                            int iDestX, int iDestY, int iSplitFrequency,
@@ -1911,8 +1915,8 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
     do {
         { for (long j = 0; j < iDrawsPerSeg; j++) {
             bComplete = 1;
-            long iUpdTLX = 9999;
             long iUpdTLY = 9999;
+            long iUpdTLX = 9999;
             long iUpdBRY = -1;
             long iUpdBRX = -1;
 
