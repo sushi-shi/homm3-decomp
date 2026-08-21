@@ -2473,7 +2473,9 @@ int TMageGuildWindow::WindowHandler(message* msg)
                     && (thisTown->active & bitNumber[HOLY_GRAIL_ID])) {
                     NormalDialog(
                         format_string(
-                            gpGeneralText->GetText(707),
+                            // Row 715, byte-proven: the inlined lookup
+                            // reads [rows + 0xb2c] = 715*4, not 707*4.
+                            gpGeneralText->GetText(715),
                             GetBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID))
                             .c_str(),
                         qualifier ? 4 : 1, -1, -1, -1, 0, -1, 0, -1, 0,
@@ -2533,11 +2535,14 @@ void townManager::handle_mage_guild_click()
             return;
         }
         if (gpCurrentPlayer->resources[GOLD] < 500) {
-            NormalDialog(gpGeneralText->GetText(214), 1, -1, 8, -1, 0,
+            // Slots 4/5 are retail's: the icon selector is the FIFTH
+            // argument (`push 8` is the third-from-last push), not the
+            // fourth - same shape every other NormalDialog site uses.
+            NormalDialog(gpGeneralText->GetText(214), 1, -1, -1, 8, 0,
                          -1, 0, -1, 0, -1, 0);
             return;
         }
-        NormalDialog(gpGeneralText->GetText(215), 2, -1, 8, -1, 0,
+        NormalDialog(gpGeneralText->GetText(215), 2, -1, -1, 8, 0,
                      -1, 0, -1, 0, -1, 0);
         if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
             return;
