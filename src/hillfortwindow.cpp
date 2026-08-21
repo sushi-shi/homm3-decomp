@@ -208,39 +208,43 @@ void THillFortWindow::DoModal()
     gpWindowManager->DoDialog(this, HillFortWindowHandler, 0);
 }
 
-#if 0  // @carcass: remaining located bodies
 // E:\gamedcs\hillfortwindow.cpp:192
 DC_ONLY(0xd6bd4, 0x22)
-unsigned char CanAfford(const long* cost, const long* playerRes)
+inline bool CanAfford(const long* cost, const long* playerRes)
 {
-    // @stub
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        if (cost[i] > playerRes[i])
+            return 0;
+    }
+    return 1;
 }
 
-#endif  // @carcass
-
 // E:\gamedcs\hillfortwindow.cpp:203
-// Residual (79.70%): ONE strength-reduction choice, cascading. Every
-// statement, branch, message recipe and inline strcpy/sprintf expansion
-// agrees; what does not is which two values VC6 keeps live across the
-// slot loop's calls. Retail homes the WIDGET ID (0xd4-based) in [ebp-8]
-// and bases the slot induction variable on slot[i].count (this+0x90,
-// `add ebx,0x50`), so every message id is `id`, `id-7`, `id+14`, `id+21`
-// and every member is a small displacement off count. This compile homes
-// the slot INDEX instead and bases the induction variable on
-// slot[i].cost[6] (this+0x84), so each message id costs an extra
-// `lea eax,[edx+0xd4]` and every member displacement is shifted by 0xc -
-// which is most of the byte delta, and it also pushes the frame to 0x44
-// because both counters need a home.
-// Tried and rejected (measured 2026-08-14, best first): `TUpgradeSlot& s
-// = slot[i]` / an equivalent `TUpgradeSlot*` walk with `for (i = 0; i <
-// 7; i++)` and `id = CREATURE_NUM_1_ID + i` (79.70, kept); retail's own
-// loop test `for (id = CREATURE_NUM_1_ID; id - CREATURE_NUM_1_ID < 7;
-// id++)` with a derived index (79.08); `id <= CREATURE_NUM_7_ID` (78.66);
-// direct `slot[i].` member spellings throughout (78.83); a second
-// induction variable `for (i = 0; ...; i++, id++)` (77.12); and the
-// id-driven loop without the reference local (68.18). The clear order at
-// the top of the body IS byte-proven and is spelled as retail has it
-// (szGoldCost, szResourceCost, resourceIndex, szCount).
+// Residual (82.2872%, 2026-08-21): the CFG is closed at 34 branches / one
+// return on both sides, with every mnemonic and symbolic target agreeing.
+// Restoring the CodeView-named CanAfford helper below removed our redundant
+// post-loop `a == 7` test (79.6984 -> 80.0868); putting the resourceIndex ==
+// -1 arm first, as retail's sole polarity difference required, then reached
+// 82.2872. Both sides now reserve the same 0x40-byte frame.
+//
+// The dominant remainder is one cascading strength-reduction choice. Retail
+// homes the 0xd4-based widget ID in [ebp-8] and bases the slot induction on
+// slot[i].count (this+0x90, `add ebx,0x50`). This compile homes the slot index
+// and bases the induction on slot[i].cost[6] (this+0x84), adding ID LEAs and
+// shifting most member displacements by 0xc. The out-of-line ledger is 23 vs
+// retail's 24, solely BroadcastMessage x14 vs x15. Raw disassembly proves
+// this is not an expanded callee: our C2 tail-merges the identical occupied-
+// and empty-arm upgrade-button update, while retail keeps two call sites.
+//
+// Dreamcast's loop block names six ID locals, in emission order: res_cost_id,
+// res_icon_id, button_id, gold_icon_id, num_id, gold_cost_id; it names no i.
+// Reintroducing all six beside the current i/reference scores 79.60, and a
+// num_id-driven no-i form scores 79.08. Adding only button_id scores 77.7066
+// and still leaves the merged call. Earlier bounded loop forms: direct
+// slot[i] (78.83), id <= CREATURE_NUM_7_ID (78.66), separate i/id induction
+// (77.12), and id-driven without the reference (68.18). The retained
+// i/id/reference form is therefore the measured x86 winner. The clear order
+// at entry is byte-proven: szGoldCost, szResourceCost, resourceIndex, szCount.
 VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
@@ -324,7 +328,12 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
             BroadcastMessage(&msg);
 
             msg.id = MESSAGE_WIDGET;
-            if (s.resourceIndex != -1) {
+            if (s.resourceIndex == -1) {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = id + 21;
+                msg.extra = widget::WIDGET_CLEAR_STATUS;
+                BroadcastMessage(&msg);
+            } else {
                 msg.codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.codeY = id + 21;
                 msg.extra = s.resourceIndex;
@@ -334,11 +343,6 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = id + 28;
                 msg.extraText = s.szResourceCost;
-                BroadcastMessage(&msg);
-            } else {
-                msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = id + 21;
-                msg.extra = widget::WIDGET_CLEAR_STATUS;
                 BroadcastMessage(&msg);
             }
 
@@ -420,12 +424,7 @@ void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
         }
     }
 
-    int a;
-    for (a = 0; a < armyGroup::ARMY_GROUP_SLOT_COUNT; a++) {
-        if (totalCost[a] > gpCurrentPlayer->resources[a])
-            break;
-    }
-    if (a == armyGroup::ARMY_GROUP_SLOT_COUNT && bAnyUpgradable)
+    if (CanAfford(totalCost, gpCurrentPlayer->resources) && bAnyUpgradable)
         UpgradeAllButtonState = UPGRADE_STATE_AFFORDABLE;
     else if (bNoneUpgradable)
         UpgradeAllButtonState = UPGRADE_STATE_NONE;

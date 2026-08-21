@@ -1130,7 +1130,7 @@ hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90
 hillfortwindow	?HandleClick@THillFortWindow@@QAEXAAVmessage@@@Z	100.0000	100.0000	100.0000	0xe8690
 hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850
-hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	79.6984	79.6984	79.6984	0xe7eb0
+hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	82.2872	82.2872	82.2872	0xe7eb0
 hillfortwindow	?UpgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500
 hiscore	??0highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9070
 hiscore	??1CHSInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xe9740
