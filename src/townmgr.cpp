@@ -3617,11 +3617,18 @@ int TShipWindow::WindowHandler(message* msg)
         if (msg->codeY != gpWindowManager->lastHover) {
             gpWindowManager->lastHover = msg->codeY;
             switch (msg->codeY) {
+            // The text-to-button pairing is retail's, traced through the
+            // dispatch rather than assumed: `sub esi,0x7801 / je L1` sends
+            // CANCEL to the block that reads [rows + 0x960] = row 600, and
+            // `dec esi / je L2` sends BUY to [rows + 0x95c] = row 599. The
+            // arms are laid out in the REVERSE of their case values, which
+            // is this sunk-body switch's own convention and not a source
+            // order - swapping the two case labels is byte-flat.
             case CANCEL_BUTTON_ID:
-                strcpy(gText, gpGeneralText->GetText(599));
+                strcpy(gText, gpGeneralText->GetText(600));
                 break;
             case BUY_BUTTON_ID:
-                strcpy(gText, gpGeneralText->GetText(600));
+                strcpy(gText, gpGeneralText->GetText(599));
                 break;
             default:
                 strcpy(gText, emptyRolloverText);

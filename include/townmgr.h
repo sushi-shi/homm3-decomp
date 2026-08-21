@@ -244,12 +244,23 @@ public:
 
 // The town hall page: one background per town type over a grid of
 // building slots the constructor lays out from two tables it builds on
-// its own stack. Its constructor writes nothing past CAdvPopup's 0x60.
+// its own stack.
 class THallWindow : public CAdvPopup {
 public:
     enum {
         EXIT_BUTTON_ID = 0x7800
     };
+
+    // ONE DWORD PAST CAdvPopup, and the allocation size is the whole
+    // proof: townManager::DoHall (0x5d27b0) pushes 0x64 to operator new
+    // for this class where CAdvPopup alone is 0x60. Neither the
+    // constructor (0x5c9be0) nor the destructor (0x5cc910) reads or
+    // writes it - the constructor's only `this`-relative stores stop at
+    // CAdvPopup's own members and the destructor walks the widget list
+    // and chains - so its consumer is outside this compiland
+    // (castle.obj's SetupCastle is the only other body handed the page).
+    // Modelled as a slot, not named, because no body here reveals a use.
+    int field_60;  // +0x60
 
     // `which` is the Dreamcast declarator's parameter name (dc
     // variables.csv, THallWindow::THallWindow fp+0x4a0).
