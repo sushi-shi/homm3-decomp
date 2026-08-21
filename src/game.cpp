@@ -600,10 +600,9 @@ void generator::Grow(int unusedArg)
 
 static long get_day_bonus(int resource, long weekBonus, long day)
 {
-    resource;
     long result = weekBonus / 7;
     long remainder = weekBonus % 7;
-    if ((day + 6) % 7 < remainder)
+    if ((day - resource + 6) % 7 < remainder)
         ++result;
     return result;
 }
@@ -627,17 +626,24 @@ static long get_day_bonus(int resource, long weekBonus, long day)
 //     signed `char` gives `jle` and `movsx`. Retyped IN PLACE in town.h
 //     (no new declarator, no include-set cost, townmgr unmoved). +1.09.
 //
-// Residual (92.0874%): two branch kinds and one addressing form.
-//   * the inner resource loop of the difficulty bonus. Retail keeps an
-//     INT COUNTER in memory and ends on `cmp edi,6 / jl` while walking
-//     the production pointer separately; our CL strength-reduces the
-//     index away entirely and ends on `dec eax / jne`, a countdown.
-//     Hoisting `resource` to function scope and sharing it with the
-//     handicap loop below is byte-flat, so whatever keeps retail's index
-//     live is not its scope.
-//   * the special-building store is a memory read-modify-write in retail
-//     (`lea edi,[edi+4*ecx] / add [edi],eax`) and a load/add/store on our
-//     side.
+// 92.0874 -> 94.4126, 2026-08-21: the difficulty loop's supposed
+// register-homing residual was a missing SOURCE operation. Dreamcast
+// get_day_bonus line 633 subtracts its `resource` parameter from `day`
+// before adding 6 and taking `% 7`; the SH4 sequence is `sub r1,r3 / add
+// #6,r3`. The old body discarded `resource`. Restoring
+// `(day - resource + 6) % 7` keeps the resource induction live and removes
+// the sole branch-kind mismatch (`jne` -> retail's `jl`) without a codegen
+// device.
+//
+// Residual (94.4126%): both sides now have 42 conditional branches and one
+// return with identical branch mnemonics. The only flow delta is two
+// identical early tests landing on block 15 here versus block 17 in retail
+// (cross-jumping / block placement); the special-building store also remains
+// a memory read-modify-write in retail (`lea edi,[edi+4*ecx] / add
+// [edi],eax`) versus a load/add/store here. Tried and rejected for the fixed
+// resource loop: a volatile counter (83.8587), an address-carried counter
+// (byte-flat), a separately advancing production pointer (byte-flat), and
+// the earlier function-scope/shared counter (byte-flat).
 VA(0x004b8af0, 0x573)
 void game::calculate_production()
 {
