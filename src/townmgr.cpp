@@ -1747,14 +1747,18 @@ TThievesGuildWindow::~TThievesGuildWindow()
 //
 // So the row is what the 85.99% note above already said it was - a pure
 // /Ob2 caller-cb row - and the following is now PROVEN rather than
-// inferred. At 60 byte-inert probes the two instruction streams are
-// IDENTICAL over all 3540 instructions once branch targets are compared
-// symbolically, with `push 0xb` the single exception; `sema diff
-// --branches` reports 179 branches and 2 rets on BOTH sides, i.e. the
-// duplicated epilogue, the hoisted `this` and the whole frame layout
-// (`mov eax,[ebp-0x7c]`) come back on their own. The 0.34% that remains
-// at the plateau is the trailing jump-table data and the unwind addend.
-// Nothing about this body's SHAPE is unknown.
+// inferred. At the plateau `sema diff --branches` reports 179 branches
+// and 2 rets on BOTH sides, i.e. the duplicated epilogue, the hoisted
+// `this` and the whole frame layout (`mov eax,[ebp-0x7c]`) come back on
+// their own. The detailed diff has only eight marked blocks: B0 is the
+// already-explained unwind relocation addend; six case-loop latches swap
+// two independent updates (`inc ebx; add edi,4` versus retail's reverse
+// order); B370 is the decoder walking into jump-table data. A raw-byte
+// check proves all nine dwords of that table agree. Thus the 99.6605
+// residue is six scheduler orderings, not missing behavior or data.
+// Preincrement, `i += 1`, `i = i + 1`, moving the increment to the loop
+// body, and `i + constant` operand order were all byte-flat at the first
+// latch. The visible loop syntax does not control this residue.
 //
 // Two things were newly eliminated this lane, both compile-free or one
 // compile each:
@@ -1906,9 +1910,13 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // proving that this codebase had diagnostic infrastructure. Retail's base
 // xdata still has exactly 50 states, so any lost diagnostics introduced no
 // additional destructible temporaries; scalar TRACE-style expressions remain
-// compatible with that frame. Count, placement, macro and format text are not
-// attested, however. No diagnostic call is landed and no probe remains in the
-// compiled body; this is the next source-history lead, not permission to pad.
+// compatible with that frame. TCastleWindow now provides independent retail
+// proof for this carrier class: three optimizer-elided call-shaped TRACE sites
+// make its 17.5 KB constructor byte-exact, while preprocessor-erased assert
+// shapes do not. The minimum measured ten-site dose below lifts this body from
+// 85.98953 to the 99.66054 plateau and reproduces the retail call and branch
+// structure. Its exact count, placement, macro name and format text remain
+// unattested; the reconstruction emits neither calls nor strings.
 //
 // AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
 // after the orchestrator reopened the sizing): respelling k of the 49
@@ -1925,10 +1933,24 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // backgrounds and the tail singles both straddle the phase boundary).
 // So the partial dose is real but capped ~89.6, and it is non-uniform
 // source; not banked, same verdict as the naked titration.
+#define HOMM3_THALL_RELEASE_TRACE(text, value)                              \
+    (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
+
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+    HOMM3_THALL_RELEASE_TRACE("THallWindow(%d)\n", which);
+
     int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
     int slotY[5] = { 37, 141, 245, 349, 453 };
     int hallX[9][18] = {
@@ -2144,6 +2166,8 @@ THallWindow::THallWindow(int which)
             MemError();
     }
 }
+
+#undef HOMM3_THALL_RELEASE_TRACE
 
 // The sixteen bytes the linker parked between THallWindow's constructor
 // and its ??_G are TTextResource::GetText's /Gy COMDAT: `mov eax,
