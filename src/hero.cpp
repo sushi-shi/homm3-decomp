@@ -89,16 +89,15 @@
 // launch_sample - the level-up jingle.
 #include "soundmgr.h"
 
+// The base stores emit in CNetMsg(subType,size) order - retail's
+// PlaceInMap expansion stores 0x424 ahead of the -1 - so route through
+// the real CMapChange initializer as CMCDeadHero below already does.
 inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
+    : CMapChange(RS_TELEPORT_HERO, sizeof(CMCTeleportHero)),
+      heroId(id),
+      point(location),
+      playerPos(gNetLocalGamePos)
 {
-    field_00 = -1;
-    field_04 = 0;
-    subType = RS_TELEPORT_HERO;
-    size = sizeof(CMCTeleportHero);
-    field_10 = 0;
-    heroId = id;
-    point = location;
-    playerPos = gNetLocalGamePos;
 }
 
 // The dead-hero record expands inside hero::Deallocate. Retail's five base
