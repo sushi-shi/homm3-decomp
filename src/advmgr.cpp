@@ -5113,6 +5113,19 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 }
 
 // E:\gamedcs\advmgr.cpp:5941
+// Residual (87.5901%): BOUNDED, and the model proves it (2026-08-21). The
+// whole delta is one callee-saved role swap - retail holds `this` in ESI and
+// the object-list pointer in EDI, we hold them the other way round - plus the
+// four-byte frame shift that follows it. Flow-distance 2, 125 blocks against
+// retail's 125, identical call multiset. `why-reg --model` reads the SAME
+// three definition slots in the SAME order on both sides (#0@8, #1@17, #2@21)
+// and reports the only lever as "make `this` the first-created call-crossing
+// pseudo"; `this` is minted between the parameters and the body locals, so no
+// declaration, include or spelling change can create a local's handle before
+// it. That is C2-side handle STATE (catalog C1 class), not handle order, and
+// it is not source-reachable. The one candidate the model still compiled
+// (swapping the baseX/baseY declarations) measured +8 distance, no
+// improvement. DrawAdvObjShadow below carries the identical wall.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
