@@ -4,12 +4,12 @@
 unit	functions	bytes
 game	81	55959
 tradpost	15	45736
-townmgr	20	27184
 sacrifice_window	37	25978
-seerhut	71	21587
+townmgr	11	21803
 command	17	15392
 remote	55	13741
 resourcemanager	25	10984
+seerhut	26	9447
 recruit	4	9176
 drawing	14	7743
 combatcontrolsubwindow	6	6238
@@ -33,6 +33,3 @@ bottomviewsubwindow	6	379
 campaignwindow	1	256
 misc	1	221
 victorylossconditions	1	69
-army	1	56
-adventureoptionswindow	1	16
-csequence	1	15

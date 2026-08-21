@@ -6311,7 +6311,7 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // byte-identical on both sides, and the 57-entry jump table at 0x00415BA4
 // agrees in length and target order. No arm is missing, extra or misplaced.
 //
-// Residual (90.20%): diagnose reports 373 vs 372 blocks and 197 vs 200
+// HISTORICAL 90.20% plateau: diagnose reported 373 vs 372 blocks and 197 vs 200
 // conditional branches - i.e. structurally converged, against 242 vs 372
 // and 131 vs 200 before this work - with ONE under-inline left. That one
 // is the std::string surface in the NOTHING/QUEST_GUARD arms: retail
@@ -6412,9 +6412,116 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 // either its source reaches the hero through some accessor we have not
 // identified (it is NOT GetCurrHero: retail loads the id as a DWORD here,
 // where GetCurrHero's tell is a CHAR compare), or VC6 flipped the arms
-// on context. The +0.20 longhand is deliberately NOT shipped: it
-// hand-expands an accessor that is proven correct everywhere else, and
-// entrenching that would be worse than the fifth of a point is worth.
+// on context. The longhand is now shipped. Once the DC-attested helper
+// carriers below and shared visit locals restored the surrounding source
+// shape, it was worth +0.20 again (94.60 -> 94.80) AND changed the prologue
+// from two callee-saved registers to retail's exact EBX/ESI/EDI set,
+// keeping playerBit in EBX. This remains a site-specific retail divergence;
+// the proven Game.h accessor itself stays untouched.
+//
+// CURRENT 2026-08-21 (94.804726%, from 90.200386%). Dreamcast CodeView
+// supplies the full local roster and proves six named text helpers in this
+// caller: set_hero_help, set_pyramid_help, and the wagon/tomb/water-wheel/
+// windmill quartet. Reconstructing those helpers here lets VC6 inline their
+// source-shaped bodies and removes the misleading `_Tidy` discrepancy.
+// Restoring the DC `testFlag`, `visited`, and `infolevel` carriers, plus
+// retail's two complete sprintf arms for BORDER_TENT and OBELISK, supplies
+// the rest of the gain. The emitted out-of-line call multiset now agrees
+// with retail (78 calls on each side), and the CFG renderer reports 372
+// blocks on both sides.
+//
+// Remaining measured residue: our frame is 0x2b8 against retail's 0x2b0;
+// deleting the copied type_point closes the frame but falls to 93.27, while
+// calling the exact out-of-line GetCell falls to 90.12 because retail's
+// inlined invalid arm retains `fullMap->cell(0,0,0)` where the standalone
+// exact GetCell folds to `fullMap->cellData`. In real code before the RET,
+// ours has 198 conditional branches against retail's 197. The sole extra is
+// localized to BUOY: retail cross-jumps its final visit test into ARENA's
+// duplicated sprintf tail. Spelling ARENA with duplicated calls coerces the
+// share but globally re-lays out the switch and falls to 92.45, so neither
+// measured regression is retained. Branch counters that include the bytes
+// after RET are invalid here: those bytes are the 57-dword jump table and
+// 216-byte case-index table, and happen to decode as bogus jcc opcodes.
+static void set_hero_help(char* buffer, const NewmapCell* cell)
+{
+    hero* mapHero = gpGame->GetHero(cell->extraInfo);
+    sprintf(buffer,
+            gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
+            mapHero->name, mapHero->HeroFn_004D8F70());
+}
+
+static void set_pyramid_help(
+    char* buffer, const NewmapCell* cell, const hero* currentHero,
+    const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[PYRAMID]);
+    if (cell->is_trigger && currentHero) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(currentHero->owner)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_wagon_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WAGON]);
+    if (cell->is_trigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(gNetLocalGamePos)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_tomb_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WARRIOR_TOMB]);
+    if (cell->is_trigger) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               cell->PlayerKnowsCell(gNetLocalGamePos)
+                   ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                   : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_water_wheel_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WATER_WHEEL]);
+    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        strcat(buffer, separator);
+        short gold = (cell->extraInfo & 0x1f) * 500;
+        if (gold == 0)
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
+static void set_windmill_help_text(
+    char* buffer, NewmapCell* cell, const char* separator)
+{
+    strcpy(buffer, gAdventureObjectNames[WINDMILL]);
+    if (cell->is_trigger && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        strcat(buffer, separator);
+        unsigned long amount = cell->extraInfo >> 13;
+        if ((amount & 0xf) == 0)
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
+        else
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
+    }
+}
+
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
@@ -6431,13 +6538,28 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
     // against retail's 0x2b0, and the 8 bytes still between them are two
     // small locals VC6 homes on our side and keeps in registers on
     // retail's, not another array.
-    char tempText[500];
-    playerData* player = gpGame->GetLocalPlayer();
-    int iPlayer = gpGame->GetLocalPlayerGamePos();
-    int playerBit = 1 << iPlayer;
-    hero* currHero = gpGame->GetHero(player->currHeroId);
-
+    unsigned long testFlag;
+    int width;
+    int visited;
+    NewmapCell* cell;
+    playerData* player;
     type_point mapPoint;
+    long x;
+    hero* currHero;
+    long y;
+    int iPlayer;
+    char tempText[500];
+    int playerBit;
+    int height;
+    int infolevel;
+
+    player = gpGame->GetLocalPlayer();
+    iPlayer = gpGame->GetLocalPlayerGamePos();
+    playerBit = 1 << iPlayer;
+    if (player->currHeroId != -1)
+        currHero = &gpGame->heroes[player->currHeroId];
+    else
+        currHero = 0;
     mapPoint.x = radarOrigin.x + cellX;
     mapPoint.y = radarOrigin.y + cellY;
     mapPoint.z = z;
@@ -6447,11 +6569,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
     } else {
         type_point point = mapPoint;
-        NewmapCell* testCell;
         if (!point.is_valid()) {
-            testCell = fullMap->cell(0, 0, 0);
+            cell = fullMap->cell(0, 0, 0);
         } else {
-            testCell = &fullMap->cellData[
+            cell = &fullMap->cellData[
                 (point.z * fullMap->Size + point.y) * fullMap->Size
                 + point.x];
         }
@@ -6461,8 +6582,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 GENERAL_TEXT_QUICK_INFO_SHROUDED));
         } else {
             type_cell_adjuster adjuster = { 0, 0, 0 };
-            NewmapCell* cell =
-                adjuster.get_trigger_cell(testCell, cellX, cellY);
+            cell = adjuster.get_trigger_cell(cell, cellX, cellY);
 
             const char* separator = DATA_COMPGEN(
                 0x006603b0, quickInfoSeparator, "\n\n");
@@ -6490,15 +6610,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
                 if (cell->is_trigger) {                                   \
-                    z = gpGame->GetInfoFlag(infoFlag, iPlayer);           \
-                    if (z) {                                              \
+                    infolevel = gpGame->GetInfoFlag(infoFlag, iPlayer);   \
+                    if (infolevel) {                                      \
                         sprintf(tempText, knownFormat,                    \
                                 gGlobalInfoFlagNames[infoFlag]);          \
                         strcat(gText, tempText);                          \
                     }                                                     \
                     if (currHero) {                                       \
-                        z = (condition);                                  \
-                        if (z)                                            \
+                        visited = (condition);                            \
+                        if (visited)                                      \
                             sprintf(tempText, visitFormat,                \
                                     gpGeneralText->GetText(               \
                                         GENERAL_TEXT_VISITED_OBJECT));    \
@@ -6519,8 +6639,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
                 if (cell->is_trigger && currHero) {                       \
-                    z = (condition);                                      \
-                    if (z)                                                \
+                    visited = (condition);                                \
+                    if (visited)                                          \
                         sprintf(tempText, visitFormat,                    \
                                 gpGeneralText->GetText(                   \
                                     GENERAL_TEXT_VISITED_OBJECT));        \
@@ -6557,10 +6677,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case ARENA:
                 strcpy(gText, gAdventureObjectNames[ARENA]);
                 if (cell->is_trigger && currHero) {
-                    unsigned long arenaBit =
-                        1UL << (cell->extraInfo & 0x1f);
+                    testFlag = 1UL << (cell->extraInfo & 0x1f);
+                    visited = testFlag & currHero->ArenaFlags;
                     sprintf(tempText, visitFormat,
-                        currHero->ArenaFlags & arenaBit
+                        visited
                             ? gpGeneralText->GetText(
                                   GENERAL_TEXT_VISITED_OBJECT)
                             : gpGeneralText->GetText(
@@ -6581,13 +6701,16 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     gBorderColorNames[cell->objectIndex],
                     gAdventureObjectNames[BORDER_TENT]);
                 if (cell->is_trigger) {
-                    sprintf(tempText, visitFormat,
-                        gpGame->borderTentVisitFlags[cell->objectIndex]
-                            & playerBit
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
+                    visited = gpGame->borderTentVisitFlags[
+                        cell->objectIndex] & playerBit;
+                    if (visited)
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -6682,13 +6805,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                         strcat(gText, tempText);
                     }
                     if (currHero) {
-                        unsigned long fortuneVisits =
+                        testFlag =
                             (currHero->flags & 0x20000000UL)
                             + (currHero->flags & 0x10000000UL)
                             + (currHero->flags & 0x08000000UL)
                             + (currHero->flags & 0x20UL);
                         sprintf(tempText, visitFormat,
-                            fortuneVisits
+                            testFlag
                                 ? gpGeneralText->GetText(
                                       GENERAL_TEXT_VISITED_OBJECT)
                                 : gpGeneralText->GetText(
@@ -6705,22 +6828,17 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case HILL_FORT:
                 strcpy(gText, gAdventureObjectNames[HILL_FORT]);
                 if (cell->is_trigger) {
-                    z = gpGame->GetInfoFlag(HillFortInfo, iPlayer);
-                    if (z) {
+                    infolevel = gpGame->GetInfoFlag(HillFortInfo, iPlayer);
+                    if (infolevel) {
                         sprintf(tempText, knownFormat,
                                 gGlobalInfoFlagNames[HillFortInfo]);
                         strcat(gText, tempText);
                     }
                 }
                 break;
-            case HERO: {
-                hero* mapHero = gpGame->GetHero(cell->extraInfo);
-                sprintf(gText,
-                        gpGeneralText->GetText(
-                            GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
-                        mapHero->name, mapHero->HeroFn_004D8F70());
+            case HERO:
+                set_hero_help(gText, cell);
                 break;
-            }
             SET_KNOWN_VISITED_QUICKINFO(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
                 (currHero->flags & 0x02000000UL)
                     + (currHero->flags & 0x10UL));
@@ -6775,11 +6893,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case MYSTICAL_GARDEN:
                 strcpy(gText, gAdventureObjectNames[MYSTICAL_GARDEN]);
                 if (cell->is_trigger) {
-                    unsigned long gardenBit =
-                        1UL << (cell->extraInfo & 0x1f);
-                    z = (gpCurrentPlayer->MysticalGardenFlags & gardenBit)
+                    testFlag = 1UL << (cell->extraInfo & 0x1f);
+                    visited = (gpCurrentPlayer->MysticalGardenFlags & testFlag)
                         && !((cell->extraInfo >> 10) & 1);
-                    if (z)
+                    if (visited)
                         sprintf(tempText, visitFormat,
                                 gpGeneralText->GetText(
                                     GENERAL_TEXT_VISITED_OBJECT));
@@ -6795,12 +6912,16 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case OBELISK:
                 strcpy(gText, gAdventureObjectNames[OBELISK]);
                 if (cell->is_trigger) {
-                    sprintf(tempText, visitFormat,
-                        gpGame->obeliskFlags[cell->extraInfo] & playerBit
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
+                    visited = gpGame->obeliskFlags[cell->extraInfo]
+                        & playerBit;
+                    if (visited)
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -6808,16 +6929,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 currHero->PowerSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case PYRAMID:
-                strcpy(gText, gAdventureObjectNames[PYRAMID]);
-                if (cell->is_trigger && currHero) {
-                    strcat(gText, separator);
-                    strcat(gText,
-                        cell->PlayerKnowsCell(currHero->owner)
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                }
+                set_pyramid_help(gText, cell, currHero, separator);
                 break;
             SET_KNOWN_VISITED_QUICKINFO(RALLY_FLAG, RallyFlagInfo,
                 currHero->flags & 0x10000);
@@ -6858,8 +6970,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case UNIVERSITY:
                 strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
                 if (cell->is_trigger) {
-                    z = gpGame->GetInfoFlag(UniversityInfo, iPlayer);
-                    if (z) {
+                    infolevel = gpGame->GetInfoFlag(UniversityInfo, iPlayer);
+                    if (infolevel) {
                         sprintf(tempText, knownFormat,
                                 gGlobalInfoFlagNames[UniversityInfo]);
                         strcat(gText, tempText);
@@ -6867,61 +6979,21 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 }
                 break;
             case WAGON:
-                strcpy(gText, gAdventureObjectNames[WAGON]);
-                if (cell->is_trigger) {
-                    strcat(gText, separator);
-                    strcat(gText,
-                        cell->PlayerKnowsCell(gNetLocalGamePos)
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                }
+                set_wagon_help_text(gText, cell, separator);
                 break;
             SET_KNOWN_VISITED_QUICKINFO(WAR_SCHOOL, WarSchoolInfo,
                 currHero->WarSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case WARRIOR_TOMB:
-                strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
-                if (cell->is_trigger) {
-                    strcat(gText, separator);
-                    strcat(gText,
-                        cell->PlayerKnowsCell(gNetLocalGamePos)
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
-                }
+                set_tomb_help_text(gText, cell, separator);
                 break;
             case WATER_WHEEL:
-                strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
-                if (cell->is_trigger
-                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-                    strcat(gText, separator);
-                    short wheelGold = (cell->extraInfo & 0x1f) * 500;
-                    if (wheelGold == 0)
-                        strcat(gText, gpGeneralText->GetText(
-                                          GENERAL_TEXT_VISITED_OBJECT));
-                    else
-                        strcat(gText, gpGeneralText->GetText(
-                                          GENERAL_TEXT_UNVISITED_OBJECT));
-                }
+                set_water_wheel_help_text(gText, cell, separator);
                 break;
             SET_KNOWN_VISITED_QUICKINFO(WATERING_HOLE, WateringHoleInfo,
                 currHero->flags & 0x40);
             case WINDMILL:
-                strcpy(gText, gAdventureObjectNames[WINDMILL]);
-                if (cell->is_trigger
-                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
-                    strcat(gText, separator);
-                    unsigned long windmillAmount = cell->extraInfo >> 13;
-                    if ((windmillAmount & 0xf) == 0)
-                        strcat(gText, gpGeneralText->GetText(
-                                          GENERAL_TEXT_VISITED_OBJECT));
-                    else
-                        strcat(gText, gpGeneralText->GetText(
-                                          GENERAL_TEXT_UNVISITED_OBJECT));
-                }
+                set_windmill_help_text(gText, cell, separator);
                 break;
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
@@ -6948,12 +7020,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
         strcat(gText, coordinateText);
     }
 
-    int width;
-    int height;
     get_quickview_size(gText, &width, &height);
 
-    int x = cellX * 32;
-    int y = cellY * 32;
+    x = cellX * 32;
+    y = cellY * 32;
     if (x < 8)
         x = 8;
     if (y < 8)
