@@ -6264,6 +6264,17 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
+    // MEASURED AND REJECTED (2026-08-21), both readings of the one real
+    // structural divergence left in this body. Retail inverts the guard and
+    // duplicates the null store into the else arm
+    // (`jne <work> / mov [ebp-0x38],edx / jmp <join>`) where we hoist it
+    // ahead of the test; spelling that as an explicit `else currentHero = 0;`
+    // costs 90.6495 -> 89.9633. And retail re-reads `origin` from its
+    // parameter home at the z compare (`mov cx, word ptr [ebp+0xa]`) where we
+    // hold it in ESI, but dropping the `int z = origin.z;` cache and reading
+    // `origin.z` at both uses costs 90.6495 -> 90.3991. The rest is the
+    // callee-saved role of `this`: retail keeps it in ECX and spills to
+    // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
     int heroX = -1;
     int heroY = -1;
     hero* currentHero = 0;
