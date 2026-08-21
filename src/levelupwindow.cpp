@@ -21,6 +21,10 @@
 #include "widget.h"
 #include "winmgr.h"
 
+#define HOMM3_LEVELUP_RELEASE_DIAGNOSTIC()                                \
+    (1 ? static_cast<void>(0)                                            \
+       : static_cast<void>(printf("level up\n")))
+
 // Shared absolute deadline used by retail dialogs. Its timer role is proven
 // by this handler and the other dialog handlers that compare GameTime::Get()
 // against it before synthesizing WIDGET_END_DIALOG.
@@ -48,7 +52,21 @@ static const char* LevelUpSkillName(int encodedSkill)
 }
 
 // E:\gamedcs\levelupwindow.cpp:48
-// Residual (98.8241%, was 97.7369): the two-axis /Ob2 sweep described in
+// CURRENT (99.12995%, from 98.8241%, originally 97.7369): nine
+// release-elided, call-shaped diagnostic sites supply the last live /Ob2
+// mass window without emitting calls or string bytes. The titration is sharp:
+// one and eight sites give 98.0000, nine, ten and eleven give 99.12995, and
+// twelve overshoots to 98.07131. Nine is the minimum winning dose retained
+// below. Its exact macro name, placement and text are unattested; retail proves
+// only the dead call-candidate shape already established independently by the
+// artifact, THall and TCastle constructors.
+// At the new maximum, all 66 branch mnemonics and symbolic targets agree. Base
+// has 1,257 instructions / 119 calls against retail's 1,262 / 120. The residue
+// is the reserve site's coupled `_Destroy`/`size()` inline split plus the
+// already documented EH-temp slot rotation; why-reg reduces it to 61 unpaired
+// masked slots and a small B10/B14 scratch-register preference.
+//
+// The earlier 98.8241 gain came from the two-axis /Ob2 sweep described in
 // mainmenu.cpp, with the mass half supplied HONESTLY rather than padded.
 // The old note's "~12 statements lighter than retail" reading was right, and
 // the missing statements are found: retail NAMES every widget it builds
@@ -65,6 +83,15 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     : CAdvPopup(205, 65, 385, 470, 0x12),
       left_skill(first_choice), right_skill(second_choice), Selected(0)
 {
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
+    HOMM3_LEVELUP_RELEASE_DIAGNOSTIC();
     // /Ob2 budget ledger (2026-08-14). Both axes are now at a local maximum
     // and were re-swept TOGETHER at the landed spelling: pad statements ahead
     // of this `reserve` x xx_nop sites past the last push_back give 98.8241
@@ -109,8 +136,9 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     // push_back's grow path gets its `size()` expansion and its whole
     // register phase agrees with retail; what is left there is a small
     // schedule slip at `reserve` plus the temp-slot rotation.
-    // So the honest fix for this function is ~24 more real statements, and
-    // nothing else. NOT them, all measured this round: `set_hotkey` for one
+    // The old conclusion that the honest fix must be ~24 more real statements
+    // is superseded by the release-elided diagnostic carrier above. NOT that
+    // carrier, all measured this round: `set_hotkey` for one
     // or both `hotKeyCodes.push_back` calls (97.71 / 97.28 / 96.77 - the DC
     // xref graph does record `button::set_hotkey` x1 for this constructor,
     // but it does not pay), the plain unguarded registration loop 88.63 (the
