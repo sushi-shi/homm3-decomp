@@ -324,6 +324,10 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 // EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
 // for it; with the highlight helpers landed the hoist happens by itself and
 // the plain literals score identically, so the crutch is gone.
+// An accessor-bearing conventional release VERIFY at entry is byte-flat
+// (2026-08-21): `(void)gpCombatOptionsWindow->Widgets.size()` leaves
+// 83.35985 and the same 28-vs-27 partial branch census/two polarities.
+// Validation mass therefore cannot select retail's tail phase here.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int CombatOptionsWindowHandler(message& msg)
 {

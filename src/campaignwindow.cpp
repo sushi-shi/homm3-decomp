@@ -56,8 +56,9 @@ inline void TCampaignWindow::HideText()
 // TCampaignWindow's +0x4c/+0x50 scalars and the 21-byte availability block
 // at +0x60, gCampaignPreviews' 0x50-byte row type, the caption block at
 // 0x6a5f88, and - the one that reaches into a shared header - the shape of
-// `gpGame->campaign = SCampaign()`.  Retail inlines BOTH the assignment and
-// the temporary's teardown member by member, which is the whole evidence for
+// `gpGame->campaign = SCampaign()`.  Retail expands the assignment and the
+// temporary's teardown member by member, except for the one nested destructor
+// boundary described below, which is the whole evidence for
 // game.h's SCampaign:
 //   +0x00/+0x01/+0x02 bytes, +0x04/+0x08 dwords, +0x0c byte, +0x10 dword -
 //     copied straight;
@@ -67,19 +68,20 @@ inline void TCampaignWindow::HideText()
 //     campaignCompleted[21];
 //   +0x3c, +0x4c, +0x5c, +0x6c: four sub-object assignments (0x45f5e0,
 //     0x45f810, 0x45f9e0, 0x50ac00) whose mirror teardowns are 0x45f560,
-//     0x45f7b0, 0x46a650 and an INLINE `_Destroy`/`operator delete`/zero
+//     0x45f7b0, the out-of-line 0x46a650 and an inline int-vector destructor
+//     that still CALLS `_Destroy` before `operator delete`/zero
 //     triple.  0x45f560 and 0x45f7b0 are vector-of-vector teardowns (inner
 //     stride 0x10; 0x45f560's leaves are 0x492 bytes each), 0x50ac00 is a
 //     four-byte-element vector::operator=, and mapScores is the +0x5c one.
 // game.h now carries all four as real members.
 //
-// FIXED 82.5365% -> 91.1679% (2026-08-21): the newGame arm. Retail's
-// SCampaign copy
-// assignment and destructor are compiler-generated and it expands both
-// inline HERE, where game::Load calls the same two COMDATs out of line
+// FIXED 82.5365% -> 98.4726% (2026-08-21): the newGame arm, in two steps.
+// Retail's SCampaign copy assignment and destructor are compiler-generated;
+// it expands the outer operations HERE, where game::Load calls the same two
+// COMDATs out of line
 // (0x4bdc70 and 0x45f110) - a plain /Ob2 split between two callers of the
-// same implicit member. Spelling them implicit in game.h reproduces retail
-// here exactly and takes this body 82.54% -> 91.17%, because the arm's use
+// same implicit member. Spelling them implicit in game.h takes this body
+// 82.54% -> 91.17%, because the arm's use
 // of EBX for the temporary is what makes retail push EBX in the PROLOGUE
 // and then hold newCampaign in it for the whole widget section - with the
 // arm out of line our CL defers `push ebx` to the reserve, keeps a zero in
@@ -90,12 +92,26 @@ inline void TCampaignWindow::HideText()
 // narrow HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN view above now exposes the
 // compiler-generated members only in the TU whose bytes require them.
 //
-// Residual (91.1679%): an inliner boundary, 54 branches / 40 calls against
-// retail's 52 / 39. diagnose identifies one under-inline family after the
-// implicit assignment/teardown. Release-elided diagnostic tails at one, two
-// and four sites are byte-flat with the same counts, so caller mass does not
-// move the remaining boundary on this shape. The old two-axis grid below was
-// measured on the explicit-member phase and remains historical evidence.
+// The remaining 91.17% boundary was the temporary's NESTED member teardown:
+// retail calls the map-score vector destructor but expands the following
+// int-vector destructor, retaining its `_Destroy` child. Our CL expanded both.
+// The two narrow derived-vector views in game.h restore that exact 39/39 call
+// ledger and cleanup transcript. The last two branches were not optimizer
+// noise at all: named `pad_03`, `pad_0d` and `pad_39` members made generated
+// operator= copy the gaps in two byte loops, while retail leaves alignment
+// padding untouched. Making those gaps implicit closes the CFG (flow-distance
+// zero) and reaches 98.4726%.
+//
+// Residual (98.4726%): one whole-body EBX/EDI role swap, with 549 instructions
+// against retail's 548. Retail binds this->EDI and the SCampaign temporary,
+// then newCampaign, to EBX; this compile makes the opposite assignment.
+// why-reg's forty store/chain/order probes are byte-flat (one volatile probe
+// and the global/store swap worsen), and both nested type declaration order
+// and a named `this` alias are byte-flat too. This is the bounded
+// register-homing class. Release-elided diagnostic tails at one, two and four
+// sites were already byte-flat, so caller mass is not a remaining lever.
+// The old two-axis grid below was measured on the explicit-member phase and
+// remains historical evidence.
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)

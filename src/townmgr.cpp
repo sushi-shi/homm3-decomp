@@ -2606,6 +2606,14 @@ void townManager::handle_mage_guild_click()
 // against retail's 140. These dormant calls can perturb caller mass but do not
 // become the LIVE candidate site that made the synthetic helper exact. The
 // one-site deficit therefore remains real; diagnostic ghosts cannot fill it.
+// Conventional release VERIFY is now bounded too (2026-08-21): tail
+// expressions equivalent to `(void)Widgets.size()`, `(void)!Widgets.empty()`
+// and `(void)(Widgets.size() == 49)` all select the same 93.8825 phase with
+// 132 branches against retail's 140, below the retained 98.2932. They do add
+// optimizer-visible accessor work, but it is not the one cheap candidate the
+// exact synthetic probe measures. Only a custom VERIFY wrapper that itself
+// contributes that empty candidate could be equivalent, and the bytes cannot
+// attest such a macro or wrapper.
 
 // The garrison base window, shared by the plain garrison dialog, the
 // monster-join prompt and the town garrison: two seven-slot army rows -
