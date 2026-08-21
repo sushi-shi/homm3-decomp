@@ -493,7 +493,12 @@ void combatManager::FreeIcons()
 // `cmp eax, esi` against the register still holding the zero it has just
 // stored into numArmies[side], where our CL emits `test eax, eax`.
 // Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
-// to force the two zeroes to share, which is byte-identical.
+// to force the two zeroes to share, which is byte-identical; and moving
+// `int placed = 0;` below the two pointer locals (byte-identical too,
+// 2026-08-21). Both sides hold the same xor-esi zero two instructions
+// above the compare; C2 simply picks the literal-zero `test` where
+// retail's picked the register compare, and the [ebp-8] spill rides on
+// the same choice. One instruction, C2 compare-selection state.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {

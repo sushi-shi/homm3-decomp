@@ -341,7 +341,7 @@ army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
-army	?can_cast_spell@army@@QBEEJ@Z	99.0409	99.0409	99.0409	0x476c0
+army	?can_cast_spell@army@@QBEEJ@Z	99.7059	99.7059	99.7059	0x476c0
 army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
