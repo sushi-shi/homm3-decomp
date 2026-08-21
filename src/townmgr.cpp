@@ -2435,6 +2435,11 @@ void TMageGuildWindow::SetRolloverText(int codeY)
 // masked qualifier at both sites.
 
 // E:\gamedcs\townmgr.cpp
+// Residual (97.3926%): a `push ebx` scheduled one instruction early and one
+// SIB encoder tie-break (`[esi + ecx + 0xbc]` against retail's
+// `[ecx + esi + 0xbc]` - same effective address, base and index swapped,
+// which is the B18 class and not source-addressable). The Holy Grail text
+// row is corrected to 715 above; the remaining bytes are those two.
 VA(0x005ce370, 0x1F0)  // anchor-vtable 0x6437dc slot 9 + anchor-callee(SetRolloverText 0x5ce1c0, whose sole caller this is) + arity(ret 4), dc 0x171118
 int TMageGuildWindow::WindowHandler(message* msg)
 {
@@ -2518,6 +2523,13 @@ int TMageGuildWindow::WindowHandler(message* msg)
 // tail.
 
 // E:\gamedcs\townmgr.cpp
+// Residual (97.4888%): two dead three-instruction blocks. At each of the two
+// GetHero sites this compile emits `cmp ecx,-1 / je <arm> / jne <join> /
+// xor edi,edi / jmp <join>` - the `jne` immediately after a `je` on the same
+// flags is unreachable, and it is the inlined accessor's own `id == -1 ->
+// return 0` arm that VC6 kept without folding. Retail folds it against the
+// caller's `!= -1` gate and emits `cmp ecx,-1 / je <arm>` alone. The two
+// NormalDialog argument slots and the general-text row are now retail's.
 VA(0x005ce560, 0x2CC)  // anchor-callee(TMageGuildWindow ctor 0x5cc980 + SetupMage 0x5d6ef0) + anchor-caller(Main 0x5d3240) + arity(bare ret), dc 0x171320
 void townManager::handle_mage_guild_click()
 {
@@ -2994,6 +3006,18 @@ void type_garrison_base_window::SetCommandAndText(message* msg)
 // latch and repaints BOTH strips with the creature that is being divided.
 
 // E:\gamedcs\townmgr.cpp
+// Residual (95.6600%): the RIGHT_SELECT pair and a gpTownManager binding
+// mirror. Retail writes `mgr->field_128 = codeY - <base>` in BOTH slot arms
+// - once as `mov ecx,[gp] / mov [ecx+0x128],eax` and once as
+// `mov eax,[gp] / mov [eax+0x128],edx` - and the differing registers are
+// what stop its cross-jumper merging them; our arms compile to the same two
+// instructions in the same registers, so C2 sinks them into one shared join
+// the top arm `jmp`s to. Source order, arm order and the fall-through arm
+// all already agree, so there is no statement to move: this is the
+// merged-block family from the side where RETAIL duplicates.
+// Everything else is downstream binding (eax<->ecx<->edx through the
+// selectedStrip/slot reads and the DIVIDE arm's two Draw calls) plus the
+// jump-table and byte-table reloc addends, which cost nothing.
 VA(0x005d0910, 0x228)  // anchor-vtable 0x643818 slot 9 + anchor-callee(SetCommandAndText 0x5d05f0 + DoCommand) + arity(ret 4), dc 0x172cf4
 int type_garrison_base_window::WindowHandler(message* msg)
 {
@@ -3921,6 +3945,14 @@ void townManager::DoUniversity()
 // written `< 0` first the row sits at 85.42. Both that gate AND
 // game::GetHero's own `== -1` are emitted - two compares against the
 // same id - because they are DIFFERENT comparisons; that is the same
+// [2026-08-21] Residual (93.6951%): a `townToView` CSE this compile makes
+// and retail does not. Retail keeps `this` in EBX and re-reads `[ebx+0x38]`
+// at every use (three times, including the one feeding
+// university_info_dialog); we load it once into EBX and index off that, which
+// transposes ecx/edx/eax through the rest of the body. The source already
+// spells every use as `townToView->...`, so there is no cache to delete -
+// C2 made this one on its own.
+//
 // asymmetry town::HasGarrison shows, and the reverse of
 // handle_hall_click below, where an identical `!= -1` gate folds the
 // accessor's test away.
@@ -5153,7 +5185,11 @@ TTavernWindow::~TTavernWindow()
 // over retail's predecessor set raises fuzzy to 83.6975 only by collapsing all
 // four copies to one (139 instructions), so that structurally wrong family is
 // rejected. One-call inline wrappers at either the gold or town site are
-// byte-flat. Removing the DC-unattested named `recruit` pointer regresses to
+// byte-flat. A named `hero*` for the RECRUIT arm's own sprintf is
+// byte-flat too (2026-08-21) even though retail splits that address as
+// `lea eax,[... + 0x21620] / add eax,0x23` where this compile folds a single
+// `lea ... + 0x21643` - VC6 re-folds the offset back through the named
+// pointer, so the split is not source-reachable here. Removing the DC-unattested named `recruit` pointer regresses to
 // 76.8086; the remaining scratch-register swaps follow the same block-choice
 // tie. This is the merged-block/compiler-generation class.
 
@@ -5240,6 +5276,14 @@ void TTavernWindow::SetRolloverText(int id)
 // afterwards whenever it stopped.
 
 // E:\gamedcs\townmgr.cpp
+// Residual (89.7235%): `player` is register-homed here and memory-homed in
+// retail. Both sides spill GetLocalPlayer's result to [ebp-0x10] straight
+// after the call, but this compile ALSO keeps it in EDI for the whole body -
+// which costs the `push edi` / `mov edi,eax` / `pop edi` triple retail does
+// not have and transposes eax<->ecx through every msg field read that
+// follows. Retail reaches `player` only through its stack home. No local
+// spelling reached it: the value is a call result, so why-reg's
+// creation-order lever does not apply.
 VA(0x005d7b30, 0x2E1)  // anchor-vtable 0x643980 slot 9 + anchor-callee(SetRolloverText 0x5d7920 + TThievesGuildWindow ctor) + arity(ret 4), dc 0x17aa28
 int TTavernWindow::WindowHandler(message* msg)
 {
@@ -6083,6 +6127,26 @@ void townManager::DoTownTavern()
 
 //
 // Residual (98.61%): FIVE BYTES, and they are the price of expanding
+// [2026-08-21] The five bytes are decoded, and the obvious fix loses.
+// Retail tests `gpWindowManager->dialogReturn` ONCE and lets the inlined
+// GetTown's own `== -1` guard reuse those flags (`cmp eax,-1 / je <else>`
+// ... `mov ecx,[edi+0x38] / jne`, the `mov` not touching flags). The
+// `int selectedTown` copy below moves the value into a second register
+// (`mov eax,ecx`) and forces a re-materialised `cmp eax,-1`. Dropping the
+// local and handing `gpWindowManager->dialogReturn` straight to GetTown DOES
+// retire the second compare and costs 0.47 (98.6070 -> 98.1343), because the
+// re-read of the global then outweighs it. The named local stays - measured
+// local maximum.
+// [2026-08-21] The five bytes are decoded, and the obvious fix loses.
+// Retail tests `gpWindowManager->dialogReturn` ONCE and lets the inlined
+// GetTown's own `== -1` guard reuse those flags: `cmp eax,-1 / je <else>`
+// ... `mov ecx,[edi+0x38] / jne` - the `mov` does not touch flags. Our
+// `int selectedTown = ...` copy moves the value to a second register
+// (`mov eax,ecx`) and forces a re-materialised `cmp eax,-1`. Dropping the
+// local and passing `gpWindowManager->dialogReturn` straight to GetTown
+// does retire the second compare and COSTS 0.47 (98.6070 -> 98.1343),
+// because the re-read of the global then outweighs it. The named local
+// stays; this pair is a local maximum.
 // MoveHero by hand instead of letting /Ob2 do it. Retail reaches the
 // teleport with `mov ecx,[gpWindowManager] / mov eax,[ecx+0x38] /
 // cmp eax,-1 / je tail`, then loads fromTown and takes the GetTown null
