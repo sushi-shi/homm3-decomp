@@ -342,7 +342,7 @@ army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0
 army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?can_cast_spell@army@@QBEEJ@Z	99.7059	99.7059	99.7059	0x476c0
-army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
+army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
@@ -376,7 +376,7 @@ army	?get_multi_head_directions@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0
 army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
 army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
-army	?get_total_combat_value@army@@QBEJJJ@Z	94.7414	94.7414	94.7414	0x42e60
+army	?get_total_combat_value@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	92.1581	92.1581	92.1581	0x42a50
 army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	96.2453	96.2453	96.2453	0x3d730
@@ -393,7 +393,7 @@ army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
-army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
+army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	92.6970	92.6970	92.6970	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0

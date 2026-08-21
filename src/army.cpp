@@ -3555,9 +3555,8 @@ inline unsigned char army::can_shoot(const army* excluded) const
                 bCanShoot = 0;
         }
     }
-    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
-        bCanShoot = 0;
-    return static_cast<unsigned char>(bCanShoot);
+    return bCanShoot
+           && (forgetfulnessRounds == 0 || forgetfulnessLevel < 2);
 }
 
 #if 0  // @carcass
@@ -5253,12 +5252,42 @@ void army::DecrementSpellRounds()
 // best (byte-identical), naming the melee arm's hex (byte-identical),
 // declaring `value`/`best` at the top with the assignment left where
 // it is (byte-identical).
+// The flag-tail twin (declared beside can_shoot in army.h): ONLY
+// get_berserk_targets calls it. Its retail expansion here matches the
+// flag-tail body while can_shoot's own COMDAT and every other consumer
+// match the &&-return tail; one inline cannot carry both decisions
+// (measured: && tail alone = 92.52 -> 23.73 here; a fastcall static
+// twin does not reproduce the member expansion either).
+inline unsigned char army::can_shoot_flagform(const army* excluded) const
+{
+    if (creatureType == ARMY_CREATURE_BALLISTA
+        || creatureType == ARMY_CREATURE_ARROW_TOWER)
+        return 1;
+    if (!(Is(2) & 1) || shotsLeft <= 0)
+        return 0;
+    hero* controller = get_controller();
+    int bCanShoot = 1;
+    if (!controller
+        || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
+        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
+            bCanShoot = 0;
+        } else if (creatureId & 1) {
+            if (gpCombatManager->enemy_is_adjacent(
+                    this, get_second_grid_index(), excluded))
+                bCanShoot = 0;
+        }
+    }
+    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
+        bCanShoot = 0;
+    return static_cast<unsigned char>(bCanShoot);
+}
+
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::get_berserk_targets(std::vector<army*>& armies) const
 {
     unsigned char canShoot;
     army* other;
-    if (can_shoot(0)) {
+    if (can_shoot_flagform(0)) {
         canShoot = 1;
     } else {
         canShoot = 0;
