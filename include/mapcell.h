@@ -543,12 +543,17 @@ public:
     unsigned long get_map_extraInfo();
     unsigned char cell_is_trigger();
     unsigned char is_diggable();
-    // The AND result is BYTE-typed in retail, and it is byte-load-bearing at
-    // every inlined site: both operands stay dword (`mov eax,1 / shl eax,cl`
-    // and `mov ecx,[cell] / shr ecx,5`) and retail then tests only their low
-    // halves - `test cl,al`, not `test ecx,eax`. Landing the mask in an
-    // `unsigned char` is what tells VC6 the upper 24 bits are dead. The value
-    // is unchanged: player is already range-checked to 0..7 above.
+    // The visibility lane is EIGHT BITS WIDE and the mask is byte-load-bearing
+    // at every inlined site: both operands stay dword (`mov eax,1 /
+    // shl eax,cl` and `mov ecx,[cell] / shr ecx,5`) and retail then tests only
+    // their low halves - `test cl,al`, not `test ecx,eax`. The explicit 0xff
+    // field mask is what tells VC6 the upper 24 bits are dead; advmgr.h's
+    // type_cell_visited_info records the same tell from the events.obj reader
+    // side. The value is unchanged - player is range-checked to 0..7 above.
+    // Two narrower spellings are MEASURED WORSE and must not be substituted:
+    // truncating the whole AND (`unsigned char known = ...`) also narrows the
+    // shift to `shl dl,cl` where retail keeps it dword, and a static_cast on
+    // either operand is evaluated FIRST and flips retail's operand order.
     unsigned char PlayerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)
