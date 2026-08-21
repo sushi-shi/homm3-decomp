@@ -501,7 +501,6 @@ army* combatManager::find_spell_target(SpellID spell, long side, long hex,
 // duplicate `return 0`) is downstream of it - flipping the test's sense
 // measures exactly neutral, and spelling the arm `return 0; return 1;`
 // instead of `return 0; break;` costs 2.3.
-VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
 // Residual (88.49, diagnosed 2026-08-21): why-branch reads one je->jne
 // flip and one D3 threading row; the byte diff shows the root - ours
 // PROMOTES targetIndex into EDI for the whole body while retail keeps
@@ -510,6 +509,7 @@ VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
 // slots) and the 6-instruction surplus follow from that one promotion.
 // A parameter's caching is C2's promotion choice, not a spelling; no
 // catalog mutation moves the branch shape (guided search exhausted).
+VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
                                               long casting_side,
@@ -2732,7 +2732,6 @@ void combatManager::MirrorImage(int targetIndex, int level)
 // where retail re-reads `[ebp-0x10]` after it. Both halves are the one
 // decision and no spelling tried moved it; the rest is scratch-register
 // renaming around the 0-in-EDI the loop exits leave behind.
-VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 // Residual (93.44%, re-read 2026-08-21): two clusters plus the EH push
 // addend. (1) Our compile DUPLICATES the try_next_row header (Pick +
 // candidate arithmetic, 10 instructions) into the goto edge where
@@ -2742,6 +2741,7 @@ VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 // ESI at the exit test where retail re-reads its frame slot; the
 // homing rides on the duplication. Not re-ground on the place_obstacle
 // precedent.
+VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
                                     int iSpellPower, int level)
 {
