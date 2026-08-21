@@ -5113,7 +5113,11 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 // diff's apparent table-only-on-our-side is an alignment
                 // artifact). No source knob reaches a `this` register
                 // choice; it is the B-family wall the campaign prices at
-                // ~0 closures.
+                // ~0 closures. The DC roster's two scoped triples named
+                // `part`, `partHigh`, and `partLow` are now restored in both
+                // hero/boat loops below; they compile byte-flat at 87.5901,
+                // closing the last missing-local hypothesis without changing
+                // the allocator wall.
                 signed char bitOffsets = objCell->offsets;
                 signed char bitY = bitOffsets >> 4;
                 bitOffsets <<= 4;
@@ -5258,18 +5262,19 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
             }
 
             if (foundHero || foundBoat) {
-                int firstPart;
-                int lastPart;
+                int part;
+                int partHigh;
+                int partLow;
                 if (row == OBJECT_DRAW_LAYER_HERO_FRONT) {
-                    firstPart = 0;
-                    lastPart = 2;
+                    partLow = 0;
+                    partHigh = 2;
                 } else if (row == OBJECT_DRAW_LAYER_HERO_BACK) {
-                    firstPart = 3;
-                    lastPart = 5;
+                    partLow = 3;
+                    partHigh = 5;
                 } else {
                     continue;
                 }
-                for (int part = firstPart; part <= lastPart; ++part) {
+                for (part = partLow; part <= partHigh; ++part) {
                     if (heroParts[part].IsValid)
                         DrawHeroPart(part, heroParts[part], baseX, baseY,
                                      tilex, tiley, tilew, tileh);
@@ -5302,7 +5307,13 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     }
 
     if (foundHero || foundBoat) {
-        for (int part = 0; part <= 5; ++part) {
+        int part;
+        int partHigh;
+        int partLow;
+
+        partLow = 0;
+        partHigh = 5;
+        for (part = partLow; part <= partHigh; ++part) {
             if (heroParts[part].IsValid)
                 DrawHeroPart(part, heroParts[part], baseX, baseY,
                              tilex, tiley, tilew, tileh);
@@ -5407,7 +5418,9 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         // ours -0x28/-0x38. Tried and rejected: signed offsets hoisted across
         // the arms (79.2763), grouped switch with promoted int offsets
         // (84.7451), function-scope numObj (byte-flat), and the DC pointer
-        // declaration order SprPtr/ObjCell/ObjType (byte-flat).
+        // declaration order SprPtr/ObjCell/ObjType (byte-flat). The DC-backed
+        // final-loop `part`/`partHigh`/`partLow` spelling is also byte-flat and
+        // does not supply retail's missing frame dword.
         signed char yOffset = offsets >> 4;
         offsets <<= 4;
         signed char xOffset = offsets >> 4;
