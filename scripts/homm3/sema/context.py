@@ -213,7 +213,17 @@ class Context:
         return self._report
 
     def fn_fuzzy(self, unit: str, name: str):
-        """fuzzy_match_percent, or None (absent = not diffed, NOT 100)."""
+        """fuzzy_match_percent, or None when the report/unit/function is
+        missing entirely.
+
+        A listed function whose fuzzy_match_percent KEY is absent scored
+        exactly 0.0: report.json is protobuf-JSON, which omits
+        default-valued fields. The earlier reading here ("absent = not
+        diffed") was measured wrong on cmbtmgr LootDeadHero 2026-08-21 -
+        objdiff pairs and diffs the function, and its insert/delete
+        penalty (both sides' unmatched rows against a one-sided
+        max_score, then clamped) produces the exact 0.0 the omission
+        encodes. Absent therefore reads as 0.0, never as "skip"."""
         rep = self.report
         if not rep:
             return None
@@ -221,7 +231,7 @@ class Context:
             if u.get("name") == unit:
                 for fn in u.get("functions") or []:
                     if fn.get("name") == name:
-                        return fn.get("fuzzy_match_percent")
+                        return fn.get("fuzzy_match_percent", 0.0)
                 break
         return None
 
