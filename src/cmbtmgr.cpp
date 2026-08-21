@@ -194,16 +194,16 @@ unsigned char combatManager::LoadWallTraitsTable()
 // quick-combat case as the IF arm and the window construction as the
 // ELSE arm reproduces retail's layout: +2.35.
 //
-// Residual (99.4306%): one scheduling slot, in the inlined `strcpy` of
-// cMgrName. Retail emits BOTH of the block's immediate dword stores
-// back to back ahead of the `or ecx,-1 / xor eax,eax / repne scasb`
-// strlen and puts `lea edx,[ebx+cMgrName]` after `sub edi,ecx`; our CL
-// keeps the first store, hoists the `lea` ahead of the scasb and sinks
-// the second store past the copy. Not source-addressable: swapping the
-// `id = 0x200` and `priority = newPriority` statements so the two
-// immediate stores are adjacent in source measures byte-identical at
-// 99.4306, so VC6 schedules this block independently of the order it
-// is written in.
+// CLOSED 99.4306 -> 100.0000 (2026-08-21), and the note that stood here
+// is a scheduling-verdict cautionary tale. It read "one scheduling
+// slot in the inlined strcpy, not source-addressable" on the evidence
+// that swapping `id = 0x200` and `priority = newPriority` measured
+// byte-identical. True, and the wrong pair: the sunk store was
+// `status = 1` (+0x34), which the source placed AFTER the strcpy while
+// retail stores it ahead of the scasb. Moving the one statement above
+// the strcpy closes the function. Declaration/statement order beat the
+// scheduler again - the A/B had only proven the two IMMEDIATE stores
+// interchangeable, not the block order-free.
 //
 // TRIED AND REJECTED: nesting the two bCreaturePlacement guards instead
 // of the flat `&&`, which is how the branch graph first reads. Measured
@@ -315,9 +315,9 @@ int combatManager::Open(int newPriority)
     field_132e0 = 0;
     priority = newPriority;
     id = 0x200;
+    status = 1;
     strcpy(cMgrName,
            DATA_COMPGEN(0x0066fecc, combatManagerName, "combatManager"));
-    status = 1;
 
     if (bCreaturePlacement
             && gpGame->IsLocalHuman(playerIds[currentSide])

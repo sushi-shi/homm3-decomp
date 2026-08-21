@@ -2129,6 +2129,15 @@ void army::range_attack()
 // the inline (98.8961), and expanding MarkCreatureEffect by hand at
 // this call site instead of calling it (95.0519 - which is the
 // cleanest proof that the header inline is what retail has).
+// Re-diagnosed 2026-08-21: `vc6 diagnose` reads it register-homing at
+// distance 4 (ecx<->ebx), why-reg's model says the bindings agree at
+// every first definition, so the divergence is a C2 addressing-fold
+// tie PAST the model's reach. Hoisting both call arguments into named
+// locals is byte-flat (99.9351). set_inside_area_effect expands the
+// SAME header inline with the same register roles and matches retail's
+// index-first fold at 100.0000, so no per-site source fact selects the
+// fold; the header body is proven and a body respelling would touch
+// its exact sibling. Parked as C2 fold-tie state; two instructions.
 VA(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
 void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
                                 long* fire_damage)
@@ -4752,13 +4761,13 @@ void army::CancelIndividualSpell(int spell)
         frameInfoWalkCycleTime = origWalkCycleTime;
         break;
     case SPELL_AGE: {
-        long hp;
+        int hp;
         if (spellInfluence[SPELL_AGE]) {
             float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+            hp = static_cast<int>(base * poisonPenalty * 0.5f + 0.95f);
         } else {
             float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+            hp = static_cast<int>(base * poisonPenalty + 0.95f);
         }
         hitPoints = hp;
         topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
@@ -4948,7 +4957,13 @@ static void drop_aura_links(army* self)
 // Residual (99.5510%): see the budget-dose and receiver-order notes above the
 // three file-local helpers this body calls. They replace the "unreachable by
 // statement-scoped pins" reading, which was right about the pin and wrong
-// about the wall.
+// about the wall. Down to ~6 instructions in the AGE arm (2026-08-21):
+// retail computes the clamp bound as `mov ecx,eax / dec ecx` AROUND the
+// hitPoints store where we emit store-then-`lea ecx,[eax-1]`. Tried and
+// rejected: `hp--` after the store (dec lands in place, 99.40), a named
+// `cap = hp` copied then decremented, and `cap = hp - 1` declared before
+// the store (both copy-propagated back to the in-place dec, 99.40/99.55).
+// C2's propagation erases every ordering the source can express here.
 //
 // The float constants are read from the image: the factor arms divide
 // the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
