@@ -1921,6 +1921,14 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // structure. Its exact count, placement, macro name and format text remain
 // unattested; the reconstruction emits neither calls nor strings.
 //
+// VERIFY IS MEASURED AND REJECTED (2026-08-21). Ten release-VERIFY scalar
+// comparisons are erased before C2 prices the caller and leave the body at
+// 85.98953. Retaining evaluation through a tiny TU-visible validation helper
+// does enter the inliner, but 10, 11 and 16 such VERIFY sites all plateau at
+// 93.212166 with 177 branches and one return, against retail's 179 and two.
+// The TRACE-shaped carrier below alone reaches the retail CFG and 99.66054;
+// this is compiler evidence, not a choice based on the macro's name.
+//
 // AND THE PARTIAL insert(end(),X) DOSE IS NOW TITRATED (2026-08-20,
 // after the orchestrator reopened the sizing): respelling k of the 49
 // push_back sites measures 85.60 (k=5, arm 1), 89.59 (k=10, arms 1-2),
