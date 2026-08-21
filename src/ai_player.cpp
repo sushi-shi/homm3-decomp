@@ -553,24 +553,38 @@ void type_AI_player::end_turn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (80.5192%; older measurement 79.8885): the 0x7c frame, local
-// offsets, player-id lifetime, threshold block, network payload layouts,
-// dialog flow and timeout tail
-// agree. The local-human gift and single-resource request now use retail's
-// called three-argument string append overload; the multi-resource request
-// assigns its formatted result, reproducing retail's inlined
-// basic_string::assign self/share/grow paths instead of append logic. Scoped
-// inline-depth overrides reproduce the other two call edges. The remaining
-// branch-count delta is three branches: retail inlines the single-request
-// temporary destructor after its called append, while this lexical override
-// calls the destructor. Naming that temporary, direct assign, depth-one, and
-// broader override probes regress or are byte-inert and were reverted. Other
-// residuals are register permutations in the transfer loops and one
-// deliberately retained retail gate after the human transfer.
+// Residual (84.5868%; older measurements 79.8885, 80.5192): the 0x7c frame,
+// local offsets, player-id lifetime, threshold block, network payloads,
+// dialog flow and timeout tail agree. More importantly, all 55 branches,
+// both returns and all 28 out-of-line calls now agree; `diagnose` reports
+// flow-distance zero and only a callee-saved/register-homing permutation.
+//
+// The missing source boundary was narrower than a lexical inline-depth
+// region. The tiny one-body helper below is inlined into both format sites,
+// but pins only the three-argument string::append call inside itself. Thus
+// GetText and each format temporary's destructor compile in the caller at
+// normal depth, exactly reproducing retail. This measured 80.5192 -> 82.58
+// for the single-request site and 82.58 -> 83.89 when shared by the gift
+// site. Spelling `list.clear()` as its direct Dinkumware operation,
+// `erase(begin(), end())`, removes the last wrapper depth and lets the trivial
+// vector `_Destroy` disappear, reaching 84.5868 and the exact call ledger.
+//
+// Naming the temporary, direct assign, depth-one and broader override probes
+// regress or are byte-inert and remain rejected. Other residuals are register
+// permutations in the transfer loops and one deliberately retained retail
+// gate after the human transfer.
 // Release-elided diagnostic carriers at one, two, four and eight entry sites
 // are byte-flat at 80.5192 with the same 52-vs-55 branch count (2026-08-21).
-// The destructor threshold is governed by the explicit inline-depth region,
-// not by this caller-mass family.
+// The recovered branch/call threshold was governed by source scope, not by
+// this caller-mass family.
+
+static inline void append_formatted_ai_message(
+    std::string& message, const std::string& formatted)
+{
+#pragma inline_depth(0)
+    message.append(formatted, 0, std::string::npos);
+#pragma inline_depth()
+}
 
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
@@ -658,17 +672,15 @@ void type_AI_player::make_gift(long player_id)
 
     std::string message;
     if (gpGame->players[player_id].IsLocalHuman()) {
-#pragma inline_depth(0)
-        message.append(format_string(
-                           gpGeneralText->GetText(
-                               GENERAL_TEXT_AI_GIFT_RECEIVED),
-                           gPlayerColorNames[team]),
-                       0, std::string::npos);
-#pragma inline_depth()
+        append_formatted_ai_message(
+            message,
+            format_string(
+                gpGeneralText->GetText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+                gPlayerColorNames[team]));
         extended_dialog(message.c_str(), list, -1, -1, 0);
     }
 
-    list.clear();
+    list.erase(list.begin(), list.end());
     for (resource = 0; resource < 7; resource++) {
         if (surplus[resource] < 0) {
             if (gpGame->players[player_id].IsLocalHuman()) {
@@ -685,14 +697,13 @@ void type_AI_player::make_gift(long player_id)
 
     if (gpGame->players[player_id].IsLocalHuman() && list.size()) {
         if (list.size() == 1) {
-#pragma inline_depth(0)
-            message.append(format_string(
-                               gpGeneralText->GetText(
-                                   GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
-                               gPlayerColorNames[team],
-                               gResourceNames[list[0].resource]),
-                           0, std::string::npos);
-#pragma inline_depth()
+            append_formatted_ai_message(
+                message,
+                format_string(
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
+                    gPlayerColorNames[team],
+                    gResourceNames[list[0].resource]));
         } else {
             message = format_string(
                 gpGeneralText->GetText(
