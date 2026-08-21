@@ -1939,6 +1939,32 @@ TThievesGuildWindow::~TThievesGuildWindow()
 #define HOMM3_THALL_RELEASE_TRACE(text, value)                              \
     (1 ? static_cast<void>(0) : static_cast<void>(printf(text, value)))
 
+// Residual (99.6605%): NOT SOURCE-REACHABLE, and this one is proven rather
+// than asserted. The CODE STREAM IS ALREADY EXACT - 3517 instructions on
+// both sides, identical mnemonics, operands, immediates and displacements,
+// 179 branches against 179, 289 calls against 289. What differs is the
+// SWITCH'S JUMP TABLE, and it differs only in how the two objects SPELL the
+// same nine targets:
+//
+//   ours    2ccc: 00 00 00 00   DIR32 $L69691   (compiler label, addend 0)
+//   retail  787c: 4a 12 00 00   DIR32 ??0THallWindow@@QAE@H@Z  (addend 0x124a)
+//
+// The delinker has no per-label symbols INSIDE a function, so vostok can only
+// express a jump-table target as `<function> + offset`; VC6 emits a `$L`
+// label per arm and relocates against that. objdiff compares the entry bytes,
+// so every one of the nine reads as a mismatch. Nine entries at four bytes
+// plus the `jmp [4*eax + <table>]` operand's own addend is 40 B against this
+// row's 39 B of recoverable mass - the whole of it.
+//
+// THE SAME CEILING BOUNDS EVERY JUMP-TABLE ROW IN THESE UNITS (measured
+// 2026-08-21, self-relocation census): get_spell_work_chance 120 B of table
+// against 152 B recoverable, get_morale_description 40 against 149,
+// get_luck_description 16 against 95, GetArmyMorale 40 against 16, and
+// type_garrison_base_window::WindowHandler 40 against 24. Price a
+// jump-table-bearing row against its table before spending a lane on it, and
+// do not read a 99.x plateau on one as a spelling problem. Fixing it is a
+// PIPELINE change (teach the comparison to resolve a self-relocation addend
+// to the same block the base's `$L` label names), not a source one.
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
 THallWindow::THallWindow(int which)
     : CAdvPopup(0, 0, 800, 600, 0)
