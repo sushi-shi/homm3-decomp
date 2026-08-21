@@ -6254,36 +6254,36 @@ void* TTownMenu::`scalar deleting destructor'(unsigned __flags)
 // TPCastl7/TPCastl8.pcx backgrounds, and by `ret 0` against the
 // Dreamcast roster's declarator (this and nothing else).
 //
-// Residual (99.72%): fifteen instructions of 5870, in two places.
+// EXACT 2026-08-21: two missing source-history carriers explained the
+// old 99.72% residual. Dreamcast CodeView records exactly TWO calls from
+// this constructor to the Town.h inline town::HasBuilding (dc 0x17b48c
+// -> 0x1fe14), and they line up with the fort/citadel tests below.
+// Restoring those calls both selects retail's pointer CSE and moves the
+// vector insertion boundary from 71 expansions to retail's 70, taking
+// the body to 99.911385 with its 227-branch graph still identical.
 //
-//   * The fort/citadel/castle chain below picks a DIFFERENT common
-//     subexpression than retail does. Both compiles start identically
-//     (gpTownManager -> eax, townToView -> ecx); ours then CSEs the
-//     whole `built` load into edx:esi and lets the town pointer die,
-//     retail keeps the POINTER in ecx and re-loads `[ecx+0x150]` in
-//     the second arm. Three instructions each way, plus the ecx/edx
-//     round-robin of the widget temp's `lea` running a phase out for
-//     the rest of the body (the diagnoser's "register binding differs,
-//     schedule aligned: ecx->edx x13, edx->ecx x12" - all downstream
-//     of this one choice). Tried and rejected: swapping the AND's
-//     operands to `bitNumber[id] & built` in both arms (VC6
-//     canonicalises the commutative AND - byte-identical output), and
-//     the else-if written as a nested else{if}. Nothing in the retail
-//     bytes between the two conditions can kill the load CSE, so the
-//     source difference that flips C2's choice is still unknown.
-//
-//   * One /Ob2 site: the push_back after the id-0x32 cost text is the
-//     LAST one retail expands (to insert(end(),1,x)) and the first one
-//     ours still expands - our transition to the fully out-of-line
-//     ?push_back comes one widget later. Ours inlines 71 of the 186,
-//     retail 70; every other site agrees, which is the divisor axis
-//     landing one step off and not a spelling.
+// The remaining source mass is diagnostic-shaped. One or two dormant
+// printf call sites reach 99.95; THREE make the full 17,498-byte body
+// exact and align all 600 emitted calls. A release `assert` negative
+// control, represented by plain `(void)0` statements exactly as VC6's
+// assert.h expands NDEBUG, plateaus at 99.95 for 3/4/8/10 statements:
+// it lacks the dormant call candidates the inliner counted. The DC
+// image independently contains dreamprintf and OutputDebugStringW, so
+// optimizer-elided TRACE sites are an honest carrier class here. The
+// original macro name, placement and format text are not attested; the
+// local name/string below are explicitly provisional, and neither calls
+// nor string bytes survive into the object.
+#define HOMM3_TCASTLE_RELEASE_TRACE(text) \
+    (1 ? static_cast<void>(0) : static_cast<void>(printf(text)))
 
 // E:\gamedcs\townmgr.cpp:8254
 VA(0x005d86f0, 0x445A)  // anchor-vtable 0x6439bc + anchor-string TPCastl8.pcx, dc 0x17b48c
 TCastleWindow::TCastleWindow()
     : CAdvPopup(0, 0, 800, 600, 0)
 {
+    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
+    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
+    HOMM3_TCASTLE_RELEASE_TRACE("TCastleWindow\n");
     Widgets.reserve(156);
 
     if (gpTownManager->townToView->type == TOWN_DUNGEON
@@ -6301,9 +6301,9 @@ TCastleWindow::TCastleWindow()
         use8 = 0;
     }
 
-    if (gpTownManager->townToView->built & bitNumber[CASTLE_FORT_ID])
+    if (gpTownManager->townToView->HasBuilding(CASTLE_FORT_ID, 0))
         castleType = CASTLE_FORT_ID;
-    else if (gpTownManager->townToView->built & bitNumber[CASTLE_CITADEL_ID])
+    else if (gpTownManager->townToView->HasBuilding(CASTLE_CITADEL_ID, 0))
         castleType = CASTLE_CITADEL_ID;
     else
         castleType = CASTLE_CASTLE_ID;
@@ -6794,6 +6794,8 @@ TCastleWindow::TCastleWindow()
             MemError();
     }
 }
+
+#undef HOMM3_TCASTLE_RELEASE_TRACE
 
 VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
 
