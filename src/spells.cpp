@@ -130,7 +130,7 @@ static const char* CreatureName(int type, long count)
 
 // WinGraph.h:55's RGBto16 (dc 0xff780) as retail's spells.cpp saw it -
 // a header inline with no retail out-of-line body, which DrawBolt
-// expands SIX times. Spelled file-locally for exactly the reason
+// expands TEN times. Spelled file-locally for exactly the reason
 // CreatureName below is; mousemgr.cpp already carries its own
 // hand-spelled two-term copy of the same expansion.
 //
@@ -1537,35 +1537,68 @@ static unsigned char gBoltSpectrumColors[15][3] = {
 // either within 2 pixels or has started moving AWAY again (further than
 // field_48 + 1), bAtDestination goes up and DoBolt stops re-aiming it.
 //
-// RGBto16's THREE TERMS ARE EMITTED RIGHT-TO-LEFT, and that reading is
+// RGBto16's THREE TERMS ARE EMITTED RIGHT-TO-LEFT, and that reading was
 // worth 71.63 -> 76.90 on its own: `(r) | (g) | (b)` in source order
 // puts the BLUE term's mask load FIRST in the object, which is retail's
-// order in all six expansions. Writing the return the other way round
+// order in all ten expansions. Writing the return the other way round
 // reverses every one of them.
 //
-// Residual (76.9%): ONE class, the B1 whole-body binding swap
-// (`esi->ebx x36` and its knock-ons). Retail keeps psBolt in EBX for
-// the whole body and has ESI and EDI free for the two pixel
-// coordinates; our CL binds psBolt->ESI, which pushes the y coordinate
-// into the caller-saved ECX and forces a reload of psBolt from [ebp+8]
-// in every arm. Under the RE'd first-fit rule (docs/vc6/regalloc.md)
-// EBX is the THIRD call-crossing pseudo, so retail created two values
-// before the parameter - which the model calls unreachable from a local
-// spelling. Tried and rejected: unnaming iSpanFirst (why-reg's own top
-// pick at -71 masked slots, and it MEASURED 76.90 -> 75.80 - the
-// low-mass inversion); hoisting iX/iY to function scope in either
-// order (byte-flat); declaring `i` at function scope between iLastX and
-// iLastY the way the DC slot order has it (byte-flat, kept for its
-// provenance); all thirteen of why-branch's D-class mutations.
+// 76.8992 -> 94.9073 (2026-08-21): the old B1 "unreachable parameter
+// binding" diagnosis was wrong because the inherited source roster was
+// incomplete. HoMM2's byte-exact DrawBolt (SOURCE/SPELLS.cpp, 0x4254ed)
+// carries two genuinely unused int locals, keeps every rasterizer
+// temporary at function scope, and - decisively - computes the six
+// lightning shades through one named byte `color` before the pixel store.
+// The HoMM3 bitmap is 16-bit, so its corresponding carrier is an unsigned
+// short. Restoring that local makes VC6 bind psBolt to retail's EBX and
+// frees ESI/EDI for the two pixel coordinates. The four DC-named locals
+// are also restored as T_INT4; HoMM2 supplies the fuller lexical order.
+// That wider roster contributes the last small 94.9052 -> 94.9073 scheduling
+// improvement, so it stays as inherited statement-order evidence rather
+// than being trimmed merely because most declarations emit no bytes.
+//
+// Residual (94.91%): the first EBX/EDI/ESI definitions and all 27
+// conditional-branch tokens now agree. The remaining shape difference is
+// one reload-only fall-through block (60 blocks vs retail's 59): our
+// compiler converges the switch arms, then reloads psBolt from [ebp+8],
+// while retail has already restored EBX on every clobbering arm. The four
+// persistent frame homes are also one cycle apart: base assigns
+// spanFirst/spanLast/lastX/lastY to -0xc/-0x10/-0x14/-0x18, retail uses
+// spanLast/lastX/lastY/spanFirst there. Rejected on the improved shape:
+// field-based spanFirst (79.1532), field-based spanLast (93.6996), a
+// 32-bit color (83.2561), and why-reg's previous-coordinate store swap
+// (94.8911 actual fuzzy despite a better masked distance). Block-scoping
+// color and implicit versus explicit narrowing are byte-flat; why-branch's
+// five case-order mutations are flat or worse.
+//
+// ASSERT/TRACE NEGATIVE CONTROL (2026-08-21): identical release-elided
+// call carriers at 1/3/5/8/10/20 sites, distinct format strings at 3/8
+// sites, and 0..8 added file-scope type definitions are all byte-flat.
+// Those source classes are real possibilities, but none selects this
+// function's remaining frame layout.
 VA(0x005a5440, 0x64C)  // order-map+arity, dc 0x154680
 void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
 {
-    long iLastX = static_cast<long>(psBolt->fX);
-    long i;
-    long iLastY = static_cast<long>(psBolt->fY);
-    long iSpanLast = psBolt->iSpanLast;
-    long iSpanFirst = psBolt->iSpanFirst;
-    long iUseThicknessStopOffset = Random(7, 12);
+    int iUseThicknessStopOffset;
+    int iRemaining;
+    int unusedBoltWord6;
+    int unusedDrawWord1;
+    int k;
+    int iX;
+    int i;
+    int iY;
+    unsigned short color;
+    int iSpanFirst;
+    int iLastX;
+    int iLastY;
+    int iSpanLast;
+    int iFromEdge;
+
+    iLastX = static_cast<long>(psBolt->fX);
+    iLastY = static_cast<long>(psBolt->fY);
+    iSpanFirst = psBolt->iSpanFirst;
+    iSpanLast = psBolt->iSpanLast;
+    iUseThicknessStopOffset = Random(7, 12);
 
     { for (i = 0; i < iDrawLength; i++) {
         psBolt->fX = static_cast<float>(
@@ -1591,20 +1624,19 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
             psBolt->fY = 555;
         }
 
-        long iX = psBolt->iX;
-        long iY = psBolt->iY;
+        iX = psBolt->iX;
+        iY = psBolt->iY;
         if (iX == iLastX && iY == iLastY)
             continue;
         iLastX = iX;
         iLastY = iY;
 
-        { for (long k = iSpanFirst; k <= iSpanLast; k++) {
+        { for (k = iSpanFirst; k <= iSpanLast; k++) {
             if (psBolt->bShallow)
                 iY = psBolt->iY + k;
             else
                 iX = psBolt->iX + k;
             if (iX >= 0 && iX < 800 && iY >= 0 && iY < 556) {
-                long iFromEdge;
                 if (k < 0)
                     iFromEdge = k - iSpanFirst;
                 else
@@ -1645,29 +1677,18 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
                     // in full and only the last channel term is
                     // tail-merged between them.
                     if (iFromEdge == BOLT_SPAN_DEPTH_0)
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(255, 255, 255));
+                        color = RGBto16(255, 255, 255);
                     else if (iFromEdge == BOLT_SPAN_DEPTH_1)
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(240, 240, 255));
+                        color = RGBto16(240, 240, 255);
                     else if (iFromEdge == BOLT_SPAN_DEPTH_2)
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(224, 224, 255));
+                        color = RGBto16(224, 224, 255);
                     else if (iFromEdge == BOLT_SPAN_DEPTH_3)
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(216, 216, 255));
+                        color = RGBto16(216, 216, 255);
                     else if (iFromEdge == BOLT_SPAN_DEPTH_4)
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(200, 200, 255));
+                        color = RGBto16(200, 200, 255);
                     else
-                        gpWindowManager->screenBitmap->map[iY * 800 + iX] =
-                            static_cast<unsigned short>(
-                                RGBto16(192, 192, 255));
+                        color = RGBto16(192, 192, 255);
+                    gpWindowManager->screenBitmap->map[iY * 800 + iX] = color;
                     break;
                 default:
                     // Anything outside the six special values is a raw
@@ -1679,7 +1700,7 @@ void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
             }
         } }
 
-        long iRemaining = abs(psBolt->iDestY - psBolt->iY)
+        iRemaining = abs(psBolt->iDestY - psBolt->iY)
             + abs(psBolt->iDestX - psBolt->iX);
         if (psBolt->bDone) {
             if (iRemaining > psBolt->field_48 + 1 || iRemaining <= 2) {

@@ -1682,7 +1682,7 @@ spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
 spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	98.2205	98.2205	98.2205	0x1a5c20
-spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	76.8992	76.8992	76.8992	0x1a5440
+spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	94.9073	94.9073	94.9073	0x1a5440
 spells	?Earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
 spells	?HandleGetTeleportDestination@@YIHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1a37d0
