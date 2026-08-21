@@ -4004,8 +4004,21 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // this body's three tests share ONE dword already in a register. The DC
 // is an older revision; retail's bytes outrank it.
 //
-// Residual (79.80%): register-homing (a whole-region eax/edi parity in
-// the inlined InMapArea walk) plus one DUP-EXIT (9 rets vs retail's 8).
+// 79.7982 -> 83.5000 (2026-08-21): the cursor-type switch was in enum
+// value order, but retail's physical arm order puts HERO before GARRISON.
+// Moving that source block is semantic-order neutral and cuts why-branch's
+// distance 117 -> 105; moving it back is the inverse regression. The
+// post-edit CFG census now agrees at 91 conditional branches and 8 returns
+// (764 instructions / 134 blocks against retail's 770 / 137).
+//
+// The DC local roster was checked at the same time. Sharing its one cTown
+// local across both town arms, widening currCell to that block, and grouping
+// `iTurns, iMouseOffset, currHero, new_cursor, path_cell` at the current-hero
+// block head are all byte-flat, separately and together, so the narrower
+// x86-winning scopes remain below.
+//
+// Residual (83.50%): register-homing (a whole-region eax/edi parity in
+// the inlined InMapArea walk) and three blocks of CFG topology.
 // The old over-call reading is RETIRED: SetPointer is mousemgr's - a
 // cross-TU body is never an /Ob2 candidate, so no budget ever explained
 // the 8-vs-7 call counts (dead-store doses of 16 and 64 statements
@@ -4030,7 +4043,9 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 // `inline_depth` cannot express: pinning the clear() statement would take
 // erase() out of line too, and retail expands that. Recorded so the next
 // lane does not spend a build on the over-inline knob predict-inline's
-// bucket suggests here.
+// bucket suggests here. Release-elided TRACE carriers at 1/3/5/8/10
+// sites are byte-flat at the improved 83.50 baseline as well, so dormant
+// call candidates do not move this particular parent/child boundary.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -4177,6 +4192,16 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                     advCommand = -1;
                 }
                 break;
+            case HERO: {
+                hero* mapHero = gpGame->GetHero(currCell->extraInfo);
+                if (gpGame->OnSameTeam(mapHero->owner, gNetLocalGamePos)) {
+                    new_cursor = 8;
+                    advCommand = 1;
+                } else {
+                    new_cursor = 5;
+                }
+                break;
+            }
             case GARRISON:
                 if (currCell->is_trigger) {
                     garrison& mapGarrison = gpGame->garrisons[currCell->extraInfo];
@@ -4189,16 +4214,6 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 }
                 new_cursor = get_normal_cursor(currCell);
                 break;
-            case HERO: {
-                hero* mapHero = gpGame->GetHero(currCell->extraInfo);
-                if (gpGame->OnSameTeam(mapHero->owner, gNetLocalGamePos)) {
-                    new_cursor = 8;
-                    advCommand = 1;
-                } else {
-                    new_cursor = 5;
-                }
-                break;
-            }
             case MONSTER:
                 new_cursor = 5;
                 break;
