@@ -69,7 +69,7 @@ advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	
 advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
 advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
-advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
+advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	93.7570	93.7570	93.7570	0x18620
 advmgr	?HandleGiftMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6a20
 advmgr	?HandleNetMsg@CAdvMgrNetMsgHandler@@MAEPAVCNetMsg@@PAV2@@Z	98.9292	98.9292	98.9292	0x5e30
 advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@MAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
