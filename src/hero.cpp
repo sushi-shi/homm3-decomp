@@ -6118,6 +6118,12 @@ unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 // back; the site is priced as bounded until a knob exists that imposes
 // a call WITHOUT shrinking the candidate set. basic_string::_Tidy x3
 // vs x2 is the same story's tail.
+// Release-elided diagnostic tails provide that denominator class but not the
+// needed depth selectivity (2026-08-21): one, two and four dead call arms all
+// regress 75.1012 -> 64.6316 with 28 branches against retail's 23; eight fall
+// to 58.6356. They reprice the whole nested bitset/string surface rather than
+// isolating the first `_Xran`. This carrier therefore closes the denominator
+// hypothesis without solving the per-depth boundary.
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
 unsigned char hero::GiveArtifact(const type_artifact* artifact,
                                  unsigned char bAnnounce,
