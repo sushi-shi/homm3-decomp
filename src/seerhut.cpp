@@ -275,12 +275,6 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3);
 
-// seerhut.obj's own primary-skill text builder, 0x56dfa0: it takes the four
-// skill bytes and returns their description. Unclaimed - the call form (both
-// the hidden return pointer and the argument on the stack) is what proves it
-// is not the /Gr fastcall default.
-std::string __stdcall skill_requirement_text(const signed char (&skills)[4]);
-
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()
@@ -384,14 +378,10 @@ void type_experience_quest::SetDefaultText()
 
 
 
-// Residual (95.67%): retail spells the argument address `lea eax,[ecx+0x40]`
-// and keeps `this` in ecx; our CL takes the same three bytes as
-// `add ecx,0x40` and pushes ecx. `homm3 vc6 diagnose` reads it as a
-// scratch-register preference at register-distance 4, flow-distance 0 (its
-// predict-inline UNDER/OVER pair is the name-pairing artefact - the callee is
-// unclaimed). Tried and rejected: `const unsigned char*` parameter, a named
-// `const signed char* skills` local, and a `const signed char (&)[4]`
-// reference parameter - all three give the same `add`.
+// The shared builder at 0x56dfa0 is a member rather than a /Gr free helper:
+// retail loads the hidden return pointer and the skill-array argument on the
+// stack, then preserves `this` in ecx for the call. The same shape appears in
+// the description and default-text callers below.
 // E:\gamedcs\seerhut.cpp
 VA(0x0056d960, 0x22)  // anchor-vtable 0x6417c4 slot 6, retail-only
 std::string type_skill_quest::GetRequirementText()
@@ -472,19 +462,32 @@ void type_skill_quest::Save(TAbstractFile* file)
     file->Write(completionText.c_str(), completionText.length());
 }
 // E:\gamedcs\seerhut.cpp
+// Residual (96.53%): the CFG is exact (13 branches and two returns on both
+// sides). Retail keeps format_string's second return value in eax while it
+// calls string::assign and then destroys that temporary; spelling the value
+// as a named local makes our CL address the same stack slot through ecx and
+// schedules the EH-state store two instructions later. Tried and rejected:
+// the natural assignment (over-inlines assign, 49.37), inline_depth(1)
+// (byte-flat), inline_depth(0) over the whole expression (79.05), a const
+// reference (byte-identical to the named value), and a direct three-argument
+// assign (over-inlines further, 24.45).
 VA(0x0056e0d0, 0x169)  // anchor-vtable 0x6417c4 slot 14 + the shared text-table shape, retail-only
 void type_skill_quest::SetDefaultText()
 {
     const std::string* texts = quest_texts();
-    std::string requirement;
-    requirement = skill_requirement_text(required_skills);
+    std::string requirement = skill_requirement_text(required_skills);
 
     if (proposalText.length() == 0)
         proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
                                      requirement.c_str());
-    if (completionText.length() == 0)
-        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
-                                       requirement.c_str());
+    if (completionText.length() == 0) {
+        std::string formatted =
+            format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                          requirement.c_str());
+#pragma inline_depth(0)
+        completionText.assign(formatted, 0, std::string::npos);
+#pragma inline_depth()
+    }
 }
 
 // Slot 6, the SHORT requirement line, and three of the leaves are a bare
