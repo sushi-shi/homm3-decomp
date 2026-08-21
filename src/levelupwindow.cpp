@@ -60,6 +60,16 @@ static const char* LevelUpSkillName(int encodedSkill)
 // below. Its exact macro name, placement and text are unattested; retail proves
 // only the dead call-candidate shape already established independently by the
 // artifact, THall and TCastle constructors.
+// A genuine release VERIFY interpretation was tested on 2026-08-21 rather
+// than assumed. Nine byte-elided `TownSpecialGrantedMask.size()` expressions
+// give 98.0000%; one through three byte-elided `GetPrimarySkill(0) >= 0`
+// expressions give 98.8241% and four overshoots to 89.1704%; the natural
+// `first_choice == -1 || LevelUpSkillName(first_choice) != 0` precondition
+// gives 98.0000%. Mixing three GetPrimarySkill checks with one size check is
+// still 98.8241%, and mixing them with six size checks is 98.0000%. Therefore
+// the retained carrier cannot honestly be named VERIFY from present evidence:
+// a real VERIFY remains plausible historically, but no tested invariant has
+// its compiler-phase shape.
 // At the new maximum, all 66 branch mnemonics and symbolic targets agree. Base
 // has 1,257 instructions / 119 calls against retail's 1,262 / 120. The residue
 // is the reserve site's coupled `_Destroy`/`size()` inline split plus the
@@ -362,6 +372,14 @@ TLevelUpWindow::~TLevelUpWindow()
 // is therefore a source-input difference we have not found, not a stale-CL
 // artifact. Tried and rejected: repeated longhand tails, switch-vs-if dispatch,
 // reordered selection arms, an inline helper.
+// Macro/source-carrier audit (2026-08-21): conventional release VERIFY of
+// each accept lookup (`(void)((accept = GetWidget(id)) != 0)`) is byte-flat,
+// as are release-elided call-shaped diagnostic doses of 1/3/5/9 sites at
+// entry. Carrying the accept object as its concrete `button*` type is also
+// byte-flat. Enabling from the natural selection invariant
+// `Selected != 0` regresses to 68.2665 and leaves the same branch-shape
+// distance. VERIFY/TRACE/ASSERT source history therefore cannot select the
+// retail tail topology through any conventional release expansion tested.
 // DC-census verdict (2026-08-14): this handler's census is CLEAN. Its
 // `heroWindow::GetWidget` x12 matches our twelve sites exactly and its
 // `widget::set_visible` x4 matches our four send_message pairs. The one

@@ -834,14 +834,31 @@ static int GetMapExtra(type_point point)
 //     not the last: retail's `xor esi,esi` precedes the `add word ptr` on
 //     adjusted_cost in both. +0.52.
 //
-// Residual (98.7182%): one register transposition and its knock-ons.  After
-// the second GetCell retail reloads `source` into EDI and takes the call
-// result into EBX; we do the opposite, and `reg_model` reports the two
-// sides' FIRST definitions agreeing (ebx@4, esi@30, edi@31), so this is
-// past the B1 minimum slice and no declaration order reaches it.  Also
-// still open: the two arms of the entry terrain dispatch share one
-// CalcTerrainCost call in retail (a tail-merge of the two argument-push
-// runs) where our CL emits two.
+// CURRENT 2026-08-21 (99.2000%, from 98.7182%): three source-order facts
+// close every remaining control-flow and size delta.  The rock arm assigns
+// impassable before last_can_stop; the final water/flight choice is written
+// `<=` with water as the fall-through arm; and the first Dimension Door arm
+// sets the bit before adding 500.  The last spelling makes VC6 use retail's
+// two-byte `or al,80h` instead of a six-byte `or esi,80h`.  Both objects are
+// now 0xa94 bytes and their 116 branches plus one return agree exactly.  The
+// old note's claimed two-call entry dispatch was stale: both current objects
+// already tail-merge the boat/land pushes into one CalcTerrainCost call.
+//
+// Residual (99.2000%): the initial Nomad predicate is scheduled differently,
+// then after the second GetCell retail keeps `source` in EDI and the result in
+// EBX while our compiler does the reverse. `why-reg --model` confirms both
+// sides have identical first definitions (ebx@4, esi@30, edi@31), placing the
+// swap beyond the B1 minimum slice.  Rejected at this plateau: swapping the
+// srcGround/predicate order (98.4199%); bool, an explicit army pointer, a
+// one-site inline predicate helper, and `register` on either competing value
+// (all byte-flat); and 1/2/4/6 complete local type definitions (byte-flat
+// across all findpath rows, with all thirteen exact functions preserved).
+// DC-local follow-up: moving candidate and the three path flags to function
+// scope/order is byte-flat; spelling source_terrain/terrain as TTerrainType is
+// byte-flat but rejected because the required bitfield-to-enum casts violate
+// the zero-cast cleanliness floor; reversing the two diagonal corner
+// declarations regresses to 99.19779%; and DC's const srcCell cannot be
+// expressed without changing the still-non-const NewmapCell accessors.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
 void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                                          long turn_mobility, long maxMobility,
@@ -883,9 +900,9 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
         long cost;
         if (destGround == eTerrainRock) {
             cost = 0;
+            impassable = 1;
             candidate.last_can_stop = 0;
             candidate.adjusted_cost += 100;
-            impassable = 1;
         } else if (candidate.dimension_door) {
             cost = 0;
             candidate.adjusted_cost += 100;
@@ -1039,8 +1056,8 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                 continue;
             if (source->magic_forbidden)
                 continue;
-            candidate.adjusted_cost += 500;
             candidate.dimension_door = 1;
+            candidate.adjusted_cost += 500;
             // Spell 8 is Dimension Door - the id is spelled as a literal
             // for the same reason GetTerrainCost spells artifacts 0x48 and
             // 0x5a as literals: naming it means a new enumerator in
@@ -1119,7 +1136,17 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                 cost = current_hero->get_spell_level(
                            8, current_hero->get_special_terrain()) == eMasteryExpert ? 200
                                                                        : 300;
-            } else if (flight_level > water_walk_level) {
+            } else if (flight_level <= water_walk_level) {
+                if (!current_hero->IsWieldingArtifact(0x5a))
+                    candidate.adjusted_cost += 500;
+                candidate.water_walking = 1;
+                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
+                                       iPathfinding, destCell->RoadSet,
+                                       candidate.flying ? flight_level : -1,
+                                       water_walk_level, native_terrain,
+                                       hasNomad);
+                candidate.move_left = land_movement - cost;
+            } else {
                 if (!current_hero->IsWieldingArtifact(0x48))
                     candidate.adjusted_cost += 500;
                 candidate.flying = 1;
@@ -1129,16 +1156,6 @@ void searchArray::TestPossibleDirections(hero* current_hero, pathCell* source,
                                        candidate.water_walking
                                            ? water_walk_level : -1,
                                        native_terrain, hasNomad);
-                candidate.move_left = land_movement - cost;
-            } else {
-                if (!current_hero->IsWieldingArtifact(0x5a))
-                    candidate.adjusted_cost += 500;
-                candidate.water_walking = 1;
-                cost = CalcTerrainCost(srcCell, direction, turn_mobility,
-                                       iPathfinding, destCell->RoadSet,
-                                       candidate.flying ? flight_level : -1,
-                                       water_walk_level, native_terrain,
-                                       hasNomad);
                 candidate.move_left = land_movement - cost;
             }
         }

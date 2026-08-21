@@ -328,6 +328,15 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 // (2026-08-21): `(void)gpCombatOptionsWindow->Widgets.size()` leaves
 // 83.35985 and the same 28-vs-27 partial branch census/two polarities.
 // Validation mass therefore cannot select retail's tail phase here.
+// Four direct source-shape probes now bound the two tail classes as well
+// (2026-08-21). Giving SHOW_GRID/MOVEMENT_SHADOW/MOUSE_SHADOW private
+// `UpdateCombatOptions` returns leaves the two missing GetWidget/send_message
+// pairs merged and falls to 80.0076; open-coding those three helper bodies is
+// byte-flat at 83.35985. Making DIALOG_RETURN_SPLIT_ACCEPT an outlier `case`
+// in the dense switch adds four branches and falls to 77.4735. Finally, the
+// positive audio-enabled spelling (`if (volume || ds) { ... } else goto`) is
+// byte-identical to the retained negative guard. The two polarity flips and
+// the three-way widget-tail merge are therefore not source-addressable here.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int CombatOptionsWindowHandler(message& msg)
 {

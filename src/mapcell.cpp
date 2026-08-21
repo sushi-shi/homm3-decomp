@@ -951,29 +951,46 @@ static void resizeSeerHutList(NewfullMap* map, int count)
 // costs 82.8043 -> 82.4190 here. Also still true from the old note: the
 // budget-starved-helper treatment on the same site scores 77.2574.
 //
-// SWEPT 2026-08-20 for the DUP-EXIT `sema diff --branches` reports (10 rets
-// against retail's 9) and for the #7 polarity flip, and both are ONE FACT:
-// retail's `Read(&count)` failure does not get its own epilogue, it jumps
-// FORWARD (`jb`) into the block the loadTownEventList failure already owns,
-// while ours emits `jae` over a local `return -1`. Underneath that sits the
-// same binding story readResourceData has - retail parks `two_layers` in EBX
-// from the prologue (`mov ebx,[ebp+0x10]` before the esi/edi pushes, then
-// `test bl,bl` at the second-layer test) and RELOADS `infile` from [ebp+0x8]
-// at every use, loading it into EDI only once `size` is dead; we cache
-// `infile` in EBX and re-read `two_layers` as a byte. Every recycled-slot
-// difference downstream is that swap - retail lands `count` in [ebp+0xa] and
-// the seer-hut index in [ebp+0xc], we use [ebp+0xe] and [ebp+0x8].
-// One thing that is NOT the binding and is worth a look: of the nineteen
-// clear() sites, seventeen match instruction for instruction and exactly two
-// do not - the gpGame members at +0x4e3a8 and +0x4e3c8. At those two retail
-// expands further than we do, calling a destroy helper and then storing
-// `_Last = _First` back (`mov [edi+8],eax`), where we stop at the erase
-// wrapper. Their neighbours at +0x4e3b8 and +0x4e3d8 are byte-identical, so
-// this is per-instantiation, not per-caller.
+// 82.8043 -> 84.2722 (2026-08-21): the DUP-EXIT and #7 polarity were one
+// source fact after all. Retail's `Read(&count)` failure jumps FORWARD (`jb`)
+// into the failure tail shared with loadTownEventList; spelling that edge as
+// an explicit goto removes our private epilogue. The branch structure is now
+// exact: 14 branches, 9 returns, and every mnemonic and symbolic target agree.
+//
+// Residual (84.2722%): the same binding story readResourceData has. Retail
+// parks `two_layers` in EBX from the prologue (`mov ebx,[ebp+0x10]` before
+// the esi/edi pushes, then `test bl,bl`) and RELOADS `infile` from [ebp+8]
+// until `size` dies; we cache `infile` in EBX and re-read `two_layers` as a
+// byte. Every recycled-slot difference downstream follows that swap.
+// Seventeen of the nineteen clear() sites agree, but the garrison (+0x4e3a8)
+// and university (+0x4e3c8) instantiations expand one level further in retail,
+// through two nested helpers before `_Last` is reset. Their immediate
+// neighbours are exact, so this is per-instantiation. A same-TU wrapper around
+// the garrison clear is byte-flat. Direct `erase(begin(),end())` does reach a
+// deeper helper, but is the wrong phase: garrison alone scored 82.6483 on the
+// old body, and both direct erases on the corrected shared-tail body fall
+// 84.2722 -> 76.2661 while growing 14 branches to 18. Neither is retained.
+//
+// LANDED 2026-08-21 (84.2722 -> 92.201836). Dreamcast CodeView names the
+// seer-hut induction local `int sprite_num`; restoring its signed type first
+// raises this body to 89.42508%, while `volatile int` regresses to 84.06422%.
+// On that source-evidenced phase, a conventional release VERIFY of `infile`
+// is byte-flat, but evaluating the natural byte-domain invariant
+// `two_layers == 0 || two_layers == 1` raises it again to 92.201836%. VC6
+// proves the comparison dead, so it emits no check; the front-end expression
+// instead reprices the parameter handles toward retail's EBX-bound
+// `two_layers`. The macro name and exact original invariant remain
+// unattested, so the spelling below records the proven carrier class.
+#define HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(expression) \
+    static_cast<void>(expression)
+
 VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
                      int saveVersion)
 {
+    HOMM3_MAPCELL_LOAD_RELEASE_VERIFY(
+        two_layers == 0 || two_layers == 1);
+
     Init(size, two_layers);
 
     if (loadMapLayer(infile, size, 0, saveVersion) < 0)
@@ -1015,14 +1032,14 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
 
     short count;
     if (infile->Read(&count, sizeof(count)) < sizeof(count))
-        return -1;
+        goto load_failure;
 
     resizeSeerHutList(this, count);
     // Retail CALLS vector<TSeerHut>::size (0x5066b0) in this loop's
     // condition - twice, once at entry and once on the back edge - where our
     // CL expands it. The pin is lexical, so restoring the depth before the
     // body leaves the body's own decisions alone.
-    unsigned int i;
+    int i;
 #pragma inline_depth(0)
     for (i = 0; i < SeerHutList.size(); ++i)
 #pragma inline_depth()
@@ -1039,11 +1056,16 @@ int NewfullMap::Load(TAbstractFile* infile, int size, unsigned char two_layers,
     if (loadTimedEventList(infile, saveVersion) < 0)
         return -1;
     if (loadTownEventList(infile, saveVersion) < 0)
-        return -1;
+        goto load_failure;
 
     IncProgressBar(1);
     return 0;
+
+load_failure:
+    return -1;
 }
+
+#undef HOMM3_MAPCELL_LOAD_RELEASE_VERIFY
 
 // E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
 // three are members of NewfullMap. Retail inlines each at its only call
@@ -1785,6 +1807,14 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 // Second, smaller: the two byte locals occupy the OPPOSITE dead parameter
 // homes. Retail reads `char_buffer` at [ebp+0xb] and the uninitialised
 // TreasureData first byte at [ebp+0xf]; we have them the other way round.
+// Hoisting the DC-roster's `treasure` record to function scope is bounded
+// too (2026-08-21): it constructs the record before the presence byte and
+// falls from 76.9111% to 43.6778%. Retail's conditional lifetime is real;
+// the Dreamcast BPREL roster does not imply x86 function scope.
+// The two direct live-range aliases are also bounded (2026-08-21): a file
+// pointer used for all four reads, a customTreasure reference, and both as
+// explicit pointers together are byte-flat at 76.9111%. C1 folds every alias
+// before allocation, so none reaches the EDI/EBX ownership decision.
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
@@ -2198,6 +2228,47 @@ static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
     return 0;
 }
 
+// Three one-call /Ob2 budget devices for loadBlackBox. The DC roster has no
+// intervening rows, so these are not claims about retail source boundaries;
+// VC6 expands all three and emits no out-of-line copies. Their measured dose
+// curve and the residual they leave are recorded on loadBlackBox below.
+static int loadBlackBoxResources(TAbstractFile* infile,
+                                 BlackBoxData* thisBox)
+{
+    int value;
+    for (int i = 0; i < 7; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->ResQty[i] = value;
+    }
+    return 0;
+}
+
+static int loadBlackBoxDwordBonuses(TAbstractFile* infile,
+                                    BlackBoxData* thisBox)
+{
+    int value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->ExperienceBonus = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->ManaBonus = value;
+    return 0;
+}
+
+static int loadBlackBoxPrimarySkills(TAbstractFile* infile,
+                                     BlackBoxData* thisBox)
+{
+    signed char value;
+    for (int i = 0; i < 4; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->PrimarySkillBonus[i] = value;
+    }
+    return 0;
+}
+
 // E:\gamedcs\mapcell.cpp:1914
 // The load twin of saveBlackBox, field for field, plus the one thing Save
 // has no counterpart for: a save VERSION, which picks the creature id's
@@ -2213,25 +2284,32 @@ static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
 // local that is then masked - the same asymmetric artifact crossing
 // loadMonsterList has.
 //
-// Residual (89.8635%): every read, every field and every list is retail's;
-// the divergence is ONE inline decision. Retail CALLS
-// vector<SecondarySkillData>::erase out of the first resize and inlines it
-// (as copy + _Destroy, then as a raw copy loop) for the two later int
-// lists; this compile inlines all three, so its /Ob2 budget is still above
-// the 8-byte element's erase cost where retail's has fallen below it.
-// diagnose routes it to predict-inline and reports exactly `1 over-inline`.
-// The budget follows the caller's front-end mass, and this caller is a
-// faithful transcription of a body the DC roster gives as one function with
-// three parameters and six locals - so there is no statement to remove.
-// Measured on the way: consolidating the locals from twelve to six bought
-// back retail's reclaimed parameter slot for the byte local (89.7740 ->
-// 89.8635) but did not move the inline decision.
+// 89.8635 -> 94.4115 -> 95.0000 (2026-08-21): the residual really was the
+// sequential /Ob2 budget. Retail CALLS vector<SecondarySkillData>::erase out
+// of the first resize and, one level later, calls `copy` inside the artifact
+// vector's resize; the original compile expanded both. Lifting the seven
+// resource reads and four primary-skill reads into the one-call helpers above
+// crosses the first boundary (94.4115). Lifting the two dword bonuses as the
+// third, smaller dose crosses the nested copy boundary too: predict-inline's
+// direct call ledgers are now exact, 9 against 9.
+//
+// Residual (95.0000%): the dword helper also changes two early failure exits.
+// Retail keeps an epilogue after each read; this compile inlines the helper
+// and merges its two `return -1` paths, so branch counts happen to agree
+// 46/46 but base has 8 returns against retail's 10 and branch #4/#5 have the
+// opposite fall-through sense. Direct dword reads restore retail's 10 exits
+// but leave `copy` expanded and score 94.4115, so the higher call-exact phase
+// is retained under the MAX rule. Calibrated negatives: primary helper alone
+// 89.8380, resource helper alone byte-flat at 89.8635, and replacing the
+// dword helper with the branch-free artifact-list helper overshoots to
+// 89.7463 (10 calls vs retail 9, 45 branches vs 46). The three-helper dose is
+// the measured peak; do not re-spend these boundaries without a new source
+// fact.
 VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
                              int saveVersion)
 {
     signed char value;
-    int dwordValue;
     int count;
     int i;
 
@@ -2243,12 +2321,8 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
             return -1;
     }
 
-    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+    if (loadBlackBoxDwordBonuses(infile, thisBox) < 0)
         return -1;
-    thisBox->ExperienceBonus = dwordValue;
-    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
-        return -1;
-    thisBox->ManaBonus = dwordValue;
 
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
         return -1;
@@ -2257,16 +2331,10 @@ int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
         return -1;
     thisBox->LuckBonus = value;
 
-    for (i = 0; i < 7; ++i) {
-        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
-            return -1;
-        thisBox->ResQty[i] = dwordValue;
-    }
-    for (i = 0; i < 4; ++i) {
-        if (infile->Read(&value, sizeof(value)) < sizeof(value))
-            return -1;
-        thisBox->PrimarySkillBonus[i] = value;
-    }
+    if (loadBlackBoxResources(infile, thisBox) < 0)
+        return -1;
+    if (loadBlackBoxPrimarySkills(infile, thisBox) < 0)
+        return -1;
 
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
         return -1;
@@ -2834,18 +2902,11 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 
 #endif  // @carcass
 
-// The nine-byte serialized spell set, unpacked a bit at a time.  Three sites
-// deserialize one - readTownData's two masks and readHeroData's - and all
-// three are written through a helper rather than longhand for the same
-// per-caller /Ob2 reason readQuestGuardArm and resizeSeerHutList exist: a
-// function this small cannot afford the register/scheduling mass the loop
-// costs its caller, and the caller comes out closer to retail without it.
-// Worth 69.8694 -> 71.9069 on readHeroData; on readTownData it is only
-// 82.0000 -> 82.0785, which is inside the noise and kept for uniformity
-// rather than for the score.
-//
-// They cost no symbol - mapcell.obj still carries exactly 67 functions -
-// because /Ob2 expands them at every one of the three sites.
+// readTownData's two nine-byte spell masks share this /Ob2 codegen helper.
+// It costs no symbol because VC6 expands it at both call sites.  readHeroData
+// deliberately keeps the analogous loop in its body: that common inlining
+// context lets VC6 share the two bitset<70>::_Xran exception-object homes and
+// is part of its current 91.6097% result (see the residual note there).
 //
 // The `/ 8` and `% 8` are SIGNED: retail's `and ecx,0x80000007` with its
 // negative fixup, and the `cdq / and edx,7 / add / sar 3` pair, are what an
@@ -2862,8 +2923,7 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 // Retail readHeroData is the exact mirror: no _Xran call at all, and
 // __CxxThrowException@8 (0x617547) TWICE - one expansion for its mask loop and
 // one for the single-spell store in the Armageddon's Blade arm.  So the two
-// functions were written against different spellings and cannot share one
-// helper:
+// functions use different spellings:
 //   readTownData   `set(i, v)`      82.0785 -> 94.3896  (+12.31)
 //   readHeroData   `(*spells)[i]=v` 83.7667; `set(i, v)` costs it 83.7528,
 //                  and `spells.set(spell, 1)` on the single-spell store costs
@@ -2872,14 +2932,7 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 // that one wrote a single mask longhand to split the two range checks apart,
 // which is not what retail did - retail keeps both loops the same shape and
 // moves the whole throw out of line by LOWERING THE STORE'S DEPTH.
-static void unpackSpellMask(std::bitset<70>* spells,
-                            const unsigned char* mask)
-{
-    for (int i = 0; i < 70; ++i)
-        (*spells)[i] = (mask[i / 8] & (1 << (i % 8))) != 0;
-}
-
-// readTownData's spelling: `set` one level down, so `_Xran` stays a CALL.
+// readTownData's spelling is `set`, one level down, so `_Xran` stays a CALL.
 static void unpackTownSpellMask(std::bitset<70>* spells,
                                 const unsigned char* mask)
 {
@@ -2950,26 +3003,40 @@ static int readTownEvent(TAbstractFile* infile, TTownEvent* thisEvent,
 // if that slot is playable at all, else the town's own owner, else a roll -
 // widened to nine alignments only when the scenario is expansion-era.
 //
-// Residual (94.3896%): 82.0785 -> 94.3896 on the bit-store depth, 2026-08-20
-// (unpackTownSpellMask's note has the derivation).  What is left is NOT the
-// inliner any more - predict-inline reports the call multisets AGREE, 24
-// against 24, where before the edit it read 23 against 24 with retail's lone
-// bitset<70>::_Xran unaccounted for.  The rest is register/scheduling:
-// why-branch still has base 50 vs retail 54 conditional branches.
+// 94.3896 -> 95.1600 (2026-08-21): the town-event loop counts DOWN from
+// `numTownEvents`, as retail's copy-to-counter / `dec` / `jne` transcript
+// proves.  The former zero-up `count < numTownEvents` loop was the remaining
+// source-level loop mismatch.
+//
+// Residual (95.1600%): the call multisets agree at 24/24 and the control-flow
+// census now agrees at 54 conditional branches and 12 returns.  What remains
+// is placement plus C1 register/stack homing: retail keeps `infile` in ESI and
+// uses EDI for the mask/event loops, while this compile keeps `infile` in EDI
+// and uses ESI for those loops.  Retail also recycles incoming parameter homes
+// for the identifier/alignment scratch values where this compile uses negative
+// locals.
+//
+// Dreamcast-local audit (2026-08-21): restoring its declaration order and
+// reusing its sole `char_buffer` for the trailing alignment byte are both
+// byte-flat at 95.1600% and are retained as the stronger source model.  Using
+// that same roster literally for the army-width conversion - shared
+// `char_buffer`/`short_buffer`/`int_buffer` instead of the scoped signed
+// byte/short/value temporaries - regresses to 94.9926%; the x86 block locals
+// below are retained.
 VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TScenarioTown> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
                              int mapVersion)
 {
-    TScenarioTown tempTown;
-    char char_buffer;
-    short short_buffer;
+    char padding[3];
     int int_buffer;
+    TScenarioTown tempTown;
+    short short_buffer;
+    int count;
+    int x;
     int numTownEvents;
     unsigned char inBuf[6];
+    char char_buffer;
     unsigned char spellBuf[9];
-    char padding[3];
-    int x;
-    int count;
 
     townObject->extraInfo = gpGame->scenarioTowns.size();
     tempTown.townType = objectTypes[townObject->typeIndex].extra;
@@ -3056,23 +3123,23 @@ int NewfullMap::readTownData(TAbstractFile* infile, CObject* townObject,
         < sizeof(numTownEvents))
         return -1;
 
-    for (count = 0; count < numTownEvents; ++count) {
+    for (count = numTownEvents; count > 0; --count) {
         TTownEvent thisEvent;
         readTownEvent(infile, &thisEvent, mapVersion);
         thisEvent.TownNum = gpGame->scenarioTowns.size();
         TownEventList.push_back(thisEvent);
     }
 
-    char alignment = -1;
+    char_buffer = -1;
     if (mapVersion >= 28)
-        infile->Read(&alignment, sizeof(alignment));
+        infile->Read(&char_buffer, sizeof(char_buffer));
 
     if (objectTypes[townObject->typeIndex].objectType == RANDOM_TOWN) {
-        if (alignment != -1
-            && (gpGame->mapHeader.playerSlotAttributes[alignment].CanBeHuman
-                || gpGame->mapHeader.playerSlotAttributes[alignment]
+        if (char_buffer != -1
+            && (gpGame->mapHeader.playerSlotAttributes[char_buffer].CanBeHuman
+                || gpGame->mapHeader.playerSlotAttributes[char_buffer]
                        .CanBeComputer)) {
-            tempTown.townType = gpGame->setup.alignment[alignment];
+            tempTown.townType = gpGame->setup.alignment[char_buffer];
         } else if (tempTown.playerOwner != -1) {
             tempTown.townType = gpGame->setup.alignment[tempTown.playerOwner];
         } else {
@@ -3204,136 +3271,38 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 // conversion - pick_alignment does exactly the same thing to its loop index,
 // and the cast-into-an-enum floor is why.
 //
-// 71.9069 -> 83.7667 -> 86.7264, 2026-08-20: one pin and then two doses of
-// the /Ob2 caller-shrink (see readHeroSecondarySkills above).  The diagnosis
-// this note used to carry was WRONG, so read the correction before
-// re-deriving it.
+// 71.9069 -> 83.7667 -> 86.7264 -> 89.3222 (2026-08-20): one call-site pin,
+// two /Ob2 caller-shrink doses, block-scoped scratch reads, and a const-ref
+// binding for ReadLengthPrefixedString's returned temporary.  The smallest
+// shrink dose, readPrimarySkills, is the peak; lifting either artifact loop,
+// the whole tail, or the Armageddon's-Blade arm overshoots and loses.
 //
-// Residual (88.5042%): the frame is still 0xe4 against retail's 0xc4, which
-// says 32 bytes of locals retail does not have - the sign the frame sweep
-// calls "a value that could not reach a dead parameter home".  Two of the
-// four have been paid off (2026-08-20): block-scoping the three scratch reads
-// put `int_buffer` in retail's own [ebp+8] and the name flag in [ebp+0xb]
-// (+0.11), and binding ReadLengthPrefixedString's return by const reference
-// instead of copying it into a named local removed a whole 16-byte string
-// object (+1.67, frame 0xf4 -> 0xe4).  What is left sits between `padding`
-// (ours [ebp-0x8c], retail [ebp-0x6c] - the deepest non-tempText local on
-// both sides) and the shallow byte locals, where retail uses [ebp-0x5c] for
-// TWO objects our compile gives separate slots.  Find those 32 bytes before
-// spending anything on the throw paths below - a frame delta shifts every
-// deep local and reads as a score hole on its own.
+// 89.3222 -> 91.6097 (2026-08-21): putting the 70-bit mask loop back in this
+// caller lets VC6 allocate BOTH inlined bitset<70>::_Xran paths from one
+// front-end context, so their string/out_of_range objects finally share stack
+// homes.  Replacing the default-constructed named `noSpells` with the direct
+// `std::bitset<70>(0)` assignment supplies the other half of the gain.  The
+// branch transcript is now exact: 53 branches, two returns, with every
+// mnemonic and symbolic target agreeing.
 //
-// THE 32 BYTES ARE NOW READ OFF THE SLOT MAPS, AND THEY ARE THE THROW PATH
-// ITSELF (2026-08-20), so the two paragraphs are one problem and not two.
-// Retail's Armageddon's-Blade spell arm builds exactly TWO objects - the
-// "invalid bitset<N> position" string at [ebp-0x40] and the out_of_range at
-// [ebp-0x5c] - and calls out to construct the second from the first.  Ours
-// builds FOUR: the string at [ebp-0x4c], an intermediate at [ebp-0x70], the
-// thrown object at [ebp-0x7c], and a fourth constructed out of the recycled
-// [ebp+0xc] parameter home.  That is the `logic_error(const string&)` base
-// construction expanded in place, and its objects are what push `padding`
-// from retail's [ebp-0x6c] down to our [ebp-0x8c].  Two doses measured
-// against it and BOTH lose, so record them before re-trying:
-//   * `hero_data->spells.set(spell, 1)` instead of `spells[spell] = 1`
-//     costs 1.26 (88.5042 -> 87.2472).  Note the direction: `[i] = 1` runs
-//     operator[] -> reference::operator= -> set -> _Xran, one level DEEPER
-//     than `set(i,v)`, and deeper is what keeps the throw out of line here.
-//   * lifting the whole artifacts block into a single-call-site static -
-//     the caller-shrink that paid +12.20 on armygrp's get_morale_description
-//     the same round - costs 1.96 (-> 86.5417).  This body is not starved of
-//     budget the way that one was.
-// THE DOSE WAS THE WRONG SIZE, NOT THE WRONG LEVER (2026-08-20).  The
-// `if (0)` cb instrument settles the direction first: GROWING this caller is
-// 88.5042 -> 87.6139 (N=12) -> 86.3708 (N=28) -> 84.3778 (N=60), monotone
-// down, so shrink was always right and the artifacts block simply overshot.
-// The SMALLEST liftable block wins - the four-iteration primary-skills read,
-// `readPrimarySkills`, is worth +0.82 (88.5042 -> 89.3222) and brings
-// `logic_error(const string&)` OUT of line at both throw sites, which is
-// exactly the expansion this note names.  Titrated: the equipped-artifact
-// loop alone is 87.86, the backpack loop alone 87.86, and BOTH of them on
-// top of the primary-skills dose 86.54 - so one dose is the peak here.
-// Retail's own slot map also puts `noSpells` shallow (its three dwords at
-// [ebp-0x24]/[ebp-0x20]/[ebp-0x1c]) where ours sits deep at [ebp-0x60].
+// Residual (91.6097%): pure C1 register/stack homing.  The frame is 0xe4
+// against retail's 0xc4.  Both of our throw expansions now reuse string
+// [ebp-0x4c] and out_of_range [ebp-0x7c]; retail reuses [ebp-0x40] and
+// [ebp-0x5c].  Our 12-byte zero bitset lives at -0x60/-0x5c/-0x58 versus
+// retail's shallow -0x24/-0x20/-0x1c.  `why-reg --model` sees the same three
+// callee-saved pseudos but a different processing order (ours EDI,EBX,ESI;
+// retail EDI,ESI,EBX), and the EH-state transcript is ours [0,-1,2,3] versus
+// retail [0,-1,1,2].  There is no remaining CFG hypothesis to chase.
 //
-// Under that: the two inlined bitset<70>::_Xran throw paths, and
-// specifically the `logic_error::logic_error(const string&)` (0x4c3090) that
-// retail CALLS inside each of them - at fn+0x5c3 and fn+0x773 - where we
-// still expand it.  Everything else in the call sequence pairs off site for
-// site: ReadHeroId +0x7b, GetStartingHeroId +0x18c/+0x192,
-// ReadLengthPrefixedString +0x4ad/+0x4af, the pinned three-argument assign
-// +0x4cc/+0x4cb, operator delete +0x4f4/+0x4f3, _Tidy and __CxxThrowException
-// in both throw paths, FindTrigger at the tail.  Note the two throws are NOT
-// identical in retail either - the first reaches 0x404150 and the second
-// 0x404a90 plus 0x404a70 - which is the string being built from two different
-// shapes, and is worth reading before assuming one fix covers both.
+// Two inlining facts remain deliberate.  Retail reaches
+// __CxxThrowException@8 twice and never calls bitset<70>::_Xran, so both bit
+// stores use `operator[]` -> `reference::operator=` -> `set`; spelling either
+// one as `set(pos,val)` makes the throw stay out of line and loses.  Conversely,
+// retail CALLS the three-argument basic_string::assign at the hero-name store;
+// the statement-scoped inline_depth(0) below prevents VC6 from expanding that
+// call and dragging fifteen unrelated string helpers into this function.
 //
-// The old text blamed `std::bitset<70>::_Xran` and concluded "no source
-// spelling reached the _Xran decision, and auto_inline(off) cannot reach it
-// either: the callee is a library template this TU never defines". Both
-// halves were true and the conclusion was not, because the residual was not
-// _Xran at all. It was `basic_string::assign(const basic_string&, size_t,
-// size_t)` at the hero-name store: retail CALLS it, our CL expanded it, and
-// the expansion is what dragged in _Grow x4, _Split x2, _Eos, memmove,
-// char_traits::assign, the free std::_Xran, the exception and logic_error
-// constructors and a string copy constructor - fifteen unmatched calls
-// against retail's eight, which is where the 21-vs-13 came from.
-//
-// The old note even names the evidence and then walks past it ("retail does
-// CALL that same three-argument assign where we expand it, a second site of
-// this very class"). What was missing was the lever, not the reading:
-// a STATEMENT-SCOPED `#pragma inline_depth(0)` on the assign. It is not a
-// source spelling, so "no spelling reaches it" never argued against it, and
-// unlike auto_inline it does not need the callee's definition to be in this
-// TU - it suppresses expansion at the CALL SITE. predict-inline now reads
-// 14 against 13.
-//
-// Kept from the old note because they still hold: writing both spell-mask
-// writes as `spells[i] = ...` rather than `set(i, ...)` (-> 69.8688), and
-// readObjectType's exactness proving bitset<48>::_Xran (0x41b410) is CALLED
-// on both sides.
-//
-// AND THAT FIRST ONE NOW HAS ITS CAUSE (2026-08-20).  It is not a preference:
-// retail readHeroData reaches __CxxThrowException@8 TWICE and never calls
-// bitset<70>::_Xran, so BOTH of its bit stores expand the throw inline, which
-// is what `operator[]` -> `reference::operator=` -> `set` produces and what
-// `set(pos, val)` does not.  readTownData is the mirror and needs `set` -
-// hence the two helpers.  Re-measured here: `set` in the mask helper costs
-// 83.7667 -> 83.7528, and `spells.set(spell, 1)` on the single-spell store
-// costs 83.7528 -> 81.4958.
-//
-// Moving the mask loop into unpackSpellMask is worth another two points
-// (69.8688 -> 71.9069) WITHOUT moving the wall - predict-inline still reads
-// 21 against 13 afterwards, so the gain is layout and register assignment,
-// not the _Xran decision. The same treatment on the single-spell store
-// (`setHeroSpell(&spells, spell)`) goes the other way, 71.9069 -> 70.1832,
-// and was reverted: one bit is not enough mass for the helper to pay for
-// itself.
-//
-// SWEPT THE FRAME 2026-08-20 and it names the rest of the residual precisely.
-// We are `sub esp, 0xf4` against retail's `sub esp, 0xc4` - FORTY-EIGHT bytes
-// too large, which on the SKILL's own scale (a 4-byte delta reads as a ~15%
-// hole) is most of what is left. The 100-byte tempText matches exactly on
-// both sides (`mov ecx,0x18 / rep stosd / stosw / stosb` plus the leading
-// byte store), and so does every scalar; the whole excess is in the throw
-// region between the array and the scalars - retail spends 0x2c there
-// (a 16-byte string at [ebp-0x6c] and a 28-byte out_of_range at [ebp-0x5c]),
-// we spend 0x5c.
-//
-// AND IT IS NOT AN EXTRA OBJECT AT SOURCE LEVEL - it is the SAME TWO OBJECTS
-// FAILING TO SHARE SLOTS. Both sides expand the out_of_range throw twice, as
-// the paragraph above establishes; retail reuses one string/out_of_range pair
-// for both expansions, while our two expansions get their own pairs
-// ([ebp-0x4c] + [ebp-0x70] for the single-spell store, [ebp-0x64] +
-// [ebp-0x8c] for the sunk one) and each carries its own unwind state
-// (`mov [ebp-0x4], 0x1` and `mov [ebp-0x4], 0x2` immediately before the
-// out_of_range ctor). So the question to answer next is why our two throw
-// paths are in DISTINCT EH states where retail's share one, not which
-// spelling of the bit store to use - that half is settled above.
-// Both expansions build the message string from a literal completely inline
-// (`repne scasb` for the length, then `rep movsd`/`rep movsb`), i.e. the
-// basic_string(const char*) ctor is expanded too.
-//
-// Measured and rejected 2026-08-20, do not retry:
+// Measured and rejected, do not retry:
 //   * a second budget-starved single-call-site static over the whole
 //     `mapHeader.version != RESTORATION` tail, which contains BOTH throw
 //     sites - the block is too big to be inlined back, so it stays a real
@@ -3341,9 +3310,21 @@ static void readHeroSecondarySkills(TAbstractFile* infile,
 //   * the same treatment on just the ARMAGEDDONS_BLADE spell arm
 //     (readCampaignSpell): 88.8320, and it is a loss for the same reason in
 //     miniature.
-//   * `hero_data->spells.reset()` in place of the `bitset<70> noSpells`
-//     temp - 84.4847, and it does not move the frame at all, so the 12-byte
-//     bitset temp is not part of the excess.
+//   * `hero_data->spells.reset()` in place of the zero-bitset assignment:
+//     84.4847, with no frame improvement.
+//   * keeping the mask loop longhand but default-constructing a named
+//     `noSpells`: 88.6583.  The frame and shared throw homes improve, but the
+//     instruction schedule regresses.
+//   * return-by-value `emptyHeroSpellSet()` and a named `noSpells(0)` are
+//     byte-identical to the retained direct temporary.  They cannot influence
+//     the remaining C1 placement decision.
+//   * the remaining Dreamcast local-roster order clues do not move the x86
+//     allocation: declaring `padding` before `tempText`, declaring
+//     `isRandomHero` before the hero-id read, and widening `hero_data` to
+//     function scope are all byte-flat at 91.6097%.  Passing the returned
+//     string temporary directly to `assign` is not flat: it loses three
+//     retail branches and falls to 90.5139%, so the const-reference lifetime
+//     below is retained.
 VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                              int mapVersion)
@@ -3548,8 +3529,8 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             // frame bytes (0xf4 -> 0xe4).  C++98 extends the temporary's
             // lifetime to the reference's scope, which is exactly the block
             // the assign sits in.
-            const std::string& heroName = ReadLengthPrefixedString(infile);
 #pragma inline_depth(0)
+            const std::string& heroName = ReadLengthPrefixedString(infile);
             hero_data->name.assign(heroName, 0, std::string::npos);
 #pragma inline_depth()
         }
@@ -3566,8 +3547,7 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
             int spell = spellByte;
             if (spell != -2) {
                 hero_data->customSpells = 1;
-                std::bitset<70> noSpells;
-                hero_data->spells = noSpells;
+                hero_data->spells = std::bitset<70>(0);
                 if (spell != -1)
                     hero_data->spells[spell] = 1;
             }
@@ -3578,7 +3558,10 @@ int NewfullMap::readHeroData(TAbstractFile* infile, CObject* heroObject,
                 hero_data->customSpells = 1;
                 unsigned char spellMask[9];
                 infile->Read(spellMask, sizeof(spellMask));
-                unpackSpellMask(&hero_data->spells, spellMask);
+                for (int spell = 0; spell < 70; ++spell) {
+                    hero_data->spells[spell] =
+                        (spellMask[spell / 8] & (1 << (spell % 8))) != 0;
+                }
             }
 
             char primaryFlag;
@@ -4977,13 +4960,26 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 // branch count goes 30 -> 31 against retail's 32 and the fourth `ret`
 // appears, so the mass does buy part of the size() expansion.
 //
-// THREE UNRELATED REAL ONE-STATEMENT CONSTRUCTS REACH THE SAME 90.1105 TO THE
-// DIGIT - an index local split out of `&objects[objectCell->objectIndex]`, a
-// named `int` for IntersectRect's return, and hoisting `objectList.begin()`
-// into a local for the while condition - which says the plateau is pure mass
-// and none of the three is evidence for itself. None makes the frame exact
-// (0x78 against retail's 0x7c) and none buys the 32nd branch, so the real
-// statement is still unidentified and NOTHING SPECULATIVE IS SHIPPED here.
+// LANDED 2026-08-21: a conventional release VERIFY over the two pointer
+// arguments reaches a slightly better 90.4313. In release it evaluates the
+// invariant but VC6 proves the pure comparison dead, so it contributes the
+// missing front-end statement without adding an instruction. Four natural
+// spellings were measured - thisCell alone, objectCell alone, two separate
+// VERIFYs, and the combined invariant retained below - and all four score
+// 90.43127 exactly. The macro name and original invariant are unattested;
+// the combined form is the minimum one-statement carrier that covers both
+// pointer preconditions.
+//
+// THREE UNRELATED REAL ONE-STATEMENT CONSTRUCTS reach the older synthetic
+// 90.1105 to the digit - an index local split out of
+// `&objects[objectCell->objectIndex]`, a named `int` for IntersectRect's
+// return, and hoisting `objectList.begin()` into a local for the while
+// condition - which says that plateau is pure mass and none of the three is
+// evidence for itself. None makes the frame exact (0x78 against retail's
+// 0x7c) and none buys the 32nd branch. On top of the landed VERIFY,
+// why-branch's explicit unrotation of the outer while reduces its abstract
+// flow distance 48 -> 35 but regresses the byte score 90.4313 -> 88.7466, so
+// the original while spelling stays.
 // What retail does with its extra dword is SPILL `newObject`
 // (`push edi / mov [ebp-0x14], edi` at the GenerateHeightMap call) while also
 // keeping it in EDI - a higher-pressure allocation than ours, consistent with
@@ -5001,10 +4997,15 @@ void NewfullMap::GenerateHeightMap(const CObject* object,
 //   * `if (!IntersectRect(...)) break;` - this DOES close the branch count
 //     (32 against 32) and costs 5.46 (78.7655), so the missing branch is not
 //     an intersection test.
+#define HOMM3_MAPCELL_RELEASE_VERIFY(expression) \
+    static_cast<void>(expression)
+
 VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell,
                              NewmapCell::TObjectCell* objectCell)
 {
+    HOMM3_MAPCELL_RELEASE_VERIFY(thisCell != 0 && objectCell != 0);
+
     std::vector<NewmapCell::TObjectCell>& objectList = thisCell->objects;
     std::vector<NewmapCell::TObjectCell>::iterator position
         = objectList.end();
@@ -5078,6 +5079,8 @@ void NewfullMap::StampObject(NewmapCell* thisCell,
 
     objectList.insert(position, *objectCell);
 }
+
+#undef HOMM3_MAPCELL_RELEASE_VERIFY
 
 // E:\gamedcs\mapcell.cpp:4167
 // Recomputes everything a cell derives from the objects standing on it.  The

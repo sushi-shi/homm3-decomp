@@ -101,17 +101,14 @@ inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
     playerPos = gNetLocalGamePos;
 }
 
-// The dead-hero twin, expanded inside hero::Deallocate. Same store order
-// as the teleport record above, minus the playerPos tail.
+// The dead-hero record expands inside hero::Deallocate. Retail's five base
+// stores use CNetMsg(subType,size) order, so preserve the real CMapChange
+// initializer instead of duplicating those assignments in the derived body.
 inline CMCDeadHero::CMCDeadHero(int id, type_point location)
+    : CMapChange(RS_DEAD_HERO, sizeof(CMCDeadHero)),
+      heroId(id),
+      point(location)
 {
-    field_00 = -1;
-    field_04 = 0;
-    subType = RS_DEAD_HERO;
-    size = sizeof(CMCDeadHero);
-    field_10 = 0;
-    heroId = id;
-    point = location;
 }
 
 #include "mousemgr.h"
@@ -616,7 +613,12 @@ static int ReadDwordField(TAbstractFile* infile)
 // side rather than a missing statement. `why-branch` finds no catalog
 // lever, and its four induction mutations on the bitset loop all measure
 // WORSE (+2 each), which independently confirms the unsigned counter is
-// right. Same class the two describers carry.
+// right. Same class the two describers carry. Release-elided diagnostic
+// carrier sites are now bounded too (2026-08-21): doses 1 and 2 at entry are
+// byte-flat at 87.94118%, while 3 and 4 both overshoot to 81.68044%.
+// Conventional release VERIFY around an already-unguarded Read retains the
+// same call and reduces to its existing ignored-result expression, so it
+// cannot supply the missing nested-call boundary either.
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
 int hero::load(TAbstractFile* infile, int saveVersion)
 {
@@ -854,14 +856,27 @@ int hero::save(TAbstractFile* outfile)
 // HeroView news up and 0x697738 the selected army slot, and this is the
 // only reference to either outside the hero-screen block.
 //
-// Residual (71.0%): ONE /Ob2 OVER-INLINE and the register roles it drags
-// with it. `flow-distance 0` - the block shape, the store set and the
-// statement order are retail's exactly. Retail CALLS
-// `basic_string::_Tidy` out of the inlined default constructor at
-// +0x3da; our CL expands it, and because the expansion frees the
-// callee-saved pair, our zero pseudo lands in EBX (and spends BL on the
-// two `unsigned char` byte stores) where retail's lands in EDI and has
-// to use immediates - which is the whole rest of the diff.
+// CURRENT (89.27957%, from 70.98925%): the missing /Ob2 candidate is a
+// conventional release VERIFY invariant. `bitset<48>::size()` is a real
+// inline accessor and therefore enters C2's site budget, but returns a
+// compile-time nonzero capacity, so `(void)size()` emits no check. That
+// single source-history carrier makes VC6 retain retail's out-of-line
+// `basic_string::_Tidy` from the inlined default string constructor. Both
+// sides now emit two calls and flow-distance is zero.
+//
+// The exact macro name and original invariant are unattested; the spelling
+// below is explicitly provisional. Its carrier class is source-plausible and
+// distinguished by compiler evidence: release-elided TRACE-shaped printf
+// sites at doses 1/3/5 are byte-flat at 70.98925%; VERIFY(bitset.none())
+// reaches the right two-call phase but emits two excess runtime branches and
+// scores 80.03226%; VERIFY(!bitset.test(0)) and VERIFY(!bitset[0]) emit no
+// excess flow but select a worse register phase at 74.95699%. The constant
+// size invariant alone reproduces the previously synthetic ceiling.
+//
+// Residual (89.27957%): one instruction and a whole-body EBX/EDI role swap
+// over 53 register-visible slots. why-reg's complete mutation set finds no
+// improving declaration/store-order edit; the call and branch structures are
+// already retail's.
 // THE BUDGET THRESHOLD IS MEASURED (2026-08-19). Adding N byte-inert
 // user-defined inline sites to the body (`_cpp_max(i, i);`, the
 // armygrp probe idiom) moves the row:
@@ -877,8 +892,8 @@ int hero::save(TAbstractFile* outfile)
 // default-constructor closure x2 and the vector-constructor iterator x2 -
 // with NO std::string at all, because the DC record has no customName.
 // The member that creates this wall is precisely the one the Dreamcast
-// build does not have. Nothing is padded: the probe is an instrument and
-// the row is deliberately left at 70.99.
+// build does not have. The release VERIFY below is the minimum honest
+// replacement for that old instrument.
 // MEASURED NEGATIVE, do not retry: `#pragma inline_depth(0)` spanning the
 // member-initialiser expansion, to chase retail's out-of-line
 // basic_string::_Tidy (base x0 vs retail x1), costs 70.99 -> 53.99. The
@@ -887,9 +902,14 @@ int hero::save(TAbstractFile* outfile)
 // (type_obscuring_object, armyGroup, bitset<48>, the type_artifact
 // default-ctor pair) where retail keeps all of those expanded, and only
 // customName's _Tidy out of line.
+#define HOMM3_HERO_CTOR_RELEASE_VERIFY(expression) \
+    static_cast<void>(expression)
+
 VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
 hero::hero()
 {
+    HOMM3_HERO_CTOR_RELEASE_VERIFY(TownSpecialGrantedMask.size());
+
     x = 0;
     y = 0;
     heroClass = 0;
@@ -911,6 +931,8 @@ hero::hero()
     field_11c = 0;
 }
 
+#undef HOMM3_HERO_CTOR_RELEASE_VERIFY
+
 // E:\gamedcs\hero.cpp:1233
 // Slot pinned by the two flanking claims (hero::hero 0x4d85f0 above,
 // get_equipped_artifacts 0x4d9070 below) and by the body: `movsx edx,
@@ -926,7 +948,11 @@ hero::hero()
 // one _Tidy call and one delete call. `operator=`, direct `assign`, a class
 // inline wrapper, and inline_depth 2/3/4 are byte-identical. The remaining
 // non-string deltas are register/order choices (memset address setup and the
-// four-byte stats loop), not missing initialization semantics.
+// four-byte stats loop), not missing initialization semantics. Release VERIFY
+// carriers do not reach this boundary either (2026-08-21): one and four
+// `TownSpecialGrantedMask.size()` invariants and one/eight user-defined
+// `_cpp_max(index,index)` invariants are all byte-flat at 82.8591%, with the
+// same one missing `_Tidy` call and 24-vs-21 branch count.
 VA(0x004d8720, 0x410)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
@@ -1900,6 +1926,16 @@ int hero::HeroFn_004D9CC0(int artifact)
 // = ...` is retail's store order (movePoints first). The tavern block
 // re-derives players[owner] from a fresh byte read rather than reusing
 // `player`, because EBX has been repurposed by then.
+//
+// Closed 2026-08-21 (93.0529 -> 100.0): expanding struct.h's three
+// type_point assignments at the call site removes the stray constructor call
+// and reproduces the packed coordinate (99.6546); spelling CMCDeadHero through
+// its CMapChange base initializer then gives retail's subtype/field_00/size/
+// field_04/field_10 store order and closes the remaining six schedule slots.
+// A genuine TU-visible inline type_point definition also closes this row but
+// perturbs later C2 state and drops hero::Fly 94.2468 -> 68.34, so the named
+// coordinate below is retained as a narrow codegen device, not a local-name
+// claim (Dreamcast lists only oldOwner).
 VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
 void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
 {
@@ -1914,7 +1950,11 @@ void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
     }
 
     if (bGameLoaded && !remote_move) {
-        CMCDeadHero change(id, type_point(x, y, z));
+        type_point location;
+        location.x = x;
+        location.y = y;
+        location.z = z;
+        CMCDeadHero change(id, location);
         SendMapChange(&change);
         gpGame->GameFn_0049C720(this, -1, freedTownVisitor);
     }
@@ -2240,6 +2280,13 @@ TSecondarySkill get_skill_award(const hero* current_hero,
 // `unsigned char complexChoice` local in each of the four arms, to chase
 // that shared-register materialisation, is BYTE-FLAT on this row (83.4342
 // either way) and costs hero 92.1826 -> 92.1392 fuzzy elsewhere.
+// The integer variants are now bounded too (2026-08-21): scoped `int one`
+// in the true arms and scoped `int zero` in the false arms are each
+// byte-flat at 83.4342, with AI_choose_secondary_skill still x1 against
+// retail's x4.  Two force-inlined source-context helpers, one per polarity,
+// also emit the baseline bytes and no helper bodies.  C1 normalises all
+// three forms before C2 chooses this cross-jump set; no scalar/helper
+// spelling reaches retail's four separately scheduled calls.
 VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::CheckLevel()
 {
@@ -4103,6 +4150,18 @@ static void show_hero_skills(int code, unsigned char right_mouse)
 // calls; selecting it inside the helper from gHeroScreenArmySlot regresses
 // to 74.13 with 128 branches. The shared-tail helper therefore cannot move
 // the whole-function cross-jump phase either, and is not retained.
+// Conventional release VERIFY is bounded as well (2026-08-21): evaluating
+// the header-inline `gpGame->GetCurrHero() == gpCurrentHero` invariant at
+// doses 1, 3 and 5 is byte-flat at 75.4051%. The release evaluation is a real
+// accessor candidate rather than an elided TRACE/ASSERT arm, but it does not
+// move this whole-function cross-jump phase.
+// The DC local census is exhausted too (2026-08-21): its only named locals
+// are `exitFlag` and `infowin`. `exitFlag` is the base-handler result tested
+// at entry, and type 0x4D89 proves `infowin` is the block-scoped
+// TQuickHeroWindow already constructed in the hero-locator right-click arm.
+// Retail likewise constructs and destroys that object in this arm, so neither
+// local exposes missing source structure; their identifier spelling cannot
+// affect code generation.
 VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
@@ -6869,6 +6928,13 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
 //     into both halves): 81.76 -> 74.13; the cross-jumper merges only
 //     the epilogue, still 3 rets, and the join still sinks. The lever
 //     that cracked viewarmywindow does NOT generalise to this class.
+// The literal retail block order is bounded too (2026-08-21). Leaving the
+// sea arm structured but sending its `else` to a land label below the AI
+// tail, then jumping backward from land, is byte-flat at 81.7645%: C1
+// canonicalizes it to this retained form. Spelling the leading test directly
+// as `if (!sea_movement) goto land_movement` breaks that canonical family and
+// collapses to 5.6129%. An explicit backward join therefore cannot preserve
+// retail's placement with this front end.
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
 int hero::GetMobility(unsigned char sea_movement)
 {

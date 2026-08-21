@@ -396,21 +396,27 @@ static inline void set_town_spell_bit(std::bitset<70>& bits,
 // Builds a local prohibited set from the town and scenario masks, then rolls
 // each guild row from the faction weights in SSpellTraits. Fixed map spells
 // win before the weighted fallback. The tail derives the active guild level,
-// accounts for Tower's Library, trims missing picks and copies the setup mask
-// into the town. set_spells_available is inlined in this retail body.
-// Residual (89.8561%): duplicating the selected-spell store/bitset mutation
-// for the fixed-spell arm and continuing immediately raises the row from
-// 86.7424% and restores the retail branch count. Moving that arm directly
-// inside the scan loses one branch and scores 83.25%; spelling the sentinel
-// as `spell < NUM_SPELLS` instead of `!=` keeps 32 branches but scores 82.47%.
-// The remaining one-block layout delta begins at that sentinel/bitset range
-// check; the weighted picker and the guild-level/count tail remain complete.
-// Re-swept 2026-08-20 against the diagnose signed/unsigned twin (#12 je->jb,
-// #13 jb->jl): a shared `goto assign` tail (no post-loop sentinel) 85.77,
-// the in-loop duplicated arm re-measured 83.25 (unchanged), and `unsigned
-// spell` - the jb tell, which the D10 sweep never tries - 87.67. All three
-// lose; the twin is downstream of the sentinel/bitset layout block, not a
-// source type. The 89.8561 shape stands.
+// accounts for Tower's Library and trims missing picks. The caller has already
+// copied town_setup->spells immediately before this call; retail returns after
+// the count loop. set_spells_available is inlined in this retail body.
+//
+// LANDED 2026-08-21 (89.8561 -> 97.73864). Removing the redundant setup-mask
+// copy first raises the row to 93.719696. Retail's fixed-spell edge then proves
+// the selected-spell store and bitset mutation belong inside the scan: a hit
+// enters that block directly, while loop exhaustion jumps around it to the
+// weighted picker. The signed post-loop test advances to the next guild slot.
+// Restoring that source shape makes all 32 branch mnemonics and symbolic
+// targets agree and raises the row again to 97.73864. This supersedes the old
+// 83.25 in-scan measurement: the now-removed tail statement had selected a
+// different whole-function VC6 phase.
+//
+// Residual (97.73864%): retail reuses EBX to zero `slot` and `totalWeight`,
+// binds the first scan's `spell` to ESI and its 0x88 trait stride to EBX; this
+// compile binds those roles to EBX and ESI respectively, then carries the
+// permutation through the weighted scan. Hoisting `slot` to function scope is
+// byte-flat. The structured signed-range guard alone scores 86.35227 and the
+// split fixed guard/post-loop continuation scores 97.11364; neither improves
+// the exact-CFG in-scan form retained below.
 VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
 void town::initialize_spells(const TownExtra* town_setup)
 {
@@ -431,16 +437,16 @@ void town::initialize_spells(const TownExtra* town_setup)
                     && akSpellTraits[spell].level == level) {
                     totalWeight +=
                         akSpellTraits[spell].townProbability[type];
-                    if (town_setup->fixedSpells.test(spell))
+                    if (town_setup->fixedSpells.test(spell)) {
+                        mageGuildSpells[level - 1][slot] = spell;
+                        prohibited.set(spell);
                         break;
+                    }
                 }
             }
 
-            if (spell != hero::NUM_SPELLS) {
-                mageGuildSpells[level - 1][slot] = spell;
-                prohibited.set(spell);
+            if (spell < hero::NUM_SPELLS)
                 continue;
-            }
             if (totalWeight == 0) {
                 mageGuildSpells[level - 1][slot] = -1;
                 continue;
@@ -478,8 +484,6 @@ void town::initialize_spells(const TownExtra* town_setup)
         mageGuildSpellCounts[availableLevel - 1] =
             static_cast<signed char>(count);
     }
-
-    spells = town_setup->spells;
 }
 
 #if 0  // @carcass
@@ -1204,7 +1208,7 @@ void show_creature_rewards(const town* this_town,
 static const int kRewardDialogBatch = 8;
 
 // E:\gamedcs\town.cpp:1793
-// Residual (90.8287%): 86.7098 -> 90.8287 on 2026-08-20, and the fix
+// Residual (90.8986%): 86.7098 -> 90.8287 on 2026-08-20, and the fix
 // CONTRADICTS the "tried and rejected" line that stood here. That line
 // recorded "event-field re-reads instead of the short growth local
 // (85.8)" as refuted. The re-read IS retail's spelling; what was missing
@@ -1226,16 +1230,28 @@ static const int kRewardDialogBatch = 8;
 // What is LEFT, read off the unmasked pair: retail materialises the
 // guard operand (`mov ax,[ebx] / test ax,ax`) where we compare in memory
 // (`cmp word ptr [ebx],0`); retail CROSS-JUMPS the two arms' shared
-// push_back tail into one block where we emit both copies, so retail's
-// two arms share the [ebp-0x20]/[ebp-0x1c] pair and ours take two.
-// Measured against exactly that and rejected: one
-// `type_dialog_resource reward;` hoisted to cover both arms (-0.007),
-// and an `unsigned short growth` local used ONLY by the zero test
-// (byte-flat - VC6 folds it back into the memory compare).
+// push_back tail into one block where we still emit both call copies.
+// Before the function-scope correction our arms also used two stack
+// pairs; they now share retail's [ebp-0x20]/[ebp-0x1c] pair, but VC6
+// still does not perform the retail cross-jump.
+// Two source corrections landed on 2026-08-21. Declaring the zero
+// `grantable` mask before loading `eventBuildings` makes the two zero
+// stores consecutive like retail (90.8287 -> 90.8916). Dreamcast has
+// one `reward` local for the whole function, and retail reuses one stack
+// pair in both loops; restoring that scope moves 90.8916 -> 90.8986.
+// This broader, source-proven scope is distinct from the earlier narrow
+// two-arm hoist that lost 0.007 points.
+//
 // Still open: branch topology #12 lands one block off (the D3
 // jump-threading class - why-branch's catalog found no applicable
-// lever). Tried and rejected earlier: the eligible mask hoisted into a
-// local (85.7), resource-store reordering (neutral).
+// lever). Restoring the two source-proven HasBuilding calls is byte-flat
+// after inlining. A shared-tail `bool has_reward` keeps 20 branches but
+// falls to 78.6294, so it is not the route to retail's cross-jump.
+// `why-reg --model --il-order` agrees on every first register definition;
+// the divergence starts after the B1 minimum slice. Also rejected: an
+// `unsigned short growth` used only by the zero test (byte-flat - VC6
+// folds it back into the memory compare), the eligible mask hoisted into
+// a local (85.7), and resource-store reordering (neutral).
 // Translates the event's 41-bit editor building mask through this
 // faction's gEventBuildingIds row, masks away what is already active,
 // illegal for the faction, or dock-impossible, builds the survivors
@@ -1245,8 +1261,8 @@ VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
 void town::give_event_reward(const TTownEvent* thisEvent)
 {
     __int64 mask = active;
-    __int64 eventBuildings = thisEvent->BuildBuildings;
     __int64 grantable = 0;
+    __int64 eventBuildings = thisEvent->BuildBuildings;
     int i;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (eventBuildings & bitNumber[i])
@@ -1265,10 +1281,10 @@ void town::give_event_reward(const TTownEvent* thisEvent)
     grantable &= ~mask;
 
     std::vector<type_dialog_resource> rewards;
+    type_dialog_resource reward;
     for (i = 0; i < MAX_BUILDING_TYPE; i++) {
         if (grantable & bitNumber[i]) {
             BuildBuilding(i, 0, 1);
-            type_dialog_resource reward;
             reward.resource = type + 0x16;
             reward.qualifier = i;
             rewards.push_back(reward);
@@ -1282,7 +1298,6 @@ void town::give_event_reward(const TTownEvent* thisEvent)
     for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
         if (thisEvent->generatorBonuses[i] != 0) {
             if (active & bitNumber[DWELLING_0_UPG_ID + i]) {
-                type_dialog_resource reward;
                 reward.resource = 0x15;
                 population[i + TOWN_DWELLING_COUNT] +=
                     thisEvent->generatorBonuses[i];
@@ -1293,7 +1308,6 @@ void town::give_event_reward(const TTownEvent* thisEvent)
                               + i + TOWN_DWELLING_COUNT]);
                 rewards.push_back(reward);
             } else if (active & bitNumber[DWELLING_0_ID + i]) {
-                type_dialog_resource reward;
                 reward.resource = 0x15;
                 population[i] += thisEvent->generatorBonuses[i];
                 reward.qualifier = (thisEvent->generatorBonuses[i] << 16)
@@ -1468,9 +1482,14 @@ void town::initialize(const TownExtra* town_setup)
 // gEventBuildingIds with the horde upgrades rolled up, the built mask
 // expanded through included_buildings and pruned to what is available -
 // or raises the default fort/tavern/dwelling openers.
-// Residual (90.2%): the CFG agrees 23/23; what is left is the
-// register/slot family (bitNumber addend cosmetics, AND-operand load
-// order, two hoisted-mask slot swaps). Operand flips measured neutral.
+// EXACT 2026-08-21 (90.2265 -> 100.0): Dreamcast CodeView records exactly
+// two T_QUAD locals, `disabled_buildings` and `built_mask`. The previous
+// body added two more 64-bit aliases for town_setup->disabledMask and
+// town_setup->builtMask; those were the two hoisted-mask slot swaps in the
+// residual. Reading both setup fields directly restores retail's complete
+// stack/register schedule and its final 43-block partition. Operand flips
+// remain byte-neutral; local census, not expression orientation, was the
+// missing source fact.
 VA(0x005c08c0, 0x3CE)  // anchor-callgraph + arity (ret 0, /Gr), dc 0x167ff4
 void initialize_buildings(town* current_town, const TownExtra* town_setup)
 {
@@ -1501,9 +1520,8 @@ void initialize_buildings(town* current_town, const TownExtra* town_setup)
         unavailable |= bitNumber[DOCK_ID];
 
     if (town_setup->hasCustomBuildings) {
-        __int64 disabled = town_setup->disabledMask;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (disabled & bitNumber[i])
+            if (town_setup->disabledMask & bitNumber[i])
                 unavailable |= bitNumber[
                     gEventBuildingIds[current_town->type][i]];
         }
@@ -1515,9 +1533,8 @@ void initialize_buildings(town* current_town, const TownExtra* town_setup)
             gTownEligibleBuildMask[current_town->type] & ~unavailable;
 
         __int64 toBuild = 0;
-        __int64 setupBuilt = town_setup->builtMask;
         for (i = 0; i < MAX_BUILDING_TYPE; i++) {
-            if (setupBuilt & bitNumber[i])
+            if (town_setup->builtMask & bitNumber[i])
                 toBuild |= town::included_buildings[current_town->type][
                         gEventBuildingIds[current_town->type][i]]
                     | bitNumber[gEventBuildingIds[current_town->type][i]];

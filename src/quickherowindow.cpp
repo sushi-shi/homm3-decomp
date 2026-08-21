@@ -33,18 +33,78 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
     {63, 132}, {99, 132}, {135, 132}
 };
 
+// Single-use /Ob2 codegen helper for the constructor below; no Dreamcast row.
+// VC6 expands it completely, but pricing the two scans in their own caller
+// moves the constructor from 90.7834 to 91.4264 and removes three excess
+// branches.  See the residual note on the constructor.
+static int choose_quick_hero_disguise(hero* thisHero)
+{
+    int disguise_creature = CREATURE_NONE;
+    if (thisHero->disguiseLevel != TQuickHeroWindow::DisguiseInvalid &&
+        thisHero->disguiseLevel <= TQuickHeroWindow::DisguiseAdvanced) {
+        const int* current_army = thisHero->army.armies;
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+             ++slot, ++current_army) {
+            int creature = *current_army;
+            // Retail compares the slot ordinal, not the creature loaded just
+            // above.  Preserve that byte-proven source-level wart.
+            if (slot != CREATURE_NONE &&
+                (disguise_creature == CREATURE_NONE ||
+                 akCreatureTypeTraits[creature].AI_value >
+                     akCreatureTypeTraits[disguise_creature].AI_value))
+                disguise_creature = creature;
+        }
+    } else if (thisHero->disguiseLevel == TQuickHeroWindow::DisguiseExpert) {
+        int creature = gpGame->f_1f698 ? 145 : 118;
+        int owner = thisHero->owner;
+        while (creature--) {
+            int town_type;
+            if (!gpGame->f_1f698 &&
+                (creature == CREATURE_AIR_ELEMENTAL ||
+                 creature == CREATURE_EARTH_ELEMENTAL ||
+                 creature == CREATURE_FIRE_ELEMENTAL ||
+                 creature == CREATURE_WATER_ELEMENTAL))
+                town_type = -1;
+            else
+                town_type = akCreatureTypeTraits[creature].townType;
+
+            int alignment = owner >= 0
+                ? gpGame->setup.alignment[owner]
+                : -1;
+            if (town_type == alignment &&
+                (disguise_creature == CREATURE_NONE ||
+                 akCreatureTypeTraits[creature].AI_value >
+                     akCreatureTypeTraits[disguise_creature].AI_value))
+                disguise_creature = creature;
+        }
+    }
+    return disguise_creature;
+}
+
 // E:\gamedcs\quickherowindow.cpp:37
-// Residual (90.78%): the complete widget recipe, both static coordinate
-// tables, disguise selection, and seven-stack count formatting are
-// represented. Retail keeps the temporary mana string's _Tidy call out of
-// line where this compile expands it to `if (p) operator delete(p)` - the
-// LAST call-multiset divergence in the whole function, everything else
-// pairs one for one - and carries a different register assignment through
-// the two disguise scans plus a pointer-cursor primary-stat loop where ours
-// indexes. Tried and rejected: an indexed/shared ostrstream construction
-// (75.28%), a pointer-form primary-stat loop (85.31%), a named mana string
-// with a scoped depth-zero destructor (85.07%), and a depth-zero whole mana
-// expression (86.54%).
+// CURRENT 92.1471% (from 90.7834, 2026-08-21).  Moving the two disguise
+// scans behind the single-use helper above changes VC6's caller-budget
+// context without emitting a helper symbol: 90.7834 -> 91.4264 and three
+// excess branches disappear.  Spelling the troop-count select as a positive
+// `>= DisguiseAdvanced` if/else then chooses retail's arm placement and
+// reaches 92.1471.  The branch transcript is exact at 54 branches and one
+// return; flow-distance is zero.
+//
+// Residual: register/inline state only.  `diagnose` reports a 259-row
+// register distance dominated by the EDX/ECX role swap.  The mana temporary's
+// _Tidy call now agrees, but our EH transcript has one later extra state:
+// after state 0xb our expanded ostrstream construction opens 0xc around the
+// separate basic_streambuf constructor before reaching 0xd; retail calls the
+// higher-level constructor and goes directly 0xb -> 0xd.  The primary-stat
+// loop as a second caller-shrink dose removes that EH difference, but worsens
+// register distance and scores 91.8229, so it is rejected.  A tiny helper
+// around the final AddWidget loop is byte-flat at 92.1471.  This bounds the
+// fresh caller-shrink search after four hypotheses.
+//
+// Earlier rejected forms remain rejected: an indexed/shared ostrstream
+// construction (75.28%), a pointer-form primary-stat loop (85.31%), a named
+// mana string with a scoped depth-zero destructor (85.07%), and a depth-zero
+// whole mana expression (86.54%).
 //
 // THE TROOP-COUNT WIDGET IS PUSHED IN EACH ARM, not assigned to a shared
 // `textWidget* troop_text` and pushed once after the if/else (86.84 ->
@@ -56,8 +116,9 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
 // tail-merges only the vector::insert call itself, so there is still just
 // one `insert` in the object, which is why the call multiset could not see
 // this and the transcript could. The proven-exact sibling
-// TQuickTownWindow::initialize_army_display writes it the same way. The eh
-// signal line is now absent from `diagnose` on this row.
+// TQuickTownWindow::initialize_army_display writes it the same way.  That old
+// per-arm signal remains absent; the current single extra state is later,
+// inside ostrstream construction as documented above.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
     : heroWindow(200, 200, 194, 186, 0x12)
@@ -111,47 +172,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
     }
 
     if (view_level >= ViewSome && thisHero->army.GetNumArmies() > 0) {
-        int disguise_creature = CREATURE_NONE;
-        if (thisHero->disguiseLevel != DisguiseInvalid &&
-            thisHero->disguiseLevel <= DisguiseAdvanced) {
-            const int* current_army = thisHero->army.armies;
-            for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
-                 ++slot, ++current_army) {
-                int creature = *current_army;
-                // Retail compares the slot ordinal here, not the creature
-                // loaded immediately before it. Preserve that source-level
-                // wart: changing it to the plausible creature test changes
-                // the loop CFG and does not reproduce the executable.
-                if (slot != CREATURE_NONE &&
-                    (disguise_creature == CREATURE_NONE ||
-                     akCreatureTypeTraits[creature].AI_value >
-                         akCreatureTypeTraits[disguise_creature].AI_value))
-                    disguise_creature = creature;
-            }
-        } else if (thisHero->disguiseLevel == DisguiseExpert) {
-            int creature = gpGame->f_1f698 ? 145 : 118;
-            int owner = thisHero->owner;
-            while (creature--) {
-                int town_type;
-                if (!gpGame->f_1f698 &&
-                    (creature == CREATURE_AIR_ELEMENTAL ||
-                     creature == CREATURE_EARTH_ELEMENTAL ||
-                     creature == CREATURE_FIRE_ELEMENTAL ||
-                     creature == CREATURE_WATER_ELEMENTAL))
-                    town_type = -1;
-                else
-                    town_type = akCreatureTypeTraits[creature].townType;
-
-                int alignment = owner >= 0
-                    ? gpGame->setup.alignment[owner]
-                    : -1;
-                if (town_type == alignment &&
-                    (disguise_creature == CREATURE_NONE ||
-                     akCreatureTypeTraits[creature].AI_value >
-                         akCreatureTypeTraits[disguise_creature].AI_value))
-                    disguise_creature = creature;
-            }
-        }
+        int disguise_creature = choose_quick_hero_disguise(thisHero);
 
         int widget_id = ARMY_1_SPRITE_ID;
         int* coordinates = &gQuickHeroArmyPositions[0][0];
@@ -168,8 +189,11 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
                 coordinates[0], coordinates[1], 32, 32, widget_id++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
-            int count = thisHero->disguiseLevel < DisguiseAdvanced
-                ? *current_count : 0;
+            int count;
+            if (thisHero->disguiseLevel >= DisguiseAdvanced)
+                count = 0;
+            else
+                count = *current_count;
             std::ostrstream quantity_text;
             if (view_level >= ViewAll) {
                 if (count < 10000)

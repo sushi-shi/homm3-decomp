@@ -181,6 +181,15 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // 97.7430. The branch census stays 105 against retail's 107 throughout.
     // Unlike the artifact/THall optimizer ghosts, this caller does not price
     // that carrier in its winning window.
+    // Conventional release VERIFY is bounded separately (2026-08-21).
+    // Combined and split pure range checks over the two 0..9 volume indices
+    // are byte-flat at 98.1326%; they disappear before the relevant budget
+    // accounting. `VERIFY(!Widgets.empty())` after the last push_back is a
+    // real accessor candidate and therefore overshoots to 96.33699%. The
+    // branch analyzer's only improving structural mutation, a `short` music
+    // status induction variable, also loses by the byte verdict (97.47005%).
+    // Thus neither VERIFY carrier class nor loop width supplies retail's two
+    // missing size() branches at the retained source phase.
     // The DC xref census for this constructor otherwise MATCHES ours exactly
     // once the Dreamcast platform delta is subtracted (DC has no window-scroll
     // group: DC 16 buttons / 12 texts / 12 TTextResource::operator[] / 25

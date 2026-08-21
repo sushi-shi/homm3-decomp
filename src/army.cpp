@@ -1486,6 +1486,12 @@ void army::Walk(int direction, unsigned char end_walk,
 // byte-inert. The EH-prologue push, the combatSpeed reloc addend and
 // the bolt-table displacements are the documented masked cosmetics
 // (PlayAnimation, EXACT, carries the identical combatSpeed read).
+// DC type/source audit (2026-08-21): its destX, total-frame count and
+// per-frame addX/addY locals are `int`, and ARROW_PERIOD is `const int`.
+// Restoring those types, plus the symmetric targetY type, is byte-flat at
+// 93.169495%. Conventional release VERIFY is also byte-flat both at entry
+// (`armyToAttack != 0`) and immediately before the rotated argument set
+// (`missileIcon != 0`). The slot swap is therefore not a missing invariant.
 VA(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
 void army::animate_missile(army* armyToAttack)
 {
@@ -1493,13 +1499,13 @@ void army::animate_missile(army* armyToAttack)
             ->IsQuickCombat())
         return;
 
-    long targetX = gpCombatManager->cells[armyToAttack->gridIndex]
-                       .field_00;
+    int targetX = gpCombatManager->cells[armyToAttack->gridIndex]
+                      .field_00;
     if (armyToAttack->creatureId & 1)
         targetX += armyToAttack->facing ? 22 : -22;
-    long targetY = gpCombatManager->cells[armyToAttack->gridIndex]
-                       .field_02
-                   - armyToAttack->image_height / 2;
+    int targetY = gpCombatManager->cells[armyToAttack->gridIndex]
+                      .field_02
+                  - armyToAttack->image_height / 2;
     gpCombatManager->ResetLimitCreature();
     gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
     gpCombatManager->ComputeMaxExtent();
@@ -1516,7 +1522,7 @@ void army::animate_missile(army* armyToAttack)
     currFrameIndex = 0;
     play_sample(SHOOT_SAMPLE);
 
-    long frames;
+    int frames;
     if (frameInfoAttackFrames > 0)
         frames = frameInfoAttackFrames;
     else
@@ -1562,8 +1568,8 @@ void army::animate_missile(army* armyToAttack)
     }
 
     int nframes = (ARROW_TRAVEL_DIST + 20) / 20;
-    long stepX;
-    long stepY;
+    int stepX;
+    int stepY;
     if (nframes > 0) {
         stepX = deltaX / nframes;
         stepY = deltaY / nframes;
@@ -1578,7 +1584,7 @@ void army::animate_missile(army* armyToAttack)
 
     Bitmap16Bit saved(width, height);
     TDrawbridgeBounds update_area = gCombatAreaLimits;
-    int MISSILE_PERIOD = static_cast<int>(
+    const int MISSILE_PERIOD = static_cast<int>(
         gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 33.0f);
 
     long frame = 0;
@@ -2347,10 +2353,10 @@ static long drain_amount(int hitPoints, int origNumTroops, int numTroops,
                     _cpp_min(iDamage, total_life));
 }
 
-static int roll_death_stares(int numTroops)
+static int roll_death_stares(const army* attacker)
 {
     int stares = 0;
-    for (long i = 0; i < numTroops; i++) {
+    for (long i = 0; i < attacker->numTroops; i++) {
         if (Random(1, 100) <= 10)
             stares++;
     }
@@ -2375,7 +2381,7 @@ static int roll_death_stares(int numTroops)
 // The case bodies are in SOURCE order per the EH-state finding
 // (vampire 0..3, gorgon 4..6, thunderbird 7..8, rust 9); the
 // dispatch tables were decoded from the image.
-// Residual (96.0724%): 92.6414 -> 95.6821 -> 96.0724 on the /Ob2 CALLER-
+// CURRENT (96.6787%): 92.6414 -> 95.6821 -> 96.0724 on the /Ob2 CALLER-
 // SHRINK lever, in two doses, and THE CALL MULTISET NOW AGREES - the
 // string-teardown budget the old note called a hard class was the caller
 // being too big, nothing more.  It read "_Tidy 5 vs 6, operator delete 4 vs
@@ -2393,10 +2399,16 @@ static int roll_death_stares(int numTroops)
 // alone and 95.39 as a third dose.  Both remaining helpers are codegen
 // devices with no Dreamcast row, in the same class as findpath's three.
 //
-// What is left is the merged-return / stale-CL-generation class: retail
-// carries SIX returns against our five.
+// The Gorgon helper originally accepted a copied troop count, which made VC6
+// strength-reduce the source loop to `dec/jne`. Passing the army instead
+// preserves the caller-shrink dose but forces the retail alias-sensitive
+// reload after Random and `cmp i,numTroops / jl`: +0.6063, and both objects
+// now agree on all 71 branches and all six returns. A pointer-based Vampire
+// helper loses that sixth return and regresses to 96.1414; reordering the
+// proven six scalar arguments and hoisting the Gorgon accumulator are both
+// byte-flat.
 //
-// THE FRAME DELTA IS NOW READ OFF THE SLOT MAPS AND IT NAMES THE SAME FACT
+// THE REMAINING FRAME DELTA IS READ OFF THE SLOT MAPS
 // (2026-08-20).  Our 0x78 against retail's 0x84 is not three scattered
 // locals: retail owns FOUR sixteen-byte string objects at [ebp-0x60],
 // [ebp-0x70], [ebp-0x80] and [ebp-0x90] where this compile owns THREE, at
@@ -2470,7 +2482,7 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 
     case CREATURE_MIGHTY_GORGON:
         if (target->Is(4) & 1) {
-            int stares = roll_death_stares(numTroops);
+            int stares = roll_death_stares(this);
             long dead = _cpp_min((numTroops + 9) / 10,
                                  _cpp_min(stares, target->numTroops));
             if (dead > 0) {
@@ -2795,10 +2807,9 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
 // manager's acting pair around each Turn.
 //
 // THREE EXPANSIONS THE DC LINE TABLE NAMES AND RETAIL INLINES:
-//   - can_retaliate (Army.h:847) becomes the four tests at 2291, and
-//     `!killed` is a FIFTH condition outside it - retail evaluates the
-//     four first, so the source is `can_retaliate(this) && !killed`
-//     and not the DC revision's own ordering.
+//   - can_retaliate (Army.h:847) becomes the three tests after the
+//     defender's explicit numTroops check at 2291; `!killed` is the fifth
+//     condition. The Dreamcast helper bytes prove that split directly.
 //   - IsIncapacitated (Army.h:840) becomes the disabled_290 /
 //     disabled_2b0 / disabled_2c0 run inside the br=5 second-strike
 //     gate. Its out-of-line copy lives in ai.obj and is untouched.
@@ -2838,7 +2849,8 @@ void army::do_attack(int direction)
         armyToAttack->residualParalyze = 1;
     unsigned char killed = do_attack(armyToAttack, direction);
     joustBonus = 0;
-    if (armyToAttack->can_retaliate(this) && !killed) {
+    if (armyToAttack->numTroops > 0
+        && armyToAttack->can_retaliate(*this) && !killed) {
         GameTime::Delay(static_cast<int>(
             gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
         gpCombatManager->currentSide = 1 - gpCombatManager->currentSide;
@@ -4810,12 +4822,17 @@ void army::CancelAllSpells()
 // the statement pins beside them, exactly like findpath's find_queue_slot.
 // They cost no symbol: army.obj defines none of them.
 //
-// Residual (99.0928%): two `lea ecx,[esi+0x2b0]` scheduled one slot late
-// against the erase_item calls, and the Age arm materialising `hp - 1` as
-// `lea ecx,[eax-1]` before `topCreatureDamage` where retail stores
-// `topCreatureDamage`'s _cpp_min temp first and reaches `hp-1` with
-// `mov ecx,eax / dec ecx`.  Both are temp-creation order inside one
-// statement.
+// 99.0928 -> 99.5510 (2026-08-21): naming a vector reference around each
+// two-iterator aura erase is the source handle for retail's receiver order.
+// It forms `lea ecx,[esi+0x2b0/2bc]` before pushing `first` and `last`, where
+// the direct member expression delayed the LEA until after both pushes.
+//
+// Residual (99.5510%): only the Age arm's first min remains. Retail copies
+// `hp`, stores hitPoints, loads topCreatureDamage, then decrements the copy;
+// this CL materialises `hp - 1` with LEA first. Three honest spellings are
+// byte-identical at 99.5510: an assignment expression in the min operand, a
+// named const-reference for the min result, and a named `damageCap` followed
+// by `--damageCap`. This is temp-creation scheduling inside one statement.
 
 // SetSpellInfluence's Poison arm, lifted out for the /Ob2 BUDGET probe
 // above.  +1.92 as the third dose.
@@ -4875,10 +4892,11 @@ static void drop_aura_links(army* self)
         }
     }
     {
-        army** first = self->aura_sources.begin();
-        army** last = self->aura_sources.end();
+        std::vector<army*>& links = self->aura_sources;
+        army** first = links.begin();
+        army** last = links.end();
 #pragma inline_depth(0)
-        self->aura_sources.erase(first, last);
+        links.erase(first, last);
 #pragma inline_depth()
     }
     long j = self->aura_clients.size();
@@ -4898,10 +4916,11 @@ static void drop_aura_links(army* self)
         }
     }
     {
-        army** first = self->aura_clients.begin();
-        army** last = self->aura_clients.end();
+        std::vector<army*>& links = self->aura_clients;
+        army** first = links.begin();
+        army** last = links.end();
 #pragma inline_depth(0)
-        self->aura_clients.erase(first, last);
+        links.erase(first, last);
 #pragma inline_depth()
     }
 }
@@ -4926,8 +4945,8 @@ static void drop_aura_links(army* self)
 // conversion or the reference-return dereference folds the copy retail
 // keeps (+0.95).
 //
-// Residual (99.0928%): see the budget-dose note above the three file-local
-// helpers this body calls - that note replaces the "unreachable by
+// Residual (99.5510%): see the budget-dose and receiver-order notes above the
+// three file-local helpers this body calls. They replace the "unreachable by
 // statement-scoped pins" reading, which was right about the pin and wrong
 // about the wall.
 //
@@ -5788,6 +5807,13 @@ void army::attack_wall(TWallTargetId wall,
 // 0x34 with x/y/halfWidth homed in fresh bottom slots (-0x34/-0x30/
 // -0x14) and targetX carried to the explosion block in EBX; ours is now
 // 0x24 and still reloads three of them. Branch sequences AGREE (25/25).
+// DC type/source audit (2026-08-21): its `destX`, `destY` and `numFrames`
+// locals are `const int`, while `startY` is plain `int`. Restoring those
+// types and spelling numFrames as the required conditional initializer are
+// byte-flat at 91.460045%. Conventional release VERIFY is also byte-flat,
+// both for the wall-id domain at entry and `explosion != 0` immediately
+// before the bounds expressions. Neither source class creates retail's four
+// extra frame slots; the residual remains allocator state.
 VA(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
 void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
 {
@@ -5797,8 +5823,8 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
         return;
     }
 
-    long targetX = gWallTargets[wall].screenX;
-    long targetY = gWallTargets[wall].screenY;
+    const int targetX = gWallTargets[wall].screenX;
+    const int targetY = gWallTargets[wall].screenY;
 
     long startX;
     if (facing == 1)
@@ -5807,8 +5833,8 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     else
         startX = gpCombatManager->cells[gridIndex].field_00
                  - frameInfoMissileOffset[2];
-    long startY = gpCombatManager->cells[gridIndex].field_02
-                  + frameInfoMissileOffset[3];
+    int startY = gpCombatManager->cells[gridIndex].field_02
+                 + frameInfoMissileOffset[3];
 
     // dy is declared AFTER the abs: startY has to stay live across the
     // branch, which is what keeps retail from folding it into the
@@ -5857,9 +5883,9 @@ void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
     ds_memsample* shootMemSample =
         gpSoundManager->MemorySample(armySample[SHOOT_SAMPLE]);
 
-    long frames = frameInfoAttackFrames;
-    if (frames <= 0)
-        frames = stdIcon->GetNumFrames(currFrameType);
+    const int frames = frameInfoAttackFrames <= 0
+                           ? stdIcon->GetNumFrames(currFrameType)
+                           : frameInfoAttackFrames;
     long delay = frameInfoAttackStartCycleTime / frames;
     for (currFrameIndex = 0; currFrameIndex < frames; currFrameIndex++) {
         gpCombatManager->DrawFrame(1, 1, 0, delay, 1, 1);

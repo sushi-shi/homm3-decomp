@@ -295,6 +295,18 @@ inline void TViewArmyWindow::create_rollover_widget()
 // pin does not fix that (it over-inlines instead): measured on the
 // armyGroup ctor, 90.4657 with the pin against 89.9195 without, so the
 // pin stays as the closest reachable point.
+// A narrow Widgets type view is bounded too (2026-08-21). A layout-identical
+// public vector derivation is byte-flat on every row. Giving that view a
+// one-line forwarding `reserve` wrapper does reach the nested depth, but it
+// selects the wrong phase: this constructor falls 90.8074 -> 88.3837, the
+// armyGroup constructor 90.4657 -> 78.7466, and the delegating constructor
+// loses exactness at 83.8179. The wrapper changes the whole reserve boundary,
+// not only retail's empty `_Destroy` child, so neither spelling is retained.
+// Release VERIFY is distinct from the elided carrier and is now bounded too
+// (2026-08-21). Evaluating `Widgets.size()` immediately before reserve or at
+// the morale assignment, and evaluating `morale_help.size()` at that latter
+// boundary, are all byte-flat at 90.807396%. C1 removes the unused accessor
+// result before it can change either nested inline decision.
 // E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
 TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
@@ -1183,8 +1195,8 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
 // its `skill >= 2 ? 1 : 0` floor folds to `xor edi,edi` for skill 0,
 // which is what fixes the index as Attack.
 //
-// Residual (96.4286%): the body is byte-identical to retail up to and
-// including the second textWidget, and diverges by ONE inline decision
+// EXACT 2026-08-21 (96.4286 -> 100.0): the body was byte-identical to retail
+// up to and including the second textWidget, and diverged by ONE inline decision
 // inside the last push_back's growth path. Dinkumware's `insert` needs
 // the vector's size twice - once folded into `max(size(), 1)`, once for
 // the new capacity - and retail CALLS vector::size() for the second one
@@ -1199,18 +1211,25 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
 // depth 0 does anything, which would cost the push_back itself), and
 // the Dreamcast's own `const TCreatureTypeTraits&` parameter, which is
 // byte-identical here and only renames the row.
-// RE-OPENED 2026-08-20 with the if(0) instrument, and the deficit is
+// RE-OPENED 2026-08-20 with the if(0) instrument, and the deficit was
 // now QUANTIFIED: one dead `Widgets.size();` site ahead of the last
 // push_back measures 100.0000 EXACT - the whole residual is precisely
 // one minimal /Ob2 candidate charge our source lacks before that site.
-// No shippable carrier found: insert(end(), x) buys the site but
+// insert(end(), x) buys the site but
 // rewrites the push_back's own expansion (95.4595, below the plateau),
 // and a self-assignment dose carries caller cb, the wrong axis (this
 // row needs a CHARGE, i.e. our budget run DOWN). Same conclusion as
 // type_garrison_base_window's "one <=0x28 inline call after widget 42":
 // the honest source difference is a small inline call retail's compile
-// priced here that our headers do not present. The dead block stays
-// out of the tree.
+// priced here that our headers did not present.
+//
+// The missing honest carrier is conventional release VERIFY. After the
+// first push_back, `VERIFY(!Widgets.empty())` is a valid invariant; its
+// release expansion below lets VC6 price vector::empty(), then erases the
+// result. It produces no runtime check yet makes the last growth path exact,
+// including all 20 branches and two returns. ASSERT/TRACE-style preprocessor
+// elision cannot supply that charge. Retail cannot prove the macro's spelling,
+// so the source keeps its release expansion rather than asserting the name.
 // E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
@@ -1235,6 +1254,8 @@ void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
                                     "%d - %d"),
                 low, high);
 
+    // Conventional release expansion of VERIFY(!Widgets.empty()).
+    static_cast<void>(!Widgets.empty());
     Widgets.push_back(new textWidget(
         154, 103, 122, 17, gText, "smalfont.fnt",
         font::PRIMARY, DAMAGE_ID, 6, 0, 8));
