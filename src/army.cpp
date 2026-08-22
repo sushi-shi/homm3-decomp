@@ -728,10 +728,8 @@ no_clover_bonus:
         ;
     }
 
-    if (creatureType == CREATURE_HALFLING && value < 1) {
-        luck = 1;
-        return;
-    }
+    if (creatureType == CREATURE_HALFLING && value < 1)
+        value = 1;
 store_luck:
     luck = value;
 }
@@ -745,12 +743,15 @@ store_luck:
 // the sole live caller passes it after the magic-terrain mode and the body
 // forwards it to armyGroup::GetMorale. The two compressed switch tables at
 // 0x43e10c/0x43e124 match GetArmyMorale's Holy Ground / Evil Fog partition.
-// Residual (97.5194%): every branch, call, member access and both selector
-// tables agree. The two executable deltas are instruction-selection twins:
-// `cmp ownerGroup,0` vs retail's `test`, and `mov [morale],0` vs retail's
-// `xor eax,eax; mov [morale],eax`. A branch-result local merges the retail-
-// duplicated exits (91.75%), a four-byte memset is worse (95.81%), and `false`
-// plus `value-value` both fold byte-identically to the retained direct zero.
+// CLOSED 97.5194 -> 100.0000 (2026-08-21), the SetLuck mechanism: the
+// early exit and the oppression arm both GOTO one shared
+// `morale = value;` store instead of writing their own. VC6
+// tail-duplicates the shared store into each path and MATERIALIZES the
+// propagated constant (`xor eax,eax; mov [morale],eax`), which no
+// direct `morale = 0;` spelling can produce - the note that stood here
+// had measured four constant spellings (branch-result local 91.75,
+// memset 95.81, `false` and `value-value` byte-flat) without trying
+// the join shape.
 VA(0x0043e000, 0x139)  // dc-bracket forced + body/caller proof, dc 0x443b4
 void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      const town* ownerTown, const hero* otherHero,
@@ -758,10 +759,8 @@ void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
                      unsigned char groupAlignments)
 {
     int value = 0;
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(17) & 1)) {
-        morale = value;
-        return;
-    }
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND || (Is(17) & 1))
+        goto store_morale;
 
     if (ownerGroup) {
         value = const_cast<armyGroup*>(ownerGroup)->GetMorale(
@@ -829,10 +828,10 @@ evil_done:
         && const_cast<hero*>(otherHero)->IsWieldingArtifact(
             ARTIFACT_SPIRIT_OF_OPPRESSION)
         && value > 0) {
-        morale = 0;
-    } else {
-        morale = value;
+        value = 0;
     }
+store_morale:
+    morale = value;
 }
 
 // E:\gamedcs\army.cpp:596
@@ -2129,6 +2128,15 @@ void army::range_attack()
 // the inline (98.8961), and expanding MarkCreatureEffect by hand at
 // this call site instead of calling it (95.0519 - which is the
 // cleanest proof that the header inline is what retail has).
+// Re-diagnosed 2026-08-21: `vc6 diagnose` reads it register-homing at
+// distance 4 (ecx<->ebx), why-reg's model says the bindings agree at
+// every first definition, so the divergence is a C2 addressing-fold
+// tie PAST the model's reach. Hoisting both call arguments into named
+// locals is byte-flat (99.9351). set_inside_area_effect expands the
+// SAME header inline with the same register roles and matches retail's
+// index-first fold at 100.0000, so no per-site source fact selects the
+// fold; the header body is proven and a body respelling would touch
+// its exact sibling. Parked as C2 fold-tie state; two instructions.
 VA(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
 void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
                                 long* fire_damage)
@@ -2942,6 +2950,18 @@ unsigned char army::check_obstacle_attacks(unsigned char is_walking)
 // handle-state class as attack_hex's direction-search note. Calls,
 // call order, and every block pair off (24/24 calls after the
 // remove_aura longhand below).
+// 89.8063 -> 93.3162 (2026-08-21): the two blocked-hex else-arms must
+// write `succeeded = 0; stop = i;` in THAT order while the moat arms
+// write `stop = i; succeeded = 0;` - the asymmetry is what stops our
+// CL cross-jumping the four arm tails into one shared block, which
+// retail keeps duplicated per arm (why-branch's D8 jne->je pair, and
+// the whole 343-vs-351 instruction gap). Residual (93.32): the walk
+// region's ebx/edi roles and the stop/conversion-temp slots are
+// permuted - retail homes `stop` at [ebp-0x4] and reloads it per
+// iteration where we keep it in EBX; why-reg's model reads the first
+// ESI/EBX/EDI definitions as agreeing on both sides, so the flip is
+// mid-function creation order past the model's reach. Global-load
+// census agrees 23=23, so it is not a cache-vs-reload spelling.
 VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
 unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
 {
@@ -3033,8 +3053,8 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
             gpCombatManager->obstacles
                 .begin[gpCombatManager->cells[next_hex].field_14]
                 .field_0a = 1;
-            stop = i;
             succeeded = 0;
+            stop = i;
         }
         if (creatureId & 1) {
             long second_hex = GetAdjacentCellIndex(gridIndex, direction)
@@ -3047,8 +3067,8 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
                 gpCombatManager->obstacles
                     .begin[gpCombatManager->cells[second_hex].field_14]
                     .field_0a = 1;
-                stop = i;
                 succeeded = 0;
+                stop = i;
             }
         }
         Walk(gpSearchArray->result[i]->direction, i == stop, at_rest);
@@ -3506,6 +3526,16 @@ unsigned char army::is_enemy(const army* arg) const
 // 92.52 -> 14.41, because the wrapper's own callees then sit at
 // depth 3 on a twice-divided budget. Retail's arithmetic only closes
 // with the two combatManager calls written here.
+// MEASURED AND REJECTED 2026-08-21: respelling the bCanShoot flag as
+// direct `return 0;`s (to chase the literal stores retail's INLINED
+// copy shows in get_total_combat_value) moves FOUR consumers the wrong
+// way at once - can_shoot 92.00 -> 73.54, get_total_combat_value
+// 94.74 -> 87.25, get_berserk_targets 92.52 -> 91.70,
+// spell_is_valid_on_target 91.07 -> 89.25. The flag is retail's own
+// source; the literal-store diamond in the get_total_combat_value
+// expansion is C2 folding the flag into control flow AT THAT SITE
+// (ours keeps one arm in EBX there), not a source shape.
+// (The ADJACENCY flag stays; the TAIL is the &&-return - see below.)
 VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 inline unsigned char army::can_shoot(const army* excluded) const
 {
@@ -3526,9 +3556,8 @@ inline unsigned char army::can_shoot(const army* excluded) const
                 bCanShoot = 0;
         }
     }
-    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
-        bCanShoot = 0;
-    return static_cast<unsigned char>(bCanShoot);
+    return bCanShoot
+           && (forgetfulnessRounds == 0 || forgetfulnessLevel < 2);
 }
 
 #if 0  // @carcass
@@ -4069,11 +4098,11 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
 DATA(0x0063b810)
 static const int kArtilleryDoubleChances[4] = { 0, 50, 75, 100 };
 
-// Residual (98.9804%): register naming only - the mastery load lands
-// in EDX against retail's EAX and the ballista's += pair rotates with
-// it, plus the string-ctor allocator byte store scheduling one slot
-// apart; the EH-prologue push immediate is the documented reloc-addend
-// cosmetic. THE STRUCTURAL FINDING THIS BODY BANKED: the switch's TEST
+// CLOSED 98.9804 -> 100.0000 (2026-08-21): the "register naming only"
+// residual was one named local away. Naming the ballista arm's hero
+// (`hero* controlling = gpCombatManager->heroes[...]`) makes the load
+// reuse EAX in place exactly as retail does, and the += pair rotation
+// and the string-ctor byte store all fall in line behind it. THE STRUCTURAL FINDING THIS BODY BANKED: the switch's TEST
 // chain is value-sorted regardless of source, but the EH STATE NUMBERS
 // follow SOURCE case order - retail's ballista-arm strings carry
 // states 0/1 and the death-blow arm 2/3/4, which pins the ballista
@@ -4101,9 +4130,10 @@ int army::ComputeAttackerDamageBonuses(int base_damage,
                                         simulate_only == 0, distance);
     switch (creatureType) {
     case ARMY_CREATURE_BALLISTA: {
+        hero* controlling =
+            gpCombatManager->heroes[get_controlling_side()];
         long mastery =
-            gpCombatManager->heroes[get_controlling_side()]
-                ->skillLevel[eSecSkillBattlefieldBallistics];
+            controlling->skillLevel[eSecSkillBattlefieldBallistics];
         if (!simulate_only
             && Random(1, 100) <= kArtilleryDoubleChances[mastery]) {
             result += base_damage;
@@ -4752,13 +4782,13 @@ void army::CancelIndividualSpell(int spell)
         frameInfoWalkCycleTime = origWalkCycleTime;
         break;
     case SPELL_AGE: {
-        long hp;
+        int hp;
         if (spellInfluence[SPELL_AGE]) {
             float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty * 0.5f + 0.95f);
+            hp = static_cast<int>(base * poisonPenalty * 0.5f + 0.95f);
         } else {
             float base = origHitPoints;
-            hp = static_cast<long>(base * poisonPenalty + 0.95f);
+            hp = static_cast<int>(base * poisonPenalty + 0.95f);
         }
         hitPoints = hp;
         topCreatureDamage = _cpp_min(topCreatureDamage, hp - 1);
@@ -4948,7 +4978,13 @@ static void drop_aura_links(army* self)
 // Residual (99.5510%): see the budget-dose and receiver-order notes above the
 // three file-local helpers this body calls. They replace the "unreachable by
 // statement-scoped pins" reading, which was right about the pin and wrong
-// about the wall.
+// about the wall. Down to ~6 instructions in the AGE arm (2026-08-21):
+// retail computes the clamp bound as `mov ecx,eax / dec ecx` AROUND the
+// hitPoints store where we emit store-then-`lea ecx,[eax-1]`. Tried and
+// rejected: `hp--` after the store (dec lands in place, 99.40), a named
+// `cap = hp` copied then decremented, and `cap = hp - 1` declared before
+// the store (both copy-propagated back to the in-place dec, 99.40/99.55).
+// C2's propagation erases every ordering the source can express here.
 //
 // The float constants are read from the image: the factor arms divide
 // the amount by 100.0, Haste re-times the walk cycle by 0.65 and Slow
@@ -5217,12 +5253,42 @@ void army::DecrementSpellRounds()
 // best (byte-identical), naming the melee arm's hex (byte-identical),
 // declaring `value`/`best` at the top with the assignment left where
 // it is (byte-identical).
+// The flag-tail twin (declared beside can_shoot in army.h): ONLY
+// get_berserk_targets calls it. Its retail expansion here matches the
+// flag-tail body while can_shoot's own COMDAT and every other consumer
+// match the &&-return tail; one inline cannot carry both decisions
+// (measured: && tail alone = 92.52 -> 23.73 here; a fastcall static
+// twin does not reproduce the member expansion either).
+inline unsigned char army::can_shoot_flagform(const army* excluded) const
+{
+    if (creatureType == ARMY_CREATURE_BALLISTA
+        || creatureType == ARMY_CREATURE_ARROW_TOWER)
+        return 1;
+    if (!(Is(2) & 1) || shotsLeft <= 0)
+        return 0;
+    hero* controller = get_controller();
+    int bCanShoot = 1;
+    if (!controller
+        || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
+        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
+            bCanShoot = 0;
+        } else if (creatureId & 1) {
+            if (gpCombatManager->enemy_is_adjacent(
+                    this, get_second_grid_index(), excluded))
+                bCanShoot = 0;
+        }
+    }
+    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
+        bCanShoot = 0;
+    return static_cast<unsigned char>(bCanShoot);
+}
+
 VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
 void army::get_berserk_targets(std::vector<army*>& armies) const
 {
     unsigned char canShoot;
     army* other;
-    if (can_shoot(0)) {
+    if (can_shoot_flagform(0)) {
         canShoot = 1;
     } else {
         canShoot = 0;
@@ -5490,6 +5556,16 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
 // why-reg's model agrees the bindings are identical at every first
 // definition, so this is the B1 handle-state class rather than
 // anything statement-local.
+// Residual (94.0790, probed 2026-08-21): one owner inversion. Retail
+// caches gridIndex in EBX across the direction loop and homes
+// `direction` at [ebp+8] ONLY (in-loop guard reads memory, spelled
+// `cmp [ebp+8],-1 / jne` - an == -1 compare); ours gives EBX to
+// `direction` and reloads gridIndex per iteration. Probed: the
+// `== -1` guard spelling alone (93.94 - the compare becomes cmp
+// ebx,-1, register still wrong) and naming gridIndex in a pre-loop
+// local (91.31 - the local takes a frame slot, direction keeps EBX,
+// frame grows). C2 prefers the loop-carried value for the register;
+// no spelling tried hands it the invariant instead.
 VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 unsigned char army::attack_hex(int hex, unsigned char restore_facing)
 {
@@ -6660,11 +6736,19 @@ void army::FaerieDragonSpell()
 // (96.46 -> 99.04 over the if/return spelling, the sivot case-2 lever
 // again).
 //
-// Residual (99.0409%): ONE materialization. The Genie arm's
-// `count > 0` return if-converts to `setg al` under our CL where
-// retail branches to its own `mov eax,1` epilogue; `count <= 0`
-// inverted, ternary and `!`-spellings all reconverge on the setg.
-// Four instructions, merged-return family.
+// 99.0409 -> 99.7059 (2026-08-21): the Genie arm's failure exit is a
+// `break` to the switch's shared return-0 tail, not its own
+// `return 0;` - the asymmetric control transfer is what stops the
+// whole diamond if-converting to `setg al` (the same lever as the
+// shr/and fold note in the skill doctrine). With the break in place
+// the arm's CFG, its [ebp+8]-homed count and the jle all match.
+// Residual (99.7059%): ONE instruction width - our true path emits
+// `mov al,1` where retail has `mov eax,1`. Tried and rejected: an int
+// local returned (copy-propagated back to al), `return count > 0;`
+// with the guard (folds to the same al constant), without the guard
+// (reconverges on setg, 99.13). C2 narrows every constant-foldable
+// return to the byte; only a genuine int-bool materialization keeps
+// eax and no honest spelling produces one here.
 VA(0x004476c0, 0x3BA)  // anchor-global + dc-callgraph, dc 0x4beec
 unsigned char army::can_cast_spell(long hex) const
 {
@@ -6688,7 +6772,7 @@ unsigned char army::can_cast_spell(long hex) const
                 count++;
         }
         if (count <= 0)
-            return 0;
+            break;
         return 1;
     }
     case CREATURE_FAERIE_DRAGON:
@@ -6787,6 +6871,15 @@ unsigned char army::can_cast_spell(long hex) const
 // `inline_depth(2)` over the tail arms - it would reject
 // get_controlling_side's depth-3 expansion retail keeps, trading a
 // 5-instruction gap for a 10-instruction one.
+// Residual (92.6970, 2026-08-21): the shooter arm's can_shoot expansion
+// computes the wide second hex inline (`neg/sbb/and 2/dec/add`, the
+// folded get_second_grid_index) where retail's expansion CALLS the
+// OffsetToFront COMDAT (`push -1 / call ?OffsetToFront / add gridIndex`).
+// Respelling can_shoot's second hex as `gridIndex + OffsetToFront(-1)`
+// reaches that shape here but breaks the shared body's other sites
+// (can_shoot 100 -> 96.59, get_total_combat_value 100 -> 97.80,
+// consider_attack 100 -> 98.22 - measured and reverted); the depth
+// split is per-site budget state the one source cannot carry.
 VA(0x00447a80, 0x429)  // anchor-callee (four call sites, one of them the
                        // tail-jump from 0x447eb0), retail-only slot
 unsigned char spell_is_valid_on_target(int spell, const army* target)

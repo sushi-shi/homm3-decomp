@@ -501,6 +501,14 @@ army* combatManager::find_spell_target(SpellID spell, long side, long hex,
 // duplicate `return 0`) is downstream of it - flipping the test's sense
 // measures exactly neutral, and spelling the arm `return 0; return 1;`
 // instead of `return 0; break;` costs 2.3.
+// Residual (88.49, diagnosed 2026-08-21): why-branch reads one je->jne
+// flip and one D3 threading row; the byte diff shows the root - ours
+// PROMOTES targetIndex into EDI for the whole body while retail keeps
+// it in scratch EDX and RE-READS [ebp+0x10] per region, handing EDI to
+// the akSpellTraits base instead. The whole register cascade (138
+// slots) and the 6-instruction surplus follow from that one promotion.
+// A parameter's caching is C2's promotion choice, not a spelling; no
+// catalog mutation moves the branch shape (guided search exhausted).
 VA(0x005a39c0, 0x2B4)  // order-map+arity, dc 0x152edc
 unsigned char combatManager::ValidSpellTarget(SpellID spellId, long mastery,
                                               long targetIndex,
@@ -1859,10 +1867,14 @@ void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY,
 // reset before the update rectangle, the two maxima are declared BRY then
 // BRX, and the padding statements run TLX/BRX/BRY/TLY. The two short icon
 // aliases at the tail likewise make retail's inlined GetNumFrames evaluate
-// stdIcon before currFrameType. Branches agree 51/51 plus one return and the
-// flat instruction streams now agree completely. The non-100 residue is only
-// relocation identity naming (working retail labels versus admitted source
-// names), so there is no remaining C++ hypothesis here.
+// stdIcon before currFrameType.
+// 99.9961 -> 100.0000 (2026-08-21): the earlier note here blamed the last
+// fraction on relocation naming; the unmasked byte diff refuted that (an
+// exact sibling carries the same reloc-name mismatches) and showed one
+// real delta - the two 9999 stores into the recycled parameter homes were
+// swapped. Retail initialises iUpdTLY BEFORE iUpdTLX (slot proof: the scan
+// compares TLX at [ebp+0x28] and TLY at [ebp+0x14] on both sides), so the
+// minima are declared TLY then TLX even though the padding runs TLX first.
 VA(0x005a5c20, 0x5C2)  // order-map+arity, dc 0x154c50
 void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
                            int iDestX, int iDestY, int iSplitFrequency,
@@ -1911,8 +1923,8 @@ void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY,
     do {
         { for (long j = 0; j < iDrawsPerSeg; j++) {
             bComplete = 1;
-            long iUpdTLX = 9999;
             long iUpdTLY = 9999;
+            long iUpdTLX = 9999;
             long iUpdBRY = -1;
             long iUpdBRX = -1;
 
@@ -2573,8 +2585,15 @@ void combatManager::ShowMassSpell(const unsigned char (*bEffected)[20],
 // and it drags the placement-block bindings with it (`ebx`/`edi` swapped
 // for the source stack and the clone's cell base). Tried and rejected:
 // all eight of why-branch's D10 induction mutations - the best,
-// reversing the direction order, is worth two masked slots and would
-// change which hex the clone lands in.
+// reversing the direction order, MEASURES +0.22 fuzzy (82.56) but is
+// REJECTED on semantics: it changes which hex the clone lands in, and
+// a reconstruction must not trade behavior for bytes. Also tried
+// 2026-08-21: hoisting iDir's declaration one scope out (byte-flat),
+// and why-reg's model finds the first ESI/EDI/EBX definitions agreeing
+// on both sides, so the homing flip is past the model's reach. Retail
+// memory-homes iDir, iDirCount AND iHexCount (ebx/ecx/edx are per-use
+// reloads there), so its pressure came from values ours never
+// materializes - not a source-order fact anyone has named yet.
 VA(0x005a6c70, 0x405)  // order-map+arity, dc 0x155f0c
 void combatManager::MirrorImage(int targetIndex, int level)
 {
@@ -2713,6 +2732,15 @@ void combatManager::MirrorImage(int targetIndex, int level)
 // where retail re-reads `[ebp-0x10]` after it. Both halves are the one
 // decision and no spelling tried moved it; the rest is scratch-register
 // renaming around the 0-in-EDI the loop exits leave behind.
+// Residual (93.44%, re-read 2026-08-21): two clusters plus the EH push
+// addend. (1) Our compile DUPLICATES the try_next_row header (Pick +
+// candidate arithmetic, 10 instructions) into the goto edge where
+// retail jumps back to one shared copy - the same duplicated-header
+// class place_obstacle measured unreachable through every loop
+// spelling (goto form already in use here). (2) Ours caches `hex` in
+// ESI at the exit test where retail re-reads its frame slot; the
+// homing rides on the duplication. Not re-ground on the place_obstacle
+// precedent.
 VA(0x005a7080, 0x29A)  // order-map+arity, dc 0x15627c
 void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType,
                                     int iSpellPower, int level)
@@ -3415,8 +3443,11 @@ void combatManager::Earthquake(int level)
 // Residual (99.78%): two instructions. Retail keeps `sar edx, 2` for
 // `aura_sources.size()` where our CL proves the low two bits zero and
 // folds the shift into the test's mask (`.empty()` is byte-identical to
-// `size() != 0` here, measured), and the function's trailing alignment
-// NOP is `mov edi,edi` against our `lea ecx,[ecx]`. Neither is source-
+// `size() != 0` here, measured; wrapping the test in a static inline
+// helper mimicking the DC roster's Army.h:835 army::is_in_aura is
+// byte-identical too, probed 2026-08-21 - the function boundary does
+// not block the fold), and the function's trailing alignment NOP is
+// `mov edi,edi` against our `lea ecx,[ecx]`. Neither is source-
 // addressable. `homm3 sema diff --branches` agrees 61/61 and 25/25.
 VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
 float combatManager::SpellCastWorkChance(SpellID spell, long side,
