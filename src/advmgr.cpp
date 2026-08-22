@@ -1099,7 +1099,18 @@ type_point advManager::get_mouse_map_point(__$ReturnUdt)
 //   - The `is_valid()` / `cell(x,y,z)` pair appears FIVE times with the
 //     zero-argument arm tail-merged onto the real one. No such function
 //     exists in the DC roster and NewfullMap::cell(type_point) already
-//     models a different, unguarded body, so these are written longhand.
+//     models a different, unguarded body, so these are written longhand -
+//     BUT LONGHAND MEANS THE HELPER'S BODY, INCLUDING ITS BY-VALUE
+//     PARAMETER (77.3765 -> 84.1883, 2026-08-21). Retail emits
+//     `mov ecx,[ebp-0x20] / mov dword ptr [ebp-0x20],ecx` before the first
+//     is_valid call: a dword SELF-store, i.e. a struct copy whose source
+//     and destination the allocator coalesced onto one slot. That is a
+//     by-value `type_point` parameter, and the fullMap load sitting
+//     BETWEEN the is_valid call and its `test al,al` is the helper's own
+//     `NewfullMap* map = manager->fullMap;` - exactly the shape of this
+//     file's DrawHeroCell static. Four sites converted (+6.81 combined);
+//     the fifth already carried the copy, and adding the map/valid locals
+//     there is byte-flat because its invalid arm returns `cellData`.
 //   - `advCommand != ADV_COMMAND_WALK_ROUTE` inside the WALK_ROUTE arm is
 //     provably false and retail still emits the compare - VC6 does not
 //     constant-propagate the switch value into an arm. Kept.
@@ -1168,16 +1179,23 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
             break;
 
         {
-            type_point heroPoint;
-            heroPoint.x = currHero->x;
-            heroPoint.y = currHero->y;
-            heroPoint.z = currHero->z;
+            type_point heroPoint(currHero->x, currHero->y, currHero->z);
+            // The BY-VALUE copy is retail's, not decoration: it emits
+            // `mov ecx,[ebp-0x20] / mov [ebp-0x20],ecx`, a dword self-store,
+            // which is a struct copy whose source and destination the
+            // allocator coalesced onto one slot. Together with the fullMap
+            // load sitting BETWEEN the is_valid call and its test, that is
+            // the signature of this file's own by-value DrawHeroCell helper
+            // being expanded here.
+            type_point cellPoint = heroPoint;
+            unsigned char valid = cellPoint.is_valid();
+            NewfullMap* map = fullMap;
             NewmapCell* standingOn;
-            if (!heroPoint.is_valid())
-                standingOn = fullMap->cell(0, 0, 0);
+            if (!valid)
+                standingOn = map->cell(0, 0, 0);
             else
-                standingOn = fullMap->cell(heroPoint.x, heroPoint.y,
-                                           heroPoint.z);
+                standingOn = map->cell(cellPoint.x, cellPoint.y,
+                                       cellPoint.z);
             // Artifact ids 0x48 and 0x5a are spelled as literals for the
             // reason findpath's GetTerrainCost records: armygrp.h's
             // EArtifactId rides in initialize.cpp's measured include
@@ -1193,10 +1211,8 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         }
 
         {
-            type_point target;
-            target.x = currHero->pathTargetX;
-            target.y = currHero->pathTargetY;
-            target.z = currHero->pathTargetZ;
+            type_point target(currHero->pathTargetX, currHero->pathTargetY,
+                              currHero->pathTargetZ);
             SeedTo(target);
         }
 
@@ -1360,16 +1376,19 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
         if (viewingPlayer->currTownId == -1)
             break;
         town* viewedTown = gpGame->GetTown(viewingPlayer->currTownId);
-        type_point townPoint;
-        townPoint.x = viewedTown->mapX;
-        townPoint.y = viewedTown->mapY;
-        townPoint.z = viewedTown->mapZ;
+        type_point townPoint(viewedTown->mapX, viewedTown->mapY,
+                             viewedTown->mapZ);
         // The lookup's result is DISCARDED - retail makes the call and
-        // never reads eax. Transcribed as retail wrote it.
-        if (!townPoint.is_valid())
-            fullMap->cell(0, 0, 0);
+        // never reads eax. Transcribed as retail wrote it, through the
+        // by-value cell helper (see the WALK_ROUTE site for the self-store
+        // that proves the copy).
+        type_point cellPoint = townPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
+        if (!valid)
+            map->cell(0, 0, 0);
         else
-            fullMap->cell(townPoint.x, townPoint.y, townPoint.z);
+            map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         viewedTown->View(0);
         eventCell = 0;
         break;
@@ -1383,19 +1402,14 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
             break;
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
         if (gUnnamed699560) {
-            type_point offMap;
-            offMap.x = -1;
-            offMap.y = -1;
-            offMap.z = 0;
+            type_point offMap(-1, -1, 0);
             SetEnvironmentOrigin(offMap, 1);
         }
         TrimLoopingSounds(0);
         HeroView(viewingPlayer->currHeroId, 0, 0, 0);
         if (gUnnamed699560) {
-            type_point centre;
-            centre.x = radarOrigin.x + 9;
-            centre.y = radarOrigin.y + 8;
-            centre.z = radarOrigin.z;
+            type_point centre(radarOrigin.x + 9, radarOrigin.y + 8,
+                              radarOrigin.z);
             SetEnvironmentOrigin(centre, 1);
         }
         if (gNetworkActive69954c && pDPlay) {
@@ -1408,30 +1422,32 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     }
 
     case ADV_COMMAND_SELECT_HERO: {
-        type_point mapPoint;
-        mapPoint.x = radarOrigin.x + lastHoverX;
-        mapPoint.y = radarOrigin.y + lastHoverY;
-        mapPoint.z = radarOrigin.z;
+        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                            radarOrigin.z);
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* heroCell;
-        if (!mapPoint.is_valid())
-            heroCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            heroCell = map->cell(0, 0, 0);
         else
-            heroCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            heroCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         SetHeroContext(heroCell->extraInfo, 0,
                        !gpCurrentPlayer->IsLocalHuman(), 1);
         break;
     }
 
     case ADV_COMMAND_SELECT_TOWN: {
-        type_point mapPoint;
-        mapPoint.x = radarOrigin.x + lastHoverX;
-        mapPoint.y = radarOrigin.y + lastHoverY;
-        mapPoint.z = radarOrigin.z;
+        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                            radarOrigin.z);
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* townCell;
-        if (!mapPoint.is_valid())
-            townCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            townCell = map->cell(0, 0, 0);
         else
-            townCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            townCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         SetTownContext(townCell->extraInfo,
                        !gpCurrentPlayer->IsLocalHuman(), 1);
         break;
@@ -1440,19 +1456,18 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
     case ADV_COMMAND_SHIPYARD: {
         gpMouseManager->ShowPointer(0);
         gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
-        type_point dockPoint;
-        dockPoint.x = radarOrigin.x + lastHoverX;
-        dockPoint.y = radarOrigin.y + lastHoverY;
-        dockPoint.z = radarOrigin.z;
-        type_point mapPoint;
-        mapPoint.x = radarOrigin.x + lastHoverX;
-        mapPoint.y = radarOrigin.y + lastHoverY;
-        mapPoint.z = radarOrigin.z;
+        type_point dockPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                             radarOrigin.z);
+        type_point mapPoint(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                            radarOrigin.z);
+        type_point cellPoint = mapPoint;
+        unsigned char valid = cellPoint.is_valid();
+        NewfullMap* map = fullMap;
         NewmapCell* dockCell;
-        if (!mapPoint.is_valid())
-            dockCell = fullMap->cell(0, 0, 0);
+        if (!valid)
+            dockCell = map->cell(0, 0, 0);
         else
-            dockCell = fullMap->cell(mapPoint.x, mapPoint.y, mapPoint.z);
+            dockCell = map->cell(cellPoint.x, cellPoint.y, cellPoint.z);
         DoEventShipyard(dockCell, dockPoint,
                         gpCurrentPlayer->IsLocalHuman());
         UpdateRadar(radarOrigin, 1, 1, 0, 0, 0);
@@ -1829,10 +1844,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
             SetHeroContext(localPlayer->currHeroId, 0, 0, 1);
         }
 
-        type_point heroPoint;
-        heroPoint.x = currHero->x;
-        heroPoint.y = currHero->y;
-        heroPoint.z = currHero->z;
+        type_point heroPoint(currHero->x, currHero->y, currHero->z);
 
         NewmapCell* standingOn;
         {
@@ -1848,10 +1860,7 @@ int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, typ
         if (standingOn->type == ANCHOR_POINT)
             break;
 
-        type_point eventPoint;
-        eventPoint.x = currHero->x;
-        eventPoint.y = currHero->y;
-        eventPoint.z = currHero->z;
+        type_point eventPoint(currHero->x, currHero->y, currHero->z);
         DoEvent(standingOn, eventPoint);
         return 1;
     }
@@ -2438,10 +2447,7 @@ int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, typ
 
     case TAdventureMapWindow::KINGDOM_OVERVIEW_ID: {
         if (gUnnamed699560) {
-            type_point invalidOrigin;
-            invalidOrigin.x = -1;
-            invalidOrigin.y = -1;
-            invalidOrigin.z = 0;
+            type_point invalidOrigin(-1, -1, 0);
             SetEnvironmentOrigin(invalidOrigin, 1);
         }
         TrimLoopingSounds(0);
@@ -3753,12 +3759,15 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
 }
 
 // E:\gamedcs\advmgr.cpp:2835
-// RETAIL-RECONSTRUCTED 2026-08-09 (99.3641%). Retail proves the complete
-// operation set: object-name copy, trigger/knowledge and global-visit gates,
-// signed shrine spell extraction, formatted spell name, and the current hero's
-// availability annotation. Dreamcast CodeView supplies the surviving
-// function/domain names. All nine branches and both returns agree; the residual
-// is one byte-width bit test and one redundant buffer reload in retail.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete operation set: object-name copy, trigger/knowledge and global-visit
+// gates, signed shrine spell extraction, formatted spell name, and the current
+// hero's availability annotation. Dreamcast CodeView supplies the surviving
+// function/domain names. The last residual - "one byte-width bit test" - was
+// NewmapCell::PlayerKnowsCell's mask: the visibility lane is an EIGHT-BIT
+// field, so retail's `test cl,al` is legal and our dword `test ecx,eax` was
+// not. Spelling the field read as `(extraInfo >> 5) & 0xff` in mapcell.h
+// closed this row, SetTreeHelpText and set_witch_hut_help_text together.
 VA(0x0040d8d0, 0x229)  // dc-bracket forced, dc 0xb788
 void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, GlobalInfoFlags type, const char* separator_1, const char* separator_2)
 {
@@ -3788,10 +3797,13 @@ void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, Globa
 }
 
 // E:\gamedcs\advmgr.cpp:2878
-// RETAIL-RECONSTRUCTED 2026-08-09 (99.7414%). Retail proves the complete
-// name/trigger, global-visit, cell-knowledge, price and hero-visit paths. All
-// nine branches and the return agree; the residual is register allocation and
-// PlayerKnowsCell's dword bit-test where retail selects the low bytes.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete name/trigger, global-visit, cell-knowledge, price and hero-visit
+// paths. The residual read as "register allocation and PlayerKnowsCell's
+// dword bit-test"; the register story was downstream of the test width.
+// Narrowing the visibility-lane read to its true eight bits in mapcell.h
+// (`(extraInfo >> 5) & 0xff`) produced retail's `test cl,al` AND its EDI
+// register choice for the cell in one edit.
 VA(0x0040db00, 0x1BD)  // dc-bracket forced, dc 0xb930
 void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
@@ -3827,12 +3839,13 @@ void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const c
 }
 
 // E:\gamedcs\advmgr.cpp:3002
-// RETAIL-RECONSTRUCTED 2026-08-09 (98.0056%). Retail proves the complete
-// object-name, trigger/sentinel, cell-knowledge, secondary-skill and
-// current-hero paths. All ten branches and the return agree; the residual is
-// register allocation and PlayerKnowsCell's dword mask where retail narrows
-// both operands to their low bytes. Dreamcast CodeView supplies the surviving
-// function, enum and traits names.
+// RETAIL-RECONSTRUCTED 2026-08-09, EXACT 2026-08-21. Retail proves the
+// complete object-name, trigger/sentinel, cell-knowledge, secondary-skill and
+// current-hero paths. The residual - "PlayerKnowsCell's dword mask where
+// retail narrows both operands to their low bytes" - named its own answer:
+// the visibility lane is eight bits wide, and reading it as such in mapcell.h
+// closed all three help-text builders at once. Dreamcast CodeView supplies
+// the surviving function, enum and traits names.
 VA(0x0040dcc0, 0x1E4)  // dc-bracket forced, dc 0xbd84
 void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
@@ -3910,16 +3923,16 @@ int advManager::ProcessWaitingHover(int mouseX, int mouseY)
             if (thisPlayer->currHeroId == -1
                 || gpGame->GetHero(thisPlayer->currHeroId)->z
                     == radarOrigin.z) {
-                type_point point;
-                point.x = radarOrigin.x + lastHoverX;
-                point.y = radarOrigin.y + lastHoverY;
-                point.z = radarOrigin.z;
+                type_point point(radarOrigin.x + lastHoverX, radarOrigin.y + lastHoverY,
+                                 radarOrigin.z);
 
+                type_point cellPoint = point;
                 NewmapCell* currCell;
-                if (!point.is_valid())
+                if (!cellPoint.is_valid())
                     currCell = fullMap->cellData;
                 else
-                    currCell = fullMap->cell(point.x, point.y, point.z);
+                    currCell = fullMap->cell(cellPoint.x, cellPoint.y,
+                                             cellPoint.z);
 
                 // rx/ry, NOT mouseX/mouseY - retail passes the /32 CELL
                 // coordinates here, exactly as ProcessHover does. At
@@ -4163,6 +4176,9 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         }
 
         hero* currHero = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+        // FIELD ASSIGNMENT, not the ctor, at this ONE site: the ctor form
+        // that is worth +2.5 to +5.7 in the neighbouring hover/context
+        // bodies costs 0.62 here (83.5000 -> 82.8763). Measured per site.
         type_point heroPoint;
         heroPoint.x = currHero->x;
         heroPoint.y = currHero->y;
@@ -4368,10 +4384,7 @@ int advManager::ProcessSearch(int x, int y, int z)
 
     if (currHero->movePoints != currHero->maxMovePoints) {
         if (!gpCurrentPlayer->IsHuman()) {
-            type_point invalidPoint;
-            invalidPoint.x = -1;
-            invalidPoint.y = -1;
-            invalidPoint.z = -1;
+            type_point invalidPoint(-1, -1, -1);
             memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
                    sizeof(invalidPoint));
             return 1;
@@ -4385,10 +4398,7 @@ int advManager::ProcessSearch(int x, int y, int z)
     if (currHero->get_number_in_backpack(true)
             == HERO_BACKPACK_CAPACITY) {
         if (!gpCurrentPlayer->IsHuman()) {
-            type_point invalidPoint;
-            invalidPoint.x = -1;
-            invalidPoint.y = -1;
-            invalidPoint.z = -1;
+            type_point invalidPoint(-1, -1, -1);
             memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
                    sizeof(invalidPoint));
             return 1;
@@ -4407,10 +4417,7 @@ int advManager::ProcessSearch(int x, int y, int z)
         z = currHero->z;
     }
 
-    type_point point;
-    point.x = x;
-    point.y = y;
-    point.z = z;
+    type_point point(x, y, z);
 
     type_point lookupPoint = point;
     if (!lookupPoint.is_valid())
@@ -4419,10 +4426,7 @@ int advManager::ProcessSearch(int x, int y, int z)
         currCell = fullMap->cell(lookupPoint.x, lookupPoint.y, lookupPoint.z);
 
     if (!gpCurrentPlayer->IsHuman() && !currCell->is_diggable()) {
-        type_point invalidPoint;
-        invalidPoint.x = -1;
-        invalidPoint.y = -1;
-        invalidPoint.z = -1;
+        type_point invalidPoint(-1, -1, -1);
         memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
                sizeof(invalidPoint));
         return 1;
@@ -4876,14 +4880,27 @@ static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 }
 
 // E:\gamedcs\advmgr.cpp:5688
-// Residual (98.1667%): all 16 branches and both returns agree. The only real
-// code delta is the third boat-sprite call: retail keeps GetNumFrames' zero
-// fallback/divisor in ECX (`xor ecx,ecx; idiv ecx`), while this VC6 build
-// spills it to the frame and therefore emits one extra instruction. Dreamcast
-// lists exactly currHero, currBoat, HeroCellY and HeroCellX as locals. A
-// release VERIFY-shaped currHero invariant, discarded GetNumFrames value and
-// `GetNumFrames(...) > 0` invariant are byte-flat; naming the divisor is also
-// flat, while naming the remainder regresses to 98.1571%.
+// Residual (98.1667%): all 16 branches and both returns agree - `vc6 diagnose`
+// reads flow-distance 0, register-distance 15, and why-reg --model finds NO
+// register-binding divergence in its slice, i.e. this is scheduling, not
+// allocation. LOCALISED 2026-08-21 to a single instruction at the THIRD boat
+// call (boatIcons), nine bytes, and the first two calls are byte-identical:
+//
+//   retail  ... cmp bl,4 / mov ebx,[eax+0x40] / seta dl
+//               mov byte ptr [ebp+0x18], dl / cdq / idiv ecx / mov ecx, esi
+//   ours    ... cmp bl,4 / MOV ECX, ESI / mov ebx,[eax+0x40] / seta dl
+//               mov byte ptr [ebp+8], dl / cdq / idiv dword ptr [ebp+0x18]
+//
+// Our CL slots the GetStandSequence receiver setup (`mov ecx,esi`) into the
+// scheduling gap BEFORE the divide, which evicts the frame count from ECX and
+// forces the whole `xor ecx,ecx` / `idiv ecx` pair into memory - three extra
+// stores plus the wider idiv. Retail issues the same move one instruction
+// later. Sites one and two prove our source shape is right; only this site's
+// schedule differs. Dreamcast lists exactly currHero, currBoat, HeroCellY and
+// HeroCellX as locals. Byte-flat probes: a release VERIFY-shaped currHero
+// invariant, a discarded GetNumFrames value, a `GetNumFrames(...) > 0`
+// invariant, and naming the divisor; naming the remainder regresses to
+// 98.1571%.
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
                               int baseY, int tilex, int tiley, int tilew,
@@ -4952,11 +4969,15 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
 }
 
 // E:\gamedcs\advmgr.cpp:5773
-// Residual (98.1840%): all 18 branches and both returns agree, with the same
-// one-instruction third-boat-call divisor spill as DrawHeroPart above. The
-// Dreamcast four-local roster and the VERIFY/accessor/named-local probes are
-// identical, so this is the shared compiler scheduling residual rather than
-// an independently source-nameable shadow-path difference.
+// Residual (98.1840%): all 18 branches and both returns agree, with exactly
+// the same nine-byte third-boat-call divisor spill as DrawHeroPart above -
+// see that body for the instruction-level localisation. The Dreamcast
+// four-local roster and the VERIFY/accessor/named-local probes are identical,
+// so this is the shared scheduling residual (flow-distance 0, why-reg --model
+// reports no binding divergence) rather than an independently source-nameable
+// shadow-path difference. The twins are a free in-compile A/B: any candidate
+// spelling should be tried in ONE of them first, since a real fix must move
+// both.
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
 void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
                                     int baseX, int baseY, int tilex,
@@ -5092,6 +5113,19 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
 }
 
 // E:\gamedcs\advmgr.cpp:5941
+// Residual (87.5901%): BOUNDED, and the model proves it (2026-08-21). The
+// whole delta is one callee-saved role swap - retail holds `this` in ESI and
+// the object-list pointer in EDI, we hold them the other way round - plus the
+// four-byte frame shift that follows it. Flow-distance 2, 125 blocks against
+// retail's 125, identical call multiset. `why-reg --model` reads the SAME
+// three definition slots in the SAME order on both sides (#0@8, #1@17, #2@21)
+// and reports the only lever as "make `this` the first-created call-crossing
+// pseudo"; `this` is minted between the parameters and the body locals, so no
+// declaration, include or spelling change can create a local's handle before
+// it. That is C2-side handle STATE (catalog C1 class), not handle order, and
+// it is not source-reachable. The one candidate the model still compiled
+// (swapping the baseX/baseY declarations) measured +8 distance, no
+// improvement. DrawAdvObjShadow below carries the identical wall.
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -6230,6 +6264,17 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 
     // The acting player's live hero, and its map square, so the cell loop
     // below can paint that one square in the owner's colour.
+    // MEASURED AND REJECTED (2026-08-21), both readings of the one real
+    // structural divergence left in this body. Retail inverts the guard and
+    // duplicates the null store into the else arm
+    // (`jne <work> / mov [ebp-0x38],edx / jmp <join>`) where we hoist it
+    // ahead of the test; spelling that as an explicit `else currentHero = 0;`
+    // costs 90.6495 -> 89.9633. And retail re-reads `origin` from its
+    // parameter home at the z compare (`mov cx, word ptr [ebp+0xa]`) where we
+    // hold it in ESI, but dropping the `int z = origin.z;` cache and reading
+    // `origin.z` at both uses costs 90.6495 -> 90.3991. The rest is the
+    // callee-saved role of `this`: retail keeps it in ECX and spills to
+    // [ebp-0x8], we move it to ESI - the bounded C1 handle-state class.
     int heroX = -1;
     int heroY = -1;
     hero* currentHero = 0;
@@ -6837,6 +6882,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
 // Retail does NOT use a ternary here: it emits two complete sprintf calls
 // and shares only the strcat tail, and it stores the tested flag into `z`
 // first rather than testing the field in place.
+// THAT IS SPECIFIC TO THIS MACRO - the ARENA and BUOY cases below keep their
+// ternaries, and the bytes say so (2026-08-21). Retail reaches BUOY's tail
+// with `mov ecx,[hero+0x105] / and ecx,4 / mov [ebp+0x10],ecx / jmp <shared>`,
+// i.e. it stores the flag and JUMPS to one shared visited/unvisited selector
+// that it also uses for ARENA; our compile expands the same ternary inline at
+// each. Rewriting those two to this macro's two-sprintf form does NOT recover
+// the sharing and makes it worse - BUOY alone 94.8708 -> 94.8239, BUOY and
+// ARENA together 92.6688. The ternary is retail's source at those two sites;
+// only the cross-jump that merges their tails is a C2 choice we do not get.
 #define SET_VISITED_QUICKINFO(objectType, condition)                     \
             case objectType:                                             \
                 strcpy(gText, gAdventureObjectNames[objectType]);         \
@@ -7767,12 +7821,16 @@ void advManager::garrison_quick_view(int id, int x, int y)
 long AI_approximate_strength(const hero* current_hero);
 
 // E:\gamedcs\advmgr.cpp:9284
-// Residual (99.96%): frame-slot coalescing only - retail parks the
-// type_point and the like modifier in one slot (-0x24), our CL gives the
-// point its own (-0x28); every instruction pairs masked. Tried and
-// rejected: closing the point's scope with a goto-identified restructure
-// (77.47 - the flow shape collapses). predict-inline's over-inline row is
-// the folded QuickWindowWait label, not a real wall.
+// EXACT. The last 0.04 was frame-slot coalescing: retail parks the
+// type_point, the like modifier AND limit()'s upper-bound temp in the SINGLE
+// slot -0x24 (frame 0x18), where we gave the point its own -0x28 (frame
+// 0x1c). VC6 only overlaps two locals whose blocks are SIBLINGS, and with the
+// point declared in the `if (currHero)` block the like/limit block nests
+// INSIDE its scope. Closing the point's block around the IsInIdentifyRange
+// call - landing the answer in `inIdentifyRange` - makes the two blocks
+// siblings, the slot is reused, and the frame becomes retail's exactly.
+// (The earlier note's rejected goto restructure at 77.47 was collapsing the
+// flow shape; the scope close alone keeps the flow and pays the whole delta.)
 VA(0x00417150, 0x2C9)  // anchor-callee, dc 0x19e80
 void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
 {
@@ -7785,9 +7843,13 @@ void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
     TQuickCreatureWindow* window;
     hero* currHero = gpGame->GetHero(localPlayer->currHeroId);
     if (currHero) {
-        type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
-                         radarOrigin.z);
-        if ((currHero->IsInIdentifyRange(&point)
+        unsigned char inIdentifyRange;
+        {
+            type_point point(radarOrigin.x + cellx, radarOrigin.y + celly,
+                             radarOrigin.z);
+            inIdentifyRange = currHero->IsInIdentifyRange(&point);
+        }
+        if ((inIdentifyRange
              && currHero->HeroFn_004E5DE0() != eMasteryInvalid)
             || DebugViewAll) {
             int like = get_like_modifier(currHero, type);
@@ -8026,10 +8088,7 @@ void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigne
 
     gpAdvManager->RedrawAdvScreen(update, 0);
 
-    type_point point;
-    point.x = radarOrigin.x + 9;
-    point.y = radarOrigin.y + 8;
-    point.z = radarOrigin.z;
+    type_point point(radarOrigin.x + 9, radarOrigin.y + 8, radarOrigin.z);
     SetEnvironmentOrigin(point, 1);
 
     point.x = currTown->mapX;
@@ -8123,10 +8182,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
     hero* newHero = &gpGame->heroes[heroId];
     NewmapCell* heroCell;
     {
-        type_point heroPoint;
-        heroPoint.x = newHero->x;
-        heroPoint.y = newHero->y;
-        heroPoint.z = newHero->z;
+        type_point heroPoint(newHero->x, newHero->y, newHero->z);
 
         type_point cellPoint = heroPoint;
         if (!cellPoint.is_valid())
@@ -8191,10 +8247,8 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         && (status == STATUS_ACTIVE || gpCurrentPlayer->IsLocalHuman())) {
         seedingValid = 0;
         if (newHero->pathTargetX >= 0) {
-            type_point routeTarget;
-            routeTarget.x = newHero->pathTargetX;
-            routeTarget.y = newHero->pathTargetY;
-            routeTarget.z = newHero->pathTargetZ;
+            type_point routeTarget(newHero->pathTargetX, newHero->pathTargetY,
+                                   newHero->pathTargetZ);
             SeedTo(routeTarget);
         }
         ShowRoute(0, 0, 1);
@@ -8455,9 +8509,25 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
 // are slightly negative (89.44), and the nested switches alone reach 92.88;
 // together they reach 93.76. Replacing the two two-value nested switches
 // (GARRISON and CREATURE_GENERATOR_4) with their DC-looking if chains was
-// also measured and rejected on the pre-tail shape (88.37). Residual: base
-// has 16 conditional branches / 72 returns against retail's 17 / 71; one
-// duplicated exit and the remaining switch-block placement are C2 choices.
+// also measured and rejected on the pre-tail shape (88.37).
+//
+// 93.7570 -> 94.5074 (2026-08-21): THAT REJECTION EXPIRED WITH THE TAIL
+// REWRITE. Re-measured on the current shape, the two two-value if-chains now
+// PAY. The bytes name them directly: retail dispatches GARRISON with
+// `mov cx, word ptr [ecx+0x22] / test cx,cx / jne / cmp cx,1`, a word-width
+// if-chain with INLINE arms, where a `switch` forces `movsx eax,word / sub /
+// je / dec` because a jump table needs the index sign-extended. Equality
+// against a short compares at 16 bits; a switch cannot.
+//
+// Residual (94.51%): CROSS-JUMPER BLOCK SHARING, and the direction is ours.
+// Retail lays the CREATURE_GENERATOR_1 arm bodies out in exact source order
+// (0x21, 0x03, 0x15, 0x2e, 0x25, 0x09, 0x17, 0x32 ...); our compile omits the
+// 0x15/0x25/0x17 copies there and shares them with the identical-valued
+// blocks in the CREATURE_BANK switch, and does the same with 0x3c. Retail
+// keeps a private copy per arm. Same mnemonics, same values, one fewer
+// return on retail's side (71 vs our 72) - a C2 tail-merge choice with no
+// source lever, since the duplicate blocks are duplicate BY VALUE and no
+// spelling can make two `return LOOPING_SOUND_23;` differ.
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
@@ -8498,11 +8568,11 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             }
         }
         case GARRISON:
-            switch (thisCell->objectIndex) {
-            case GET_SOUND_GARRISON_0: return LOOPING_SOUND_41;
-            case GET_SOUND_GARRISON_1: return LOOPING_SOUND_25;
-            default: return LOOPING_SOUND_INVALID;
-            }
+            if (thisCell->objectIndex == GET_SOUND_GARRISON_0)
+                return LOOPING_SOUND_41;
+            if (thisCell->objectIndex == GET_SOUND_GARRISON_1)
+                return LOOPING_SOUND_25;
+            return LOOPING_SOUND_INVALID;
         case WINDMILL:
             return LOOPING_SOUND_66;
         case WHIRLPOOL:
@@ -8611,11 +8681,11 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             default: return LOOPING_SOUND_42;
             }
         case CREATURE_GENERATOR_4:
-            switch (thisCell->objectIndex) {
-            case GET_SOUND_GENERATOR4_0: return LOOPING_SOUND_43;
-            case GET_SOUND_GENERATOR4_1: return LOOPING_SOUND_12;
-            default: return LOOPING_SOUND_INVALID;
-            }
+            if (thisCell->objectIndex == GET_SOUND_GENERATOR4_0)
+                return LOOPING_SOUND_43;
+            if (thisCell->objectIndex == GET_SOUND_GENERATOR4_1)
+                return LOOPING_SOUND_12;
+            return LOOPING_SOUND_INVALID;
         case DEFENSE_TOWER:
         case HILL_FORT:
         case WAR_SCHOOL:
@@ -8849,11 +8919,13 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         return;
     }
 
+    // The point is a TEMPORARY, not a named local: retail reads it back
+    // through the constructor's returned `this` (`call ??0type_point /
+    // mov eax,[eax]`), where naming it re-reads the frame slot instead.
 #pragma inline_depth(0)
-    type_point seedTarget(currentHero->pathTargetX, currentHero->pathTargetY,
-                          currentHero->pathTargetZ);
+    SeedTo(type_point(currentHero->pathTargetX, currentHero->pathTargetY,
+                      currentHero->pathTargetZ));
 #pragma inline_depth()
-    SeedTo(seedTarget);
 
     int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
     if (static_cast<int>(gpSearchArray->result.size()) <= 0
@@ -8866,10 +8938,7 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
         bShowRoute = 1;
 
         int movePoints = currentHero->movePoints;
-        type_point heroPos;
-        heroPos.x = currentHero->x;
-        heroPos.y = currentHero->y;
-        heroPos.z = currentHero->z;
+        type_point heroPos(currentHero->x, currentHero->y, currentHero->z);
         type_point step = heroPos;
 
         currentHero->army.GetNativeTerrain();
@@ -9278,10 +9347,15 @@ void advManager::SetInitialMapOrigin()
 
     advWindow->SetElevationToggleImage(radarOrigin.z);
 
-    type_point center;
-    center.x = radarOrigin.x + 9;
-    center.y = radarOrigin.y + 8;
-    center.z = radarOrigin.z;
+    // EXACT via the CONSTRUCTOR, not field assignment (92.1202 -> 100.0000,
+    // 2026-08-21). Setting x/y/z as three separate member assignments makes
+    // VC6 read-modify-write the packed word once per field
+    // (`xor word ptr [ebp-6], cx` twice); the three-argument ctor builds the
+    // whole y|z word in a register, masks the old one with
+    // `and eax, 0xffffc000` and stores it ONCE. Retail's mask-and-single-store
+    // is the ctor's signature. It also retires the by-value copy VC6 was
+    // making for GetCell's parameter, which retail does not have.
+    type_point center(radarOrigin.x + 9, radarOrigin.y + 8, radarOrigin.z);
 
     field_58 = GetCell(center)->GroundSet;
     gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
@@ -9706,8 +9780,6 @@ int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
 void advManager::ViewPuzzle()
 {
-    type_point centre;
-
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
     DemobilizeCurrHero(0, 1);
     int pos = gpGame->GetLocalPlayerGamePos();
@@ -9720,7 +9792,7 @@ void advManager::ViewPuzzle()
 
     if (gpGame->field_4e3e8 > 0) {
         gpWindowManager->SaveFizzleSourceX(8, 8, 592, 544);
-        centre = gpGame->get_puzzle_origin();
+        type_point centre = gpGame->get_puzzle_origin();
         int grailY = gpGame->ultimateArtifactY;
         int grailX = gpGame->ultimateArtifactX;
         gUnnamed6989f4 = 1;
@@ -9749,14 +9821,16 @@ void advManager::ViewPuzzle()
     if (!gUnnamed6aac3c) {
         RedrawAdvScreen(1, 0);
         gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
-        // SetHeroContext's merged y|z store idiom: both values in hand
-        // before the first bitfield write.
-        int centreX = radarOrigin.x + 9;
-        int centreY = radarOrigin.y + 8;
-        int centreZ = radarOrigin.z;
-        centre.x = centreX;
-        centre.y = centreY;
-        centre.z = centreZ;
+        // Two BLOCK-SCOPED points, and the tail one CONSTRUCTED (83.3125 ->
+        // 85.6339, 2026-08-21, frame 0x148 -> retail's 0x140 exactly). The
+        // single function-scope `centre` shared by the puzzle-origin block
+        // and this one held its slot live across the whole body; separate
+        // block-scoped locals coalesce. The ctor is the same lever that
+        // closed SetInitialMapOrigin: it merges the y|z bitfield word into
+        // one masked store where the named-int form the previous note
+        // reached for still emitted per-field read-modify-writes.
+        type_point centre(radarOrigin.x + 9, radarOrigin.y + 8,
+                          radarOrigin.z);
         SetEnvironmentOrigin(centre, 1);
     }
 }
@@ -9892,19 +9966,33 @@ unsigned char advManager::DoSystemOptions()
 // the wooded default. type_point's `short x:10, y:10, z:4` packing puts y
 // and z in the second allocation unit, which is why retail walks the loop
 // variable through `xor word ptr [p+2]` bitfield writes.
-// Residual (99.10%): the two lower clamps only. Retail tests `value < 0`
+// CASE ARM ORDER IS SOURCE ORDER HERE (99.0975 -> 99.1483, 2026-08-21).
+// This dispatches through a jump table (`jmp dword ptr [4*edx + tbl]`), so
+// the arm BODIES emerge in source order, and retail's run is
+// `inc [trees] / inc [mountains] / inc [dead]` against our
+// `trees / dead / mountains`. The counters' own slots are NOT the tell and
+// do not move - the majority vote at the bottom reads trees at -0xc, dead
+// at -0x8 and mountains at -0x4 identically on both sides, which is what
+// identifies each arm. Retail's source simply wrote DEAD_VEGETATION last.
+//
+// Residual (99.15%): the two lower clamps only. Retail tests `value < 0`
 // and yields the zero (`jl`), where this TU's `_cpp_max` spelling
 // (`_X > _Y ? _X : _Y`) tests `value > 0` and yields the value (`jg`).
-// Swapping to `_cpp_max(0, value)` DOES buy the retail polarity but costs
-// the shared zero: retail materialises one `xor esi, esi` feeding both
-// clamps, while the swapped order creates the constant first, parks it in
-// edx and re-emits an immediate 0 for the second clamp - measured 98.73,
-// strictly worse, so the higher-scoring order stands. The template itself
-// is NOT the knob: FindAdjacentMonster four functions up uses the same
+// RE-MEASURED at this plateau, both combinations. `_cpp_max(0, value)` buys
+// the retail polarity AND retail's whole temp-slot numbering (-0x1c value,
+// -0x14 zero, and the counter-init store order) - but it costs the shared
+// zero. Retail materialises one `xor esi, esi` that is STILL LIVE at the
+// minX clamp; the swapped order picks edx instead, loses it to the
+// gMapHeight load in the maxY clamp sitting between the two lower clamps,
+// and re-emits an immediate 0. Measured 98.7331 alone and 98.7839 with the
+// arm reorder, against 99.1483 for the order that stands. The template is
+// NOT the knob: FindAdjacentMonster four functions up uses the same
 // `_cpp_max(value, 0)` idiom and retail emits `jg` there, so this TU's
 // spelling is byte-proven and MoreTreesNear's source genuinely differed.
-// What remains beyond the polarity is frame-slot coalescing (arg-slot
-// [ebp+8] vs a negative scratch slot), the documented class.
+// Beyond the polarity, exactly one dword: our frame is 0x2c against
+// retail's 0x30 because retail gives maxX a real slot (-0x28) and spends
+// the recycled parameter home [ebp+8] on the loop's shifted-point temp,
+// where we do the reverse.
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
 int advManager::MoreTreesNear(type_point point)
 {
@@ -9932,9 +10020,6 @@ int advManager::MoreTreesNear(type_point point)
             case TERRAIN_YUCCA_TREE:
                 trees++;
                 break;
-            case TERRAIN_DEAD_VEGETATION:
-                dead++;
-                break;
             case TERRAIN_HILL:
             case TERRAIN_MOUND:
             case TERRAIN_MOUNTAIN:
@@ -9942,6 +10027,9 @@ int advManager::MoreTreesNear(type_point point)
             case TERRAIN_VOLCANIC_VENT:
             case TERRAIN_VOLCANO:
                 mountains++;
+                break;
+            case TERRAIN_DEAD_VEGETATION:
+                dead++;
                 break;
             }
         }
