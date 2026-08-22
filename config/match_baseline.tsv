@@ -306,7 +306,7 @@ army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
 army	?CancelIndividualSpell@army@@QAEXH@Z	96.2713	96.2713	96.2713	0x44510
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
-army	?ComputeAttackerDamageBonuses@army@@QBEHHEPAV1@EJ@Z	98.9804	98.9804	98.9804	0x43840
+army	?ComputeAttackerDamageBonuses@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43840
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
 army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
@@ -326,14 +326,14 @@ army	?OffsetToFront@army@@QBEHH@Z	100.0000	100.0000	100.0000	0x45cd0
 army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
 army	?ProcessDeath@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x44120
 army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
-army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
-army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
+army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	100.0000	100.0000	100.0000	0x3df20
+army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	100.0000	100.0000	100.0000	0x3e000
 army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	99.5510	99.5510	99.5510	0x448f0
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?Unnamed447fe0@army@@QAEEXZ	100.0000	100.0000	100.0000	0x47fe0
 army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0
-army	?WalkTo@army@@QAEEHE@Z	89.8063	89.8063	89.8063	0x41fa0
+army	?WalkTo@army@@QAEEHE@Z	93.3162	93.3162	93.3162	0x41fa0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?animate_missile@army@@QAEXPAV1@@Z	93.1695	93.1695	93.1695	0x3f2c0
@@ -341,8 +341,8 @@ army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	91.4600	91.4600	91.4600	0x45fd0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
-army	?can_cast_spell@army@@QBEEJ@Z	99.0409	99.0409	99.0409	0x476c0
-army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
+army	?can_cast_spell@army@@QBEEJ@Z	99.7059	99.7059	99.7059	0x476c0
+army	?can_shoot@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
@@ -376,7 +376,7 @@ army	?get_multi_head_directions@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0
 army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
 army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
-army	?get_total_combat_value@army@@QBEJJJ@Z	94.7414	94.7414	94.7414	0x42e60
+army	?get_total_combat_value@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	92.1581	92.1581	92.1581	0x42a50
 army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	96.2453	96.2453	96.2453	0x3d730
@@ -393,7 +393,7 @@ army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?set_inside_area_effect@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x3efe0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
-army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	91.0744	91.0744	91.0744	0x47a80
+army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	92.6970	92.6970	92.6970	0x47a80
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
 armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
@@ -548,7 +548,7 @@ cmbtmgr	?GetMissileStartingPosition@@YIXHHHHHHPBVCSprite@@PAH111@Z	100.0000	100.
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
 cmbtmgr	?HexIsBlocked@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
-cmbtmgr	?InLineOfSight@combatManager@@QBEEHH@Z	95.4601	95.4601	95.4601	0x67840
+cmbtmgr	?InLineOfSight@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x67840
 cmbtmgr	?InitNonVisualVars@combatManager@@QAEXXZ	95.7196	95.7196	95.7196	0x63c60
 cmbtmgr	?InitializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66c50
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
@@ -560,11 +560,11 @@ cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	99.3528	99.3528	99.3528	0x63600
 cmbtmgr	?LoadIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63370
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
-cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	0.0000	0.0000	33.3711	0x6a070
+cmbtmgr	?LootDeadHero@combatManager@@QAEXHAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x6a070
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?MakeCreaturesVanish@combatManager@@QAEXXZ	96.8312	96.8312	96.8312	0x66e00
 cmbtmgr	?NextArmy@combatManager@@QAEEE@Z	100.0000	100.0000	100.0000	0x65080
-cmbtmgr	?Open@combatManager@@UAEHH@Z	99.4306	99.4306	99.4306	0x62a20
+cmbtmgr	?Open@combatManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x62a20
 cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
 cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0
@@ -577,7 +577,7 @@ cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x66b3
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	99.6497	99.6497	99.6497	0x65330
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
-cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1361	98.1361	98.1361	0x66290
+cmbtmgr	?SetupAndLoadObstacles@combatManager@@QAEXXZ	98.1402	98.1402	98.1402	0x66290
 cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	93.5088	93.5088	93.5088	0x67db0
 cmbtmgr	?ShootBallisticMissile@combatManager@@QAEXHHHHPBVCSprite@@@Z	89.3406	89.3406	89.3406	0x67a00
@@ -1682,7 +1682,7 @@ spells	?Armageddon@combatManager@@QAEXHH@Z	93.9013	93.9013	93.9013	0x1a4bc0
 spells	?ChainLightning@combatManager@@QAEXHHH@Z	96.1913	96.1913	96.1913	0x1a6360
 spells	?ClearEffects@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1a66b0
 spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	100.0000	100.0000	100.0000	0x1a7890
-spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	99.9961	99.9961	99.9961	0x1a5c20
+spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0x1a5c20
 spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	94.9073	94.9073	94.9073	0x1a5440
 spells	?Earthquake@combatManager@@QAEXH@Z	84.9579	84.9579	84.9579	0x1a7c80
 spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	91.1017	91.1017	91.1017	0x1a61f0
