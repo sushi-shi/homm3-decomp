@@ -50,6 +50,10 @@ enum EGeneralTextIndex {
     // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
     // counts toward the include-set threshold in every consumer.
     GENERAL_TEXT_SKELETON_GOLD = 47,
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    // TurnDurationMsg prefixes its caller-supplied warning with this row.
+    GENERAL_TEXT_TURN_DURATION_PREFIX = 54,
+#endif
     // town.obj's three event-reward rows: the " and " list separator
     // (folded [Text._First + 0x238] in both show_* helpers), and the
     // two town-event dialog formats give_event_reward's helpers wrap
@@ -69,6 +73,15 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
     GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
     GENERAL_TEXT_QUIT = 70,
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    // SendChat's command/status rows. The indices are the folded retail
+    // TTextResource loads; their roles are fixed by the surrounding ping
+    // and recipient-control flow. Gated because enum population is a
+    // measured VC6 codegen input in unrelated consumers.
+    GENERAL_TEXT_CHAT_PING_COMMAND = 73,
+    GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT = 74,
+    GENERAL_TEXT_CHAT_PING_ALL = 75,
+#endif
     GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
     GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,
     GENERAL_TEXT_QUICK_INFO_INVALID_POINT = 111,
@@ -177,6 +190,10 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG = 474,
+    GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG = 475,
+#endif
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell
     // icons print, all folded [Text._First + N] loads in its
@@ -232,9 +249,7 @@ public:
     TSpreadsheetResource(const char* name, int size, const char* data);
     virtual ~TSpreadsheetResource();
 
-    // Retail vtable slot 2. Kept non-virtual in this partial header until the
-    // resource base's provisional `_vslot2` declaration is renamed/retyped.
-    unsigned int GetSize() const;
+    virtual unsigned int GetSize() const;
     int GetNumberOfRows() const { return Spreadsheet.size(); }
     const TStringVector& GetRow(int r) const { return *Spreadsheet[r]; }
 
@@ -259,8 +274,7 @@ public:
     TTextResource(const char* name, int size, const char* data);
     virtual ~TTextResource();
 
-    // Retail vtable slot 2; see the base-signature note above.
-    unsigned int GetSize() const;
+    virtual unsigned int GetSize() const;
     const char* GetText(int r) const { return Text[r]; }
     const char* operator[](int i) const { return Text[i]; }
 

@@ -238,6 +238,11 @@ struct type_AI_spellcaster {
     // 0x420f00 twin question in the first place.
     long get_ogre_mage_value(const army* target);
     long get_caliph_value(const army* target);
+    // Retail-only SoD helper at 0x43c620. Its only caller is ai.cpp's
+    // Faerie Dragon chooser, whose three pushes prove (hex, five times
+    // stack size, army::field_4e0) in this order. No Dreamcast row names it;
+    // the role follows the creature-specific caller and retail spell logic.
+    long get_faerie_dragon_spell_value(long hex, long power, SpellID spell);
     long get_damage_value(SpellID spell, long base_damage,
                           const hero* target_hero, const army* target);
     long get_damage_spell_value(const army* enemy, type_enchant_data caster);

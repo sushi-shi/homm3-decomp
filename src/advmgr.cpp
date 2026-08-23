@@ -66,8 +66,6 @@
 #include "button.h"
 #include "csprite.h"
 #define HOMM3_ADVMGR_OBJ_DECLS
-#define HOMM3_ADVMGR_QUICKINFO_VIEW
-#define HOMM3_MAPCELL_OBJECTS_VIEW
 #include "game.h"
 #include "creature_bank.h"
 #include "exec.h"
@@ -8201,7 +8199,7 @@ void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPl
         cursorDirection = newHero->facing;
         cursorSequence = newHero->GetStandSequence();
         cursorFrameCount = 0;
-        if (bVideoPaused && !gUnnamed682a38 && !gCompleteDrawMessageBypass) {
+        if (bVideoPaused && !gbFollowPlayerMode && !gCompleteDrawMessageBypass) {
             if (gpCurrentPlayer->IsHuman()) {
                 if (!gpCurrentPlayer->IsLocalHuman())
                     return;
@@ -9449,7 +9447,7 @@ void advManager::StartLocalPlayerTurn()
         gTurnDuration69d630.Start();
         PopupPlayerTurnInfo();
         gUnnamed69d810 = gpGame->GetLocalPlayerGamePos();
-        gUnnamed69d80e = 1;
+        g_weMoved = 1;
     }
 
     if ((gpGame->field_1f63e != 1

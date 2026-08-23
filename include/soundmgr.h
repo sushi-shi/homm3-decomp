@@ -152,6 +152,12 @@ public:
     soundManager();
     virtual void Close();
     ds_memsample* MemorySample(sample* memSample);
+#ifdef HOMM3_REMOTE_SOUND_DECLS
+    // Retail-only 0x59a030. The remote chat path calls operation 4 to ask
+    // whether its current Miles sample is still playing; operation 1 returns
+    // volume. Name provisional until stronger PC-source evidence appears.
+    int GetSampleInfo(ds_memsample* inSample, short operation);
+#endif
     void StopSample(ds_memsample* inSample);
     void WaitSample(ds_memsample* sample, int time);
     void ModifySample(ds_memsample* inSample, short sFunction, long value);

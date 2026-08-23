@@ -6,16 +6,30 @@
 #define HOMM3_DXPLAY_H
 
 #include <windows.h>
+#include <va.h>
 
 class CDPlayConnection;
+class CDPlayAddressElement;
 class CDPlayGroup;
 class CDPlayMsg;
 class CDPlayPlayer;
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;
+struct DPLCONNECTION;
 struct DPNAME;
 struct DPSESSIONDESC2;
+struct DPMSG_ADDGROUPTOGROUP;
+struct DPMSG_ADDPLAYERTOGROUP;
+struct DPMSG_CHAT;
+struct DPMSG_CREATEPLAYERORGROUP;
+struct DPMSG_DESTROYPLAYERORGROUP;
+struct DPMSG_GENERIC;
+struct DPMSG_SECUREMESSAGE;
+struct DPMSG_SETPLAYERORGROUPDATA;
+struct DPMSG_SETPLAYERORGROUPNAME;
+struct DPMSG_SETSESSIONDESC;
+struct DPMSG_STARTSESSION;
 
 // Dreamcast CodeView proves this complete virtual order. Retail's
 // CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
@@ -23,6 +37,7 @@ struct DPSESSIONDESC2;
 // menu and oldmain. Retail bodies also prove the complete base data layout.
 class CDPlay {
 public:
+    CDPlay();
     virtual ~CDPlay();
     virtual unsigned char Init();
     virtual unsigned char InitConnection(CDPlayConnection* connection);
@@ -84,6 +99,62 @@ public:
         CDPlayMsg* message, unsigned long flags);
     virtual void GetErrorDesc(long error, char* description);
     virtual unsigned char IsHost();
+    virtual unsigned char FlushReceiveQueue();
+    virtual unsigned char* GetPlayerAddress(
+        unsigned long playerId, unsigned long* size);
+    virtual unsigned char GetCaps(DPCAPS* caps, unsigned char guaranteed);
+    virtual unsigned char GetSendQueueSize(
+        unsigned long fromId, unsigned long toId,
+        unsigned long* numMessages, unsigned long* numBytes);
+    virtual unsigned char GetReceiveQueueSize(
+        unsigned long fromId, unsigned long toId,
+        unsigned long* numMessages, unsigned long* numBytes);
+
+    long GetLastError() { return m_hRes; }
+
+protected:
+    virtual unsigned char ReceiveMsg(
+        unsigned long fromId, unsigned long toId, CDPlayMsg* message);
+    virtual unsigned char ReceiveSystemMsg(
+        unsigned long toId, CDPlayMsg* message);
+    virtual unsigned char SysMsgAddGroupToGroup(
+        DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
+    virtual unsigned char SysMsgAddPlayerToGroup(
+        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
+    virtual unsigned char SysMsgChat(
+        DPMSG_CHAT* message, unsigned long toId);
+    virtual unsigned char SysMsgDeleteGroupFromGroup(
+        DPMSG_ADDGROUPTOGROUP* message, unsigned long toId);
+    virtual unsigned char SysMsgDeletePlayerFromGroup(
+        DPMSG_ADDPLAYERTOGROUP* message, unsigned long toId);
+    virtual unsigned char SysMsgSecureMessage(
+        DPMSG_SECUREMESSAGE* message, unsigned long toId);
+    virtual unsigned char SysMsgSessionLost(
+        DPMSG_GENERIC* message, unsigned long toId);
+    virtual unsigned char SysMsgSetPlayerOrGroupData(
+        DPMSG_SETPLAYERORGROUPDATA* message, unsigned long toId);
+    virtual unsigned char SysMsgSetPlayerOrGroupName(
+        DPMSG_SETPLAYERORGROUPNAME* message, unsigned long toId);
+    virtual unsigned char SysMsgSetSessionDesc(
+        DPMSG_SETSESSIONDESC* message, unsigned long toId);
+    virtual unsigned char SysMsgStartSession(
+        DPMSG_STARTSESSION* message, unsigned long toId);
+    virtual unsigned char SysMsgHost(
+        DPMSG_GENERIC* message, unsigned long toId);
+    virtual unsigned char SysMsgCreatePlayerOrGroup(
+        DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
+    virtual unsigned char SysMsgDestroyPlayerOrGroup(
+        DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
+    virtual unsigned char AddGroupEnum(
+        unsigned long groupId, const DPNAME* name, unsigned long flags);
+    virtual unsigned char AddPlayerEnum(
+        unsigned long playerId, const DPNAME* name, unsigned long flags);
+    virtual unsigned char AddSessionEnum(
+        const DPSESSIONDESC2* session, unsigned long flags);
+    virtual unsigned char AddConnectionEnum(
+        const GUID* serviceProvider, void* connection,
+        unsigned long connectionSize, const DPNAME* name,
+        unsigned long flags);
 
 private:
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
@@ -108,11 +179,168 @@ SIZE(CDPlay, 0x58);
 // zero-offset CDPlay base.  The two trailing pointers retain their DC offsets
 // in retail, so this is also the complete PC layout needed by CDPlayHeroes.
 class CDPlayLobby : public CDPlay {
+public:
+    CDPlayLobby();
+    virtual ~CDPlayLobby();
+    virtual unsigned char Init();
+    virtual unsigned char RegisterApp(
+        char* appName, char* fileName, char* commandLine,
+        GUID appGuid, char* executableName);
+    CDPlayConnection* CreateTCPIPConnection(
+        char* ipAddress, char* name, CDPlayConnection* append);
+    CDPlayConnection* CreateIPXConnection(
+        char* name, CDPlayConnection* append);
+    CDPlayConnection* CreateModemConnection(
+        char* name, char* phoneNumber, char* modemString);
+    CDPlayConnection* CreateSerialConnection(
+        char* name, struct _DPCOMPORTADDRESS* comportInfo);
+    unsigned char TestLobbied();
+    virtual unsigned char EnumLobbyConnections(
+        CAutoArray<CDPlayConnection>* connections);
+    virtual unsigned char SetGroupConnectionSettings(
+        unsigned long groupId, DPLCONNECTION* connection);
+    virtual DPLCONNECTION* GetGroupConnectionSettings(
+        unsigned long groupId);
+    virtual unsigned char EnumGroupsInGroup(
+        CAutoArray<CDPlayGroup>* groups,
+        unsigned long parentId, unsigned long flags);
+    virtual unsigned char EnumGroupPlayers(
+        CAutoArray<CDPlayPlayer>* players,
+        unsigned long groupId, unsigned long flags);
+    virtual unsigned char EnumGroupPlayersRemote(
+        CAutoArray<CDPlayPlayer>* players, unsigned long groupId,
+        GUID* instance, unsigned long flags);
+    virtual unsigned char EnumAddress(
+        void* connection, unsigned long size,
+        CAutoArray<CDPlayAddressElement>* addresses);
+    virtual unsigned char GetIPAddress(
+        unsigned long playerId, char* ipAddress);
+
+protected:
+    virtual unsigned char HandleSystemLobbyMsg(
+        unsigned long appId, CDPlayMsg* message);
+    virtual unsigned char AddAddressEnum(
+        const GUID* type, unsigned long size, const void* data);
+
 private:
     void* m_lpLobby;                         // +0x58
     CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
+
+// Dreamcast fixes both fields and the eight-byte extent.  Retail's
+// CDPlayHeroes constructor/destructor independently show these two inline
+// members: construction clears both dwords, while destruction frees pData
+// and clears the pair.  Keeping those bodies in the class reproduces the
+// header-inline expansion in remote.obj.
+class CDPlayMsg {
+public:
+    CDPlayMsg() : pData(0), dataSize(0) {}
+    ~CDPlayMsg()
+    {
+        if (pData) {
+            delete [] pData;
+            pData = 0;
+            dataSize = 0;
+        }
+    }
+
+    unsigned char* pData;
+    unsigned long dataSize;
+};
+SIZE(CDPlayMsg, 0x08);
+
+// Dreamcast publishes the complete 0x98-byte value layout. Retail's two
+// inlined delete paths in remote::InitConnection independently prove the
+// owned connection buffer at +0x10 and the trivial non-virtual destructor.
+class CDPlayConnection {
+public:
+    ~CDPlayConnection()
+    {
+        delete [] pConnection;
+    }
+
+    GUID guidSP;                       // +0x00
+    unsigned char* pConnection;        // +0x10
+    char sName[128];                   // +0x14
+    unsigned long size;                // +0x94
+};
+SIZE(CDPlayConnection, 0x98);
+
+// array.h's complete template surface and layout come from Dreamcast
+// CodeView.  Retail independently confirms the seven-slot virtual order in
+// four admitted vtables, as well as the +8/+c/+10 array bookkeeping used by
+// the shared method bodies at 0x499fc0..0x512670.  The small bodies stay in
+// the header: VC6 inlines them into remote::HandleMPlayerLaunch exactly as it
+// did in retail.
+template<class T>
+class CAutoArray {
+public:
+    CAutoArray()
+    {
+        step = 25;
+        size = 0;
+        allocSize = 0;
+        pArray = 0;
+    }
+
+    virtual ~CAutoArray()
+    {
+        Destroy(1);
+    }
+
+    void Destroy(unsigned char deleteData)
+    {
+        for (unsigned long i = 0; i < size; ++i) {
+            T* element = Get(i);
+            if (deleteData)
+                delete element;
+        }
+
+        if (pArray)
+            delete [] pArray;
+        pArray = 0;
+        size = allocSize = 0;
+    }
+
+    void SetStep(unsigned long newStep) { step = newStep; }
+    virtual unsigned char Add(T* element);
+    virtual T* Get(unsigned long elementNbr)
+    {
+        if (elementNbr >= size)
+            return 0;
+        return pArray[elementNbr];
+    }
+    virtual unsigned char Put(unsigned long elementNbr, T* element);
+    virtual unsigned char Delete(unsigned long elementNbr);
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
+    virtual unsigned long GetCount() { return size; }
+
+protected:
+    unsigned long step;       // +0x04
+    T** pArray;               // +0x08
+    unsigned long allocSize;  // +0x0c
+    unsigned long size;       // +0x10
+};
+
+// The Windows structure consumed here preserves the complete Dreamcast
+// value layout.  HandleMPlayerLaunch's inlined Get(0) reaches guidInstance
+// at +4, which is the retail proof needed by this TU.
+class CDPlaySession {
+public:
+    unsigned long dwFlags;      // +0x00
+    GUID guidInstance;          // +0x04
+    GUID guidApp;               // +0x14
+    unsigned long maxPlayers;   // +0x24
+    unsigned long playerCount;  // +0x28
+    char sessionName[128];      // +0x2c
+    char password[80];          // +0xac
+    unsigned long dwUser1;      // +0xfc
+    unsigned long dwUser2;      // +0x100
+    unsigned long dwUser3;      // +0x104
+    unsigned long dwUser4;      // +0x108
+};
+SIZE(CDPlaySession, 0x10c);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:1941, dc 0x8bba4) int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext);

@@ -115,7 +115,7 @@ public:
     TPalette16 palette;
     // DC LF_MEMBER `Data`.
     void* data;
-    // The glyph payload's byte count, byte-proven by _vslot2 below: the
+    // The glyph payload's byte count, byte-proven by GetSize below: the
     // whole class is 0x1260 and the only member past `data` is the dword
     // at 0x125c that the size query adds to it. DC has no such member -
     // its port left the resource size query on a different slot shape.
@@ -127,7 +127,7 @@ public:
     // Slot 2 of vtable 0x63e5f4 (the resource size query, pure at the
     // base). Retail 0x4b5250 - the twelve-byte
     // `mov eax,[ecx+0x125c]; add eax,0x1260; ret`.
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
 
     void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);

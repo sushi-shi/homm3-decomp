@@ -34,6 +34,7 @@ public:
     sample(const char* newName, const void* src, long len,
            long channel, long volume, long loop);
     virtual ~sample();  // retail 0x566e60; vtable 0x6416d0
+    virtual unsigned int GetSize() const;
 };
 
 // --- sample ---

@@ -5,6 +5,11 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+namespace SmackManager {
+void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
+                    unsigned long blueMask);             // 0x598a40
+}
+
 // Partial byte-proven view of the Smacker handle (radlib SmackTag);
 // only the members the smackmgr wrappers touch are modeled. Width/
 // Height are unsigned (VideoPlay centers with shr); the LastRect

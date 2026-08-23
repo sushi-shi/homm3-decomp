@@ -51,3 +51,10 @@ sample::~sample()
     field_2c = 0;
 }
 
+// The third sample vtable entry at 0x6416d8 fixes this compact override;
+// its constant is the complete 0x34-byte object followed by owned sample data.
+VA(0x00566e90, 0x07)
+unsigned int sample::GetSize() const
+{
+    return sizeof(sample) + field_24;
+}

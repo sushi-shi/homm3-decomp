@@ -24,16 +24,27 @@ public:
     unsigned char* data;
 
     virtual ~Bitmap24Bit();
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
 
     Bitmap24Bit(const char* name, int w, int h,
                 const unsigned char* source, int size);
     Bitmap24Bit(const char* name, const char* path);
 
+    int GetWidth() const { return Width; }
+    int GetHeight() const { return Height; }
     void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
               int dx, int dy) const;
     void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
               int dx, int dy, int dw, int dh, int dpitch) const;
+    void AdjustHSV(int x, int y, int w, int h, float hue,
+                   float hue_adjust, float saturation_adjust,
+                   float value_adjust);
+    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
+                   float value_adjust)
+    {
+        AdjustHSV(0, 0, GetWidth(), GetHeight(), hue, hue_adjust,
+                  saturation_adjust, value_adjust);
+    }
 
 private:
     int importPCXFile(const char* filename);

@@ -35,6 +35,7 @@ DATA(0x0069ca22) unsigned char gMouseInUpdate;
 DATA(0x006aacc4) IDirectDrawSurface4* gpDDSMouseSurface;
 DATA(0x006aacc8) IDirectDrawSurface4* gpDDSMouseSaveSurface;
 DATA(0x006aaccc) IDirectDrawSurface4* gpDDSMouseScratchSurface;
+DATA(0x0068c860) unsigned long gColorMask68c860;
 DATA(0x0068c864) unsigned long gColorMask68c864;
 DATA(0x0068c868) unsigned long gColorMask68c868;
 

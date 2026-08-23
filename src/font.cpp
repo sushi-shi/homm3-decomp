@@ -170,7 +170,7 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 // glyph payload's own byte count. DC files no such row for font because
 // its port left the query on a different slot shape.
 VA(0x004b5250, 0xC)  // anchor-vtable (slot 2 of 0x63e5f4), retail-only
-unsigned int font::_vslot2() const
+unsigned int font::GetSize() const
 {
     return DataSize + sizeof(font);
 }
@@ -181,7 +181,7 @@ unsigned int font::_vslot2() const
 // DECODED from the Dreamcast body 2026-08-14 (SH4, 44 B): every clip
 // parameter is DEAD - the whole function is
 // `DrawCharacter('_', bitmap, x, y, color + highlighted)`. Retail has no
-// row for it at all (nothing between _vslot2's end at 0x4b525c and
+// row for it at all (nothing between GetSize's end at 0x4b525c and
 // DrawStringExecute at 0x4b5260), so retail's font.cpp spells the
 // underscore draw directly, exactly as the already-exact
 // DrawBoundedString does. Kept as a carcass note, not reconstructed.

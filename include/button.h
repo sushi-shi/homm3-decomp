@@ -95,8 +95,16 @@ public:
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
     void set_hotkey(int code)
     {
+#ifdef HOMM3_HERO_OBJ_VIEW
+        // hero.obj owns retail's retained out-of-line COMDAT copy. Its
+        // 431-byte body is Dinkumware vector<int>::push_back expanded
+        // directly; the insert spelling below is a caller-allocation lever
+        // needed only in the TUs where this wrapper itself is inlined.
+        hotKeyCodes.push_back(code);
+#else
         std::vector<int>* codes = &hotKeyCodes;
         codes->insert(codes->end(), 1, code);
+#endif
     }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190

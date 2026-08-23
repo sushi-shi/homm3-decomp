@@ -1542,16 +1542,16 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
     return shooter_value[data->side] > shooter_value[data->enemy_side];
 }
 
-#if 0  // @carcass
+// The retained out-of-line copy of the header-inline destructor. Its first
+// retail reference is has_ranged_advantage's unwind funclet at 0x627a40;
+// the body is exactly Dinkumware vector teardown: delete list._First and
+// clear its three pointers. The inline definition preserves the caller's
+// original expansion while this declaration gives the COMDAT source
+// ownership without inventing a separate hand-written body.
+VA(0x00420cf0, 0x26)
+type_spellvalue::~type_spellvalue();
 
-// UNCLAIMED, 0x420cf0 (38 B). A compiler-generated teardown, not an
-// ai.cpp body: it frees the pointer at +0x18 of its `this` and then
-// zeroes +0x18/+0x1c/+0x20 - a std::vector member's three pointers.
-// The DC roster's nearest twin is type_spellvalue::~type_spellvalue
-// (dc 0x28050, ai.cpp:1626, 24 B), which is itself compiler-generated
-// at first use; its cross-TU caller at 0x627a40 is the COMDAT
-// signature. Left alone until the compgen-dtor claim kind covers
-// implicit destructors as well as scalar deleting ones.
+#if 0  // @carcass
 
 // 0x420d20 AND 0x420f00 ARE TWINS AND ONLY ONE IS THE DC BODY. Both
 // are thiscall `ret 0xc` with an EH frame and a ~1 KB stack buffer,
@@ -1647,15 +1647,50 @@ unsigned char combatManager::choose_creature_spell(const army* current_army, lon
     return 1;
 }
 
-#if 0  // @carcass
-
-// UNCLAIMED, 0x420f00 (251 B) - the retail-only twin described above.
-// NAMED 2026-08-14 by choose_spell_action's jump table: it is the arm
-// creatureType 0x86 takes, so it is the Faerie Dragon's own chooser.
-// Declared in cmbtmgr.h as SOD_choose_faerie_dragon_spell and called
-// from there; its body is still unreconstructed.
-
-#endif  // @carcass
+// RETAIL-ONLY SoD chooser. choose_spell_action's jump table routes only
+// CREATURE_FAERIE_DRAGON here. It scans the visible 15 columns of every
+// combat row and asks the creature-specific spell valuer for the best hex;
+// positive ties do not replace an earlier choice. The local spellcaster
+// owns the one-state /GX frame visible in retail.
+//
+// WALL 2026-08-22 (94.51765%, 251 bytes): control flow is exact - both
+// sides have 85 instructions, nine conditional branches, two returns and
+// thirteen blocks, with branch-shape distance zero. The remaining delta is
+// one EBX/EDI role swap: candidate keeps current_army in EBX and best_hex
+// in EDI, while retail does the reverse. why-reg v2 reports 28
+// register-visible slots with identical definition slots/order, classifying
+// the difference as C1/front-end handle state. Its model-selected adjacent
+// best_hex/value declaration swap is byte-flat; making best_hex volatile
+// regresses to 61 slots, and pre-creating an army pointer alias is also
+// byte-flat. The independently fixed address lets the cross-build symbol
+// contribute the private bool/reference declarator below, but that stronger
+// source typing is likewise byte-identical and does not change the wall.
+VA(0x00420f00, 0xFB)
+bool combatManager::SOD_choose_faerie_dragon_spell(
+        const army* current_army, long& best_value,
+        type_AI_combat_parameters& estimate)
+{
+    long best_hex = -1;
+    type_AI_spellcaster caster(this, estimate.side, 1);
+    for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (InInvisibleColumn(hex))
+            continue;
+        long value = caster.get_faerie_dragon_spell_value(
+                hex, current_army->numTroops * 5,
+                current_army->field_4e0);
+        if (value <= 0)
+            continue;
+        if (best_hex >= 0 && value <= best_value)
+            continue;
+        best_hex = hex;
+        best_value = value;
+    }
+    if (best_hex < 0)
+        return 0;
+    field_3c = 10;
+    field_44 = best_hex;
+    return 1;
+}
 
 // E:\gamedcs\ai.cpp:1694
 // Nothing else in the TU calls army::get_resurrection_size, and this
@@ -1783,7 +1818,7 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
             return 1;
         break;
     case CREATURE_FAERIE_DRAGON:
-        if (SOD_choose_faerie_dragon_spell(current_army, best_value, estimate))
+        if (SOD_choose_faerie_dragon_spell(current_army, *best_value, *estimate))
             return 1;
         break;
     }
@@ -1890,15 +1925,57 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
     }
 }
 
-// UNCLAIMED, 0x421590 (225 B). Reads combatManager+0x53a8 and +0x53a4
-// and indexes the eleven-entry byte table at 0x63bce8 - the exact
-// trio searchArray::set_moat (0x4b3290) uses, so this marks the MOAT
-// hexes for the AI. The Dreamcast ai.obj roster has no such body and
-// no name for one; it is retail-only. Declared as combatManager::
-// mark_moat in cmbtmgr.h after its argument list turned out to be
-// mark_firewalls' exactly, and left unreconstructed - choose_melee_
-// target is its only caller and a call relocation's symbol name does
-// not gate the score.
+// RETAIL-ONLY. The two eleven-entry walks are the danger-map counterpart
+// of searchArray::set_moat: score both moat rows, but omit their gate hex
+// while the drawbridge is down. The damage table is indexed by defending
+// town type, and retail deliberately passes lowest_attack twice just as
+// mark_firewalls immediately above does. choose_melee_target is the only
+// caller; no Dreamcast roster row attests a name, so mark_moat follows this
+// TU's own mark_* family.
+//
+// WALL 2026-08-22 (79.9375%, 225 bytes): control flow is closed - both
+// sides have eight conditional branches, one return and thirteen blocks,
+// with branch-shape distance zero. The residual is one VC6 register-role
+// rotation: candidate assigns estimate/enemy_attacks/hex to EDI/EBX/ESI;
+// retail assigns them ESI/EDI/EBX. That forces one otherwise needless move
+// per table walk (83 aligned instructions against retail's 80). why-reg v2
+// reports 63 register-visible slots and identical definition slots/order,
+// classifying the difference as C1/front-end pseudo processing order; its
+// first-created estimate alias is copy-propagated and byte-inert. The full
+// bounded catalog agrees: named zero is distance-flat at 63, while volatile
+// row (69), unnamed hex (77), volatile hex (81/107), and a byte-typed hex
+// (61.175% byte score, with invented homes) all regress. No algorithm or
+// branch delta remains.
+VA(0x00421590, 0xE1)
+void combatManager::mark_moat(const army* current_army, long* enemy_attacks,
+                              type_AI_combat_parameters* estimate)
+{
+    if (!field_53a8)
+        return;
+
+    long row;
+    for (row = 0; row < 11; row++) {
+            long hex = gMoatColumns[row];
+            if (drawbridgeState == DRAWBRIDGE_UP
+                    || hex != COMBAT_HEX_GATE_MOAT) {
+                enemy_attacks[hex] -= current_army->get_loss_combat_value(
+                        estimate->lowest_attack, estimate->lowest_attack, 0,
+                        gMoatDamage[defendingTown->type], estimate->kills_only);
+            }
+        }
+
+    if (!field_53a9)
+        return;
+    for (row = 0; row < 11; row++) {
+            long hex = gOuterMoatColumns[row];
+            if (drawbridgeState == DRAWBRIDGE_UP
+                    || hex != COMBAT_HEX_OUTER_MOAT) {
+                enemy_attacks[hex] -= current_army->get_loss_combat_value(
+                        estimate->lowest_attack, estimate->lowest_attack, 0,
+                        gMoatDamage[defendingTown->type], estimate->kills_only);
+            }
+        }
+}
 
 // E:\gamedcs\ai.cpp:1896
 // The melee chooser: score every enemy stack the mover could reach,

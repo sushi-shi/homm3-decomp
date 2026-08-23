@@ -6,7 +6,6 @@
 #include <va.h>
 #include <string.h>
 #include "questlogwindow.h"
-#define HOMM3_QUESTLOG_VIEW
 #include "game.h"
 #include "kb.h"
 #include "message.h"

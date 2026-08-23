@@ -18,6 +18,14 @@ enum ECombatDrawingOffsets {
     COMBAT_ARCHER_EFFECT_OFFSET = 0x1402c
 };
 
+// Retail's battlefield indexing: eleven rows of seventeen cells, with the
+// first and last column reserved as off-grid borders.
+enum ECombatGridDimensions {
+    COMBAT_GRID_COLUMN_COUNT = 17,
+    COMBAT_GRID_RIGHT_BORDER_COLUMN = 16,
+    COMBAT_GRID_HEX_COUNT = 187
+};
+
 // combatManager::CombatAreaLimits, retail .data 0x6aace8 - the value
 // every accumulating draw pass resets the combat drawing extent to
 // before it starts. Definition and DATA claim are src/drawing.cpp's;

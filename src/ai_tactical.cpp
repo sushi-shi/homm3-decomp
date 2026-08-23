@@ -966,6 +966,14 @@ inline type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent,
 // find_move_order / simulate_combat / find_AI_targets all sit between
 // the store and the use and none of them lets VC6 assume `this` is
 // unaliased.
+// Residual (93.1850%, register homing): flow-distance is zero.  Retail
+// homes combat in EBX before the base-member constructor and later reuses
+// the dead parameter slot for enemy; this compile reloads combat and binds
+// EBX to enemy instead.  why-reg classifies the equal definition slots as
+// the C1 front-end processing-order family.  A named combat-manager alias
+// regresses slightly, while swapping the adjacent side/creature stores is
+// byte-flat; the model's automated adjacent-store mutation has no further
+// legal source move.
 VA(0x004369c0, 0x22B)  // anchor-callee, dc 0x3d604
 type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side,
                                          unsigned char creature_spell)
@@ -3499,6 +3507,20 @@ void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
 // The trailing choice->field_20 is consider_teleport's inlined
 // is_last_action once more, here with `field_1c` standing in for the
 // disabled triple.
+//
+// Residual (97.0996%, audited 2026-08-22): the helper spelling is already
+// the winning one (94.46 -> 97.10), and the remaining CFG is closed: both
+// objects have 29 conditional branches and one return, with every mnemonic
+// and symbolic target agreeing. The explicit delta is confined to the
+// expanded is_last_action tail. Retail keeps the acting stack and live-stack
+// count in EAX/ESI and merges the false/true result in EAX; this compile
+// rotates the same values through ESI/ECX and merges the byte in EBX, leaving
+// one extra instruction (232 against 231). `why-reg` measures distance 45;
+// all 12 catalog mutations are flat or worse (naming origNumTroops and
+// un-naming creature_cast are flat, while every volatile, store-order and
+// choice->spell probe regresses). The remaining non-tail rows are only
+// gpCombatManager relocation-name differences. This is C1 register-handle
+// state, with no source-addressable lever found.
 VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
 {
@@ -4428,6 +4450,80 @@ long type_AI_spellcaster::get_caliph_value(const army* target)
     return total / count;
 }
 
+// RETAIL-ONLY SoD helper used by the Faerie Dragon chooser. Creature
+// casts start at Advanced mastery, with the same special-battlefield
+// promotion used by the Ogre Mage and Master Genie immediately above.
+// The nine damage spells then split into direct, Chain Lightning and
+// area-effect pricing; only the first two families require an occupied
+// target hex.
+VA(0x0043c620, 0x1DD)
+long type_AI_spellcaster::get_faerie_dragon_spell_value(
+        long hex, long power, SpellID spell)
+{
+    TSkillMastery mastery = SKILL_MASTERY_ADVANCED;
+    unsigned char expert = 0;
+    switch (gpCombatManager->field_53c0) {
+    case COMBAT_SPELL_RESTRICTION_ALL_EXPERT:
+        expert = 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_WATER_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[spell].schoolBits >> 2) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_FIRE_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[spell].schoolBits >> 1) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_EARTH_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[spell].schoolBits >> 3) & 1;
+        break;
+    case COMBAT_SPELL_RESTRICTION_AIR_EXPERT:
+        expert = static_cast<unsigned char>(
+            akSpellTraits[spell].schoolBits) & 1;
+        break;
+    }
+    if (expert)
+        mastery = SKILL_MASTERY_EXPERT;
+
+    army* target = gpCombatManager->cells[hex].get_army();
+    long base_damage;
+    switch (spell) {
+    case SPELL_MAGIC_ARROW:
+    case SPELL_ICE_BOLT:
+    case SPELL_LIGHTNING_BOLT:
+    case SPELL_IMPLOSION:
+        if (!target)
+            return 0;
+        base_damage = akSpellTraits[spell].mastery_bonus[mastery]
+                      + akSpellTraits[spell].power_factor * power;
+        return get_damage_value(spell, base_damage, enemy_hero, target);
+
+    case SPELL_CHAIN_LIGHTNING:
+        if (target) {
+            unsigned char immune = static_cast<unsigned char>(
+                static_cast<unsigned>(target->creatureId) >> 21);
+            long creature_cast = creature_spell != 0;
+            if (!(immune & 1)
+                    && gpCombatManager->ValidSpellTargetArmy(
+                        SPELL_CHAIN_LIGHTNING, side, target, 1,
+                        creature_cast)) {
+                return get_chain_lightning_value(power, mastery, target);
+            }
+        }
+        return 0;
+
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_INFERNO:
+    case SPELL_METEOR_SHOWER:
+        base_damage = akSpellTraits[spell].mastery_bonus[mastery]
+                      + akSpellTraits[spell].power_factor * power;
+        return get_area_effect_value(spell, base_damage, mastery, hex);
+    }
+    return 0;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3398
@@ -4457,6 +4553,11 @@ unsigned char type_AI_spellcaster::spells_not_required()
 // more in the pool the spell keeps 5/2 of its value, and below that it
 // is scaled by `sqrt(mana / cost)`. Then Random(75, 100) percent of
 // that is what actually competes.
+// EXACT 2026-08-22 (98.8760 -> 100.0): retail does not pre-initialize
+// healing_only.  The no-simulation path and the first doomed friendly stack
+// assign zero through one shared exit, while only loop exhaustion assigns
+// one.  Spelling those terminal assignments directly reproduces its lone
+// remaining branch polarity and the complete instruction stream.
 VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
 unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
 {
@@ -4471,7 +4572,7 @@ unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
         if (enemy_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
             inhibited = 1;
     }
-    unsigned char healing_only = 1;
+    unsigned char healing_only;
     if (!field_1c) {
         healing_only = 0;
     } else {
@@ -4487,10 +4588,12 @@ unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
             if (our_army->AI_expected_damage + our_army->topCreatureDamage
                     >= our_army->hitPoints) {
                 healing_only = 0;
-                break;
+                goto healing_only_done;
             }
         }
+        healing_only = 1;
     }
+healing_only_done:
     if (our_hero)
         duration = our_hero->GetSpellDurationBonus() + power;
     if (retreating)

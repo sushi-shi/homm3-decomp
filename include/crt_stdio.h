@@ -31,6 +31,9 @@ int __cdecl fseek(FILE* stream, long offset, int origin);
 long __cdecl ftell(FILE* stream);
 int __cdecl fclose(FILE* stream);
 int __cdecl sprintf(char* buffer, const char* format, ...);
+// VC6's va_list is char*.  Keep the ABI spelling here without pulling
+// <stdarg.h> and its include-set surface into every consumer of this header.
+int __cdecl vsprintf(char* buffer, const char* format, char* arguments);
 void* __cdecl memset(void* dest, int fill, unsigned int count);
 char* __cdecl _getcwd(char* buffer, int maxlen);
 int __cdecl _strcmpi(const char* lhs, const char* rhs);

@@ -5,6 +5,7 @@
 #include "textwdgt.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
+#include "message.h"
 #include "recruit.h"
 #include "resourcemanager.h"
 #include "window.h"
@@ -93,6 +94,110 @@ void textWidget::Dim()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\textwdgt.cpp:120
+// Vtable 0x642db0 slot 2. The stale generated vtable join called this
+// TSpreadsheetResource_vslot02, but the hand-admitted table is textWidget's
+// and every accessed field is the widget/textWidget layout. The control flow
+// is the button-family message protocol with no click callback: select and
+// deselect translate mouse messages in place, while widget commands 3 and 8
+// set Text and Color.
+//
+// WALL 2026-08-22 (98.49315%, 429 bytes): semantic/CFG reconstruction is
+// complete. The candidate and retail have the same 146 aligned instructions,
+// 25/25 conditional branches, seven returns, and branch sequence. The entire
+// residual is one VC6 register-colouring permutation: candidate keeps status
+// in EDX, disabled in BL, parentWindow in EBX, mouseX in ESI, and mouseY in
+// EDI; retail assigns those roles to EBX, DL, EDI, EDX, and ESI. why-reg's
+// bounded probes (volatile/named/unnamed coordinates, swapped declaration
+// order, disabled/status materialization, and register hints) either leave the
+// allocation unchanged or regress it; its best edit, volatile mouseX, falls
+// to 92.39041% under the byte verdict. No semantic or control-flow delta is
+// left to justify further source distortion.
+VA(0x005bc440, 0x1AD)
+int textWidget::Main(message* msg)
+{
+    if (field_2C > 0) {
+returnZero:
+        return 0;
+    }
+
+    short widgetStatus = status;
+    if (!(widgetStatus & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            goto returnZero;
+        return widget::Main(msg);
+    }
+
+    bool isDisabled = false;
+    if (widgetStatus & WIDGET_DISABLED)
+        isDisabled = true;
+
+    switch (msg->id) {
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (isDisabled)
+            goto returnZero;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_DOWN: {
+        if (!(widgetStatus & WIDGET_DRAWN))
+            goto returnZero;
+        short mouseY = msg->codeY - parentWindow->y;
+        short mouseX = msg->codeX - parentWindow->x;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            goto returnZero;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->codeX = WIDGET_RIGHT_SELECT;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeY = id;
+            return MESSAGE_DISPATCH_FORWARD;
+        }
+        widgetStatus |= WIDGET_SELECTED;
+        status = widgetStatus;
+        msg->codeX = WIDGET_SELECT;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = id;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+
+    case MESSAGE_LEFT_BUTTON_UP:
+        if (isDisabled)
+            goto returnZero;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_UP:
+        if (!(widgetStatus & WIDGET_DRAWN)
+            || !(widgetStatus & WIDGET_SELECTED))
+            goto returnZero;
+        widgetStatus &= ~WIDGET_SELECTED;
+        status = widgetStatus;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_UP)
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = WIDGET_DESELECT;
+        msg->codeY = id;
+        return MESSAGE_DISPATCH_FORWARD;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case WIDGET_SET_TEXT:
+            if (msg->codeY == id) {
+                SetText(msg->extraText);
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+        case WIDGET_SET_COLOR:
+            if (msg->codeY == id) {
+                Color = msg->extra;
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+        }
+        break;
+    }
+
+    return widget::Main(msg);
+}
 
 // E:\gamedcs\textwdgt.cpp:235
 // Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to

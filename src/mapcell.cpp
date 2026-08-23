@@ -4,38 +4,40 @@
 // The ten-bit mask CObjectType carries at +0x34. Its own gate, deliberately
 // narrower than HOMM3_MAPCELL_OBJECTS_VIEW: only this TU constructs a
 // CObjectType, and this header's include closure is measured.
-// SPAN AUDIT 2026-08-19 - the eleven carved rows inside this compiland's
-// claimed span (0x4fbf90..0x505b20) that carry no VA claim are ALL excluded
-// class, so the span has no missing attributions at the small end:
+// SPAN AUDIT 2026-08-19, updated 2026-08-22 - the small compiler-generated
+// rows inside this compiland's claimed span (0x4fbf90..0x505b20) are:
 //   0x4fd1c0 24 B   header-inline ctor COMDAT (char + three zeroed dwords)
-//   0x4fca60 62 B   Dinkumware string release: [eax-1] refcount then delete
-//   0x4fd460 88 B   `??_M` vector destructor iterator for NewmapCell
+//   0x4fca60 62 B   implicit TreasureData destructor - now claimed exact
+//   0x4fd460 88 B   `??_ENewmapCell` vector deleting destructor - now
+//                   claimed exact
 //   0x504260 46 B / 0x504290 42 B
 //                   the static ctor/dtor pair for a file-scope 16-byte
-//                   string global at 0x699690, registered through _atexit -
+//                   vector<int> gMissingMaskTypes at 0x699690, registered
+//                   through _atexit -
 //                   the cinit class the match doctrine excludes
-// The four larger ones (0x4fd950, 0x4fe6c0, 0x500de0, 0x502b60) are real
-// game code with NO Dreamcast counterpart: the DC roster for mapcell.cpp is
-// exhausted (90 rows, every name present in this file bar two $E thunks),
-// and 0x502b60 in particular sits between readGarrisonData (dc line 3229)
-// and readObject (dc line 3290) where the roster has nothing at all. They
-// are retail-only and need body evidence, not an order-map. 0x502b60 walks a
-// 16-byte-element vector at NewfullMap+0xc0 (unmodelled, inside pad_0c0),
-// builds a `generator`, and resolves each entry to a town alignment either
-// by finding a matching record in gpGame's 136-byte-stride pool at +0x98 or
-// by calling pick_alignment - a random-dwelling resolution pass.
+//   0x5042c0 421 B  retail-only per-class object-type-index rebuild - now
+//                   claimed at its 99.8854 scheduling/pooled-symbol wall
+// The two larger rows (0x500de0, 0x502b60) are real game code with NO
+// Dreamcast counterpart: the DC roster for mapcell.cpp is exhausted (90
+// rows, every name present in this file bar two $E thunks), and 0x502b60 in
+// particular sits between readGarrisonData (dc line 3229) and readObject (dc
+// line 3290) where the roster has nothing at all. They require retail body
+// evidence, not an order-map. Both are now exact: 0x500de0 is
+// LoadShipyards, and 0x502b60 is SoD_transformRandomDwellings, which walks
+// the 16-byte-element vector at NewfullMap+0xc0, builds a `generator`, and
+// resolves each entry to a town alignment either by finding a matching
+// record in gpGame's 136-byte-stride pool at +0x98 or by calling
+// pick_alignment.
 //
+#define HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
+#define HOMM3_MAPCELL_UPGRADE_VIEW
+#define HOMM3_QUEST_GUARD_LOAD_DECLS
 #include <stdio.h>
 #include <va.h>
 #include <windows.h>
 #include "advmgr_objects.h"
 #include "csprite.h"
 #include "advmgr.h"
-#define HOMM3_ADVMGR_QUICKINFO_VIEW
-#define HOMM3_GAME_HERO_EXTRA_VIEW
-#define HOMM3_MAPCELL_HERO_SETUP_VIEW
-#define HOMM3_MAPCELL_OBJECTS_VIEW
-#define HOMM3_MAPCELL_TOWNEXTRA_VIEW
 #include "game.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -355,6 +357,11 @@ CObject* NewmapCell::TObjectCell::get_object()
 
 #endif  // @carcass
 
+// The destructor remains implicit in C++. mapcell.obj already emits the real
+// ??1TreasureData COFF public, first among the byte-identical one-string
+// destructors folded to this retail body; this row only claims that symbol.
+VA_COMPGEN(0x004fca60, 0x3E, IMPLICIT_DTOR, TreasureData)
+
 // E:\gamedcs\mapcell.cpp:361
 // Resolves a cell that merely OVERLAPS an object to the cell the object is
 // actually triggered from.  A cell that is itself a trigger answers with
@@ -635,6 +642,30 @@ TAdventureObjectType NewmapCell::get_special_terrain() const
     return NOTHING;
 }
 
+// E:\gamedcs\mapcell.cpp:525
+// The 186-entry retail switch table spans special-object ids 46..231. Only
+// five entries leave the default arm: MAGIC_PLAINS and the four elemental
+// ground types below. The object ids are retail bytes; the result spellings
+// are the NH3API cross-build enum after the address and mapping were proved.
+VA(0x004fcf40, 0x112)  // hd-crossbuild, anchor-callee
+int NewmapCell::get_magic_terrain_type()
+{
+    switch (get_special_terrain()) {
+    case MAGIC_PLAINS:
+        return MAGIC_TERRAIN_MAGIC_PLAINS;
+    case LUCID_POOLS:
+        return MAGIC_TERRAIN_LUCID_POOLS;
+    case FIERY_FIELDS:
+        return MAGIC_TERRAIN_FIERY_FIELDS;
+    case ROCKLANDS:
+        return MAGIC_TERRAIN_ROCKLANDS;
+    case MAGIC_CLOUDS:
+        return MAGIC_TERRAIN_MAGIC_CLOUDS;
+    default:
+        return MAGIC_TERRAIN_INVALID;
+    }
+}
+
 // E:\gamedcs\mapcell.cpp:524
 // RECONSTRUCTED 2026-08-20. Fourteen default member constructions and one
 // null pointer - the whole body is `cellData = 0`, and the interesting part
@@ -659,6 +690,11 @@ NewfullMap::NewfullMap()
     : cellData(0)
 {
 }
+
+// The array member above makes VC6 emit this helper without any source
+// definition: std::vector<CObjectType>'s `default constructor closure'.
+// NewfullMap passes it to the vector-constructor iterator for all 232 rows.
+VA_COMPGEN(0x004fd1c0, 0x18, DEFAULT_CTOR_CLOSURE, CObjectType)
 
 // E:\gamedcs\mapcell.cpp:530
 // RECONSTRUCTED 2026-08-20. This is NewfullMap::Close's body inlined ahead
@@ -741,7 +777,7 @@ NewfullMap::~NewfullMap()
 // destructor iterator, and conditionally calls operator delete. It is the
 // compiler-generated NewmapCell deleting destructor, not this no-argument
 // Dreamcast method. Retail NewfullMap::~NewfullMap and Init inline Close.
-// RETAIL_LOCATED(0x004fd460, 0x58) NewmapCell deleting destructor
+// The retail body is claimed below through the already-emitted ??_E public.
 void NewfullMap::Close()
 {
     // @stub
@@ -751,6 +787,11 @@ void NewfullMap::Close()
 // retail places this COMDAT right after Close, which calls it and takes its
 // address for the `vector destructor iterator' (also address-taken in Init).
 #endif  // @carcass
+
+// VC6 already emits ??_ENewmapCell for the delete[] in NewfullMap's
+// destructor. Retail has the same flags/cookie/iterator/delete body; this
+// direct-symbol claim does not define a special member in C++.
+VA_COMPGEN(0x004fd460, 0x58, VECTOR_DELETING_DTOR, NewmapCell)
 
 VA(0x004fd4c0, 0x26)  // order-map: called + address-taken by Close 0xfd460, address-taken by Init 0xfd4f0; frees vector<TObjectCell> at +0x12, dc 0xf4bdc
 NewmapCell::~NewmapCell()
@@ -884,7 +925,7 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
     if (readTimedEventList(infile, mapVersion) < 0)
         return -1;
 
-    NewfullMapFn_00502B60();
+    SoD_transformRandomDwellings();
 
     // Retail CALLS vector<CObject>::size in this loop's CONDITION, at
     // Read+0x285 (entry) and +0x29b (back edge) - the two calls that sit
@@ -896,9 +937,52 @@ int NewfullMap::Read(TAbstractFile* infile, int size, unsigned char two_layers,
 #pragma inline_depth()
         PlaceObject(i, 1);
 
-    NewfullMapFn_00500DE0();
+    LoadShipyards();
     return 0;
 }
+
+// Savegame-only quest-guard list loader. Load calls this only for version 25
+// and newer, immediately after the older seer-hut list. Retail reads the
+// 16-bit count without branching on the byte count, resizes the five-byte
+// TQuestGuard vector, loads every row, and registers each non-null polymorphic
+// quest record in mapObjectData just as the seer-hut loop in Load does.
+//
+// Residual (90.4916%, compiler allocation wall): `sema --branches` agrees on
+// all 19 branch decisions. The remaining differences are register/stack
+// scheduling across the inlined resize and push_back bodies. An unsigned
+// short loop was 89.7479%; masking an int and using for/while loops reached
+// 88.3698/89.8403%; a second promoted count was 88.6135%; and explicitly
+// hoisting the quest pointer was 82.2605%. The guarded do/while below is the
+// best source-faithful spelling measured.
+//
+// `auto_inline(off)` is load-bearing at the callee declaration: without it,
+// /Ob2 copies this entire 616-byte body into NewfullMap::Load and drops that
+// caller from 92.201836% to 64.12%. Pinning only the call site with
+// inline_depth(0) reaches 84.27%, so the scoped no-inline attribute preserves
+// the established caller wall while leaving this function independently
+// matchable.
+#pragma auto_inline(off)
+VA(0x004fd950, 0x268)  // caller Load 0xfdbc0; TQuestGuard ctor/load + vector resize/push_back
+void NewfullMap::NewfullMapFn_004FD950(
+    TAbstractFile* infile, int saveVersion)
+{
+    int count;
+    infile->Read(&count, 2);
+    count &= 0xFFFF;
+    QuestGuardList.resize(count);
+
+    if (count > 0) {
+        int i = 0;
+        do {
+            QuestGuardList[i].load(infile, saveVersion);
+            if (QuestGuardList[i].quest)
+                mapObjectData.push_back(static_cast<CMapObjectData*>(
+                    static_cast<void*>(QuestGuardList[i].quest)));
+            ++i;
+        } while (--count);
+    }
+}
+#pragma auto_inline(on)
 
 // Load's seer-hut resize, factored out for the same reason readObject's
 // QUEST_GUARD arm is: the /Ob2 budget is per-CALLER and clamps at a floor,
@@ -1412,6 +1496,125 @@ int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
+
+union LegacyUpgradeExtraInfo {
+    unsigned long value;
+    LegacyArtifactInfo artifact_info;
+    LegacySkeletonInfo skeleton_info;
+    LegacyMonsterInfo monster_info;
+    LegacyPyramidInfo pyramid_info;
+    LegacyTreasureInfo treasure_info;
+    LegacyWagonInfo wagon_info;
+    LegacyTombInfo tomb_info;
+};
+
+union CurrentUpgradeExtraInfo {
+    unsigned long value;
+    CurrentArtifactInfo artifact_info;
+    type_skeleton_info skeleton_info;
+    MonsterInfo monster_info;
+    type_pyramid_info pyramid_info;
+    TreasureInfo treasure_info;
+    CurrentUpgradeWagonInfo wagon_info;
+    type_tomb_info tomb_info;
+    CurrentVisitedInfo visited_info;
+};
+
+// Retail-only compatibility pass called once for every loaded map cell.
+// The seven non-default lookup-table entries are object ids 5, 22, 54, 63,
+// 101, 105 and 108; the case spellings below are therefore byte-proven.
+//
+// Residual (96.26%, compiler register-allocation wall): base and retail have
+// the same 14-block flow, and the ARTIFACT, DEAD_GUY and PYRAMID arms are
+// instruction-exact. MONSTER, TREASURE_CHEST, WAGON and WARRIOR_TOMB perform
+// the same masked field transfers but assign the source/result roles to
+// EAX/EDX/ESI differently. That makes the code one byte longer and moves the
+// otherwise-identical lookup/jump tables by the following four-byte
+// alignment boundary.
+//
+// The legacy dword must be a distinct value: viewing old and new layouts as
+// aliases lets C2 delete the identity field copies and scores 69.53%. One
+// snapshot before the switch scores 92.55%; reversing the byte-indicated
+// monster index conversion scores 94.52%; case-local storage, `register`,
+// and declaration-order probes are byte-flat. The separate per-arm snapshot
+// below is the best source-faithful form measured.
+VA(0x004fe6c0, 0x254)  // caller loadMapLayer; v25 gate + seven-arm bitfield upgrade
+void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion)
+{
+    if (saveVersion >= 25)
+        return;
+
+    LegacyUpgradeExtraInfo legacy;
+    CurrentUpgradeExtraInfo* current =
+        static_cast<CurrentUpgradeExtraInfo*>(static_cast<void*>(cell));
+
+    switch (cell->type) {
+    case ARTIFACT:
+        legacy.value = cell->extraInfo;
+        current->artifact_info.custom = legacy.artifact_info.custom;
+        if (!current->artifact_info.custom) {
+            current->artifact_info.guard = legacy.artifact_info.guard;
+            current->artifact_info.resource_price =
+                legacy.artifact_info.resource_price;
+            current->artifact_info.guard_qty =
+                legacy.artifact_info.guard_qty;
+        }
+        break;
+
+    case DEAD_GUY:
+        legacy.value = cell->extraInfo;
+        current->skeleton_info.artifact = legacy.skeleton_info.artifact;
+        current->skeleton_info.has_treasure =
+            legacy.skeleton_info.has_treasure;
+        current->skeleton_info.id = legacy.skeleton_info.id;
+        break;
+
+    case MONSTER:
+        legacy.value = cell->extraInfo;
+        current->monster_info.qty = legacy.monster_info.qty;
+        current->monster_info.disposition = legacy.monster_info.disposition;
+        current->monster_info.never_flee = legacy.monster_info.never_flee;
+        current->monster_info.dont_grow = legacy.monster_info.dont_grow;
+        current->monster_info.index = legacy.monster_info.index;
+        current->monster_info.unused_27 = 0;
+        current->monster_info.custom = legacy.monster_info.custom;
+        break;
+
+    case PYRAMID:
+        legacy.value = cell->extraInfo;
+        current->pyramid_info.guarded = legacy.pyramid_info.guarded;
+        current->visited_info.visited_bits =
+            legacy.pyramid_info.visited_bits;
+        current->pyramid_info.spell = legacy.pyramid_info.spell;
+        break;
+
+    case TREASURE_CHEST:
+        legacy.value = cell->extraInfo;
+        current->treasure_info.artifact = legacy.treasure_info.artifact;
+        current->treasure_info.has_artifact =
+            legacy.treasure_info.is_artifact;
+        current->treasure_info.gold = legacy.treasure_info.gold_amount;
+        break;
+
+    case WAGON:
+        legacy.value = cell->extraInfo;
+        current->wagon_info.artifact = legacy.wagon_info.artifact;
+        current->wagon_info.full = legacy.wagon_info.full;
+        current->wagon_info.has_artifact = legacy.wagon_info.has_artifact;
+        current->wagon_info.resource = legacy.wagon_info.resource;
+        current->wagon_info.resource_amount =
+            legacy.wagon_info.resource_amount;
+        current->visited_info.visited_bits = legacy.wagon_info.visited_bits;
+        break;
+
+    case WARRIOR_TOMB:
+        legacy.value = cell->extraInfo;
+        current->tomb_info.has_artifact = legacy.tomb_info.full;
+        current->visited_info.visited_bits = legacy.tomb_info.visited_bits;
+        current->tomb_info.artifact = legacy.tomb_info.artifact;
+        break;
+    }
+}
 
 // E:\gamedcs\mapcell.cpp:995
 // The save-game layer reader, and the exact inverse of saveMapLayer field
@@ -2588,6 +2791,73 @@ int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject)
 
 #endif  // @carcass
 
+// The twelve adjacent squares LoadShipyards tests, in retail order. The
+// body strength-reduces the indexed walk to a pointer at +4 (the first dy),
+// reads dx from -4, and advances eight bytes through each pair. Retail's
+// writable .data bytes at 0x67faa8..0x67fb07 prove every value.
+DATA(0x0067faa8)
+static int gShipyardOffsets[12][2] = {
+    { -2,  0 }, {  2,  0 }, { -2,  1 }, {  2,  1 },
+    { -1,  1 }, {  1,  1 }, {  0,  1 }, { -2, -1 },
+    {  2, -1 }, { -1, -1 }, {  1, -1 }, {  0, -1 }
+};
+
+// Retail's Read calls this nullary member after every object has been placed.
+// Its full body is uniquely byte-identical to the HD executable's
+// NewfullMap::LoadShipyards, so that name is admitted only after the retail
+// call site, member offsets, table bytes, and map-cell transformations prove
+// the identity independently.
+//
+// For every trigger shipyard, the first valid adjacent square in
+// gShipyardOffsets order must be water, unblocked, and either non-triggering
+// or a boat. Its coordinates are then copied into the ShipyardInfo overlay of
+// every shipyard cell in the object's three-wide horizontal footprint.
+VA(0x00500de0, 0x239)  // anchor-caller + member offsets + HD53 byte-identical name; retail-only
+void NewfullMap::LoadShipyards()
+{
+    type_point newPoint;
+
+    for (int z = 0; z < HasTwoLevels + 1; ++z) {
+        for (int y = 0; y < gMapHeight; ++y) {
+            for (int x = 0; x < gMapWidth; ++x) {
+                NewmapCell* cell = &cellData[(z * Size + y) * Size + x];
+                if (!cell->is_trigger || cell->type != SHIPYARD)
+                    continue;
+
+                newPoint.z = z;
+                for (int count = 0; count < 12; ++count) {
+                    newPoint.x = x + gShipyardOffsets[count][0];
+                    newPoint.y = y + gShipyardOffsets[count][1];
+                    if (!newPoint.is_valid())
+                        continue;
+
+                    NewmapCell* boatCell = &cellData[
+                        (newPoint.z * Size + newPoint.y) * Size + newPoint.x];
+                    if (boatCell->GroundSet == eTerrainWater
+                        && !boatCell->IsBlocked
+                        && (!boatCell->is_trigger
+                            || boatCell->type == BOAT)) {
+                        for (int checkX = x - 1; checkX <= x + 1; ++checkX) {
+                            if (checkX < 0 || checkX >= gMapWidth)
+                                continue;
+                            NewmapCell* shipyardCell =
+                                &cellData[(z * Size + y) * Size + checkX];
+                            if (shipyardCell->type != SHIPYARD)
+                                continue;
+                            ShipyardInfo* shipyardInfo =
+                                static_cast<ShipyardInfo*>(static_cast<void*>(
+                                    &shipyardCell->extraInfo));
+                            shipyardInfo->boatX = newPoint.x;
+                            shipyardInfo->boatY = newPoint.y;
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
 // E:\gamedcs\mapcell.cpp:2445
 VA(0x00501020, 0x110)  // order-map: calls armyGroup ctor/Initialize (mine ctor inlined) + FindTrigger 0x4fec30; called by readObject, dc 0xeffec
 int NewfullMap::readMineData(TAbstractFile* infile, CObject* mineObject)
@@ -2714,6 +2984,15 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // xor-merges at the end are type_point's bitfields (x:10, y:10, z:4), not a
 // write back into the object, and the two bytes read just before are
 // discarded padding.
+//
+// Residual (96.4729%, nested-inliner wall): retail inlines MonsterData's
+// constructor but leaves its string::_Tidy child out of line.  This VC6
+// invocation expands both.  A declaration-site inline_depth(1) is byte-flat;
+// inline_depth(0) calls the entire MonsterData constructor instead (96.63%,
+// but the wrong retail boundary), while pinning the block's error return
+// regresses to 90.0370.  There is no pragma depth that means "inline the
+// parent, call only its child" at this site, so the canonical constructor is
+// retained.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
@@ -3710,6 +3989,86 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     return 0;
 }
 
+// Retail's Read tail calls this after the random-dwelling records and town
+// definitions have both been loaded. Its full 667-byte body is uniquely
+// byte-identical to the HD executable's
+// NewfullMap::SoD_transformRandomDwellings; the retail vector strides,
+// member offsets, constants, and callees independently prove the mapping.
+//
+// A linked castle id inherits that scenario town's alignment; otherwise the
+// saved faction mask is rolled directly. The selected town/level entry in
+// the nine-by-fourteen dwelling table is converted to a generator object.
+// Stone Golems use the four-creature factory entry; every other creature is
+// found in the eighty-entry single-generator table. The object's horizontal
+// trigger offset is then normalized before a generator record is appended.
+// EXACT 2026-08-22: both backwards searches require postfix-decrement loop
+// conditions. Their zero/nonzero branches, the shared `x`/FindTrigger local,
+// and the width-bound mask scan reproduce all 36 retail blocks.
+VA(0x00502b60, 0x29B)  // anchor-caller + vector/member/callee proof + HD53 byte-identical name; retail-only
+void NewfullMap::SoD_transformRandomDwellings()
+{
+    generator newGenerator;
+
+    for (unsigned int index = 0; index < randomDwellings.size(); ++index) {
+        RandomDwellingData& dwelling = randomDwellings[index];
+
+        int alignment;
+        if (dwelling.castleId) {
+            int townIndex = gpGame->scenarioTowns.size();
+            while (townIndex--) {
+                if (gpGame->scenarioTowns[townIndex].castleId
+                    == dwelling.castleId)
+                    break;
+            }
+            alignment = gpGame->scenarioTowns[townIndex].townType;
+        } else {
+            alignment = pick_alignment(dwelling.factionMask, 0);
+        }
+
+        TCreatureType creature = gTownDwellingCreatures[
+            alignment * 2 * TOWN_DWELLING_COUNT
+            + Random(dwelling.minLevel, dwelling.maxLevel)];
+
+        int generatorType;
+        if (creature == CREATURE_STONE_GOLEM) {
+            NewfullMapFn_00505F20(dwelling.object, CREATURE_GENERATOR_4,
+                                  1, -1);
+            newGenerator.genClass = CREATURE_GENERATOR_4;
+            generatorType = 1;
+        } else {
+            newGenerator.genClass = CREATURE_GENERATOR_1;
+            generatorType = 79;
+            do {
+            } while (gCreatureGenerator1Types[generatorType] != creature
+                     && generatorType--);
+            if (generatorType < 0)
+                continue;
+            NewfullMapFn_00505F20(dwelling.object, CREATURE_GENERATOR_1,
+                                  generatorType, -1);
+        }
+
+        CObjectType* objectType = dwelling.object->get_object_type_ptr();
+        int x;
+        for (x = 0; x < objectType->width; ++x) {
+            if (!objectType->passableCells[47 - x]
+                || objectType->triggerCells[47 - x])
+                break;
+        }
+        dwelling.object->x += x;
+
+        int triggerY;
+        dwelling.object->FindTrigger(&x, &triggerY);
+        newGenerator.genType = static_cast<char>(generatorType);
+        newGenerator.mapX = static_cast<unsigned char>(x);
+        newGenerator.mapY = static_cast<unsigned char>(triggerY);
+        newGenerator.mapZ = dwelling.object->z;
+        newGenerator.Initialize(dwelling.owner);
+
+        gpGame->generators.push_back(newGenerator);
+        dwelling.object->extraInfo = gpGame->generators.size() - 1;
+    }
+}
+
 // readObject's QUEST_GUARD arm. It was factored out here because the /Ob2
 // budget is per-CALLER and clamps at a floor, so a small function gets a
 // small budget and the insert stayed a CALL, which the single-call-site
@@ -4604,6 +4963,52 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
 DATA(0x00699690)
 static std::vector<int> gMissingMaskTypes;
 
+// Retail-only object-type lookup rebuild.  Each of the 232 adventure-object
+// classes owns a vector of type records.  Clear every record's resolved
+// index first, then bind each deserialized objectTypes entry to the matching
+// (class, extra, image-name) record in that per-class vector.  The backwards
+// search is byte-visible: retail starts at size(), tests the pre-decrement
+// value, and leaves the successful index in the decremented counter.
+//
+// Wall (99.88535%, 2026-08-22): all 32 blocks, all 32 edges, the 157
+// instructions and their register bindings agree.  The only code delta is
+// one post-RA reload schedule after the inlined string comparison: retail
+// restores ESI before EAX/EDI, while this compile restores it after them.
+// `why-reg --model` classifies the two unpaired slots as the B16/C3/C4
+// schedule family, not a register-binding defect.  Direct/reference/pointer
+// candidate spellings, && versus split conditions, compare() versus ==,
+// signed/unsigned and reused/block-scoped loop counters, and every adjacent
+// declaration-order mutation either preserve this transpose or get worse.
+// The other asm-report row is cosmetic: this TU's Dinkumware `_Nullstr`
+// COFF symbol and the target's source-owned pooled empty-literal symbol both
+// resolve to 0x63a608; no DATA_COMPGEN binding exists in mapcell.obj because
+// the literal's physical owner is another compiland.
+VA(0x005042c0, 0x1A5)  // retail body + two callers: readMapObjects/loadMapObjects; no DC roster row
+void NewfullMap::NewfullMapFn_005042C0()
+{
+    for (int objectClass = 0; objectClass < 232; ++objectClass) {
+        for (int typeIndex = 0;
+             typeIndex < objectTypeIndex[objectClass].size(); ++typeIndex) {
+            objectTypeIndex[objectClass][typeIndex].field_42 = 0xffff;
+        }
+    }
+
+    for (int i = 0; i < objectTypes.size(); ++i) {
+        int objectClass = objectTypes[i].objectType;
+        int extra = objectTypes[i].extra;
+        int typeIndex = objectTypeIndex[objectClass].size();
+        while (typeIndex--) {
+            CObjectType& candidate = objectTypeIndex[objectClass][typeIndex];
+            if (candidate.extra == extra
+                && candidate.ImageName == objectTypes[i].ImageName)
+                break;
+        }
+        if (typeIndex >= 0)
+            objectTypeIndex[objectClass][typeIndex].field_42 =
+                static_cast<unsigned short>(i);
+    }
+}
+
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(TAbstractFile* infile, int mapVersion)
@@ -5365,6 +5770,119 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     }
     return 0;
 }
+
+// These Dinkumware template members are already emitted by NewfullMap's
+// vector members.  The annotations only pair their named VC6 COMDATs with
+// the contiguous retail run; there are deliberately no source definitions.
+VA_COMPGEN(0x00506260, 0x38, VECTOR_DTOR, CObjectType)
+VA_COMPGEN(0x005062a0, 0x21, VECTOR_SIZE, CObjectType)
+VA_COMPGEN(0x005062d0, 0x38, VECTOR_DTOR, TreasureData)
+VA_COMPGEN(0x00506310, 0x38, VECTOR_DTOR, MonsterData)
+VA_COMPGEN(0x00506350, 0x3B, VECTOR_DTOR, BlackBoxData)
+VA_COMPGEN(0x00506390, 0x312, VECTOR_RESIZE, TSeerHut)
+VA_COMPGEN(0x005066b0, 0x21, VECTOR_SIZE, TSeerHut)
+VA_COMPGEN(0x005066e0, 0x20, VECTOR_SIZE, TQuestGuard)
+VA_COMPGEN(0x00506700, 0x38, VECTOR_DTOR, TTimedEvent)
+VA_COMPGEN(0x00506740, 0x38, VECTOR_DTOR, TTownEvent)
+VA_COMPGEN(0x00506880, 0x17, BITSET_TIDY, Bitset10)
+// Load clears these adjacent vectors in member order.  The retail helper
+// strides independently prove the element identities: CObjectType 0x44,
+// TreasureData 0x4c, MonsterData 0x30, and BlackBoxData 0xe4.
+// Residuals (implicit-assignment compiler walls): CObjectType::erase is
+// 91.19% (same 8-block CFG, 2 differ), TreasureData::erase is 88.04%
+// (same 9 blocks, 1 differs), MonsterData::erase is 90.72% (same 10 blocks,
+// 2 differ), and BlackBoxData::erase is 98.58% (same 13 blocks, 1 differs).
+// Each difference begins with retail loading string::npos where this VC6
+// instantiation folds -1, followed only by register-allocation fallout.
+// TreasureData::insert is 84.00% (49 vs 48 blocks); why-branch classifies
+// its one extra return as VC6 exit-merge/jump-threading topology.  This is
+// an already-generated specialization of pristine vendor STL, so neither
+// rewriting the template nor defining an explicit assignment is admissible.
+VA_COMPGEN(0x005068a0, 0xE0, VECTOR_ERASE, CObjectType)
+VA_COMPGEN(0x00506980, 0x340, VECTOR_INSERT, TreasureData)
+VA_COMPGEN(0x00506cc0, 0xA7, VECTOR_ERASE, TreasureData)
+// Residual (98.85%, compiler CSE wall): same 52-block CFG; four blocks
+// differ only at string::npos materialization and its register fallout.
+VA_COMPGEN(0x00506d70, 0x32C, VECTOR_INSERT, MonsterData)
+VA_COMPGEN(0x005070a0, 0xA3, VECTOR_ERASE, MonsterData)
+VA_COMPGEN(0x00507150, 0x32E, VECTOR_INSERT, BlackBoxData)
+VA_COMPGEN(0x00507480, 0x14D, VECTOR_ERASE, BlackBoxData)
+VA_COMPGEN(0x005075d0, 0x26B, VECTOR_INSERT, TSeerHut)
+VA_COMPGEN(0x00507840, 0x61, VECTOR_ERASE, TSeerHut)
+VA_COMPGEN(0x005078b0, 0x217, VECTOR_INSERT, TQuestGuard)
+VA_COMPGEN(0x00507dd0, 0x47, VECTOR_ERASE, TQuestGuard)
+// Residuals (compiler CSE/register walls): TTimedEvent::insert is 96.86%
+// with the same 50-block CFG (14 register/stack-slot blocks differ), while
+// its erase is 98.59% with the same 10-block CFG and one npos block.
+VA_COMPGEN(0x00507e20, 0x328, VECTOR_INSERT, TTimedEvent)
+VA_COMPGEN(0x00508150, 0xC2, VECTOR_ERASE, TTimedEvent)
+VA_COMPGEN(0x00508220, 0x23, VECTOR_DESTROY, TTimedEvent)
+// This already-emitted specialization matches retail exactly.
+VA_COMPGEN(0x00508250, 0x34E, VECTOR_INSERT, TTownEvent)
+// Residual (53.87%, nested-inliner wall): retail expands the implicit
+// TTimedEvent assignment while shifting each TTownEvent; this VC6 context
+// calls its emitted operator=, changing the CFG from 12 to 14 blocks.
+// inline_depth(3) around the first TownEventList.clear() was byte-flat for
+// both this COMDAT and its caller.  An explicit assignment operator would
+// change the source model for the same reason explicit probe destructors do.
+VA_COMPGEN(0x005085a0, 0xF3, VECTOR_ERASE, TTownEvent)
+VA_COMPGEN(0x005086a0, 0x23, VECTOR_DESTROY, TTownEvent)
+// The two 16-byte trivial-record erase instantiations fold byte-for-byte;
+// HeroPlaceholderData is the first emitted VC6 COMDAT and therefore owns
+// the selected retail body. RandomDwellingData remains a folded alias.
+VA_COMPGEN(0x005086d0, 0x53, VECTOR_ERASE, HeroPlaceholderData)
+// Residual (95.04%, compiler CSE wall): same 9-block CFG; its sole differing
+// block begins at string::npos and consists of register scheduling only.
+VA_COMPGEN(0x00508730, 0x12E, VECTOR_ERASE, TScenarioTown)
+VA_COMPGEN(0x00508860, 0x44, VECTOR_ERASE, generator)
+VA_COMPGEN(0x005088b0, 0x58, VECTOR_UCOPY, TSeerHut)
+VA_COMPGEN(0x00508910, 0x4E, VECTOR_UFILL, TSeerHut)
+VA_COMPGEN(0x00508960, 0x3E, VECTOR_UCOPY, TQuestGuard)
+VA_COMPGEN(0x005089a0, 0x34, VECTOR_UFILL, TQuestGuard)
+// RandomDwellingData's instantiation precedes the byte-identical
+// HeroPlaceholderData instantiation in mapcell.obj and owns the folded body.
+VA_COMPGEN(0x005089e0, 0x30A, VECTOR_INSERT, RandomDwellingData)
+VA_COMPGEN(0x005090b0, 0x30C, VECTOR_INSERT, generator)
+// This 4-byte element loop is also the folded body called as copy<pathCell**>
+// from ai_player/findpath.  mapcell.obj's COFF order emits copy<int> here,
+// immediately before copy<TTimedEvent> and copy<type_university>, so copy<int>
+// is the primary owner even though the surviving retail xref uses an alias.
+VA_COMPGEN(0x005093c0, 0x25, STD_COPY, Int)
+// Residual (96.50%, compiler CSE wall): after the implicit padding fields
+// were removed, base and retail have the same 36-block CFG and differ in
+// only three blocks. Retail hoists string::npos (0x63a60c) into ESI for the
+// assignment-length clamp and reuses it; this instantiation folds the first
+// use to -1 and loads npos only at the later bounds check. The body remains
+// the compiler-emitted std::copy/TTimedEvent assignment chain.
+VA_COMPGEN(0x005093f0, 0x1A4, STD_COPY, TTimedEvent)
+VA_COMPGEN(0x005095e0, 0x3F, STD_COPY, type_university)
+VA_COMPGEN(0x00509620, 0x207, STD_COPY, type_creature_bank)
+VA_COMPGEN(0x00509830, 0x168, STD_CONSTRUCT, TreasureData)
+VA_COMPGEN(0x005099a0, 0x16A, STD_CONSTRUCT, MonsterData)
+VA_COMPGEN(0x00509b10, 0x208, STD_CONSTRUCT, BlackBoxData)
+VA_COMPGEN(0x00509d20, 0x29, STD_CONSTRUCT, TSeerHut)
+VA_COMPGEN(0x00509d50, 0x0F, STD_CONSTRUCT, TQuestGuard)
+VA_COMPGEN(0x00509d60, 0x188, STD_CONSTRUCT, TTimedEvent)
+VA_COMPGEN(0x00509ef0, 0x1BA, STD_CONSTRUCT, TTownEvent)
+VA_COMPGEN(0x0050a0b0, 0x1DD, STD_CONSTRUCT, TScenarioTown)
+// Residuals (compiler CSE wall; CFGs identical): MonsterData 94.36%
+// (32 blocks, 4 differ), BlackBoxData 98.57% (31/1), TTimedEvent 96.26%
+// (32/3), TTownEvent 94.06% (33/6), and TScenarioTown 96.71% (30/4).
+// In each implicit assignment retail hoists string::npos (0x63a60c) and
+// reuses that register; these VC6 instantiations constant-fold the first
+// use to -1 and load npos later, with only register-allocation fallout.
+// Explicit operator= definitions would change the source model and are not
+// admissible emission controls.
+VA_COMPGEN(0x0050a290, 0x161, IMPLICIT_COPY_ASSIGN, MonsterData)
+VA_COMPGEN(0x0050a400, 0x2F6, IMPLICIT_COPY_ASSIGN, BlackBoxData)
+VA_COMPGEN(0x0050a700, 0x17A, IMPLICIT_COPY_ASSIGN, TTimedEvent)
+VA_COMPGEN(0x0050a880, 0x1A2, IMPLICIT_COPY_ASSIGN, TTownEvent)
+VA_COMPGEN(0x0050aa30, 0x1CD, IMPLICIT_COPY_ASSIGN, TScenarioTown)
+// vector<TArtifact>::operator= is the first emitted owner of the body also
+// called through the byte-identical vector<int> specialization.
+VA_COMPGEN(0x0050ac00, 0x188, VECTOR_COPY_ASSIGN, TArtifact)
+VA_COMPGEN(0x0050ad90, 0x13, VECTOR_CAPACITY, SecondarySkillData)
+VA_COMPGEN(0x0050adb0, 0x2B, STD_COPY, SecondarySkillData)
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 

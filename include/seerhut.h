@@ -50,6 +50,9 @@ public:
     // element with the stream as its one argument. DECLARED, not defined:
     // the body is an unclaimed carve row outside this compiland.
     int save(TAbstractFile* outfile);
+#ifdef HOMM3_QUEST_GUARD_LOAD_DECLS
+    int load(TAbstractFile* infile, int saveVersion);
+#endif
 
 protected:
     // TSeerHut initializes the shared bytes in its own body; retail's store

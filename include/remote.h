@@ -6,10 +6,33 @@
 #define HOMM3_REMOTE_H
 
 #include "dxplay.h"
+#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+#include <deque>
+#endif
+#ifdef HOMM3_CHAT_EDIT_DECLS
+#include "textntry.h"
+#endif
 
 class CNetMsg;
 class textWidget;
 class sample;
+class ds_memsample;
+
+// DC publishes this exact 351-byte record and the cdecl varargs Log
+// signature.  Retail's global at 0x69d648 and its pushed-this call sites
+// prove the PC identity independently.
+class CLogFile {
+public:
+    CLogFile(char* sLogFileName);
+    void InitLogFile();
+    void Log(char* format, ...);
+
+private:
+    char m_logFileName[351];
+};
+SIZE(CLogFile, 351);
+
+extern CLogFile logFile;
 
 // Retail inlines these accessors in the adventure-popup constructor and proves
 // m_inPopup at +4. Dreamcast supplies the names, the abort pointer at +8, and
@@ -85,6 +108,9 @@ SIZE(CAdvMgrNetMsgHandler, 0x0c);
 // bytes relative to DC's +0xe8 layout.
 class CDPlayHeroes : public CDPlayLobby {
 public:
+    CDPlayHeroes();
+    virtual ~CDPlayHeroes();
+    void DestroyMsgQueue();
     // RESOLVED 2026-08-14, and the earlier measurement is now explained.
     // Both handler accessors have OUT-OF-LINE retail bodies, and both of
     // them live in remote.cpp: 0x5537a0 is GetNetMsgHandler's seven bytes
@@ -107,15 +133,47 @@ public:
     // for the same reason as the pair above.
     CNetMsg* GetRemoteData(unsigned char removeFromQueue,
                            unsigned char* wasCompressed);
+    bool PollRemote();
+    bool TransmitRemoteData(CNetMsg* pMsg, int toWho,
+                            bool compressMsg, bool guaranteed);
+    bool TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
+                                bool compressMsg, bool guaranteed);
+    // Retail 0x5533d0, DC remote.cpp:578. The free transmit wrappers stamp
+    // their sender fields and optional compression, then call this retrying
+    // DirectPlay sender with the final message buffer.
+    bool SendIt(CNetMsg* pMsg, unsigned long dpidTo, bool guaranteed);
+
+protected:
+    // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
+    // free-function friends below; the Dreamcast class record marks it
+    // protected rather than public.
+    CNetMsg* CompressMsg(CNetMsg* pNetMsg);
+    friend int TransmitRemoteDataDPID(CNetMsg*, unsigned long,
+                                      bool, bool);
+    friend int TransmitRemoteData(CNetMsg*, int,
+                                  bool, bool);
 
 private:
+#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+    CDPlayMsg dpMsg;                       // +0x60
+    std::deque<CNetMsg*> msgQueue;         // +0x68..+0x97
+    char sLocalIPAddress[80];              // +0x98..+0xe7
+    unsigned long confirmId;               // +0xe8
+    unsigned long currMessageId;           // +0xec
+#else
     char m_remoteState[0x90];       // +0x60..+0xef
+#endif
     CNetMsgHandler* m_pNetMsgHandler; // +0xf0
 };
 SIZE(CDPlayHeroes, 0xf4);
 
 extern CDPlayHeroes* pDPlay;
 extern unsigned char gbDPlayReady;
+extern unsigned char gbMPlayer;
+extern unsigned char gbMPlayerHost;
+extern char gcTCPAddress[21];
+
+extern "C" const GUID GUID_Heroes3;
 
 extern unsigned char gbUnk69774c;
 
@@ -139,6 +197,9 @@ public:
         }
     };
 
+    void Init();
+    void ShutDown();
+
     CChatStr* msgArray;       // +0x00
     int currMsg;              // +0x04
     int msgCount;             // +0x08
@@ -150,13 +211,18 @@ public:
     int maxLines;             // +0x1c
     int position;             // +0x20
     unsigned char chatKilled; // +0x24
-    unsigned char isSysMsg;   // +0x25
-    char pad_26[2];
-    sample* g_chatSample;        // +0x28
-    sample* g_playerDropSample;  // +0x2c
-    sample* g_sysMsgSample;      // +0x30
-    sample* g_turnDurSample;     // +0x34
-    sample* g_playerEnterSample; // +0x38
+    char pad_25[3];
+    // Retail PC adds the live Miles handle that AddChat/TurnDurationMsg
+    // reuse. The DC record lacks it, which shifts isSysMsg and all five
+    // resource pointers by eight bytes in retail.
+    ds_memsample* g_chatMemSample; // +0x28
+    unsigned char isSysMsg;        // +0x2c
+    char pad_2d[3];
+    sample* g_chatSample;        // +0x30
+    sample* g_playerDropSample;  // +0x34
+    sample* g_sysMsgSample;      // +0x38
+    sample* g_turnDurSample;     // +0x3c
+    sample* g_playerEnterSample; // +0x40
 
     void UpdateWidget(textWidget* widget, unsigned char killOld, int numLines);
     void KillOldChat();
@@ -169,7 +235,7 @@ public:
     void SetPosition(int newPos);
 };
 SIZE(CChatManager::CChatStr, 0x88);
-SIZE(CChatManager, 0x3c);
+SIZE(CChatManager, 0x44);
 
 DATA(0x0069d7b0) extern CChatManager chatMan;
 
@@ -191,6 +257,39 @@ void __cdecl TurnDurationMsg(CChatManager* manager, const char* format, ...);
 // varargs form: retail's ReceiveChat (0x554a20) calls it with four pushes
 // and `add esp, 0x10`.
 void __cdecl AddChat(CChatManager* manager, const char* format, ...);
+void __cdecl SystemMsg(CChatManager* manager, const char* format, ...);
+void __cdecl PlayerDropMsg(CChatManager* manager, const char* format, ...);
+void __cdecl PlayerEnterMsg(CChatManager* manager, const char* format, ...);
+
+#ifdef HOMM3_CHAT_EDIT_DECLS
+enum ENetMessageRecipient {
+    NET_MESSAGE_RECIPIENT_ALL = 0x7f
+};
+
+// Retail vtable 0x640e30. Slots 0..18 are textEntryWidget's exact prefix;
+// Dreamcast supplies the seven introduced method names at slots 19..24 and
+// proves that this class adds no data (its 0x70-byte extent equals retail's
+// textEntryWidget extent). The retail bodies independently confirm the base
+// tail offsets: IsOpen reads cursorIndex at +0x58 and the edit actions use
+// Text at +0x30.
+class CChatEdit : public textEntryWidget {
+public:
+    CChatEdit(int x, int y, int w, int h, int textSize, char* text,
+              char* fontName, font::TColor color,
+              font::EJustify justification,
+              char* backgroundIcon, int backgroundFrame, int id, int style,
+              int readType, int insetX, int insetY);
+    virtual ~CChatEdit();
+    virtual int OnKeyPress(message* msg);                       // slot 15
+    virtual unsigned char IgnoreKey(message* msg);              // slot 16
+    virtual void UpdateScreen();                                // slot 19
+    virtual int OnEnter(message msg);                            // slot 20
+    virtual int OnEscape(message msg);                           // slot 21
+    virtual int OnFunctionKey(message msg, int toWho);           // slot 22
+    virtual bool IsOpen();                                       // slot 23
+    virtual void SendChat(const char* text, int toWho) = 0;      // slot 24
+};
+#endif
 
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
@@ -212,6 +311,8 @@ public:
     {
         return m_currDuration != 0 && !gbUnk69774c;
     }
+    friend void __cdecl TurnDurationMsg(
+        CChatManager* manager, const char* format, ...);
 protected:
     unsigned long m_lastWarned;
     unsigned long m_turnStartTime;
@@ -229,7 +330,7 @@ extern CTurnDuration gTurnDuration69d630;
 // HandleNetMsg. The band 0x552e00..0x556900 that owns their siblings is
 // unclaimed, so the names stay ordinal and the DATA claims wait for it.
 extern int gUnnamed69d810;
-extern unsigned char gUnnamed69d80e;
+extern unsigned char g_weMoved;
 
 // Retail's constructor/destructor pair stores and tests only this byte;
 // Dreamcast supplies the class and member names.
@@ -271,8 +372,11 @@ void ReceiveChat(char* cChat, int fromWho);
 extern char gUnnamed69d7b0[];
 
 int TransmitRemoteData(CNetMsg* pMsg, int toWho,
-                       unsigned char compressMsg,
-                       unsigned char guaranteed);
+                       bool compressMsg, bool guaranteed);
+int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
+                           bool compressMsg, bool guaranteed);
+void PollRemote();
+void SendChat(const char* cChat, int toWho);
 
 // Retail .data 0x69954c. make_gift only uses it as the gate for sending
 // a gift/request message to a non-local human; wider role unattested.
@@ -310,7 +414,7 @@ void ReceiveChat(char* cChat, int fromWho);
 // remote band owns it.
 extern char gUnnamed69d7b0[];
 
-int TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed);
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg, bool guaranteed);
 // CODEVIEW(E:\gamedcs\remote.cpp:1454, dc 0x11cf94) void PollRemote();
 // CODEVIEW(E:\gamedcs\remote.cpp:1490, dc 0x11d020) void SendChat(const char* cChat, int toWho);
 // CODEVIEW(E:\gamedcs\remote.cpp:1529, dc 0x11d1c8) void ReceiveChat(char* cChat, int fromWho);

@@ -1202,8 +1202,9 @@ public:
     // movsd` and no EH frame, so `army` owns non-trivial members
     // (the DC roster's std::vector<army*> / std::deque<SpellID>) -
     // declaring the pair here is what reproduces the retail calls.
-    // DECLARED, NOT DEFINED: army.obj is not an admitted unit, so both
-    // stay unresolved externals in the candidate link's punch list.
+    // DECLARED, NOT DEFINED: the memberwise implicit form depends on the
+    // original source member granularity, which this partial layout does not
+    // yet preserve closely enough to reproduce the retained retail body.
     army(const army& other);
     ~army();
 

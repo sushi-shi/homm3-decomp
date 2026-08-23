@@ -137,6 +137,17 @@ struct type_cell_visited_info {
 };
 SIZE(type_cell_visited_info, 4);
 
+// The Pyramid's guarded flag at bit 0 and signed eight-bit spell lane at
+// bits 13..20. Retail's out-of-line set_pyramid merges the two bitfield
+// assignments into one dword read-modify-write.
+struct type_pyramid_info {
+    unsigned long guarded : 1;
+    unsigned long unused : 12;
+    signed long spell : 8;
+    unsigned long tail : 11;
+};
+SIZE(type_pyramid_info, 4);
+
 // DoEventWagon (0x4a69b0) packs five lanes into the one dword and the
 // arm proves every width: an UNSIGNED five-bit resource amount at bits
 // 0..4, read with a BYTE load because the field ends inside the first
@@ -216,6 +227,7 @@ union ExtraInfoUnion {
     type_witch_hut_info witch_hut_info;
     type_fountain_info fountain_info;
     type_cell_visited_info cell_visited_info;
+    type_pyramid_info pyramid_info;
     type_wagon_info wagon_info;
     type_skeleton_info skeleton_info;
     type_tree_info tree_info;
@@ -223,6 +235,11 @@ union ExtraInfoUnion {
     type_university_info university_info;
 
     void SetCellVisited(short player);
+    void clear_visited_bits() { cell_visited_info.visited = 0; }
+    void set_pyramid(bool guards, int new_spell);
+    void SetWagon(enum EGameResource resource, short amount);
+    void SetWagon(int artifact);
+    void set_witch_skill(int skill);
 
     // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
     // GetLeanToAmount is decorated `short` and that WIDTH is what makes
@@ -557,7 +574,7 @@ DATA(0x00698778) extern int gUnnamed698778;
 // exactly what SetHeroContext's branches prove and nothing wider:
 //   0x682a38  cleared for the "is this turn ours to draw" gate, tested
 //             between bVideoPaused and gCompleteDrawMessageBypass.
-DATA(0x00682a38) extern unsigned char gUnnamed682a38;
+DATA(0x00682a38) extern unsigned char gbFollowPlayerMode;
 //   0x6989f4  set to 1 around ViewPuzzle's grail-reveal CompleteDraw and
 //             cleared right after - a draw-pass mode latch by role.
 DATA(0x006989f4) extern int gUnnamed6989f4;

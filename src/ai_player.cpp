@@ -69,6 +69,22 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
     return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
 }
 
+// Retail 0x526cc0: /Gr fastcall, player id in ECX and the seven-resource
+// vector in EDX. The owning philai TU is not yet reconstructed.
+int AI_resource_cost(long player_id, const int* resources);
+const std::bitset<9>& ArmyGrpFn_0044A460();
+const unsigned int CTA_SHOOTER = 0x4;
+
+// E:\gamedcs\ai_player.cpp:134
+// Slot 0 of vtable 0x63b670. The target walks gpGame's vector<town> by
+// its 0x168-byte stride and clears the DC-named byte at +3 in every row.
+VA(0x00428260, 0x4E)  // vtable slot + DC method/field proof; dc 0x2de68
+void type_town_threat_checker::clear_marks()
+{
+    for (unsigned int i = 0; i < gpGame->towns.size(); ++i)
+        gpGame->towns[i].threatening_heroes = 0;
+}
+
 // E:\gamedcs\ai_player.cpp:69
 // Both armyGroups are plain 56-byte copies (`rep movsd` of 14 dwords)
 // taken before anything else runs, so the simulation mutates neither
@@ -164,30 +180,29 @@ unsigned char can_take_town(const hero* attacking_hero, const town* defending_to
 
 #if 0  // @carcass
 
-// THE THREAT-CHECKER BRACKET IS NOT DECIDABLE YET (surveyed
-// 2026-08-08). Retail puts only FOUR rows between can_take_town
+// THE THREAT-CHECKER BRACKET was only partially decidable when surveyed
+// 2026-08-08. Retail puts only FOUR rows between can_take_town
 // (0x428410, claimed) and get_attack_bonus (0x428710, claimed) -
 // 0x428570 (13 B), 0x428580 (289 B), 0x4286b0 (33 B) and 0x4286e0
 // (38 B) - while the Dreamcast roster lists ELEVEN bodies there, six of
 // them 4- to 18-byte accessors that /Ob2 folds away without trace. With
-// seven of eleven candidates unplaceable the ranks carry no
-// information, so the arities have to decide alone and they do not:
-//   * 0x428570 is `ret 4` and its whole body is `inc byte [arg+3]`,
-//     which reads like type_town_threat_checker::mark_town (18 B, two
-//     parameters) except that it never touches `this`.
-//   * 0x428580 is `ret 4` with an EH frame and calls town::get_army
-//     and playerData::hasGivenArtifact. Two DC rows have that arity -
-//     get_resource_value (200 B) and type_garrison_purchaser::mark_town
-//     (160 B) - and neither obviously wants those two callees.
-//   * 0x4286b0 IS a constructor (it returns `this` in eax after
-//     storing three arguments), but `ret 0xc` makes it FOUR parameters
-//     and both DC constructors here take two. 33 B against the threat
-//     checker's 34 is the closest size pair in the bracket and the
-//     arity still refuses it.
+// seven of eleven candidates unplaceable the ranks originally carried no
+// information. The three game bodies are now independently resolved:
+//   * 0x428570 is now proven as type_town_threat_checker::mark_town:
+//     it is slot 2 of the checker's three-entry vtable; DC puts this method
+//     in slot 2 too and names town byte +3 `threatening_heroes`; the body
+//     increments precisely that byte. The active exact claim is below.
+//   * 0x428580 is type_garrison_purchaser::mark_town: derived vtable slot 2
+//     agrees with DC, and its town-army/artifact calls feed the now-proven
+//     six-argument Complete purchaser path. The active claim is below.
+//   * 0x4286b0 is now proven as type_creature_source's three-argument
+//     constructor. The old bracket note mistakenly counted the implicit
+//     `this` as a fourth stack parameter; `ret 0xc` is exactly the DC
+//     signature, and the four stores reproduce its 0/4/8/10 layout.
 //   * 0x4286e0 (`ret`, frees [this+0x30], caller in another TU's band)
 //     is the same compiler-generated vector teardown shape as ai.obj's
 //     0x420cf0, not an ai_player.cpp body at all.
-// Left unclaimed rather than ranked into place.
+// Only 0x4286e0 is not a source body; it remains compiler-generated teardown.
 
 // E:\gamedcs\ai_player.cpp:89
 DC_ONLY(0x2dd40, 0x22)
@@ -267,6 +282,46 @@ long type_AI_player::get_resource_value(int* resources)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\ai_player.cpp:186
+VA(0x00428570, 0x0D)  // exact: vtable slot + DC field/type proof; dc 0x2dfa4
+void type_town_threat_checker::mark_town(town* our_town)
+{
+    ++our_town->threatening_heroes;
+}
+
+// The retail vtable at 0x63b67c puts 0x428580 in derived slot 2, the same
+// slot/name the DC vtable assigns type_garrison_purchaser::mark_town. Its
+// inlined purchaser construction then walks exactly fourteen town population
+// words, and the final call shape is the Complete six-argument do_purchase
+// extension (allow_trade plus the separately stored Angelic-Alliance flag).
+VA(0x00428580, 0x121)  // retail vtable slot + body/callgraph proof; dc 0x2dff4
+void type_garrison_purchaser::mark_town(town* our_town)
+{
+    type_AI_creature_purchaser purchaser(current_player_id, our_town);
+    playerData* player = &gpGame->players[current_player_id];
+    unsigned char has_angelic_alliance = player->hasGivenArtifact(0x81);
+    purchaser.set_subtract_mode(0);
+    purchaser.do_purchase(&our_town->get_army(), 3, 0, player->resources,
+                          1, has_angelic_alliance);
+}
+
+// E:\gamedcs\ai_player.h:299
+VA(0x004286b0, 0x21)  // DC signature/layout + retail stores; dc 0x37e08
+type_creature_source::type_creature_source(TCreatureType new_type,
+                                           short* new_amount,
+                                           unsigned char _is_free)
+{
+    type = new_type;
+    ptr = new_amount;
+    is_free = _is_free;
+    number = *new_amount;
+}
+
+// The purchaser destructor remains implicit in C++. Its live vector member
+// already makes VC6 emit ??1type_AI_creature_purchaser; this row only binds
+// that existing COFF public to retail's three-pointer vector teardown.
+VA_COMPGEN(0x004286e0, 0x26, IMPLICIT_DTOR, type_AI_creature_purchaser)
 
 // E:\gamedcs\ai_player.cpp:245
 // Static (DC public `?get_attack_bonus@type_AI_player@@SAMF@Z`, S =
@@ -859,19 +914,128 @@ void type_AI_player::calculate_reserve()
     }
 }
 
+// Dreamcast emits this adjacent helper out of line in its debug-oriented
+// build. Retail's /O2 build instead expands both calls into the purchaser.
+static __forceinline long sum_player_dwellings(int player_id)
+{
+    long value = 0;
+    playerData* player = &gpGame->players[player_id];
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        for (int dwelling = 0; dwelling < 14; ++dwelling) {
+            long growth = current_town->get_growth_rate(dwelling);
+            if (growth > 0) {
+                TCreatureType creature = gTownDwellingCreatures[
+                    current_town->type * 14 + dwelling];
+                value += akCreatureTypeTraits[creature].AI_value * growth;
+            }
+        }
+    }
+    return value;
+}
+
+// The available-resource row starts at seven turns of current production, then
+// subtracts one growth cycle from every populated dwelling in the player's
+// towns. On Easy, a computer-only local team is additionally kept below the
+// strongest human player's projected creature value. Gold is deliberately
+// excluded from the final affordability veto; the other six resources and
+// the top creature tier can mark each of the 145 creature ids prohibited.
+// Residual wall (99.90%): all 76 blocks and their flow match. The only three
+// differing instructions are byte-equivalent SIB encodings of `game + index`
+// in the two inlined GetTeam reads and the playerDisabled read. Reversed
+// subscript spelling was byte-flat; the remaining distinction is VC6's
+// commutative base/index choice, not missing game behavior.
+VA(0x00429d50, 0x3F9)  // DC identity/caller + retail body; dc 0x2f694
+void fill_prohibited_array(playerData* player, unsigned char* prohibited)
+{
+    int income[7];
+    short i;
+    int resources[7];
+
+    for (int resource = 0; resource < 7; ++resource)
+        income[resource] =
+            player->turnProductionResource[resource] * 7;
+
+    for (i = 0; i < player->numTowns; ++i) {
+        town* current_town = gpGame->GetTown(player->townIds[i]);
+        short dwelling;
+        for (dwelling = 0; dwelling < 14; ++dwelling) {
+            short growth = current_town->get_growth_rate(dwelling);
+            if (growth > 0) {
+                TCreatureType creature = gTownDwellingCreatures[
+                    current_town->type * 14 + dwelling];
+                GetMonsterCost(creature, resources);
+                int resource = 0;
+                int resources_left = 7;
+                do {
+                    income[resource] -= resources[resource] * growth;
+                    ++resource;
+                } while (--resources_left);
+            }
+        }
+    }
+
+    long local_growth = 0;
+    long human_strength = 0;
+    if (gpGame->setup.difficulty == 0) {
+        int local_player = gNetLocalGamePos;
+        int local_team = local_player < 0
+            ? local_player
+            : gpGame->mapHeader.teamInfo[local_player];
+        if (local_team < 0 || !gpGame->IsHumanTeam(local_team)) {
+            int player_index = 0;
+            int players_left = 8;
+            do {
+                if (!gpGame->playerDisabled[player_index]
+                    && gpGame->IsHuman(player_index)) {
+                    long growth_value = sum_player_dwellings(player_index);
+                    human_strength = _cpp_max(human_strength, growth_value);
+                }
+                ++player_index;
+            } while (--players_left);
+
+            local_growth = sum_player_dwellings(gNetLocalGamePos);
+        }
+    }
+
+    for (int creature = 0; creature < 145; ++creature) {
+        prohibited[creature] = 0;
+        GetMonsterCost(creature, resources);
+        int resource = 0;
+        int resources_left = 6;
+        do {
+            if (resources[resource] > 0 && income[resource] <= 0)
+                prohibited[creature] = 1;
+            ++resource;
+        } while (--resources_left);
+
+        if (gpGame->setup.difficulty == 0) {
+            int local_player = gNetLocalGamePos;
+            int local_team = local_player < 0
+                ? local_player
+                : gpGame->mapHeader.teamInfo[local_player];
+            if (local_team < 0 || !gpGame->IsHumanTeam(local_team)) {
+                    if (akCreatureTypeTraits[creature].level
+                        == TOWN_DWELLING_COUNT - 1)
+                    prohibited[creature] = 1;
+                if (akCreatureTypeTraits[creature].growthRate
+                            * akCreatureTypeTraits[creature].AI_value
+                        + local_growth
+                        > human_strength) {
+                    prohibited[creature] = 1;
+                }
+            }
+        }
+    }
+}
+
 #if 0  // @carcass
 
-// UNCLAIMED, 0x429d50 (1017 B). The only other retail row left in the
-// span, and the last thirteen DC bodies of this bracket are all
-// candidates. It saves BOTH ecx and edx, so it is a /Gr free function,
-// and `ret` with no stack arguments makes it exactly two parameters -
-// which fits fill_prohibited_array (524 B), value_of_castle_upgrade
-// (248 B), value_of_silo (36 B), value_of_hall (640 B) and
-// get_requirements (262 B) equally. Its one caller is the end_turn
-// slot at 0x428dd0 and its one named callee is GetMonsterCost; neither
-// narrows five candidates to one. The other eight DC statics here have
-// three or four parameters and are excluded by the arity, but that
-// still leaves a five-way tie, so nothing is claimed.
+// RESOLVED, 0x429d50: end_turn's prohibited-creature buffer, the retail
+// production/dwelling scans, and both Complete-only Easy-policy phases prove
+// fill_prohibited_array. The adjacent sum_player_dwellings helper is inlined
+// twice in retail. See the live 99.90% body above; no unclaimed row remains in
+// this ai_player span.
 
 // E:\gamedcs\ai_player.cpp:834
 DC_ONLY(0x2f4b0, 0x96)
@@ -1900,6 +2064,591 @@ long* get_danger_cell(long* danger_zones, type_point point)
 }
 
 #endif  // @carcass
+
+// Complete inserts has_angelic_alliance at +8 relative to the DC roster;
+// the five stores below are the whole retail constructor at 0x42c040. The
+// byte itself, improvement, and both natural alignment gaps are intentionally
+// left alone, exactly as the constructor bytes require.
+VA(0x0042c040, 0x15)  // retail stores + DC base roster; dc 0x315bc
+type_AI_creature_swapper::type_AI_creature_swapper()
+{
+    army = 0;
+    adjacent_army = 0;
+    morale = 0;
+    alignment_count = 0;
+    army_value_increase = 0;
+}
+
+// Complete factors the alignment census/grouping pass that the DC build
+// emits at its call sites. The +1 indexing covers neutral plus nine town
+// alignments, proving the ten-byte member extent. The bitset is the same
+// nine-alignment grouping set used by armyGroup::GetMorale.
+VA(0x0042c060, 0xC3)  // retail body/callgraph + DC inline semantics
+void type_AI_creature_swapper::get_alignments()
+{
+    alignment_count = army->GetAlignments(alignments);
+    if (!has_angelic_alliance) {
+        return;
+    }
+    for (int alignment = 0; alignment < 9; ++alignment) {
+        if (alignments[alignment + 1] != 0 && has_angelic_alliance) {
+            const std::bitset<9>& allied_alignments = ArmyGrpFn_0044A460();
+            if (!allied_alignments.test(alignment)) {
+                continue;
+            }
+            int other = 0;
+            while (!allied_alignments.test(other)) {
+                ++other;
+            }
+            if (other != alignment) {
+                if (alignments[other + 1] > 0) {
+                    --alignment_count;
+                }
+                alignments[other + 1] += alignments[alignment + 1];
+                alignments[alignment + 1] = 0;
+            }
+        }
+    }
+}
+
+// DC proves the method identity and signature. Retail additionally shows that
+// a displaced stack is offered to the adjacent army first; if that army is
+// full, only an adjacent stack weaker than the displaced one is replaced.
+VA(0x0042c130, 0x146)  // DC method + retail body/callgraph; dc 0x315d8
+void type_AI_creature_swapper::add_creatures(
+    TCreatureType type, short amount, short slot)
+{
+    TCreatureType old_type = army->armyTypes[slot];
+    army_value_increase += akCreatureTypeTraits[type].AI_value * amount;
+    if (old_type != type && old_type != CREATURE_NONE) {
+        army_value_increase -= akCreatureTypeTraits[old_type].AI_value
+            * static_cast<short>(army->numTroops[slot]);
+        short old_amount = army->numTroops[slot];
+
+        armyGroup* destination = adjacent_army;
+        if (destination && !destination->Add(old_type, old_amount, -1)) {
+            long weakest_value = -akCreatureTypeTraits[old_type].AI_value
+                * old_amount;
+            short weakest_slot = -1;
+            for (short candidate = 0;
+                 candidate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                 ++candidate) {
+                long value = -akCreatureTypeTraits[
+                    destination->armyTypes[candidate]].AI_value
+                    * destination->numTroops[candidate];
+                if (value > weakest_value) {
+                    weakest_value = value;
+                    weakest_slot = candidate;
+                }
+            }
+            if (weakest_slot >= 0) {
+                destination->Dismiss(weakest_slot);
+                destination->Add(old_type, old_amount, weakest_slot);
+            }
+        }
+        army->Dismiss(slot);
+    }
+    army->Add(type, amount, slot);
+}
+
+// DC proves this method's identity, signature, and call graph. Retail adds a
+// separate get_alignments call after temporarily dismissing each candidate;
+// the surrounding capacity checks and the restore/add split are byte-visible.
+VA(0x0042c5b0, 0xD1)  // DC method + retail call graph; dc 0x31924
+void type_AI_creature_swapper::dump_extra_creature()
+{
+    if (!adjacent_army
+        || adjacent_army->GetNumArmies() == armyGroup::ARMY_GROUP_SLOT_COUNT
+        || army->GetNumArmies() == 1)
+        return;
+
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        TCreatureType type = army->armyTypes[slot];
+        if (type != CREATURE_NONE) {
+            if (adjacent_army->GetNumArmies()
+                    == armyGroup::ARMY_GROUP_SLOT_COUNT
+                || army->GetNumArmies() == 1)
+                return;
+
+            int count = army->numTroops[slot];
+            army->Dismiss(slot);
+            get_alignments();
+
+            short add_slot;
+            if (value_of_adding_army(type, count, add_slot, false) <= 0) {
+                adjacent_army->Add(type, count, -1);
+                if (adjacent_army->GetNumArmies()
+                        == armyGroup::ARMY_GROUP_SLOT_COUNT
+                    || army->GetNumArmies() == 1)
+                    return;
+            } else {
+                army->armyTypes[slot] = type;
+                army->numTroops[slot] = count;
+            }
+        }
+    }
+}
+
+// DC proves the identity, parameter roles, and shooter_count local. Retail
+// adds the Complete elemental-alignment gate and exposes both shooter-policy
+// predicates: preserve a sole shooter, but replace a shooter once there are
+// already more than three. Alignment checking admits only a singleton group.
+// Residual (88.34%): all policy/filter calls and 135 of retail's 140
+// instructions are present across 41 versus 42 blocks. The remaining split
+// is a VC6 register-role permutation in the Complete alignment fold;
+// `why-reg` measures distance 119. Making the grouped alignment volatile
+// improves that internal distance but worsens the real objdiff score to
+// 86.33%, and declaration/reference/condition spellings are flat or worse.
+VA(0x0042c690, 0x192)  // DC method + retail body/caller; dc 0x31a00
+long type_AI_creature_swapper::choose_weakest_army(
+    bool is_shooter, bool check_alignments)
+{
+    long shooter_count = 0;
+    int shooter_slot;
+    for (shooter_slot = 0;
+         shooter_slot < armyGroup::ARMY_GROUP_SLOT_COUNT;
+         ++shooter_slot) {
+        TCreatureType type = army->armyTypes[shooter_slot];
+        if (type != CREATURE_NONE
+            && (akCreatureTypeTraits[type].attributes & CTA_SHOOTER)) {
+            ++shooter_count;
+        }
+    }
+
+    bool replace_shooter = is_shooter && shooter_count > 3;
+    bool preserve_shooter = !is_shooter && shooter_count == 1;
+    long weakest_slot = -1;
+    long weakest_value = 0;
+
+    int slot;
+    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        TCreatureType type = army->armyTypes[slot];
+        if (type == CREATURE_NONE)
+            continue;
+
+        int grouped_alignment;
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
+        if (check_alignments) {
+            int alignment;
+            if (gpGame->f_1f698 == 0
+                && (type == CREATURE_AIR_ELEMENTAL
+                    || type == CREATURE_EARTH_ELEMENTAL
+                    || type == CREATURE_FIRE_ELEMENTAL
+                    || type == CREATURE_WATER_ELEMENTAL)) {
+                alignment = -1;
+            } else {
+                alignment = akCreatureTypeTraits[type].townType;
+            }
+
+            grouped_alignment = alignment;
+            if (has_angelic_alliance) {
+                const std::bitset<9>& allied_alignments =
+                    ArmyGrpFn_0044A460();
+                if (allied_alignments.test(alignment)) {
+                    grouped_alignment = 0;
+                    while (!allied_alignments.test(grouped_alignment))
+                        ++grouped_alignment;
+                }
+            }
+            if (alignments[grouped_alignment + 1] != 1)
+                continue;
+        }
+
+        if (replace_shooter && !(traits.attributes & CTA_SHOOTER))
+            continue;
+        if (preserve_shooter && (traits.attributes & CTA_SHOOTER))
+            continue;
+
+        long value = army->numTroops[slot] * traits.AI_value;
+        if (weakest_slot < 0 || value < weakest_value) {
+            weakest_value = value;
+            weakest_slot = slot;
+        }
+    }
+    return weakest_slot;
+}
+
+// DC proves the signature, source-line phases, and both replacement exits.
+// Retail adds Complete's elemental and Angelic-Alliance alignment folding.
+// A new singleton alignment is rejected when its morale loss outweighs the
+// incoming stack; slowing the army also subtracts the proportional movement
+// loss before an existing, empty, or weakest slot is selected.
+// Residual (89.09%): the 67/68-block and 287/292-instruction forms have the
+// same substantive exits, calls, morale census and movement calculation.
+// `why-reg` leaves distance 155; its best volatile-value probe moves that
+// metric by only five and does not improve objdiff, while the measured
+// pointer/reference, declaration and expression variants are flat or worse.
+VA(0x0042c830, 0x33F)  // DC method/callgraph + retail Complete body; dc 0x31af4
+long type_AI_creature_swapper::value_of_adding_army(
+    TCreatureType type, short count, short& slot,
+    bool must_replace_creature)
+{
+    const TCreatureTypeTraits* traits = &akCreatureTypeTraits[type];
+    bool bad_morale = false;
+    long morale_army_value = 0;
+    long value = traits->AI_value * count;
+
+    int alignment;
+    if (gpGame->f_1f698 == 0
+        && (type == CREATURE_AIR_ELEMENTAL
+            || type == CREATURE_EARTH_ELEMENTAL
+            || type == CREATURE_FIRE_ELEMENTAL
+            || type == CREATURE_WATER_ELEMENTAL)) {
+        alignment = -1;
+    } else {
+        alignment = traits->townType;
+    }
+    if (has_angelic_alliance) {
+        const std::bitset<9>& allied_alignments = ArmyGrpFn_0044A460();
+        if (allied_alignments.test(alignment)) {
+            alignment = 0;
+            while (!allied_alignments.test(alignment))
+                ++alignment;
+        }
+    }
+
+    if (alignments[alignment + 1] == 0 && army->GetNumArmies() > 0) {
+        int minimum_morale;
+        if (gpGame->f_1f698 == 0
+            && (type == CREATURE_AIR_ELEMENTAL
+                || type == CREATURE_EARTH_ELEMENTAL
+                || type == CREATURE_FIRE_ELEMENTAL
+                || type == CREATURE_WATER_ELEMENTAL)) {
+            minimum_morale = 1;
+        } else {
+            minimum_morale = 2;
+            if (traits->townType != TOWN_NECROPOLIS)
+                minimum_morale = 1;
+        }
+
+        if (army->GetMorale(0, 0, 0, 0, 0,
+                           has_angelic_alliance, 0)
+                + morale < minimum_morale) {
+            int index;
+            for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                 ++index) {
+                TCreatureType current = army->armyTypes[index];
+                if (current != CREATURE_NONE
+                    && !(akCreatureTypeTraits[current].attributes
+                         & CTA_NO_MORALE)
+                    && current != CREATURE_MINOTAUR
+                    && current != CREATURE_MINOTAUR_KING) {
+                    morale_army_value +=
+                        akCreatureTypeTraits[current].AI_value
+                        * army->numTroops[index];
+                }
+            }
+            if (!(traits->attributes & CTA_NO_MORALE)
+                && type != CREATURE_MINOTAUR
+                && type != CREATURE_MINOTAUR_KING) {
+                morale_army_value += value;
+            }
+            bad_morale = morale_army_value >= value * 10;
+        }
+    }
+
+    int slowest_speed = 20;
+    int index;
+    for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+        TCreatureType current = army->armyTypes[index];
+        if (current != CREATURE_NONE) {
+            slowest_speed = _cpp_min(
+                slowest_speed, akCreatureTypeTraits[current].speed);
+        }
+    }
+    if (slowest_speed > traits->speed) {
+        long old_move = gLandMovement[slowest_speed];
+        long new_move = gLandMovement[traits->speed];
+        long army_value = army->get_AI_value() + 500;
+        value += static_cast<long>(
+            static_cast<double>(new_move) * army_value
+            / static_cast<double>(old_move)
+            - static_cast<double>(army_value));
+    }
+
+    slot = -1;
+    for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+        if (army->armyTypes[index] == type) {
+            slot = index;
+            if (must_replace_creature)
+                return -1;
+            return value;
+        }
+    }
+
+    if (!bad_morale && !must_replace_creature
+        && (army->GetNumArmies() < 6 || !adjacent_army)) {
+        for (index = 0; index < armyGroup::ARMY_GROUP_SLOT_COUNT; ++index) {
+            if (army->armyTypes[index] == CREATURE_NONE) {
+                slot = index;
+                return value;
+            }
+        }
+    }
+
+    slot = choose_weakest_army(
+        (traits->attributes & CTA_SHOOTER) != 0, bad_morale);
+    if (slot < 0)
+        return 0;
+    return value - akCreatureTypeTraits[army->armyTypes[slot]].AI_value
+        * army->numTroops[slot];
+}
+
+// Shared source for the retail out-of-line body and the copy expanded inside
+// get_purchase_value. Keeping the unclaimed helper here preserves the inline
+// context while the two claimed functions remain in retail address order.
+static __forceinline void AI_consolidate_army_impl(armyGroup* current_army)
+{
+    for (int first = 0; first < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+         ++first) {
+        TCreatureType type = current_army->armyTypes[first];
+        if (type != CREATURE_NONE) {
+            for (int duplicate = first + 1;
+                duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT;
+                ++duplicate) {
+                if (current_army->armyTypes[duplicate] == type) {
+                    current_army->numTroops[first] +=
+                        current_army->numTroops[duplicate];
+                    current_army->Dismiss(duplicate);
+                }
+            }
+        }
+    }
+}
+
+// This is the town overload attested at DC ai_player.cpp:2483. Retail's
+// Dinkumware vector widens the DC class from 56 to 60 bytes, but the scalar
+// offsets before it are unchanged. VC6 inlines this constructor into the
+// derived mark_town above; no destructor is written here because its vector
+// teardown is the compiler-generated implicit special member seen in retail.
+VA(0x0042ce30, 0x114)  // DC overload + retail layout/body; dc 0x31ed4
+type_AI_creature_purchaser::type_AI_creature_purchaser(
+    long player, town* current_town)
+{
+    funds = 0;
+    player_id = player;
+    subtract_cost_mode = 1;
+    set(current_town);
+}
+
+// The constructor and mark_town both expand this routine. Their progressively
+// deeper inline contexts explain retail's three vector forms: this standalone
+// body expands push_back completely, the constructor stops at insert(pos,n,x),
+// and mark_town stops one layer earlier at insert(pos,x).
+VA(0x0042d1b0, 0x268)  // DC method + retail vector/population body; dc 0x31f94
+void type_AI_creature_purchaser::set(town* current_town)
+{
+    creatures.clear();
+    int dwelling = 0;
+    int remaining = 14;
+    short* population = current_town->population;
+    for (; remaining; ++dwelling, ++population, --remaining) {
+        TCreatureType type = gTownDwellingCreatures[
+            current_town->type * 14 + dwelling];
+        short amount = *population;
+        if (amount > 0) {
+            creatures.push_back(type_creature_source(type, population, 0));
+        }
+    }
+}
+
+// DC proves the method, signature, and the add_creatures/value_of_adding_army
+// edges. Retail proves the Complete purchaser tail: two independent cost
+// arrays, optional resource trading, a seven-resource affordability cap, and
+// the three-quarter cap on the cost penalty used to choose the best source.
+static int __cdecl MaxBuyableCreatures(
+    const long* funds, TCreatureType type, int limit)
+{
+    int resources[7];
+    GetMonsterCost(type, resources);
+    for (int resource = 0; resource < 7; ++resource) {
+        if (resources[resource] > 0) {
+            int affordable;
+            if (funds[resource] > 0)
+                affordable = funds[resource] / resources[resource];
+            else
+                affordable = 0;
+            if (affordable < limit)
+                limit = affordable;
+        }
+    }
+    return limit;
+}
+
+// Residual (97.27%): 217 of 219 instructions agree; the remaining delta is
+// VC6 stack-slot coloring around the best-source state (`why-reg` distance
+// 70), after equivalent declaration and expression orders were exhausted.
+VA(0x0042d420, 0x264)  // DC method/callgraph + exact retail caller; dc 0x32038
+long type_AI_creature_purchaser::do_best_purchase(
+    bool trade_allowed)
+{
+    int resource_cost[7];
+    short source_index;
+    long best_value = 0;
+    short best_number = 0;
+    short best_source = -1;
+    short best_slot = -1;
+
+    get_alignments();
+    for (source_index = 0; source_index < creatures.size(); ++source_index) {
+        TCreatureType type = creatures[source_index].type;
+        short available = creatures[source_index].number;
+        if (available > 0) {
+            long number;
+            if (creatures[source_index].is_free) {
+                number = available;
+            } else {
+                GetMonsterCost(type, resource_cost);
+                if (trade_allowed)
+                    gAIPlayers[player_id].trade_resources(
+                        resource_cost, creatures[source_index].number);
+                number = MaxBuyableCreatures(
+                    funds, type, creatures[source_index].number);
+            }
+
+            if (number > 0) {
+                short slot;
+                long value = value_of_adding_army(
+                    type, number, slot, false);
+                if (value > 0) {
+                    if (subtract_cost_mode
+                        && !creatures[source_index].is_free) {
+                        long cost_value = AI_resource_cost(
+                            player_id, resource_cost) * number;
+                        if (cost_value > value * 3 / 4)
+                            cost_value = value * 3 / 4;
+                        value -= cost_value;
+                    }
+
+                    if (value > best_value) {
+                        best_source = source_index;
+                        best_value = value;
+                        best_slot = slot;
+                        best_number = number;
+                    }
+                }
+            }
+        }
+    }
+
+    if (best_value > 0) {
+        TCreatureType type = creatures[best_source].type;
+        add_creatures(type, best_number, best_slot);
+        if (!creatures[best_source].is_free) {
+            GetMonsterCost(type, resource_cost);
+            best_number = MaxBuyableCreatures(
+                funds, type, creatures[best_source].number);
+            for (short resource = 0; resource < 7; ++resource)
+                funds[resource] -= resource_cost[resource] * best_number;
+            creatures[best_source].number -= best_number;
+        }
+    }
+    return best_value;
+}
+
+// Complete extends the five-argument DC routine with a final byte carrying
+// the Angelic-Alliance result. Retail proves both bytes independently: the
+// last parameter is stored at base +8, while allow_trade is forwarded to
+// do_best_purchase. Duplicate creature stacks are merged before purchasing,
+// then every source's final count is written back through its saved pointer.
+// Residual (97.53%): the 90-instruction multiset and CFG are exact. Retail
+// transposes one reload across an adjacent reload; `why-reg` distance 2 and
+// the exhausted declaration/loop spellings classify it as post-RA scheduling.
+VA(0x0042d690, 0xE1)  // mark_town caller + DC method/callgraph; dc 0x32288
+void type_AI_creature_purchaser::do_purchase(
+    armyGroup* new_army, short new_morale, armyGroup* new_adjacent_army,
+    long* new_funds, unsigned char allow_trade,
+    unsigned char new_has_angelic_alliance)
+{
+    army = new_army;
+    adjacent_army = new_adjacent_army;
+    morale = new_morale;
+    funds = new_funds;
+    has_angelic_alliance = new_has_angelic_alliance;
+
+    int slot = 1;
+    int* creature = new_army->armies;
+    int* count = new_army->numTroops;
+    for (; slot - 1 < armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+        ++slot, ++creature, ++count) {
+        int type = *creature;
+        if (type != CREATURE_NONE) {
+            int duplicate = slot;
+            if (duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT) {
+                int* candidate = creature + 1;
+                do {
+                    if (*candidate == type) {
+                        *count += candidate[
+                            armyGroup::ARMY_GROUP_SLOT_COUNT];
+                        new_army->Dismiss(duplicate);
+                    }
+                    ++duplicate;
+                    ++candidate;
+                } while (duplicate < armyGroup::ARMY_GROUP_SLOT_COUNT);
+            }
+        }
+    }
+
+    dump_extra_creature();
+    do {
+    } while (do_best_purchase(allow_trade) > 0);
+
+    for (short source = 0; source < creatures.size(); ++source)
+        *creatures[source].ptr = creatures[source].number;
+}
+
+// Complete adds the final Angelic-Alliance byte to the DC signature. Retail
+// copies both armies and all seven resources, so the valuation can run the
+// real purchaser loop without mutating any caller-owned state. The adjacent
+// local is constructed even when the optional source pointer is null.
+// Residual (97.33%): all 13 blocks, all 86 instructions, every call and the
+// flow graph agree. Only two caller-saved allocation sites differ inside the
+// inlined consolidation walk (EAX/ECX versus ECX/EDX, then ECX versus EDX).
+// `why-reg` measures distance 12; both model and guided sweeps, declaration
+// lifetime/order probes, direct-loop expansion and alternate call operands
+// either leave it unchanged or worsen it.
+VA(0x0042d780, 0xEF)  // DC method/locals + retail Complete tail; dc 0x322f8
+long type_AI_creature_purchaser::get_purchase_value(
+    const armyGroup* new_army, short new_morale,
+    const armyGroup* new_adjacent_army, const long* new_funds,
+    unsigned char new_has_angelic_alliance)
+{
+    armyGroup local_army(*new_army);
+    armyGroup local_adjacent_army;
+    long local_funds[7];
+    memcpy(local_funds, new_funds, sizeof local_funds);
+    long value = 0;
+
+    army = &local_army;
+    morale = new_morale;
+    funds = local_funds;
+    has_angelic_alliance = new_has_angelic_alliance;
+
+    armyGroup* local_adjacent = 0;
+    if (new_adjacent_army) {
+        local_adjacent_army = *new_adjacent_army;
+        local_adjacent = &local_adjacent_army;
+    }
+    adjacent_army = local_adjacent;
+
+    AI_consolidate_army_impl(army);
+    dump_extra_creature();
+    long purchase;
+    do {
+        purchase = do_best_purchase(false);
+        value += purchase;
+    } while (purchase > 0);
+    return value;
+}
+
+// DC proves the function and its nested merge walk. Retail's /Gr profile
+// carries the sole army pointer in ECX; every duplicate stack is folded into
+// the first occurrence and then dismissed in place.
+VA(0x0042d870, 0x67)  // DC function/body + retail caller bracket; dc 0x323bc
+void AI_consolidate_army(armyGroup* current_army)
+{
+    AI_consolidate_army_impl(current_army);
+}
 
 // E:\gamedcs\findpath.h:270
 VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec

@@ -3,13 +3,20 @@
 // 54 functions in link order; 21 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+#define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #include "drawing.h"
 #include "combatcontrolsubwindow.h"
 #include "combatwindow.h"
+#include "winmgr.h"
 
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
 DATA(0x006aace8) TDrawbridgeBounds gCombatAreaLimits;
+
+// NH3API's name crosses to this retail datum by bijective instruction-
+// operand correspondence, not by its contradicted address. Retail accesses
+// the flag as a full dword in this wrapper and the command-processing sites.
+DATA(0x006989ec) int gbProcessingCombatAction;
 
 // ARITY SCREEN over the located rows, run 2026-08-14 before reconstructing
 // anything here. `ret N` against the Dreamcast parameter count:
@@ -100,6 +107,23 @@ void combatManager::ResetLimitCreature()
     memset(bytes + COMBAT_ARCHER_EFFECT_OFFSET, 0, 3);
     *static_cast<TDrawbridgeBounds*>(static_cast<void*>(
         bytes + COMBAT_DRAWING_EXTENT_OFFSET)) = gCombatAreaLimits;
+}
+
+// Complete's no-extent refresh. The retail body fixes the field gate and
+// consumes gCombatDrawLimits694f18 as left/top/right/bottom before forwarding
+// the inclusive rectangle to heroWindowManager::UpdateScreen.
+VA(0x00493780, 0x44)  // hd-crossbuild; DC signature 0x83e58
+void combatManager::UpdateCombatArea()
+{
+    if (!IsQuickCombat() && field_13300) {
+        gpWindowManager->UpdateScreen(
+            gCombatDrawLimits694f18.values[0],
+            gCombatDrawLimits694f18.values[1],
+            gCombatDrawLimits694f18.values[2]
+                - gCombatDrawLimits694f18.values[0] + 1,
+            gCombatDrawLimits694f18.values[3]
+                - gCombatDrawLimits694f18.values[1] + 1);
+    }
 }
 
 #if 0  // @carcass
@@ -280,6 +304,29 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\drawing.cpp:1113. Complete retains the DC wrapper shape but
+// its larger overload gained a third argument, passed as zero here.
+VA(0x00494390, 0xA7)  // hd-crossbuild, dc 0x84dac
+void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
+                                    int bAllowDuringAction)
+{
+    if (gbProcessingCombatAction && !bAllowDuringAction)
+        return;
+
+    std::vector<long> hexes;
+    if (iNewMouseGridIndex >= 0
+            && iNewMouseGridIndex < COMBAT_GRID_HEX_COUNT
+            && iNewMouseGridIndex % COMBAT_GRID_COLUMN_COUNT != 0
+            && iNewMouseGridIndex % COMBAT_GRID_COLUMN_COUNT
+                   != COMBAT_GRID_RIGHT_BORDER_COLUMN) {
+        hexes.push_back(iNewMouseGridIndex);
+    } else {
+        iNewMouseGridIndex = -1;
+    }
+
+    UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
+}
 
 // E:\gamedcs\drawing.cpp:1865
 // The generated callgraph proposal placed this name at 0x4958e0, but that

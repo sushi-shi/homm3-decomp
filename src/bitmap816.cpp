@@ -8,6 +8,8 @@
 // had (see the destructor's note below). NEW.H does NOT declare it.
 #include <new>
 #include "bitmap816.h"
+#include "bitmap16.h"
+#include "pcx.h"
 
 // Retail vtable 0x63ba14 slot 0; retail places the generated wrapper before
 // the constructors, while Dreamcast appends it to the compiland.
@@ -119,10 +121,178 @@ void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* zBuf
 
 #endif  // @carcass
 
+// E:\gamedcs\bitmap816.cpp:244
+// Exact: the PCX helper ABI and both stack records are independently present
+// in the DC type stream; retail then fixes every field use. The only final
+// source-order lever was spelling BPPixel before Nplanes in their product.
+VA(0x0044fa40, 0x155)  // exact, source order; dc 0x53df0
+int Bitmap816::importPCXFile(const char* filename, int rbits, int rshift,
+                             int gbits, int gshift, int bbits, int bshift)
+{
+    PcxData pdat;
+    imgdes pcxfile;
+    int error = pcxinfo(filename, &pdat);
+    if (error)
+        return 1;
+
+    Width = pdat.width;
+    Height = pdat.length;
+    Pitch = Width;
+    ImageSize = Width * Height;
+    DataSize = ImageSize;
+    map = new unsigned char[ImageSize];
+    if (!map)
+        return 2;
+
+    allocimage(&pcxfile, pdat.width, pdat.length,
+               pdat.BPPixel * pdat.Nplanes);
+    loadpcx(filename, &pcxfile);
+    flipimage(&pcxfile, &pcxfile);
+
+    for (int y = 0; y < Height; ++y) {
+        memcpy(map + y * Pitch,
+               pcxfile.ibuff + y * pcxfile.buffwidth,
+               Width);
+    }
+
+    for (int i = 0; i < 256; ++i) {
+        p16.data[i] =
+            static_cast<unsigned short>(
+                ((pcxfile.palette[i].rgbRed >> (8 - rbits)) << rshift) |
+                ((pcxfile.palette[i].rgbGreen >> (8 - gbits)) << gshift) |
+                ((pcxfile.palette[i].rgbBlue >> (8 - bbits)) << bshift));
+    }
+
+    freeimage(&pcxfile);
+    return 0;
+}
+
+// E:\gamedcs\bitmap816.cpp:327
+// Exact: source-shaped indexed loops are load-bearing here; VC6 converts
+// their pointer cursors to retail's decrementing row/column counters.
+VA(0x0044fba0, 0xCB)  // exact, source order; dc 0x53fe4
+void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
+                            unsigned short* dst, int dx, int dy,
+                            int dw, int dh, int dpitch, int id) const
+{
+    if (dx < 0) {
+        sx -= dx;
+        sw += dx;
+        dx = 0;
+    }
+    if (dy < 0) {
+        sy -= dy;
+        sh += dy;
+        dy = 0;
+    }
+    if (dx + sw > dw)
+        sw = dw - dx;
+    if (dy + sh > dh)
+        sh = dh - dy;
+
+    if (sw > 0 && sh > 0) {
+        unsigned char* src = map + sy * Pitch + sx;
+        dst = static_cast<unsigned short*>(static_cast<void*>(
+            static_cast<unsigned char*>(static_cast<void*>(dst))
+            + dy * dpitch + dx * 2));
+        for (int y = 0; y < sh; ++y) {
+            unsigned short* out = dst;
+            unsigned char* in = src;
+            for (int x = 0; x < sw; ++x) {
+                unsigned char pixel = *in++;
+                if (pixel)
+                    *out = static_cast<unsigned short>(id);
+                ++out;
+            }
+            dst = static_cast<unsigned short*>(static_cast<void*>(
+                static_cast<unsigned char*>(static_cast<void*>(dst))
+                + dpitch));
+            src += Pitch;
+        }
+    }
+}
+
+// E:\gamedcs\bitmap816.cpp:400
+VA(0x0044fc70, 0x136)  // exact, source order; dc 0x540a8
+void Bitmap816::Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+                     int dx, int dy, int dw, int dh, int dpitch,
+                     bool tblit) const
+{
+    if (dx < 0) {
+        sx -= dx;
+        sw += dx;
+        dx = 0;
+    }
+    if (dy < 0) {
+        sy -= dy;
+        sh += dy;
+        dy = 0;
+    }
+    if (dx + sw > dw)
+        sw = dw - dx;
+    if (dy + sh > dh)
+        sh = dh - dy;
+
+    if (sw > 0 && sh > 0) {
+        unsigned char* src = map + sy * Pitch + sx;
+        dst = static_cast<unsigned short*>(static_cast<void*>(
+            static_cast<unsigned char*>(static_cast<void*>(dst))
+            + dy * dpitch + dx * 2));
+        if (tblit) {
+            for (int y = 0; y < sh; ++y) {
+                unsigned short* out = dst;
+                unsigned char* in = src;
+                for (int x = 0; x < sw; ++x) {
+                    unsigned char pixel = *in++;
+                    if (pixel)
+                        *out = p16.data[pixel];
+                    ++out;
+                }
+                dst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                    + dpitch));
+                src += Pitch;
+            }
+        } else {
+            for (int y = 0; y < sh; ++y) {
+                unsigned short* out = dst;
+                unsigned char* in = src;
+                for (int x = 0; x < sw; ++x) {
+                    *out++ = p16.data[*in++];
+                }
+                dst = static_cast<unsigned short*>(static_cast<void*>(
+                    static_cast<unsigned char*>(static_cast<void*>(dst))
+                    + dpitch));
+                src += Pitch;
+            }
+        }
+    }
+}
+
+// The const high-level blitter expands Bitmap16Bit's retail-proven layout
+// into the eleven-argument pixel primitive below it in the same compiland.
+VA(0x0044fdb0, 0x3B)  // hd-crossbuild; dc 0x541b0
+void Bitmap816::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+                     int dx, int dy, bool tblit) const
+{
+    Draw(sx, sy, sw, sh, dst->map, dx, dy,
+         dst->Width, dst->Height, dst->Pitch, tblit);
+}
+
+// Retail vtable 0x63ba14 slot 3. The screen z-buffer wrapper supplies the
+// fixed 800x600 geometry and 1600-byte pitch to the eleven-argument body.
+VA(0x0044fdf0, 0x3B)  // anchor-vtable; dc 0x5422c
+void Bitmap816::zBufferDraw(int sx, int sy, int sw, int sh,
+                            unsigned short* zBuffer, int dx, int dy,
+                            int id) const
+{
+    zBufferDraw(sx, sy, sw, sh, zBuffer, dx, dy, 800, 600, 1600, id);
+}
+
 // Retail vtable 0x63ba14 slot 2. DC's header-inline resource-size helper is
 // not listed separately in the source roster.
 VA(0x0044fe30, 0x09)
-unsigned int Bitmap816::_vslot2() const
+unsigned int Bitmap816::GetSize() const
 {
     return DataSize + sizeof(*this);
 }

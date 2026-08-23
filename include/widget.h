@@ -179,6 +179,9 @@ public:
     void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
+#ifdef HOMM3_WIDGET_SET_VISIBLE_DECLS
+    void set_visible(unsigned char arg);
+#endif
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
     // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
     // earlier obj, ICF-folded with other empty bodies). Declared only;

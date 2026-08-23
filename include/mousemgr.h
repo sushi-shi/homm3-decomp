@@ -110,6 +110,15 @@ public:
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
 extern mouseManager* gpMouseManager;
 
+// The three DirectDraw surfaces owned and loaded by mousemgr.cpp. The
+// wingraph lifecycle releases the same cells during graphics shutdown.
+extern IDirectDrawSurface4* gpDDSMouseSurface;         // 0x6aacc4
+extern IDirectDrawSurface4* gpDDSMouseSaveSurface;     // 0x6aacc8
+extern IDirectDrawSurface4* gpDDSMouseScratchSurface;  // 0x6aaccc
+extern unsigned long gColorMask68c860;
+extern unsigned long gColorMask68c864;
+extern unsigned long gColorMask68c868;
+
 // --- globals ---
 // CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:266, dc 0xff76c) unsigned long GetCurrentThreadId();
 // CODEVIEW(E:\gamedcs\WinGraph.h:55, dc 0xff780) unsigned RGBto16(int r, int g, int b);

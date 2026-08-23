@@ -27,6 +27,7 @@
 // game::Load's tail needs load_recorded_events and setup_shipyards, and
 // neither is reached by any other body here. Same gate discipline as the
 // two groups above.
+#define HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
 #include "advmgr_objects.h"
 #include "advmgr.h"
 #include "initialize.h"
@@ -35,14 +36,19 @@
 #include <string.h>
 #include <ctype.h>
 #include <va.h>
+#include <direct.h>
+#include <math.h>
+#include <memory>
 #define HOMM3_GAME_CLAIM_TOWN_DECLS
+#define HOMM3_GAME_CREATURE_BANK_DTOR_DECL
 #define HOMM3_GAME_GARRISON_HERO_DECLS
-#define HOMM3_GAME_HERO_EXTRA_VIEW
 #define HOMM3_GAME_LOAD_TAIL_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_GAME_RANDOM_OBJECTS_DECLS
 #define HOMM3_GAME_TOWN_HEROES_DECLS
-#define HOMM3_MAPCELL_OBJECTS_VIEW
+#define HOMM3_GAME_VALIDATE_VLC_DECLS
+#define HOMM3_GAME_NEW_MAP_DECLS
+#define HOMM3_VLC_CHECKS_VIEW
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
@@ -78,6 +84,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "herospec.h"
 #include "savegame.h"
 #include "winmgr.h"
+#include "creature_bank.h"
 #include "creaturetype.h"
 #include "viewarmywindow.h"
 #include "recruit.h"
@@ -89,6 +96,11 @@ inline type_point::type_point(short new_x, short new_y, short new_z)
     x = new_x;
     y = new_y;
     z = new_z;
+}
+
+inline unsigned char type_point::operator==(const type_point* arg)
+{
+    return arg->x == x && arg->y == y && arg->z == z;
 }
 
 // The generator save format stores creature ids as bytes while the live
@@ -114,10 +126,46 @@ inline TArtifact artifact_from_int(int value)
     return converted.artifact;
 }
 
+inline type_creature_bank_type creature_bank_type_from_int(int value)
+{
+    union {
+        int integer;
+        type_creature_bank_type bankType;
+    } converted;
+    converted.integer = value;
+    return converted.bankType;
+}
+
+inline EGameResource game_resource_from_int(int value)
+{
+    union {
+        int integer;
+        EGameResource resource;
+    } converted;
+    converted.integer = value;
+    return converted.resource;
+}
+
 // Defined at the foot of this file, where retail emits it (0x4d2ac0):
 // declared here so game::Save's pool writes call it out of line.
 unsigned char save_vector(TAbstractFile* outfile,
                           std::vector<type_point>* src_vector);
+
+// The retail linker folds the byte-identical type_point and long writers at
+// 0x4d2ac0.  Keep the one admitted writer while exposing the pairing vector's
+// DC-proven element type to the rest of game.cpp.
+union TGatePairVectorPointerAlias {
+    std::vector<long>* pairs;
+    std::vector<type_point>* points;
+};
+
+static __forceinline std::vector<type_point>*
+gate_pair_storage_as_points(std::vector<long>* pairs)
+{
+    TGatePairVectorPointerAlias alias;
+    alias.pairs = pairs;
+    return alias.points;
+}
 // The other two instantiations game::Save's tail reaches, both also
 // defined at the foot of this file (0x4d2b20 / 0x4d2b80). The university
 // one is a plain block write like the type_point overload; the creature
@@ -161,6 +209,7 @@ static inline int load_saved_hero_id(TAbstractFile* infile, int saveVersion)
     }
     return heroId;
 }
+
 const int ALL_RANDOM_ARTIFACT_CLASSES = 0x1e;
 const int CAMPAIGN_ARMY_OVERRIDE_HERO = 45;
 const int CAMPAIGN_ARMY_OVERRIDE_CAMPAIGN = 14;
@@ -187,12 +236,38 @@ const int START_LEVEL_CAMPAIGN = 8;
 const int START_LEVEL_SCENARIO = 3;
 const int START_LEVEL_HERO_ID = 151;
 const int START_LEVEL_BONUS = 5;
+
+const int FIRST_ARMAGEDDONS_BLADE_CAMPAIGN = 7;
+const int NEW_MAP_RUMOUR_MAP_THRESHOLD = 33;
+const int NEW_MAP_RUMOUR_SPECIAL_THRESHOLD = 66;
 // The map's full obelisk roster and the puzzle it uncovers are the same
 // 48: game::obeliskFlags is 0x30 entries, puzzlePiecesRemoved is a
 // std::bitset<48>, and GetNumObelisks scans exactly 48. The placement
 // loop works over the 47 pieces below the last one.
 const int OBELISK_COUNT = 48;
 const int PUZZLE_PLACEABLE_PIECES = 47;
+
+// The Dreamcast enum leaves 18/19 unnamed, but retail's own diagnostics at
+// 0x677e38/0x677db0 call these exact switch values CREATURE_GENERATOR_2 and
+// CREATURE_GENERATOR_3. Keep the PC-only names scoped to their sole consumer
+// instead of rewriting the cross-build enum roster in mapcell.h.
+const int RETAIL_CREATURE_GENERATOR_2 = 18;
+const int RETAIL_CREATURE_GENERATOR_3 = 19;
+
+// Random-map placeholder domains recovered from RandomizeEvents' retail
+// switch. They are source-local because no cross-TU enum identity survives.
+const int BLACK_BOX_RANDOM_ANY = 1;
+const int BLACK_BOX_RANDOM_TREASURE = 2;
+const int BLACK_BOX_RANDOM_MINOR = 3;
+const int BLACK_BOX_RANDOM_MAJOR = 4;
+const int BLACK_BOX_RANDOM_RELIC = 5;
+const int PYRAMID_SPELL_LEVEL = 5;
+const unsigned long SHRINE_RANDOM_SPELL = 0x007fe000;
+const int SHRINE_LEVEL_ONE = 0;
+const int SHRINE_LEVEL_TWO = 1;
+const int SHRINE_LEVEL_THREE = 2;
+const unsigned char WHIRLPOOL_TRIGGER_X_OFFSET = 2;
+const unsigned char WHIRLPOOL_TRIGGER_Y_OFFSET = 0x10;
 
 const int PRODUCTION_ARTIFACT_CRYSTAL = 0x6d;
 const int PRODUCTION_ARTIFACT_GEMS = 0x6e;
@@ -291,6 +366,31 @@ void ImmMouseWindowMoved()
         OffsetRect(rect, dx, dy);
         enclosure->SetRect(rect);
     }
+}
+
+// Retail-only HeroExtra reset used by game::SetupOrigData.  No Dreamcast
+// procedure row names it; the receiver layout and sole caller prove the role,
+// so the address remains in the source spelling.
+VA(0x004b8450, 0xF7)
+void HeroExtra::HeroExtraFn_004B8450(int heroId)
+{
+    Owner = -1;
+    id = heroId;
+    field_008 = 0;
+    location = type_point(-1, -1, -1);
+    PatrolRadius = -1;
+    bCustomName = 0;
+    bCustomExperience = 0;
+    bCustomPortraitNumber = 0;
+    bCustomSecondarySkills = 0;
+    bCustomArmies = 0;
+    GroupFormation = 0;
+    bCustomArtifacts = 0;
+    customName = 0;
+    name = std::string();
+    sex = -1;
+    customSpells = 0;
+    customPrimarySkills = 0;
 }
 
 // E:\gamedcs\game.cpp:408
@@ -1021,6 +1121,15 @@ int game::SaveGarrisonPool(TAbstractFile* outfile)
 // E:\gamedcs\game.cpp:1114
 #endif  // @carcass
 
+// Residual (99.6447%, diagnosed 2026-08-22): the complete instruction and
+// branch streams agree. The seven real rows are scale-1 SIB encoder ties on
+// the loop's boat writes: our object emits `[edi+base+field]`, retail emits
+// `[base+edi+field]`; the addresses and register values are identical. The
+// other rows are unscored names for vector::insert/size/erase. Replacing all
+// subscripts with `(boats.begin()+i)->field` and with the reversed
+// `(i+boats.begin())->field` is byte-flat, and why-reg confirms all first
+// definitions agree. This is post-allocation address-fold state, not a
+// missing source operation.
 VA(0x004b9a00, 0x239)  // anchor-callee (type_obscuring_object::load), dc 0xa46e8
 int game::LoadBoatPool(TAbstractFile* infile)
 {
@@ -1515,9 +1624,17 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
         return -1;
 
-    unsigned char bits[2] = {0, 0};
-    for (unsigned int bit = 0; bit < 12; bit++) {
-        if (assembledCombinations.test(bit))
+    // Residual (99.9557%, name-only relocation): the explicit bitset pointer
+    // and loop-counter lifetime reproduce retail's EBX/EDI roles, word clear,
+    // and complete byte-packing instruction stream.  The sole diff is our
+    // `_Xran` relocation name versus the delinker's unclaimed synthetic name
+    // for the same retail range-check callee.
+    unsigned char bits[2];
+    const std::bitset<12>* combinations = &assembledCombinations;
+    unsigned int bit = 0;
+    memset(bits, 0, sizeof(bits));
+    for (; bit < 12; bit++) {
+        if (combinations->test(bit))
             bits[bit >> 3] |= static_cast<unsigned char>(1 << (bit & 7));
     }
     outfile->Write(bits, sizeof(bits));
@@ -1705,6 +1822,29 @@ int playerData::NumOfGivenArtifact(int iWhichArtifact)
     }
 
     return count;
+}
+
+// Retail-only companion to NumOfGivenArtifact. The early-return form:
+// inspect every owned hero, then every nonnegative town garrison hero.
+VA(0x004bacb0, 0xCA)  // hd-crossbuild + anchor-callee
+bool playerData::hasGivenArtifact(int artifact)
+{
+    for (int heroIndex = 0; heroIndex < numHeroes; heroIndex++) {
+        hero* currentHero = gpGame->GetHero(heroes[heroIndex]);
+        if (currentHero->IsWieldingArtifact(artifact))
+            return true;
+    }
+
+    for (int townIndex = 0; townIndex < numTowns; townIndex++) {
+        town* currentTown = gpGame->GetTown(townIds[townIndex]);
+        if (currentTown->garrisonHeroId >= 0) {
+            hero* currentHero = gpGame->GetHero(currentTown->garrisonHeroId);
+            if (currentHero->IsWieldingArtifact(artifact))
+                return true;
+        }
+    }
+
+    return false;
 }
 
 // E:\gamedcs\game.cpp:1938
@@ -2044,7 +2184,7 @@ int game::GetNewHeroId(int playerPos, THeroClass excludedClass,
 {
     int heroClass;
     long totalCount;
-    long choice;
+    long choice = 0;
     long counts[18];
     int heroId;
     long weights[18];
@@ -2081,9 +2221,12 @@ int game::GetNewHeroId(int playerPos, THeroClass excludedClass,
             weights[heroClass] = 0;
     }
 
-    // RETAIL RESIDUAL: every branch agrees, but retail binds the gpGame
-    // pointer/value pair to eax/ecx here and this SP3 compile chooses
-    // ecx/eax. Equivalent source-level lifetime spellings do not move it.
+    // Residual (98.9815%): every branch agrees, but retail binds the gpGame
+    // pointer/value pair to EAX/ECX here and this SP3 compile chooses
+    // ECX/EAX, then hoists alignment across the compare. Measured and
+    // byte-flat on 2026-08-22: nesting this first guard, naming either the
+    // gpGame pointer or f_1f698 value, and reversing it to `2 <= f_1f698`.
+    // This is register-homing/front-end handle state, not missing flow.
     if (gpGame->f_1f698 >= 2
         && *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
         && alignment != TOWN_CONFLUX
@@ -2271,6 +2414,36 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 // E:\gamedcs\game.cpp:2564
 #endif  // @carcass
 
+// The Dreamcast roster calls this game::saveString (dc 0xa750c), paired
+// with game::loadString above. Retail lowers both helpers as free /Gr
+// functions. SaveSignPool, game::SaveRumours, TTimedEvent_Save, and the
+// map-cell serializers independently corroborate the writer at 0x4bbb60.
+// EXACT 2026-08-22: the direct transcription matches all code bytes;
+// only the allocation and pooled-empty-string relocation names differ.
+// The fence is part of the match: without it VC6 expands this exact body
+// into SaveSignPool and SaveRumours, while retail calls it out of line.
+#pragma auto_inline(off)
+VA(0x004bbb60, 0xBB)  // caller tree + dc 0xa750c
+int __fastcall SaveAbstractString(TAbstractFile* outfile, std::string* text)
+{
+    short length = text->length();
+
+    if (outfile->Write(&length, sizeof(length)) < sizeof(length))
+        return -1;
+
+    if (length > 0) {
+        char* buffer = new char[length + 1];
+        memset(buffer, 0, length + 1);
+        strcpy(buffer, text->c_str());
+        if (outfile->Write(buffer, length) < length)
+            return -1;
+        delete[] buffer;
+    }
+
+    return length;
+}
+#pragma auto_inline(on)
+
 // anchor-caller game::Save (0x4be3f0) + the string helper: this body
 // calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
 // SaveSignPool also calls (and that TTimedEvent_Save calls from another
@@ -2278,13 +2451,19 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 // through it. `ret 4` = the calibrated p=2 form. First Save-side callee
 // of game::Save in address order, matching the DC roster's first
 // Save/Load pair after the string helpers.
+// EXACT 2026-08-22 (99.7000 -> 100.0000): retail compares the first
+// SaveAbstractString result with the zero already held in ESI. Naming the
+// result and spelling the predicate as `0 > save_result` preserves that
+// front-end operand order and emits `cmp eax,esi`; the direct `call < 0`
+// spelling canonicalizes it to `test eax,eax`.
 VA(0x004bbc20, 0x21E)  // anchor-caller (game::Save) + string-helper, dc 0xa75d0
 int game::SaveRumours(TAbstractFile* outfile)
 {
     unsigned char bool_buffer;
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         current_rumour(currentRumour);
-    if (SaveAbstractString(outfile, &current_rumour) < 0)
+    int save_result = SaveAbstractString(outfile, &current_rumour);
+    if (0 > save_result)
         return -1;
 
     if (outfile->Write(rumourState, sizeof(rumourState)) < sizeof(int))
@@ -2364,6 +2543,102 @@ SavedGameHeader::SavedGameHeader()
     version = 42;
 }
 
+#if 0  // @carcass - inline body lives in game.h
+// E:\gamedcs\VictoryLossConditions.h:77
+// EXACT 2026-08-22: game.h's three-member initializer emits all 14 bytes.
+VA(0x004bc340, 0xE)  // anchor-caller (SavedGameHeader ctor), dc 0xbccdc
+VictoryConditionStruct::VictoryConditionStruct()
+{
+    // @stub - game.h emits the retail body
+}
+#endif  // @carcass
+
+// Reset's retail source saw the implicit SCampaign/NewSMapHeader assignment
+// surface that this TU deliberately hides to keep game::Load exact. One free
+// inline-candidate site restores that lost /Ob2 divisor without emitting code.
+static void reset_assignment_surface()
+{
+}
+
+// The Dreamcast header roster emits SavedGameHeader::Reset immediately
+// after the constructor (dc 0xbcf00). Retail's only call is saved.Reset()
+// in game::Save, and its stores cover the same 0x5a4-byte header layout.
+// EXACT 2026-08-22: the memberwise copies below reproduce the two implicit
+// assignment bodies without widening game.h's codegen-sensitive surface.
+// The final free inline site is load-bearing: k=0 leaves string::_Grow
+// expanded (79.54%), k=1 makes every instruction agree, and a semantic
+// IsHuman adapter is not free enough and remains at the k=0 phase. The
+// byte/dword union spells retail's last stack slot exactly: setne writes its
+// byte view, then the int store reloads and masks the dword view.
+VA(0x004bc350, 0x271)  // anchor-caller (game::Save) + layout, dc 0xbcf00
+void SavedGameHeader::Reset()
+{
+    if (gbUnk69774c)
+        strcpy(id, "H3SVC");
+    else
+        strcpy(id, "H3SVG");
+
+    version = 42;
+    gameVersion = gpGame->f_1f698;
+
+    SCampaign& savedCampaign = campaign;
+    const SCampaign& gameCampaign = gpGame->campaign;
+    savedCampaign.isCheater = gameCampaign.isCheater;
+    savedCampaign.secretActive = gameCampaign.secretActive;
+    savedCampaign.currentMap = gameCampaign.currentMap;
+    savedCampaign.currentCampaign = gameCampaign.currentCampaign;
+    savedCampaign.numMapRegions = gameCampaign.numMapRegions;
+    savedCampaign.crossoverArrayIndex = gameCampaign.crossoverArrayIndex;
+    savedCampaign.briefingChoice = gameCampaign.briefingChoice;
+#pragma inline_depth(0)
+    savedCampaign.campaignFilename.assign(gameCampaign.campaignFilename,
+                                          0, std::string::npos);
+#pragma inline_depth()
+    for (int campaignIndex = 0;
+         campaignIndex < sizeof(savedCampaign.campaignCompleted);
+         ++campaignIndex) {
+        savedCampaign.campaignCompleted[campaignIndex] =
+            gameCampaign.campaignCompleted[campaignIndex];
+    }
+#pragma inline_depth(0)
+    savedCampaign.carryOverHeroes = gameCampaign.carryOverHeroes;
+    savedCampaign.field_4c = gameCampaign.field_4c;
+    savedCampaign.mapScores = gameCampaign.mapScores;
+    savedCampaign.field_6c = gameCampaign.field_6c;
+#pragma inline_depth()
+
+    NewSMapHeader& savedMapHeader = mapHeader;
+    const NewSMapHeader& gameMapHeader = gpGame->mapHeader;
+#pragma inline_depth(0)
+    static_cast<CMapHeaderData&>(savedMapHeader) =
+        static_cast<const CMapHeaderData&>(gameMapHeader);
+    savedMapHeader.mapName.assign(gameMapHeader.mapName,
+                                  0, std::string::npos);
+    savedMapHeader.mapDescription.assign(gameMapHeader.mapDescription,
+                                         0, std::string::npos);
+#pragma inline_depth()
+    savedMapHeader.availableHeroes = gameMapHeader.availableHeroes;
+
+    currentPlayer = gNetLocalGamePos;
+    mapSetup = gpGame->setup;
+    campaignGame = gbUnk69774c;
+    fileName = gpGame->saveFileName;
+    difficultyRating = gpGame->difficultyRating;
+    numDeadPlayers = gpGame->field_1f635;
+    memcpy(deadPlayer, gpGame->playerDisabled, sizeof(deadPlayer));
+
+    int* human = humanPlayer;
+    union {
+        unsigned char byte;
+        unsigned int value;
+    } isHuman;
+    for (int i = 0; i < 8; ++i) {
+        isHuman.byte = gpGame->players[i].IsHuman();
+        *human++ = isHuman.value & 0xff;
+    }
+    reset_assignment_surface();
+}
+
 // Retail disproves the earlier order-only SaveBlackMarkets claim: every
 // member access is within the 0x5a4-byte SavedGameHeader, and the three
 // callees receive its map-header, setup, and campaign subobjects.  Keep the
@@ -2423,6 +2698,178 @@ int SavedGameHeader::Save(TAbstractFile* outfile)
     return 0;
 }
 
+// E:\gamedcs\Game.h:1344
+// Loads either from a caller-owned stream or from the remembered save name in
+// the games directory. Retail extends the Dreamcast's three nested loaders
+// with a save-version argument, independently proven by their `ret 8` bodies.
+// EXACT 2026-08-22: inputWasProvided must precede auto_ptr so its compare is
+// interleaved with the guard's two field stores. Four free candidates preserve
+// retail's out-of-line _Tidy on both failure exits and their merged tail; zero
+// through three over-inline the second destructor and split that tail.
+static void saved_header_load_surface()
+{
+}
+
+VA(0x004bc750, 0x3D5)  // adjacent SavedGameHeader Save/setup_shipyards + dc 0xbcfe4
+int SavedGameHeader::Load(TAbstractFile* infile)
+{
+    std::string openedName;
+    unsigned char inputWasProvided = infile != 0;
+    std::auto_ptr<TAbstractFile> ownedInput;
+
+    if (!inputWasProvided) {
+        openedName = gpGame->setup.filename;
+        _chdir("games");
+        try {
+            infile = new TGzFile(openedName.c_str(), "rb");
+            ownedInput = std::auto_ptr<TAbstractFile>(infile);
+        }
+        catch (...) {
+            return -1;
+        }
+        _chdir("..");
+        if (!infile)
+            return -1;
+    }
+
+    if (infile->Read(id, sizeof(id)) < sizeof(id))
+        return -1;
+
+    {
+        int buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        version = buffer;
+    }
+    if (version > 42)
+        return -1;
+
+    if (version >= 40) {
+        int buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        gameVersion = buffer;
+    } else {
+        if (version < 25 && (version < 16 || version > 18))
+            return -1;
+        if (version <= 18)
+            gameVersion = 0;
+        else if (version <= 30)
+            gameVersion = 1;
+        else
+            gameVersion = 2;
+    }
+
+    if (gameVersion == 1 &&
+        *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW)
+        return -1;
+
+    char compatibilityBuffer[32];
+    infile->Read(compatibilityBuffer, sizeof(compatibilityBuffer));
+    if (mapHeader.Load(infile, version) < 0)
+        return -1;
+    if (mapSetup.load(infile, version) < 0)
+        return -1;
+
+    {
+        short buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        campaignGame = buffer != 0;
+    }
+    if (campaignGame)
+        campaign.Load(infile, version);
+
+    char fileNameBuffer[0x15f];
+    infile->Read(fileNameBuffer, sizeof(fileNameBuffer));
+    fileName = fileNameBuffer;
+
+    {
+        short buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        difficultyRating = buffer;
+    }
+    {
+        char buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        numDeadPlayers = buffer;
+    }
+    infile->Read(deadPlayer, sizeof(deadPlayer));
+    infile->Read(humanPlayer, sizeof(humanPlayer));
+    {
+        int buffer;
+        infile->Read(&buffer, sizeof(buffer));
+        currentPlayer = buffer;
+    }
+
+    if (!inputWasProvided)
+        strcpy(mapSetup.filename, openedName.c_str());
+    saved_header_load_surface();
+    saved_header_load_surface();
+    saved_header_load_surface();
+    saved_header_load_surface();
+    return 0;
+}
+
+// E:\gamedcs\game.cpp:2975
+// Rebuilds the per-player shipyard indices after loading a map. Heroes and
+// boats temporarily expose the object below their occupied cell; the same
+// obscurer is restored once that cell has been inspected. The y/x loop order
+// and its width/height bounds are retail's own packed-type_point schedule.
+// EXACT 2026-08-22: clear() is load-bearing - VC6 expands clear and erase but
+// retains the empty POD _Destroy helper; explicit erase over-inlines it away.
+VA(0x004bcb30, 0x26C)  // sole caller game::Load, dc 0xa8144
+void game::setup_shipyards()
+{
+    hero* obscuringHero = 0;
+    boat* obscuringBoat = 0;
+    int i;
+    for (i = 0; i < 8; ++i) {
+        players[i].shipyards.clear();
+    }
+
+    type_point location;
+    for (location.z = 0;
+         location.z < gpGame->worldMap.GetNumLevels();
+         ++location.z) {
+        for (location.y = 0; location.y < gMapWidth; ++location.y) {
+            for (location.x = 0; location.x < gMapHeight; ++location.x) {
+                NewmapCell* mapCell = gpGame->worldMap.cell(location);
+
+                if (mapCell->type == HERO) {
+                    obscuringHero = gpGame->GetHero(mapCell->extraInfo);
+                    obscuringHero->restore_cell();
+                }
+                if (mapCell->type == BOAT) {
+                    obscuringBoat = gpGame->GetBoat(mapCell->extraInfo);
+                    obscuringBoat->restore_cell();
+                }
+
+                ShipyardInfo* shipyardInfo =
+                    static_cast<ShipyardInfo*>(
+                        static_cast<void*>(&mapCell->extraInfo));
+                if (mapCell->type == SHIPYARD && mapCell->is_trigger &&
+                    shipyardInfo->owner >= 0) {
+                    std::vector<type_point>& shipyards =
+                        players[shipyardInfo->owner].shipyards;
+                    type_point* shipyardEnd = shipyards.end();
+#pragma inline_depth(0)
+                    shipyards.insert(shipyardEnd, 1, location);
+#pragma inline_depth()
+                }
+
+                if (obscuringHero) {
+                    obscuringHero->type_obscuring_object::obscure_cell(
+                        HERO, obscuringHero->id);
+                    obscuringHero = 0;
+                }
+                if (obscuringBoat) {
+                    obscuringBoat->type_obscuring_object::obscure_cell(
+                        BOAT, obscuringBoat->id);
+                    obscuringBoat = 0;
+                }
+            }
+        }
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2672
@@ -2449,13 +2896,6 @@ unsigned char type_creature_bank::save(void* outfile)
 // E:\gamedcs\game.cpp:2806
 DC_ONLY(0xa7bec, 0x558)
 int game::GetSaveGameHeaders(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:2975
-DC_ONLY(0xa8144, 0x28A)
-void game::setup_shipyards()
 {
     // @stub
 }
@@ -2720,13 +3160,13 @@ int game::Load(TAbstractFile* infile)
     if (LoadRumours(infile) < 0)
         return -1;
 
-    // Retail CALLS vector<LoadEventRecord>::erase(begin(), end()) here -
+    // Retail CALLS vector<TBlackMarket>::erase(begin(), end()) here -
     // clear()'s own body, expanded, with the erase left out of line. Our
     // CL expands erase too and calls its `copy` and `_Destroy` instead, so
     // the erase is spelled out and pinned; begin()/end() are hoisted first
     // because the pin would otherwise de-inline them as well.
-    LoadEventRecord* eventLast = field_1f680.end();
-    LoadEventRecord* eventFirst = field_1f680.begin();
+    TBlackMarket* eventLast = field_1f680.end();
+    TBlackMarket* eventFirst = field_1f680.begin();
 #pragma inline_depth(0)
     field_1f680.erase(eventFirst, eventLast);
 #pragma inline_depth()
@@ -2742,8 +3182,8 @@ int game::Load(TAbstractFile* infile)
         // shl 2` once for the request and again for the compare. Landing it
         // in an `eventBytes` local costs the second sign-extended reload.
         if (infile->Read(field_1f680.begin(),
-                         char_buffer * sizeof(LoadEventRecord))
-            < char_buffer * sizeof(LoadEventRecord)) {
+                         char_buffer * sizeof(TBlackMarket))
+            < char_buffer * sizeof(TBlackMarket)) {
         event_records_failed:
             return -1;
         }
@@ -3005,10 +3445,12 @@ int game::Load(TAbstractFile* infile)
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {
             type_point emptyPoint;
+            std::vector<type_point>* pairStorage =
+                gate_pair_storage_as_points(&undergroundGatePairs);
 #pragma inline_depth(0)
-            undergroundGatePairs.resize(short_buffer, emptyPoint);
+            pairStorage->resize(short_buffer, emptyPoint);
 #pragma inline_depth()
-            infile->Read(undergroundGatePairs.begin(),
+            infile->Read(pairStorage->begin(),
                          short_buffer * sizeof(type_point));
         }
     }
@@ -3050,6 +3492,112 @@ int game::Load(TAbstractFile* infile)
 #pragma inline_depth(0)
     return 0;
 #pragma inline_depth()
+}
+
+// E:\gamedcs\game.cpp:3257, dc 0xa8b48.
+// Retail deliberately serializes `color` twice: the second eight-byte
+// write/read pair also targets offset zero, leaving `handicap` out of this
+// record.  The adjacent load routine proves that this is the on-disk format,
+// not a decompiler artefact.
+VA(0x004be140, 0x11E)
+int SGameSetupOptions::save(TAbstractFile* outfile)
+{
+    char char_buffer;
+
+    outfile->Write(color, sizeof(color));
+    outfile->Write(color, sizeof(handicap));
+    outfile->Write(alignment, sizeof(alignment));
+    outfile->Write(playerPos, sizeof(playerPos));
+
+    char_buffer = difficulty;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    outfile->Write(filename, sizeof(filename));
+    outfile->Write(path, sizeof(path));
+    outfile->Write(canFlipFromToComputer, sizeof(canFlipFromToComputer));
+
+    char_buffer = curSelectedPlayer;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = fileInitialized;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = initializationNumHumans;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    char_buffer = turnDuration;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+
+    for (int i = 0; i < 8; ++i) {
+        char_buffer = startingHero[i];
+        outfile->Write(&char_buffer, sizeof(char_buffer));
+    }
+
+    return outfile->Write(startingBonus, sizeof(startingBonus)) <
+                   sizeof(startingBonus)
+               ? -1
+               : 0;
+}
+
+union TSetupLoadCounterAlias {
+    TAbstractFile** fileSlot;
+    int* counterSlot;
+};
+
+static __forceinline int& setup_load_counter_slot(TAbstractFile*& fileSlot)
+{
+    TSetupLoadCounterAlias alias;
+    alias.fileSlot = &fileSlot;
+    return *alias.counterSlot;
+}
+
+// E:\gamedcs\game.cpp:3266, dc 0xa8b74.  The retail PC build adds the
+// save-version argument used for the old path default and hero-id remap.
+VA(0x004be260, 0x188)
+int SGameSetupOptions::load(TAbstractFile* infile, int saveVersion)
+{
+    TAbstractFile* input = infile;
+    {
+        char char_buffer;
+
+        input->Read(color, sizeof(color));
+        input->Read(color, sizeof(handicap));
+        input->Read(alignment, sizeof(alignment));
+        input->Read(playerPos, sizeof(playerPos));
+
+        input->Read(&char_buffer, sizeof(char_buffer));
+        difficulty = char_buffer;
+        input->Read(filename, sizeof(filename));
+        input->Read(path, sizeof(path));
+        if (saveVersion < 28)
+            strcpy(path, "maps");
+        input->Read(canFlipFromToComputer, sizeof(canFlipFromToComputer));
+
+        input->Read(&char_buffer, sizeof(char_buffer));
+        curSelectedPlayer = char_buffer;
+        input->Read(&char_buffer, sizeof(char_buffer));
+        fileInitialized = char_buffer != 0;
+        input->Read(&char_buffer, sizeof(char_buffer));
+        initializationNumHumans = char_buffer;
+        input->Read(&char_buffer, sizeof(char_buffer));
+        turnDuration = char_buffer;
+    }
+
+    // C1 reuses the now-dead input-parameter home for retail's countdown.
+    // Naming that alias keeps the one-slot frame and the independently saved
+    // `input` pointer preserves the file object used by the loop body.
+    volatile int& heroesRemaining = setup_load_counter_slot(infile);
+    int* heroPos = startingHero;
+    int remaining;
+    heroesRemaining = 8;
+    do {
+        *heroPos = load_saved_hero_id(input, saveVersion);
+        remaining = heroesRemaining;
+        ++heroPos;
+        --remaining;
+        heroesRemaining = remaining;
+    } while (remaining);
+
+    return input->Read(startingBonus, sizeof(startingBonus)) <
+                   sizeof(startingBonus)
+               ? -1
+               : 0;
 }
 
 // E:\gamedcs\game.cpp:3311
@@ -3295,8 +3843,8 @@ int game::Save(TAbstractFile* outfile)
         // local CSEs the two and compares SIGNED (`cmp eax,edi / jge`)
         // where retail compares UNSIGNED (`cmp eax,edx / jae`).
         if (outfile->Write(field_1f680.begin(),
-                           char_buffer * sizeof(LoadEventRecord)) <
-            char_buffer * sizeof(LoadEventRecord)) {
+                           char_buffer * sizeof(TBlackMarket)) <
+                           char_buffer * sizeof(TBlackMarket)) {
         load_events_failed:
             return -1;
         }
@@ -3528,7 +4076,8 @@ int game::Save(TAbstractFile* outfile)
 
     save_vector(outfile, &whirlpools);
     save_vector(outfile, &undergroundGateExits);
-    save_vector(outfile, &undergroundGatePairs);
+    save_vector(outfile,
+                gate_pair_storage_as_points(&undergroundGatePairs));
 
     // Unguarded, like the three pool writes above them.
     save_vector(outfile, &universities);
@@ -3549,20 +4098,6 @@ int game::Save(TAbstractFile* outfile)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\game.cpp:3257
-DC_ONLY(0xa8b48, 0x2A)
-int SGameSetupOptions::save(void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:3266
-DC_ONLY(0xa8b74, 0x2A)
-int SGameSetupOptions::load(void* infile)
-{
-    // @stub
-}
 
 // E:\gamedcs\game.cpp:3275
 DC_ONLY(0xa8ba0, 0xCC)
@@ -3680,28 +4215,1725 @@ unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffi
     return 1;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:3790
-DC_ONLY(0xa9e88, 0x246)
+// E:\gamedcs\game.cpp:3790, dc 0xa9e88.  Retail resets the original-map
+// session state, hero setup records, live heroes, and the small visibility
+// bands without reconstructing the owning game object.
+VA(0x004bf1a0, 0x183)
 void game::SetupOrigData()
 {
-    // @stub
+    int i;
+
+    gUnnamed69951c = 0;
+    gUnnamed69950c = -1;
+    difficultyRating = 1;
+    giWeekTypeExtra = 0;
+    giWeekType = 0;
+    giMonthType = 0;
+    giMonthTypeExtra = 0;
+    field_1f69c = 0;
+
+    strncpy(saveFileName, (*gpGeneralText)[12], sizeof(saveFileName));
+    saveFileName[sizeof(saveFileName) - 1] = 0;
+    for (i = 0; i < 8; ++i)
+        playerDisabled[i] = 0;
+    memset(gUnnamed69fb24, -1, sizeof(gUnnamed69fb24));
+
+    ultimateArtifactX = -1;
+    ultimateArtifactY = -1;
+    ultimateArtifactZ = -1;
+    field_1f642 = 1;
+    field_1f640 = 1;
+    field_1f63e = 1;
+    field_1f695 = 0x7f;
+    ultimateArtifactPresent = 0;
+
+    for (i = 0; i < 8; ++i)
+        field_1f644[i * sizeof(int)] = 0;
+
+    field_4e3e8 = 0;
+    advManager* manager = gpAdvManager;
+    manager->inDialog = 0;
+    for (i = 0; i < sizeof(heroAvailability); ++i)
+        heroAvailability[i] = -1;
+
+    std::bitset<8> allPlayers;
+    allPlayers.set();
+    for (i = 0; i < HERO_COUNT; ++i)
+        heroPoolMap[i] = allPlayers;
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        heroSetup[i].HeroExtraFn_004B8450(i);
+        heroes[i].initialize(i);
+    }
+
+    for (i = 0; i < sizeof(obeliskFlags); ++i)
+        obeliskFlags[i] = 0;
+    for (i = 0; i < sizeof(spellUsed); ++i)
+        spellUsed[i] = 0;
+    for (i = 0; i < sizeof(spellDisabled); ++i)
+        spellDisabled[i] = 0;
+    for (i = 0; i < sizeof(cartographerFlags); ++i)
+        cartographerFlags[i] = 0;
 }
 
-// E:\gamedcs\game.cpp:3842
-DC_ONLY(0xaa0d0, 0x31E)
+// E:\gamedcs\game.cpp:3842, dc 0xaa0d0.  The PC build chooses the remote
+// transfer directory from the RMT prefix, clears the transient destination
+// pools, and then delegates the record body to game::Load.
+VA(0x004bf330, 0x23B)
 int game::LoadGame(const char* filename, int bIsOrigData, int bIsQuickLoad)
 {
-    // @stub
+    SetupOrigData();
+    if (bIsOrigData)
+        return 0;
+
+    char cBuf[450];
+    gbGameOver = 0;
+    if (_strnicmp(filename,
+                  DATA_COMPGEN(0x00677da8, remoteSavePrefix, "RMT"),
+                  3) == 0) {
+        sprintf(cBuf,
+                DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
+                DATA_COMPGEN(0x00677d88, dataDirectoryPrefix, ".\\DATA\\"),
+                filename);
+    } else {
+        sprintf(cBuf,
+                DATA_COMPGEN(0x00660358, processSearchFoundFormat, "%s%s"),
+                DATA_COMPGEN(0x0063e65c, gamesDirectoryPrefix, ".\\GAMES\\"),
+                filename);
+    }
+
+    try {
+        TGzFile infile(
+            cBuf, DATA_COMPGEN(0x00677d6c, gzReadMode, "rb"));
+
+        int i;
+        for (i = 0; i < 8; ++i) {
+            lithPools[i].clear();
+            lithExitPools[i].clear();
+        }
+        whirlpools.clear();
+        undergroundGateExits.clear();
+        undergroundGatePairs.clear();
+        monsterIdentifiers.clear();
+
+        Load(&infile);
+        return 1;
+    } catch (...) {
+        return 0;
+    }
 }
 
-// E:\gamedcs\game.cpp:3953
-DC_ONLY(0xaa3f0, 0x308)
+union TNeutralWeightAddress {
+    const int* pointer;
+    int address;
+};
+
+static __forceinline int neutral_weight_address(const int* pointer)
+{
+    TNeutralWeightAddress value;
+    value.pointer = pointer;
+    return value.address;
+}
+
+// E:\gamedcs\game.cpp:3953, dc 0xaa3f0.  Neutral towns gain one weighted
+// dwelling's weekly growth.  A full garrison only replaces its weakest
+// stack when the incoming stack is stronger, and a five-percent roll upgrades
+// matching base creatures after the addition.
+VA(0x004bf570, 0x203)
 void game::GiveTroopsToNeutralTown(int iTownId)
 {
-    // @stub
+    town* current_town = &towns[iTownId];
+    long week_number = static_cast<short>(
+        (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e) / 7;
+    int max_roll = std::_cpp_min(week_number, static_cast<long>(8)) + 1;
+    int iRoll = Random(0, max_roll) + Random(0, max_roll)
+              + Random(0, max_roll);
+
+    long monster_level;
+    const int* level_weight;
+    monster_level = 0;
+    level_weight = gNeutralTownLevelWeights;
+    for (;
+         neutral_weight_address(level_weight)
+             < neutral_weight_address(&gNeutralTownLevelWeightsEnd);
+         ++monster_level, ++level_weight) {
+        if (*level_weight >= iRoll)
+            break;
+        iRoll -= *level_weight;
+    }
+
+    int town_type = current_town->type;
+    armyGroup* town_army = &current_town->get_army();
+    TCreatureType creature;
+    TCreatureType upgraded_creature;
+    TCreatureType upgraded_value = gTownUpgradedDwellingCreatures[
+        town_type * TOWN_DWELLING_SLOTS + monster_level];
+    creature = gTownDwellingCreatures[
+        town_type * TOWN_DWELLING_SLOTS + monster_level];
+    upgraded_creature = upgraded_value;
+    if (town_army->get_creature_total(upgraded_creature))
+        creature = upgraded_creature;
+
+    long amount = akCreatureTypeTraits[creature].growthRate;
+    if (!town_army->CanJoin(creature)) {
+        long worst_army = -1;
+        long worst_value = akCreatureTypeTraits[creature].AI_value * amount;
+        for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            long value = akCreatureTypeTraits[town_army->armies[slot]].AI_value
+                       * town_army->numTroops[slot];
+            if (value < worst_value) {
+                worst_army = slot;
+                worst_value = value;
+            }
+        }
+        if (worst_army < 0)
+            return;
+        town_army->Dismiss(worst_army);
+    }
+
+    town_army->Add(creature, amount, -1);
+    if (current_town->population[monster_level] < amount)
+        current_town->population[monster_level] = 0;
+    else
+        current_town->population[monster_level] -= amount;
+
+    int upgraded_slot = monster_level + TOWN_DWELLING_COUNT;
+    if (current_town->population[upgraded_slot] < amount)
+        current_town->population[upgraded_slot] = 0;
+    else
+        current_town->population[upgraded_slot] -= amount;
+
+    if (creature != upgraded_creature && Random(1, 100) <= 5) {
+        for (long slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            if (town_army->armies[slot] == creature)
+                town_army->armies[slot] = upgraded_creature;
+        }
+    }
 }
+
+// Game.h's IsHumanTeam is an inline in the Dreamcast roster. Retail expands
+// it at every validation site below: the team lookup uses this game, while
+// the range-clamped IsHuman half reads the active global game.
+inline unsigned char validate_is_human_team(game* thisGame, int teamNum)
+{
+    for (int i = 0; i < 8; ++i) {
+        if (thisGame->mapHeader.teamInfo[i] == teamNum) {
+            int gamePos = i;
+            if (gamePos >= 8 || gamePos < 0)
+                gamePos = 0;
+            if (gpGame->players[gamePos].isHuman)
+                return 1;
+        }
+    }
+    return 0;
+}
+
+// E:\gamedcs\game.cpp:4050
+// Residual wall (89.04%): the semantic blocks, calls, and field offsets are
+// proved, but VC6 retains two source-shape differences (105 branches / two
+// exits here versus retail's 103 / one).  A compound campaign predicate
+// (73.44%), shared-label gotos (71.68%), a switch (79.20%), direct HeroXYZ
+// fields (87.67%), and the class-member IsHumanTeam spelling (88.74%) all
+// measured worse; the remaining cross-jump and duplicated tail are bounded.
+VA(0x004bf780, 0x6E2)  // order-map + whole-function identity, dc 0xaa7e0
+void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
+{
+    signed char victoryType = mapHeader.victoryCondition.Type;
+    if (victoryType == VICTORY_CONDITION_ARTIFACT
+        || victoryType == VICTORY_CONDITION_BUILD_GRAIL
+        || victoryType == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
+        int num_living_players = 0;
+        for (int i = 0; i < 8; ++i) {
+            if (!playerDisabled[i])
+                ++num_living_players;
+        }
+
+        int map = campaign.currentMap;
+        int campaign_number = campaign.currentCampaign;
+        if (num_living_players == 1) {
+            mapHeader.victoryCondition.AllowNormalVictory = 0;
+        } else if (gbUnk69774c) {
+            if (campaign_number == GAME_CAMPAIGN_5
+                || campaign_number == GAME_CAMPAIGN_3) {
+                if (map == GAME_SCENARIO_0)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_2) {
+                if (map == GAME_SCENARIO_1)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_8) {
+                if (map == GAME_SCENARIO_2)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_7) {
+                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_3
+                    || map == GAME_SCENARIO_6)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_15) {
+                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_2
+                    || map == GAME_SCENARIO_3)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_18) {
+                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_8
+                    || map == GAME_SCENARIO_9)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_16) {
+                if (map == GAME_SCENARIO_1 || map == GAME_SCENARIO_2
+                    || map == GAME_SCENARIO_3)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else if (campaign_number == GAME_CAMPAIGN_14) {
+                if (map == GAME_SCENARIO_2 || map == GAME_SCENARIO_3
+                    || map == GAME_SCENARIO_4)
+                    mapHeader.victoryCondition.AllowNormalVictory = 0;
+                else
+                    mapHeader.victoryCondition.AllowNormalVictory = 1;
+            } else {
+                mapHeader.victoryCondition.AllowNormalVictory = 1;
+            }
+        } else {
+            mapHeader.victoryCondition.AllowNormalVictory = 1;
+        }
+    }
+
+    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO)
+        mapHeader.victoryCondition.AllowNormalVictory = 1;
+
+    if (!check_map_locations)
+        return;
+
+    VictoryConditionStruct& victory = mapHeader.victoryCondition;
+    if (victoryType == VICTORY_CONDITION_DEFEAT_HERO) {
+        int* victoryHeroLocation = &victory.HeroX;
+        type_point vchero_loc(victoryHeroLocation[0],
+                              victoryHeroLocation[1],
+                              victoryHeroLocation[2]);
+        victory.HeroID = -1;
+        for (int i = 0; i < HERO_COUNT; ++i) {
+            type_point poolhero_loc(heroes[i].x, heroes[i].y, heroes[i].z);
+            if (vchero_loc.operator==(&poolhero_loc)) {
+                int team = heroes[i].owner;
+                if (team >= 0)
+                    team = mapHeader.teamInfo[team];
+                if (team >= 0 && validate_is_human_team(this, team)) {
+                    victory.Type = -1;
+                    break;
+                }
+                victory.HeroID = i;
+                break;
+            }
+        }
+        if (victory.HeroID == -1)
+            victory.Type = -1;
+    }
+
+    if (victory.Type == VICTORY_CONDITION_DEFEAT_MONSTER) {
+        NewmapCell* thisCell = worldMap.cell(
+            victory.MonsterX, victory.MonsterY, victory.MonsterZ);
+        if (thisCell->type == MONSTER && thisCell->is_trigger) {
+            victory.CreatureType =
+                creature_type_from_int(thisCell->objectIndex);
+        } else {
+            victory.Type = -1;
+            victory.CreatureType = creature_type_from_int(-1);
+            victory.AllowNormalVictory = 1;
+        }
+    }
+
+    if (victory.Type == VICTORY_CONDITION_CAPTURE_TOWN) {
+        town* this_town = GetTown(GetTownId(
+            victory.TownX, victory.TownY, victory.TownZ));
+        int team = this_town->owner;
+        if (team >= 0)
+            team = mapHeader.teamInfo[team];
+        if (team >= 0 && validate_is_human_team(this, team))
+            victory.Type = -1;
+    }
+
+    LossConditionStruct& loss = mapHeader.lossCondition;
+    if (loss.Type == LOSS_CONDITION_LOSE_HERO) {
+        type_point lchero_loc(loss.HeroX, loss.HeroY, loss.HeroZ);
+        loss.HeroID = -1;
+        for (int i = 0; i < HERO_COUNT; ++i) {
+            type_point poolhero_loc(heroes[i].x, heroes[i].y, heroes[i].z);
+            if (lchero_loc.operator==(&poolhero_loc)) {
+                int numHumanTeams = 0;
+                for (int team = 0; team < 8; ++team) {
+                    if (validate_is_human_team(this, team))
+                        ++numHumanTeams;
+                }
+                if (numHumanTeams <= 1) {
+                    int team = heroes[i].owner;
+                    if (team >= 0)
+                        team = mapHeader.teamInfo[team];
+                    unsigned char humanTeam = 0;
+                    if (team >= 0)
+                        humanTeam = validate_is_human_team(this, team);
+                    if (team < 0 || humanTeam) {
+                        loss.HeroID = i;
+                        break;
+                    }
+                }
+                loss.Type = -1;
+                break;
+            }
+        }
+        if (loss.HeroID == -1)
+            loss.Type = -1;
+    }
+
+    if (loss.Type == LOSS_CONDITION_LOSE_TOWN) {
+        town* this_town = GetTown(GetTownId(
+            loss.TownX, loss.TownY, loss.TownZ));
+        int numHumanTeams = 0;
+        int owner;
+        int townTeam;
+        for (int teamCheck = 0; teamCheck < 8; ++teamCheck) {
+            if (validate_is_human_team(this, teamCheck))
+                ++numHumanTeams;
+        }
+        if (numHumanTeams > 1)
+            goto invalid_loss_town;
+        owner = this_town->owner;
+        townTeam = owner;
+        if (townTeam >= 0)
+            townTeam = mapHeader.teamInfo[townTeam];
+        if (townTeam >= 0) {
+            unsigned char humanTeam =
+                validate_is_human_team(this, townTeam);
+            if (!humanTeam)
+                goto invalid_loss_town;
+        }
+        if (owner != -1)
+            goto valid_loss_town;
+invalid_loss_town:
+        loss.Type = -1;
+valid_loss_town:;
+    }
+}
+
+static __forceinline void add_new_map_starting_materials(
+    long* wood, long* ore, long amount)
+{
+    *wood += amount;
+    *ore += amount;
+}
+
+// E:\gamedcs\game.cpp:4236
+// Retail's PC path widens the DC (MapName, playerHeroFaces) surface to a
+// stream plus campaign context and game-version selector.  The whole body is
+// independently pinned by its two callers, ret 16, and the DC callee roster.
+VA(0x004bfe70, 0x6A8)  // order-map + whole-function identity, dc 0xaada4
+void game::NewMap(TAbstractFile* mapFile, int* playerHeroFaces,
+                  NewMapCampaignContext* campaignContext, int gameVersion)
+{
+    gbInSetup698400 = 1;
+
+    for (int heroIndex = 0; heroIndex < HERO_COUNT; ++heroIndex) {
+        heroes[heroIndex].experience = Random(0, 50) + 40;
+        SetRandomHeroArmies(heroIndex, 0, 0);
+        int mobility = heroes[heroIndex].GetMobility();
+        heroes[heroIndex].movePoints = mobility;
+        heroes[heroIndex].maxMovePoints = mobility;
+        heroes[heroIndex].iLevelSeed =
+            static_cast<unsigned char>(Random(1, 255));
+        heroes[heroIndex].lastWisdom = 0;
+        heroes[heroIndex].last_magic_school_level = 0;
+    }
+
+    field_1f634 = 8;
+    field_1f635 = 0;
+    if (gameVersion != -1 && !gbUnk69774c) {
+        f_1f698 = gameVersion;
+    } else {
+        f_1f698 = 2;
+        if (gbUnk69774c) {
+            if (campaign.currentCampaign < FIRST_ARMAGEDDONS_BLADE_CAMPAIGN)
+                f_1f698 = 0;
+            else if (campaign.currentCampaign < 13)
+                f_1f698 = 1;
+        }
+    }
+
+    if (playerHeroFaces != NULL) {
+        for (int facePlayer = 0; facePlayer < 8; ++facePlayer) {
+            if (players[facePlayer].isHuman
+                && mapHeader.playerSlotAttributes[facePlayer].GenerateHero) {
+                int heroId = playerHeroFaces[facePlayer];
+                if (heroId != -1) {
+                    heroAvailability[heroId] = static_cast<char>(facePlayer);
+                    if (gpGame->setup.startingHero[facePlayer] == -1)
+                        gpGame->setup.startingHero[facePlayer] = heroId;
+                }
+            }
+        }
+    }
+
+    LoadMap(mapFile);
+
+    for (int playerIndex = 0; playerIndex < 8; ++playerIndex) {
+        players[playerIndex].color = static_cast<signed char>(playerIndex);
+        players[playerIndex].numTowns = 0;
+        players[playerIndex].currTownId = -1;
+        players[playerIndex].numHeroes = 0;
+        players[playerIndex].currHeroId = -1;
+    }
+
+    clear_event_records();
+    InitRandomArtifacts();
+    ProcessRandomObjects();
+    RandomizeEvents();
+    match_underground_gates();
+    RandomizeHolyGrail();
+    ProcessOnMapTowns();
+    AI_examine_map();
+    if (campaignContext != NULL)
+        gpGame->campaign.DoPreLoadCustomization();
+    ProcessOnMapHeroes();
+    if (campaignContext != NULL)
+        campaignContext->NewMapFn_00487290();
+    CreateTownHeroes(playerHeroFaces);
+
+    for (unsigned int mapDataIndex = 0;
+         mapDataIndex < worldMap.mapObjectData.size(); ++mapDataIndex) {
+        CMapObjectDataNewMapView* mapData =
+            static_cast<CMapObjectDataNewMapView*>(
+                worldMap.mapObjectData[mapDataIndex]);
+        mapData->NewMapVFn38();
+    }
+
+    memset(playerDisabled, 0, sizeof(playerDisabled));
+    for (int disabledPlayer = 0; disabledPlayer < 8; ++disabledPlayer)
+        playerDisabled[disabledPlayer] =
+            players[disabledPlayer].numHeroes == 0
+            && players[disabledPlayer].numTowns == 0;
+
+    field_1f640 = 1;
+    for (int recruitPlayer = 0; recruitPlayer < 8; ++recruitPlayer) {
+        for (int j = 0; j < 2; ++j) {
+            int heroId = players[recruitPlayer].recruits[j];
+            if (heroId >= 0) {
+                hero* recruitHero = GetHero(heroId);
+                if (!(recruitHero->flags & 0x20000)) {
+                    heroAvailability[heroId] = -1;
+                    players[recruitPlayer].recruits[j] = -1;
+                }
+            }
+        }
+    }
+
+    for (int activePlayer = 0; activePlayer < 8; ++activePlayer) {
+        if (!playerDisabled[activePlayer])
+            set_recruits(activePlayer);
+    }
+
+    ValidateVictoryLossConditions(1);
+
+    if (gbUnk69774c && campaign.currentCampaign == GAME_CAMPAIGN_14) {
+        hero* campaignHero = &heroes[45];
+        if (campaignHero->equipped[hero::EQUIPPED_SLOT_SPELLBOOK].artifactId
+            != -1)
+            campaignHero->remove_artifact(hero::EQUIPPED_SLOT_SPELLBOOK);
+        if (campaign.currentMap == GAME_SCENARIO_2) {
+            type_artifact alliance(ARTIFACT_ANGELIC_ALLIANCE, -1);
+            campaignHero->GiveArtifact(&alliance, 0, 0);
+        }
+    }
+
+    for (int setupPlayer = 0; setupPlayer < 8; ++setupPlayer) {
+        if (playerDisabled[setupPlayer])
+            continue;
+
+        if (players[setupPlayer].isHuman) {
+            players[setupPlayer].personality = 3;
+            memcpy(players[setupPlayer].resources,
+                   gInitResourcesHuman[setup.difficulty],
+                   sizeof(players[setupPlayer].resources));
+            if (field_1f69d)
+                memcpy(players[setupPlayer].resources,
+                       &gNeutralTownLevelWeightsEnd,
+                       sizeof(players[setupPlayer].resources));
+        } else {
+            players[setupPlayer].personality = Random(0, 2);
+            memcpy(players[setupPlayer].resources,
+                   gInitResourcesComputer[setup.difficulty],
+                   sizeof(players[setupPlayer].resources));
+        }
+
+        if (!gbUnk69774c) {
+            int bonus = gNewMapStartingBonus[setupPlayer];
+            bool hasHero = true;
+            if (GetHero(players[setupPlayer].heroes[0]) == NULL)
+                hasHero = false;
+            if (bonus == NEW_MAP_BONUS_RANDOM) {
+                if (hasHero)
+                    bonus = Random(0, 2);
+                else
+                    bonus = Random(1, 2);
+            }
+            gpGame->setup.startingBonus[setupPlayer] =
+                static_cast<signed char>(bonus);
+
+            switch (bonus) {
+            case NEW_MAP_BONUS_ARTIFACT: {
+                int heroId = gpGame->setup.startingHero[setupPlayer];
+                if (heroId == -1)
+                    heroId = players[setupPlayer].heroes[0];
+                hero* bonusHero = GetHero(heroId);
+                if (bonusHero != NULL) {
+                    type_artifact artifact(GetRandomArtifactId(2), -1);
+                    bonusHero->GiveArtifact(&artifact, 1, 1);
+                }
+                break;
+            }
+            case NEW_MAP_BONUS_GOLD:
+                players[setupPlayer].resources[GOLD] += Random(5, 10) * 100;
+                break;
+            case NEW_MAP_BONUS_RESOURCE: {
+                int amount = Random(3, 6);
+                switch (setup.alignment[setupPlayer]) {
+                case TOWN_CASTLE:
+                case TOWN_NECROPOLIS:
+                case TOWN_STRONGHOLD:
+                case TOWN_FORTRESS: {
+                    amount = Random(5, 10);
+                    add_new_map_starting_materials(
+                        &players[setupPlayer].resources[WOOD],
+                        &players[setupPlayer].resources[ORE], amount);
+                    break;
+                }
+                case TOWN_RAMPART:
+                    players[setupPlayer].resources[CRYSTAL] += amount;
+                    break;
+                case TOWN_TOWER:
+                    players[setupPlayer].resources[GEMS] += amount;
+                    break;
+                case TOWN_INFERNO:
+                case TOWN_CONFLUX:
+                    players[setupPlayer].resources[MERCURY] += amount;
+                    break;
+                case TOWN_DUNGEON:
+                    players[setupPlayer].resources[SULFUR] += amount;
+                    break;
+                }
+                break;
+            }
+            }
+        }
+
+        if (setup.handicap[setupPlayer]) {
+            for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+                double handicap;
+                if (setup.handicap[setupPlayer] == NEW_MAP_HANDICAP_MILD)
+                    handicap = 0.85;
+                else
+                    handicap = 0.7;
+                players[setupPlayer].resources[resource] =
+                    static_cast<long>(
+                        players[setupPlayer].resources[resource] * handicap);
+            }
+        }
+    }
+
+    if (campaignContext != NULL)
+        campaignContext->NewMapFn_00487900();
+
+    SetupAdjacentMons();
+    int rumourType = Random(1, 100);
+    if (rumourType < NEW_MAP_RUMOUR_MAP_THRESHOLD)
+        SetCannedRumour();
+    else if (rumourType < NEW_MAP_RUMOUR_SPECIAL_THRESHOLD)
+        SetMapRumour();
+    else
+        SetSpecialRumour();
+
+    field_1f664[0] = GetRandomArtifactId(2);
+    field_1f664[1] = GetRandomArtifactId(2);
+    field_1f664[2] = GetRandomArtifactId(2);
+    field_1f664[3] = GetRandomArtifactId(4);
+    field_1f664[4] = GetRandomArtifactId(4);
+    field_1f664[5] = GetRandomArtifactId(4);
+    field_1f664[6] = GetRandomArtifactId(8);
+
+    gbInSetup698400 = 0;
+}
+
+// Retail-only PC wrapper between the DC NewMap and SetupFirstPlayer rows.
+// Its two callers pass a directory, filename, optional eight-hero override,
+// and game-version selector; the body constructs the zlib stream and hands
+// exactly those latter two values to the stream-based NewMap overload.
+// WALL 99.4%: all 100 explicit instructions, all three returns and the whole
+// try/catch funclet graph agree.  The sole byte-level residual is VC6's hidden
+// try-state zero at ebp-4: retail reuses the already-zero EAX (`mov [ebp-4],
+// eax`), while rebuilding the same source emits the equivalent immediate-zero
+// store.  This is compiler EH bookkeeping, not an unrecovered source action.
+VA(0x004c0520, 0x106)  // anchor-callers + contiguous catch funclets, retail-only
+unsigned char game::NewMap(const char* mapPath, const char* mapName,
+                           int* playerHeroFaces, int gameVersion)
+{
+    try {
+        strcpy(gText, mapPath);
+        strcat(gText,
+               DATA_COMPGEN(0x00677dac, newMapPathSeparator, "\\"));
+        strcat(gText, mapName);
+
+        TGzFile mapFile(
+            gText, DATA_COMPGEN(0x00677d6c, newMapGzReadMode, "rb"));
+        NewMap(&mapFile, playerHeroFaces, NULL, gameVersion);
+        return 1;
+    } catch (...) {
+        return 0;
+    }
+}
+
+__forceinline int game::setup_first_player_position(int firstHuman)
+{
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        if (firstHuman >= 0 && firstHuman < 8 &&
+            players[firstHuman].isHuman) {
+            return firstHuman;
+        }
+        int player;
+        for (player = 7; player >= 0; --player) {
+            if (players[player].isHuman)
+                goto playerSelected;
+        }
+        player = 0;
+playerSelected:
+        return player;
+    }
+    return gLocalGamePos;
+}
+
+// E:\gamedcs\game.cpp:4474
+// The DC roster names a no-argument SetupFirstPlayer.  Retail's callers put
+// gpGame in ECX, and every indexed player load is relative to that receiver,
+// proving the PC member form.  The first loop deliberately preserves the
+// array accessor's retail range clamp even though the induction is [0,8): the
+// resulting >=8/<0 pair is present in the bytes.  The hotseat fallback walks
+// the player array backwards and selects zero only when no human exists.
+VA(0x004c0630, 0xB1)  // anchor-callers + dc-order, dc 0xab8d0
+void game::SetupFirstPlayer()
+{
+    int firstHuman = 0;
+    while (firstHuman < 8) {
+        int playerIndex = firstHuman;
+        if (playerIndex >= 8 || playerIndex < 0)
+            playerIndex = 0;
+        if (players[playerIndex].isHuman)
+            break;
+        ++firstHuman;
+    }
+
+    gNetLocalGamePos = firstHuman;
+    gpCurrentPlayer = &players[firstHuman];
+    gUnnamed69ccc4 = static_cast<unsigned char>(1 << firstHuman);
+
+    int currentPlayer = setup_first_player_position(firstHuman);
+    gUnnamed69778c = currentPlayer;
+    gMapVisibilityBit = static_cast<unsigned char>(1 << currentPlayer);
+    gUnnamed69d810 = firstHuman;
+}
+
+union TUniversitySkillsPointerAlias {
+    int* skills;
+    type_university* university;
+};
+
+static __forceinline type_university* university_skills_record(int* skills)
+{
+    TUniversitySkillsPointerAlias alias;
+    alias.skills = skills;
+    return alias.university;
+}
+
+// E:\gamedcs\game.cpp:4770
+// Retail builds one availability bit per secondary skill from the scenario's
+// disabled-skill row, draws four distinct set bits, and appends those four
+// ints as one university record.  The local is deliberately an int array:
+// the bytes contain no type_university constructor call before the vector
+// append, unlike the elemental-school default record used by townManager.
+// WALL 99.7464%: all 24 blocks, every branch target and every instruction
+// count agree.  The explicit-code residual is one whole-loop register tie:
+// retail keeps the cached availability bound in EBX and each Random ordinal
+// in EDI; this compile assigns those two non-overlapping values the other way
+// round.  Dreamcast CodeView attests university/used/choice/i/skill, and
+// restoring its indexed i loop raised 93.08 -> 99.75.  Exhausted byte-inert
+// levers: reset vs set(false), int/unsigned/register bounds, cached-count vs
+// explicit-highest formulations, split declaration/initialization orders,
+// and pre/post-reset induction ordering.  The direct count-in-loop spelling
+// duplicates the popcount loop and falls to 87.05.
+VA(0x004c06f0, 0x179)  // dc-order + member receiver, dc 0xac048
+void game::randomize_university(NewmapCell* cell)
+{
+    int selectedSkills[4];
+    std::bitset<28> availableSkills;
+    long i;
+    for (i = 0; i < 28; ++i)
+        availableSkills.set(i, !gpGame->field_4e658[i]);
+
+    int availableCount = availableSkills.count();
+    long choice;
+    int skill;
+    for (i = 0; i < 4; ++i) {
+        choice = Random(0, availableCount - 1);
+        skill = 0;
+        for (;;) {
+            if (!availableSkills.test(skill)) {
+                ++skill;
+                continue;
+            }
+            if (choice == 0)
+                break;
+            --choice;
+            ++skill;
+        }
+
+        selectedSkills[i] = skill;
+        availableSkills.set(skill, false);
+        --availableCount;
+    }
+
+    const unsigned long cellVisitedBits = 0x00001fe0;
+    const unsigned long universityIndexBits = 0x01ffe000;
+    cell->extraInfo &= ~cellVisitedBits;
+    std::vector<type_university>* universityList = &universities;
+    unsigned long universityIndex = universityList->size() & 0xfff;
+    cell->extraInfo = (cell->extraInfo & ~universityIndexBits)
+        | (universityIndex << 13);
+    type_university* universityTail = universityList->end();
+    type_university* universityRecord =
+        university_skills_record(selectedSkills);
+#pragma inline_depth(0)
+    universityList->insert(universityTail, 1, *universityRecord);
+#pragma inline_depth()
+}
+
+// E:\gamedcs\game.cpp:4816
+// A radius-zero map marker is already fixed and only needs to be armed.  A
+// missing marker starts at the map centre on a random level with the maximum
+// radius.  Retail then clamps the search away from the puzzle-image margins,
+// counts diggable cells on the chosen level (flipping levels once if needed),
+// and selects one by ordinal on a second pass.
+//
+// 99.95109% wall: all 34 blocks, 22 branches, and every explicit instruction
+// are exact.  The only three objdiff lines are DIR32 symbol-label differences
+// at the same retail storage: our provisional gMapWidth/gMapHeight externs
+// resolve to 0x6783c8/0x6783cc, while the delinked target must still call them
+// data_2783c8/data_2783cc.  Neither datum's defining TU has been reconstructed,
+// and DATA() is definition-only, so claiming either on these header externs (or
+// manufacturing a game.cpp definition) would violate the annotation contract.
+// Moving numValidCells's initialization ahead of the four bound calculations
+// is essential: it reproduces retail's complete stack-slot/register schedule.
+VA(0x004c0870, 0x22A)  // dc-order + is_diggable caller, dc 0xac1a4
+void game::RandomizeHolyGrail()
+{
+    if (field_1f695 == 0 && ultimateArtifactX != -1) {
+        ultimateArtifactPresent = 1;
+        return;
+    }
+
+    if (ultimateArtifactX == -1) {
+        if (field_4e3e8 <= 0)
+            return;
+        ultimateArtifactX = gMapWidth / 2;
+        ultimateArtifactY = gMapHeight / 2;
+        ultimateArtifactZ = Random(1, worldMap.GetNumLevels()) - 1;
+        field_1f695 = 0x7f;
+    }
+
+    int numValidCells = 0;
+    int ultimateXLow = ultimateArtifactX - field_1f695;
+    int ultimateXHigh = ultimateArtifactX + field_1f695;
+    int ultimateYLow = ultimateArtifactY - field_1f695;
+    int ultimateYHigh = ultimateArtifactY + field_1f695;
+
+    if (ultimateXLow < 10)
+        ultimateXLow = 10;
+    if (ultimateXHigh > gMapWidth - 10)
+        ultimateXHigh = gMapWidth - 10;
+    if (ultimateYLow < 9)
+        ultimateYLow = 9;
+    if (ultimateYHigh > gMapWidth - 9)
+        ultimateYHigh = gMapWidth - 9;
+
+    int i;
+    for (i = 0; i < worldMap.GetNumLevels(); ++i) {
+        for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
+            for (int y = ultimateYLow; y <= ultimateYHigh; ++y) {
+                NewmapCell* tempCell =
+                    worldMap.cell(x, y, ultimateArtifactZ);
+                if (tempCell->is_diggable())
+                    ++numValidCells;
+            }
+        }
+        if (numValidCells > 0)
+            break;
+        ultimateArtifactZ = 1 - ultimateArtifactZ;
+    }
+
+    i = Random(0, numValidCells - 1);
+    numValidCells = 0;
+    for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
+        for (int y = ultimateYLow; y <= ultimateYHigh; ++y) {
+            NewmapCell* tempCell = worldMap.cell(x, y, ultimateArtifactZ);
+            if (tempCell->is_diggable()) {
+                if (numValidCells == i) {
+                    ultimateArtifactX = static_cast<short>(x);
+                    ultimateArtifactY = static_cast<short>(y);
+                    ultimateArtifactPresent = 1;
+                    return;
+                }
+                ++numValidCells;
+            }
+        }
+    }
+}
+
+// E:\\gamedcs\\game.cpp:4907
+// Start with the scenario-disabled artifact mask, then reserve every concrete
+// artifact already placed on a trigger cell so GetRandomArtifactId cannot hand
+// out a duplicate.  Retail's first loop is the inlined byte specialization of
+// std::copy; the map scan is z/x/y order and re-reads both global dimensions.
+VA(0x004c0aa0, 0xBE)  // dc-order + NewMap caller, dc 0xac494
+void game::InitRandomArtifacts()
+{
+    std::copy(artifactDisabled,
+              artifactDisabled + sizeof(artifactDisabled), artifactUsed);
+
+    int z;
+    int x;
+    int y;
+    for (z = 0; z < worldMap.GetNumLevels(); ++z) {
+        for (x = 0; x < gMapWidth; ++x) {
+            for (y = 0; y < gMapHeight; ++y) {
+                NewmapCell* tempCell = worldMap.cell(x, y, z);
+                if (tempCell->type == ARTIFACT && tempCell->is_trigger)
+                    artifactUsed[tempCell->objectIndex] = 1;
+            }
+        }
+    }
+}
+
+// E:\\gamedcs\\game.cpp:4950
+// Pair each still-unmatched underground gate with the nearest unmatched gate
+// on the other map level.  The pairing vector stores reciprocal signed
+// indices; distance is the truncated Euclidean x/y distance used by retail.
+// WALL 98.34513%: all 18 blocks, all 10 branches, every block size, and the
+// complete instruction count agree.  The residual is a register rotation in
+// the inlined packed-coordinate comparison/distance expression: retail keeps
+// exit_point's packed y/z word in EDX while this compile keeps current_gate's
+// in ECX, then reloads the other word.  `i + 1 < size()` is essential (the
+// algebraic `i < size()-1` form falls to 72.87%), as is the square-symmetric
+// exit.y-current.y spelling (94.67% otherwise).  Exhausted byte-inert or lower
+// levers: nested != versus equality/continue, reversed z operands (98.14),
+// reversed x delta (94.76), and direct versus force-inlined distance helpers
+// with or without named deltas (98.35/97.86).  The former `_sqrt` relocation
+// delta was a false runtime boundary, now byte-proven and corrected in the
+// hand-owned inventories from the pinned VC6 SP3 LIBCMT sqrt.obj.
+VA(0x004c0b60, 0x160)  // dc-order + NewMap caller, dc 0xac63c
+void game::match_underground_gates()
+{
+    long distance;
+    type_point current_gate;
+    long i;
+    long j;
+    type_point exit_point;
+    long best_distance = 0;
+    long closest;
+
+    for (i = 0; i + 1 < undergroundGateExits.size(); ++i) {
+        if (undergroundGatePairs[i] >= 0)
+            continue;
+
+        current_gate = undergroundGateExits[i];
+        closest = -1;
+        for (j = i + 1; j < undergroundGateExits.size(); ++j) {
+            if (undergroundGatePairs[j] >= 0)
+                continue;
+
+            exit_point = undergroundGateExits[j];
+            if (current_gate.z != exit_point.z) {
+                distance = static_cast<long>(sqrt(static_cast<double>(
+                    (current_gate.x - exit_point.x)
+                        * (current_gate.x - exit_point.x)
+                    + (exit_point.y - current_gate.y)
+                        * (exit_point.y - current_gate.y))));
+                if (closest < 0 || distance < best_distance) {
+                    closest = j;
+                    best_distance = distance;
+                }
+            }
+        }
+
+        if (closest >= 0) {
+            undergroundGatePairs[i] = closest;
+            undergroundGatePairs[closest] = i;
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:4639. Retail inlines all three constant-level calls
+// into RandomizeEvents, but keeps the Dinkumware bitset operations out of
+// line. The subscript/reference spelling is visible in the retail call pair:
+// bitset::operator[] followed by _Bit_reference::operator=.
+static __forceinline void RandomizeShrine(NewmapCell* cell, const int level)
+{
+    if ((cell->extraInfo & SHRINE_RANDOM_SPELL) == SHRINE_RANDOM_SPELL) {
+#pragma inline_depth(0)
+        std::bitset<5> spellLevels(0);
+        spellLevels[level] = true;
+#pragma inline_depth()
+        int spell = gpGame->GetRandomSpell(spellLevels);
+        cell->extraInfo = (cell->extraInfo & 0xff801fff)
+            | ((spell & 0x3ff) << 13);
+    }
+    cell->extraInfo &= 0xffffe01f;
+}
+
+// E:\gamedcs\game.cpp:4509. On x86 the unchanged award, secondary skill
+// and spell stores fold away, leaving only the randomized primary lane.
+static __forceinline void RandomizeScholar(NewmapCell* cell)
+{
+    int award = cell->GetScholarAward();
+    if (award != const_scholar_primary_skill) {
+        int primary = Random(0, 3);
+        int secondary = cell->GetScholarSecondarySkill();
+        int spell = cell->GetScholarSpell();
+        cell->scholar_info.award = award;
+        cell->scholar_info.primary = primary;
+        cell->scholar_info.secondary = secondary;
+        cell->scholar_info.spell = spell;
+    }
+}
+
+// E:\gamedcs\game.cpp:4613.
+static __forceinline void RandomizeSeaChest(NewmapCell* cell)
+{
+    int chance = Random(0, 99);
+    if (chance < 20) {
+        cell->sea_chest_info.reward = 0;
+    }
+    else if (chance < 90) {
+        cell->sea_chest_info.reward = 1;
+    }
+    else {
+        cell->sea_chest_info.reward = 2;
+        cell->sea_chest_info.artifact =
+            gpGame->GetRandomArtifactId(2);
+    }
+}
+
+// E:\gamedcs\game.cpp:4691.
+static __forceinline void RandomizeTreasure(NewmapCell* cell)
+{
+    int chance = Random(0, 99);
+    if (gpGame->field_1f69d)
+        chance = 60;
+    cell->treasure_info.has_artifact = 0;
+    if (chance < 32)
+        cell->treasure_info.gold = 2;
+    else if (chance < 64)
+        cell->treasure_info.gold = 3;
+    else if (chance < 95)
+        cell->treasure_info.gold = 4;
+    else {
+        cell->treasure_info.artifact =
+            gpGame->GetRandomArtifactId(2);
+        cell->treasure_info.has_artifact = 1;
+    }
+}
+
+// E:\gamedcs\game.cpp:4745. These two helpers are expanded into
+// RandomizeEvents. Their packed writes remain calls because the corresponding
+// ExtraInfoUnion methods have retail rows immediately after RandomizeEvents.
+static __forceinline void randomize_wagon(NewmapCell* cell)
+{
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+    int chance = Random(0, 99);
+    short amount = static_cast<short>(Random(2, 5));
+    EGameResource resource = game_resource_from_int(Random(0, 5));
+    info->SetWagon(resource, amount);
+    if (chance < 10)
+        info->EmptyWagon();
+    else if (chance < 50)
+#pragma inline_depth(0)
+        info->SetWagon(gpGame->GetRandomArtifactId(6));
+#pragma inline_depth()
+}
+
+// E:\gamedcs\game.cpp:4761. The vector local and its teardown belong to the
+// inlined source helper; retail calls only the packed pyramid setter.
+static __forceinline void randomize_pyramid(NewmapCell* cell)
+{
+    std::vector<long> possibleSpells;
+    int i;
+    for (i = 0; i < 70; ++i) {
+        if (akSpellTraits[i].school != const_invalid_school
+            && akSpellTraits[i].level == PYRAMID_SPELL_LEVEL
+            && !gpGame->field_4e658[i])
+            possibleSpells.push_back(i);
+    }
+
+    int spell = possibleSpells[Random(0, possibleSpells.size() - 1)];
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+    info->set_pyramid(true, spell);
+    info->clear_visited_bits();
+}
+
+// E:\gamedcs\game.cpp:4804. Like the shrine helper, this has no PC row:
+// /Ob2 expands it into RandomizeEvents while leaving bitset's non-trivial
+// operations as calls. The Dreamcast local/xref roster and retail's helper
+// sequence both select operator[] rather than test/set for the filter.
+static __forceinline void randomize_witch_hut(NewmapCell* cell)
+{
+#pragma inline_depth(0)
+    std::bitset<28> possibleSkills(cell->extraInfo);
+    cell->extraInfo = 0;
+    if (!possibleSkills.any())
+        possibleSkills = std::bitset<28>(0).flip();
+
+    int i;
+    for (i = 0; i < 28; ++i)
+        possibleSkills[i] = possibleSkills[i]
+            && !gpGame->field_4e658[i];
+
+    int skill;
+    int count = possibleSkills.count();
+    if (count < 1) {
+        skill = -1;
+    }
+    else {
+        int choice = Random(1, count);
+        for (skill = 0; skill < 28; ++skill) {
+            if (possibleSkills[skill] && --choice < 1)
+                break;
+        }
+    }
+#pragma inline_depth()
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(&cell->extraInfo));
+#pragma inline_depth(0)
+    info->set_witch_skill(skill);
+#pragma inline_depth()
+}
+
+// E:\gamedcs\game.cpp:5003
+// Assign every stateful adventure-map object its new-game payload.  The
+// Dreamcast line table supplies the source identity and local roster; the PC
+// switch domain, every call, every constant and every packed-field write are
+// recovered from retail 0x4c0cc0.  Five creature-bank cases deliberately own
+// separate block locals: retail carries five EH states and five independent
+// vector<TArtifact> teardown paths for exactly those records.
+//
+// 86.92752% wall, 2026-08-22. The semantic skeleton is closed at 213 blocks
+// on both sides (88 candidate branches against retail's 87), and the frame is
+// within one dword (`0x334` against `0x330`). The remaining deltas are bounded
+// compiler-layout classes: retail places BLACK_BOX's ANY and RELIC arms in the
+// hot run while this CL places only ANY there; each bank cleanup expands the
+// record destructor by exactly one layer in retail; MAGIC_SPRING recomputes
+// its left-cell expression where our equivalent local reuses it; and retail
+// inlines bitset-reference conversion while leaving its nested test as a call.
+// Moving RELIC in source order, `inline_depth(1)` on the bank cleanups,
+// repeating the MAGIC_SPRING expression, and hoisting either Witch reference
+// conversion were each measured separately and rejected by the ratchet.
+VA(0x004c0cc0, 0x1668)  // NewMap caller + dc order, dc 0xac910
+void game::RandomizeEvents()
+{
+    unsigned long numLithTwoWay = 0;
+    unsigned long numMagicSpring = 0;
+    unsigned long numLibrary = 0;
+    unsigned long numWarriorTomb = 0;
+    unsigned long numDefenseTower = 0;
+    unsigned long numDeadGuy = 0;
+    unsigned long numTrainingGround = 0;
+    unsigned long numPowerSchool = 0;
+    unsigned long numWhirlpool = 0;
+    int x;
+    unsigned long numLeanTo = 0;
+    int i;
+    int y;
+    NewmapCell* tempCell;
+    int z;
+    unsigned long numWarSchool = 0;
+    unsigned long numArena = 0;
+    unsigned long numTreeOfKnowledge = 0;
+    unsigned long numGardenOfRevelation = 0;
+    unsigned long numMagicSchool = 0;
+    unsigned long numMercCamp = 0;
+    int id;
+    unsigned long numLithOneWay = 0;
+    unsigned long numMysticalGarden = 0;
+    TBlackMarket thisMarket;
+    int luck_bonus;
+    unsigned char resQty;
+    EGameResource resType;
+    NewmapCell::TObjectCell thisObj;
+
+    const unsigned long visitedBits = 0x00001fe0;
+    const unsigned long poolIndexBits = 0x03ffe000;
+
+    for (z = 0; z < worldMap.GetNumLevels(); ++z) {
+        for (y = 0; y < gMapHeight; ++y) {
+            for (x = 0; x < gMapWidth; ++x) {
+                tempCell = worldMap.cell(x, y, z);
+                if (!tempCell->is_trigger)
+                    continue;
+
+                switch (tempCell->type) {
+                case ARENA:
+                    tempCell->extraInfo = numArena++;
+                    break;
+
+                case ARTIFACT:
+                    if (!tempCell->IsCustomized()) {
+                        Random(0, 99);
+                        tempCell->extraInfo &= 0xfffffff0;
+                    }
+                    break;
+
+                case BLACK_BOX:
+                    if (static_cast<short>(tempCell->extraInfo) < 0) {
+                        switch (-static_cast<short>(tempCell->extraInfo)) {
+                        case BLACK_BOX_RANDOM_ANY:
+                            tempCell->extraInfo = GetRandomArtifactId(14);
+                            break;
+                        case BLACK_BOX_RANDOM_TREASURE:
+                            tempCell->extraInfo = GetRandomArtifactId(2);
+                            break;
+                        case BLACK_BOX_RANDOM_MINOR:
+                            tempCell->extraInfo = GetRandomArtifactId(4);
+                            break;
+                        case BLACK_BOX_RANDOM_MAJOR:
+                            tempCell->extraInfo = GetRandomArtifactId(8);
+                            break;
+                        case BLACK_BOX_RANDOM_RELIC:
+                            tempCell->extraInfo = GetRandomArtifactId(16);
+                            break;
+                        }
+                    }
+                    break;
+
+                case BLACK_MARKET:
+                    thisMarket.artifacts[0] = GetRandomArtifactId(2);
+                    thisMarket.artifacts[1] = GetRandomArtifactId(2);
+                    thisMarket.artifacts[2] = GetRandomArtifactId(2);
+                    thisMarket.artifacts[3] = GetRandomArtifactId(4);
+                    thisMarket.artifacts[4] = GetRandomArtifactId(4);
+                    thisMarket.artifacts[5] = GetRandomArtifactId(4);
+                    thisMarket.artifacts[6] = GetRandomArtifactId(8);
+                    field_1f680.push_back(thisMarket);
+                    tempCell->extraInfo = field_1f680.size() - 1;
+                    break;
+
+                case CAMPFIRE:
+                    tempCell->extraInfo = Random(4, 6) << 4;
+                    tempCell->extraInfo |= Random(0, 5);
+                    break;
+
+                case CREATURE_BANK:
+                    {
+                        tempCell->extraInfo &= ~visitedBits;
+                        tempCell->extraInfo =
+                            ((creatureBanks.size() & 0xfff) << 13)
+                            | (tempCell->extraInfo & ~poolIndexBits);
+                        type_creature_bank bank;
+                        initialize_creature_bank(
+                            &bank,
+                            creature_bank_type_from_int(tempCell->objectIndex));
+                        creatureBanks.push_back(bank);
+#pragma inline_depth(0)
+                    }
+#pragma inline_depth()
+                    break;
+
+                case CREATURE_GENERATOR_1:
+                    id = GetGeneratorId(x, y, z);
+                    ClaimGenerator(id, generators[id].playerOwner);
+                    break;
+
+                case RETAIL_CREATURE_GENERATOR_2:
+                    sprintf(gText,
+                            "CREATURE_GENERATOR_2 found at X=%d Y=%d Z=%d",
+                            x, y, z);
+                    MessageBoxA(hwndApp, gText, "Invalid Generator", 0);
+                    break;
+
+                case RETAIL_CREATURE_GENERATOR_3:
+                    sprintf(gText,
+                            "CREATURE_GENERATOR_3 found at X=%d Y=%d Z=%d",
+                            x, y, z);
+                    MessageBoxA(hwndApp, gText, "Invalid Generator", 0);
+                    break;
+
+                case CREATURE_GENERATOR_4:
+                    id = GetGeneratorId(x, y, z);
+                    ClaimGenerator(id, generators[id].playerOwner);
+                    break;
+
+                case DEAD_GUY:
+                    {
+                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->extraInfo));
+                        if (Random(0, 99) < 20)
+                            info->SetSkeleton(numDeadGuy++, true,
+                                              GetRandomArtifactId(6));
+                        else
+                            info->SetSkeleton(numDeadGuy++, false, -1);
+                    }
+                    break;
+
+                case DEFENSE_TOWER:
+                    tempCell->extraInfo = numDefenseTower++;
+                    break;
+
+                case DERELICT_SHIP:
+                    {
+                        tempCell->extraInfo &= ~visitedBits;
+                        tempCell->extraInfo =
+                            ((creatureBanks.size() & 0xfff) << 13)
+                            | (tempCell->extraInfo & ~poolIndexBits);
+                        type_creature_bank bank;
+                        initialize_creature_bank(&bank,
+                                                 CREATURE_BANK_DERELICT);
+                        creatureBanks.push_back(bank);
+#pragma inline_depth(0)
+                    }
+#pragma inline_depth()
+                    break;
+
+                case SEPULCHER:
+                    {
+                        tempCell->extraInfo &= ~visitedBits;
+                        tempCell->extraInfo =
+                            ((creatureBanks.size() & 0xfff) << 13)
+                            | (tempCell->extraInfo & ~poolIndexBits);
+                        type_creature_bank bank;
+                        initialize_creature_bank(&bank,
+                                                 CREATURE_BANK_SEPULCHER);
+                        creatureBanks.push_back(bank);
+#pragma inline_depth(0)
+                    }
+#pragma inline_depth()
+                    break;
+
+                case SHIPWRECK:
+                    {
+                        tempCell->extraInfo &= ~visitedBits;
+                        tempCell->extraInfo =
+                            ((creatureBanks.size() & 0xfff) << 13)
+                            | (tempCell->extraInfo & ~poolIndexBits);
+                        type_creature_bank bank;
+                        initialize_creature_bank(&bank,
+                                                 CREATURE_BANK_SHIPWRECK);
+                        creatureBanks.push_back(bank);
+#pragma inline_depth(0)
+                    }
+#pragma inline_depth()
+                    break;
+
+                case DRAGON_CITY:
+                    {
+                        tempCell->extraInfo &= ~visitedBits;
+                        tempCell->extraInfo =
+                            ((creatureBanks.size() & 0xfff) << 13)
+                            | (tempCell->extraInfo & ~poolIndexBits);
+                        type_creature_bank bank;
+                        initialize_creature_bank(&bank,
+                                                 CREATURE_BANK_DRAGON);
+                        creatureBanks.push_back(bank);
+#pragma inline_depth(0)
+                    }
+#pragma inline_depth()
+                    break;
+
+                case FLOTSAM:
+                    tempCell->extraInfo = Random(0, 3);
+                    break;
+
+                case FOUNTAIN_OF_FORTUNE:
+                    {
+                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->extraInfo));
+                        luck_bonus = Random(0, 3);
+                        if (luck_bonus == 0)
+                            info->fountain_info.luck = -1;
+                        else
+                            info->fountain_info.luck = luck_bonus;
+                        tempCell->extraInfo &= ~visitedBits;
+                    }
+                    break;
+
+                case GARDEN_OF_REVELATION:
+                    tempCell->extraInfo = numGardenOfRevelation++;
+                    break;
+
+                case GARRISON:
+                    {
+                        id = tempCell->extraInfo;
+                        garrison* g = &garrisons[id];
+                        int new_owner = g->playerOwner;
+                        type_point location(g->mapX, g->mapY, g->mapZ);
+#pragma inline_depth(0)
+                        CMCClaimGarrison change(id, new_owner);
+#pragma inline_depth()
+                        SendMapChange(&change);
+                        g->playerOwner = new_owner;
+                        if (new_owner != -1)
+                            SetVisibility(location.x, location.y, location.z,
+                                          new_owner, 3, 0);
+                    }
+                    break;
+
+                case LEAN_TO:
+                    {
+                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->extraInfo));
+                        resType = game_resource_from_int(Random(0, 5));
+                        resQty = static_cast<unsigned char>(Random(1, 5));
+                        info->SetLeanTo(numLeanTo++, resQty, resType);
+                    }
+                    break;
+
+                case LIBRARY:
+                    tempCell->extraInfo = numLibrary++;
+                    break;
+
+                case LIGHTHOUSE:
+                    id = -1;
+                    for (i = 0; i < mines.size(); ++i) {
+                        if (mines[i].mapX == x && mines[i].mapY == y
+                            && mines[i].mapZ == z) {
+                            id = i;
+                            break;
+                        }
+                    }
+                    tempCell->extraInfo = id;
+                    break;
+
+                case LITH_ONEWAY_EXIT:
+                    {
+                        std::vector<type_point>* pool =
+                            &lithExitPools[tempCell->objectIndex];
+                        tempCell->extraInfo = pool->size();
+                        type_point point(x, y, z);
+                        pool->push_back(point);
+                    }
+                    break;
+
+                case UNDERGROUND_GATE:
+                    {
+                        tempCell->extraInfo = undergroundGateExits.size();
+                        type_point point(x, y, z);
+                        undergroundGateExits.push_back(point);
+                        undergroundGatePairs.push_back(-1);
+                    }
+                    break;
+
+                case LITH_TWOWAY:
+                    {
+                        std::vector<type_point>* pool =
+                            &lithPools[tempCell->objectIndex];
+                        tempCell->extraInfo = pool->size();
+                        type_point point(x, y, z);
+                        pool->push_back(point);
+                    }
+                    break;
+
+                case MAGIC_SCHOOL:
+                    tempCell->extraInfo = numMagicSchool++;
+                    break;
+
+                case MAGIC_SPRING:
+                    if (x > 0) {
+                        NewmapCell* left = worldMap.cell(x - 1, y, z);
+                        if (left->type == MAGIC_SPRING && left->is_trigger) {
+                            tempCell->extraInfo = left->extraInfo;
+                            break;
+                        }
+                    }
+                    tempCell->extraInfo =
+                        (tempCell->extraInfo & 0xffffffe0)
+                        | (numMagicSpring++ & 0x1f) | 0x40;
+                    break;
+
+                case MERC_CAMP:
+                    tempCell->extraInfo = numMercCamp++;
+                    break;
+
+                case MINE:
+                    id = -1;
+                    for (i = 0; i < mines.size(); ++i) {
+                        if (mines[i].mapX == x && mines[i].mapY == y
+                            && mines[i].mapZ == z) {
+                            id = i;
+                            break;
+                        }
+                    }
+                    if (mines[id].field_02) {
+                        mines[id].guards.armies[0] = 0x46;
+                        mines[id].guards.numTroops[0] = Random(100, 200);
+                    }
+                    ClaimMine(id, mines[id].playerOwner,
+                              const_initialization_action);
+                    break;
+
+                case MONSTER:
+                    if ((tempCell->extraInfo & 0xfff) == 0) {
+                        int creature = tempCell->objectIndex;
+                        tempCell->monster_info.qty = Random(
+                            akCreatureTypeTraits[creature].wanderingLow,
+                            akCreatureTypeTraits[creature].wanderingHigh);
+                    }
+                    break;
+
+                case MYSTICAL_GARDEN:
+                    resType = Random(0, 1) ? GOLD : GEMS;
+                    tempCell->extraInfo =
+                        (tempCell->extraInfo & 0xfffffc20)
+                        | (numMysticalGarden++ & 0x1f)
+                        | ((resType & 0xf) << 6) | 0x400;
+                    break;
+
+                case OBELISK:
+                    if (gpGame->field_4e3e8 < 48)
+                        tempCell->extraInfo = gpGame->field_4e3e8++;
+                    break;
+
+                case POWER_SCHOOL:
+                    tempCell->extraInfo = numPowerSchool++;
+                    break;
+
+                case PYRAMID:
+                    randomize_pyramid(tempCell);
+                    break;
+
+                case REFUGEE_CAMP:
+                    {
+                        TCreatureType creature = GetRandomMonster(0, 6);
+                        tempCell->objectIndex = creature;
+                        tempCell->extraInfo =
+                            akCreatureTypeTraits[creature].growthRate;
+                    }
+                    break;
+
+                case RESOURCE:
+                    if ((tempCell->extraInfo & 0x7ffff) == 0) {
+                        if (tempCell->objectIndex == WOOD
+                            || tempCell->objectIndex == ORE
+                            || tempCell->objectIndex == GOLD)
+                            id = Random(5, 10);
+                        else
+                            id = Random(3, 6);
+                        tempCell->extraInfo =
+                            (tempCell->extraInfo & 0xfff80000)
+                            | (id & 0x7ffff);
+                    }
+                    break;
+
+                case SCHOLAR:
+                    RandomizeScholar(tempCell);
+                    break;
+
+                case SEA_CHEST:
+                    RandomizeSeaChest(tempCell);
+                    break;
+
+                case SHIPWRECK_SURVIVOR:
+                    id = Random(0, 99);
+                    if (id < 55)
+                        tempCell->extraInfo = GetRandomArtifactId(2);
+                    else if (id < 75)
+                        tempCell->extraInfo = GetRandomArtifactId(4);
+                    else if (id < 95)
+                        tempCell->extraInfo = GetRandomArtifactId(8);
+                    else
+                        tempCell->extraInfo = GetRandomArtifactId(16);
+                    break;
+
+                case SHIPYARD:
+                    {
+                        signed char oldOwner =
+                            static_cast<signed char>(tempCell->extraInfo);
+                        if (oldOwner != -1) {
+                            tempCell->extraInfo =
+                                (tempCell->extraInfo & 0xffffff00) | 0xff;
+                            type_point location(x, y, z);
+                            ClaimShipyard(location, oldOwner);
+                        }
+                    }
+                    break;
+
+                case SHRINE1:
+                    RandomizeShrine(tempCell, SHRINE_LEVEL_ONE);
+                    break;
+
+                case SHRINE2:
+                    RandomizeShrine(tempCell, SHRINE_LEVEL_TWO);
+                    break;
+
+                case SHRINE3:
+                    RandomizeShrine(tempCell, SHRINE_LEVEL_THREE);
+                    break;
+
+                case TRAINING_GROUNDS:
+                    tempCell->extraInfo = numTrainingGround++;
+                    break;
+
+                case TREASURE_CHEST:
+                    RandomizeTreasure(tempCell);
+                    break;
+
+                case TREE_OF_KNOWLEDGE:
+                    tempCell->extraInfo =
+                        (tempCell->extraInfo & 0xffffe000)
+                        | (numTreeOfKnowledge++ & 0x1f);
+                    id = Random(0, 2);
+                    tempCell->extraInfo =
+                        (tempCell->extraInfo & 0xffff1fff)
+                        | ((id & 7) << 13);
+                    break;
+
+                case UNIVERSITY:
+                    randomize_university(tempCell);
+                    break;
+
+                case WAGON:
+                    randomize_wagon(tempCell);
+                    break;
+
+                case WAR_SCHOOL:
+                    tempCell->extraInfo = numWarSchool++;
+                    break;
+
+                case WARRIOR_TOMB:
+                    id = Random(0, 99);
+                    if (id < 30)
+                        id = 2;
+                    else if (id < 80)
+                        id = 4;
+                    else if (id < 95)
+                        id = 8;
+                    else
+                        id = 16;
+                    tempCell->extraInfo =
+                        (tempCell->extraInfo & 0xff80001f) | 1
+                        | ((GetRandomArtifactId(id) & 0x3ff) << 13);
+                    break;
+
+                case WATER_WHEEL:
+                    {
+                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->extraInfo));
+                        info->set_wheel_gold(500);
+                    }
+                    break;
+
+                case WHIRLPOOL:
+                    thisObj = tempCell->objects[0];
+                    if ((thisObj.offsets & 0xf)
+                            == WHIRLPOOL_TRIGGER_X_OFFSET
+                        && (thisObj.offsets & 0xf0)
+                            == WHIRLPOOL_TRIGGER_Y_OFFSET) {
+                        tempCell->extraInfo = numWhirlpool++;
+                    }
+                    else {
+                        int xOffset = static_cast<signed char>(
+                            thisObj.offsets << 4) >> 4;
+                        int yOffset =
+                            static_cast<signed char>(thisObj.offsets) >> 4;
+                        tempCell->extraInfo = worldMap.cell(
+                            x + xOffset - 2, y + yOffset - 1, z)->extraInfo;
+                    }
+                    {
+                        type_point point(x, y, z);
+                        type_point* whirlpoolEnd = whirlpools.end();
+#pragma inline_depth(0)
+                        whirlpools.insert(whirlpoolEnd, 1, point);
+#pragma inline_depth()
+                    }
+                    break;
+
+                case WINDMILL:
+                    {
+                        ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                            static_cast<void*>(&tempCell->extraInfo));
+                        resQty = static_cast<unsigned char>(Random(3, 6));
+                        resType = game_resource_from_int(Random(1, 5));
+                        info->set_windmill(resType, resQty);
+                    }
+                    break;
+
+                case WITCH_HUT:
+                    randomize_witch_hut(tempCell);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\MapCell.h:1056. Retail keeps these four packed-field methods
+// out of line directly after RandomizeEvents; the masks and widths below are
+// recovered from 0x4c2330..0x4c23dc.
+VA(0x004c2330, 0x27)
+void ExtraInfoUnion::set_pyramid(bool guards, int new_spell)
+{
+    pyramid_info.guarded = guards;
+    pyramid_info.spell = new_spell;
+}
+
+VA(0x004c2360, 0x27)
+void ExtraInfoUnion::SetWagon(EGameResource resource, short amount)
+{
+    value = (value & 0xe1ffa000)
+        | (amount & 0x1f) | 0x2000 | ((resource & 0xf) << 25);
+}
+
+VA(0x004c2390, 0x21)
+void ExtraInfoUnion::SetWagon(int artifact)
+{
+    value = (value & 0xfe00601f)
+        | ((artifact & 0x3ff) << 15) | 0x6000;
+}
+
+VA(0x004c23c0, 0x1c)
+void ExtraInfoUnion::set_witch_skill(int skill)
+{
+    value = (value & 0xfff0001f) | ((skill & 0x7f) << 13);
+}
+
+// E:\gamedcs\netmsg.h:619. RandomizeEvents exhausts VC6's inline budget
+// before this construction, leaving the constructor as the next retail row.
+VA(0x004c23e0, 0x31)
+CMCClaimGarrison::CMCClaimGarrison(int id, int player)
+    : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
+      garrisonId(id), playerPos(player)
+{
+}
+
+// The implicit record destructor is materialized by the later
+// vector<type_creature_bank> teardown. Its only non-trivial member is the
+// artifact vector at +0x60, yielding retail's 38-byte body.
+VA(0x004c2420, 0x26)
+type_creature_bank::~type_creature_bank()
+{
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:4029
 DC_ONLY(0xaa6f8, 0xE8)
@@ -3720,13 +5952,6 @@ void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
 // E:\gamedcs\game.cpp:4236
 DC_ONLY(0xaada4, 0xB2A)
 void game::NewMap(char* MapName, THeroID* playerHeroFaces)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4474
-DC_ONLY(0xab8d0, 0x9A)
-void SetupFirstPlayer()
 {
     // @stub
 }
@@ -3794,44 +6019,9 @@ void randomize_pyramid(NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\game.cpp:4770
-DC_ONLY(0xac048, 0x11E)
-void game::randomize_university(NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\game.cpp:4804
 DC_ONLY(0xac168, 0x3A)
 void randomize_witch_hut(NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4816
-DC_ONLY(0xac1a4, 0x2EE)
-void game::RandomizeHolyGrail()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4907
-DC_ONLY(0xac494, 0x1A6)
-void game::InitRandomArtifacts()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:4950
-DC_ONLY(0xac63c, 0x2D4)
-void game::match_underground_gates()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:5003
-DC_ONLY(0xac910, 0x1278)
-void game::RandomizeEvents()
 {
     // @stub
 }
@@ -4139,7 +6329,17 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
     garrison* current_garrison = &garrisons[garrisonId];
     type_point location(current_garrison->mapX, current_garrison->mapY,
                         current_garrison->mapZ);
-    CMCClaimGarrison change(garrisonId, newPlayerOwner);
+    // This later, smaller caller inlines the same constructor. Spell the
+    // seven stores explicitly so the one out-of-line source definition above
+    // does not change its already-banked schedule.
+    CMCClaimGarrison change;
+    change.field_04 = 0;
+    change.field_10 = 0;
+    change.subType = RS_CLAIM_GARRISON;
+    change.field_00 = -1;
+    change.size = sizeof(CMCClaimGarrison);
+    change.garrisonId = garrisonId;
+    change.playerPos = newPlayerOwner;
     SendMapChange(&change);
 
     current_garrison->playerOwner = newPlayerOwner;
@@ -5094,6 +7294,13 @@ void game::ProcessRandomObjects()
 // falls into the caller's own `== -1` test with the index still live in
 // esi, and on loop exhaustion VC6 constant-folds that test against the
 // -1 return and jumps straight to the null pointer.
+// Residual (98.6076%, register scheduling): flow-distance is zero and only
+// eight register-visible slots differ inside the inlined coordinate compare.
+// Retail creates the CastleLoc scratch in EAX one instruction earlier; this
+// compiler rotates EAX/EDX around two independent loads.  why-reg's proposed
+// named startingHeroIds element is not a legal writable local transform, and
+// binding CastleLoc to a const reference regresses to 98.15% by perturbing the
+// following y compare.  The direct argument spelling is the measured wall.
 VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
 void game::CreateTownHeroes(int* startingHeroIds)
 {
@@ -6212,13 +8419,6 @@ unsigned char town::IsCapitol()
     // @stub
 }
 
-// E:\gamedcs\VictoryLossConditions.h:77
-DC_ONLY(0xbccdc, 0x1E)
-void VictoryConditionStruct::VictoryConditionStruct()
-{
-    // @stub
-}
-
 // E:\gamedcs\VictoryLossConditions.h:141
 DC_ONLY(0xbccfc, 0x22)
 void LossConditionStruct::LossConditionStruct()
@@ -6282,23 +8482,9 @@ void SavedGameHeader::SavedGameHeader()
     // @stub
 }
 
-// E:\gamedcs\Game.h:1312
-DC_ONLY(0xbcf00, 0x6C)
-void SavedGameHeader::Reset()
-{
-    // @stub
-}
-
 // E:\gamedcs\Game.h:1325
 DC_ONLY(0xbcf6c, 0x78)
 int SavedGameHeader::Save(void* outfile)
-{
-    // @stub
-}
-
-// E:\gamedcs\Game.h:1344
-DC_ONLY(0xbcfe4, 0x78)
-int SavedGameHeader::Load(void* infile)
 {
     // @stub
 }

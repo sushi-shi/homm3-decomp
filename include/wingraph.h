@@ -5,6 +5,18 @@
 #ifndef HOMM3_WINGRAPH_H
 #define HOMM3_WINGRAPH_H
 
+#include <va.h>
+
+// The prefix of DirectDraw's 32-byte pixel-format record at 0x68c850.
+// The three channel masks immediately following it are exposed by
+// mousemgr.h because both wingraph setup and the mouse renderer consume them.
+struct TPixelFormatPrefix {
+    unsigned long size;
+    unsigned long flags;
+    char pad_08[8];
+};
+SIZE(TPixelFormatPrefix, 0x10);
+
 // Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
 // AppCommand fullscreen arm, AppExit, WM_PAINT and WinMain).
 unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
@@ -21,6 +33,7 @@ void DDInitGraphics();                                   // 0x6014f0
 // static is a VC6 hard error and the call/jmp bytes are identical either way.
 void DDCleanUpWinGraphics();                             // 0x6018a0
 unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
+void DDSD(int iDDErr, char* cFile, int iLine);           // 0x6006e0
 int GetDesktopWidth();                                   // 0x6014c0
 int GetDesktopHeight();                                  // 0x6014d0
 // GetDesktopInfo's verdict: the engine's 16-bit surfaces need a desktop
@@ -52,6 +65,9 @@ extern int gUnnamed6989d4;                               // .bss 0x6989d4
 struct IDirectDrawSurface4;
 struct IDirectDrawSurface;
 struct tagRECT;
+IDirectDrawSurface* DDCreateSurface(unsigned long width,
+                                   unsigned long height,
+                                   int bPrimary);         // 0x6005f0
 void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags);                        // 0x6001d0

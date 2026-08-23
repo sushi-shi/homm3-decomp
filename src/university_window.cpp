@@ -3,8 +3,18 @@
 // 17 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "university_window.h"
+#include "game.h"
+#include "hero.h"
+#include "kb.h"
 #include "message.h"
+#include "misc.h"
+#include "sskilltraits.h"
+#include "widget.h"
 #include "winmgr.h"
+
+// Source-owned format selected by the constructor for the university's
+// right-click description. The pointer is zero-fill storage until that setup.
+DATA(0x006a7dec) static const char* gUniversitySkillHelpFormat;
 
 #if 0  // @carcass: unpromoted Dreamcast bodies
 
@@ -100,6 +110,74 @@ void type_university_window::handle_widget_hover(widget* current_widget)
     else
         rolloverText->SetText(current_widget->RollOver);
     DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+// The address-taken callback immediately following handle_widget_hover is the
+// purchase button's handler: right-select (14) formats the selected skill's
+// Basic description and opens the canonical skill dialog; a plain deselect
+// (13) pays 2,000 gold, teaches one level, restores the two widget groups,
+// refreshes all four offer rows and clears the selection.
+//
+// Residual (80.29256%): compiler inliner wall, not missing behavior.
+// Dreamcast CodeView records exactly one source local here, `result`, in the
+// right-select scope (source line 486), and its line/block scopes agree with
+// the two arms below.  Retail expands both nested basic_string::_Tidy sites
+// (the default construction of result and the format_string temporary's
+// destruction); this VC6 invocation calls both out of line.  That accounts
+// for the complete 12-vs-15 branch delta and for retail's second operator
+// delete edge. `homm3 vc6 diagnose --run` classifies exactly two
+// under-inlines plus that coupled apparent over-inline, and why-branch finds
+// no source-addressable CFG lever. Measured negatives: a named format
+// temporary (72.489365), a nested-scope named temporary (78.643616), and
+// inline_depth(2/255) or a named zero at the constructor site (byte-flat).
+// Keeping the window cast branch-local is the best register schedule
+// (80.18617 -> 80.29256).
+// E:\gamedcs\university_window.cpp:479
+VA(0x005f0f60, 0x21D)  // constructor callback xref + selected-skill tail
+int type_university_window::purchase_click(message* msg)
+{
+    if (msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+        type_university_window* window =
+            static_cast<type_university_window*>(msg->window);
+        int skill = window->selectedSkill;
+        std::string result;
+        result = format_string(
+            gUniversitySkillHelpFormat, gSkillMasteryNames[0],
+            akSSkillTraits[skill].name, 2000);
+        NormalDialog(result.c_str(), 4, -1, -1,
+                     20, skill * 3 + 3, -1, 0, -1, 0, -1, 0);
+        return 1;
+    }
+
+    if (msg->codeX == widget::WIDGET_DESELECT
+        && !(msg->qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_university_window* window =
+            static_cast<type_university_window*>(msg->window);
+        playerData* player = window->currentHero->get_player();
+        player->resources[6] -= 2000;
+        window->currentHero->GiveSS(window->selectedSkill, 1);
+
+        int i;
+        for (i = 0; i < window->field_e8.size(); ++i)
+            window->field_e8[i]->send_message(
+                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_CLEAR_STATUS);
+        for (i = 0; i < window->field_d8.size(); ++i)
+            window->field_d8[i]->send_message(
+                widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
+
+        type_university_skill* skill = window->skills;
+        int count = 4;
+        do {
+            window->update_skill_button(skill);
+            ++skill;
+        } while (--count);
+
+        window->selectedSkill = -1;
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return 1;
+    }
+    return 0;
 }
 
 // E:\gamedcs\university_window.cpp:515

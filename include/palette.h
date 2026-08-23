@@ -53,7 +53,9 @@ public:
     // which VC6 only emits when that call is allowed to throw. A throw()
     // here erases that chain (the map collapses to one entry).
     virtual ~TPalette24();
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
+    void AdjustHSV(float hue, float hue_adjust, float saturation_adjust,
+                   float value_adjust);
 };
 SIZE(TPalette24, 0x31c);
 
@@ -70,7 +72,18 @@ public:
     // its constructor 0x4b5070 runs this body on that subobject as a
     // member initializer. Declaration only - the body stays palette's.
     TPalette16();
+    TPalette16(const unsigned short* data);
     TPalette16(const TPalette24* p24);
+    TPalette16(const TPalette24* p24,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
+    TPalette16(const TRGBA* rgba,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
+    TPalette16(const char* name, const TPalette24* p24,
+               int rbits, int rshift, int gbits, int gshift,
+               int bbits, int bshift);
+    TPalette16(const TPalette16* copy);
 
     // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the
     // resource destructor. Keeping this out-of-line declaration is also
@@ -78,7 +91,7 @@ public:
     virtual ~TPalette16();
 
     // Retail 0x522b40 returns the fixed 0x21c-byte resource extent.
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
 
     // The NWC pointer-taking assignment DC CodeView attests
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the

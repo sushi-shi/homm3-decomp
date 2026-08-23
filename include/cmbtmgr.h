@@ -1223,10 +1223,16 @@ public:
     int DrawCreatureAndHeroSubwindows();
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
     // the one of its four UpdateCombatArea overloads that takes no
-    // extent. Declared here, unclaimed, because Armageddon calls it once
-    // per animation frame; drawing.cpp still carries the @carcass stub
-    // and the body stays that TU's to reconstruct.
+    // extent. Armageddon calls it once per animation frame; its retail body
+    // is reconstructed in drawing.cpp.
     void UpdateCombatArea();                                  // 0x493780
+#ifdef HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
+    // Complete's large overload has one trailing int absent from the DC
+    // signature; the small wrapper at 0x494390 always passes zero there.
+    void UpdateMouseGrid(int gridIndex, std::vector<long>& hexes,
+                         int retailTail);
+    void UpdateMouseGrid(int gridIndex, int allowDuringAction);
+#endif
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
                    unsigned char bLimitDraw, int iDelay,
@@ -1434,15 +1440,14 @@ public:
     void mark_firewalls(const army* current_army, long* enemy_attacks,
                         type_AI_combat_parameters* estimate);   // 0x4214f0
     // The moat twin of mark_firewalls, retail-only: 0x421590 walks the
-    // eleven gMoatColumns entries and, when the defending town is not a
-    // Fortress, subtracts the moat's get_loss_combat_value from each of
-    // those hexes' danger scores, then repeats over gOuterMoatColumns
+    // eleven gMoatColumns entries and subtracts the moat's
+    // get_loss_combat_value from each danger score, omitting the gate hex
+    // while the drawbridge is down; it then repeats over gOuterMoatColumns
     // under the second flag at +0x53a9. Its argument list is
     // mark_firewalls' exactly, and choose_melee_target is its only
     // caller. NO Dreamcast roster row attests it, so the name follows
     // this TU's own mark_* family rather than importing a guess; the
-    // body is left unreconstructed (declared only, so the call stays
-    // extern).
+    // body is reconstructed in ai.cpp.
     void mark_moat(const army* current_army, long* enemy_attacks,
                    type_AI_combat_parameters* estimate);        // 0x421590
     long choose_shooter_target(const army* current_army,
@@ -1498,15 +1503,16 @@ public:
     unsigned char choose_resurrect_action(
         const army* current_army, long* best_value,
         type_AI_combat_parameters* estimate);                 // 0x421000
+private:
     // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
     // two above and the third arm of choose_spell_action's switch, the
-    // one creatureType 0x86 (Faerie Dragon) takes. It has no Dreamcast
-    // row at all, so the name is the role the switch proves. DECLARED,
-    // NOT DEFINED - ai.cpp leaves its body unclaimed and the call site
-    // only needs the signature.
-    unsigned char SOD_choose_faerie_dragon_spell(
-        const army* current_army, long* best_value,
-        type_AI_combat_parameters* estimate);                 // 0x420f00
+    // one creatureType 0x86 (Faerie Dragon) takes. The address is fixed
+    // independently by that switch; the HD/cross-build symbol can then
+    // supply the otherwise unattested private bool/reference declarator.
+    bool SOD_choose_faerie_dragon_spell(
+        const army* current_army, long& best_value,
+        type_AI_combat_parameters& estimate);                 // 0x420f00
+public:
     unsigned char choose_defense_hex(const army* current_army,
                                      const army* client, long* best_hex,
                                      long* open_hexes,

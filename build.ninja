@@ -334,7 +334,7 @@ build build/objdiff/base/kb.obj: cl src/kb.cpp | scripts/homm3/core/cc_wrap.py
   unit = kb
 build build/objdiff/base/bottomviewsubwindow.obj: cl $
     src/bottomviewsubwindow.cpp | scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
   unit = bottomviewsubwindow
 build build/objdiff/base/recruit.obj: cl src/recruit.cpp | $
     scripts/homm3/core/cc_wrap.py

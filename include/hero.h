@@ -1113,6 +1113,7 @@ struct THeroClassTraits {
 };
 SIZE(THeroClassTraits, 0x40);
 
+extern int gLandMovement[21];
 DATA(0x0067d868) extern THeroClassTraits aHeroClassTraits[18];
 extern const THeroClassTraits (&akHeroClasses)[18];
 

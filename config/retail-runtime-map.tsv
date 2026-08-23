@@ -502,8 +502,9 @@ rva	name
 0x217aa0	__alloca_probe
 0x217ad0	__alldiv
 0x217b80	__CIsqrt
-0x217b94	crt_24120_sub06_217b94
-0x217b9d	crt_sqrt_217b9d
+# Pinned VC6 SP3 lib-rtm/LIBCMT.LIB sqrt.obj: public `_sqrt` is object +0x14
+# and byte-matches this complete 166-byte retail entry.
+0x217b94	_sqrt
 0x217c3a	??_L@YGXPAXIHP6EX0@Z1@Z
 0x217ca4	crt_217c3a_sub00_217ca4
 0x217cbc	??_M@YGXPAXIHP6EX0@Z@Z

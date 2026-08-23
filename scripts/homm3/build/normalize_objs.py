@@ -167,10 +167,7 @@ def main(argv=None) -> int:
             unit = rel.name[:-6] if rel.name.endswith(".c.obj") else rel.stem
             claims = ()
             if COMPGEN_MANIFEST.is_file():
-                claims = tuple(
-                    claim for claim in canon.load_compgen_claims(
-                        COMPGEN_MANIFEST, unit)
-                    if claim.kind != "SCALAR_DELETING_DTOR")
+                claims = canon.load_compgen_claims(COMPGEN_MANIFEST, unit)
             out = out_root / rel
             sidecar = out.with_suffix(".symbols.tsv")
             out.parent.mkdir(parents=True, exist_ok=True)

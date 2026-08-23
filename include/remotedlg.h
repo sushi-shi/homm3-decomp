@@ -87,6 +87,10 @@ public:
                             int iHighID);                        // slot 5
 
 protected:
+    void CalcSpriteDimensions(CSprite* sprite, int& maxWidth,
+                              int& maxHeight, int& minY);
+    void DrawSprite();
+    void TickAnimation();
     unsigned long m_lastTick;    // +0x58
     int m_spriteX;               // +0x5c
     int m_spriteY;               // +0x60
@@ -97,6 +101,29 @@ protected:
     CSprite* m_pSprite;          // +0x74
 };
 SIZE(CAnimatedDlg, 0x78);
+
+// DC's CWaitForReadyPlayersDlg is 0x90 over its 0x70 CAnimatedDlg.  Retail
+// widens only that base by eight bytes, giving this 0x98-byte translation:
+// startTime/lastMsg move to +0x78/+0x7c, the already proven 0x10-byte pause
+// handler occupies +0x80, and the eight player-ready bytes begin at +0x90.
+// Retail's vtable 0x640ecc is CAnimatedDlg's fourteen slots with slot 0 and
+// slot 3 replaced by this class's deleting destructor and message handler.
+class CWaitForReadyPlayersDlg : public CAnimatedDlg {
+public:
+    CWaitForReadyPlayersDlg();
+    void Wait();
+    unsigned char AllPlayersReady();
+    virtual int handle_message(message& msg);  // slot 3
+
+protected:
+    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
+
+    unsigned long startTime;             // +0x78
+    unsigned long lastMsg;               // +0x7c
+    CNetMsgHandlerPause m_netMsgHandler;  // +0x80
+    unsigned char playerReady[8];         // +0x90
+};
+SIZE(CWaitForReadyPlayersDlg, 0x98);
 
 // --- CAnimatedDlg ---
 // CODEVIEW(E:\gamedcs\remote.cpp:1539, dc 0x11d1ec) void CAnimatedDlg::CAnimatedDlg();

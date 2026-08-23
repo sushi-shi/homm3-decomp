@@ -169,7 +169,7 @@ void TPalette16::AdjustValue(float amount)
 #endif  // @carcass
 
 VA(0x00522b40, 0x6)  // TPalette16 vtable 0x640368 slot 2
-unsigned int TPalette16::_vslot2() const
+unsigned int TPalette16::GetSize() const
 {
     return sizeof(*this);
 }
@@ -237,7 +237,7 @@ TPalette24::~TPalette24() throw()
 }
 
 VA(0x00522f70, 0x06)  // TPalette24 vtable 0x640374 slot 2
-unsigned int TPalette24::_vslot2() const
+unsigned int TPalette24::GetSize() const
 {
     return sizeof(*this);
 }

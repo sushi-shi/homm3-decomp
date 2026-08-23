@@ -56,7 +56,9 @@ extern const type_creature_bank_traits* const_creature_bank_traits;
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0) void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:67, dc 0x7112c) unsigned char initialize_creature_bank_traits();
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:146, dc 0x71218) void split_slot(armyGroup* army_group, long slot, long groups);
-// CODEVIEW(E:\gamedcs\creature_bank.cpp:166, dc 0x712d0) void initialize_creature_bank(type_creature_bank* bank, type_creature_bank_type type);
+// CODEVIEW(E:\gamedcs\creature_bank.cpp:166, dc 0x712d0)
+void initialize_creature_bank(type_creature_bank* bank,
+                              type_creature_bank_type type);
 
 // --- std ---
 // CODEVIEW(..\stlport\stl_vector.h:368, dc 0x71548) void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::push_back(const TArtifact* __x);

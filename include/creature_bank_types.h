@@ -3,14 +3,27 @@
 #define HOMM3_CREATURE_BANK_TYPES_H
 
 #include <va.h>
+#include <vector>
+#include "artifact.h"
 #include "armygrp.h"
 
-// Retail indexes these records with a 108-byte stride. The first 56 bytes are
-// the independently proven armyGroup; the reward tail remains opaque until a
-// consuming function names it.
+// Dreamcast CodeView names the reward tail and retail independently fixes all
+// of its boundaries.  The army is 56 bytes; the seven-resource row occupies
+// +0x38..+0x53; RandomizeEvents' implicit local constructor writes the byte at
+// +0x5c and zeroes the three vector pointers at +0x60/+0x64/+0x68.  The PC
+// vector is four bytes wider than Dreamcast STLport's, which accounts exactly
+// for retail's 108-byte stride against the DC record's 104 bytes. The three
+// alignment bytes before artifacts stay implicit so generated copies skip
+// them.
 struct type_creature_bank {
     armyGroup guards;
-    char pad_038[0x34];
+    long resources[7];
+    TCreatureType reward_creature;
+    signed char reward_creatures;
+    std::vector<TArtifact> artifacts;
+#ifdef HOMM3_GAME_CREATURE_BANK_DTOR_DECL
+    ~type_creature_bank();
+#endif
 };
 SIZE(type_creature_bank, 0x6c);
 
