@@ -4,11 +4,9 @@
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_PROTECTION_VIEW
 #define HOMM3_ARMY_SPELLS_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <va.h>
 // AreaEffect hands akSpellTraits[spell].m_effect (+0x08) to drawing's
 // hex-taking SpellEffect; armygrp.h keeps that slice behind this view.
-#define HOMM3_ARMYGRP_SPELL_EFFECT_VIEW
 #include "armygrp.h"
 #include "spells.h"
 // DrawBolt writes 16-bit pixels straight into the screen bitmap, so
@@ -3440,15 +3438,12 @@ void combatManager::Earthquake(int level)
 // "the callers outvote the callee" was an artifact of changing one end
 // of the family at a time.
 //
-// Residual (99.78%): two instructions. Retail keeps `sar edx, 2` for
-// `aura_sources.size()` where our CL proves the low two bits zero and
-// folds the shift into the test's mask (`.empty()` is byte-identical to
-// `size() != 0` here, measured; wrapping the test in a static inline
-// helper mimicking the DC roster's Army.h:835 army::is_in_aura is
-// byte-identical too, probed 2026-08-21 - the function boundary does
-// not block the fold), and the function's trailing alignment NOP is
-// `mov edi,edi` against our `lea ecx,[ecx]`. Neither is source-
-// addressable. `homm3 sema diff --branches` agrees 61/61 and 25/25.
+// EXACT 2026-08-22 (99.7765 -> 100.0000): the ordered `size() > 0`
+// comparison preserves retail's `sar edx,2` before the zero branch, where
+// `size() != 0` lets C2 prove the low two pointer-difference bits zero and
+// fold the shift into a mask test. The corrected extent also restores the
+// trailing alignment bytes. Rejected earlier: `.empty()` and a static inline
+// Army.h-style is_in_aura helper are byte-identical to `size() != 0`.
 VA(0x005a8090, 0x5A4)  // order-map+arity, dc 0x157354
 float combatManager::SpellCastWorkChance(SpellID spell, long side,
                                          const army* target,
@@ -3584,7 +3579,7 @@ float combatManager::SpellCastWorkChance(SpellID spell, long side,
         break;
     }
 
-    if (benefit <= 0 && target->aura_sources.size() != 0)
+    if (benefit <= 0 && target->aura_sources.size() > 0)
         return get_spell_work_chance(spell, creature, casting_hero,
                                      target_hero)
             * 0.8f;

@@ -11,7 +11,6 @@
 #include "border.h"
 #include "textwdgt.h"
 #include "exec.h"
-#define HOMM3_MAPCELL_OBJECTS_VIEW
 #include "game.h"
 #include "kb.h"
 #include "message.h"

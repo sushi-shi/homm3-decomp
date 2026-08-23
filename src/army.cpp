@@ -32,7 +32,6 @@
 #define HOMM3_ARMY_SPELL_ROW_VIEW
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
 #define HOMM3_ARMY_WALL_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>

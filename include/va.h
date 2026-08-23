@@ -17,8 +17,16 @@
  *                                  compiler-generated function with no
  *                                  source definition to sit on; kind is
  *                                  STATIC_INIT_DISPATCH / STATIC_ATEXIT /
- *                                  STATIC_DTOR / STATIC_CTOR; owner names
- *                                  the global that causes it
+ *                                  STATIC_DTOR / STATIC_CTOR /
+ *                                  DEFAULT_CTOR_CLOSURE /
+ *                                  VECTOR_DELETING_DTOR / VECTOR_DTOR /
+ *                                  VECTOR_* / BITSET_TIDY / STD_* /
+ *                                  IMPLICIT_COPY_ASSIGN / IMPLICIT_DTOR;
+ *                                  owner names the
+ *                                  global, class, vector element, or
+ *                                  specialization token that causes it;
+ *                                  direct-symbol kinds only claim a named
+ *                                  COFF symbol VC6 already emitted
  *   DATA(addr)                     global datum definition (never on a
  *                                  header extern)
  *   DATA_COMPGEN(addr, name, value)

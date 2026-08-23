@@ -65,6 +65,7 @@ public:
     LODFile();
     ~LODFile();
     void clear();
+    int open(const char* filename, int flags);
     LODEntry* getItemIndex(const char* item_name);
     unsigned char pointAt(const char* itemName);
     int read(void* dest, int numBytes);
@@ -73,6 +74,15 @@ private:
     void Find(unsigned begin, unsigned end, const char* item_name);
 };
 SIZE(LODFile, 0x18c);
+
+// ResourceManager's retail archive pool is eight interleaved 0x190-byte
+// slots. Open proves the leading dword is the archive pathname and every
+// resource lookup independently proves the LODFile subobject at +4.
+struct TResourceLODSlot {
+    const char* archiveName;
+    LODFile file;
+};
+SIZE(TResourceLODSlot, 0x190);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\lodfile.cpp:393, dc 0xe9654) int compare(const void* arg1, const void* arg2);

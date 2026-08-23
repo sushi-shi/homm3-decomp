@@ -151,6 +151,31 @@ class CompgenClaim:
     size: int
 
 
+# These VA_COMPGEN kinds name ordinary, already-defined COFF symbols.  They
+# participate in the retail label join, but must not enter the anonymous
+# compiler-function canonicalizer below: there is nothing to rename.
+DIRECT_SYMBOL_COMPGEN_KINDS = frozenset({
+    "SCALAR_DELETING_DTOR",
+    "VECTOR_DELETING_DTOR",
+    "DEFAULT_CTOR_CLOSURE",
+    "VECTOR_DTOR",
+    "VECTOR_SIZE",
+    "VECTOR_CAPACITY",
+    "VECTOR_RESIZE",
+    "VECTOR_INSERT",
+    "VECTOR_ERASE",
+    "VECTOR_DESTROY",
+    "VECTOR_UCOPY",
+    "VECTOR_UFILL",
+    "VECTOR_COPY_ASSIGN",
+    "BITSET_TIDY",
+    "STD_CONSTRUCT",
+    "STD_COPY",
+    "IMPLICIT_COPY_ASSIGN",
+    "IMPLICIT_DTOR",
+})
+
+
 @dataclass(frozen=True)
 class CompgenDataClaim:
     name: str
@@ -526,6 +551,21 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
         return (owner_present(names, owner) and
                 any(name.startswith(prefix) for name in names))
 
+    def is_static_ctor(index, owner):
+        names = target_names(index)
+        if (owner_present(names, owner) and
+                any(name.startswith("??0") for name in names)):
+            return True
+        # VC6 /Ob2 can inline a small constructor completely into its
+        # volatile `$E<n>` init function. The remaining owner edge proves
+        # which datum is initialized; excluding exit-registration and
+        # destructor roles prevents the other `$E<n>` helpers for that same
+        # datum from becoming candidates. The outer assignment still
+        # requires exactly one candidate before any rename is admitted.
+        return (owner_present(names, owner) and
+                "_atexit" not in names and
+                not is_static_dtor(index, owner))
+
     def is_static_dtor(index, owner):
         names = target_names(index)
         if (owner_present(names, owner) and
@@ -547,7 +587,7 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
 
     def has_role(index, claim):
         if claim.kind == "STATIC_CTOR":
-            return is_special_member(index, claim.owner, "??0")
+            return is_static_ctor(index, claim.owner)
         if claim.kind == "STATIC_DTOR":
             return is_static_dtor(index, claim.owner)
         if claim.kind == "STATIC_ATEXIT":
@@ -1203,7 +1243,9 @@ def load_compgen_claims(path: Path | None, unit: str | None):
             delimiter="\t")
         return tuple(CompgenClaim(
             row["name"], row["kind"], row["owner"], int(row["size"], 0))
-            for row in rows if row["unit"] == unit)
+            for row in rows
+            if (row["unit"] == unit
+                and row["kind"] not in DIRECT_SYMBOL_COMPGEN_KINDS))
 
 
 def load_compgen_data_claims(path: Path | None, unit: str | None):

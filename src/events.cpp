@@ -5,7 +5,6 @@
 #include <string.h>
 #include <va.h>
 #include "advmgr_objects.h"
-#define HOMM3_EVENTS_VIEW
 #include "game.h"
 #include "advmgr.h"
 #include "cursor.h"

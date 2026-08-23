@@ -546,6 +546,20 @@ void launch_sample(const char* sample_name, int max_time, int channel)
         _beginthread(WaitEndSampleThread, 0, launched);
 }
 
+// The Dreamcast roster emits this tiny SoundMgr.h service inline from kb.obj;
+// Complete keeps an independently masked-identical out-of-line copy in the
+// sound-manager span. Retail's member offsets and imports prove the body.
+VA(0x0059a7d0, 0x51)  // hd-crossbuild; DC SoundMgr.h:140, dc 0xe6ef4
+void soundManager::service_sounds()
+{
+    EnterCriticalSection(&section_sound_call);
+    AIL_serve();
+    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
+        AIL_service_stream(gMP3Stream, 1);
+    Sleep(1);
+    LeaveCriticalSection(&section_sound_call);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\soundmgr.cpp:1068

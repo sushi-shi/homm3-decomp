@@ -30,9 +30,24 @@ public:
     // background through [vptr]+flag 1. Slot 2 reports the resource's
     // total in-memory extent: the 0x38-byte object plus DataSize.
     virtual ~Bitmap16Bit();
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
 
     Bitmap16Bit(int w, int h);
+    Bitmap16Bit(const char* name, int w, int h);
+    // Header accessors (DC Bitmap16.h:111-113, 150/156). They are kept
+    // inline because Complete's ResourceManager expands them into its
+    // bitmap-remap blit rather than calling the emitted DC copies.
+    int GetWidth() const { return Width; }
+    int GetHeight() const { return Height; }
+    int GetPitch() const { return Pitch; }
+    unsigned short* GetMap(int x, int y)
+    {
+        return map + y * Pitch + x;
+    }
+    const unsigned short* GetMap(int x, int y) const
+    {
+        return map + y * Pitch + x;
+    }
     void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);
     // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
@@ -42,6 +57,15 @@ public:
     void FillRect(int x, int y, int w, int h, unsigned short color);
     void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
+    // DC Bitmap16.h:162 header forwarding overload. ResourceManager's
+    // graphics remappers expand this wrapper into their retail bodies.
+    void Draw(int srcX, int srcY, int srcWidth, int srcHeight,
+              Bitmap16Bit* dst, int dstX, int dstY, bool flipped) const
+    {
+        Draw(srcX, srcY, srcWidth, srcHeight, dst->GetMap(0, 0),
+             dstX, dstY, dst->GetWidth(), dst->GetHeight(), dst->GetPitch(),
+             flipped);
+    }
     // Retail bodies 0x44e540 / 0x44e780, both reached from
     // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
     // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`

@@ -166,7 +166,7 @@ void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
 // byte count at +0x1c, and the destructor plus constructor tail close the
 // fixed object extent at 0x30.
 VA(0x0044f180, 0x7)
-unsigned int Bitmap24Bit::_vslot2() const
+unsigned int Bitmap24Bit::GetSize() const
 {
     return DataSize + sizeof(Bitmap24Bit);
 }

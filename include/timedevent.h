@@ -11,6 +11,8 @@ class TAbstractFile;
 // leading STL string to 16 bytes and adds ApplyToHuman before the DC-attested
 // ApplyToComputer byte; TTimedEvent::Save/Load prove both bytes and every
 // remaining offset, while saveTimedEventList closes the 0x34-byte stride.
+// The alignment byte before FirstTime is deliberately implicit: naming it
+// makes VC6's generated copies treat retail padding as a real member.
 class TTimedEvent {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
@@ -18,7 +20,6 @@ public:
     unsigned char PlayerFlags;
     unsigned char ApplyToHuman;
     unsigned char ApplyToComputer;
-    char pad_2f;
     unsigned short FirstTime;
     unsigned short Interval;
 
@@ -33,13 +34,13 @@ SIZE(TTimedEvent, 0x34);
 // DC CodeView names the derived town-event payload. Retail's four-byte-wider
 // base shifts the three fields to +0x34/+0x38/+0x40; saveTownEventList proves
 // those offsets, the seven-word generator band, and the 0x50-byte stride.
+// Alignment before BuildBuildings and the tail rounding are likewise left
+// implicit so generated copies do not copy padding bytes.
 class TTownEvent : public TTimedEvent {
 public:
     signed char TownNum;
-    char pad_35[3];
     __int64 BuildBuildings;
     unsigned short generatorBonuses[7];
-    char pad_4e[2];
 
     // MapCell.h:400 in the DC roster - a header-inline default constructor.
     // loadTownEventList's resize temp proves its whole body: after the base

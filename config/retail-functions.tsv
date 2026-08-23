@@ -7,6 +7,11 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
+# BOUNDARY CORRECTION 2026-08-22: 0x217b94 is the 166-byte `_sqrt`, not
+# a 9-byte helper followed by a 157-byte function at 0x217b9d. The pinned
+# VC6 SP3 lib-rtm/LIBCMT.LIB `sqrt.obj` publishes `_sqrt` at object +0x14;
+# its complete 166 bytes and reloc topology match retail 0x617b94..0x617c3a.
+# The apparent 0x217b9d entry is fall-through inside `_sqrt`. 11933 rows since.
 # BOUNDARY CORRECTION 2026-08-07: the three C++ EH unwind funclets the
 # carve split off after heroWindowManager::DoQuickView (0x202b7a/25,
 # 0x202b93/31, 0x202bb2/22) are folded back into 0x202a40, whose true
@@ -2362,8 +2367,7 @@ rva	size
 0xbf570	515
 0xbf780	1762
 0xbfe70	1704
-0xc0520	235
-0xc060b	6
+0xc0520	262
 0xc0630	177
 0xc06f0	377
 0xc0870	554
@@ -6422,8 +6426,7 @@ rva	size
 0x217aa0	47
 0x217ad0	170
 0x217b80	20
-0x217b94	9
-0x217b9d	157
+0x217b94	166
 0x217c3a	106
 0x217ca4	24
 0x217cbc	104

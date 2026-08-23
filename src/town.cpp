@@ -585,6 +585,17 @@ type_building_id town::create_building(type_building_id building)
 // owned town has a Capitol. The surviving City Hall bit is restored in
 // `built`, the Capitol bit is removed from `active`, and ConvertObject is
 // called for this town's map cell so its adventure object follows suit.
+// WALL (96.4595%, audited 2026-08-22): both objects have 111 instructions,
+// 13 blocks, seven conditional branches and one return, and their symbolic
+// branch streams agree.  The only residual is the register/schedule chosen
+// for the final `built |= City Hall; active &= ~Capitol` mask pair; the
+// operations, data symbols, member offsets and resulting stores all agree.
+// `vc6 why-reg` measured all 14 applicable catalog mutations.  Declaration
+// swaps and un-naming the size, id, count and limit were byte-flat; naming
+// either mask and every other volatile probe regressed.  Making the dead
+// loop `slot` volatile reduced register distance 34 -> 26 but remained
+// non-exact and would falsely model externally mutable state, so it was
+// rejected.  This is C2 scratch scheduling, not a missing source action.
 VA(0x005bec60, 0x173)  // retail body + dc identity, dc 0x166ed8
 void town::destroy_extra_capitol()
 {

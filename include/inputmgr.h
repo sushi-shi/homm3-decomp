@@ -38,7 +38,13 @@ enum EKeyCodes {
     // contiguous 0x3b..0x44 run, F11/F12 sit apart at 0x57/0x58 - all
     // four bounds byte-proven by its scan-table branch.
     KEYCODE_F1 = 0x3b,
+    KEYCODE_F2 = 0x3c,
+    KEYCODE_F3 = 0x3d,
     KEYCODE_F4 = 0x3e,
+    KEYCODE_F5 = 0x3f,
+    KEYCODE_F6 = 0x40,
+    KEYCODE_F7 = 0x41,
+    KEYCODE_F8 = 0x42,
     KEYCODE_F10 = 0x44,
     KEYCODE_KP_7 = 0x47,
     KEYCODE_KP_8 = 0x48,

@@ -12,6 +12,20 @@
 class hero;
 struct type_university;
 
+// Shared three-entry Basic/Advanced/Expert display-name row. Its retail
+// storage is claimed by levelupwindow.cpp; the university purchase callback
+// reads the Basic entry when composing its skill dialog.
+extern const char* gSkillMasteryNames[3];
+
+// The retail purchase handler walks four records from +0x74 with a 0x14
+// stride and passes each record to update_skill_button. The record's interior
+// belongs to that still-unclaimed method; its extent is nevertheless fixed by
+// both the walk and the +0xc4 end of the array.
+struct type_university_skill {
+    char pad_00[0x14];
+};
+SIZE(type_university_skill, 0x14);
+
 // Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
 // DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
 // proven in advmgr_popup.h.  The tail layout remains undeclared until its
@@ -19,10 +33,11 @@ struct type_university;
 // needed by the first admitted method.
 class type_university_window : public CAdvPopup {
 public:
-    // 0x60..0x6f is not yet attested by any admitted body; the rollover
-    // pointer at +0x70 is - handle_widget_hover 0x5f0dc0 loads it and
-    // dispatches slot 13 (textWidget::SetText) through it.
-    char pad_60[0x10];
+    // purchase_click independently proves the hero at +0x60, then walks four
+    // 0x14-byte skill records from +0x74 and keeps its selected skill at
+    // +0xd4. handle_widget_hover proves the rollover pointer between them.
+    hero* currentHero;             // +0x60
+    char pad_64[0x0c];
     textWidget* rolloverText;  // +0x70
     // The tail, proven by the constructor 0x5ef500 and by the stack copy
     // townManager::DoUniversity builds: the base runs to +0x74, then
@@ -33,7 +48,9 @@ public:
     // ends at +0xf8, which is exactly the 0x11c-byte frame
     // DoUniversity reserves less its own string, skill record and
     // allocator temp.
-    char pad_74[0x64];
+    type_university_skill skills[4];  // +0x74 .. +0xc3
+    char pad_c4[0x10];
+    int selectedSkill;                // +0xd4
     std::vector<widget*> field_d8;
     std::vector<widget*> field_e8;
 
@@ -47,6 +64,9 @@ public:
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int ExitDialog(message* msg);  // slot 14
+
+    void update_skill_button(type_university_skill* skill);
+    static int purchase_click(message* msg);
 };
 SIZE(type_university_window, 0xf8);
 

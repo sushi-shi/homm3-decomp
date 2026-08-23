@@ -614,6 +614,29 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
     }
 }
 
+// The default ostrstream used above causes VC6 to retain this consecutive
+// Dinkumware support band in bottomviewsubwindow.obj. The identities come
+// from the base object's own public symbols; the retail bodies and vtable
+// edges independently prove the same roles. They have no user-authored
+// definitions on which a live annotation can sit, so ordinary members use
+// claim-only carcass declarators and deleting wrappers use VA_COMPGEN.
+#if 0  // @carcass -- compiler/library COMDATs emitted by the constructor
+VA(0x004515c0, 0x10)
+void ios_base::ios_base();
+
+VA_COMPGEN(0x004515d0, 0x21, SCALAR_DELETING_DTOR, ios_base)
+
+VA(0x00451600, 0xE5)
+void strstreambuf::strstreambuf(int allocationSize);
+
+VA_COMPGEN(0x004516f0, 0x21, SCALAR_DELETING_DTOR, strstreambuf)
+
+VA_COMPGEN(0x00451720, 0x30, SCALAR_DELETING_DTOR, ostrstream)
+
+VA(0x00451750, 0x14)
+void ostrstream::`vbase destructor'();
+#endif
+
 // UNBLOCKED by the constructor above - its 0x63bb1c store is the one
 // image-wide reference to this class's table.
 VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)

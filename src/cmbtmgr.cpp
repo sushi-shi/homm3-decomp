@@ -41,7 +41,6 @@
 #define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_CMBTMGR_ROUND_VIEW
 #include <math.h>
 #include <stdlib.h>
 
@@ -54,7 +53,6 @@
 // armygrp.h and artifact.h stopped gating those enumerators; byte-inert,
 // since each is visible either way now.)
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
-#define HOMM3_CMBTMGR_CALIPH_VIEW    // combatManager::CastSpell, for SetNextArmy
 // PowEffect's own surface: its declarator and TSpellEffectID from
 // cmbtmgr.h, the five animation-state bytes plus iPostPowSpellToCast
 // and bPowSequenceComplete from army.h, the death sequence from
@@ -493,12 +491,13 @@ void combatManager::FreeIcons()
 // `cmp eax, esi` against the register still holding the zero it has just
 // stored into numArmies[side], where our CL emits `test eax, eax`.
 // Tried and rejected: `numArmies[side] = placed;` after `int placed = 0;`
-// to force the two zeroes to share, which is byte-identical; and moving
-// `int placed = 0;` below the two pointer locals (byte-identical too,
-// 2026-08-21). Both sides hold the same xor-esi zero two instructions
-// above the compare; C2 simply picks the literal-zero `test` where
-// retail's picked the register compare, and the [ebp-8] spill rides on
-// the same choice. One instruction, C2 compare-selection state.
+// to force the two zeroes to share; moving `int placed = 0;` below the two
+// pointer locals; reversing the predicate to `0 != combat_hero`; and swapping
+// the combat_hero/group declaration order (the last two re-measured
+// 2026-08-22). All are byte-identical. Both sides hold the same xor-esi zero
+// two instructions above the compare; C2 simply picks the literal-zero
+// `test` where retail picked the register compare, and the [ebp-8] spill
+// rides on the same choice. One instruction, C2 compare-selection state.
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
 void combatManager::LoadArmies(unsigned char is_surrounded)
 {
@@ -605,6 +604,13 @@ void combatManager::FreeArmies()
 }
 
 #endif  // @carcass
+
+// Retail-only helper; the sole caller is DoVictory in command.obj.
+VA(0x004639e0, 0x0E)  // exact
+void combatManager::StopCombatSounds()
+{
+    gpSoundManager->StopAllSamples(1);
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1178
 // The seed expression is byte-forced: retail builds `x*0x1aed3` with one

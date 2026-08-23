@@ -73,6 +73,10 @@ enum ESpellValueClass {
 class type_spellvalue {
 public:
     type_spellvalue(const hero* new_hero);
+    // Non-trivial solely because of list. Keeping the empty body inline
+    // preserves the compiler-generated expansion at each use while giving
+    // ai.cpp a source spelling for retail's retained COMDAT copy.
+    ~type_spellvalue() {}
 
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.

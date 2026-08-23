@@ -6,6 +6,7 @@
 #define HOMM3_ARMYGRP_H
 
 #include <va.h>
+#include "abstractfile.h"
 
 // This header used to pull in "game.h" for its consumers' convenience.
 // It cannot any more: game.h owns `class game`, whose hero array needs
@@ -631,12 +632,25 @@ enum TTerrainType {
 // dword param with sentinels 2..5): cursed ground zeroes the stat,
 // holy ground/evil fog swing morale by town alignment, the clover
 // field lifts neutral-town luck. NH3API terrain.hpp EMagicTerrain
-// spellings; only the byte-proven sentinels are listed.
+// spellings. NewmapCell::get_magic_terrain_type (0x4fcf40) proves the
+// remaining return values against its five-way special-terrain switch.
 enum EMagicTerrain {
+#ifdef HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
+    MAGIC_TERRAIN_INVALID = -1,
+    MAGIC_TERRAIN_COAST = 0,
+    MAGIC_TERRAIN_MAGIC_PLAINS = 0x1,
+#endif
     MAGIC_TERRAIN_CURSED_GROUND = 0x2,
     MAGIC_TERRAIN_HOLY_GROUND = 0x3,
     MAGIC_TERRAIN_EVIL_FOG = 0x4,
     MAGIC_TERRAIN_CLOVER_FIELD = 0x5
+#ifdef HOMM3_MAPCELL_MAGIC_TERRAIN_VIEW
+    ,
+    MAGIC_TERRAIN_LUCID_POOLS = 0x6,
+    MAGIC_TERRAIN_FIERY_FIELDS = 0x7,
+    MAGIC_TERRAIN_ROCKLANDS = 0x8,
+    MAGIC_TERRAIN_MAGIC_CLOUDS = 0x9
+#endif
 };
 
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
@@ -751,15 +765,6 @@ DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
 // measured, with no semantic change anywhere. armygrp.cpp and
 // viewarmywindow.cpp are the two TUs that define the macro.
 DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
-
-// Minimal stream interface for save/load: retail virtual-calls slot 1
-// to read and slot 2 to write (this in ecx, (buffer, size) on stack).
-class TAbstractFile {
-public:
-    virtual void _vslot0() = 0;
-    virtual int Read(void* data, int size) = 0;
-    virtual int Write(const void* data, int size) = 0;
-};
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride

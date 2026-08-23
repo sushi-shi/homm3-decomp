@@ -208,7 +208,9 @@ public:
     // can_build's first gate: nonzero in gpGame->towns[id] refuses
     // every build. Name unattested - ordinal placeholder.
     unsigned char field_02;
-    char pad_03[1];
+    // DC names the next byte `threatening_heroes`; retail's
+    // type_town_threat_checker::mark_town increments exactly +3.
+    unsigned char threatening_heroes;
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
     char type;
@@ -740,6 +742,10 @@ extern int gSiloIncome[9][NUM_RESOURCES];
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
 extern TCreatureType gTownDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+// Biased view of the upgraded half of the same first town row. Retail
+// GiveTroopsToNeutralTown carries a distinct relocation to this address.
+DATA(0x006747d0)
+extern TCreatureType gTownUpgradedDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
 // Retail .data 0x6782a4: ordinary spell counts for guild levels one
 // through five. initialize_spells generates one extra candidate per row so

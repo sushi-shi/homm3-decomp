@@ -3,6 +3,7 @@
 // 41 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include "misc.h"
 #include "kbwin.h"
 
@@ -441,9 +442,12 @@ void ReadPrefs()
 // read run. Canonical source ends with strcpy(CDDrive, AppPath). Retail was
 // binary-patched there to a four-byte assignment plus a jump over 17 NOPs,
 // leaving the final five instructions of the old inline strcpy unreachable.
-// Keeping strcpy restores the exact live tail and scores 95.9319%; spelling
-// the patched assignment in C falls to 91.136%, so no binary-patch artifact
-// is encoded in source.
+// Residual (binary patch, 95.9319%): keeping strcpy restores the exact live
+// tail; spelling the patched assignment in C falls to 91.136%, so no
+// binary-patch artifact is encoded in source.  The remaining two flow edits
+// are the patch jump and the synthetic CRT identity attached to _getcwd;
+// the registry-query run and the live strcpy instructions are otherwise
+// instruction-for-instruction retail.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
 void ReadPrefsFromRegistry()
 {
@@ -784,14 +788,13 @@ int SRandom(int iLower, int iUpper)
     // @stub
 }
 
-// E:\gamedcs\misc.cpp:820
-DC_ONLY(0xfe10c, 0x42)
-std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string(__$ReturnUdt, const char* format)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Retail's only three references to this scratch are format_string's
+// vsprintf destination, strlen source and copy source.  Its 512-byte extent
+// is bounded exactly by the next referenced bss cell at 0x6998cc.
+DATA(0x006996cc)
+static char gFormatStringBuffer[512];
 
 // The seed SRand records before handing it to the CRT. Retail .data
 // 0x67fb94, and the store below is its ONLY reference in the whole
@@ -813,6 +816,22 @@ void SRand(int iSeed)
 {
     gUnnamed67fb94 = iSeed;
     srand(iSeed);
+}
+
+// E:\gamedcs\misc.cpp:820
+// Located 2026-08-22: the sole carved row in the SRand..TPickANumber bracket.
+// Retail calls vsprintf with the hidden varargs cursor and the 0x6996cc
+// scratch, then constructs the hidden std::string return from that scratch.
+// EXACT on first compile: 8/8 branches, 3/3 returns and the full instruction
+// stream agree; only the unscored scratch-buffer symbol name differs.
+VA(0x0050c600, 0xDD)  // dc-bracket + body (vsprintf/string return), dc 0xfe10c
+std::string format_string(const char* format, ...)
+{
+    va_list arguments;
+    va_start(arguments, format);
+    vsprintf(gFormatStringBuffer, format, arguments);
+    va_end(arguments);
+    return std::string(gFormatStringBuffer);
 }
 
 // E:\gamedcs\misc.cpp:838

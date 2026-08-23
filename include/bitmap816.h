@@ -32,21 +32,33 @@ public:
     TPalette16 p16;
     TPalette24 p24;
 
+    Bitmap816(const char* name, int w, int h, unsigned char* data,
+              TPalette16* palette16, int dataSize);
+    Bitmap816(const char* name, const char* path,
+              int rbits, int rshift, int gbits, int gshift,
+              int bbits, int bshift);
+
     // Blitters, declared for border.cpp's bitmapBorder::Draw /
     // zBufferDraw (0x450450 / 0x4503f0). Argument lists are the DC
     // roster's, and each is byte-corroborated by its retail call site's
     // push run (8 and 11 arguments respectively).
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx,
+        int dy, int dw, int dh, int dpitch, bool tblit) const;
     void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
-        int dy, unsigned char tblit);
+        int dy, bool tblit) const;
     void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
-        int dx, int dy, int dw, int dh, int dpitch, int id);
+        int dx, int dy, int dw, int dh, int dpitch, int id) const;
+    int importPCXFile(const char* filename, int rbits, int rshift,
+        int gbits, int gshift, int bbits, int bshift);
     void mark_puzzle(unsigned char* visible, long dest_x, long dest_y);
     void SetPalette(const unsigned short* pal);
     void SetPalette(TPalette24* pal24);
     void ResetPalette();
 
     virtual ~Bitmap816();
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
+    virtual void zBufferDraw(int sx, int sy, int sw, int sh,
+        unsigned short* zBuffer, int dx, int dy, int id) const;
 };
 SIZE(Bitmap816, 0x56c);
 

@@ -7,6 +7,10 @@
 
 #include "resource.h"
 
+#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
+class TPalette16;
+#endif
+
 // Retail layout is byte-proven by both constructors at 0x47c2b0/0x47c360
 // and the destructor at 0x47c430.  The Dreamcast field roster agrees
 // through map@0x44; retail omits that build's DirectDraw tail, leaving a
@@ -20,6 +24,30 @@
 // spelling.
 extern unsigned short gHalfIntensityMask;     // 0x6968a4
 extern unsigned short gQuarterIntensityMask;  // 0x6968aa
+
+// Dreamcast CodeView enum 0x1772. Retail GetSprite passes the on-disk value
+// through both CSpriteFrame constructor overloads, proving the same 32-bit
+// domain on x86.
+enum TEncodingMethod {
+    eEncodeRaw = 0,
+    eEncodeGeneralRLE = 1,
+    eEncodeTilesetRLE = 2,
+    eEncodeAdvObjRLE = 3,
+    kNumEncodingMethods = 4
+};
+
+#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
+// General-RLE control values consumed by the specialized frame renderers.
+// Their effects vary with the renderer and whether an outline color is live,
+// so the names preserve the encoded domain rather than inventing one effect.
+enum TRleControlCode {
+    eRleControlShadow75 = 1,
+    eRleControlShadow50 = 4,
+    eRleControlOutline5 = 5,
+    eRleControlOutline6 = 6,
+    eRleControlOutline7 = 7
+};
+#endif
 
 class CSpriteFrame : public resource {
 public:
@@ -35,8 +63,61 @@ public:
     int Pitch;
     unsigned char* map;
 
+    CSpriteFrame(const char* name, int w, int h, unsigned char* data,
+                 int csize, TEncodingMethod encoding);
+    CSpriteFrame(const char* name, int w, int h, unsigned char* data,
+                 int csize, TEncodingMethod encoding,
+                 int cw, int ch, int cx, int cy);
+
     virtual ~CSpriteFrame();
-    virtual unsigned int _vslot2() const;
+    virtual unsigned int GetSize() const;
+
+    // CSpriteFrame.h:87-90.  DC emits standalone copies, while retail's
+    // consumers expand these one-field accessors in place.
+    int GetCroppedWidth() const { return CroppedWidth; }
+    int GetCroppedHeight() const { return CroppedHeight; }
+    int GetCroppedX() const { return CroppedX; }
+    int GetCroppedY() const { return CroppedY; }
+
+#ifdef HOMM3_CSPRITEFRAME_DRAW_METHODS
+    void Clip(int& sx, int& sy, int& sw, int& sh, int& dx, int& dy,
+              int dw, int dh, unsigned char hflip,
+              unsigned char vflip) const;
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+              int dx, int dy, int dw, int dh, int dpitch,
+              TPalette16& pal, unsigned char hflip,
+              unsigned char tblit) const;
+    void DrawCreatureImpl(int sx, int sy, int sw, int sh,
+                          unsigned short* dst, int dx, int dy, int dw,
+                          int dh, int dpitch, TPalette16& pal,
+                          unsigned char hflip, unsigned short outcolor,
+                          unsigned char alpha) const;
+    void DrawAdvObjImpl(int sx, int sy, int sw, int sh,
+                        unsigned short* dst, int dx, int dy, int dw, int dh,
+                        int dpitch, TPalette16& pal, unsigned char hflip,
+                        unsigned short flagcolor) const;
+    void DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh,
+                                 unsigned short* dst, int dx, int dy,
+                                 int dw, int dh, int dpitch, TPalette16& pal,
+                                 unsigned short flagcolor,
+                                 unsigned char hflip) const;
+    void DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh,
+                              unsigned short* dst, int dx, int dy, int dw,
+                              int dh, int dpitch, TPalette16& pal,
+                              unsigned char hflip) const;
+    void DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst,
+                  int dx, int dy, int dw, int dh, int dpitch,
+                  TPalette16& pal, unsigned char hflip,
+                  unsigned char vflip) const;
+    void DrawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst,
+                        int dx, int dy, int dw, int dh, int dpitch,
+                        TPalette16& pal, unsigned char hflip,
+                        unsigned char vflip) const;
+    void DrawSpellEffect(int sx, int sy, int sw, int sh,
+                         unsigned short* dst, int dx, int dy, int dw, int dh,
+                         int dpitch, TPalette16& pal, unsigned char hflip,
+                         unsigned char alpha) const;
+#endif
 
     // Static: retail takes rmask/gmask in ecx/edx with bmask on the
     // stack and never touches a `this`, which under /Gr is exactly a

@@ -56,6 +56,20 @@ enum eRS_Messages {
     RS_MAP_CHANGE_END = 1063,
     RS_TRADE_REQUEST = 1064,
     RS_PLAYER_ACTIVE = 1071,
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    // SendChat's ping command constructs the next two rungs directly.
+    // Kept in remote.cpp's netmsg view because this enum is a measured
+    // include-set/codegen trigger for unrelated consumers.
+    RS_PING = 1072,
+#endif
+#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+    // The two consecutive ready-handshake records constructed by
+    // CWaitForReadyPlayersDlg.  DC's gapless roster names the rungs;
+    // retail stores 0x3f4/0x3f5 in their 20-byte base-only messages.
+    RS_READY_TO_PLAY = 1012,
+    RS_ALL_READY_TO_PLAY = 1013,
+    RS_SET_AS_HOST = 1015,
+#endif
     RS_GIFT = 1074,
     RS_GIFT_REQUEST = 1075,
     RS_SESSION_LOST = 1076,
@@ -81,6 +95,46 @@ public:
     }
 };
 
+#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+class CReadyToPlayMsg : public CNetMsg {
+public:
+    CReadyToPlayMsg()
+        : CNetMsg(RS_READY_TO_PLAY, sizeof(CReadyToPlayMsg)) {}
+};
+SIZE(CReadyToPlayMsg, 0x14);
+
+class CAllReadyToPlayMsg : public CNetMsg {
+public:
+    CAllReadyToPlayMsg()
+    {
+        subType = RS_ALL_READY_TO_PLAY;
+        field_00 = -1;
+        size = sizeof(CAllReadyToPlayMsg);
+        field_04 = 0;
+        field_10 = 0;
+    }
+};
+SIZE(CAllReadyToPlayMsg, 0x14);
+
+// remote.h:537 in DC. This four-byte owner exists solely to release a
+// dequeued message on every return arm of the ready-dialog dispatcher.
+// Its ctor and dtor are header inline in the original and retail expands
+// both into CWaitForReadyPlayersDlg::handle_message.
+class CMessageKill {
+public:
+    CMessageKill(CNetMsg* pNetMsg) : m_pNetMsg(pNetMsg) {}
+    ~CMessageKill()
+    {
+        if (m_pNetMsg)
+            delete m_pNetMsg;
+    }
+
+private:
+    CNetMsg* m_pNetMsg;
+};
+SIZE(CMessageKill, 0x4);
+#endif
+
 // Complete retail's resource-trade notification is a compact CNetMsg with
 // three dwords at +0x14. HandleTradeRequestMsg proves their player/resource/
 // amount roles. The Dreamcast port's same-named class instead embeds two hero
@@ -101,9 +155,38 @@ public:
 
 class CChatMsg : public CNetMsg {
 public:
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    char m_text[128];
+
+    CChatMsg(const char* text)
+        : CNetMsg(RS_CHAT_MSG, 0)
+    {
+        strncpy(m_text, text, 127);
+        size = GetSize();
+    }
+
+    unsigned long GetSize()
+    {
+        return strlen(m_text) + sizeof(CNetMsg) + 1;
+    }
+#else
     char m_text[1];  // flexible tail; the wire extent is GetSize's, only
                      // the address is consumed here
+#endif
 };
+
+#ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+// netmsg.h:804 in the Dreamcast roster. Retail SendChat independently
+// proves the one-dword payload, 0x18-byte extent and constructor store order.
+class CPingMsg : public CNetMsg {
+public:
+    unsigned long m_pingTime;
+
+    CPingMsg(unsigned long pingTime, eRS_Messages id)
+        : CNetMsg(id, sizeof(CPingMsg)), m_pingTime(pingTime) {}
+};
+SIZE(CPingMsg, 0x18);
+#endif
 
 class CPlayerDroppedMsg : public CNetMsg {
 public:
@@ -160,9 +243,14 @@ public:
     int garrisonId;
     int playerPos;
 
+#ifdef HOMM3_GAME_GARRISON_HERO_DECLS
+    CMCClaimGarrison() {}
+    CMCClaimGarrison(int id, int player);
+#else
     CMCClaimGarrison(int id, int player)
         : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
           garrisonId(id), playerPos(player) {}
+#endif
 };
 
 class CMCClaimGenerator : public CMapChange {

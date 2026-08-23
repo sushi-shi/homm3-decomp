@@ -216,6 +216,94 @@ enum TAdventureObjectType {
     MAX_EVENT_TYPE             = 165
 };
 
+#ifdef HOMM3_MAPCELL_UPGRADE_VIEW
+// The save-version <25 views used by mapcell.cpp's retail-only compatibility
+// pass. The legacy layouts are published by the Dreamcast CodeView record;
+// the current layouts are fixed by retail's seven conversion arms. They are
+// gated because only mapcell.obj converts serialized legacy dwords.
+struct LegacyArtifactInfo {
+    signed long price : 4;
+    signed long guard : 8;
+    signed long resource_price : 4;
+    unsigned long guard_qty : 15;
+    unsigned long custom : 1;
+};
+
+struct CurrentArtifactInfo {
+    signed long price : 4;
+    signed long guard : 9;
+    signed long resource_price : 4;
+    unsigned long guard_qty : 14;
+    unsigned long custom : 1;
+};
+
+struct LegacySkeletonInfo {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    unsigned long artifact : 7;
+    unsigned long has_treasure : 1;
+    unsigned long tail : 18;
+};
+
+struct LegacyMonsterInfo {
+    unsigned long qty : 12;
+    signed long disposition : 5;
+    unsigned long never_flee : 1;
+    unsigned long dont_grow : 1;
+    unsigned long index : 12;
+    unsigned long custom : 1;
+};
+
+struct LegacyPyramidInfo {
+    unsigned long guarded : 1;
+    unsigned long unused : 3;
+    unsigned long visited_bits : 8;
+    signed long spell : 8;
+    unsigned long tail : 12;
+};
+
+struct LegacyTreasureInfo {
+    signed long artifact : 8;
+    unsigned long is_artifact : 1;
+    unsigned long gold_amount : 4;
+    unsigned long tail : 19;
+};
+
+struct LegacyWagonInfo {
+    unsigned long resource_amount : 5;
+    unsigned long visited_bits : 8;
+    unsigned long full : 1;
+    unsigned long has_artifact : 1;
+    signed long artifact : 8;
+    signed long resource : 4;
+    unsigned long tail : 5;
+};
+
+struct CurrentUpgradeWagonInfo {
+    unsigned long resource_amount : 5;
+    unsigned long visited_bits : 8;
+    unsigned long full : 1;
+    unsigned long has_artifact : 1;
+    signed long artifact : 10;
+    signed long resource : 4;
+    unsigned long tail : 3;
+};
+
+struct LegacyTombInfo {
+    unsigned long full : 1;
+    unsigned long unused : 4;
+    unsigned long visited_bits : 8;
+    signed long artifact : 8;
+    unsigned long tail : 11;
+};
+
+struct CurrentVisitedInfo {
+    unsigned long head : 5;
+    unsigned long visited_bits : 8;
+    unsigned long tail : 19;
+};
+#endif
+
 struct ShipyardInfo {
     signed int owner : 8;
     unsigned int boatX : 8;
@@ -665,18 +753,13 @@ public:
 };
 #pragma pack(pop)
 
-// 0x4fe6c0, RETAIL-ONLY and unclaimed: no Dreamcast counterpart exists (the
-// DC roster for mapcell.cpp is exhausted), so the NAME is PROVISIONAL and
-// taken from what the body does. loadMapLayer hands it every cell it
-// finishes, together with the save version, and it returns at once unless
-// that version is below 25; older saves go through a seven-arm jump table
-// on the cell's object type that repacks extraInfo's bitfields into their
-// current positions.
-//
-// DECLARED BUT NOT DEFINED, deliberately. What loadMapLayer needs is the
-// call; a body written before those seven arms are decoded would claim the
-// row and score it low for nothing, and the call's reloc NAME does not
-// gate the verdict (the DoDialog precedent).
+// 0x4fe6c0, RETAIL-ONLY: no Dreamcast function counterpart exists (the DC
+// roster for mapcell.cpp is exhausted), so the NAME remains provisional and
+// is taken from the now-reconstructed body. loadMapLayer hands it every cell
+// it finishes, together with the save version, and it returns at once unless
+// that version is below 25; older saves go through a seven-arm jump table on
+// the cell's object type that repacks extraInfo's bitfields into their current
+// positions. The body is enrolled as a documented compiler wall.
 //
 // A free function, so /Gr makes it __fastcall - which is what retail emits:
 // the cell in ECX, the save version in EDX.

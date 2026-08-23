@@ -39,7 +39,6 @@
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_TOWNMGR_GRAIL_DECLS
 #define HOMM3_TOWNMGR_TOWN_NAME_DECLS
-#define HOMM3_TOWNMGR_VIEWARMY_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
@@ -4755,7 +4754,8 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
 // `switch (msg->id)` over the single case, `MESSAGE_MOUSE_MOVE ==
 // msg->id`, the early-return form `if (msg->id != MESSAGE_MOUSE_MOVE)
 // return 1;`, a named `int id` local, and that local hoisted above the
-// base handler's result test so the load sits in its own block.
+// base handler's result test so the load sits in its own block, and an
+// identical duplicated conjunct (byte-flat, 2026-08-22).
 
 // E:\gamedcs\townmgr.cpp:7513
 VA(0x005d6810, 0xFB)  // anchor-vtable 0x643944 slot 9 + arity, dc 0x1799bc

@@ -121,7 +121,9 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
     field_50 = -1;
 
     if (newGame)
-        gpGame->campaign = SCampaign();
+        *static_cast<SCampaignCtorView*>(
+            static_cast<void*>(&gpGame->campaign)) =
+            SCampaignCtorView();
 
     memset(campaignAvailable, 0, sizeof(campaignAvailable));
 
@@ -255,6 +257,14 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
 // Retail emits the compiler-generated wrapper immediately after the
 // constructor; Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0045f0e0, 0x21, SCALAR_DELETING_DTOR, TCampaignWindow)
+
+// Empty source body: retail's entire function is the compiler-supplied member
+// teardown.  This explicit emission keeps the same generated work available
+// after the constructor switches to its declaration-only layout view above.
+VA(0x0045f110, 0x100)
+SCampaign::~SCampaign()
+{
+}
 
 // E:\gamedcs\campaignwindow.cpp:261
 VA(0x0045f210, 0xAE)  // six preview-state closes + global/widget teardown, dc 0x5bd00

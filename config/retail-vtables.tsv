@@ -100,8 +100,8 @@ rva	function_count	class
 0x23db68	13	
 0x23db9c	15	
 0x23dbd8	15	
-0x23dc28	62	
-0x23dd20	73	
+0x23dc28	62	CDPlay
+0x23dd20	73	CDPlayLobby
 0x23de44	7	
 0x23de74	6	
 0x23de8c	6	
@@ -208,7 +208,7 @@ rva	function_count	class
 0x240c4c	9	
 0x240c70	3	
 0x240c7c	9	
-0x240d04	73	
+0x240d04	73	CDPlayHeroes
 0x240e30	25	
 0x240e94	14	
 0x240ecc	14	

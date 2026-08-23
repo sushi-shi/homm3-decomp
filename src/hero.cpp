@@ -37,7 +37,6 @@
 // HOMM3_GAME_HERO_EXTRA_VIEW stays defined ACROSS this include (it used
 // to be dropped right after hero.h): hero::HeroFn_004D8B30 takes a
 // HeroExtra, and that class lives behind this same gate in game.h.
-#define HOMM3_GAME_HERO_EXTRA_VIEW
 #define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
 // advManager::FizzleCenter - HeroView's dismiss path calls it. The one
@@ -2446,6 +2445,20 @@ void hero::CheckLevel()
 // conversion goes through a union overlay, NOT static_cast: a cast into
 // an enum domain is a cleanliness floor at zero in this tree, and the
 // overlay is byte-inert (the value is already in EAX).
+//
+// WALL (98.8073%, audited 2026-08-22): spelling both weighted passes as
+// `if (!skillDisabled[i]) chance = trait; else chance = 0` restores
+// retail's fall-through load and raises this row from 94.1284%.  All 75
+// blocks, 51 conditional branches and both returns now agree.  The sole
+// explicit-code residual is the campaign gate's final id comparison:
+// retail materializes it as `sete cl; test cl,cl; je`, while this VC6
+// compile folds every honest spelling to the equivalent direct `jne`.
+// A named byte, explicit 1/0 arms, force/ordinary inline predicates with
+// byte and bool returns (including a parameterized form), and a class-body
+// inline accessor were byte-flat.  `why-branch` found only two unrelated
+// D13 mutations and neither moved the branch shape.  The remaining flat-asm
+// rows are name-only relocations for already-proven globals and the two ends
+// of the four-entry magic-school table; no source operand differs.
 VA(0x004dad00, 0x283)  // anchor-caller + arity, dc 0xccf78
 TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
 {
@@ -2526,10 +2539,10 @@ TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_leve
             current_hero->skillLevel[i] >= min_level &&
             i != excluded) {
             int chance;
-            if (skillDisabled[i])
-                chance = 0;
-            else
+            if (!skillDisabled[i])
                 chance = classTraits.gainSecondarySkillChance[i];
+            else
+                chance = 0;
             if (chance == 0 && current_hero->skillLevel[i] > 0)
                 chance = 1;
             total += chance;
@@ -2544,10 +2557,10 @@ TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_leve
             current_hero->skillLevel[i] >= min_level &&
             i != excluded) {
             int chance;
-            if (skillDisabled[i])
-                chance = 0;
-            else
+            if (!skillDisabled[i])
                 chance = classTraits.gainSecondarySkillChance[i];
+            else
+                chance = 0;
             if (chance == 0 && current_hero->skillLevel[i] > 0)
                 chance = 1;
             roll -= chance;
@@ -4939,6 +4952,15 @@ THeroScreenWindow::THeroScreenWindow()
 }
 
 #if 0  // @carcass
+
+// Retail 0x4e1370 is the one out-of-line COMDAT copy of this header inline:
+// this enormous constructor exhausts /Ob2 at the exit-button call, and the
+// linker reuses hero.obj's copy for four later callers
+// (0x57c2d2/0x5cc832/0x5dcae6/0x5e7b71). The public base-object symbol and
+// its vector<int> body prove the identity; the declarator only enrolls the
+// already-emitted COMDAT and does not manufacture a second definition.
+VA(0x004e1370, 0x1AF)
+void button::set_hotkey(int code);
 
 // E:\gamedcs\hero.cpp:4186
 // RETAIL_LOCATED(0x004e1520, 0x21): compiler-generated ??_G immediately
@@ -7366,6 +7388,13 @@ boat* hero::find_summonable_boat()
 // worldMap.cell() site: retail CALLS NewfullMap::cell(int,int,int) there
 // (predict-inline base x0 vs retail x1) where our CL expanded its index
 // arithmetic inline.
+// Residual (86.9922%, register homing): naming that call's NewmapCell result
+// raises the retained spelling another 1.29 points, but flow-distance is
+// already zero and why-reg reports identical first definitions.  Retail
+// keeps EBX live through the packed-point comparison; this compile borrows
+// it with a push/pop and rotates the subsequent ECX/EDX scratches.  Reversing
+// the point/invalid declaration order regresses to 82.87%; leaving the cell
+// result unnamed is 85.70%, and removing the call-site pin returns 75.23%.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
 unsigned char hero::can_summon_boat()
 {
@@ -7393,9 +7422,10 @@ unsigned char hero::can_summon_boat()
         // (base x0 vs retail x1) where our CL expanded its index
         // arithmetic inline.
 #pragma inline_depth(0)
-        magicTerrain = gpGame->worldMap.cell(
-            point.x, point.y, point.z)->get_magic_terrain_type();
+        NewmapCell* magicCell = gpGame->worldMap.cell(
+            point.x, point.y, point.z);
 #pragma inline_depth()
+        magicTerrain = magicCell->get_magic_terrain_type();
     }
 
     int mastery = GetSpellSchoolLevel(
@@ -7659,6 +7689,12 @@ int hero::HeroFn_004E5DE0()
 // Visions range is its per-mastery trait bonus times clamped spell power,
 // floored at three cells. The point must share the hero's map level and lie
 // strictly inside the resulting squared Euclidean radius.
+// Residual (98.6813%, register scheduling): both sides have the same CFG and
+// instruction multiset.  The sole delta is whether the packed hero-x dword
+// load is scheduled immediately before or after the independent
+// `location->x` word load.  A named hero-x local and the algebraically
+// reversed `-heroLocation.x + location->x` spelling are byte-identical;
+// why-reg finds no binding divergence in its model slice.
 VA(0x004e5e10, 0x11C)  // anchor-global, dc 0xd55c0
 unsigned char hero::IsInIdentifyRange(const type_point* location)
 {

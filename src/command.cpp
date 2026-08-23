@@ -916,16 +916,14 @@ void combatManager::show_looted_artifacts(
 // surviving stacks, resurrect the necromancer's dead, hand out experience
 // and artifacts, and raise the results window.
 //
-// Residual (99.4634%): FIVE instructions, all inside the inlined
-// _cpp_min, and the branch diff agrees 45/45 with one ret on both sides.
-// Retail materialises BOTH const-reference temporaries and only then
-// compares (`mov [ebp-0x28],edx / movsx ecx,.. / mov [ebp+8],ecx /
-// cmp ecx,edx`); our CL sinks the second store past the compare and
-// names the two registers the other way round. Tried and rejected:
-// folding the result back into the assignment as
-// `heroes[1]->mana = static_cast<short>(_cpp_min(..))` - it keeps the
-// same schedule AND re-narrows the load, 99.4634 -> 96.4902. Scheduling
-// inside a straight-line block; not ground past that.
+// EXACT 2026-08-22 (99.4634 -> 100.0000): the only delta was five
+// instructions inside the inlined _cpp_min. Declaring currentMana before
+// manaCap, while keeping the arguments in (cap,current) order, gives both
+// const-reference temporaries retail's ECX/EDX roles and homes currentMana
+// before the compare. The branch stream remains 45/45 with one return.
+// Rejected on the way: folding the result back into the assignment narrows
+// the mana load again (96.4902); separating declaration from initialization
+// and routing through an int* are both byte-flat at 99.4634.
 VA(0x00477470, 0x58C)  // linkorder, dc 0x6e1c8
 void combatManager::DoVictory(int winningGroup)
 {
@@ -1022,8 +1020,9 @@ void combatManager::DoVictory(int winningGroup)
         // <xutility> ships _cpp_min for exactly that reason, and its
         // `_Y < _X ? _Y : _X` body is the branch polarity retail has.
         if (defendingTown) {
-            int manaCap = field_13df4;
+            // Declaration order is codegen-significant: keep current first.
             int currentMana = heroes[1]->mana;
+            int manaCap = field_13df4;
             int newMana = std::_cpp_min(manaCap, currentMana);
             heroes[1]->mana = newMana;
         }

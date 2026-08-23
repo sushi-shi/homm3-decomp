@@ -80,6 +80,75 @@ public:
     virtual void mark_town(town* our_town);
 };
 
+// Dreamcast records this exact 12-byte value object, and retail's
+// constructor at 0x4286b0 writes the same four fields at 0/4/8/10.
+struct type_creature_source {
+    TCreatureType type;
+    short* ptr;
+    short number;
+    unsigned char is_free;
+
+    type_creature_source(TCreatureType new_type, short* new_amount,
+                         unsigned char _is_free);
+};
+SIZE(type_creature_source, 12);
+
+// The DC field roster proves the seven base members and the purchaser's
+// four-member tail. Retail adds the byte at +8 (do_purchase writes the
+// Angelic-Alliance result there), which moves morale/alignment_count to
+// +0xa/+0xc while leaving the 32-byte base extent unchanged. GetAlignments
+// proves the ten-byte array at +0xe; the gap after the alliance byte and the
+// base's tail are ordinary VC6 alignment and remain implicit.
+class type_AI_creature_swapper {
+protected:
+    armyGroup* army;
+    armyGroup* adjacent_army;
+    unsigned char has_angelic_alliance;
+    short morale;
+    short alignment_count;
+    unsigned char alignments[10];
+    long army_value_increase;
+    short improvement;
+
+    void get_alignments();
+    void add_creatures(TCreatureType type, short amount, short slot);
+    void dump_extra_creature();
+    long choose_weakest_army(bool is_shooter, bool check_alignments);
+    long value_of_adding_army(TCreatureType type, short count,
+                              short& slot, bool must_replace_creature);
+
+public:
+    type_AI_creature_swapper();
+};
+SIZE(type_AI_creature_swapper, 0x20);
+
+class type_AI_creature_purchaser : public type_AI_creature_swapper {
+protected:
+    long player_id;
+    long* funds;
+    unsigned char subtract_cost_mode;
+    std::vector<type_creature_source> creatures;
+
+    long do_best_purchase(bool trade_allowed);
+
+public:
+    type_AI_creature_purchaser(long player, town* current_town);
+    void set(town* current_town);
+    void do_purchase(armyGroup* new_army, short new_morale,
+                     armyGroup* new_adjacent_army, long* new_funds,
+                     unsigned char allow_trade,
+                     unsigned char new_has_angelic_alliance);
+    long get_purchase_value(const armyGroup* new_army, short new_morale,
+                            const armyGroup* new_adjacent_army,
+                            const long* new_funds,
+                            unsigned char new_has_angelic_alliance);
+
+    void set_subtract_mode(unsigned char arg) { subtract_cost_mode = arg; }
+};
+SIZE(type_AI_creature_purchaser, 0x3c);
+
+void AI_consolidate_army(armyGroup* current_army);
+
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.
 struct type_creature_value {
@@ -132,6 +201,7 @@ public:
                             std::vector<long>& trade_qty);
     bool can_trade_resources(const int* cost, int* supply,
                              std::vector<long>& trade_qty);
+    void trade_resources(const int* cost, long number);
 
 private:
     static float attack_computer_bonus;

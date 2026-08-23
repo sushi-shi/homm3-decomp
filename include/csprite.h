@@ -7,11 +7,15 @@
 
 #include "bitmap16.h"
 #include "csequence.h"
+#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
+#include "cspriteframe.h"
+#endif
 #include "resource.h"
 
 class palette;
 class paletteHiColor;
 class TPalette16;
+class TPalette24;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
 // NH3API creatures.hpp identical): only the transition pair
@@ -60,15 +64,22 @@ class CSprite : public resource {
 public:
     CSequence** s;
     TPalette16* p;
-    paletteHiColor* p24;
+    // DC CodeView type 0x17d1 is TPalette24*. Retail ResetPalette confirms
+    // it by passing p24+0x1c (the resource head) to the raw palette ctor.
+    TPalette24* p24;
     int numSequences;
     int* validSeqMask;
     int Width;
     int Height;
 
+    CSprite(const char* name, int sprtype, int w, int h);
+    void AllocateSeq(int seqnum, int numFrames);
+    int AddFrame(int seqnum, CSpriteFrame* frame);
+
     virtual ~CSprite();      // slot 0
     virtual void Dispose();  // slot 1, retail body 0x55d1a0
-    virtual unsigned int _vslot2() const;  // slot 2, retail 0x47bd50
+    virtual unsigned int GetSize() const;  // slot 2, retail 0x47bd50
+    static int GetNumSeqs(int type);
 
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
@@ -82,9 +93,33 @@ public:
         return 0;
     }
 
+    // CSprite.h:148-151.  The Dreamcast image carries out-of-line copies;
+    // the retail remote caller expands these in place.  Keep this proven
+    // view out of unrelated TUs until their include closures need it too.
+#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
+    int GetCroppedX(int seq, int frame) const
+    {
+        return s[seq]->f[frame]->GetCroppedX();
+    }
+    int GetCroppedY(int seq, int frame) const
+    {
+        return s[seq]->f[frame]->GetCroppedY();
+    }
+    int GetCroppedWidth(int seq, int frame) const
+    {
+        return s[seq]->f[frame]->GetCroppedWidth();
+    }
+    int GetCroppedHeight(int seq, int frame) const
+    {
+        return s[seq]->f[frame]->GetCroppedHeight();
+    }
+#endif
+
     palette* GetPalette();
     void ColorCycle(int begin, int end, int step);
     void SetPalette(const unsigned short* pal);
+    void SetPalette(TPalette16& pal);
+    void ResetPalette();
     void Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
               unsigned short* dst, int dx, int dy, int dw, int dh,
               int dpitch, unsigned char hflip, unsigned char tblit);
@@ -107,6 +142,17 @@ public:
                       int sh, unsigned short* dst, int dx, int dy, int dw,
                       int dh, int dpitch, unsigned char hflip,
                       unsigned short outcolor);
+    // CSprite.h:342 header wrapper (the DC compiler emits its own copy at
+    // 0x87394); retail expands the Bitmap16Bit forwarding in remote.
+#ifdef HOMM3_CSPRITE_CROP_ACCESSORS
+    void DrawCreature(int seqnum, int framenum, int sx, int sy, int sw,
+                      int sh, Bitmap16Bit* dst, int dx, int dy,
+                      unsigned char hflip, unsigned short outcolor)
+    {
+        DrawCreature(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                     dst->Width, dst->Height, dst->Pitch, hflip, outcolor);
+    }
+#endif
     void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
@@ -140,6 +186,15 @@ public:
         DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
                        dst->Width, dst->Height, dst->Pitch, hflip);
     }
+#ifdef HOMM3_CSPRITE_DRAW_METHODS
+    void DrawHeroAlpha(int seqnum, int framenum, int sx, int sy, int sw,
+                       int sh, unsigned short* dst, int dx, int dy, int dw,
+                       int dh, int dpitch, unsigned char hflip);
+    void DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw,
+                         int sh, unsigned short* dst, int dx, int dy, int dw,
+                         int dh, int dpitch, unsigned char hflip,
+                         unsigned char alpha);
+#endif
     void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
                           unsigned short* dst, int dx, int dy, int dw,
                           int dh, int dpitch, unsigned char hflip);
@@ -258,7 +313,7 @@ public:
 // CODEVIEW(E:\gamedcs\csprite.cpp:774, dc 0x73880) const char* CSprite::GetSequenceName(int type, int num);
 // CODEVIEW(E:\gamedcs\csprite.cpp:947, dc 0x73b10) void CSprite::SpriteDataDelete();
 // CODEVIEW(E:\gamedcs\csprite.cpp:998, dc 0x73bf4) void CSprite::SpriteDataReload();
-// CODEVIEW(E:\gamedcs\CSprite.h:259, dc 0x744e4) void CSprite::SetPalette(TPalette16* pal);
+// CODEVIEW(E:\gamedcs\CSprite.h:259, dc 0x744e4) void CSprite::SetPalette(TPalette16& pal);
 // CODEVIEW(E:\gamedcs\csprite.cpp:86, dc 0x74548) void* CSprite::`scalar deleting destructor'(unsigned __flags);
 
 // --- CSpriteFrame ---

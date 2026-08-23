@@ -236,7 +236,8 @@ public:
         ImageName;
     signed char width;
     signed char height;
-    char pad_12[2];
+    // +0x12..+0x13 is alignment before the first bitset.  Keep it implicit:
+    // retail's generated assignment skips these bytes.
     std::bitset<48> drawCells;
     // +0x1c, sliced out of the old pad: saveObjectType packs FOUR masks,
     // not three, and this is the second of them. DC name PassableMask; the
@@ -277,7 +278,10 @@ public:
     };
     int extra;
     unsigned char suppressDraw;
-    char pad_41[3];
+    // +0x41 remains implicit alignment, but retail's generated assignment
+    // explicitly copies a word at +0x42; the old pad_41[3] hid that real
+    // field and also made VC6 copy the otherwise-skipped +0x41 byte.
+    unsigned short field_42;
 };
 SIZE(CObjectType, 0x44);
 

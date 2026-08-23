@@ -42,6 +42,12 @@ DATA(0x00698a14) extern font* gpCalligraphicFont;
 // the troop-count box's number with it, which is the reader the note
 // above was waiting on.
 DATA(0x00698a04) extern font* gpTinyFont;
+#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+// The third cell of the same canonical font run.  CWaitForReadyPlayersDlg
+// passes it to CAnimatedDlg::Setup; scoped because adding declarations to
+// a shared header is a measured VC6 include-set trigger in this tree.
+DATA(0x00698a0c) extern font* gpMediumFont;
+#endif
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);

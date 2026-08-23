@@ -57,7 +57,7 @@ MIRROR = common.HOMM3_DIR / "build/gen/msvc-include"
 STAMP = MIRROR / ".mirror-stamp"
 
 #: Bumped whenever PATCHES changes, so an existing mirror regenerates.
-PATCH_VERSION = 1
+PATCH_VERSION = 2
 
 TARGET = "i686-pc-windows-msvc"
 MSC_VER = "1200"
@@ -102,6 +102,27 @@ def _vector_bool(text: str) -> str:
                         "\t\t\t: _Off(_X._Off), _Ptr(_X._Ptr) {}\n", "")
 
 
+def _sstream(text: str) -> str:
+    """VC6 repeats both default template arguments from <iosfwd> on the
+    four string-stream definitions, and finds ``in``/``out`` through their
+    dependent stream bases. Clang rejects the repeated defaults and does not
+    perform that legacy dependent-base lookup. Removing the defaults and
+    qualifying the same ios_base enumerators changes neither entity nor any
+    name mangled through it."""
+    text = text.replace(
+        "\tclass _Tr = char_traits<_E>,\n\tclass _A = allocator<_E> >",
+        "\tclass _Tr,\n\tclass _A >")
+    text = text.replace("openmode _M = in)",
+                        "openmode _M = ios_base::in)")
+    text = text.replace("_Sb(_M | in)", "_Sb(_M | ios_base::in)")
+    text = text.replace("openmode _M = out)",
+                        "openmode _M = ios_base::out)")
+    text = text.replace("_Sb(_M | out)", "_Sb(_M | ios_base::out)")
+    text = text.replace("openmode _W = in | out)",
+                        "openmode _W = ios_base::in | ios_base::out)")
+    return text
+
+
 def _qualify_ios_enumerators(names):
     """`flags() & unitbuf`, `_Bfl == oct`: <ios> gives ios_base both an
     ENUMERATOR and a same-named std:: manipulator function. cl's lookup
@@ -127,6 +148,7 @@ PATCHES = {
         ("unitbuf", "oct", "hex", "dec"))(_drop_redundant_traits_default(t)),
     "istream": lambda t: _qualify_ios_enumerators(
         ("skipws", "oct", "hex", "dec"))(_drop_redundant_traits_default(t)),
+    "sstream": _sstream,
 }
 
 

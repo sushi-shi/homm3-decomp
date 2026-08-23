@@ -144,7 +144,15 @@ TEMPLATE_ARGS_RE = re.compile(r"<[^<>]*>")
 TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*?@(\w+)@@")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
-                 "STATIC_CTOR", "SCALAR_DELETING_DTOR"}
+                 "STATIC_CTOR", "SCALAR_DELETING_DTOR",
+                 "VECTOR_DELETING_DTOR", "DEFAULT_CTOR_CLOSURE",
+                 "VECTOR_DTOR", "VECTOR_SIZE",
+                 "VECTOR_CAPACITY",
+                 "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_ERASE",
+                 "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
+                 "VECTOR_COPY_ASSIGN",
+                 "BITSET_TIDY", "STD_CONSTRUCT", "STD_COPY",
+                 "IMPLICIT_COPY_ASSIGN", "IMPLICIT_DTOR"}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -560,11 +568,68 @@ def _demangle_key(mangled: str):
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor. Assignment (??4) keys to the declarator scanner's stable
     `Class_Class_operator` spelling; other special operators return None."""
+    vector_element = re.search(
+        r"\?\$vector@(?:V|U|W4)?([A-Za-z_]\w*)@", mangled)
+    if mangled.startswith("??1?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_dtor"
+    if mangled.startswith("?size@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_size"
+    if mangled.startswith("?capacity@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_capacity"
+    if mangled.startswith("?resize@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_resize"
+    if mangled.startswith("?insert@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_insert"
+    if mangled.startswith("?erase@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_erase"
+    if mangled.startswith("?_Destroy@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_destroy"
+    if mangled.startswith("?_Ucopy@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_ucopy"
+    if mangled.startswith("?_Ufill@?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_ufill"
+    if mangled.startswith("??4?$vector@") and vector_element:
+        return f"{vector_element.group(1).lower()}@vector_copy_assign"
+    if mangled.startswith("?_Tidy@?$bitset@$09@"):
+        # VC6's compact template-number spelling `$09` is bitset<10>.
+        return "bitset10@bitset_tidy"
+    construct_owner = re.match(
+        r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
+    if construct_owner:
+        return f"{construct_owner.group(1).lower()}@std_construct"
+    copy_owner = re.match(
+        r"^\?copy@std@@YI(?:PA|PB)(?:V|U)([A-Za-z_]\w*)@", mangled)
+    if copy_owner:
+        return f"{copy_owner.group(1).lower()}@std_copy"
+    if mangled.startswith("?copy@std@@YIPAHPAH"):
+        return "int@std_copy"
+    if mangled.startswith("?copy@std@@YIPAHPBH"):
+        return "const_int@std_copy"
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
         cls = mangled[4:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_{cls}".lower() + "@gdtor"
+    if mangled.startswith("??_E"):
+        # vector deleting destructor - another real named COFF public,
+        # distinct from both ??_G and std::vector<T>::~vector.
+        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}_{cls}".lower() + "@vdtor"
+    if mangled.startswith("??_F"):
+        # MSVC's `default constructor closure'. The first admitted case is
+        # vector<CObjectType>; VA_COMPGEN's identifier-only owner names the
+        # element class, which is stable even though the full template type
+        # cannot be a macro argument without exposing its comma list.
+        if vector_element:
+            return f"{vector_element.group(1).lower()}@fctor"
+        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        return f"{cls.lower()}@fctor" if cls else None
+    if mangled.startswith("??_D"):
+        # MSVC's `vbase destructor' closure. Claim-only carcass rows use
+        # the compiler's own backtick spelling, which scan_file normalizes
+        # to Class__vbase_destructor.
+        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}__vbase_destructor".lower()
     if mangled.startswith("??0") or mangled.startswith("??1"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         key = f"{cls}_{cls}".lower()
@@ -743,7 +808,24 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                  if not r.get("ir_unconfirmed")
                  and (r["channel"] == "src-VA"
                       or (r["channel"] == "src-VA_COMPGEN"
-                          and "$scalar_deleting_dtor$" in r["name"]))]
+                          and ("$scalar_deleting_dtor$" in r["name"]
+                               or "$vector_deleting_dtor$" in r["name"]
+                               or "$default_ctor_closure$" in r["name"]
+                               or "$vector_dtor$" in r["name"]
+                               or "$vector_size$" in r["name"]
+                               or "$vector_capacity$" in r["name"]
+                               or "$vector_resize$" in r["name"]
+                               or "$vector_insert$" in r["name"]
+                               or "$vector_erase$" in r["name"]
+                               or "$vector_destroy$" in r["name"]
+                               or "$vector_ucopy$" in r["name"]
+                               or "$vector_ufill$" in r["name"]
+                               or "$vector_copy_assign$" in r["name"]
+                               or "$bitset_tidy$" in r["name"]
+                               or "$std_construct$" in r["name"]
+                               or "$std_copy$" in r["name"]
+                               or "$implicit_copy_assign$" in r["name"]
+                               or "$implicit_dtor$" in r["name"])))]
     if not unit_rows:
         return
     authority = {key: [(n, c) for n, c in group if n not in taken]
@@ -759,6 +841,75 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}_{owner}@gdtor",
                                   []).append(row)
+            continue
+        if "$vector_deleting_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}@vdtor",
+                                  []).append(row)
+            continue
+        if "$default_ctor_closure$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@fctor", []).append(row)
+            continue
+        if "$vector_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_dtor", []).append(row)
+            continue
+        if "$vector_size$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_size", []).append(row)
+            continue
+        if "$vector_capacity$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_capacity", []).append(row)
+            continue
+        if "$vector_resize$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_resize", []).append(row)
+            continue
+        if "$vector_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_insert", []).append(row)
+            continue
+        if "$vector_erase$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_erase", []).append(row)
+            continue
+        if "$vector_destroy$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_destroy", []).append(row)
+            continue
+        if "$vector_ucopy$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_ucopy", []).append(row)
+            continue
+        if "$vector_ufill$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_ufill", []).append(row)
+            continue
+        if "$vector_copy_assign$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@vector_copy_assign", []).append(row)
+            continue
+        if "$bitset_tidy$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@bitset_tidy", []).append(row)
+            continue
+        if "$std_construct$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@std_construct", []).append(row)
+            continue
+        if "$std_copy$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$implicit_copy_assign$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}_operator", []).append(row)
+            continue
+        if "$implicit_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}@dtor", []).append(row)
             continue
         key = row["name"].lower()
         if row["rva"] in dtor_rvas:
@@ -926,25 +1077,7 @@ SITE_KINDS = (("VA", "func"), ("VA_COMPGEN", "func"), ("DATA", "data"),
 #: whose site has gone is reported as stale, so the floor cannot quietly
 #: outlive its cause. It is code, not a config table, because a single
 #: entry's justification is prose that belongs beside the rule.
-HEADER_VA_FLOOR = {
-    0x0bbb60: (
-        "include/game.h - SaveAbstractString, the 0x4bbb60 /Gr string "
-        "WRITER twinned with loadString at 0x4bb990. The fix is known and "
-        "measured (2026-08-20): move the VA() onto a claim-only stub in "
-        "src/game.cpp's `#if 0 // @carcass` block, where 160 such stubs "
-        "already carry the retail functions this build does not define, and "
-        "the address takes the name SaveAbstractString from unit `game` "
-        "instead of the working label game_b9270_sub00_bbb60. It is not "
-        "made here because claiming an address also ENROLLS it: the synth "
-        "PDB puts it in module game, the delinker emits it into "
-        "game.c.obj, and `homm3 status` writes a new 0.00% row into "
-        "config/match_baseline.tsv (1809 -> 1810 rows, 73.08% -> 73.06% "
-        "fuzzy). That accounting is correct for an unreconstructed retail "
-        "function and matches every other carcass claim - but the baseline "
-        "is the matcher lanes' shared ratchet, so enrolling a function is a "
-        "MATCHER change, not an extraction one. Reconstruct the body (or "
-        "take the 0% row deliberately) and this entry goes away."),
-}
+HEADER_VA_FLOOR = {}
 
 
 def pooled_sites() -> dict:
@@ -1162,6 +1295,90 @@ def selftest() -> list[str]:
         failures.append("a comma inside a nested call split an argument")
     if _split_top_level('0x1, n, "a, b"') != ["0x1", "n", '"a, b"']:
         failures.append("a comma inside a string literal split an argument")
+
+    # Special-name joins used by claim-only compiler-generated rows. In
+    # particular, ??_D is MSVC's vbase destructor rather than an ordinary
+    # destructor (??1), so collapsing the two loses the ostrstream closure.
+    if _demangle_key("??_Dostrstream@std@@QAEXXZ") != \
+            "ostrstream__vbase_destructor":
+        failures.append("MSVC vbase destructor did not get its distinct key")
+    if _demangle_key("??_Gios_base@std@@UAEPAXI@Z") != \
+            "ios_base_ios_base@gdtor":
+        failures.append("MSVC scalar deleting destructor key regressed")
+    if _demangle_key("??_ENewmapCell@@QAEPAXI@Z") != \
+            "newmapcell_newmapcell@vdtor":
+        failures.append("MSVC vector deleting destructor key regressed")
+    if _demangle_key(
+            "??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@"
+            "@std@@QAEXXZ") != "cobjecttype@fctor":
+        failures.append("MSVC default constructor closure key regressed")
+    if _demangle_key(
+            "??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@"
+            "@std@@QAE@XZ") != "blackboxdata@vector_dtor":
+        failures.append("MSVC vector destructor key regressed")
+    if _demangle_key(
+            "?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@"
+            "@std@@QBEIXZ") != "cobjecttype@vector_size":
+        failures.append("MSVC vector size key regressed")
+    if _demangle_key(
+            "?resize@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@"
+            "@std@@QAEXIABVTSeerHut@@@Z") != "tseerhut@vector_resize":
+        failures.append("MSVC vector resize key regressed")
+    if _demangle_key(
+            "?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@"
+            "@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z") != \
+            "blackboxdata@vector_insert":
+        failures.append("MSVC vector insert key regressed")
+    if _demangle_key(
+            "?erase@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std"
+            "@@@std@@QAEPAVTQuestGuard@@PAV3@0@Z") != \
+            "tquestguard@vector_erase":
+        failures.append("MSVC vector erase key regressed")
+    if _demangle_key(
+            "?capacity@?$vector@USecondarySkillData@@V?$allocator@USecondarySkillData@@"
+            "@std@@@std@@QBEIXZ") != "secondaryskilldata@vector_capacity":
+        failures.append("MSVC vector capacity key regressed")
+    if _demangle_key("?_Tidy@?$bitset@$09@std@@AAEXK@Z") != \
+            "bitset10@bitset_tidy":
+        failures.append("MSVC bitset<10> _Tidy key regressed")
+    if _demangle_key(
+            "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
+            "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \
+            "ttimedevent@vector_destroy":
+        failures.append("MSVC vector _Destroy key regressed")
+    if _demangle_key(
+            "?_Ucopy@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@"
+            "@std@@IAEPAVTSeerHut@@PBV3@0PAV3@@Z") != \
+            "tseerhut@vector_ucopy":
+        failures.append("MSVC vector _Ucopy key regressed")
+    if _demangle_key(
+            "?_Ufill@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@"
+            "@std@@@std@@IAEXPAVTQuestGuard@@IABV3@@Z") != \
+            "tquestguard@vector_ufill":
+        failures.append("MSVC vector _Ufill key regressed")
+    if _demangle_key(
+            "??4?$vector@W4TArtifact@@V?$allocator@W4TArtifact@@@std@@@std"
+            "@@QAEAAV01@ABV01@@Z") != "tartifact@vector_copy_assign":
+        failures.append("MSVC vector copy-assignment key regressed")
+    if _demangle_key(
+            "?_Construct@std@@YIXPAVMonsterData@@ABV2@@Z") != \
+            "monsterdata@std_construct":
+        failures.append("MSVC std::_Construct key regressed")
+    if _demangle_key(
+            "?copy@std@@YIPAUtype_university@@PAU2@00@Z") != \
+            "type_university@std_copy":
+        failures.append("MSVC std::copy key regressed")
+    if _demangle_key("?copy@std@@YIPAHPAH00@Z") != "int@std_copy":
+        failures.append("MSVC std::copy<int> key regressed")
+    if _demangle_key("?copy@std@@YIPAHPBH0PAH@Z") != \
+            "const_int@std_copy":
+        failures.append("MSVC std::copy<const int> key regressed")
+    if _demangle_key("??4MonsterData@@QAEAAV0@ABV0@@Z") != \
+            "monsterdata_monsterdata_operator":
+        failures.append("MSVC implicit copy-assignment key regressed")
+    if _demangle_key("??1TreasureData@@QAE@XZ") != \
+            "treasuredata_treasuredata@dtor":
+        failures.append("MSVC implicit destructor key regressed")
 
     # 4. raw arguments must survive masking: two DIFFERENT literals of
     #    equal length mask to the same blanks, so a pooled-agreement

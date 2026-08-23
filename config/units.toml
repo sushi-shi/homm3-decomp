@@ -40,9 +40,10 @@ game_o2_ml_gr_windows = [
   "/GX",
   "/D_WINDOWS",
 ]
-# campaignbrief.obj's NewSMapHeader destructor contains std::_Lockit around
-# Dinkumware's shared map sentinel. /ML removes those calls; /MT reproduces
-# them while leaving the campaign-window destructor unchanged.
+# campaignbrief.obj's NewSMapHeader destructor and bottomviewsubwindow.obj's
+# strstreambuf constructor contain std::_Lockit scopes around Dinkumware
+# runtime state. /ML removes those calls; /MT reproduces both retail bodies
+# while leaving the campaign-window destructor unchanged.
 game_o2_mt_gr_windows = [
   "/nologo",
   "/c",
@@ -467,7 +468,7 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "bottomviewsubwindow"
 source = "src/bottomviewsubwindow.cpp"
-flags = "game_o2_ml_gr_windows"
+flags = "game_o2_mt_gr_windows"
 
 
 [[unit]]

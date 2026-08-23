@@ -1,10 +1,9 @@
 # generator: python3 -m homm3.vc6.genab run
-# date: 2026-08-20
+# date: 2026-08-22
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - regenerate, never hand-edit
 # sp3-c2: 12.00.8447 sha256 a0cc45f83fd0ed009aa4f43df5598105a1049ad9675de0b1089be7cce7d3c153 size 737329 (pinned toolchain)
 # rtm-c2: 12.00.8168.0 sha256 45187b0b6288240f73272a7c61e6329c50048a76e57db3bb87b6f0229e09e27d size 737329 (staged ../orig/vc6-rtm/C2.DLL)
 # metric: align = _align.distance (unpaired register-visible masked slots), flow = _flow.distance (branch-shape); verdict grades at align+flow==0 - REGISTER-VISIBLE+BRANCH-SHAPE, weaker than byte-exact (absolute addresses masked)
 # retail_producer: delinked = build/objdiff/target/<unit>.c.obj (same disassembler both sides); capstone = image producer (cross-producer skew inflates distances)
 fn	unit	rva	size	sp3_align	sp3_flow	rtm_align	rtm_flow	sp3_vs_rtm	retail_producer	verdict	note
-?Open@advManager@@UAEHH@Z	advmgr	0x6fd0	0x7d6	397	102	397	102	0	delinked	neither	RTM output identical to SP3 - not a generation wall
-?WindowHandler@THeroScreenWindow@@UAEHPAVmessage@@@Z	hero	0xdd2d0	0x143e	1089	327	1089	327	0	delinked	neither	RTM output identical to SP3 - not a generation wall
+@game_null_159510@12	resourcemanager	0x159510	0x4c1						delinked	neither	symbol not public in compiled obj

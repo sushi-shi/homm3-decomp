@@ -5,10 +5,18 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
+namespace std {
+template<class T1, class T2> struct pair;
+}
+
 class CSprite;
 class font;
 class resource;
+class sample;
+class TPalette24;
 class LODFile;
+struct TResourceLODSlot;
+extern TResourceLODSlot gResourceLODSlots[];
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -16,12 +24,50 @@ class LODFile;
 // under /Gr; called by the button ctors).
 class Bitmap816;
 class Bitmap16Bit;
+class TPalette16;
 class TSpreadsheetResource;
 class TTextResource;
 
+// The four state-selected rows at retail 0x69e538 contain three
+// (count, LOD-index-list) pairs. The first serves sprites, the second
+// bitmaps, and the final pair remains byte-proven but semantically unnamed.
+struct TResourceArchiveList {
+    int count;
+    int* indices;
+};
+
+struct TResourceArchiveContext {
+    TResourceArchiveList sprites;
+    TResourceArchiveList bitmaps;
+    TResourceArchiveList sounds;
+};
+SIZE(TResourceArchiveContext, 0x18);
+
+// Dreamcast CodeView's function-local GetBitmap16 record (type 0x289c),
+// independently byte-proven by retail's three archive-header reads.
+struct TBitmapResourceHeader {
+    int DataSize;
+    int Width;
+    int Height;
+};
+SIZE(TBitmapResourceHeader, 0x0c);
+
+extern int* gpVideoGameState;
+extern TResourceArchiveContext gResourceArchiveContexts[4];
+
 namespace ResourceManager {
+void RemapGraphics();
+void SaturateGraphics();
+// Complete adds an error-code output to Dreamcast's two-boolean form. The
+// sole retail caller passes an int*, and the catch handler stores through it.
+bool Open(bool openSprites, bool openBitmaps, int* errorCode);
+void Close();
+void SetPath(const char* path);
+void SetPixelFormat(unsigned long redMask, unsigned long greenMask,
+                    unsigned long blueMask);             // 0x55a6b0
 CSprite* GetSprite(const char* name);
 font* GetFont(const char* name);
+sample* GetSample(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* GetBitmap816(const char* name);
 // Retail body 0x55afd0, the 16-bit twin: same 12-byte strncpy cache-key
@@ -29,6 +75,7 @@ Bitmap816* GetBitmap816(const char* name);
 // fastcall argument where DC's form carries a second `ignore_cache`
 // byte - so retail's is the single-argument overload.
 Bitmap16Bit* GetBitmap16(const char* name);
+void GetBackdrop(const char* resName, Bitmap16Bit* destBmap);
 // Retail body 0x55bdd0 (campaignmap's camptext.txt loader).
 TTextResource* GetText(const char* name);
 // Retail body 0x55c0a0 (monframeinfo's cranim.txt parser calls it).
@@ -52,6 +99,7 @@ void AddToCache(resource* value);
 // ReadFromSpriteResource exactly four times, and retail's readObjectType
 // calls this twice and the reader below four times.
 LODFile* PointToSpriteResource(const char* name);
+LODFile* PointToBitmapResource(const char* name);
 // Retail body 0x55d0d0, SEVENTEEN bytes - it passes ecx straight through
 // as LODFile::read's `this` and forwards the other two arguments.
 //
@@ -63,12 +111,16 @@ LODFile* PointToSpriteResource(const char* name);
 // names describe one retail function. The tree's already-admitted label
 // for the address is kept rather than re-titled from this lane.
 int ReadFromBitmapResource(LODFile* resource, void* data, int numBytes);
+// Retail 0x55d070 walks the active context's bitmap LOD list until
+// getItemIndex finds the named entry, then returns that entry's +0x14 size.
+int GetBitmapResourceSize(const char* name);
 
 // PROVEN retail cache ABI used by AddToCache/GetSpreadsheet. The global map
 // starts at 0x69e528; head is +4. A node holds its 13-byte key at +0xc and
 // resource pointer at +0x1c.
 struct TCacheMapKey {
     char name[13];
+    TCacheMapKey() {}
     TCacheMapKey(const char* value);
 };
 
@@ -76,6 +128,9 @@ struct TCacheValue {
     TCacheMapKey first;
     resource* second;
     TCacheValue(resource* value);
+    TCacheValue(const std::pair<const char*, resource*>& value);
+    TCacheValue(const std::pair<const char*, resource*>& value,
+                bool pinNestedInline);
 };
 
 struct TCacheNode {
@@ -87,11 +142,18 @@ struct TCacheNode {
 
 struct TCacheIterator {
     TCacheNode* node;
+
+    TCacheIterator& operator++();
+    bool operator!=(const TCacheIterator& other) const;
 };
+
+struct TCacheTreeInsertResult;
 
 struct TCacheInsertResult {
     TCacheIterator first;
     unsigned char second;
+
+    TCacheInsertResult(const TCacheTreeInsertResult& other);
 };
 
 class TCacheMap {
@@ -104,10 +166,38 @@ public:
     unsigned char pad_09[3];
     unsigned int size;
 
+    // These model the two compiler-visible layers collapsed into this proven
+    // 16-byte facade: the out-of-line tree lookup used by earlier getters,
+    // and the same lookup body exposed for C1 to inline in resource::Dispose.
     TCacheIterator find(const TCacheMapKey& key);
-    TCacheInsertResult insert(const TCacheValue& value);
+    TCacheIterator find_tree(const TCacheMapKey& key);
+    TCacheIterator find_inline(const TCacheMapKey& key);
+    TCacheIterator begin();
+    TCacheIterator end_inline() const;
+    TCacheNode* lower_bound(const TCacheMapKey& key);
+    TCacheIterator* lower_bound_iterator(TCacheIterator* result,
+                                         const TCacheMapKey& key);
+    TCacheTreeInsertResult insert(const TCacheValue& value);
+    TCacheInsertResult insert_wrapper(const TCacheValue& value);
+    TCacheIterator erase(TCacheIterator position);
+    TCacheIterator erase(TCacheIterator first, TCacheIterator last);
 };
 }
+
+// Bootstrap name for Complete's large common missing-resource reporter at
+// retail 0x559510. Its fastcall ABI is proven by all thirteen getter call
+// sites and its body is reconstructed; no PC symbol source survives, so the
+// linkage name remains explicitly provisional.
+extern "C" void __fastcall game_null_159510(const char* caller,
+                                             int resourceType,
+                                             const char* resourceName);
+
+// Complete's sprite-family counterpart to game_null_159510. GetSprite's two
+// retail call sites prove the same fastcall surface; the PC symbol name is
+// provisional because this helper has no Dreamcast identity.
+extern "C" void __fastcall game_sprite_1599e0(const char* caller,
+                                               int resourceType,
+                                               const char* resourceName);
 
 // --- Bitmap16Bit ---
 // CODEVIEW(E:\gamedcs\Bitmap16.h:142, dc 0x122b8c) void Bitmap16Bit::SetPixelFormat(unsigned red, unsigned green, unsigned blue);

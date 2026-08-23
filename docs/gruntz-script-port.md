@@ -260,6 +260,445 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-23 — `CSpriteFrame::DrawCreatureImpl` is semantically closed at a
+  bounded 93.77% C1 scheduling wall, retiring its DC-only view.** With alpha
+  zero, retail dispatches raw/tile encodings to `DrawTile` and encoding 3 to
+  `DrawAdvObjImpl`; the general path otherwise clips and decodes the same
+  dword-offset scanlines as `Draw`. Literal runs either install palette pixels
+  or half-blend them with the destination. Encoded runs darken existing pixels
+  by one half or by one quarter plus one half, skip unsupported codes, or
+  install the requested outline color for codes 5--7. Both forward and
+  horizontally reversed paths are reconstructed. Moving each run counter into
+  its switch case raised the renderer from 81.42% to 92.47%; promoted color
+  temporaries in the four half-shade cases give the 93.77% wall. Block-scoping
+  the line-offset table recovers the displaced setup-block sizes but scores
+  93.58%; direct half-shade expressions restore reverse default-tail merging
+  but score 92.47%; explicit 32-bit alpha temporaries score 88.55%; and
+  mask-first expressions are byte-flat. `why-reg --model --il-order` finds the
+  same first callee-saved definitions on both sides (EDI=sw, ESI=sx, EBX=sh),
+  classifying the residual as later C1 handle state rather than a
+  source-nameable ordering edit. The admitted inventory is now 1818/2207 exact.
+
+- **2026-08-23 — `CSpriteFrame::Draw` is semantically closed at a bounded
+  94.35% C1 scheduling wall, retiring its final DC-only view.** Retail selects
+  the tile renderer for raw/tile encodings and the adventure-object renderer
+  for encoding 3, then clips and decodes encoding-1 scanlines from a dword
+  offset table. Each run is `(code,count-minus-one)`; the TU-installed 255
+  marker selects literal palette indices, other codes are repeated colors,
+  and transparent blit skips repeated runs. Forward and horizontally reversed
+  output paths are byte-semantically symmetric. The reconstruction has the
+  exact 44-branch/four-return sequence and all 88 retail CFG blocks. A single
+  reused clipping scratch recovers retail's clip schedule, `for` scanlines
+  plus `do/while` runs recover its control flow, and declaring the output
+  cursor before decoder state recovers the EDI/homed-skipped allocation.
+  Dreamcast CodeView independently proves the sole named local is `const
+  unsigned int* aLineOffset`; placing it before the guarded literal-run static
+  gives the best score. Entry-, post-static-, post-Clip-, block-scope and
+  shared-map variants are flat or worse. `why-reg --model --il-order` finds
+  identical first callee-saved definitions (EDI=sw, EBX=sx, ESI=dx), bounding
+  the five remaining size-only blocks to later C1 handle state rather than a
+  source-nameable creation-order edit. The admitted inventory is now
+  1818/2206 exact with this additional bounded claim.
+
+- **2026-08-23 — fourteen adjacent `CSprite` draw adapters are exact.** The
+  retail bodies select a `CSpriteFrame` through the sequence/frame arrays and
+  forward the crop, destination and palette arguments to the specialized
+  frame renderer. `DrawCreature` calls `DrawCreatureImpl` with alpha zero;
+  `DrawAdvObj` and `DrawHero` call `DrawAdvObjImpl` with flag color zero; and
+  `DrawHeroAlpha` calls `DrawAdvObjWithFlagAlpha` with flag color zero. The
+  pointer adapter supplies the complete frame dimensions, while the interface
+  adapter supplies transparent-blit one. The shroud adapter makes paired tile
+  and tile-shadow calls on one selected frame; declaring its palette alias
+  before the frame alias reproduces retail's ESI/EDI assignment exactly. The
+  other tile, shadow, hero, spell-effect and flag-color paths are direct
+  forwarders. All fourteen close without walls, advancing the inventory from
+  1804/2191 to 1818/2205 exact functions at 96.75% fuzzy.
+
+- **2026-08-23 — ten adjacent CSprite/CSpriteFrame ownership and construction
+  rows are exact.** `ResourceManager::GetSprite` proves the retail calls and
+  overloads for the 280-byte `CSprite` constructor, `AllocateSeq`, the
+  frame-pointer `AddFrame`, and both importing `CSpriteFrame` constructors.
+  The `CSprite` constructor reproduces the complete inlined sixteen-entry
+  resource-type switch: creatures allocate 22 sequences, heroes 18, combat
+  heroes 5, the single-sequence sprite families 1, and the remaining explicit
+  domain 0. Keeping all zero-valued 65/72/74..79 arms is significant—without
+  them C1 shortens or compresses the jump table. Member-initializer spelling
+  places the derived vptr store after the six initial field stores and closes
+  the last constructor bytes. `AllocateSeq` and `AddFrame` then reduce exactly
+  to `CSequence` construction and forwarding. The compact and cropped frame
+  constructors are exact on their first scored forms: both create a type-64
+  resource, use `csize ? csize : cropped-area` for `DataSize`, allocate/copy
+  the encoded payload, and install the byte-proven dimensions, crop rectangle,
+  pitch and encoding fields. The same pass closes `CSprite`'s generated scalar
+  deleting destructor, ordinary destructor, `SetPalette(const unsigned
+  short*)`, and `ResetPalette`. Destruction releases every live sequence,
+  both sequence arrays and both virtual palette resources before the resource
+  base. Reset reconstructs 24- and 16-bit stack palettes and installs a heap
+  copy. Dreamcast's decoration for the header helper is `AAVTPalette16`, a
+  reference—not the stale pointer rendering in the generated game tree;
+  restoring `SetPalette(TPalette16&)` and passing the constructor temporary
+  retains its returned `this` in EDI exactly as retail does. The batch advances
+  the inventory from 1794/2181 to 1804/2191 exact functions, at 96.75% fuzzy.
+
+- **2026-08-22 — the retail ResourceManager archive/cache/sound/sprite tranche
+  is reconstructed: thirty-one exact rows and eleven bounded walls.** Cross-build
+  names are admitted only after the PC bytes prove the ABI and data layout.
+  The archive pool consists of eight 0x190-byte interleaved slots: an archive
+  pathname at 0x69d870 plus the 0x18c-byte `LODFile` subobject at +4. Four
+  active-context rows at 0x69e538 each contain three
+  `(count,index-list)` pairs. That model makes the sprite and bitmap
+  `PointTo*Resource` walkers exact at five blocks / 131 bytes each. The
+  17-byte shared reader is exact as well: it receives its `LODFile *` in ECX,
+  preserves the destination in EDX, pushes the byte count, and calls
+  `LODFile::read`. `GetBackdrop` is exact across all three blocks, including
+  its `Bitmap816::Draw`, virtual `Dispose`, resource-type 16 and common
+  missing-resource reporter call. `GetBitmapResourceSize` has the exact
+  three-block flow and 30 of 31 instructions; retail alone retains a dead
+  context-address `lea`. Pointer, reference and inline-accessor spellings
+  remove it, a by-value spelling emits a real 24-byte copy, and both why-reg
+  paths reject a binding explanation, bounding the 96.77% residual to C1
+  dead-address materialization. `resource::Dispose` is exact at all 11 blocks
+  / 161 bytes: it decrements a live reference, constructs the 13-byte cache
+  key, follows Dinkumware's inlined lower-bound/find path, erases the hit, and
+  invokes virtual deletion with flag 1. The out-of-line 32-byte cache-key
+  constructor, `Close`, `SetPath`, and `SetPixelFormat` are also exact.
+  Complete's 753-byte `Open` extends Dreamcast's two-`bool` signature with an
+  `int*` error output proved by its sole caller and outer catch handler. It
+  walks the active sprite and bitmap archive lists, opens each interleaved
+  slot's pathname, throws the retail 0/1 error classes, and retains the shipped
+  oddity of reserving an eight-index rollback vector without appending to it.
+  Its seven-state/two-try EH map, 36-block count, sixteen branches and three
+  returns agree. The 74.6250% residual is one positional STL boundary: retail
+  expands `reserve`'s `_Ucopy` but calls `pop_back`'s `_Destroy`; SP3 makes the
+  opposite choices, shifting one frame slot and downstream registers. A
+  zero-through-eight inert-site ladder, the branch/register solvers and an RTM
+  C2 A/B exhausted the known levers; RTM is byte-identical to SP3.
+  CodeView's `char[261]` type supplies SetPath's otherwise-hidden four bytes
+  of frame padding; SetPixelFormat matches all 22 blocks, including the three
+  destructive mask scans; and Close matches its iterator deletion, range
+  erase, and eight-file clear loop. Four newly claimed public cache getters
+  (`GetBitmap16`, `GetPalette`, `GetFont`, and `GetText`) reproduce the same
+  six-block / 138-byte family as `GetSpreadsheet`. Restoring Dinkumware's real
+  `std::pair<const char*,resource*>` conversion in `AddToCache` closes that
+  helper and all five getters exactly; this was the source model behind their
+  previously shared fourteen-slot insertion schedule. Keeping the
+  archive bodies and inline find surface late in the TU avoids perturbing
+  earlier C1-sensitive functions. `RemapGraphics` and `SaturateGraphics` add
+  two more exact rows (485 and 545 bytes): their 81-byte switch tables prove
+  the dispatched retail resource types, and their scoped Dinkumware
+  `auto_ptr` temporaries reproduce both exception states and virtual cleanup.
+  Dreamcast's `TPalette24* CSprite::p24` field is independently confirmed by
+  retail's palette-header offset, while the attested `Bitmap16Bit*` Draw
+  forwarding overload supplies the otherwise-hidden C1 inlining boundary
+  needed for the exact blit register schedule. The 576-byte `LoadText` and
+  `LoadSpreadsheet` twins are exact as well, along with their stdio/LOD Read
+  adapters and both implicit scalar deleting destructors. Retail's LOD Read
+  convention returns the requested size when `LODFile::read` reports zero;
+  its extra `not` fixes that ABI. The loaders' last cleanup-order detail comes
+  from the header-inline empty `TAbstractFile` virtual destructor: C1 erases
+  its dead stack-vptr reset, while the generated deleting destructors retain
+  the real base-destructor call. An inner buffer scope then places `delete[]`
+  before `fclose` on the ordinary-file path, matching all 21 blocks. The two
+  font-loader rows are now admitted as bounded walls. The 361-byte stream
+  helper is at 86.7419% with the exact header/payload reads, font construction,
+  palette cache/refcount path, `SetPalette`, and virtual `Dispose` semantics.
+  Retail proves a pointer-only unwind guard here, distinct from Dreamcast's
+  independently attested 8-byte `TResourcePtr`; the provisional
+  `TScopedResourcePtr` records that PC-only shape without corrupting the
+  canonical cross-build type. why-reg confirms that every first register
+  definition agrees and bounds the residual to the later 15-vs-17-block cache
+  CFG/homing choice. The 553-byte file/archive wrapper reaches 95.6292%; its
+  two archive searches and fallback/error behavior agree, while the remaining
+  dominant difference is the established VC6 midpoint where retail inlines a
+  string temporary's destructor but leaves `_Tidy(true)` out of line. No
+  `inline_depth` value expresses that boundary; depth zero, retained here,
+  is the best measured form. `GetPalette24` adds the same bounded class at
+  94.7045%: Dreamcast and the HD masked identity fix its public name, while
+  retail proves the 24-byte header, 256-`TRGBA` payload, ordinary/archive
+  adapters, `default.pal` fallback, resource-type 96 reporter calls, and the
+  global saturation transform. Candidate and target each contain 220 body
+  instructions; the residual is the same string teardown boundary followed
+  by an EBX/EDI C1 allocation permutation. why-reg's only legal declaration-
+  order proposal worsens the distance, and branch-local read buffers double
+  the frame rather than recovering retail's slot coloring. `LoadPalette` is
+  bounded at 95.6920% with the same complete file/archive and fallback
+  behavior, plus the proven six-global pixel-format conversion tuple. An
+  explicit file/archive `else` lets C1 reuse one `TPalette24` slot and recovers
+  retail's exact 0x758-byte frame; an inner ordinary-path scope also places
+  its destructor before `fclose`. The remaining 22-vs-24-block split is the
+  shared string `_Tidy` midpoint and an ESI/EDI front-end-state permutation;
+  why-reg's only legal declaration reorder worsens its distance 67 -> 75.
+  The adjacent 904-byte `LoadBitmap16` body is exact across all 39 blocks:
+  file and archive sources converge through a temporary `Bitmap24Bit`, its
+  12-byte `{DataSize,Width,Height}` header and both ownership guards reproduce
+  retail cleanup, and the resulting 24-to-16 draw agrees instruction for
+  instruction. `inline_depth(1)` reaches the string `_Tidy` midpoint here;
+  restoring Dreamcast's header-inline `GetWidth`/`GetHeight` accessors then
+  fixes the final argument-register order. The 1,055-byte `GetBitmap816` is
+  now reconstructed end to end: cache lookup, ordinary-file constructor,
+  active-LOD and `default.pcx` fallback walks, 12-byte header, owned pixel
+  data, 24-to-16 palette conversion, saturation, both cache insertion forms,
+  cleanup and reference accounting. Separating its ordinary-file return from
+  the archive tail raises it to 94.4307%; the residual 32-vs-34-block split
+  is the same positional string boundary (retail inlines `c_str` but calls
+  `_Tidy(true)`) and its resulting 20-byte frame/slot-coloring displacement.
+  why-branch found every archive-loop rewrite flat or worse, why-reg found no
+  viable creation-order edit, and RTM C2 emits the SP3 object exactly. Its
+  newly claimed 44-byte public map-insert wrapper is independently bounded at
+  99.7222%: every byte but the returned success-flag load width agrees, and
+  volatile/transport spellings only add instructions. The public `GetSample`
+  getter then closes exactly through the adjacent 0x55c3c0 loader, and
+  retail's two byte-identical 86-byte cache-find layers are exact after
+  keeping both out of C1 auto-inlining. Finally, `CSprite::Dispose` is exact
+  across all 25 blocks / 280 bytes: it releases every live sequence frame and
+  then reproduces the inlined base cache removal. Its retained 23-byte
+  lower-bound facade is exact as well; expressing the aggregate-return ABI as
+  its explicit result pointer preserves the two live caller iterator slots,
+  and copying the selected iterator value recovers retail's final register
+  flow. The Complete-only sound path then adds exact `GetSoundFile` and
+  `LoadSample` bodies. The former is exact across 41 blocks / 655 bytes and
+  proves the three active sound-header descriptors, 48-byte header records,
+  extension-free case-insensitive lookup, scalar `auto_ptr` transfer, and
+  positioned Win32 reads. The latter is exact across 25 blocks / 854 bytes:
+  it probes a temporary resource-path string, reads an ordinary file as one
+  `size`-byte item with catch/rethrow cleanup, falls back through the sound
+  archives and `default.wav`, emits both diagnostics, and constructs the
+  sample with retail's 0/127/1 tuple. The adjacent virtual
+  `sample::GetSize` is exact as well. The newly claimed common missing-resource
+  reporter is semantically closed but bounded at 77.39%: its twelve named
+  resource cases, `0x` hexadecimal default, seven-part message and MessageBox
+  call agree; retail expands four late string assignments while this C1
+  expands one. Direct `operator=`/`assign`, explicit length, force-inline and
+  depth probes do not express that boundary, and why-reg identifies the
+  remaining register order as non-source-nameable C1 handle state. Complete
+  also adds its sprite-family twin at 0x5599e0. That 1,096-byte
+  reporter has the same fastcall ABI and message construction, plus all eleven
+  named sprite cases and the hexadecimal default. It is bounded at 70.5441%:
+  why-reg sees 298 later string-expression slots processed in a different
+  order despite identical first register definitions, and depth/declaration
+  probes either stay flat or perturb already-exact later rows. Finally,
+  `GetSprite` is reconstructed end to end at 88.86%. Its cache lookup, two
+  active-archive walks, 0x310-byte DEF header, sequence/name/offset copies,
+  compact and cropped frame paths, frame cache insertion, palette conversion
+  and final sprite insertion all agree semantically; its 45 branches and three
+  returns are exact. The surviving 73-vs-72-block split is one inner-loop ESI
+  reload followed by an ESI/EDI/EBX allocation permutation. A prechecked
+  `do/while` recovers retail's frame-index/name-offset initialization order;
+  register, volatile, declaration and loop-form probes cannot recover the
+  later C1 handle state, and why-reg finds no first-definition permutation to
+  move. This work advances the inventory from 1762/2140 to 1794/2181 exact
+  functions, at 96.74% fuzzy.
+
+- **2026-08-22 — the PC quest factory and its implicit destructor family are
+  exact: eight newly claimed rows, no explicit destructor definitions.**
+  Retail 0x573240 is the nine-arm `create_quest` factory: the subtract-one
+  jump table, allocation sizes, vtables and payload stores independently map
+  h3m quest types 1..9 onto the nine derived classes. Its common 95-byte
+  callee at 0x56cb80 is `type_quest::type_quest(unsigned char)`; three empty
+  strings precede the body assignments, which select the text table, choose
+  `rand()%3`, and set the last base dword to -1. The frameless factory proves
+  the TU's nothrow `operator delete` contract, while `auto_inline(off)` on the
+  base constructor reproduces retail's nine calls. The nested monster-field
+  assignment fixes the last scheduling slot and makes all 23 factory blocks,
+  including the jump table, exact. Crucially, those constructor calls make
+  VC6 emit the derived virtual destructor symbols naturally. Claim-only
+  annotations then bind the ICF-shared simple-leaf body/wrapper and the
+  distinct artifact- and creature-vector wrapper/body pairs: all six are
+  byte-exact without declaring or defining a derived destructor. The batch
+  advances the compiled inventory from 1754/2132 to 1762/2140 exact, at
+  96.83% fuzzy.
+
+- **2026-08-22 — the last unclaimed ai_player row is closed at a 99.90%
+  encoding wall.** Retail 0x429d50 is `fill_prohibited_array`: end_turn's
+  unique caller supplies its 145-byte result, the body starts from seven turns
+  of `turnProductionResource`, subtracts dwelling growth costs, and Complete's
+  two Easy-only phases cap computer-only teams below the strongest projected
+  human dwelling value. Dreamcast CodeView supplies the exact top locals
+  (`human_strength`, `income[7]`, `short i`, `resources[7]`) and the adjacent
+  `sum_player_dwellings` helper; VC6 inlines that helper twice in retail. The
+  reconstruction has the exact 76-block CFG and differs only at three
+  commutative SIB base/index encodings. A reversed-subscript probe was
+  byte-flat, bounding the residual to post-RA address encoding rather than
+  game behavior. This claims the final 1,017-byte in-span ai_player row: the
+  inventory is 1754/2132 exact, with this function retained as the sixth
+  bounded wall in the cluster. The temporary
+  `HOMM3_AI_PLAYER_CREATURE_LEVEL_VIEW` used during reconstruction is now
+  retired as well: `TOWN_DWELLING_COUNT - 1` names the same zero-based top
+  tier, keeps the three-instruction encoding residual unchanged, and leaves
+  town.obj at its prior score without widening `TCreatureTypeTraits`.
+
+- **2026-08-22 — the ai_player garrison/purchaser cluster is identified end
+  to end: 9 exact bodies and 5 bounded compiler walls.** The retail vtable
+  resolves 0x428580 as `type_garrison_purchaser::mark_town`; its artifact
+  query and army call expose Complete's purchaser extension as two distinct
+  bytes (`allow_trade` plus `has_angelic_alliance`). Retail then proves the
+  swapper's ten-byte alignment census, with only the surrounding ABI gaps
+  left implicit, and the Complete elemental/Angelic-Alliance grouping rules.
+  Exact bodies are garrison `mark_town`, `type_creature_source`'s constructor,
+  the swapper constructor, `get_alignments`, `add_creatures`, the town
+  purchaser constructor, `set(town*)`, and `AI_consolidate_army`. The ninth is
+  the already-emitted 38-byte implicit purchaser destructor: an
+  `IMPLICIT_DTOR` claim binds VC6's existing named COFF public without adding
+  any destructor declaration or definition to C++. The five
+  semantically closed residuals are `choose_weakest_army` 88.34% (41/42
+  blocks, 135/140 instructions), `value_of_adding_army` 89.09% (67/68,
+  287/292), `do_best_purchase` 97.27% (217/219 instructions), `do_purchase`
+  97.53% (exact 90-instruction multiset/CFG), and `get_purchase_value` 97.33%
+  (all 13 blocks and all 86 instructions). Their in-tree notes record the
+  exhausted `why-reg`, volatile, declaration, expression, call-form and
+  direct-loop probes; the remaining differences are VC6 register allocation,
+  stack coloring or post-RA scheduling rather than missing game behavior.
+  The batch advances the ratchetable inventory from 1745/2117 to 1754/2131
+  exact (82.3%, 96.82% fuzzy).
+
+- **2026-08-22 — implicit special members stay implicit; claim-only compiler
+  output requires an already-emitted VC6 symbol.** Explicit derived
+  destructors used as emission probes were removed: although they can force
+  VC6 to produce similar bodies, they change the source model and therefore
+  are not admissible matches. `VA_COMPGEN` instead gained
+  `DEFAULT_CTOR_CLOSURE` for the 24-byte
+  `std::vector<CObjectType>::`default constructor closure' already emitted
+  by `NewfullMap`'s member construction in `mapcell.obj`; the claim pairs it
+  at 100% without a C++ definition. Like `SCALAR_DELETING_DTOR`, this is a
+  named COFF symbol joined directly against the base object, so both kinds
+  bypass the anonymous compiler-function canonicalizer. The same rule admits
+  the contiguous retail COMDAT run containing four already-emitted vector
+  destructors (`CObjectType`, `TreasureData`, `MonsterData`, `BlackBoxData`)
+  and `vector<CObjectType>::size` through `VECTOR_DTOR` / `VECTOR_SIZE`; all
+  five pair at 100% without source definitions. The same inventory sweep
+  then admitted another eleven exact named COMDATs: `TSeerHut::resize`, two
+  vector sizes, two event-vector destructors, five vector insert/erase
+  members, and `bitset<10>::_Tidy`. The source join selftest carries the real
+  mangled-name regression checks, and `homm3 delink` plus the fast build
+  validate the end-to-end path. A following seven-helper batch added six
+  more exact `_Destroy` / `_Ucopy` / `_Ufill` rows. The seventh,
+  `vector<TTownEvent>::erase`, is a documented 53.87% nested-inliner wall:
+  retail expands the implicit base assignment where this VC6 context calls
+  it, and an inline-depth probe was byte-flat. COFF section order then proved
+  the owners of two otherwise folded 16-byte-record COMDATs
+  (`HeroPlaceholderData::erase`, `RandomDwellingData::insert`); those and the
+  stride-unique `generator::erase` add three more exact rows. The next six
+  claim-only rows are exact as well: `generator::insert`, `std::copy<int>`,
+  `std::copy<type_university>`, and three `std::_Construct` instantiations
+  (`MonsterData`, `TSeerHut`, `TQuestGuard`). The 37-byte `copy<int>` body is
+  also the `/OPT:ICF` destination used by `copy<pathCell **>` call sites;
+  `mapcell.obj`'s COFF section order identifies `copy<int>` as the primary
+  owner, immediately before the event/university copy instantiations. The
+  full batch left the ratcheted inventory at 1731/2085 exact functions. A
+  second six-row identity sweep then exposed why layout-only padding must
+  also remain implicit: explicit pad members made VC6 copy bytes retail
+  skips. Removing the byte-proven alignment/tail members from `TTimedEvent`,
+  `TTownEvent`, `TreasureData`, `BlackBoxData`, and `type_creature_bank`
+  preserved every offset and class size while closing five helpers:
+  `copy<type_creature_bank>` and `_Construct` for `TreasureData`,
+  `BlackBoxData`, `TTimedEvent`, and `TTownEvent`. `copy<TTimedEvent>` remains
+  a documented 96.50% CSE wall with an identical 36-block CFG: retail hoists
+  and reuses `string::npos`, while this instantiation folds its first use to
+  -1 and reloads it later. That batch reached 1736/2091 exact. A claim-only
+  `IMPLICIT_COPY_ASSIGN` kind then admitted five named `??4` symbols without
+  defining any operator in C++. Making `TScenarioTown`'s four alignment gaps
+  implicit closed `_Construct<TScenarioTown>` and raised its assignment from
+  56.57% to 96.71%. Its assignment and those for `MonsterData`,
+  `BlackBoxData`, `TTimedEvent`, and `TTownEvent` retain identical CFGs but
+  the same `string::npos` hoist/constant-fold choice; their five residuals
+  are documented together at the claims. A final three-body sweep added the
+  already-emitted `vector<TArtifact>::operator=`,
+  `vector<SecondarySkillData>::capacity`, and
+  `std::copy<SecondarySkillData>` symbols. Retail bytes corrected two initial
+  hypotheses here: the pointer span in the 19-byte member reaches the
+  end-of-storage field, proving `capacity` rather than `size`, while the
+  43-byte copy loop receives its first two arguments in ECX/EDX and pops only
+  the result argument, proving the global fastcall `std::copy` rather than
+  the member `_Ucopy`. All three are exact after correcting their identities;
+  the inventory reached 1740/2100 exact. The following vector-clear sweep
+  admitted five more genuine emitted bodies. Retail element strides and the
+  adjacent `NewfullMap::Load` member accesses prove `CObjectType::erase`,
+  `TreasureData::{insert,erase}`, `MonsterData::erase`, and
+  `BlackBoxData::erase`. Removing `CObjectType`'s named alignment bytes raised
+  its erase helper from 49.09% to 91.19%; retail also proved that the old
+  three-byte tail actually contains an aligned 16-bit field at +0x42, with
+  only +0x41 implicit. The four erase residuals now have identical CFGs and
+  only the established `string::npos` fold/hoist register fallout.
+  `TreasureData::insert` remains 84.00% (49 vs 48 blocks); `why-branch`
+  classifies its extra return as VC6 exit-merge/jump-threading topology in an
+  already-generated pristine-vendor specialization. All five are documented
+  compiler walls, leaving the inventory at 1740/2105 exact. The next five
+  call-site/stride-proven vector bodies produced one exact match,
+  `vector<TTownEvent>::insert`. `MonsterData::insert`, timed-event
+  insert/erase, and `TScenarioTown::erase` retain the same CFGs as retail
+  (52, 50, 10, and 9 blocks respectively); their residuals are confined to
+  the same npos CSE and consequent register/stack-slot allocation. They are
+  documented at their claims, taking the inventory to 1741/2110 exact. The
+  same doctrine then admitted the 62-byte one-string
+  `TreasureData::~TreasureData` body through a direct-symbol
+  `IMPLICIT_DTOR` claim. The C++ destructor remains implicit;
+  `mapcell.obj` already emits its real `??1TreasureData` public first among
+  the byte-identical destructors folded to the retail address. The joined
+  body is exact, raising the inventory to 1742/2111. The adjacent 88-byte
+  `??_ENewmapCell` body received the same treatment through a direct-symbol
+  `VECTOR_DELETING_DTOR` claim: retail and base agree on the flags, array
+  cookie, vector-destructor iterator, and both conditional delete paths.
+  It too is exact without defining a special member, for 1743/2112. The
+  first remaining retail-only mapcell game body was then decoded from its
+  `NewfullMap::Load` call site: 0x4fd950 reads a 16-bit quest-guard count,
+  resizes the five-byte `TQuestGuard` vector, loads each row, and appends each
+  non-null quest to `mapObjectData`. A masked `int` plus a guarded do/while is
+  the best measured source spelling at 90.4916%; all 19 branch decisions
+  agree, with the residual confined to register/stack scheduling through the
+  two inlined vector operations. The candidate must carry scoped
+  `auto_inline(off)`: otherwise /Ob2 expands the entire 616-byte callee into
+  `NewfullMap::Load`, dropping that established caller from 92.201836% to
+  64.12% (a call-site `inline_depth(0)` recovers only 84.27%). The row is a
+  documented compiler wall, so enrolling it changes the inventory to
+  1743/2113 exact. The next retail-only body, 0x4fe6c0, is the per-cell
+  save-version compatibility pass called by `loadMapLayer`. Its lookup table
+  proves seven object arms: ARTIFACT, DEAD_GUY, MONSTER, PYRAMID,
+  TREASURE_CHEST, WAGON and WARRIOR_TOMB. Dreamcast CodeView supplies the
+  legacy named bitfields, while retail proves their current widened/shifted
+  destinations. Keeping a distinct legacy dword reproduces all masked field
+  transfers at 96.26% with the same 14-block flow; three arms are
+  instruction-exact, and the remaining four differ only in EAX/EDX/ESI role
+  selection. The resulting one-byte code-size difference moves the otherwise
+  identical switch tables across the next four-byte alignment boundary.
+  Direct aliasing (69.53%), a shared pre-switch snapshot (92.55%), reversing
+  the monster index conversion (94.52%), case-local storage, `register`, and
+  declaration-order probes were rejected or byte-flat. The gated conversion
+  views live in `mapcell.h`, not as `.cpp`-local shadow types. Enrolling this
+  second compiler wall takes the inventory to 1743/2114 exact. The following
+  569-byte retail-only body is the post-load shipyard pass. Its Read-tail call
+  and NewfullMap member offsets independently locate it; a uniquely
+  byte-identical HD twin supplies the name `NewfullMap::LoadShipyards` only
+  after that retail proof. Retail `.data` supplies the twelve signed adjacent
+  `(dx,dy)` pairs. Nesting the three-cell coordinate propagation inside the
+  successful direction arm lets VC6 eliminate the explicit found test and
+  count stack slot, reproducing all 27 blocks and every instruction exactly.
+  The offset table is exact too. This raises the inventory to 1744/2115. The
+  other large retail-only row has a uniquely byte-identical HD twin named
+  `NewfullMap::SoD_transformRandomDwellings`. Retail proves the 16-byte input
+  record, its signed faction/owner/level fields, the reverse 136-byte town
+  lookup, both generator tables, and the width-bound passable/trigger-mask
+  scan. Postfix-decrement conditions on both reverse searches plus reuse of
+  the horizontal offset as FindTrigger's x output reproduce all 667 bytes
+  and 36 blocks. With that last large mapcell row exact, the inventory is
+  1745/2116. The final claimable row in mapcell's retail span is the
+  421-byte nullary helper at 0x5042c0, called immediately after object-type
+  deserialization by both readMapObjects and loadMapObjects. It first clears
+  the resolved 16-bit index in every record of the 232 per-class vectors,
+  then searches the appropriate vector backwards for each main objectTypes
+  record by `(extra, ImageName)` and writes the main-vector index. The
+  reconstructed body reaches 99.88535% with the same 32-block CFG and the
+  same 157-instruction multiset. Its sole code delta is a post-RA transpose
+  of one ESI reload across the adjacent EAX/EDI reloads; `why-reg` confirms
+  no binding divergence, and the tested expression, condition, index-scope,
+  signedness and declaration-order spellings either leave the schedule
+  unchanged or worsen it. The other asm-report row is a symbolic-only
+  relocation: mapcell's Dinkumware `_Nullstr` and the target's pooled
+  source-owned empty literal both resolve to 0x63a608, whose physical
+  DATA_COMPGEN owner is another compiland. This is a documented compiler /
+  pooled-COMDAT wall, enrolling the row at 1745/2117; mapcell's sole
+  remaining unclaimed in-span row is the deliberately excluded 42-byte
+  static-destruction cinit shim at 0x504290.
+
 - **2026-08-20 — clang-IR extraction LANDED (lane/ir-extraction); the
   2026-08-19 declination was wrong on both of its stated grounds.** That
   entry declined the port because IR "would change names" and because
@@ -318,14 +757,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   Extraction costs 7.3 s wall for the whole tree (116 clang probes, thread
   pooled), and only on the `homm3 delink` path — `homm3 build` never runs it.
 
-- **2026-08-20 — FINDING, not fixed: 119 macro sites reach no fragment.**
+- **2026-08-20 — FINDING (header-VA member resolved 2026-08-22): 119 macro sites reach no fragment.**
   Surfaced by the ported completeness sweep, three classes.
   (1) **100 `DATA()` sites in `include/`** — extraction reads `src/*.c*`
   only, so a header claim never becomes a row; they sit on `extern`
   declarations, which `include/va.h` already forbids ("never on a header
   extern"). (2) **1 `VA()` site in a header**: `include/game.h:722` claims
   `SaveAbstractString` at 0x4bbb60, and that address carries the dense
-  working label `game_b9270_sub00_bbb60` in the label map instead. The IR
+  working label `game_b9270_sub00_bbb60` in the label map instead. On
+  2026-08-22 the writer was reconstructed exactly in `src/game.cpp`, its
+  source claim enrolled the row, and the stale header floor entry was removed. The IR
   channel *finds* this one (it is the single claim clang names that cl's obj
   does not define, because the header only declares it), which is how it was
   confirmed. (3) **18 `DATA_COMPGEN`/`DATA_COMPGEN_GUARD` sites in `src/`**

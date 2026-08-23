@@ -86,6 +86,21 @@ struct TQuestPosition {
     unsigned short : 2;
 };
 
+// Retail's factory at 0x573240 switches on exactly these nine values. The
+// class mapping is independently fixed by the slot-8 constants in the nine
+// derived vtables (see the file header).
+enum EQuestType {
+    QUEST_EXPERIENCE = 1,
+    QUEST_PRIMARY_SKILLS = 2,
+    QUEST_DEFEAT_HERO = 3,
+    QUEST_DEFEAT_MONSTER = 4,
+    QUEST_ARTIFACTS = 5,
+    QUEST_CREATURES = 6,
+    QUEST_RESOURCES = 7,
+    QUEST_BE_HERO = 8,
+    QUEST_BELONG_TO_PLAYER = 9
+};
+
 // Every derived class reads its own payload at +0x40, so the base closes at
 // 0x40; nothing between the vptr and there is attested.
 class type_quest {
@@ -116,6 +131,8 @@ public:
     std::string completionText;  // +0x28
     int field_38;
     int field_3c;
+
+    type_quest(unsigned char flags);
 
     // THE VTABLE IS NOW MODELLED AT ITS REAL WIDTH (2026-08-20). The ten
     // tables each hold FIFTEEN slots, and every declaration below sits at
@@ -265,6 +282,8 @@ class type_experience_quest : public type_quest {
 public:
     int required_level;  // +0x40
 
+    type_experience_quest(unsigned char flags);
+
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
@@ -283,6 +302,8 @@ public:
 class type_skill_quest : public type_quest {
 public:
     signed char required_skills[4];  // +0x40
+
+    type_skill_quest(unsigned char flags);
 
     // seerhut.obj's shared primary-skill list builder, called with this in
     // ecx and the four-byte payload as its explicit stack argument.
@@ -304,6 +325,8 @@ public:
     int defeated_hero;    // +0x44
     int satisfied_mask;   // +0x48, one bit per player
 
+    type_defeat_hero_quest(unsigned char flags);
+
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual void NotifyHeroDefeated(int hero_id, int player);
@@ -322,6 +345,8 @@ public:
     TQuestPosition position;     // +0x44
     int monster_id;       // +0x48
     int defeated_by;      // +0x4c, -1 until some player kills it
+
+    type_monster_quest(unsigned char flags);
 
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
@@ -342,6 +367,8 @@ class type_artifact_quest : public type_quest {
 public:
     std::vector<TArtifact> artifacts;  // +0x40
 
+    type_artifact_quest(unsigned char flags);
+
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
@@ -358,6 +385,8 @@ public:
     std::vector<int> counts;             // +0x40
     std::vector<TCreatureType> types;    // +0x50
 
+    type_creature_quest(unsigned char flags);
+
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
@@ -373,7 +402,12 @@ class type_resource_quest : public type_quest {
 public:
     int resources[7];  // +0x40
 
+    type_resource_quest(unsigned char flags);
+
     virtual int GetAIValue(int player);
+    virtual unsigned char is_satisfied(hero* current_hero);
+    virtual void TakePayment(hero* current_hero);
+    virtual void DoProgressDialog();
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
@@ -385,6 +419,8 @@ public:
 class type_be_hero_quest : public type_quest {
 public:
     int required_hero;  // +0x40
+
+    type_be_hero_quest(unsigned char flags);
 
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
@@ -400,6 +436,8 @@ public:
 class type_belong_to_player_quest : public type_quest {
 public:
     int required_owner;  // +0x40
+
+    type_belong_to_player_quest(unsigned char flags);
 
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();

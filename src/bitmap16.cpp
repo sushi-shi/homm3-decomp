@@ -61,7 +61,7 @@ Bitmap16Bit::~Bitmap16Bit()
 }
 
 VA(0x0044e240, 0x07)  // vtable slot 2: fixed object extent + pixel bytes
-unsigned int Bitmap16Bit::_vslot2() const
+unsigned int Bitmap16Bit::GetSize() const
 {
     return sizeof(*this) + DataSize;
 }
