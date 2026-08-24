@@ -977,6 +977,28 @@ public:
         NUM_TOWN_BUTTONS = 5
     };
 
+    // Retail-only ids accepted by convertID2HelpID. Their numeric identity
+    // and help-row mapping are byte-proven; no surviving symbol source gives
+    // the widget roles, so keep the spellings explicitly provisional.
+    enum EHelpWidgetIDs {
+        ROLLOVER_TEXT_ID = 200,
+        HELP_WIDGET_1001_ID = 1001,
+        HELP_WIDGET_1002_ID,
+        HELP_WIDGET_1003_ID,
+        HELP_WIDGET_1004_ID,
+        HELP_WIDGET_1005_ID,
+        HELP_WIDGET_1006_ID,
+        HELP_WIDGET_1007_ID,
+        HELP_WIDGET_1008_ID,
+        HELP_WIDGET_1009_ID,
+        HELP_WIDGET_1010_ID,
+        HELP_WIDGET_1011_ID,
+        HELP_WIDGET_1012_ID,
+        HELP_WIDGET_1013_ID,
+        HELP_WIDGET_1014_ID,
+        HELP_WIDGET_1015_ID
+    };
+
     // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
@@ -1053,6 +1075,7 @@ public:
     void UpdateSpellButton(const class hero* thisHero);
     void draw_bottom_view(unsigned char update);
     void animate_bottom_view(unsigned char in_background);
+    int convertID2HelpID(int id) const;
     unsigned char ProcessHover(int hx, int hy);
     // Retail 0x402e70, `ret 4` over one message pointer and answering in
     // AL - the hero-locator note above already reads its id normalisation.

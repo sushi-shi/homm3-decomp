@@ -135,7 +135,7 @@ void TQuestLogWindow::UpdateQuestLocator(int i)
                        .QuestGuardFn_00572D60().c_str());
         else
             strcpy(gText, gpGame->worldMap.SeerHutList[quest]
-                       .SeerHutFn_00574070().c_str());
+                       .getSeerLogText().c_str());
 
         msg.codeX = widget::WIDGET_SET_TEXT;
         msg.codeY = i + 1;

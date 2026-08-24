@@ -25,6 +25,20 @@ struct THelpText {
     const char* rclick;
 };
 
+// Eight-byte help rows at retail 0x6a56e0. townmgr.cpp owns the address
+// annotation; adventuremapwindow reads the same storage as text/rclick
+// pairs. The provisional name is retained until the text initializer lands.
+extern const char* gUnnamed6a56e0[];
+
+// Dreamcast names its right-click text pointer array gQuickViewText. Retail
+// interleaves that column with rollover pointers, so consecutive entries are
+// eight bytes apart beginning at the second pointer of the first help row.
+struct TQuickViewTextRow {
+    const char* text;
+    char pad_04[4];
+};
+SIZE(TQuickViewTextRow, 8);
+
 // heroWindow::type flag bits. FIXED_LAYER and SAVE_BACKGROUND carry
 // homm2's WindowFlag names and values (byte-proven in Open/Close);
 // 0x10 is retail-only - SaveBackground pads the grab by 8 pixels and

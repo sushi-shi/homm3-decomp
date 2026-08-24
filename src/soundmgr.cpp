@@ -15,12 +15,21 @@
 // and Random.
 #include "advmgr.h"
 #include "cmbtmgr.h"
+#include "kb.h"
 #include "misc.h"
 
 // Number of live asynchronous sample waiters. WaitEndSampleThread increments
 // and decrements this counter; Close gives them up to one second to drain.
 // The role and storage are retail-byte-proven; no surviving name covers it.
 DATA(0x006a3254) int gSampleWorkerCount;
+DATA(0x0069fec0) MP3ResumePosition gMP3ResumePositions[50];
+DATA(0x006a3498) int gMP3ResumePositionCount;
+DATA(0x00684aa8) int gSoundSampleRate = 44100;
+DATA(0x00684aac) int gSoundBitsPerSample = SOUND_BITS_PER_SAMPLE_16;
+DATA(0x00684ab0) int gSoundOutputChannels = 2;
+DATA(0x00684ae0) int gSoundMaxSamples = 14;
+DATA(0x0069fe80) AILWaveFormat gSoundWaveFormat;
+DATA(0x00698a28) int gUnk698a28;
 
 // Provisional file-static, /Ob2-inlined at both of its call sites (no
 // out-of-line body sits anywhere in the soundmgr span). The manager
@@ -76,9 +85,9 @@ static void ServeSampleStream()
 // already modelled in their own headers), 0x66fedc is the literal
 // "combat%02d", 0x678330 is the nine-byte terrain->music-id table, and
 // the thread entry the vol==0 arm hands to _beginthread is 0x59a830 -
-// the SAME entry StopMP3 uses (the delinker spells both
-// `service_sounds + 0x60`), so that arm is StopMP3() /Ob2-inlined, not
-// a distinct body. Both Enters go through gpSoundManager and both
+// the SAME ProcessMP3Stop entry StopMP3 uses - so that arm is StopMP3()
+// /Ob2-inlined, not a distinct body. Both Enters go through
+// gpSoundManager and both
 // Leaves through `this`; that asymmetry is retail's and is transcribed
 // verbatim. The two inner arms are ResumeStream() and StopMP3()
 // inlined by /Ob2, written as CALLS per the ClearMemSample precedent.
@@ -180,6 +189,130 @@ soundManager::soundManager()
     InitializeCriticalSection(&section_sound_call);
     InitializeCriticalSection(&section_MP3_change);
     InitializeCriticalSection(&section_MP3_name_change);
+}
+
+// E:\gamedcs\soundmgr.cpp:322
+// Vtable slot 0 and the unique Device:/Miles setup body independently pin
+// this retail expansion of soundManager::Open. The DC body is much smaller
+// because it uses ds_engine; Complete performs the PC waveOut preference
+// fallback, Smacker/Bink binding and twelve-handle allocation here.
+//
+// Residual (84.53%): the best source has retail's 17 branches, one return,
+// complete middleware call/data flow and 703-byte target extent. Two retry
+// branches still target blocks in the opposite physical order, and C2 keeps
+// `this` in EBX while retail keeps it in ESI (homed while ESI carries the
+// channel count) and holds AIL_set_preference in EBX. Four grounded shapes
+// were exhausted: structured retry plus a post-loop driver test (83.56%, one
+// extra branch), explicit-goto retry (67.80%, wrong block order), the direct
+// result-carrier loop below (84.53%), and an explicit long-lived
+// set-preference pointer (same bytes). The remaining layout/RA choice is not
+// source-addressable without distorting the proven retry semantics.
+VA(0x005997d0, 0x2BF)  // vtable slot + Device: string, dc 0x14b240
+int soundManager::Open(int newPriority)
+{
+    field_80 = 0xff;
+    memset(&field_40, 0,
+           sizeof(field_40) + sizeof(sampleHandles) + sizeof(field_7c));
+
+    if (!gbNoSound) {
+        AIL_startup();
+        if (!gUnk698a28 && !ds) {
+            typedef int (__stdcall* SetPreferenceProc)(int, int);
+            SetPreferenceProc setPreference = AIL_set_preference;
+            setPreference(15, 0);
+            setPreference(33, 1);
+            setPreference(34, 100);
+
+            AILDigitalDriver* driver;
+            AILDigitalDriver* result;
+            for (;;) {
+                if (gSoundSampleRate < 11025) {
+                    result = 0;
+                    break;
+                }
+
+                gSoundWaveFormat.formatTag = 1;
+                gSoundWaveFormat.channels =
+                    static_cast<unsigned short>(gSoundOutputChannels);
+                gSoundWaveFormat.samplesPerSec = gSoundSampleRate;
+                gSoundWaveFormat.avgBytesPerSec =
+                    (gSoundBitsPerSample / 8) * gSoundOutputChannels
+                    * gSoundSampleRate;
+                gSoundWaveFormat.blockAlign = static_cast<unsigned short>(
+                    (gSoundBitsPerSample / 8) * gSoundOutputChannels);
+                gSoundWaveFormat.bitsPerSample =
+                    static_cast<unsigned short>(gSoundBitsPerSample);
+
+                AIL_HWND();
+                int openResult = AIL_waveOutOpen(
+                    &driver, 0, -1, &gSoundWaveFormat);
+                if (!openResult) {
+                    char description[128];
+                    strcpy(description, DATA_COMPGEN(
+                        0x00684b28, soundDevicePrefix, "Device: "));
+                    AIL_digital_configuration(
+                        driver, 0, 0, description + strlen(description));
+                    if (AIL_get_preference(15)) {
+                        result = driver;
+                        break;
+                    }
+                    if (!strstr(description, DATA_COMPGEN(
+                            0x00684b1c, emulatedDeviceMarker,
+                            "Emulated"))) {
+                        result = driver;
+                        break;
+                    }
+                    AIL_waveOutClose(driver);
+                    setPreference(15, 1);
+                } else if (AIL_get_preference(15)) {
+                    gSoundSampleRate /= 2;
+                    if (gSoundSampleRate >= 11025)
+                        continue;
+                    if (gSoundBitsPerSample == SOUND_BITS_PER_SAMPLE_8) {
+                        gSoundBitsPerSample = SOUND_BITS_PER_SAMPLE_8;
+                        gSoundSampleRate = 22050;
+                        continue;
+                    }
+                    result = 0;
+                    break;
+                }
+                setPreference(15, 1);
+            }
+            ds = result;
+        }
+
+        if (!ds) {
+            gUnk698764 = 0;
+        } else {
+            if (gpSoundManager->ds->primaryBuffer) {
+                AILPrimaryBuffer* buffer =
+                    gpSoundManager->ds->primaryBuffer;
+                buffer->vtable->setVolume(buffer, 0);
+            }
+            SmackSoundUseMSS(gpSoundManager->ds);
+            BinkSetSoundSystem(BinkOpenMiles, gpSoundManager->ds);
+        }
+        field_84 = 1;
+
+        if (!gbNoSound && ds) {
+            int count;
+            for (count = 0; count < 12; ++count) {
+                sampleHandles[count] = AIL_allocate_sample_handle(ds);
+                if (!sampleHandles[count])
+                    break;
+            }
+            field_7c = count;
+            gSoundMaxSamples = count;
+        }
+        field_40 = 1;
+    }
+
+    id = 16;
+    priority = -1;
+    status = STATUS_ACTIVE;
+    strcpy(cMgrName, DATA_COMPGEN(
+        0x00684b0c, soundManagerName, "soundManager"));
+    return 0;
 }
 
 // E:\gamedcs\soundmgr.cpp:410
@@ -345,6 +478,33 @@ void soundManager::ModifySample(ds_memsample* inSample, short sFunction, long va
         }
     }
     LeaveCriticalSection(&section_sound_call);
+}
+
+// PC-only query used by the remote chat sample path.  Operation 1 returns
+// the Miles volume and operation 4 reduces the status to the playing bit;
+// every other operation retains the initialized zero result.
+VA(0x0059a030, 0x87)  // remote call sites + Miles imports, retail-only
+int soundManager::GetSampleInfo(ds_memsample* inSample, short operation)
+{
+    if (gbNoSound)
+        return 0;
+    if (!ds)
+        return 0;
+    if (!inSample)
+        return 0;
+
+    int result = 0;
+    EnterCriticalSection(&section_sound_call);
+    switch (operation) {
+    case SAMPLE_INFO_VOLUME:
+        result = AIL_sample_volume(inSample);
+        break;
+    case SAMPLE_INFO_PLAYING:
+        result = AIL_sample_status(inSample) == AIL_SAMPLE_PLAYING;
+        break;
+    }
+    LeaveCriticalSection(&section_sound_call);
+    return result;
 }
 
 // E:\gamedcs\soundmgr.cpp:691
@@ -546,6 +706,31 @@ void launch_sample(const char* sample_name, int max_time, int channel)
         _beginthread(WaitEndSampleThread, 0, launched);
 }
 
+// The address taken by launch_sample is a cdecl thread entry.  Its packet
+// fields, 100-ms elapsed-time loop, live-waiter accounting, and final
+// ClearMemSample expansion are all independently visible in retail.
+// E:\gamedcs\soundmgr.cpp:911/976 vicinity; PC worker has no DC row.
+VA(0x0059a6b0, 0x113)  // address-taken + packet layout, retail-only
+void __cdecl WaitEndSampleThread(void* arglist)
+{
+    ++gSampleWorkerCount;
+    LaunchedSample* launched = static_cast<LaunchedSample*>(arglist);
+    int elapsed = 0;
+    if (launched->sample2.playSample && !bShutDownDone) {
+        while (SamplePlaying(gpSoundManager, launched->sample2.playSample)
+               && elapsed < launched->max_time) {
+            Sleep(100);
+            elapsed += 100;
+            if (bShutDownDone)
+                break;
+        }
+    }
+    ClearMemSample(launched->sample2);
+    delete launched;
+    --gSampleWorkerCount;
+    _endthread();
+}
+
 // The Dreamcast roster emits this tiny SoundMgr.h service inline from kb.obj;
 // Complete keeps an independently masked-identical out-of-line copy in the
 // sound-manager span. Retail's member offsets and imports prove the body.
@@ -560,23 +745,107 @@ void soundManager::service_sounds()
     LeaveCriticalSection(&section_sound_call);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:1068
-DC_ONLY(0x14b7e0, 0x12)
-void ProcessMP3Stop(void* nothing)
+// Retail has five address-taken references to this 16-byte-aligned entry.
+// Its load/call/tail-jump body and the DC callgraph independently settle the
+// cdecl thread signature and ThreadStopMP3 callee.
+VA(0x0059a830, 0x10)  // address-taken + dc 0x14b7e0 xref edge
+void __cdecl ProcessMP3Stop(void* nothing)
 {
-    // @stub
+    gpSoundManager->ThreadStopMP3();
+    _endthread();
 }
 
 // E:\gamedcs\soundmgr.cpp:1162
-DC_ONLY(0x14b7f4, 0xF4)
-void ProcessStopAndPlayMP3()
+// ResumeStream and StartMP3 both hand this entry to _beginthread; the body
+// reciprocally calls ConvertVolume and ThreadStopMP3 and uses the same
+// position cache as ThreadStopMP3. Those independent edges settle the PC
+// worker despite its much larger Miles implementation than Dreamcast's.
+VA(0x0059a840, 0x3BB)  // three address-taken xrefs + dc 0x14b7f4 role
+void __cdecl ProcessStopAndPlayMP3(void* arglist)
 {
-    // @stub
-}
+    EnterCriticalSection(&gpSoundManager->section_MP3_change);
+    int volume = gpSoundManager->ConvertVolume(127, VOLUME_TYPE_101);
+    EnterCriticalSection(&gpSoundManager->section_MP3_name_change);
+    if (!gMP3NamePlaying[0]) {
+        LeaveCriticalSection(&gpSoundManager->section_MP3_name_change);
+        LeaveCriticalSection(&gpSoundManager->section_MP3_change);
+        _endthread();
+        return;
+    }
+    LeaveCriticalSection(&gpSoundManager->section_MP3_name_change);
 
-#endif  // @carcass
+    gpSoundManager->ThreadStopMP3();
+    EnterCriticalSection(&gpSoundManager->section_sound_call);
+    if (!bShutDownDone && gMP3Stream)
+        AIL_close_stream(gMP3Stream);
+    gMP3Stream = 0;
+    LeaveCriticalSection(&gpSoundManager->section_sound_call);
+
+    EnterCriticalSection(&gpSoundManager->section_MP3_name_change);
+    if (!gMP3NamePlaying[0]) {
+        LeaveCriticalSection(&gpSoundManager->section_MP3_name_change);
+        LeaveCriticalSection(&gpSoundManager->section_MP3_change);
+        _endthread();
+        return;
+    }
+
+    strcpy(gMP3Name, gMP3NamePlaying);
+    gUnk69fe90 = gUnk69fe9c;
+    char filename[100];
+    sprintf(filename, DATA_COMPGEN(
+        0x00684b34, mp3PathFormat, "mp3\\%s.mp3"), gMP3NamePlaying);
+    gMP3NamePlaying[0] = 0;
+    LeaveCriticalSection(&gpSoundManager->section_MP3_name_change);
+
+    if (volume && !bShutDownDone) {
+        gpSoundManager->MP3Playing = 1;
+        EnterCriticalSection(&gpSoundManager->section_sound_call);
+        gMP3Stream = AIL_open_stream(gpSoundManager->ds, filename, 0);
+        if (gMP3Stream && !bShutDownDone && bForegroundApp) {
+            AIL_set_stream_volume(
+                gMP3Stream, gUnk69fe90 ? volume : 0);
+            AIL_set_stream_loop_count(gMP3Stream, gUnk69fe90);
+            AIL_service_stream(gMP3Stream, 1);
+
+            if (!gUnk69fe90) {
+                EnterCriticalSection(&gpSoundManager->section_MP3_change);
+                EnterCriticalSection(&gpSoundManager->section_sound_call);
+                for (int slot = 0; slot < gMP3ResumePositionCount; ++slot) {
+                    if (strcmp(gMP3ResumePositions[slot].name, gMP3Name) == 0) {
+                        AIL_set_stream_position(
+                            gMP3Stream, gMP3ResumePositions[slot].position);
+                        break;
+                    }
+                }
+                LeaveCriticalSection(&gpSoundManager->section_sound_call);
+                LeaveCriticalSection(&gpSoundManager->section_MP3_change);
+            }
+
+            if (!bShutDownDone)
+                AIL_start_stream(gMP3Stream);
+
+            if (!gUnk69fe90) {
+                float currentVolume = 0.0f;
+                for (int step = 1; step < 10; ++step) {
+                    if (bShutDownDone)
+                        break;
+                    currentVolume += static_cast<float>(volume) / 10.0f;
+                    AIL_set_stream_volume(
+                        gMP3Stream, static_cast<int>(currentVolume));
+                    LeaveCriticalSection(&gpSoundManager->section_sound_call);
+                    Sleep(100);
+                    EnterCriticalSection(&gpSoundManager->section_sound_call);
+                }
+                if (!bShutDownDone)
+                    AIL_set_stream_volume(gMP3Stream, volume);
+            }
+        }
+        LeaveCriticalSection(&gpSoundManager->section_sound_call);
+    }
+    LeaveCriticalSection(&gpSoundManager->section_MP3_change);
+    _endthread();
+}
 
 // E:\gamedcs\soundmgr.cpp:1288
 VA(0x0059ac00, 0xA9)  // anchor-global, dc 0x14b8e8
@@ -673,19 +942,63 @@ void soundManager::StopMP3()
         AIL_serve();
         Sleep(5);
         if (!bShutDownDone)
-            _beginthread(::service_sounds, 0, 0);
+            _beginthread(ProcessMP3Stop, 0, 0);
     }
     LeaveCriticalSection(&section_sound_call);
     LeaveCriticalSection(&section_MP3_change);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:1434
-DC_ONLY(0x14b984, 0x74)
+// ProcessMP3Stop's exact call edge pins this member to the 533-byte body at
+// 0x59b080. Retail saves the current stream position under its pending name,
+// fades the active volume in nine fixed steps while releasing the Miles lock
+// for each sleep, pauses the stream, and clears MP3Playing.
+VA(0x0059b080, 0x215)  // ProcessMP3Stop sole direct caller, dc 0x14b984
 void soundManager::ThreadStopMP3()
 {
-    // @stub
-}
+    EnterCriticalSection(&section_MP3_change);
+    EnterCriticalSection(&section_sound_call);
+    if (gMP3Stream && MP3Playing && !bShutDownDone) {
+        EnterCriticalSection(&gpSoundManager->section_MP3_name_change);
+        EnterCriticalSection(&gpSoundManager->section_sound_call);
 
-#endif  // @carcass
+        int slot;
+        for (slot = 0; slot < gMP3ResumePositionCount; ++slot) {
+            if (strcmp(gMP3ResumePositions[slot].name, gMP3Name) == 0) {
+                gMP3ResumePositions[slot].position =
+                    AIL_stream_position(gMP3Stream);
+                break;
+            }
+        }
+        if (slot == gMP3ResumePositionCount) {
+            strcpy(gMP3ResumePositions[slot].name, gMP3Name);
+            gMP3ResumePositions[slot].position =
+                AIL_stream_position(gMP3Stream);
+            ++gMP3ResumePositionCount;
+        }
+
+        LeaveCriticalSection(&gpSoundManager->section_sound_call);
+        LeaveCriticalSection(&gpSoundManager->section_MP3_name_change);
+
+        float originalVolume =
+            static_cast<float>(AIL_stream_volume(gMP3Stream));
+        if (originalVolume != 0.0f) {
+            float currentVolume = originalVolume;
+            for (int step = 1; step < 10; ++step) {
+                if (bShutDownDone)
+                    break;
+                currentVolume -= originalVolume / 10.0f;
+                AIL_set_stream_volume(
+                    gMP3Stream, static_cast<int>(currentVolume));
+                LeaveCriticalSection(&section_sound_call);
+                Sleep(100);
+                EnterCriticalSection(&section_sound_call);
+            }
+        }
+        if (!bShutDownDone)
+            AIL_pause_stream(gMP3Stream, 1);
+    }
+    MP3Playing = 0;
+    LeaveCriticalSection(&section_sound_call);
+    LeaveCriticalSection(&section_MP3_change);
+}

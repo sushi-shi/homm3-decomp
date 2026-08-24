@@ -317,6 +317,15 @@ public:
 #ifdef HOMM3_NEWFULLMAP_CELL_OUTOFLINE
     NewmapCell* cell(int x, int y, int z);
     NewmapCell* cell(type_point point);
+#elif defined(HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE)
+    // Some compilands saw the three-scalar implementation out of line but
+    // retained the packed-point header wrapper. The wrapper's by-value
+    // parameter then becomes a real local while its tail remains a call.
+    NewmapCell* cell(int x, int y, int z);
+    NewmapCell* cell(type_point point)
+    {
+        return cell(point.x, point.y, point.z);
+    }
 #else
     // Header inline in the original map class. InsertObject expands this
     // three-dimensional row-major lookup, and so does advManager::EraseObj
@@ -331,7 +340,7 @@ public:
     }
     NewmapCell* cell(type_point point)
     {
-        return &cellData[(point.z * Size + point.y) * Size + point.x];
+        return cell(point.x, point.y, point.z);
     }
 #endif
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
@@ -870,6 +879,35 @@ public:
     unsigned char CheckForTimeLimitExpired();
 };
 SIZE(LossConditionStruct, 0x24);
+
+#ifdef HOMM3_REMOTE_WINLOSS_DECLS
+// The two remote win/loss messages have one sender/loser dword between the
+// common 0x14-byte CNetMsg base and their respective condition records.
+// Retail's handlers read both payloads at +0x18 and copy 0x4c bytes for the
+// victory form; Dreamcast supplies the class and member roles.
+class CPlayerWonMsg : public CNetMsg {
+public:
+    int gamePos;
+    VictoryConditionStruct victoryCondition;
+};
+SIZE(CPlayerWonMsg, 0x64);
+
+class CPlayerLostMsg : public CNetMsg {
+public:
+    int loser;
+    LossConditionStruct lossCondition;
+};
+SIZE(CPlayerLostMsg, 0x3c);
+
+// The normal-win notification carries only the winning network game slot.
+// Retail's handler reads the dword immediately after CNetMsg at +0x14;
+// Dreamcast CodeView supplies the class/member identity.
+class CNormalWinMsg : public CNetMsg {
+public:
+    int gamePos;
+};
+SIZE(CNormalWinMsg, 0x18);
+#endif
 
 // The three serialized aggregates embedded consecutively in `game` are
 // fixed by retail's SavedGameHeader constructor, assignment calls, and copy
@@ -1830,6 +1868,13 @@ public:
     std::vector<MonsterIdentifier> monsterIdentifiers;
 
     NewfullMap* GetWorldMapData();
+#ifdef HOMM3_GAME_SEER_HUT_DECLS
+    // Retail-only 0x4cef10. The quest-monster initializer passes the editor's
+    // stable object reference and receives the corresponding packed point;
+    // the body is the reverse search over monsterIdentifiers above. Kept
+    // ordinal because neither the Dreamcast roster nor NH3API names it.
+    TQuestPosition GameFn_004CEF10(int identifier);
+#endif
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250

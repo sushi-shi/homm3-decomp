@@ -12,13 +12,36 @@
 #include "quest.h"
 // game.h for game::GetHero, which two of the slot-7 descriptions below
 // name their hero through. MEASURED on this compiland 2026-08-21.
+#define HOMM3_GAME_SEER_HUT_DECLS
+#define HOMM3_NEWFULLMAP_INT_CELL_OUTOFLINE
 #include "game.h"
+#include "advmgr.h"
+#include "winmgr.h"
 #include "textresource.h"
+
+// These three cross-TU helpers are the only reward-application dependencies
+// not already surfaced by their owning class headers. Dreamcast names every
+// edge from TSeerHut::GiveReward; retail independently proves the /Gr
+// register ABI and widens the creature count to an int at both call sites.
+void AI_equip_artifacts(hero* currentHero);
+void AI_join_decision(hero* currentHero, TCreatureType creature, int amount);
+void do_monster_join_dialog(hero* currentHero, TCreatureType creature,
+                            int amount);
 
 // The retail factory is frameless under /GX even though its new-expressions
 // construct vector-owning classes, so this TU saw the nothrow deallocator
 // declaration used by the other frameless-construction compilands.
 __declspec(nothrow) void __cdecl operator delete(void* value);
+
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94). Retail expands this shared
+// header helper into the creature requirement builder below.
+static inline const char* GetArmyName(int type, int count)
+{
+    return type >= 0 && type <= 0x96
+               ? (count == 1 ? akCreatureTypeTraits[type].m_name
+                             : akCreatureTypeTraits[type].m_plural_name)
+               : emptyRolloverText;
+}
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
 
@@ -267,6 +290,21 @@ std::string format_string(const char* format, ...);
 // walk this array in lockstep with their seven-dword payload.
 DATA(0x006a5e64) extern const char* gResourceNames[7];
 
+// The nine compass phrases used to describe a quest monster's map region.
+// Retail reaches every cell directly from the initializer below; their
+// clockwise order is north, north-east, east, south-east, south, south-west,
+// west, north-west, then centre.
+DATA(0x006a5c48) extern const char* gQuestMonsterDirections[9];
+
+// VC6's by-value, reference-returning max helper. The unvisited arm of
+// TSeerHut::getValue homes both operands and selects between their addresses,
+// which distinguishes this template shape from a plain ternary.
+template <class T>
+inline const T& _cpp_max(T left, T right)
+{
+    return left < right ? right : left;
+}
+
 // seerhut.obj's list formatter, 0x56c960.  It joins a vector with the
 // localized final separator and returns the result through the usual hidden
 // std::string return buffer (ECX), with the vector reference in EDX under
@@ -463,6 +501,111 @@ unsigned char type_skill_quest::is_satisfied(hero* current_hero)
     return 1;
 }
 
+// Slot 4 reports only the primary-skill requirements the visiting hero still
+// lacks. A custom progress line takes the direct path; otherwise retail
+// formats the missing-skill list into the table's progress column and appends
+// the common deadline suffix before showing the same pictures.
+//
+// Residual (56.5135%): the semantic body is complete, but the current STL
+// view gives VC6 44 CFG blocks and three cleanup exits against retail's 30
+// blocks and one exit. The original natural vector spelling inlined its
+// constructor/destructor and scored 46.5225%; source-local inline_depth(0)
+// restores retail's out-of-line vector calls and reaches the retained score.
+// Named strings versus lifetime-extended const references are byte-flat at
+// that score. Closing this requires the retail vector declaration view, not
+// fabricated cleanup gotos or raw storage.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056dad0, 0x28C)  // anchor-vtable 0x6417c4 slot 4 + exact HD structural twin
+void type_skill_quest::DoProposalDialog(hero* current_hero)
+{
+    signed char missing[4];
+    for (int i = 0; i < 4; ++i) {
+        int have;
+        if (current_hero->stats[i] > 99)
+            have = 99;
+        else if (current_hero->stats[i] > 0)
+            have = current_hero->stats[i];
+        else
+            have = i >= 2;
+
+        missing[i] = required_skills[i] > have ? required_skills[i] : 0;
+    }
+
+    if (progressText.length() > 0) {
+        std::string text = GetProposalDialogText();
+        const char* textPointer = text.c_str();
+#pragma inline_depth(0)
+        {
+        std::vector<type_dialog_resource> dialogResources;
+        for (int i = 0; i < 4; ++i) {
+            if (missing[i] > 0) {
+                type_dialog_resource resource;
+                resource.resource = 0x1f + i;
+                resource.qualifier = 0x10000
+                    | static_cast<unsigned short>(missing[i]);
+                dialogResources.push_back(resource);
+            }
+        }
+        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+        }
+#pragma inline_depth()
+    } else {
+        std::string requirement = skill_requirement_text(missing);
+        const char* requirementPointer = requirement.c_str();
+        std::string text = format_string(
+            quest_text(QUEST_TEXT_PROGRESS).c_str(), requirementPointer);
+        text += get_time_limit_text();
+        const char* textPointer = text.c_str();
+
+#pragma inline_depth(0)
+        {
+        std::vector<type_dialog_resource> dialogResources;
+        for (int i = 0; i < 4; ++i) {
+            if (missing[i] > 0) {
+                type_dialog_resource resource;
+                resource.resource = 0x1f + i;
+                resource.qualifier = 0x10000
+                    | static_cast<unsigned short>(missing[i]);
+                dialogResources.push_back(resource);
+            }
+        }
+        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+        }
+#pragma inline_depth()
+    }
+}
+
+// Slot 5 presents one primary-skill picture for every positive requirement.
+// The picture class advances from 0x1f with the skill index, while the
+// qualifier packs the displayed value below a high-word one.
+// Residual (75.8427%): semantics and all twelve CFG blocks agree, but retail
+// keeps the GetProgressDialogText return object alive while taking c_str()
+// directly from the returned EAX; this CL invocation reloads the same string
+// slot before the vector loop and consequently chooses a different register
+// schedule. Tried and rejected: a named string alone, a bare c_str pointer
+// (destroys the temporary before the loop), a named string plus saved pointer,
+// and the lifetime-extending const reference below. The latter models the
+// shipped lifetime honestly and is retained instead of forcing allocator
+// scaffolding.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056dd60, 0xF5)  // anchor-vtable 0x6417c4 slot 5 + dialog picture rows, retail-only
+void type_skill_quest::DoProgressDialog()
+{
+    const std::string& text = GetProgressDialogText();
+    const char* textPointer = text.c_str();
+    std::vector<type_dialog_resource> dialogResources;
+    for (int i = 0; i < 4; ++i) {
+        if (required_skills[i] > 0) {
+            type_dialog_resource resource;
+            resource.resource = 0x1f + i;
+            resource.qualifier = 0x10000
+                | static_cast<unsigned short>(required_skills[i]);
+            dialogResources.push_back(resource);
+        }
+    }
+    extended_dialog(textPointer, dialogResources, -1, -1, 0);
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x0056de60, 0x29)  // anchor-vtable 0x6417c4 slot 11, retail-only
 void type_skill_quest::Load(TAbstractFile* file, int version)
@@ -515,6 +658,25 @@ void type_skill_quest::Save(TAbstractFile* file)
         file->Write(&length, sizeof(length));
         file->Write(completionText.c_str(), completionText.length());
     }
+}
+// The explicit array argument controls which rows are present, while the
+// formatted values come from this quest's own +0x40 payload. Retail advances
+// gPrimarySkillNames as a pointer from 0x6a5390 to 0x6a53a0, proving the four
+// canonical primary-skill names and their order.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056dfa0, 0x124)  // anchor-callers(slot 6/7/14) + primary-skill table, retail-only
+std::string type_skill_quest::skill_requirement_text(
+    const signed char (&skills)[4])
+{
+    std::vector<std::string> requirements;
+    for (int i = 0; i < 4; ++i) {
+        if (skills[i] > 0) {
+            requirements.push_back(format_string(
+                DATA_COMPGEN(0x00683220, skillRequirementFormat, "%s %i"),
+                gPrimarySkillNames[i], required_skills[i]));
+        }
+    }
+    return join_quest_requirements(requirements);
 }
 // E:\gamedcs\seerhut.cpp
 // Residual (96.53%): the CFG is exact (13 branches and two returns on both
@@ -763,27 +925,32 @@ void type_monster_quest::DoProgressDialog()
 }
 
 
-// DECODED BUT NOT CLAIMED - type_monster_quest's slot-10 override, 0x56ed40,
-// 0x45 bytes. The body is unambiguous:
-//
-//     if (defeated_by >= 0) return;
-//     if (position.x != where.x) return;
-//     if (position.y != where.y) return;
-//     if (position.z != where.z) return;
-//     defeated_by = player;
-//
-// with TQuestPosition exactly as quest.h models it. The wall is a branch
-// COUNT: retail keeps four conditional branches, our CL fuses the y and z
-// tests into one `test eax,0x3fff` because their masks are adjacent in the
-// same word, giving three. Measured at 72.61% and unmoved by four spellings
-// - one `&&` chain, four separate early-return `if`s, named-padding
-// bitfields, unnamed-padding bitfields, and explicit
-// `(unsigned short)((a ^ b) & mask) != 0` casts over a plain two-short
-// struct. Retail's form materialises each mask (`and eax,0x3ff / test ax,ax`)
+// Type_monster_quest's slot-10 override. The body is unambiguous with
+// TQuestPosition exactly as quest.h models it.
+// Residual (72.61%): the branch COUNT differs. Retail keeps four conditional
+// branches, while our CL fuses the y and z tests into one `test eax,0x3fff`
+// because their masks are adjacent in the same word, giving three. Tried and
+// rejected: one `&&` chain; named-padding bitfields; unnamed-padding
+// bitfields; and explicit `(unsigned short)((a ^ b) & mask) != 0` casts over
+// a plain two-short struct. Retail's form materialises each mask
+// (`and eax,0x3ff / test ax,ax`)
 // where ours tests the immediate directly, in the FIRST comparison too,
 // where nothing is reused - so this is the merged-return / stale-CL-
-// generation residual class, not a source-shape miss. Left unclaimed rather
-// than land a 72.61% row.
+// generation residual class, not a source-shape miss.
+VA(0x0056ed40, 0x45)  // anchor-vtable 0x64183c slot 10, retail-only
+void type_monster_quest::NotifyMonsterDefeated(TQuestPosition where,
+                                                int player)
+{
+    if (defeated_by >= 0)
+        return;
+    if (position.x != where.x)
+        return;
+    if (position.y != where.y)
+        return;
+    if (position.z != where.z)
+        return;
+    defeated_by = player;
+}
 
 // E:\gamedcs\seerhut.cpp
 VA(0x0056ed90, 0x51)  // anchor-vtable 0x64183c slot 11, retail-only
@@ -866,6 +1033,82 @@ void type_monster_quest::Save(TAbstractFile* file)
     }
 }
 
+// Slot 14 does more than the other default-text initializers because a map
+// stores this quest's target as an editor object reference. Retail first
+// resolves that reference through game::monsterIdentifiers, rejects the
+// all-minus-one point, reads the creature type from the referenced map cell,
+// and describes the point by map third (plus an underground suffix). Those
+// two strings are the varargs for each of the three localized text columns.
+//
+// Residual (98.3426%): all 77 blocks and all 41 branch targets agree. The
+// three differing blocks are the EH-handler relocation addend, the initial
+// packed-point/cell-call register schedule, and one final inlined `_Eos`
+// where retail calls it. A named map pointer regresses the opening schedule;
+// direct one-argument string spellings either outline the wrapper or expand
+// `_Grow`. The traits-length/two-argument spelling below is the measured form
+// that reproduces retail's otherwise-unique middle-north assignment block.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056ef20, 0x57C)  // anchor-vtable 0x64183c slot 14 + quest-monster pool
+void type_monster_quest::SetDefaultText()
+{
+    position = gpGame->GameFn_004CEF10(map_monster);
+    if (position.x < 0)
+        return;
+
+    const char* monsterName;
+    const std::string* texts =
+        quest_text_row() + QUEST_TEXT_COLUMNS * quest_type();
+    monster_id = gpGame->worldMap.cell(position)->objectIndex;
+    monsterName = monster_id >= 0 && monster_id <= 0x96
+                      ? akCreatureTypeTraits[monster_id].m_plural_name
+                      : emptyRolloverText;
+
+    std::string direction;
+    if (position.x < gMapWidth / 3) {
+        if (position.y < gMapHeight / 3)
+            direction = gQuestMonsterDirections[7];
+        else if (position.y > (2 * gMapHeight) / 3)
+            direction = gQuestMonsterDirections[5];
+        else
+            direction = gQuestMonsterDirections[6];
+    } else if (position.x > (2 * gMapWidth) / 3) {
+        if (position.y < gMapHeight / 3)
+            direction = gQuestMonsterDirections[1];
+        else if (position.y > (2 * gMapHeight) / 3)
+            direction = gQuestMonsterDirections[3];
+        else
+            direction = gQuestMonsterDirections[2];
+    } else {
+        if (position.y < gMapHeight / 3) {
+            // This one site exhausted a different VC6 inline budget in
+            // retail: traits::length is open, assign(pointer, length) is not.
+            const char* directionText = gQuestMonsterDirections[0];
+            const size_t directionLength =
+                std::char_traits<char>::length(directionText);
+#pragma inline_depth(0)
+            direction.assign(directionText, directionLength);
+#pragma inline_depth()
+        } else if (position.y > (2 * gMapHeight) / 3)
+            direction = gQuestMonsterDirections[4];
+        else
+            direction = gQuestMonsterDirections[8];
+    }
+
+    if (position.z)
+        direction += DATA_COMPGEN(0x00683228, questUndergroundSuffix,
+                                  " underground");
+
+    if (proposalText.length() == 0)
+        proposalText = format_string(texts[QUEST_TEXT_PROPOSAL].c_str(),
+                                     monsterName, direction.c_str());
+    if (progressText.length() == 0)
+        progressText = format_string(texts[QUEST_TEXT_PROGRESS].c_str(),
+                                     monsterName, direction.c_str());
+    if (completionText.length() == 0)
+        completionText = format_string(texts[QUEST_TEXT_COMPLETION].c_str(),
+                                       monsterName, direction.c_str());
+}
+
 // The derived destructor family is deliberately implicit. Explicit
 // definitions were measured and rejected: they make VC6 add a derived-vptr
 // store absent from retail. The factory below now makes VC6 emit the real
@@ -901,6 +1144,17 @@ int type_artifact_quest::GetAIValue(int player)
     }
     return total;
 }
+// Slot 6 names every requested artifact through the Complete-era 32-byte
+// traits table, then delegates punctuation to the shared quest-list helper.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056f5f0, 0x136)  // anchor-vtable 0x641878 slot 6 + artifact traits stride, retail-only
+std::string type_artifact_quest::GetRequirementText()
+{
+    std::vector<std::string> requirements;
+    for (unsigned i = 0; i < artifacts.size(); ++i)
+        requirements.push_back(akArtifactTraits[artifacts[i]].name);
+    return join_quest_requirements(requirements);
+}
 // The three CONTAINER leaves take their vararg from slot 6 - a real
 // virtual call on `this`, which is what the `call dword ptr [eax+0x18]`
 // in each of them is - and destroy the returned temporary on the way
@@ -932,6 +1186,96 @@ void type_artifact_quest::TakePayment(hero* current_hero)
 {
     for (unsigned i = 0; i < artifacts.size(); ++i)
         current_hero->remove_artifact(artifacts[i]);
+}
+
+// Slot 4 filters the payload to the artifacts the visiting hero still lacks.
+// Retail keeps both that id vector and its parallel name vector alive across
+// the text choice.  Each arm then owns its own picture vector: the generated
+// arm formats the missing-name list into the progress template, while a
+// custom progress string is passed through directly.
+//
+// Residual (88.7407%): all 31 CFG blocks and every branch target agree, as do
+// retail's 0x68 frame and every persistent vector/string/record slot. Keeping
+// each dialog record outside its loop is what recovers that layout. Retail
+// outlines only the generated arm's repeated vector::size test; restricting
+// inline_depth(0) to that statement restores the complete CFG without also
+// outlining operator[] and push_back.
+//
+// Five block sizes remain different. They are one quest-text register
+// schedule plus a coherent Dinkumware inline-budget class: this compile
+// inlines both dialog-vector destructors and the final trivial artifact-vector
+// destroy where retail calls them, and selects the count-taking insert in the
+// custom arm where retail selects the position/value overload. Extending the
+// depth limit through either dialog scope regresses to 33 blocks / 86.4222%;
+// branch-local versus function-scoped text pointers is byte-flat. Retain the
+// source-shaped lifetime instead of manufacturing storage or cleanup flow.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056f8a0, 0x313)  // anchor-vtable 0x641878 slot 4 + artifact picture class, retail-only
+void type_artifact_quest::DoProposalDialog(hero* current_hero)
+{
+    std::vector<TArtifact> missingArtifacts;
+    std::vector<std::string> requirements;
+    const char* textPointer;
+    for (unsigned i = 0; i < artifacts.size(); ++i) {
+        if (!current_hero->HasArtifact(artifacts[i])) {
+            missingArtifacts.push_back(artifacts[i]);
+            requirements.push_back(akArtifactTraits[artifacts[i]].name);
+        }
+    }
+
+    if (progressText.length() == 0) {
+        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        std::string text = format_string(
+            textFormat.c_str(),
+            join_quest_requirements(requirements).c_str());
+        textPointer = text.c_str();
+        std::vector<type_dialog_resource> dialogResources;
+        type_dialog_resource resource;
+        unsigned i = 0;
+        for (;;) {
+#pragma inline_depth(0)
+            if (i >= missingArtifacts.size())
+                break;
+#pragma inline_depth()
+            resource.resource = 8;
+            resource.qualifier = missingArtifacts[i];
+            dialogResources.push_back(resource);
+            ++i;
+        }
+        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+    } else {
+        textPointer = progressText.c_str();
+        std::vector<type_dialog_resource> dialogResources;
+        type_dialog_resource resource;
+        for (unsigned i = 0; i < missingArtifacts.size(); ++i) {
+            resource.resource = 8;
+            resource.qualifier = missingArtifacts[i];
+            dialogResources.push_back(resource);
+        }
+        extended_dialog(textPointer, dialogResources, -1, -1, 0);
+    }
+}
+
+// Slot 5 uses extended-dialog artifact pictures: class 8 and the artifact id
+// as qualifier, one row per element in the quest payload.
+// Residual (75.2353%): the same returned-string lifetime/register-allocation
+// class as the skill twin above; all twelve CFG blocks agree. The natural
+// source-compatible variants were exhausted there and this one retains the
+// lifetime-extending const reference for the same reason.
+// E:\gamedcs\seerhut.cpp
+VA(0x0056fbc0, 0xE6)  // anchor-vtable 0x641878 slot 5 + artifact picture class, retail-only
+void type_artifact_quest::DoProgressDialog()
+{
+    const std::string& text = GetProgressDialogText();
+    const char* textPointer = text.c_str();
+    std::vector<type_dialog_resource> dialogResources;
+    for (unsigned i = 0; i < artifacts.size(); ++i) {
+        type_dialog_resource resource;
+        resource.resource = 8;
+        resource.qualifier = artifacts[i];
+        dialogResources.push_back(resource);
+    }
+    extended_dialog(textPointer, dialogResources, -1, -1, 0);
 }
 // The two container leaves' deserializers, and the mirror of their own
 // slot 13: a BYTE count and then one element per trip, appended through
@@ -1066,6 +1410,23 @@ int type_creature_quest::GetAIValue(int player)
         total += akCreatureTypeTraits[types[i]].AI_value * counts[i];
     return total;
 }
+// This is the creature counterpart of the exact resource builder below:
+// every parallel type/count row becomes one localized `count name` fragment,
+// selecting the singular trait name only for a count of one.
+// E:\gamedcs\seerhut.cpp
+VA(0x005704e0, 0x1A7)  // anchor-vtable 0x6418b4 slot 6 + parallel-vector walks, retail-only
+std::string type_creature_quest::GetRequirementText()
+{
+    std::string requirement;
+    std::vector<std::string> requirements;
+    for (unsigned i = 0; i < types.size(); ++i) {
+        requirement = format_string(
+            DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+            counts[i], GetArmyName(types[i], counts[i]));
+        requirements.push_back(requirement);
+    }
+    return join_quest_requirements(requirements);
+}
 // E:\gamedcs\seerhut.cpp
 VA(0x00570690, 0xCF)  // anchor-vtable 0x6418b4 slot 7 + the shared text-table shape, retail-only
 std::string type_creature_quest::GetQuestDescription()
@@ -1104,6 +1465,105 @@ void type_creature_quest::TakePayment(hero* current_hero)
         }
     }
 }
+
+// Slot 4 lists only stacks for which the visitor's whole army is below the
+// quest count. The display keeps the full required count (not the deficit),
+// both in the localized text fragment and in the packed creature picture.
+//
+// Residual (97.4706%): all 33 CFG blocks and every branch target agree; 32
+// block instruction counts are exact. The sole size difference is the same
+// quest-text copy schedule as the artifact proposal: this compile folds the
+// row offset into two memory operands where retail materializes one add.
+// Naming the source reference is byte-flat, so retain the direct expression.
+// E:\gamedcs\seerhut.cpp
+VA(0x00570880, 0x2F8)  // anchor-vtable 0x6418b4 slot 4 + creature picture class, retail-only
+void type_creature_quest::DoProposalDialog(hero* current_hero)
+{
+    std::string text;
+    std::vector<std::string> requirements;
+    std::vector<type_dialog_resource> dialogResources;
+    type_dialog_resource resource;
+
+    for (unsigned i = 0; i < types.size(); ++i) {
+        if (current_hero->army.get_creature_total(types[i]) < counts[i]) {
+            text = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                counts[i], GetArmyName(types[i], counts[i]));
+            requirements.push_back(text);
+
+            resource.resource = 0x15;
+            resource.qualifier =
+                (static_cast<unsigned long>(
+                    static_cast<unsigned short>(counts[i])) << 16)
+                | static_cast<unsigned short>(types[i]);
+            dialogResources.push_back(resource);
+        }
+    }
+
+    if (progressText.length() == 0) {
+        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        text = format_string(
+            textFormat.c_str(),
+            join_quest_requirements(requirements).c_str());
+    } else {
+        text = progressText;
+    }
+    extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
+}
+
+// Slot 5 shows every requested creature stack. With no custom proposal text,
+// retail appends the deadline suffix to the proposal template before filling
+// in the joined stack list; otherwise it uses the base's dated proposal-text
+// getter. Picture qualifiers use the same unsigned 16|16 packing as slot 4.
+//
+// Residual (99.5679%): all 25 CFG blocks and every branch target agree. The
+// vectors need their own inner scope so the final text cleanup can use the
+// retail inline boundary. inline_depth(0) leaves one instruction: this compile
+// calls basic_string::~basic_string, while retail inlines that wrapper and
+// calls `_Tidy(1)`. Default depth expands the complete refcount path and falls
+// to 90.8971%; depth 1 is likewise rejected at 86.0535%.
+// E:\gamedcs\seerhut.cpp
+VA(0x00570b80, 0x2D5)  // anchor-vtable 0x6418b4 slot 5 + creature picture class, retail-only
+void type_creature_quest::DoProgressDialog()
+{
+    std::string text;
+    {
+        std::vector<std::string> requirements;
+        std::vector<type_dialog_resource> dialogResources;
+        type_dialog_resource resource;
+
+        for (unsigned i = 0; i < types.size(); ++i) {
+            text = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                counts[i], GetArmyName(types[i], counts[i]));
+            requirements.push_back(text);
+
+            resource.resource = 0x15;
+            resource.qualifier =
+                (static_cast<unsigned long>(
+                    static_cast<unsigned short>(counts[i])) << 16)
+                | static_cast<unsigned short>(types[i]);
+            dialogResources.push_back(resource);
+        }
+
+        if (proposalText.length() == 0) {
+            std::string textFormat =
+                quest_text_row()[QUEST_TEXT_COLUMNS * quest_type()
+                                 + QUEST_TEXT_PROPOSAL];
+            if (field_3c >= 0)
+                textFormat += get_time_limit_text();
+            text = format_string(
+                textFormat.c_str(),
+                join_quest_requirements(requirements).c_str());
+        } else {
+            text = GetProposalDialogText();
+        }
+        extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
+    }
+#pragma inline_depth(0)
+}
+#pragma inline_depth()
+
 // E:\gamedcs\seerhut.cpp
 VA(0x00570e60, 0x208)  // anchor-vtable 0x6418b4 slot 11 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::Load(TAbstractFile* file, int version)
@@ -1305,6 +1765,57 @@ void type_resource_quest::TakePayment(hero* current_hero)
     do {
         *playerResource++ -= *questResource++;
     } while (--count);
+}
+
+// Vtable 0x6418f0 slot 4. Unlike slot 5, the proposal shows only resources
+// the visitor still lacks. Retail strength-reduces the three parallel walks
+// (player treasury, quest price, localized resource name) into pointers, then
+// builds both the missing-requirement strings and their dialog pictures.
+//
+// Residual (87.1048%): all 25 blocks, all 12 branches and the 0x6c frame
+// agree. Keeping the dialog record at function scope is load-bearing: it
+// prevents the later text-format local from reusing the record's two slots
+// and recovers retail's complete temporary layout (86.9301 -> 87.1048).
+// What remains is register homing: our VC6 promotes `i` in EBX and homes
+// `this` at -0x10; retail keeps `this` in EBX and recycles the dead hero
+// parameter slot for `i`, moving eleven otherwise-corresponding blocks.
+// for/while forms, scalar declaration order and an explicit `this` alias are
+// byte-flat; an expression-temporary format string breaks the CFG and falls
+// to 80.2795%. Retain the source-shaped lifetime rather than fake the homes.
+VA(0x00571840, 0x29D)  // anchor-vtable + player-resource stride, retail-only
+void type_resource_quest::DoProposalDialog(hero* current_hero)
+{
+    std::vector<std::string> requirements;
+    std::string text;
+    std::vector<type_dialog_resource> dialogResources;
+    int i = 0;
+    type_dialog_resource resource;
+    long* playerResources =
+        gpGame->players[current_hero->owner].resources;
+
+    while (i <= 6) {
+        if (playerResources[i] < resources[i]) {
+            text = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                resources[i], gResourceNames[i]);
+            requirements.push_back(text);
+
+            resource.resource = i;
+            resource.qualifier = resources[i];
+            dialogResources.push_back(resource);
+        }
+        ++i;
+    }
+
+    if (progressText.length() == 0) {
+        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        text = format_string(
+            textFormat.c_str(),
+            join_quest_requirements(requirements).c_str());
+    } else {
+        text = progressText;
+    }
+    extended_dialog(text.c_str(), dialogResources, -1, -1, 0);
 }
 
 // Vtable 0x6418f0 slot 5. The dialog pictures are the positive entries of
@@ -1529,6 +2040,20 @@ std::string type_belong_to_player_quest::GetRequirementText()
     return std::string();
 }
 
+// Slot 7 lower-cases the localized player-colour name in place before using
+// it as the description template's sole vararg. The same begin/end/begin
+// transform is independently exact in SetDefaultText below.
+// E:\gamedcs\seerhut.cpp
+VA(0x00572670, 0x19D)  // anchor-vtable 0x641968 slot 7 + player-colour table, retail-only
+std::string type_belong_to_player_quest::GetQuestDescription()
+{
+    std::string requirement = gPlayerColorNames[required_owner];
+    std::transform(requirement.begin(), requirement.end(),
+                   requirement.begin(), ::tolower);
+    return format_string(quest_text(QUEST_TEXT_DESCRIPTION).c_str(),
+                         requirement.c_str());
+}
+
 // E:\gamedcs\seerhut.cpp
 VA(0x00572810, 0x06)  // anchor-vtable 0x641968 slot 8, retail-only
 int type_belong_to_player_quest::quest_type()
@@ -1621,6 +2146,59 @@ TQuestGuard::TQuestGuard()
 {
     quest = 0;
     visitedPlayers = 0;
+}
+
+// The exact HD 5.3 structural twin supplies the member identity and full
+// signature. Retail fixes every operation independently: the +0x3c deadline,
+// row-wide expired string, slots 2/3/4/5, local-player visit bit, completion
+// text accessor, and the EraseAndFizzle tail.
+VA(0x00572b60, 0x1FE)  // exact HD structural twin 0x572df0
+void TQuestGuard::DoEvent(hero* current_hero, bool human_player,
+                          NewmapCell* eventCell, type_point point)
+{
+    if (!quest)
+        return;
+
+    bool expired = false;
+    if (quest->field_3c >= 0) {
+        expired = quest->field_3c < static_cast<short>(
+            (gpGame->field_1f642 * 4 + gpGame->field_1f640 - 5) * 7
+            + gpGame->field_1f63e);
+    }
+
+    if (expired) {
+        if (human_player) {
+            const std::string* row = quest->field_04
+                ? gQuestTextA[quest->field_38]
+                : gQuestTextB[quest->field_38];
+            NormalDialog(row[type_quest::QUEST_TEXT_EXPIRED].c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    if (human_player) {
+        if (!(visitedPlayers & (1 << current_hero->owner)))
+            quest->DoProgressDialog();
+        else if (!quest->is_satisfied(current_hero))
+            quest->DoProposalDialog(current_hero);
+    }
+
+    visitedPlayers |= 1 << gNetLocalGamePos;
+    if (!quest->is_satisfied(current_hero))
+        return;
+
+    if (human_player) {
+        NormalDialog(quest->get_completion_text().c_str(),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT
+            && gpWindowManager->dialogReturn != DIALOG_RETURN_CHOICE_1)
+            return;
+    }
+
+    quest->TakePayment(current_hero);
+    gpAdvManager->EraseAndFizzle(eventCell, point, 1);
+    quest = 0;
 }
 
 // The quest log's line for this guard, and the ONE reader of the text
@@ -1873,6 +2451,446 @@ TSeerHut::TSeerHut()
     visitedPlayers = 0;
     NameIndex = 0;
     field_12 = 0;
+}
+
+// Retail's sole caller passes a hero and consumes the result as the AI value
+// of this map object. The independently identical HD body supplies the member
+// name; retail proves the reward helper, visited mask, quest virtual slots and
+// every date-field width used below.
+VA(0x005735a0, 0xC3)  // exact HD structural twin 0x573970
+int TSeerHut::getValue(hero* currentHero)
+{
+    int value = reward.getValue(currentHero);
+
+    if (!(visitedPlayers & (1 << currentHero->owner)))
+        return _cpp_max(value, 20);
+
+    if (quest) {
+        bool expired = false;
+        if (quest->field_3c >= 0) {
+            short days = (gpGame->field_1f642 * 4
+                + gpGame->field_1f640 - 5) * 7 + gpGame->field_1f63e;
+            expired = quest->field_3c < days;
+        }
+
+        if (!expired && quest->is_satisfied(currentHero))
+            return value - quest->GetAIValue(currentHero->owner);
+    }
+
+    return 0;
+}
+
+// Dreamcast preserves the public member name and `(hero*, bool)` signature.
+// Retail's much larger Complete-era body independently proves the split
+// quest/reward model: it drives the same quest slots as TQuestGuard::DoEvent,
+// prices the reward for the AI, and consumes the quest only after payment and
+// reward application. A hut with no quest records the visit and shows one of
+// three randomized empty-hut lines to a human player.
+//
+// Residual (39.0772% over the admitted code-plus-switch-table row; 30.8511%
+// in the code-only iteration): all reward cases, both dialog paths, both
+// deadline checks and every virtual/helper edge are decoded, but this view
+// reserves a 0x34-byte string frame and emits 87 CFG blocks / three exits
+// against retail's 0x24 bytes and 59 blocks / two exits. Direct versus
+// explicit-bool deadline tests moved 30.5793 -> 30.8511; a
+// register-qualified hero alias was byte-flat. The mismatch is the same
+// local-coloring/EH-view class as the complex slot-4 dialog above, so retain
+// the natural ownership model.
+VA(0x00573670, 0x400)  // code plus two retail switch tables in the admitted row
+void TSeerHut::DoSeerEvent(hero* current_hero, bool human_player)
+{
+    if (quest) {
+        bool expired = false;
+        if (quest->field_3c >= 0) {
+            expired = quest->field_3c < static_cast<short>(
+                (gpGame->field_1f642 * 4 + gpGame->field_1f640 - 5) * 7
+                + gpGame->field_1f63e);
+        }
+        if (expired)
+            return;
+
+        hero* currentHero = current_hero;
+        if (human_player) {
+            if (!(visitedPlayers
+                  & (1 << static_cast<unsigned char>(gNetLocalGamePos))))
+                quest->DoProgressDialog();
+            else if (!quest->is_satisfied(currentHero))
+                quest->DoProposalDialog(currentHero);
+        }
+
+        visitedPlayers |= 1 << gNetLocalGamePos;
+        if (!quest->is_satisfied(currentHero))
+            return;
+
+        if (human_player) {
+            int rewardPicture;
+            switch (reward.rewardType) {
+            case eRewardExperience:
+                rewardPicture = 0x11;
+                break;
+            case eRewardMana:
+                rewardPicture = 0x23;
+                break;
+            case eRewardMorale:
+                rewardPicture = 0x0e;
+                break;
+            case eRewardLuck:
+                rewardPicture = 0x0b;
+                break;
+            case eRewardResource:
+                rewardPicture = reward.value.resource.resourceType;
+                break;
+            case eRewardPrimarySkill:
+                switch (reward.value.primarySkill.skillType) {
+                case TSeerReward::ePriSkillAttack:
+                    rewardPicture = 0x1f;
+                    break;
+                case TSeerReward::ePriSkillDefense:
+                    rewardPicture = 0x20;
+                    break;
+                case TSeerReward::ePriSkillPower:
+                    rewardPicture = 0x21;
+                    break;
+                case TSeerReward::ePriSkillKnowledge:
+                    rewardPicture = 0x22;
+                    break;
+                default:
+                    rewardPicture = -1;
+                    break;
+                }
+                break;
+            case eRewardSecondarySkill:
+                rewardPicture = 0x14;
+                break;
+            case eRewardArtifact:
+                rewardPicture = 8;
+                break;
+            case eRewardSpell:
+                rewardPicture = 9;
+                break;
+            case eRewardCreature:
+                rewardPicture = 0x15;
+                break;
+            default:
+                rewardPicture = -1;
+                break;
+            }
+
+            NormalDialog(quest->get_completion_text().c_str(),
+                         2, -1, -1, rewardPicture,
+                         reward.GetRewardExtra(currentHero),
+                         -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT
+                && gpWindowManager->dialogReturn != DIALOG_RETURN_CHOICE_1)
+                return;
+        } else {
+            int value = reward.getValue(currentHero);
+            if (!(visitedPlayers & (1 << currentHero->owner))) {
+                value = _cpp_max(value, 20);
+            } else {
+                if (!quest)
+                    return;
+                if (quest->field_3c >= 0
+                    && quest->field_3c < static_cast<short>(
+                        (gpGame->field_1f642 * 4
+                         + gpGame->field_1f640 - 5) * 7
+                        + gpGame->field_1f63e))
+                    return;
+                if (!quest->is_satisfied(currentHero))
+                    return;
+                value -= quest->GetAIValue(currentHero->owner);
+            }
+            if (value <= 0)
+                return;
+        }
+
+        quest->TakePayment(currentHero);
+        reward.giveReward(currentHero, human_player);
+        quest = 0;
+        return;
+    }
+
+    visitedPlayers |= 1 << gNetLocalGamePos;
+    if (human_player) {
+        std::string text;
+        text = format_string(
+            gQuestTextA[rand() % 3][type_quest::QUEST_TEXT_EXPIRED].c_str(),
+            (*gpSeerHutNames)[NameIndex].c_str());
+        NormalDialog(text.c_str(), 1, -1, -1, -1, 0,
+                     -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// Retail-only TSeerReward dispatcher, named and typed by the HD/NH3API twin;
+// the retail caller independently passes &TSeerHut::reward and all ten arms
+// prove the 12-byte receiver. Notable retail behavior preserved literally:
+// the Luck arm calls its appraisal but falls through into Resource instead
+// of returning that result. The primary-skill sub-switch values are the DC
+// TPrimarySkill roster and the five hero tail weights retain their DC names.
+// Residual (99.9839%): all 18 CFG blocks and every body instruction agree;
+// retail reserves separate locals for `artifact` at [ebp-8] and the
+// resource conversion's unnamed double at [ebp-0x10], while this VC6 SP3
+// compile colors their non-overlapping lifetimes onto [ebp-8]. Thus only
+// `sub esp,8` versus `sub esp,0x10` and the double's two stack displacements
+// differ. The HD 5.3 IDB independently preserves those two frame members.
+// Tried and rejected: function- and case-scoped doubles (byte-identical), a
+// volatile double (same frame plus wrong scheduling), `double[1]`
+// (byte-identical), and a function-scoped default-constructed artifact
+// (separate slots, but adds two entry-time -1 stores absent from retail).
+// Raw storage or a dummy no-init tag could impose the frame but would not be
+// a source reconstruction; keep this compiler-generation/local-coloring
+// plateau instead.
+VA(0x00573a70, 0x210)  // anchor-global, HD name map 0x573e40
+int TSeerReward::getValue(const hero* currentHero)
+{
+    switch (rewardType) {
+    case eRewardExperience:
+        return static_cast<int>(value.dwords[0]
+            * currentHero->turnExperienceToRVRatio);
+
+    case eRewardMana:
+        return currentHero->value_of_knowledge * value.dwords[0] / 20;
+
+    case eRewardMorale:
+        return const_cast<hero*>(currentHero)->MoraleIncreaseValue(
+            value.signedLow.bonus);
+
+    case eRewardLuck:
+        const_cast<hero*>(currentHero)->LuckIncreaseValue(
+            value.signedLow.bonus);
+
+    case eRewardResource:
+    {
+        double quantity;
+        playerData* player = const_cast<hero*>(currentHero)->get_player();
+        quantity = value.resource.quantity;
+        return static_cast<int>(
+            quantity * player->resourceValue[value.resource.resourceType]);
+    }
+
+    case eRewardPrimarySkill:
+        switch (value.primarySkill.skillType) {
+        case ePriSkillAttack:
+        case ePriSkillDefense: {
+            int experience = hero::GetExperienceIncrement(currentHero->level);
+            return static_cast<int>(value.primarySkill.bonus
+                * currentHero->turnExperienceToRVRatio * experience);
+        }
+        case ePriSkillPower:
+            return value.primarySkill.bonus * currentHero->value_of_power;
+        case ePriSkillKnowledge:
+            return value.primarySkill.bonus * currentHero->value_of_knowledge;
+        default:
+            return 0;
+        }
+
+    case eRewardSecondarySkill:
+        return const_cast<hero*>(currentHero)->SoD_get_seer_skill_value(
+            value.secondarySkill.skillType, value.secondarySkill.bonus);
+
+    case eRewardArtifact: {
+        if (const_cast<hero*>(currentHero)->get_number_in_backpack(1) >= 64)
+            return 0;
+        type_artifact artifact(value.dwords[0], -1);
+        return AI_get_value_of_artifact(&artifact, currentHero->owner);
+    }
+
+    case eRewardSpell:
+        return currentHero->ValueOfSpell(value.dwords[0]);
+
+    case eRewardCreature:
+        return akCreatureTypeTraits[value.creature.creatureType].AI_value
+            * value.creature.count;
+
+    default:
+        return 0;
+    }
+}
+
+// EXACT 2026-08-24. Retail's sole caller at 0x573919 passes `this + 5`,
+// the independently proven address of TSeerHut::reward, followed by the hero
+// and human-player
+// flag. All ten arms use exactly the payload views proven by getValue and
+// GetRewardExtra. Dreamcast's TSeerHut::GiveReward supplies the semantic
+// statement order and the artifact local; the later class/name split is
+// corroborated by the HD structural twin only after the retail receiver is
+// fixed.
+VA(0x00573c80, 0x290)  // anchor-caller 0x573919 + dc semantic twin 0x12d4dc
+void TSeerReward::giveReward(hero* currentHero, bool humanPlayer)
+{
+    switch (rewardType) {
+    case eRewardExperience:
+        currentHero->GiveExperience(static_cast<int>(
+            currentHero->GetExperienceBonusFactor() * value.dwords[0]),
+            1, 1);
+        break;
+
+    case eRewardMana:
+    {
+        int amount;
+        if (currentHero->mana + value.dwords[0] > 999)
+            amount = 999 - currentHero->mana;
+        else if (currentHero->mana + value.dwords[0] < 0)
+            amount = currentHero->mana;
+        else
+            amount = value.dwords[0];
+        currentHero->mana += amount;
+        break;
+    }
+
+    case eRewardMorale:
+        currentHero->field_11a += value.signedLow.bonus;
+        break;
+
+    case eRewardLuck:
+        currentHero->field_11b += value.signedLow.bonus;
+        break;
+
+    case eRewardResource:
+        currentHero->GiveResource(value.resource.resourceType,
+                                  value.resource.quantity);
+        break;
+
+    case eRewardPrimarySkill:
+        currentHero->AdjustPrimarySkill(value.primarySkill.skillType,
+                                        value.primarySkill.bonus);
+        break;
+
+    case eRewardSecondarySkill:
+    {
+        int skill = value.secondarySkill.skillType;
+        int bonus = value.secondarySkill.bonus;
+        if (currentHero->skillLevel[skill] == 0) {
+            if (currentHero->skillCount < 8) {
+                currentHero->GiveSS(skill, bonus);
+                break;
+            }
+        }
+        if (currentHero->skillLevel[skill] > 0
+            && currentHero->skillLevel[skill] < bonus)
+            currentHero->GiveSS(skill,
+                bonus - currentHero->skillLevel[skill]);
+        break;
+    }
+
+    case eRewardArtifact:
+        if (currentHero->get_number_in_backpack(1) < 64) {
+            type_artifact artifact(artifact_from_int(value.dwords[0]));
+            currentHero->GiveArtifact(&artifact, 1, 1);
+            if (!humanPlayer)
+                AI_equip_artifacts(currentHero);
+        }
+        break;
+
+    case eRewardSpell:
+        if (currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
+            && akSpellTraits[value.dwords[0]].level
+                <= currentHero->wisdomLevel + 2
+            && !currentHero->in_spellbook[value.dwords[0]])
+            currentHero->AddSpell(value.dwords[0]);
+        break;
+
+    case eRewardCreature:
+        if (!currentHero->army.Add(value.creature.creatureType,
+                                   value.creature.count, -1)) {
+            if (humanPlayer)
+                do_monster_join_dialog(currentHero,
+                    creature_type_from_int(value.creature.creatureType),
+                    value.creature.count);
+            else
+                AI_join_decision(currentHero,
+                    creature_type_from_int(value.creature.creatureType),
+                    value.creature.count);
+        }
+        break;
+    }
+}
+
+// EXACT 2026-08-24. Dreamcast keeps this semantic helper as the private
+// TSeerHut::GetRewardExtra(const hero*) at seerhut.cpp:373. Retail's caller
+// passes `this + 5`, and all three adjacent switch helpers read a 12-byte
+// `(type,payload[8])` record, proving that x86 moved the operation onto
+// TSeerReward. The ten switch arms independently prove every payload view:
+// signed-byte morale/luck/primary bonuses, dword mana/resource/skill ids,
+// and the packed 16-bit creature/count pair.
+VA(0x00573f10, 0xBC)  // caller passes &TSeerHut::reward; dc semantic twin 0x12d6d8
+int TSeerReward::GetRewardExtra(const hero* thisHero)
+{
+    switch (rewardType) {
+    case eRewardExperience:
+        return static_cast<int>(
+            const_cast<hero*>(thisHero)->GetExperienceBonusFactor()
+            * value.dwords[0]);
+    case eRewardMana:
+        return value.dwords[0];
+    case eRewardMorale:
+    case eRewardLuck:
+        return value.signedLow.bonus;
+    case eRewardResource:
+        return value.dwords[1];
+    case eRewardPrimarySkill:
+        return value.signedHigh.bonus;
+    case eRewardSecondarySkill:
+        return value.secondarySkill.skillType * 3
+            + value.secondarySkill.bonus + 2;
+    case eRewardArtifact:
+    case eRewardSpell:
+        return value.dwords[0];
+    case eRewardCreature:
+        return static_cast<unsigned short>(value.dwords[0])
+            | (static_cast<unsigned short>(value.creature.count) << 16);
+    default:
+        return -1;
+    }
+}
+
+// Retail's only caller is NewfullMap::Save, and the thiscall body serializes
+// exactly one 0x13-byte SeerHutList element. The independently identical HD
+// body supplies the member name after retail fixes the receiver, stream ABI,
+// virtual quest slots, and every field offset. Dreamcast preserves the same
+// TSeerHut::save lineage, though its older body wrote through gzwrite.
+VA(0x00573fd0, 0x91)  // caller NewfullMap::Save; HD 0x5743a0; dc 0x12d8c0
+int TSeerHut::save(TAbstractFile* outfile)
+{
+    if (!quest) {
+        unsigned char questType = 0;
+        outfile->Write(&questType, sizeof(questType));
+    } else {
+        unsigned char questType =
+            static_cast<unsigned char>(quest->quest_type());
+        outfile->Write(&questType, sizeof(questType));
+        quest->Save(outfile);
+    }
+
+    outfile->Write(&reward, sizeof(reward));
+
+    {
+        unsigned char value = field_12;
+        outfile->Write(&value, sizeof(value));
+    }
+    {
+        unsigned char value = visitedPlayers;
+        outfile->Write(&value, sizeof(value));
+    }
+    {
+        unsigned char value = NameIndex;
+        return outfile->Write(&value, sizeof(value));
+    }
+}
+
+// The quest log's SeerHutList arm is the QuestGuard builder's three-argument
+// twin: the quest-table log format receives the requirement and this hut's
+// generated name. Retail's sole caller proves the receiver and nullary
+// string-return ABI; the unique identical HD body supplies the method name.
+VA(0x00574070, 0x138)  // UpdateQuestLocator caller; HD twin 0x574440
+std::string TSeerHut::getSeerLogText()
+{
+    std::string logFormat =
+        quest->quest_texts()[type_quest::QUEST_TEXT_LOG];
+    return format_string(
+        logFormat.c_str(),
+        quest->GetRequirementText().c_str(),
+        (*gpSeerHutNames)[NameIndex].c_str());
 }
 
 // The TQuestGuard pair's TSeerHut twin, and it splits CROSSWISE: 0x5741b0

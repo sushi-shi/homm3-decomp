@@ -228,7 +228,7 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
     if (pNetMsg->subType >= RS_MAP_CHANGE_START
         && pNetMsg->subType <= RS_MAP_CHANGE_END) {
         gpAdvManager->AdvmgrFn_00482010(pNetMsg);
-        RemoteFn_00555910(pNetMsg);
+        DestroyMsg(pNetMsg);
         return 0;
     }
 
@@ -294,12 +294,12 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
         }
         CPlayerDropUpdateMsg* pMsg =
             static_cast<CPlayerDropUpdateMsg*>(pNetMsg);
-        RemoteFn_005565E0(pMsg->m_gamePos);
+        OnPlayerDropUpdateMsg(pMsg->m_dpidDropped);
         break;
     }
     case RS_PLAYER_DEAD: {
         CPlayerDeadMsg* pMsg = static_cast<CPlayerDeadMsg*>(pNetMsg);
-        RemoteFn_00556780(pMsg->m_gamePos, 1);
+        HandlePlayerDead(pMsg->m_gamePos, 1);
         break;
     }
     case RS_PLAYER_WON:
@@ -307,14 +307,14 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_00556940(pNetMsg);
+        HandlePlayerWon(pNetMsg);
         break;
     case RS_PLAYER_LOST:
         if (m_inPopup) {
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_005569A0(pNetMsg);
+        HandlePlayerLost(pNetMsg);
         break;
     case RS_SET_VISIBILITY: {
         CSetVisibilityMsg* pMsg = static_cast<CSetVisibilityMsg*>(pNetMsg);
@@ -409,22 +409,22 @@ CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        pNetMsg = RemoteFn_00557920(pNetMsg);
+        pNetMsg = CNetMsgHandler::HandleNetMsg(pNetMsg);
         break;
     case RS_NORMAL_WIN:
         if (m_inPopup) {
             m_pAbortPopupMsg = pNetMsg;
             return 0;
         }
-        RemoteFn_005569F0(pNetMsg);
+        HandleNormalWinMsg(pNetMsg);
         break;
     default:
-        pNetMsg = RemoteFn_00557920(pNetMsg);
+        pNetMsg = CNetMsgHandler::HandleNetMsg(pNetMsg);
         break;
     }
 
     if (pNetMsg)
-        RemoteFn_00555910(pNetMsg);
+        DestroyMsg(pNetMsg);
     return 0;
 }
 
@@ -883,10 +883,15 @@ int advManager::Open(int newPriority)
 
 // The admitted retail vtable inventory bounds advManager at exactly three
 // slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.
-// The old generated-dtor claim at 0x4077b0 was false. That address is the
-// first entry of the following five-slot CAdvMgrNetMsgHandler table at
-// 0x63a684 and calls the CNetMsgHandlerPause-family destructor at 0x57d160.
-// Keep it unclaimed until that network-handler class is admitted.
+// The following five-slot table at 0x63a684 belongs instead to the now-
+// modelled CAdvMgrNetMsgHandler. Its slot 0 is this deleting destructor;
+// VC6's emitted ??_G public and all 33 retail bytes agree. The five-byte
+// implicit destructor it calls is folded with another owner in retail, but
+// VC6 still emits the class's named ??1 public; the direct-symbol compgen
+// claim binds that existing body without inventing a source destructor.
+VA_COMPGEN(0x004077b0, 0x21, SCALAR_DELETING_DTOR,
+           CAdvMgrNetMsgHandler)
+VA_COMPGEN(0x0057d160, 0x05, IMPLICIT_DTOR, CAdvMgrNetMsgHandler)
 
 // E:\gamedcs\advmgr.cpp:1092
 // The sprite teardown, gated on the town-nesting depth. Retail's own

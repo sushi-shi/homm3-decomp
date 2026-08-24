@@ -10,6 +10,11 @@
 // 0x41e RS_CLAIM_GENERATOR, 1055 = 0x41f RS_CLAIM_GARRISON. The numbering
 // transfers whole, so a retail subtype constant can be named from it.
 enum eRS_Messages {
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    // CEndPlacementPhaseMsg's retail inline constructor stores 0x3f0;
+    // the gapless DC message ladder names that value.
+    RS_END_PLACEMENT_PHASE = 0x3f0,
+#endif
     RS_COMBAT_TYPE = 0x3f1,
     // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
     // note. DC eRS_Messages has RS_SET_VISIBILITY = 1021, and retail's two
@@ -66,6 +71,7 @@ enum eRS_Messages {
     // The two consecutive ready-handshake records constructed by
     // CWaitForReadyPlayersDlg.  DC's gapless roster names the rungs;
     // retail stores 0x3f4/0x3f5 in their 20-byte base-only messages.
+    RS_HERO_LEVEL_UPDATE = 1011,
     RS_READY_TO_PLAY = 1012,
     RS_ALL_READY_TO_PLAY = 1013,
     RS_SET_AS_HOST = 1015,
@@ -94,6 +100,18 @@ public:
         field_10 = 0;
     }
 };
+
+#ifdef HOMM3_COMMAND_GRID_VIEW
+// DC netmsg.h:758 names the base-only message; retail ResetRound expands
+// this constructor in place and proves both the store order and 0x14 extent.
+class CEndPlacementPhaseMsg : public CNetMsg {
+public:
+    CEndPlacementPhaseMsg()
+        : CNetMsg(RS_END_PLACEMENT_PHASE,
+                  sizeof(CEndPlacementPhaseMsg)) {}
+};
+SIZE(CEndPlacementPhaseMsg, 0x14);
+#endif
 
 #ifdef HOMM3_REMOTE_WAIT_READY_DECLS
 class CReadyToPlayMsg : public CNetMsg {
@@ -129,10 +147,49 @@ public:
             delete m_pNetMsg;
     }
 
+    void SetMessage(CNetMsg* pNetMsg) { m_pNetMsg = pNetMsg; }
+
 private:
     CNetMsg* m_pNetMsg;
 };
 SIZE(CMessageKill, 0x4);
+#endif
+
+#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
+class TAbstractFile;
+
+// Retail's complex wire-message base is a vptr followed by an ordinary
+// 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
+// that layout, and 0x512e00 copies a received header into netmsg before
+// dispatching the remaining payload through virtual read(). The ordinal name
+// is retained because neither retail nor DC names that PC-only bridge.
+class t_complex_net_message {
+public:
+    t_complex_net_message(int subType);
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+    unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
+
+protected:
+    CNetMsg netmsg;  // +0x04
+};
+SIZE(t_complex_net_message, 0x18);
+
+class CCombatInitMsg;
+#endif
+
+#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+// DC netmsg.h:488 supplies the class and all four payload names. Retail's
+// CLevelPickWaitDlg dispatcher independently proves the 0x3c-byte wire
+// extent and every PC offset while copying the two skill bands into a hero.
+class CHeroLevelUpdateMsg : public CNetMsg {
+public:
+    int m_hero;                    // +0x14
+    signed char m_ssLevel[28];     // +0x18
+    signed char m_stats[4];        // +0x34
+    int m_numSSs;                  // +0x38
+};
+SIZE(CHeroLevelUpdateMsg, 0x3c);
 #endif
 
 // Complete retail's resource-trade notification is a compact CNetMsg with
@@ -195,8 +252,18 @@ public:
 
 class CPlayerDropUpdateMsg : public CNetMsg {
 public:
-    int m_gamePos;
+    unsigned long m_dpidDropped;
+
+#ifdef HOMM3_REMOTE_WAIT_READY_DECLS
+    // DC netmsg.h:461 supplies the constructor and payload name. Retail's
+    // two inlined HandleNewHost copies independently prove the 0x18-byte
+    // extent, RS_PLAYER_DROP_UPDATE subtype, and final payload store.
+    CPlayerDropUpdateMsg(unsigned long dpidDropped)
+        : CNetMsg(RS_PLAYER_DROP_UPDATE, sizeof(CPlayerDropUpdateMsg)),
+          m_dpidDropped(dpidDropped) {}
+#endif
 };
+SIZE(CPlayerDropUpdateMsg, 0x18);
 
 class CPlayerDeadMsg : public CNetMsg {
 public:

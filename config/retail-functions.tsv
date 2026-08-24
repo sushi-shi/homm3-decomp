@@ -44,6 +44,12 @@
 # actions, rethrows, and exact VC6 reproduction prove they belong to the parent;
 # its aligned extent ends at MainLoop's independent entry 0xb0e40.
 # 11932 rows since.
+# BOUNDARY ADMISSION 2026-08-24: soundmgr.obj's ProcessMP3Stop thread entry
+# is the 16-byte body at 0x19a830. Five retail `_beginthread` immediates point
+# to the 16-byte-aligned entry; it loads gpSoundManager, calls the independent
+# 0x19b080 member body, then tail-jumps to `__endthread`. Dreamcast CodeView
+# independently publishes `void ProcessMP3Stop(void*)` and its sole outgoing
+# edge to soundManager::ThreadStopMP3. 11934 rows since.
 rva	size
 0x1000	89
 0x1060	96
@@ -4946,6 +4952,7 @@ rva	size
 0x19a590	274
 0x19a6b0	275
 0x19a7d0	81
+0x19a830	16
 0x19a840	955
 0x19ac00	169
 0x19acb0	853

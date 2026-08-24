@@ -81,6 +81,8 @@ SIZE(LODFile, 0x18c);
 struct TResourceLODSlot {
     const char* archiveName;
     LODFile file;
+
+    TResourceLODSlot(const char* name);
 };
 SIZE(TResourceLODSlot, 0x190);
 

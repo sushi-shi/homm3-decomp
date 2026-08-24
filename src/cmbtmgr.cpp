@@ -29,17 +29,20 @@
 //     (84 B), 0x66260 (38 B, operator delete tail) - member-subobject
 //     STL ctors/dtors called out of combatManager::combatManager. The
 //     excluded COMDAT class; never claimed.
-//   0x639e0 (14 B, tail-calls soundManager::StopAllSamples), 0x641f0's
-//     neighbours 0x64d40 (525 B, FEAR.WAV) and 0x64f50 (291 B, calls
-//     only army::GetSpeed), 0x65f20 (178 B, town::CalcNumLevelArchers),
-//     0x693a0, 0x69440 (launch_sample + rand) and 0x69e50 (`ret 0xc`
-//     moat-damage helper) - retail bodies with no counterpart anywhere
-//     in the DC cmbtmgr.obj roster, and all but 0x69e50 are called
-//     only from outside this span. Naming them would be invention.
+// Promoted 2026-08-24 from the retail-only class: 0x639e0, plus the four
+// ordinary helpers at 0x65f20, 0x693a0, 0x69440 and 0x69e50. None has a
+// DC cmbtmgr.obj counterpart, so the unattested functions retain bootstrap
+// or address-ordinal names; their retail bodies and callers now prove their
+// complete roles. The excluded ctor/dtor COMDATs above remain unclaimed.
+// Promoted 2026-08-24 after NextArmy closed: its two adjacent retail-only
+// helpers at 0x64d40 and 0x64f50 retain address-ordinal names, but their
+// selected-stack fear check and strict move-order predicate are now fully
+// pinned by their bodies and sole caller.
 #define HOMM3_ARMY_MIDPOINT_DECL
 #define HOMM3_ARMY_NEW_TURN_DECL
 #define HOMM3_ARMY_POW_VIEW
 #define HOMM3_ARMY_RESET_LATCH_DECL
+#define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_TURN_ABILITY_VIEW
 #include <math.h>
 #include <stdlib.h>
@@ -306,9 +309,9 @@ int combatManager::Open(int newPriority)
     }
 
     gCombatStamp6989b8 = GameTime::Get();
-    Unnamed479f30();
+    ResetCycleTimers();
     gpInputManager->Flush();
-    Unnamed478890();
+    ResetMouse();
 
     field_132e0 = 0;
     priority = newPriority;
@@ -770,7 +773,7 @@ void combatManager::InitNonVisualVars()
     field_13d76 = 0;
     field_132c4 = 0;
     field_132f8 = 0;
-    field_14030 = 0;
+    field_14030[0] = 0;
     field_132e4 = 0;
 
     if (heroes[1]) {
@@ -1381,6 +1384,94 @@ int combatManager::CheckApplyBadMorale(int group, int index)
     return 0;
 }
 
+// Retail-only turn-loss check reached immediately after bad morale in
+// NextArmy. A selected stack immune through attribute 17, or itself an
+// Azure Dragon, cannot be frightened. Otherwise the opposing controller's
+// Azure Dragon population supplies a ten-percent fear roll; a hit consumes
+// the selected stack's turn and, outside quick combat, plays the complete
+// message/effect/sample sequence.
+//
+// Residual (91.10%): all 19 branches and five returns agree, as do the
+// semantic instruction sequence and 525-byte span. Retail keeps `selected`
+// in EDI, the Azure total in EDX and the loop count in EAX (with an EBX
+// zero-test copy); this VC6 invocation keeps them in EBX, EDI and EDX and
+// addresses the stack through EAX. Four grounded source shapes were tested:
+// a direct hypnotized-side if/else with signed `<`, the complement-first
+// spelling with `!=`, an initialized actual-side spelling, and the explicit
+// actual-side if/else below. The last is best and reproduces retail's side
+// branch skeleton; the remaining allocation/strength-reduction choice is
+// not source-addressable without semantic distortion.
+VA(0x00464d40, 0x20D)  // NextArmy sole caller + Fear.wav/body, retail-only
+unsigned char combatManager::Unnamed464d40(army* selected)
+{
+    if (selected->Is(17) & 1)
+        return 0;
+    if (selected->creatureType == CREATURE_AZURE_DRAGON)
+        return 0;
+
+    int actualSide;
+    if (selected->hypnotizeFlag)
+        actualSide = 1 - selected->combatSide;
+    else
+        actualSide = selected->combatSide;
+    int opposingSide = 1 - actualSide;
+
+    int azureDragons = 0;
+    for (int i = 0; i != numArmies[opposingSide]; ++i) {
+        army* stack = &armies[opposingSide][i];
+        if (stack->creatureType == CREATURE_AZURE_DRAGON)
+            azureDragons += stack->numTroops;
+    }
+    if (!azureDragons)
+        return 0;
+    if (rand() % 10 > 0)
+        return 0;
+
+    selected->creatureId |= 1 << 26;
+    if (!IsQuickCombat()) {
+        SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+            0x0066ff88, fearSampleName, "Fear.wav"));
+        sprintf(gText,
+                gpGeneralText->GetText(GENERAL_TEXT_COMBAT_FEAR),
+                CreatureName(CREATURE_AZURE_DRAGON, azureDragons),
+                CreatureName(selected->creatureType, selected->numTroops));
+        combatWindow->combat_message(gText, 1, 0);
+        SpellEffect(15, selected, 100, 1);
+        WaitEndSample(sample, -1);
+    }
+    return 1;
+}
+
+// Retail-only strict ordering predicate used by NextArmy's scan. Special
+// turn-state bit 24, arrow towers and catapults outrank ordinary stacks;
+// speed direction flips for the second pass, then side and slot break ties.
+VA(0x00464f50, 0x123)  // NextArmy sole caller + GetSpeed pair, retail-only
+unsigned char combatManager::Unnamed464f50(
+    const army* incumbent, const army* candidate)
+{
+    if ((incumbent->Is(24) & 1) != (candidate->Is(24) & 1))
+        return incumbent->Is(24) & 1;
+
+    int incumbentSpecial = incumbent->creatureType == CREATURE_ARROW_TOWER;
+    int candidateSpecial = candidate->creatureType == CREATURE_ARROW_TOWER;
+    if (incumbentSpecial != candidateSpecial)
+        return incumbentSpecial;
+
+    incumbentSpecial = incumbent->creatureType == CREATURE_CATAPULT;
+    candidateSpecial = candidate->creatureType == CREATURE_CATAPULT;
+    if (incumbentSpecial != candidateSpecial)
+        return incumbentSpecial;
+
+    if (incumbent->GetSpeed() != candidate->GetSpeed()) {
+        if (field_13de4)
+            return incumbent->GetSpeed() < candidate->GetSpeed();
+        return incumbent->GetSpeed() > candidate->GetSpeed();
+    }
+    if (incumbent->combatSide != candidate->combatSide)
+        return incumbent->combatSide != actingSide;
+    return incumbent->bitIndex < candidate->bitIndex;
+}
+
 // E:\gamedcs\cmbtmgr.cpp:2152
 // The turn scan. Two structural facts are forced by the encoding rather
 // than chosen: the outer pass loop is a GOTO loop - five separate sites
@@ -1952,6 +2043,29 @@ void combatManager::KeepAttack(int iTowerPos)
 
     if (!IsQuickCombat())
         WaitEndSample(sample, -1);
+}
+
+// Retail-only tower AI helper, absent from the Dreamcast cmbtmgr.obj roster.
+// Its sole caller is combatManager's AI command dispatcher at 0x4740d0.
+// The current arrow tower determines whether the town's archer count is
+// halved; the 0x41e190 selector then answers a defender slot, which is stored
+// as the SHOOT order's target hex. Both function names are address ordinals.
+VA(0x00465f20, 0xB2)  // anchor-callee, retail-only
+void combatManager::Unnamed465f20()
+{
+    int numArchers;
+    int archerLevel;
+    defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
+    if (armies[actingSide][actingSlot].gridIndex != COMBAT_HEX_KEEP)
+        numArchers = (numArchers + 1) / 2;
+
+    int target = Unnamed41e190(0, archerLevel, numArchers * 6 / 2);
+    if (target < 0) {
+        field_3c = AI_ORDER_NONE;
+        return;
+    }
+    field_3c = AI_ORDER_SHOOT;
+    field_44 = armies[0][target].gridIndex;
 }
 
 #if 0  // @carcass
@@ -2707,7 +2821,7 @@ void combatManager::InitializeArchers()
 //
 // The tower branch is written out here rather than routed through
 // mark_tower_army (0x46a460), which is the same three-way switch: retail
-// EXPANDS it at this site and keeps the out-of-line body for LoadArmies,
+// EXPANDS it at this site and keeps the out-of-line body for cross-TU callers,
 // the /Ob2 asymmetry this TU shows twice more. Calling it from here
 // would emit a CALL retail does not have, because nothing in this tree
 // defines a body for VC6 to expand.
@@ -3928,6 +4042,65 @@ play_frame:
     DrawFrame(1, 0, 0, 0, 1, 0);
 }
 
+// Retail-only combat teardown helper. The two direct callers pass the side
+// to erase after battle; the body disables the highlighter and kills every
+// ordinary stack while deliberately leaving the synthetic arrow tower alone.
+// No Dreamcast row attests a semantic name, so the address ordinal remains.
+VA(0x004693a0, 0x9F)  // anchor-callee, retail-only
+void combatManager::Unnamed4693a0(int side)
+{
+    gpGame->field_1f69c = 1;
+    if (gbUnk69774c)
+        gpGame->campaign.isCheater = 1;
+    TurnOffHighlighter(1);
+
+    army* stack = &armies[side][0];
+    for (int slot = 0; slot < numArmies[side]; slot++, stack++) {
+        if (stack->creatureType != CREATURE_NONE
+                && stack->creatureType != CREATURE_ARROW_TOWER) {
+            stack->numTroops = 0;
+            stack->ProcessDeath(0);
+        }
+    }
+}
+
+// Complete's retail-only Phoenix rebirth sweep. A dead Phoenix stack with a
+// remaining rebirth charge returns one creature per full group of five, plus
+// one independent 1-in-5 roll for each remainder creature. Bit 26 records the
+// successful rebirth before the visual/sound path and Resurrect restores it.
+VA(0x00469440, 0x1B2)  // anchor-callee, retail-only
+void combatManager::CheckRebirth()
+{
+    for (int side = 0; side < 2; side++) {
+        army* stack = &armies[side][0];
+        for (int slot = 0; slot < numArmies[side]; slot++, stack++) {
+            if (stack->creatureType != CREATURE_PHOENIX
+                    || !(stack->Is(21) & 1)
+                    || stack->numSpellCasts <= 0
+                    || (stack->Is(23) & 1))
+                continue;
+
+            stack->numSpellCasts--;
+            stack->numTroops = 0;
+            stack->topCreatureDamage = 0;
+            int resurrected = stack->origNumTroops / 5;
+            int rolls = stack->origNumTroops % 5;
+            while (rolls--) {
+                if (rand() % 5 == 0)
+                    resurrected++;
+            }
+            if (!resurrected)
+                continue;
+
+            stack->creatureId |= 1 << 26;
+            if (!IsQuickCombat())
+                launch_sample(akSpellTraits[SPELL_RESURRECTION].m_sample,
+                              -1, 3);
+            Resurrect(stack, stack->hitPoints * resurrected, 0);
+        }
+    }
+}
+
 // E:\gamedcs\cmbtmgr.cpp:4497
 // `current_army` KEEPS the DC roster's const (corrected 2026-08-14). The
 // note this replaces said army::is_enemy was non-const in the same
@@ -4222,6 +4395,33 @@ unsigned char combatManager::IsInMoat(int hex, int* index)
     }
     if (index)
         *index = -1;
+    return 0;
+}
+
+// Retail-only Complete moat worker. The exact three-argument thiscall is
+// proven by army_check_obstacle_attacks_6a570, its sole caller: moving stacks
+// stop their walk sample, take the faction's moat damage, announce the
+// faction-specific message, then resume walking if they survived.
+VA(0x00469e50, 0xC1)  // anchor-callee, retail-only
+unsigned char combatManager::Unnamed469e50(
+    int hex, army* stack, unsigned char playSound)
+{
+    if (gpGame->f_1f698 >= 2 && stack->numTroops && IsInMoat(hex, 0)) {
+        if (playSound)
+            stack->stop_sample(army::WALK_SAMPLE);
+
+        int damage = gMoatDamage[defendingTown->type];
+        if (damage) {
+            int killed = stack->Damage(damage);
+            damage_message(gMoatDamageMessages[defendingTown->type], 1,
+                           damage, stack, killed);
+            PowEffect(-1, 1);
+            if (stack->numTroops > 0 && playSound)
+                stack->play_sample(army::WALK_SAMPLE);
+            CheckRebirth();
+            return 1;
+        }
+    }
     return 0;
 }
 
@@ -4523,6 +4723,25 @@ void combatManager::CalculateGainedExperience(int side, int* experience_gained)
             * static_cast<float>(total));
     else
         *experience_gained = total;
+}
+
+// Retail-only cross-TU helper.  Every caller hands it an army stack; the
+// three observed tower grid indices select the keep/lower/upper redraw
+// latches exactly as the two inlined cmbtmgr copies do.
+VA(0x0046a460, 0x39)  // body + 27 cross-TU callers, retail-only
+void combatManager::mark_tower_army(const army* tower)
+{
+    switch (tower->gridIndex) {
+    case COMBAT_HEX_LOWER_TOWER:
+        field_1402c[1] = 1;
+        break;
+    case COMBAT_HEX_KEEP:
+        field_1402c[0] = 1;
+        break;
+    case COMBAT_HEX_UPPER_TOWER:
+        field_1402c[2] = 1;
+        break;
+    }
 }
 
 // E:\gamedcs\cmbtmgr.cpp:4969

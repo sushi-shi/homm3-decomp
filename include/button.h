@@ -95,11 +95,13 @@ public:
     // and create_upgrade_widget 88.11% -> 89.88% in one build.
     void set_hotkey(int code)
     {
-#ifdef HOMM3_HERO_OBJ_VIEW
+#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_ADVENTUREMAPWINDOW_OBJ_VIEW)
         // hero.obj owns retail's retained out-of-line COMDAT copy. Its
         // 431-byte body is Dinkumware vector<int>::push_back expanded
         // directly; the insert spelling below is a caller-allocation lever
         // needed only in the TUs where this wrapper itself is inlined.
+        // adventuremapwindow.obj's SetSleepImage independently proves the
+        // same push_back spelling after it clears the sleep button's keys.
         hotKeyCodes.push_back(code);
 #else
         std::vector<int>* codes = &hotKeyCodes;

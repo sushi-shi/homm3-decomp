@@ -104,6 +104,13 @@ struct type_artifact {
     int extra;
 
     type_artifact() : artifactId(-1), extra(-1) {}
+    // DC Hero.h:209 names this one-argument form; giveReward's exact retail
+    // store order proves that the auxiliary word is initialized first.
+    explicit type_artifact(TArtifact id)
+    {
+        extra = -1;
+        artifactId = id;
+    }
     type_artifact(int id, int extraValue)
         : artifactId(id), extra(extraValue) {}
 
@@ -606,9 +613,17 @@ public:
     // widens it to double and uses it as the attacking side's combat
     // modifier. The role remains provisional, so keep the ordinal name.
     float field_47a;
-    // +0x47e..0x491, the rest of the record's tail. Its extent, not the
-    // remaining field split, is retail-proven (see SIZE below).
-    char pad_47e[0x14];
+    // +0x47e..0x491. Dreamcast names the same five-dword tail in this
+    // order; retail independently proves every dword boundary through the
+    // five direct writers recorded in the retail layout scan, while
+    // TSeerReward::getValue reads value_of_power and value_of_knowledge at
+    // +0x47e/+0x486. The +0x1e cross-build shift follows the already-proven
+    // retail packing above; the band still closes SIZE(hero) exactly.
+    long value_of_power;
+    long value_of_duration;
+    long value_of_knowledge;
+    long value_of_spring;
+    long value_of_well;
 
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c690).
     // Retail has no out-of-line row; AI_value_of_combat expands this
@@ -892,6 +907,21 @@ public:
     // three pushes.
     int GetMorale(const hero* otherHero, unsigned char on_cursed_ground,
                   unsigned char apply_limits);
+    // Retail 0x527cf0 / 0x527d80. The Dreamcast philai.cpp roster keeps
+    // these as file-local functions taking `(const hero*, int)`, but both
+    // retail bodies and every retail call use the x86 member ABI: the hero
+    // is in ECX, the value is the sole stack argument, and the callee
+    // returns with `ret 4`. The HD 5.3 structural twins independently have
+    // that same `__thiscall` shape. Names retain the DC lineage; class
+    // ownership is retail-byte-proven.
+    int MoraleIncreaseValue(int value);
+    int LuckIncreaseValue(int value);
+    // Retail 0x524630, named by an exact whole-body HD 5.3 twin. Kept on
+    // `int` here because TSecondarySkill deliberately lives in herospec.h,
+    // outside hero.h's include closure; retail passes and indexes the full
+    // dword domain value. philai.cpp crosses to its typed helpers without
+    // changing this record's public header view.
+    int SoD_get_seer_skill_value(int skill, int level);
     float GetMagicResistanceFactor();
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
     // CalculateGainedExperience (0x46a350) scales the whole award by it
@@ -930,7 +960,7 @@ public:
     float GetOffenseFactor();
     float GetDefenseFactor();
     float GetIntelligenceFactor();
-#ifdef HOMM3_HERO_OBJ_VIEW
+#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions; the retail
     // hero.obj sites expand it byte-for-byte under /Ob2.

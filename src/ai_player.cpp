@@ -75,6 +75,49 @@ int AI_resource_cost(long player_id, const int* resources);
 const std::bitset<9>& ArmyGrpFn_0044A460();
 const unsigned int CTA_SHOOTER = 0x4;
 
+// struct.h's original three-coordinate constructor was header-inline.  This
+// TU needs both expansions below, while advmgr.obj continues to own the one
+// retained out-of-line COMDAT at 0x4192b0.
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
+// E:\gamedcs\ai_player.cpp:97
+// The DC body calls this exact family (GetHero, GetMobility, SeedPosition and
+// mark_towns); retail supplies the x86 identity and the two nested roster
+// loops.  Enemy searches receive 800 extra movement points and begin from
+// the hero's live packed map location, with an invalid destination.
+// EXACT 2026-08-24 on the first admitted spelling: all 15 blocks and every
+// instruction reproduce retail.
+VA(0x004280e0, 0x171)  // retail call graph/body + DC method/xrefs; dc 0x2dd64
+void type_town_threat_checker::check_towns()
+{
+    clear_marks();
+
+    for (int player_id = 0; player_id < 8; ++player_id) {
+        const playerData& player = gpGame->players[player_id];
+        if (!gpGame->OnSameTeam(player_id, current_player_id)
+            && !gpGame->playerDisabled[player_id]) {
+            for (int hero_index = 0; hero_index < player.numHeroes;
+                 ++hero_index) {
+                hero* enemy_hero = gpGame->GetHero(player.heroes[hero_index]);
+                int mobility = enemy_hero->GetMobility() + 800;
+                type_point start(enemy_hero->x, enemy_hero->y, enemy_hero->z);
+                type_point target(-1, -1, -1);
+                enemy_hero->bounty = 0;
+                gpSearchArray->SeedPosition(
+                    enemy_hero, start, target, mobility,
+                    (enemy_hero->flags >> 18) & 1,
+                    const_AI_enemy_search, mobility, 0);
+                mark_towns(enemy_hero, gpSearchArray);
+            }
+        }
+    }
+}
+
 // E:\gamedcs\ai_player.cpp:134
 // Slot 0 of vtable 0x63b670. The target walks gpGame's vector<town> by
 // its 0x168-byte stride and clears the DC-named byte at +3 in every row.
@@ -83,6 +126,36 @@ void type_town_threat_checker::clear_marks()
 {
     for (unsigned int i = 0; i < gpGame->towns.size(); ++i)
         gpGame->towns[i].threatening_heroes = 0;
+}
+
+// E:\gamedcs\ai_player.cpp:146
+// The current player's towns are filtered through the two virtual policy
+// slots.  A town contributes only when the enemy hero's seeded search reached
+// its cell and the combat simulation says the hero can take it; the fixed
+// five-million reward is shared across the player's signed town count.
+// INSTRUCTION-EXACT 2026-08-24. The 99.9554% report is one synthetic DIR32
+// relocation: stripped-image recovery treats the honest integer 5,000,000 as
+// a code address because it equals VA 0x4c4b40. This is the same proven,
+// source-unreachable cap documented on AI_value_of_combat; all 16 blocks,
+// instructions, operands and branches otherwise agree.
+VA(0x004282b0, 0x157)  // retail body/call graph + DC signature/xrefs; dc 0x2deac
+void type_town_threat_checker::mark_towns(hero* enemy_hero,
+                                          searchArray* search_array)
+{
+    playerData& player = gpGame->players[current_player_id];
+
+    for (int town_index = 0; town_index < player.numTowns; ++town_index) {
+        town* our_town = gpGame->GetTown(player.townIds[town_index]);
+        if (!is_marked(our_town)) {
+            type_point location(our_town->mapX, our_town->mapY,
+                                our_town->mapZ);
+            if (search_array->get_cell(location, 0)->visited
+                && can_take_town(enemy_hero, our_town)) {
+                enemy_hero->bounty = 5000000 / player.numTowns;
+                mark_town(our_town);
+            }
+        }
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:69
@@ -134,7 +207,9 @@ void type_town_threat_checker::clear_marks()
 // unreconstructed, already converted, or a Dreamcast-only factoring:
 //   advManager::DoAdvCommand / TownQuickView / SetTownContext, and
 //     advspells' advManager::TownGate - all four score 0.0, not reconstructed
-//   type_town_threat_checker::mark_towns - no reconstructed row
+//   type_town_threat_checker::mark_towns - reconstructed at 99.9554% with a
+//     direct inline constructor expansion; it does not consume this by-value
+//     helper (the sole residual is the false 5,000,000 DIR32 relocation)
 //   searchArray::check_town_portal - no reconstructed row
 //   townManager::MoveHero - another lane's unit
 //   town::PlaceInMap - ALREADY 100.0000 without it

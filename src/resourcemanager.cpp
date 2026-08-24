@@ -170,6 +170,16 @@ int ResourceManager::t_lod_file_adapter::Read(void* data, int size)
     return lod_file->read(data, size) ? 0 : size;
 }
 
+// The eight archive globals are constructed through this small wrapper.
+// Retail proves the archive-name pointer at +0, the LODFile subobject at +4,
+// and the 0x190-byte stride independently in both the initializer and every
+// resource lookup.
+VA(0x005591e0, 0x1A)  // anchor-cinit 0x559150, retail-only
+TResourceLODSlot::TResourceLODSlot(const char* name)
+    : archiveName(name)
+{
+}
+
 // E:\gamedcs\resourcemanager.cpp:2397
 // The retail body is the same key-copy/insert/refcount sequence inlined at
 // 0x55c0f5. Dreamcast supplies the helper name and signature; the x86 cache
@@ -185,6 +195,14 @@ void ResourceManager::AddToCache(resource* value)
         static_cast<const char*>(value->Name), value)));
     ++value->ReferenceCount;
 }
+
+// The ostringstream used by both missing-resource reporters makes VC6 retain
+// this Dinkumware vbase-destructor closure. The base object's ??_D public and
+// both retail calls independently identify it; all 20 emitted bytes agree.
+#if 0  // @carcass -- compiler/library COMDAT emitted by ostringstream
+VA(0x005594f0, 0x14)  // anchor-caller + emitted COFF public, retail-only
+void basic_ostringstream::`vbase destructor'();
+#endif
 
 DATA(0x00694d60) unsigned long gColorMaskGreen;
 DATA(0x00694d64) unsigned long gColorMaskRed;
@@ -2597,7 +2615,16 @@ DATA(0x0069923c)
 int* gpVideoGameState;
 
 DATA(0x0069d870)
-TResourceLODSlot gResourceLODSlots[8];
+TResourceLODSlot gResourceLODSlots[8] = {
+    DATA_COMPGEN(0x00682ef8, resourceBitmapArchiveName, "h3bitmap.lod"),
+    DATA_COMPGEN(0x00682ee8, resourceSpriteArchiveName, "h3sprite.lod"),
+    DATA_COMPGEN(0x00682ed8, resourceAbBitmapArchiveName, "h3ab_bmp.lod"),
+    DATA_COMPGEN(0x00682ec8, resourceAbSpriteArchiveName, "h3ab_spr.lod"),
+    DATA_COMPGEN(0x00682eb8, resourcePBitmapArchiveName, "h3pbitma.lod"),
+    DATA_COMPGEN(0x00682ea8, resourcePSpriteArchiveName, "h3psprit.lod"),
+    DATA_COMPGEN(0x00682e98, resourceAbPBitmapArchiveName, "h3abp_bm.lod"),
+    DATA_COMPGEN(0x00682e88, resourceAbPSpriteArchiveName, "h3abp_sp.lod")
+};
 
 DATA(0x0069e538)
 TResourceArchiveContext gResourceArchiveContexts[4];

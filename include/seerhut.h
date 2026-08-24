@@ -6,6 +6,10 @@
 #include <va.h>
 
 class type_quest;
+class TAdventureMapWindow;
+class hero;
+class NewmapCell;
+struct type_point;
 
 #pragma pack(push, 1)
 
@@ -24,6 +28,12 @@ public:
     // the definition lived in seerhut.cpp. The inline body stays for the
     // views whose own call sites do expand it.
     TQuestGuard();
+
+    // The quest-guard adventure event. The exact HD structural twin fixes
+    // the name and argument list; retail independently proves the four
+    // stack arguments, the quest virtual slots, and the EraseAndFizzle tail.
+    void DoEvent(hero* current_hero, bool human_player,
+                 NewmapCell* eventCell, type_point point);
 
     // The h3m reader, reached from readObject's QUEST_GUARD arm with the
     // stream as its one argument. DECLARED, not defined: the body is an
@@ -61,16 +71,70 @@ protected:
 };
 SIZE(TQuestGuard, 0x5);
 
+// Dreamcast names this reward domain on TSeerData. Retail's ten-way helper
+// dispatch and the three adjacent users preserve the same 0..10 values even
+// though the x86 build split the reward into its own 12-byte record.
+enum TSeerRewardType {
+    eRewardNone = 0,
+    eRewardExperience = 1,
+    eRewardMana = 2,
+    eRewardMorale = 3,
+    eRewardLuck = 4,
+    eRewardResource = 5,
+    eRewardPrimarySkill = 6,
+    eRewardSecondarySkill = 7,
+    eRewardArtifact = 8,
+    eRewardSpell = 9,
+    eRewardCreature = 10
+};
+
 // Bytes +5..+0x10 of TSeerHut. The constructor initializes the common type
 // word; the remaining eight bytes are the selected reward's payload.
 struct TSeerReward {
+    // DC TPrimarySkill values. Kept nested because the canonical global
+    // secondary-skill header is intentionally outside game.h's wide include
+    // closure; these are exactly the four case labels this record needs.
+    enum TPrimarySkillType {
+        ePriSkillAttack = 0,
+        ePriSkillDefense = 1,
+        ePriSkillPower = 2,
+        ePriSkillKnowledge = 3
+    };
+
     int rewardType;
     union {
         char payload[8];
         int dwords[2];
+        struct {
+            signed int bonus : 8;
+        } signedLow;
+        struct {
+            int first;
+            signed int bonus : 8;
+        } signedHigh;
+        struct {
+            int skillType;
+            int bonus;
+        } secondarySkill;
+        struct {
+            int resourceType;
+            int quantity;
+        } resource;
+        struct {
+            int skillType;
+            signed int bonus : 8;
+        } primarySkill;
+        struct {
+            int creatureType;
+            signed int count : 16;
+            signed int : 16;
+        } creature;
     } value;
 
     TSeerReward() : rewardType(0) {}
+    int getValue(const hero* currentHero);
+    void giveReward(hero* currentHero, bool humanPlayer);
+    int GetRewardExtra(const hero* thisHero);
 };
 SIZE(TSeerReward, 0xc);
 
@@ -84,6 +148,7 @@ class TSeerHut : private TQuestGuard {
     // reaches across, and everything else here still goes through TSeerHut's
     // own surface.
     friend class NewfullMap;
+    friend class TAdventureMapWindow;
 
 public:
     TSeerReward reward;
@@ -91,6 +156,12 @@ public:
     unsigned char field_12;
 
     TSeerHut();
+    // Dreamcast supplies the surviving public name/signature; retail's
+    // Complete-era body replaces the monolith with the virtual quest family.
+    void DoSeerEvent(hero* current_hero, bool human_player);
+    // The AI appraisal of an unvisited or active hut. Retail fixes the
+    // hero ABI and all quest/reward calls; the HD twin supplies the name.
+    int getValue(hero* currentHero);
 
     // The SeerHutList twin of TQuestGuard::read, reached the same way from
     // readObject's SEER arm. Declared separately because the TQuestGuard
@@ -107,14 +178,14 @@ public:
     // against `game_137c0_sub01_1743e0`.
     std::string SeerHutFn_005741B0(int player);
     std::string SeerHutFn_005743E0(int player);
-    // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of
-    // TQuestGuard::QuestGuardFn_00572D60 and reached from the same
-    // quest-log body, on the other arm of its SeerHutList/QuestGuardList
-    // split. Provisional name.
-    std::string SeerHutFn_00574070();
+    // The SeerHutList twin of TQuestGuard::QuestGuardFn_00572D60, reached
+    // from the other arm of the quest log's list split. The exact HD
+    // structural twin supplies the later method name after retail fixes the
+    // receiver and nullary string-return ABI.
+    std::string getSeerLogText();
     // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
-    // same way from NewfullMap::Save. Declared, not defined - and declared
-    // separately because the TQuestGuard base is private here.
+    // same way from NewfullMap::Save. Declared separately because the
+    // TQuestGuard base is private here.
     int save(TAbstractFile* outfile);
 };
 SIZE(TSeerHut, 0x13);

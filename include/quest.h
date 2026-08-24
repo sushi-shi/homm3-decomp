@@ -75,16 +75,11 @@ DATA(0x0068320c) extern std::string (*gQuestTextA)[52];
 DATA(0x00683210) extern std::string (*gQuestTextB)[52];
 
 // The packed map position the defeat-monster quest carries at +0x44 and
-// compares field by field in slot 10. The three widths are read straight off
-// that body: it xors the low word against the argument's and masks 0x3ff,
-// then xors the high word and masks 0x3ff and 0x3c00 out of the SAME xor.
-struct TQuestPosition {
-    unsigned short x : 10;
-    unsigned short : 6;
-    unsigned short y : 10;
-    unsigned short z : 4;
-    unsigned short : 2;
-};
+// compares field by field in slot 10. Retail reads the same signed 10/10/4
+// lanes as the shared type_point, and NH3API independently types both the
+// member and slot-10 argument as type_point. Keep the old local spelling as
+// an alias so the evidence correction does not obscure the quest discussion.
+typedef type_point TQuestPosition;
 
 // Retail's factory at 0x573240 switches on exactly these nine values. The
 // class mapping is independently fixed by the slot-8 constants in the nine
@@ -116,8 +111,9 @@ public:
     // +0x04 is a two-valued selector: slot 7 and slot 14 pick between
     // the two text tables at 0x68320c and 0x683210 on it and on nothing
     // else. +0x38 is the ROW of whichever table that picks, scaled by
-    // 832; +0x3c is written and never read by any body in this file.
-    // All three keep ordinal names.
+    // 832. TSeerHut::getValue now proves +0x3c is the quest deadline, but
+    // it keeps an ordinal name until a retail-era source identity fixes the
+    // original spelling.
     unsigned char field_04;
     char pad_05[3];
     // PROVISIONAL names, on two pieces of evidence: the order slot 13
@@ -202,8 +198,8 @@ public:
     // arguments and return nothing. The NAMES are provisional inventions -
     // only the argument shape and the two overriding bodies are attested.
     virtual void NotifyHeroDefeated(int hero_id, int player);
-    // Slot 10's monster override (0x56ed40) is decoded but NOT claimed - see
-    // the residual note in seerhut.cpp.
+    // Slot 10's monster override is reconstructed at 0x56ed40; see its
+    // compiler-generation residual note in seerhut.cpp.
     virtual void NotifyMonsterDefeated(TQuestPosition where, int player);
     // Slot 11 / slot 12: the two deserializers. Both are loads - every body
     // in the family calls TAbstractFile slot 1 and then stores what came back
@@ -242,7 +238,11 @@ public:
         // 0x574070 are its only readers, and they are the two builders the
         // quest log's own window calls.
         QUEST_TEXT_LOG = 4,
-        QUEST_TEXT_COLUMNS = 5
+        QUEST_TEXT_COLUMNS = 5,
+        // One row-wide line follows the ten five-column quest groups.
+        // TQuestGuard::DoEvent is its byte-proven reader when a deadline
+        // has passed; unlike the grouped lines, it does not call quest_type.
+        QUEST_TEXT_EXPIRED = 50
     };
     // The five-column group this quest type owns, computed ONCE: slot 14
     // fills three of the columns off one row and retail keeps the group
@@ -276,6 +276,13 @@ public:
     // them. Same provisional standing as the slots that call them.
     std::string GetProposalDialogText();
     std::string GetProgressDialogText();
+    // The exact HD structural twin maps this accessor to retail 0x45bad0;
+    // its body copies the base's +0x28 completionText member.
+    std::string get_completion_text();
+    // The exact HD structural twin maps this deadline suffix builder to
+    // retail 0x56d040. The two dated dialog getters and the complex skill /
+    // creature dialogs are its four callers.
+    std::string get_time_limit_text();
 };
 
 class type_experience_quest : public type_quest {
@@ -311,6 +318,8 @@ public:
         const signed char (&skills)[4]);
 
     virtual unsigned char is_satisfied(hero* current_hero);
+    virtual void DoProposalDialog(hero* current_hero);
+    virtual void DoProgressDialog();
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
@@ -353,9 +362,11 @@ public:
     virtual void Load(TAbstractFile* file, int version);
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
+    virtual void NotifyMonsterDefeated(TQuestPosition where, int player);
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
     virtual std::string GetRequirementText();
+    virtual void SetDefaultText();
 };
 
 // Quest type 5: the artifacts the hero must hand over. The vector at +0x40
@@ -372,6 +383,9 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    virtual void DoProposalDialog(hero* current_hero);
+    virtual void DoProgressDialog();
+    virtual std::string GetRequirementText();
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
     virtual void SetDefaultText();
@@ -390,6 +404,9 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    virtual void DoProposalDialog(hero* current_hero);
+    virtual void DoProgressDialog();
+    virtual std::string GetRequirementText();
     virtual void Save(TAbstractFile* file);
     virtual std::string GetQuestDescription();
     virtual void SetDefaultText();
@@ -407,6 +424,7 @@ public:
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual void TakePayment(hero* current_hero);
+    virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
@@ -442,6 +460,7 @@ public:
     virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual std::string GetRequirementText();
+    virtual std::string GetQuestDescription();
     virtual void Load(TAbstractFile* file, int version);
     virtual void DoProposalDialog(hero* current_hero);
     virtual void DoProgressDialog();

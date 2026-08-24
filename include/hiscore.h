@@ -12,23 +12,45 @@
 
 class message;
 class textWidget;
+class iconWidget;
+class Bitmap816;
 class CHighScoreEdit : public textEntryWidget {
 public:
     CHighScoreEdit* nextEdit;
     CHighScoreEdit* prevEdit;
 
+    CHighScoreEdit(int x, int y, int w, int h, int textSize,
+                   const char* text, const char* fontName,
+                   font::TColor color, unsigned justification,
+                   const char* backgroundIcon, int backgroundFrame, int id,
+                   int style, int readType, int insetX, int insetY);
     virtual int OnKeyPress(message* msg);  // slot 15, retail 0x4e9710
 };
 SIZE(CHighScoreEdit, 0x78);
 
+// ResetHighScores 0x4e8fb0 zeroes exactly 22 0x64-byte records, then copies
+// two 41-byte strings and parses the dwords at +0x54/+0x58. AddScoreToHighScore
+// 0x4e91d0 stores difficulty at +0x5c and its one-byte cheat latch at +0x60;
+// the three trailing bytes remain padding.
+struct HighScoreRec {
+    char field_00[41];
+    char field_29[41];
+    char pad_52[2];
+    int field_54;
+    int field_58;
+    int field_5c;
+    unsigned char cheated;
+    char pad_61[3];
+};
+SIZE(HighScoreRec, 0x64);
+
 // Retail ctor 0x4e9070 proves the baseManager head, vtable 0x63eb8c,
 // and the trailing score-table selector at +0x8d0.  Open 0x4e90a0 reads
-// exactly 0x898 bytes beginning at +0x38, so the opaque table span and
-// total size below are independently byte-bounded without inventing the
-// private HighScoreRec fields.
+// exactly 0x898 bytes beginning at +0x38, independently bounding the 22
+// records modeled above and the total class size.
 class highScoreManager : public baseManager {
 public:
-    unsigned char highScores[0x898];
+    HighScoreRec highScores[2][11];
     int highScoreType;
 
     highScoreManager();
@@ -70,14 +92,21 @@ public:
 };
 SIZE(CHSInputDlg, 0x5c);
 
-// Retail's heroWindow base is eight bytes smaller than the Dreamcast
-// base.  Applying that proven shift to the DC tail puts hiScoreBack at
-// +0x108; the retail destructor independently loads +0x108/+0x10c.
-// The intervening creature-widget/frame state remains intentionally opaque.
+// DC names the two eleven-entry icon arrays Creatures and their matching
+// frame slots CreatureFrames.  Retail retains both arrays at +0x4c/+0xa4,
+// but drops DC's intervening m_h_index dword: bIsStandard consequently lands
+// at +0xfc, followed by iCreatureFrame/lLastServe at +0x100/+0x104.
+// Its GetBitmap816 calls store the two captured backgrounds at +0x108/+0x10c;
+// the destructor independently reads those same final two slots.
 class THighScoreWindow : public heroWindow {
 public:
-    unsigned char highScoreState[0xbc];
-    Bitmap16Bit* hiScoreBack[2];
+    iconWidget* Creatures[2][11];
+    int CreatureFrames[2][11];
+    unsigned char bIsStandard;
+    char pad_fd[3];
+    int iCreatureFrame;
+    unsigned long lLastServe;
+    Bitmap816* hiScoreBack[2];
 
     THighScoreWindow();
     virtual ~THighScoreWindow();

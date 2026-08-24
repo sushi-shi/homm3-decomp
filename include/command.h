@@ -88,6 +88,11 @@ enum ELastAliveSide {
 // whether the results dialog gets a deadline.
 extern int gbThisNetGotAdventureControl;
 
+// The two remote combat-control player positions. Dreamcast publishes the
+// array name; retail ResetRound indexes [1-currentSide], producing relocs to
+// both the base and its second element.
+DATA(0x0069773c) extern int iCombatControlNetPos[2];
+
 
 // --- CCombatMainMsg ---
 // CODEVIEW(E:\gamedcs\netmsg.h:217, dc 0x70a58) void CCombatMainMsg::CCombatMainMsg(int nextAction, int nextActionExtra, int nextActionGridIndex, int nextActionGridIndex2, int seed);

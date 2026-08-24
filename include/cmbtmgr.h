@@ -417,6 +417,31 @@ enum EAIOrder {
 
 class combatManager : public baseManager {
 public:
+#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
+    // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
+    // this type by value; retail indexes the same eighteen wall rows.
+    enum TWallSection {
+        eWallSectionDoor = 0,
+        eWallSectionDoorRope = 1,
+        eWallSectionMoat = 2,
+        eWallSectionMoatLip = 3,
+        eWallSectionBackWall = 4,
+        eWallSectionUpperTower = 5,
+        eWallSectionUpperWall = 6,
+        eWallSectionUpperButtress = 7,
+        eWallSectionMidUpperWall = 8,
+        eWallSectionGate = 9,
+        eWallSectionMidLowerWall = 10,
+        eWallSectionLowerButtress = 11,
+        eWallSectionLowerWall = 12,
+        eWallSectionLowerTower = 13,
+        eWallSectionMainBuilding = 14,
+        eWallSectionMainBuildingCover = 15,
+        eWallSectionLowerTowerCover = 16,
+        eWallSectionUpperTowerCover = 17,
+        kNumWallSections = 18
+    };
+#endif
     // Retail obstacle-catalogue prefix. PlaceAllObstacles reads the two
     // unsigned masks at +0/+2 from 20-byte rows; the remaining sixteen
     // bytes are not needed by that function and stay opaque here.
@@ -711,7 +736,16 @@ public:
     // names stay address ordinals.
     int field_53e4[2];                // +0x53e4
     int field_53ec[2];                // +0x53ec
+#ifdef HOMM3_CMBTMGR_CYCLE_VIEW
+    // Retail ResetCycleTimers stamps both entries from one GameTime::Get.
+    // Dreamcast names the same semantic row cmbtHeroLastFidgetTime; its
+    // offset is 0x10 later in that older layout, so the retail placement
+    // here comes only from the x86 stores at 0x479f43/0x479f49.
+    char pad_53f4[0x8];
+    unsigned long cmbtHeroLastFidgetTime[2]; // +0x53fc
+#else
     char pad_53f4[0x10];
+#endif
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
     // Two scalars InitNonVisualVars sets to 0 and 3 respectively, the 3
@@ -825,7 +859,9 @@ public:
     // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
     // `byte [this + side + 0x132b0]`) and answer "combat over" / "this
     // side won" the moment either reads non-zero. Retail tests the
-    // 0x132b2 pair FIRST in both functions. Names await a writer.
+    // 0x132b2 pair FIRST in both functions. HandleCombatPlayerDrop writes
+    // field_132b0[1] when the remote combat player disappears; the broader
+    // pair semantics and names await the remaining writers.
     unsigned char field_132b0[2];     // +0x132b0
     unsigned char field_132b2[2];     // +0x132b2
     // Read as a full dword by is_computer_action (0x474bf0) and paired
@@ -1066,9 +1102,11 @@ public:
     // combatManager), but do not read the end of this list as the end of
     // the object.
     unsigned char field_1402f;         // +0x1402f
-    // +0x14030, cleared by InitNonVisualVars - the byte that proves the
-    // class runs past everything modelled above. Ordinal.
-    unsigned char field_14030;         // +0x14030
+    // +0x14030 is the byte InitNonVisualVars clears. The following 187-byte
+    // row is cleared by process_move_then_attack before it asks the acting
+    // stack to check obstacle attacks. Kept as one raw band so admitting the
+    // newly proven tail does not change the class declarator population.
+    unsigned char field_14030[COMBAT_GRID_CELLS + 1]; // +0x14030..0x140eb
 
     combatManager();
 
@@ -1189,6 +1227,10 @@ public:
     void Close();
     unsigned char HexIsBlocked(int index) const;
     unsigned char IsInMoat(int hex, int* index);
+    // Complete-only moat damage worker; its sole caller passes the entered
+    // hex, moving stack and a byte sound-control flag.
+    unsigned char Unnamed469e50(int hex, army* stack,
+                                unsigned char playSound);     // 0x469e50
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
     void PlaceAllObstacles();
@@ -1213,20 +1255,35 @@ public:
     void GenerateMap();
     void DetermineCombatTerrain();
     void SetupAdjacencyArray();
+#ifndef HOMM3_COMMAND_GRID_VIEW
+    // command.cpp substitutes ResetRound for this unused declaration so its
+    // measured member-handle population stays constant.
     int PlaceLargeObstacle(unsigned terrain_mask,
                            unsigned special_terrain_mask);
+#endif
     void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
     void ResetLimitCreature();
+#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
+    // command.cpp substitutes HandleCombatPlayerDrop for this unused member,
+    // preserving its measured C1XX member-handle population.
     int DrawCreatureAndHeroSubwindows();
+#else
+    unsigned char HandleCombatPlayerDrop(unsigned long dpid, message* msg);
+#endif
     // 0x493780 (68 B), drawing.obj's no-argument combat-area refresh -
     // the one of its four UpdateCombatArea overloads that takes no
     // extent. Armageddon calls it once per animation frame; its retail body
     // is reconstructed in drawing.cpp.
+#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
     void UpdateCombatArea();                                  // 0x493780
+#endif
 #ifdef HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
+    // drawing.obj 0x4937d0; SetCombatGrid passes the inlined current-army
+    // result exactly as the DC source statement does.
+    void SetupGridForArmy(const army* thisArmy);
     // Complete's large overload has one trailing int absent from the DC
     // signature; the small wrapper at 0x494390 always passes zero there.
     void UpdateMouseGrid(int gridIndex, std::vector<long>& hexes,
@@ -1347,6 +1404,11 @@ public:
     // so the declaration takes the int retail actually pushes and the
     // enum waits for the lane that reconstructs the body.
     void KeepAttack(int iTowerPos);                           // 0x465ad0
+    // Retail-only tower AI helper and its retail-only AI selector. Their
+    // bodies/callers prove the signatures but no roster row supplies a name,
+    // so both retain address ordinals.
+    void Unnamed465f20();                                     // 0x465f20
+    int Unnamed41e190(int side, int archerLevel, int damage); // 0x41e190
     // DC header inline (CmbtMgr.h:1555, dc 0x4cc74, 24 B) with an
     // out-of-line copy on that build and NONE on retail, so /Ob2 took
     // every retail site: army::do_multi_head_attack (0x440310) carries
@@ -1376,8 +1438,9 @@ public:
     // and the one decorated anchor in it (enemy_is_adjacent 0x469600) is
     // the THIRD retail row where it is the FIRST Dreamcast one, so this
     // is one of the two retail-only rows. Name is a bootstrap invention.
-    // Behind the same view as MarkCreatureEffect below, for this
-    // header's usual measured reason; army.cpp is the only consumer.
+    // 0x4693a0 is the adjacent retail-only side teardown: its callers pass
+    // the defeated side, and it kills every non-tower stack in that row.
+    void Unnamed4693a0(int side);                             // 0x4693a0
     void CheckRebirth();                                      // 0x469440
     void MarkCreatureEffect(int group, int index)
     {
@@ -1549,7 +1612,15 @@ public:
     // 0x422a40 is called from, with `this` = the combatManager and two
     // stack arguments. Declared so that constructor can spell the
     // call; not claimed, and the body belongs to the ai.obj lane.
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    // command.cpp:3038. The retail call at 0x477f3d occupies the exact
+    // AICheckRetreat statement slot in Dreamcast CheckGetAIMove, and the
+    // helper's other retail caller sits in ai.obj. This command-only
+    // substitution preserves the measured member-handle population.
+    unsigned char AICheckRetreat();                            // 0x41e570
+#else
     void simulate_combat(long side, unsigned char simulated);  // 0x422a40
+#endif
     // 0x5a93a0, the row IMMEDIATELY AFTER get_elemental_type (0x5a9360)
     // in spells.obj - which is exactly where DC's own spells.cpp
     // roster puts combatManager::AbleToSummonElemental (spells.cpp:5912,
@@ -1558,7 +1629,11 @@ public:
     // consider_spell (0x43bb20) gates its whole summon arm on it, with
     // the spell and this caster's side on the stack. Declared for that
     // call site; not claimed.
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    void CheckGetAIMove();                                    // 0x477ee0
+#else
     unsigned char AbleToSummonElemental(SpellID spell, long side);
+#endif
     // The two spells.obj leaves ai_tactical's get_chain_lightning_value
     // (0x437190) drives the chain with. Both are named by the DC xref
     // graph, which records exactly these two as callees of that body,
@@ -1575,9 +1650,17 @@ public:
     // body (0x5a61f0 at 91.10%), not from the xref graph's guess.
     long GetNextChainLightningTarget(const army* last_target,
                                      long use_random);         // 0x5a61f0
+#ifndef HOMM3_COMMAND_GRID_VIEW
     void ClearEffects();                                      // 0x5a66b0
+#endif
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    // command.cpp calls the ai.obj leaf but never has_ranged_advantage;
+    // the one-for-one substitution preserves this include-sensitive slot.
+    unsigned char DoSpellAI();                                // 0x422da0
+#else
     unsigned char has_ranged_advantage(
         type_AI_combat_parameters* data);                     // 0x420a80
+#endif
     unsigned char should_stay_in_castle(
         type_AI_combat_parameters* estimate);                 // 0x4213f0
     void place_shooter(const army* current_army);             // 0x422060
@@ -2095,8 +2178,14 @@ public:
     // 92.5714 -> 92.5357 - the same include-set trip, at the same two
     // values, that the RESURRECT_VIEW note above records. spells.cpp is
     // the only consumer.
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    // command.cpp claims GetControl and never consumes the spells-only
+    // berserk collector. This keeps the already measured member count fixed.
+    void GetControl();                                        // 0x4782d0
+#else
     void mark_berserk_area_effect(long hex, long mastery,
                                   std::vector<army*>& targets);  // 0x5a4810
+#endif
     // THE COMBAT SET-UP FAMILY, declared 2026-08-20. Every one of these
     // already had an out-of-class definition in cmbtmgr.cpp with only a
     // CODEVIEW comment to declare it, which VC6 accepts on the definition
@@ -2112,6 +2201,12 @@ public:
     // JPAVtown@@12HHH_N@Z - the S_PUB32 run types every parameter. The
     // trailing _N is spelled `unsigned char` here, as everywhere else in
     // this header, and retail reads it as one byte either way.
+#ifndef HOMM3_COMMAND_GRID_VIEW
+    // command.cpp references none of these eight setup/turn members. Its
+    // command-only view substitutes the eight reconstructed declarations
+    // below one-for-one; exposing both sets moves GetCommand 92.5714 ->
+    // 92.5357 through the measured C1XX member-handle wall. The paired view
+    // restores the historic score without hiding a command.cpp dependency.
     void SetupCombat(type_point point, hero* leftHero,
                      armyGroup* leftArmyGroup, long right_player,
                      town* rightTown, hero* rightHero,
@@ -2126,25 +2221,22 @@ public:
     unsigned char NextArmy(unsigned char checking_for_bad_morale);
     void SetNextArmy(int group, int index);
     // THE TWO UNNAMED TURN-SCAN HELPERS, 0x464d40 (525 B) and 0x464f50
-    // (291 B). This file's locate sweep left both unclaimed and unnamed
-    // on purpose: neither has a counterpart anywhere in the DC
-    // cmbtmgr.obj roster, so a name would be invention. That decision
-    // stands - these are address ordinals, the town.h Unnamed526d20
-    // shape - but NextArmy's body now pins down what they ARE, which is
-    // what a later lane needs to promote them:
+    // (291 B). Neither has a counterpart anywhere in the DC cmbtmgr.obj
+    // roster, so the 2026-08-24 promotion deliberately retains address
+    // ordinals rather than inventing names. NextArmy and the retail bodies
+    // pin down what they ARE:
     //   0x464d40 is a combatManager method taking the selected stack and
     //     answering a byte. Its call site is nested in the SAME guard as
     //     CheckApplyBadMorale, immediately after it, and a non-zero
     //     answer restarts the whole turn scan - the stack loses its
     //     turn. Retail's body reaches FEAR.WAV. Read together that is a
-    //     fear check, but the roster does not say so and this lane does
-    //     not name it.
+    //     fear check. Its reconstructed body is semantically closed with
+    //     a bounded register-allocation residual.
     //   0x464f50 is a combatManager method taking TWO stacks and
     //     answering a byte, and retail's body calls only army::GetSpeed.
     //     NextArmy asks it (best, candidate) and KEEPS the incumbent
     //     when the answer is non-zero, so it orders two stacks - the
-    //     move-order comparator. Also left unnamed.
-    // Declared, not claimed: their bodies are outside this lane.
+    //     move-order comparator. Its reconstructed body is byte-exact.
     unsigned char Unnamed464d40(army* selected);
     unsigned char Unnamed464f50(const army* incumbent, const army* candidate);
     // TWO MORE ADDRESS ORDINALS, both pinned by SetNextArmy's body and
@@ -2168,18 +2260,38 @@ public:
     unsigned char Unnamed5a40d0(SpellID spell, long mastery, long side,
                                 long arg4, long arg5);
     void Unnamed4782d0();
-    // TWO MORE, both command.obj bodies Open calls back to back with no
-    // arguments, and both left as address ordinals for the reason above.
-    //   0x479f30 (139 B) takes one GameTime::Get(), stores it to
-    //     +0x53fc and +0x5400, then walks both sides' stacks and seeds
-    //     army+0xfc with `now + 2*Random(1,50) - army+0x154` for every
-    //     stack whose +0x154 exceeds 0x33 - a per-stack animation-phase
-    //     seeder.
-    //   0x478890 (110 B) returns at once under IsQuickCombat; otherwise
-    //     it either clears the combat message line and forces a mouse
-    //     move, or re-arms the combat pointer.
-    void Unnamed479f30();
-    void Unnamed478890();
+#endif
+    // ResetCycleTimers (0x479f30, 139 B) takes one GameTime::Get(), stores
+    // it to the two hero fidget clocks, then walks numArmies on both sides
+    // and seeds army::iLastFidgetTime with
+    // `now + 2*Random(50, iFidgetFrequency) - iFidgetFrequency` whenever
+    // that frequency exceeds 51. Retail proves the offsets and arguments;
+    // Dreamcast proves the public name and the two field semantics.
+    //   ResetMouse (0x478890, 110 B) returns at once under IsQuickCombat;
+    //     otherwise it either clears the combat message line and forces a
+    //     mouse move, or re-arms the combat pointer. Dreamcast's decorated
+    //     public and the retail body now prove the source name.
+    void ResetCycleTimers();
+    void ResetMouse();
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    void ResetRound();
+    void auto_resolve_combat();
+    int CheckWin(message* msg);
+    void CheckChangeSelector();
+    void TurnOffSelector(unsigned char drawIt);
+    void CheckChangeHighlighter(int currentIndex);
+    unsigned char process_move_then_attack(message* msg);
+    void process_first_aid(army* currentArmy);
+    void ResetCyclingCreatures();
+    void SetCombatGrid(int showEntireGrid, int showMouseHex, int gridLevel,
+                       unsigned char drawNow);
+#endif
+#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
+private:
+    std::string get_tower_string(TWallSection wall, long archers,
+                                 long skill) const;
+public:
+#endif
 };
 SIZE(combatManager::TWallTraits, 0x24);
 
@@ -2200,10 +2312,22 @@ extern combatManager* gpCombatManager;
 // extern added to this header is its own measured include-set trigger
 // (the field_132a0 bisection), and cmbtmgr.obj is the only consumer
 // that needs them today.
+#ifdef HOMM3_COMMAND_GRID_VIEW
+// CheckGetAIMove caches the displayed surrender price here. No surviving
+// retail or Dreamcast symbol supplies a public spelling, so the name keeps
+// its address ordinal. This substitutes a command-unused extern one-for-one.
+DATA(0x00695030) extern long gSurrenderCost695030;
+#else
 DATA(0x00698998) extern unsigned long gCombatStamp698998;
+#endif
 DATA(0x006989b8) extern unsigned long gCombatStamp6989b8;
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+#ifdef HOMM3_COMMAND_GRID_VIEW
+// Set while the combat action pump is active; process_move_then_attack clears
+// it on a win before the ResetMouse path. Definition belongs to drawing.cpp.
+DATA(0x006989ec) extern int gbProcessingCombatAction;
+#endif
 
 // The combat random seed, .data 0x66d840. SetupCombat parks its iSeed
 // parameter here and NOTHING in the image ever reads it back - the reloc
@@ -2321,6 +2445,11 @@ DATA(0x00641e08) extern const TSpellEffectTraits akSpellEffectTraits[];
 // and mark_firewalls (0x4215e0) read the same table with a live index.
 // Name is a BOOTSTRAP INVENTION - no roster attests it.
 DATA(0x0063bd18) extern const int gMoatDamage[];
+
+// The nine faction-specific moat attacker strings filled by the game-array
+// text loader and indexed by defendingTown->type in the retail-only moat
+// worker at 0x469e50. Name is a BOOTSTRAP INVENTION.
+DATA(0x006a5d60) extern const char* gMoatDamageMessages[9];
 
 // The standalone 20-byte obstacle shape the Tower's moat mines are
 // built from, at .rdata 0x63cf00 - not a row of gObstacleShapes but a

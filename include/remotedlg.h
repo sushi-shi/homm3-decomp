@@ -16,8 +16,21 @@
 #include "bitmap16.h"
 #include "dialogbox.h"
 #include "remote.h"
+#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
+#include "armygrp.h"
+#include "hero.h"
+#include "netmsg.h"
+#include "town.h"
+#endif
 
 class CSprite;
+
+// Retail-only wrappers in the video TU immediately after smackmgr. The first
+// forwards its fastcall frame argument to SmackGoto on the current handle;
+// the second decodes that handle's current frame when playback is active.
+// Their wider ownership and original names remain unattested.
+void __fastcall SetCurrentSmackFrame(int frame);
+void DrawCurrentSmackFrame();
 
 // CNetMsgHandlerPause - the scoped handler that parks whatever handler the
 // network singleton is carrying, installs itself for the life of a modal
@@ -151,14 +164,83 @@ SIZE(CWaitForReadyPlayersDlg, 0x98);
 class CLevelPickWaitDlg : public CAnimatedDlg {
 public:
     CLevelPickWaitDlg();
+    void WaitForLevels(int fromWho);
     virtual int handle_message(message& msg);  // slot 3
 
 protected:
+    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
+    void OnHeroLevelUpdate(CNetMsg* pNetMsg);
+
     int m_fromWho;                        // +0x78
     CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
     unsigned char m_playerDropped;        // +0x8c
 };
 SIZE(CLevelPickWaitDlg, 0x90);
+
+#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
+// DC supplies all seventeen payload names and their order. Retail shifts the
+// scalar prefix by four bytes for t_complex_net_message's vptr, retains both
+// 0x38-byte army groups, aligns town to +0xb0, and widens each hero to 0x492.
+// The last hero ends at +0xb3c; town's natural eight-byte alignment rounds the
+// complete PC class to 0xb40, exactly the stack extent in DoNetCombat and the
+// member extent in the wait-dialog constructor.
+class CCombatInitMsg : public t_complex_net_message {
+public:
+    CCombatInitMsg();
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+
+    type_point m_point;             // +0x018
+    unsigned char m_leftHero;       // +0x01c
+    unsigned char m_rightTown;      // +0x01d
+    unsigned char m_rightHero;      // +0x01e
+    int m_seed;                     // +0x020
+    int m_winner;                   // +0x024
+    unsigned char m_retreatWin;     // +0x028
+    unsigned char m_combatSurrender;// +0x029
+    int m_leftOwner;                // +0x02c
+    int m_leftGold;                 // +0x030
+    int m_rightOwner;               // +0x034
+    int m_rightGold;                // +0x038
+    armyGroup m_leftArmyGroup;      // +0x03c
+    armyGroup m_rightArmyGroup;     // +0x074
+    town m_town;                    // +0x0b0
+    hero m_leftHeroData;            // +0x218
+    hero m_rightHeroData;           // +0x6aa
+};
+SIZE(CCombatInitMsg, 0xb40);
+#endif
+
+#ifdef HOMM3_REMOTE_BATTLE_DLG_DECLS
+// The remote-combat wait dialog shares CAnimatedDlg's 0x78-byte prefix.
+// Dreamcast proves the method names and m_playerPos at the first derived
+// dword; retail 0x557090 independently reads/writes it at +0x78. The PC
+// constructor then builds a large, platform-specific combat-init payload at
+// +0x80, a pause handler at +0xbc0 and a received byte at +0xbd0. The
+// intervening +0x7c pointer is DC-attested; retail leaves it untouched in the
+// constructor/Wait/handler trio. Every PC offset below is independently fixed
+// by those three bodies.
+class CWaitForRemoteBattleDlg : public CAnimatedDlg {
+public:
+    CWaitForRemoteBattleDlg();
+    void Wait(int playerPos);
+    virtual int handle_message(message& msg);  // slot 3
+
+protected:
+    int OnPlayerDrop(CNetMsg* pNetMsg, message& msg);
+
+    int m_playerPos;                         // +0x78
+    CCombatInitMsg* m_pCombatInitMsg;        // +0x7c (DC name)
+    CCombatInitMsg m_combatInitMsg;          // +0x80 (retail by-value copy)
+    CNetMsgHandlerPause m_netMsgHandler;     // +0xbc0
+    unsigned char m_combatInitMsgReceived;   // +0xbd0
+};
+// CCombatInitMsg gives the containing dialog eight-byte alignment, so the
+// received byte's +0xbd1 end rounds to 0xbd8. DoCombat's local begins at
+// ebp-0xd58 and the next aligned local band begins at ebp-0x180, confirming
+// that full stack extent independently.
+SIZE(CWaitForRemoteBattleDlg, 0xbd8);
+#endif
 
 // CSaveScreen - the off-screen backing store the transfer dialog parks the
 // framebuffer in. DC's field list sits on a 184-byte Bitmap16Bit; retail's
@@ -203,6 +285,8 @@ public:
     ~CGameTransferSmack();
     void Setup(int x, int y, unsigned char sending, unsigned char drawText);
     void Start();
+    void SetPercentage(float pct);
+    void DrawCurrentFrame() { DrawCurrentSmackFrame(); }
     void Stop();
     void SaveScreen();
     void RestoreScreen();

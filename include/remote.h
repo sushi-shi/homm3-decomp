@@ -67,11 +67,9 @@ public:
     void Copy(CNetMsgHandler* pOther);
     void SetAbortPopupMsg(CNetMsg* pNetMsg);
 
-    // Retail-only 0x557920, an ordinal placeholder. The dispatcher's
-    // default arm hands every unhandled message to it (the body that
-    // handles RS_NEW_HOST among others) and forwards its result to the
-    // recycler; the row is not claimed here.
-    CNetMsg* RemoteFn_00557920(CNetMsg* pNetMsg);
+    // A pure virtual may still have an out-of-line definition. Retail's
+    // vtable keeps _purecall in slot 3, while two direct base-qualified
+    // dispatcher calls land on that definition at 0x557920.
 
 protected:
     // PROTECTED, not private, 2026-08-20: CAdvMgrNetMsgHandler::
@@ -346,25 +344,31 @@ protected:
 };
 SIZE(CHourGlass, 1);
 
-// The dispatcher's out-of-TU surface, all retail-only ordinals in the
-// remote band (0x553aa0..0x5569f0); none of the rows is claimed here.
-//   0x555910  the per-message recycler every dispatch path ends in
+// The dispatcher's out-of-TU surface in the remote band. Named declarations
+// are retail/DC-correlated claims; RemoteFn entries stay address-ordinal.
+//   0x555910  DestroyMsg, the recycler every dispatch path ends in
 //   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
 //   0x556430  player-drop handling      0x5565e0  player-drop update
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
-void RemoteFn_00555910(CNetMsg* pNetMsg);
+void DestroyMsg(CNetMsg* pNetMsg);
 char* RemoteFn_00553AA0(char* dst, const char* format, ...);
 void RemoteFn_00556430(int gamePos);
-void RemoteFn_005565E0(int gamePos);
-void RemoteFn_00556780(int gamePos, unsigned char bDead);
-void RemoteFn_00556940(CNetMsg* pNetMsg);
-void RemoteFn_005569A0(CNetMsg* pNetMsg);
-void RemoteFn_005569F0(CNetMsg* pNetMsg);
+void OnPlayerDropUpdateMsg(unsigned long dpid);
+void HandlePlayerDead(int deadGuy, unsigned char showMsg);
+void HandlePlayerWon(CNetMsg* pNetMsg);
+void HandlePlayerLost(CNetMsg* pNetMsg);
+void HandleNormalWinMsg(CNetMsg* pNetMsg);
 
 // remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
 // dispatcher hands it the chat text in place and the sender's slot.
+#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
 void ReceiveChat(char* cChat, int fromWho);
+#endif
+// remote.cpp:2227, dc 0x11e01c; command's combat-drop handler forwards a
+// DPID that belongs to neither combat side to this process-wide handler;
+// both remote wait-dialog dispatchers use the same public boundary.
+void HandlePlayerDrop(unsigned long dpid);
 
 // Retail .bss 0x69d7b0, the status-line scratch RemoteFn_00553AA0 fills
 // for the turn-update and player-active banners. Ordinal name; the
@@ -389,21 +393,22 @@ extern int gNetworkActive69954c;
 // CODEVIEW(E:\gamedcs\remote.cpp:1390, dc 0x11ce14) unsigned char InitRemote(eNetGameType iMPType, const char* sUserName);
 // CODEVIEW(E:\gamedcs\remote.cpp:1411, dc 0x11ce68) void RemoteCleanup();
 // CODEVIEW(E:\gamedcs\remote.cpp:1438, dc 0x11cf34) int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed);
-// CODEVIEW(E:\gamedcs\remote.cpp:1446, dc 0x11cf64) // The dispatcher's out-of-TU surface, all retail-only ordinals in the
-// remote band (0x553aa0..0x5569f0); none of the rows is claimed here.
-//   0x555910  the per-message recycler every dispatch path ends in
+// CODEVIEW(E:\gamedcs\remote.cpp:1446, dc 0x11cf64)
+// The dispatcher's duplicated prototype surface; see the admitted names and
+// retained retail-only ordinals above.
+//   0x555910  DestroyMsg, the recycler every dispatch path ends in
 //   0x553aa0  sprintf-and-queue of a status chat line (cdecl varargs)
 //   0x556430  player-drop handling      0x5565e0  player-drop update
 //   0x556780  player-dead sweep         0x556940  player-won
 //   0x5569a0  player-lost               0x5569f0  session-lost/normal-win
-void RemoteFn_00555910(CNetMsg* pNetMsg);
+void DestroyMsg(CNetMsg* pNetMsg);
 char* RemoteFn_00553AA0(char* dst, const char* format, ...);
 void RemoteFn_00556430(int gamePos);
-void RemoteFn_005565E0(int gamePos);
-void RemoteFn_00556780(int gamePos, unsigned char bDead);
-void RemoteFn_00556940(CNetMsg* pNetMsg);
-void RemoteFn_005569A0(CNetMsg* pNetMsg);
-void RemoteFn_005569F0(CNetMsg* pNetMsg);
+void OnPlayerDropUpdateMsg(unsigned long dpid);
+void HandlePlayerDead(int deadGuy, unsigned char showMsg);
+void HandlePlayerWon(CNetMsg* pNetMsg);
+void HandlePlayerLost(CNetMsg* pNetMsg);
+void HandleNormalWinMsg(CNetMsg* pNetMsg);
 
 // remote.cpp:1529 in the DC roster (dc 0x11d1c8); retail 0x554a20. The
 // dispatcher hands it the chat text in place and the sender's slot.

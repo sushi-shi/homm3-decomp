@@ -260,6 +260,950 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `UpdateCurrentPlayers` adds 334 exact remote bytes; two
+  adjacent player identities are admitted as bounded residuals.**
+  Dreamcast supplies the public `UpdateCurrentPlayers` and `IsValidHuman`
+  source boundaries plus the complete `CDPlayPlayer` layout. Retail proves
+  that layout independently through the DPID load at +0x100, then fixes the
+  whole PC body: enumerate DirectPlay players into a local `CAutoArray`, walk
+  the eight 0x168-byte `playerData` records, retain DPIDs found in the live
+  list, otherwise clear the three net fields and restore general-text row
+  469, and publish the surviving player count at 0x699274. Direct
+  `gpGame->players[i]` subscripts are byte-selected: VC6 strength-reduces them
+  into retail's EBX stride while a named `playerData&` wrongly caches a
+  pointer and grows the frame. The decisive lifetime boundary is the explicit
+  final `playerArray.Destroy(1)`; it makes VC6 eliminate the immediately
+  redundant implicit normal-exit destructor while preserving exception
+  cleanup. The result is exact across all **334 bytes and 14 CFG blocks**.
+
+  The same lane admits two source-honest residuals rather than grinding
+  register allocation. `GetNextHumanPlayer` at 0x4f4ba0 is 95.12% with all
+  twelve CFG blocks aligned and only its initialization schedule different.
+  `HandlePlayerDead` at 0x556780 is 98.34% with all twenty blocks aligned and
+  nineteen exact; retail proves its local-player cleanup, both dialogs and
+  active-human handoff, leaving only the final player-pointer register order.
+  The adjacent implicit `CWaitForReadyPlayersDlg` destructor remains
+  deliberately unclaimed: enabling the TU-wide base-destructor expansion that
+  improves it regresses the already-banked readiness-wrapper cleanup boundary.
+  No external implementation body was used. The synchronized inventory moves
+  from **1889/2298 to 1890/2301 exact functions at 96.68% fuzzy**.
+
+- **2026-08-24 — the remote-combat constructor and its deleting wrapper add
+  349 exact bytes.** Retail 0x556f20 expands `CAnimatedDlg`, constructs the
+  PC-only complex combat-init payload and pause handler, installs vtable
+  0x640f78, then clears only `m_playerPos` and the +0xbd0 received latch.
+  Dreamcast supplies all seventeen `CCombatInitMsg` payload names; retail
+  independently proves their shifted scalar prefix, both 0x38-byte army
+  groups, the town at +0xb0 and the two 0x492-byte heroes at +0x218/+0x6aa.
+  The town's eight-byte alignment rounds the message from its +0xb3c member
+  end to 0xb40 and the containing dialog to 0xbd8, which `DoCombat`'s stack
+  bands corroborate. That natural class spelling reproduces all 316
+  constructor bytes and five CFG blocks on its first synchronized compile.
+
+  The constructor also makes VC6 emit the vtable's 33-byte scalar deleting
+  destructor at 0x557060, which is exact as a `VA_COMPGEN` claim. Its call
+  target, the 253-byte ordinary destructor at 0x4aea00, remains deliberately
+  unclaimed: it is an implicit destructor selected from events.obj by the
+  still-unreconstructed `DoCombat`; an explicit empty body reaches 98.75%
+  but adds the one derived-vptr store retail omits, so that provenance-false
+  transcription was rejected. The synchronized inventory advances from
+  **1887/2296 to 1889/2298 exact functions at 96.68% fuzzy**.
+
+- **2026-08-24 — the remote-combat wait dispatcher reproduces all 489 retail
+  bytes exactly.** Vtable 0x640f78 slot 3 and the adjacent Dreamcast order
+  bracket identify 0x5570f0 as
+  `CWaitForRemoteBattleDlg::handle_message`; retail's byte table independently
+  fixes the five live subtypes and their chat, combat-init, player-drop, host
+  handoff and session-loss arms. The source-shaped `CMessageKill` owns every
+  dequeued packet except `RS_COMBAT_INIT`, which the PC-only complex-message
+  bridge at 0x512e00 deserializes into the dialog before setting the received
+  byte and closing the modal. The drop helper resolves and handles every DPID,
+  then closes only when the dropped seat equals `m_playerPos`.
+
+  Retail's complex-message constructor proves a vptr plus 0x14-byte `CNetMsg`
+  base at +4, while the `advManager::DoNetCombat` stack frame proves the
+  derived `CCombatInitMsg` is 0xb40 bytes. Together with the wait-dialog
+  constructor, these facts place the by-value message at +0x80, its pause
+  handler at +0xbc0 and the received flag at +0xbd0; Dreamcast contributes
+  only the class/member identities and helper name. The first synchronized
+  spelling matches all 20 CFG blocks and advances the inventory from
+  **1886/2295 to 1887/2296 exact functions at 96.68% fuzzy**.
+
+- **2026-08-24 — the level-pick network dispatcher is exact across all 757
+  retail bytes.** Vtable 0x640f40 slot 3 and the Dreamcast order slot fix
+  0x556c20 as `CLevelPickWaitDlg::handle_message`; retail's 73-entry byte
+  dispatch table independently fixes the five live subtypes: chat, hero-level
+  update, player drop, host handoff and session loss. The body follows the
+  same source-shaped `CMessageKill` lifetime as the already matched ready-player
+  dispatcher, which accounts for all three cleanup expansions around its two
+  early returns.
+
+  DC supplies the two private helper names and the four
+  `CHeroLevelUpdateMsg` payload names; retail proves their PC layout by copying
+  28 secondary-skill bytes to hero +0xc9, four primary-stat bytes to +0x476,
+  and the skill count to +0x101. The player-drop arm compares the DirectPlay
+  owner with `m_fromWho`, marks `m_playerDropped`, and reaches the same
+  `HandlePlayerDrop` boundary as the combat-drop path. `/Ob2` naturally
+  expands both helpers, `CAnimatedDlg::handle_message`, `ReceiveChat`, and the
+  previously reconstructed `HandleNewHost`/`GetPriorPlayer` pair while keeping
+  the expected network transmit out of line. The first synchronized source
+  spelling reproduces all 27 CFG blocks and advances the inventory from
+  **1885/2294 to 1886/2295 exact functions at 96.67% fuzzy**.
+
+- **2026-08-24 — three adjacent remote.obj rows add 824 exact retail bytes,
+  including the pure base network handler's legal out-of-line body.** The
+  sole `RS_NORMAL_WIN` dispatcher edge and Dreamcast's matching name/order
+  slot fix 0x5569f0 as `HandleNormalWinMsg`. Retail proves its one-dword
+  player payload, local-team comparison, general-text rows 660/661, game-over
+  state and the same-team completion latch. The first natural transcription
+  is exact at 180 bytes. Dreamcast's `pct`, `cText[256]` and `sPct[256]`
+  locals then identify 0x5574b0 as `CGameTransferSmack::SetPercentage`;
+  retail supplies the 20-frame scale, rows 99/100, `"\n%0.0f%%"` suffix,
+  160x160 text/update rectangle and current-Smacker wrapper calls. Its first
+  source spelling is exact across all 301 bytes.
+
+  Retail vtable 0x640f14 still contains `_purecall` in slot 3, but direct
+  base-qualified calls from the adventure dispatcher land on 0x557920;
+  C++ permits that pure virtual to have a definition. Dreamcast independently
+  names it `CNetMsgHandler::HandleNetMsg` and records its calls to
+  `HandleNewHost` and `DestroyMsg`. Restoring those source boundaries explains
+  the PC body: `/Ob2` expands `HandleNewHost` and its `GetPriorPlayer` helper,
+  transfers host control with a 0x18-byte `CPlayerDropUpdateMsg`, reports
+  general-text row 471, handles session loss with row 329, and retains the
+  guarded message destroy. A call-site `inline_depth(0)` preserves retail's
+  out-of-line `CDPlayHeroes::TransmitRemoteData` call inside the otherwise
+  expanded helper. The result is exact across 19 blocks, 10 branches and all
+  343 bytes. This batch advances the synchronized inventory from 1882/2291
+  to 1885/2294 exact functions at 96.67% fuzzy.
+
+- **2026-08-24 — the final two ordinary Seer Hut rows are admitted as the
+  creature proposal/progress dialogs.** Vtable 0x6418b4 slots 4 and 5, the
+  parallel count/type vectors and picture class 0x15 fix 0x570880 and
+  0x570b80 as `type_creature_quest::DoProposalDialog(hero*)` and
+  `DoProgressDialog()`. The proposal filters to stacks whose whole-army total
+  is below the quest count, while progress shows every requested stack. Both
+  format localized `count name` rows and pack each picture qualifier as the
+  zero-extended 16-bit count over the 16-bit creature id. The generated
+  proposal path formats the missing list through the progress template; the
+  progress path uses the proposal template plus its optional deadline suffix,
+  or the dated custom proposal getter.
+
+  The proposal scores 97.4706% with all 33 CFG blocks and branch targets
+  exact. Its only size difference is a one-instruction quest-text address
+  schedule; a named source reference is byte-flat. The progress body initially
+  reproduced its first 24 blocks but expanded the final string refcount path
+  (90.8971%). Giving the two vectors their source-shaped inner scope and
+  applying `inline_depth(0)` only to the outer text destructor restores all 25
+  retail blocks and reaches 99.5679%. One instruction remains: this compiler
+  calls `basic_string::~basic_string`, while retail inlines that wrapper and
+  calls `_Tidy(1)`. Default depth and depth 1 regress, so no manual destructor
+  or raw-storage spelling is admitted.
+
+- **2026-08-24 — the artifact proposal dialog is admitted with its exact
+  retail CFG and stack layout.** Vtable 0x641878 slot 4, the Complete-era
+  artifact-traits stride and extended-dialog picture class 8 fix 0x56f8a0 as
+  `type_artifact_quest::DoProposalDialog(hero*)`. The body builds parallel
+  vectors of the requested artifacts the visitor still lacks and their
+  localized names. An empty custom progress string formats that joined list
+  through the quest table's progress column; otherwise the custom text passes
+  through directly. Both arms then show only the missing artifact pictures.
+
+  Keeping each two-dword dialog record outside its loop recovers retail's
+  exact 0x68 frame and every vector, string, temporary and record slot. Retail
+  outlines `missingArtifacts.size()` only in the generated-text arm; a
+  statement-scoped `inline_depth(0)` restores all 31 CFG blocks and every
+  branch target without disturbing the inline element access and insertion.
+  The retained body scores 88.7407%. Its five size-only residual blocks are a
+  bounded VC6/Dinkumware generation class: one quest-text register schedule,
+  two dialog-vector destructor inline choices, the custom arm's equivalent
+  vector-insert overload, and the final trivial artifact-vector destroy.
+  Extending the depth limit through the dialog scope regresses to 33 blocks
+  and 86.4222%; text-pointer scope changes are byte-flat, so no fabricated
+  storage or cleanup flow is admitted.
+
+- **2026-08-24 — the last resource-quest dialog is admitted with its full
+  retail CFG and an isolated register-homing residual.** Vtable 0x6418f0
+  slot 4 fixes 0x571840 as
+  `type_resource_quest::DoProposalDialog(hero*)`. The body uses the visitor's
+  signed owner byte and retail's 360-byte `playerData` stride to compare all
+  seven treasury balances with the quest price. Only deficits become
+  localized `"%d %s"` requirement fragments and `type_dialog_resource`
+  pictures. An empty custom progress string selects the quest table's progress
+  column, formats it with the joined deficit list, and otherwise copies the
+  custom string before the common extended dialog.
+
+  Natural source reproduced all 25 blocks and 12 branch targets. Moving the
+  reusable dialog record from the loop arm to function scope recovered the
+  exact 0x6c frame and all three late string-temporary placements (86.9301 ->
+  87.1048%). The bounded remainder is one allocation choice: this VC6 promotes
+  the loop index in EBX and homes `this` at -0x10, while retail retains `this`
+  in EBX and reuses the dead hero-argument slot for the index. Equivalent
+  for/while forms, declaration-order changes and an explicit `this` alias are
+  byte-flat; turning the named text-format local into an expression temporary
+  changes the CFG and scores 80.2795%. The semantic body is banked without a
+  fabricated volatile or recycled-argument spelling.
+
+- **2026-08-24 — the retail-only monster-quest default-text initializer is
+  semantically closed at 98.3426%, and its packed position is corrected to
+  canonical `type_point`.** Vtable slot 14 and the contiguous monster-quest
+  pool fix 0x56ef20 as `type_monster_quest::SetDefaultText`. The body resolves
+  the editor monster reference through the 0x4cef10 reverse search over
+  `game::monsterIdentifiers`, rejects its all-minus-one result, reads the
+  creature id from the referenced `NewmapCell`, selects its plural name, and
+  chooses one of the nine compass strings at 0x6a5c48 by map thirds. It then
+  adds the retail `" underground"` suffix for the lower layer and fills the
+  three empty localized text columns with monster name and direction.
+
+  Retail's packed-field reads prove that both the quest member and slot-10
+  argument use the shared signed 10/10/4 `type_point`; NH3API corroborates the
+  type only after that byte proof. Replacing the provisional unsigned duplicate
+  makes the adjacent 69-byte `NotifyMonsterDefeated` exact (72.6087 -> 100%).
+  The initializer also recovers a mixed `NewfullMap::cell` header view: the
+  by-value point wrapper is inline, while the three-scalar overload is called
+  out of line.
+
+  The retained initializer has retail's exact 77-block, 41-branch CFG. A
+  traits-length plus depth-bounded two-argument `std::string::assign` restores
+  the one compass site whose inline budget differs from its eight siblings.
+  Only three compiler-generation blocks remain: the EH-handler relocation
+  addend, opening point/cell register scheduling, and one final inlined `_Eos`
+  where retail calls it. Direct `assign`, bounded `operator=`, explicit
+  length-aware calls, declaration-order changes, and a named map pointer were
+  measured; all either regressed the CFG/score or were byte-flat, so the
+  semantic closure is banked without fabricated storage or control flow.
+
+- **2026-08-24 — the two Complete-era quest event dispatchers are decoded;
+  `TQuestGuard::DoEvent` is exact and the larger Seer event exposes an honest
+  EH/STL-view residual.** Retail's caller, four-argument `ret 0x10`, five-byte
+  guard layout and quest vtable calls fix 0x572b60 as
+  `TQuestGuard::DoEvent(hero*, bool, NewmapCell*, type_point)`. Its deadline,
+  visit-mask, proposal/progress, completion-confirmation, payment and
+  `EraseAndFizzle` paths reproduce all 510 bytes. The last instruction lever
+  was a direct signed-short day comparison, which lets VC6 keep the modulo-day
+  arithmetic in BX instead of copying it through AX.
+
+  The adjacent 0x573670 body retains Dreamcast's public
+  `TSeerHut::DoSeerEvent(hero*, bool)` identity but is retail-only in shape:
+  it selects all ten reward pictures, values the reward for AI visitors,
+  applies payment/reward on acceptance, and formats the randomized empty-hut
+  text. Its semantic body is complete, but the current string/STL declaration
+  view produces a 0x34-byte frame and 87 blocks / three cleanup exits against
+  retail's 0x24 bytes and 59 / two. The code-only iteration plateaued at
+  30.8511% after the direct deadline, explicit expired-bool and register-alias
+  hypotheses; the admitted 0x400-byte row includes both exact switch tables
+  and therefore closes at 39.0772% in the synchronized report.
+
+  The primary-skill slot-4 dialog at 0x56dad0 was decoded in the same pass. It
+  computes the four still-missing skills, chooses the custom or synthesized
+  progress line, appends the deadline suffix, and emits the four packed skill
+  pictures. Source-local inline-depth control restores retail's out-of-line
+  vector calls (46.5225 -> 56.5135%), but the present STL view still duplicates
+  two cleanup exits; that residual is banked without raw-storage scaffolding.
+
+- **2026-08-24 — six quest text/dialog identities were admitted; four text
+  builders are exact and two progress dialogs retain an honest VC6 lifetime
+  residual.** Vtable slots and retail operands identify 0x56dfa0 as
+  `type_skill_quest::skill_requirement_text`, 0x56f5f0 and 0x5704e0 as the
+  artifact/creature slot-6 requirement builders, and 0x572670 as the
+  belong-to-player slot-7 description. The primary-skill body walks the
+  canonical four-name table at 0x6a5390 and formats `%s %i`; the two container
+  bodies feed artifact names or singular/plural `count name` fragments to the
+  already exact shared list formatter. The player description lower-cases
+  `gPlayerColorNames[required_owner]` with the same `std::transform` expansion
+  already exact in that class's default-text body. Natural source made three
+  rows exact on the first pass; spelling the DC-attested inline `GetArmyName`
+  helper rather than precomputing locals closed the sole creature
+  register-schedule residual.
+
+  Retail vtable slot 5 and extended-dialog picture rows independently fix
+  0x56dd60 and 0x56fbc0 as the skill/artifact progress dialogs. Both retain
+  the returned progress string through construction of an eight-byte picture
+  vector: skill pictures are classes `0x1f + i` with packed requirement
+  values, while artifact pictures use class 8 and the artifact id. Their
+  semantics and twelve-block CFGs agree, but this VC6 SP3 compile reloads the
+  lifetime-extended string slot where retail consumes the returned EAX
+  directly, cascading into 75.8427% and 75.2353% register-schedule residuals.
+  Named-string, bare-pointer, named-string-plus-pointer and const-reference
+  shapes were measured; the const reference is retained because it models
+  the shipped lifetime without false raw-storage or allocator scaffolding.
+
+- **2026-08-24 — the Seer Hut save/log/appraisal trio is reconstructed
+  exactly, closing three adjacent retail-only rows.** Retail's sole
+  `NewfullMap::Save` call fixes 0x573fd0 as the one-argument serializer for
+  a 0x13-byte `TSeerHut`; the body independently proves quest type slot 8,
+  quest save slot 13, the 12-byte reward record, and the shipped tail order
+  `field_12`, `visitedPlayers`, `NameIndex`. The exact HD body supplies the
+  `TSeerHut::save` name only after those retail facts, while Dreamcast
+  preserves the older method lineage. The natural block-scoped byte locals
+  reproduce all 145 bytes exactly.
+
+  The quest log's SeerHutList arm is the sole caller of 0x574070 and proves
+  a nullary thiscall with a hidden `std::string` result. Its unique HD
+  structural twin supplies `getSeerLogText`; retail then fixes the three
+  format inputs as the LOG-column template, the quest requirement, and the
+  indexed seer name. A direct `quest_text(LOG)` accessor plateaued at 89.45%
+  because it folded the table addressing. Spelling the source operation as
+  `quest_texts()[QUEST_TEXT_LOG]` restores retail's two-stage address
+  arithmetic and makes the 312-byte body exact.
+
+  The independently mapped HD row at 0x573970 identifies retail 0x5735a0 as
+  `TSeerHut::getValue(hero*)`; retail's sole AI caller and 195-byte body fix
+  the ABI and semantics. An unvisited player receives at least 20 value via
+  VC6's by-value, reference-returning `_cpp_max`. A visited hut is worthless
+  when its quest is absent, past its +0x3c deadline, or unsatisfied;
+  otherwise its value is reward appraisal minus the quest's player-specific
+  AI cost. The first direct-guard reconstruction reached 48.91%. Nesting the
+  visited path around one shared zero exit, materializing the `expired`
+  boolean, and narrowing the absolute-day formula to `short` reproduces the
+  retail register allocation, `setl/test` predicate, and 16-bit date
+  arithmetic exactly. The synchronized build -> delink -> build closes at
+  **1,876/2,277 exact, 96.78% fuzzy, and 42.04% filtered executable
+  coverage**; all ratchet, claim, banked-row, single-view and cleanliness
+  gates pass.
+
+- **2026-08-24 — `TSeerReward::giveReward` is reconstructed exactly across
+  all ten reward arms, its jump table, and its Complete-only AI edges.** The
+  sole retail caller at 0x573919 passes `TSeerHut + 5`, independently proving
+  the 12-byte reward receiver and the `(hero*, bool)` ABI; the unique fixed-
+  byte HD join supplies the later `TSeerReward::giveReward` ownership only
+  after that retail proof. Dreamcast's seerhut.cpp lineage supplies the
+  statement order and its one named local, `type_artifact artifact`, while
+  retail fixes every payload width and callee. The exact body preserves the
+  shipped negative-mana assignment, signed morale/luck bytes, the secondary-
+  skill eight-slot cap and upgrade delta, the 64-artifact backpack limit,
+  spellbook/wisdom/known-spell gates, and the human-dialog versus AI-join
+  creature split. Retail also proves that the creature count is widened from
+  the packed signed 16-bit payload before all three calls.
+
+  Three source shapes were decisive under VC6: mana selects its amount in the
+  branches instead of preinitializing it; a newly granted secondary skill
+  exits that switch arm before the mastery is retested; and spell/creature
+  payloads stay as direct member reads. Dreamcast Hero.h:209 independently
+  names the one-argument `type_artifact(TArtifact)` constructor, while this
+  retail body proves its `extra = -1` then artifact-id store order. The final
+  0x290-byte claim is 100.00%, with all 14 conditional branches and 13 exits
+  agreeing. The synchronized build -> delink -> build advances the inventory
+  to **1,873/2,274 exact at 96.77% fuzzy and 42.01% filtered executable
+  coverage**; all ratchet, claim, banked-row, single-view and cleanliness
+  gates pass.
+
+- **2026-08-24 — the 528-byte `TSeerReward::getValue` dispatcher and its
+  three retail-only philai dependencies are reconstructed; three helpers are
+  exact and the dispatcher retains only a two-slot VC6 coloring residual.**
+  Retail 0x527cf0/0x527d80 prove that Complete changed Dreamcast's file-local
+  `MoraleIncreaseValue(const hero*, int)` and `LuckIncreaseValue` helpers to
+  thiscalls: the hero is in ECX, the award is the sole stack argument, and
+  both return with `ret 4`. Dreamcast line records supply the statement
+  shapes and named `double value_added`; retail independently fixes the
+  undead early-out, morale/luck curves, primary-stat and army-value scaling,
+  and the luck-cap rewrite. Both bodies are byte-exact (137 and 144 bytes).
+  The 96-byte `hero::SoD_get_seer_skill_value` at 0x524630 is also exact. An
+  independently identical HD 5.3 body supplies its name, while retail proves
+  the receiver, two dword arguments, learned-skill/capacity gates and the
+  typed `wants_skill` / `get_skill_value` calls. A representation-only local
+  union keeps `TSecondarySkill` out of hero.h's wide include closure.
+
+  With those calls named, retail 0x573a70 is reconstructed through all ten
+  reward arms and both jump tables. It preserves the shipped Luck-arm bug:
+  `LuckIncreaseValue` is called and its result discarded before falling into
+  Resource appraisal. Retail also proves the Complete-only hero tail weights
+  `value_of_power` and `value_of_knowledge`; the surrounding five-dword band
+  is split with the matching Dreamcast names after a retail writer scan
+  confirms every dword boundary. The resulting 528-byte body has the exact
+  18-block CFG and every executable instruction except three stack operands.
+  Retail/HD keep `artifact` at `[ebp-8]` and an unnamed resource-conversion
+  double at `[ebp-0x10]`; this VC6 SP3 compile colors the non-overlapping
+  lifetimes together at `[ebp-8]`, giving `sub esp,8` instead of `0x10`.
+  Function- and case-scoped doubles, `volatile`, a one-element array and a
+  function-scoped artifact were measured; the first two natural forms
+  coalesce, `volatile` also perturbs scheduling, and the last creates two
+  entry-time `-1` stores absent from retail. Raw storage/dummy-tag scaffolding
+  was rejected as non-source. The bounded local-coloring plateau is
+  **99.9839%**. After synchronized build -> delink -> build, the inventory is
+  1,872/2,273 exact at 96.77% fuzzy and 41.98% filtered executable coverage;
+  all ratchet, claim, banked-row, single-view and cleanliness gates pass.
+
+- **2026-08-24 — retail's 188-byte `TSeerReward::GetRewardExtra` switch is
+  admitted and exact; generated tiny-row lookalikes remain unclaimed.**
+  The sole retail call at 0x5737f2 passes `TSeerHut + 5`, exactly the address
+  of the independently proven 12-byte reward record, while the three
+  contiguous helpers at 0x573a70/0x573c80/0x573f10 all dispatch on its
+  0..10 type word and read only its eight-byte payload. That x86 evidence
+  proves the retail receiver and address. Dreamcast supplies the semantic
+  `GetRewardExtra(const hero*)` identity at seerhut.cpp:373 and the eleven
+  `TSeerRewardType` names; NH3API was consulted only for the already-proven
+  retail record/helper spelling, never for an address. The body reproduces
+  all ten arms: experience-factor scaling, direct mana/resource/artifact/
+  spell values, signed morale/luck/primary bonuses, the secondary-skill
+  icon formula, and the packed creature/count result. The first direct-cast
+  model reached 87.43%; representing the narrow payloads as full-dword
+  signed bitfields recovered retail's `mov` + shift sign extension and
+  raised it to 91.86%; retaining the creature id's direct 16-bit load made
+  all 11 blocks, 8 returns, 188 bytes and the jump table exact. The adjacent
+  528-byte `getValue` helper is located but deliberately not claimed in this
+  batch: two of its calls lead to retail-thiscall philai helpers whose DC
+  `static` signatures differ, so those identities must be promoted first.
+  The same audit rejected eight tempting tiny rows as independent game
+  claims: cmbtmgr's set/vector/TArcher construction and destruction helpers
+  (0x462890/0x4628b0/0x462930/0x466260), hero's rethrow funclet 0x4e29dc,
+  mapcell's static-destruction shim 0x504290, and resourcemanager's tree
+  destructor/catch tail 0x559440/0x55b8b9. Retail bytes and ownership remain
+  authoritative; no generated/library body was laundered into source. The
+  post-delink checkpoint is 1,869/2,269 linked functions exact, 96.77% fuzzy
+  and 41.93% of the filtered executable matched; the tractable in-span tier
+  falls to 257 functions / 195.9 KB.
+
+- **2026-08-24 — command's 1,461-byte `GetControl` state machine is admitted
+  with every retail UI/AI transition reconstructed and a bounded VC6 block-
+  placement residual.**
+  The exhaustive command.obj order bracket fixes retail 0x4782d0 between
+  `CheckGetAIMove` and `ResetMouse`; Dreamcast independently publishes
+  `combatManager::GetControl`, its void-thiscall ABI, source line 3131 and the
+  same direct-call family. Retail then fixes the Complete behavior: clear the
+  selected-hex and sentinel fields, flush pending input outside automation,
+  restore the combat cursor for an active non-quick manager, inline
+  `CheckChangeSelector`, and derive the remote-human control latch from both
+  player ids and the network/local-human tests.
+
+  The reconstructed control-bar half disables every button for quick/computer
+  actions, applies the AI-turn highlight, or broadcasts the local player's
+  palette and updates the retreat, surrender, spellbook and three command
+  buttons. The retail bytes correct two source-level details that a superficial
+  reading misses: the town gate tests the **Stronghold faction byte at town+4**
+  and its active special-building bit, not the owner byte; and placement mode
+  clears only 0x8fc/0x7802 before skipping the ordinary 0x7d6..0x7da updates.
+  The tail reproduces the inlined `ResetMouse`, clears the pending order and
+  calls ai.obj's `DoSpellAI`.
+
+  The best natural VC6 spelling reaches **87.77473%**. Candidate and retail
+  both contain 79 blocks, 52 branches and two returns; the entry through the
+  network/control-window gates and the shared ResetMouse/DoSpellAI tail agree.
+  The principal residual is block placement: retail emits the three-block
+  automated-control arm before the long local-human UI arm, while this SP3 C1
+  stream permutes it behind that arm and changes a few scratch bindings.
+  Positive/negative structured predicates, a nested form and explicit local
+  labels are byte-identical; duplicating the final tail regresses to 69.56%,
+  and named player/hero locals regress to 79.98%/86.46%. The placement nesting
+  is the last semantic correction (86.21% -> 87.77%), so the compiler-layout
+  residual is documented instead of disguised with another rewrite.
+
+  `GetControl` and `DoSpellAI` use command-only one-for-one substitutions for
+  command-unused spells/AI declarations, preserving the measured member-
+  handle population; `GetCommand` remains at its historic **92.57143%** canary.
+  After build -> fresh delink -> full build, all **2,268** rows are ratchet-
+  clean, with **1,868 exact at 96.77% fuzzy**, 2,199 source claims and
+  **41.92% executable coverage** (817.2 KiB matched). The regenerated queue is
+  400 non-exact functions / 27.3 KiB recoverable. The ordinary unclaimed in-
+  span tier falls to **258 functions / 196.1 KiB** (command: 2 / 8,609 B), and
+  the no-unit-claim remainder falls to **1104.7 KiB**. Banked-row, source-claim,
+  single-view and cleanliness gates are clean.
+
+- **2026-08-24 — command's move/attack transaction and three tail rows are
+  byte-exact, and `ResetRound` is admitted at a fully bounded VC6
+  handle-state residual.**
+  The exhaustive Dreamcast command.obj roster/order join fixes 0x478900 as
+  `combatManager::process_move_then_attack`; retail independently fixes its
+  656-byte extent, every Complete field offset and all 25 branch edges. The
+  reconstructed transaction preserves the old hex and facing, resets cycling
+  and the Champion charge distance, moves before attacking when needed,
+  clears Complete's 187-cell movement row on the fallback path, applies
+  obstacle attacks, and implements the Harpy/Hag return flight with the three
+  retail disable guards. It then restores facing, resolves victory, or closes
+  the turn through morale and cycle-timer processing. The first scored VC6
+  build reproduces all 656 bytes exactly.
+
+  Retail 0x475ed0 is likewise fixed as `combatManager::ResetRound` by the
+  unique whole-body map, command order and the DC statement table. Its live
+  body covers Complete's placement-phase/network handoff, highlighter reset,
+  both 20-stack side walks, expiring obstacle removal/spell effects and the
+  round message. It reaches **97.48035% across 815 bytes** with identical
+  229-instruction streams, all 21 branches and both returns exact. The only
+  differences occupy 26 register-visible slots in the placement-message and
+  inlined-highlighter regions; the callee-saved bindings agree, and `why-reg`
+  v2 classifies the remainder as C1 front-end scratch-pseudo order. Named,
+  value and pointer remote-position locals, the reversed endpoint spelling,
+  and a manual highlighter expansion were measured and were identical or
+  worse. The DC line row explicitly requires `TurnOffHighlighter(1)`, so the
+  evidence-backed source is retained and the compiler-only residual is
+  documented rather than obscured with further semantic rewrites.
+
+  The order bracket after exact `AddArmy` then promotes three formerly
+  boundary-attributed rows: private const `get_tower_string` at 0x47a2d0,
+  `ViewCastleBallista` at 0x47a380 and `HandleCombatPlayerDrop` at 0x47a500.
+  Their DC publics fix the names, constness and ABIs; retail independently
+  proves the wall-strength/trait lookup, Citadel/Castle tower composition,
+  modal arguments, player-id dispatch and the fully inlined two-side cycle
+  timer reset. All **907 bytes** are exact. The only source-version
+  correction is decisive: Complete omits the DC statement table's trailing
+  `FullUpdate` after the castle dialog and after both player-drop dialogs;
+  deleting the first such call alone closes `ViewCastleBallista` from
+  98.19444% to 100%. The new signatures initially crossed command.obj's
+  measured C1XX handle threshold; command-only substitutions for unused
+  drawing/text/remote declarations restore `GetCommand` without hiding any
+  dependency or accepting a regression.
+
+  The same order audit now admits the intervening **997-byte** row at
+  0x477ee0 as `combatManager::CheckGetAIMove`. Retail fixes both neighbours
+  (`TurnOffHighlighter` / `GetControl`) and every field/call edge; the direct
+  0x41e570 call occupies Dreamcast's exact `AICheckRetreat` statement slot.
+  The reconstructed body handles the human retreat confirmation, computes
+  the active-stack combat value, lets `/Ob2` expand the already exact
+  `get_surrender_cost`, enforces the town/hero/gold/value surrender gates and
+  records retreat/surrender orders 4/5. It reaches **94.43355%** with an exact
+  53-block CFG, all 35 branches and all five returns; 49 blocks also have the
+  exact instruction count. The residual is confined to the two twenty-stack
+  value loops: retail homes one extra four-byte scratch and uses a different
+  EDI/ECX/EDX binding. A named side is inert, two explicit current-hero
+  lifetimes regress to 87.19%/80.53%, and spelling Dreamcast's `IsActive`
+  helper directly regresses to 84.86% by consuming an inline-budget slot and
+  leaving an extra string `_Tidy` call. The named army-row base is therefore
+  retained as the best natural source, with no missing semantic block.
+
+  The final 17-byte command-tail row at 0x47a670 is deliberately **not**
+  claimed: the compiled relocation identifies it as Dinkumware
+  `std::_Tree<int,...>::begin()`, a pooled header COMDAT. Thus command's real
+  game-code tail ends at 0x47a664; the later Dreamcast-only
+  `CheckAutoScrolling` / `ShiftXY` rows have no separate retail slot here and
+  are not forced onto library bytes.
+
+  After a fresh PDB/delink and full gated rebuild, the checkpoint is
+  **1868/2267 exact at 96.78% fuzzy**, 2198 source claims and **41.86%
+  executable coverage** (816.0 KiB matched). `GetCommand` retains its historic
+  92.57143% canary score; ratchet, banked-row, source-claim, single-view and
+  cleanliness gates are clean. The regenerated queue contains 399 non-exact
+  functions / 27.1 KiB recoverable, while the ordinary unclaimed in-span tier
+  falls from 262 functions / 199.9 KiB to **259 functions / 197.5 KiB**,
+  accounting for the three newly admitted in-span command rows. The three
+  boundary-attributed tail rows and newly compiled `CheckGetAIMove` together
+  reduce the no-unit-claim remainder from 1108.0 KiB to **1106.2 KiB**.
+
+- **2026-08-24 — seven more command.obj combat-control functions are
+  reconstructed and all 1,965 bytes reproduce retail exactly.** The
+  exhaustive Dreamcast command.obj roster/order join fixes 0x476200,
+  0x4762f0, 0x477ac0, 0x477b60, 0x477c20, 0x477e10 and 0x478b90 as
+  `combatManager::auto_resolve_combat`, `CheckWin`, `CheckChangeSelector`,
+  `TurnOffSelector`, `CheckChangeHighlighter`, `TurnOffHighlighter` and
+  `process_first_aid`; retail independently fixes every boundary, Complete
+  field offset, branch and call edge. The selector pair tracks the acting
+  stack at +0x132c8, normalises its wait animation and marks the old stack for
+  redraw. The highlighter pair closes the adjacent active-byte/grid-index
+  state machine, including the inlined hex/occupancy and fidget-sequence
+  tests. All four bodies are byte-exact.
+
+  `auto_resolve_combat` copies both `armyGroup`s, runs `AI_auto_combat`, then
+  writes simulated counts back through the retail-proven `originalIndex` at
+  army +0x5c and raises the zero-count marker. `CheckWin` adds Complete's
+  delayed quick-combat resolver, determines a sole winner or draw, propagates
+  both combat flags, calls `DoVictory` and terminates the message loop. The
+  first-aid worker resolves the target cell, rolls the hero's First Aid
+  factor, clamps against `topCreatureDamage`, marks the tent as spent and
+  performs the Regeneration sample/message/effect path outside quick combat.
+  Its last stack-slot residual closed only when the random maximum is the
+  short-lived first local and the old/final damage result occupies the
+  longer-lived parameter home; that is the source shape retail's VC6 stream
+  proves.
+
+  The full gate initially caught the known command include-set wall:
+  `GetCommand` moved 92.5714 -> 92.5357 after all eight command-view method
+  declarations (six new rows plus the already landed grid/reset pair) were
+  visible beside eight unrelated setup/turn declarations; the seventh new
+  body, `TurnOffHighlighter`, reused its existing declaration. A negative
+  control proved the member-count cause. The final command-only view hides
+  exactly the eight methods command.cpp never references, substitutes the
+  no-argument `army::GetName` for its unused static overload in the same slot,
+  and keeps `AI_auto_combat`'s one-use declaration local. `GetCommand` is
+  restored to its historic 92.5714 without accepting a regression, while
+  every promoted body remains exact.
+
+  After a fresh PDB/delink and full gated build, the checkpoint is
+  **1864/2261 exact at 96.78% fuzzy**, 2192 source claims and **41.70%
+  executable coverage** (812.7 KiB matched). Ratchet, banked-row,
+  source-claim, single-view and cleanliness gates are clean. The regenerated
+  queue remains 397 non-exact functions / 27.1 KiB recoverable; the ordinary
+  unclaimed in-span tier falls to **262 functions / 199.9 KiB**, and
+  command.obj itself falls from 13 functions / 14,503 bytes to **6 functions
+  / 12,538 bytes**, exactly accounting for the seven promoted rows.
+
+- **2026-08-24 — command's combat-cycle/reset cluster adds four exact
+  functions, and the Dreamcast statement table corrects the timer formula.**
+  The retail bodies at 0x478890, 0x479de0, 0x479f30 and 0x479fc0 are now
+  admitted as `combatManager::ResetMouse`, `ResetCyclingCreatures`,
+  `ResetCycleTimers` and `SetCombatGrid`. The identities come from the
+  Dreamcast decorated publics and command.obj order, but every placement,
+  field offset, call edge and final verdict comes independently from the
+  retail image. All four reproduce their retail bytes exactly on the first
+  source spelling.
+
+  `ResetMouse` closes the 110-byte cursor reset that `Open` calls and
+  `RightClick` open-codes in three return arms. `ResetCyclingCreatures`
+  closes the two live-stack walks: the first detects non-dead stacks in
+  `cs_fidget` and expands Complete's tower-aware `MarkCreatureEffect`; the
+  second returns every non-dead stack to `cs_wait`, resets its frame index
+  and stamps `iLastFidgetTime`. `ResetCycleTimers` proves the two retail
+  cycle fields at army +0xfc/+0x154 as the DC-named `iLastFidgetTime` and
+  embedded `SMonFrameInfo::iFidgetFrequency`. More importantly, the SH4
+  statement disassembly refutes the old provisional note: the call is
+  **`Random(50, iFidgetFrequency)`**, not `Random(1, 50)`, making the exact
+  assignment
+  `now + 2*Random(50, iFidgetFrequency) - iFidgetFrequency`. The two manager
+  stores at retail +0x53fc/+0x5400 are the hero last-fidget clock row; DC
+  gives the semantic name while retail alone fixes its shifted x86 offset.
+
+  `SetCombatGrid` then validates the surrounding inline graph. Its three
+  globals are the already byte-proven registry-backed preference members
+  `showCombatGrid`, `showCombatMouseHex` and `combatShadeLevel`. Retail
+  expands both `get_current_army()` and the newly reconstructed
+  `ResetMouse()` under `/Ob2`, exactly as the direct DC source statements
+  predict, while retaining `UpdateMouseGrid`, `SetupGridForArmy`,
+  `DrawFrame` and `WritePrefs` out of line. Command-only class/army views
+  expose the necessary fields and declarations without perturbing any
+  previously exact body.
+
+  After fresh delinks and the full gated build, the checkpoint is
+  **1857/2254 exact at 96.77% fuzzy**, 2185 source claims and **41.60%
+  executable coverage**. All ratchet, banked-row, source-claim, single-view
+  and cleanliness gates are clean. The regenerated queue remains 397
+  non-exact functions / 27.1 KiB recoverable; the ordinary unclaimed
+  in-span tier falls from 273 functions / 202.7 KiB to **269 functions /
+  201.8 KiB**, exactly accounting for the four promoted command bodies.
+
+- **2026-08-24 — the resource-archive initializer and remote wait/win-loss
+  cluster are reconstructed; five new rows are exact and two are
+  instruction-exact.** Retail's 0x559150 dynamic initializer proves eight
+  consecutive 0x190-byte `TResourceLODSlot` objects, each consisting of an
+  archive-name pointer and a `LODFile` at +4. The resulting 26-byte
+  constructor at 0x5591e0 and all eight Complete archive strings now match
+  exactly. Dreamcast then supplies the names and signatures for
+  `HandlePlayerWon` and `HandlePlayerLost`, while retail fixes the common
+  payload offset (+0x18), the 0x4c/0x24 condition records, the fastcall
+  helper arguments and every global store. Both candidate instruction
+  streams and control flow are byte-identical to retail (94 and 75 bytes);
+  their strict scores remain **99.9394% / 99.9091%** only because the
+  stripped target still calls the two display helpers by working labels and
+  names the three honest globals generically. This is the established
+  relocation-name-only residual class, not a source-code mismatch.
+
+  The adjacent dialog sweep adds exact `CLevelPickWaitDlg::WaitForLevels`
+  (114 bytes) and `CWaitForRemoteBattleDlg::Wait` (92 bytes). Retail proves
+  their shared creature-table/animated-dialog pattern and their deliberate
+  differences: the level-pick path seeds and retries Devil/Arch Devil, then
+  uses text row 472/sequence 0; the remote-combat path makes one roll and uses
+  row 473/sequence 12. The PC remote-battle constructor also proves that its
+  object carries a large platform-specific combat-init payload at +0x80 and
+  a pause handler at +0xbc0, so only the retail-proven +0x78 prefix is
+  modelled until those bodies land; Dreamcast's compact pointer-based tail is
+  not transferred to x86. Finally, the now-supported `IMPLICIT_DTOR` claim
+  binds the existing five-byte VC6 publics for `CSaveScreen` (0x557340) and
+  `CAdvMgrNetMsgHandler` (0x57d160), both exact without inventing source
+  destructor definitions. The nearby 1/3-byte text-widget slots, the shared
+  popup null virtual, sacrifice-widget folds, cmbtmgr member-subobject
+  callbacks and EH funclets remain deliberately excluded rather than falsely
+  owned. After fresh delinks and full gated builds, the checkpoint is
+  **1853/2250 exact at 96.77% fuzzy**, 2181 source claims and **41.55%
+  executable coverage**. Ratchet, banked-row, source-claim, single-view and
+  cleanliness gates are clean. The refreshed queue contains 397 non-exact
+  functions / 27.1 KiB recoverable and 273 ordinary unclaimed in-span
+  functions / 202.7 KiB in the tractable tier; only the three previously
+  bounded sub-0.05-point historical peaks remain.
+
+- **2026-08-24 — the two lost town reward peaks are recovered with the real
+  vector operation, one honestly exact.** `homm3 vc6 queue` exposed
+  `show_building_rewards` at 92.6954% below a historic 100% and
+  `show_creature_rewards` at 93.2294% below 99.0596%. Those historic peaks
+  had been produced by sixty/thirty self-assignments and were correctly
+  withdrawn under the no-numerator-carriers rule. The missing real construct
+  was already named by Dreamcast's xref census: both helpers call
+  `std::vector<type_dialog_resource>::clear`, while the reconstruction had
+  manually spelled `erase(begin(), end())`. The two forms emit the same tail
+  copy loop, but only `clear()` gives VC6 retail's earlier inline graph: the
+  `format_string` return temporary's destructor expands instead of calling
+  `_Tidy(1)`. `show_building_rewards` therefore closes all **474 bytes at
+  100.0000%**, and `show_creature_rewards` recovers its carrier-free
+  **99.0596%** peak. The creature body now also restores Dreamcast's one
+  header-inline `GetArmyName` call in place of its hand-expanded lookup; it is
+  byte-flat, but is the better source claim. Its 218 instructions, 12-call
+  inline multiset and all 20 branch targets agree with retail. The sole
+  remaining delta is one adjacent scheduling transpose around
+  `format_string("%d ", count)`: retail forms the hidden return-slot address
+  before pushing the count, VC6 does the reverse. Swapping the count/creature
+  declarations is flat, the allocation model finds no binding divergence,
+  and a scoped named temporary regresses to 97.3624%, so the attested direct
+  expression is retained. No synthetic mass remains. After a fresh delink and
+  full gated build, the checkpoint is **1848/2243 exact at 96.77% fuzzy** and
+  **41.53% executable coverage** (809.6 KiB fuzzy-matched), with 2174 source
+  claims. The refreshed queue contains 395 non-exact functions / 27.1 KiB
+  recoverable and no lost town peaks; only three sub-0.05-point historic peaks
+  remain tree-wide.
+
+- **2026-08-24 — `town::ApplySpecialBuildingEffect` and its retained
+  `GetPrimarySkill` header COMDAT close exactly.** The retail bracket between
+  exact `SetSummoningGenerator` (0x5bd750) and `town::town` (0x5bde80), plus
+  the Dreamcast public at dc 0x165ea0 and its xref census, uniquely fixes the
+  1,361-byte body at 0x5bd8e0. Retail proves seven independent town-type arms:
+  Dungeon's Mana Vortex doubles maximum mana; Castle's Stables grants the
+  shared movement bonus once; Tower and Inferno increment Knowledge and Spell
+  Power; Dungeon's Battle Scholar Academy grants a Learning-scaled 1,000
+  experience; Stronghold and Fortress increment Attack and Defense. The three
+  building masks are the existing `bitNumber[EXTRA_0_ID]`,
+  `bitNumber[EXTRA_2_ID]` and `bitNumber[SPECIAL_BUILDING_ID]`, and the five
+  once-per-town rewards use the DC-attested `TownSpecialGrantedMask`. The first
+  structured transcription was instruction-exact through Mana Vortex and
+  Stables but scored 97.4786% overall because VC6 expanded the first bitset
+  `operator[]` and left its nested `test` out of line. A nonzero
+  `inline_depth` probe was byte-flat; spelling that first predicate as the
+  equivalent `.test(id)` exposes the same bounds-check/test body one level
+  shallower and closes all 1,361 bytes. The other four predicates retain the
+  Dreamcast's proxy spelling and naturally reproduce retail's later inline
+  decisions, so this one spelling is recorded as a retail-codegen divergence,
+  not promoted to a cross-architecture source fact. Expanding the
+  DC-attested `GetMaxMana` header inline also makes town.obj emit the adjacent
+  `hero::GetPrimarySkill(int) const` COMDAT at 0x5bde40; its 49 bytes match
+  retail exactly and are enrolled with the established claim-only header-body
+  pattern. After a fresh PDB/delink and full build, the checkpoint is
+  **1847/2243 exact at 96.76% fuzzy**, 2174 source claims and **41.53%
+  executable coverage** (809.5 KiB fuzzy-matched). Ratchet, banked-row,
+  source-claim, single-view and cleanliness gates are clean. The refreshed
+  queue contains 396 non-exact functions / 27.1 KiB recoverable and 279
+  ordinary unclaimed in-span functions / 203.1 KiB in the tractable tier.
+  No external implementation body was used: retail bytes, relocations and CFG
+  prove the x86 behavior; Dreamcast CodeView supplies only names, signatures
+  and cross-architecture call-graph corroboration.
+
+- **2026-08-24 — the town-threat search pair is reconstructed and the
+  summoning-portal generator closes exactly.** Retail's adjacent bodies at
+  0x4280e0/0x4282b0 are uniquely identified as
+  `type_town_threat_checker::check_towns` and `mark_towns`: the former is
+  called by both turn paths and calls the latter, while the Dreamcast xref
+  graph independently supplies `GetHero`, `GetMobility`, `SeedPosition`,
+  `GetTown`, `get_cell` and `can_take_town`. `check_towns` clears every town
+  mark, searches each opposing hero with 800 bonus mobility, clears that
+  hero's bounty and scans the acting player's towns; its first admitted
+  spelling is byte-exact over 369 bytes. `mark_towns` reproduces all 343
+  bytes, 16 blocks and every instruction, but reports **99.9554%** because
+  stripped-image relocation recovery classifies the honest integer
+  5,000,000 as a DIR32 code reference: it numerically equals VA 0x4c4b40.
+  This is the same source-unreachable relocation class already proven on
+  `AI_value_of_combat`, so the integer spelling remains honest. The adjacent
+  town bracket then fixes 0x5bd750 as `town::SetSummoningGenerator`; the DC
+  locals name its generator copy and candidate vector, while retail proves
+  the owner filter, two uniform random choices and growth-rate assignment.
+  Changing the candidate index from unsigned to one address-taken `int`
+  raised the first transcription from 78.2652% to 94.3106%; reusing it across
+  all three loops and restoring the empty-vector early return closes all 392
+  bytes exactly. The checkpoint is **1845/2241 exact at 96.75% fuzzy**, 2172
+  source claims and **41.46% executable coverage**. All ratchet, banked-row,
+  source-claim, single-view and cleanliness gates are clean. No external
+  implementation body was used; retail bytes/relocations/CFGs prove the x86
+  behavior and Dreamcast CodeView is limited to names, signatures, locals and
+  cross-architecture call-graph corroboration. The refreshed queue contains
+  396 non-exact functions / 27.1 KiB recoverable and 281 ordinary unclaimed
+  in-span functions / 204.5 KiB in the tractable tier.
+
+- **2026-08-24 — `adventuremapwindow`'s five remaining ordinary in-span
+  functions are claimed and all 2,486 bytes reproduce retail exactly.** The
+  exhaustive Dreamcast-roster/order-map join fixes the identities and retail
+  carves of `convertID2HelpID`, `ProcessRightSelect`, `ProcessHover`,
+  `UpdateQuestLogButton` and `SetSleepImage`; the regenerated in-span census
+  now has no unclaimed `adventuremapwindow` row. `convertID2HelpID` implements
+  the sparse 27-row widget-help map, including Complete's ids 1001..1015.
+  `ProcessRightSelect` dispatches the two hero rows and town row to their quick
+  views, then sizes and centres generic help. `ProcessHover` reconstructs the
+  cached hover gate, mouse reset, town/hero rollover formatters, generic-help
+  lookup and id-200 redraw. Its first structured transcription reached
+  97.13% with every instruction and all 19 symbolic branches aligned but a
+  duplicate epilogue; Dreamcast CodeView's lexical blocks proved that the
+  focus early return and hover-change body are siblings, which makes VC6 emit
+  retail's single exit and closes the function. `UpdateQuestLogButton` scans
+  both quest-object lists and visited-player masks, while `SetSleepImage`
+  reproduces the icon, palette, draw, status and hotkey broadcasts. The work
+  also admits the retail hover cache at 0x65f228, sleep icon/hotkey data, the
+  interleaved eight-byte quick-help row, and the narrow declarations required
+  by the five callers. After a fresh delink, the checkpoint is **1843/2238
+  exact at 96.75% fuzzy**, 2169 source claims and **41.40% executable
+  coverage** (807.0 KiB matched); `adventuremapwindow` itself is 23/24 exact
+  at 99.8494%, with only the already banked 98.5808% `UpdateHeroLocator`
+  residual. All ratchet, banked-row, source-claim, single-view, cleanliness
+  and delink-freshness gates are clean. The refreshed wall census remains 395
+  residual functions / 27.1 KiB recoverable, and the tractable unclaimed tier
+  is 283 functions / 205.2 KiB. No external implementation body was used:
+  retail bytes, relocations and CFGs drove the reconstruction, with Dreamcast
+  evidence limited to names, types and lexical source shape.
+
+- **2026-08-24 — hiscore's last two ordinary in-span functions are claimed;
+  the 1,228-byte score insertion is instruction-exact and the 1,286-byte
+  window constructor is semantically closed.** `AddScoreToHighScore` now
+  models the two eleven-row 0x64-byte tables, the campaign/cheat placement
+  rules, the descending whole-record shift, the fully inlined
+  `CHSInputDlg` construction and teardown, and the 0x898-byte file rewrite.
+  Its 39 CFG blocks, every block size, all 17 symbolic branch targets and
+  every instruction agree with retail. The strict report remains
+  **99.9974%** solely because the EH-prologue frame push carries a synthetic
+  unwind-table relocation addend on the delinked side; as with the existing
+  `hero::GiveExperience` residual, that addend is not source-addressable.
+  `THighScoreWindow` constructs the four controls, both eleven-icon score
+  families, the widget stream and the two captured backgrounds. Its 46-block
+  CFG and branch sequence agree, with 42 exact-sized blocks and four
+  one-byte size residuals; **90.7049%** is bounded to the global
+  EBX/ESI/EDI allocation phase. An early `i = 0` lifetime was byte-flat, and
+  reversing the two widget-ID additions fell to 87.55%, so neither probe was
+  retained. Dreamcast CodeView independently proves `Creatures[2][11]`,
+  `CreatureFrames[2][11]`, `bIsStandard`, `iCreatureFrame`, `lLastServe` and
+  `hiScoreBack[2]`; retail shifts the arrays by its eight-byte-wider base,
+  then drops DC's intervening `m_h_index` dword, exactly explaining the
+  observed +0xfc..+0x10c tail. The refreshed delink/build checkpoint is
+  **1838/2233 exact at 96.74% fuzzy**, 2164 source claims and **41.28%
+  executable coverage** (804.6 KiB matched). The score ratchet, banked-row,
+  claim, single-view and cleanliness gates are clean. The regenerated wall
+  census contains 395 residual functions / 27.1 KiB recoverable; the two new
+  claims remove `hiscore` from the tractable unclaimed inventory, reducing
+  that tier to 204 functions / 188.2 KiB. No externally sourced
+  implementation body was used: retail bytes, relocations and xrefs drove
+  the reconstruction, with Dreamcast evidence limited to names and layouts.
+
+- **2026-08-24 — four retail-only combat-manager helpers are promoted and
+  reproduce all 964 bytes exactly.** The nearby 0x462890/0x4628b0/0x462930
+  member-subobject constructors and 0x466260 operator-delete tail remain the
+  excluded COMDAT class; the queue now reports exactly those four rows (253
+  bytes) as the only unclaimed functions inside `cmbtmgr`'s span. The ordinary
+  bodies have no counterpart in the Dreamcast `cmbtmgr.obj` roster, so the
+  three unattested methods retain address-ordinal names while the already
+  documented Phoenix sweep keeps its bootstrap `CheckRebirth` name.
+  `Unnamed465f20` derives the siege-tower strength, preserves retail's
+  diagnostic `numArchers * 6 / 2` arithmetic, selects a defender and emits the
+  SHOOT order; it was exact on the first compile. `Unnamed4693a0` disables the
+  highlighter and kills every non-tower stack on the requested side.
+  `CheckRebirth` spends Phoenix rebirth charges, applies one resurrection per
+  full group of five plus the independent remainder rolls, plays the
+  Resurrection sample outside quick combat, and restores the successful
+  stack. `Unnamed469e50` is the Complete-only moat worker: it stops/resumes the
+  walk sample, applies the faction's moat damage, prints the nine-row
+  faction-specific message, drives the effect, then checks rebirth. The latter
+  three closed in one retail-grounded source-shape probe: explicit advancing
+  `army*` induction, a zero-tested remainder loop, and the moat worker's one
+  shared false epilogue. The refreshed build/delink/build checkpoint reaches
+  **1838/2231 exact at 96.74% fuzzy**, 2162 source claims and **41.16%
+  executable coverage**. All ratchet, banked-row, source-claim, single-view,
+  cleanliness and delink-freshness gates are clean. The wall census remains
+  393 residual functions (27.0 KiB recoverable); the tractable unclaimed tier
+  falls to 206 functions / 190.6 KiB, and matched executable code rises to
+  802.3 KiB. No externally sourced implementation body was used: retail bytes,
+  xrefs and call conventions drove the reconstructions, with Dreamcast
+  evidence used only to prove that the four rows are absent from its roster.
+
+- **2026-08-24 — the retail MP3 stop/swap worker cluster is reconstructed,
+  adding three exact functions and one bounded `soundManager::Open`.** The
+  missing 16-byte boundary at 0x59a830 is admitted from five `_beginthread`
+  address-takes, its retail tail into `_endthread`, and the Dreamcast
+  `ProcessMP3Stop(void*) -> ThreadStopMP3` relationship. `ProcessMP3Stop`
+  (16 bytes), `soundManager::ThreadStopMP3` (533 bytes), and
+  `ProcessStopAndPlayMP3` (955 bytes) now reproduce retail byte-for-byte,
+  including the fifty-entry resume-position cache, stream pause/reopen
+  sequence, nested critical sections, and ten-step volume fades.
+  `soundManager::Open` is independently fixed by vtable slot zero, the
+  Dreamcast decorated signature, its unique Miles startup/import surface,
+  and the `Device: ` literal. Its complete 703-byte semantic body models the
+  PCM fallback loop, emulated-driver retry, Bink/Smack setup, primary-buffer
+  mute, and sample-handle allocation. After four source-shape probes it is
+  bounded at **84.53%** with the same 17-branch, one-return inventory; the
+  residual is two retry-edge targets/block placement plus global EBX/ESI
+  allocation. The refreshed build/delink/build checkpoint reaches
+  **1834/2227 exact at
+  96.73984% fuzzy**, 2158 source claims and **41.11% executable coverage**.
+  Every ratchet, banked-row, claim, single-view, and cleanliness gate is
+  clean. The wall census contains 393 residual functions (27.0 KiB
+  recoverable), while 212 tractable unclaimed functions span 193.2 KiB; the
+  four promoted RVAs no longer appear in the unclaimed inventory. No
+  externally sourced implementation body was used: retail bytes and xrefs
+  drove the reconstruction, with Dreamcast evidence used only for identity,
+  names, and types.
+
+- **2026-08-24 — NextArmy's two retail-only turn-scan helpers are admitted;
+  the move-order predicate is exact and the Azure-Dragon fear check is
+  semantically closed.** Neither 0x464d40 nor 0x464f50 appears in the
+  Dreamcast `cmbtmgr.obj` roster, so both deliberately retain address-ordinal
+  names. Their retail bodies and sole caller nevertheless settle the types
+  and behavior. `Unnamed464f50(best, candidate)` compares turn-state bit 24,
+  arrow-tower and catapult priority, pass-dependent speed, side, then slot;
+  preserving the full inline `Is(24)` words through its first early return
+  reproduces all 291 bytes. `Unnamed464d40(selected)` rejects immune and
+  Azure stacks, resolves hypnosis-adjusted controller side, counts opposing
+  Azure Dragons, makes the ten-percent roll, consumes the turn, and performs
+  the FEAR.WAV/message/effect sequence outside quick combat. Its 525-byte
+  candidate is bounded at **91.10%** after four source-shape probes: all 19
+  branches and five returns agree, while retail and this VC6 invocation
+  choose different registers and loop-strength reductions. The refreshed
+  build/delink/build checkpoint reaches **1831/2223 exact at 96.74% fuzzy**,
+  2154 source claims and **41.00% executable coverage**; the score ratchet,
+  banked-row, claim, single-view, and cleanliness gates are clean. The wall
+  census now contains 392 residual functions and 26.9 KB recoverable; no
+  externally sourced implementation body was used.
+
+- **2026-08-24 — the tractable-gap sweep adds ten exact rows and one bounded
+  sound-worker residual.** `hiscore.obj` is now 14/14 exact: retail's
+  0x898-byte manager span resolves to 22 0x64-byte records, letting
+  `ResetHighScores`, `Open`, `ViewHiScore`, the 16-argument
+  `CHighScoreEdit` constructor, and the signed-short threshold walker
+  `GetMonType` reproduce byte-for-byte. `soundManager::GetSampleInfo` is
+  exact from its Miles volume/status imports and remote callers;
+  `WaitEndSampleThread` is semantically closed at 92.0%, with all 13 branches
+  aligned and only EAX/ESI allocation differences remaining across the two
+  inlined guards after four source-shape probes. The combat sweep adds exact
+  `combatManager::mark_tower_army` from 27 cross-TU callers, plus exact
+  `TCombatControlSubWindow::set_rollover` and both disable passes from the
+  three four-slot vtables; the shared `ret 4`/`ret 8` folds and Dreamcast
+  decorated publics settle the two otherwise-empty slot signatures. The
+  build/delink/build checkpoint reaches **1830/2221 exact at 96.75% fuzzy**,
+  2152 source claims and **40.97% executable coverage**. The score ratchet,
+  banked-row, claim, single-view, and cleanliness gates are all clean; no
+  externally sourced implementation body was used.
+
+- **2026-08-24 — `CAdvMgrNetMsgHandler`'s deleting destructor is admitted
+  exact from its now-live class model.** The 33-byte body at 0x4077b0 is slot
+  0 of the class's unique five-slot vtable at 0x63a684, and the current
+  `advmgr.obj` independently emits the corresponding `??_G` public. Candidate
+  and retail have identical wrapper bytes and relocation topology: call the
+  implicit five-byte destructor, conditionally delete, return `this`. The
+  target still gives that implicit callee a generic working label, a cosmetic
+  relocation-name delta that the exact-byte verdict correctly ignores. The
+  earlier note correctly rejected attributing this row to `advManager`, but
+  its instruction to wait for the network-handler model had become stale.
+  `VA_COMPGEN` now
+  pairs the right compiler emission without falsely claiming the implicit
+  ordinary destructor. The build/delink/build cycle adds a second exact row
+  this session, reaching **1820/2210 exact**, 2141 source claims, and 40.89%
+  executable coverage; all gates remain clean.
+
+- **2026-08-24 — the monster-quest defeat notification is admitted at its
+  bounded 72.61% compiler-generation wall.** The unclaimed-span census also
+  exposed the 69-byte `type_monster_quest` slot-10 body at 0x56ed40. Retail's
+  four field comparisons and final `defeated_by = player` store establish the
+  semantic body and the `TQuestPosition, int` argument shape already inferred
+  from the shared base slot. The candidate has the same state guard, field
+  comparisons, store, and calling convention. Its remaining structural delta
+  is stable across four source families: this VC6 invocation combines the
+  adjacent y/z bitfields into one masked test and three branches, while retail
+  preserves separate masks and four branches. The claim adds one reviewed row
+  without moving the exact count: **1819/2209 exact at 96.74% fuzzy**, 2140
+  source claims, and 40.89% executable coverage; all gates remain clean.
+
+- **2026-08-24 — the templated ostringstream vbase-destructor closure is
+  admitted exact, and the claim join now handles MSVC `??_D?$...` owners.**
+  The tractable unclaimed-span census exposed the 20-byte body at 0x5594f0
+  between `ResourceManager::AddToCache` and the common resource reporter.
+  Its only caller family is the TU's two missing-resource ostringstream
+  paths; the emitted `resourcemanager.obj` public independently identifies
+  it as `std::basic_ostringstream<char,...>::\`vbase destructor'`. Candidate
+  and retail both adjust `this` by 0x50, call the same complete destructor
+  and `basic_ios` destructor, then return, matching all bytes. The existing
+  claim-only vbase-destructor channel already handled non-template owners
+  such as `ostrstream`, but `_demangle_key` retained the leading `?$` for a
+  template class and therefore could not join an otherwise identical carcass
+  declarator. Stripping that compiler template marker down to the stable
+  owner name, with a negative-control selftest, fixes the general `??_D?$`
+  case without adding a new annotation kind. The build/delink/build cycle
+  adds one exact row and advances the linked inventory from 1818/2207 to
+  **1819/2208 exact at 96.75% fuzzy**; all gates remain clean.
+
 - **2026-08-23 — `CSpriteFrame::DrawCreatureImpl` is semantically closed at a
   bounded 93.77% C1 scheduling wall, retiring its DC-only view.** With alpha
   zero, retail dispatches raw/tile encodings to `DrawTile` and encoding 3 to
