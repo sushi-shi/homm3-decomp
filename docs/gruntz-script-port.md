@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the hex-target `combatManager::SpellEffect` overload
+  reproduces all 573 retail bytes.** The adjacent drawing-order row at
+  0x496a10, its four-argument `ret 0x10`, two retail callers and Dreamcast
+  `drawing.cpp:2593` entry establish the identity. Dreamcast additionally
+  supplies the by-value `TSpellEffectTraits` local, frame local, statement
+  boundaries and `CSprite::GetWidth`/`GetHeight` inline sources; retail fixes
+  Complete's 83-effect bound and Immersion cue. Placement modes 0, 1 and 4
+  anchor the sprite above, centrally on, or at the corner of a combat hex.
+  Each frame redraws the clean battlefield, blits the effect directly to the
+  screen, refreshes the combat viewport, and optionally leaves the last frame
+  posted. The decisive source detail is the switch's deliberate lack of a
+  fallback assignment: inventing one scored 90.64%; removing it restored
+  retail's case layout, and the two DC-attested size accessors closed the last
+  register-scheduling delta from 96.12% to exact. All 25 CFG blocks and every
+  normalized instruction agree. The synchronized checkpoint reaches
+  **1915/2330 linked exact**, **1846/2261 game exact**, **96.59% game fuzzy**
+  and **43.34% executable coverage**. No external implementation body was
+  used.
+
 - **2026-08-24 — the army-target `combatManager::SpellEffect` overload
   reproduces all 453 retail bytes.** Drawing order and the four-argument
   `ret 0x10` row place it at 0x496840; Dreamcast `drawing.cpp:2524` supplies
