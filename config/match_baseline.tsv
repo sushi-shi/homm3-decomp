@@ -812,10 +812,12 @@ drawing	?DrawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@HEH@Z	10
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	98.3816	98.3816	98.3816	0x94440
 drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x958e0
+drawing	?DrawObstacle@combatManager@@QAEHABVhexcell@@@Z	100.0000	100.0000	100.0000	0x95730
 drawing	?DrawOccupant@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x94f40
 drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	100.0000	100.0000	100.0000	0x953b0
 drawing	?DrawSpriteObject@combatManager@@QAEHPBVCSprite@@HHHE@Z	100.0000	100.0000	100.0000	0x95500
-drawing	?DrawWallAt@combatManager@@QAEXHH@Z	99.1993	99.1993	99.1993	0x94c20
+drawing	?DrawWall@combatManager@@QAEHPBVBitmap816@@HHHHHH@Z	100.0000	100.0000	100.0000	0x957b0
+drawing	?DrawWallAt@combatManager@@QAEXHH@Z	99.7256	99.7256	99.7256	0x94c20
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
 drawing	?SetupGridForArmy@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x937d0
 drawing	?UpdateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93780

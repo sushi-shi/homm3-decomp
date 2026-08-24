@@ -347,6 +347,21 @@ static inline int DrawingControllingSide(const army* stack)
     return stack->combatSide;
 }
 
+// Modelling the tower choice as a single-call-site inline makes VC6 retain
+// retail's otherwise redundant lower-tower comparison and restores
+// DrawWallAt's full 54-block CFG. The three selector blocks still lay out
+// with the opposite final branch polarity (99.73%).
+static inline void DrawingTowerArcher(
+    combatManager::TArcher*& archer,
+    combatManager::TArcher* archers,
+    int wall)
+{
+    if (wall != combatManager::eWallSectionLowerTowerCover)
+        archer = &archers[2];
+    else
+        archer = &archers[1];
+}
+
 // EXACT. Dreamcast fixes the statement/lexical shape and retail adds the
 // arrow-tower exclusion plus the Complete combat-grid preference as an
 // alternate gate for the placement-phase latch. The output row marks the
@@ -1036,19 +1051,12 @@ draw_special_wall:
             continue;
 
         {
-            // Retail retains one repeated lower-tower compare after the
-            // three-way guard. VC6 folds that compare from every equivalent
-            // structured spelling tried here; it is the sole non-relocation
-            // delta in the normalized flat-asm comparison (99.1993%).
             TArcher* archer = 0;
             if (wall != eWallSectionMainBuildingCover) {
                 if (wall != eWallSectionLowerTowerCover
                         && wall != eWallSectionUpperTowerCover)
                     goto draw_wall_image;
-                if (wall != eWallSectionLowerTowerCover)
-                    archer = &archers[2];
-                else
-                    archer = &archers[1];
+                DrawingTowerArcher(archer, archers, wall);
             } else {
                 archer = &archers[0];
             }
@@ -1380,6 +1388,66 @@ int combatManager::DrawCreatureAndHeroSubwindows()
     return 1;
 }
 
+// Dreamcast fixes this row between the subwindow painter and DrawWall and
+// attests the const-reference signature. Retail's body resolves the cell's
+// obstacle slot, advances its animation modulo sequence zero's frame count,
+// and forwards the cell coordinates to DrawSpriteObject.
+VA(0x00495730, 0x73)  // dc order/signature + exact body, dc 0x85f70
+int combatManager::DrawObstacle(const hexcell& cell)
+{
+    TObstacle& obstacle = obstacles.begin[cell.field_14];
+    int yOffset = 42 * (obstacle.shape->minRow - 1);
+    return DrawSpriteObject(
+        obstacle.sprite,
+        field_13ffc % obstacle.sprite->GetNumFrames(0),
+        cell.field_04, cell.field_06 - yOffset, 0);
+}
+
+// This clipped rectangle wrapper is the retail counterpart of Dreamcast's
+// drawing.cpp:1963 row: its seven arguments and Bitmap816::Draw edge are
+// exact, and DrawWallAt is its only retail caller.
+VA(0x004957b0, 0x125)  // dc order/signature + unique caller, dc 0x85fd4
+int combatManager::DrawWall(const Bitmap816* image, int x, int y,
+                            int width, int height, int dx, int dy)
+{
+    SLimitData limits(dx, dy, dx + width - 1, dy + height - 1);
+
+    if (limits.iMinX < gCombatDrawLimits694f18.iMinX)
+        limits.iMinX = gCombatDrawLimits694f18.iMinX;
+    if (limits.iMinY < gCombatDrawLimits694f18.iMinY)
+        limits.iMinY = gCombatDrawLimits694f18.iMinY;
+    if (limits.iMaxX > gCombatDrawLimits694f18.iMaxX)
+        limits.iMaxX = gCombatDrawLimits694f18.iMaxX;
+    if (limits.iMaxY > gCombatDrawLimits694f18.iMaxY)
+        limits.iMaxY = gCombatDrawLimits694f18.iMaxY;
+
+    if (field_13d2c) {
+        if (drawbridgeBounds.iMinX > limits.iMinX)
+            drawbridgeBounds.iMinX = limits.iMinX;
+        if (drawbridgeBounds.iMinY > limits.iMinY)
+            drawbridgeBounds.iMinY = limits.iMinY;
+        if (drawbridgeBounds.iMaxX < limits.iMaxX)
+            drawbridgeBounds.iMaxX = limits.iMaxX;
+        if (drawbridgeBounds.iMaxY < limits.iMaxY)
+            drawbridgeBounds.iMaxY = limits.iMaxY;
+    }
+
+    if (field_13d34)
+        return 0;
+
+    if (field_13d30) {
+        if (limits.iMinX > drawbridgeBounds.iMaxX
+                || limits.iMaxX < drawbridgeBounds.iMinX
+                || limits.iMinY > drawbridgeBounds.iMaxY
+                || limits.iMaxY < drawbridgeBounds.iMinY)
+            return 0;
+    }
+
+    image->Draw(x, y, width, limits.iMaxY - dy + 1,
+                gpWindowManager->screenBitmap, dx, dy, true);
+    return 1;
+}
+
 // The shared bitmap-object painter clips the image rectangle to the combat
 // viewport, optionally accumulates it into the current effect extent, rejects
 // a disjoint limited draw, and finally blits the full-width image through the
@@ -1433,7 +1501,7 @@ int combatManager::DrawObject(const Bitmap816* image, int x, int y)
 
 // E:\gamedcs\drawing.cpp:1948
 DC_ONLY(0x85f70, 0x64)
-int combatManager::DrawObstacle(const hexcell* c)
+int combatManager::DrawObstacle(const hexcell& c)
 {
     // @stub
 }
