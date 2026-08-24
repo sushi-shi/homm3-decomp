@@ -4,6 +4,7 @@
 #include <va.h>
 #include <string.h>
 #define HOMM3_SLIMITDATA_VIEW
+#define HOMM3_DRAWING_UPDATE_GRID_DECLS
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #define HOMM3_DRAWING_BACKGROUND_VIEW
 #define HOMM3_DRAWING_ARCHER_DECLS
@@ -25,6 +26,11 @@
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
 DATA(0x006aace8) TDrawbridgeBounds gCombatAreaLimits;
+
+// UpdateGrid's private "the grid bitmap has been posted" latch. It is
+// cleared when the caller says the clean battlefield was reposted and set
+// after the complete visible-grid pass. No other retail body references it.
+DATA(0x006969d4) int gCombatGridPosted6969d4;
 
 // NH3API's name crosses to this retail datum by bijective instruction-
 // operand correspondence, not by its contradicted address. Retail accesses
@@ -211,7 +217,7 @@ void combatManager::SetupGridForArmy(const army* thisArmy)
 }
 
 // E:\gamedcs\drawing.cpp:755
-// RETAIL_LOCATED(0x00493930, 0x3c0): not reconstructed; anchor-global, dc 0x84420
+// RETAIL_LIVE(0x00493930, 0x3c0): reconstructed below; anchor-global, dc 0x84420
 int combatManager::UpdateGrid(int bPostGridIsClean, int bSetupGrid)
 {
     // @stub
@@ -375,6 +381,145 @@ void combatManager::SetupGridForArmy(const army* thisArmy)
                 field_0107[i] = 3;
         }
     }
+}
+
+// Retail and DC agree on the four phases and all six callees: optionally
+// seed the acting stack's requested hexes, restore the changed portion of
+// the clean battlefield, darken the new requested hexes, then post the
+// visible grid overlay. Complete's nullary is_computer_action helper is the
+// 74-byte adapter at 0x474ba0; its unique UpdateGrid caller and the retained
+// SetupGridForArmy edge disambiguate this row from the adjacent draw bodies.
+// Keeping the DC inline limits chain below reproduces all 84 retail CFG blocks
+// and all 960 bytes exactly; flattening it into equivalent comparisons changes
+// only VC6's late register/homing choices and tops out at 94.34%.
+// E:\gamedcs\drawing.cpp:755
+VA(0x00493930, 0x3c0)  // anchor-global + dc order/callgraph, dc 0x84420
+int combatManager::UpdateGrid(int bPostGridIsClean, int bSetupGrid)
+{
+    if (IsQuickCombat())
+        return 0;
+
+    army* currentArmy = get_current_army();
+    if (bSetupGrid) {
+        if (!is_computer_action()) {
+            int side;
+            if (currentArmy->hypnotizeFlag)
+                side = 1 - currentArmy->combatSide;
+            else
+                side = currentArmy->combatSide;
+
+            if (sideIsLocalHuman[side]) {
+                SetupGridForArmy(currentArmy);
+                goto grid_ready;
+            }
+        }
+        {
+            memset(field_0107, 0, sizeof(field_0107));
+        }
+    }
+
+grid_ready:
+    if (bPostGridIsClean)
+        gCombatGridPosted6969d4 = 0;
+
+    if (!gUnnamed698758.combatShadeLevel && !bCreaturePlacement
+            && !gUnnamed698758.showCombatGrid && !field_13d76)
+        return 0;
+
+    unsigned char update = 0;
+
+    if (field_13d76) {
+        for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
+            if (cells[i].field_10 & 2) {
+                combatShadowBitmap->Draw(
+                    0, 0, 45, 52, field_53b0,
+                    cells[i].field_04, cells[i].field_06, true);
+                update = 1;
+            }
+        }
+    }
+
+    if (gUnnamed698758.combatShadeLevel || bCreaturePlacement) {
+        unsigned char newGrid = 0;
+        unsigned char oldGrid = 0;
+        unsigned char changed = 0;
+        int i;
+        for (i = 0; i < COMBAT_GRID_CELLS; i++) {
+            if (field_004c[i] != field_0107[i]) {
+                changed = 1;
+                break;
+            }
+        }
+
+        for (i = 0; i < COMBAT_GRID_CELLS; i++) {
+            if (field_0107[i]) {
+                newGrid = 1;
+                break;
+            }
+        }
+
+        for (i = 0; i < COMBAT_GRID_CELLS; i++) {
+            if (field_004c[i]) {
+                oldGrid = 1;
+                break;
+            }
+        }
+
+        if (!bPostGridIsClean) {
+            if (!changed)
+                return 0;
+
+            if (oldGrid) {
+                SLimitData UpdateLimits =
+                    *static_cast<const SLimitData*>(static_cast<const void*>(
+                        &gCombatAreaLimits));
+                for (i = 0; i < COMBAT_GRID_CELLS; i++) {
+                    if (field_004c[i] != field_0107[i]
+                            || field_0107[i]) {
+                        UpdateLimits.Include(cells[i].limits());
+                    }
+                }
+
+                UpdateLimits.Clip(gCombatGridAreaLimits);
+
+                field_53ac->Draw(
+                    UpdateLimits.iMinX - 58,
+                    UpdateLimits.iMinY - 86,
+                    UpdateLimits.Width(), UpdateLimits.Height(),
+                    field_53b0, UpdateLimits.iMinX, UpdateLimits.iMinY,
+                    false);
+                update = 1;
+            }
+        }
+
+        if (newGrid) {
+            for (i = 0; i < COMBAT_GRID_CELLS; i++) {
+                if (field_0107[i]) {
+                    field_53b0->Darken(
+                        cells[i].field_04, cells[i].field_06, 45, 52,
+                        combatShadowBitmap, 0, 0);
+                    update = 1;
+                }
+            }
+        }
+    }
+
+    if (gUnnamed698758.showCombatGrid
+            && (!gCombatGridPosted6969d4 || update)) {
+        for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
+            if (!InInvisibleColumn(i)) {
+                combatCellGridBitmap->Draw(
+                    0, 0, combatCellGridBitmap->GetWidth(),
+                    combatCellGridBitmap->GetHeight(), field_53b0,
+                    cells[i].field_04, cells[i].field_06, true);
+            }
+        }
+        update = 1;
+        gCombatGridPosted6969d4 = 1;
+    }
+
+    memcpy(field_004c, field_0107, sizeof(field_004c));
+    return update;
 }
 
 // RECONSTRUCTED. The DC statement sequence accounts for every Complete

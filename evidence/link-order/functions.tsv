@@ -1436,7 +1436,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x93710	99	in-span	drawing	drawing	?ResetLimitCreature@combatManager@@QAEXXZ
 0x93780	68	in-span	drawing	drawing	?UpdateCombatArea@combatManager@@QAEXXZ
 0x937d0	341	in-span	drawing	drawing	?SetupGridForArmy@combatManager@@QAEXPBVarmy@@@Z
-0x93930	960	in-span	drawing	drawing	combatManager_UpdateGrid
+0x93930	960	in-span	drawing	drawing	?UpdateGrid@combatManager@@QAEHHH@Z
 0x93cf0	427	in-span	drawing	drawing	?DrawBackground@combatManager@@QAEXXZ
 0x93ea0	1226	in-span	drawing	drawing	game_94390_sub00_93ea0
 0x94390	167	in-span	drawing	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z

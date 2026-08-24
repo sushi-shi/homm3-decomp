@@ -276,7 +276,7 @@ inliner (predict-inline)	19	95.3028	414	remote	?OnPlayerDropUpdateMsg@@YIXK@Z	pr
 register-homing (why-reg)	19	98.8368	1661	quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	19	95.8926	469	ai	?choose_creature_spell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	19	97.4706	760	seerhut	?DoProposalDialog@type_creature_quest@@UAEXPAVhero@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	19	95.5109	427	drawing	?DrawBackground@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	19	95.5109	427	drawing	?DrawBackground@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	19	92.5679	253	victorylossconditions	?IsGrailTarget@VictoryConditionStruct@@QAEEPAVtown@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	18	98.1927	1020	ai_tactical	?consider_spell@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	18	98.3167	1091	remote	?HandleMPlayerLaunch@@YIEXZ	why-reg	run why-reg / why-branch for the full search
