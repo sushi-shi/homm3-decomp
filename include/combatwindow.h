@@ -23,7 +23,14 @@ public:
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
     textWidget* chatWidget;
-    char pad_54[0x1c];
+    // The message ring at +0x54 is still opaque as a type, but its four-word
+    // STL vector representation is byte-proven by combat_message and the
+    // destructor.  ClearCombatMessages uses the count and last-update clock
+    // immediately following it.
+    char pad_54[0x10];
+    int combatMessageCount;
+    int combatMessageStart;
+    unsigned long combatMessageTime;
     TSubWindow* controlSubWindow;
     TCombatHeroSubWindow* heroSubWindows[2];
     TCombatCreatureSubWindow* creatureSubWindows[4];

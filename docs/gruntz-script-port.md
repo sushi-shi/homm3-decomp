@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `TCombatWindow::ClearCombatMessages` reproduces all 54
+  retail bytes.** Dreamcast `combatwindow.cpp:417` places the method between
+  `handle_widget_hover` and `show_messages`; retail independently proves the
+  identity through its sole combat-manager caller, the +0x64 message-count
+  latch, the +0x6c clock, and its call to the three-argument
+  `combat_message`. Splitting the previously opaque class tail exposes those
+  two fields without changing the proven 0x8c-byte layout. The existing
+  header-inline `GameTime::ElapsedSince` is also byte-significant: it evaluates
+  the timestamp into EDI before calling `GameTime::Get`, reproducing the
+  retail schedule that a hand-written subtraction cannot. All four blocks,
+  both branches, and 54 bytes agree. No external implementation body was
+  used.
+
 - **2026-08-24 — `HandlePlayerWon` and `HandlePlayerLost` reproduce all 94
   and 75 retail bytes.** Their dispatcher slots, payload offsets, helper
   calls and Dreamcast `remote.cpp:2419/2441` rows establish both identities

@@ -14,13 +14,13 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 **Executable matched: 43.36%** — fuzzy-weighted bytes over all 1,996,081 unfiltered bytes.
 
-**Match score** — 1,919 / 4,749 functions exact (40.4%) across the full engine (2330 in linked units).
+**Match score** — 1,920 / 4,749 functions exact (40.4%) across the full engine (2331 in linked units).
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   117 | 1850 / 2261 (81.8%) |  96.63% |    96.63% |
+| `game`        |   117 | 1851 / 2262 (81.8%) |  96.63% |    96.63% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |    0 / 2,419 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |    0 / 2,418 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
