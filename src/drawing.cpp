@@ -16,6 +16,7 @@
 #define HOMM3_ARMY_SPELL_EFFECT_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_CMBTMGR_CYCLE_VIEW
+#define HOMM3_CMBTMGR_HEX_SPELL_EFFECT_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
@@ -146,7 +147,8 @@ void combatManager::ResetLimitCreature()
 VA(0x00493780, 0x44)  // hd-crossbuild; DC signature 0x83e58
 void combatManager::UpdateCombatArea()
 {
-    if (!IsQuickCombat() && field_13300) {
+    if (!static_cast<const combatManager*>(this)->IsQuickCombat()
+            && field_13300) {
         gpWindowManager->UpdateScreen(
             gCombatDrawLimits694f18.iMinX,
             gCombatDrawLimits694f18.iMinY,
@@ -1911,6 +1913,62 @@ void combatManager::SpellEffect(int effect, army* target_army, int iDelay,
     }
     target_army->bShowPowEffect = 0;
     DrawFrame(1, 0, 0, iDelay, 1, 1);
+}
+
+// Animate a spell directly over a battlefield hex. The effect is blitted
+// after each clean battlefield frame rather than being attached to an army;
+// leave_last_frame controls whether the final blit remains on screen.
+// E:\gamedcs\drawing.cpp:2593
+VA(0x00496a10, 0x23d)  // order-map+arity+dc source structure, dc 0x8703c
+void combatManager::SpellEffect(int effect, int hex, int iDelay,
+                                unsigned char leave_last_frame)
+{
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+    if (effect == -1)
+        return;
+    if (effect < 0)
+        return;
+    if (effect >= 83)
+        return;
+
+    TSpellEffectTraits traits = akSpellEffectTraits[effect];
+    if (!traits.m_name)
+        return;
+
+    LoadSpellEffect(effect);
+
+    int x;
+    int y;
+    switch (traits.flags & 0xf) {
+    case SPELL_EFFECT_PLACE_OVERHEAD:
+        x = cells[hex].field_00 - powSprite->GetWidth() / 2;
+        y = cells[hex].field_06 - powSprite->GetHeight() + 52;
+        break;
+    case SPELL_EFFECT_PLACE_CENTERED:
+        x = cells[hex].field_00 - powSprite->GetWidth() / 2;
+        y = cells[hex].field_02 - powSprite->GetHeight() / 2 - 37;
+        break;
+    case SPELL_EFFECT_PLACE_HEX:
+        x = cells[hex].field_04;
+        y = cells[hex].field_06 - powSprite->GetHeight() + 52;
+        break;
+    }
+
+    PlayImmEffect(akSpellEffectTraits[effect].m_immName, 1);
+    for (int frame = 0; frame < powSprite->GetNumFrames(cs_walk); frame++) {
+        DrawFrame(0, 0, 0, iDelay, 1, 1);
+
+        Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+        powSprite->DrawSpellEffect(
+            0, frame, 0, 0, powSprite->GetWidth(), powSprite->GetHeight(),
+            screen->map, x, y, screen->Width, screen->Height, screen->Pitch,
+            0, (traits.flags >> 8) & 1);
+        UpdateCombatArea();
+    }
+
+    if (!leave_last_frame)
+        DrawFrame(1, 0, 0, iDelay, 1, 1);
 }
 
 #if 0  // @carcass

@@ -76,6 +76,10 @@ public:
     // CSprite.h:145. DrawWallAt expands this DC header accessor at its
     // archer site; the retail load is the Width dword above.
     int GetWidth() const { return Width; }
+    // The adjacent size accessor is expanded throughout drawing's hex-
+    // targeted spell animation; Dreamcast retains out-of-line copies of
+    // both accessors while retail VC6 folds them to the two dword loads.
+    int GetHeight() const { return Height; }
 #endif
 
     CSprite(const char* name, int sprtype, int w, int h);

@@ -2522,7 +2522,12 @@ enum TSpellEffectPlacement {
     SPELL_EFFECT_PLACE_OVERHEAD = 0x0,
     SPELL_EFFECT_PLACE_CENTERED = 0x1,
     SPELL_EFFECT_PLACE_ABOVE = 0x2,
-    SPELL_EFFECT_PLACE_FLANK = 0x3
+    SPELL_EFFECT_PLACE_FLANK = 0x3,
+#ifdef HOMM3_CMBTMGR_HEX_SPELL_EFFECT_VIEW
+    // The hex-target SpellEffect overload anchors this mode at the combat
+    // cell's field_04/field_06 corner instead of at an army sprite.
+    SPELL_EFFECT_PLACE_HEX = 0x4
+#endif
 };
 
 struct TSpellEffectTraits {

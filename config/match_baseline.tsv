@@ -824,6 +824,7 @@ drawing	?DrawWall@combatManager@@QAEHPBVBitmap816@@HHHHHH@Z	100.0000	100.0000	10
 drawing	?DrawWallAt@combatManager@@QAEXHH@Z	99.7256	99.7256	99.7256	0x94c20
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
 drawing	?SetupGridForArmy@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x937d0
+drawing	?SpellEffect@combatManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x96a10
 drawing	?SpellEffect@combatManager@@QAEXHPAVarmy@@HE@Z	100.0000	100.0000	100.0000	0x96840
 drawing	?UpdateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93780
 drawing	?UpdateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930
