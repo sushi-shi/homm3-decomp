@@ -3,6 +3,7 @@
 // 72 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatwindow.h"
+#include "kbwin.h"
 #include "remote.h"
 #include "subwindow.h"
 #include "textwdgt.h"
@@ -36,6 +37,21 @@ void TCombatWindow::Close(unsigned char update)
         controlSubWindow = 0;
     }
     heroWindow::Close(update);
+}
+
+// EXACT: the timed message clear is the retail 0x472bf0 body.  The Dreamcast row
+// places ClearCombatMessages between handle_widget_hover and show_messages;
+// retail's sole combatManager::RightClick call, the +0x64 message count and
+// +0x6c GameTime stamp, and its call to combat_message prove the identity.
+VA(0x00472bf0, 0x36)
+void TCombatWindow::ClearCombatMessages()
+{
+    if (combatMessageCount
+        && GameTime::ElapsedSince(combatMessageTime) >= 3000) {
+        combatMessageCount = 0;
+        combat_message(
+            DATA_COMPGEN(0x00691210, combatRolloverEmptyText, ""), 0, 0);
+    }
 }
 
 // The combat chat painter is the retail 0x473290 body: refresh the twenty-line
