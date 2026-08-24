@@ -13,6 +13,7 @@
 #define HOMM3_CSPRITE_CROP_ACCESSORS
 #define HOMM3_ARMY_AREA_HIGHLIGHT_VIEW
 #define HOMM3_ARMY_CYCLE_VIEW
+#define HOMM3_ARMY_SPELL_EFFECT_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_CMBTMGR_CYCLE_VIEW
 #include "drawing.h"
@@ -1856,6 +1857,60 @@ void combatManager::CycleCombatScreen()
     GameTime::Get();
     gCombatStamp6989b8 =
         GameTime::NextFrameTime(gCombatStamp6989b8, 100);
+}
+
+// Animate a cached spell overlay on one stack, optionally running the
+// stack's wince sequence alongside it. Dreamcast supplies the source shape;
+// retail adds the 83rd Complete effect and the Immersion cue between the two
+// frame walks.
+// E:\gamedcs\drawing.cpp:2524
+VA(0x00496840, 0x1c5)  // order-map+arity+dc source structure, dc 0x86ea0
+void combatManager::SpellEffect(int effect, army* target_army, int iDelay,
+                                unsigned char bDoWince)
+{
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return;
+    if (effect == -1)
+        return;
+    if (effect < 0)
+        return;
+    if (effect >= 83)
+        return;
+    if (!akSpellEffectTraits[effect].m_name)
+        return;
+
+    if (target_army->currFrameType == cs_wince)
+        bDoWince = 0;
+
+    if (LoadSpellEffect(effect))
+        target_army->bShowPowEffect = 1;
+
+    int frame = 0;
+    if (bDoWince) {
+        target_army->currFrameType = cs_wince;
+        while (frame < target_army->stdIcon->GetNumFrames(cs_wince)) {
+            target_army->currFrameIndex = frame;
+            if (frame < powSprite->GetNumFrames(cs_walk))
+                powFrameIndex = frame;
+            else
+                powFrameIndex = powSprite->GetNumFrames(cs_walk);
+            DrawFrame(1, 0, 0, 100, 1, 1);
+            frame++;
+        }
+        target_army->currFrameType = cs_wait;
+        target_army->currFrameIndex = 0;
+        if (frame >= powSprite->GetNumFrames(cs_walk))
+            DrawFrame(1, 0, 0, 0, 1, 0);
+    }
+
+    PlayImmEffect(akSpellEffectTraits[effect].m_immName, 1);
+    while (frame < powSprite->GetNumFrames(cs_walk)) {
+        powFrameIndex = frame;
+        DrawFrame(1, 0, 0, iDelay, 1, 1);
+        frame++;
+    }
+    target_army->bShowPowEffect = 0;
+    DrawFrame(1, 0, 0, iDelay, 1, 1);
 }
 
 #if 0  // @carcass
