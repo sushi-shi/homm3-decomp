@@ -146,7 +146,7 @@ rva	size	unit	current_label	provenance
 0x91860	33	dimensiondoorwindow	??_GTDimensionDoorWindow@@UAEPAXI@Z	src-VA+base
 0x91c60	33	dimensiondoorwindow	??_GTSkuttleBoatWindow@@UAEPAXI@Z	src-VA+base
 0x93780	68	drawing	?UpdateCombatArea@combatManager@@QAEXXZ	src-VA+ir
-0x93ea0	1226	drawing	game_94390_sub00_93ea0	working-label
+0x94370	32	drawing	__h3cg$drawing$static_dtor$old_hexes	src-VA_COMPGEN
 0x94390	167	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	src-VA+ir
 0x94440	2005	drawing	combatManager_DrawFrame	working-label
 0x953b0	324	drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	src-VA+ir

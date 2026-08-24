@@ -18,7 +18,7 @@ hexcell::hexcell()
     field_1a = none;
     iBodiesInHex = 0;
     field_4c = 0;
-    field_4d = none;
+    background_offset = none;
 }
 
 #if 0  // @carcass
@@ -46,4 +46,3 @@ army* hexcell::get_dead_army(int i) const
 #if 0  // @carcass
 
 #endif  // @carcass
-

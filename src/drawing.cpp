@@ -231,8 +231,11 @@ void combatManager::DrawBackground()
 }
 
 // E:\gamedcs\drawing.cpp:982
-DC_ONLY(0x849c4, 0x3D4)
-void combatManager::UpdateMouseGrid(int iNewMouseGridIndex, std::vector<long,std::allocator<long>* hexes)
+// RETAIL_LIVE(0x00493ea0, 0x4ca): reconstructed below; dc order/callgraph,
+// dc 0x849c4; Complete adds a trailing force-refresh flag
+void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
+                                    std::vector<long>& hexes,
+                                    unsigned char forceUpdate)
 {
     // @stub
 }
@@ -579,6 +582,125 @@ void combatManager::DrawBackground()
     field_53b0->Draw(0, 0, 800, 556,
                      gpWindowManager->screenBitmap, 0, 0, false);
     field_53b8 = 1;
+}
+
+// E:\gamedcs\drawing.cpp:513. DC records this edge as inline from the large
+// UpdateMouseGrid overload. Complete likewise carries only the expanded
+// UpdateScreen call; its exact register schedule and the later vector-clear
+// inline budget select a const reference instead of DC's by-value parameter.
+inline void combatManager::UpdateCombatArea(const SLimitData& area)
+{
+    gpWindowManager->UpdateScreen(
+        area.iMinX, area.iMinY, area.Width(), area.Height());
+}
+
+// Complete preserves the DC old-hex background-atlas algorithm and adds one
+// trailing force-refresh flag. Each old hex restores its saved 45-pixel atlas
+// lane, each new hex claims a free lane and saves the clean battlefield under
+// it, then the new set is shaded. The union of old and new cell rectangles is
+// clipped, drawn, framed and posted before the static old_hexes vector is
+// replaced. The retail call sites pass one only for forced spell-animation
+// refreshes; ordinary mouse updates pass zero.
+// E:\gamedcs\drawing.cpp:982
+VA(0x00493ea0, 0x4ca)  // dc order/callgraph + retail arity, dc 0x849c4
+void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
+                                    std::vector<long>& hexes,
+                                    unsigned char forceUpdate)
+{
+    // DC records both of these as locals with static storage in this body.
+    DATA(0x006772d8)
+    static int iLastMouseGridIndex = -1;
+    DATA_COMPGEN_GUARD(0x006969b0, oldMouseGridHexesGuard, old_hexes)
+    VA_COMPGEN(0x00494370, 0x20, STATIC_DTOR, old_hexes)
+    DATA(0x006969b8)
+    static std::vector<long> old_hexes;
+
+    if (field_132f8
+            || static_cast<const combatManager*>(this)->IsQuickCombat()
+            || !gUnnamed698758.showCombatMouseHex)
+        return;
+    if (iNewMouseGridIndex == iLastMouseGridIndex && !forceUpdate)
+        return;
+
+    int i;
+    int iCopyHeight;
+    for (i = 0; i < old_hexes.size(); ++i) {
+        hexcell& cell = cells[old_hexes[i]];
+        iCopyHeight = 52;
+        if (cell.field_06 > 504)
+            iCopyHeight = 556 - cell.field_06;
+
+        field_53b4->Draw(
+            cell.background_offset * 45, 0, 45, iCopyHeight,
+            field_53b0, cell.field_04, cell.field_06, false);
+        cell.background_offset = -1;
+    }
+
+    {
+        unsigned char offset_used[19];
+        memset(offset_used, 0, sizeof(offset_used));
+        int offset = 0;
+        for (i = 0; i < hexes.size(); ++i) {
+            hexcell& cell = cells[hexes[i]];
+            while (offset_used[offset] && offset < 19)
+                ++offset;
+
+            cell.background_offset = offset;
+            offset_used[offset] = 1;
+            iCopyHeight = 52;
+            if (cell.field_06 > 504)
+                iCopyHeight = 556 - cell.field_06;
+
+            field_53b0->Draw(
+                cell.field_04, cell.field_06, 45, iCopyHeight,
+                field_53b4, offset * 45, 0, false);
+        }
+    }
+
+    for (i = 0; i < hexes.size(); ++i) {
+        hexcell& cell = cells[hexes[i]];
+        field_53b0->Darken(cell.field_04, cell.field_06, 45, 52,
+                           combatShadowBitmap, 0, 0);
+    }
+
+    SLimitData& extent =
+        *static_cast<SLimitData*>(static_cast<void*>(&drawbridgeBounds));
+    const SLimitData& combatDrawLimits =
+        *static_cast<const SLimitData*>(static_cast<const void*>(
+            &gCombatDrawLimits694f18));
+    SLimitData SaveExtent = extent;
+    int iSaveLimitToExtent = field_13d30;
+    drawbridgeBounds = gCombatAreaLimits;
+    field_13d30 = 1;
+
+    for (i = 0; i < old_hexes.size(); ++i) {
+        const hexcell& cell = cells[old_hexes[i]];
+        extent.Include(SLimitData(cell.field_04, cell.field_06,
+                                  cell.field_04 + 44,
+                                  cell.field_06 + 51));
+    }
+    for (i = 0; i < hexes.size(); ++i) {
+        const hexcell& cell = cells[hexes[i]];
+        extent.Include(SLimitData(cell.field_04, cell.field_06,
+                                  cell.field_04 + 44,
+                                  cell.field_06 + 51));
+    }
+
+    extent.Clip(combatDrawLimits);
+    field_53b0->Draw(
+        drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+        extent.Width(), extent.Height(), gpWindowManager->screenBitmap,
+        drawbridgeBounds.values[0], drawbridgeBounds.values[1], false);
+    DrawFrame(0, 0, 0, 0, 1, 0);
+    UpdateCombatArea(extent);
+
+    extent = SaveExtent;
+    field_13d30 = iSaveLimitToExtent;
+    iLastMouseGridIndex = iNewMouseGridIndex;
+
+    old_hexes.clear();
+    for (i = 0; i < hexes.size(); ++i)
+        old_hexes.push_back(hexes[i]);
 }
 
 // E:\gamedcs\drawing.cpp:1113. Complete retains the DC wrapper shape but

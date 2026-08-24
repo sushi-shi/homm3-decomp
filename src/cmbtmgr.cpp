@@ -1034,7 +1034,7 @@ void combatManager::GenerateMap()
             cell->armySlot = -1;
             cell->field_1a = -1;
             cell->field_14 = -1;
-            cell->field_4d = -1;
+            cell->background_offset = -1;
             cell->field_00 = static_cast<short>(
                 x * 44 + upper_offset + 14);
             cell->field_02 = static_cast<short>(y * 42 + 128);
