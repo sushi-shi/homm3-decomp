@@ -46,6 +46,17 @@ struct SLimitData {
 #ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
     int Width() const { return iMaxX - iMinX + 1; }
     int Height() const { return iMaxY - iMinY + 1; }
+    bool Intersects(const SLimitData& limits) const
+    {
+        return iMinX <= limits.iMaxX
+            && iMaxX >= limits.iMinX
+            && iMinY <= limits.iMaxY
+            && iMaxY >= limits.iMinY;
+    }
+    bool IsEmpty() const
+    {
+        return iMaxX < iMinX || iMaxY < iMinY;
+    }
     void Clip(const SLimitData& limits)
     {
         if (iMinX < limits.iMinX)

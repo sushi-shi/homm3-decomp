@@ -90,8 +90,8 @@ extern const float gCombatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\CSpriteFrame.h:88, dc 0x8734c) int CSpriteFrame::GetCroppedHeight();
 
 // --- SLimitData ---
-// CODEVIEW(E:\gamedcs\struct.h:284, dc 0x872a8) unsigned char SLimitData::Intersects(const SLimitData* check_limits);
-// CODEVIEW(E:\gamedcs\struct.h:300, dc 0x872dc) unsigned char SLimitData::IsEmpty();
+// CODEVIEW(E:\gamedcs\struct.h:284, dc 0x872a8) bool SLimitData::Intersects(const SLimitData& check_limits) const;
+// CODEVIEW(E:\gamedcs\struct.h:300, dc 0x872dc) bool SLimitData::IsEmpty() const;
 
 // --- TCombatHeroSubWindow ---
 // CODEVIEW(E:\gamedcs\CombatControlSubWindow.h:148, dc 0x87344) unsigned char TCombatHeroSubWindow::IsShown();

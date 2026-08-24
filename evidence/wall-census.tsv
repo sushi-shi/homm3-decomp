@@ -349,7 +349,6 @@ unclassified	7	98.8764	593	game	??0SavedGameHeader@@QAE@XZ	why-reg	run why-reg /
 register-homing (why-reg)	7	98.9815	642	game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	6	98.4931	429	textwdgt	?Main@textWidget@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	6	97.3256	239	ai_player	?get_purchase_value@type_AI_creature_purchaser@@QAEJPBVarmyGroup@@F0PBJE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	6	99.1993	796	drawing	?DrawWallAt@combatManager@@QAEXHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	6	99.3528	984	cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	6	98.9637	602	game	?SetupPuzzlePieces@game@@QAEHHH@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	6	93.4848	92	mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -383,6 +382,7 @@ inliner (predict-inline)	3	98.5897	194	mapcell	?erase@?$vector@VTTimedEvent@@V?$
 inliner (predict-inline)	3	99.4737	494	mapcell	?Read@TTimedEvent@@QAEHPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	3	99.3103	363	mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	2	96.2963	59	seerhut	?read@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	why-reg	run why-reg / why-branch for the full search
+control-flow (why-branch)	2	99.7256	796	drawing	?DrawWallAt@combatManager@@QAEXHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	2	99.6447	569	game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	2	99.1053	210	ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@J0JEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	2	99.4000	262	game	?NewMap@game@@QAEEPBD0PAHH@Z	why-reg	run why-reg / why-branch for the full search
