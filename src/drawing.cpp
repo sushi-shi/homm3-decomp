@@ -8,6 +8,7 @@
 #define HOMM3_DRAWING_BACKGROUND_VIEW
 #define HOMM3_DRAWING_ARCHER_DECLS
 #define HOMM3_CSPRITE_DRAW_METHODS
+#define HOMM3_ARMY_MOVE_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
@@ -41,15 +42,14 @@ DATA(0x006989ec) int gbProcessingCombatAction;
 //   0x495bf0 ret      ComputeMaxExtent()                     0  OK
 //   0x495f50 ret 0x20 ComputeExtent(8)                       8  OK
 //   0x4960d0 ret      CycleCombatScreen()                    0  OK
-//   0x494c20 ret 8    DrawObstacleAt(int)                    1  +1
-//   0x494f40 ret 0xc  DrawWallAt(int, int)                   2  +1
+//   0x494c20 ret 8    DrawWallAt(int, int)                   2  OK
+//   0x494f40 ret 0xc  DrawOccupant(int, int, int)            3  OK
 //   0x495090 ret 0x20 DrawArcher(7)                          7  +1
 //
-// Eight of eleven agree; the three that do not all carry exactly ONE MORE
-// stack argument than the DC prototype, so this is not a shifted map (a
-// shift would scatter the deltas rather than line them up at +1). Write
-// the DC prototype for those three and the frame can never match - the
-// extra parameter is trailing.
+// Ten of eleven agree. The two rows once attributed to DrawObstacleAt and
+// DrawWallAt were a stale order-only map: their bodies instead preserve the
+// complete DC callee sets of DrawWallAt and DrawOccupant respectively. That
+// correction leaves DrawArcher as the sole Complete signature extension.
 //
 // 0x495090's extra argument is decoded: a byte that selects table index 0
 // vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row.
@@ -246,14 +246,14 @@ void combatManager::DrawFrame(unsigned char update, unsigned char bLimitCreature
 }
 
 // E:\gamedcs\drawing.cpp:1399
-// RETAIL_LOCATED(0x00494c20, 0x31c): not reconstructed; dc-callgraph unique, dc 0x853f4
+DC_ONLY(0x853f4, 0x84)
 void combatManager::DrawObstacleAt(int hex_index)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1426
-// RETAIL_LOCATED(0x00494f40, 0x147): not reconstructed; dc-callgraph unique, dc 0x85478
+// RETAIL_LOCATED(0x00494c20, 0x31c): not reconstructed; callee-set, dc 0x85478
 void combatManager::DrawWallAt(int hex_index, int dx)
 {
     // @stub
@@ -267,7 +267,7 @@ void combatManager::DrawDeadOccupants(int index)
 }
 
 // E:\gamedcs\drawing.cpp:1602
-DC_ONLY(0x85844, 0x134)
+// RETAIL_LIVE(0x00494f40, 0x147): reconstructed below; callee-set, dc 0x85844
 void combatManager::DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 {
     // @stub
@@ -457,6 +457,51 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
     }
 
     UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
+}
+
+// Retail's three-argument row at 0x494f40 is DrawOccupant, not DrawWallAt:
+// its DrawFrame caller supplies (index, iDrawPriority, bNumBoxOnly), and its
+// complete callee set agrees with the DC method. The stack is drawn around
+// any moat overlays so a wide creature's front and rear cells layer correctly.
+// E:\gamedcs\drawing.cpp:1602
+VA(0x00494f40, 0x147)  // callee-set + exact arity, dc 0x85844
+void combatManager::DrawOccupant(int index, int iDrawPriority,
+                                 int bNumBoxOnly)
+{
+    if (!ValidHex(index))
+        return;
+
+    hexcell* hex = &cells[index];
+    int row = GridY(index);
+    army* occupant = hex->get_army();
+    if (iDrawPriority != COMBAT_DRAW_PRIORITY_ANY
+            && iDrawPriority != occupant->iDrawPriority)
+        return;
+    if (occupant->LetsPretendImNotHere)
+        return;
+    if (hex->field_1a == occupant->facing)
+        return;
+
+    occupant->DrawToBuffer(hex->field_00, hex->field_02, bNumBoxOnly);
+    if (!field_53a8)
+        return;
+    if (row == COMBAT_GATE_ROW && drawbridgeState != DRAWBRIDGE_UP)
+        return;
+    if (iDrawPriority == COMBAT_DRAW_PRIORITY_SINGLE_PASS)
+        return;
+
+    if (index == gMoatColumns[row]
+            || (field_53a9 && index == gOuterMoatColumns[row]))
+        DrawMoatOverlay(index);
+
+    if (occupant->Is(0) & 1) {
+        int front = index + occupant->OffsetToFront(-1);
+        if (front == gMoatColumns[row]
+                || (field_53a9 && front == gOuterMoatColumns[row]))
+            DrawMoatOverlay(front);
+    }
+
+    occupant->DrawToBuffer(hex->field_00, hex->field_02, 1);
 }
 
 // Complete keeps the DC DrawArcher control flow but adds a trailing colour-row
