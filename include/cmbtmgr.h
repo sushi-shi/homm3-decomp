@@ -780,8 +780,11 @@ public:
 #endif
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
-    // Two scalars InitNonVisualVars sets to 0 and 3 respectively, the 3
-    // shared with field_13d48 out of one register. Both ordinals.
+    // Dreamcast names this pair cmbtHeroFlagFrame[2]. Retail's
+    // InitNonVisualVars sets the two entries to 0 and 3 respectively, the 3
+    // shared with field_13d48 out of one register. They remain split here to
+    // preserve the measured declarator count; drawing indexes the contiguous
+    // pair from &field_5414.
     int field_5414;                    // +0x5414
     int field_5418;                    // +0x5418
 #ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
@@ -1112,7 +1115,11 @@ public:
     // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
     // only ever searches 0..19. Name is an address ordinal.
     unsigned char field_14000[2][20];  // +0x14000
-    char pad_14028[0x4];
+    // The first pair requests hero extents and the second pair requests
+    // hero-flag extents, both indexed by combat side. ComputeMaxExtent
+    // reads the four bytes as one contiguous row; keep one declarator here
+    // so this consumer-facing retype does not perturb the include-set count.
+    unsigned char field_14028[4];      // +0x14028
     // The three arrow-tower latches, keyed by the tower's grid index by
     // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
     // +0x1402e.
