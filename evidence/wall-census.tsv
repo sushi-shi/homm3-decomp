@@ -413,5 +413,3 @@ unclassified	0	99.9554	343	ai_player	?mark_towns@type_town_threat_checker@@IAEXP
 inliner (predict-inline)	0	99.9912	1627	armygrp	??0TSplitWindow@@QAE@HHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (32 name-unresolvable pair(s) discounted)
 unclassified	0	99.7222	44	resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	0	99.9839	528	seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-register-homing (why-reg)	0	99.9091	75	remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	why-reg	register-homing knob (B-family)
-register-homing (why-reg)	0	99.9394	94	remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	why-reg	register-homing knob (B-family)

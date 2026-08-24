@@ -2386,19 +2386,23 @@ void HandlePlayerDead(int deadGuy, unsigned char showMsg)
     }
 }
 
-// E:\gamedcs\remote.cpp:2419. Retail's message payload begins at +0x18:
+// EXACT. Retail's message payload begins at +0x18:
 // the first dword after CNetMsg is the sender slot and the following 0x4c
 // bytes are copied into gpGame's live victory condition before the display
 // helper is called. Dreamcast supplies the public name, signature and local
-// variable roles; every PC offset comes from this body.
+// variable roles; separate declarations followed by bGameWon/bGameLost
+// assignments preserve retail's reverse zero-store order.
+// E:\gamedcs\remote.cpp:2419
 VA(0x00556940, 0x5E)  // anchor-dispatch RS_PLAYER_WON, dc 0x11e494
 void HandlePlayerWon(CNetMsg* pNetMsg)
 {
     CPlayerWonMsg* message = static_cast<CPlayerWonMsg*>(pNetMsg);
     gpGame->mapHeader.victoryCondition = message->victoryCondition;
 
-    int bGameLost = 0;
-    int bGameWon = 0;
+    int bGameLost;
+    int bGameWon;
+    bGameWon = 0;
+    bGameLost = 0;
     gbGameOver = 1;
     DisplayVCWinLoss(&message->victoryCondition,
                      &bGameWon, &bGameLost, 1);
@@ -2408,14 +2412,18 @@ void HandlePlayerWon(CNetMsg* pNetMsg)
         bDefeatedAllPlayers = 1;
 }
 
-// E:\gamedcs\remote.cpp:2441. The loss twin consumes the 0x24-byte payload
-// at the same +0x18 offset but does not replace gpGame's map-header record.
+// EXACT. The loss twin consumes the 0x24-byte payload at the same +0x18
+// offset but does not replace gpGame's map-header record. It uses the same
+// retail-proven reverse zero-store order as the win handler.
+// E:\gamedcs\remote.cpp:2441
 VA(0x005569a0, 0x4B)  // anchor-dispatch RS_PLAYER_LOST, dc 0x11e500
 void HandlePlayerLost(CNetMsg* pNetMsg)
 {
     CPlayerLostMsg* message = static_cast<CPlayerLostMsg*>(pNetMsg);
-    int bGameLost = 0;
-    int bGameWon = 0;
+    int bGameLost;
+    int bGameWon;
+    bGameWon = 0;
+    bGameLost = 0;
     DisplayLCWinLoss(&message->lossCondition,
                      &bGameWon, &bGameLost, 1);
     if (bGameLost)
