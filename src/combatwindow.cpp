@@ -3,11 +3,14 @@
 // 72 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatwindow.h"
+#include "combatcontrolsubwindow.h"
 #include "kbwin.h"
 #include "remote.h"
 #include "subwindow.h"
+#include "textntry.h"
 #include "textwdgt.h"
 #include "winmgr.h"
+#include "widget.h"
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
 
@@ -39,6 +42,34 @@ void TCombatWindow::Close(unsigned char update)
     heroWindow::Close(update);
 }
 
+// Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
+// sites in handle_widget_hover. The control-bar vtable and the chat editor's
+// +0x6d focus byte independently prove the two member types.
+inline void TCombatWindow::set_rollover(const char* new_text)
+{
+    if (controlSubWindow && !chatEdit->bHasFocus)
+        controlSubWindow->set_rollover(new_text);
+}
+
+// EXACT: E:\gamedcs\combatwindow.cpp:393-407. Retail vtable 0x63d528 slot 4
+// points here; the DC source-line blocks preserve the accessor, early-return
+// condition, and the null/non-null rollover arms.
+VA(0x00472b80, 0x67)
+void TCombatWindow::handle_widget_hover(widget* current_widget)
+{
+    const char* new_text = current_widget->RollOver;
+    if (combatMessageCount > 0
+        && (!new_text || current_widget->id == COMBAT_LOG_SCROLL_UP_ID
+            || current_widget->id == COMBAT_LOG_SCROLL_DOWN_ID))
+        return;
+
+    if (!new_text)
+        set_rollover(DATA_COMPGEN(
+            0x00691210, combatHoverRolloverEmptyText, ""));
+    else
+        set_rollover(new_text);
+}
+
 // EXACT: the timed message clear is the retail 0x472bf0 body.  The Dreamcast row
 // places ClearCombatMessages between handle_widget_hover and show_messages;
 // retail's sole combatManager::RightClick call, the +0x64 message count and
@@ -51,6 +82,24 @@ void TCombatWindow::ClearCombatMessages()
         combatMessageCount = 0;
         combat_message(
             DATA_COMPGEN(0x00691210, combatRolloverEmptyText, ""), 0, 0);
+    }
+}
+
+// EXACT: E:\gamedcs\combatwindow.cpp:456-469. The control-bar guard and the
+// +0x68 current line establish the retail row; DC's source lines preserve
+// the size-minus-two upper clamp, zero lower clamp, and show_messages call.
+VA(0x00472db0, 0x40)
+void TCombatWindow::scroll_rollover(long delta)
+{
+    if (controlSubWindow) {
+        long start = combatMessageStart;
+        long last = combatMessages.size() - 2;
+        start += delta;
+        if (start > last)
+            start = last;
+        if (start < 0)
+            start = 0;
+        show_messages(start);
     }
 }
 

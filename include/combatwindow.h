@@ -5,12 +5,15 @@
 #ifndef HOMM3_COMBATWINDOW_H
 #define HOMM3_COMBATWINDOW_H
 
+#include <string>
 #include "window.h"
 
 class TSubWindow;
 class TCombatCreatureSubWindow;
 class TCombatHeroSubWindow;
 class textWidget;
+class textEntryWidget;
+class type_combat_sub_window;
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
@@ -19,23 +22,31 @@ class textWidget;
 // two hero panels and four creature panels that fill the remaining tail.
 class TCombatWindow : public heroWindow {
 public:
-    char pad_4c[0x4];
+    enum EWidgetIds {
+        COMBAT_LOG_SCROLL_UP_ID = 0x7d6,
+        COMBAT_LOG_SCROLL_DOWN_ID = 0x7d7
+    };
+
+    // combat_message and handle_widget_hover both follow this pointer to
+    // textEntryWidget::bHasFocus at +0x6d. The constructor initially nulls
+    // it; the concrete object is the combat chat editor.
+    textEntryWidget* chatEdit;
     // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
     // its DC counterpart is likewise the combat chat text widget.
     textWidget* chatWidget;
-    // The message ring at +0x54 is still opaque as a type, but its four-word
-    // STL vector representation is byte-proven by combat_message and the
-    // destructor.  ClearCombatMessages uses the count and last-update clock
-    // immediately following it.
-    char pad_54[0x10];
+    // The four-word VC6 vector begins at +0x54; its pointer triplet at
+    // +0x58/+0x5c/+0x60 is byte-proven by combat_message, scroll_rollover,
+    // and the destructor.
+    std::vector<std::string*> combatMessages;
     int combatMessageCount;
     int combatMessageStart;
     unsigned long combatMessageTime;
-    TSubWindow* controlSubWindow;
+    type_combat_sub_window* controlSubWindow;
     TCombatHeroSubWindow* heroSubWindows[2];
     TCombatCreatureSubWindow* creatureSubWindows[4];
 
     virtual void Close(unsigned char update);
+    virtual void handle_widget_hover(widget* current_widget);
     // 0x472bf0, LOCATED 2026-08-13 from combatManager::RightClick. The
     // 54-byte body clears the +0x64 latch and re-sets the message line
     // from the string at 0x691210 once GameTime has run 3000 ticks past
@@ -44,6 +55,9 @@ public:
     // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
     // bytes against 54).
     void ClearCombatMessages();
+    void set_rollover(const char* new_text);
+    void show_messages(long start);
+    void scroll_rollover(long delta);
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
