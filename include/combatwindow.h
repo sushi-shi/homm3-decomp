@@ -15,6 +15,11 @@ class textWidget;
 class textEntryWidget;
 class type_combat_sub_window;
 
+// Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
+// combat-window right-click handler consumes the same table as the combat
+// sub-window constructors.
+extern THelpText gCombatSubWindowHelp[11];
+
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
 // the polymorphic combat-control subwindow at +0x70 before delegating to
@@ -23,8 +28,18 @@ class type_combat_sub_window;
 class TCombatWindow : public heroWindow {
 public:
     enum EWidgetIds {
+        COMBAT_LEFT_COMMAND_0_ID = 0x7d1,
+        COMBAT_LEFT_COMMAND_1_ID = 0x7d2,
+        COMBAT_LEFT_COMMAND_2_ID = 0x7d3,
+        COMBAT_LEFT_COMMAND_3_ID = 0x7d4,
+        COMBAT_ROLLOVER_ID = 0x7d5,
         COMBAT_LOG_SCROLL_UP_ID = 0x7d6,
-        COMBAT_LOG_SCROLL_DOWN_ID = 0x7d7
+        COMBAT_LOG_SCROLL_DOWN_ID = 0x7d7,
+        COMBAT_RIGHT_COMMAND_0_ID = 0x7d8,
+        COMBAT_RIGHT_COMMAND_1_ID = 0x7d9,
+        COMBAT_RIGHT_COMMAND_2_ID = 0x7da,
+        COMBAT_PLACEMENT_COMMAND_0_ID = 0x8fc,
+        COMBAT_PLACEMENT_COMMAND_1_ID = 0x7802
     };
 
     // combat_message and handle_widget_hover both follow this pointer to
@@ -57,6 +72,8 @@ public:
     // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
     // bytes against 54).
     void ClearCombatMessages();
+    static int convertID2HelpID(int id);
+    unsigned char ProcessRightSelect(const message* msg);
     void set_rollover(const char* new_text);
     void show_messages(long start);
     void scroll_rollover(long delta);

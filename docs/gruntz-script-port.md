@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `TCombatWindow::ProcessRightSelect` adds 292 exact
+  retail bytes.** The Dreamcast line map preserves the call to the static
+  `convertID2HelpID`, its explicit negative-ID rejection, text sizing, and
+  centered type-4 dialog. Retail folds the helper into its only caller and
+  uses the same eleven-row `THelpText` table at 0x6a6968 that the combat
+  sub-window constructors partition: ids 0x7d1..0x7da map to rows 0..8
+  (the two log arrows share row 5), while placement ids 0x8fc and 0x7802
+  map to rows 9 and 10. Omitting the source helper's explicit `id < 0`
+  arm measured 97.7528% because VC6 folded negatives into the switch
+  default; restoring it reproduces all five retail branches, the ten-entry
+  jump table, and all 292 bytes. No external implementation body was used.
+
 - **2026-08-24 — `TCombatWindow::~TCombatWindow` adds 334 exact retail
   bytes.** The constructor's direct store to retail .bss 0x695000 and four
   chat-callback reads prove the compiland-local `gpCombatWindow` pointer;
