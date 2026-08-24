@@ -211,8 +211,12 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
 #ifdef HOMM3_REMOTE_SEND_CHAT_DECLS
+    GENERAL_TEXT_PLAYER_DROPPED = 470,
     GENERAL_TEXT_CHAT_NONHUMAN_WIRE_TAG = 474,
     GENERAL_TEXT_CHAT_NONHUMAN_LINE_TAG = 475,
+    // OnPlayerDropUpdateMsg displays this row while reloading the shared
+    // recovery save. Retail fixes it at [Text._First + 0xa4c].
+    GENERAL_TEXT_PLAYER_DROP_RELOAD = 659,
 #endif
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
     // The four spell-influence rollover rows TViewArmyWindow's spell

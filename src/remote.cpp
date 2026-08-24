@@ -35,9 +35,16 @@
 #include "remotedlg.h"
 #include "message.h"
 #include "inputmgr.h"
+#include "mousemgr.h"
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
+
+// remote.cpp's CHourGlass wrapper expands these two singleselectionwindow
+// helpers at each use. They stay file-local declarations because this is the
+// only remote consumer and widening the shared header would perturb its TUs.
+void StartMouseThread();
+void StopMouseThread();
 
 inline type_point::type_point(short new_x, short new_y, short new_z)
 {
@@ -142,6 +149,9 @@ DATA(0x00697758) char gcTCPAddress[21];
 // The PC layout is crossed from the HD build through whole-function operand
 // correspondence; the names and types are the Dreamcast CodeView globals.
 DATA(0x0069d804) unsigned char GameMode;
+// Retail-only byte armed when player-drop recovery resumes through
+// game::NextPlayer. No surviving symbol attests a semantic name.
+DATA(0x0069d80d) unsigned char gUnnamed69d80d;
 DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo gsThisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType iMPNetProtocol;
@@ -152,6 +162,34 @@ DATA(0x0069d818) static unsigned long lastActiveUpdate;
 // DPSD's recursion guard. Dreamcast publishes this compiland-local byte as
 // `__inside__`; retail's two inlined error paths fix it at 0x69d814.
 DATA(0x0069d814) static unsigned char __inside__;
+
+// E:\gamedcs\remote.cpp:3114..3134. These four source boundaries have no
+// standalone retail bodies: /Ob2 expands the one-byte wrapper into its sole
+// OnPlayerDropUpdateMsg use. Stop deliberately leaves m_thread armed; the
+// explicit Stop and the later destructor therefore both stop the thread,
+// exactly as retail does.
+inline CHourGlass::CHourGlass(unsigned char thread)
+    : m_thread(thread)
+{
+    Start();
+}
+
+inline CHourGlass::~CHourGlass()
+{
+    Stop();
+}
+
+inline void CHourGlass::Stop()
+{
+    if (m_thread)
+        StopMouseThread();
+}
+
+inline void CHourGlass::Start()
+{
+    if (m_thread)
+        StartMouseThread();
+}
 
 static const long PLAYER_ACTIVE_UPDATE_INTERVAL = 600000;
 
@@ -1916,6 +1954,18 @@ unsigned char HandleMPlayerLaunch()
     return 1;
 }
 
+// E:\gamedcs\remote.cpp:2150. Retail has no surviving out-of-line copy:
+// HandlePlayerDrop expands the eight-player DPID search and consumes -1 as
+// its not-found sentinel.
+int GetPlayerPos(unsigned long dpid)
+{
+    for (int i = 0; i < 8; ++i) {
+        if (gpGame->players[i].dpid == dpid)
+            return i;
+    }
+    return -1;
+}
+
 // E:\gamedcs\remote.cpp:2161. Retail has no surviving out-of-line copy:
 // both HandleNewHost expansions keep the candidate in a register, wrap at
 // zero and ask game::IsHuman until they find the prior human seat.
@@ -1970,6 +2020,51 @@ void UpdateCurrentPlayers()
     playerArray.Destroy(1);
 }
 
+// E:\gamedcs\remote.cpp:2227. The DC roster supplies the public identity,
+// helper boundaries and parameter role. Retail independently proves the
+// eight-player DPID search, dropped-player chat, active-player handoff and
+// host-only recovery update.
+VA(0x00556430, 0x1A1)  // anchor-callers + strings + dc-order-map, dc 0x11e01c
+void HandlePlayerDrop(unsigned long dpid)
+{
+    int playerPos = GetPlayerPos(dpid);
+    if (playerPos == -1)
+        return;
+
+    logFile.Log(DATA_COMPGEN(0x00682df8, handlingPlayerDropLog,
+                            "Handling player drop [%d]"),
+                dpid);
+    PlayerDropMsg(&chatMan,
+                  gpGeneralText->GetText(GENERAL_TEXT_PLAYER_DROPPED),
+                  gpGame->players[playerPos].cName);
+    UpdateCurrentPlayers();
+
+    if (gUnnamed69d810 == playerPos
+        && !gpGame->playerDisabled[playerPos]) {
+        int priorPlayer = GetPriorPlayer(gUnnamed69d810);
+        gNetLocalGamePos = priorPlayer;
+        gUnnamed69d810 = priorPlayer;
+
+        if (pDPlay->IsHost()) {
+            if (gNetLocalGamePos == gpGame->GetLocalPlayerGamePos()) {
+                logFile.Log(DATA_COMPGEN(
+                                0x00682dc8, hostWasLastPlayerLog,
+                                "Host [%d] was last player... time to recover..."),
+                            gsThisNetPlayerInfo.dpid);
+                OnPlayerDropUpdateMsg(dpid);
+            } else {
+                logFile.Log(DATA_COMPGEN(
+                                0x00682d9c, playerWasLastPlayerLog,
+                                "%d was last player... time to recover..."),
+                            dpid);
+                CPlayerDropUpdateMsg msg(dpid);
+                TransmitRemoteData(
+                    &msg, gUnnamed69d810, false, true);
+            }
+        }
+    }
+}
+
 // E:\gamedcs\remote.cpp:2289. DC publishes this free-function boundary and
 // both call edges; retail /Ob2 expands it into CLevelPickWaitDlg's dispatcher
 // and CNetMsgHandler::HandleNetMsg, leaving no standalone body. The two PC
@@ -1993,6 +2088,53 @@ void HandleNewHost()
         }
     }
     SystemMsg(&chatMan, gpGeneralText->GetText(471));
+}
+
+// E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
+// local CTextDialog/CHourGlass types. Retail independently fixes the recovery
+// filenames, general-text row, player-record updates and the two resume arms.
+VA(0x005565e0, 0x19E)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
+void OnPlayerDropUpdateMsg(unsigned long dpid)
+{
+    logFile.Log(DATA_COMPGEN(0x00682e24, playerDropUpdateLog,
+                            "OnPlayerDropUpdateMsg (%d)"),
+                dpid);
+
+    gpMouseManager->SetPointer(1, mouseManager::ADVENTURE_SET);
+    CTextDialog dlg(0x12);
+    dlg.Setup(gpGeneralText->GetText(GENERAL_TEXT_PLAYER_DROP_RELOAD),
+              gpMediumFont);
+    dlg.Open(0, 1);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+
+    CHourGlass hourGlass(1);
+    if (!gpGame->LoadGame(gUnnamed698758.scFile, 0, 0))
+        gpGame->LoadGame(gUnnamed698758.rcFile, 0, 0);
+
+    dlg.Close(1);
+    hourGlass.Stop();
+    UpdateCurrentPlayers();
+
+    int playerPos = gpGame->GetGamePosFromDPID(dpid);
+    if (playerPos != -1)
+        gpGame->players[playerPos].ClearNetInfo();
+
+    int localPlayer = gpGame->GetLocalPlayerGamePos();
+    gNetLocalGamePos = localPlayer;
+    gUnnamed69d810 = localPlayer;
+    gpCurrentPlayer = &gpGame->players[localPlayer];
+    gUnnamed69ccc4 = 1 << localPlayer;
+
+    int visiblePlayer = gpGame->GetLocalPlayerGamePos();
+    gUnnamed69778c = visiblePlayer;
+    gMapVisibilityBit = 1 << visiblePlayer;
+
+    if (g_weMoved) {
+        gUnnamed69d80d = 1;
+        gpGame->NextPlayer();
+    } else {
+        gpAdvManager->StartLocalPlayerTurn();
+    }
 }
 
 // E:\gamedcs\remote.cpp:2375.  The DC roster supplies the public identity
