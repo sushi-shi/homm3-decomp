@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `TCombatWindow::~TCombatWindow` adds 334 exact retail
+  bytes.** The constructor's direct store to retail .bss 0x695000 and four
+  chat-callback reads prove the compiland-local `gpCombatWindow` pointer;
+  the destructor clears that same slot. Dreamcast lines 293-313 preserve
+  the teardown phases and ownership: delete the polymorphic control bar,
+  walk and delete the inherited `Widgets`, walk and delete every owned
+  message string, then clear the callback pointer. Retail extends the DC
+  tail from two panels to the byte-proven two `TCombatHeroSubWindow` and
+  four `TCombatCreatureSubWindow` fields at +0x74..+0x88. The resulting
+  VC6 body reproduces all 334 bytes. The semantic viewer differs only in
+  synthesized EH, vtable, and data-relocation label spellings; the
+  authoritative normalized comparison reports 100.0%. No external
+  implementation body was used.
+
 - **2026-08-24 — three combat-window display functions add 613 exact retail
   bytes.** `show_messages` reproduces all 371 bytes from Dreamcast lines
   431-450 and retail's +0x54 message vector: it selects up to two strings,

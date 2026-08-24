@@ -1,13 +1,13 @@
 <!-- # generator: homm3.vc6.report | # date: 2026-08-24 | # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - regenerate, never hand-edit | plateaus in [50.0, 99.999%); base-vs-delinked-target diagnosis, no recompiles -->
 # vc6 plateau diagnosis (read-only; solvers propose, never land)
 
-412 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
+409 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
 
 ## Wall-class summary
 
 - **198** register-homing (why-reg)
-- **104** inliner (predict-inline)
-- **82** control-flow (why-branch)
+- **102** inliner (predict-inline)
+- **81** control-flow (why-branch)
 - **28** unclassified
 
 | fuzzy | unit | function | wall class | reg-dist | flow-dist | knob to try |
@@ -157,7 +157,7 @@
 | 91.11 | remote | `??1CNetMsgHandlerPause@@UAE@XZ` | register-homing (why-reg) | 10 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 91.19 | mapcell | `?erase@?$vector@VCObjectType@@V?$allocator@V..` | inliner (predict-inline) | 57 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted) |
 | 91.30 | bottomviewsubwindow | `??0TBottomViewResourceMessage@@QAE@PAVheroWi..` | register-homing (why-reg) | 40 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 91.46 | army | `?attack_wall@army@@QAEXW4TWallTargetId@@J@Z` | inliner (predict-inline) | 155 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted) |
+| 91.46 | army | `?attack_wall@army@@QAEXW4TWallTargetId@@J@Z` | inliner (predict-inline) | 155 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted) |
 | 91.60 | victorylossconditions | `?CheckForArtifactWin@VictoryConditionStruct@..` | register-homing (why-reg) | 75 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 91.61 | mapcell | `?readHeroData@NewfullMap@@QAEHPAVTAbstractFi..` | register-homing (why-reg) | 393 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 91.65 | hero | `?get_morale_description@hero@@QBE?AV?$basic_..` | inliner (predict-inline) | 104 | 76 | callee expanded on one side only (A8/A9/A12): 3 under-inline, 1 over-inline (28 name-unresolvable pair(s) discounted) |
@@ -247,7 +247,6 @@
 | 95.44 | town | `?GiveSpells@town@@QAEXPAVhero@@@Z` | control-flow (why-branch) | 12 | 35 | loop-form / merged-return placement / case order (D1-D9) |
 | 95.47 | mapcell | `?readMapLayer@NewfullMap@@QAEHPAVTAbstractFi..` | register-homing (why-reg) | 46 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 95.49 | ai_tactical | `?get_cure_value@type_AI_spellcaster@@QAEJPBV..` | register-homing (why-reg) | 30 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 95.51 | drawing | `?DrawBackground@combatManager@@QAEXXZ` | inliner (predict-inline) | 30 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted) |
 | 95.52 | army | `?do_attack@army@@QAEEPAV1@H@Z` | control-flow (why-branch) | 76 | 3 | loop-form / merged-return placement / case order (D1-D9) |
 | 95.55 | ai_tactical | `?consider_teleport@type_AI_spellcaster@@QAEX..` | control-flow (why-branch) | 25 | 4 | loop-form / merged-return placement / case order (D1-D9) |
 | 95.63 | resourcemanager | `?LoadFont@ResourceManager@@YIPAVfont@@PBD@Z` | inliner (predict-inline) | 43 | 17 | callee expanded on one side only (A8/A9/A12): 2 under-inline, 1 over-inline (2 name-unresolvable pair(s) discounted) |
@@ -310,7 +309,7 @@
 | 97.39 | townmgr | `?WindowHandler@TMageGuildWindow@@UAEHPAVmess..` | register-homing (why-reg) | 8 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 97.43 | ai_player | `?calculate_demand@type_AI_player@@QAEXXZ` | register-homing (why-reg) | 257 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 97.47 | seerhut | `?DoProposalDialog@type_creature_quest@@UAEXP..` | register-homing (why-reg) | 19 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 97.48 | command | `?ResetRound@combatManager@@QAEXXZ` | inliner (predict-inline) | 26 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline (3 name-unresolvable pair(s) discounted) |
+| 97.48 | command | `?ResetRound@combatManager@@QAEXXZ` | inliner (predict-inline) | 26 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline (1 name-unresolvable pair(s) discounted) |
 | 97.49 | townmgr | `?handle_mage_guild_click@townManager@@QAEXXZ` | control-flow (why-branch) | 9 | 28 | loop-form / merged-return placement / case order (D1-D9) |
 | 97.53 | ai_player | `?do_purchase@type_AI_creature_purchaser@@QAE..` | register-homing (why-reg) | 8 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 97.61 | mapcell | `?erase@?$vector@VTTownEvent@@V?$allocator@VT..` | inliner (predict-inline) | 43 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted) |
@@ -337,7 +336,7 @@
 | 98.34 | remote | `?HandlePlayerDead@@YIXHE@Z` | register-homing (why-reg) | 10 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 98.34 | seerhut | `?SetDefaultText@type_monster_quest@@UAEXXZ` | inliner (predict-inline) | 25 | 0 | callee expanded on one side only (A8/A9/A12): 1 over-inline (18 name-unresolvable pair(s) discounted) |
 | 98.35 | game | `?match_underground_gates@game@@QAEXXZ` | register-homing (why-reg) | 18 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 98.38 | drawing | `?DrawFrame@combatManager@@QAEXEEEHEE@Z` | inliner (predict-inline) | 34 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (5 name-unresolvable pair(s) discounted) |
+| 98.38 | drawing | `?DrawFrame@combatManager@@QAEXEEEHEE@Z` | register-homing (why-reg) | 34 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 98.46 | font | `?DrawStringExecute@font@@QAEXPBDHPAVBitmap16..` | register-homing (why-reg) | 72 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 98.47 | ai | `?DoCompAI@combatManager@@QAEXH@Z` | unclassified | 1 | 0 | run why-reg / why-branch for the full search |
 | 98.47 | campaignwindow | `??0TCampaignWindow@@QAE@EH@Z` | inliner (predict-inline) | 189 | 0 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (25 name-unresolvable pair(s) discounted) |
@@ -375,7 +374,6 @@
 | 99.11 | ai_tactical | `?get_simple_attack_effect@type_AI_combat_par..` | register-homing (why-reg) | 32 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.13 | levelupwindow | `??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z` | inliner (predict-inline) | 61 | 0 | callee expanded on one side only (A8/A9/A12): 1 over-inline (84 name-unresolvable pair(s) discounted) |
 | 99.15 | advmgr | `?MoreTreesNear@advManager@@QAEHUtype_point@@..` | control-flow (why-branch) | 117 | 4 | loop-form / merged-return placement / case order (D1-D9) |
-| 99.20 | drawing | `?DrawWallAt@combatManager@@QAEXHH@Z` | control-flow (why-branch) | 6 | 32 | loop-form / merged-return placement / case order (D1-D9) |
 | 99.20 | findpath | `?TestPossibleDirections@searchArray@@QAEXPAV..` | register-homing (why-reg) | 46 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.27 | victorylossconditions | `?CheckForGrailBuildingWin@VictoryConditionSt..` | register-homing (why-reg) | 13 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.27 | advmgr | `?SetHeroContext@advManager@@QAEXHHEE@Z` | register-homing (why-reg) | 8 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
@@ -392,7 +390,7 @@
 | 99.58 | hero | `?get_primary_skill_total@hero@@QAEFXZ` | register-homing (why-reg) | 2 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.64 | diff | `?Apply@CDiffFile@@QAEPAXPAEH@Z` | register-homing (why-reg) | 6 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.64 | game | `?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z` | register-homing (why-reg) | 14 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 99.65 | cmbtmgr | `?SetNextArmy@combatManager@@QAEXHH@Z` | inliner (predict-inline) | 39 | 0 | callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (9 name-unresolvable pair(s) discounted) |
+| 99.65 | cmbtmgr | `?SetNextArmy@combatManager@@QAEXHH@Z` | inliner (predict-inline) | 39 | 0 | callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (8 name-unresolvable pair(s) discounted) |
 | 99.66 | townmgr | `??0THallWindow@@QAE@H@Z` | inliner (predict-inline) | 42 | 2 | callee expanded on one side only (A8/A9/A12): 12 under-inline, 12 over-inline (222 name-unresolvable pair(s) discounted) |
 | 99.71 | army | `?can_cast_spell@army@@QBEEJ@Z` | register-homing (why-reg) | 33 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.72 | resourcemanager | `?insert_wrapper@TCacheMap@ResourceManager@@Q..` | unclassified | 2 | 0 | run why-reg / why-branch for the full search |
@@ -408,17 +406,16 @@
 | 99.88 | hero | `?HeroFn_004DBF30@hero@@QAEEHJ@Z` | register-homing (why-reg) | 24 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.89 | mapcell | `?NewfullMapFn_005042C0@NewfullMap@@QAEXXZ` | register-homing (why-reg) | 2 | 0 | register-homing knob (B-family) |
 | 99.90 | ai_player | `?fill_prohibited_array@@YIXPAVplayerData@@PA..` | register-homing (why-reg) | 6 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
-| 99.91 | remote | `?HandlePlayerLost@@YIXPAVCNetMsg@@@Z` | register-homing (why-reg) | 2 | 0 | register-homing knob (B-family) |
 | 99.92 | armygrp | `?WindowHandler@TSplitWindow@@UAEHPAVmessage@..` | register-homing (why-reg) | 8 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.93 | seerhut | `?LoadFromMap@type_creature_quest@@UAEXPAVTAb..` | register-homing (why-reg) | 28 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.93 | seerhut | `?Load@type_creature_quest@@UAEXPAVTAbstractF..` | register-homing (why-reg) | 28 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.94 | army | `?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z` | register-homing (why-reg) | 4 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 99.94 | adventureoptionswindow | `?WindowHandler@TAdventureOptionsWindow@@UAEH..` | control-flow (why-branch) | 34 | 2 | loop-form / merged-return placement / case order (D1-D9) |
 | 99.94 | game | `?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z` | register-homing (why-reg) | 4 | 0 | spill to dead-parameter slot (B4) |
-| 99.94 | remote | `?HandlePlayerWon@@YIXPAVCNetMsg@@@Z` | register-homing (why-reg) | 2 | 0 | register-homing knob (B-family) |
 | 99.95 | seerhut | `?Load@type_artifact_quest@@UAEXPAVTAbstractF..` | register-homing (why-reg) | 20 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.95 | seerhut | `?LoadFromMap@type_artifact_quest@@UAEXPAVTAb..` | register-homing (why-reg) | 20 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.95 | game | `?RandomizeHolyGrail@game@@QAEXXZ` | unclassified | 18 | 0 | run why-reg / why-branch for the full search |
+| 99.95 | drawing | `?DrawWallAt@combatManager@@QAEXHH@Z` | register-homing (why-reg) | 4 | 0 | register-homing knob (B-family) |
 | 99.96 | ai_player | `?mark_towns@type_town_threat_checker@@IAEXPA..` | unclassified | 2 | 0 | run why-reg / why-branch for the full search |
 | 99.96 | game | `?save@playerData@@QAEHPAVTAbstractFile@@@Z` | register-homing (why-reg) | 34 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 99.96 | ai_combat | `?AI_value_of_combat@@YIJPBVhero@@0ABVarmyGro..` | unclassified | 8 | 0 | run why-reg / why-branch for the full search |

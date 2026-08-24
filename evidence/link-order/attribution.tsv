@@ -121,7 +121,7 @@ rva	size	unit	current_label	provenance
 0x6db90	33	combatcontrolsubwindow	??_GTCombatCreatureSubWindow@@UAEPAXI@Z	src-VA+base
 0x6f6d0	33	combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	src-VA+base
 0x71a40	33	combatresultswindow	??_GTCombatResultsWindow@@UAEPAXI@Z	src-VA+base
-0x72900	334	combatwindow	game_728a0_sub00_72900	working-label
+0x72900	334	combatwindow	??1TCombatWindow@@UAE@XZ	src-VA+ir
 0x72a50	292	combatwindow	game_74d80_sub10_72a50	working-label
 0x72b80	103	combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	src-VA+ir
 0x72bf0	54	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	src-VA+ir
