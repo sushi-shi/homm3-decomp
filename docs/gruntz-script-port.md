@@ -260,6 +260,37 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — player-drop recovery adds a 417-byte exact handler and
+  admits its adjacent reload path with the retail CFG intact.** Dreamcast's
+  remote.obj roster supplies the `HandlePlayerDrop`, `GetPlayerPos`,
+  `OnPlayerDropUpdateMsg` and `CHourGlass` source boundaries. Retail proves
+  the PC mapping independently through the drop/recovery log strings, the
+  eight 0x168-byte player records and the callers in both wait-dialog
+  dispatchers. `HandlePlayerDrop` searches the DPID, emits general-text row
+  470 with the dropped player's name, refreshes the DirectPlay roster and,
+  when the acting player vanished, hands control to the prior human. The host
+  either reloads locally or transmits `CPlayerDropUpdateMsg` through the
+  existing free wrapper; using that wrapper, rather than restating its
+  `SendIt` pipeline, is the decisive source boundary. The result matches all
+  **417 bytes and 20 CFG blocks** at 0x556430.
+
+  The adjacent 0x5565e0 reload path reproduces all eight CFG blocks and both
+  branches at 95.30%. It shows general-text row 659, tries the shared SC then
+  RC recovery files, explicitly stops the hourglass before refreshing the
+  player list, clears the dropped player's net record, rebuilds both current-
+  player masks and resumes through `NextPlayer` or `StartLocalPlayerTurn`.
+  Retail's two `StopMouseThread` calls prove that `CHourGlass::Stop` leaves its
+  one-byte thread selector armed; all four wrapper methods are consequently
+  `/Ob2`-only source boundaries with no standalone PC body. The bounded
+  residual is compiler generation: this compile releases ESI after the DPID
+  lookup, spills the first shift byte and calls the empty `CTextDialog`
+  destructor layer, while retail reuses ESI and calls `TDialogBox` directly.
+  Local/global assignment forms and explicit game-pointer lifetimes are
+  byte-flat. Making the empty destructor visible does change the cleanup, but
+  adds a vptr store and regresses the already-exact `CAnimatedDlg` destructor
+  to 96.30%, so that TU-wide trade is rejected. The synchronized inventory
+  moves from **1890/2301 to 1891/2303 exact functions at 96.68% fuzzy**.
+
 - **2026-08-24 — `UpdateCurrentPlayers` adds 334 exact remote bytes; two
   adjacent player identities are admitted as bounded residuals.**
   Dreamcast supplies the public `UpdateCurrentPlayers` and `IsValidHuman`
