@@ -32,6 +32,13 @@ public:
     TPalette16 p16;
     TPalette24 p24;
 
+#ifdef HOMM3_DRAWING_BACKGROUND_VIEW
+    // Bitmap816.h:70/71 header accessors. DrawBackground's Dreamcast xref
+    // graph records both inlined uses; the retail body reads +0x24/+0x28.
+    int GetWidth() const { return Width; }
+    int GetHeight() const { return Height; }
+#endif
+
     Bitmap816(const char* name, int w, int h, unsigned char* data,
               TPalette16* palette16, int dataSize);
     Bitmap816(const char* name, const char* path,

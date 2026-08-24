@@ -51,21 +51,39 @@ def runtime_map(path: Path | None = None) -> list[Claim]:
 
 
 def reloc_aliases(path: Path | None = None) -> list[Claim]:
-    """Reviewed relocation-alias OWNERS, one claim per distinct target rva
-    (many reviewed sites may share an owner). Two rows disagreeing on one
-    target's owner is a table defect and dies here."""
+    """Reviewed relocation-alias OWNERS, anchored at their symbol bases.
+
+    ``target_rva`` is the concrete stripped-image operand, while ``addend``
+    is the displacement from the source-level owner symbol.  Therefore the
+    PDB owner belongs at ``target_rva - addend``.  Many exact sites and many
+    interior targets may legitimately collapse onto that one owner/base.
+    """
     _b, _h, raw = read_tsv(path or RELOC_ALIASES)
     owner_by_target: dict[int, str] = {}
+    owner_by_base: dict[int, str] = {}
+    base_by_owner: dict[str, int] = {}
     for r in raw:
         target = int(r["target_rva"], 16)
+        addend = int(r["addend"], 0)
+        base = target - addend
         owner = r["owner"]
         prior = owner_by_target.get(target)
         if prior and prior != owner:
             common.die(f"reloc aliases disagree at data rva 0x{target:x}: "
                        f"{prior!r} vs {owner!r}")
         owner_by_target[target] = owner
-    return [Claim(target, owner, "data", "reloc-alias", None, "", {})
-            for target, owner in sorted(owner_by_target.items())]
+        prior = owner_by_base.get(base)
+        if prior and prior != owner:
+            common.die(f"reloc aliases disagree at owner base 0x{base:x}: "
+                       f"{prior!r} vs {owner!r}")
+        owner_by_base[base] = owner
+        prior_base = base_by_owner.get(owner)
+        if prior_base is not None and prior_base != base:
+            common.die(f"reloc alias owner {owner!r} has two bases: "
+                       f"0x{prior_base:x} vs 0x{base:x}")
+        base_by_owner[owner] = base
+    return [Claim(base, owner, "data", "reloc-alias", None, "", {})
+            for base, owner in sorted(owner_by_base.items())]
 
 
 def reloc_targets(path: Path | None = None) -> list[int]:

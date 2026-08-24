@@ -4,11 +4,16 @@
 #include <va.h>
 #include <string.h>
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
+#define HOMM3_DRAWING_BACKGROUND_VIEW
 #include "drawing.h"
+#include "bitmap16.h"
+#include "bitmap816.h"
 #include "combatcontrolsubwindow.h"
 #include "combatwindow.h"
 #include "findpath.h"
 #include "prefs.h"
+#include "resourcemanager.h"
+#include "town.h"
 #include "winmgr.h"
 
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
@@ -365,6 +370,65 @@ void combatManager::SetupGridForArmy(const army* thisArmy)
                 field_0107[i] = 3;
         }
     }
+}
+
+// RECONSTRUCTED. The DC statement sequence accounts for every Complete
+// branch: load the selected battlefield, composite the optional large
+// elevation overlay and town moat rows, cache the battlefield viewport,
+// rebuild the grid, then publish the finished 800x556 image to the
+// window-manager screen bitmap.
+// The only normalized residual is VC6's C1-state register allocation in the
+// elevation block: candidate keeps (table offset, bitmap) in (EDI, EBX), while
+// retail keeps (row pointer, bitmap) in (EBX, EDI). why-reg classifies the
+// identical schedule as the source-unreachable B1/C1 handle-state class; the
+// SP3-vs-RTM oracle is identical on both compiler generations.
+// E:\gamedcs\drawing.cpp:919
+VA(0x00493cf0, 0x1ab)  // dc-callgraph unique, dc 0x847dc
+void combatManager::DrawBackground()
+{
+    if (IsQuickCombat())
+        return;
+    if (field_53b8)
+        return;
+
+    ResourceManager::GetBackdrop(backgroundName, field_53b0);
+
+    int index = largeObstacleId;
+    if (index >= 0) {
+        const SElevationOverlay* overlay = &sElevationOverlay[index];
+        Bitmap816* bitmap = ResourceManager::GetBitmap816(
+            sElevationOverlay[index].FileName);
+        bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(), field_53b0,
+                     overlay->x, overlay->y, true);
+        bitmap->Dispose();
+    }
+
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE && field_53a8) {
+        TWallTraits* traits =
+            &akWallTraits[defendingTown->type][WALL_TRAITS_ROW_MOAT];
+        Bitmap816* bitmap = combatIcons[WALL_TRAITS_ROW_MOAT][0];
+        if (bitmap) {
+            bitmap->Draw(
+                0, 0, bitmap->GetWidth(), bitmap->GetHeight(), field_53b0,
+                traits->x, traits->y, true);
+        }
+
+        traits = &akWallTraits[defendingTown->type]
+                              [WALL_TRAITS_ROW_MOAT + 1];
+        bitmap = combatIcons[WALL_TRAITS_ROW_MOAT + 1][0];
+        if (bitmap) {
+            bitmap->Draw(
+                0, 0, bitmap->GetWidth(), bitmap->GetHeight(), field_53b0,
+                traits->x, traits->y, true);
+        }
+    }
+
+    field_53b0->Draw(0x3a, 0x56, 0x2ab, 0x1d8,
+                     field_53ac, 0, 0, false);
+    UpdateGrid(1, 0);
+    field_53b0->Draw(0, 0, 800, 556,
+                     gpWindowManager->screenBitmap, 0, 0, false);
+    field_53b8 = 1;
 }
 
 // E:\gamedcs\drawing.cpp:1113. Complete retains the DC wrapper shape but
