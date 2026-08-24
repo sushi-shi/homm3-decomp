@@ -259,11 +259,13 @@ public:
     int iMirrorSourceIndex;        // +0x24
     int iMirrorDestIndex;          // +0x28
     int iRoundsLeftBeforeVanish;   // +0x2c
-#elif defined(HOMM3_ARMY_POW_VIEW)
+#elif defined(HOMM3_ARMY_POW_VIEW) \
+   || defined(HOMM3_ARMY_SPELL_EFFECT_VIEW)
     // PowEffect needs only the first of that pair - it scans every stack
     // for a raised bShowPowEffect to decide whether to load the effect
-    // sprite at all, and clears it in the closing walk - so the pow view
-    // takes one declarator where the round view takes three.
+    // sprite at all, and clears it in the closing walk. Drawing's single-
+    // stack SpellEffect overload raises and clears the same byte. Those two
+    // narrow views take one declarator where the round view takes three.
     unsigned char bShowPowEffect;  // +0x20
     char pad_21[0xf];
 #else

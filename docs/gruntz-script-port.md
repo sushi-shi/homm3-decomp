@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the army-target `combatManager::SpellEffect` overload
+  reproduces all 453 retail bytes.** Drawing order and the four-argument
+  `ret 0x10` row place it at 0x496840; Dreamcast `drawing.cpp:2524` supplies
+  the name, signature, optimized `frame` local and statement skeleton.
+  Retail independently fixes Complete's 83-effect bound and adds the
+  Immersion force-feedback cue absent from Dreamcast. The method rejects
+  quick combat and invalid or resource-less effects, caches the overlay,
+  optionally advances the stack's wince sequence in lockstep with it, then
+  finishes the remaining overlay frames and clears the stack's draw flag.
+  The natural source shape reproduces all 44 CFG blocks and every normalized
+  instruction on its first compile, including VC6's reuse of the wince frame
+  counter for the remaining effect pass. The synchronized checkpoint reaches
+  **1914/2329 linked exact**, **1845/2260 game exact**, **96.59% game fuzzy**
+  and **43.31% executable coverage**. No external implementation body was
+  used.
+
 - **2026-08-24 — `combatManager::CycleCombatScreen` reproduces all 1,898
   retail bytes.** The 0x4960d0 drawing-order anchor, its zero-argument ABI and
   Dreamcast `drawing.cpp:2257` row establish the identity; the DC line table
