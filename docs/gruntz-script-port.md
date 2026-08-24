@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::DrawOccupant` corrects a stale drawing
+  map and reproduces all 327 retail bytes.** The old order-only hypothesis
+  assigned 0x494c20 to `DrawObstacleAt` and 0x494f40 to `DrawWallAt`.
+  Retail independently rejects both assignments: 0x494c20 has `ret 8` and
+  the three `DrawWall` plus `DrawArcher` calls of the two-argument
+  `DrawWallAt`, while 0x494f40 has `ret 0xc`, is called by `DrawFrame`, and
+  preserves the complete Dreamcast `DrawOccupant` callee set. The latter
+  validates its index, filters the resident army by draw priority, invisibility
+  and facing, draws it once, layers the inner or optional outer moat under both
+  cells of a wide creature, then redraws the army above the moat. Its row
+  calculation and wide-creature front offset inline exactly as retail does;
+  all 21 CFG blocks and every normalized byte agree on the first post-delink
+  comparison. The source map now leaves `DrawObstacleAt` DC-only and places
+  `DrawWallAt` at 0x494c20. The synchronized checkpoint reaches **1903/2315
+  linked exact**, **1834/2246 game exact**, **96.59% game fuzzy** and
+  **42.84% executable coverage**. All 51 unit tests, five freshness controls
+  and every fatal gate pass. The all-unit queue remains 412 residual functions
+  / 28.6 KiB recoverable; the ordinary tractable tier falls to **215 functions
+  / 177.4 KiB**, including four remaining `drawing` rows / 4,987 bytes. No
+  external implementation body was used.
+
 - **2026-08-24 — `combatManager::DrawSpellEffect` and
   `DrawSpriteObject` reproduce all 324 and 322 retail bytes.** The adjacent
   rows at 0x4953b0 and 0x495500 preserve the Dreamcast caller edges and end in

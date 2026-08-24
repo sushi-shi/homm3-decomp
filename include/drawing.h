@@ -7,6 +7,15 @@
 
 #include "cmbtmgr.h"
 
+#ifdef HOMM3_DRAWING_ARCHER_DECLS
+// DrawOccupant's priority sentinels: 8 bypasses the army-priority filter,
+// while 7 performs the first draw but suppresses the moat/redraw pass.
+enum ECombatDrawPriority {
+    COMBAT_DRAW_PRIORITY_SINGLE_PASS = 7,
+    COMBAT_DRAW_PRIORITY_ANY = 8
+};
+#endif
+
 // The effect-latch tail lies beyond the currently materialized
 // combatManager prefix. These offsets are retail-byte-proven by
 // ResetLimitCreature; naming them avoids a second access-layout class.

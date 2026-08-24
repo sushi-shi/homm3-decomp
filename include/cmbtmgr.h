@@ -1321,6 +1321,9 @@ public:
                        unsigned char isFlipped);
     int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
+    void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
+    int DrawMoatOverlay(int index);
+    int GridY(int index) const { return index / COMBAT_GRID_ROW_STRIDE; }
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
