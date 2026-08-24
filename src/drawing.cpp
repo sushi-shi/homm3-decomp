@@ -357,18 +357,16 @@ static inline int DrawingControllingSide(const army* stack)
 }
 
 // Modelling the tower choice as a single-call-site inline makes VC6 retain
-// retail's otherwise redundant lower-tower comparison and restores
-// DrawWallAt's full 54-block CFG. The three selector blocks still lay out
-// with the opposite final branch polarity (99.73%).
+// retail's otherwise redundant lower-tower comparison. The conditional
+// expression gives that comparison retail's branch polarity; only the
+// source-equivalent main/upper selector-block order remains (99.95%).
 static inline void DrawingTowerArcher(
     combatManager::TArcher*& archer,
     combatManager::TArcher* archers,
     int wall)
 {
-    if (wall != combatManager::eWallSectionLowerTowerCover)
-        archer = &archers[2];
-    else
-        archer = &archers[1];
+    archer = wall == combatManager::eWallSectionLowerTowerCover
+        ? &archers[1] : &archers[2];
 }
 
 // EXACT. Dreamcast fixes the statement/lexical shape and retail adds the
@@ -555,21 +553,18 @@ grid_ready:
     return update;
 }
 
-// RECONSTRUCTED. The DC statement sequence accounts for every Complete
+// EXACT. The DC statement sequence accounts for every Complete
 // branch: load the selected battlefield, composite the optional large
 // elevation overlay and town moat rows, cache the battlefield viewport,
 // rebuild the grid, then publish the finished 800x556 image to the
 // window-manager screen bitmap.
-// The only normalized residual is VC6's C1-state register allocation in the
-// elevation block: candidate keeps (table offset, bitmap) in (EDI, EBX), while
-// retail keeps (row pointer, bitmap) in (EBX, EDI). why-reg classifies the
-// identical schedule as the source-unreachable B1/C1 handle-state class; the
-// SP3-vs-RTM oracle is identical on both compiler generations.
+// Taking the overlay row once and using its FileName member preserves retail's
+// (row pointer, bitmap) register state across the resource lookup and draw.
 // E:\gamedcs\drawing.cpp:919
 VA(0x00493cf0, 0x1ab)  // dc-callgraph unique, dc 0x847dc
 void combatManager::DrawBackground()
 {
-    if (IsQuickCombat())
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
         return;
     if (field_53b8)
         return;
@@ -580,7 +575,7 @@ void combatManager::DrawBackground()
     if (index >= 0) {
         const SElevationOverlay* overlay = &sElevationOverlay[index];
         Bitmap816* bitmap = ResourceManager::GetBitmap816(
-            sElevationOverlay[index].FileName);
+            overlay->FileName);
         bitmap->Draw(0, 0, bitmap->GetWidth(), bitmap->GetHeight(), field_53b0,
                      overlay->x, overlay->y, true);
         bitmap->Dispose();
