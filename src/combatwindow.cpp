@@ -10,6 +10,7 @@
 #include "combatcontrolsubwindow.h"
 #include "font.h"
 #include "game.h"
+#include "cheatcode.h"
 #include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -17,6 +18,7 @@
 #include "remote.h"
 #include "subwindow.h"
 #include "textntry.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "winmgr.h"
 #include "widget.h"
@@ -26,17 +28,47 @@
 // the corresponding compiland-local pointer at 0x1bf12c.
 static TCombatWindow* gpCombatWindow;
 
-#if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
-
+// E:\gamedcs\combatwindow.cpp:42. SendChat is the sole retail caller;
+// Dreamcast supplies the reference ABI, local TCheatCode and statement map.
+// The 28-block CFG is retail-identical. The 90.2966% residual is one measured
+// VC6 inline decision: predict-inline reports that only _Tidy(false) expands
+// here while retail calls it; direct operator=/assign/count/wrapper spellings
+// are byte-flat, so keep the natural source rather than model string internals.
 // E:\gamedcs\combatwindow.cpp:42
-DC_ONLY(0x69638, 0x218)
-void CheckCombatCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString)
+VA(0x00472010, 0x1C0)
+void CheckCombatCheatCode(std::string& chatString)
 {
-    // @stub
-}
+    hero* currentHero =
+        gpCombatManager->heroes[gpCombatManager->currentSide];
+    std::string* chat = &chatString;
+    TCheatCode code(chat->c_str());
 
-// E:\gamedcs\combatwindow.cpp:281
-#endif  // @carcass
+    if (code.compare(DATA_COMPGEN(
+            0x0063d490, combatCheatBluePill, "ajpoyhrcvyy"))) {
+        gpCombatManager->Unnamed4693a0(gpCombatManager->currentSide);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063d49c, combatCheatRedPill, "ajperqcvyy"))) {
+        gpCombatManager->Unnamed4693a0(1 - gpCombatManager->currentSide);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063d4a8, combatCheatAllSpells,
+                   "ajpgurervfabfcbba"))
+               && currentHero) {
+        currentHero->mana = 999;
+        if (!currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            currentHero->GiveArtifact(&spellbook, 1, 1);
+        }
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+            currentHero->AddSpell(spell);
+    } else {
+        return;
+    }
+
+    *chat = (*gpGeneralText)[261];
+    gpGame->field_1f69c = 1;
+    if (gbUnk69774c)
+        gpGame->campaign.isCheater = 1;
+}
 
 // Retail inlines this compiland-private forwarding constructor into its sole
 // use below: the base call is followed by the +0x70 clear and 0x63d4bc vptr.
@@ -57,6 +89,7 @@ inline CCombatChatEdit::CCombatChatEdit(
 // allocation extent, widget argument, panel coordinate, and registration
 // order; Dreamcast independently supplies the constructor identity and call
 // graph.
+// E:\gamedcs\combatwindow.cpp:221
 VA(0x004721d0, 0x42A)  // body + sole caller + medfont.fnt, dc 0x69850
 TCombatWindow::TCombatWindow(unsigned char do_placement)
     : heroWindow(0, 0, 800, 600, 1)
@@ -116,6 +149,7 @@ TCombatWindow::TCombatWindow(unsigned char do_placement)
 
 // Vtable 0x63d4bc slot 15. The inactive editor consumes only the activation
 // key; once active it delegates the complete editor key path to CChatEdit.
+// E:\gamedcs\combatwindow.cpp:143
 VA(0x00472600, 0xA5)  // vtable slot + activation-state body, dc 0x6a484
 int CCombatChatEdit::OnKeyPress(message* msg)
 {
@@ -142,12 +176,13 @@ int CCombatChatEdit::OnKeyPress(message* msg)
 // Vtable 0x63d4bc slot 24. Local combat accepts cheat text before the common
 // network/local chat path; both modes then close the editor and restore the
 // combat control bar.
+// E:\gamedcs\combatwindow.cpp:171
 VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
 void CCombatChatEdit::SendChat(const char* sChat, int toWho)
 {
     std::string chatString(sChat);
     if (!gpGame->IsMultiplayer())
-        CheckCombatCheatCode(&chatString);
+        CheckCombatCheatCode(chatString);
 
     field_70 = 0;
     ::SendChat(chatString.c_str(), toWho);
@@ -167,6 +202,7 @@ void CCombatChatEdit::SendChat(const char* sChat, int toWho)
 
 // Vtable 0x63d4bc slot 21. Escape closes the edit without sending, redraws
 // its rectangle, and restores the control-bar rollover line.
+// E:\gamedcs\combatwindow.cpp:193
 VA(0x004727f0, 0x5E)  // vtable slot + control-bar redraw, dc 0x6a540
 int CCombatChatEdit::OnEscape(message msg)
 {
@@ -189,6 +225,7 @@ int CCombatChatEdit::OnEscape(message msg)
 
 // Vtable 0x63d4bc slot 19. The inactive editor deliberately performs no
 // drawing; activation makes this the ordinary draw-and-post rectangle path.
+// E:\gamedcs\combatwindow.cpp:207
 VA(0x00472850, 0x3D)  // vtable slot + field_70 guard, dc 0x6a590
 void CCombatChatEdit::UpdateScreen()
 {

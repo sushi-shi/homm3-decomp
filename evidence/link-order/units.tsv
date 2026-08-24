@@ -3,7 +3,7 @@
 # date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
-adventuremapwindow	0x2b10	0x40a4	5524	19	0	23	19	4
+adventuremapwindow	0x2b10	0x40a4	5524	19	1	23	19	4
 adventureoptionswindow	0x51d0	0x592c	1884	3	0	5	3	2
 advmgr	0x5de0	0x1b0da	86778	101	2	112	101	11
 advspells	0x1c2f0	0x1c482	402	1	0	1	1	0
@@ -29,7 +29,7 @@ cmbtmgr	0x62760	0x6a511	32177	61	0	74	61	13
 combatcontrolsubwindow	0x6b610	0x6dc2b	9755	13	0	21	13	8
 combatoptionswindow	0x6e3b0	0x6feda	6954	4	0	5	4	1
 combatresultswindow	0x702d0	0x71c14	6468	6	0	7	6	1
-combatwindow	0x721d0	0x732e2	4370	3	0	17	3	14
+combatwindow	0x72010	0x732e2	4818	8	0	18	8	10
 command	0x74bf0	0x7a2cd	22237	11	0	28	11	17
 creature_bank	0x7aad0	0x7ab2e	94	1	0	1	1	0
 creaturetype	0x7b120	0x7b211	241	3	0	3	3	0

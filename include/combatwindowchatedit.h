@@ -34,6 +34,6 @@ SIZE(CCombatChatEdit, 0x74);
 
 // combatwindow.cpp:42, dc 0x69638. The chat editor calls this before sending
 // local-game input so combat-only cheat words can be consumed in place.
-void CheckCombatCheatCode(std::string* chatString);
+void CheckCombatCheatCode(std::string& chatString);
 
 #endif  /* HOMM3_COMBATWINDOWCHATEDIT_H */

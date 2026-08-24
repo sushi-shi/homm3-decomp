@@ -183,6 +183,7 @@ register-homing (why-reg)	46	86.9922	350	hero	?can_summon_boat@hero@@QAEEXZ	why-
 register-homing (why-reg)	45	79.9375	225	ai	?mark_moat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	44	97.7989	2006	advmgr	?Open@advManager@@UAEHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (20 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	44	93.4375	666	spells	?SummonElemental@combatManager@@QAEXHW4TCreatureType@@HH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	43	90.2966	448	combatwindow	?CheckCombatCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 register-homing (why-reg)	43	96.3708	1196	spells	?ShowMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	43	97.4340	1678	ai_player	?calculate_demand@type_AI_player@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	43	92.5170	571	army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
@@ -269,7 +270,7 @@ unclassified	21	98.1840	1172	advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDra
 unclassified	21	98.1667	1156	advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	21	97.4804	815	command	?ResetRound@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 register-homing (why-reg)	20	96.8602	651	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-inliner (predict-inline)	20	93.3486	305	combatwindow	?SendChat@CCombatChatEdit@@UAEXPBDH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	20	93.3486	305	combatwindow	?SendChat@CCombatChatEdit@@UAEXPBDH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	20	88.0435	167	mapcell	?erase@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEPAVTreasureData@@PAV3@0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	20	94.3617	353	mapcell	??4MonsterData@@QAEAAV0@ABV0@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	20	97.0996	686	ai_tactical	?consider_resurrect@type_AI_spellcaster@@QAEXPAUtype_spell_choice@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)

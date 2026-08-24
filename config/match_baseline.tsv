@@ -27,6 +27,7 @@ adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	1
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
 adventuremapwindow	?convertID2HelpID@TAdventureMapWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x2c50
 adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0
+adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z	100.0000	100.0000	100.0000	0x2a30
 adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10
 adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x51d0
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0
@@ -679,6 +680,7 @@ combatwindow	??0TCombatWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0x721d0
 combatwindow	??1CCombatChatEdit@@UAE@XZ	100.0000	100.0000	100.0000	0x72890
 combatwindow	??1TCombatWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x72900
 combatwindow	??_GTCombatWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x728a0
+combatwindow	?CheckCombatCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	90.2966	90.2966	90.2966	0x72010
 combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x72bf0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x73290

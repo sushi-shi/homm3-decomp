@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the shared cheat-code encoder is exact and the combat cheat
+  dispatcher reaches a bounded 90.2966%.** Dreamcast Game.h proves the
+  200-byte `TCheatCode`, its 200-byte `code` array, two substitution-alphabet
+  pointers and the constructor/compare/encode surface. Retail independently
+  places the shared encoder at 0x402a30 through calls from both the adventure
+  and combat cheat dispatchers. Preserving the lowered `min(strlen,199)` as
+  two locals plus a selected address reproduces all eight blocks and all 161
+  bytes. `CCombatChatEdit::SendChat` is the sole retail caller of
+  `CheckCombatCheatCode` at 0x472010; its three encoded literals, current-side
+  hero lookup, Blue Pill/Red Pill battle termination, spellbook/all-spells
+  grant, general-text row 261 and game/campaign cheat latches agree with the
+  DC line/xref map and retail bytes. Its complete 28-block CFG is identical.
+  The inliner oracle isolates the remaining delta to one call: our compiland
+  expands `_Tidy(false)` inside the final string assignment while retail calls
+  it, cascading into opposite EBX/ESI homing. Direct operator, assign,
+  counted-assign and one-level wrapper surfaces are byte-flat, so the natural
+  source is retained without exposing Dinkumware internals. The synchronized
+  checkpoint reaches **1935/2349 linked exact**, **1866/2280 game exact**,
+  **96.64% game fuzzy** and **43.62% executable coverage**. No external
+  implementation body was used.
+
 - **2026-08-24 — the combat chat editor adds five exact rows and one bounded
   nested-inline plateau.** Vtable 0x63d4bc fixes the four ordinary methods at
   0x472600..0x472850; Dreamcast `combatwindow.cpp:143-207` independently
