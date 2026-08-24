@@ -1,11 +1,11 @@
 <!-- # generator: homm3.vc6.report | # date: 2026-08-24 | # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - regenerate, never hand-edit | plateaus in [50.0, 99.999%); base-vs-delinked-target diagnosis, no recompiles -->
 # vc6 plateau diagnosis (read-only; solvers propose, never land)
 
-409 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
+410 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
 
 ## Wall-class summary
 
-- **198** register-homing (why-reg)
+- **199** register-homing (why-reg)
 - **102** inliner (predict-inline)
 - **81** control-flow (why-branch)
 - **28** unclassified
@@ -209,7 +209,7 @@
 | 93.88 | townmgr | `??0type_monster_join_window@@QAE@PAVhero@@PA..` | control-flow (why-branch) | 43 | 24 | loop-form / merged-return placement / case order (D1-D9) |
 | 93.90 | spells | `?Armageddon@combatManager@@QAEXHH@Z` | inliner (predict-inline) | 255 | 1 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline |
 | 93.96 | hero | `?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z` | inliner (predict-inline) | 65 | 28 | callee expanded on one side only (A8/A9/A12): 1 over-inline (11 name-unresolvable pair(s) discounted) |
-| 93.96 | advmgr | `?SetRolloverText@advManager@@QAEXPAVNewmapCe..` | inliner (predict-inline) | 705 | 350 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted) |
+| 93.96 | advmgr | `?SetRolloverText@advManager@@QAEXPAVNewmapCe..` | inliner (predict-inline) | 705 | 350 | callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline |
 | 93.98 | cmbtmgr | `?ShootMissile@combatManager@@QAEXHHHHPBMPBVC..` | register-homing (why-reg) | 76 | 1 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 94.06 | mapcell | `??4TTownEvent@@QAEAAV0@ABV0@@Z` | control-flow (why-branch) | 17 | 2 | loop-form / merged-return placement / case order (D1-D9) |
 | 94.08 | army | `?attack_hex@army@@QAEEHE@Z` | control-flow (why-branch) | 37 | 7 | loop-form / merged-return placement / case order (D1-D9) |
@@ -306,6 +306,7 @@
 | 97.29 | spells | `?ResetBoltAngle@combatManager@@QAEXPAUSBolt@..` | unclassified | 30 | 0 | run why-reg / why-branch for the full search |
 | 97.32 | ai_combat | `?do_aftermath@type_AI_combat_data@@QAEXPAV1@..` | register-homing (why-reg) | 4 | 0 | register-homing knob (B-family) |
 | 97.33 | ai_player | `?get_purchase_value@type_AI_creature_purchas..` | register-homing (why-reg) | 12 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
+| 97.34 | advmgr | `?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPB..` | register-homing (why-reg) | 12 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 97.39 | townmgr | `?WindowHandler@TMageGuildWindow@@UAEHPAVmess..` | register-homing (why-reg) | 8 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 97.43 | ai_player | `?calculate_demand@type_AI_player@@QAEXXZ` | register-homing (why-reg) | 257 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 97.47 | seerhut | `?DoProposalDialog@type_creature_quest@@UAEXP..` | register-homing (why-reg) | 19 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |

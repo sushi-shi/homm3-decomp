@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the retail-only mine help-text helper at 0x40d670 is
+  reconstructed to 97.3418%.** Its two MINE callers prove the five-parameter
+  `/Gr` ABI and compact/full modes; retail independently proves the 64-byte
+  mine record, ordinary/abandoned description table, owner and same-team
+  resource annotations, and guard-army formatter. Using the returned string
+  as a direct temporary moved the body from 91.0717% to 96.3924%, and retail's
+  symmetric player/owner `OnSameTeam` argument order reaches 97.3418%. Both
+  sides have 17 blocks, 10 branches and two returns, with every instruction
+  from the team comparison onward exact. The remaining prelude swaps EAX/EDI
+  for the owner and player. The guided nine-mutation register sweep found no
+  gain, and the allocator model sees identical first definitions, classifying
+  it as late register homing rather than missing semantics. No external
+  implementation body was used.
+
 - **2026-08-24 — `TCombatWindow::combat_message` adds 862 exact retail
   bytes and closes the attributed combat-window in-span backlog.** The
   Dreamcast statement map preserves the four live-combat guards, transient

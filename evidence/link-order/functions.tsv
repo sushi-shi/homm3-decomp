@@ -80,7 +80,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xb0e0	100	in-span	advmgr	advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z
 0xb150	8860	in-span	advmgr	advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z
 0xd3f0	636	in-span	advmgr	advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z
-0xd670	595	in-span	advmgr	advmgr	game_b150_sub02_d670
+0xd670	595	in-span	advmgr	advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z
 0xd8d0	553	in-span	advmgr	advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z
 0xdb00	445	in-span	advmgr	advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z
 0xdcc0	484	in-span	advmgr	advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z
