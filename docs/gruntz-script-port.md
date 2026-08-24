@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::DrawMoatOverlay` reproduces all 471 retail
+  bytes.** Its two `DrawOccupant` callers, one-argument ABI and Dreamcast
+  `drawing.cpp:2019` row establish the identity. The method intersects the
+  selected hex's six-pixel lower strip with the town-specific moat image and
+  combat viewport, participates in dirty-extent capture and limited drawing,
+  then blits the surviving rectangle. The arithmetic, temporary layout and
+  final `Bitmap816::Draw` call were already instruction-identical, but the
+  nested reconstruction had one shared failure epilogue and scored only
+  24.94%. Retail's five-return CFG proves four flat early-failure guards;
+  spelling those directly reproduces all 45 blocks and every byte on the
+  first compile. The synchronized checkpoint reaches **1916/2330 linked
+  exact**, **1847/2261 game exact**, **96.63% game fuzzy** and **43.36%
+  executable coverage**. No external implementation body was used.
+
 - **2026-08-24 — the hex-target `combatManager::SpellEffect` overload
   reproduces all 573 retail bytes.** The adjacent drawing-order row at
   0x496a10, its four-argument `ret 0x10`, two retail callers and Dreamcast

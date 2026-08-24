@@ -1510,10 +1510,7 @@ int combatManager::DrawObject(const Bitmap816* image, int x, int y)
 // DC order, signature and locals identify the adjacent Complete body: it
 // clips the six-pixel lower strip of the selected hex against the town's moat
 // bitmap, applies the shared drawing-extent gates, and blits that intersection.
-// The payload blocks align after the early-exit sites; VC6 cross-jumps the four
-// zero returns to one epilogue while retail duplicates them (5 ret vs 2 ret,
-// why-branch D6), leaving the normalized flat score at 24.94%.
-VA(0x00495a10, 0x1d7)  // dc order/callers + body, dc 0x861cc
+VA(0x00495a10, 0x1d7)  // dc order/callers + exact body, dc 0x861cc
 int combatManager::DrawMoatOverlay(int index)
 {
     const hexcell& cell = cells[index];
@@ -1524,43 +1521,44 @@ int combatManager::DrawMoatOverlay(int index)
     moat_extent.Clip(gCombatDrawLimits694f18);
 
     Bitmap816* image = combatIcons[WALL_TRAITS_ROW_MOAT][0];
-    if (image) {
-        SLimitData image_extent(
-            traits.x, traits.y,
-            traits.x + image->GetWidth() - 1,
-            traits.y + image->GetHeight() - 1);
-        moat_extent.Clip(image_extent);
-        if (!moat_extent.IsEmpty()) {
-            if (field_13d2c)
-                drawbridgeBounds.Include(moat_extent);
-            if (!field_13d34) {
-                if (!field_13d30
-                        || moat_extent.Intersects(drawbridgeBounds)) {
-                    int source_x;
-                    if (traits.x < moat_extent.iMinX)
-                        source_x = moat_extent.iMinX - traits.x;
-                    else {
-                        source_x = 0;
-                        moat_extent.iMinX = traits.x;
-                    }
-                    int source_y;
-                    if (traits.y < moat_extent.iMinY)
-                        source_y = moat_extent.iMinY - traits.y;
-                    else {
-                        source_y = 0;
-                        moat_extent.iMinY = traits.y;
-                    }
+    if (!image)
+        return 0;
 
-                    image->Draw(source_x, source_y,
-                                moat_extent.Width(), moat_extent.Height(),
-                                gpWindowManager->screenBitmap,
-                                moat_extent.iMinX, moat_extent.iMinY, true);
-                    return 1;
-                }
-            }
-        }
+    SLimitData image_extent(
+        traits.x, traits.y,
+        traits.x + image->GetWidth() - 1,
+        traits.y + image->GetHeight() - 1);
+    moat_extent.Clip(image_extent);
+    if (moat_extent.IsEmpty())
+        return 0;
+
+    if (field_13d2c)
+        drawbridgeBounds.Include(moat_extent);
+    if (field_13d34)
+        return 0;
+    if (field_13d30 && !moat_extent.Intersects(drawbridgeBounds))
+        return 0;
+
+    int source_x;
+    if (traits.x < moat_extent.iMinX)
+        source_x = moat_extent.iMinX - traits.x;
+    else {
+        source_x = 0;
+        moat_extent.iMinX = traits.x;
     }
-    return 0;
+    int source_y;
+    if (traits.y < moat_extent.iMinY)
+        source_y = moat_extent.iMinY - traits.y;
+    else {
+        source_y = 0;
+        moat_extent.iMinY = traits.y;
+    }
+
+    image->Draw(source_x, source_y,
+                moat_extent.Width(), moat_extent.Height(),
+                gpWindowManager->screenBitmap,
+                moat_extent.iMinX, moat_extent.iMinY, true);
+    return 1;
 }
 
 // Build the dirty rectangle for every combat object whose effect latch is

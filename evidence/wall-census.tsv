@@ -10,7 +10,6 @@ inliner (predict-inline)	535	93.9598	8860	advmgr	?SetRolloverText@advManager@@QA
 inliner (predict-inline)	514	74.4096	2007	viewarmywindow	?WindowHandler@TViewArmyWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 2 over-inline (16 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	494	94.8708	9632	advmgr	?QuickInfo@advManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	384	83.5000	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
-control-flow (why-branch)	354	24.9415	471	drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	350	88.5460	3056	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	323	70.5441	1096	resourcemanager	@game_sprite_1599e0@12	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (30 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	305	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (3 name-unresolvable pair(s) discounted)
