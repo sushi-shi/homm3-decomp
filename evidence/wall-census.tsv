@@ -348,6 +348,7 @@ unclassified	7	98.8764	593	game	??0SavedGameHeader@@QAE@XZ	why-reg	run why-reg /
 register-homing (why-reg)	7	98.9815	642	game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	6	98.4931	429	textwdgt	?Main@textWidget@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	6	97.3256	239	ai_player	?get_purchase_value@type_AI_creature_purchaser@@QAEJPBVarmyGroup@@F0PBJE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	6	99.1993	796	drawing	?DrawWallAt@combatManager@@QAEXHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	6	99.3528	984	cmbtmgr	?LoadArmies@combatManager@@QAEXE@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	6	98.9637	602	game	?SetupPuzzlePieces@game@@QAEHHH@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	6	93.4848	92	mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)

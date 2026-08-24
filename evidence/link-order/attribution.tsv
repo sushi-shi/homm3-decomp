@@ -150,7 +150,6 @@ rva	size	unit	current_label	provenance
 0x93ea0	1226	drawing	game_94390_sub00_93ea0	working-label
 0x94390	167	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	src-VA+ir
 0x94440	2005	drawing	combatManager_DrawFrame	working-label
-0x94c20	796	drawing	game_94440_sub02_94c20	working-label
 0x953b0	324	drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	src-VA+ir
 0x95500	322	drawing	?DrawSpriteObject@combatManager@@QAEHPBVCSprite@@HHHE@Z	src-VA+ir
 0xb3b90	32	findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	src-VA+ir

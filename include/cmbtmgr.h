@@ -417,7 +417,8 @@ enum EAIOrder {
 
 class combatManager : public baseManager {
 public:
-#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
+#if defined(HOMM3_COMMAND_TOWER_STRING_VIEW) \
+        || defined(HOMM3_DRAWING_ARCHER_DECLS)
     // DC CmbtMgr.h's complete nested enum. Command's get_tower_string takes
     // this type by value; retail indexes the same eighteen wall rows.
     enum TWallSection {
@@ -1321,6 +1322,9 @@ public:
                        unsigned char isFlipped);
     int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
+    void DrawWallAt(int hexIndex, int rowOffset);
+    int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
+                 int destX, int destY);
     void DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly);
     int DrawMoatOverlay(int index);
     int GridY(int index) const { return index / COMBAT_GRID_ROW_STRIDE; }
