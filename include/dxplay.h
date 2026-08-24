@@ -47,6 +47,14 @@ struct DPMSG_SETPLAYERORGROUPNAME;
 struct DPMSG_SETSESSIONDESC;
 struct DPMSG_STARTSESSION;
 
+// The SDK macro values are also the exact HRESULT immediates used by the
+// DirectPlay send path. The domain lives here instead of importing DPLAY.H's
+// anonymous typedef structs over these hand-owned forward declarations.
+enum EDPlaySendError {
+    DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
+    DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
+};
+
 // Dreamcast CodeView proves this complete virtual order. Retail's
 // CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
 // IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main

@@ -81,6 +81,9 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_CHAT_PING_COMMAND = 73,
     GENERAL_TEXT_CHAT_PING_PLAYER_FORMAT = 74,
     GENERAL_TEXT_CHAT_PING_ALL = 75,
+    // CDPlayHeroes::SendIt shows this two-button row after six failed send
+    // attempts and retries only when the window returns ACCEPT.
+    GENERAL_TEXT_DPLAY_SEND_RETRY = 82,
 #endif
     GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
     GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,

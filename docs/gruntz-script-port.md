@@ -260,6 +260,41 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — DirectPlay compression and member-side player-drop handling
+  add 681 exact bytes; `SendIt` is admitted at a bounded 86.98% wall.** The
+  Dreamcast remote.obj roster fixes the protected `CompressMsg`, public
+  `SendIt`/`HandlePlayerDrop` and protected `QueueMsg` boundaries and their
+  source order. Retail independently maps them through the zlib edge, the two
+  DirectPlay error log strings, the player-drop log, virtual slots 8/32/35,
+  and the existing transmit callers. `CompressMsg` copies the 0x14-byte wire
+  header, reserves 20% plus twelve bytes, uses zlib level 6 and discards both
+  failed and non-shrinking output. A named original-size local recovers
+  retail's ESI lifetime; suppressing automatic inlining only across this
+  member preserves the four already-exact transmit wrappers. The result is
+  exact across all **185 bytes and five CFG blocks** at 0x5532b0.
+
+  `HandlePlayerDrop` logs the DirectPlay DPID, constructs the 0x18-byte
+  `CPlayerDropMsg`, clones it and appends the clone to the message deque.
+  Retail proves that the DPID occupies both the base sender cell at +4 and
+  the payload at +0x14. Preserving the roster's later `QueueMsg` source
+  boundary lets `/Ob2` make the same context-dependent decision: the member
+  handler expands the deque internals, whereas `SendIt` stops at the
+  Dinkumware `push_back` helper. The handler matches all **496 bytes and 16
+  CFG blocks** at 0x553580.
+
+  `SendIt` reconstructs the six-attempt guaranteed/unreliable send path,
+  HRESULT 0x88770096/0x80070057 handling, error logging, 200 ms delay,
+  general-text row 82 retry dialog, shutdown path and invalid-player destroy
+  plus queued-drop edge. Its invalid-player tail is exact block-for-block,
+  but C2 rotates the source-honest `for` loop to a bottom test and normalizes
+  the `Send` result through CL; retail keeps the retry comparison at the loop
+  header and AL live through the HRESULT tests. `while`, explicit header
+  breaks and call-site `inline_depth(1/2)` are structurally flat; caching the
+  HRESULT worsens 86.98% to 85.00%. The retained form is the highest
+  source-authoritative result rather than a control-flow carrier. The
+  synchronized inventory moves from **1891/2303 to 1893/2306 exact functions
+  at 96.68% fuzzy**.
+
 - **2026-08-24 — player-drop recovery adds a 417-byte exact handler and
   admits its adjacent reload path with the retail CFG intact.** Dreamcast's
   remote.obj roster supplies the `HandlePlayerDrop`, `GetPlayerPos`,
