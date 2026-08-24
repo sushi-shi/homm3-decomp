@@ -158,8 +158,8 @@ rva	size	unit	current_label	provenance
 0x94390	167	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	src-VA+base
 0x953b0	324	drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	src-VA+base
 0x95500	322	drawing	?DrawSpriteObject@combatManager@@QAEHPBVCSprite@@HHHE@Z	src-VA+base
-0x95730	115	drawing	game_19fe30_sub04_95730	working-label
-0x957b0	293	drawing	game_94c20_sub01_957b0	working-label
+0x95730	115	drawing	?DrawObstacle@combatManager@@QAEHABVhexcell@@@Z	src-VA+base
+0x957b0	293	drawing	?DrawWall@combatManager@@QAEHPBVBitmap816@@HHHHHH@Z	src-VA+base
 0xb3b90	32	findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	src-VA+ir
 0xb5110	103	font	??1font@@UAE@XZ	src-VA+ir
 0xb5250	12	font	?GetSize@font@@UBEIXZ	src-VA+ir

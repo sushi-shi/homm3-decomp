@@ -129,7 +129,7 @@ extern const float gCombatSpeedFactors[3];
 // CODEVIEW(E:\gamedcs\drawing.cpp:1804, dc 0x85d00) int combatManager::DrawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1836, dc 0x85e3c) int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1865, dc 0x85f1c) int combatManager::DrawCreatureAndHeroSubwindows();
-// CODEVIEW(E:\gamedcs\drawing.cpp:1948, dc 0x85f70) int combatManager::DrawObstacle(const hexcell* c);
+// CODEVIEW(E:\gamedcs\drawing.cpp:1948, dc 0x85f70) int combatManager::DrawObstacle(const hexcell& c);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1963, dc 0x85fd4) int combatManager::DrawWall(const Bitmap816* image, int x, int y, int w, int h, int dx, int dy);
 // CODEVIEW(E:\gamedcs\drawing.cpp:1991, dc 0x86098) int combatManager::DrawObject(const Bitmap816* image, int x, int y);
 // CODEVIEW(E:\gamedcs\drawing.cpp:2019, dc 0x861cc) int combatManager::DrawMoatOverlay(int index);

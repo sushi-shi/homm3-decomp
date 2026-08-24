@@ -1357,6 +1357,7 @@ public:
                        unsigned char isFlipped);
     int DrawSpriteObject(const CSprite* sprite, int frame, int x, int y,
                          unsigned char isFlipped);
+    int DrawObstacle(const hexcell& cell);
     void DrawWallAt(int hexIndex, int rowOffset);
     int DrawWall(const Bitmap816* image, int x, int y, int width, int height,
                  int destX, int destY);
