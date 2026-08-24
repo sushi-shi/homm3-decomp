@@ -233,6 +233,11 @@ public:
     void ClearChat();
     void SetMaxLines(int maxChatLines);
     void SetPosition(int newPos);
+#ifdef HOMM3_DRAWING_CHAT_VIEW
+    // remote.h:326, DC 0x87620. Complete expands this accessor in DrawFrame;
+    // no retail out-of-line copy survives.
+    unsigned char ChatChanged() const { return changed || chatKilled; }
+#endif
 };
 SIZE(CChatManager::CChatStr, 0x88);
 SIZE(CChatManager, 0x44);

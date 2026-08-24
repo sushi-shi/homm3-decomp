@@ -11,6 +11,9 @@
 // DrawOccupant's priority sentinels: 8 bypasses the army-priority filter,
 // while 7 performs the first draw but suppresses the moat/redraw pass.
 enum ECombatDrawPriority {
+    COMBAT_DRAW_PRIORITY_WALL = 0,
+    COMBAT_DRAW_PRIORITY_CORPSE = 1,
+    COMBAT_DRAW_PRIORITY_OBSTACLE = 2,
     COMBAT_DRAW_PRIORITY_SINGLE_PASS = 7,
     COMBAT_DRAW_PRIORITY_ANY = 8
 };

@@ -29,7 +29,7 @@ cmbtmgr	combatcontrolsubwindow	0x6a511	0x6b610	4351	22
 combatcontrolsubwindow	combatoptionswindow	0x6dc2b	0x6e3b0	1925	14	
 combatoptionswindow	combatresultswindow	0x6feda	0x702d0	1014	11	
 combatresultswindow	combatwindow	0x71c14	0x728d0	3260	19	
-combatwindow	command	0x728fa	0x74bf0	8950	33	
+combatwindow	command	0x732e2	0x74bf0	6414	24	
 command	creature_bank	0x7a2cd	0x7aad0	2051	16	
 creature_bank	creaturetype	0x7ab2e	0x7b120	1522	3	
 creaturetype	csequence	0x7b211	0x7b840	1583	4	
@@ -41,7 +41,7 @@ customcampaign	dialogbox	0x8b2d7	0x8fdc0	19177	88	dc_input,dc_precompiledheaders
 dialogbox	diff	0x90b67	0x90f60	1017	11	
 diff	dimensiondoorwindow	0x912ff	0x916f0	1009	11	
 dimensiondoorwindow	drawing	0x91edc	0x93710	6196	16	
-drawing	event_record	0x95729	0x9da70	33607	176	ds_engine,dxplay
+drawing	event_record	0x95a09	0x9da70	32871	173	ds_engine,dxplay
 event_record	exec	0x9dab1	0xb0a10	77663	150	events
 exec	findpath	0xb0f35	0xb1330	1019	11	
 findpath	fly	0xb3f61	0xb46c0	1887	14	

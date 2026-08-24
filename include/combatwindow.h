@@ -10,6 +10,7 @@
 class TSubWindow;
 class TCombatCreatureSubWindow;
 class TCombatHeroSubWindow;
+class textWidget;
 
 // Retail vtable 0x63d528 and Close independently prove the heroWindow base;
 // combatManager::Open allocates the complete 0x8c-byte object. Close deletes
@@ -18,7 +19,11 @@ class TCombatHeroSubWindow;
 // two hero panels and four creature panels that fill the remaining tail.
 class TCombatWindow : public heroWindow {
 public:
-    char pad_4c[0x24];
+    char pad_4c[0x4];
+    // DrawChatText and DrawFrame both load the same pointer at retail +0x50;
+    // its DC counterpart is likewise the combat chat text widget.
+    textWidget* chatWidget;
+    char pad_54[0x1c];
     TSubWindow* controlSubWindow;
     TCombatHeroSubWindow* heroSubWindows[2];
     TCombatCreatureSubWindow* creatureSubWindows[4];
@@ -46,6 +51,8 @@ public:
     // and the one combatManager's morale/damage bodies print through.
     void combat_message(const char* new_text, unsigned char keep,
                         unsigned char priority);
+    // combatwindow.cpp:603, DC 0x6a264; retail body 0x473290.
+    void DrawChatText(unsigned char update);
 };
 SIZE(TCombatWindow, 0x8c);
 

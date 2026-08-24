@@ -1005,7 +1005,7 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
             xoff = -xoff;
         long numboxX = x + xoff;
         long numboxY = y + yoff;
-        if (gpCombatManager->Unnamed4958E0(
+        if (gpCombatManager->DrawObject(
                 gpCombatManager->combatGridBitmap, numboxX, numboxY)) {
             if (numSpellInfluences == 0) {
                 gpWindowManager->screenBitmap->Colorize(
@@ -3051,7 +3051,7 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
         } else if (gpCombatManager->cells[next_hex].field_10 & 4) {
             gpCombatManager->obstacles
                 .begin[gpCombatManager->cells[next_hex].field_14]
-                .field_0a = 1;
+                .is_visible = 1;
             succeeded = 0;
             stop = i;
         }
@@ -3065,7 +3065,7 @@ unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
             } else if (gpCombatManager->cells[second_hex].field_10 & 4) {
                 gpCombatManager->obstacles
                     .begin[gpCombatManager->cells[second_hex].field_14]
-                    .field_0a = 1;
+                    .is_visible = 1;
                 succeeded = 0;
                 stop = i;
             }

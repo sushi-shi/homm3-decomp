@@ -3,7 +3,10 @@
 // 72 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatwindow.h"
+#include "remote.h"
 #include "subwindow.h"
+#include "textwdgt.h"
+#include "winmgr.h"
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
 
@@ -33,6 +36,23 @@ void TCombatWindow::Close(unsigned char update)
         controlSubWindow = 0;
     }
     heroWindow::Close(update);
+}
+
+// The combat chat painter is the retail 0x473290 body: refresh the twenty-line
+// text widget from chatMan, draw it, and optionally post exactly its rectangle.
+// E:\gamedcs\combatwindow.cpp:603
+VA(0x00473290, 0x52)  // DrawFrame caller + DC callee set, dc 0x6a264
+void TCombatWindow::DrawChatText(unsigned char update)
+{
+    if (chatWidget) {
+        chatMan.UpdateWidget(chatWidget, 1, 20);
+        chatWidget->Draw();
+        if (update) {
+            gpWindowManager->UpdateScreen(
+                chatWidget->x, chatWidget->y,
+                chatWidget->width, chatWidget->height);
+        }
+    }
 }
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet

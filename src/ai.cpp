@@ -1916,7 +1916,7 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
         TObstacle* obstacle = &GetObstacle(cells[i].field_14);
         long base = obstacle->spell_damage;
         long damage = ModifySpellDamage(base, 0xd,
-                                        heroes[obstacle->field_09],
+                                        heroes[obstacle->owner],
                                         heroes[estimate->side],
                                         current_army, 0);
         enemy_attacks[i] -= current_army->get_loss_combat_value(
