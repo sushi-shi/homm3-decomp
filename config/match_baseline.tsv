@@ -806,6 +806,7 @@ dimensiondoorwindow	?WindowHandler@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.
 dimensiondoorwindow	?WindowHandler@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91d00
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
+drawing	?SetupGridForArmy@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x937d0
 drawing	?UpdateCombatArea@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93780
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390
 dxplay	?GetGuid@CDPlay@@UAEPAU_GUID@@XZ	100.0000	100.0000	100.0000	0x96ca0

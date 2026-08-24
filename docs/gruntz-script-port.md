@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::SetupGridForArmy` claims and reproduces
+  all 341 retail bytes.** The Dreamcast roster, source order and unique call
+  graph place the method at 0x4937d0; retail independently confirms the one-
+  argument arity and all seven named calls. Complete adds two gates around the
+  DC statement skeleton: arrow-tower stacks are excluded, and either the
+  persistent combat-grid preference or the creature-placement latch must be
+  set. The method clears the 187-byte result row, seeds combat reachability,
+  then marks the acting stack and its wide tail, reachable enemy occupants,
+  and reachable empty cells (the latter with value 3). The final codegen lever
+  was the DC Army.h shape: `get_owning_side` and `get_controlling_side` must be
+  distinct inline accessors in the comparison. Raw field spelling let VC6 fold
+  the occupant load into memory; the two TU-local inline views reproduce
+  retail's `EAX`/`ECX` materialization exactly. All **26 CFG blocks and every
+  instruction agree**. After the synchronized build/delink/build cycle, the
+  linked checkpoint is **1897/2308 exact** and **1828/2239 game functions
+  exact**, at **96.68% fuzzy** and **42.73% executable coverage**. All fatal
+  gates are clean. The full census remains **411 residual functions / 28.6
+  KiB recoverable**, while the newly claimed body reduces the ordinary
+  tractable tier to **222 functions / 179.5 KiB** and raises matched code to
+  833.0 KiB. No external implementation body was used; Dreamcast supplied the
+  identity and source shape, while retail bytes fixed Complete's behavior and
+  the x86 verdict.
+
 - **2026-08-24 — the creature-quest serializer recovers its historical exact
   peak with two typed inline scalar writers.** The 311-byte
   `type_creature_quest::Save` residual had only one instruction wrong: retail

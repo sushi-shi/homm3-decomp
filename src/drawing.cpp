@@ -7,6 +7,8 @@
 #include "drawing.h"
 #include "combatcontrolsubwindow.h"
 #include "combatwindow.h"
+#include "findpath.h"
+#include "prefs.h"
 #include "winmgr.h"
 
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
@@ -304,6 +306,66 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int
 }
 
 #endif  // @carcass
+
+// Dreamcast keeps both accessors in Army.h. This TU needs their inlined
+// comparison shape, while the shared army.h deliberately keeps the controlling
+// accessor out of line for already measured consumers.
+static inline int DrawingOwningSide(const army* stack)
+{
+    return stack->combatSide;
+}
+
+static inline int DrawingControllingSide(const army* stack)
+{
+    if (stack->hypnotizeFlag)
+        return 1 - stack->combatSide;
+    return stack->combatSide;
+}
+
+// EXACT. Dreamcast fixes the statement/lexical shape and retail adds the
+// arrow-tower exclusion plus the Complete combat-grid preference as an
+// alternate gate for the placement-phase latch. The output row marks the
+// acting stack and its wide tail with 1, reachable empty cells with 3, and
+// reachable enemy-occupied cells with 1; all other cells remain zero.
+// E:\gamedcs\drawing.cpp:689
+VA(0x004937d0, 0x155)  // dc-callgraph unique, dc 0x842a8
+void combatManager::SetupGridForArmy(const army* thisArmy)
+{
+    if (IsQuickCombat())
+        return;
+    if (thisArmy->creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+        return;
+    if (!gUnnamed698758.showCombatGrid && !bCreaturePlacement)
+        return;
+
+    thisArmy->GetAttackMask(thisArmy->gridIndex, 2, -1);
+    memset(field_0107, 0, sizeof(field_0107));
+
+    int side;
+    if (thisArmy->hypnotizeFlag)
+        side = 1 - thisArmy->combatSide;
+    else
+        side = thisArmy->combatSide;
+    gpSearchArray->SeedCombatPosition(thisArmy, side, thisArmy->GetSpeed(),
+                                      bCreaturePlacement, -1);
+
+    for (int i = 0; i < COMBAT_GRID_CELLS; i++) {
+        if (i == thisArmy->gridIndex) {
+            field_0107[i] = 1;
+        } else if ((thisArmy->creatureId & 1)
+                   && i == thisArmy->gridIndex
+                       + (thisArmy->facing ? 1 : -1)) {
+            field_0107[i] = 1;
+        } else if (cells[i].field_4a || cells[i].field_4b) {
+            if (cells[i].HasArmy()) {
+                if (DrawingOwningSide(cells[i].get_army())
+                        != DrawingControllingSide(thisArmy))
+                    field_0107[i] = 1;
+            } else
+                field_0107[i] = 3;
+        }
+    }
+}
 
 // E:\gamedcs\drawing.cpp:1113. Complete retains the DC wrapper shape but
 // its larger overload gained a third argument, passed as zero here.
