@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `TCombatWindow::combat_message` adds 862 exact retail
+  bytes and closes the attributed combat-window in-span backlog.** The
+  Dreamcast statement map preserves the four live-combat guards, transient
+  rollover arm, kept-message construction, newline split, two-line display
+  cap, and final `show_messages` range. Retail fixes the combat-manager
+  guard offsets, `gUnnamed698a08` small-font measurement, and the +0x54
+  `vector<string*>` already proven by scrolling and destruction. The direct
+  source form reproduces VC6's inlined string/vector helpers; the one
+  control-flow trap was the final null-control-bar check. A positive `if`
+  merged its cleanup tail and measured 91.6053%, while the DC-consistent
+  early return restores retail's fourth epilogue. All 26 branches and all
+  862 bytes agree. No external implementation body was used.
+
 - **2026-08-24 — `TCombatWindow::ProcessRightSelect` adds 292 exact
   retail bytes.** The Dreamcast line map preserves the call to the static
   `convertID2HelpID`, its explicit negative-ID rejection, text sizing, and

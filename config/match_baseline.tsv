@@ -681,6 +681,7 @@ combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x7
 combatwindow	?DrawWindow@TCombatWindow@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x732f0
 combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x731f0
 combatwindow	?ProcessRightSelect@TCombatWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x72a50
+combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	100.0000	100.0000	100.0000	0x72e90
 combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x72b80
 combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0
 combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72c30
