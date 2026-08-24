@@ -80,13 +80,14 @@ public:
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
-#if !defined(HOMM3_COMMAND_GRID_VIEW) \
-        && !defined(HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW)
+#if !defined(HOMM3_COMMAND_GRID_VIEW)
     TCombatWindow(unsigned char do_placement);
-#else
+#endif
+#if defined(HOMM3_COMMAND_GRID_VIEW) \
+        || defined(HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW)
     // command.cpp and combatwindow.cpp use the placement teardown but do not
-    // construct this window; substitute one declaration to preserve each
-    // TU's VC6 handle count.
+    // construct this window. combatwindow.cpp now also reconstructs the
+    // constructor, so its private view needs both declarations.
     void EndPlacementPhase();                              // 0x4731f0
 #endif
     // Retail 0x472e90, the message line ClearCombatMessages forwards to

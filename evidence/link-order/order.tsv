@@ -28,8 +28,8 @@ position	unit	first_rva	end_rva	gap_to_next
 22	cmbtmgr	0x62760	0x6a511	4351
 23	combatcontrolsubwindow	0x6b610	0x6dc2b	1925
 24	combatoptionswindow	0x6e3b0	0x6feda	1014
-25	combatresultswindow	0x702d0	0x71c14	3260
-26	combatwindow	0x728d0	0x732e2	6414
+25	combatresultswindow	0x702d0	0x71c14	1468
+26	combatwindow	0x721d0	0x732e2	6414
 27	command	0x74bf0	0x7a2cd	2051
 28	creature_bank	0x7aad0	0x7ab2e	1522
 29	creaturetype	0x7b120	0x7b211	1583

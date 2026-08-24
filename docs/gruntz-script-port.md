@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `TCombatWindow::TCombatWindow` reproduces all 1,066 retail
+  bytes.** `combatManager::Open` is the sole retail caller and supplies the
+  placement byte; Dreamcast `combatwindow.cpp:221` independently supplies the
+  identity, signature and constructor call graph. Retail fixes the 0x8c-byte
+  window, three initial widgets, the 0x74-byte combat chat editor, placement
+  versus control bar, two hero panels and four 0x70-byte creature panels,
+  including every coordinate and registration order. The natural source was
+  immediately 99.6685% with identical 50-block flow. The only semantic delta
+  was construction order inside the private chat editor: making its +0x70
+  byte a member initializer moves that store ahead of the derived vptr store,
+  exactly as retail does. The synchronized checkpoint reaches **1929/2341
+  linked exact**, **1860/2272 game exact**, **96.65% game fuzzy** and
+  **43.56% executable coverage**. All 51 unit tests, five freshness controls,
+  link-order checks and fatal gates pass; the all-unit queue remains 412
+  residual functions / 28.6 KiB recoverable and emits only the two known
+  inlined-away `initialize.obj` `create_included_mask` diagnostics. No
+  external implementation body was used.
+
 - **2026-08-24 — the retail-only mine help-text helper at 0x40d670 is
   reconstructed to 97.3418%.** Its two MINE callers prove the five-parameter
   `/Gr` ABI and compact/full modes; retail independently proves the 64-byte
