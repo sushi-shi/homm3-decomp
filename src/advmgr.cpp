@@ -3714,8 +3714,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 // and it leaves 0xd670 - a 5-param row that, like the creature-bank
 // builder, calls the army describer 0xabe0 and armyGroup::HasCreatures
 // - as a retail-only sibling with no DC counterpart. Its two callers and
-// `ret 0xc` now admit only the ordinal five-parameter declaration used above;
-// the body stays unclaimed. 0xabe0 is named only by its independently
+// `ret 0xc` admit the ordinal five-parameter declaration used above and the
+// reconstructed body below. 0xabe0 is named only by its independently
 // reconstructed army-description role.
 //
 // 0xd3f0 is the one with independent body evidence: 6 params AND the
@@ -3759,6 +3759,53 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
         }
     }
     strcat(buffer, army_name);
+}
+
+// RETAIL-RECONSTRUCTED (97.3418%): no distinct Dreamcast row survives, but the
+// two retail callers fix this five-parameter /Gr ABI and the MINE case role.
+// The body reads the byte-proven mine pool, chooses the ordinary/abandoned
+// description, adds owner and allied-resource text, then appends the guard-army
+// description. The direct string temporary raised 91.0717% to 96.3924%; the
+// symmetric player/owner OnSameTeam order raises it to the retained score and
+// makes every instruction from that comparison onward exact. Both sides have
+// the same 17 blocks, 10 branches and two returns. The residue is only the
+// earlier owner/player EAX<->EDI homing: the guided nine-mutation register
+// sweep found no improvement, while the allocator model reports identical
+// first definitions and therefore no source-addressable minimum slice.
+VA(0x0040d670, 0x253)
+void AdvmgrFn_0040D670(char* buffer, NewmapCell* cell, long playerId,
+                       const char* separator, unsigned char showFullList)
+{
+    mine* currentMine = &gpGame->mines[cell->extraInfo];
+    int owner = currentMine->playerOwner;
+    int mineType = currentMine->type;
+    const char* description = gMineDescriptions[7];
+    if (!currentMine->field_02)
+        description = gMineDescriptions[mineType];
+    strcpy(buffer, description);
+
+    if (owner != -1) {
+        strcat(buffer, separator);
+        strcat(buffer, gObjectOwnerColorNames[owner]);
+    }
+
+    if (owner >= 0) {
+        if (playerId >= 0 && gpGame->OnSameTeam(playerId, owner)) {
+            strcat(buffer, separator);
+            strcat(buffer, DATA_COMPGEN(
+                0x00660354, mineResourceOpen, "("));
+            strcat(buffer, gResourceNames[mineType]);
+            strcat(buffer, DATA_COMPGEN(
+                0x00660350, mineResourceClose, ")"));
+        }
+    }
+
+    armyGroup* guards = &currentMine->guards;
+    if (guards->HasCreatures()) {
+        strcat(buffer, separator);
+        strcat(buffer,
+               get_army_help_text(guards, showFullList).c_str());
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:2835

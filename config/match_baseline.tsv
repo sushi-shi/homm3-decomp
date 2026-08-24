@@ -39,6 +39,7 @@ advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
 advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160
 advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60
 advmgr	??_GCAdvMgrNetMsgHandler@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x77b0
+advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	97.3418	97.3418	97.3418	0xd670
 advmgr	?BVMessage@advManager@@QAEXPBD@Z	92.6829	92.6829	92.6829	0x16210
 advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	93.3333	93.3333	93.3333	0x16060
 advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450

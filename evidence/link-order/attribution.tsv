@@ -14,7 +14,7 @@ rva	size	unit	current_label	provenance
 0x7b10	111	advmgr	?get_map_center@advManager@@QBE?AUtype_point@@XZ	src-VA+ir
 0x8770	49	advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	src-VA+ir
 0xabe0	893	advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	src-VA+ir
-0xd670	595	advmgr	game_b150_sub02_d670	working-label
+0xd670	595	advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	src-VA+ir
 0xec80	10	advmgr	?Reseed@advManager@@QAEXHH@Z	src-VA+ir
 0xf240	43	advmgr	cinit0033_f240	working-label
 0xfca0	122	advmgr	?hasFlag@@YI_NH@Z	src-VA+ir

@@ -482,6 +482,10 @@ DATA(0x006a7520) extern const char* const gBorderColorNames[];
 DATA(0x006a5898) extern const char* const gObjectOwnerColorNames[8];
 DATA(0x006914fc) extern const char* const gCreatureGenerator1RolloverNames[];
 DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
+// InitializeMineNames copies the eight lines of minename.txt here. The mine
+// help-text helper indexes 0..6 by mine type and uses row 7 for an abandoned
+// mine, independently fixing both the extent and the table's consumer role.
+DATA(0x006a74d0) extern const char* const gMineDescriptions[8];
 // events.obj joins the gate for the resource pile (0x4a4be0), which
 // strcpy's the resource's own name out of this table and lower-cases its
 // first letter before formatting the pickup line. The guard is SPLIT
