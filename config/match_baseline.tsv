@@ -6,6 +6,7 @@
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
 adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10
 adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0
+adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	53.5182	53.5182	53.5182	0x2450
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280

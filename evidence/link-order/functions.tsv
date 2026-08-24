@@ -3,6 +3,9 @@
 # date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	relation	owner_or_bracket	candidates	label
+0x2450	1491	in-span	adventuremapwindow	adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
+0x2a30	161	in-span	adventuremapwindow	adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z
+0x2ae0	33	in-span	adventuremapwindow	adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z
 0x2b10	119	in-span	adventuremapwindow	adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ
 0x2b90	36	in-span	adventuremapwindow	adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z
 0x2bc0	78	in-span	adventuremapwindow	adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z

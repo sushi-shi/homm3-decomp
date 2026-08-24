@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the 1,491-byte adventure cheat dispatcher is fully
+  reconstructed at a bounded 53.5182% compiler plateau.** The retail entry at
+  0x402450, its sole retail caller, and Dreamcast `adventuremapwindow.cpp:63`
+  establish `CheckAdvCheatCode`, its `std::string&` ABI and local
+  `TCheatCode`. Retail fixes all sixteen encoded comparisons and their order:
+  the two seven-slot army fills, three war-machine grants, experience award,
+  luck/movement/morale flags, puzzle view, reveal/hide-map loops, seven-resource
+  award, both end-game outcomes, spellbook/all-spells grant, build-everything
+  toggle and the paired palette transforms. It also fixes the shared accepted
+  text (general-text row 261) and both cheat latches. The opening 41 compiled
+  blocks agree almost instruction-for-instruction; the inliner oracle reports
+  equal total out-of-line call counts and isolates the plateau to two VC6
+  decisions: our compiland expands two nested `basic_string::_Tidy` calls that
+  retail keeps, and merges one of the phisher-price branch's identical redraw
+  sites. Direct assignment, counted assignment, named-source/wrapper surfaces,
+  `inline_depth(1/2/4)` and explicit branch returns were measured and byte-flat,
+  so the natural source is retained without exposing Dinkumware internals. The
+  synchronized checkpoint reaches **1935/2350 linked exact**, **1866/2281 game
+  exact**, **96.57% game fuzzy** and **43.66% executable coverage**. All 51
+  unit tests, five freshness controls, VC6 negative controls, link-order gates
+  and fatal gates pass; the regenerated queue contains 415 residual functions
+  / 29.4 KiB recoverable and only the two known inlined-away
+  `create_included_mask` diagnostics. No external implementation body was
+  used.
+
 - **2026-08-24 — the shared cheat-code encoder is exact and the combat cheat
   dispatcher reaches a bounded 90.2966%.** Dreamcast Game.h proves the
   200-byte `TCheatCode`, its 200-byte `code` array, two substitution-alphabet

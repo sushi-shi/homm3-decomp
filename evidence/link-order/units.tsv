@@ -3,7 +3,7 @@
 # date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
-adventuremapwindow	0x2b10	0x40a4	5524	19	1	23	19	4
+adventuremapwindow	0x2450	0x40a4	7252	20	1	26	20	6
 adventureoptionswindow	0x51d0	0x592c	1884	3	0	5	3	2
 advmgr	0x5de0	0x1b0da	86778	101	2	112	101	11
 advspells	0x1c2f0	0x1c482	402	1	0	1	1	0

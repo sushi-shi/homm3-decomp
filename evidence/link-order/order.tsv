@@ -3,7 +3,7 @@
 # date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 position	unit	first_rva	end_rva	gap_to_next
-0	adventuremapwindow	0x2b10	0x40a4	4396
+0	adventuremapwindow	0x2450	0x40a4	4396
 1	adventureoptionswindow	0x51d0	0x592c	1204
 2	advmgr	0x5de0	0x1b0da	4630
 3	advspells	0x1c2f0	0x1c482	9790

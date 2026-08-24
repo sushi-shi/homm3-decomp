@@ -3,6 +3,8 @@
 # date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	unit	current_label	provenance
+0x2a30	161	adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z	src-VA+ir
+0x2ae0	33	adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	src-VA+base
 0x2e70	405	adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	src-VA+ir
 0x3010	522	adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	src-VA+ir
 0x39b0	490	adventuremapwindow	?UpdateQuestLogButton@TAdventureMapWindow@@QAEXE@Z	src-VA+ir

@@ -6,7 +6,7 @@
 #define HOMM3_ADVENTUREMAPWINDOW_H
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\adventuremapwindow.cpp:63, dc 0x3b0) void CheckAdvCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString);
+// CODEVIEW(E:\gamedcs\adventuremapwindow.cpp:63, dc 0x3b0) void CheckAdvCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>& chatString);
 // CODEVIEW(..\stlport\config/stl_wince.h:41, dc 0x2cb8) void* operator new(unsigned __formal, void* _P);
 // CODEVIEW(E:\gamedcs\includes.h:114, dc 0x2da4) int min(int a, int b);
 // CODEVIEW(E:\gamedcs\CustomCampaign.h:977, dc 0x2e7c) void `vector constructor iterator'(void* __t, unsigned __s, int __n, void (*)()* __f);
