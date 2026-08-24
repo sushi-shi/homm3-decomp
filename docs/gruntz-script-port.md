@@ -260,6 +260,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the combat chat editor adds five exact rows and one bounded
+  nested-inline plateau.** Vtable 0x63d4bc fixes the four ordinary methods at
+  0x472600..0x472850; Dreamcast `combatwindow.cpp:143-207` independently
+  supplies their names, signatures and statement order. `OnKeyPress`
+  reproduces all 165 bytes by treating Tab as the inactive editor's activation
+  key and otherwise delegating to `CChatEdit`; `OnEscape` and `UpdateScreen`
+  reproduce all 94 and 61 bytes. The retail five-byte
+  `CCombatChatEdit::~CCombatChatEdit` is specifically VC6's implicit derived
+  destructor: spelling an empty body inserts a derived-vtable store, while the
+  established `IMPLICIT_DTOR` claim preserves the exact tail jump into
+  `CChatEdit::~CChatEdit`. `TCombatWindow`'s adjacent 33-byte scalar-deleting
+  destructor is exact under the existing compiler-generated claim. `SendChat`
+  at 0x4726b0 reaches **93.3486%** with all 16 CFG blocks and every instruction
+  after string construction identical. Its sole real code delta is VC6
+  inlining `basic_string::_Eos` at the end of the c-string constructor where
+  retail calls it; `inline_depth(1)` is byte-flat and `inline_depth(0)` also
+  suppresses the required outer constructor inline, regressing to 70.82%, so
+  the measured compiler-state residual is retained without a source hack. The
+  synchronized checkpoint reaches **1934/2347 linked exact**, **1865/2278 game
+  exact**, **96.65% game fuzzy** and **43.59% executable coverage**. No
+  external implementation body was used.
+
 - **2026-08-24 — `TCombatWindow::TCombatWindow` reproduces all 1,066 retail
   bytes.** `combatManager::Open` is the sole retail caller and supplies the
   placement byte; Dreamcast `combatwindow.cpp:221` independently supplies the
