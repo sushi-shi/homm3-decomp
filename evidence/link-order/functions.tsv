@@ -1455,8 +1455,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x958e0	297	in-span	drawing	drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z
 0x95a10	471	in-span	drawing	drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z
 0x95bf0	862	in-span	drawing	drawing	?ComputeMaxExtent@combatManager@@QAEXXZ
-0x95f50	380	bracketed	drawing..event_record	drawing,ds_engine,dxplay,event_record	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z
-0x960d0	1898	bracketed	drawing..event_record	drawing,ds_engine,dxplay,event_record	combatManager_CycleCombatScreen
+0x95f50	380	in-span	drawing	drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z
+0x960d0	1898	in-span	drawing	drawing	?CycleCombatScreen@combatManager@@QAEXXZ
 0x96840	453	bracketed	drawing..event_record	drawing,ds_engine,dxplay,event_record	game_3f900_sub10_96840
 0x96a10	573	bracketed	drawing..event_record	drawing,ds_engine,dxplay,event_record	game_75ed0_sub02_96a10
 0x96c70	33	bracketed	drawing..event_record	drawing,ds_engine,dxplay,event_record	?SetGuid@CDPlay@@UAEXU_GUID@@@Z

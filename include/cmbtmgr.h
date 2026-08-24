@@ -423,6 +423,19 @@ enum EAIOrder {
     AI_ORDER_NONE = 12
 };
 
+// The combat-hero sprite state is stored as an int rather than as a
+// CodeView enum. One is the timed idle fidget; the two event-driven states
+// have no surviving public names, so their source-facing names keep the
+// retail ordinals explicit.
+#ifdef HOMM3_DRAWING_ARCHER_DECLS
+enum CombatHeroFrameType {
+    COMBAT_HERO_FRAME_IDLE = 0,
+    COMBAT_HERO_FRAME_FIDGET = 1,
+    COMBAT_HERO_FRAME_EVENT_2 = 2,
+    COMBAT_HERO_FRAME_EVENT_3 = 3
+};
+#endif
+
 class combatManager : public baseManager {
 public:
 #if defined(HOMM3_COMMAND_TOWER_STRING_VIEW) \
@@ -1374,6 +1387,7 @@ public:
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);
+    void CycleCombatScreen();
 #endif
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,

@@ -11,7 +11,10 @@
 #define HOMM3_DRAWING_CHAT_VIEW
 #define HOMM3_CSPRITE_DRAW_METHODS
 #define HOMM3_CSPRITE_CROP_ACCESSORS
+#define HOMM3_ARMY_AREA_HIGHLIGHT_VIEW
+#define HOMM3_ARMY_CYCLE_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
+#define HOMM3_CMBTMGR_CYCLE_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
@@ -19,7 +22,9 @@
 #include "combatwindow.h"
 #include "csprite.h"
 #include "findpath.h"
+#include "game.h"
 #include "kbwin.h"
+#include "misc.h"
 #include "palette.h"
 #include "prefs.h"
 #include "remote.h"
@@ -1670,6 +1675,187 @@ void combatManager::ComputeExtent(const CSprite* sprite, int sequence,
     limits->Clip(gCombatDrawLimits694f18);
     if (saveBiggestExtent)
         drawbridgeBounds.Include(*limits);
+}
+
+// Advance the idle battlefield animation state. Dreamcast supplies the
+// source locals and inline identities; retail fixes Complete's tower arm,
+// the two combat-hero trigger latches, the exact fidget randomisation and
+// the palette/frame-pacer tail.
+// E:\gamedcs\drawing.cpp:2257
+VA(0x004960d0, 0x76a)  // anchor-global + dc source structure, dc 0x867bc
+void combatManager::CycleCombatScreen()
+{
+    ResetLimitCreature();
+
+    for (int side = 0; side < 2; side++) {
+        if (heroFlagSprites[side] && heroes[side]) {
+            *(&field_5414 + side) =
+                (*(&field_5414 + side) + 1)
+                    % heroFlagSprites[side]->GetNumFrames(0);
+            field_14028[2 + side] = 1;
+        }
+    }
+
+    int selector_group;
+    int selector_index;
+    if (lastMovedArmy) {
+        selector_group = lastMovedArmy->combatSide;
+        selector_index = lastMovedArmy->bitIndex;
+    } else {
+        selector_group = -1;
+        selector_index = -1;
+    }
+
+    int highlighter_group;
+    int highlighter_index;
+    if (field_132cc) {
+        highlighter_group = cells[field_132d0].armySide;
+        highlighter_index = cells[field_132d0].armySlot;
+    } else {
+        highlighter_group = -1;
+        highlighter_index = -1;
+    }
+
+    unsigned char CyclingCreatures = 0;
+    unsigned char bCycleMonster[2][20];
+    memset(bCycleMonster, 0, sizeof(bCycleMonster));
+    for (side = 0; side < 2; side++) {
+        for (int slot = 0; slot < numArmies[side]; slot++) {
+            army* stack = &armies[side][slot];
+            if (!(stack->Is(21) & 1)
+                    && !stack->IsIncapacitated()
+                    && stack->creatureType != army::ARMY_CREATURE_ARROW_TOWER
+                    && (stack->currFrameType == cs_fidget
+                        || (stack->currFrameType == cs_wait
+                            && stack->stdIcon->GetNumFrames(cs_fidget) > 0
+                            && GameTime::ElapsedSince(stack->iLastFidgetTime)
+                                > stack->frameInfoFidgetFrequency))) {
+                MarkCreatureEffect(side, slot);
+                CyclingCreatures = 1;
+                bCycleMonster[side][slot] = 1;
+            }
+            if (stack->is_in_area_highlight())
+                MarkCreatureEffect(side, slot);
+        }
+    }
+
+    if (selector_group != -1 && selector_index != -1)
+        MarkCreatureEffect(selector_group, selector_index);
+    if (highlighter_group != -1 && highlighter_index != -1)
+        MarkCreatureEffect(highlighter_group, highlighter_index);
+
+    int nextCmbtHeroFrameType[2];
+    for (side = 0; side < 2; side++) {
+        nextCmbtHeroFrameType[side] = -1;
+        if (!creatureSprites[side])
+            continue;
+
+        if (field_53e4[side] == COMBAT_HERO_FRAME_EVENT_2
+                || field_53e4[side] == COMBAT_HERO_FRAME_EVENT_3
+                || field_53e4[side] == COMBAT_HERO_FRAME_FIDGET) {
+            field_14028[side] = 1;
+        } else if (field_53e4[side] == COMBAT_HERO_FRAME_IDLE
+                   && !field_53e0[side] && field_53dc[side]) {
+            int player = playerIds[currentSide];
+            if (player != -1 && gpGame->IsLocalHuman(player)) {
+                field_53de[side] = 0;
+                field_53dc[side] = 0;
+                field_53e0[side] = 1;
+                if (creatureSprites[side]->GetNumFrames(
+                        COMBAT_HERO_FRAME_EVENT_2) > 0) {
+                    nextCmbtHeroFrameType[side] =
+                        COMBAT_HERO_FRAME_EVENT_2;
+                    field_14028[side] = 1;
+                }
+            } else {
+                field_53de[side] = 0;
+                field_53dc[side] = 0;
+            }
+        } else if (field_53e4[side] == COMBAT_HERO_FRAME_IDLE
+                   && !field_53e2[side] && field_53de[side]) {
+            int player = playerIds[currentSide];
+            if (player != -1 && gpGame->IsLocalHuman(player)) {
+                field_53de[side] = 0;
+                field_53dc[side] = 0;
+                field_53e2[side] = 1;
+                if (creatureSprites[side]->GetNumFrames(
+                        COMBAT_HERO_FRAME_EVENT_3) > 0) {
+                    field_14028[side] = 1;
+                    nextCmbtHeroFrameType[side] =
+                        COMBAT_HERO_FRAME_EVENT_3;
+                }
+            } else {
+                field_53de[side] = 0;
+                field_53dc[side] = 0;
+            }
+        } else if (field_53e4[side] == COMBAT_HERO_FRAME_IDLE
+                   && GameTime::ElapsedSince(
+                          cmbtHeroLastFidgetTime[side]) > 4500) {
+            field_14028[side] = 1;
+            nextCmbtHeroFrameType[side] = COMBAT_HERO_FRAME_FIDGET;
+        }
+    }
+
+    ComputeMaxExtent();
+
+    if (CyclingCreatures) {
+        for (side = 0; side < 2; side++) {
+            for (int slot = 0; slot < numArmies[side]; slot++) {
+                if (!bCycleMonster[side][slot])
+                    continue;
+
+                army* stack = &armies[side][slot];
+                if (stack->currFrameType == cs_wait) {
+                    stack->currFrameType = cs_fidget;
+                    stack->currFrameIndex = 0;
+                    continue;
+                }
+
+                if (stack->frameInfoFidgetFrequency
+                        && SafeRandom(0, 100) >= 8)
+                    stack->currFrameIndex++;
+                if (stack->currFrameIndex
+                        >= stack->stdIcon->GetNumFrames(cs_fidget)) {
+                    stack->currFrameType = cs_wait;
+                    stack->currFrameIndex = 0;
+                    stack->iLastFidgetTime = GameTime::Get();
+                    if (stack->frameInfoFidgetFrequency > 0) {
+                        stack->iLastFidgetTime = static_cast<unsigned long>(
+                            stack->iLastFidgetTime
+                            + (SafeRandom(
+                                   0, stack->frameInfoFidgetFrequency) * 0.5
+                               - stack->frameInfoFidgetFrequency * 0.25));
+                    }
+                }
+            }
+        }
+    }
+
+    for (side = 0; side < 2; side++) {
+        if (!field_14028[side])
+            continue;
+        if (nextCmbtHeroFrameType[side] != -1) {
+            field_53e4[side] = nextCmbtHeroFrameType[side];
+            field_53ec[side] = 0;
+        } else {
+            field_53ec[side]++;
+            if (field_53ec[side]
+                    >= creatureSprites[side]->GetNumFrames(
+                           field_53e4[side])) {
+                field_53e4[side] = COMBAT_HERO_FRAME_IDLE;
+                field_53ec[side] = 0;
+                cmbtHeroLastFidgetTime[side] = GameTime::Get();
+            }
+        }
+    }
+
+    field_13ffc++;
+    gSystemPalette->Cycle(96, 103, -1);
+    gSystemPalette->Cycle(112, 119, -1);
+    DrawFrame(1, 1, 0, 0, 1, 0);
+    GameTime::Get();
+    gCombatStamp6989b8 =
+        GameTime::NextFrameTime(gCombatStamp6989b8, 100);
 }
 
 #if 0  // @carcass
