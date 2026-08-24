@@ -1064,12 +1064,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x72a50	292	in-span	combatwindow	combatwindow	game_74d80_sub10_72a50
 0x72b80	103	in-span	combatwindow	combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z
 0x72bf0	54	in-span	combatwindow	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ
-0x72c30	371	in-span	combatwindow	combatwindow	calls_timeGetTime_72c30
+0x72c30	371	in-span	combatwindow	combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z
 0x72db0	64	in-span	combatwindow	combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z
 0x72e90	862	in-span	combatwindow	combatwindow	calls_timeGetTime_72e90
-0x731f0	153	in-span	combatwindow	combatwindow	game_740d0_sub02_731f0
+0x731f0	153	in-span	combatwindow	combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ
 0x73290	82	in-span	combatwindow	combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z
-0x732f0	89	bracketed	combatwindow..command	combatwindow,command	game_732f0
+0x732f0	89	bracketed	combatwindow..command	combatwindow,command	?DrawWindow@TCombatWindow@@UAEXEHH@Z
 0x73350	416	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub00_73350
 0x734f0	135	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub01_734f0
 0x73580	118	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub02_73580

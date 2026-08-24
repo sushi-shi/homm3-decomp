@@ -267,7 +267,7 @@ register-homing (why-reg)	22	99.2000	2708	findpath	?TestPossibleDirections@searc
 control-flow (why-branch)	21	95.4379	467	town	?GiveSpells@town@@QAEXPAVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	21	98.1840	1172	advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
 unclassified	21	98.1667	1156	advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
-inliner (predict-inline)	21	97.4804	815	command	?ResetRound@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
+inliner (predict-inline)	21	97.4804	815	command	?ResetRound@combatManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	20	96.8602	651	ai_tactical	?get_muck_and_mire_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	20	88.0435	167	mapcell	?erase@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEPAVTreasureData@@PAV3@0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	20	94.3617	353	mapcell	??4MonsterData@@QAEAAV0@ABV0@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)

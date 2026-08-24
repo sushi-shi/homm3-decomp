@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — three combat-window display functions add 613 exact retail
+  bytes.** `show_messages` reproduces all 371 bytes from Dreamcast lines
+  431-450 and retail's +0x54 message vector: it selects up to two strings,
+  joins them with a newline, updates the control bar's visible range and
+  rollover, and stamps the +0x6c clock. Its 27 blocks and fourteen branches
+  agree. `EndPlacementPhase` reproduces 153 bytes by deleting the placement
+  bar, constructing the normal `TCombatControlSubWindow`, dispatching a full
+  vslot-5 redraw, and posting 800x600; all six blocks and two branches agree.
+  Finally, vtable 0x63d528 slot 5 proves the 89-byte body immediately after
+  `DrawChatText` is `TCombatWindow::DrawWindow`, not the earlier DC roster's
+  standalone `DrawChatEdit`: retail inlines that helper after the base draw,
+  drawing and posting the focused chat editor. All five blocks and three
+  branches agree. The semantic viewer names the two EH-handler relocations
+  differently from the synthesized target, but the authoritative normalized
+  VC6 comparison reports 100.0% for both EH-bearing bodies. No external
+  implementation body was used.
+
 - **2026-08-24 — combat-window hover and message scrolling add 167 exact
   retail bytes.** Vtable 0x63d528 slot 4 fixes 0x472b80 as
   `TCombatWindow::handle_widget_hover`; Dreamcast source-line records preserve
