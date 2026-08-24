@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — the creature-quest serializer recovers its historical exact
+  peak with two typed inline scalar writers.** The 311-byte
+  `type_creature_quest::Save` residual had only one instruction wrong: retail
+  loads the 16-bit creature id through `AX` but spills the whole `EAX` value
+  into the shared scratch home before writing two bytes. A direct short/int
+  union emitted a word spill; assigning its int member widened the source
+  load, while the previously found pointer-alias spelling was correctly
+  rejected by the zero-debt gates. The source-faithful shape is two separately
+  inlined helpers, one taking `short` and one taking `int`: VC6 gives each
+  formal the same four-byte argument home, producing retail's partial-register
+  first store and the count overwrite without casts or aliasing. All 14 CFG
+  blocks and every instruction are now exact. After the synchronized
+  build/delink/build cycle, the linked checkpoint is **1896/2307 exact** and
+  **1827/2238 game functions exact**, at **96.68% fuzzy** and **42.71%
+  executable coverage**. All fatal gates are clean. The refreshed all-unit
+  census falls to **411 residual functions / 28.6 KiB recoverable**, and only
+  two rows remain below any historical peak; the ordinary tractable tier stays
+  **223 functions / 179.8 KiB**.
+
 - **2026-08-24 — `AddScoreToHighScore` is promoted from 99.9974% to an exact
   normalized match by correcting the score-file creation mode.** The earlier
   reconstruction passed `_S_IREAD | _S_IWRITE`, which VC6 emits as `0x180`;

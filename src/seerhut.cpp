@@ -1623,13 +1623,21 @@ void type_creature_quest::LoadFromMap(TAbstractFile* file)
 // The creature quest's serializer, and the one that proves the two
 // vectors are parallel: the count comes off `types` (+0x50) and the loop
 // then indexes `counts` (+0x40) with the same subscript.
-// Residual (99.9632%): retail loads the type through AX but spills the whole
-// EAX scratch; the real union below emits the same slot overlay with a word
-// spill. An int scratch sign-extends (99.5588), assigning the int union member
-// widens the load (99.9632), separate scoped locals keep two homes (99.4853),
-// and an inline short writer is byte-identical to that last shape. Aliasing a
-// short local through int* is exact, but was rejected by the zero-debt
-// reinterpret_cast gate rather than admitted as false type modelling.
+// EXACT (99.9632 -> 100%): the two payloads use separately inlined scalar
+// writers. VC6 spills the short formal's partially loaded EAX into the first
+// writer's four-byte argument home, then reuses that home for the int writer.
+// This reproduces retail's AX-load/dword-spill pair without the false int/short
+// pointer alias that found the same code shape during the original search.
+
+static inline void WriteCreatureType(TAbstractFile* file, short value)
+{
+    file->Write(&value, sizeof(value));
+}
+
+static inline void WriteCreatureCount(TAbstractFile* file, int value)
+{
+    file->Write(&value, sizeof(value));
+}
 
 // E:\gamedcs\seerhut.cpp
 VA(0x00571280, 0x137)  // anchor-vtable 0x6418b4 slot 13 + TAbstractFile::Write shape, retail-only
@@ -1638,14 +1646,8 @@ void type_creature_quest::Save(TAbstractFile* file)
     unsigned char count = static_cast<unsigned char>(types.size());
     file->Write(&count, sizeof(count));
     for (unsigned int i = 0; i < types.size(); i++) {
-        union save_value {
-            short type;
-            int number;
-        } value;
-        value.type = types[i];
-        file->Write(&value.type, sizeof(value.type));
-        value.number = counts[i];
-        file->Write(&value.number, sizeof(value.number));
+        WriteCreatureType(file, types[i]);
+        WriteCreatureCount(file, counts[i]);
     }
 
     {
