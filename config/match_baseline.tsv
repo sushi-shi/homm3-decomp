@@ -1686,6 +1686,7 @@ remote	?CheckHandleNet@CNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	1
 remote	?CheckHandleNet@CNetMsgHandlerPause@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x155170
 remote	?Clear@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d60
 remote	?ClearChat@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1540b0
+remote	?CompressMsg@CDPlayHeroes@@IAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x1532b0
 remote	?Copy@CNetMsgHandler@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x155150
 remote	?CreateDPlayObject@@YIEXZ	100.0000	100.0000	100.0000	0x1555b0
 remote	?DestroyMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x155910
@@ -1700,6 +1701,7 @@ remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.00
 remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569f0
 remote	?HandlePlayerDead@@YIXHE@Z	98.3380	98.3380	98.3380	0x156780
 remote	?HandlePlayerDrop@@YIXK@Z	100.0000	100.0000	100.0000	0x156430
+remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	100.0000	100.0000	100.0000	0x153580
 remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	99.9091	99.9091	99.9091	0x1569a0
 remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	99.9394	99.9394	99.9394	0x156940
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
@@ -1732,6 +1734,7 @@ remote	?ResumeTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154060
 remote	?Save@CSaveScreen@@QAEXHH@Z	100.0000	100.0000	100.0000	0x157350
 remote	?SaveScreen@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157600
 remote	?SendChat@@YIXPBDH@Z	100.0000	100.0000	100.0000	0x1547c0
+remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	86.9847	86.9847	86.9847	0x1533d0
 remote	?SetAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x157910
 remote	?SetDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70
 remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0

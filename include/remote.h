@@ -140,12 +140,14 @@ public:
     // their sender fields and optional compression, then call this retrying
     // DirectPlay sender with the final message buffer.
     bool SendIt(CNetMsg* pMsg, unsigned long dpidTo, bool guaranteed);
+    void HandlePlayerDrop(unsigned long dpid);
 
 protected:
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
     CNetMsg* CompressMsg(CNetMsg* pNetMsg);
+    void QueueMsg(CNetMsg* pNetMsg);
     friend int TransmitRemoteDataDPID(CNetMsg*, unsigned long,
                                       bool, bool);
     friend int TransmitRemoteData(CNetMsg*, int,

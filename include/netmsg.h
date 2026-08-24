@@ -250,6 +250,24 @@ public:
     int m_gamePos;
 };
 
+#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+// netmsg.h:423 in the DC roster. Retail's CDPlayHeroes drop paths prove the
+// duplicated DPID: DirectPlay's sender cell at +4 and the message payload at
+// +0x14 both receive the dropped id.
+class CPlayerDropMsg : public CNetMsg {
+public:
+    unsigned long m_dpid;
+
+    CPlayerDropMsg(unsigned long dpid)
+        : CNetMsg(RS_PLAYER_DROPPED, sizeof(CPlayerDropMsg)),
+          m_dpid(dpid)
+    {
+        field_04 = dpid;
+    }
+};
+SIZE(CPlayerDropMsg, 0x18);
+#endif
+
 class CPlayerDropUpdateMsg : public CNetMsg {
 public:
     unsigned long m_dpidDropped;

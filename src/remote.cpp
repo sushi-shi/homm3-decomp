@@ -36,6 +36,7 @@
 #include "message.h"
 #include "inputmgr.h"
 #include "mousemgr.h"
+#include "../vendor/zlib-1.1.3/zlib.h"
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
@@ -444,6 +445,42 @@ bool CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho,
         pMsg, dpidTo, compressMsg, guaranteed);
 }
 
+// E:\gamedcs\remote.cpp:425. Dreamcast supplies the protected member
+// boundary and zlib edge. Retail proves the 0x14-byte wire header, 20%
+// headroom, level-6 compression and the rule that a non-shrinking result is
+// discarded rather than transmitted.
+#pragma auto_inline(off)
+VA(0x005532b0, 0xB9)  // anchor-callers + zlib-edge + dc-order-map
+CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg)
+{
+    unsigned long compressedSize =
+        static_cast<unsigned long>(pNetMsg->size * 1.2) + 12;
+    void* storage = ::operator new(compressedSize);
+    CNetMsg* compressedMsg = static_cast<CNetMsg*>(storage);
+    memcpy(compressedMsg, pNetMsg, sizeof(CNetMsg));
+
+    compressedSize -= sizeof(CNetMsg);
+    if (compress2(
+            static_cast<unsigned char*>(storage) + sizeof(CNetMsg),
+            &compressedSize,
+            static_cast<const unsigned char*>(
+                static_cast<const void*>(pNetMsg)) + sizeof(CNetMsg),
+            pNetMsg->size - sizeof(CNetMsg), 6)) {
+        ::operator delete(storage);
+        return 0;
+    }
+
+    compressedMsg->size = compressedSize + sizeof(CNetMsg);
+    unsigned long originalSize = pNetMsg->size;
+    compressedMsg->field_10 = originalSize;
+    if (compressedMsg->size >= originalSize) {
+        ::operator delete(storage);
+        return 0;
+    }
+    return compressedMsg;
+}
+#pragma auto_inline(on)
+
 // E:\gamedcs\remote.cpp:496
 // The DPID form is the same send pipeline without recipient lookup. HD
 // 0x553770 maps bijectively to retail 0x553370 and the DC roster fixes its
@@ -466,6 +503,91 @@ bool CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg,
     if (compressedMsg)
         delete compressedMsg;
     return result;
+}
+
+// E:\gamedcs\remote.cpp:578. Dreamcast supplies the public member boundary
+// and its HandlePlayerDrop edge. Retail fixes the DirectPlay error cases,
+// six-attempt retry loop, localized retry dialog and queued drop message.
+// Residual wall (86.98%): the invalid-player tail is exact block-for-block,
+// including the caller-context decision to leave deque::push_back out of
+// line. C2 rotates this source-honest for-loop into a bottom test and
+// normalizes Send's AL result through CL; retail keeps the retry-limit test
+// at the header and AL live through the HRESULT compares. `while`, explicit
+// header-break and call-site inline_depth(1/2) forms do not recover that
+// schedule. Caching GetLastError in a named local regresses it to 85.00%.
+VA(0x005533d0, 0x1AB)  // anchor-strings + virtual-slots + dc-order-map
+bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
+                          bool guaranteed)
+{
+    char errorDescription[256];
+    int retries;
+    for (retries = 0; retries <= 5; ++retries) {
+        bool sent = Send(pMsg, pMsg->size, gsThisNetPlayerInfo.dpid,
+                         dpidTo, guaranteed);
+        if ((!sent
+             && GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
+            || GetLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {
+            GetErrorDesc(GetLastError(), errorDescription);
+            logFile.Log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
+                                    "DPlay Send error [%s]"),
+                        errorDescription);
+            logFile.Log(DATA_COMPGEN(0x00682abc, invalidSendPlayerLog,
+                                    "Sending to invalid player? [%d]"),
+                        dpidTo);
+            if (GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER) {
+                DestroyPlayer(dpidTo);
+                HandlePlayerDrop(dpidTo);
+            }
+            return true;
+        }
+
+        if (!sent) {
+            GetErrorDesc(GetLastError(), errorDescription);
+            logFile.Log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
+                                    "DPlay Send error [%s]"),
+                        errorDescription);
+            GameTime::Delay(200);
+
+            if (retries >= 5) {
+                NormalDialogTimeOut(
+                    gpGeneralText->GetText(GENERAL_TEXT_DPLAY_SEND_RETRY),
+                    2, 15000, -1, -1, -1, 0, -1, 0, -1, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+                    ShutDown(0);
+                    return false;
+                }
+                retries = -1;
+            }
+        }
+        else {
+            return true;
+        }
+    }
+    return false;
+}
+
+// E:\gamedcs\remote.cpp:690. The member form is the DirectPlay-layer event:
+// it destroys no game state itself, but logs and enqueues a 0x18-byte
+// CPlayerDropMsg for the higher-level dispatchers.
+VA(0x00553580, 0x1F0)  // anchor-string + SendIt-inline + dc-order-map
+void CDPlayHeroes::HandlePlayerDrop(unsigned long dpid)
+{
+    logFile.Log(DATA_COMPGEN(0x00682a78, playerDroppedLog,
+                            "********Player dropped---->[%d]"),
+                dpid);
+    CPlayerDropMsg msg(dpid);
+    QueueMsg(&msg);
+}
+
+// E:\gamedcs\remote.cpp:702. Retail keeps no standalone copy. /Ob2 expands
+// allocation/copy into both member drop paths; the standalone handler also
+// expands Dinkumware's push_back internals, while SendIt's nested occurrence
+// stops at that template boundary.
+void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg)
+{
+    void* storage = ::operator new(pNetMsg->size);
+    memcpy(storage, pNetMsg, pNetMsg->size);
+    msgQueue.push_back(static_cast<CNetMsg*>(storage));
 }
 
 // E:\gamedcs\remote.cpp:783 - install a handler and hand it whatever state
