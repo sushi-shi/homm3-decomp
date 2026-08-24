@@ -10,6 +10,7 @@
 #define HOMM3_DRAWING_ARCHER_DECLS
 #define HOMM3_DRAWING_CHAT_VIEW
 #define HOMM3_CSPRITE_DRAW_METHODS
+#define HOMM3_CSPRITE_CROP_ACCESSORS
 #define HOMM3_ARMY_MOVE_VIEW
 #include "drawing.h"
 #include "bitmap16.h"
@@ -1497,6 +1498,97 @@ int combatManager::DrawObject(const Bitmap816* image, int x, int y)
     return 1;
 }
 
+// DrawOccupant's two moat intersections are this row's only retail callers.
+// DC order, signature and locals identify the adjacent Complete body: it
+// clips the six-pixel lower strip of the selected hex against the town's moat
+// bitmap, applies the shared drawing-extent gates, and blits that intersection.
+// The payload blocks align after the early-exit sites; VC6 cross-jumps the four
+// zero returns to one epilogue while retail duplicates them (5 ret vs 2 ret,
+// why-branch D6), leaving the normalized flat score at 24.94%.
+VA(0x00495a10, 0x1d7)  // dc order/callers + body, dc 0x861cc
+int combatManager::DrawMoatOverlay(int index)
+{
+    const hexcell& cell = cells[index];
+    const TWallTraits& traits =
+        akWallTraits[defendingTown->type][WALL_TRAITS_ROW_MOAT];
+    SLimitData moat_extent(cell.field_04, cell.field_06 + 36,
+                           cell.field_04 + 43, cell.field_06 + 41);
+    moat_extent.Clip(gCombatDrawLimits694f18);
+
+    Bitmap816* image = combatIcons[WALL_TRAITS_ROW_MOAT][0];
+    if (image) {
+        SLimitData image_extent(
+            traits.x, traits.y,
+            traits.x + image->GetWidth() - 1,
+            traits.y + image->GetHeight() - 1);
+        moat_extent.Clip(image_extent);
+        if (!moat_extent.IsEmpty()) {
+            if (field_13d2c)
+                drawbridgeBounds.Include(moat_extent);
+            if (!field_13d34) {
+                if (!field_13d30
+                        || moat_extent.Intersects(drawbridgeBounds)) {
+                    int source_x;
+                    if (traits.x < moat_extent.iMinX)
+                        source_x = moat_extent.iMinX - traits.x;
+                    else {
+                        source_x = 0;
+                        moat_extent.iMinX = traits.x;
+                    }
+                    int source_y;
+                    if (traits.y < moat_extent.iMinY)
+                        source_y = moat_extent.iMinY - traits.y;
+                    else {
+                        source_y = 0;
+                        moat_extent.iMinY = traits.y;
+                    }
+
+                    image->Draw(source_x, source_y,
+                                moat_extent.Width(), moat_extent.Height(),
+                                gpWindowManager->screenBitmap,
+                                moat_extent.iMinX, moat_extent.iMinY, true);
+                    return 1;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+// The DC signature and cropped-frame accessor set identify retail's adjacent
+// eight-argument extent worker. It builds the inclusive cropped rectangle,
+// mirrors its horizontal origin for flipped sprites, clips it to the combat
+// viewport, and optionally includes it in the current accumulated extent.
+VA(0x00495f50, 0x17c)  // dc order/signature + exact accessor set, dc 0x866ac
+void combatManager::ComputeExtent(const CSprite* sprite, int sequence,
+                                  int frame, int x, int y,
+                                  SLimitData* limits, int isFlipped,
+                                  unsigned char saveBiggestExtent)
+{
+    SLimitData dummy;
+    if (!limits)
+        limits = &dummy;
+
+    if (isFlipped) {
+        limits->iMinX = x + sprite->GetWidth()
+            - sprite->GetCroppedX(sequence, frame)
+            - sprite->GetCroppedWidth(sequence, frame);
+        limits->iMaxX = x + sprite->GetWidth()
+            - sprite->GetCroppedX(sequence, frame) - 1;
+    } else {
+        limits->iMinX = x + sprite->GetCroppedX(sequence, frame);
+        limits->iMaxX = x + sprite->GetCroppedX(sequence, frame)
+            + sprite->GetCroppedWidth(sequence, frame) - 1;
+    }
+    limits->iMinY = y + sprite->GetCroppedY(sequence, frame);
+    limits->iMaxY = y + sprite->GetCroppedY(sequence, frame)
+        + sprite->GetCroppedHeight(sequence, frame) - 1;
+
+    limits->Clip(gCombatDrawLimits694f18);
+    if (saveBiggestExtent)
+        drawbridgeBounds.Include(*limits);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\drawing.cpp:1948
@@ -1571,14 +1663,14 @@ void Rescale(int* x, int* y, unsigned char offset)
 
 // E:\gamedcs\struct.h:284
 DC_ONLY(0x872a8, 0x32)
-unsigned char SLimitData::Intersects(const SLimitData* check_limits)
+bool SLimitData::Intersects(const SLimitData& check_limits) const
 {
     // @stub
 }
 
 // E:\gamedcs\struct.h:300
 DC_ONLY(0x872dc, 0x16)
-unsigned char SLimitData::IsEmpty()
+bool SLimitData::IsEmpty() const
 {
     // @stub
 }
