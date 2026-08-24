@@ -1382,7 +1382,9 @@ int combatManager::DrawCreatureAndHeroSubwindows()
 
 // The shared bitmap-object painter clips the image rectangle to the combat
 // viewport, optionally accumulates it into the current effect extent, rejects
-// a disjoint limited draw, and finally blits the full 8-bit image.
+// a disjoint limited draw, and finally blits the full-width image through the
+// clipped bottom row. That last asymmetric height is retail-significant: using
+// image->GetHeight() instead leaves the otherwise identical body at 78%.
 // E:\gamedcs\drawing.cpp:1991
 VA(0x004958e0, 0x129)  // DrawFrame/DrawToBuffer callers, dc 0x86098
 int combatManager::DrawObject(const Bitmap816* image, int x, int y)
@@ -1422,7 +1424,7 @@ int combatManager::DrawObject(const Bitmap816* image, int x, int y)
             return 0;
     }
 
-    image->Draw(0, 0, image->GetWidth(), image->GetHeight(),
+    image->Draw(0, 0, image->GetWidth(), limits.iMaxY - y + 1,
                 gpWindowManager->screenBitmap, x, y, true);
     return 1;
 }

@@ -811,7 +811,7 @@ drawing	?DrawCombatHero@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@E@Z	10
 drawing	?DrawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@HEH@Z	100.0000	100.0000	100.0000	0x951b0
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	98.3816	98.3816	98.3816	0x94440
-drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	78.0000	78.0000	78.0000	0x958e0
+drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x958e0
 drawing	?DrawOccupant@combatManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x94f40
 drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	100.0000	100.0000	100.0000	0x953b0
 drawing	?DrawSpriteObject@combatManager@@QAEHPBVCSprite@@HHHE@Z	100.0000	100.0000	100.0000	0x95500
