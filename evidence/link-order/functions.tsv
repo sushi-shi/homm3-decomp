@@ -1061,7 +1061,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x728a0	33	bracketed	combatresultswindow..combatwindow	combatresultswindow,combatwindow	game_728a0
 0x728d0	42	in-span	combatwindow	combatwindow	?Close@TCombatWindow@@UAEXE@Z
 0x72900	334	in-span	combatwindow	combatwindow	??1TCombatWindow@@UAE@XZ
-0x72a50	292	in-span	combatwindow	combatwindow	game_74d80_sub10_72a50
+0x72a50	292	in-span	combatwindow	combatwindow	?ProcessRightSelect@TCombatWindow@@QAEEPBVmessage@@@Z
 0x72b80	103	in-span	combatwindow	combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z
 0x72bf0	54	in-span	combatwindow	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ
 0x72c30	371	in-span	combatwindow	combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z

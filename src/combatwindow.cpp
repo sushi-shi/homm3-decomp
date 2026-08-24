@@ -5,7 +5,9 @@
 #define HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW
 #include "combatwindow.h"
 #include "combatcontrolsubwindow.h"
+#include "kb.h"
 #include "kbwin.h"
+#include "message.h"
 #include "remote.h"
 #include "subwindow.h"
 #include "textntry.h"
@@ -73,6 +75,50 @@ TCombatWindow::~TCombatWindow()
     delete creatureSubWindows[3];
 
     gpCombatWindow = 0;
+}
+
+// Retail folds the DC helper at combatwindow.cpp:322-346 into its only caller.
+// The two scroll arrows deliberately share help row 5.
+inline int TCombatWindow::convertID2HelpID(int id)
+{
+    if (id < 0)
+        return -1;
+
+    switch (id) {
+    case COMBAT_LEFT_COMMAND_0_ID: return 0;
+    case COMBAT_LEFT_COMMAND_1_ID: return 1;
+    case COMBAT_LEFT_COMMAND_2_ID: return 2;
+    case COMBAT_LEFT_COMMAND_3_ID: return 3;
+    case COMBAT_ROLLOVER_ID: return 4;
+    case COMBAT_LOG_SCROLL_UP_ID:
+    case COMBAT_LOG_SCROLL_DOWN_ID: return 5;
+    case COMBAT_RIGHT_COMMAND_0_ID: return 6;
+    case COMBAT_RIGHT_COMMAND_1_ID: return 7;
+    case COMBAT_RIGHT_COMMAND_2_ID: return 8;
+    case COMBAT_PLACEMENT_COMMAND_0_ID: return 9;
+    case COMBAT_PLACEMENT_COMMAND_1_ID: return 10;
+    default: return -1;
+    }
+}
+
+// EXACT: E:\gamedcs\combatwindow.cpp:356-374. Retail inlines convertID2HelpID,
+// selects the right-click column of the shared eleven-row help table, sizes
+// the text, and centers a type-4 dialog in the 800x600 combat window.
+VA(0x00472a50, 0x124)
+unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
+{
+    int helpID = convertID2HelpID(msg->codeY);
+    if (helpID < 0)
+        return 0;
+
+    const char* text = gCombatSubWindowHelp[helpID].rclick;
+    int width;
+    int height;
+    CalculateDialogTextSize(text, &width, &height);
+    NormalDialog(text, 4, (WINDOW_SCREEN_WIDTH - width) / 2,
+        (WINDOW_SCREEN_HEIGHT - height) / 2,
+        -1, 0, -1, 0, -1, 0, -1, 0);
+    return 1;
 }
 
 // Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
@@ -209,20 +255,6 @@ void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
 }
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
-
-// E:\gamedcs\combatwindow.cpp:322
-DC_ONLY(0x69c70, 0x6A)
-int TCombatWindow::convertID2HelpID(int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:356
-DC_ONLY(0x69cdc, 0x7E)
-unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
-{
-    // @stub
-}
 
 // E:\gamedcs\combatwindow.cpp:382
 DC_ONLY(0x69d5c, 0x4C)
