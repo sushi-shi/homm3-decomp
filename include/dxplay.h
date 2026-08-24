@@ -47,6 +47,69 @@ struct DPMSG_SETPLAYERORGROUPNAME;
 struct DPMSG_SETSESSIONDESC;
 struct DPMSG_STARTSESSION;
 
+#ifdef HOMM3_REMOTE_LOBBY_DECLS
+// DirectPlay 6 structures used by remote's retail lobby-connect path. The
+// layouts are published in the Dreamcast CodeView stream and independently
+// fixed on PC by the field loads in LobbyLaunchConnect.
+struct DPNAME {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    union {
+        unsigned short* lpszShortName;
+        char* lpszShortNameA;
+    };
+    union {
+        unsigned short* lpszLongName;
+        char* lpszLongNameA;
+    };
+};
+SIZE(DPNAME, 0x10);
+
+struct DPSESSIONDESC2 {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    GUID guidInstance;
+    GUID guidApplication;
+    unsigned long dwMaxPlayers;
+    unsigned long dwCurrentPlayers;
+    union {
+        unsigned short* lpszSessionName;
+        char* lpszSessionNameA;
+    };
+    union {
+        unsigned short* lpszPassword;
+        char* lpszPasswordA;
+    };
+    unsigned long dwReserved1;
+    unsigned long dwReserved2;
+    unsigned long dwUser1;
+    unsigned long dwUser2;
+    unsigned long dwUser3;
+    unsigned long dwUser4;
+};
+SIZE(DPSESSIONDESC2, 0x50);
+
+struct DPLCONNECTION {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    DPSESSIONDESC2* lpSessionDesc;
+    DPNAME* lpPlayerName;
+    GUID guidSP;
+    void* lpAddress;
+    unsigned long dwAddressSize;
+};
+SIZE(DPLCONNECTION, 0x28);
+
+enum EDPlayConnectionFlags {
+    DPLAY_CONNECTION_CREATE_SESSION = 0x2
+};
+
+enum EDPlaySessionFlags {
+    DPLAY_SESSION_MIGRATE_HOST = 0x4,
+    DPLAY_SESSION_KEEP_ALIVE = 0x40
+};
+#endif
+
 // The SDK macro values are also the exact HRESULT immediates used by the
 // DirectPlay send path. The domain lives here instead of importing DPLAY.H's
 // anonymous typedef structs over these hand-owned forward declarations.
@@ -219,6 +282,13 @@ public:
     CDPlayConnection* CreateSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     unsigned char TestLobbied();
+#ifdef HOMM3_REMOTE_LOBBY_DECLS
+    DPLCONNECTION* GetConnectionSettings(
+        unsigned long appId, unsigned long* size);
+    unsigned char SetConnectionSettings(
+        unsigned long appId, DPLCONNECTION* connection);
+    unsigned char Connect();
+#endif
     virtual unsigned char EnumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
     virtual unsigned char SetGroupConnectionSettings(

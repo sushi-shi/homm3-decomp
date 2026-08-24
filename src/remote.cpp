@@ -12,6 +12,7 @@
 #define HOMM3_REMOTE_BATTLE_DLG_DECLS
 #define HOMM3_REMOTE_WAIT_READY_DECLS
 #define HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+#define HOMM3_REMOTE_LOBBY_DECLS
 #define HOMM3_REMOTE_PLAYER_LIST_DECLS
 #include "remote.h"
 #include "advmgr.h"
@@ -157,6 +158,10 @@ DATA(0x0069d80e) unsigned char g_weMoved;
 DATA(0x0069d608) CNetPlayerInfo gsThisNetPlayerInfo;
 DATA(0x006989f0) eNetGameType iMPNetProtocol;
 DATA(0x00682a38) unsigned char gbFollowPlayerMode;
+// Dreamcast publishes gMapName as char[260]. LobbyLaunchConnect copies the
+// selected setup filename here before refreshing the scenario header; the
+// next retail cell at 0x6994e4 independently proves the 0x104-byte extent.
+DATA(0x006993e0) char gMapName[260];
 // Dreamcast's remote.obj static-global roster names this timestamp;
 // retail's PollRemote fixes its address and unsigned-long type.
 DATA(0x0069d818) static unsigned long lastActiveUpdate;
@@ -2073,6 +2078,91 @@ unsigned char HandleMPlayerLaunch()
                             "Successful MPlayer connection."));
     strcpy(gsThisNetPlayerInfo.sName,
            gUnnamed698758.networkDefaultName);
+    return 1;
+}
+
+// E:\gamedcs\remote.cpp:2045. Dreamcast supplies the function and hourglass
+// lifetime; retail independently fixes the PC DirectPlayLobby structures,
+// HRESULT/log paths and the inlined InitRemote/RemoteCleanup boundaries.
+VA(0x00555ef0, 0x3E4)  // anchor-strings + lobby-callees + dc-order-map
+unsigned char LobbyLaunchConnect()
+{
+    strcpy(gMapName, gpGame->setup.filename);
+    gpGame->mapHeader.Get(
+        gpGame->setup.path, gpGame->setup.filename, 0);
+
+    if (gbMPlayer) {
+        if (HandleMPlayerLaunch())
+            return 1;
+        RemoteCleanupInline();
+        return 0;
+    }
+
+    logFile.Log(DATA_COMPGEN(0x00682d7c, lobbyGettingSettings,
+                            "Getting connection settings..."));
+    DPLCONNECTION* connection =
+        pDPlay->GetConnectionSettings(0, 0);
+    if (!connection)
+        return 0;
+
+    if (connection->dwFlags & DPLAY_CONNECTION_CREATE_SESSION) {
+        connection->lpSessionDesc->dwFlags |=
+            DPLAY_SESSION_MIGRATE_HOST | DPLAY_SESSION_KEEP_ALIVE;
+        logFile.Log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
+                                "We are the host...."));
+    } else {
+        logFile.Log(DATA_COMPGEN(0x00682d54, lobbyIsGuest,
+                                "We are a guest...."));
+    }
+    logFile.Log(DATA_COMPGEN(0x00682d2c, lobbyMaxPlayers,
+                            "CDPlayLobby::Connect - MaxPlayers: %d"),
+                connection->lpSessionDesc->dwMaxPlayers);
+    logFile.Log(DATA_COMPGEN(0x00682d00, lobbyCurrentPlayers,
+                            "CDPlayLobby::Connect - CurrentPlayers: %d"),
+                connection->lpSessionDesc->dwCurrentPlayers);
+
+    if (!pDPlay->SetConnectionSettings(0, connection)) {
+        logFile.Log(DATA_COMPGEN(0x00682cdc, lobbySetSettingsError,
+                                "Error setting connection settings!"));
+        delete connection;
+        return 0;
+    }
+
+    CHourGlass hourGlass(1);
+    logFile.Log(DATA_COMPGEN(0x00682cc4, lobbyAttemptingConnect,
+                            "Attempting connect..."));
+    if (!pDPlay->Connect()) {
+        logFile.Log(DATA_COMPGEN(0x00682ca0, lobbyConnectError,
+                                "Error connecting to lobby session!"));
+        char sDesc[256];
+        pDPlay->GetErrorDesc(pDPlay->GetLastError(), sDesc);
+        logFile.Log(DATA_COMPGEN(0x00682c90, lobbyLastError,
+                                "Last error=[%s]"), sDesc);
+        delete connection;
+        return 0;
+    }
+
+    logFile.Log(DATA_COMPGEN(0x00682c7c, lobbyConnected,
+                            "Successful connect!"));
+    strncpy(gUnnamed698758.networkDefaultName,
+            connection->lpPlayerName->lpszShortNameA, 21);
+    delete connection;
+    // Retail preserves this original one-past terminator store.
+    gUnnamed698758.networkDefaultName[21] = 0;
+    logFile.Log(DATA_COMPGEN(0x00682c6c, lobbyUserName,
+                            "Username=[%s]"),
+                gUnnamed698758.networkDefaultName);
+
+    iMPNetProtocol = MP_TCP;
+    gUnnamed699274 = 1;
+    gUnnamed6994e4 = 1;
+    InitRemote(MP_TCP, gUnnamed698758.networkDefaultName);
+    int version = *gpVideoGameState;
+    gsThisNetPlayerInfo.dpid = pDPlay->CreatePlayer(
+        gUnnamed698758.networkDefaultName, &version, sizeof(version), 0);
+    if (!gsThisNetPlayerInfo.dpid)
+        return 0;
+    gsThisNetPlayerInfo.version = version;
     return 1;
 }
 

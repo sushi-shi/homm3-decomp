@@ -1715,6 +1715,7 @@ remote	?IsOn@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157a80
 remote	?IsOpen@CChatEdit@@UAE_NXZ	100.0000	100.0000	100.0000	0x1543e0
 remote	?IsSaved@CSaveScreen@@QAEEXZ	100.0000	100.0000	100.0000	0x157400
 remote	?KillOldChat@CChatManager@@QAEXXZ	96.6265	96.6265	96.6265	0x153df0
+remote	?LobbyLaunchConnect@@YIEXZ	100.0000	100.0000	100.0000	0x155ef0
 remote	?OnEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380
 remote	?OnEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0
 remote	?OnFunctionKey@CChatEdit@@UAEHVmessage@@H@Z	100.0000	100.0000	100.0000	0x154330

@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `LobbyLaunchConnect` closes remote.obj's last ordinary
+  in-span function with all 996 retail bytes exact.** Dreamcast supplies the
+  free-function boundary, the `CHourGlass` local, `gMapName` as a 260-byte
+  array and the DirectPlayLobby method/structure names. Retail independently
+  fixes the PC identity through eleven connection log strings and the
+  `HandleMPlayerLaunch`, `GetConnectionSettings`, `SetConnectionSettings`
+  and `Connect` edges. It also proves Complete's widened scenario-header
+  call: copy the 251-byte setup filename to `gMapName`, then pass setup path,
+  filename and a literal zero to the three-argument PC `NewSMapHeader::Get`.
+
+  The MPlayer arm reuses the admitted bootstrap and expands the same
+  `RemoteCleanup` body on failure. The lobby arm retrieves the 0x28-byte
+  `DPLCONNECTION`, marks a hosting session migrate-host/keep-alive, logs its
+  maximum/current player counts, installs the settings and keeps the
+  connection allocation alive through `Connect`. The hourglass spans that
+  connect plus local-player creation, including both error cleanups. Success
+  copies DirectPlay's short player name into the persisted 21-byte network
+  name, preserves retail's one-past terminator store, expands `InitRemote`,
+  publishes the TCP/player-count state and creates the local DirectPlay
+  player with the four-byte game version. Restoring those three state stores
+  raises the initial 98.55% reconstruction to **100.00% across all 26 CFG
+  blocks** at 0x555ef0. The synchronized inventory moves from **1893/2306 to
+  1894/2307 exact functions**; remote's only remaining in-span gap is the
+  deliberately unclaimed implicit wait-dialog destructor.
+
 - **2026-08-24 — DirectPlay compression and member-side player-drop handling
   add 681 exact bytes; `SendIt` is admitted at a bounded 86.98% wall.** The
   Dreamcast remote.obj roster fixes the protected `CompressMsg`, public
