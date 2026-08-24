@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::DrawBackground` reproduces all 427 retail
+  bytes, and `DrawWallAt` advances to a bounded 99.95%.** Drawing order, the
+  zero-argument ABI and Dreamcast `drawing.cpp:919` establish the background
+  row at 0x493cf0. It loads the selected battlefield, composites Complete's
+  optional elevation and town-moat layers, caches the battlefield viewport,
+  rebuilds the grid, then posts the finished 800x556 bitmap to the window
+  manager. The reconstructed CFG and schedule were already complete, but
+  caching only the elevation index made VC6 retain `(table offset, bitmap)`
+  in `(EDI, EBX)` instead of retail's `(row pointer, bitmap)` in `(EBX,
+  EDI)`. Reusing the selected row for `FileName`, x and y gives the optimizer
+  the original value lifetime and reproduces every instruction; the const
+  `IsQuickCombat` overload independently fixes the first call relocation.
+  The same pass reshapes `DrawWallAt`'s inline archer choice as a conditional
+  expression, changing its otherwise redundant final lower-tower test to
+  retail's `jne` and raising 99.73% to 99.95%. Its 54 blocks and symbolic
+  branch sequence now agree; only the byte-distinct but source-equivalent
+  ordering of the main-keep and upper-tower pointer blocks remains. The
+  synchronized checkpoint reaches **1917/2330 linked exact**, **1848/2261
+  game exact**, **96.63% game fuzzy** and **43.36% executable coverage**. No
+  external implementation body was used.
+
 - **2026-08-24 — `combatManager::DrawMoatOverlay` reproduces all 471 retail
   bytes.** Its two `DrawOccupant` callers, one-argument ABI and Dreamcast
   `drawing.cpp:2019` row establish the identity. The method intersects the
