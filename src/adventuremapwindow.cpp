@@ -8,6 +8,7 @@
 #include "border.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
+#include "cheatcode.h"
 #include "game.h"
 #include "hero.h"
 #include "kb.h"
@@ -23,6 +24,14 @@
 #include "winmgr.h"
 
 DATA(0x006a56e4) extern TQuickViewTextRow gQuickViewText[];
+
+// Dreamcast Game.h names both substitution alphabets. Retail's encoder reads
+// the second pointer; retaining both definitions preserves the original
+// adjacent data pair.
+DATA(0x0065f220)
+const char* TCheatCode::a = "abcdefghijklmnopqrstuvwxyz";
+DATA(0x0065f224)
+const char* TCheatCode::b = "nopqrstuvwxyzabcdefghijklm";
 
 #if 0  // @carcass
 
@@ -146,6 +155,33 @@ void TAdventureMapWindow::SetSleepImage(int image)
 }
 
 #endif  // @carcass
+
+// Game.h:1439, dc 0x2fa0. Constructor calls from both cheat handlers expand
+// to this shared encoder. Retail's lowered min keeps the length and 199-byte
+// ceiling in two stack locals and selects one by address; retaining that
+// source-level selection reproduces all eight blocks and 161 bytes.
+// E:\gamedcs\Game.h:1439
+VA(0x00402a30, 0xA1)
+void TCheatCode::encode(const char* value)
+{
+    int i = 0;
+    const int maximum = 199;
+    for (;;) {
+        int length = static_cast<int>(strlen(value));
+        const int* limit = &maximum;
+        if (length <= maximum)
+            limit = &length;
+        if (i >= *limit)
+            break;
+
+        if (isalpha(value[i]))
+            code[i] = b[tolower(value[i]) - 'a'];
+        else
+            code[i] = value[i];
+        i++;
+    }
+    code[i] = 0;
+}
 
 // Retail emits the generated wrapper immediately before the destructor;
 // slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.

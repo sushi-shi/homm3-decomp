@@ -1051,7 +1051,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x71b50	27	in-span	combatresultswindow	combatresultswindow	?Close@TCombatResultsWindow@@UAEXE@Z
 0x71b70	20	in-span	combatresultswindow	combatresultswindow	?DoModal@TCombatResultsWindow@@QAEXXZ
 0x71b90	132	in-span	combatresultswindow	combatresultswindow	?CombatResultsWindowHandler@@YIHAAVmessage@@@Z
-0x72010	448	bracketed	combatresultswindow..combatwindow	combatresultswindow,combatwindow	game_ajpoyhrcvyy_72010
+0x72010	448	in-span	combatwindow	combatwindow	?CheckCombatCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
 0x721d0	1066	in-span	combatwindow	combatwindow	??0TCombatWindow@@QAE@E@Z
 0x72600	165	in-span	combatwindow	combatwindow	?OnKeyPress@CCombatChatEdit@@UAEHPAVmessage@@@Z
 0x726b0	305	in-span	combatwindow	combatwindow	?SendChat@CCombatChatEdit@@UAEXPBDH@Z
