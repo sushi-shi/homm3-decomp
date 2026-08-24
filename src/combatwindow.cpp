@@ -4,7 +4,9 @@
 #include <va.h>
 #define HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW
 #include "combatwindow.h"
+#include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
+#include "font.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -204,6 +206,60 @@ void TCombatWindow::scroll_rollover(long delta)
     }
 }
 
+// EXACT: E:\gamedcs\combatwindow.cpp:508-574. The DC statement map preserves the
+// transient-versus-kept arms, newline split, two-line cap, and final visible
+// range. Retail fixes the live combat-manager guards and the +0x54 message
+// vector shared with show_messages and the destructor.
+VA(0x00472e90, 0x35E)
+void TCombatWindow::combat_message(const char* new_text,
+                                   unsigned char keep,
+                                   unsigned char priority)
+{
+    if (gpCombatManager->IsQuickCombat())
+        return;
+    if (!controlSubWindow->rolloverWidget)
+        return;
+    if (!gpCombatManager->field_13300)
+        return;
+    if (gpCombatManager->field_132f8)
+        return;
+
+    if (!keep) {
+        if (combatMessageCount > 0
+                && GameTime::ElapsedSince(combatMessageTime) < 3000
+                && !priority)
+            return;
+        set_rollover(new_text);
+        return;
+    }
+
+    std::string cTemp(new_text);
+    unsigned int split = cTemp.find('\n');
+    combatMessageTime = GameTime::Get();
+    combatMessageCount++;
+
+    if (split == std::string::npos) {
+        combatMessages.push_back(new std::string(cTemp));
+    } else {
+        cTemp[split] = ' ';
+        if (gUnnamed698a08->LineLength(
+                cTemp.c_str(), controlSubWindow->rolloverWidget->width) < 2) {
+            combatMessages.push_back(new std::string(cTemp));
+        } else {
+            combatMessageCount++;
+            combatMessages.push_back(new std::string(cTemp.substr(0, split)));
+            combatMessages.push_back(new std::string(
+                cTemp.substr(split + 1, std::string::npos)));
+        }
+    }
+
+    if (combatMessageCount > 2)
+        combatMessageCount = 2;
+    if (!controlSubWindow)
+        return;
+    show_messages(combatMessages.size() - combatMessageCount);
+}
+
 // EXACT: E:\gamedcs\combatwindow.cpp:583-594. The DC statement map and retail both
 // replace the placement bar with the ordinary control bar, redraw the entire
 // window through vslot 5, and post the full 800x600 screen.
@@ -301,13 +357,6 @@ int TCombatWindow::scroll_up(message* msg)
 // E:\gamedcs\combatwindow.cpp:491
 DC_ONLY(0x69f94, 0x26)
 int TCombatWindow::scroll_down(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:508
-DC_ONLY(0x69fbc, 0x242)
-void TCombatWindow::combat_message(const char* new_text, unsigned char keep, unsigned char priority)
 {
     // @stub
 }

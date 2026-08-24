@@ -127,7 +127,7 @@ rva	size	unit	current_label	provenance
 0x72bf0	54	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	src-VA+ir
 0x72c30	371	combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z	src-VA+ir
 0x72db0	64	combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	src-VA+ir
-0x72e90	862	combatwindow	calls_timeGetTime_72e90	working-label
+0x72e90	862	combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	src-VA+ir
 0x731f0	153	combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ	src-VA+ir
 0x74d80	4429	command	game_true_74d80	working-label
 0x76200	225	command	?auto_resolve_combat@combatManager@@QAEXXZ	src-VA+ir

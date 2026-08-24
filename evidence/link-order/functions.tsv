@@ -1066,7 +1066,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x72bf0	54	in-span	combatwindow	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ
 0x72c30	371	in-span	combatwindow	combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z
 0x72db0	64	in-span	combatwindow	combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z
-0x72e90	862	in-span	combatwindow	combatwindow	calls_timeGetTime_72e90
+0x72e90	862	in-span	combatwindow	combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z
 0x731f0	153	in-span	combatwindow	combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ
 0x73290	82	in-span	combatwindow	combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z
 0x732f0	89	bracketed	combatwindow..command	combatwindow,command	?DrawWindow@TCombatWindow@@UAEXEHH@Z
