@@ -383,10 +383,12 @@ int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo,
                            bool compressMsg, bool guaranteed);
 void PollRemote();
 void SendChat(const char* cChat, int toWho);
+unsigned char LobbyLaunchConnect();
 
 // Retail .data 0x69954c. make_gift only uses it as the gate for sending
 // a gift/request message to a non-local human; wider role unattested.
 extern int gNetworkActive69954c;
+extern int gUnnamed6994e4;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\remote.cpp:102, dc 0x11b8c4) void DPSD(int iDPErr, char* cFile, int iLine);
