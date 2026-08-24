@@ -25,12 +25,17 @@ class town;
 struct type_AI_combat_parameters;
 struct type_artifact;
 
-// Four integer drawing bounds copied as one value before a drawbridge
-// animation. Retail's assignment establishes the 16-byte extent; the
-// coordinate roles remain unnamed until a drawing reader is decoded.
+// Four inclusive drawing bounds copied as one value before a drawbridge
+// animation. Drawing.cpp's decoded readers prove the same min/max layout as
+// SLimitData. Keep the concrete source type consumer-scoped so the other VC6
+// units retain their already measured type-handle state.
+#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
+typedef SLimitData TDrawbridgeBounds;
+#else
 struct TDrawbridgeBounds {
     int values[4];
 };
+#endif
 SIZE(TDrawbridgeBounds, 0x10);
 
 // Polymorphic objects owned by combatManager at offsets where Close only
@@ -357,7 +362,10 @@ struct type_obstacle_shape {
     unsigned char minRow;             // +0x4
     unsigned char width;              // +0x5
     unsigned char extra_hex_count;    // +0x6
-    unsigned char pad_07;
+    // DC TObstacleInfo::underlay. DrawFrame independently proves the byte:
+    // non-zero shapes are drawn in the pre-unit pass, zero shapes in draw
+    // priority 2.
+    unsigned char underlay;
     signed char extra_hex_offsets[8]; // +0x8, extra_hex_count entries
     const char* spriteName;           // +0x10
 };
@@ -516,14 +524,13 @@ public:
         CSprite* sprite;                    // +0x0
         const type_obstacle_shape* shape;   // +0x4
         unsigned char hex;                  // +0x8
-        // Byte-proven by searchArray::set_moat (0x4b3290), which marks
-        // an obstacle's cell as moat-slowed when EITHER the acting
-        // stack's combatSide equals the SIGNED byte at +9 (`movsx ecx,
-        // byte [obstacle+9]` against army::combatSide) or the byte at
-        // +0xa is set. Names are address ordinals - no roster reaches
-        // either slot.
-        signed char field_09;               // +0x9
-        unsigned char field_0a;             // +0xa
+        // DC CodeView names these owner/is_visible. Retail independently
+        // fixes both offsets: searchArray::set_moat (0x4b3290) marks an
+        // obstacle's cell as moat-slowed when either the acting stack's
+        // combatSide equals the signed byte at +9 or the byte at +0xa is
+        // set; DrawFrame expands the same IsVisible predicate.
+        signed char owner;                  // +0x9
+        unsigned char is_visible;           // +0xa
         char pad_0b[0x1];
         // Sliced 2026-08-08 by mark_firewalls (0x4214f0), which feeds
         // this dword straight into ModifySpellDamage as the base
@@ -532,10 +539,18 @@ public:
         // Name provisional; no roster reaches the slot.
         long spell_damage;                  // +0xc
         // place_obstacle stamps these two on every obstacle it builds -
-        // +0x10 zero and +0x14 all-ones - alongside field_09/-1 and
-        // field_0a/1. No reader is decoded, so both stay ordinals.
+        // +0x10 zero and +0x14 all-ones - alongside owner/-1 and
+        // is_visible/1. No reader is decoded, so both stay ordinals.
         long field_10;                      // +0x10
         long field_14;                      // +0x14
+
+        // Dreamcast CodeView names this one-argument const member and fixes
+        // its bool result; the retail DrawFrame expansion proves the two
+        // participating bytes at +0x9/+0xa.
+        bool IsVisible(int side) const
+        {
+            return is_visible || owner == side;
+        }
     };
 
     // Dinkumware's four-word vector representation. FreeIcons exposes the
@@ -769,7 +784,14 @@ public:
     // shared with field_13d48 out of one register. Both ordinals.
     int field_5414;                    // +0x5414
     int field_5418;                    // +0x5418
+#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
+    // DC CodeView names these two adjacent SLimitData[2] arrays; DrawFrame's
+    // four DrawCombatHero calls independently prove the retail offsets.
+    SLimitData sCmbtHeroLimitData[2];      // +0x541c
+    SLimitData sCmbtHeroFlagLimitData[2];  // +0x543c
+#else
     char pad_541c[0x40];
+#endif
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
@@ -1362,11 +1384,10 @@ public:
     int DrawCreature(const CSprite* sprite, int sequence, int frame,
                      int x, int y, struct SLimitData* psLimitData,
                      int id, unsigned char isFlipped, int iColor);
-    // 0x4958e0 (drawing.obj), the three-argument rectangle clip
-    // DrawToBuffer asks before drawing the troop-count box over the
-    // combat grid bitmap. ORDINAL PLACEHOLDER name - no roster row
-    // reaches it.
-    int Unnamed4958E0(Bitmap816* grid, int x, int y);
+    // drawing.cpp:1991, DC 0x86098. DrawFrame supplies three wall bitmaps
+    // and army::DrawToBuffer supplies the troop-count background; the
+    // common three-argument clip/draw body at 0x4958e0 settles the identity.
+    int DrawObject(const Bitmap816* image, int x, int y);
     // The three missile animators. Every pointer parameter's constness
     // is read off the DC S_PUB32 mangling rather than guessed:
     // ?ShootMissile@combatManager@@QAAXHHHHPBMPBVCSprite@@@Z gives

@@ -2237,8 +2237,8 @@ next_hex:
         obstacle.sprite = ResourceManager::GetSprite(shape->spriteName);
         obstacle.shape = shape;
         obstacle.hex = static_cast<unsigned char>(hex);
-        obstacle.field_09 = -1;
-        obstacle.field_0a = 1;
+        obstacle.owner = -1;
+        obstacle.is_visible = 1;
         obstacle.spell_damage = 0;
         obstacle.field_10 = 0;
         obstacle.field_14 = -1;
@@ -2539,8 +2539,8 @@ void combatManager::SetupAndLoadObstacles()
                     ResourceManager::GetSprite(gLandMineShape.spriteName);
                 new_landmine.shape = &gLandMineShape;
                 new_landmine.hex = static_cast<unsigned char>(hex);
-                new_landmine.field_09 = 1;
-                new_landmine.field_0a = 0;
+                new_landmine.owner = 1;
+                new_landmine.is_visible = 0;
                 new_landmine.spell_damage = damage;
                 new_landmine.field_10 = 0;
                 new_landmine.field_14 = 0x3b;

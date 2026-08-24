@@ -8,6 +8,7 @@
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #define HOMM3_DRAWING_BACKGROUND_VIEW
 #define HOMM3_DRAWING_ARCHER_DECLS
+#define HOMM3_DRAWING_CHAT_VIEW
 #define HOMM3_CSPRITE_DRAW_METHODS
 #define HOMM3_ARMY_MOVE_VIEW
 #include "drawing.h"
@@ -17,10 +18,15 @@
 #include "combatwindow.h"
 #include "csprite.h"
 #include "findpath.h"
+#include "kbwin.h"
 #include "palette.h"
 #include "prefs.h"
+#include "remote.h"
 #include "resourcemanager.h"
+#include "soundmgr.h"
+#include "textwdgt.h"
 #include "town.h"
+#include "widget.h"
 #include "winmgr.h"
 
 // DC attests combatManager::CombatAreaLimits; the retail address and all four
@@ -135,12 +141,12 @@ void combatManager::UpdateCombatArea()
 {
     if (!IsQuickCombat() && field_13300) {
         gpWindowManager->UpdateScreen(
-            gCombatDrawLimits694f18.values[0],
-            gCombatDrawLimits694f18.values[1],
-            gCombatDrawLimits694f18.values[2]
-                - gCombatDrawLimits694f18.values[0] + 1,
-            gCombatDrawLimits694f18.values[3]
-                - gCombatDrawLimits694f18.values[1] + 1);
+            gCombatDrawLimits694f18.iMinX,
+            gCombatDrawLimits694f18.iMinY,
+            gCombatDrawLimits694f18.iMaxX
+                - gCombatDrawLimits694f18.iMinX + 1,
+            gCombatDrawLimits694f18.iMaxY
+                - gCombatDrawLimits694f18.iMinY + 1);
     }
 }
 
@@ -688,9 +694,9 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
 
     extent.Clip(combatDrawLimits);
     field_53b0->Draw(
-        drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+        drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
         extent.Width(), extent.Height(), gpWindowManager->screenBitmap,
-        drawbridgeBounds.values[0], drawbridgeBounds.values[1], false);
+        drawbridgeBounds.iMinX, drawbridgeBounds.iMinY, false);
     DrawFrame(0, 0, 0, 0, 1, 0);
     UpdateCombatArea(extent);
 
@@ -724,6 +730,237 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
     }
 
     UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
+}
+
+// Complete keeps the DC six-stage battlefield compositor but expands the
+// small obstacle/dead-stack helpers into the two grid walks. The first pass
+// draws underlay obstacles, the eight-priority pass interleaves walls, corpses,
+// ordinary obstacles and living stacks, and the tail posts either the full
+// combat area or the accumulated creature-effect extent. All 117 CFG blocks
+// and branch targets agree with retail. The 98.38% residual is confined to
+// VC6 register lifetimes in the limited-background blit and first obstacle
+// walk (34 register-visible slots; no control-flow distance).
+// E:\gamedcs\drawing.cpp:1141
+VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
+void combatManager::DrawFrame(unsigned char update,
+                              unsigned char bLimitCreatureEffect,
+                              unsigned char bLimitDraw, int iDelay,
+                              unsigned char bRefreshBackground,
+                              unsigned char bDoDelayTil)
+{
+    if (field_132f8
+            || static_cast<const combatManager*>(this)->IsQuickCombat()
+            || !field_13300)
+        return;
+
+    if (bLimitCreatureEffect) {
+        ComputeMaxExtent();
+        field_13d30 = 1;
+    }
+
+    if (chatMan.ChatChanged()) {
+        field_13d30 = 0;
+        bLimitDraw = 0;
+        bLimitCreatureEffect = 0;
+        if (field_53b8) {
+            field_53b0->Draw(
+                combatWindow->chatWidget->x,
+                combatWindow->chatWidget->y,
+                combatWindow->chatWidget->width,
+                combatWindow->chatWidget->height,
+                gpWindowManager->screenBitmap,
+                combatWindow->chatWidget->x,
+                combatWindow->chatWidget->y, false);
+            goto background_ready;
+        }
+    } else {
+        if (!bRefreshBackground)
+            goto background_ready;
+        if (field_53b8) {
+            if (!bLimitCreatureEffect && !bLimitDraw && !field_13d30) {
+                field_53b0->Draw(0, 0, 800, 556,
+                                 gpWindowManager->screenBitmap,
+                                 0, 0, false);
+            } else {
+                SLimitData& bounds = drawbridgeBounds;
+                field_53b0->Draw(
+                    bounds.iMinX, bounds.iMinY,
+                    bounds.Width(), bounds.Height(),
+                    gpWindowManager->screenBitmap,
+                    bounds.iMinX, bounds.iMinY, false);
+            }
+            goto background_ready;
+        }
+    }
+    DrawBackground();
+
+background_ready:
+
+    for (int row = 0; row < 11; row++) {
+        for (int column = 1; column < COMBAT_GRID_LAST_COLUMN; column++) {
+            hexcell& cell = cells[GetHexIndex(column, row)];
+            if (cell.field_10 & 1) {
+                int obstacleIndex = cell.field_14;
+                if (obstacles.begin[obstacleIndex].shape->underlay) {
+                    TObstacle& obstacle = obstacles.begin[obstacleIndex];
+                    if (obstacle.is_visible
+                            || (obstacle.owner == currentSide
+                                && sideIsLocalHuman[currentSide])
+                            || (obstacle.owner != currentSide
+                                && !sideIsLocalHuman[currentSide])
+                            || field_13d75) {
+                        int yOffset =
+                            42 * (obstacle.shape->minRow - 1);
+                        DrawSpriteObject(
+                            obstacle.sprite,
+                            field_13ffc
+                                % obstacle.sprite->GetNumFrames(0),
+                            cell.field_04, cell.field_06 - yOffset, 0);
+                    }
+                }
+            }
+        }
+    }
+
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE) {
+        const TWallTraits& traits =
+            akWallTraits[defendingTown->type][eWallSectionBackWall];
+        DrawObject(combatIcons[eWallSectionBackWall][0],
+                   traits.x, traits.y);
+    }
+
+    if (heroes[0]) {
+        DrawCombatHero(heroFlagSprites[0], 0, field_5414,
+                       29, 20,
+                       &sCmbtHeroFlagLimitData[0], 0);
+        DrawCombatHero(creatureSprites[0], field_53e4[0], field_53ec[0],
+                       -43, -19,
+                       &sCmbtHeroLimitData[0], 0);
+    }
+    if (heroes[1]) {
+        DrawCombatHero(heroFlagSprites[1], 0, field_5418,
+                       755, 20,
+                       &sCmbtHeroFlagLimitData[1], 0);
+        DrawCombatHero(creatureSprites[1], field_53e4[1], field_53ec[1],
+                       693, -19,
+                       &sCmbtHeroLimitData[1], 1);
+    }
+
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE)
+        DrawWallAt(255, 1);
+
+    for (row = 0; row < 11; row++) {
+        if (field_132f4 > COMBAT_FORTIFICATION_NONE
+                && row == COMBAT_GATE_ROW
+                && drawbridgeState != DRAWBRIDGE_UP) {
+            const TWallTraits& traits =
+                akWallTraits[defendingTown->type][eWallSectionDoor];
+            DrawObject(combatIcons[eWallSectionDoor][drawbridgeState],
+                       traits.x, traits.y);
+        }
+
+        int firstColumn;
+        int lastColumn;
+        int step;
+        if (field_132f4 > COMBAT_FORTIFICATION_NONE && row >= 6) {
+            firstColumn = COMBAT_GRID_LAST_COLUMN;
+            lastColumn = -1;
+            step = -1;
+        } else {
+            firstColumn = 0;
+            lastColumn = COMBAT_GRID_ROW_STRIDE;
+            step = 1;
+        }
+
+        for (int priority = 0; priority <= COMBAT_DRAW_PRIORITY_SINGLE_PASS;
+                priority++) {
+            for (int column = firstColumn; column != lastColumn;
+                    column += step) {
+                int index = GetHexIndex(column, row);
+                hexcell& cell = cells[index];
+
+                if (field_132f4 > COMBAT_FORTIFICATION_NONE
+                        && priority == COMBAT_DRAW_PRIORITY_WALL) {
+                    DrawWallAt(index, step);
+                } else if (priority == COMBAT_DRAW_PRIORITY_CORPSE) {
+                    for (int body = 0; body < cell.iBodiesInHex; body++) {
+                        army* dead = cell.get_dead_army(body);
+                        if (cell.deadPartOfDouble[body] != dead->facing)
+                            dead->DrawToBuffer(
+                                cell.field_00, cell.field_02, 0);
+                    }
+                } else if (priority == COMBAT_DRAW_PRIORITY_OBSTACLE
+                           && (cell.field_10 & 1)) {
+                    int obstacleIndex = cell.field_14;
+                    if (!obstacles.begin[obstacleIndex].shape->underlay) {
+                        TObstacle& obstacle = obstacles.begin[obstacleIndex];
+                        if (obstacle.is_visible
+                                || (obstacle.owner == currentSide
+                                    && sideIsLocalHuman[currentSide])
+                                || (obstacle.owner != currentSide
+                                    && !sideIsLocalHuman[currentSide])
+                                || field_13d75) {
+                            int yOffset =
+                                42 * (obstacle.shape->minRow - 1);
+                            DrawSpriteObject(
+                                obstacle.sprite,
+                                field_13ffc
+                                    % obstacle.sprite->GetNumFrames(0),
+                                cell.field_04, cell.field_06 - yOffset, 0);
+                        }
+                    }
+                }
+
+                if (cells[index].HasArmy())
+                    DrawOccupant(index, priority, 0);
+            }
+        }
+
+        if (field_132f4 > COMBAT_FORTIFICATION_NONE
+                && row == COMBAT_GATE_ROW
+                && drawbridgeState == DRAWBRIDGE_DOWN
+                && combatIcons[eWallSectionDoorRope][1]) {
+            const TWallTraits& traits =
+                akWallTraits[defendingTown->type][eWallSectionDoorRope];
+            DrawObject(combatIcons[eWallSectionDoorRope][1],
+                       traits.x, traits.y);
+        }
+        PollSound();
+    }
+
+    if (field_132f4 > COMBAT_FORTIFICATION_NONE) {
+        DrawWallAt(200, -1);
+        if (field_132f4 > COMBAT_FORTIFICATION_NONE)
+            DrawWallAt(251, -1);
+    }
+
+    combatWindow->DrawChatText(0);
+    if (gUnnamed698758.combatArmyInfoLevel)
+        DrawCreatureAndHeroSubwindows();
+
+    if (bDoDelayTil) {
+        GameTime::DelayTil(gCombatStamp698998);
+        gCombatStamp698998 = GameTime::NextFrameTime(
+            gCombatStamp698998,
+            static_cast<long>(
+                iDelay
+                * gCombatSpeedFactors[gUnnamed698758.combatSpeed]));
+    }
+
+    if (update) {
+        if (!bLimitCreatureEffect && !bLimitDraw) {
+            UpdateCombatArea();
+            return;
+        }
+
+        SLimitData& bounds = drawbridgeBounds;
+        const SLimitData& combatDrawLimits = gCombatDrawLimits694f18;
+        bounds.Clip(combatDrawLimits);
+        UpdateCombatArea(bounds);
+    }
+
+    if (bLimitCreatureEffect || bLimitDraw)
+        field_13d30 = 0;
 }
 
 // Retail's wall row selects one of five preloaded images from each of the
@@ -919,10 +1156,10 @@ int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame,
     }
 
     if (field_13d30) {
-        if (limits->iMinX > drawbridgeBounds.values[2]
-                || limits->iMaxX < drawbridgeBounds.values[0]
-                || limits->iMinY > drawbridgeBounds.values[3]
-                || limits->iMaxY < drawbridgeBounds.values[1])
+        if (limits->iMinX > drawbridgeBounds.iMaxX
+                || limits->iMaxX < drawbridgeBounds.iMinX
+                || limits->iMinY > drawbridgeBounds.iMaxY
+                || limits->iMaxY < drawbridgeBounds.iMinY)
             return 0;
     }
 
@@ -958,10 +1195,10 @@ int combatManager::DrawCreature(const CSprite* sprite, int sequence, int frame,
     }
 
     if (field_13d30) {
-        if (limits->iMinX > drawbridgeBounds.values[2]
-                || limits->iMaxX < drawbridgeBounds.values[0]
-                || limits->iMinY > drawbridgeBounds.values[3]
-                || limits->iMaxY < drawbridgeBounds.values[1])
+        if (limits->iMinX > drawbridgeBounds.iMaxX
+                || limits->iMaxX < drawbridgeBounds.iMinX
+                || limits->iMinY > drawbridgeBounds.iMaxY
+                || limits->iMaxY < drawbridgeBounds.iMinY)
             return 0;
     }
 
@@ -996,10 +1233,10 @@ int combatManager::DrawCombatHero(const CSprite* sprite, int sequence,
     }
 
     if (field_13d30) {
-        if (limits->iMinX > drawbridgeBounds.values[2]
-                || limits->iMaxX < drawbridgeBounds.values[0]
-                || limits->iMinY > drawbridgeBounds.values[3]
-                || limits->iMaxY < drawbridgeBounds.values[1])
+        if (limits->iMinX > drawbridgeBounds.iMaxX
+                || limits->iMaxX < drawbridgeBounds.iMinX
+                || limits->iMinY > drawbridgeBounds.iMaxY
+                || limits->iMaxY < drawbridgeBounds.iMinY)
             return 0;
     }
 
@@ -1023,34 +1260,34 @@ int combatManager::DrawSpellEffect(const CSprite* sprite, int frame,
     SLimitData limits(x, y, x + sprite->Width - 1,
                       y + sprite->Height - 1);
 
-    if (limits.iMinX < gCombatDrawLimits694f18.values[0])
-        limits.iMinX = gCombatDrawLimits694f18.values[0];
-    if (limits.iMinY < gCombatDrawLimits694f18.values[1])
-        limits.iMinY = gCombatDrawLimits694f18.values[1];
-    if (limits.iMaxX > gCombatDrawLimits694f18.values[2])
-        limits.iMaxX = gCombatDrawLimits694f18.values[2];
-    if (limits.iMaxY > gCombatDrawLimits694f18.values[3])
-        limits.iMaxY = gCombatDrawLimits694f18.values[3];
+    if (limits.iMinX < gCombatDrawLimits694f18.iMinX)
+        limits.iMinX = gCombatDrawLimits694f18.iMinX;
+    if (limits.iMinY < gCombatDrawLimits694f18.iMinY)
+        limits.iMinY = gCombatDrawLimits694f18.iMinY;
+    if (limits.iMaxX > gCombatDrawLimits694f18.iMaxX)
+        limits.iMaxX = gCombatDrawLimits694f18.iMaxX;
+    if (limits.iMaxY > gCombatDrawLimits694f18.iMaxY)
+        limits.iMaxY = gCombatDrawLimits694f18.iMaxY;
 
     if (field_13d2c) {
-        if (drawbridgeBounds.values[0] > limits.iMinX)
-            drawbridgeBounds.values[0] = limits.iMinX;
-        if (drawbridgeBounds.values[1] > limits.iMinY)
-            drawbridgeBounds.values[1] = limits.iMinY;
-        if (drawbridgeBounds.values[2] < limits.iMaxX)
-            drawbridgeBounds.values[2] = limits.iMaxX;
-        if (drawbridgeBounds.values[3] < limits.iMaxY)
-            drawbridgeBounds.values[3] = limits.iMaxY;
+        if (drawbridgeBounds.iMinX > limits.iMinX)
+            drawbridgeBounds.iMinX = limits.iMinX;
+        if (drawbridgeBounds.iMinY > limits.iMinY)
+            drawbridgeBounds.iMinY = limits.iMinY;
+        if (drawbridgeBounds.iMaxX < limits.iMaxX)
+            drawbridgeBounds.iMaxX = limits.iMaxX;
+        if (drawbridgeBounds.iMaxY < limits.iMaxY)
+            drawbridgeBounds.iMaxY = limits.iMaxY;
     }
 
     if (field_13d34)
         return 0;
 
     if (field_13d30) {
-        if (limits.iMinX > drawbridgeBounds.values[2]
-                || limits.iMaxX < drawbridgeBounds.values[0]
-                || limits.iMinY > drawbridgeBounds.values[3]
-                || limits.iMaxY < drawbridgeBounds.values[1])
+        if (limits.iMinX > drawbridgeBounds.iMaxX
+                || limits.iMaxX < drawbridgeBounds.iMinX
+                || limits.iMinY > drawbridgeBounds.iMaxY
+                || limits.iMaxY < drawbridgeBounds.iMinY)
             return 0;
     }
 
@@ -1073,34 +1310,34 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame,
     SLimitData limits(x, y, x + sprite->Width - 1,
                       y + sprite->Height - 1);
 
-    if (limits.iMinX < gCombatDrawLimits694f18.values[0])
-        limits.iMinX = gCombatDrawLimits694f18.values[0];
-    if (limits.iMinY < gCombatDrawLimits694f18.values[1])
-        limits.iMinY = gCombatDrawLimits694f18.values[1];
-    if (limits.iMaxX > gCombatDrawLimits694f18.values[2])
-        limits.iMaxX = gCombatDrawLimits694f18.values[2];
-    if (limits.iMaxY > gCombatDrawLimits694f18.values[3])
-        limits.iMaxY = gCombatDrawLimits694f18.values[3];
+    if (limits.iMinX < gCombatDrawLimits694f18.iMinX)
+        limits.iMinX = gCombatDrawLimits694f18.iMinX;
+    if (limits.iMinY < gCombatDrawLimits694f18.iMinY)
+        limits.iMinY = gCombatDrawLimits694f18.iMinY;
+    if (limits.iMaxX > gCombatDrawLimits694f18.iMaxX)
+        limits.iMaxX = gCombatDrawLimits694f18.iMaxX;
+    if (limits.iMaxY > gCombatDrawLimits694f18.iMaxY)
+        limits.iMaxY = gCombatDrawLimits694f18.iMaxY;
 
     if (field_13d2c) {
-        if (drawbridgeBounds.values[0] > limits.iMinX)
-            drawbridgeBounds.values[0] = limits.iMinX;
-        if (drawbridgeBounds.values[1] > limits.iMinY)
-            drawbridgeBounds.values[1] = limits.iMinY;
-        if (drawbridgeBounds.values[2] < limits.iMaxX)
-            drawbridgeBounds.values[2] = limits.iMaxX;
-        if (drawbridgeBounds.values[3] < limits.iMaxY)
-            drawbridgeBounds.values[3] = limits.iMaxY;
+        if (drawbridgeBounds.iMinX > limits.iMinX)
+            drawbridgeBounds.iMinX = limits.iMinX;
+        if (drawbridgeBounds.iMinY > limits.iMinY)
+            drawbridgeBounds.iMinY = limits.iMinY;
+        if (drawbridgeBounds.iMaxX < limits.iMaxX)
+            drawbridgeBounds.iMaxX = limits.iMaxX;
+        if (drawbridgeBounds.iMaxY < limits.iMaxY)
+            drawbridgeBounds.iMaxY = limits.iMaxY;
     }
 
     if (field_13d34)
         return 0;
 
     if (field_13d30) {
-        if (limits.iMinX > drawbridgeBounds.values[2]
-                || limits.iMaxX < drawbridgeBounds.values[0]
-                || limits.iMinY > drawbridgeBounds.values[3]
-                || limits.iMaxY < drawbridgeBounds.values[1])
+        if (limits.iMinX > drawbridgeBounds.iMaxX
+                || limits.iMaxX < drawbridgeBounds.iMinX
+                || limits.iMinY > drawbridgeBounds.iMaxY
+                || limits.iMaxY < drawbridgeBounds.iMinY)
             return 0;
     }
 
@@ -1140,6 +1377,53 @@ int combatManager::DrawCreatureAndHeroSubwindows()
     if (combatWindow->creatureSubWindows[3]->IsShown())
         combatWindow->creatureSubWindows[3]->Draw(
             0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    return 1;
+}
+
+// The shared bitmap-object painter clips the image rectangle to the combat
+// viewport, optionally accumulates it into the current effect extent, rejects
+// a disjoint limited draw, and finally blits the full 8-bit image.
+// E:\gamedcs\drawing.cpp:1991
+VA(0x004958e0, 0x129)  // DrawFrame/DrawToBuffer callers, dc 0x86098
+int combatManager::DrawObject(const Bitmap816* image, int x, int y)
+{
+    SLimitData limits(x, y,
+                      x + image->GetWidth() - 1,
+                      y + image->GetHeight() - 1);
+
+    if (limits.iMinX < gCombatDrawLimits694f18.iMinX)
+        limits.iMinX = gCombatDrawLimits694f18.iMinX;
+    if (limits.iMinY < gCombatDrawLimits694f18.iMinY)
+        limits.iMinY = gCombatDrawLimits694f18.iMinY;
+    if (limits.iMaxX > gCombatDrawLimits694f18.iMaxX)
+        limits.iMaxX = gCombatDrawLimits694f18.iMaxX;
+    if (limits.iMaxY > gCombatDrawLimits694f18.iMaxY)
+        limits.iMaxY = gCombatDrawLimits694f18.iMaxY;
+
+    if (field_13d2c) {
+        if (drawbridgeBounds.iMinX > limits.iMinX)
+            drawbridgeBounds.iMinX = limits.iMinX;
+        if (drawbridgeBounds.iMinY > limits.iMinY)
+            drawbridgeBounds.iMinY = limits.iMinY;
+        if (drawbridgeBounds.iMaxX < limits.iMaxX)
+            drawbridgeBounds.iMaxX = limits.iMaxX;
+        if (drawbridgeBounds.iMaxY < limits.iMaxY)
+            drawbridgeBounds.iMaxY = limits.iMaxY;
+    }
+
+    if (field_13d34)
+        return 0;
+
+    if (field_13d30) {
+        if (limits.iMinX > drawbridgeBounds.iMaxX
+                || limits.iMaxX < drawbridgeBounds.iMinX
+                || limits.iMinY > drawbridgeBounds.iMaxY
+                || limits.iMaxY < drawbridgeBounds.iMinY)
+            return 0;
+    }
+
+    image->Draw(0, 0, image->GetWidth(), image->GetHeight(),
+                gpWindowManager->screenBitmap, x, y, true);
     return 1;
 }
 

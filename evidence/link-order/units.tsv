@@ -29,7 +29,7 @@ cmbtmgr	0x62760	0x6a511	32177	61	0	74	61	13
 combatcontrolsubwindow	0x6b610	0x6dc2b	9755	13	0	21	13	8
 combatoptionswindow	0x6e3b0	0x6feda	6954	4	0	5	4	1
 combatresultswindow	0x702d0	0x71c14	6468	6	0	7	6	1
-combatwindow	0x728d0	0x728fa	42	1	0	1	1	0
+combatwindow	0x728d0	0x732e2	2578	2	0	10	2	8
 command	0x74bf0	0x7a2cd	22237	11	0	28	11	17
 creature_bank	0x7aad0	0x7ab2e	94	1	0	1	1	0
 creaturetype	0x7b120	0x7b211	241	3	0	3	3	0
@@ -41,7 +41,7 @@ customcampaign	0x8b200	0x8b2d7	215	2	0	2	2	0
 dialogbox	0x8fdc0	0x90b67	3495	10	0	12	10	2
 diff	0x90f60	0x912ff	927	4	0	4	4	0
 dimensiondoorwindow	0x916f0	0x91edc	2028	8	0	10	8	2
-drawing	0x93710	0x95729	8217	11	0	17	11	6
+drawing	0x93710	0x95a09	8953	13	0	20	13	7
 event_record	0x9da70	0x9dab1	65	1	0	1	1	0
 exec	0xb0a10	0xb0f35	1317	5	0	5	5	0
 findpath	0xb1330	0xb3f61	11313	18	0	19	18	1

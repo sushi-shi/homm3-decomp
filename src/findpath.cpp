@@ -1424,7 +1424,7 @@ void searchArray::set_moat(const army* current_army)
         if (gpCombatManager->cells[cell].field_10 & 4) {
             const combatManager::TObstacle* obstacle =
                 &gpCombatManager->obstacles.begin[gpCombatManager->cells[cell].field_14];
-            if (current_army->combatSide == obstacle->field_09 || obstacle->field_0a)
+            if (current_army->combatSide == obstacle->owner || obstacle->is_visible)
                 bIsMoatSlowed[cell] = 1;
         }
     } }
