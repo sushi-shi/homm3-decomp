@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — Complete's extended `combatManager::DrawArcher` reproduces
+  all 276 retail bytes.** The row at 0x495090 forwards the DC method's seven
+  arguments to `ComputeExtent`, but retail's `ret 0x20` and its sole caller
+  prove an eighth byte-sized colour selector. That caller is the siege-wall
+  archer pass at 0x494c20, preserving the Dreamcast
+  `DrawWallAt -> DrawArcher` edge and resolving the earlier ambiguity with
+  neighbouring `DrawCreatureAlpha`. The method creates a temporary 16-byte
+  `SLimitData` when needed, updates and clips the dirty extent against the
+  manager's four drawing bounds, then draws the fixed 232-pixel archer strip
+  to the screen bitmap with system-palette row 0 or 96. An explicit
+  zero-initialize/conditional-assign spelling gives VC6 retail's byte test
+  and two-way branch; all 15 CFG blocks then agree. Two reviewed site-specific
+  aliases preserve the source names of `gpWindowManager` and
+  `gSystemPalette`; the still-unclaimed `ComputeExtent` callee retains a
+  cosmetic relocation-label delta, which the normalized exact-byte verdict
+  correctly ignores. The synchronized build/delink/build checkpoint reaches
+  **1898/2310 linked exact**, **1829/2241 game exact**, **96.59% game fuzzy**
+  and **42.77% executable coverage**. All 51 unit tests and every ratchet,
+  banked-row, claim, single-view and cleanliness gate pass. The all-unit
+  queue remains 412 residual functions / 28.6 KiB recoverable; the ordinary
+  tractable tier falls to **220 functions / 178.8 KiB**. No external
+  implementation body was used: retail bytes prove the behavior and x86
+  verdict; Dreamcast CodeView supplies the name, base signature, layout and
+  cross-architecture caller edge.
+
 - **2026-08-24 — `combatManager::SetupGridForArmy` claims and reproduces
   all 341 retail bytes.** The Dreamcast roster, source order and unique call
   graph place the method at 0x4937d0; retail independently confirms the one-

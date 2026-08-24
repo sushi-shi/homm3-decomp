@@ -3,14 +3,18 @@
 // 54 functions in link order; 21 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+#define HOMM3_SLIMITDATA_VIEW
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #define HOMM3_DRAWING_BACKGROUND_VIEW
+#define HOMM3_DRAWING_ARCHER_DECLS
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "combatcontrolsubwindow.h"
 #include "combatwindow.h"
+#include "csprite.h"
 #include "findpath.h"
+#include "palette.h"
 #include "prefs.h"
 #include "resourcemanager.h"
 #include "town.h"
@@ -47,11 +51,11 @@ DATA(0x006989ec) int gbProcessingCombatAction;
 // extra parameter is trailing.
 //
 // 0x495090's extra argument is decoded: a byte that selects table index 0
-// vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row -
-// exactly what DrawCreatureAlpha's trailing `iColor` does, and
-// DrawCreatureAlpha (dc 0x85b50) is the neighbouring DC row with eight
-// parameters. So either these three gained a Complete-era colour argument
-// or 0x495090 is DrawCreatureAlpha. Its body forwards its other seven
+// vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row.
+// Its only retail caller is the siege-wall/archer pass at 0x494c20, matching
+// the Dreamcast DrawWallAt -> DrawArcher edge and settling this row as
+// DrawArcher rather than neighbouring DrawCreatureAlpha. Complete therefore
+// added the trailing colour selector. The body forwards the other seven
 // arguments verbatim to ComputeExtent (0x495f50) plus the +0x13d2c limit
 // byte as SaveBiggestExtent, and the screen puts ComputeExtent at eight,
 // which is what makes the forwarding legible.
@@ -269,7 +273,7 @@ void combatManager::DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 }
 
 // E:\gamedcs\drawing.cpp:1661
-// RETAIL_LOCATED(0x00495090, 0x114): not reconstructed; dc-callgraph unique, dc 0x85978
+// RETAIL_LIVE(0x00495090, 0x114): reconstructed below; dc caller edge, dc 0x85978
 int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
@@ -452,6 +456,46 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
     }
 
     UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
+}
+
+// Complete keeps the DC DrawArcher control flow but adds a trailing colour-row
+// selector. The selected system-palette entry is forwarded as CSprite's
+// outcolor; the source crop remains the archer strip's fixed 232-pixel height.
+// E:\gamedcs\drawing.cpp:1661
+VA(0x00495090, 0x114)  // dc-callgraph unique, dc 0x85978
+int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame,
+                              int x, int y, SLimitData* limits,
+                              unsigned char isFlipped,
+                              unsigned char colorRow)
+{
+    SLimitData computedLimits;
+    if (!limits)
+        limits = &computedLimits;
+
+    if (field_13d2c || field_13d30) {
+        ComputeExtent(sprite, sequence, frame, x, y, limits, isFlipped,
+                      field_13d2c);
+        if (field_13d34)
+            return 0;
+    }
+
+    if (field_13d30) {
+        if (limits->iMinX > drawbridgeBounds.values[2]
+                || limits->iMaxX < drawbridgeBounds.values[0]
+                || limits->iMinY > drawbridgeBounds.values[3]
+                || limits->iMaxY < drawbridgeBounds.values[1])
+            return 0;
+    }
+
+    unsigned int paletteIndex = 0;
+    if (colorRow)
+        paletteIndex = 96;
+    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+    const_cast<CSprite*>(sprite)->DrawCreature(
+        sequence, frame, 0, 0, sprite->Width, 232, screen->map,
+        x, y, screen->Width, screen->Height, screen->Pitch,
+        isFlipped, gSystemPalette->data[paletteIndex]);
+    return 1;
 }
 
 // E:\gamedcs\drawing.cpp:1865
