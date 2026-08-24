@@ -47,6 +47,7 @@ public:
 
     virtual void Close(unsigned char update);
     virtual void handle_widget_hover(widget* current_widget);
+    virtual void DrawWindow(unsigned char update, int low, int high);
     // 0x472bf0, LOCATED 2026-08-13 from combatManager::RightClick. The
     // 54-byte body clears the +0x64 latch and re-sets the message line
     // from the string at 0x691210 once GameTime has run 3000 ticks past
@@ -61,11 +62,13 @@ public:
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
-#ifndef HOMM3_COMMAND_GRID_VIEW
+#if !defined(HOMM3_COMMAND_GRID_VIEW) \
+        && !defined(HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW)
     TCombatWindow(unsigned char do_placement);
 #else
-    // command.cpp uses the placement teardown but never constructs this
-    // window; substitute one declaration to preserve its VC6 handle count.
+    // command.cpp and combatwindow.cpp use the placement teardown but do not
+    // construct this window; substitute one declaration to preserve each
+    // TU's VC6 handle count.
     void EndPlacementPhase();                              // 0x4731f0
 #endif
     // Retail 0x472e90, the message line ClearCombatMessages forwards to
