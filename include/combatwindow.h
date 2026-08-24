@@ -45,6 +45,7 @@ public:
     TCombatHeroSubWindow* heroSubWindows[2];
     TCombatCreatureSubWindow* creatureSubWindows[4];
 
+    virtual ~TCombatWindow();
     virtual void Close(unsigned char update);
     virtual void handle_widget_hover(widget* current_widget);
     virtual void DrawWindow(unsigned char update, int low, int high);

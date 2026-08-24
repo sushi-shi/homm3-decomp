@@ -13,6 +13,11 @@
 #include "winmgr.h"
 #include "widget.h"
 
+// Retail .bss 0x695000. The constructor publishes itself here for the chat
+// edit callbacks and the destructor clears the slot. The Dreamcast image has
+// the corresponding compiland-local pointer at 0x1bf12c.
+static TCombatWindow* gpCombatWindow;
+
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
 
 // E:\gamedcs\combatwindow.cpp:42
@@ -41,6 +46,33 @@ void TCombatWindow::Close(unsigned char update)
         controlSubWindow = 0;
     }
     heroWindow::Close(update);
+}
+
+// EXACT: E:\gamedcs\combatwindow.cpp:293-313. Retail extends the DC teardown with
+// four additional creature panels, but preserves its three source phases:
+// destroy the control bar and inherited widgets, destroy every owned message,
+// then release the side panels and clear the callback-visible singleton.
+VA(0x00472900, 0x14E)
+TCombatWindow::~TCombatWindow()
+{
+    if (controlSubWindow)
+        delete controlSubWindow;
+
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it)
+        delete *it;
+
+    for (unsigned int i = 0; i < combatMessages.size(); ++i)
+        delete combatMessages[i];
+
+    delete heroSubWindows[0];
+    delete heroSubWindows[1];
+    delete creatureSubWindows[0];
+    delete creatureSubWindows[1];
+    delete creatureSubWindows[2];
+    delete creatureSubWindows[3];
+
+    gpCombatWindow = 0;
 }
 
 // Dreamcast keeps this source helper out of line; retail /Ob2 folds both call
@@ -177,13 +209,6 @@ void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
 }
 
 #if 0  // @carcass: remaining combat-window bodies are not reconstructed yet
-
-// E:\gamedcs\combatwindow.cpp:293
-DC_ONLY(0x69b6c, 0x104)
-void TCombatWindow::~TCombatWindow()
-{
-    // @stub
-}
 
 // E:\gamedcs\combatwindow.cpp:322
 DC_ONLY(0x69c70, 0x6A)
