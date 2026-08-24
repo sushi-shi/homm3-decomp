@@ -253,7 +253,7 @@ void combatManager::DrawObstacleAt(int hex_index)
 }
 
 // E:\gamedcs\drawing.cpp:1426
-// RETAIL_LOCATED(0x00494c20, 0x31c): not reconstructed; callee-set, dc 0x85478
+// RETAIL_LIVE(0x00494c20, 0x31c): reconstructed below; callee-set, dc 0x85478
 void combatManager::DrawWallAt(int hex_index, int dx)
 {
     // @stub
@@ -457,6 +457,132 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
     }
 
     UpdateMouseGrid(iNewMouseGridIndex, hexes, 0);
+}
+
+// Retail's wall row selects one of five preloaded images from each of the
+// defending town's eighteen TWallTraits records. Ordinary rows are clipped
+// against the selected battlefield hex; the keep and tower rows optionally
+// insert their defending archer before the foreground cover is drawn.
+// E:\gamedcs\drawing.cpp:1426
+VA(0x00494c20, 0x31c)  // callee-set + exact arity, dc 0x85478
+void combatManager::DrawWallAt(int hex_index, int dx)
+{
+    const TWallTraits* wt_table = akWallTraits[defendingTown->type];
+
+    for (int wall = eWallSectionDoor; wall < kNumWallSections; wall++) {
+        const TWallTraits& traits = wt_table[wall];
+        int wall_hex = traits.hex;
+        Bitmap816* image = combatIcons[wall][wallStanding[wall]];
+        if (wall_hex == -1 || !image)
+            continue;
+
+        if (wall == eWallSectionMainBuilding
+                || wall == eWallSectionMainBuildingCover
+                || wall == eWallSectionLowerTower
+                || wall == eWallSectionLowerTowerCover
+                || wall == eWallSectionUpperTower
+                || wall == eWallSectionUpperTowerCover
+                || wall == eWallSectionGate)
+            goto draw_special_wall;
+
+        {
+        if (hex_index
+                == wall_hex + dx * COMBAT_GRID_ROW_STRIDE
+                    - RowIsOdd(GridY(wall_hex))
+                || (hex_index == wall_hex && !GridY(wall_hex))) {
+            const int sw = cells[wall_hex].field_04 - traits.x;
+            if (sw > 0)
+                DrawWall(image, 0, 0, sw, image->GetHeight(),
+                         traits.x, traits.y);
+        } else if (hex_index
+                == wall_hex - dx * COMBAT_GRID_ROW_STRIDE
+                    - RowIsOdd(GridY(wall_hex)) + 1) {
+            const hexcell& cell = cells[wall_hex];
+            const int sw = image->GetWidth() - cell.field_04 + traits.x
+                           - COMBAT_WALL_HEX_WIDTH;
+            if (sw > 0) {
+                const int sx = cell.field_04 - traits.x
+                               + COMBAT_WALL_HEX_WIDTH;
+                DrawWall(image, sx, 0, sw, image->GetHeight(),
+                         cell.field_04 + COMBAT_WALL_HEX_WIDTH, traits.y);
+            }
+        }
+
+        if (hex_index == wall_hex) {
+            int width = COMBAT_WALL_HEX_WIDTH;
+            const hexcell& cell = cells[wall_hex];
+            int source_x = cell.field_04 - traits.x;
+            int dest_x = cell.field_04;
+            if (source_x < 0) {
+                width += source_x;
+                dest_x = traits.x;
+                source_x = 0;
+            }
+            int remaining_width = image->GetWidth() - source_x;
+            if (width > remaining_width)
+                width = remaining_width;
+            DrawWall(image, source_x, 0, width, image->GetHeight(),
+                     dest_x, traits.y);
+        }
+        }
+        continue;
+
+draw_special_wall:
+        if (hex_index != wall_hex)
+            continue;
+
+        {
+            // Retail retains one repeated lower-tower compare after the
+            // three-way guard. VC6 folds that compare from every equivalent
+            // structured spelling tried here; it is the sole non-relocation
+            // delta in the normalized flat-asm comparison (99.1993%).
+            TArcher* archer = 0;
+            if (wall != eWallSectionMainBuildingCover) {
+                if (wall != eWallSectionLowerTowerCover
+                        && wall != eWallSectionUpperTowerCover)
+                    goto draw_wall_image;
+                if (wall != eWallSectionLowerTowerCover)
+                    archer = &archers[2];
+                else
+                    archer = &archers[1];
+            } else {
+                archer = &archers[0];
+            }
+
+            if (archer->sprite) {
+                int draw_x;
+                if (!archer->field_14) {
+                    draw_x = archer->x - archer->sprite->GetWidth();
+                    draw_x += COMBAT_ARCHER_X_BIAS;
+                    if (akCreatureTypeTraits[archer->creatureType].attributes
+                            & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                        draw_x += COMBAT_WALL_HEX_WIDTH;
+                    if (archer->creatureType == CREATURE_MEDUSA)
+                        draw_x -= 5;
+                } else {
+                    draw_x = archer->x - COMBAT_ARCHER_X_BIAS;
+                    if (akCreatureTypeTraits[archer->creatureType].attributes
+                            & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                        draw_x -= COMBAT_WALL_HEX_WIDTH;
+                    if (archer->creatureType == CREATURE_MEDUSA)
+                        draw_x += 5;
+                }
+                int draw_y = archer->y - COMBAT_ARCHER_Y_BIAS;
+
+                DrawArcher(
+                    archer->sprite, archer->field_18, archer->field_1c,
+                    draw_x, draw_y, 0,
+                    !archer->field_14,
+                    archer->field_18 == COMBAT_ARCHER_ACTIVE_SEQUENCE
+                        && actingSide == COMBAT_ARCHER_DEFENDING_SIDE
+                        && actingSlot == archer->armySlot);
+            }
+        }
+
+draw_wall_image:
+        DrawWall(image, 0, 0, image->GetWidth(), image->GetHeight(),
+                 traits.x, traits.y);
+    }
 }
 
 // Retail's three-argument row at 0x494f40 is DrawOccupant, not DrawWallAt:

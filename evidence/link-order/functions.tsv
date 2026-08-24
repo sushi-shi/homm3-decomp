@@ -1441,7 +1441,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x93ea0	1226	in-span	drawing	drawing	game_94390_sub00_93ea0
 0x94390	167	in-span	drawing	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z
 0x94440	2005	in-span	drawing	drawing	combatManager_DrawFrame
-0x94c20	796	in-span	drawing	drawing	game_94440_sub02_94c20
+0x94c20	796	in-span	drawing	drawing	?DrawWallAt@combatManager@@QAEXHH@Z
 0x94f40	327	in-span	drawing	drawing	?DrawOccupant@combatManager@@QAEXHHH@Z
 0x95090	276	in-span	drawing	drawing	?DrawArcher@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@EE@Z
 0x951b0	253	in-span	drawing	drawing	?DrawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@HEH@Z

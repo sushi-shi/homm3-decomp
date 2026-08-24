@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::DrawWallAt` reconstructs all siege-wall
+  behavior and reaches a bounded 99.20% plateau.** Retail 0x494c20 has the
+  two-argument `ret 8`, three `DrawWall` calls and one `DrawArcher` call of
+  the Dreamcast method, independently correcting the stale order-only map.
+  Its eighteen defending-town rows select the standing wall image, clip
+  ordinary sections against the current battlefield hex, and layer the keep
+  or tower archer beneath its foreground cover. The DC `hexcell` reference
+  and explicit archer x/y locals reproduce retail's frame, register pressure,
+  both facing paths and every call argument. The normalized flat-asm diff has
+  one real residual: retail retains a repeated `cmp eax,0x10; jne` in the
+  three-way archer selector, for 33 branches against the reconstruction's 32;
+  VC6 folds it from every reviewed structured equivalent. All other reported
+  deltas are cosmetic names for the still-unclaimed `DrawWall` and creature-
+  traits relocations. The synchronized checkpoint reaches **1903/2316 linked
+  exact**, **1834/2247 game exact**, **96.60% game fuzzy** and **42.88%
+  executable coverage**. All 51 unit tests, five freshness controls and every
+  fatal gate pass. The all-unit queue contains 413 residual functions / 28.6
+  KiB recoverable (including this plateau); the ordinary tractable tier falls
+  to **214 functions / 176.6 KiB**, with three remaining `drawing` rows /
+  4,191 bytes. No external implementation body was used.
+
 - **2026-08-24 — `combatManager::DrawOccupant` corrects a stale drawing
   map and reproduces all 327 retail bytes.** The old order-only hypothesis
   assigned 0x494c20 to `DrawObstacleAt` and 0x494f40 to `DrawWallAt`.

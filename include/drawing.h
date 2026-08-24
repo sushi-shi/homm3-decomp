@@ -14,6 +14,15 @@ enum ECombatDrawPriority {
     COMBAT_DRAW_PRIORITY_SINGLE_PASS = 7,
     COMBAT_DRAW_PRIORITY_ANY = 8
 };
+
+enum ECombatWallDrawingConstants {
+    COMBAT_WALL_HEX_WIDTH = 44,
+    COMBAT_ARCHER_X_BIAS = 196,
+    COMBAT_ARCHER_Y_BIAS = 267,
+    COMBAT_ARCHER_DEFENDING_SIDE = 1,
+    COMBAT_ARCHER_ACTIVE_SEQUENCE = 2,
+    COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE = 1
+};
 #endif
 
 // The effect-latch tail lies beyond the currently materialized
