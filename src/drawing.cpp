@@ -1555,6 +1555,89 @@ int combatManager::DrawMoatOverlay(int index)
     return 0;
 }
 
+// Build the dirty rectangle for every combat object whose effect latch is
+// raised. Dreamcast preserves the four source walks and their exact field
+// roles; retail independently fixes the two 20-stack rows, the hero/flag
+// pairs, the placed-obstacle vector, and Complete's three 36-byte archers.
+// The closing Clip is inlined on retail into four viewport clamps.
+// E:\gamedcs\drawing.cpp:2093
+VA(0x00495bf0, 0x35e)  // anchor-global + dc source structure, dc 0x86380
+void combatManager::ComputeMaxExtent()
+{
+    for (int side = 0; side < 2; side++) {
+        for (int slot = 0; slot < 20; slot++) {
+            if (field_14000[side][slot]) {
+                field_13d2c = 1;
+                field_13d34 = 1;
+                armies[side][slot].DrawToBuffer(
+                    cells[armies[side][slot].gridIndex].field_00,
+                    cells[armies[side][slot].gridIndex].field_02, 0);
+                field_13d34 = 0;
+                field_13d2c = 0;
+            }
+        }
+    }
+
+    for (side = 0; side < 2; side++) {
+        if (field_14028[side] || field_14028[2 + side]) {
+            ComputeExtent(creatureSprites[side], field_53e4[side],
+                          field_53ec[side], side ? 693 : -43, -19,
+                          &sCmbtHeroLimitData[side], side != 0, 1);
+            ComputeExtent(heroFlagSprites[side], 0,
+                          *(&field_5414 + side),
+                          side ? 755 : 29, 20,
+                          &sCmbtHeroFlagLimitData[side], 0, 1);
+        }
+    }
+
+    if (obstacles.size()) {
+        for (TObstacle* obstacle = obstacles.begin;
+             obstacle != obstacles.end; obstacle++) {
+            CSprite* sprite = obstacle->sprite;
+            if (sprite && sprite->GetNumFrames(0) > 1) {
+                int yOffset = 42 * (obstacle->shape->minRow - 1);
+                ComputeExtent(
+                    sprite, 0, field_13ffc % sprite->GetNumFrames(0),
+                    cells[obstacle->hex].field_04,
+                    cells[obstacle->hex].field_06 - yOffset,
+                    0, 0, 1);
+            }
+        }
+    }
+
+    for (int archerIndex = 0; archerIndex < 3; archerIndex++) {
+        if (field_1402c[archerIndex] && archers[archerIndex].sprite) {
+            field_13d2c = 1;
+            field_13d34 = 1;
+            TArcher& archer = archers[archerIndex];
+            int draw_x;
+            if (!archer.field_14) {
+                draw_x = archer.x - archer.sprite->GetWidth()
+                         + COMBAT_ARCHER_X_BIAS;
+                if (akCreatureTypeTraits[archer.creatureType].attributes
+                        & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                    draw_x += COMBAT_WALL_HEX_WIDTH;
+                if (archer.creatureType == CREATURE_MEDUSA)
+                    draw_x -= 5;
+            } else {
+                draw_x = archer.x - COMBAT_ARCHER_X_BIAS;
+                if (akCreatureTypeTraits[archer.creatureType].attributes
+                        & COMBAT_ARCHER_DOUBLE_WIDE_ATTRIBUTE)
+                    draw_x -= COMBAT_WALL_HEX_WIDTH;
+                if (archer.creatureType == CREATURE_MEDUSA)
+                    draw_x += 5;
+            }
+            DrawArcher(archer.sprite, archer.field_18, archer.field_1c,
+                       draw_x, archer.y - COMBAT_ARCHER_Y_BIAS, 0,
+                       !archer.field_14, 0);
+            field_13d34 = 0;
+            field_13d2c = 0;
+        }
+    }
+
+    drawbridgeBounds.Clip(gCombatDrawLimits694f18);
+}
+
 // The DC signature and cropped-frame accessor set identify retail's adjacent
 // eight-argument extent worker. It builds the inclusive cropped rectangle,
 // mirrors its horizontal origin for flipped sprites, clips it to the combat

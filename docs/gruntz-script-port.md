@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::ComputeMaxExtent` reproduces all 862 retail
+  bytes.** The global anchor at 0x495bf0, its zero-argument signature, the
+  `DrawFrame`/`CycleCombatScreen` callers and the Dreamcast
+  `drawing.cpp:2093` row establish the identity. Dreamcast preserves four
+  source walks and the exact callee family: two 20-stack effect rows, the two
+  hero/flag pairs, the placed-obstacle vector and three siege archers, followed
+  by `SLimitData::Clip`. Retail independently fixes Complete's 1,352-byte army
+  stride, 24-byte obstacle rows, 36-byte archer rows, all screen-coordinate
+  constants and the four-byte hero/flag effect band. The decisive source
+  shapes were to re-subscript the army instead of caching a reference, retain
+  the obstacle's explicit 42-pixel `yOffset`, and bind each archer through a
+  block-scoped reference; together they reproduce all 43 CFG blocks and every
+  normalized instruction. The synchronized checkpoint reaches **1912/2327
+  linked exact**, **1843/2258 game exact**, **96.58% game fuzzy** and **43.20%
+  executable coverage**. All 51 unit tests, five freshness controls, link-order
+  checks and fatal gates pass; the all-unit VC6 queue emits only the two known
+  inlined-away `initialize.obj` `create_included_mask` diagnostics. No external
+  implementation body was used.
+
 - **2026-08-24 — `combatManager::UpdateMouseGrid` and its static cleanup
   reproduce 1,258 retail bytes exactly.** Drawing order, the four retail
   callers and Dreamcast `drawing.cpp:982` identify 0x493ea0; Complete's

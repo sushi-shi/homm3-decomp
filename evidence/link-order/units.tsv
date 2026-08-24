@@ -41,7 +41,7 @@ customcampaign	0x8b200	0x8b2d7	215	2	0	2	2	0
 dialogbox	0x8fdc0	0x90b67	3495	10	0	12	10	2
 diff	0x90f60	0x912ff	927	4	0	4	4	0
 dimensiondoorwindow	0x916f0	0x91edc	2028	8	0	10	8	2
-drawing	0x93710	0x95a09	8953	13	0	20	13	7
+drawing	0x93710	0x95f4e	10302	14	0	22	14	8
 event_record	0x9da70	0x9dab1	65	1	0	1	1	0
 exec	0xb0a10	0xb0f35	1317	5	0	5	5	0
 findpath	0xb1330	0xb3f61	11313	18	0	19	18	1
