@@ -13,10 +13,12 @@
 #include "hero.h"
 #include "kb.h"
 #include "town.h"
+#include "townmgr_globals.h"
 #include "message.h"
 #include "mousemgr.h"
 #include "quest.h"
 #include "resourcedisplay.h"
+#include "resourcemanager.h"
 #include "textwdgt.h"
 #include "textntry.h"
 #include "textresource.h"
@@ -38,13 +40,6 @@ const char* TCheatCode::b = "nopqrstuvwxyzabcdefghijklm";
 // E:\gamedcs\adventuremapwindow.cpp:52
 DC_ONLY(0x370, 0x3E)
 void TAdventureMapWindow::SleepAllWidgets(unsigned char put_to_sleep)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:63
-DC_ONLY(0x3b0, 0x4EC)
-void CheckAdvCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString)
 {
     // @stub
 }
@@ -155,6 +150,148 @@ void TAdventureMapWindow::SetSleepImage(int image)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\adventuremapwindow.cpp:63. The Dreamcast procedure record
+// types the sole parameter as an lvalue reference and names the one local
+// TCheatCode. Retail independently fixes the sixteen comparisons, their
+// order, and every effect below. The 53.5182% plateau is compiler layout,
+// not a semantic gap: predict-inline finds equal total call counts and only
+// two real frontiers - our CL expands two nested basic_string::_Tidy calls
+// retail keeps, and merges the phisher-price branch's identical Redraw call
+// (two sites here versus retail's three). Direct/counted assign spellings and
+// inline_depth(1/2/4) were byte-flat, so the natural source stays.
+VA(0x00402450, 0x5D3)  // anchor-global, dc 0x3b0
+void CheckAdvCheatCode(std::string& chatString)
+{
+    hero* currentHero = gpGame->GetCurrHero();
+    std::string* chat = &chatString;
+    TCheatCode code(chat->c_str());
+
+    if (code.compare(DATA_COMPGEN(
+            0x0063a480, advCheatTrinity, "ajpgevavgl"))
+        && currentHero) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            if (currentHero->army.armies[slot] == -1)
+                currentHero->army.Add(CREATURE_ARCHANGEL, 5, slot);
+        }
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a48c, advCheatAgents, "ajpntragf"))
+               && currentHero) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+            if (currentHero->army.armies[slot] == -1)
+                currentHero->army.Add(CREATURE_BLACK_KNIGHT, 10, slot);
+        }
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a498, advCheatLotsOfGuns, "ajpybgfbsthaf"))
+               && currentHero) {
+        if (!currentHero->HasArtifact(ARTIFACT_AMMO_CART)) {
+            type_artifact artifact(ARTIFACT_AMMO_CART, -1);
+            currentHero->GiveArtifact(&artifact, 0, 0);
+        }
+        if (!currentHero->HasArtifact(ARTIFACT_BALLISTA)) {
+            type_artifact artifact(ARTIFACT_BALLISTA, -1);
+            currentHero->GiveArtifact(&artifact, 0, 0);
+        }
+        if (!currentHero->HasArtifact(ARTIFACT_FIRST_AID_TENT)) {
+            type_artifact artifact(ARTIFACT_FIRST_AID_TENT, -1);
+            currentHero->GiveArtifact(&artifact, 0, 0);
+        }
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4a8, advCheatNeo, "ajparb"))
+               && currentHero) {
+        currentHero->GiveExperience(
+            hero::GetExperienceIncrement(currentHero->level), 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4b0, advCheatFollowTheWhiteRabbit,
+                   "ajpsbyybjgurjuvgrenoovg"))
+               && currentHero) {
+        currentHero->flags |= 0x00400000;
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4c8, advCheatNebuchadnezzar,
+                   "ajparohpunqarmmne"))
+               && currentHero) {
+        currentHero->flags |= 0x01000000;
+        int mobility = currentHero->GetMobility();
+        currentHero->movePoints = mobility;
+        currentHero->maxMovePoints = mobility;
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4dc, advCheatMorpheus, "ajpzbecurhf"))
+               && currentHero) {
+        currentHero->flags |= 0x00800000;
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4e8, advCheatOracle, "ajpbenpyr"))) {
+        gpCurrentPlayer->extraPuzzlePieces = 0x30;
+        gpAdvManager->ViewPuzzle();
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a4f4, advCheatWhatIsTheMatrix,
+                   "ajpjungvfgurzngevk"))) {
+        for (int level = 0; level < gpGame->GetNumMapLevels(); level++)
+            gpGame->SetVisibility(0, 0, level, gNetLocalGamePos, 200, 0);
+        if (currentHero)
+            gpAdvManager->Reseed(0, 0);
+        gpAdvManager->RedrawAdvScreen(1, 0);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a508, advCheatIgnoranceIsBliss,
+                   "ajpvtabenaprvfoyvff"))) {
+        for (int level = 0; level < gpGame->GetNumMapLevels(); level++)
+            gpGame->ResetVisibility(0, 0, level, -1, 200);
+        gpGame->GameFn_004C7C50();
+        if (currentHero)
+            gpAdvManager->Reseed(0, 0);
+        gpAdvManager->RedrawAdvScreen(1, 0);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a51c, advCheatTheConstruct,
+                   "ajpgurpbafgehpg"))) {
+        for (int resource = 0; resource < 7; resource++)
+            gpCurrentPlayer->resources[resource] +=
+                resource == GOLD ? 100000 : 100;
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a52c, advCheatBluePill, "ajpoyhrcvyy"))) {
+        CheckEndGame(2);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a538, advCheatRedPill, "ajperqcvyy"))) {
+        CheckEndGame(1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a544, advCheatThereIsNoSpoon,
+                   "ajpgurervfabfcbba"))
+               && currentHero) {
+        currentHero->mana = 999;
+        if (!currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+            currentHero->GiveArtifact(&spellbook, 1, 1);
+        }
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++)
+            currentHero->AddSpell(spell);
+        gpAdvManager->UpdBottomView(1, 1, 1);
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a558, advCheatZion, "ajpmvba"))) {
+        gBuildAllBuildings = !gBuildAllBuildings;
+    } else if (code.compare(DATA_COMPGEN(
+                   0x0063a560, advCheatPhisherPrice,
+                   "ajpcuvfurecevpr"))) {
+        gGraphicsSaturated = !gGraphicsSaturated;
+        if (gGraphicsSaturated) {
+            ResourceManager::SaturateGraphics();
+            gpAdvManager->RedrawAdvScreen(1, 0);
+        } else {
+            ResourceManager::RemapGraphics();
+            gpAdvManager->RedrawAdvScreen(1, 0);
+        }
+        return;
+    } else {
+        return;
+    }
+
+    *chat = (*gpGeneralText)[261];
+    gpGame->field_1f69c = 1;
+    if (gbUnk69774c)
+        gpGame->campaign.isCheater = 1;
+}
 
 // Game.h:1439, dc 0x2fa0. Constructor calls from both cheat handlers expand
 // to this shared encoder. Retail's lowered min keeps the length and 199-byte

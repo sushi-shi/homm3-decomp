@@ -54,6 +54,9 @@ SIZE(TBitmapResourceHeader, 0x0c);
 
 extern int* gpVideoGameState;
 extern TResourceArchiveContext gResourceArchiveContexts[4];
+// Claimed by resourcemanager.obj; the adventure-map phisher-price command
+// toggles it before selecting the palette transform.
+extern unsigned char gGraphicsSaturated;  // retail 0x69e5b0
 
 namespace ResourceManager {
 void RemapGraphics();
