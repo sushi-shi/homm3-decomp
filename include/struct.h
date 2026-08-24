@@ -28,4 +28,19 @@ struct type_point {
     unsigned char is_valid();
 };
 
+#ifdef HOMM3_SLIMITDATA_VIEW
+// The shared inclusive rectangle used by the adventure and combat drawing
+// code. Dreamcast CodeView fixes the four names, offsets, and 16-byte extent;
+// retail's combat drawing wrappers read the same four dwords in this order.
+// Keep the concrete view consumer-scoped: introducing a class into every TU
+// that includes struct.h perturbs VC6's type-handle state.
+struct SLimitData {
+    int iMinX;
+    int iMinY;
+    int iMaxX;
+    int iMaxY;
+};
+SIZE(SLimitData, 0x10);
+#endif
+
 #endif /* HOMM3_STRUCT_H */

@@ -1310,6 +1310,16 @@ public:
                          int retailTail);
     void UpdateMouseGrid(int gridIndex, int allowDuringAction);
 #endif
+#ifdef HOMM3_DRAWING_ARCHER_DECLS
+    // Complete extends the DC DrawArcher signature with a trailing palette-row
+    // selector. The retail caller passes it immediately after isFlipped.
+    int DrawArcher(const CSprite* sprite, int sequence, int frame,
+                   int x, int y, SLimitData* limits,
+                   unsigned char isFlipped, unsigned char colorRow);
+    void ComputeExtent(const CSprite* sprite, int sequence, int frame,
+                       int x, int y, SLimitData* limits, int isFlipped,
+                       unsigned char saveBiggestExtent);
+#endif
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
                    unsigned char bLimitDraw, int iDelay,
