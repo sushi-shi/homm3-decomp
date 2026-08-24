@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — combat-window hover and message scrolling add 167 exact
+  retail bytes.** Vtable 0x63d528 slot 4 fixes 0x472b80 as
+  `TCombatWindow::handle_widget_hover`; Dreamcast source-line records preserve
+  its inlined help-text accessor, the active-message guard with its two widget
+  ID exemptions, and the null/non-null `set_rollover` arms. The x86 body
+  independently resolves the former +0x4c pad as the chat editor by reading
+  its already-proven +0x6d `bHasFocus` byte, and resolves +0x70 as the common
+  polymorphic combat-control/placement subwindow. All twelve blocks, nine
+  branches, and 103 bytes agree. The adjacent 64-byte
+  `TCombatWindow::scroll_rollover` is fixed by Dreamcast lines 456-469 and its
+  sole message-handler caller. Restoring the real four-word
+  `vector<string*>` at +0x54 makes VC6 emit retail's null-aware inline `size`,
+  followed by the exact size-minus-two and zero clamps and `show_messages`
+  call; all ten blocks and four branches agree. No external implementation
+  body was used.
+
 - **2026-08-24 — `TCombatWindow::ClearCombatMessages` reproduces all 54
   retail bytes.** Dreamcast `combatwindow.cpp:417` places the method between
   `handle_widget_hover` and `show_messages`; retail independently proves the

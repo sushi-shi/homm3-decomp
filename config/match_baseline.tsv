@@ -677,6 +677,8 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x72bf0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 combatwindow	?DrawChatText@TCombatWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x73290
+combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x72b80
+combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20
 command	?CheckChangeSelector@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x77ac0
