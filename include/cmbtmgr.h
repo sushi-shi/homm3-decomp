@@ -1316,6 +1316,9 @@ public:
     int DrawArcher(const CSprite* sprite, int sequence, int frame,
                    int x, int y, SLimitData* limits,
                    unsigned char isFlipped, unsigned char colorRow);
+    int DrawCombatHero(const CSprite* sprite, int sequence, int frame,
+                       int x, int y, SLimitData* limits,
+                       unsigned char isFlipped);
     void ComputeExtent(const CSprite* sprite, int sequence, int frame,
                        int x, int y, SLimitData* limits, int isFlipped,
                        unsigned char saveBiggestExtent);

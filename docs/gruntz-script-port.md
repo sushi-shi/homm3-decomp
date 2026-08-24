@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — Complete's ordinary creature and combat-hero drawing
+  wrappers reproduce all 253 and 251 retail bytes.** Retail 0x4951b0 has
+  `army::DrawToBuffer` as its sole caller and preserves the Dreamcast edge to
+  `combatManager::DrawCreature`; its nine-argument stack cleanup and final
+  `CSprite::DrawCreature` call independently prove Complete's full signature,
+  including the unused id and forwarded output colour. The next retail row at
+  0x4952b0 preserves all four Dreamcast `DrawFrame -> DrawCombatHero` edges
+  and the seven-argument cleanup. Complete omits the intervening Dreamcast
+  `DrawCreatureAlpha` body and implements the hero wrapper through
+  `CSprite::DrawCreature` with output colour zero. Both methods share the
+  already-proven temporary `SLimitData`, extent-update and drawbridge-bounds
+  clip skeleton, then draw the sprite's full width and height to the screen
+  bitmap. VC6 reproduces every instruction in both bodies; their only asm
+  report is the cosmetic label for still-unclaimed `ComputeExtent`, and the
+  normalized byte verdict is exact. The synchronized build/delink/build
+  checkpoint reaches **1900/2312 linked exact**, **1831/2243 game exact**,
+  **96.59% game fuzzy** and **42.79% executable coverage**. All 51 unit tests
+  and every fatal gate pass. The all-unit queue remains 412 residual
+  functions / 28.6 KiB recoverable, while the ordinary tractable tier falls
+  to **218 functions / 178.3 KiB**. Retail bytes prove both x86 identities and
+  behavior; Dreamcast CodeView supplies names, base signatures and caller
+  edges, with no external implementation body used.
+
 - **2026-08-24 — Complete's extended `combatManager::DrawArcher` reproduces
   all 276 retail bytes.** The row at 0x495090 forwards the DC method's seven
   arguments to `ComputeExtent`, but retail's `ret 0x20` and its sole caller

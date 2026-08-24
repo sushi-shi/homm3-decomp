@@ -280,7 +280,7 @@ int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame, in
 }
 
 // E:\gamedcs\drawing.cpp:1699
-DC_ONLY(0x85a48, 0x108)
+// RETAIL_LIVE(0x004951b0, 0xfd): reconstructed below; caller-edge, dc 0x85a48
 int combatManager::DrawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
 {
     // @stub
@@ -294,7 +294,7 @@ int combatManager::DrawCreatureAlpha(const CSprite* sprite, int sequence, int fr
 }
 
 // E:\gamedcs\drawing.cpp:1772
-// RETAIL_LOCATED(0x00495650, 0xd9): not reconstructed; dc-callgraph unique, dc 0x85c2c
+// RETAIL_LIVE(0x004952b0, 0xfb): reconstructed below; caller-edge, dc 0x85c2c
 int combatManager::DrawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
@@ -495,6 +495,79 @@ int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame,
         sequence, frame, 0, 0, sprite->Width, 232, screen->map,
         x, y, screen->Width, screen->Height, screen->Pitch,
         isFlipped, gSystemPalette->data[paletteIndex]);
+    return 1;
+}
+
+// The ordinary stack renderer shares DrawArcher's extent and clip gates, then
+// draws the sprite's full frame dimensions and forwards the caller's output
+// colour. army::DrawToBuffer is its sole caller in both retail and Dreamcast.
+// E:\gamedcs\drawing.cpp:1699
+VA(0x004951b0, 0xfd)  // caller-edge, dc 0x85a48
+int combatManager::DrawCreature(const CSprite* sprite, int sequence, int frame,
+                                int x, int y, SLimitData* limits, int id,
+                                unsigned char isFlipped, int iColor)
+{
+    SLimitData computedLimits;
+    if (!limits)
+        limits = &computedLimits;
+
+    if (field_13d2c || field_13d30) {
+        ComputeExtent(sprite, sequence, frame, x, y, limits, isFlipped,
+                      field_13d2c);
+        if (field_13d34)
+            return 0;
+    }
+
+    if (field_13d30) {
+        if (limits->iMinX > drawbridgeBounds.values[2]
+                || limits->iMaxX < drawbridgeBounds.values[0]
+                || limits->iMinY > drawbridgeBounds.values[3]
+                || limits->iMaxY < drawbridgeBounds.values[1])
+            return 0;
+    }
+
+    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+    const_cast<CSprite*>(sprite)->DrawCreature(
+        sequence, frame, 0, 0, sprite->Width, sprite->Height, screen->map,
+        x, y, screen->Width, screen->Height, screen->Pitch,
+        isFlipped, iColor);
+    return 1;
+}
+
+// Complete drops the intervening Dreamcast DrawCreatureAlpha row. The next
+// retail wrapper keeps DrawCombatHero's four DrawFrame callers and seven-
+// argument signature, but renders through CSprite::DrawCreature with a zero
+// output colour after the shared extent/clip gates.
+// E:\gamedcs\drawing.cpp:1772
+VA(0x004952b0, 0xfb)  // caller-edge, dc 0x85c2c
+int combatManager::DrawCombatHero(const CSprite* sprite, int sequence,
+                                  int frame, int x, int y,
+                                  SLimitData* limits,
+                                  unsigned char isFlipped)
+{
+    SLimitData computedLimits;
+    if (!limits)
+        limits = &computedLimits;
+
+    if (field_13d2c || field_13d30) {
+        ComputeExtent(sprite, sequence, frame, x, y, limits, isFlipped,
+                      field_13d2c);
+        if (field_13d34)
+            return 0;
+    }
+
+    if (field_13d30) {
+        if (limits->iMinX > drawbridgeBounds.values[2]
+                || limits->iMaxX < drawbridgeBounds.values[0]
+                || limits->iMinY > drawbridgeBounds.values[3]
+                || limits->iMaxY < drawbridgeBounds.values[1])
+            return 0;
+    }
+
+    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+    const_cast<CSprite*>(sprite)->DrawCreature(
+        sequence, frame, 0, 0, sprite->Width, sprite->Height, screen->map,
+        x, y, screen->Width, screen->Height, screen->Pitch, isFlipped, 0);
     return 1;
 }
 
