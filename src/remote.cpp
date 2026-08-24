@@ -6,9 +6,13 @@
 #define HOMM3_CHAT_EDIT_DECLS
 #define HOMM3_REMOTE_SEND_CHAT_DECLS
 #define HOMM3_REMOTE_SOUND_DECLS
+#define HOMM3_REMOTE_WINLOSS_DECLS
 #define HOMM3_CSPRITE_CROP_ACCESSORS
+#define HOMM3_COMBAT_INIT_MSG_DECLS
+#define HOMM3_REMOTE_BATTLE_DLG_DECLS
 #define HOMM3_REMOTE_WAIT_READY_DECLS
 #define HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+#define HOMM3_REMOTE_PLAYER_LIST_DECLS
 #include "remote.h"
 #include "advmgr.h"
 #include "crt_stdio.h"
@@ -34,6 +38,33 @@
 // gpWindowManager: CSaveScreen grabs and restores through the screen
 // bitmap, and hands the dirty rect back to the window manager.
 #include "winmgr.h"
+
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
+// E:\gamedcs\netmsg.h:264. DC supplies the member names and the header
+// source boundary; retail independently proves the PC offsets and this exact
+// body in both advManager::DoNetCombat and the wait-dialog constructor.
+inline CCombatInitMsg::CCombatInitMsg()
+    : t_complex_net_message(RS_COMBAT_INIT)
+{
+    m_point = type_point(0, 0, 0);
+    m_leftHero = 0;
+    m_rightTown = 0;
+    m_rightHero = 0;
+    m_seed = 0;
+    m_winner = 0;
+    m_retreatWin = 0;
+    m_combatSurrender = 0;
+    m_leftOwner = 0;
+    m_leftGold = 0;
+    m_rightOwner = 0;
+    m_rightGold = 0;
+}
 
 inline CLogFile::CLogFile(char* sLogFileName)
 {
@@ -100,6 +131,11 @@ DATA(0x0069d80c) unsigned char gbDPlayReady;
 // HandleMPlayerLaunch independently distinguish their roles.
 DATA(0x00699550) unsigned char gbMPlayer;
 DATA(0x00699551) unsigned char gbMPlayerHost;
+// Dreamcast publishes `bDefeatedAllPlayers` as a bool in remote.obj. Retail's
+// win/loss handlers independently locate the PC cell and store full dwords,
+// so the PC representation is int even though the role and owner transfer.
+DATA(0x00699510) int bDefeatedAllPlayers;
+DATA(0x00699274) extern int gUnnamed699274;
 // Dreamcast publishes gcTCPAddress as char[21]; retail's client launch arm
 // passes this exact cell both to the log formatter and InitConnection.
 DATA(0x00697758) char gcTCPAddress[21];
@@ -1271,10 +1307,11 @@ CAnimatedDlg::CAnimatedDlg()
 VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
 // E:\gamedcs\remote.cpp:1547 - the EH frame, sprite Dispose virtual call and
-// CDialog teardown now match retail instruction for instruction.  Suppressing
-// auto-inlining is part of the source contract: retail calls this body from
-// CWaitForReadyPlayersDlg's expanded destructor rather than expanding it a
-// second time.
+// CDialog teardown match retail instruction for instruction.  The readiness
+// wrapper's two cleanup paths call this body out of line, so suppressing
+// automatic inlining is part of that already-proven source contract.  VC6
+// would prefer to expand this body in the separately emitted implicit derived
+// destructor, but claiming that row would regress the historical wrapper.
 #pragma auto_inline(off)
 VA(0x00554ab0, 0x55)  // anchor-vtable + dc-order-map, dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
@@ -1607,9 +1644,10 @@ int CWaitForReadyPlayersDlg::handle_message(message& msg)
 }
 
 // E:\gamedcs\remote.cpp:1820 - CWaitForReadyPlayersDlg's compiler-generated
-// deleting destructor, slot 0 of vtable 0x640ecc. The implicit destructor it
-// calls is deliberately not claimed: DC marks it compgenx and VA_COMPGEN has
-// no ordinary-destructor kind (the same contract as CSaveScreen below).
+// deleting destructor, slot 0 of vtable 0x640ecc.  The following implicit
+// destructor is intentionally unclaimed: DC marks it compgenx, and enabling
+// the TU-wide base-destructor expansion it needs regresses the already-banked
+// WaitForReadyToPlayMsg cleanup boundary.
 VA_COMPGEN(0x005554b0, 0x21, SCALAR_DELETING_DTOR,
            CWaitForReadyPlayersDlg)
 
@@ -1814,7 +1852,6 @@ unsigned char HandleMPlayerLaunch()
     logFile.Log(DATA_COMPGEN(0x00682c50, remoteMPlayerDetected,
                             "Detected MPlayer launch."));
 
-    DATA(0x00699274) extern int gUnnamed699274;
     DATA(0x006994e4) extern int gUnnamed6994e4;
     gUnnamed699274 = 1;
     gUnnamed6994e4 = 1;
@@ -1879,6 +1916,185 @@ unsigned char HandleMPlayerLaunch()
     return 1;
 }
 
+// E:\gamedcs\remote.cpp:2161. Retail has no surviving out-of-line copy:
+// both HandleNewHost expansions keep the candidate in a register, wrap at
+// zero and ask game::IsHuman until they find the prior human seat.
+int GetPriorPlayer(int gamePos)
+{
+    do {
+        --gamePos;
+        if (gamePos < 0)
+            gamePos = 7;
+    } while (!gpGame->IsHuman(gamePos));
+    return gamePos;
+}
+
+// E:\gamedcs\remote.cpp:2174. DC supplies this source boundary and the
+// CDPlayPlayer member names. Retail expands it into UpdateCurrentPlayers:
+// virtual GetCount/Get calls remain, while GetId becomes the +0x100 load.
+static __forceinline unsigned char IsValidHuman(
+    CAutoArray<CDPlayPlayer>& playerArray, unsigned long dpid)
+{
+    for (unsigned long i = 0; i < playerArray.GetCount(); ++i) {
+        if (playerArray.Get(i)->GetId() == dpid)
+            return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\remote.cpp:2187. The DC roster supplies the identity and local
+// array role. Retail proves the eight 0x168-byte player records, their net
+// fields, general-text row 469 and the final live-player count publication.
+VA(0x005562e0, 0x14E)  // anchor-callers + dc-order-map, dc 0x11df10
+void UpdateCurrentPlayers()
+{
+    CAutoArray<CDPlayPlayer> playerArray;
+    pDPlay->EnumPlayers(&playerArray, 0, 0);
+
+    for (int i = 0; i < 8; ++i) {
+        if (gpGame->players[i].dpid
+            && IsValidHuman(playerArray, gpGame->players[i].dpid))
+            continue;
+
+        gpGame->players[i].dpid = 0;
+        gpGame->players[i].isHuman = 0;
+        gpGame->players[i].isLocal = 0;
+        strcpy(gpGame->players[i].cName,
+               gpGeneralText->GetText(GENERAL_TEXT_DEFAULT_PLAYER_NAME));
+    }
+
+    gUnnamed699274 = playerArray.GetCount();
+    // Retail spells the normal-exit cleanup as this explicit source call.
+    // VC6 then proves the following implicit destructor is a no-op, omitting
+    // its otherwise surviving EH-state and vptr stores.
+    playerArray.Destroy(1);
+}
+
+// E:\gamedcs\remote.cpp:2289. DC publishes this free-function boundary and
+// both call edges; retail /Ob2 expands it into CLevelPickWaitDlg's dispatcher
+// and CNetMsgHandler::HandleNetMsg, leaving no standalone body. The two PC
+// copies agree on every global, message field, and call.
+void HandleNewHost()
+{
+    logFile.Log(DATA_COMPGEN(0x00682e14, handleNewHostLog,
+                            "HandleNewHost"));
+    if (!gpGame->IsHuman(gUnnamed69d810)) {
+        gNetLocalGamePos = GetPriorPlayer(gNetLocalGamePos);
+        if (gNetLocalGamePos == gpGame->GetLocalPlayerGamePos()) {
+            OnPlayerDropUpdateMsg(-1);
+        } else {
+            CPlayerDropUpdateMsg msg(-1);
+            if (gNetworkActive69954c && pDPlay) {
+#pragma inline_depth(0)
+                pDPlay->TransmitRemoteData(
+                    &msg, gNetLocalGamePos, false, true);
+#pragma inline_depth()
+            }
+        }
+    }
+    SystemMsg(&chatMan, gpGeneralText->GetText(471));
+}
+
+// E:\gamedcs\remote.cpp:2375.  The DC roster supplies the public identity
+// and parameter roles.  Retail independently proves playerDisabled, the
+// local-seat cleanup expansion, both general-text indices and dialog payloads,
+// and the GetNextHumanPlayer call used to advance the acting player.
+VA(0x00556780, 0x1C0)  // anchor-dispatch + dc-order-map, dc 0x11e39c
+void HandlePlayerDead(int deadGuy, unsigned char showMsg)
+{
+    gpGame->playerDisabled[deadGuy] = 1;
+
+    if (deadGuy == gLocalGamePos) {
+        RemoteCleanupInline();
+
+        if (showMsg) {
+            strcpy(gText, gpGeneralText->GetText(96));
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+
+        bDefeatedAllPlayers = 0;
+        gbGameOver = 1;
+    } else {
+        if (!gbUnk691209 && showMsg) {
+            sprintf(gText, gpGeneralText->GetText(6),
+                    gpGame->GetPlayerName(deadGuy));
+            NormalDialog(gText, 1, -1, -1, 10, deadGuy, -1, -1,
+                         -1, 5000, -1, 0);
+        }
+
+        if (deadGuy == gUnnamed69d810) {
+            int nextPlayer = GetNextHumanPlayer(deadGuy);
+            gNetLocalGamePos = nextPlayer;
+            gUnnamed69d810 = nextPlayer;
+            gpCurrentPlayer = &gpGame->players[nextPlayer];
+        }
+    }
+}
+
+// E:\gamedcs\remote.cpp:2419. Retail's message payload begins at +0x18:
+// the first dword after CNetMsg is the sender slot and the following 0x4c
+// bytes are copied into gpGame's live victory condition before the display
+// helper is called. Dreamcast supplies the public name, signature and local
+// variable roles; every PC offset comes from this body.
+VA(0x00556940, 0x5E)  // anchor-dispatch RS_PLAYER_WON, dc 0x11e494
+void HandlePlayerWon(CNetMsg* pNetMsg)
+{
+    CPlayerWonMsg* message = static_cast<CPlayerWonMsg*>(pNetMsg);
+    gpGame->mapHeader.victoryCondition = message->victoryCondition;
+
+    int bGameLost = 0;
+    int bGameWon = 0;
+    gbGameOver = 1;
+    DisplayVCWinLoss(&message->victoryCondition,
+                     &bGameWon, &bGameLost, 1);
+    if (bGameLost)
+        bDefeatedAllPlayers = 0;
+    if (bGameWon)
+        bDefeatedAllPlayers = 1;
+}
+
+// E:\gamedcs\remote.cpp:2441. The loss twin consumes the 0x24-byte payload
+// at the same +0x18 offset but does not replace gpGame's map-header record.
+VA(0x005569a0, 0x4B)  // anchor-dispatch RS_PLAYER_LOST, dc 0x11e500
+void HandlePlayerLost(CNetMsg* pNetMsg)
+{
+    CPlayerLostMsg* message = static_cast<CPlayerLostMsg*>(pNetMsg);
+    int bGameLost = 0;
+    int bGameWon = 0;
+    DisplayLCWinLoss(&message->lossCondition,
+                     &bGameWon, &bGameLost, 1);
+    if (bGameLost)
+        bDefeatedAllPlayers = 0;
+    if (bGameWon)
+        bDefeatedAllPlayers = 1;
+}
+
+// E:\gamedcs\remote.cpp:2458. The sole RS_NORMAL_WIN dispatcher call and
+// the order slot between the player-loss handler and CLevelPickWaitDlg fix
+// the retail identity; Dreamcast independently publishes the name and ABI.
+// Retail sets the game-over latch, compares the sender's team with the local
+// network player, then shows general-text row 660 or 661. A same-team win also
+// raises the adjacent one-byte session latch.
+VA(0x005569f0, 0xB4)  // anchor-dispatch RS_NORMAL_WIN, dc 0x11e598
+void HandleNormalWinMsg(CNetMsg* pNetMsg)
+{
+    CNormalWinMsg* message = static_cast<CNormalWinMsg*>(pNetMsg);
+    gbGameOver = 1;
+    int localPlayer = gpGame->GetLocalPlayerGamePos();
+
+    if (gpGame->OnSameTeam(message->gamePos, localPlayer)) {
+        NormalDialog(gpGeneralText->GetText(660), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        bDefeatedAllPlayers = 1;
+        gUnnamed69951c = 1;
+    } else {
+        NormalDialog(gpGeneralText->GetText(661), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        bDefeatedAllPlayers = 0;
+    }
+}
+
 // E:\gamedcs\remote.cpp:2479 - CLevelPickWaitDlg's constructor, and the
 // fourth vtable this file unblocks. Nothing else in remote.obj referenced
 // ??_7CLevelPickWaitDlg@@6B@, so VC6 emitted neither the table nor the
@@ -1903,9 +2119,194 @@ CLevelPickWaitDlg::CLevelPickWaitDlg()
     m_playerDropped = 0;
 }
 
+// E:\gamedcs\remote.cpp:2485 - park the expected sender, randomize the
+// animated wait-dialog creature exactly as the ready-player modal does, and
+// show general-text row 472. Retail's load from the creature table at +0x0c
+// independently fixes m_sprite_name; the two rejected ids are Devil and
+// Arch Devil (54/55).
+VA(0x00556ba0, 0x72)  // dc-order-map + retail member/table accesses, dc 0x11e6a4
+void CLevelPickWaitDlg::WaitForLevels(int fromWho)
+{
+    m_fromWho = fromWho;
+    SRand(GameTime::Get());
+
+    int creature;
+    do {
+        creature = Random(0, 111);
+    } while (creature == CREATURE_ARCH_DEVIL
+             || creature == CREATURE_DEVIL);
+
+    Setup(gpGeneralText->GetText(472), gpMediumFont,
+          akCreatureTypeTraits[creature].m_sprite_name, 0);
+    DoModal(0);
+}
+
 // E:\gamedcs\remote.cpp:2482 - CLevelPickWaitDlg::`scalar deleting
 // destructor', slot 0 of vtable 0x640f40.
 VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
+
+// E:\gamedcs\remote.cpp:2503. The level-pick modal advances its animation,
+// drains one queued message, and uses CMessageKill to release it across both
+// early-return arms. The five-case switch is fixed independently by retail's
+// byte dispatch table (subtypes 1004, 1011, 1014, 1015 and 1076); DC supplies
+// the class/helper names and the same call graph.
+VA(0x00556c20, 0x2F5)  // anchor-vtable + dc-order-map, dc 0x11e718
+int CLevelPickWaitDlg::handle_message(message& msg)
+{
+    CAnimatedDlg::handle_message(msg);
+    PollSound();
+
+    CNetMsg* pNetMsg = GetRemoteData(1);
+    if (pNetMsg) {
+        CMessageKill msgKill(pNetMsg);
+        switch (pNetMsg->subType) {
+            case RS_HERO_LEVEL_UPDATE:
+                OnHeroLevelUpdate(pNetMsg);
+                return ExitDialog(msg);
+
+            case RS_PLAYER_DROPPED:
+                return OnPlayerDrop(pNetMsg, msg);
+
+            case RS_SET_AS_HOST:
+                HandleNewHost();
+                break;
+
+            case RS_SESSION_LOST:
+                NormalDialog(gpGeneralText->GetText(329),
+                             1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+                ShutDown(0);
+                break;
+
+            case RS_CHAT_MSG:
+                ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
+                            pNetMsg->field_00);
+                break;
+        }
+    }
+    return 0;
+}
+
+// E:\gamedcs\remote.cpp:2546. Retail expands this source boundary into the
+// dispatcher. A drop from the player whose level choice is pending marks the
+// modal and closes it; every other drop is still handed to the global handler.
+int CLevelPickWaitDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
+{
+    int gamePos = gpGame->GetGamePosFromDPID(pNetMsg->field_04);
+    if (gamePos == m_fromWho) {
+        m_playerDropped = 1;
+        HandlePlayerDrop(pNetMsg->field_04);
+        return ExitDialog(msg);
+    }
+    HandlePlayerDrop(pNetMsg->field_04);
+    return 0;
+}
+
+// E:\gamedcs\remote.cpp:2567. DC names the message fields; retail proves
+// their offsets by copying the 28 secondary-skill levels and four primary
+// stats into the selected hero before replacing the secondary-skill count.
+void CLevelPickWaitDlg::OnHeroLevelUpdate(CNetMsg* pNetMsg)
+{
+    CHeroLevelUpdateMsg* levelMsg =
+        static_cast<CHeroLevelUpdateMsg*>(pNetMsg);
+    hero* targetHero = gpGame->GetHero(levelMsg->m_hero);
+    if (targetHero) {
+        memcpy(targetHero->skillLevel, levelMsg->m_ssLevel,
+               sizeof(levelMsg->m_ssLevel));
+        memcpy(targetHero->stats, levelMsg->m_stats,
+               sizeof(levelMsg->m_stats));
+        targetHero->skillCount = levelMsg->m_numSSs;
+    }
+}
+
+// E:\gamedcs\remote.cpp:2592. The base dialog, by-value combat-init message
+// and pause handler account for the complete EH-bearing construction chain;
+// retail then installs this class's vtable and clears only the player seat and
+// received latch. The DC-only message pointer at +0x7c is deliberately left
+// untouched here, exactly as in the PC body.
+VA(0x00556f20, 0x13C)  // anchor-vtable + dc-order-map, dc 0x11e8e0
+CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
+{
+    m_playerPos = 0;
+    m_combatInitMsgReceived = 0;
+}
+
+// E:\gamedcs\remote.cpp:2595 - slot 0 of vtable 0x640f78. Its ordinary
+// destructor is the events.obj body at 0x4aea00; this is the generated
+// delete-flag wrapper emitted beside the vtable-owning constructor.
+VA_COMPGEN(0x00557060, 0x21, SCALAR_DELETING_DTOR,
+           CWaitForRemoteBattleDlg)
+
+// E:\gamedcs\remote.cpp:2600 - the remote-combat twin of WaitForLevels.
+// Retail proves the four deliberate differences: no clock seeding, no
+// Devil/Arch Devil retry, general-text row 473, and animation sequence 12.
+VA(0x00557090, 0x5C)  // vtable/field/table accesses + dc order, dc 0x11e948
+void CWaitForRemoteBattleDlg::Wait(int playerPos)
+{
+    m_playerPos = playerPos;
+    int creature = Random(0, 111);
+    Setup(gpGeneralText->GetText(473), gpMediumFont,
+          akCreatureTypeTraits[creature].m_sprite_name, 12);
+    DoModal(0);
+}
+
+// E:\gamedcs\remote.cpp:2613. Vtable 0x640f78 slot 3 and the adjacent DC
+// order bracket identify this as the remote-combat wait dispatcher. Retail's
+// byte table fixes its five live messages and one ownership exception:
+// RS_COMBAT_INIT is deserialized into the dialog, so CMessageKill must not
+// release that packet on the return path.
+VA(0x005570f0, 0x1E9)  // anchor-vtable + dc-order-map, dc 0x11e9a0
+int CWaitForRemoteBattleDlg::handle_message(message& msg)
+{
+    CAnimatedDlg::handle_message(msg);
+    PollSound();
+
+    CNetMsg* pNetMsg = GetRemoteData(1);
+    if (pNetMsg) {
+        CMessageKill killMsg(0);
+        if (pNetMsg->subType != RS_COMBAT_INIT)
+            killMsg.SetMessage(pNetMsg);
+
+        switch (pNetMsg->subType) {
+            case RS_PLAYER_DROPPED:
+                return OnPlayerDrop(pNetMsg, msg);
+
+            case RS_SET_AS_HOST:
+                SystemMsg(&chatMan, gpGeneralText->GetText(471));
+                break;
+
+            case RS_SESSION_LOST:
+                NormalDialog(gpGeneralText->GetText(329),
+                             1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+                ShutDown(0);
+                break;
+
+            case RS_COMBAT_INIT:
+                m_combatInitMsg.RemoteFn_00512E00(pNetMsg);
+                m_combatInitMsgReceived = 1;
+                return ExitDialog(msg);
+
+            case RS_CHAT_MSG:
+                ReceiveChat(static_cast<CChatMsg*>(pNetMsg)->m_text,
+                            pNetMsg->field_00);
+                break;
+        }
+    }
+    return 0;
+}
+
+// E:\gamedcs\remote.cpp:2660. Retail expands the helper into the dispatcher:
+// it resolves and processes every dropped DPID, but closes this modal only
+// when the dropped player is the combat peer it is waiting for.
+int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
+{
+    int gamePos = gpGame->GetGamePosFromDPID(pNetMsg->field_04);
+    HandlePlayerDrop(pNetMsg->field_04);
+    if (gamePos == m_playerPos)
+        return ExitDialog(msg);
+    return 0;
+}
 
 // E:\gamedcs\remote.cpp:2673 - CSaveScreen's constructor, the second row in
 // this file that unblocks a vtable. Nothing else referenced
@@ -1932,10 +2333,12 @@ CSaveScreen::CSaveScreen(int w, int h)
 // slot 0 of vtable 0x640fb0. /OPT:ICF folded a second class's identical
 // slot-0 body onto it (0x642d8c points here too).
 //
-// NO CLAIM on the destructor 0x557340 (5 B): DC marks ~CSaveScreen
-// (compgenx), so there is no source declarator for a VA to sit on, and
-// VA_COMPGEN carries no kind for an implicit destructor.
+// DC marks ~CSaveScreen compgenx, so the C++ destructor stays implicit. VC6
+// nevertheless emits its named ??1CSaveScreen public as the five-byte tail
+// jump at 0x557340; the direct-symbol claim binds that existing body without
+// adding a source destructor.
 VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
+VA_COMPGEN(0x00557340, 0x05, IMPLICIT_DTOR, CSaveScreen)
 
 // E:\gamedcs\remote.cpp:2680 - grab the screen into this bitmap and
 // remember where it came from. Bitmap16Bit::Grab takes the source
@@ -2049,6 +2452,37 @@ void CGameTransferSmack::Start()
 {
     m_started = 1;
     ShowVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
+}
+
+// E:\gamedcs\remote.cpp:2747. The two 256-byte locals and the source names
+// `cText` / `sPct` come from CodeView; retail fixes the PC-only 20-frame
+// Smacker scale, general-text rows 99/100, percentage format and screen draw.
+// DrawCurrentFrame is the DC-attested header inline and reduces here to the
+// current-handle video wrapper at 0x598e80.
+VA(0x005574b0, 0x12D)  // order/call graph + DC identity, dc 0x11ece4
+void CGameTransferSmack::SetPercentage(float pct)
+{
+    m_lastFrame = static_cast<int>(pct * 20.0f);
+    SetCurrentSmackFrame(m_lastFrame);
+    DrawCurrentFrame();
+
+    char cText[256];
+    char sPct[256];
+    if (m_sending)
+        strcpy(cText, gpGeneralText->GetText(99));
+    else
+        strcpy(cText, gpGeneralText->GetText(100));
+    sprintf(sPct,
+            DATA_COMPGEN(0x00682e40, transferPercentageFormat, "\n%0.0f%%"),
+            pct * 100.0f);
+    strcat(cText, sPct);
+
+    if (m_drawText) {
+        gpMediumFont->DrawBoundedString(
+            cText, gpWindowManager->screenBitmap, m_x, m_y, 160, 160,
+            font::PRIMARY, 5, -1);
+    }
+    gpWindowManager->UpdateScreen(m_x, m_y, 160, 160);
 }
 
 // E:\gamedcs\remote.cpp:2789 - the guard-and-clear half of the destructor,
@@ -2750,6 +3184,35 @@ VA(0x00557910, 0xD)  // anchor-bracket (m_pAbortPopupMsg at 8), dc 0x11efcc
 void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
 {
     m_pAbortPopupMsg = pNetMsg;
+}
+
+// E:\gamedcs\remote.cpp:2882. Retail keeps HandleNetMsg pure in vtable slot
+// 3 but also emits this legal out-of-line definition for direct base calls.
+// The sparse two-case dispatch either defers a host handoff during a popup,
+// expands HandleNewHost, or reports a lost session; every consumed message
+// is then released by the base handler itself.
+VA(0x00557920, 0x157)  // direct base calls + dc identity/order, dc 0x11efd0
+CNetMsg* CNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    switch (pNetMsg->subType) {
+    case RS_SET_AS_HOST:
+        if (m_inPopup) {
+            m_pAbortPopupMsg = pNetMsg;
+            return 0;
+        }
+        HandleNewHost();
+        break;
+
+    case RS_SESSION_LOST:
+        NormalDialog(gpGeneralText->GetText(329), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        ShutDown(0);
+        break;
+    }
+
+    if (pNetMsg)
+        DestroyMsg(pNetMsg);
+    return 0;
 }
 
 // E:\gamedcs\remote.cpp:2920

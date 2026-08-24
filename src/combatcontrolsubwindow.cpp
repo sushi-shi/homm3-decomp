@@ -152,9 +152,12 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 //   0x46bc30   0x26d   TCombatControlSubWindow::ctor                  177
 //   0x46bea0    0x21   TCombatControlSubWindow::`scalar deleting dtor'214
 //   0x46bed0    0x78   TCombatControlSubWindow::~                     222
+//   0x46bf50    0x32   TCombatControlSubWindow::set_rollover          249
+//   0x46bf90    0xb2   type_combat_sub_window::DisableAllButtons      148
 //   0x46c050   0x18c   TCombatPlacementSubWindow::ctor                282
 //   0x46c1e0    0x21   TCombatPlacementSubWindow::`scalar del dtor'   308
 //   0x46c210    0x78   TCombatPlacementSubWindow::~                   317
+//   0x46c290    0xd6   TCombatPlacementSubWindow::DisableAllButtons   327
 //   0x46c370   0x7fc   TCombatHeroSubWindow::ctor                     343
 //   0x46cb70    0x21   TCombatHeroSubWindow::`scalar deleting dtor'   396
 //   0x46cba0    0x6b   TCombatHeroSubWindow::~                        407
@@ -209,41 +212,9 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 // The tail dims 0x7d4 through the PARENT window rather than through this
 // sub-window, and only when both sides are AI.
 //
-// Residual (89.4751%): flow-distance ZERO - every widget, literal, id,
-// help row, hotkey and both the reserve and AddWidget loops agree, and
-// the whole delta is ONE register binding that cascades. Retail parks
-// the CSE'd constant zero in EDI, where it dies at the reserve block and
-// the copy loop inherits the register; this build parks it in EBX, where
-// it survives to the end of the body (every later `test eax,eax` becomes
-// `cmp eax,ebx` and every `push 0` a `push ebx`) and the reserve's copy
-// destination spills to a fourth stack local (`sub esp,0x10` against
-// retail's 0xc). `homm3 vc6 why-reg --model` calls it: the two compiles
-// fed the allocator the same pseudos in a different processing order,
-// and the transposed value is a C2-side constant rather than a named
-// local, so no statement-level knob reaches it.
-//
-// The EH cleanup transcript was checked here on 2026-08-14 and AGREES, which
-// is worth recording because it very nearly read the other way. Grepping the
-// `[ebp-4]` state stores for IMMEDIATES gives retail
-// [1,0,2,0,3,0,4,0,5,0,6,0,7,0,8,0] against our [1,2,3,4,5,6,7,8] and looks
-// like eight missing cleanup regions. It is not: this build spells every
-// reset-to-0 as `mov [ebp-4],ebx` off exactly the CSE'd zero the residual
-// above is about, so both sides have sixteen region boundaries and the same
-// eight `new`s. A state store sourced from a register is still a state
-// store; homm3.vc6._eh counts them and suppresses the row (docs/vc6/
-// eh-cleanup.md, guard 3). The constant-zero verdict above therefore stands
-// unchanged - the transcript adds no new evidence on this row.
-//
-// Tried and rejected: `Widgets.reserve(10)` ahead of the rolloverWidget
-// store scores HIGHER (92.5664) but is structurally contradicted -
-// retail's `add esi,0x14` overwrites `this` with `&Widgets`, which it can
-// only do because no member store follows the reserve, and that spelling
-// forces the `lea esi,[edi+0x14]` form with `this` kept live in EDI. The
-// mem-init form `, rolloverWidget(0)` is 89.4212, i.e. the same wall one
-// notch worse. The include-set lever is INERT here (hero.h, army.h and
-// csprite.h added together moved nothing), which is itself the finding:
-// this is C2 state, not C1 handle order. A ternary for the palette
-// fallback is byte-identical to the `if`.
+// EXACT at the current checkpoint. The older 89.4751% register-wall note
+// was stale: the admitted baseline already reproduces retail's register
+// lifetimes, stack extent, and EH-state stores byte-for-byte.
 VA(0x0046b610, 0x570)  // anchor-callee (both derived ctors), dc 0x64a84
 type_combat_sub_window::type_combat_sub_window(
     heroWindow* parent, const char* background_sprite_name)
@@ -350,7 +321,7 @@ type_combat_sub_window::~type_combat_sub_window()
 // The two arrows' handlers are ADDRESS-TAKEN ONLY and uncarved; see the
 // note on their declarations in the header.
 //
-// Residual (94.3558%): every widget, literal, help row, hotkey, dim and
+// Residual (96.39904%): every widget, literal, help row, hotkey, dim and
 // both loops agree, and the only deltas are two scheduling swaps inside
 // the set_hotkey expansions. Retail emits `disabled_frame` between the
 // first arrow's argument pushes and reloads the member afterwards; this
@@ -412,6 +383,36 @@ VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
 VA(0x0046bed0, 0x78)  // anchor-vtable 0x63d420 + "cbar.pcx" caller, dc 0x65244
 TCombatControlSubWindow::~TCombatControlSubWindow()
 {
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:249
+VA(0x0046bf50, 0x32)  // vtable 0x63d420 slot 1 + rollover widget at +0x34, dc 0x65274
+void TCombatControlSubWindow::set_rollover(const char* new_text)
+{
+    rolloverWidget->SetText(new_text);
+    rolloverWidget->send_message(widget::WIDGET_DRAW, 0);
+    rolloverWidget->send_message(widget::WIDGET_SET_STATUS,
+                                 widget::WIDGET_UPDATE);
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:148
+// Retail's base vtable 0x63d410 and the control table 0x63d420 both put
+// this body in slot 3. The seven ids are the seven family-base buttons;
+// DrawWindow and UpdateScreen make the status-only changes visible in one
+// refresh of the owning window.
+VA(0x0046bf90, 0xB2)  // vtable 0x63d410/0x63d420 slot 3, dc 0x64f68
+void type_combat_sub_window::DisableAllButtons()
+{
+    parentWindow->WidgetSetStatus(0x7d1, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7d2, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7d3, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7d4, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7d8, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7d9, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7da, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+                             WINDOW_ALL_WIDGETS_HIGH);
+    gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
 // The battlefield-placement bar: two buttons over the family base, and
@@ -477,6 +478,18 @@ VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
 VA(0x0046c210, 0x78)  // anchor-vtable 0x63d430 + "coplacbr.pcx" caller, dc 0x6544c
 TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
 {
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:327
+// The 214-byte retail body is exactly the base's seven-button pass with
+// these two placement-only ids prepended; VC6 /Ob2 inlines the qualified
+// base call whole.
+VA(0x0046c290, 0xD6)  // vtable 0x63d430 slot 3, dc 0x65478
+void TCombatPlacementSubWindow::DisableAllButtons()
+{
+    parentWindow->WidgetSetStatus(0x8fc, widget::WIDGET_DIMMED_NODRAW);
+    parentWindow->WidgetSetStatus(0x7802, widget::WIDGET_DIMMED_NODRAW);
+    type_combat_sub_window::DisableAllButtons();
 }
 
 // TCombatHeroSubWindow's own destructor is 107 bytes, not 120, and the

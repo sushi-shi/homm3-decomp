@@ -11,6 +11,7 @@
 
 class hero;
 class playerData;
+class searchArray;
 class town;
 
 // The two gift messages extend the shared 20-byte network-message head.
@@ -61,6 +62,9 @@ SIZE(CTurnUpdateMsg, 24);
 // instance. The virtual roster/order comes from the three retail vtable
 // entries and the corresponding DC public names.
 class type_town_threat_checker {
+protected:
+    void mark_towns(hero* enemy_hero, searchArray* search_array);
+
 public:
     int current_player_id;
 

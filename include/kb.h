@@ -58,6 +58,7 @@ unsigned short* GetMapExtraPtr(int x, int y, int z);
 void ShutDown(const char* cInExitMessage);               // 0x4f3690
 int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
 void CleanUpMenus();                                     // 0x4f4b50
+int GetNextHumanPlayer(int start);                       // 0x4f4ba0
 void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
@@ -68,6 +69,11 @@ void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
 void get_quickview_size(const char* text, int* width, int* height); // 0x4f5f30
+// Retail 0x4f62a0. Three callers pass text in ECX, width in EDX and height
+// on the stack; the body lays out wrapped dialog text and writes both sizes.
+// The role is proven while the spelling remains provisional.
+void __fastcall CalculateDialogTextSize(const char* text, int* width,
+                                        int* height);
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
@@ -83,6 +89,14 @@ void MemError();                                         // 0x4f42c0
 void KbFn_004F4C00(int field00, unsigned char b);
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
+#ifdef HOMM3_REMOTE_WINLOSS_DECLS
+unsigned char DisplayVCWinLoss(VictoryConditionStruct* victoryCondition,
+                               int* bGameWon, int* bGameLost,
+                               unsigned char remoteCheck);
+unsigned char DisplayLCWinLoss(LossConditionStruct* lossCondition,
+                               int* bGameWon, int* bGameLost,
+                               unsigned char remoteCheck);
+#endif
 // Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
 // wants to keep touching the adventure UI reads immediately afterwards -
 // 36 image-wide references, the bulk of them inside kb.obj's own band

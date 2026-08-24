@@ -14,7 +14,31 @@ void PollSound();
 class sample;
 class ds_memsample;
 
-class ds_engine;
+// Retail PC's soundManager::ds is a Miles digital-driver handle, not the
+// Dreamcast ds_engine pointer carried by CodeView. Open is the only body that
+// reaches into it: +0xa8 is a buffer-like COM interface whose slot 15 is
+// invoked with volume zero. These narrow views encode only those proven
+// accesses and keep the rest of Miles' private driver opaque.
+struct AILPrimaryBufferVtable {
+    void* methods[15];
+    long (__stdcall* setVolume)(void* self, long volume);
+};
+struct AILPrimaryBuffer {
+    AILPrimaryBufferVtable* vtable;
+};
+struct AILDigitalDriver {
+    unsigned char opaque[0xa8];
+    AILPrimaryBuffer* primaryBuffer;
+};
+
+struct AILWaveFormat {
+    unsigned short formatTag;
+    unsigned short channels;
+    unsigned long samplesPerSec;
+    unsigned long avgBytesPerSec;
+    unsigned short blockAlign;
+    unsigned short bitsPerSample;
+};
 
 // DC-attested verbatim (LF_FIELDLIST 0x1c9c, Size = 8): the pair a
 // loaded-and-playing sample travels as. `playSample` is `void*` in the
@@ -84,6 +108,14 @@ enum ESoundChannel {
     SOUND_CHANNEL_COUNT = 4
 };
 
+// The PCM sample-width domain used to fill the wave format and to select
+// Open's fallback after a failed driver probe. Values are retail-byte proven;
+// names are role placeholders.
+enum ESoundBitsPerSample {
+    SOUND_BITS_PER_SAMPLE_8 = 8,
+    SOUND_BITS_PER_SAMPLE_16 = 16
+};
+
 // The soundManager::ConvertVolume iVolumeType domain. Byte-proven:
 // 101 selects gUnk698760 and every other value selects gUnk698764;
 // SetMusicVolume passes 101, MemorySample and ModifySample pass 100.
@@ -114,7 +146,8 @@ enum ESampleModifyFunction {
 // lower than previously modelled.
 //   0x34  baseManager::status - re-zeroed by this ctor
 //   0x38  field_38  (untouched by the ctor; role unattested)
-//   0x3c  ds        - the DC name; the engine handle whose non-null
+//   0x3c  ds        - the DC name retained for the PC Miles driver handle;
+//                     the engine handle whose non-null
 //                     value gates every AIL call (`[ecx+0x3c]` test in
 //                     MemorySample/StopAllSamples/PauseSamples)
 //   0x40  field_40  (second non-null gate in MemorySample; unattested)
@@ -136,12 +169,18 @@ enum ESampleModifyFunction {
 // sampleHandles + field_7c exactly (1 + 14 + 1 = 16 dwords).
 class soundManager : public baseManager {
 public:
+    enum ESampleInfoOperation {
+        SAMPLE_INFO_VOLUME = 1,
+        SAMPLE_INFO_PLAYING = 4
+    };
+
     int field_38;
-    ds_engine* ds;
+    AILDigitalDriver* ds;
     int field_40;
     ds_memsample* sampleHandles[14];
     int field_7c;
-    int field_80;
+    unsigned char field_80;
+    unsigned char field_81[3];
     int field_84;
     int bChangeSounds;
     unsigned char MP3Playing;
@@ -150,14 +189,13 @@ public:
     CRITICAL_SECTION section_MP3_name_change;
 
     soundManager();
+    virtual int Open(int newPriority);
     virtual void Close();
     ds_memsample* MemorySample(sample* memSample);
-#ifdef HOMM3_REMOTE_SOUND_DECLS
     // Retail-only 0x59a030. The remote chat path calls operation 4 to ask
     // whether its current Miles sample is still playing; operation 1 returns
     // volume. Name provisional until stronger PC-source evidence appears.
     int GetSampleInfo(ds_memsample* inSample, short operation);
-#endif
     void StopSample(ds_memsample* inSample);
     void WaitSample(ds_memsample* sample, int time);
     void ModifySample(ds_memsample* inSample, short sFunction, long value);
@@ -174,12 +212,12 @@ public:
     void service_sounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
                                   // inline there, emitted in kb.obj)
 
-    // Retail bodies located this lane and NOT yet claimed - the carcass
-    // still carries both as DC_ONLY (i.e. "no retail body"), which this
-    // lane's evidence contradicts. See the note in soundmgr.cpp; the
-    // promotion is a user decision, so only the declarations land here.
+    // PC-expanded bodies promoted from the locate sweep. SetMusicVolume,
+    // ConvertVolume and ThreadStopMP3 are exact; Open is declared in its
+    // vtable position above and carries a bounded retry/RA residual.
     void SetMusicVolume();                              // 0x5994b0
     int ConvertVolume(int iVolumeValue, int iVolumeType);  // 0x5996c0
+    void ThreadStopMP3();                               // 0x59b080
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
@@ -211,6 +249,16 @@ extern unsigned char gbUnk691209;
 // placeholders - names unattested.
 extern int gUnk698760;
 extern int gUnk698764;
+extern int gUnk698a28;
+
+// Retail PC Miles initialization state used only by Open. The three .data
+// configuration dwords begin at 0x684aa8; the 16-byte PCM descriptor is at
+// 0x69fe80; and the successful sample-handle count occupies 0x684ae0.
+extern int gSoundSampleRate;
+extern int gSoundBitsPerSample;
+extern int gSoundOutputChannels;
+extern int gSoundMaxSamples;
+extern AILWaveFormat gSoundWaveFormat;
 
 // Retail .bss 0x69fe78: the Miles stream handle. Named from the import
 // contract - it is the sole argument to AIL_stream_status and
@@ -251,13 +299,27 @@ extern char gMP3NamePlaying[260];
 extern int gUnk69fe90;
 extern int gUnk69fe9c;
 
-// The thread entry ResumeStream and SetMusicVolume hand to
-// _beginthread: retail 0x59a840. The name is BORROWED, not evidence:
-// the DC roster's ProcessStopAndPlayMP3 (dc 0x14b7f4, 244 B) is the
-// only row whose role fits, but the carve gives 0x59a840 a size of
-// 955 B - a 3.9x ratio, well outside the 0.3-2.5x SH4->x86 band - so
-// either the pairing is wrong or that carve row spans more than one
-// function. Deliberately NOT claimed.
+// Retail .bss 0x69fec0: fifty 0x108-byte playback-position records. The
+// 260-byte name and trailing dword are forced by ThreadStopMP3's stride,
+// inline strcmp/strcpy loops and AIL_stream_position store. The count is the
+// dword at 0x6a3498. Names are provisional; the PC cache has no DC twin.
+struct MP3ResumePosition {
+    char name[260];
+    int position;
+};
+extern MP3ResumePosition gMP3ResumePositions[50];
+extern int gMP3ResumePositionCount;
+
+// The stop entry StopMP3 and its inlined copies hand to _beginthread.
+// Retail 0x59a830 is independently pinned by five address-taken xrefs and
+// the DC ProcessMP3Stop -> soundManager::ThreadStopMP3 edge.
+void __cdecl ProcessMP3Stop(void* nothing);
+
+// The stop-and-play entry ResumeStream, StartMP3 and SetMusicVolume hand to
+// _beginthread: retail 0x59a840. Its 955-byte PC Miles body is now exact;
+// those three address-taken xrefs, the reciprocal ConvertVolume call and
+// the shared position cache independently settle the DC roster identity
+// despite the large cross-platform size ratio.
 void __cdecl ProcessStopAndPlayMP3(void* arglist);
 
 // Retail .rdata/.data 0x684ae8: the nine terrain music base names
@@ -281,6 +343,7 @@ extern unsigned char gTerrainMusicIds[9];
 extern "C" {
 __declspec(dllimport) void __stdcall _AIL_end_sample(ds_memsample* sample);
 __declspec(dllimport) int __stdcall _AIL_sample_status(ds_memsample* sample);
+__declspec(dllimport) int __stdcall _AIL_sample_volume(ds_memsample* sample);
 __declspec(dllimport) void __stdcall _AIL_stop_sample(ds_memsample* sample);
 __declspec(dllimport) void __stdcall _AIL_resume_sample(ds_memsample* sample);
 __declspec(dllimport) void __stdcall _AIL_init_sample(ds_memsample* sample);
@@ -293,15 +356,46 @@ __declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sa
 __declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
                                                             int volume);
 __declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
+__declspec(dllimport) int __stdcall _AIL_stream_position(void* stream);
+__declspec(dllimport) int __stdcall _AIL_stream_volume(void* stream);
+__declspec(dllimport) void* __stdcall _AIL_open_stream(void* driver,
+                                                       const char* filename,
+                                                       int stream_mem);
+__declspec(dllimport) void __stdcall _AIL_set_stream_loop_count(void* stream,
+                                                                int loops);
+__declspec(dllimport) void __stdcall _AIL_start_stream(void* stream);
+__declspec(dllimport) void __stdcall _AIL_set_stream_position(void* stream,
+                                                              int position);
 __declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
 __declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
 __declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
 __declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
 __declspec(dllimport) void __stdcall _AIL_shutdown();
 __declspec(dllimport) void __stdcall _AIL_serve();
+__declspec(dllimport) void __stdcall _AIL_startup();
+__declspec(dllimport) int __stdcall _AIL_set_preference(int preference,
+                                                        int value);
+__declspec(dllimport) int __stdcall _AIL_get_preference(int preference);
+__declspec(dllimport) void __stdcall _AIL_HWND();
+__declspec(dllimport) int __stdcall _AIL_waveOutOpen(
+    AILDigitalDriver** driver, void* waveOut, int device,
+    AILWaveFormat* format);
+__declspec(dllimport) void __stdcall _AIL_waveOutClose(
+    AILDigitalDriver* driver);
+__declspec(dllimport) void __stdcall _AIL_digital_configuration(
+    AILDigitalDriver* driver, int* rate, int* format, char* description);
+__declspec(dllimport) ds_memsample* __stdcall _AIL_allocate_sample_handle(
+    AILDigitalDriver* driver);
+__declspec(dllimport) unsigned char __stdcall _SmackSoundUseMSS(
+    AILDigitalDriver* driver);
+typedef void* (__stdcall* BinkOpenMilesProc)(void*);
+__declspec(dllimport) void* __stdcall _BinkOpenMiles(void* soundSystem);
+__declspec(dllimport) int __stdcall _BinkSetSoundSystem(
+    BinkOpenMilesProc openSound, AILDigitalDriver* driver);
 }
 #define AIL_end_sample _AIL_end_sample
 #define AIL_sample_status _AIL_sample_status
+#define AIL_sample_volume _AIL_sample_volume
 #define AIL_stop_sample _AIL_stop_sample
 #define AIL_resume_sample _AIL_resume_sample
 #define AIL_init_sample _AIL_init_sample
@@ -310,12 +404,29 @@ __declspec(dllimport) void __stdcall _AIL_serve();
 #define AIL_set_sample_loop_count _AIL_set_sample_loop_count
 #define AIL_set_sample_volume _AIL_set_sample_volume
 #define AIL_stream_status _AIL_stream_status
+#define AIL_stream_position _AIL_stream_position
+#define AIL_stream_volume _AIL_stream_volume
+#define AIL_open_stream _AIL_open_stream
+#define AIL_set_stream_loop_count _AIL_set_stream_loop_count
+#define AIL_start_stream _AIL_start_stream
+#define AIL_set_stream_position _AIL_set_stream_position
 #define AIL_set_stream_volume _AIL_set_stream_volume
 #define AIL_service_stream _AIL_service_stream
 #define AIL_pause_stream _AIL_pause_stream
 #define AIL_close_stream _AIL_close_stream
 #define AIL_shutdown _AIL_shutdown
 #define AIL_serve _AIL_serve
+#define AIL_startup _AIL_startup
+#define AIL_set_preference _AIL_set_preference
+#define AIL_get_preference _AIL_get_preference
+#define AIL_HWND _AIL_HWND
+#define AIL_waveOutOpen _AIL_waveOutOpen
+#define AIL_waveOutClose _AIL_waveOutClose
+#define AIL_digital_configuration _AIL_digital_configuration
+#define AIL_allocate_sample_handle _AIL_allocate_sample_handle
+#define SmackSoundUseMSS _SmackSoundUseMSS
+#define BinkOpenMiles _BinkOpenMiles
+#define BinkSetSoundSystem _BinkSetSoundSystem
 
 // The CRT thread spawner retail reaches with a plain `call __beginthread`
 // (msvcrt, __cdecl). Declared here rather than via <process.h> so the
@@ -323,15 +434,7 @@ __declspec(dllimport) void __stdcall _AIL_serve();
 extern "C" unsigned long __cdecl _beginthread(void(__cdecl* start_address)(void*),
                                               unsigned stack_size,
                                               void* arglist);
-
-// The thread entry retail hands to _beginthread in StopMP3,
-// StopAllSamples and PauseSamples. Its retail body is 0x59a7d0 - the
-// same address kb.h names as the soundManager::service_sounds member.
-// _beginthread's parameter type cannot accept a pointer-to-member, so
-// retail's soundmgr.cpp must have had a free-function declaration of
-// that body in scope; this is that view. TWO VIEWS OF ONE ADDRESS -
-// flagged for evidence-backed adjudication, not claimed by either side.
-void __cdecl service_sounds(void* arglist);
+extern "C" void __cdecl _endthread(void);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* gpSoundManager;

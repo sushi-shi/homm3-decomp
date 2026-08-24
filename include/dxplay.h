@@ -12,7 +12,23 @@ class CDPlayConnection;
 class CDPlayAddressElement;
 class CDPlayGroup;
 class CDPlayMsg;
+#ifdef HOMM3_REMOTE_PLAYER_LIST_DECLS
+// DC's complete 0x104-byte class has a 255-byte name followed by the
+// naturally aligned DPID at +0x100. Retail independently proves that tail:
+// UpdateCurrentPlayers compares the result of CAutoArray::Get at +0x100.
+class CDPlayPlayer {
+public:
+    char* GetName() { return m_sName; }
+    unsigned long GetId() { return m_dpid; }
+
+protected:
+    char m_sName[255];
+    unsigned long m_dpid;
+};
+SIZE(CDPlayPlayer, 0x104);
+#else
 class CDPlayPlayer;
+#endif
 class CDPlaySession;
 template<class T> class CAutoArray;
 struct DPCAPS;

@@ -635,7 +635,13 @@ public:
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
     char pad_154[0x4];
 #else
+#ifdef HOMM3_ARMY_CYCLE_VIEW
+    // The command.obj cycle reset is an independent retail witness for
+    // the DC-named last-fidget clock: it writes this dword from GameTime.
+    unsigned long iLastFidgetTime; // +0xfc
+#else
     char pad_fc[0x4];
+#endif
     // The per-frame DRAW OFFSET a stack is currently displaced by,
     // byte-proven by MirrorImage (0x5a6c70): it sets the pair from the
     // difference between the source hex's and the clone's own hexcell
@@ -657,7 +663,14 @@ public:
     // army::Fly's two already are, and in the same band comment's terms:
     // read the fields you need, do not model the record.
     int frameInfoAttackFrames;    // +0x150 == sMonFrameInfo.iAttackFrames
+#ifdef HOMM3_ARMY_CYCLE_VIEW
+    // Embedded SMonFrameInfo::iFidgetFrequency (+0x44 in the 0x54 row).
+    // ResetCycleTimers compares it with 51 and uses it as Random's upper
+    // bound before retiming iLastFidgetTime.
+    int frameInfoFidgetFrequency; // +0x154
+#else
     char pad_154[0x4];
+#endif
 #endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
     // sMonFrameInfo.iAttackStartCycleTime (DC TMonFrameInfo@76, between
@@ -980,6 +993,11 @@ public:
     // `distance`, which is the Champion's per-hex charge bonus.
     int joustBonus;                // +0x490
     int counterstrokeBonus;        // +0x494
+#elif defined(HOMM3_ARMY_PROCESS_MOVE_VIEW)
+    // process_move_then_attack clears the charge distance before movement
+    // and once more after the strike. DC names the same +0x490 field.
+    int joustBonus;                // +0x490
+    char pad_494[0x4];
 #else
     char pad_490[0x8];
 #endif
@@ -1301,7 +1319,11 @@ public:
     // RECORDED, NOT ACTED ON: the access change and the bool retype are
     // one measured pass over the whole family (bool is not free in VC6
     // - it normalizes), and this lane only needed the declarations.
+#ifndef HOMM3_ARMY_COMMAND_ROUND_VIEW
+    // command.cpp substitutes army::ResetRound for this unused member,
+    // preserving the declaration population of that handle-sensitive TU.
     unsigned char simple_move(int hex, unsigned char restore_facing);
+#endif
     // BEHIND A VIEW, MEASURED: declaring WalkTo to every consumer of
     // this header costs command.obj's combatManager::GetCommand
     // 92.5714 -> 92.5357 with no semantic change anywhere - the
@@ -1312,7 +1334,11 @@ public:
     // fire it. army.cpp is the only consumer.
 #ifdef HOMM3_ARMY_MOVE_VIEW
     unsigned char WalkTo(int destIndex, unsigned char restore_facing);
+#endif
+#if defined(HOMM3_ARMY_MOVE_VIEW) || defined(HOMM3_ARMY_PROCESS_MOVE_VIEW)
     unsigned char attack_hex(int hex, unsigned char restore_facing);
+#endif
+#ifdef HOMM3_ARMY_MOVE_VIEW
     // 0x445cd0 (56 B), CORRECTED 2026-08-15. This row carried the name
     // `move_to` in an earlier link-order join and it is refuted by the
     // body: it takes ONE stack argument, answers 1 for direction ids
@@ -1548,6 +1574,14 @@ public:
         ARMY_CREATURE_GRIFFIN = 0x4,
         ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
 #endif
+#ifdef HOMM3_ARMY_PROCESS_MOVE_VIEW
+        // The two Dungeon flyers that strike and return to their starting
+        // hex. process_move_then_attack compares exactly 0x48/0x49 before
+        // applying the Blind/Stone/Paralyze return guards. NH3API spellings;
+        // the ids also follow from Dungeon's 0x46..0x53 fourteen-slot run.
+        ARMY_CREATURE_HARPY = 0x48,
+        ARMY_CREATURE_HARPY_HAG = 0x49,
+#endif
         // The two creatures that bring down a wall segment without a
         // catapult, and AttackWall (0x445d30) is what proves both: its
         // switch answers 0x5e with ballistics row 1 and 0x5f with row
@@ -1636,7 +1670,14 @@ public:
     // singular name for a count of one and the plural otherwise, and
     // the shared empty string for an out-of-range id. Name is the HD
     // crossbuild's, which pairs this rva by masked byte identity.
+#ifdef HOMM3_ARMY_FIRST_AID_VIEW
+    // command.cpp needs the header-inline instance overload and has no
+    // caller of the static overload. Substituting it in the same member
+    // slot preserves that TU's measured C1XX declarator count.
+    const char* GetName() const;
+#else
     static const char* GetName(int type, long count);
+#endif
 
     // The engine's creatureId bit accessor - the DC roster's
     // army::Is(unsigned attribute) (Army.h:765, dc 0x27ce4, 14 B), and
@@ -1907,7 +1948,7 @@ public:
     // stack at `hex` is a legal target for and cast it.
     void cast_caliph_spell(long hex);
 #endif
-#ifdef HOMM3_ARMY_ROUND_VIEW
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_COMMAND_ROUND_VIEW)
     // 0x447120, claimed in army.cpp. Everything a stack does between
     // rounds: retaliations restored, spell rounds decremented, poison
     // applied, and the summon countdown that ends in ProcessDeath.

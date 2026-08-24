@@ -628,7 +628,14 @@ def _demangle_key(mangled: str):
         # MSVC's `vbase destructor' closure. Claim-only carcass rows use
         # the compiler's own backtick spelling, which scan_file normalizes
         # to Class__vbase_destructor.
-        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        owner = mangled[4:]
+        if owner.startswith("?$"):
+            # A class-template owner starts `?$Class@...`; only the stable
+            # template name participates in the source join, just as it does
+            # for ordinary template members below.
+            cls = owner[2:].split("@", 1)[0]
+        else:
+            cls = owner.split("@@", 1)[0].split("@")[0]
         return f"{cls}__vbase_destructor".lower()
     if mangled.startswith("??0") or mangled.startswith("??1"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
@@ -1302,6 +1309,11 @@ def selftest() -> list[str]:
     if _demangle_key("??_Dostrstream@std@@QAEXXZ") != \
             "ostrstream__vbase_destructor":
         failures.append("MSVC vbase destructor did not get its distinct key")
+    if _demangle_key(
+            "??_D?$basic_ostringstream@DU?$char_traits@D@std@@"
+            "V?$allocator@D@2@@std@@QAEXXZ") != \
+            "basic_ostringstream__vbase_destructor":
+        failures.append("template vbase destructor owner was not normalized")
     if _demangle_key("??_Gios_base@std@@UAEPAXI@Z") != \
             "ios_base_ios_base@gdtor":
         failures.append("MSVC scalar deleting destructor key regressed")

@@ -47,6 +47,13 @@ public:
     type_combat_sub_window(heroWindow* parent,
                            const char* background_sprite_name);
     virtual ~type_combat_sub_window();
+    // Slots 1 and 2 inherit the image-wide empty-body folds at 0x485d80
+    // (`ret 4`) and 0x5bc7e0 (`ret 8`). The Dreamcast decorated publics
+    // independently preserve the same PBD/JJ arguments; only the generated
+    // prototype comments below lost them.
+    virtual void set_rollover(const char* new_text);
+    virtual void set_rollover_buttons(int first, int second);
+    virtual void DisableAllButtons();
 };
 SIZE(type_combat_sub_window, 0x38);
 
@@ -64,6 +71,7 @@ public:
 
     TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
+    virtual void set_rollover(const char* new_text);
 };
 SIZE(TCombatControlSubWindow, 0x40);
 
@@ -78,6 +86,7 @@ private:
 public:
     TCombatPlacementSubWindow(heroWindow* parent);
     virtual ~TCombatPlacementSubWindow();
+    virtual void DisableAllButtons();
 };
 SIZE(TCombatPlacementSubWindow, 0x3c);
 

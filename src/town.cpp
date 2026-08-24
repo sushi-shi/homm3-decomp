@@ -10,6 +10,8 @@
 #include "exec.h"
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
+#include "events.h"
+#include "kb.h"
 #include "misc.h"
 #include "timedevent.h"
 #include "town.h"
@@ -23,6 +25,7 @@ DATA(0x00699548) extern int gUnnamed699548;
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006994fc) extern townManager* gpTownManager;
 DATA(0x00699500) extern executive* gpExecutive;
+
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
 // data segment brackets it with town's other statics
@@ -68,6 +71,54 @@ int town::GetPortraitFrame(bool is_small) const
     return frame;
 }
 
+// E:\gamedcs\town.cpp:779
+// Collect every generator owned by this town's player, choose one dwelling
+// and then choose uniformly among its non-empty creature slots.  The retail
+// body default-constructs the 92-byte generator before the scan and assigns
+// the selected vector element into it, which is why this is not expressed as
+// a reference to the game vector.
+// EXACT 2026-08-24. A single `int i` is address-taken by vector::push_back and
+// then reused across all three loops; together with the empty-vector early
+// return, that reproduces retail's stack-home stores and shared cleanup tail.
+VA(0x005bd750, 0x188)  // retail bracket/body + DC method/xrefs; dc 0x165da4
+void town::SetSummoningGenerator()
+{
+    std::vector<int> generators;
+    generator thisGenerator;
+    int i;
+
+    for (i = 0; i < gpGame->generators.size(); ++i) {
+        if (gpGame->generators[i].playerOwner == owner)
+            generators.push_back(i);
+    }
+
+    if (generators.size() == 0) {
+        summoningType = CREATURE_NONE;
+        return;
+    }
+
+    thisGenerator = gpGame->generators[
+        generators[Random(0, generators.size() - 1)]];
+
+    int creature_count = 0;
+    for (i = 0; i < 4; ++i) {
+        if (thisGenerator.type[i] != CREATURE_NONE)
+            ++creature_count;
+    }
+
+    if (creature_count) {
+        int selected_creature = rand() % creature_count;
+        for (i = 0; i < 4; ++i) {
+            if (thisGenerator.type[i] != CREATURE_NONE
+                && selected_creature-- == 0)
+                break;
+        }
+        summoningType = thisGenerator.type[i];
+        summoningPopulation =
+            akCreatureTypeTraits[summoningType].growthRate;
+    }
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\town.cpp:779
@@ -80,6 +131,112 @@ void town::SetSummoningGenerator()
 // E:\gamedcs\town.cpp:798
 DC_ONLY(0x165ea0, 0x568)
 void town::ApplySpecialBuildingEffect(hero* townHero)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// E:\gamedcs\town.cpp:798
+// Applies the once-per-hero rewards from the town-specific special
+// buildings. The retail body is seven independent town-type tests rather
+// than a switch; preserving that source shape also preserves the repeated
+// bitset bounds checks and the compiler's mixed inline/out-of-line lowering
+// of reference::operator=.
+//
+// EXACT 2026-08-24. The first visit test is deliberately the const-style
+// `test(id)` spelling: VC6 otherwise expands operator[] but leaves its nested
+// `test` as the one out-of-line call in this body (97.4786%). Dreamcast's
+// xrefs record operator[] at all five tests, so this is a retail-codegen
+// spelling divergence rather than a cross-architecture source claim; the
+// other four retain the DC-attested proxy spelling and naturally reproduce
+// retail's later inline decisions.
+VA(0x005bd8e0, 0x551)  // unique retail body + DC method/xrefs, dc 0x165ea0
+void town::ApplySpecialBuildingEffect(hero* townHero)
+{
+    if (type == TOWN_DUNGEON && field_33
+        && HasBuilding(EXTRA_0_ID, 0)) {
+        int max_mana = townHero->GetMaxMana() * 2;
+        if (townHero->mana < max_mana) {
+            if (gpGame->IsLocalHuman(owner))
+                NormalDialog(gpGeneralText->GetText(580), // Mana Vortex
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            townHero->mana = static_cast<short>(max_mana);
+            field_33 = 0;
+        }
+    }
+
+    if (type == TOWN_CASTLE && HasBuilding(EXTRA_0_ID, 0)
+        && !(townHero->flags & 2)) {
+        townHero->flags |= 2;
+        townHero->maxMovePoints += gStablesMovementBonus;
+        townHero->movePoints += gStablesMovementBonus;
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(gpGeneralText->GetText(581), // Stables
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    if (type == TOWN_TOWER && HasBuilding(EXTRA_2_ID, 0)
+        && !townHero->TownSpecialGrantedMask.test(id)) {
+        townHero->TownSpecialGrantedMask[id] = 1;
+        townHero->AdjustPrimarySkill(3, 1);
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(
+                gpGeneralText->GetText(582), // Wall of Knowledge
+                1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
+    }
+
+    if (type == TOWN_INFERNO && HasBuilding(EXTRA_2_ID, 0)
+        && !townHero->TownSpecialGrantedMask[id]) {
+        townHero->TownSpecialGrantedMask[id] = 1;
+        townHero->AdjustPrimarySkill(2, 1);
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(gpGeneralText->GetText(583), // Order of Fire
+                         1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
+    }
+
+    if (type == TOWN_DUNGEON && HasBuilding(EXTRA_2_ID, 0)
+        && !townHero->TownSpecialGrantedMask[id]) {
+        int experience = static_cast<int>(
+            townHero->GetExperienceBonusFactor() * 1000.0f);
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(
+                gpGeneralText->GetText(584), // Battle Scholar Academy
+                1, -1, -1, 0x11, experience, -1, 0, -1, 0, -1, 0);
+        townHero->TownSpecialGrantedMask[id] = 1;
+        townHero->GiveExperience(experience, 1, 1);
+    }
+
+    if (type == TOWN_STRONGHOLD && HasBuilding(EXTRA_2_ID, 0)
+        && !townHero->TownSpecialGrantedMask[id]) {
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(
+                gpGeneralText->GetText(585), // Hall of Valhalla
+                1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
+        townHero->TownSpecialGrantedMask[id] = 1;
+        townHero->AdjustPrimarySkill(0, 1);
+    }
+
+    if (type == TOWN_FORTRESS && HasBuilding(SPECIAL_BUILDING_ID, 0)
+        && !townHero->TownSpecialGrantedMask[id]) {
+        if (gpGame->IsLocalHuman(townHero->owner))
+            NormalDialog(
+                gpGeneralText->GetText(586), // Cage of Warlords
+                1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
+        townHero->TownSpecialGrantedMask[id] = 1;
+        townHero->AdjustPrimarySkill(1, 1);
+    }
+}
+
+#if 0  // @carcass: claim-only home for the header COMDAT below
+
+// E:\gamedcs\hero.h:669
+// GetMaxMana expands into ApplySpecialBuildingEffect, but its nested
+// GetPrimarySkill call is retained as this 49-byte /Gy COMDAT immediately
+// after the caller. The compiled definition remains in hero.h; this carcass
+// only gives that already-emitted decorated symbol its retail address.
+VA(0x005bde40, 0x31)  // exact body + sole caller above, dc 0x2c668
+int hero::GetPrimarySkill(int skill) const
 {
     // @stub
 }
@@ -1206,6 +1363,17 @@ void extended_dialog(const char* text,
                      std::vector<type_dialog_resource>& resources,
                      long x, long y, long timeout);
 const char* GetBuildingName(int townType, int buildingId);
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94). Dreamcast records this
+// header-inline name selector once in show_creature_rewards; retail expands
+// it completely at that site. Keep the definition TU-local until the shared
+// creaturetype.h include-set can be audited.
+static inline const char* GetArmyName(int type, int count)
+{
+    return type >= 0 && type <= 150
+               ? (count == 1 ? akCreatureTypeTraits[type].m_name
+                             : akCreatureTypeTraits[type].m_plural_name)
+               : "";
+}
 // The two /Gr helpers below are declared ahead of their caller so their
 // BODIES can follow it - retail emits each one after give_event_reward
 // (the STATIC-HELPERS-AFTER-CALLER note above).
@@ -1336,12 +1504,14 @@ void town::give_event_reward(const TTownEvent* thisEvent)
 }
 
 // E:\gamedcs\town.cpp:1732
-// Residual (92.7%): retail expands the format_string temporary's
-// destructor inline (the refcount arms) where our CL calls _Tidy(1) -
-// the sequential-inline-budget class; a scoped named local measured
-// 92.0. Joins the granted building names with ", "/" and ", wraps them in the
-// town-event dialog format, raises the extended dialog for the local
-// owner, and clears the reward vector for the caller's next batch.
+// EXACT 2026-08-24. Dreamcast's xref census records one vector::clear call;
+// the former hand-expansion as erase(begin(), end()) emitted the same final
+// vector loop but priced the earlier format_string temporary differently,
+// leaving its destructor out of line at 92.6954%. Restoring clear() changes
+// the real inline graph and closes all 474 bytes without a numerator carrier.
+// Joins the granted building names with ", "/" and ", wraps them in the town-
+// event dialog format, raises the extended dialog for the local owner, and
+// clears the reward vector for the caller's next batch.
 VA(0x005c0220, 0x1DA)  // anchor-caller (give_event_reward), dc 0x167958
 void show_building_rewards(const town* this_town,
                            std::vector<type_dialog_resource>* rewards)
@@ -1361,15 +1531,20 @@ void show_building_rewards(const town* this_town,
     if (gpCurrentPlayer->IsLocalHuman()
         && gNetLocalGamePos == this_town->owner)
         extended_dialog(text.c_str(), *rewards, -1, -1, 0);
-    rewards->erase(rewards->begin(), rewards->end());
+    rewards->clear();
 }
 
 // E:\gamedcs\town.cpp:1760
-// Residual (93.2%): the same temporary-destructor inline-vs-call class
-// as show_building_rewards, plus slot cosmetics around the "%d "
-// format call. The creature twin: "<count> <name>" per reward with the same
-// separators, the count picking the singular or plural creature name,
-// and the first reward's count driving the outer format.
+// Residual (99.0596%): the same DC-attested clear() repair restores the
+// inlined format_string destructor and recovers the honest pre-carrier peak.
+// The 218-instruction streams and all 20 branch targets agree; only the
+// adjacent hidden-return-slot `lea` and count `push` around format_string
+// remain transposed. The DC-attested GetArmyName call is byte-flat and kept;
+// swapping count/creature declarations was flat, while a scoped named
+// temporary fell to 97.3624%, so this is the closest source-compatible form.
+// The creature twin emits "<count> <name>" per reward with the same separators,
+// selects singular/plural by count, and drives the outer format by the first
+// reward's count.
 VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
 void show_creature_rewards(const town* this_town,
                            std::vector<type_dialog_resource>* rewards)
@@ -1385,16 +1560,7 @@ void show_creature_rewards(const town* this_town,
                 text += ", ";
         }
         text += format_string("%d ", count);
-        const char* name;
-        if (creature >= 0 && creature <= 0x96) {
-            if (count == 1)
-                name = akCreatureTypeTraits[creature].m_name;
-            else
-                name = akCreatureTypeTraits[creature].m_plural_name;
-        } else {
-            name = "";
-        }
-        text += name;
+        text += GetArmyName(creature, count);
     }
     long firstCount = (*rewards)[0].qualifier >> 16;
     text = format_string(gpGeneralText->GetText(GENERAL_TEXT_EVENT_CREATURES),
@@ -1402,7 +1568,7 @@ void show_creature_rewards(const town* this_town,
     if (gpCurrentPlayer->IsLocalHuman()
         && gNetLocalGamePos == this_town->owner)
         extended_dialog(text.c_str(), *rewards, -1, -1, 0);
-    rewards->erase(rewards->begin(), rewards->end());
+    rewards->clear();
 }
 
 // Forward declarations for the two bodies that follow their callers in

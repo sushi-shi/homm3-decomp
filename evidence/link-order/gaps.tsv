@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-15
+# date: 2026-08-24
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 after_unit	before_unit	gap_start	gap_end	bytes	fns	candidate_owners
 adventuremapwindow	adventureoptionswindow	0x40a4	0x51d0	4396	33	
@@ -8,7 +8,7 @@ adventureoptionswindow	advmgr	0x592c	0x5de0	1204	14
 advmgr	advspells	0x1b0da	0x1c2f0	4630	30	
 advspells	ai	0x1c482	0x1eac0	9790	20	
 ai	ai_combat	0x224d9	0x23c80	6055	25	
-ai_combat	ai_player	0x276bf	0x28410	3409	20	
+ai_combat	ai_player	0x276bf	0x28260	2977	18	
 ai_player	ai_tactical	0x2a2a7	0x35830	46473	131	
 ai_tactical	army	0x3cb08	0x3d540	2616	16	
 army	armygrp	0x48d1b	0x496a0	2437	19	
@@ -33,9 +33,9 @@ combatwindow	command	0x728fa	0x74bf0	8950	33
 command	creature_bank	0x7a2cd	0x7aad0	2051	16	
 creature_bank	creaturetype	0x7ab2e	0x7b120	1522	3	
 creaturetype	csequence	0x7b211	0x7b840	1583	4	
-csequence	csprite	0x7b8c6	0x7bcc0	1018	8	
-csprite	cspriteframe	0x7bceb	0x7c430	1861	22	
-cspriteframe	cursor	0x7c452	0x7ffe0	15246	25	
+csequence	csprite	0x7b8c6	0x7b920	90	2	
+csprite	cspriteframe	0x7c23c	0x7c2b0	116	4	
+cspriteframe	cursor	0x7d09c	0x7ffe0	12100	21	
 cursor	customcampaign	0x7fffa	0x8b200	45574	166	
 customcampaign	dialogbox	0x8b2d7	0x8fdc0	19177	88	dc_input,dc_precompiledheaders
 dialogbox	diff	0x90b67	0x90f60	1017	11	
@@ -47,12 +47,12 @@ exec	findpath	0xb0f35	0xb1330	1019	11
 findpath	fly	0xb3f61	0xb46c0	1887	14	
 fly	font	0xb5012	0xb5070	94	2	
 font	game	0xb5b90	0xb8550	10688	57	
-game	gametypewindow	0xceca8	0xd54c0	26648	115	
+game	gametypewindow	0xd2b20	0xd54c0	10656	43	
 gametypewindow	hero	0xd5b60	0xd7470	6416	47	genericresource,global
 hero	herodefs	0xe64be	0xe67a0	738	8	
 herodefs	hexcell	0xe6cd8	0xe7150	1144	11	
 hexcell	hillfortwindow	0xe71fd	0xe7e10	3091	13	
-hillfortwindow	hiscore	0xe8bb9	0xe9070	1207	12	
+hillfortwindow	hiscore	0xe8bb9	0xe8fb0	1015	11	
 hiscore	iconwdgt	0xe9e41	0xea720	2271	5	
 iconwdgt	initialize	0xeb33d	0xebb10	2003	12	
 initialize	inputmgr	0xebce9	0xec0e0	1015	11	
@@ -76,21 +76,21 @@ questlogwindow	quickherowindow	0x12e42d	0x12ead0	1699	13
 quickherowindow	quickinfowindow	0x12f43b	0x12f8c0	1157	12	
 quickinfowindow	quicktownwindow	0x12fd2b	0x130120	1013	11	
 quicktownwindow	recruit	0x130d3d	0x14e750	121363	302	
-recruit	remote	0x15174b	0x153770	8229	32	
+recruit	remote	0x15174b	0x153220	6869	27	
 remote	resource	0x157f71	0x158720	1967	13	
 resource	resourcedisplay	0x1587a7	0x158ba0	1017	11	
-resourcedisplay	resourcemanager	0x1590c4	0x1594b0	1004	11	
+resourcedisplay	resourcemanager	0x1590c4	0x1590f0	44	1	
 resourcemanager	sacrifice_window	0x15c12a	0x15fce0	15286	90	ressw
 sacrifice_window	sample	0x166758	0x166da0	1608	5	
 sample	scenarioinfo	0x166e89	0x169800	10615	17	
 scenarioinfo	search	0x1699b2	0x16a0d0	1822	12	
 search	seerhut	0x16a352	0x16d3e0	12430	42	
-seerhut	singleselectionpopups	0x173593	0x175a10	9341	34	
+seerhut	singleselectionpopups	0x17460c	0x175a10	5124	25	
 singleselectionpopups	singleselectionwindow	0x175a20	0x177c90	8816	44	
 singleselectionwindow	slider	0x177cdd	0x196050	123763	204	
 slider	smackmgr	0x197185	0x1971b0	43	1	
 smackmgr	soundmgr	0x197cf4	0x1994b0	6076	23	
-soundmgr	spellbookwindow	0x19b07a	0x19c8f0	6262	27	
+soundmgr	spellbookwindow	0x19b295	0x19c8f0	5723	26	
 spellbookwindow	spelldefs	0x19c9a0	0x19e060	5824	6	
 spelldefs	spells	0x19e4af	0x1a3700	21073	29	
 spells	strip	0x1a939c	0x1a9d20	2436	15	

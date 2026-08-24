@@ -91,9 +91,29 @@ enum EGeneralTextIndex {
     // describes that consumer, which is this enum's stated convention;
     // the index is retail-byte-proven (a folded [Text._First + 0x204]).
     GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
+#ifdef HOMM3_COMMAND_GRID_VIEW
+    // ResetRound posts this line after every non-placement, non-quick round;
+    // retail folds Text._First + 0x674, i.e. row 413.
+    GENERAL_TEXT_COMBAT_ROUND = 413,
+#endif
+#ifndef HOMM3_COMMAND_PLAYER_DROP_VIEW
     GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_BACKPACK_FULL = 153,
+#else
+    // HandleCombatPlayerDrop's two 15-second notification rows replace two
+    // command-unused entries at the same parse slots: enum population is a
+    // measured VC6 handle-state input for this TU.
+    GENERAL_TEXT_COMBAT_LOCAL_PLAYER_DROPPED = 416,
+    GENERAL_TEXT_COMBAT_REMOTE_PLAYER_DROPPED = 417,
+#endif
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
+#ifdef HOMM3_COMMAND_TOWER_STRING_VIEW
+    // get_tower_string's two folded vector loads at Text._First + 0x26c and
+    // +0x270. The first takes the wall name; the second takes that name,
+    // skill and the double/triple archer counts.
+    GENERAL_TEXT_COMBAT_WALL_DESTROYED_FORMAT = 155,
+    GENERAL_TEXT_COMBAT_WALL_STATUS_FORMAT = 156,
+#endif
     GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
     // The two rows above HEALTH_REMAINING in the popup, both folded
     // [Text._First + N] loads: 0x31c in
@@ -222,6 +242,7 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY = 683,
     GENERAL_TEXT_GARRISON_ADVENTURE_SPELL = 685,
     GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
+    GENERAL_TEXT_COMBAT_FEAR = 729,
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT = 730,
     GENERAL_TEXT_CAMPAIGN_HERO_CLASS = 736,
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6 = 746,

@@ -11,16 +11,21 @@ adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	10
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280
 adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20
 adventuremapwindow	?HighlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x38c0
+adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	100.0000	100.0000	100.0000	0x3010
+adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	100.0000	100.0000	100.0000	0x2e70
 adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40
+adventuremapwindow	?SetSleepImage@TAdventureMapWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x3cc0
 adventuremapwindow	?UpdateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60
 adventuremapwindow	?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	98.5808	98.5808	98.5808	0x3560
 adventuremapwindow	?UpdateHeroLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x32e0
+adventuremapwindow	?UpdateQuestLogButton@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x39b0
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
 adventuremapwindow	?UpdateSleepButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3ba0
 adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3bf0
 adventuremapwindow	?UpdateTownLocator@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x37a0
 adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3420
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
+adventuremapwindow	?convertID2HelpID@TAdventureMapWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x2c50
 adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0
 adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10
 adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x51d0
@@ -31,7 +36,9 @@ adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	100.000
 advmgr	??0CAdvPopup@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1b040
 advmgr	??0advManager@@QAE@XZ	90.2973	90.2973	90.2973	0x6df0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
+advmgr	??1CAdvMgrNetMsgHandler@@UAE@XZ	100.0000	100.0000	100.0000	0x17d160
 advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60
+advmgr	??_GCAdvMgrNetMsgHandler@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x77b0
 advmgr	?BVMessage@advManager@@QAEXPBD@Z	92.6829	92.6829	92.6829	0x16210
 advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	93.3333	93.3333	93.3333	0x16060
 advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450
@@ -216,6 +223,7 @@ ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
+ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.0000	0x280e0
 ai_player	?choose_weakest_army@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690
 ai_player	?clear_marks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260
 ai_player	?do_best_purchase@type_AI_creature_purchaser@@IAEJ_N@Z	97.2740	97.2740	97.2740	0x2d420
@@ -233,6 +241,7 @@ ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000	100.0000	100.0000
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110
 ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570
+ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	99.9554	99.9554	99.9554	0x282b0
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
@@ -569,6 +578,7 @@ cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350
 cmbtmgr	?CheckApplyBadMorale@combatManager@@QAEHHH@Z	97.7333	97.7333	97.7333	0x64b40
 cmbtmgr	?CheckApplyGoodMorale@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x64920
+cmbtmgr	?CheckRebirth@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69440
 cmbtmgr	?Close@combatManager@@UAEXXZ	100.0000	100.0000	100.0000	0x63260
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
 cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x686b0
@@ -619,6 +629,11 @@ cmbtmgr	?ShootMissile@combatManager@@QAEXHHHHPBMPBVCSprite@@@Z	93.9760	93.9760	9
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510
 cmbtmgr	?StopCombatSounds@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x639e0
+cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	91.0961	91.0961	91.0961	0x64d40
+cmbtmgr	?Unnamed464f50@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x64f50
+cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65f20
+cmbtmgr	?Unnamed4693a0@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x693a0
+cmbtmgr	?Unnamed469e50@combatManager@@QAEEHPAVarmy@@E@Z	100.0000	100.0000	100.0000	0x69e50
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860
@@ -626,6 +641,7 @@ cmbtmgr	?damage_message@combatManager@@QAEXPBDJJPBVarmy@@J@Z	98.8371	98.8371	98.
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
+cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x6a460
 cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	75.5550	75.5550	75.5550	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
@@ -641,8 +657,11 @@ combatcontrolsubwindow	??_GTCombatCreatureSubWindow@@UAEPAXI@Z	100.0000	100.0000
 combatcontrolsubwindow	??_GTCombatHeroSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6cb70
 combatcontrolsubwindow	??_GTCombatPlacementSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6c1e0
 combatcontrolsubwindow	??_Gtype_combat_sub_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6bb80
+combatcontrolsubwindow	?DisableAllButtons@TCombatPlacementSubWindow@@UAEXXZ	100.0000	100.0000	100.0000	0x6c290
+combatcontrolsubwindow	?DisableAllButtons@type_combat_sub_window@@UAEXXZ	100.0000	100.0000	100.0000	0x6bf90
 combatcontrolsubwindow	?Show@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6cdf0
 combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6ce70
+combatcontrolsubwindow	?set_rollover@TCombatControlSubWindow@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x6bf50
 combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x6e3b0
 combatoptionswindow	??1TCombatOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6f700
 combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f6d0
@@ -657,6 +676,10 @@ combatresultswindow	?DoModal@TCombatResultsWindow@@QAEXXZ	100.0000	100.0000	100.
 combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x71af0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
+command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20
+command	?CheckChangeSelector@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x77ac0
+command	?CheckGetAIMove@combatManager@@QAEXXZ	94.4335	94.4335	94.4335	0x77ee0
+command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x762f0
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
 command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470
 # GetCommand ACCEPTED 92.5714 -> 92.5357 (2026-08-20, spells lane).
@@ -675,10 +698,24 @@ command	?DoVictory@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77470
 # the delta is one addressing-mode choice and command.cpp's own source
 # and include set did not move. hist stays at 92.5714.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+command	?GetControl@combatManager@@QAEXXZ	87.7747	87.7747	87.7747	0x782d0
+command	?HandleCombatPlayerDrop@combatManager@@QAEEKPAVmessage@@@Z	100.0000	100.0000	100.0000	0x7a500
+command	?ResetCycleTimers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79f30
+command	?ResetCyclingCreatures@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x79de0
+command	?ResetMouse@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x78890
+command	?ResetRound@combatManager@@QAEXXZ	97.4804	97.4804	97.4804	0x75ed0
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
+command	?SetCombatGrid@combatManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x79fc0
+command	?TurnOffHighlighter@combatManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x77e10
+command	?TurnOffSelector@combatManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x77b60
+command	?ViewCastleBallista@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7a380
+command	?auto_resolve_combat@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x76200
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
+command	?get_tower_string@combatManager@@ABE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TWallSection@1@JJ@Z	100.0000	100.0000	100.0000	0x7a2d0
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0
+command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	100.0000	100.0000	100.0000	0x78b90
+command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x78900
 command	?show_eagle_eye@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x76fe0
 command	?show_looted_artifacts@combatManager@@QAEXAAV?$vector@Utype_artifact@@V?$allocator@Utype_artifact@@@std@@@std@@H@Z	100.0000	100.0000	100.0000	0x772b0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
@@ -1223,15 +1260,22 @@ hillfortwindow	?HandleClick@THillFortWindow@@QAEXAAVmessage@@@Z	100.0000	100.000
 hillfortwindow	?HillFortWindowHandler@@YIHAAVmessage@@@Z	91.9430	91.9430	91.9430	0xe8850
 hillfortwindow	?Recalculate@THillFortWindow@@QAEXE@Z	82.2872	82.2872	82.2872	0xe7eb0
 hillfortwindow	?UpgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500
+hiscore	??0CHighScoreEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0xe96a0
+hiscore	??0THighScoreWindow@@QAE@XZ	90.7049	90.7049	90.7049	0xe9880
 hiscore	??0highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9070
 hiscore	??1CHSInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xe9740
 hiscore	??1THighScoreWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe9dc0
 hiscore	??1highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9090
 hiscore	??_GCHSInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9800
 hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90
+hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	99.9974	99.9974	99.9974	0xe91d0
+hiscore	?GetMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830
 hiscore	?GetRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0
 hiscore	?OnKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xe9710
 hiscore	?OnWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe9790
+hiscore	?Open@highScoreManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xe90a0
+hiscore	?ResetHighScores@highScoreManager@@QAEXXZ	100.0000	100.0000	100.0000	0xe8fb0
+hiscore	?ViewHiScore@highScoreManager@@QAEXXZ	100.0000	100.0000	100.0000	0xe9110
 iconwdgt	??0iconWidget@@QAE@HHHHHPBDHHEIH@Z	100.0000	100.0000	100.0000	0xea720
 iconwdgt	??1iconWidget@@UAE@XZ	100.0000	100.0000	100.0000	0xea7b0
 iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xea6f0
@@ -1303,6 +1347,7 @@ kb	?CleanUpMenus@@YIXXZ	100.0000	100.0000	100.0000	0xf4b50
 kb	?GameUnsaved@@YIHXZ	100.0000	100.0000	100.0000	0xf4310
 kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0
 kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0
+kb	?GetNextHumanPlayer@@YIHH@Z	95.1191	95.1191	95.1191	0xf4ba0
 kb	?MemError@@YIXXZ	100.0000	100.0000	100.0000	0xf42c0
 kb	?NormalDialogTimeOut@@YIXPBDHHHHHHHHHHH@Z	100.0000	100.0000	100.0000	0xf6530
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140
@@ -1527,6 +1572,9 @@ path	?ValidPath@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x123a70
 path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
+philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
+philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
+philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0
@@ -1613,11 +1661,13 @@ remote	??0CLevelPickWaitDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x156ab0
 remote	??0CNetMsgHandler@@QAE@XZ	100.0000	100.0000	100.0000	0x1577f0
 remote	??0CNetMsgHandlerPause@@QAE@XZ	100.0000	100.0000	100.0000	0x157e30
 remote	??0CSaveScreen@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1572e0
+remote	??0CWaitForRemoteBattleDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x156f20
 remote	??1CAnimatedDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x154ab0
 remote	??1CDPlayHeroes@@UAE@XZ	100.0000	100.0000	100.0000	0x152320
 remote	??1CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157430
 remote	??1CNetMsgHandler@@UAE@XZ	41.8750	41.8750	41.8750	0x1578d0
 remote	??1CNetMsgHandlerPause@@UAE@XZ	91.1111	91.1111	91.1111	0x157ee0
+remote	??1CSaveScreen@@UAE@XZ	100.0000	100.0000	100.0000	0x157340
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
 remote	??_GCDPlayHeroes@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1522f0
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
@@ -1626,6 +1676,7 @@ remote	??_GCNetMsgHandler@@UAEPAXI@Z	78.1250	78.1250	78.1250	0x157810
 remote	??_GCNetMsgHandlerPause@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157eb0
 remote	??_GCSaveScreen@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157310
 remote	??_GCWaitForReadyPlayersDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1554b0
+remote	??_GCWaitForRemoteBattleDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157060
 remote	?AddChat@@YAXPAVCChatManager@@PBDZZ	96.6326	96.6326	96.6326	0x153840
 remote	?CalcDimensions@CAnimatedDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0000	100.0000	0x154c30
 remote	?CalcDimensions@CGameTransferDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0000	100.0000	0x157790
@@ -1644,7 +1695,12 @@ remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100
 remote	?GetNetMsgHandler@CDPlayHeroes@@QAEPAVCNetMsgHandler@@XZ	100.0000	100.0000	100.0000	0x1537a0
 remote	?GetRemoteData@@YIPAVCNetMsg@@E@Z	100.0000	100.0000	100.0000	0x154400
 remote	?HandleMPlayerLaunch@@YIEXZ	98.3167	98.3167	98.3167	0x155aa0
+remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180
+remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569f0
+remote	?HandlePlayerDead@@YIXHE@Z	98.3380	98.3380	98.3380	0x156780
+remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	99.9091	99.9091	99.9091	0x1569a0
+remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	99.9394	99.9394	99.9394	0x156940
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0
 remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0
@@ -1678,6 +1734,7 @@ remote	?SetAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	10
 remote	?SetDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70
 remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0
 remote	?SetNetMsgHandler@CDPlayHeroes@@QAEXPAVCNetMsgHandler@@@Z	100.0000	100.0000	100.0000	0x153770
+remote	?SetPercentage@CGameTransferSmack@@QAEXM@Z	100.0000	100.0000	100.0000	0x1574b0
 remote	?SetPosition@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x154170
 remote	?Setup@CAnimatedDlg@@UAEEPBDPAVfont@@0H@Z	100.0000	100.0000	100.0000	0x154b10
 remote	?Setup@CGameTransferSmack@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x157460
@@ -1693,12 +1750,17 @@ remote	?TransmitRemoteData@CDPlayHeroes@@QAE_NPAVCNetMsg@@H_N1@Z	100.0000	100.00
 remote	?TransmitRemoteDataDPID@@YIHPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x154560
 remote	?TransmitRemoteDataDPID@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N1@Z	100.0000	100.0000	100.0000	0x153370
 remote	?TurnDurationMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153960
+remote	?UpdateCurrentPlayers@@YIXXZ	100.0000	100.0000	100.0000	0x1562e0
 remote	?UpdateScreen@CChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x154200
 remote	?UpdateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100.0000	0x153d00
 remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0
+remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x157090
+remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0
 remote	?WaitForReadyToPlayMsg@@YIXXZ	84.0248	84.0248	84.0248	0x154f10
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90
+remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190
+remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1570f0
 remote	__h3cg$remote$static_ctor$logFile	100.0000	100.0000	100.0000	0x152260
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0
@@ -1709,6 +1771,8 @@ resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158
 resourcedisplay	?Clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159020
 resourcedisplay	?Update@TResourceDisplay@@QAEXEE@Z	100.0000	100.0000	100.0000	0x158f20
 resourcemanager	??0TCacheMapKey@ResourceManager@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x15ac20
+resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	100.0000	100.0000	100.0000	0x1591e0
+resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0x1594f0
 resourcemanager	??_Gt_lod_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7d0
 resourcemanager	??_Gt_stdio_file_adapter@ResourceManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x15a7a0
 resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z	100.0000	100.0000	100.0000	0x1594b0
@@ -1782,35 +1846,48 @@ seerhut	??_Gtype_artifact_quest@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x16f4a0
 seerhut	??_Gtype_creature_quest@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x170370
 seerhut	??_Gtype_experience_quest@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x171530
 seerhut	??_Gtype_quest@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x16cbe0
+seerhut	?DoEvent@TQuestGuard@@QAEXPAVhero@@_NPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x172b60
+seerhut	?DoProgressDialog@type_artifact_quest@@UAEXXZ	75.2353	75.2353	75.2353	0x16fbc0
 seerhut	?DoProgressDialog@type_be_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171fc0
 seerhut	?DoProgressDialog@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1725b0
+seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	99.5679	99.5679	99.5679	0x170b80
 seerhut	?DoProgressDialog@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e4b0
 seerhut	?DoProgressDialog@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d550
 seerhut	?DoProgressDialog@type_monster_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16eca0
 seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171ae0
+seerhut	?DoProgressDialog@type_skill_quest@@UAEXXZ	75.8427	75.8427	75.8427	0x16dd60
+seerhut	?DoProposalDialog@type_artifact_quest@@UAEXPAVhero@@@Z	88.7407	88.7407	88.7407	0x16f8a0
 seerhut	?DoProposalDialog@type_be_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f20
 seerhut	?DoProposalDialog@type_belong_to_player_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x172510
+seerhut	?DoProposalDialog@type_creature_quest@@UAEXPAVhero@@@Z	97.4706	97.4706	97.4706	0x170880
 seerhut	?DoProposalDialog@type_defeat_hero_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16e410
 seerhut	?DoProposalDialog@type_experience_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16d4b0
 seerhut	?DoProposalDialog@type_monster_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16ec00
+seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	87.1048	87.1048	87.1048	0x171840
+seerhut	?DoProposalDialog@type_skill_quest@@UAEXPAVhero@@@Z	56.5135	56.5135	56.5135	0x16dad0
+seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	39.0772	39.0772	39.0772	0x173670
 seerhut	?GetAIValue@type_artifact_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x16f5a0
 seerhut	?GetAIValue@type_creature_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x170480
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560
 seerhut	?GetQuestDescription@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f730
 seerhut	?GetQuestDescription@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172160
+seerhut	?GetQuestDescription@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172670
 seerhut	?GetQuestDescription@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x170690
 seerhut	?GetQuestDescription@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e340
 seerhut	?GetQuestDescription@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d410
 seerhut	?GetQuestDescription@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16eb30
 seerhut	?GetQuestDescription@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1716e0
 seerhut	?GetQuestDescription@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d990
+seerhut	?GetRequirementText@type_artifact_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16f5f0
 seerhut	?GetRequirementText@type_be_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172060
 seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650
+seerhut	?GetRequirementText@type_creature_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x1704e0
 seerhut	?GetRequirementText@type_defeat_hero_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16e240
 seerhut	?GetRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0
 seerhut	?GetRequirementText@type_monster_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16ea30
 seerhut	?GetRequirementText@type_resource_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x171580
 seerhut	?GetRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d960
+seerhut	?GetRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	100.0000	100.0000	100.0000	0x173f10
 seerhut	?Load@type_artifact_quest@@UAEXPAVTAbstractFile@@H@Z	99.9482	99.9482	99.9482	0x16fcb0
 seerhut	?Load@type_be_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172200
 seerhut	?Load@type_belong_to_player_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172820
@@ -1827,6 +1904,7 @@ seerhut	?LoadFromMap@type_experience_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	10
 seerhut	?LoadFromMap@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x171bb0
 seerhut	?LoadFromMap@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16de90
 seerhut	?NotifyHeroDefeated@type_defeat_hero_quest@@UAEXHH@Z	100.0000	100.0000	100.0000	0x16e550
+seerhut	?NotifyMonsterDefeated@type_monster_quest@@UAEXUtype_point@@H@Z	100.0000	100.0000	100.0000	0x16ed40
 seerhut	?QuestGuardFn_00572D60@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172d60
 seerhut	?QuestGuardFn_00572E40@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x172e40
 seerhut	?QuestGuardFn_00573040@TQuestGuard@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@H@Z	100.0000	100.0000	100.0000	0x173040
@@ -1846,12 +1924,17 @@ seerhut	?SetDefaultText@type_belong_to_player_quest@@UAEXXZ	100.0000	100.0000	10
 seerhut	?SetDefaultText@type_creature_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x1713c0
 seerhut	?SetDefaultText@type_defeat_hero_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16e6f0
 seerhut	?SetDefaultText@type_experience_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x16d720
+seerhut	?SetDefaultText@type_monster_quest@@UAEXXZ	98.3426	98.3426	98.3426	0x16ef20
 seerhut	?SetDefaultText@type_resource_quest@@UAEXXZ	100.0000	100.0000	100.0000	0x171cc0
 seerhut	?SetDefaultText@type_skill_quest@@UAEXXZ	96.5299	96.5299	96.5299	0x16e0d0
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860
 seerhut	?TakePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0
 seerhut	?TakePayment@type_resource_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x171800
 seerhut	?create_quest@@YIPAVtype_quest@@HE@Z	100.0000	100.0000	100.0000	0x173240
+seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x174070
+seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	100.0000	100.0000	100.0000	0x1735a0
+seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	99.9839	99.9839	99.9839	0x173a70
+seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x173c80
 seerhut	?is_satisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800
 seerhut	?is_satisfied@type_be_hero_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f00
 seerhut	?is_satisfied@type_belong_to_player_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x1724f0
@@ -1868,6 +1951,8 @@ seerhut	?quest_type@type_defeat_hero_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x
 seerhut	?quest_type@type_monster_quest@@UAEHXZ	100.0000	100.0000	100.0000	0x16ebc0
 seerhut	?read@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	96.2963	96.2963	96.2963	0x1734e0
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520
+seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0
+seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
@@ -1906,11 +1991,15 @@ soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1
 soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000	100.0000	100.0000	0x19a410
 soundmgr	?Close@soundManager@@UAEXXZ	100.0000	100.0000	100.0000	0x199a90
 soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1996c0
+soundmgr	?GetSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z	100.0000	100.0000	100.0000	0x19a030
 soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470
 soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	99.7840	99.7840	99.7840	0x19a210
 soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000	100.0000	100.0000	0x199f40
 soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000	100.0000	100.0000	0x19a3f0
+soundmgr	?Open@soundManager@@UAEHH@Z	84.5280	84.5280	84.5280	0x1997d0
 soundmgr	?PauseSamples@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x199c40
+soundmgr	?ProcessMP3Stop@@YAXPAX@Z	100.0000	100.0000	100.0000	0x19a830
+soundmgr	?ProcessStopAndPlayMP3@@YAXPAX@Z	100.0000	100.0000	100.0000	0x19a840
 soundmgr	?ResumeSamples@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x199b90
 soundmgr	?ResumeStream@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19ac00
 soundmgr	?SetMusicVolume@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1994b0
@@ -1919,7 +2008,9 @@ soundmgr	?StopAllSamples@soundManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x199d
 soundmgr	?StopMP3@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19b010
 soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	100.0000	100.0000	100.0000	0x199e80
 soundmgr	?SwitchAmbientMusic@soundManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x19a1e0
+soundmgr	?ThreadStopMP3@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19b080
 soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000	100.0000	100.0000	0x19a4c0
+soundmgr	?WaitEndSampleThread@@YAXPAX@Z	92.0000	92.0000	92.0000	0x19a6b0
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590
 soundmgr	?service_sounds@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a7d0
@@ -2027,16 +2118,19 @@ textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f
 textwdgt	?Draw@textWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc5f0
 textwdgt	?Main@textWidget@@UAEHPAVmessage@@@Z	98.4931	98.4931	98.4931	0x1bc440
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
+town	?ApplySpecialBuildingEffect@town@@QAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1bd8e0
 town	?BuildBuilding@town@@QAE?AW4type_building_id@@HEE@Z	99.3036	99.3036	99.3036	0x1bede0
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
 town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
 town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x1c1440
 town	?GetPortraitFrame@town@@QBEH_N@Z	100.0000	100.0000	100.0000	0x1bd700
+town	?GetPrimarySkill@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x1bde40
 town	?GetTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450
 town	?GiveSpells@town@@QAEXPAVhero@@@Z	95.4379	95.4379	95.4379	0x1be030
 town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
+town	?SetSummoningGenerator@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bd750
 town	?SwapHeroes@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be450
 town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0
@@ -2070,14 +2164,12 @@ town	?initialize_hordes@town@@SIXXZ	99.7778	99.7778	99.7778	0x1bdf60
 town	?initialize_spells@town@@QAEXPBVTownExtra@@@Z	97.7386	97.7386	97.7386	0x1be600
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
-# reopen-sweep's 100.0000 EXACT here was carried by a sixty-statement
-# `i = i;` dose (its own commit flagged the device); withdrawn at the
-# 2026-08-21 merge per no-numerator-carriers - the value below is the
-# honest carrier-free plateau. Same withdrawal for the sibling row
-# (dose 30, 99.0596). The dose reads as a byte budget: the real
-# missing mass is ~60/~30 statement-units in these bodies.
-town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	92.6954	92.6954	100.0000	0x1c0220
-town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	93.2294	93.2294	99.0596	0x1c0400
+# 2026-08-24: both carrier-free peaks are recovered by the real source call
+# Dreamcast records at each tail: vector::clear(), not the former manual
+# erase(begin(), end()). Building is honestly exact; creature's 99.0596 is
+# its one-schedule residual, now also spelling the DC-attested GetArmyName.
+town	?show_building_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1c0220
+town	?show_creature_rewards@@YIXPBVtown@@PAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@std@@@Z	99.0596	99.0596	99.0596	0x1c0400
 town	?update_shipyard@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1bf210
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340

@@ -11,6 +11,14 @@
 #include "tradpost.h"
 #include "game.h"
 
+// ai_tactical.h's current TSkillMastery view collides with herospec.h's
+// independently reconstructed enum, already included through philai.h.
+// These are the two cross-TU declarations this compiland actually needs;
+// their /Gr register ABI and return type are byte-proven by the exact
+// definitions at 0x435830 / 0x435960 and by both call sites below.
+double AI_value_of_morale(long morale, long change);
+double AI_value_of_luck(long luck, long change);
+
 #if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:58
@@ -397,6 +405,32 @@ long get_artifact_purchase_price(TArtifact artifact, long market_count,
         }
     }
     return best_price;
+}
+
+// Retail-only Shadow of Death secondary-skill reward appraisal. The HD 5.3
+// row at 0x524b10 is an exact whole-function structural twin and supplies
+// the name/signature; retail independently proves the hero receiver, both
+// stack arguments, every field offset, and the two philai helper edges.
+// The union is the same no-code representation bridge used elsewhere in the
+// tree: hero.h intentionally does not import the TSecondarySkill definition.
+VA(0x00524630, 0x60)  // anchor-global, exact HD structural twin 0x524b10
+int hero::SoD_get_seer_skill_value(int skill, int level)
+{
+    union {
+        int value;
+        TSecondarySkill skill;
+    } typed_skill;
+    typed_skill.value = skill;
+
+    if (skillLevel[skill] >= level)
+        return 0;
+    if (skillLevel[skill] == 0) {
+        if (skillCount >= 8)
+            return 0;
+        if (!wants_skill(this, typed_skill.skill, 1))
+            return 0;
+    }
+    return get_skill_value(this, typed_skill.skill, 1);
 }
 
 // The AI's spell-appraisal curve, one 32-byte row per "times castable"
@@ -1117,6 +1151,44 @@ void AI_examine_map()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2692. Retail changes the DC static's explicit
+// hero parameter into the receiver, but preserves its statement shape:
+// undead armies get no morale credit, the morale curve supplies the only
+// named double local, and the army value is scaled by the hero's four-stat
+// total before that local is converted back to an integer.
+VA(0x00527cf0, 0x89)  // anchor-global, dc 0x111b7c
+int hero::MoraleIncreaseValue(int value)
+{
+    if (army.HasAllUndead())
+        return 0;
+
+    double value_added = AI_value_of_morale(GetMorale(0, 0, 1), value);
+    value_added *= (get_primary_skill_total() + 40)
+                   * army.get_AI_value() / 40;
+    return static_cast<int>(value_added);
+}
+
+// E:\gamedcs\philai.cpp:2728. `luck` is register-only in the DC symbols.
+// Both builds rewrite it to `3 - luck` when the proposed award crosses the
+// positive cap, then reject a non-positive award on that path; retail's
+// EAX/EDX call pair proves that the rewritten value remains the FIRST
+// AI_value_of_luck argument while the original award remains the second.
+VA(0x00527d80, 0x90)  // anchor-global, dc 0x111c78
+int hero::LuckIncreaseValue(int value)
+{
+    int luck = GetLuck(0, 0, 1);
+    if (luck + value > 3) {
+        luck = 3 - luck;
+        if (value <= 0)
+            return 0;
+    }
+
+    double value_added = AI_value_of_luck(luck, value);
+    value_added *= (get_primary_skill_total() + 40)
+                   * army.get_AI_value() / 40;
+    return static_cast<int>(value_added);
+}
 
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
 // skills.  When the hero either knows both or knows neither, the two

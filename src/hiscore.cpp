@@ -3,9 +3,63 @@
 // 32 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
+#include "bitmap816.h"
+#include "border.h"
+#include "button.h"
+#include "game.h"
 #include "hiscore.h"
+#include "iconwdgt.h"
+#include "kbwin.h"
+#include "mousemgr.h"
+#include "resourcemanager.h"
+#include "textresource.h"
+#include "textwdgt.h"
 #include "winmgr.h"
+
+// The file-name pointer and the threshold/creature pairs are both
+// hiscore.obj-owned retail data.  The latter is deliberately only declared:
+// this TU needs the first two signed shorts of each four-byte record, while
+// admitting all 117 private table rows would add no code identity evidence.
+DATA(0x0067f1f0)
+static const char* gHighScoreFileName =
+    DATA_COMPGEN(0x0067f4d0, highScoreFileName, "HiScore.dat");
+DATA(0x0067f1f4) static int gHighScoreRanks[2];
+DATA(0x0067f1fc) extern short gHighScoreCreatureTable[][2];
+DATA(0x006a5ecc) extern char* gHighScoreDefaults0[11][4];
+DATA(0x006a7f08) extern char* gHighScoreDefaults1[11][4];
+DATA(0x006991c0) THighScoreWindow* gpHighScoreWindow;
+DATA(0x006993cc) highScoreManager* gpHighScoreManager;
+DATA(0x0069955c) int gbShowHighScore;
+int HighScoreWindowHandler(message& msg);
+void Unnamed4f3a60(char* filename);
+void MemError();
+
+// The two defaults tables each feed eleven 0x64-byte records.  Retail keeps
+// the two string copies and numeric parses interleaved per row, after one
+// whole-table dword clear.
+// E:\gamedcs\hiscore.cpp:615
+VA(0x004e8fb0, 0xBD)  // body + two defaults-table xrefs, dc 0xd7a08
+void highScoreManager::ResetHighScores()
+{
+    memset(highScores, 0, sizeof(highScores));
+    for (int i = 0; i < 11; ++i) {
+        strncpy(highScores[1][i].field_00, gHighScoreDefaults1[i][0], 41);
+        strncpy(highScores[1][i].field_29, gHighScoreDefaults1[i][1], 41);
+        highScores[1][i].field_58 = atoi(gHighScoreDefaults1[i][2]);
+        highScores[1][i].field_54 = atoi(gHighScoreDefaults1[i][3]);
+
+        strncpy(highScores[0][i].field_00, gHighScoreDefaults0[i][0], 41);
+        strncpy(highScores[0][i].field_29, gHighScoreDefaults0[i][1], 41);
+        highScores[0][i].field_58 = atoi(gHighScoreDefaults0[i][2]);
+        highScores[0][i].field_54 = atoi(gHighScoreDefaults0[i][3]);
+    }
+}
 
 // Located as the sole vtable-0x63eb8c constructor in the retail
 // hillfortwindow..iconwdgt bracket.  Its base call and the +0x8d0 store
@@ -23,6 +77,165 @@ highScoreManager::highScoreManager()
 VA(0x004e9090, 0x07)  // vtable-store, dc 0xd7b08
 highScoreManager::~highScoreManager()
 {
+}
+
+// Slot 0 of vtable 0x63eb8c.  Retail's 0x898-byte read from +0x38 bounds
+// the private score table independently of its unrecovered record type.
+// E:\gamedcs\hiscore.cpp:658
+VA(0x004e90a0, 0x66)  // vtable-slot + HiScore.dat, dc 0xd7b28
+int highScoreManager::Open(int newPriority)
+{
+    char path[351];
+    sprintf(path,
+            DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
+            DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
+            gHighScoreFileName);
+    int file = _open(path, _O_BINARY);
+    if (file != -1) {
+        _read(file, highScores, sizeof(highScores));
+        _close(file);
+    }
+    return 0;
+}
+
+// The complete retail wrapper is a stack window, one initial refresh, and
+// heroWindowManager's ordinary modal pump with this TU's callback.
+// E:\gamedcs\hiscore.cpp:732
+VA(0x004e9110, 0xC0)  // ctor/update/dialog-handler xrefs, dc 0xd7bd0
+void highScoreManager::ViewHiScore()
+{
+    THighScoreWindow window;
+    window.Update();
+    gpWindowManager->DoDialog(&window, HighScoreWindowHandler, 0);
+}
+
+// The retail build inlines this sole constructor use into
+// AddScoreToHighScore.  Every widget argument below is byte-visible in that
+// expansion; the three-entry reserve followed by four pushes also explains
+// the one reallocating final insertion.
+inline CHSInputDlg::CHSInputDlg(int maxChars)
+    : CHeroWindowEx(284, 194, 232, 212, 0x12)
+{
+    Widgets.reserve(3);
+    Widgets.push_back(new bitmapBorder(
+        0, 0, width, height, 500,
+        DATA_COMPGEN(0x0067f4e8, highScoreNameBackground, "HighName.pcx"),
+        0x800));
+
+    field1 = new CHighScoreEdit(
+        18, 105, 199, 23, 40,
+        DATA_COMPGEN(0x00691210, highScoreInputEmptyText, ""),
+        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+        font::WHITE, 4, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
+    header1 = new textWidget(
+        13, 13, 205, 100, gpGeneralText->GetText(97),
+        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+        font::WHITE, -1, 1, 0, 8);
+    Widgets.push_back(field1);
+    Widgets.push_back(header1);
+    Widgets.push_back(new button(
+        84, 143, 64, 32, OKAY_ID,
+        DATA_COMPGEN(0x0067f4dc, highScoreOkayButton, "mubchck.def"),
+        0, 1, 0, 28, 2));
+
+    rollover = new textWidget(
+        8, 186, 216, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, highScoreSmallFont, "smalfont.fnt"),
+        font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
+    Widgets.push_back(rollover);
+
+    AddWidgetsToMessageStream();
+    SetFocus(field1->id);
+    field1->SetFocus(1);
+    field1->SetAutoDraw(1);
+}
+
+// Retail selects the score family from the caller's final integer, shifts a
+// full 0x64-byte record at a time, and keeps the deliberate eleventh overflow
+// row for cheaters.  The local input window's constructor is expanded above;
+// its scope ends immediately after the name copy, exactly where retail runs
+// the inlined widget purge and heroWindow teardown.
+// E:\gamedcs\hiscore.cpp:772
+VA(0x004e91d0, 0x4CC)  // body + score-table/file/global xrefs, dc 0xd7c3c
+int highScoreManager::AddScoreToHighScore(int score, int days,
+    int difficulty, int scoreType, const char* land)
+{
+    unsigned char cheated = gpGame->field_1f69c == 1;
+    highScoreType = scoreType;
+    HighScoreRec* scores = highScores[scoreType];
+    int rank;
+
+    if (!scoreType && gpGame->campaign.isCheater) {
+        cheated = 1;
+        rank = 10;
+    } else if (cheated) {
+        rank = 10;
+    } else {
+        for (rank = 0; rank < 10; ++rank) {
+            if (score > scores[rank].field_54
+                    || scores[rank].field_54 == -1)
+                break;
+        }
+    }
+
+    if (rank < 10) {
+        for (int source = 9; source >= rank; --source)
+            scores[source + 1] = scores[source];
+    }
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    gpMouseManager->ShowPointer(false);
+
+    {
+        CHSInputDlg input(3);
+        input.field1->SetText(gpGame->GetLocalPlayer()->GetName());
+        input.DoModal(0);
+
+        memset(&scores[rank], 0, sizeof(scores[rank]));
+        strcpy(scores[rank].field_00, input.field1->Text.c_str());
+    }
+
+    strcpy(scores[rank].field_29,
+        cheated ? gpGeneralText->GetText(261) : land);
+    scores[rank].field_54 = score;
+    scores[rank].field_58 = days;
+    scores[rank].field_5c = difficulty;
+    scores[rank].cheated = cheated;
+    gHighScoreRanks[scoreType == 1] = rank;
+
+    char path[351];
+    sprintf(path,
+        DATA_COMPGEN(0x00660358, highScorePathFormat, "%s%s"),
+        DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
+        gHighScoreFileName);
+    int file = _open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
+                     _S_IREAD | _S_IWRITE);
+    if (file == -1) {
+        Unnamed4f3a60(const_cast<char*>(gHighScoreFileName));
+    } else {
+        _write(file, gpHighScoreManager->highScores,
+               sizeof(gpHighScoreManager->highScores));
+        _close(file);
+    }
+
+    gbShowHighScore = 1;
+    return 0;
+}
+
+// Retail's 16 stack arguments feed the proven textEntryWidget constructor
+// unchanged, followed by the CHighScoreEdit vtable store and two null links.
+// E:\gamedcs\hiscore.cpp:179
+VA(0x004e96a0, 0x62)  // base-call + vtable-store, dc 0xd8d2c
+CHighScoreEdit::CHighScoreEdit(int x, int y, int w, int h, int textSize,
+    const char* text, const char* fontName, font::TColor color,
+    unsigned justification, const char* backgroundIcon, int backgroundFrame,
+    int id, int style, int readType, int insetX, int insetY)
+    : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                      justification, backgroundIcon, backgroundFrame, id,
+                      style, readType, insetX, insetY)
+{
+    nextEdit = 0;
+    prevEdit = 0;
 }
 
 // Slot 15 of the CHighScoreEdit vtable 0x63ebf4 (its only override of
@@ -76,6 +289,110 @@ textWidget* CHSInputDlg::GetRolloverWidget()
 // Virtual slot 0 emits the usual VC6 scalar-deleting wrapper beside the
 // out-of-line destructor.
 VA_COMPGEN(0x004e9800, 0x21, SCALAR_DELETING_DTOR, CHSInputDlg)
+
+// The first score family uses fifths, then both families walk the same
+// signed-short {threshold, creature} table.  The no-bound loop is byte-proven:
+// the table's terminal threshold is the sentinel.
+// E:\gamedcs\hiscore.cpp:837
+VA(0x004e9830, 0x48)  // body/table-xref, dc 0xd7e0c
+int highScoreManager::GetMonType(int score, int scoreType)
+{
+    if (!scoreType)
+        score /= 5;
+
+    int i = 0;
+    while (score > gHighScoreCreatureTable[i][0])
+        ++i;
+    return gHighScoreCreatureTable[i][1];
+}
+
+// Four controls precede the two 11-icon score families.  The family-one
+// records are emitted first into the second pointer bank, then family zero;
+// constant-folding GetMonType in each loop accounts for the one inline divide
+// by five in the latter family only.
+// E:\gamedcs\hiscore.cpp:858
+VA(0x004e9880, 0x506)  // vtable/global/widget/resource xrefs, dc 0xd7e3c
+THighScoreWindow::THighScoreWindow()
+    : heroWindow(0, 0, 800, 600, 0)
+{
+    int i;
+    int y;
+    button* okay;
+
+    bIsStandard = gpHighScoreManager->highScoreType == 1;
+    iCreatureFrame = 0;
+    lLastServe = GameTime::Get();
+    gpHighScoreWindow = this;
+
+    Widgets.reserve(18);
+
+    okay = new button(
+        726, 346, 41, 199, DIALOG_RETURN_OK,
+        DATA_COMPGEN(0x0067f538, highScoreExitButton, "HiScExt.def"),
+        0, 1, 0, 28, 2);
+    okay->set_hotkey(1);
+    Widgets.push_back(okay);
+    Widgets.push_back(new button(
+        726, 114, 41, 199, 1003,
+        DATA_COMPGEN(0x0067f52c, highScoreResetButton, "HiScRes.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(
+        31, 114, 41, 199, 1001,
+        DATA_COMPGEN(0x0067f520, highScoreCampaignButton, "HiScCam.def"),
+        0, 1, 0, 46, 2));
+    Widgets.push_back(new button(
+        31, 346, 41, 199, 1002,
+        DATA_COMPGEN(0x0067f514, highScoreStandardButton, "HiScSta.def"),
+        0, 1, 0, 31, 2));
+
+    memset(CreatureFrames, 0, sizeof(CreatureFrames));
+    for (i = 0, y = 26; y < 576; ++i, y += 50) {
+        Creatures[1][i] = new iconWidget(
+            649, y, 64, 64, 1004 + i,
+            gpGame->worldMap.NewfullMapFn_00505EA0(
+                MONSTER, highScoreManager::GetMonType(
+                    gpHighScoreManager->highScores[1][i].field_54,
+                    1))->ImageName.c_str(),
+            0, 0, 0, 0,
+            iconWidget::ICON_STYLE_PLAIN);
+        Creatures[1][i]->send_message(
+            widget::WIDGET_CLEAR_STATUS,
+            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        Widgets.push_back(Creatures[1][i]);
+    }
+    for (i = 0, y = 26; y < 576; ++i, y += 50) {
+        Creatures[0][i] = new iconWidget(
+            649, y, 64, 64, 1015 + i,
+            gpGame->worldMap.NewfullMapFn_00505EA0(
+                MONSTER, highScoreManager::GetMonType(
+                    gpHighScoreManager->highScores[0][i].field_54,
+                    0))->ImageName.c_str(),
+            0, 0, 0, 0,
+            iconWidget::ICON_STYLE_PLAIN);
+        Creatures[0][i]->send_message(
+            widget::WIDGET_CLEAR_STATUS,
+            widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        Widgets.push_back(Creatures[0][i]);
+    }
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    hiScoreBack[0] = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0067f504, highScoreBackground0, "hiscore2.pcx"));
+    hiScoreBack[1] = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0067f4f8, highScoreBackground1, "hiscore.pcx"));
+
+    for (i = 0; i < 11; ++i) {
+        gpHighScoreWindow->Creatures[gpHighScoreWindow->bIsStandard][i]
+            ->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    }
+}
 
 VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 

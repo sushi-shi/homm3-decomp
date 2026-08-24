@@ -940,6 +940,31 @@ void CleanUpMenus()
     activeMenu = NULL;
 }
 
+// E:\gamedcs\kb.cpp:4781.  DC supplies the public identity and signature;
+// retail independently proves the modulo-eight walk, IsHuman call, disabled
+// flag at game+0x1f636 and the stop when the scan wraps to its starting seat.
+VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
+int GetNextHumanPlayer(int start)
+{
+    int checked = 0;
+    int player = start;
+    player = (player + 1) % 8;
+
+    for (;;) {
+        if (gpGame->IsHuman(player)
+            && !gpGame->playerDisabled[player]) {
+            if (player == start)
+                break;
+            return player;
+        }
+
+        player = (player + 1) % 8;
+        if (++checked >= 8)
+            break;
+    }
+    return -1;
+}
+
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
 // same argument-reordering wrapper as the Dreamcast body, shortened to
 // 52 bytes by x86 stack loads: /Gr keeps cText/iMBType in ecx/edx, so
