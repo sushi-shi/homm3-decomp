@@ -11,6 +11,7 @@ command	2	8609
 combatcontrolsubwindow	3	5796
 ai_tactical	1	1786
 advmgr	1	1439
+combatwindow	6	663
 cmbtmgr	4	253
 remote	1	201
 resourcemanager	3	132

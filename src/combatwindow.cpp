@@ -4,7 +4,9 @@
 #include <va.h>
 #define HOMM3_COMBATWINDOW_END_PLACEMENT_VIEW
 #include "combatwindow.h"
+#include "combatwindowchatedit.h"
 #include "cmbtmgr.h"
+#include "border.h"
 #include "combatcontrolsubwindow.h"
 #include "font.h"
 #include "kb.h"
@@ -31,15 +33,84 @@ void CheckCombatCheatCode(std::basic_string<char,std::char_traits<char>,std::all
     // @stub
 }
 
-// E:\gamedcs\combatwindow.cpp:221
-DC_ONLY(0x69850, 0x2DC)
-void TCombatWindow::TCombatWindow(unsigned char do_placement)
-{
-    // @stub
-}
-
 // E:\gamedcs\combatwindow.cpp:281
 #endif  // @carcass
+
+// Retail inlines this compiland-private forwarding constructor into its sole
+// use below: the base call is followed by the +0x70 clear and 0x63d4bc vptr.
+inline CCombatChatEdit::CCombatChatEdit(
+    int x, int y, int w, int h, int textSize, char* text, char* fontName,
+    font::TColor color, font::EJustify justification, char* backgroundIcon,
+    int backgroundFrame, int id, int style, int readType, int insetX,
+    int insetY)
+    : CChatEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                backgroundIcon, backgroundFrame, id, style, readType,
+                insetX, insetY),
+      field_70(0)
+{
+}
+
+// E:\gamedcs\combatwindow.cpp:221. The sole retail caller,
+// combatManager::Open, supplies the placement flag. Retail fixes every
+// allocation extent, widget argument, panel coordinate, and registration
+// order; Dreamcast independently supplies the constructor identity and call
+// graph.
+VA(0x004721d0, 0x42A)  // body + sole caller + medfont.fnt, dc 0x69850
+TCombatWindow::TCombatWindow(unsigned char do_placement)
+    : heroWindow(0, 0, 800, 600, 1)
+{
+    gpCombatWindow = this;
+    chatWidget = 0;
+    chatEdit = 0;
+
+    Widgets.reserve(3);
+    Widgets.push_back(new border(0, 0, 800, 556, 0, 1));
+
+    chatWidget = new textWidget(
+        75, 100, 520, 440, 0,
+        DATA_COMPGEN(0x0065f2ec, combatWindowMedfont, "medfont.fnt"),
+        font::CHAT, 1, font::BOTTOM_JUSTIFIED, 0, 8);
+    chatEdit = new CCombatChatEdit(
+        214, 563, 400, 32, 127,
+        DATA_COMPGEN(0x00691210, combatChatEmptyText, ""),
+        DATA_COMPGEN(0x0065f2f8, combatChatSmallFont, "smalfont.fnt"),
+        font::WHITE, font::LEFT_JUSTIFIED,
+        DATA_COMPGEN(0x00670020, combatChatBackground, "cRollovr.pcx"),
+        0, 2, 0x100, textEntryWidget::READ_TYPE_INSET, 3, 0);
+    Widgets.push_back(chatEdit);
+    Widgets.push_back(chatWidget);
+
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    if (do_placement) {
+        controlSubWindow = new TCombatPlacementSubWindow(this);
+        WidgetSetStatus(COMBAT_RIGHT_COMMAND_0_ID, 8);
+        WidgetSetStatus(COMBAT_RIGHT_COMMAND_1_ID, 8);
+        WidgetSetStatus(COMBAT_RIGHT_COMMAND_2_ID, 8);
+    } else {
+        controlSubWindow = new TCombatControlSubWindow(this);
+    }
+
+    heroSubWindows[0] = new TCombatHeroSubWindow(1, 135, 78, 202, this);
+    heroSubWindows[1] = new TCombatHeroSubWindow(721, 135, 78, 202, this);
+    creatureSubWindows[0] =
+        new TCombatCreatureSubWindow(1, 267, 78, 288, this, 1);
+    creatureSubWindows[1] =
+        new TCombatCreatureSubWindow(721, 267, 78, 288, this, 1);
+    creatureSubWindows[2] =
+        new TCombatCreatureSubWindow(1, 429, 78, 126, this, 2);
+    creatureSubWindows[3] =
+        new TCombatCreatureSubWindow(721, 429, 78, 126, this, 2);
+
+    combatMessageCount = 0;
+    combatMessageStart = 0;
+}
 
 // E:\gamedcs\combatwindow.cpp:281
 VA(0x004728d0, 0x2A)  // vtable 0x63d528 slot 2 + heroWindow::Close, dc 0x69b2c

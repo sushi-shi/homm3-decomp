@@ -675,6 +675,7 @@ combatresultswindow	?Close@TCombatResultsWindow@@UAEXE@Z	100.0000	100.0000	100.0
 combatresultswindow	?CombatResultsWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x71b90
 combatresultswindow	?DoModal@TCombatResultsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x71b70
 combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x71af0
+combatwindow	??0TCombatWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0x721d0
 combatwindow	??1TCombatWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x72900
 combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x72bf0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0

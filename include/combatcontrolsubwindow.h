@@ -136,6 +136,12 @@ class TCombatCreatureSubWindow : public TSubWindow {
 public:
     char pad_34[0x34];
     bool shown;
+    // Retail's four construction sites allocate 0x70 bytes. The shown byte
+    // remains at +0x68; the last seven bytes are still opaque.
+    char pad_69[7];
+
+    TCombatCreatureSubWindow(int x, int y, int w, int h,
+                             heroWindow* parent, int view_level);
 
     // Its 0x63d444 table holds exactly one slot: 0x63d440 (the sibling
     // TCombatHeroSubWindow's table) sits four bytes earlier, so neither
@@ -157,6 +163,7 @@ public:
     void UnShow();
     bool IsShown() const { return shown; }
 };
+SIZE(TCombatCreatureSubWindow, 0x70);
 
 // --- TCombatControlSubWindow ---
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:177, dc 0x64fcc) void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent);
