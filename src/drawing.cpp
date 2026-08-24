@@ -7,6 +7,7 @@
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #define HOMM3_DRAWING_BACKGROUND_VIEW
 #define HOMM3_DRAWING_ARCHER_DECLS
+#define HOMM3_CSPRITE_DRAW_METHODS
 #include "drawing.h"
 #include "bitmap16.h"
 #include "bitmap816.h"
@@ -301,14 +302,14 @@ int combatManager::DrawCombatHero(const CSprite* sprite, int sequence, int frame
 }
 
 // E:\gamedcs\drawing.cpp:1804
-DC_ONLY(0x85d00, 0x13C)
+// RETAIL_LIVE(0x004953b0, 0x144): reconstructed below; caller-edge, dc 0x85d00
 int combatManager::DrawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1836
-DC_ONLY(0x85e3c, 0xDE)
+// RETAIL_LIVE(0x00495500, 0x142): reconstructed below; caller-edge, dc 0x85e3c
 int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
 {
     // @stub
@@ -568,6 +569,108 @@ int combatManager::DrawCombatHero(const CSprite* sprite, int sequence,
     const_cast<CSprite*>(sprite)->DrawCreature(
         sequence, frame, 0, 0, sprite->Width, sprite->Height, screen->map,
         x, y, screen->Width, screen->Height, screen->Pitch, isFlipped, 0);
+    return 1;
+}
+
+// The spell-effect wrapper computes its inclusive screen rectangle directly,
+// clips it to the combat viewport, and uses that clipped bottom edge as the
+// source height. Its three retail callers and sole sprite-method edge preserve
+// the Dreamcast DrawSpellEffect identity.
+VA(0x004953b0, 0x144)  // caller-edge, dc 0x85d00
+int combatManager::DrawSpellEffect(const CSprite* sprite, int frame,
+                                   int x, int y,
+                                   unsigned char isFlipped,
+                                   unsigned char isAlpha)
+{
+    SLimitData limits(x, y, x + sprite->Width - 1,
+                      y + sprite->Height - 1);
+
+    if (limits.iMinX < gCombatDrawLimits694f18.values[0])
+        limits.iMinX = gCombatDrawLimits694f18.values[0];
+    if (limits.iMinY < gCombatDrawLimits694f18.values[1])
+        limits.iMinY = gCombatDrawLimits694f18.values[1];
+    if (limits.iMaxX > gCombatDrawLimits694f18.values[2])
+        limits.iMaxX = gCombatDrawLimits694f18.values[2];
+    if (limits.iMaxY > gCombatDrawLimits694f18.values[3])
+        limits.iMaxY = gCombatDrawLimits694f18.values[3];
+
+    if (field_13d2c) {
+        if (drawbridgeBounds.values[0] > limits.iMinX)
+            drawbridgeBounds.values[0] = limits.iMinX;
+        if (drawbridgeBounds.values[1] > limits.iMinY)
+            drawbridgeBounds.values[1] = limits.iMinY;
+        if (drawbridgeBounds.values[2] < limits.iMaxX)
+            drawbridgeBounds.values[2] = limits.iMaxX;
+        if (drawbridgeBounds.values[3] < limits.iMaxY)
+            drawbridgeBounds.values[3] = limits.iMaxY;
+    }
+
+    if (field_13d34)
+        return 0;
+
+    if (field_13d30) {
+        if (limits.iMinX > drawbridgeBounds.values[2]
+                || limits.iMaxX < drawbridgeBounds.values[0]
+                || limits.iMinY > drawbridgeBounds.values[3]
+                || limits.iMaxY < drawbridgeBounds.values[1])
+            return 0;
+    }
+
+    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+    const_cast<CSprite*>(sprite)->DrawSpellEffect(
+        0, frame, 0, 0, sprite->Width, limits.iMaxY - y + 1,
+        screen->map, x, y, screen->Width, screen->Height, screen->Pitch,
+        isFlipped, isAlpha);
+    return 1;
+}
+
+// The ordinary sprite-object wrapper has the same extent path as the spell
+// effect above, but calls CSprite::Draw with transparency enabled. Retail's
+// DrawFrame and effect-helper callers preserve the Dreamcast source row.
+VA(0x00495500, 0x142)  // caller-edge, dc 0x85e3c
+int combatManager::DrawSpriteObject(const CSprite* sprite, int frame,
+                                    int x, int y,
+                                    unsigned char isFlipped)
+{
+    SLimitData limits(x, y, x + sprite->Width - 1,
+                      y + sprite->Height - 1);
+
+    if (limits.iMinX < gCombatDrawLimits694f18.values[0])
+        limits.iMinX = gCombatDrawLimits694f18.values[0];
+    if (limits.iMinY < gCombatDrawLimits694f18.values[1])
+        limits.iMinY = gCombatDrawLimits694f18.values[1];
+    if (limits.iMaxX > gCombatDrawLimits694f18.values[2])
+        limits.iMaxX = gCombatDrawLimits694f18.values[2];
+    if (limits.iMaxY > gCombatDrawLimits694f18.values[3])
+        limits.iMaxY = gCombatDrawLimits694f18.values[3];
+
+    if (field_13d2c) {
+        if (drawbridgeBounds.values[0] > limits.iMinX)
+            drawbridgeBounds.values[0] = limits.iMinX;
+        if (drawbridgeBounds.values[1] > limits.iMinY)
+            drawbridgeBounds.values[1] = limits.iMinY;
+        if (drawbridgeBounds.values[2] < limits.iMaxX)
+            drawbridgeBounds.values[2] = limits.iMaxX;
+        if (drawbridgeBounds.values[3] < limits.iMaxY)
+            drawbridgeBounds.values[3] = limits.iMaxY;
+    }
+
+    if (field_13d34)
+        return 0;
+
+    if (field_13d30) {
+        if (limits.iMinX > drawbridgeBounds.values[2]
+                || limits.iMaxX < drawbridgeBounds.values[0]
+                || limits.iMinY > drawbridgeBounds.values[3]
+                || limits.iMaxY < drawbridgeBounds.values[1])
+            return 0;
+    }
+
+    Bitmap16Bit* screen = gpWindowManager->screenBitmap;
+    const_cast<CSprite*>(sprite)->Draw(
+        0, frame, 0, 0, sprite->Width, limits.iMaxY - y + 1,
+        screen->map, x, y, screen->Width, screen->Height, screen->Pitch,
+        isFlipped, 1);
     return 1;
 }
 

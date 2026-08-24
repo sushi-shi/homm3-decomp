@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::DrawSpellEffect` and
+  `DrawSpriteObject` reproduce all 324 and 322 retail bytes.** The adjacent
+  rows at 0x4953b0 and 0x495500 preserve the Dreamcast caller edges and end in
+  their uniquely named `CSprite::DrawSpellEffect` and `CSprite::Draw` calls,
+  independently proving both identities. Each constructs an inclusive sprite
+  rectangle, clips it to the 0x694f18 combat viewport, optionally accumulates
+  it into the manager's dirty extent, rejects disjoint or suppressed draws,
+  and uses the clipped bottom edge as the source height. The first forwards
+  flip and alpha bytes to the spell-effect blitter; the second enables the
+  ordinary sprite blitter's transparency flag. A direct field spelling
+  reached 99.91% for DrawSpellEffect with one interchangeable SIB encoding.
+  Restoring the DC-attested four-argument `SLimitData` constructor changed
+  only that source expression's compiler lineage and reproduced retail's
+  final byte; the same constructor spelling then made DrawSpriteObject exact
+  on its first compile. All 26 CFG blocks agree in each body. Their asm reports
+  contain only the cosmetic four-lane names for the source-owned combat
+  viewport aggregate, and the normalized exact-byte verdicts are clean. The
+  synchronized build/delink/build checkpoint reaches **1902/2314 linked
+  exact**, **1833/2245 game exact**, **96.59% game fuzzy** and **42.82%
+  executable coverage**. All 51 unit tests and every fatal gate pass. The
+  all-unit queue remains 412 residual functions / 28.6 KiB recoverable; the
+  ordinary tractable tier falls to **216 functions / 177.7 KiB**. No external
+  implementation body was used.
+
 - **2026-08-24 — Complete's ordinary creature and combat-hero drawing
   wrappers reproduce all 253 and 251 retail bytes.** Retail 0x4951b0 has
   `army::DrawToBuffer` as its sole caller and preserves the Dreamcast edge to

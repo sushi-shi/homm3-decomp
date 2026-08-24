@@ -39,6 +39,10 @@ struct SLimitData {
     int iMinY;
     int iMaxX;
     int iMaxY;
+
+    SLimitData() {}
+    SLimitData(int minx, int miny, int maxx, int maxy)
+        : iMinX(minx), iMinY(miny), iMaxX(maxx), iMaxY(maxy) {}
 };
 SIZE(SLimitData, 0x10);
 #endif
