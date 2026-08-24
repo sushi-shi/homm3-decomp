@@ -68,7 +68,10 @@ public:
     // halves through the two different bytes. Name pending a writer.
     unsigned char field_4b;       // +0x4b
     unsigned char field_4c;
-    signed char field_4d;
+    // DC members.csv names +0x4d background_offset. Complete's
+    // UpdateMouseGrid stores the clean-background atlas lane here before
+    // shading a cell, then consumes lane*45 while restoring that cell.
+    signed char background_offset;
     // Object stride is 0x70, byte-proven by ValidAttack's cell access
     // (0x523bb0: index*112 + 0x1c4 into combatManager).
     char pad_4e[0x22];

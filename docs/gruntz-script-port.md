@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::UpdateMouseGrid` and its static cleanup
+  reproduce 1,258 retail bytes exactly.** Drawing order, the four retail
+  callers and Dreamcast `drawing.cpp:982` identify 0x493ea0; Complete's
+  `ret 0xc` and call-site pushes prove the added trailing byte is a forced-
+  refresh flag. The body restores the old shaded cells from 45-pixel atlas
+  lanes, saves clean backgrounds for the new set, darkens those cells, unions
+  and clips both dirty regions, posts the framed rectangle, then replaces its
+  function-local `old_hexes` vector. Retail independently proves the 19-byte
+  lane-use table, DC's `background_offset` member at `hexcell+0x4d`, the
+  `iLastMouseGridIndex` datum and the adjacent atexit cleanup at 0x494370.
+  The decisive source boundary was DC's inline edge to
+  `UpdateCombatArea(SLimitData)`: a direct `UpdateScreen` call emitted the
+  same visible work but let VC6 over-inline `vector<long>::_Destroy` out of
+  `clear()`. Restoring the adapter, with the const-reference form selected by
+  Complete's bytes, preserves retail's empty out-of-line `_Destroy` and makes
+  all 66 CFG blocks / 1,226 body bytes exact; its 32-byte static destructor is
+  independently exact and is now admitted to the canonical function
+  inventory. The synchronized checkpoint reaches **1906/2319 linked exact**,
+  **1837/2250 game exact**, **96.60% game fuzzy** and **42.99% executable
+  coverage**. All 51 unit tests, five freshness controls and every fatal gate
+  pass. The all-unit queue remains 413 residual functions / 28.6 KiB
+  recoverable; the ordinary tractable tier falls to **212 functions / 174.5
+  KiB**, and `drawing` has one unclaimed row / 2,005 bytes left. No external
+  implementation body was used.
+
 - **2026-08-24 — `combatManager::UpdateGrid` reproduces all 960 retail
   bytes.** The retail row at 0x493930 is fixed by the drawing order map, its
   `ret 8`, the unique `SetupGridForArmy` edge and the same six-callee family

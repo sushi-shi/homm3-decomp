@@ -1438,7 +1438,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x937d0	341	in-span	drawing	drawing	?SetupGridForArmy@combatManager@@QAEXPBVarmy@@@Z
 0x93930	960	in-span	drawing	drawing	?UpdateGrid@combatManager@@QAEHHH@Z
 0x93cf0	427	in-span	drawing	drawing	?DrawBackground@combatManager@@QAEXXZ
-0x93ea0	1226	in-span	drawing	drawing	game_94390_sub00_93ea0
+0x93ea0	1226	in-span	drawing	drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z
+0x94370	32	in-span	drawing	drawing	__h3cg$drawing$static_dtor$old_hexes
 0x94390	167	in-span	drawing	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z
 0x94440	2005	in-span	drawing	drawing	combatManager_DrawFrame
 0x94c20	796	in-span	drawing	drawing	?DrawWallAt@combatManager@@QAEXHH@Z

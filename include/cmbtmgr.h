@@ -1311,11 +1311,18 @@ public:
     // drawing.obj 0x4937d0; SetCombatGrid passes the inlined current-army
     // result exactly as the DC source statement does.
     void SetupGridForArmy(const army* thisArmy);
-    // Complete's large overload has one trailing int absent from the DC
-    // signature; the small wrapper at 0x494390 always passes zero there.
+    // Complete's large overload has a force-refresh flag absent from the DC
+    // signature. The small wrapper passes zero; the spell animation path
+    // passes one when an unchanged grid index still needs repainting.
     void UpdateMouseGrid(int gridIndex, std::vector<long>& hexes,
-                         int retailTail);
+                         unsigned char forceUpdate);
     void UpdateMouseGrid(int gridIndex, int allowDuringAction);
+#ifdef HOMM3_SLIMITDATA_VIEW
+    // drawing.cpp:513, DC 0x83ec0. DC's body takes the extent by value;
+    // Complete has no out-of-line copy, and the exact retail expansion in
+    // UpdateMouseGrid proves its const-reference form here.
+    void UpdateCombatArea(const SLimitData& area);
+#endif
 #endif
 #ifdef HOMM3_DRAWING_ARCHER_DECLS
     // Complete extends the DC DrawArcher signature with a trailing palette-row
