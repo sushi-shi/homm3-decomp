@@ -9,6 +9,8 @@
 #include "border.h"
 #include "combatcontrolsubwindow.h"
 #include "font.h"
+#include "game.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -111,6 +113,98 @@ TCombatWindow::TCombatWindow(unsigned char do_placement)
     combatMessageCount = 0;
     combatMessageStart = 0;
 }
+
+// Vtable 0x63d4bc slot 15. The inactive editor consumes only the activation
+// key; once active it delegates the complete editor key path to CChatEdit.
+VA(0x00472600, 0xA5)  // vtable slot + activation-state body, dc 0x6a484
+int CCombatChatEdit::OnKeyPress(message* msg)
+{
+    if (field_70)
+        return CChatEdit::OnKeyPress(msg);
+
+    if (GetCharPressed(msg) == KEYCODE_TAB) {
+        if (gpCombatWindow->controlSubWindow
+            && gpCombatWindow->controlSubWindow->rolloverWidget) {
+            gpCombatWindow->controlSubWindow->rolloverWidget->send_message(
+                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_CLEAR_STATUS);
+        }
+        field_70 = 1;
+        SetFocus(1);
+        parentWindow->SetFocus(id);
+        Draw();
+        gpWindowManager->UpdateScreen(
+            x + parentWindow->x, y + parentWindow->y, width, height);
+        return 1;
+    }
+    return 0;
+}
+
+// Vtable 0x63d4bc slot 24. Local combat accepts cheat text before the common
+// network/local chat path; both modes then close the editor and restore the
+// combat control bar.
+VA(0x004726b0, 0x131)  // vtable slot + SendChat/IsMultiplayer, dc 0x6a488
+void CCombatChatEdit::SendChat(const char* sChat, int toWho)
+{
+    std::string chatString(sChat);
+    if (!gpGame->IsMultiplayer())
+        CheckCombatCheatCode(&chatString);
+
+    field_70 = 0;
+    ::SendChat(chatString.c_str(), toWho);
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+
+    type_combat_sub_window*& combatSubWindow =
+        gpCombatWindow->controlSubWindow;
+    if (combatSubWindow) {
+        if (combatSubWindow->rolloverWidget) {
+            combatSubWindow->rolloverWidget->send_message(
+                widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
+        }
+        combatSubWindow->Draw(1, -0xffff, 0xffff);
+    }
+}
+
+// Vtable 0x63d4bc slot 21. Escape closes the edit without sending, redraws
+// its rectangle, and restores the control-bar rollover line.
+VA(0x004727f0, 0x5E)  // vtable slot + control-bar redraw, dc 0x6a540
+int CCombatChatEdit::OnEscape(message msg)
+{
+    field_70 = 0;
+    parentWindow->SetFocus(-1);
+    SetFocus(0);
+    Draw();
+
+    type_combat_sub_window*& combatSubWindow =
+        gpCombatWindow->controlSubWindow;
+    if (combatSubWindow) {
+        if (combatSubWindow->rolloverWidget) {
+            combatSubWindow->rolloverWidget->send_message(
+                widget::WIDGET_SET_STATUS, widget::WIDGET_CLEAR_STATUS);
+        }
+        combatSubWindow->Draw(1, -0xffff, 0xffff);
+    }
+    return 1;
+}
+
+// Vtable 0x63d4bc slot 19. The inactive editor deliberately performs no
+// drawing; activation makes this the ordinary draw-and-post rectangle path.
+VA(0x00472850, 0x3D)  // vtable slot + field_70 guard, dc 0x6a590
+void CCombatChatEdit::UpdateScreen()
+{
+    if (field_70) {
+        Draw();
+        gpWindowManager->UpdateScreen(
+            x + parentWindow->x, y + parentWindow->y, width, height);
+    }
+}
+
+// Vtable 0x63d4bc slot 0. This must remain implicit: an explicit empty
+// body makes VC6 insert a derived-vtable store before the base destructor.
+VA_COMPGEN(0x00472890, 0x05, IMPLICIT_DTOR, CCombatChatEdit)
+
+// Vtable 0x63d528 slot 0.
+VA_COMPGEN(0x004728a0, 0x21, SCALAR_DELETING_DTOR, TCombatWindow)
 
 // E:\gamedcs\combatwindow.cpp:281
 VA(0x004728d0, 0x2A)  // vtable 0x63d528 slot 2 + heroWindow::Close, dc 0x69b2c
@@ -470,62 +564,6 @@ void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
 // E:\gamedcs\widget.h:231
 DC_ONLY(0x6a3e8, 0x4)
 const char* widget::get_help_text()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:139
-DC_ONLY(0x6a3ec, 0x98)
-void CCombatChatEdit::CCombatChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:143
-DC_ONLY(0x6a484, 0x4)
-int CCombatChatEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:171
-DC_ONLY(0x6a488, 0xB8)
-void CCombatChatEdit::SendChat(const char* sChat, int toWho)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:193
-DC_ONLY(0x6a540, 0x50)
-int CCombatChatEdit::OnEscape(message msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:207
-DC_ONLY(0x6a590, 0x4C)
-void CCombatChatEdit::UpdateScreen()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:213
-DC_ONLY(0x6a5dc, 0x34)
-void* CCombatChatEdit::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:213
-DC_ONLY(0x6a610, 0x18)
-void CCombatChatEdit::~CCombatChatEdit()
-{
-    // @stub
-}
-
-// E:\gamedcs\combatwindow.cpp:278
-DC_ONLY(0x6a628, 0x34)
-void* TCombatWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
