@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::CycleCombatScreen` reproduces all 1,898
+  retail bytes.** The 0x4960d0 drawing-order anchor, its zero-argument ABI and
+  Dreamcast `drawing.cpp:2257` row establish the identity; the DC line table
+  additionally supplies all six optimized locals and the header-inline edges
+  to `army::Is`, `IsIncapacitated`, `is_in_area_highlight`, `GameTime` and
+  `CSprite::GetNumFrames`. Retail fixes Complete's tower-aware
+  `MarkCreatureEffect` expansion, both local-human combat-hero triggers, the
+  40-stack fidget walk, palette cycles and 100 ms frame pacer. Two source
+  details were decisive: the invalid-player cleanup is the structured `else`
+  of each positive local-human arm, and DC lines 2309/2311 put
+  `CyclingCreatures = 0` before the explicit 40-byte `memset`; VC6 schedules
+  that source order into retail's otherwise surprising zeroing preheader.
+  The result reproduces all 111 CFG blocks and every normalized instruction.
+  The synchronized checkpoint reaches **1913/2328 linked exact**,
+  **1844/2259 game exact**, **96.58% game fuzzy** and **43.29% executable
+  coverage**. All 51 unit tests, five freshness controls, link-order checks
+  and fatal gates pass; the all-unit VC6 queue emits only the two known
+  inlined-away `initialize.obj` `create_included_mask` diagnostics. No
+  external implementation body was used.
+
 - **2026-08-24 — `combatManager::ComputeMaxExtent` reproduces all 862 retail
   bytes.** The global anchor at 0x495bf0, its zero-argument signature, the
   `DrawFrame`/`CycleCombatScreen` callers and the Dreamcast

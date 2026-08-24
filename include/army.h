@@ -1130,8 +1130,11 @@ public:
 // HOMM3_ARMY_RESET_LATCH_DECL admits field_4f0 ALONE, without the aura
 // vectors or army.cpp's round view: combatManager::NextArmy (0x465080)
 // gates its three disabled_* tests on this latch and needs nothing else
-// from either block. Both arms below still describe the same bytes.
-#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_RESET_LATCH_DECL)
+// from either block. HOMM3_ARMY_AREA_HIGHLIGHT_VIEW admits the adjacent
+// accessor byte for drawing.cpp without the four vectors. Both arms below
+// still describe the same bytes.
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_RESET_LATCH_DECL) \
+        || defined(HOMM3_ARMY_AREA_HIGHLIGHT_VIEW)
     // A per-round latch ResetRound clears before anything else. No
     // roster attests it and ResetRound is the only writer located so
     // far, so the name is an address ordinal. (DC calls it
@@ -1157,8 +1160,8 @@ public:
     // the member for the animation test - which is what fixes the
     // offset and the byte width. Both arms take the declarator so the
     // include-set count stays equal between them; the whole block is
-    // already behind the round/reset gate above, so nothing outside
-    // those two views sees a new declarator.
+    // already behind the round/reset/area-highlight gate above, so other
+    // views see no new declarator.
     //
     // HOMM3_ARMY_AURA_SOURCES_DECL admits the four LISTS alone, without
     // the aura/binding member functions the full view carries below:
@@ -1696,6 +1699,14 @@ public:
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
     }
+#ifdef HOMM3_ARMY_AREA_HIGHLIGHT_VIEW
+    // DC Army.h:881, a class-body byte accessor. CycleCombatScreen is the
+    // retail witness: /Ob2 expands it to the lone +0x4f1 byte read.
+    unsigned char is_in_area_highlight() const
+    {
+        return is_area_effect_target;
+    }
+#endif
 #ifdef HOMM3_ARMY_ROUND_VIEW
     // The DC roster's army::LeavesNoBody (Army.h:875, dc 0x4ca60) - a
     // class-body inline; retail carries no out-of-line copy anywhere.
