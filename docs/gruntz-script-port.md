@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `HandlePlayerWon` and `HandlePlayerLost` reproduce all 94
+  and 75 retail bytes.** Their dispatcher slots, payload offsets, helper
+  calls and Dreamcast `remote.cpp:2419/2441` rows establish both identities
+  and ABIs. Each passes the embedded victory or loss condition to the
+  corresponding display helper and updates the all-players-defeated latch
+  from its two output locals; the win handler additionally copies the live
+  victory record and raises the game-over latch. CodeView fixes the locals as
+  `bGameLost` followed by `bGameWon`, while retail fixes their initialization
+  schedule in the opposite order. Keeping the declaration order but spelling
+  separate `bGameWon = 0; bGameLost = 0;` assignments reproduces all five
+  blocks and every instruction in both functions. The synchronized
+  checkpoint reaches **1919/2330 linked exact**, **1850/2261 game exact**,
+  **96.63% game fuzzy** and **43.36% executable coverage**. No external
+  implementation body was used.
+
 - **2026-08-24 — `combatManager::DrawBackground` reproduces all 427 retail
   bytes, and `DrawWallAt` advances to a bounded 99.95%.** Drawing order, the
   zero-argument ABI and Dreamcast `drawing.cpp:919` establish the background

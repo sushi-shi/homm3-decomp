@@ -1725,8 +1725,8 @@ remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569f
 remote	?HandlePlayerDead@@YIXHE@Z	98.3380	98.3380	98.3380	0x156780
 remote	?HandlePlayerDrop@@YIXK@Z	100.0000	100.0000	100.0000	0x156430
 remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	100.0000	100.0000	100.0000	0x153580
-remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	99.9091	99.9091	99.9091	0x1569a0
-remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	99.9394	99.9394	99.9394	0x156940
+remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0
+remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x156940
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
 remote	?IgnoreKey@CChatEdit@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1543f0
 remote	?Init@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1537b0

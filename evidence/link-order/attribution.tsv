@@ -382,8 +382,6 @@ rva	size	unit	current_label	provenance
 0x156430	417	remote	?HandlePlayerDrop@@YIXK@Z	src-VA+ir
 0x1565e0	414	remote	?OnPlayerDropUpdateMsg@@YIXK@Z	src-VA+ir
 0x156780	448	remote	?HandlePlayerDead@@YIXHE@Z	src-VA+ir
-0x156940	94	remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	src-VA+ir
-0x1569a0	75	remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	src-VA+ir
 0x1569f0	180	remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	src-VA+ir
 0x156b70	33	remote	??_GCLevelPickWaitDlg@@UAEPAXI@Z	src-VA+base
 0x156ba0	114	remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	src-VA+ir
