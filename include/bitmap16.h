@@ -50,6 +50,12 @@ public:
     }
     void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);
+#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
+    // DC bitmap16.cpp:778; UpdateGrid's seven pushes and retail target
+    // 0x44e6a0 independently preserve this masked darken overload.
+    void Darken(int x, int y, int w, int h, Bitmap816* mask,
+                int sx, int sy);
+#endif
     // Retail 0x44e4c0, thiscall (x, y, w, h, color). TWO independent
     // callers pin it: textWidget::Draw's back-colour fill, and
     // heroWindowManager::FadeToBlack (0x6030e0), whose five-argument push

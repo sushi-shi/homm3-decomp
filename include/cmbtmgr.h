@@ -1282,6 +1282,12 @@ public:
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
+#ifdef HOMM3_DRAWING_UPDATE_GRID_DECLS
+    // Complete's nullary adapter at 0x474ba0 selects the acting stack and
+    // forwards it to the one-argument body at 0x474bf0. UpdateGrid is its
+    // only retail caller; DC retains the nullary source signature.
+    unsigned char is_computer_action();
+#endif
 #ifdef HOMM3_DRAWING_BACKGROUND_VIEW
     // drawing.cpp:919, DC 0x847dc; Complete's body is at 0x493cf0.
     void DrawBackground();

@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `combatManager::UpdateGrid` reproduces all 960 retail
+  bytes.** The retail row at 0x493930 is fixed by the drawing order map, its
+  `ret 8`, the unique `SetupGridForArmy` edge and the same six-callee family
+  as Dreamcast `drawing.cpp:755`. It optionally seeds the acting stack's
+  requested hexes, restores the changed rectangle from the clean battlefield,
+  darkens the new selection, draws the visible grid overlay and copies the new
+  187-byte state to the posted row. Retail independently proves the two state
+  rows, 112-byte cell stride, `GridAreaLimits` rectangle and private posted-
+  grid latch. The decisive matching boundary was the DC inline chain
+  `hexcell::limits` -> `SLimitData::Include` -> `Clip` -> `Width`/`Height`:
+  spelling the equivalent comparisons by hand preserved all 84 CFG blocks but
+  plateaued at 94.34%; restoring those natural helpers made VC6 emit every
+  instruction and byte exactly. The synchronized checkpoint reaches
+  **1904/2317 linked exact**, **1835/2248 game exact**, **96.60% game fuzzy**
+  and **42.93% executable coverage**. All 51 unit tests, five freshness
+  controls and every fatal gate pass. The all-unit queue remains 413 residual
+  functions / 28.6 KiB recoverable; the ordinary tractable tier falls to
+  **213 functions / 175.7 KiB**, with two remaining `drawing` rows / 3,231
+  bytes. No external implementation body was used.
+
 - **2026-08-24 — `combatManager::DrawWallAt` reconstructs all siege-wall
   behavior and reaches a bounded 99.20% plateau.** Retail 0x494c20 has the
   two-argument `ret 8`, three `DrawWall` calls and one `DrawArcher` call of
