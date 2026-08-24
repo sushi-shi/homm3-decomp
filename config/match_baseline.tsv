@@ -1268,7 +1268,7 @@ hiscore	??1THighScoreWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe9dc0
 hiscore	??1highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9090
 hiscore	??_GCHSInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9800
 hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90
-hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	99.9974	99.9974	99.9974	0xe91d0
+hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	100.0000	100.0000	100.0000	0xe91d0
 hiscore	?GetMonType@highScoreManager@@SIHHH@Z	100.0000	100.0000	100.0000	0xe9830
 hiscore	?GetRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0
 hiscore	?OnKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xe9710

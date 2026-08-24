@@ -414,4 +414,3 @@ unclassified	0	99.9632	311	seerhut	?Save@type_creature_quest@@UAEXPAVTAbstractFi
 register-homing (why-reg)	0	99.9839	528	seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	0	99.9091	75	remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	0	99.9394	94	remote	?HandlePlayerWon@@YIXPAVCNetMsg@@@Z	why-reg	register-homing knob (B-family)
-inliner (predict-inline)	0	99.9974	1228	hiscore	?AddScoreToHighScore@highScoreManager@@QAEHHHHHPBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline (14 name-unresolvable pair(s) discounted)
