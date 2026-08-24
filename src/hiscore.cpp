@@ -154,7 +154,8 @@ inline CHSInputDlg::CHSInputDlg(int maxChars)
 // full 0x64-byte record at a time, and keeps the deliberate eleventh overflow
 // row for cheaters.  The local input window's constructor is expanded above;
 // its scope ends immediately after the name copy, exactly where retail runs
-// the inlined widget purge and heroWindow teardown.
+// the inlined widget purge and heroWindow teardown.  The final file rewrite
+// passes _S_IWRITE alone: VC6 encodes that creation mode as retail's 0x80.
 // E:\gamedcs\hiscore.cpp:772
 VA(0x004e91d0, 0x4CC)  // body + score-table/file/global xrefs, dc 0xd7c3c
 int highScoreManager::AddScoreToHighScore(int score, int days,
@@ -209,7 +210,7 @@ int highScoreManager::AddScoreToHighScore(int score, int days,
         DATA_COMPGEN(0x00677d88, highScoreDataDirectory, ".\\DATA\\"),
         gHighScoreFileName);
     int file = _open(path, _O_BINARY | _O_CREAT | _O_TRUNC | _O_WRONLY,
-                     _S_IREAD | _S_IWRITE);
+                     _S_IWRITE);
     if (file == -1) {
         Unnamed4f3a60(const_cast<char*>(gHighScoreFileName));
     } else {

@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-24 — `AddScoreToHighScore` is promoted from 99.9974% to an exact
+  normalized match by correcting the score-file creation mode.** The earlier
+  reconstruction passed `_S_IREAD | _S_IWRITE`, which VC6 emits as `0x180`;
+  retail's `_open` call instead pushes `0x80`, the VC6 value of `_S_IWRITE`
+  alone. The corrected source makes the last substantive semantic block exact:
+  all 39 CFG blocks, their sizes, branches and ordinary instructions now agree.
+  The verbose semantic view still prints the known synthetic EH-unwind addend
+  in the prologue (`0` versus `0xb`), but the relocation-aware normalized
+  verifier correctly classifies all 1,228 bytes as exact. After a fresh
+  build/delink/build cycle, the linked checkpoint is **1895/2307 exact**
+  overall and **1826/2238 game functions exact**, at **96.68% fuzzy** and
+  **42.71% executable coverage**. All fatal gates are clean. The refreshed
+  all-unit census contains **412 residual functions / 28.6 KiB recoverable**;
+  the ordinary tractable tier remains **223 functions / 179.8 KiB**.
+
 - **2026-08-24 — `LobbyLaunchConnect` closes remote.obj's last ordinary
   in-span function with all 996 retail bytes exact.** Dreamcast supplies the
   free-function boundary, the `CHourGlass` local, `gMapName` as a 260-byte
@@ -1126,11 +1141,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   models the two eleven-row 0x64-byte tables, the campaign/cheat placement
   rules, the descending whole-record shift, the fully inlined
   `CHSInputDlg` construction and teardown, and the 0x898-byte file rewrite.
-  Its 39 CFG blocks, every block size, all 17 symbolic branch targets and
-  every instruction agree with retail. The strict report remains
-  **99.9974%** solely because the EH-prologue frame push carries a synthetic
-  unwind-table relocation addend on the delinked side; as with the existing
-  `hero::GiveExperience` residual, that addend is not source-addressable.
+  Its 39 CFG blocks, every block size and all 17 symbolic branch targets
+  agree with retail. The strict report remained **99.9974%**; at this
+  checkpoint that residual was mistakenly attributed solely to the
+  EH-prologue's synthetic unwind-table relocation addend. A later byte audit
+  also found the `_open` creation-mode mismatch and the correction is recorded
+  in the newer entry above.
   `THighScoreWindow` constructs the four controls, both eleven-icon score
   families, the widget stream and the two captured backgrounds. Its 46-block
   CFG and branch sequence agree, with 42 exact-sized blocks and four
