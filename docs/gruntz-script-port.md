@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the adventure hero locator is exact and the first
+  stream-adapter `Write` COMDAT is admitted.** `UpdateHeroLocator`'s sole
+  residual was retail's branch over `WIDGET_SET_STATUS`/`WIDGET_CLEAR_STATUS`;
+  the direct ternary let VC6 fold the adjacent values into arithmetic. The
+  branch is the source expansion of Dreamcast Widget.h:263
+  `widget::set_visible(unsigned char)`. Exposing that header inline only to
+  adventuremapwindow.obj reproduces all 574 retail bytes and retires the
+  98.5808% plateau without a control-flow carrier.
+
+  The tractable-span census also exposed the five-byte body at 0x559140.
+  Both retail resource-file-adapter vtables point their slot-2 `Write`
+  methods at `xor eax,eax; ret 8`; the compiled resourcemanager.obj contains
+  both matching inline publics, and the linker keeps the first stdio-adapter
+  COMDAT while folding the LOD adapter and CHeroWindowEx default handler onto
+  it. A claim-only carcass declarator names the already-emitted header body
+  without moving code. The synchronized checkpoint reaches **1937/2351
+  linked exact**, **1868/2282 game exact**, **96.57% game fuzzy** and
+  **43.66% executable coverage**. No external implementation body was used.
+
 - **2026-08-24 — the 1,491-byte adventure cheat dispatcher is fully
   reconstructed at a bounded 53.5182% compiler plateau.** The retail entry at
   0x402450, its sole retail caller, and Dreamcast `adventuremapwindow.cpp:63`

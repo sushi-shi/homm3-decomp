@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-24
+# date: 2026-08-25
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	relation	owner_or_bracket	candidates	label
 0x2450	1491	in-span	adventuremapwindow	adventuremapwindow	?CheckAdvCheatCode@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z
@@ -3388,7 +3388,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x159020	164	in-span	resourcedisplay	resourcedisplay	?Clear@TResourceDisplay@@QAEXXZ
 0x1590f0	29	in-span	resourcemanager	resourcemanager	?Read@t_stdio_file_adapter@ResourceManager@@UAEHPAXH@Z
 0x159110	33	in-span	resourcemanager	resourcemanager	?Read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z
-0x159140	5	in-span	resourcemanager	resourcemanager	CAdvPopup_vslot12
+0x159140	5	in-span	resourcemanager	resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z
 0x1591e0	26	in-span	resourcemanager	resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z
 0x159440	110	in-span	resourcemanager	resourcemanager	game_159440
 0x1594b0	64	in-span	resourcemanager	resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z

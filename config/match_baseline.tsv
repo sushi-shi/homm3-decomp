@@ -17,7 +17,7 @@ adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	1
 adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40
 adventuremapwindow	?SetSleepImage@TAdventureMapWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x3cc0
 adventuremapwindow	?UpdateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60
-adventuremapwindow	?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	98.5808	98.5808	98.5808	0x3560
+adventuremapwindow	?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3560
 adventuremapwindow	?UpdateHeroLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x32e0
 adventuremapwindow	?UpdateQuestLogButton@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x39b0
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
@@ -1857,6 +1857,7 @@ resourcemanager	?RemapGraphics@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000
 resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	100.0000	100.0000	100.0000	0x15a020
 resourcemanager	?SetPath@ResourceManager@@YIXPBD@Z	100.0000	100.0000	100.0000	0x15a5c0
 resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	100.0000	100.0000	100.0000	0x15a6b0
+resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	100.0000	100.0000	100.0000	0x159140
 resourcemanager	?find@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15d3b0
 resourcemanager	?find_tree@TCacheMap@ResourceManager@@QAE?AUTCacheIterator@2@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e330
 resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertResult@2@ABUTCacheValue@2@@Z	99.7222	99.7222	99.7222	0x15d380

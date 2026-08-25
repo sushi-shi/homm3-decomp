@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-24
+# date: 2026-08-25
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
 adventuremapwindow	0x2450	0x40a4	7252	20	1	26	20	6

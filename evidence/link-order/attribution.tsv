@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-24
+# date: 2026-08-25
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	unit	current_label	provenance
 0x2a30	161	adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z	src-VA+ir
@@ -406,7 +406,7 @@ rva	size	unit	current_label	provenance
 0x158770	35	resource	??_Gresource@@UAEPAXI@Z	src-VA+base
 0x158e50	33	resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	src-VA+base
 0x159110	33	resourcemanager	?Read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	src-VA+ir
-0x159140	5	resourcemanager	CAdvPopup_vslot12	working-label
+0x159140	5	resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	src-VA+base
 0x159150	132	resourcemanager	cinit0778_159150	working-label
 0x1591e0	26	resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	src-VA+ir
 0x159230	46	resourcemanager	cinit0779_159230	working-label
