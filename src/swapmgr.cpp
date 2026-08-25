@@ -19,18 +19,24 @@ void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
     ::SendChat(sChat, toWho);
     SendChatCleanup();
 }
+
+// E:\gamedcs\swapmgr.cpp:454 - vtable slot 0.
+VA_COMPGEN(0x005ae390, 0x21, SCALAR_DELETING_DTOR, TSwapWindow)
+
+// E:\gamedcs\swapmgr.cpp:457
+VA(0x005ae3c0, 0x6B)  // inherited widget ownership + heroWindow dtor, dc 0x15c320
+TSwapWindow::~TSwapWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
 #if 0  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:210
 DC_ONLY(0x159328, 0x2FF8)
 void TSwapWindow::TSwapWindow(hero** heroes)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:457
-DC_ONLY(0x15c320, 0x62)
-void TSwapWindow::~TSwapWindow()
 {
     // @stub
 }

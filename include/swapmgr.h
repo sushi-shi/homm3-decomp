@@ -6,6 +6,7 @@
 #define HOMM3_SWAPMGR_H
 
 #include "basemgr.h"
+#include "window.h"
 
 // MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
 // for its private CGameChatEdit-derived editor. Remove this gate use when the
@@ -16,7 +17,6 @@
 
 class Bitmap816;
 class hero;
-class heroWindow;
 class message;
 
 // Dreamcast proves the inheritance and method identities. Retail independently
@@ -33,6 +33,14 @@ public:
 class CSwapManagerChatEdit : public CGameChatEdit {
 public:
     virtual void SendChat(const char* text, int toWho) OVERRIDE;
+};
+
+// Dreamcast proves the direct heroWindow base and contributes no additional
+// virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
+class TSwapWindow : public heroWindow {
+public:
+    virtual ~TSwapWindow();
+    void UpdateArrows();
 };
 
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
