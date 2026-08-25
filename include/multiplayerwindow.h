@@ -177,7 +177,29 @@ public:
 SIZE(CMPInputDlg, 0x64);
 
 class CSprite;
-class CDPlaySession;
+
+// CDPlaySession - the DirectPlay session record CAutoArray<CDPlaySession>
+// stores. dxplay.h carries the same class for the network TUs, but that header
+// redefines the CAutoArray template THIS header owns, so the two are never
+// co-included; only multiplayerwindow.cpp reads mpw.h, so the definition lives
+// here. TMultiPlayerWindow::Update reads dwFlags, maxPlayers, playerCount and
+// the sessionName string; the two 16-byte GUID blobs are padded so windows.h
+// need not enter this closure. Layout byte-for-byte matches dxplay.h.
+class CDPlaySession {
+public:
+    unsigned long dwFlags;      // +0x00
+    char guidInstance[16];      // +0x04
+    char guidApp[16];           // +0x14
+    unsigned long maxPlayers;   // +0x24
+    unsigned long playerCount;  // +0x28
+    char sessionName[128];      // +0x2c
+    char password[80];          // +0xac
+    unsigned long dwUser1;      // +0xfc
+    unsigned long dwUser2;      // +0x100
+    unsigned long dwUser3;      // +0x104
+    unsigned long dwUser4;      // +0x108
+};
+SIZE(CDPlaySession, 0x10c);
 
 // CAutoArray<T> - E:\gamedcs\array.h's hand-rolled auto-growing pointer
 // array. DC field list 0x2967 (no STLport shift; a plain class): vfptr@0,
@@ -205,15 +227,14 @@ public:
 
     // The delete-every-element teardown the compiler-generated scalar
     // deleting destructor inlines (retail 0x512670 for <CDPlaySession>).
+    // Delegating to Destroy() rather than writing the loop here is what keeps
+    // retail's virtual Get(i) dispatch: in a destructor VC6 devirtualizes+
+    // inlines a virtual call on `this`, but inside the inlined Destroy (a
+    // normal member) the exact type is not assumed, so Get stays a vtable
+    // dispatch - the same shape GoMainMenu's inlined Destroy already matches.
     virtual ~CAutoArray()
     {
-        for (unsigned long i = 0; i < size; i++)
-            delete Get(i);
-        if (pArray)
-            delete pArray;
-        pArray = 0;
-        allocSize = 0;
-        size = 0;
+        Destroy();
     }
 
     virtual unsigned char Add(T* element)
@@ -349,6 +370,7 @@ public:
     virtual textWidget* GetRolloverWidget();
     void GoSessionList();
     void GoMainMenu();
+    void Update();
 };
 SIZE(TMultiPlayerWindow, 0x100);
 
