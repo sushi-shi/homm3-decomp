@@ -1741,7 +1741,7 @@ multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	80.4609	80.4609	80.4609	0x10e050
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
 multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
-multiplayerwindow	??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z	85.8537	85.8537	85.8537	0x112670
+multiplayerwindow	??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112670
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
