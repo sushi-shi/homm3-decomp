@@ -214,7 +214,6 @@ void CNetPlayerHandler::CNetPlayerHandler()
 #endif  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1020
-VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes handler turn-state fields 0x7c0/0x7c8/0x7cc, dc 0x1304a8
 // Residual (73.5%): register-homing wall. Every block, branch, both scans and
 // all field writes match retail; the delta is the 3-callee-saved assignment.
 // Retail keeps pos in ebx (loaded once, `cmp [edx],ebx` direct memory compare)
@@ -222,6 +221,7 @@ VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes 
 // BOTH loops; our CL homes pos in esi (materializing [edx] into edi to compare)
 // and re-reads [ebp+8] once esi is clobbered by the second loop, permuting
 // esi/edi/ebx. Order sweeps do not move it (documented register-homing class).
+VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes handler turn-state fields 0x7c0/0x7c8/0x7cc, dc 0x1304a8
 unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 {
     CNetPlayerHandlerPlayer* pCurrent = GetPlayerInPos(pos);
