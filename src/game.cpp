@@ -8180,6 +8180,21 @@ bool game::IsMultiplayer() const
     return false;
 }
 
+#if 0  // @carcass
+// game::ResetGame is RVA-scrambled out of dc order: its dc 0xbc418 sits
+// with the trailing @carcass roster, but the linker placed its body at
+// 0x4cecb0 - between IsMultiplayer (0x4cec90) and the save_vector template
+// COMDAT (0x4d2ac0). Located by xref (playerData::Init +
+// CTurnDuration::Clear, 2/2); carcass-claimed here so the VA order gate
+// holds without a game.h declarator. The DC_ONLY roster row is removed.
+// E:\gamedcs\game.cpp:11895
+VA(0x004cecb0, 0x81)  // anchor-callee (playerData::Init, CTurnDuration::Clear - xref 2/2), dc 0xbc418
+void game::ResetGame()
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
 // vectors (the eight lithPools, the eight lithExitPools, then
@@ -8223,12 +8238,8 @@ void game::mark_campaign_map_won()
     // @stub
 }
 
-// E:\gamedcs\game.cpp:11895
-DC_ONLY(0xbc418, 0xE8)
-void game::ResetGame()
-{
-    // @stub
-}
+// E:\gamedcs\game.cpp:11895 - game::ResetGame promoted to a VA carcass
+// claim near its real link position (0x4cecb0); see above IsMultiplayer.
 
 // E:\gamedcs\game.cpp:11918
 DC_ONLY(0xbc500, 0x9C)
