@@ -297,6 +297,10 @@ ai_player	type_spellcaster_artifact_get_value	0.0000	0.0000	0.0000	0x32720
 ai_player	type_statue_of_legion_artifact_get_value	0.0000	0.0000	0.0000	0x33580
 ai_player	type_tome_artifact_get_value	0.0000	0.0000	0.0000	0x32c20
 ai_player	type_undead_king_cloak_artifact_get_value	0.0000	0.0000	0.0000	0x333a0
+ai_player	value_of_dwelling	0.0000	0.0000	0.0000	0x2b520
+ai_player	value_of_dwelling_upgrade	0.0000	0.0000	0.0000	0x2b5b0
+ai_player	value_of_horde	0.0000	0.0000	0.0000	0x2b790
+ai_player	value_of_horde_upgrade	0.0000	0.0000	0.0000	0x2b800
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0
