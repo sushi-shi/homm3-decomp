@@ -2058,6 +2058,13 @@ public:
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
                        unsigned char remote_move);            // 0x49cdd0
+    // MATCHING_DEBT: events.obj loses an exact row if these game.obj-only
+    // declarators enter its class-type stream. Reuse the existing sole-TU
+    // gate until game.h's codegen-sensitive declaration surface is split.
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+    void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
+    void CheckForTownEvent();                                 // 0x4cda10
+#endif
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80

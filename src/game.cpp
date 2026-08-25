@@ -7695,11 +7695,43 @@ void game::CheckForTimeEvent()
 }
 
 // E:\gamedcs\game.cpp:11540
-DC_ONLY(0xbafec, 0xF8)
+#endif  // @carcass
+VA(0x004cda10, 0x164)  // complete town-event eligibility/date loop, dc 0xbafec
 void game::CheckForTownEvent()
 {
-    // @stub
+    int day = static_cast<short>(
+        (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e);
+
+    for (unsigned int i = 0; i < worldMap.TownEventList.size(); ++i) {
+        TTownEvent* thisEvent = &worldMap.TownEventList[i];
+        int playerIndex = gNetLocalGamePos;
+        if (playerIndex >= 8 || playerIndex < 0)
+            playerIndex = 0;
+        if (!(players[playerIndex].isHuman
+                  ? thisEvent->ApplyToHuman
+                  : thisEvent->ApplyToComputer)) {
+            continue;
+        }
+        if (!(gUnnamed69ccc4 & thisEvent->PlayerFlags))
+            continue;
+
+        if (thisEvent->FirstTime == day) {
+            town* thisTown = GetTown(thisEvent->TownNum);
+            if (gNetLocalGamePos == thisTown->owner) {
+                GiveTimeEventReward(thisEvent);
+                thisTown->give_event_reward(thisEvent);
+            }
+        } else if (thisEvent->Interval && day > thisEvent->FirstTime
+                   && (day - thisEvent->FirstTime) % thisEvent->Interval == 0) {
+            town* thisTown = GetTown(thisEvent->TownNum);
+            if (gNetLocalGamePos == thisTown->owner) {
+                GiveTimeEventReward(thisEvent);
+                thisTown->give_event_reward(thisEvent);
+            }
+        }
+    }
 }
+#if 0  // @carcass
 
 #endif  // @carcass
 
