@@ -409,9 +409,12 @@ DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
 // to each lands inside this compiland's bracket and nothing in the image
 // writes them.
 DATA(0x006a5d84) extern const char* gUnnamed6a5d84;
+DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
+DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
 DATA(0x006a5d90) extern const char* gUnnamed6a5d90;
 DATA(0x006a5da4) extern const char* gUnnamed6a5da4;
 DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
+DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
 DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
 DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
 DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
@@ -1415,6 +1418,114 @@ void townManager::SetHeroCommand()
         }
     }
     strcpy(statusText, gUnnamed6a5da8);
+}
+
+// E:\gamedcs\townmgr.cpp:3274
+VA(0x005c7400, 0x391)  // order-map + select_army/GetNumArmies callees, dc 0x16c6a8
+void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
+{
+    char flag = 0;
+    field_19c = -1;
+    if (field_12c->group->GetNumArmies() == 1) {
+        if (townToView) {
+            if (field_12c == field_120 || townToView->garrisonHeroId != -1) {
+                if (field_134 != field_12c)
+                    flag = 1;
+            }
+        } else if (field_12c == field_120 && field_134 != field_12c) {
+            flag = 1;
+        }
+    }
+
+    if (field_12c == field_134 && field_130 == field_138) {
+        int id = field_12c->group->armies[field_130];
+        const char* name;
+        if (id >= 0 && id <= 150)
+            name = akCreatureTypeTraits[id].m_plural_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5d94, name);
+        field_19c = 1;
+        return;
+    }
+
+    long selOwner = field_12c->owner;
+    if (selOwner != gNetLocalGamePos) {
+        select_army(field_134, field_138, join_dialog);
+        return;
+    }
+
+    int anchorId = field_134->group->armies[field_138];
+    int selId = field_12c->group->armies[field_130];
+    if (anchorId == selId && selOwner == field_134->owner) {
+        if (splitEnabled) {
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d84, name);
+            field_19c = 5;
+            return;
+        }
+        if (flag) {
+            strcpy(statusText, gUnnamed6a5d88);
+            return;
+        }
+        const char* name;
+        if (selId >= 0 && selId <= 150)
+            name = akCreatureTypeTraits[selId].m_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5d8c, name);
+        field_19c = 2;
+        return;
+    }
+
+    if (splitEnabled) {
+        if (anchorId == -1) {
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d90, name);
+            field_19c = 5;
+            return;
+        }
+    } else {
+        if (anchorId == -1) {
+            if (flag) {
+                strcpy(statusText, gUnnamed6a5d98);
+                return;
+            }
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_plural_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d9c, name);
+            field_19c = 3;
+            return;
+        }
+    }
+
+    if (field_134->owner != selOwner) {
+        select_army(field_134, field_138, join_dialog);
+        return;
+    }
+    const char* nameAnchor;
+    if (anchorId >= 0 && anchorId <= 150)
+        nameAnchor = akCreatureTypeTraits[anchorId].m_plural_name;
+    else
+        nameAnchor = emptyRolloverText;
+    const char* nameSel;
+    if (selId >= 0 && selId <= 150)
+        nameSel = akCreatureTypeTraits[selId].m_plural_name;
+    else
+        nameSel = emptyRolloverText;
+    sprintf(statusText, gUnnamed6a5da0, nameSel, nameAnchor);
+    field_19c = 3;
 }
 
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
