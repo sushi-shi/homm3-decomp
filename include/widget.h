@@ -182,6 +182,19 @@ public:
     // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
     // RollOver load, so no out-of-line body survives.
     const char* get_help_text() const { return RollOver; }
+    // Dreamcast header inlines used by mode-switch paths. Scope their live
+    // definitions to the owning TU: even unused header bodies perturb VC6's
+    // global inline budget in unrelated compilands.
+#ifdef HOMM3_WIDGET_HIDE_SHOW_INLINE
+    void hide()
+    {
+        send_message(WIDGET_CLEAR_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    }
+    void show()
+    {
+        send_message(WIDGET_SET_STATUS, WIDGET_ACTIVE | WIDGET_DRAWN);
+    }
+#endif
 #ifdef HOMM3_WIDGET_SET_VISIBLE_INLINE
     // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
     // callers fold this body into their owning function; the one retained

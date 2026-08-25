@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — both sacrifice mode switches add 911 exact retail bytes.**
+  The 590-byte `set_artifact_mode` and 321-byte `set_creature_mode` are fixed
+  by `DoModal`'s two arms and the Dreamcast roster; retail independently
+  proves their complementary `artifact_widgets` / `creature_widgets`
+  hide/show passes and every control pointer at +0x84..+0xb8. The artifact
+  path clears the held offering, expands the exact slot/offering/backpack
+  refresh helpers, configures the backpack and mode buttons, then refreshes
+  experience. Its direct spelling matches all twenty-nine blocks.
+
+  Dreamcast's seven-element 224-byte array fixes each creature-offering
+  record at 32 bytes. Retail's retained updater proves six widget pointers
+  followed by `group` and `amount` at +0x18/+0x1c; the creature path seeds
+  those seven records, clears the current record, updates the slider/button
+  state and matches all eleven blocks. The DC header-inline `widget::hide`
+  and `show` bodies are exposed only to this owning TU because unconditional
+  header definitions perturb VC6's global inline budget even when unused.
+  The synchronized checkpoint reaches **1953/2367 linked exact**,
+  **1884/2298 game exact**, **96.59% game fuzzy** and **43.86% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the sacrifice experience/destructor checkpoint adds 726
   exact retail bytes.** Dreamcast supplies the adjacent names, signatures
   and source order; retail independently identifies `update_experience` at
