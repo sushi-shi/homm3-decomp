@@ -10,14 +10,25 @@
 #include "town.h"
 #include "tradpost.h"
 #include "game.h"
+#include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
+                     // adventure-object appraisals (custom item / scroll / ...)
 
 // ai_tactical.h's current TSkillMastery view collides with herospec.h's
 // independently reconstructed enum, already included through philai.h.
-// These are the two cross-TU declarations this compiland actually needs;
+// These cross-TU declarations are what this compiland actually needs;
 // their /Gr register ABI and return type are byte-proven by the exact
 // definitions at 0x435830 / 0x435960 and by both call sites below.
 double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
+
+// ai_combat.h's whole-of-combat appraisal, declared file-locally rather
+// than pulling that header's declarator population into this closure. The
+// /Gr fastcall ABI and (const hero*, const hero*, const armyGroup&,
+// const town*, NewmapCell*) -> long shape are byte-proven by every
+// value_of_* call site below (0x52a410 / 0x529890 / 0x52a870 ...).
+long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
+    const armyGroup& defending_army, const town* defending_town,
+    NewmapCell* cell);
 
 #if 0  // @carcass
 
@@ -1126,12 +1137,22 @@ long AI_value_of_event(const hero* current_hero, type_point point, long* move_co
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1867
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:1867.  A map object carrying a custom artifact reward:
+// its value is the item's own worth plus, when the map maker gave it custom
+// guardians, what beating those guardians is worth.
 VA(0x00529890, 0x40)  // anchor-callee, dc 0x1103c4
 long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_value)
 {
-    // @stub
+    TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+    if (treasure->HasCustomGuardians)
+        return AI_value_of_combat(current_hero, 0, treasure->Guardians, 0, cell)
+            + item_value;
+    return item_value;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2054
 VA(0x00529920, 0x10d)  // anchor-callee, dc 0x110808
