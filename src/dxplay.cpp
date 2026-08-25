@@ -535,6 +535,42 @@ unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
     // @stub
 }
 
+// E:\gamedcs\dxplay.cpp:1941 - DirectPlay enum callbacks (stdcall), each
+// address-taken as the callback pointer by its CDPlay(Lobby) Enum* method.
+VA(0x00499e20, 0x23)  // anchor-address-take: pushed by EnumAddress@0x99b20; ret 0x10 (4 params), dc 0x8bba4
+int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1948
+VA(0x00499e50, 0x1F)  // anchor-address-take: pushed by EnumSessions@0x97440; ret 0x10 (4 params), dc 0x8bbc4
+int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1963
+VA(0x00499e70, 0x2B)  // anchor-address-take: pushed by EnumConnections@0x971b0; ret 0x18 (6 params), dc 0x8bbdc
+int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1976
+VA(0x00499ea0, 0x23)  // anchor-address-take: pushed by EnumGroups@0x972c0 + EnumGroupsInGroup@0x999a0; ret 0x14 (5 params), dc 0x8bc0c
+int EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1991
+VA(0x00499ed0, 0x23)  // anchor-address-take: pushed by EnumPlayers@0x97340 + EnumGroupPlayers*; ret 0x14 (5 params), dc 0x8bc28
+int EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
 // E:\gamedcs\array.h:46
 VA(0x00499f00, 0x5B)  // anchor-body: stores CAutoArray vtable (0x63de44) + inlined Destroy loop, no flags param (plain dtor), dc 0x8c148
 void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
@@ -634,41 +670,6 @@ unsigned char CDPlayLobby::ReceiveLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMs
 // E:\gamedcs\dxplay.cpp:1802
 DC_ONLY(0x8b960, 0x4)
 unsigned char CDPlayLobby::HandleSystemLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1941
-DC_ONLY(0x8bba4, 0x20)
-int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1948
-DC_ONLY(0x8bbc4, 0x18)
-int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1963
-DC_ONLY(0x8bbdc, 0x30)
-int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1976
-DC_ONLY(0x8bc0c, 0x1C)
-int EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1991
-DC_ONLY(0x8bc28, 0x5C)
-int EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
 {
     // @stub
 }

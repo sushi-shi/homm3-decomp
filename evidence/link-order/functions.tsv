@@ -1537,11 +1537,11 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x99b20	137	in-span	dxplay	dxplay	CDPlayLobby_EnumAddress
 0x99bb0	170	in-span	dxplay	dxplay	CDPlayLobby_AddAddressEnum
 0x99c60	440	in-span	dxplay	dxplay	CDPlayLobby_GetIPAddress
-0x99e20	35	bracketed	dxplay..event_record	dxplay,event_record	game_99b20_sub00_99e20
-0x99e50	31	bracketed	dxplay..event_record	dxplay,event_record	game_97440_sub00_99e50
-0x99e70	43	bracketed	dxplay..event_record	dxplay,event_record	game_971b0_sub00_99e70
-0x99ea0	35	bracketed	dxplay..event_record	dxplay,event_record	game_972c0_sub00_99ea0
-0x99ed0	35	bracketed	dxplay..event_record	dxplay,event_record	game_97340_sub00_99ed0
+0x99e20	35	in-span	dxplay	dxplay	EnumAddressCallback
+0x99e50	31	in-span	dxplay	dxplay	EnumSession
+0x99e70	43	in-span	dxplay	dxplay	EnumConnectionsCallback
+0x99ea0	35	in-span	dxplay	dxplay	EnumGroupsCallback
+0x99ed0	35	in-span	dxplay	dxplay	EnumPlayersCallback
 0x99f00	91	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_CAutoArray
 0x99f60	96	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_Destroy
 0x99fc0	29	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_Get

@@ -42,7 +42,7 @@ dialogbox	0x8fdc0	0x90b67	3495	10	0	12	10	2
 diff	0x90f60	0x912ff	927	4	0	4	4	0
 dimensiondoorwindow	0x916f0	0x91edc	2028	8	0	10	8	2
 drawing	0x93710	0x96c4d	13629	17	0	26	17	9
-dxplay	0x96ce0	0x99e18	12600	68	11	70	68	2
+dxplay	0x96ce0	0x99ef3	12819	72	11	75	72	3
 event_record	0x9a5e0	0x9dcec	14092	63	0	69	63	6
 events	0x9e2e0	0xacba6	59590	19	0	90	19	71
 exec	0xb0a10	0xb0f35	1317	5	0	5	5	0
