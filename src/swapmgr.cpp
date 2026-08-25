@@ -8,9 +8,19 @@
 #include "swapmgr.h"
 #include "game.h"
 #include "hero.h"
+#include "advmgr.h"
+#include "bitmap816.h"
+#include "remote.h"
+#include "widget.h"
+#include "winmgr.h"
 
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
+
+// Selector display mode (bss 0x6a3d08, adjacent to gpSwapManager): Reset clears it,
+// DrawSelector dispatches on 0/1/other. All image-wide references sit inside
+// swapmgr's bracket, so this compiland owns it (townmgr's gUnnamed6aaa50 precedent).
+DATA(0x006a3d08) static int gUnnamed6a3d08;
 
 #if 0  // @carcass -- located, not reconstructed (RVA order)
 
@@ -42,14 +52,56 @@ void TSwapWindow::~TSwapWindow()
     // @stub
 }
 
-// E:\gamedcs\swapmgr.cpp:465
-VA(0x005ae430, 0xCB)  // corroborates TSwapWindow-ctor sub, send_message widget x7, ret 0, dc 0x15c384
-void swapManager::UpdateArrows()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\swapmgr.cpp:465
+// DC symbol is TSwapWindow::UpdateArrows (dc 0x15c384); the carcass mislabelled
+// it swapManager::UpdateArrows. `this` reads widget pointers at +0x54/+0x58/+0x5c
+// (a swapManager would have selection ints there), and it consults the separate
+// gpSwapManager singleton for the side/hero state - so this is the window method.
+// Residual: 10/11 blocks byte-exact. B2 differs by one instruction - retail loads
+// gpSwapManager via eax then copies to edi and schedules the gpGame load after the
+// field_5d test; our CL loads gpSwapManager straight into edi and hoists the gpGame
+// load ahead of the test. A register-homing scheduling residual (naming/reordering
+// gpSwapManager or gpGame either regressed the CFG or was byte-inert).
+VA(0x005ae430, 0xCB)  // corroborates TSwapWindow-ctor sub, send_message widget x7, ret 0, dc 0x15c384
+void TSwapWindow::UpdateArrows()
+{
+    if (!field_54)
+        return;
+    if (!field_58)
+        return;
+
+    swapManager* sm = gpSwapManager;
+    if (sm->field_5d)
+    {
+        if (sm->heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+        {
+            field_54->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        else
+        {
+            field_54->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        field_5c->enable(1);
+    }
+    else
+    {
+        if (sm->heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+        {
+            field_54->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        else
+        {
+            field_54->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        field_5c->enable(0);
+    }
+}
 
 // E:\gamedcs\swapmgr.cpp:583
 VA(0x005ae500, 0xA9)  // anchor-callee ??0baseManager + IsHuman, ret 8, dc 0x15c470
@@ -78,14 +130,58 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     field_64 = 0;
 }
 
-#if 0  // @carcass -- located, not reconstructed (RVA order)
-
 // E:\gamedcs\swapmgr.cpp:617
+// Residual (~70%): the four morale/luck clamps to [-3,3]. Message build and the
+// five selection resets are byte-exact and the constant 3 CSEs into ebx as retail
+// does. The remainder is a register-homing residual: retail keeps the GetMorale/
+// GetLuck result live in eax across BOTH clamp comparisons and computes the low
+// bound's address lazily inside the taken branch (`jge; lea &lo; jmp`), so the min
+// step reads `cmp eax,3` directly; our CL computes `lea &lo` eagerly and reloads
+// the max reference (`cmp [eax],3`). Tried and rejected: by-value _cpp_min/_cpp_max
+// (CSEs -3 not 3), std::_cpp_min/_cpp_max (this spelling), block-scoped named locals.
 VA(0x005ae5b0, 0x19B)  // corroborates 5x -1 selection init at +0x48..+0x58, ret 0, dc 0x15c534
 void swapManager::Reset()
 {
-    // @stub
+    field_54 = -1;
+    field_50 = -1;
+    field_58 = -1;
+    field_4c = -1;
+    field_48 = -1;
+    gUnnamed6a3d08 = 0;
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 5;
+    msg.extra = 0x1000;
+    msg.codeY = 0x67;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x68;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = 4;
+    msg.codeY = 0x6b;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[0]->GetMorale(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6c;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[1]->GetMorale(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6d;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[0]->GetLuck(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6e;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[1]->GetLuck(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:665
 VA(0x005ae750, 0x3A2)  // anchor-callee AddWindow/DisableButtons/CNetMsgHandler + tradesel.pcx, ret 4, dc 0x15c66c
@@ -101,12 +197,30 @@ CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:789
 VA(0x005aed20, 0x9B)  // anchor-callee RemoveWindow/EnableButtons/SetNetMsgHandler, ret 0, dc 0x15ca44
 void swapManager::Close()
 {
-    // @stub
+    if (gHeroScreenDraggedArtifact.artifactId != -1)
+    {
+        heroes[0]->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
+        gHeroScreenDraggedArtifact.artifactId = -1;
+    }
+    border->Dispose();
+    gpWindowManager->RemoveWindow(parent);
+    delete parent;
+    status = 0;
+    if (pDPlay)
+        pDPlay->SetNetMsgHandler(field_60);
+    delete field_64;
+    gpAdvManager->status = 1;
+    gpAdvManager->EnableButtons();
+    gpAdvManager->Reseed(0, 0);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)  // corroborates reads selection +0x48/+0x50 then Bitmap816::Draw/UpdateScreen, ret 0, dc 0x15cadc
