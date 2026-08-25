@@ -150,7 +150,7 @@ DATA(0x006aaa5c) extern unsigned char gBuildAllBuildings;
 // CycleOutline publishes the objId of the object it is animating into
 // it and townObject::Draw reads it back, which is the whole role.
 DATA(0x006aa9e8) static int gUnnamed6aa9e8;
-DATA(0x006aa9ec) static int gUnnamed6aa9ec;
+DATA(0x006aa9ec) static heroWindow* gUnnamed6aa9ec;
 
 // The eight resource icons of the town screen's bottom bar, as x/y
 // pairs; the constructor's one loop walks them. Its single image-wide
@@ -6290,14 +6290,116 @@ void DoMapTavern(type_point point)
 // fetch is dereferenced UNGUARDED (`mov al,[edi+0x34]` with no null
 // test), which is retail's own code and not a spelling artefact: the
 // hire two calls earlier is what makes the id non-negative.
-#if 0  // @carcass: located, not reconstructed
+// The tavern chooser: builds the tavern window over the two recruitable
+// heroes the local player's tavern is currently offering
+// (playerData::recruits), broadcasts their portraits, the gold price and
+// the highlighted hero's name/class/artifact line, dims the recruit widget
+// when the hire cannot happen, then runs the modal. gTavernHero is left
+// pointing at whichever hero the panel is showing so DoMapTavern/DoTownTavern
+// can hire it. Returns whether the player confirmed (dialogReturn == recruit
+// widget 0xc). Human-only text is gated on IsLocalHuman for network play.
+// Residual (96.48%): register-homing - retail keeps recruits[1] live in esi
+// across the second-hero block and re-materialises -1 as an immediate at
+// each `== -1`, while our CL CSEs -1 into esi and re-reads recruits[1];
+// forcing the recruits[1] CSE with a named local measured WORSE (95.59 ->
+// 91.19), so it is left as retail's allocator tie-break. Plus the EH
+// prologue `push <scopetable>` addend (a reloc addend, not a state count),
+// a deferred `push ebx`, and the singular-artifact `.`-append indexing
+// gText[len-2] off the end pointer rather than off gText's base.
 // E:\gamedcs\townmgr.cpp:8055
 VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
 unsigned char DoTavern()
 {
-    // @stub
+    gUnnamed6aa9d8 = 1;
+    gUnnamed6aa9ec = new TTavernWindow(0xca, 0x30);
+    if (!gUnnamed6aa9ec)
+        MemError();
+    SetWinText(gUnnamed6aa9ec, 0x16);
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    gUnnamed6aa9ec->BroadcastMessage(&msg);
+
+    msg.extraText = gText;
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        sprintf(gText, gpGeneralText->GetText(217), gpGame->currentRumour);
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 2;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    playerData* player = gpGame->GetLocalPlayer();
+    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), gHeroGoldCost);
+    msg.codeY = 4;
+    gUnnamed6aa9ec->BroadcastMessage(&msg);
+
+    if (player->recruits[0] == -1) {
+        gTavernHero = 0;
+        gUnnamed6aa9ec->WidgetClearStatus(8, widget::WIDGET_DRAWN);
+    } else {
+        gTavernHero = &gpGame->heroes[player->recruits[0]];
+        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
+        msg.codeX = widget::WIDGET_SET_IMAGE;
+        msg.codeY = 5;
+        msg.extraText =
+            akHeroTraits[gpGame->GetHero(player->recruits[0])->portrait]
+                .largePortraitName;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (player->recruits[1] == -1) {
+        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
+    } else {
+        msg.codeY = 6;
+        msg.extraText =
+            akHeroTraits[gpGame->GetHero(player->recruits[1])->portrait]
+                .largePortraitName;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+        if (gTavernHero == 0)
+            gTavernHero = &gpGame->heroes[player->recruits[1]];
+    }
+
+    if (gTavernHero) {
+        int total = gTavernHero->get_number_in_backpack(0)
+                  + gTavernHero->get_equipped_artifacts(0);
+        sprintf(gText, gpGeneralText->GetText(216), gTavernHero->name,
+                gTavernHero->level, gTavernHero->HeroFn_004D8F70(), total);
+        if (total == 1) {
+            int len = strlen(gText);
+            gText[len - 2] = '.';
+            gText[len - 1] = 0;
+        }
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 7;
+        msg.extraText = gText;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (player->resources[6] < gHeroGoldCost || gTavernHero == 0
+        || player->numHeroes >= 8
+        || (gMapTavern == 0
+            && gpTownManager->townToView->visitingHeroId != -1)) {
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.codeY = TTavernWindow::HIRE_BUTTON_ID;
+        msg.extra = widget::WIDGET_DIMMED_NODRAW;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        gUnnamed6aa9ec->GetWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
+    gUnnamed6aa9ec->DoModal(0);
+    delete gUnnamed6aa9ec;
+    gUnnamed6aa9d8 = 0;
+    return gpWindowManager->dialogReturn == TTavernWindow::HIRE_BUTTON_ID;
 }
-#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8164
 VA(0x005d82b0, 0x1D0)  // order-map(after DoMapTavern) + DoTavern/RedrawTownScreen edges + arity(bare ret), dc 0x17b154
