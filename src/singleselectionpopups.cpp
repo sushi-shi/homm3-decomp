@@ -30,6 +30,9 @@
 #include "bitmap16.h"
 #include "csprite.h"
 #include "winmgr.h"
+#include "remote.h"
+#include "kbwin.h"
+#include "game.h"
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
@@ -150,16 +153,48 @@ CTeamAlignmentDlg::~CTeamAlignmentDlg()
 {
 }
 
-#if 0  // @carcass -- located, not reconstructed
-
-// E:\gamedcs\singleselectionpopups.h:45
+// E:\gamedcs\singleselectionpopups.h:45 - slot 3 of every dialog vtable. A
+// right-click (RIGHT_BUTTON_UP) or a network abort-popup ends the dialog with
+// WIDGET_END_DIALOG in both codeX/codeY; everything else falls through to the
+// base heroWindow::handle_message (folded onto inputManager::Main 0x4ec560).
+// The two end-dialog paths keep their own dialogReturn/id stores and share
+// only the codeX/codeY/return tail, exactly as retail cross-jumps them; the
+// `id = MESSAGE_WIDGET` store must precede `dialogReturn = codeY` (id store
+// stays per-block, +12.8) and the netmsg chain nests inside the id!=0x40 arm
+// so the default `return` sinks between the two arms (+45 over the flat form).
+//
+// Residual (99.96%): every instruction byte matches; the only deltas are
+// three reloc-NAME cosmetics the model does not resolve here - bVideoPaused
+// (data_29954c) and pDPlay (data_29d808) are unnamed tree-wide (their owning
+// objs delink them to working labels too), and the tail call names the folded
+// heroWindow::handle_message where the model carries only its ICF twin
+// inputManager::Main (0x4ec560). Reloc-name-only, not source-reachable from
+// this TU (the names live in shared headers / other objs).
 VA(0x00575430, 0x8f)  // anchor-vtable CSingleSelPopup::handle_message = shared slot3 of all four dialog vtables, ret 4, dc 0x12ef28
 int CSingleSelPopup::handle_message(message& msg)
 {
-    // @stub
+    if (msg.id != MESSAGE_RIGHT_BUTTON_UP) {
+        if (bVideoPaused && pDPlay) {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (handler) {
+                handler->CheckHandleNet(1, 0);
+                if (handler->GetAbortPopupMsg()) {
+                    msg.id = MESSAGE_WIDGET;
+                    gpWindowManager->dialogReturn = msg.codeY;
+                    msg.codeX = widget::WIDGET_END_DIALOG;
+                    msg.codeY = widget::WIDGET_END_DIALOG;
+                    return 2;
+                }
+            }
+        }
+        return heroWindow::handle_message(msg);
+    }
+    msg.id = MESSAGE_WIDGET;
+    gpWindowManager->dialogReturn = msg.codeY;
+    msg.codeX = widget::WIDGET_END_DIALOG;
+    msg.codeY = widget::WIDGET_END_DIALOG;
+    return 2;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\singleselectionpopups.cpp:215
 VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // vtbl 0x6419d8 slot0, dc 0x12f304
@@ -304,12 +339,40 @@ unsigned char CTeamAlignmentDlg::CreateWin()
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:424
+#endif  // @carcass
+
+// E:\gamedcs\singleselectionpopups.cpp:424 - build the team-mask table off
+// gpGame: for each present player (setup.playerPos >= 0) not yet grouped,
+// open a new team seeded with that player's bit, then fold in every later
+// present player sharing its mapHeader.teamInfo entry.
 VA(0x00576930, 0xd1)  // anchor-callee called by CTeamAlignmentDlg ctor (0x5764d0), void/ret, touches team bss 0x2994e8, dc 0x12edd4
 void CTeamAlignmentDlg::GetTeams()
 {
-    // @stub
+    unsigned char assigned[8] = { 0 };
+    int player;
+
+    memset(teamMasks, 0, sizeof(teamMasks));
+    numTeams = 0;
+    for (player = 0; player < 8; ++player) {
+        if (gpGame->setup.playerPos[player] < 0)
+            continue;
+        if (assigned[player])
+            continue;
+        assigned[player] = 1;
+        teamMasks[numTeams] = 1 << player;
+        for (int other = player + 1; other < 8; ++other) {
+            if (gpGame->setup.playerPos[other] < 0)
+                continue;
+            if (gpGame->OnSameTeam(player, other)) {
+                assigned[other] = 1;
+                teamMasks[numTeams] |= 1 << other;
+            }
+        }
+        ++numTeams;
+    }
 }
+
+#if 0  // @carcass -- located, not reconstructed
 
 // ============================================================================
 // Unclaimed DC roster rows: inlined away, ICF-folded onto a claimed twin, or

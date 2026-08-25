@@ -2375,14 +2375,14 @@ singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0
 singleselectionpopups	??_GCSpriteWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1757b0
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750
+singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930
 singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	94.2771	94.2771	94.2771	0x175290
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
+singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	99.9636	99.9636	99.9636	0x175430
 singleselectionpopups	CBonusDlg_CreateWin	0.0000	0.0000	0.0000	0x1754f0
 singleselectionpopups	CBonusDlg_CreateWin_1757e0	0.0000	0.0000	0.0000	0x1757e0
 singleselectionpopups	CHeroDlg_CreateWin	0.0000	0.0000	0.0000	0x175a90
-singleselectionpopups	CSingleSelPopup_handle_message	0.0000	0.0000	0.0000	0x175430
 singleselectionpopups	CTeamAlignmentDlg_CreateWin	0.0000	0.0000	0.0000	0x176540
-singleselectionpopups	CTeamAlignmentDlg_GetTeams	0.0000	0.0000	0.0000	0x176930
 singleselectionpopups	CTownDlg_CreateWin	0.0000	0.0000	0.0000	0x175e60
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 singleselectionwindow	CChatSlider_SetResolution	0.0000	0.0000	0.0000	0x17c9d0
