@@ -18,6 +18,13 @@ class message;
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
 // prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
 // proves the rest of the ctor-touched prefix store-for-store.
+// The selection side held in field_48 (-1 when nothing is selected):
+// DrawSelector draws the highlight over the left or the right hero column.
+enum ESwapSelectSide {
+    kSwapSelectLeft = 0,
+    kSwapSelectRight = 1,
+};
+
 class swapManager : public baseManager {
 public:
     heroWindow* parent;      // +0x38

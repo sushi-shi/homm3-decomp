@@ -221,14 +221,64 @@ void swapManager::Close()
     gpAdvManager->Reseed(0, 0);
 }
 
-#if 0  // @carcass -- located, not reconstructed (RVA order)
-
 // E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)  // corroborates reads selection +0x48/+0x50 then Bitmap816::Draw/UpdateScreen, ret 0, dc 0x15cadc
 void swapManager::DrawSelector()
 {
-    // @stub
+    int x = 0;
+    int y = 0;
+
+    if (field_48 == -1)
+        return;
+    if (field_50 == -1)
+        return;
+
+    if (gUnnamed6a3d08)
+    {
+        int selectedType = heroes[field_48]->army.armies[field_50];
+        x = 0x43;
+        for (int hero = 0; hero < 2; hero++)
+        {
+            for (int slot = 0; slot < 7; slot++, x += 0x24)
+            {
+                if (!(hero == field_48 && slot == field_50))
+                {
+                    int creature = heroes[hero]->army.armies[slot];
+                    if (creature == -1 || creature == selectedType)
+                    {
+                        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap, x - 2, 0x81, true);
+                        gpWindowManager->UpdateScreen(x - 2, 0x81, 0x24, 0x24);
+                    }
+                }
+            }
+            x = 0x1e5;
+        }
+    }
+    else
+    {
+        switch (field_48)
+        {
+        case kSwapSelectLeft:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x41;
+                y = 0x81;
+            }
+            break;
+        case kSwapSelectRight:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x1e3;
+                y = 0x81;
+            }
+            break;
+        }
+        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap, x, y, true);
+        gpWindowManager->UpdateScreen(x, y, 0x24, 0x24);
+    }
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:940
 VA(0x005aef00, 0x24C)  // corroborates heroes[side].artifact[slot] (8B stride @+0x12d), ret 8, dc 0x15cd2c
