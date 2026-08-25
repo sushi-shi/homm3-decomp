@@ -1741,6 +1741,7 @@ multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	80.4609	80.4609	80.4609	0x10e050
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
 multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
+multiplayerwindow	??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z	85.8537	85.8537	85.8537	0x112670
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
@@ -1757,7 +1758,6 @@ multiplayerwindow	TMultiPlayerWindow_InitRemote	0.0000	0.0000	0.0000	0x10fbc0
 multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x10f4e0
 multiplayerwindow	TMultiPlayerWindow_Update	0.0000	0.0000	0.0000	0x10f0f0
 multiplayerwindow	TMultiPlayerWindow_WindowHandler	0.0000	0.0000	0.0000	0x10f940
-multiplayerwindow	__h3cg$multiplayerwindow$scalar_deleting_dtor$CAutoArray	0.0000	0.0000	0.0000	0x112670
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	100.0000	100.0000	100.0000	0x11e330
