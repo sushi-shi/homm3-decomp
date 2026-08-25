@@ -63,6 +63,45 @@ public:
 };
 SIZE(CHotSeatDlg, 0x114);
 
+// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
+// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
+// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
+// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
+// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
+// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
+// The vtable 0x6400f4 is 14 slots (CHeroWindowEx's roster): overrides at slot
+// 0 (sdd/dtor), 12 (OnWidgetDeselect), 13 (GetRolloverWidget) - exactly the
+// CHotSeatDlg shape. UpdateOK/DisableOK/OnOK are non-virtual. field1/field2
+// are DC CMPInputEdit* but reached only as textWidget here.
+class CMPInputDlg : public CHeroWindowEx {
+public:
+    enum {
+        BACKGROUND_ID = 500,
+        FIELD1_ID = 501,
+        FIELD2_ID = 502,
+        HEADER1_ID = 503,
+        HEADER2_ID = 504,
+        OKAY_ID = 505,
+        BACK_ID = 506,
+        ROLLOVER_ID = 507
+    };
+
+    textWidget* field1;    // +0x50 (DC CMPInputEdit*)
+    textWidget* field2;    // +0x54 (DC CMPInputEdit*)
+    textWidget* header1;   // +0x58
+    textWidget* header2;   // +0x5c
+    textWidget* rollover;  // +0x60
+
+    CMPInputDlg(int maxChars1, int maxChars2);
+    virtual ~CMPInputDlg();
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    unsigned char OnOK();
+    void UpdateOK();
+    void DisableOK();
+};
+SIZE(CMPInputDlg, 0x64);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:872, dc 0xffb40) void DeleteTempSaveGame(const char* filename);
