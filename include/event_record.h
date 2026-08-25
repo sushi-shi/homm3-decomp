@@ -91,14 +91,32 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
 };
 
+// A recorded boat-hide. load/save (0x49ad00/0x49adf0) serialize the boat (by its
+// byte id at boat+0x19, re-resolved via &gpGame->boats[]); two flag bytes(+0xc,
+// +0xd) and two coords(+0x10,+0x14, stored int, serialized as 16-bit) are only
+// present in save versions [0x12,0x1e] except 0x1c, or >= 0x23; older saves
+// default them to {1,0,-1,-1}.
 class type_record_hide_boat : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    boat* current_boat;      // +0x08
+    unsigned char field_0c;  // +0x0c - flag (default 1)
+    unsigned char field_0d;  // +0x0d - flag (default 0)
+    int field_10;            // +0x10 - coord (serialized as 16-bit; default -1)
+    int field_14;            // +0x14 - coord (serialized as 16-bit; default -1)
 };
 
+// show_boat extends hide_boat with two trailing dwords (+0x18/+0x1c). load calls
+// hide_boat::load then reads them; save inlines hide_boat::save then writes them.
 class type_record_show_boat : public type_record_hide_boat {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int field_18;            // +0x18
+    int field_1c;            // +0x1c
 };
 
 // A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
