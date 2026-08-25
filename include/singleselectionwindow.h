@@ -9,22 +9,7 @@
 #include "advmgr_popup.h"
 #include "va.h"
 
-// Bootstrap VIEW of the game-selection megawindow. DC reports size 2928
-// with SH4 STL; the retail extent below is frame-derived from advmgr's
-// SaveGame, whose window local spans ebp-0x19ec..ebp-0x7c around an
-// __alloca_probe frame. Layout unmodeled - the ctor (retail 0x579960,
-// DC gameMode int: 2 = the save flavor), the destructor (0x583b40) and
-// the modal runner (0x584bf0, DoModal's (unsigned char) shape) are all
-// advmgr's SaveGame needs. Its own TU will replace this view.
-class TSingleSelectionWindow : public CAdvPopup {
-public:
-    char pad_60[0x1970 - 0x60];
-
-    TSingleSelectionWindow(int gameMode);
-    virtual ~TSingleSelectionWindow();
-    virtual int DoModal(unsigned char fadeIn);
-};
-SIZE(TSingleSelectionWindow, 0x1970);
+class slider;
 
 // Four cross-TU cells advmgr's SaveGame drives; the selection window's
 // own TU is their natural owner, so they are declared here (the
@@ -91,6 +76,23 @@ public:
     unsigned char IsFaceTaken(int face, int exclude);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
+
+class TSingleSelectionWindow : public CAdvPopup {
+public:
+    char pad_60[0x64 - 0x60];
+    unsigned char m_flag64;
+    unsigned char m_flag65;
+    char pad_66[0x1064 - 0x66];
+    CNetPlayerHandler m_players;
+    char pad_1834[0x1840 - 0x1834];
+    slider* m_fileSlider;
+    char pad_1844[0x1970 - 0x1844];
+
+    TSingleSelectionWindow(int gameMode);
+    virtual ~TSingleSelectionWindow();
+    virtual int DoModal(unsigned char fadeIn);
+};
+SIZE(TSingleSelectionWindow, 0x1970);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:164, dc 0x12f6d4) const char* GetResourceBonusCaption(int townType);

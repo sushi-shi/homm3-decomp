@@ -1701,6 +1701,18 @@ TSingleSelectionWindow::~TSingleSelectionWindow()
 
 VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
 
+VA(0x00584bf0, 0x50)
+int TSingleSelectionWindow::DoModal(unsigned char fade)
+{
+    if ((m_flag64 == 0 && m_flag65 == 0)
+            || (m_flag64 != 0
+                && (bVideoPaused != 0
+                    || gUnnamed6989f0 == WINDOW_MODE_6989F0_3)))
+        m_fileSlider->SetState(11);
+    return gpWindowManager->DoDialogDraw(this,
+        heroWindow::HeroWindowHandler, ::Update, 0);
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:454
 VA(0x005891b0, 0x45)  // anchor-vtable CHostWaitDlg slot 3, dc 0x1477b0
 int CHostWaitDlg::handle_message(message& msg)
