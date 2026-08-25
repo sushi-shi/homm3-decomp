@@ -38,6 +38,49 @@ SIZE(CHotSeatMan, 0xac);
 
 DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
+class CSprite;
+class CHeroSessions;
+class bitmapBorder;
+class button;
+class slider;
+class textEntryWidget;
+
+// DC publishes this complete member tail at +0x4c..+0xf8. Retail's
+// CHeroWindowEx base is one dword wider, translating the tail to
+// +0x50..+0xfc; the getter at 0x50ed50 independently proves the final offset.
+class TMultiPlayerWindow : public CHeroWindowEx {
+public:
+    CSprite* GameState;                 // +0x50
+    unsigned char inSessionList;        // +0x54
+    unsigned char showSplash;           // +0x55
+    int currentGame;                    // +0x58
+    int currentIndex;                   // +0x5c
+    CHeroSessions* pSessions;           // +0x60
+    unsigned long sessTimer;            // +0x64
+    unsigned long sessionRefreshTimeout; // +0x68
+    char localIPAddress[80];             // +0x6c
+    textEntryWidget* playerName;         // +0xbc
+    unsigned char hostJoinScreen;        // +0xc0
+    bitmapBorder* splash;                // +0xc4
+    button* hotSeat;                     // +0xc8
+    button* ipx;                         // +0xcc
+    button* tcp;                         // +0xd0
+    button* modem;                       // +0xd4
+    button* direct;                      // +0xd8
+    button* online;                      // +0xdc
+    button* host;                        // +0xe0
+    button* join;                        // +0xe4
+    button* search;                      // +0xe8
+    button* cancel;                      // +0xec
+    slider* gameSlider;                  // +0xf0
+    textWidget* sessNameHeader;          // +0xf4
+    textWidget* userNameHeader;          // +0xf8
+    textWidget* RolloverWidget;           // +0xfc
+
+    virtual textWidget* GetRolloverWidget();
+};
+SIZE(TMultiPlayerWindow, 0x100);
+
 class CMPInputEdit;
 
 // DC supplies the five-member tail at +0x4c..+0x5c and the CHeroWindowEx
