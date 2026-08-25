@@ -232,6 +232,7 @@ DATA(0x006aaa70) static unsigned char gBackpackStart;
 union TMarketArtifactList {
     char* asBytes;
     const TArtifact* asArtifacts;
+    int* asIds;   // the buy/sell panels write -1 back into an emptied slot
 };
 DATA(0x006aaa74) static TMarketArtifactList gpMarketArtifacts;
 DATA(0x006aaa78) static hero* gpMarketHero;
@@ -789,6 +790,11 @@ void TSellArtifactWindow::decrement_backpack_start()
 #endif  // @carcass
 
 DATA(0x0068c482) static unsigned short gMarketValues[7];
+// Retail .data 0x68c492, the second seven-short resource-value row (0x10 above
+// gMarketValues). The buy-artifact window divides an artifact's gold cost by
+// this row's value (scaled by fArtifactPurchaseEfficency) rather than by the
+// resource-trade row. Name provisional; identity is the byte-proven address.
+DATA(0x0068c492) static unsigned short gArtifactMarketValues[7];
 
 // E:\gamedcs\tradpost.cpp:2160
 VA(0x005ecd10, 0x0B)
@@ -1130,16 +1136,153 @@ void TGiveResourceWindow::SetRolloverText(int codeY)
     // addend -0x70) in config/delink-reloc-aliases.tsv, outside a lane's files.
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2743
+// The buy-artifact dialog handler. Subtype 0xc picks the paying resource or an
+// artifact-for-sale slot (each re-selection re-runs the inlined artifact-price
+// ComputeTradeRatios); subtype 0xd commits the purchase (spend resources, give
+// the artifact, empty the slot) or the two tab-command panels; subtype 0xe
+// right-clicks an artifact slot into its info popup. Hover copies the rollover.
 VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
 int TBuyArtifactWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
 
-#endif  // @carcass
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+            case MARKET_SELL_GOLD_ID: {
+                int resIdx = msg->codeY - MARKET_SELL_WOOD_ID;
+                if (resIdx == gSelectedArtifact)
+                    return 1;
+                int slotIdx = gLeftResource;
+                gSelectedArtifact = resIdx;
+                if (slotIdx != -1) {
+                    gRatioInverted = 0;
+                    float denom = static_cast<float>(gArtifactMarketValues[resIdx])
+                                * fArtifactPurchaseEfficency[gMarketCount];
+                    float cost = static_cast<float>(
+                        akArtifactTraits[gpMarketArtifacts.asIds[slotIdx]].cost);
+                    long q;
+                    if (denom == 0.0f || cost == 0.0f) {
+                        q = 0;
+                        gGiveQuantity = 0;
+                        gMaxTradeUnits = 0;
+                    } else {
+                        q = static_cast<long>(cost / denom + 0.5);
+                        gGiveQuantity = q;
+                        gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
+                    }
+                    gRightAmount = gpCurrentPlayer->resources[resIdx] >= q;
+                }
+                break;
+            }
+            case BUY_ARTIFACT_SLOT_0_ID: case BUY_ARTIFACT_SLOT_1_ID:
+            case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
+            case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
+            case BUY_ARTIFACT_SLOT_6_ID: {
+                int slotIdx = msg->codeY - BUY_ARTIFACT_SLOT_0_ID;
+                if (slotIdx == gLeftResource)
+                    return 1;
+                int resIdx = gSelectedArtifact;
+                gLeftResource = slotIdx;
+                if (resIdx != -1) {
+                    gRatioInverted = 0;
+                    float denom = static_cast<float>(gArtifactMarketValues[resIdx])
+                                * fArtifactPurchaseEfficency[gMarketCount];
+                    float cost = static_cast<float>(
+                        akArtifactTraits[gpMarketArtifacts.asIds[slotIdx]].cost);
+                    long q;
+                    if (denom == 0.0f || cost == 0.0f) {
+                        q = 0;
+                        gGiveQuantity = 0;
+                        gMaxTradeUnits = 0;
+                    } else {
+                        q = static_cast<long>(cost / denom + 0.5);
+                        gGiveQuantity = q;
+                        gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
+                    }
+                    gRightAmount = gpCurrentPlayer->resources[resIdx] >= q;
+                }
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (gRightAmount == 0)
+                    return 1;
+                if (gRatioInverted) {
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gGiveQuantity * gRightAmount;
+                } else {
+                    gpCurrentPlayer->resources[gSelectedArtifact] -=
+                        gGiveQuantity * gRightAmount;
+                    type_artifact art(gpMarketArtifacts.asIds[gLeftResource], -1);
+                    gpMarketHero->GiveArtifact(&art, 1, 1);
+                    gpMarketArtifacts.asIds[gLeftResource] = -1;
+                }
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+            case MARKET_BUY_RIGHT_LABEL_ID:
+                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
+                bExit = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_RIGHT_SELECT: {
+            if (msg->codeY < BUY_ARTIFACT_SLOT_0_ID ||
+                msg->codeY > BUY_ARTIFACT_SLOT_6_ID)
+                return 1;
+            type_artifact art(
+                gpMarketArtifacts.asIds[msg->codeY - BUY_ARTIFACT_SLOT_0_ID], -1);
+            gpMarketHero->HeroFn_004D9A00(&art, 1);
+            return 1;
+        }
+
+        default:
+            return 1;
+        }
+
+        Update(1);
+        if (bExit) {
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return 2;
+        }
+        return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
 
 // E:\gamedcs\tradpost.cpp:2871
 // Rollover text for the buy-artifact panel. The fixed panel labels come from
