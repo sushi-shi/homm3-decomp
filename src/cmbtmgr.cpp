@@ -4763,6 +4763,41 @@ bool combatManager::IsQuickCombat() const
     return gUnnamed698758.quickCombat != 0;
 }
 
+// Two combatManager grid workers that live in the retail cmbtmgr.obj tail
+// (the 0x6a511..0x6b610 gap before combatcontrolsubwindow), both proven to
+// belong to the combat manager by the huge [this+0x14031] this-relative
+// scratch-map offset - only combatManager is 0x14000+ B, so no window or
+// STL COMDAT can carry that offset. Located, not reconstructed: @stub
+// bodies, admitted for the denominator. Neither has a DC cmbtmgr.obj row
+// (the SH4 build folds the worker back into its army-side wrapper).
+#if 0  // @carcass claim
+
+// 0x46a520 (68 B, `ret 4`): thiscall worker over an army*. Clears the
+// 187-cell scratch map at [this+0x14031] (rep stosd 0x2e + stosw + stosb =
+// COMBAT_GRID_CELLS) then marks the stack's primary grid index ([army+0x38])
+// and, when the stack's second-hex flag ([army+0x84] & 1) is set, its
+// army::get_second_grid_index cell. Called from army.obj (carve 0x45950).
+VA(0x0046a520, 0x44)  // corroborates: [this+0x14031] grid write + army* arg, retail-only
+unsigned char combatManager::Unnamed46a520(army* stack)
+{
+    // @stub
+}
+
+// 0x46a570 (224 B, `ret 8`): combatManager::check_obstacle_attacks, the
+// landmine / fire-wall worker already declared at cmbtmgr.h:1227 and proven
+// there. army::check_obstacle_attacks (0x441f70) forwards to it as
+// gpCombatManager->check_obstacle_attacks(this, is_walking); the arity
+// matches (two stack args, army* + walking flag) and it writes the same
+// [this+0x14031] grid map. Declaration already exists, so no header edit.
+VA(0x0046a570, 0xE0)  // anchor-callee: army::check_obstacle_attacks fwd, retail-only
+unsigned char combatManager::check_obstacle_attacks(army* this_army,
+                                                    unsigned char is_walking)
+{
+    // @stub
+}
+
+#endif  // @carcass claim
+
 #if 0  // @carcass
 
 // ..\stlport\stl_bvector.h:684
