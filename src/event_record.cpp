@@ -4,6 +4,7 @@
 #include <va.h>
 #include "event_record.h"
 #include "game.h"
+#include "abstractfile.h"
 
 #if 0  // @carcass
 
@@ -21,19 +22,21 @@ void type_event_record::~type_event_record()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:51
-DC_ONLY(0x8c678, 0x1E)
-unsigned char type_event_record::load(void* infile)
+VA(0x0049a5e0, 0x1D)  // anchor-vtable, dc 0x8c678
+unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    return infile->Read(&player_id, 1) == 1;
 }
 
 // E:\gamedcs\event_record.cpp:60
-DC_ONLY(0x8c698, 0x1E)
-unsigned char type_event_record::save(void* outfile)
+VA(0x0049a600, 0x1D)  // anchor-vtable, dc 0x8c698
+unsigned char type_event_record::save(TAbstractFile* outfile)
 {
-    // @stub
+    return outfile->Write(&player_id, 1) == 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:65
 DC_ONLY(0x8c6b8, 0x50)
@@ -70,36 +73,38 @@ type_event_record* type_record_move_hero::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:116
-DC_ONLY(0x8c7e8, 0x4)
+VA(0x0049a680, 0x6)  // anchor-vtable, dc 0x8c7e8
 type_event_record_type type_record_move_hero::get_type()
 {
-    // @stub
+    return RECORD_MOVE_HERO;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:124
-DC_ONLY(0x8c7ec, 0xCE)
+VA(0x0049a690, 0xB1)  // anchor-vtable, dc 0x8c7ec
 unsigned char type_record_move_hero::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:145
-DC_ONLY(0x8c8bc, 0x60)
+VA(0x0049a750, 0x63)  // anchor-vtable, dc 0x8c8bc
 unsigned char type_record_move_hero::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:161
-DC_ONLY(0x8c91c, 0xCE)
+VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
 void type_record_move_hero::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:186
-DC_ONLY(0x8c9ec, 0x66)
+VA(0x0049a910, 0x65)  // anchor-vtable, dc 0x8c9ec
 void type_record_move_hero::undo()
 {
     // @stub
@@ -119,15 +124,17 @@ type_event_record* type_record_teleport::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:219
-DC_ONLY(0x8caec, 0x4)
+VA(0x0049a9b0, 0x6)  // anchor-vtable, dc 0x8caec
 type_event_record_type type_record_teleport::get_type()
 {
-    // @stub
+    return RECORD_TELEPORT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:227
-DC_ONLY(0x8caf0, 0x3C)
+VA(0x0049a9c0, 0x7B)  // anchor-vtable, dc 0x8caf0
 void type_record_teleport::replay(unsigned char draw)
 {
     // @stub
@@ -155,28 +162,28 @@ type_event_record_type type_record_claim_mine::get_type()
 }
 
 // E:\gamedcs\event_record.cpp:263
-DC_ONLY(0x8cbb4, 0x66)
+VA(0x0049aa70, 0x71)  // anchor-vtable, dc 0x8cbb4
 unsigned char type_record_claim_mine::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:279
-DC_ONLY(0x8cc1c, 0x4E)
+VA(0x0049aaf0, 0x4A)  // anchor-vtable, dc 0x8cc1c
 unsigned char type_record_claim_mine::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:292
-DC_ONLY(0x8cc6c, 0x6C)
+VA(0x0049ab40, 0x74)  // anchor-vtable, dc 0x8cc6c
 void type_record_claim_mine::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:312
-DC_ONLY(0x8ccd8, 0x24)
+VA(0x0049abc0, 0x19)  // anchor-vtable, dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
     // @stub
@@ -204,14 +211,14 @@ type_event_record_type type_record_claim_town::get_type()
 }
 
 // E:\gamedcs\event_record.cpp:347
-DC_ONLY(0x8cdd8, 0x70)
+VA(0x0049ac20, 0x7E)  // anchor-vtable, dc 0x8cdd8
 void type_record_claim_town::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:367
-DC_ONLY(0x8ce48, 0x2A)
+VA(0x0049aca0, 0x1D)  // anchor-vtable, dc 0x8ce48
 void type_record_claim_town::undo()
 {
     // @stub
@@ -231,36 +238,38 @@ type_event_record* type_record_hide_boat::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:392
-DC_ONLY(0x8ced8, 0x4)
+VA(0x0049acf0, 0x6)  // anchor-vtable, dc 0x8ced8
 type_event_record_type type_record_hide_boat::get_type()
 {
-    // @stub
+    return RECORD_HIDE_BOAT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:400
-DC_ONLY(0x8cedc, 0x4E)
+VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
 unsigned char type_record_hide_boat::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:415
-DC_ONLY(0x8cf2c, 0x36)
+VA(0x0049adf0, 0x8A)  // anchor-vtable, dc 0x8cf2c
 unsigned char type_record_hide_boat::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:427
-DC_ONLY(0x8cf64, 0x2E)
+VA(0x0049ae80, 0x44)  // anchor-vtable, dc 0x8cf64
 void type_record_hide_boat::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:440
-DC_ONLY(0x8cf94, 0x12)
+VA(0x0049aed0, 0x23)  // anchor-vtable, dc 0x8cf94
 void type_record_hide_boat::undo()
 {
     // @stub
@@ -280,36 +289,38 @@ type_event_record* type_record_show_boat::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:466
-DC_ONLY(0x8d06c, 0x4)
+VA(0x0049af30, 0x6)  // anchor-vtable, dc 0x8d06c
 type_event_record_type type_record_show_boat::get_type()
 {
-    // @stub
+    return RECORD_SHOW_BOAT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:474
-DC_ONLY(0x8d070, 0xA0)
+VA(0x0049af40, 0x51)  // anchor-vtable, dc 0x8d070
 unsigned char type_record_show_boat::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:488
-DC_ONLY(0x8d110, 0x3A)
+VA(0x0049afa0, 0x9F)  // anchor-vtable, dc 0x8d110
 unsigned char type_record_show_boat::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:500
-DC_ONLY(0x8d14c, 0x8A)
+VA(0x0049b040, 0xB5)  // anchor-vtable, dc 0x8d14c
 void type_record_show_boat::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:520
-DC_ONLY(0x8d1d8, 0x46)
+VA(0x0049b100, 0x4E)  // anchor-vtable, dc 0x8d1d8
 void type_record_show_boat::undo()
 {
     // @stub
@@ -329,36 +340,38 @@ type_event_record* type_record_erase::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:552
-DC_ONLY(0x8d2b8, 0x4)
+VA(0x0049b180, 0x6)  // anchor-vtable, dc 0x8d2b8
 type_event_record_type type_record_erase::get_type()
 {
-    // @stub
+    return RECORD_ERASE;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:560
-DC_ONLY(0x8d2bc, 0x7A)
+VA(0x0049b190, 0x8B)  // anchor-vtable, dc 0x8d2bc
 unsigned char type_record_erase::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:578
-DC_ONLY(0x8d338, 0x90)
+VA(0x0049b220, 0x57)  // anchor-vtable, dc 0x8d338
 unsigned char type_record_erase::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:592
-DC_ONLY(0x8d3c8, 0xA4)
+VA(0x0049b280, 0xEA)  // anchor-vtable, dc 0x8d3c8
 void type_record_erase::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:614
-DC_ONLY(0x8d46c, 0x42)
+VA(0x0049b370, 0x83)  // anchor-vtable, dc 0x8d46c
 void type_record_erase::undo()
 {
     // @stub
@@ -386,28 +399,28 @@ type_event_record_type type_record_hide_hero::get_type()
 }
 
 // E:\gamedcs\event_record.cpp:654
-DC_ONLY(0x8d52c, 0x72)
+VA(0x0049b430, 0xC8)  // anchor-vtable, dc 0x8d52c
 unsigned char type_record_hide_hero::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:673
-DC_ONLY(0x8d5a0, 0x4E)
+VA(0x0049b500, 0x61)  // anchor-vtable, dc 0x8d5a0
 unsigned char type_record_hide_hero::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:687
-DC_ONLY(0x8d5f0, 0x96)
+VA(0x0049b570, 0x102)  // anchor-vtable, dc 0x8d5f0
 void type_record_hide_hero::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:712
-DC_ONLY(0x8d688, 0x80)
+VA(0x0049b680, 0x1F)  // anchor-vtable, dc 0x8d688
 void type_record_hide_hero::undo()
 {
     // @stub
@@ -435,28 +448,28 @@ type_event_record_type type_record_show_hero::get_type()
 }
 
 // E:\gamedcs\event_record.cpp:752
-DC_ONLY(0x8d7ec, 0x72)
+VA(0x0049b6d0, 0x85)  // anchor-vtable, dc 0x8d7ec
 unsigned char type_record_show_hero::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:770
-DC_ONLY(0x8d860, 0x52)
+VA(0x0049b760, 0x95)  // anchor-vtable, dc 0x8d860
 unsigned char type_record_show_hero::save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:784
-DC_ONLY(0x8d8b4, 0x140)
+VA(0x0049b800, 0x15E)  // anchor-vtable, dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:817
-DC_ONLY(0x8d9f4, 0x8C)
+VA(0x0049b960, 0x9E)  // anchor-vtable, dc 0x8d9f4
 void type_record_show_hero::undo()
 {
     // @stub
@@ -476,29 +489,36 @@ type_event_record* type_record_player_death::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:858
-DC_ONLY(0x8dae8, 0x4)
+VA(0x0049ba30, 0x6)  // anchor-vtable, dc 0x8dae8
 type_event_record_type type_record_player_death::get_type()
 {
-    // @stub
+    return RECORD_PLAYER_DEATH;
 }
 
 // E:\gamedcs\event_record.cpp:866
-DC_ONLY(0x8daec, 0x3E)
-unsigned char type_record_player_death::load(void* infile)
+VA(0x0049ba40, 0x3D)  // anchor-vtable, dc 0x8daec
+unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&extra, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:878
-DC_ONLY(0x8db2c, 0x68)
-unsigned char type_record_player_death::save(void* outfile)
+VA(0x0049ba80, 0x30)  // anchor-vtable, dc 0x8db2c
+unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    unsigned char ok = outfile->Write(&extra, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:889
-DC_ONLY(0x8db94, 0x8A)
+VA(0x0049bab0, 0x11A)  // anchor-vtable, dc 0x8db94
 void type_record_player_death::replay(unsigned char draw)
 {
     // @stub
@@ -525,22 +545,24 @@ type_event_record* type_record_shroud::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:927
-DC_ONLY(0x8dcd4, 0x4)
+VA(0x0049bc80, 0x6)  // anchor-vtable, dc 0x8dcd4
 type_event_record_type type_record_shroud::get_type()
 {
-    // @stub
+    return RECORD_SHROUD;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:935
-DC_ONLY(0x8dcd8, 0xB0)
+VA(0x0049bc90, 0x151)  // anchor-vtable, dc 0x8dcd8
 unsigned char type_record_shroud::load(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:960
-DC_ONLY(0x8dd88, 0x62)
+VA(0x0049bdf0, 0x66)  // anchor-vtable, dc 0x8dd88
 unsigned char type_record_shroud::save(void* outfile)
 {
     // @stub
@@ -554,70 +576,70 @@ void type_record_shroud::add_change(int x, int y, int z, short old_value, short 
 }
 
 // E:\gamedcs\event_record.cpp:993
-DC_ONLY(0x8de70, 0xF0)
+VA(0x0049be60, 0xBA)  // anchor-vtable, dc 0x8de70
 void type_record_shroud::replay(unsigned char draw)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1018
-DC_ONLY(0x8df60, 0x7E)
+VA(0x0049bf20, 0x6E)  // anchor-vtable, dc 0x8df60
 void type_record_shroud::undo()
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1034
-DC_ONLY(0x8dfe0, 0x78)
+VA(0x0049bf90, 0x1F1)  // anchor-callee vtbl, dc 0x8dfe0
 void game::record_claim_mine(long id, long new_owner)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1049
-DC_ONLY(0x8e058, 0x60)
+VA(0x0049c190, 0x1FE)  // anchor-callee vtbl, dc 0x8e058
 void game::record_claim_town(long id, long new_owner)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1061
-DC_ONLY(0x8e0b8, 0x4E)
+VA(0x0049c390, 0x1C2)  // anchor-callee vtbl, dc 0x8e0b8
 void game::record_erase_object(NewmapCell* cell, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1071
-DC_ONLY(0x8e108, 0x3E)
+VA(0x0049c560, 0x1B8)  // anchor-callee vtbl, dc 0x8e108
 void game::record_hide_boat(boat* current_boat)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1079
-DC_ONLY(0x8e148, 0x44)
+VA(0x0049c720, 0x1DD)  // anchor-callee vtbl, dc 0x8e148
 void game::record_hide_hero(hero* current_hero, char old_owner)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1087
-DC_ONLY(0x8e18c, 0x42)
+VA(0x0049c900, 0x217)  // anchor-callee vtbl, dc 0x8e18c
 void game::record_show_boat(boat* current_boat, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1096
-DC_ONLY(0x8e1d0, 0xA0)
+VA(0x0049cb20, 0x226)  // anchor-callee vtbl, dc 0x8e1d0
 void game::record_show_hero(hero* current_hero, char owner, type_point location, unsigned char is_boat)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1106
-DC_ONLY(0x8e270, 0x4A)
+VA(0x0049cd50, 0x1FA)  // anchor-callee vtbl, dc 0x8e270
 void game::record_move(hero* current_hero, int direction, type_point destination)
 {
     // @stub
@@ -631,42 +653,47 @@ void game::record_player_death(char player_id)
 }
 
 // E:\gamedcs\event_record.cpp:1123
-DC_ONLY(0x8e2f8, 0x42)
+VA(0x0049cf50, 0x20B)  // anchor-callee vtbl, dc 0x8e2f8
 void game::record_teleport(hero* current_hero, type_point destination)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1136
-// RETAIL_LOCATED(0x0049d160, 0x268)  // anchor-global, dc 0x8e33c
+VA(0x0049d160, 0x268)  // anchor-global, dc 0x8e33c
 void game::SetVisibility(const int startX, const int startY, const int z, const int whichPlayer, int range, unsigned char remote_move)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1189
-// RETAIL_LOCATED(0x0049d3d0, 0x260)  // anchor-global, dc 0x8e54c
+VA(0x0049d3d0, 0x260)  // anchor-global, dc 0x8e54c
 void game::ResetVisibility(int start_x, int start_y, int z, int whichPlayer, int range)
 {
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:1239
-DC_ONLY(0x8e730, 0x4A)
+VA(0x0049d630, 0x8C)  // linkorder dc-label, dc 0x8e730
 void game::clear_event_records()
 {
-    // @stub
+    int i = eventRecords.size();
+    while (i-- != 0)
+        delete eventRecords[i];
+    eventRecords.clear();
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1251
-DC_ONLY(0x8e77c, 0xB2)
+VA(0x0049d6c0, 0xD3)  // linkorder dc-label, dc 0x8e77c
 void game::clear_event_records(char player_id)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:1282
-DC_ONLY(0x8e830, 0x258)
+VA(0x0049d7a0, 0x2C1)  // linkorder dc-label, dc 0x8e830
 void game::play_recorded_events()
 {
     // @stub
@@ -686,13 +713,6 @@ unsigned char game::load_recorded_events(void* infile)
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:1426
-DC_ONLY(0x8ebc4, 0x98)
-unsigned char game::save_recorded_events(void* outfile)
-{
-    // @stub
-}
-
 // E:\gamedcs\event_record.h:64
 DC_ONLY(0x8ec5c, 0x4)
 char type_event_record::get_player_id()
@@ -708,7 +728,7 @@ void type_record_move_hero::type_record_move_hero()
 }
 
 // E:\gamedcs\event_record.h:85
-DC_ONLY(0x8eccc, 0x34)
+VA_COMPGEN(0x0049a620, 0x21, SCALAR_DELETING_DTOR, type_record_move_hero)  // dc 0x8eccc
 void* type_record_move_hero::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
@@ -939,14 +959,14 @@ void CMCClaimTown::CMCClaimTown(signed char townId, int playerPos)
 }
 
 // E:\gamedcs\event_record.cpp:38
-DC_ONLY(0x8f330, 0x34)
+VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)  // dc 0x8f330
 void* type_event_record::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
 
 // E:\gamedcs\event_record.cpp:913
-DC_ONLY(0x8f364, 0x34)
+VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)  // dc 0x8f364
 void* type_record_shroud::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
@@ -1509,4 +1529,19 @@ unsigned char game::replay_available() const
             return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\event_record.cpp:1426
+VA(0x0049dc60, 0x8C)  // linkorder dc-label, dc 0x8ebc4
+unsigned char game::save_recorded_events(TAbstractFile* outfile)
+{
+    int count = eventRecords.size();
+    outfile->Write(&count, 4);
+    for (int i = 0; i < count; ++i) {
+        unsigned char type = eventRecords[i]->get_type();
+        outfile->Write(&type, 1);
+        if (!eventRecords[i]->save(outfile))
+            return 0;
+    }
+    return 1;
 }
