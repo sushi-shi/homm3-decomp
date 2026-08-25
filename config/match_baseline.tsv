@@ -1633,8 +1633,10 @@ mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x10
 mousemgr	?Update@mouseManager@@QAEXE@Z	94.1675	94.1675	94.1675	0x10cd90
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
+multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
+multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?GetRolloverWidget@CMPInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x110970
 multiplayerwindow	?GetRolloverWidget@TMultiPlayerWindow@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x10ed50

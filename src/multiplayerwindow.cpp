@@ -4,6 +4,7 @@
 #include <va.h>
 #include "multiplayerwindow.h"
 #include "winmgr.h"
+#include "csprite.h"
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -470,6 +471,19 @@ VA(0x0050ed50, 0x7)
 textWidget* TMultiPlayerWindow::GetRolloverWidget()
 {
     return RolloverWidget;
+}
+
+VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
+
+// E:\gamedcs\multiplayerwindow.cpp:1012
+VA(0x0050ee40, 0xAB)  // scalar-dtor callee + vtable 0x6400a0, dc 0x100430
+TMultiPlayerWindow::~TMultiPlayerWindow()
+{
+    gpMultiPlayerWindow = 0;
+    GameState->Dispose();
+    delete_widgets();
+    pSessions->Destroy();
+    delete pSessions;
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:465
