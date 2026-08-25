@@ -3489,10 +3489,10 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x162840	358	in-span	sacrifice_window	sacrifice_window	?update_slot@type_sacrifice_window@@QAEXJ@Z
 0x1629b0	34	in-span	sacrifice_window	sacrifice_window	?set_visible@widget@@QAEXE@Z
 0x1629e0	51	in-span	sacrifice_window	sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ
-0x162a20	590	in-span	sacrifice_window	sacrifice_window	game_164e70_sub00_162a20
+0x162a20	590	in-span	sacrifice_window	sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ
 0x162c70	292	in-span	sacrifice_window	sacrifice_window	?update_offering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z
 0x162da0	930	in-span	sacrifice_window	sacrifice_window	game_163150_sub00_162da0
-0x163150	321	in-span	sacrifice_window	sacrifice_window	game_164910_sub00_163150
+0x163150	321	in-span	sacrifice_window	sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ
 0x1632a0	1047	in-span	sacrifice_window	sacrifice_window	game_15fce0_sub00_1632a0
 0x1636c0	794	in-span	sacrifice_window	sacrifice_window	game_15fd10_sub00_1636c0
 0x1639e0	91	in-span	sacrifice_window	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z

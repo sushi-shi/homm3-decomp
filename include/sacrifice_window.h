@@ -29,6 +29,8 @@ enum ECommaFormatting {
 enum ESacrificeWindowHelp {
     SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING = 14,
     SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE = 15,
+    SACRIFICE_HELP_SACRIFICE_ARTIFACTS = 16,
+    SACRIFICE_HELP_SACRIFICE_CREATURES = 17,
     SACRIFICE_HELP_COUNT = 20
 };
 
@@ -39,6 +41,21 @@ enum ESacrificeArtifactSlotFrame {
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
 DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+
+// DC proves a seven-element 224-byte array, hence 32 bytes per record.
+// Retail update_creature_offering independently proves the six widget
+// pointers followed by the group/amount pair at +0x18/+0x1c.
+struct type_creature_offering {
+    iconWidget* icon_widget;
+    widget* field_04;
+    textWidget* field_08;
+    iconWidget* selection_widget;
+    widget* field_10;
+    textWidget* field_14;
+    long group;
+    long amount;
+};
+SIZE(type_creature_offering, 0x20);
 
 // Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
 // at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
@@ -62,7 +79,8 @@ public:
     long total_experience;                   // +0x78
     textWidget* experience_widget;           // +0x7c
     textWidget* experience_total_widget;     // +0x80
-    unsigned char pad_84[0x8];
+    textWidget* current_artifact_value;       // +0x84
+    textWidget* creature_name_widget;         // +0x88
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
     // type_skeleton_window keeps at +0x60 and type_university_window at
@@ -71,19 +89,25 @@ public:
     // DC places the current-artifact/slider/button pointers at +0x88..+0xb0.
     // Retail's proven 8-byte base delta moves that run to +0x90..+0xb8;
     // update_experience independently proves sacrifice_button at +0xa4.
-    unsigned char pad_90[0x14];
+    iconWidget* current_artifact_widget;      // +0x90
+    widget* creature_slider;                  // +0x94
+    widget* left_backpack_button;             // +0x98
+    widget* right_backpack_button;            // +0x9c
+    widget* empty_backpack_button;            // +0xa0
     widget* sacrifice_button;                 // +0xa4
-    unsigned char pad_a8[0x14];
+    widget* all_artifacts_button;              // +0xa8
+    widget* creatures_button;                  // +0xac
+    widget* max_creatures_button;              // +0xb0
+    widget* all_creatures_button;              // +0xb4
+    widget* artifacts_button;                  // +0xb8
     std::vector<type_artifact_offering> artifact_offerings; // +0xbc
     std::vector<textWidget*> artifact_value_widgets;        // +0xcc
     std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
     std::vector<iconWidget*> slot_back_widgets;              // +0xec
     std::vector<iconWidget*> slot_widgets;                   // +0xfc
     std::vector<iconWidget*> backpack_widgets;               // +0x10c
-    // DC places seven 32-byte creature-offering records and one current
-    // record in this 0x100-byte band. None owns storage; the retail dtor
-    // steps directly from backpack_widgets to artifact_widgets.
-    unsigned char pad_11c[0x100];
+    type_creature_offering creature_offerings[7];          // +0x11c
+    type_creature_offering current_creature;               // +0x1fc
     std::vector<widget*> artifact_widgets;                   // +0x21c
     std::vector<widget*> creature_widgets;                   // +0x22c
 
@@ -102,6 +126,7 @@ public:
     virtual ~type_sacrifice_window();
     void set_artifact_mode();
     void set_creature_mode();
+    void update_creature_offering(type_creature_offering* creature);
     void update_experience();
     void update_slot(long slot);
     void update_all_slots();

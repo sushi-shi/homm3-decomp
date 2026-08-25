@@ -447,9 +447,7 @@ rva	size	unit	current_label	provenance
 0x161f70	1063	sacrifice_window	game_smalfont_fnt_161f70	working-label
 0x162660	469	sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	src-VA+base
 0x1629b0	34	sacrifice_window	?set_visible@widget@@QAEXE@Z	src-VA+ir
-0x162a20	590	sacrifice_window	game_164e70_sub00_162a20	working-label
 0x162da0	930	sacrifice_window	game_163150_sub00_162da0	working-label
-0x163150	321	sacrifice_window	game_164910_sub00_163150	working-label
 0x1632a0	1047	sacrifice_window	game_15fce0_sub00_1632a0	working-label
 0x1636c0	794	sacrifice_window	game_15fd10_sub00_1636c0	working-label
 0x1639e0	91	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	src-VA+base
