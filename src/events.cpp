@@ -52,7 +52,7 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point, int fiz
 }
 
 // E:\gamedcs\events.cpp:317
-DC_ONLY(0x903b4, 0x2A4)
+// RETAIL_LOCATED(0x0049e2e0, 0x38B)  // located @stub (promoted to active VA), dc 0x903b4
 void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -94,14 +94,14 @@ void advManager::DoEventFreeArtifact(hero* current_hero, NewmapCell* cell, type_
 }
 
 // E:\gamedcs\events.cpp:516
-DC_ONLY(0x908dc, 0x1FC)
+// RETAIL_LOCATED(0x0049ea40, 0x304)  // located @stub (promoted to active VA), dc 0x908dc
 void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:570
-DC_ONLY(0x90ad8, 0x180)
+// RETAIL_LOCATED(0x0049ed50, 0x2E8)  // located @stub (promoted to active VA), dc 0x90ad8
 void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
 {
     // @stub
@@ -122,14 +122,14 @@ TreasureData* advManager::get_treasure_data(NewmapCell* cell)
 }
 
 // E:\gamedcs\events.cpp:656
-DC_ONLY(0x90d34, 0x3CE)
+// RETAIL_LOCATED(0x0049f070, 0x765)  // located @stub (promoted to active VA), dc 0x90d34
 void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:760
-DC_ONLY(0x91104, 0x1B8)
+// RETAIL_LOCATED(0x0049f7e0, 0x2A4)  // located @stub (promoted to active VA), dc 0x91104
 void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -150,7 +150,7 @@ void add_reward(std::basic_string<char,std::char_traits<char>,std::allocator<cha
 }
 
 // E:\gamedcs\events.cpp:852
-DC_ONLY(0x9138c, 0x870)
+// RETAIL_LOCATED(0x0049fa90, 0x106B)  // located @stub (promoted to active VA), dc 0x9138c
 unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
 {
     // @stub
@@ -234,14 +234,14 @@ void advManager::DoEventCoverOfDarkness(NewmapCell* cell, type_point point, unsi
 }
 
 // E:\gamedcs\events.cpp:1456
-DC_ONLY(0x925fc, 0x218)
+// RETAIL_LOCATED(0x004a15a0, 0x301)  // located @stub (promoted to active VA), dc 0x925fc
 void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:1505
-DC_ONLY(0x92814, 0x52A)
+// RETAIL_LOCATED(0x004a18b0, 0x79A)  // located @stub (promoted to active VA), dc 0x92814
 void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -402,7 +402,7 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell, unsign
 }
 
 // E:\gamedcs\events.cpp:2515
-DC_ONLY(0x94760, 0x280)
+// RETAIL_LOCATED(0x004a3eb0, 0x376)  // located @stub (promoted to active VA), dc 0x94760
 void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -430,7 +430,7 @@ void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell, unsign
 }
 
 // E:\gamedcs\events.cpp:2746
-DC_ONLY(0x94ea4, 0x288)
+// RETAIL_LOCATED(0x004a4780, 0x45D)  // located @stub (promoted to active VA), dc 0x94ea4
 void advManager::DoCustomResource(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)
 {
     // @stub
@@ -472,7 +472,7 @@ void advManager::DoEventSkeleton(hero* current_hero, NewmapCell* cell, unsigned 
 }
 
 // E:\gamedcs\events.cpp:3039
-DC_ONLY(0x957fc, 0x236)
+// RETAIL_LOCATED(0x004a5610, 0x346)  // located @stub (promoted to active VA), dc 0x957fc
 void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell, const char* prompt, GlobalInfoFlags type, unsigned char human_player)
 {
     // @stub
@@ -486,7 +486,7 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell, unsigned cha
 }
 
 // E:\gamedcs\events.cpp:3133
-DC_ONLY(0x95b54, 0x2C0)
+// RETAIL_LOCATED(0x004a5a80, 0x41E)  // located @stub (promoted to active VA), dc 0x95b54
 void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -521,7 +521,7 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell, un
 }
 
 // E:\gamedcs\events.cpp:3377
-DC_ONLY(0x962dc, 0xFC)
+// RETAIL_LOCATED(0x004a6440, 0xD8)  // located @stub (promoted to active VA), dc 0x962dc
 void advManager::DoTreasureDialog(hero* current_hero, int amount, unsigned char human_player)
 {
     // @stub
@@ -549,7 +549,7 @@ void advManager::DoEventWagon(hero* current_hero, NewmapCell* cell, unsigned cha
 }
 
 // E:\gamedcs\events.cpp:3579
-DC_ONLY(0x96994, 0x180)
+// RETAIL_LOCATED(0x004a6b30, 0x12A)  // located @stub (promoted to active VA), dc 0x96994
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell, unsigned char human_player)
 {
     // @stub
@@ -832,28 +832,28 @@ short advManager::RecruitEvent(hero* who, TCreatureType creature, short availabl
 }
 
 // E:\gamedcs\events.cpp:5590
-DC_ONLY(0x9a5b0, 0x2E6)
+// RETAIL_LOCATED(0x004aba50, 0x361)  // located @stub (promoted to active VA), dc 0x9a5b0
 void advManager::GeneratorEvent(hero* who, NewmapCell* eventCell, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:5661
-DC_ONLY(0x9a898, 0x532)
+// RETAIL_LOCATED(0x004abdc0, 0x6D0)  // located @stub (promoted to active VA), dc 0x9a898
 int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:5805
-DC_ONLY(0x9adcc, 0x166)
+// RETAIL_LOCATED(0x004ac490, 0xEE)  // located @stub (promoted to active VA), dc 0x9adcc
 void advManager::do_event_undead_lair(hero* current_hero, NewmapCell* cell, const char* question_text, const char* empty_text, const char* reward_text, unsigned long visited_flag, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:5851
-DC_ONLY(0x9af34, 0x480)
+// RETAIL_LOCATED(0x004ac580, 0x3A7)  // located @stub (promoted to active VA), dc 0x9af34
 int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMons, NewmapCell* eventCell, type_point point, TCreatureType monType2, int numMons2, int numGroups2, TCreatureType monType3, int numMons3, int numGroups3)
 {
     // @stub
@@ -874,7 +874,7 @@ void advManager::HeroLoses(hero* who, int vanish_sound)
 }
 
 // E:\gamedcs\events.cpp:6030
-DC_ONLY(0x9b448, 0x11A)
+// RETAIL_LOCATED(0x004acaa0, 0x106)  // located @stub (promoted to active VA), dc 0x9b448
 void advManager::DoWhirlpool(hero* who)
 {
     // @stub
@@ -888,35 +888,35 @@ void advManager::FizzleCenter(int whichSound)
 }
 
 // E:\gamedcs\events.cpp:6118
-DC_ONLY(0x9b670, 0x118)
+// RETAIL_LOCATED(0x004acca0, 0xC3)  // located @stub (promoted to active VA), dc 0x9b670
 void advManager::DoAIEvent(NewmapCell* cell, hero* current_hero, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:6149
-DC_ONLY(0x9b788, 0x1E8)
+// RETAIL_LOCATED(0x004acd70, 0x365)  // located @stub (promoted to active VA), dc 0x9b788
 int advManager::DoNetCombat(CCombatInitMsg* pCombatInitMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:6283
-DC_ONLY(0x9b970, 0x9EC)
+// RETAIL_LOCATED(0x004ad470, 0x1531)  // located @stub (promoted to active VA), dc 0x9b970
 int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:6725
-DC_ONLY(0x9c35c, 0x1F8)
+// RETAIL_LOCATED(0x004aeb50, 0x390)  // located @stub (promoted to active VA), dc 0x9c35c
 void advManager::SendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, int toWhoNetPos, int iWinner, unsigned char bRetreatWin, unsigned char bCombatSurrender)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:6781
-DC_ONLY(0x9c554, 0x224)
+// RETAIL_LOCATED(0x004aeee0, 0x3DF)  // located @stub (promoted to active VA), dc 0x9c554
 void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* right_player, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* iSeed, signed char* iWinner, unsigned char* bRetreatWin, unsigned char* bCombatSurrender)
 {
     // @stub
@@ -2175,6 +2175,15 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
     gUnnamed67f574 = savedFlag;
 }
 
+// E:\gamedcs\events.cpp:317.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049e2e0, 0x38B)  // dc-bracket forced, ret 0xc=p4, dc 0x903b4
+void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\events.cpp:380.  The anchor point (jump-table arm 0x03): a
 // hero steps off his boat. The whole body is DoEventBoat run backwards -
 // the same 0x40000 sea bit, the same Boots-of-Levitation movement
@@ -2327,12 +2336,57 @@ void advManager::GiveArtifact(hero* current_hero, type_point point,
     current_hero->CheckLevel();
 }
 
+// E:\gamedcs\events.cpp:516.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049ea40, 0x304)  // dc-bracket forced, ret 0x10=p5, dc 0x908dc
+void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:570.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049ed50, 0x2E8)  // dc-bracket forced, ret 0x1c=p8 (unique), dc 0x90ad8
+void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
     unsigned index = (cell->extraInfo >> 19) & 0xfff;
     return &fullMap->customTreasure[index];
 }
+
+// E:\gamedcs\events.cpp:656.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049f070, 0x765)  // dc-bracket forced, ret 0x10=p5, dc 0x90d34
+void advManager::DoCustomArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:760.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
+void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:852.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
+unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
+{
+    // @stub
+}
+#endif  // @carcass
 
 VA(0x004a0c20, 0x23)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
@@ -2658,6 +2712,24 @@ void advManager::DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
     CompleteDraw(0);
     UpdateScreen(0, 0);
 }
+
+// E:\gamedcs\events.cpp:1456.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a15a0, 0x301)  // dc-bracket forced, ret 0x10=p5, dc 0x925fc
+void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:1505.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a18b0, 0x79A)  // dc-bracket forced, ret 0x10=p5, dc 0x92814
+void advManager::DoEventCreatureGenerator(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:1649.  The Marletto Tower: +1 Defense forever,
 // once per hero, and the visit is remembered on the HERO rather than on
@@ -3470,6 +3542,15 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
     current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
 }
 
+// E:\gamedcs\events.cpp:2515.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a3eb0, 0x376)  // dc-bracket forced, ret 0x10=p5, dc 0x94760
+void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\events.cpp:2601.  The pyramid (jump-table arm 0x3f): a
 // yes/no prompt, two Golem stacks to beat, and then the spell it was
 // built around - which a hero may still fail to take home for want of a
@@ -3660,6 +3741,15 @@ void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell,
     }
     cell->extraInfo = available;
 }
+
+// E:\gamedcs\events.cpp:2746.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a4780, 0x45D)  // dc-bracket forced, ret 0x10=p5, dc 0x94ea4
+void advManager::DoCustomResource(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:2825.  The resource pile (jump-table arm 0x4f): a
 // customised cell goes straight to DoCustomResource, an ordinary one pays
@@ -3941,6 +4031,15 @@ void advManager::DoEventSkeleton(hero* current_hero, ExtraInfoUnion* cell,
     gpCurrentPlayer->DeadGuyFlags |= 1 << cell->GetItemId();
 }
 
+// E:\gamedcs\events.cpp:3039.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a5610, 0x346)  // dc-bracket forced, ret 0x14=p6, dc 0x957fc
+void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell, const char* prompt, GlobalInfoFlags type, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // Declared inline in the original Game.h (DC line 865); this is the retail
 // COMDAT copy selected into events.obj. Negative player ids are their own
 // team sentinel, while real slots use the signed team byte in the map header.
@@ -4000,6 +4099,15 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
     }
     current_hero->flags |= 0x100000;
 }
+
+// E:\gamedcs\events.cpp:3133.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a5a80, 0x41E)  // dc-bracket forced, ret 0x10=p5, dc 0x95b54
+void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3207.  The spell scroll (jump-table arm 0x5d): one
 // scroll, refused outright to a hero with all sixty-four backpack slots
@@ -4197,6 +4305,15 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
     g->SetInfoFlag(TrainingGroundsInfo, gNetLocalGamePos);
     current_hero->CheckLevel();
 }
+
+// E:\gamedcs\events.cpp:3377.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
+void advManager::DoTreasureDialog(hero* current_hero, int amount, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3414.  The treasure chest (jump-table arm 0x65):
 // either an artifact or a pile of gold, and the gold arm is also where an
@@ -4427,6 +4544,15 @@ void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
 // the body proves and is PROVISIONAL; the row is not claimed here.
 TCreatureType UpgradedCreatureType(TCreatureType type);
 TCreatureType DowngradedCreatureType(TCreatureType type);
+
+// E:\gamedcs\events.cpp:3579.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
+void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3627.  The wandering stack is fought. The combat
 // itself is CombatMonsterEvent; what belongs to this body is the count
@@ -5316,6 +5442,15 @@ void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell,
     gpAdvManager->TeleportTo(current_hero, point, "telptout.wav", 0, 1, 0);
 }
 
+// E:\gamedcs\events.cpp:4302.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
+void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\events.cpp:5146.  The adventure map's post-move event
 // entry point: reseed the object animations, play the object's sound,
 // dispatch it, then repaint every part of the adventure screen a visit
@@ -5431,6 +5566,15 @@ void advManager::EraseObj(NewmapCell* thisCell, type_point point,
                    radarOrigin.z),
         1);
 }
+
+// E:\gamedcs\events.cpp:5240.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004aadf0, 0x1DC)  // linkorder + ret 0x8=p3 (note above), dc 0x99d98
+void advManager::HeroSwap(hero* leftHero, hero* rightHero)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\events.cpp:5264.  A hero steps onto a town tile. Three
 // outcomes: the town is already friendly and is simply entered, the town
@@ -5680,6 +5824,42 @@ void advManager::EventSound(int eventID, int extraInfo)
         launch_sample(sampleName.c_str(), -1, 3);
 }
 
+// E:\gamedcs\events.cpp:5590.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004aba50, 0x361)  // anchor-callee game::GetGeneratorId, ret 0xc=p4, dc 0x9a5b0
+void advManager::GeneratorEvent(hero* who, NewmapCell* eventCell, type_point point)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:5661.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
+int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:5805.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004ac490, 0xEE)  // dc-bracket forced, ret 0x1c=p8 (unique), dc 0x9adcc
+void advManager::do_event_undead_lair(hero* current_hero, NewmapCell* cell, const char* question_text, const char* empty_text, const char* reward_text, unsigned long visited_flag, type_point point)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:5851.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004ac580, 0x3A7)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
+int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMons, NewmapCell* eventCell, type_point point, TCreatureType monType2, int numMons2, int numGroups2, TCreatureType monType3, int numMons3, int numGroups3)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
 // combat loss, whirlpool, or any other vanishing - and then asks whether
 // that loss ends the game.
@@ -5715,6 +5895,15 @@ void advManager::HeroLoses(hero* who, int vanish_sound)
     }
 }
 
+// E:\gamedcs\events.cpp:6030.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004acaa0, 0x106)  // dc-bracket forced, ret 0x4=p2, dc 0x9b448
+void advManager::DoWhirlpool(hero* who)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\events.cpp:6076.  The pickup/vanish flash over the centre
 // of the adventure map: pick the sample by kind, play it, and fizzle the
 // 224x224 block at (192,160) forward over 65 frames with the pointer
@@ -5743,3 +5932,49 @@ void advManager::FizzleCenter(int whichSound)
     gpWindowManager->FizzleForwardX(0xc0, 0xa0, 0xe0, 0xe0, 0x41);
     gpMouseManager->ShowPointer(false);
 }
+
+
+// E:\gamedcs\events.cpp:6118.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004acca0, 0xC3)  // anchor-callee DispatchEvent(0x4a84f0), ret 0xc=p4, dc 0x9b670
+void advManager::DoAIEvent(NewmapCell* cell, hero* current_hero, type_point point)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:6149.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004acd70, 0x365)  // dc-bracket forced, ret 0x4=p2, armyGroup ctors, dc 0x9b788
+int advManager::DoNetCombat(CCombatInitMsg* pCombatInitMsg)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:6283.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004ad470, 0x1531)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
+int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:6725.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004aeb50, 0x390)  // anchor-callee 0x512c50 (shared w/ DoNetCombat), ret 0x30=p13, dc 0x9c35c
+void advManager::SendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, int toWhoNetPos, int iWinner, unsigned char bRetreatWin, unsigned char bCombatSurrender)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:6781.  Located, not reconstructed.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004aeee0, 0x3DF)  // dc-bracket forced, ret 0x34=p14 (unique), dc 0x9c554
+void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* right_player, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* iSeed, signed char* iWinner, unsigned char* bRetreatWin, unsigned char* bCombatSurrender)
+{
+    // @stub
+}
+#endif  // @carcass
