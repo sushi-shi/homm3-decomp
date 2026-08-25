@@ -39,11 +39,43 @@ SIZE(CHotSeatMan, 0xac);
 DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
 class CSprite;
-class CHeroSessions;
+class CDPlaySession;
 class bitmapBorder;
 class button;
 class slider;
 class textEntryWidget;
+
+// E:\gamedcs\array.h's five-dword auto-growing pointer array.  The DC
+// field list and retail's inlined Destroy path agree on this layout.
+template<class T>
+class CAutoArray {
+public:
+    unsigned long step;
+    T** pArray;
+    unsigned long allocSize;
+    unsigned long size;
+
+    virtual ~CAutoArray();
+    virtual unsigned char Add(T* element);
+    virtual T* Get(unsigned long elementNbr);
+    virtual unsigned char Put(unsigned long elementNbr, T* element);
+    virtual unsigned char Delete(unsigned long elementNbr);
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
+    virtual unsigned long GetCount();
+
+    void Destroy(unsigned char deleteData = 1)
+    {
+        if (deleteData) {
+            for (unsigned long i = 0; i < size; ++i)
+                delete Get(i);
+        }
+        if (pArray)
+            delete pArray;
+        pArray = 0;
+        allocSize = 0;
+        size = 0;
+    }
+};
 
 // DC publishes this complete member tail at +0x4c..+0xf8. Retail's
 // CHeroWindowEx base is one dword wider, translating the tail to
@@ -55,31 +87,38 @@ public:
     unsigned char showSplash;           // +0x55
     int currentGame;                    // +0x58
     int currentIndex;                   // +0x5c
-    CHeroSessions* pSessions;           // +0x60
+    CAutoArray<CDPlaySession>* pSessions; // +0x60
     unsigned long sessTimer;            // +0x64
     unsigned long sessionRefreshTimeout; // +0x68
     char localIPAddress[80];             // +0x6c
-    textEntryWidget* playerName;         // +0xbc
+    textWidget* playerName;              // +0xbc
     unsigned char hostJoinScreen;        // +0xc0
-    bitmapBorder* splash;                // +0xc4
-    button* hotSeat;                     // +0xc8
-    button* ipx;                         // +0xcc
-    button* tcp;                         // +0xd0
-    button* modem;                       // +0xd4
-    button* direct;                      // +0xd8
-    button* online;                      // +0xdc
-    button* host;                        // +0xe0
-    button* join;                        // +0xe4
-    button* search;                      // +0xe8
-    button* cancel;                      // +0xec
-    slider* gameSlider;                  // +0xf0
+    widget* splash;                      // +0xc4
+    widget* hotSeat;                     // +0xc8
+    widget* ipx;                         // +0xcc
+    widget* tcp;                         // +0xd0
+    widget* modem;                       // +0xd4
+    widget* direct;                      // +0xd8
+    widget* online;                      // +0xdc
+    widget* host;                        // +0xe0
+    widget* join;                        // +0xe4
+    widget* search;                      // +0xe8
+    widget* cancel;                      // +0xec
+    widget* gameSlider;                  // +0xf0
     textWidget* sessNameHeader;          // +0xf4
     textWidget* userNameHeader;          // +0xf8
     textWidget* RolloverWidget;           // +0xfc
 
+    virtual ~TMultiPlayerWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
     virtual textWidget* GetRolloverWidget();
+    void GoSessionList();
+    void GoMainMenu();
 };
 SIZE(TMultiPlayerWindow, 0x100);
+
+DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
 
 class CMPInputEdit;
 
