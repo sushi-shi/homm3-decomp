@@ -10,6 +10,7 @@
 
 class CSprite;
 class Bitmap816;
+enum TTownType;
 
 class CHotspotWidget : public widget {
 public:
@@ -61,6 +62,22 @@ public:
     virtual int handle_message(message& msg);
 };
 
+class CHeroDlg : public CSingleSelPopup {
+public:
+    CHeroDlg(unsigned char newGameMode);
+    virtual ~CHeroDlg();
+    unsigned char CreateWin(Bitmap816* heroPick, const char* heroName,
+                            CSprite* specialtyIcon, int frame,
+                            const char* specialtyName, const char* desc);
+};
+
+class CTownDlg : public CSingleSelPopup {
+public:
+    CTownDlg(unsigned char newGameMode);
+    virtual ~CTownDlg();
+    unsigned char CreateWin(CSprite* town, int frame, TTownType townType);
+};
+
 class CTeamAlignmentDlg : public CSingleSelPopup {
 public:
     int teamMasks[8];
@@ -78,11 +95,6 @@ public:
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:218, dc 0x12dff0) unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:234, dc 0x12e1cc) unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:215, dc 0x12f304) void* CBonusDlg::`scalar deleting destructor'(unsigned __flags);
-
-// --- CHeroDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:255, dc 0x12e3a0) void CHeroDlg::CHeroDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:260, dc 0x12e3f0) unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:256, dc 0x12f338) void* CHeroDlg::`scalar deleting destructor'(unsigned __flags);
 
 // --- CHotspotWidget ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:114, dc 0x12de28) void CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId, unsigned char focus);
@@ -106,10 +118,5 @@ public:
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:71, dc 0x12f0c8) void CSpriteWidget::Draw();
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f11c) void* CSpriteWidget::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f150) void CSpriteWidget::~CSpriteWidget();
-
-// --- CTownDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:298, dc 0x12e690) void CTownDlg::CTownDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:302, dc 0x12e708) unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:299, dc 0x12f36c) void* CTownDlg::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */
