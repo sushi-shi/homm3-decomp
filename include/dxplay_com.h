@@ -42,6 +42,14 @@ SIZE(DPCHAT, 0x0c);
 // the first stack argument, so this reproduces `mov ecx,[obj] / call [ecx+slot]`
 // at the exact vtable byte offsets read from the retail bodies. No object of
 // this type is ever constructed here, so no vtable is emitted for it.
+// DirectPlay enumeration callback pointer types (FAR PASCAL = __stdcall). The
+// wrappers pass their file-scope trampolines here; typing the vtable parameter
+// lets the function name convert without a cast.
+typedef int (__stdcall* DPENUMPLAYERSCB2)(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
+typedef int (__stdcall* DPENUMSESSIONSCB2)(const DPSESSIONDESC2*, unsigned long*, unsigned long, void*);
+typedef int (__stdcall* DPENUMCONNECTIONSCB)(const GUID*, void*, unsigned long, const DPNAME*, unsigned long, void*);
+typedef int (__stdcall* DPENUMADDRESSCB)(const GUID*, unsigned long, const void*, void*);
+
 struct IDirectPlay4A {
     virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;                 // 0x00
     virtual unsigned long __stdcall AddRef() = 0;                                            // 0x04
@@ -53,10 +61,10 @@ struct IDirectPlay4A {
     virtual long __stdcall DeletePlayerFromGroup(unsigned long idGroup, unsigned long idPlayer) = 0; // 0x1c
     virtual long __stdcall DestroyGroup(unsigned long idGroup) = 0;                          // 0x20
     virtual long __stdcall DestroyPlayer(unsigned long idPlayer) = 0;                        // 0x24
-    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x28
-    virtual long __stdcall EnumGroups(GUID* lpguidInstance, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x2c
-    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x30
-    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long dwTimeout, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x34
+    virtual long __stdcall EnumGroupPlayers(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x28
+    virtual long __stdcall EnumGroups(GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x2c
+    virtual long __stdcall EnumPlayers(GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x30
+    virtual long __stdcall EnumSessions(DPSESSIONDESC2* lpsd, unsigned long dwTimeout, DPENUMSESSIONSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x34
     virtual long __stdcall GetCaps(DPCAPS* lpDPCaps, unsigned long dwFlags) = 0;             // 0x38
     virtual long __stdcall GetGroupData(unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize, unsigned long dwFlags) = 0; // 0x3c
     virtual long __stdcall GetGroupName(unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x40
@@ -78,8 +86,8 @@ struct IDirectPlay4A {
     virtual long __stdcall AddGroupToGroup(unsigned long idParentGroup, unsigned long idGroup) = 0; // 0x80
     virtual long __stdcall CreateGroupInGroup(unsigned long idParentGroup, unsigned long* lpidGroup, DPNAME* lpGroupName, void* lpData, unsigned long dwDataSize, unsigned long dwFlags) = 0; // 0x84
     virtual long __stdcall DeleteGroupFromGroup(unsigned long idParentGroup, unsigned long idGroup) = 0; // 0x88
-    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x8c
-    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, void* lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x90
+    virtual long __stdcall EnumConnections(const GUID* lpguidApplication, DPENUMCONNECTIONSCB lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x8c
+    virtual long __stdcall EnumGroupsInGroup(unsigned long idGroup, GUID* lpguidInstance, DPENUMPLAYERSCB2 lpEnumCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x90
     virtual long __stdcall GetGroupConnectionSettings(unsigned long dwFlags, unsigned long idGroup, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x94
     virtual long __stdcall InitializeConnection(void* lpConnection, unsigned long dwFlags) = 0; // 0x98
     virtual long __stdcall SecureOpen(const DPSESSIONDESC2* lpsd, unsigned long dwFlags, const void* lpSecurity, const void* lpCredentials) = 0; // 0x9c
@@ -103,7 +111,7 @@ struct IDirectPlayLobby3A {
     virtual unsigned long __stdcall Release() = 0;                                           // 0x08
     virtual long __stdcall Connect(unsigned long dwFlags, void** lplpDP, void* pUnk) = 0;    // 0x0c
     virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* lpData, unsigned long dwDataSize, void* lpAddress, unsigned long* lpdwAddressSize) = 0; // 0x10
-    virtual long __stdcall EnumAddress(void* lpEnumAddressCallback, const void* lpAddress, unsigned long dwAddressSize, void* lpContext) = 0; // 0x14
+    virtual long __stdcall EnumAddress(DPENUMADDRESSCB lpEnumAddressCallback, const void* lpAddress, unsigned long dwAddressSize, void* lpContext) = 0; // 0x14
     virtual long __stdcall EnumAddressTypes(void* lpCallback, const GUID& guidSP, void* lpContext, unsigned long dwFlags) = 0; // 0x18
     virtual long __stdcall EnumLocalApplications(void* lpCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x1c
     virtual long __stdcall GetConnectionSettings(unsigned long dwAppID, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x20
