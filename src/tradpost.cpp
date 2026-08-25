@@ -10,6 +10,7 @@
 #include "textresource.h"
 #include "townmgr.h"
 #include "widget.h"
+#include "message.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -206,8 +207,10 @@ void DoMarketplace()
 // Both are also the two rows the Dreamcast source order puts immediately
 // before DoMarket.
 
+DATA(0x006aaa70) static int gBackpackStart;
 DATA(0x006aaa74) static char* gpMarketArtifacts;
 DATA(0x006aaa78) static hero* gpMarketHero;
+DATA(0x006aaa90) static int gSelectedArtifact;
 DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
@@ -340,12 +343,52 @@ void DoMarket()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:860
+// Configures the shared message widget for one artifact slot of the left
+// column: equipped slots 0..17 map to the hero's equipped array, slots 18+
+// to the backpack (paged by gBackpackStart once more than six are held). An
+// empty slot only relabels the widget; a filled slot broadcasts the icon and
+// picture updates, then the slot's rollover/border state.
 VA(0x005ea5d0, 0x103)  // ordermap clean run + arity ret 8, dc 0x188bd4
 void TSellArtifactWindow::update_sell_artifact_widget(message* msg, long i)
 {
-    // @stub
+    type_artifact art;
+    if (i < 18) {
+        art = gpMarketHero->equipped[i];
+    } else {
+        long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+        if (numInBackpack < 6)
+            art = gpMarketHero->backpack[i - 18];
+        else
+            art = gpMarketHero->backpack[
+                ((gBackpackStart & 0xff) + i - 18) % numInBackpack];
+    }
+
+    if (art.artifactId == -1) {
+        msg->codeY = i + 0x54;
+    } else {
+        msg->codeX = 5;
+        msg->extra = 2;
+        BroadcastMessage(msg);
+        msg->codeX = 5;
+        msg->codeY = i + 0x54;
+        msg->extra = 6;
+        BroadcastMessage(msg);
+        msg->codeX = 4;
+        msg->extra = art.artifactId;
+    }
+    BroadcastMessage(msg);
+    if (gSelectedArtifact == i)
+        msg->codeX = 5;
+    else
+        msg->codeX = 6;
+    msg->extra = 4;
+    msg->codeY = i + 0x6b;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:905
 DC_ONLY(0x188cc8, 0x38)
@@ -610,14 +653,35 @@ double get_trade_ratio(EGameResource source, EGameResource dest, double efficien
     return ratio;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2229
+// The left column is the hero's artifact list (18 equipped slots then the
+// backpack); the exchange divides the artifact's gold cost, scaled by the
+// marketplace-count efficiency, by the resource's market value, floored to 1.
 VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
 void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
-    // @stub
+    type_artifact leftArtifact;
+    if (inLeftResource < 18)
+        leftArtifact = gpMarketHero->equipped[inLeftResource];
+    else
+        leftArtifact = gpMarketHero->backpack[inLeftResource - 18];
+
+    float ratio = static_cast<float>(akArtifactTraits[leftArtifact.artifactId].cost)
+                * fArtifactPurchaseEfficency[gMarketCount];
+    ratio /= static_cast<float>(gMarketValues[inRightResource]);
+    if (ratio < 1.0f)
+        ratio = 1.0f;
+    *bInLeftDenominated = 1;
+    *iInTradeRatio = static_cast<long>(ratio + 0.5);
+    *iInMaxUnitsToTrade = 1;
+    // Residual (99.67%): the numerator temp (cost*efficiency) homes to a dead
+    // parameter slot [ebp+8] where retail reuses the local slot [ebp-4] that
+    // held leftArtifact.extra - a register-allocator temp-slot choice. Tried
+    // and rejected: single-expression a*b/c (correct slot, wrong fmul order),
+    // block-scoped leftArtifact (no change).
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:2250
 VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
