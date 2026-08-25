@@ -375,15 +375,9 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1846
-// The retail row at 0x565430 (0x80) between handle_widget_hover and the
-// transformer-slot rows is ExitDialog, NOT this: it writes MESSAGE_WIDGET
-// into msg->id, zeroes dialogReturn, stores 10 into codeY then codeX and
-// returns MESSAGE_DISPATCH_FORWARD - the ExitDialog shape this tree already
-// has exact twice - before disposing the held artifact at +0x64 through
-// hero::equip_artifact / hero::add_to_backpack. So WindowHandler has no
-// retail row of its own in this bracket. Reconstructing ExitDialog needs
-// type_artifact modelled at +0x64 and hero.h pulled into this TU's include
-// closure; deferred rather than blocked.
+// The retail row at 0x565430 between handle_widget_hover and the
+// transformer-slot rows is ExitDialog, not this. WindowHandler has no retail
+// row of its own in this bracket; ExitDialog is reconstructed below.
 DC_ONLY(0x127484, 0x36)
 int type_sacrifice_window::WindowHandler(message* msg)
 {
@@ -1590,6 +1584,37 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
     else
         rolloverText->SetText(current_widget->RollOver);
     DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1859
+// Vtable 0x641620 slot 14 fixes the identity. Complete returns any held
+// artifact to its original equipped slot where possible, then tries an
+// arbitrary equipped slot, the backpack, and finally the arbitrary equipped
+// path once more before closing the modal dialog.
+VA(0x00565430, 0x80)  // anchor-vtable slot 14, dc 0x1274bc
+int type_sacrifice_window::ExitDialog(message* msg)
+{
+    type_artifact_offering* artifact = &holding_artifact;
+    msg->id = MESSAGE_WIDGET;
+    gpWindowManager->dialogReturn = 0;
+    msg->codeY = widget::WIDGET_END_DIALOG;
+    msg->codeX = widget::WIDGET_END_DIALOG;
+
+    if (artifact->artifactId != -1) {
+        if (artifact->source < 19) {
+            if (current_hero->equip_artifact(artifact, artifact->source))
+                goto artifact_returned;
+            if (current_hero->equip_artifact(artifact, -1))
+                goto artifact_returned;
+        }
+        if (current_hero->add_to_backpack(artifact, -1))
+            goto artifact_returned;
+        current_hero->equip_artifact(artifact, -1);
+
+artifact_returned:
+        artifact->artifactId = -1;
+    }
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1900

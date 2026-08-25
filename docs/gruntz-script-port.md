@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — `type_sacrifice_window::ExitDialog` reproduces all 128
+  retail bytes.** Vtable 0x641620 slot 14 fixes the body at 0x565430 as the
+  sacrifice dialog's protected exit handler, and the Dreamcast roster
+  independently supplies its name and signature. Dreamcast class/member
+  records prove that `type_artifact_offering` is a 16-byte `type_artifact`
+  derivative with `source` and `value` at +8/+12, and place the dialog's
+  `holding_artifact`, `sacrificing_artifacts` and
+  `can_sacrifice_artifacts` consecutively. Widening the proven eight-byte
+  CAdvPopup base difference maps them to retail +0x64/+0x74/+0x75; retaining
+  the otherwise-unused +0x74 byte also preserves the already-exact `DoModal`.
+  Retail returns a held artifact to its original slot when that slot is below
+  19, then tries an arbitrary equipped slot, the backpack, and a final
+  arbitrary-slot fallback before clearing the artifact id and closing the
+  dialog. A named pointer to the held record gives VC6 retail's ESI/EDI
+  allocation, while nesting both equipped-slot attempts under the source
+  bound reproduces the last branch edge. The synchronized checkpoint reaches
+  **1938/2352 linked exact**, **1869/2283 game exact**, **96.57% game fuzzy**
+  and **43.67% executable coverage**. No external implementation body was
+  used.
+
 - **2026-08-25 — the adventure hero locator is exact and the first
   stream-adapter `Write` COMDAT is admitted.** `UpdateHeroLocator`'s sole
   residual was retail's branch over `WIDGET_SET_STATUS`/`WIDGET_CLEAR_STATUS`;
