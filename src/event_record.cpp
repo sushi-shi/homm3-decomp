@@ -665,12 +665,17 @@ void game::ResetVisibility(int start_x, int start_y, int z, int whichPlayer, int
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:1239
 VA(0x0049d630, 0x8C)  // linkorder dc-label, dc 0x8e730
 void game::clear_event_records()
 {
-    // @stub
+    int i = eventRecords.size();
+    while (i-- != 0)
+        delete eventRecords[i];
+    eventRecords.clear();
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1251
 VA(0x0049d6c0, 0xD3)  // linkorder dc-label, dc 0x8e77c
