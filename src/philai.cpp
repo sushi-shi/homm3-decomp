@@ -1106,18 +1106,31 @@ int hero::LuckIncreaseValue(int value)
     return static_cast<int>(value_added);
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
 // E:\gamedcs\philai.cpp:3007.  Sirens grant experience for sacrificed troops.
 // Exact cross-TU callee set {hero::GetExperienceBonusFactor} - the only DC philai
-// fn that calls it.
+// fn that calls it.  Each stack over one troop sacrifices seven tenths of itself
+// (the remainder stays), and the experience earned is the survivors' hit points
+// scaled by the hero's experience-bonus factor.
 VA(0x00527ec0, 0x93)  // anchor-callee, dc 0x11260c
 int AI_VisitSirens(const hero* current_hero, armyGroup* army)
 {
-    // @stub
+    long total = 0;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        int creature = army->armies[i];
+        if (creature != CREATURE_NONE) {
+            int troops = army->numTroops[i];
+            if (troops > 1) {
+                short sacrifice = static_cast<short>(
+                    static_cast<float>(troops) * 0.7);
+                army->numTroops[i] = sacrifice;
+                total += akCreatureTypeTraits[creature].hitPoints
+                    * (troops - sacrifice);
+            }
+        }
+    }
+    return static_cast<int>(total
+        * const_cast<hero*>(current_hero)->GetExperienceBonusFactor());
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\philai.cpp:3277.  Exact cross-TU callee set {AI_value_of_combat,
 // armyGroup::armyGroup, armyGroup::get_AI_value, hero::get_player}; ret 0xc matches
