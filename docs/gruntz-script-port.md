@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice artifact-offering chain adds 810 exact
+  retail bytes.** Dreamcast supplies the names, signatures and order of the
+  static `convert_with_commas` / `update_offering` pair; retail independently
+  fixes their x86 identities and behavior. `convert_with_commas` formats a
+  signed decimal and walks the Dinkumware string backward with a
+  post-decrement index, inserting a comma every third digit. Its 29-block
+  flow matched immediately; declaring the long-lived digit counter before
+  the string gives VC6 retail's EDI allocation and makes all 469 bytes exact.
+
+  `update_offering` expands the already-proven artifact-widget updater,
+  formats the offered value through that helper, and toggles the paired icon
+  and text widgets. Retail HELP.TXT loader 0x5b9b52 independently proves that
+  0x6a6638 is a twenty-row `THelpText` table: it writes stride-8 pairs through
+  0x6a66d7, while the updater reads rows 14 and 15. Admitting the array rather
+  than inventing two standalone pointers makes the natural 292-byte body
+  exact on its first comparison. Finally, the 49-byte
+  `type_sacrifice_window::update_artifact_offering` wrapper directly proves
+  the three adjacent VC6 vector `_First` loads at object offsets
+  +0xc0/+0xd0/+0xe0; the DC member roster and the already-proven eight-byte
+  base delta fix the corresponding vector objects at +0xbc/+0xcc/+0xdc.
+  The synchronized checkpoint reaches **1946/2360 linked exact**,
+  **1877/2291 game exact**, **96.58% game fuzzy** and **43.76% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the two town special-building market entries add 628
   exact retail bytes.** `townManager::Main` independently fixes both
   identities and Complete-era ABIs. Its building-17 arm admits only town

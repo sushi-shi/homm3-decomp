@@ -447,17 +447,14 @@ rva	size	unit	current_label	provenance
 0x161f70	1063	sacrifice_window	game_smalfont_fnt_161f70	working-label
 0x1623a0	347	sacrifice_window	game_a84f0_sub67_1623a0	working-label
 0x162500	346	sacrifice_window	game_162a20_sub01_162500	working-label
-0x162660	469	sacrifice_window	game_162500_sub00_162660	working-label
 0x162840	358	sacrifice_window	game_1629e0_sub00_162840	working-label
 0x1629b0	34	sacrifice_window	?set_visible@widget@@QAEXE@Z	src-VA+ir
 0x1629e0	51	sacrifice_window	game_1636c0_sub01_1629e0	working-label
 0x162a20	590	sacrifice_window	game_164e70_sub00_162a20	working-label
-0x162c70	292	sacrifice_window	game_162a20_sub02_162c70	working-label
 0x162da0	930	sacrifice_window	game_163150_sub00_162da0	working-label
 0x163150	321	sacrifice_window	game_164910_sub00_163150	working-label
 0x1632a0	1047	sacrifice_window	game_15fce0_sub00_1632a0	working-label
 0x1636c0	794	sacrifice_window	game_15fd10_sub00_1636c0	working-label
-0x163a40	49	sacrifice_window	game_164340_sub00_163a40	working-label
 0x163a80	795	sacrifice_window	game_15fd40_sub00_163a80	working-label
 0x163da0	338	sacrifice_window	game_160380_sub00_163da0	working-label
 0x163f00	338	sacrifice_window	game_160380_sub01_163f00	working-label
