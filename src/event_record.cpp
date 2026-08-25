@@ -185,11 +185,13 @@ void type_record_claim_mine::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:312
-DC_ONLY(0x8ccd8, 0x24)
+#endif  // @carcass
+VA(0x0049abc0, 0x19)  // anchor-vtable, dc 0x8ccd8
 void type_record_claim_mine::undo()
 {
-    // @stub
+    gpGame->mines[id].playerOwner = old_owner;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:321
 DC_ONLY(0x8ccfc, 0x60)
