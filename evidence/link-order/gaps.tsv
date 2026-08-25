@@ -57,7 +57,8 @@ hillfortwindow	hiscore	0xe8bb9	0xe8fb0	1015	11
 hiscore	iconwdgt	0xe9e41	0xea720	2271	5	
 iconwdgt	initialize	0xeb33d	0xebb10	2003	12	
 initialize	inputmgr	0xebce9	0xec0e0	1015	11	
-inputmgr	kbwin	0xeccca	0xf7a30	44390	77	kb
+inputmgr	kb	0xeccca	0xed230	1382	15	
+kb	kbwin	0xf42b7	0xf7a30	14201	21	
 kbwin	levelupwindow	0xf8490	0xf8880	1008	11	
 levelupwindow	lodfile	0xf9bc0	0xfa610	2640	14	
 lodfile	mainmenu	0xfa655	0xfb2a0	3147	18	
