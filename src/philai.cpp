@@ -1117,14 +1117,26 @@ int AI_VisitSirens(const hero* current_hero, armyGroup* army)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:3277.  Exact cross-TU callee set {AI_value_of_combat,
 // armyGroup::armyGroup, armyGroup::get_AI_value, hero::get_player}; ret 0xc matches
-// the 3 stack args of the 5-parameter fastcall signature.
+// the 3 stack args of the 5-parameter fastcall signature.  Bribing is worth it
+// when the monster stack's own strength, minus what the bribe gold is worth to
+// this player, still beats what fighting the stack would net.
 VA(0x00527f60, 0x73)  // anchor-callee, dc 0x112dd4
-unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
+    TCreatureType type, short amount, long gold_cost)
 {
-    // @stub
+    armyGroup monster_army(type, amount);
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    long bribe_worth = static_cast<long>(monster_army.get_AI_value()
+        - gold_cost * player->resourceValue[GOLD]);
+    long fight_worth = AI_value_of_combat(current_hero, 0, monster_army, 0, cell);
+    return bribe_worth > fight_worth;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
 // object-type dispatch that reaches nearly every value_of_* helper below
