@@ -22,6 +22,20 @@ struct type_artifact_offering : public type_artifact {
 };
 SIZE(type_artifact_offering, 16);
 
+enum ECommaFormatting {
+    COMMA_DIGIT_THRESHOLD = 4
+};
+
+enum ESacrificeWindowHelp {
+    SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING = 14,
+    SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE = 15,
+    SACRIFICE_HELP_COUNT = 20
+};
+
+// HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
+// text/right-click pairs from 0x6a6638 through 0x6a66d7.
+DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];
+
 // Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
 // at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
 // That is also exactly the Dreamcast 0x214-byte field roster widened by the
@@ -45,7 +59,15 @@ public:
     // type_skeleton_window keeps at +0x60 and type_university_window at
     // +0x70. Offsets either side of it are unchanged.
     textWidget* rolloverText;
-    unsigned char pad_90[0x1ac];
+    // DC places the intervening current-artifact/slider/button pointers at
+    // +0x88..+0xb0. Retail's proven 8-byte base delta moves that opaque run
+    // to +0x90..+0xb8; update_artifact_offering then directly proves the
+    // three following VC6 vector _First pointers at +0xc0/+0xd0/+0xe0.
+    unsigned char pad_90[0x2c];
+    std::vector<type_artifact_offering> artifact_offerings; // +0xbc
+    std::vector<textWidget*> artifact_value_widgets;        // +0xcc
+    std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
+    unsigned char pad_ec[0x150];
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
@@ -61,6 +83,7 @@ public:
     // 0x563150. Bodies still deferred.
     void set_artifact_mode();
     void set_creature_mode();
+    void update_artifact_offering(long slot);
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int DoModal(unsigned char fadeIn);                 // slot 6
@@ -164,8 +187,11 @@ SIZE(type_transformer_slot, 0x50);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);
+std::string convert_with_commas(long value);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:800, dc 0x125a4c) void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:821, dc 0x125aac) void update_offering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering);
+void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
+                     const type_artifact_offering* offering);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:914, dc 0x125de0) long sacrifice_value(TCreatureType creature);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:2385, dc 0x1282b0) void move_all_armies(armyGroup* source, armyGroup* dest);
 

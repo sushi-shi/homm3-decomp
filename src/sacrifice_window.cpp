@@ -5,6 +5,7 @@
 #include <va.h>
 #include "sacrifice_window.h"
 #include "message.h"
+#include "misc.h"
 #include "sample.h"
 #include "soundmgr.h"
 #include "winmgr.h"
@@ -1541,6 +1542,28 @@ unsigned char type_army_slot_widget::handle_click(
     return 0;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:760
+// Retail first formats the signed value as decimal, then walks the resulting
+// string backward. The post-decrement loop and iterator insert account for
+// the characteristic index/check and inlined Dinkumware string machinery.
+VA(0x00562660, 0x1d5)  // dc order/name + body/ABI, dc 0x1258ac
+std::string convert_with_commas(long value)
+{
+    long digits = 0;
+    std::string result;
+    result = format_string(
+        DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), value);
+
+    long position = result.length();
+    while (position--) {
+        if (++digits == COMMA_DIGIT_THRESHOLD) {
+            result.insert(result.begin() + position + 1, ',');
+            digits = 1;
+        }
+    }
+    return result;
+}
+
 // Header-inline on Dreamcast; the Complete linker retained the copy emitted
 // in this compiland. Its DC signature and the HD masked identity agree.
 VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
@@ -1550,6 +1573,44 @@ void widget::set_visible(unsigned char arg)
         send_message(WIDGET_SET_STATUS, WIDGET_DRAWN);
     else
         send_message(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:821
+// The first half is update_artifact_widget inlined by /Ob2: retaining the
+// complete by-value artifact copy accounts for retail's otherwise-unused
+// second dword load. The two help pointers are rows 14 and 15 of the
+// HELP.TXT table whose base and twenty-row extent are independently proven
+// by the loader at 0x5b9b52.
+VA(0x00562c70, 0x124)  // dc order/name + body/ABI, dc 0x125aac
+void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
+                     const type_artifact_offering* offering)
+{
+    type_artifact artifact = *offering;
+    if (artifact.artifactId == -1) {
+        artifact_widget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                      widget::WIDGET_DRAWN);
+        artifact_widget->set_help_text(0, 0, 1);
+    } else {
+        artifact_widget->SetIconFrame(artifact.artifactId);
+        artifact_widget->send_message(widget::WIDGET_SET_STATUS,
+                                      widget::WIDGET_DRAWN);
+        artifact_widget->set_help_text(
+            akArtifactTraits[artifact.artifactId].name, 0, 1);
+    }
+
+    if (offering->artifactId == -1) {
+        artifact_widget->set_help_text(
+            gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING].text,
+            0, 1);
+        value_widget->set_visible(0);
+        value_widget->set_help_text(0, 0, 1);
+    } else {
+        value_widget->SetText(convert_with_commas(offering->value).c_str());
+        value_widget->set_visible(1);
+        value_widget->set_help_text(
+            gSacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].text,
+            0, 1);
+    }
 }
 
 // E:\gamedcs\sacrifice_window.cpp:800
@@ -1571,6 +1632,18 @@ void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
         slot_widget->set_help_text(
             akArtifactTraits[artifact.artifactId].name, 0, 1);
     }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1189
+// The three indexed _First loads independently prove the adjacent vector
+// layout: offering records at +0xc0, value widgets at +0xd0 and artifact
+// widgets at +0xe0. VC6 evaluates the forwarding arguments right-to-left.
+VA(0x00563a40, 0x31)  // dc order/name + retail vector offsets, dc 0x1265b8
+void type_sacrifice_window::update_artifact_offering(long slot)
+{
+    update_offering(artifact_offering_widgets[slot],
+                    artifact_value_widgets[slot],
+                    &artifact_offerings[slot]);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
