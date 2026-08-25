@@ -5771,29 +5771,6 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
-VA(0x00505f20, 0x157)  // retail-only; caller/member/vector proof
-void NewfullMap::NewfullMapFn_00505F20(
-    CObject* object, int objectType, int objectIndex, int terrain)
-{
-    std::vector<CObjectType>& types = objectTypeIndex[objectType];
-    int typeIndex = types.size();
-    while (typeIndex--) {
-        CObjectType& candidate = types[typeIndex];
-        if (candidate.extra == objectIndex
-            && (terrain == -1 || candidate.mask_34[terrain]))
-            break;
-    }
-
-    CObjectType& selected = types[typeIndex];
-    if (static_cast<short>(selected.field_42) < 0) {
-        selected.field_42 = static_cast<unsigned short>(objectTypes.size());
-        objectTypes.push_back(selected);
-        sprites.push_back(
-            ResourceManager::GetSprite(selected.ImageName.c_str()));
-    }
-    object->typeIndex = selected.field_42;
-}
-
 // These Dinkumware template members are already emitted by NewfullMap's
 // vector members.  The annotations only pair their named VC6 COMDATs with
 // the contiguous retail run; there are deliberately no source definitions.
