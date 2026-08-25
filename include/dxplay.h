@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include <dplobby.h>
+#include <string.h>
 #include <va.h>
 
 class CDPlayConnection;
@@ -158,6 +159,8 @@ protected:
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     virtual unsigned char SysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
+
+public:
     virtual unsigned char AddGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     virtual unsigned char AddPlayerEnum(
@@ -241,12 +244,14 @@ public:
 protected:
     virtual unsigned char HandleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
+
+public:
     virtual unsigned char AddAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
 private:
     IDirectPlayLobby3A* m_lpLobby;           // +0x58
-    CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
+    CAutoArray<CDPlayAddressElement>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
 
@@ -277,6 +282,16 @@ SIZE(CDPlayMsg, 0x08);
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
+    CDPlayConnection(const GUID* serviceProvider, unsigned long connSize,
+        void* connection, char* name)
+    {
+        guidSP = *serviceProvider;
+        size = connSize;
+        pConnection = new unsigned char[connSize];
+        memcpy(pConnection, connection, size);
+        strcpy(sName, name);
+    }
+
     ~CDPlayConnection()
     {
         delete [] pConnection;
@@ -344,6 +359,55 @@ protected:
     unsigned long allocSize;  // +0x0c
     unsigned long size;       // +0x10
 };
+
+template<class T>
+unsigned char CAutoArray<T>::Put(unsigned long elementNbr, T* element)
+{
+    if (elementNbr >= size)
+        return 0;
+    pArray[elementNbr] = element;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Add(T* element)
+{
+    if (size >= allocSize) {
+        T** grown = new T*[allocSize + step];
+        for (unsigned long i = 0; i < size; ++i)
+            grown[i] = pArray[i];
+        if (pArray)
+            delete [] pArray;
+        pArray = grown;
+        allocSize += step;
+    }
+    pArray[size] = element;
+    ++size;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Delete(unsigned long elementNbr)
+{
+    if (elementNbr >= size)
+        return 0;
+    for (unsigned long i = elementNbr; i + 1 < size; ++i)
+        pArray[i] = pArray[i + 1];
+    --size;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Insert(unsigned long nextElementNbr, T* element)
+{
+    if (nextElementNbr > size)
+        return 0;
+    Add(element);
+    for (unsigned long i = size - 1; i > nextElementNbr; --i)
+        pArray[i] = pArray[i - 1];
+    pArray[nextElementNbr] = element;
+    return 1;
+}
 
 // The Windows structure consumed here preserves the complete Dreamcast
 // value layout.  HandleMPlayerLaunch's inlined Get(0) reaches guidInstance
