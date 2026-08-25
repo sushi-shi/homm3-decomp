@@ -13,6 +13,7 @@
 
 class armyGroup;
 class sample;
+class slider;
 
 // DC field list: a 16-byte type_artifact-derived record, with the wearable
 // source slot at +8 and the displayed sacrifice value at +12.
@@ -27,6 +28,9 @@ enum ECommaFormatting {
 };
 
 enum ESacrificeWindowHelp {
+    SACRIFICE_HELP_MAX_CREATURES = 10,
+    SACRIFICE_HELP_ALL_CREATURES = 11,
+    SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON = 12,
     SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING = 14,
     SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE = 15,
     SACRIFICE_HELP_SACRIFICE_ARTIFACTS = 16,
@@ -95,7 +99,7 @@ public:
     // Retail's proven 8-byte base delta moves that run to +0x90..+0xb8;
     // update_experience independently proves sacrifice_button at +0xa4.
     iconWidget* current_artifact_widget;      // +0x90
-    widget* creature_slider;                  // +0x94
+    slider* creature_slider;                  // +0x94
     widget* left_backpack_button;             // +0x98
     widget* right_backpack_button;            // +0x9c
     widget* empty_backpack_button;            // +0xa0
@@ -136,11 +140,17 @@ public:
     void update_slot(long slot);
     void update_all_slots();
     void update_artifact_offering(long slot);
+    void set_creature_sacrifice(long slot, long new_amount);
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int DoModal(unsigned char fadeIn);                 // slot 6
 protected:
     virtual int ExitDialog(message* msg);                      // slot 14
+private:
+    long get_max_amount(long slot) const;
+    static int all_creatures(message& msg);
+    static int max_creatures(message& msg);
+    static void creature_slider_change(int state, heroWindow* parent_window);
 };
 SIZE(type_sacrifice_window, 0x23c);
 

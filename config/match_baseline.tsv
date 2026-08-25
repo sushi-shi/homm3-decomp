@@ -1871,6 +1871,7 @@ sacrifice_window	??_Gtype_skeleton_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	
 sacrifice_window	?DoModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1653b0
 sacrifice_window	?ExitDialog@type_sacrifice_window@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x165430
 sacrifice_window	?WindowHandler@type_skeleton_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1666f0
+sacrifice_window	?all_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164cf0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
 sacrifice_window	?handle_click@type_army_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fda0
 sacrifice_window	?handle_click@type_artifact_offering_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd40
@@ -1879,8 +1880,10 @@ sacrifice_window	?handle_click@type_doll_slot_widget@@UAEEEE@Z	100.0000	100.0000
 sacrifice_window	?handle_click@type_transformer_slot@@UAEEEE@Z	100.0000	100.0000	100.0000	0x1654c0
 sacrifice_window	?handle_widget_hover@type_sacrifice_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1653f0
 sacrifice_window	?handle_widget_hover@type_skeleton_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x166720
+sacrifice_window	?max_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164de0
 sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x162a20
 sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x163150
+sacrifice_window	?set_creature_sacrifice@type_sacrifice_window@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x164c00
 sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b0
 sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x1629e0
 sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x163a40

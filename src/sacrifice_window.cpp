@@ -6,9 +6,11 @@
 #include <va.h>
 #include "sacrifice_window.h"
 #include "game.h"
+#include "kb.h"
 #include "message.h"
 #include "misc.h"
 #include "sample.h"
+#include "slider.h"
 #include "textresource.h"
 #include "soundmgr.h"
 #include "winmgr.h"
@@ -1910,6 +1912,129 @@ void type_sacrifice_window::update_artifact_offering(long slot)
     update_offering(artifact_offering_widgets[slot],
                     artifact_value_widgets[slot],
                     &artifact_offerings[slot]);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1572
+// The three retail callers and the two retained updater calls identify this
+// row. Direct array subscripts preserve VC6's shared pre-base index, while
+// the right-hand bonus-factor operands keep each result live on the x87
+// stack exactly as in update_creature_offering.
+VA(0x00564c00, 0xe6)  // caller/callee graph + dc name/signature/order
+void type_sacrifice_window::set_creature_sacrifice(long slot, long new_amount)
+{
+    if (creature_offerings[slot].amount == new_amount)
+        return;
+
+    TCreatureType creature_type = current_hero->army.armyTypes[slot];
+    long value = sacrifice_value(creature_type);
+    long old_experience = static_cast<long>(
+        (value * creature_offerings[slot].amount)
+        * current_hero->GetExperienceBonusFactor());
+    total_experience += static_cast<long>(
+        (value * new_amount) * current_hero->GetExperienceBonusFactor())
+        - old_experience;
+
+    creature_offerings[slot].amount = new_amount;
+    update_creature_offering(&creature_offerings[slot]);
+    if (current_creature.group == slot) {
+        current_creature.amount = new_amount;
+        update_creature_offering(&current_creature);
+    }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1599
+// Retail expands this helper at both callers. The scan preserves one troop
+// only when every other army slot has already been offered to its limit.
+long type_sacrifice_window::get_max_amount(long slot) const
+{
+    long amount = current_hero->army.numTroops[slot];
+    if (amount <= 0)
+        return 0;
+
+    long other;
+    for (other = 0; other < armyGroup::ARMY_GROUP_SLOT_COUNT; ++other) {
+        if (other != slot
+            && creature_offerings[other].amount
+                < current_hero->army.numTroops[other])
+            break;
+    }
+    if (other == armyGroup::ARMY_GROUP_SLOT_COUNT)
+        --amount;
+    return amount;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1626
+// The create_creature_widgets function stores this private static callback's
+// address. Complete's fastcall entry therefore receives message by reference
+// in ECX; its window field supplies the owning sacrifice dialog.
+VA(0x00564cf0, 0xe9)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::all_creatures(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        long slot = armyGroup::ARMY_GROUP_SLOT_COUNT - 1;
+        do {
+            window->set_creature_sacrifice(
+                slot, window->get_max_amount(slot));
+        } while (slot--);
+        window->creature_slider->SetState(
+            window->creature_slider->get_maximum() - 1);
+        window->update_experience();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1796
+// Inlined into the max-creatures button callback below. Dreamcast records
+// this as a private static slider callback; Complete retains only its two
+// member calls at the constant-state caller.
+void type_sacrifice_window::creature_slider_change(
+    int state, heroWindow* parent_window)
+{
+    type_sacrifice_window* window =
+        static_cast<type_sacrifice_window*>(parent_window);
+    window->set_creature_sacrifice(window->current_creature.group, state);
+    window->update_experience();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1663
+// The constructor's callback pointer at 0x561962 independently proves this
+// previously missing retail boundary. Its 0x88-byte body ends in `ret` and
+// is followed by eight alignment NOPs before sacrifice_artifacts.
+VA(0x00564de0, 0x88)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::max_creatures(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        int maximum = window->creature_slider->get_maximum() - 1;
+        window->creature_slider->SetState(maximum);
+        creature_slider_change(maximum, window);
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
