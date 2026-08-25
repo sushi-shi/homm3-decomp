@@ -29,7 +29,7 @@ cmbtmgr	combatcontrolsubwindow	0x6a511	0x6b610	4351	22
 combatcontrolsubwindow	combatoptionswindow	0x6dc2b	0x6e3b0	1925	14	
 combatoptionswindow	combatresultswindow	0x6feda	0x702d0	1014	11	
 combatresultswindow	combatwindow	0x71c14	0x72010	1020	11	
-combatwindow	command	0x732e2	0x74bf0	6414	24	
+combatwindow	command	0x732e2	0x73c00	2334	16	
 command	creature_bank	0x7a2cd	0x7aad0	2051	16	
 creature_bank	creaturetype	0x7ab2e	0x7b120	1522	3	
 creaturetype	csequence	0x7b211	0x7b840	1583	4	
