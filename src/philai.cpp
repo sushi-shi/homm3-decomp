@@ -732,13 +732,6 @@ int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2054
-DC_ONLY(0x110808, 0xD8)
-long value_of_bank(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2115
 DC_ONLY(0x1108e0, 0xD6)
 int ValueOfCampfire(playerData* player, NewmapCell* cell)
@@ -1005,13 +998,6 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3096
-DC_ONLY(0x112830, 0xE4)
-long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:3277
 DC_ONLY(0x112dd4, 0x10C)
 unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
@@ -1112,13 +1098,6 @@ int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3834
-DC_ONLY(0x113e24, 0x986)
-long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:4126
 DC_ONLY(0x1147ac, 0x2AE)
 void AI_examine_map()
@@ -1168,6 +1147,24 @@ int hero::LuckIncreaseValue(int value)
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
+// E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
+// object-type dispatch that reaches nearly every value_of_* helper below
+// (calls value_of_town, ValueOfScroll, MoraleIncreaseValue, AI_value_of_luck
+// and the whole segment-9 sub cluster) - the retail carve named them all as
+// game_128040_subNN for exactly that reason.
+VA(0x00528040, 0x1648)  // anchor-callee, dc 0x113e24
+long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2054
+VA(0x00529920, 0x10d)  // anchor-callee, dc 0x110808
+long value_of_bank(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:2128
 VA(0x00529a30, 0x27f)  // anchor-callee, dc 0x1109b8
 int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
@@ -1192,6 +1189,13 @@ int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
 // E:\gamedcs\philai.cpp:3131
 VA(0x0052ab80, 0x505)  // anchor-callee, dc 0x112914
 long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3096
+VA(0x0052b090, 0x14e)  // anchor-callee, dc 0x112830
+long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
 {
     // @stub
 }
