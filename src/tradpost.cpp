@@ -593,14 +593,24 @@ long get_market_value(EGameResource resource)
 // (TSellArtifactWindow::WindowHandler -> 0x5ecdc0; TSellCreatureWindow::Update
 // and ::WindowHandler -> 0x5ece80, which also calls armyGroup::GetNumArmies).
 // Bodies deferred: the window classes carry no modelled members yet.
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// get_trade_ratio (below) needs none and is reconstructed; it inlines the two
+// get_market_value lookups (unsigned short widened through a dword slot), and
+// returns the integer-rounded exchange rate - the smaller side floored to 1.
 
 // E:\gamedcs\tradpost.cpp:2168
-VA(0x005ecd20, 0x94)  // free fn, arity ret 8 (double efficiency) + float ratio body, dc 0x18ab9c
+VA(0x005ecd20, 0x94)  // free fn ret 8 + float ratio body, dc 0x18ab9c
 double get_trade_ratio(EGameResource source, EGameResource dest, double efficiency)
 {
-    // @stub
+    double ratio = static_cast<double>(gMarketValues[dest])
+                 / (static_cast<double>(gMarketValues[source]) * efficiency);
+    if (ratio >= 1.0)
+        ratio = static_cast<double>(static_cast<long>(ratio + 0.999));
+    else
+        ratio = 1.0 / static_cast<double>(static_cast<long>(1.0 / ratio));
+    return ratio;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:2229
 VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
