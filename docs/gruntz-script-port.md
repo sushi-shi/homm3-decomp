@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the skeleton-transformer creature grid reproduces all 655
+  retail bytes.** Its sole retail caller is the 0x5654f0 transformer-window
+  constructor, while the Dreamcast roster identifies the row at 0x566760 as
+  `type_skeleton_window::create_creature_icons` and supplies its full
+  signature. Complete independently proves the 83-by-98 grid, small-font
+  count widgets, case-distinct `twcrport.def` / `TwCrPort.def` portraits,
+  group/slot pair, hidden selection state and all three widget insertions.
+  The two expanded `type_transformer_slot` constructors also byte-prove their
+  base arguments and the original `slot`-before-`group` assignment order;
+  there is no retained constructor body to claim.
+
+  The decisive source correction was `item_number + count`, matching the
+  earlier sacrifice grid, rather than directly mutating `item_number`. That
+  gives VC6 retail's scalar and pointer induction variables. This partial TU
+  remains one source-level inline candidate short of retail's `/Ob2` divisor:
+  a measured empty tail-call scaffold emits no instructions and keeps only
+  the third nested vector insertion out of line, raising the natural body
+  from 32.79% to 99.97%; swapping the constructor's two member assignments
+  then makes all 19 blocks and 655 bytes exact. The scaffold is explicitly
+  marked for removal when the missing original expression is recovered. The
+  synchronized checkpoint reaches **1969/2387 linked exact**, **1900/2318
+  game exact**, **96.61% game fuzzy** and **44.46% executable coverage**; the
+  full ratchet, banked-row, claim, single-view and zero-debt cleanliness gates
+  pass.
+
 - **2026-08-25 — the sacrifice creature-icon grid reproduces all 1,063
   retail bytes.** The helper is the sole call target from
   `create_creature_widgets`; its position in the Dreamcast roster and

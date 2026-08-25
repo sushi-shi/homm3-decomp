@@ -288,6 +288,12 @@ public:
     virtual ~type_skeleton_window();
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int WindowHandler(message* msg);                   // slot 9
+private:
+    void create_creature_icons(
+        long icon_x, long icon_y, long columns, long rows,
+        long group_number, long item_number, long& widget_id,
+        iconWidget** icon_widgets, iconWidget** selection_widgets,
+        textWidget** text_widgets);
 };
 
 // The transformer dialog's creature slots. Retail 0x5654c0 forwards TWO
@@ -298,6 +304,10 @@ class type_transformer_slot : public iconWidget {
 public:
     long group;
     long slot;
+
+    type_transformer_slot(long new_x, long new_y, long new_w, long new_h,
+                          long new_group, long new_slot, long new_id,
+                          const char* image);
 
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);

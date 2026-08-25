@@ -2111,6 +2111,15 @@ void type_sacrifice_window::pick_up_artifact(
     DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
+// CODEGEN SCAFFOLD: this partial reconstruction is one source-level inline
+// candidate short of retail's /Ob2 divisor in create_creature_icons below.
+// The empty tail call emits no instructions; it only keeps the third nested
+// vector::insert out of line, as retail does. Remove it when the missing
+// original source expression that supplied that candidate is recovered.
+static void transformer_grid_inline_surface()
+{
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1053
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
@@ -2936,6 +2945,19 @@ unsigned char type_transformer_slot::handle_click(
     return 0;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1891
+// Complete expands both calls in the transformer icon grid and retains no
+// separately claimable constructor body.
+type_transformer_slot::type_transformer_slot(
+    long new_x, long new_y, long new_w, long new_h, long new_group,
+    long new_slot, long new_id, const char* image)
+    : iconWidget(new_x, new_y, new_w, new_h, new_id, image,
+                 0, 0, 0, 0, 16)
+{
+    slot = new_slot;
+    group = new_group;
+}
+
 // The transformer dialog's own pair, found by the same vtable-uniqueness
 // scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
 // deleting destructor whose only image-wide reference is slot 0 of vtable
@@ -2982,6 +3004,57 @@ void type_skeleton_window::handle_widget_hover(widget* current_widget)
     else
         rolloverText->SetText(current_widget->RollOver);
     DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2326
+// The transformer constructor is this helper's sole retail caller; the
+// Dreamcast roster fixes its identity and signature. Complete proves the
+// two case-distinct portrait resources and both inlined slot constructors.
+// One measured byte-free candidate-site scaffold restores retail's third
+// vector insertion topology; see transformer_grid_inline_surface above.
+VA(0x00566760, 0x28f)  // anchor-caller + dc name/signature/order, dc 0x1280e0
+void type_skeleton_window::create_creature_icons(
+    long icon_x, long icon_y, long columns, long rows,
+    long group_number, long item_number, long& widget_id,
+    iconWidget** icon_widgets, iconWidget** selection_widgets,
+    textWidget** text_widgets)
+{
+    long row;
+    long count = 0;
+    long column;
+    long text_x = icon_x - 5;
+    long text_y = icon_y + 68;
+
+    for (row = 0; row < rows; ++row) {
+        for (column = 0; column < columns; ++column) {
+            text_widgets[count] = new textWidget(
+                text_x, text_y, 66, 16, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+            Widgets.push_back(text_widgets[count]);
+
+            icon_widgets[count] = new type_transformer_slot(
+                icon_x, icon_y, 58, 64, group_number, item_number + count,
+                widget_id++, "twcrport.def");
+            Widgets.push_back(icon_widgets[count]);
+
+            selection_widgets[count] = new type_transformer_slot(
+                icon_x, icon_y, 58, 64, group_number, item_number + count,
+                widget_id++, "TwCrPort.def");
+            Widgets.push_back(selection_widgets[count]);
+            selection_widgets[count]->SetIconFrame(1);
+            selection_widgets[count]->send_message(
+                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+
+            ++count;
+            text_x += 83;
+            icon_x += 83;
+        }
+        text_x -= columns * 83;
+        icon_x -= columns * 83;
+        text_y += 98;
+        icon_y += 98;
+    }
+    transformer_grid_inline_surface();
 }
 
 #if 0  // @carcass: final duplicate STLport helper rows
