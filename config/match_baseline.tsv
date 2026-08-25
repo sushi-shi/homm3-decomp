@@ -938,6 +938,11 @@ dxplay	CDPlay_SysMsgCreatePlayerOrGroup	0.0000	0.0000	0.0000	0x981e0
 dxplay	CDPlay_SysMsgHost	0.0000	0.0000	0.0000	0x981d0
 dxplay	CDPlay_UpdateSessionDesc	0.0000	0.0000	0.0000	0x96f90
 dxplay	CDPlay__scalar_deleting_destructor	0.0000	0.0000	0.0000	0x96ce0
+dxplay	EnumAddressCallback	0.0000	0.0000	0.0000	0x99e20
+dxplay	EnumConnectionsCallback	0.0000	0.0000	0.0000	0x99e70
+dxplay	EnumGroupsCallback	0.0000	0.0000	0.0000	0x99ea0
+dxplay	EnumPlayersCallback	0.0000	0.0000	0.0000	0x99ed0
+dxplay	EnumSession	0.0000	0.0000	0.0000	0x99e50
 dxplay	void_CAutoArray_scalar_deleting_destructor	0.0000	0.0000	0.0000	0x9a020
 event_record	?clear_event_records@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d630
 event_record	?get_type@type_record_erase@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9b180
