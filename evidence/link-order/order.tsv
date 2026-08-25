@@ -77,8 +77,8 @@ position	unit	first_rva	end_rva	gap_to_next
 71	quickherowindow	0x12ead0	0x12f43b	1157
 72	quickinfowindow	0x12f8c0	0x12fd2b	1013
 73	quicktownwindow	0x130120	0x130d3d	121363
-74	recruit	0x14e750	0x15174b	6869
-75	remote	0x153220	0x157f71	1967
+74	recruit	0x14e750	0x15174b	3557
+75	remote	0x152530	0x157f71	1967
 76	resource	0x158720	0x1587a7	1017
 77	resourcedisplay	0x158ba0	0x1590c4	44
 78	resourcemanager	0x1590f0	0x15c12a	15110
