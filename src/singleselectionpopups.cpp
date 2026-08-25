@@ -24,6 +24,18 @@
 // All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget) and all
 // four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox); they are
 // emitted here as empty out-of-line bodies with no claim of their own.
+//
+// CreateWin family status: the two CBonusDlg::CreateWin overloads are
+// reconstructed (98.00 / 95.51) and cap on the register-homing family - the
+// schedule is aligned (why-reg flow-distance 0) but retail binds `this` to edi
+// and the per-widget temp to esi where our CL binds them the other way, a swap
+// the vc6 catalog reports as not source-addressable. The remaining three
+// (CHeroDlg 0x575a90, CTownDlg 0x575e60, CTeamAlignmentDlg 0x576540) stay
+// @stub: they share the same register cap AND add gpGeneralText font-table
+// reads (gpGeneralText->[0x20]->[0x138/0x13c]) plus sprintf/town-type/team
+// display logic, so they cannot reach 100.0000 from this TU. Reconstruct on
+// the CBonusDlg template (Add + the inlined CSpriteWidget/CBitmapWidget ctors)
+// when the register-homing binding becomes addressable.
 #include <va.h>
 #include "singleselectionpopups.h"
 #include "bitmap816.h"
