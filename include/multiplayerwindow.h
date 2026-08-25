@@ -102,6 +102,64 @@ public:
 };
 SIZE(CMPInputDlg, 0x64);
 
+class CSprite;
+class CDPlaySession;
+template<class T> class CAutoArray;
+
+// TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
+// DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
+// byte-wider base shifts every trailing member +4 (all are pointers, a char
+// array, or small scalars, so the shift is uniform). Retail proofs:
+// GetRolloverWidget reads RolloverWidget@0xfc; InitRemote reads playerName
+// @0xbc and sessTimer@0x68; ~dtor reads GameState@0x50 and pSessions@0x60;
+// GoSessionList/GoMainMenu toggle the button run @0xc4..0xf8. Total 0x100.
+// The 14-slot vtable 0x6400a0 overrides slot 0 (sdd/dtor), 9 (WindowHandler),
+// 12 (OnWidgetDeselect), 13 (GetRolloverWidget).
+//
+// The DC types of the widget members are bitmapBorder* (splash), button*
+// (the ten screen buttons), slider* (gameSlider) and textWidget* (the three
+// headers); they are modelled as their widget/textWidget base here because
+// every reconstructed body reaches them only through widget::send_message /
+// textWidget::Text, and narrowing the include set avoids the declarator wall.
+class TMultiPlayerWindow : public CHeroWindowEx {
+public:
+    CSprite* GameState;                     // +0x50
+    unsigned char inSessionList;            // +0x54
+    unsigned char showSplash;               // +0x55
+    int currentGame;                        // +0x58
+    int currentIndex;                       // +0x5c
+    CAutoArray<CDPlaySession>* pSessions;   // +0x60
+    unsigned long sessTimer;                // +0x64
+    unsigned long sessionRefreshTimeout;    // +0x68
+    char localIPAddress[80];                // +0x6c
+    textWidget* playerName;                 // +0xbc (DC textEntryWidget*)
+    unsigned char hostJoinScreen;           // +0xc0
+    widget* splash;                         // +0xc4 (DC bitmapBorder*)
+    widget* hotSeat;                        // +0xc8 (DC button*)
+    widget* ipx;                            // +0xcc
+    widget* tcp;                            // +0xd0
+    widget* modem;                          // +0xd4
+    widget* direct;                         // +0xd8
+    widget* online;                         // +0xdc
+    widget* host;                           // +0xe0
+    widget* join;                           // +0xe4
+    widget* search;                         // +0xe8
+    widget* cancel;                         // +0xec
+    widget* gameSlider;                     // +0xf0 (DC slider*)
+    textWidget* sessNameHeader;             // +0xf4
+    textWidget* userNameHeader;             // +0xf8
+    textWidget* RolloverWidget;             // +0xfc
+
+    TMultiPlayerWindow();
+    virtual ~TMultiPlayerWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    void GoSessionList();
+    void GoMainMenu();
+};
+SIZE(TMultiPlayerWindow, 0x100);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:872, dc 0xffb40) void DeleteTempSaveGame(const char* filename);

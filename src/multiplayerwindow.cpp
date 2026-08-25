@@ -372,13 +372,16 @@ void TMultiPlayerWindow::TMultiPlayerWindow()
 {
     // @stub
 }
+#endif
 
+// E:\gamedcs\MultiPlayerWindow.h:91
 VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
 textWidget* TMultiPlayerWindow::GetRolloverWidget()
 {
-    // @stub
+    return RolloverWidget;
 }
 
+#if 0  // @carcass
 VA(0x0050edb0, 0x21)  // anchor-vtable 0x6400a0 slot 0 (scalar deleting dtor); body calls ~TMPW 0x50ee40 + operator delete, ret 4, dc 0x102f98
 void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
 {
@@ -390,13 +393,31 @@ void TMultiPlayerWindow::~TMultiPlayerWindow()
 {
     // @stub
 }
+#endif
 
-VA(0x0050eef0, 0xC9)  // anchor-bracket: sole no-arg void member (ret 0, ecx=this) between ~TMPW and Update; toggles widget set via widget::send_message x12, dc 0x100498
+// E:\gamedcs\multiplayerwindow.cpp:1025
+VA(0x0050eef0, 0xC9)  // anchor-bracket: no-arg void member; toggles widget set via widget::send_message x12, dc 0x100498
 void TMultiPlayerWindow::GoSessionList()
 {
-    // @stub
+    inSessionList = 1;
+    showSplash = 0;
+    splash->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
+#if 0  // @carcass
 VA(0x0050efc0, 0x12B)  // anchor-bracket: second no-arg void member in the ~TMPW..Update run; send_message x13 + GetWidget + operator delete (teardown), dc 0x10051c
 void TMultiPlayerWindow::GoMainMenu()
 {
