@@ -75,6 +75,13 @@ public:
     {
         gameMode = newGameMode;
     }
+    // Inlined into every CreateWin: push the widget onto the window's vector
+    // and register it with priority -1 (dc 0x12eef4).
+    void Add(widget* w)
+    {
+        Widgets.push_back(w);
+        AddWidget(w, -1);
+    }
     virtual int handle_message(message& msg);  // slot 3, retail 0x575430
 };
 
