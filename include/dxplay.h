@@ -326,7 +326,7 @@ public:
 
 private:
     void* m_lpLobby;                         // +0x58
-    CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
+    CAutoArray<CDPlayAddressElement>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
 
@@ -357,6 +357,16 @@ SIZE(CDPlayMsg, 0x08);
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
+    CDPlayConnection(const GUID* lpGuid, unsigned long connSize, void* lpConn,
+        char* name)
+    {
+        guidSP = *lpGuid;
+        size = connSize;
+        pConnection = new unsigned char[connSize];
+        memcpy(pConnection, lpConn, size);
+        strcpy(sName, name);
+    }
+
     ~CDPlayConnection()
     {
         delete [] pConnection;
@@ -424,6 +434,60 @@ protected:
     unsigned long allocSize;  // +0x0c
     unsigned long size;       // +0x10
 };
+
+// The non-inline array virtuals. Get/GetCount/Destroy/~ stay inline in the
+// class (VC6 expands them into the enum wrappers exactly as retail did); Put is
+// the one non-inline virtual retail keeps out of line in dxplay.obj. Add/Delete/
+// Insert instantiate only for the address-element array's vtable and ICF-fold
+// onto identical instantiations outside this TU.
+template<class T>
+unsigned char CAutoArray<T>::Put(unsigned long elementNbr, T* element)
+{
+    if (elementNbr >= size)
+        return 0;
+    pArray[elementNbr] = element;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Add(T* element)
+{
+    if (size >= allocSize) {
+        T** grown = new T*[allocSize + step];
+        for (unsigned long i = 0; i < size; ++i)
+            grown[i] = pArray[i];
+        if (pArray)
+            delete [] pArray;
+        pArray = grown;
+        allocSize += step;
+    }
+    pArray[size] = element;
+    ++size;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Delete(unsigned long elementNbr)
+{
+    if (elementNbr >= size)
+        return 0;
+    for (unsigned long i = elementNbr; i + 1 < size; ++i)
+        pArray[i] = pArray[i + 1];
+    --size;
+    return 1;
+}
+
+template<class T>
+unsigned char CAutoArray<T>::Insert(unsigned long nextElementNbr, T* element)
+{
+    if (nextElementNbr > size)
+        return 0;
+    Add(element);
+    for (unsigned long i = size - 1; i > nextElementNbr; --i)
+        pArray[i] = pArray[i - 1];
+    pArray[nextElementNbr] = element;
+    return 1;
+}
 
 // The Windows structure consumed here preserves the complete Dreamcast
 // value layout.  HandleMPlayerLaunch's inlined Get(0) reaches guidInstance

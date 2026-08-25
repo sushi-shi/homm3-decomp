@@ -32,10 +32,61 @@ public:
     unsigned long m_dpid;     // +0x100
 };
 
+// The address-element records one DirectPlay SP address chunk EnumAddress splits
+// out: a 16-byte data-type GUID, an owned copy of the chunk bytes at +0x10 and
+// its size at +0x14. AddAddressEnum news one per enumerated chunk; the array's
+// inlined teardown frees the buffer, then the element. Completed here for this
+// TU (only forward-declared in the shared header).
+class CDPlayAddressElement {
+public:
+    CDPlayAddressElement(const GUID* lpGuid, const void* pData,
+        unsigned long dataSize)
+    {
+        m_guid = *lpGuid;
+        m_dataSize = dataSize;
+        m_pData = new char[dataSize];
+        memcpy(m_pData, pData, m_dataSize);
+    }
+
+    ~CDPlayAddressElement()
+    {
+        delete [] m_pData;
+    }
+
+    GUID m_guid;              // +0x00
+    char* m_pData;            // +0x10
+    unsigned long m_dataSize; // +0x14
+};
+
 // DirectPlay HRESULTs the wrapper bodies branch on. The two-call Get* pattern
 // probes with a null buffer and expects DPERR_BUFFERTOOSMALL before allocating.
 enum EDPlayResult {
-    DPERR_BUFFERTOOSMALL = 0x8877001e
+    DPERR_BUFFERTOOSMALL = 0x8877001e,
+    DPERR_NOMESSAGES = 0x887700be
+};
+
+// DirectPlay system-message discriminants. ReceiveSystemMsg reads dwType off the
+// leading DPMSG_GENERIC and dispatches to the matching SysMsg* handler.
+enum EDPlaySysMsgType {
+    DPSYS_CREATEPLAYERORGROUP = 0x03,
+    DPSYS_DESTROYPLAYERORGROUP = 0x05,
+    DPSYS_ADDPLAYERTOGROUP = 0x07,
+    DPSYS_DELETEPLAYERFROMGROUP = 0x21,
+    DPSYS_SESSIONLOST = 0x31,
+    DPSYS_HOST = 0x101,
+    DPSYS_SETPLAYERORGROUPDATA = 0x102,
+    DPSYS_SETPLAYERORGROUPNAME = 0x103,
+    DPSYS_SETSESSIONDESC = 0x104,
+    DPSYS_ADDGROUPTOGROUP = 0x105,
+    DPSYS_DELETEGROUPFROMGROUP = 0x106,
+    DPSYS_SECUREMESSAGE = 0x107,
+    DPSYS_STARTSESSION = 0x108,
+    DPSYS_CHAT = 0x109
+};
+
+// The common message prefix: every DPMSG_* system message leads with dwType.
+struct DPMSG_GENERIC {
+    unsigned long dwType;
 };
 
 // DirectPlay value structures consumed only by this TU's wrapper bodies. The
@@ -63,6 +114,72 @@ struct DPCHAT {
     };
 };
 SIZE(DPCHAT, 0x0c);
+
+// The lobby application descriptor RegisterApp fills in. dwSize (0x38) is fixed
+// by RegisterApp's own store; the executable path at +0x34 is the game's own
+// trailing field beyond the stock lobby descriptor.
+struct DPAPPLICATIONDESC {
+    unsigned long dwSize;              // +0x00
+    unsigned long dwFlags;            // +0x04
+    char* lpszApplicationNameA;       // +0x08
+    GUID guidApplication;             // +0x0c
+    char* lpszFilenameA;              // +0x1c
+    char* lpszCommandLineA;           // +0x20
+    char* lpszPathA;                  // +0x24
+    char* lpszCurrentDirectoryA;      // +0x28
+    char* lpszDescriptionA;           // +0x2c
+    unsigned short* lpszDescriptionW; // +0x30
+    char* lpszExecutableA;            // +0x34
+};
+SIZE(DPAPPLICATIONDESC, 0x38);
+
+// The DirectPlay COM identifiers the object factory and lobby-connect paths
+// reference by address. Values read from the retail .rdata GUID pool; only the
+// address matters to the emitted code (the reloc immediate is masked). The
+// null GUID doubles as the unset-application-guid sentinel HostSession and the
+// base ctor compare against.
+DATA(0x00643d58) static const GUID s_guidNull =
+    { 0x00000000, 0x0000, 0x0000, { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 } };
+DATA(0x00643d78) static const GUID s_dpaidINet =
+    { 0xC4A54DA0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643db8) static const GUID s_clsidDirectPlayLobby =
+    { 0x2FE8F810, 0xB2A5, 0x11D0, { 0xA7, 0x87, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
+DATA(0x00643dc8) static const GUID s_iidDirectPlayLobby3A =
+    { 0x2DB72491, 0x652C, 0x11D1, { 0xA7, 0xA8, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
+DATA(0x00643e18) static const GUID s_clsidDirectPlay =
+    { 0xD1EB6D20, 0x8923, 0x11D0, { 0x9D, 0x97, 0x00, 0xA0, 0xC9, 0x0A, 0x43, 0xCB } };
+DATA(0x00643e28) static const GUID s_iidDirectPlay4A =
+    { 0x0AB1C531, 0x4745, 0x11D1, { 0xA7, 0xA1, 0x00, 0x00, 0xF8, 0x03, 0xAB, 0xFC } };
+
+// The DPAID address-element data-type tags and the four service-provider GUIDs
+// the Create*Connection compound-address builders reference. Values read from the
+// same .rdata pool; DATA-claimed so the reloc names pair.
+DATA(0x00643d68) static const GUID s_dpaidComPort =
+    { 0xF2F0CE00, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643d88) static const GUID s_dpaidModem =
+    { 0xF6DCC200, 0xA2FE, 0x11D0, { 0x9C, 0x4F, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643d98) static const GUID s_dpaidPhone =
+    { 0x78EC89A0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643da8) static const GUID s_dpaidServiceProvider =
+    { 0x07D916C0, 0xE0AF, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643dd8) static const GUID s_spModem =
+    { 0x44EAA760, 0xCB68, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643de8) static const GUID s_spSerial =
+    { 0x0F1D6860, 0x88D9, 0x11CF, { 0x9C, 0x4E, 0x00, 0xA0, 0xC9, 0x05, 0x42, 0x5E } };
+DATA(0x00643df8) static const GUID s_spTCPIP =
+    { 0x36E95EE0, 0x8577, 0x11CF, { 0x96, 0x0C, 0x00, 0x80, 0xC7, 0x53, 0x4E, 0x82 } };
+DATA(0x00643e08) static const GUID s_spIPX =
+    { 0x685BC400, 0x9D2C, 0x11CF, { 0xA9, 0xCD, 0x00, 0xAA, 0x00, 0x68, 0x86, 0xE3 } };
+
+// The lobby compound-address builder consumes an array of these tag/size/value
+// triples; CreateCompoundAddress packs them into an SP address blob.
+struct _DPCOMPORTADDRESS;
+struct DPCOMPOUNDADDRESSELEMENT {
+    GUID guidDataType;         // +0x00
+    unsigned long dwDataSize;  // +0x10
+    const void* lpData;        // +0x14
+};
+SIZE(DPCOMPOUNDADDRESSELEMENT, 0x18);
 
 // DirectPlay COM interface, modeled privately for this TU only (m_lpDP is a
 // void* in the shared header, static_cast here). Retail dispatches every
