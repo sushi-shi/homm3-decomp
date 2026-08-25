@@ -10,14 +10,14 @@
 #include "town.h"
 #include "tradpost.h"
 #include "game.h"
+#include "advmgr.h"
 
-// ai_tactical.h's current TSkillMastery view collides with herospec.h's
-// independently reconstructed enum, already included through philai.h.
-// These are the two cross-TU declarations this compiland actually needs;
-// their /Gr register ABI and return type are byte-proven by the exact
-// definitions at 0x435830 / 0x435960 and by both call sites below.
+// Keep the needed cross-TU declarations narrow: ai_tactical.h's current
+// TSkillMastery view collides with herospec.h's definition.
 double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
+long AI_value_of_combat(const hero*, const hero*, const armyGroup&,
+    const town*, NewmapCell*);
 
 #if 0  // @carcass
 
@@ -1188,6 +1188,50 @@ int hero::LuckIncreaseValue(int value)
     value_added *= (get_primary_skill_total() + 40)
                    * army.get_AI_value() / 40;
     return static_cast<int>(value_added);
+}
+
+VA(0x00527ec0, 0x93)
+int AI_VisitSirens(const hero* current_hero, armyGroup* army)
+{
+    long total = 0;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        int creature = army->armies[i];
+        if (creature != CREATURE_NONE) {
+            int troops = army->numTroops[i];
+            if (troops > 1) {
+                short sacrifice = static_cast<short>(
+                    static_cast<float>(troops) * 0.7);
+                army->numTroops[i] = sacrifice;
+                total += akCreatureTypeTraits[creature].hitPoints
+                    * (troops - sacrifice);
+            }
+        }
+    }
+    return static_cast<int>(total
+        * const_cast<hero*>(current_hero)->GetExperienceBonusFactor());
+}
+
+VA(0x00527f60, 0x73)
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
+    TCreatureType type, short amount, long gold_cost)
+{
+    armyGroup monster_army(type, amount);
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    long bribe_worth = static_cast<long>(monster_army.get_AI_value()
+        - gold_cost * player->resourceValue[GOLD]);
+    long fight_worth = AI_value_of_combat(current_hero, 0, monster_army, 0, cell);
+    return bribe_worth > fight_worth;
+}
+
+VA(0x00529890, 0x40)
+long value_of_custom_item(const hero* current_hero, NewmapCell* cell,
+    long item_value)
+{
+    TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+    if (treasure->HasCustomGuardians)
+        return AI_value_of_combat(current_hero, 0, treasure->Guardians, 0, cell)
+            + item_value;
+    return item_value;
 }
 
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
