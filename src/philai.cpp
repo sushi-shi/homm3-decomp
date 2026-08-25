@@ -1226,12 +1226,44 @@ long value_of_recruiting(const hero* current_hero, TCreatureType creature, short
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2903
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2903.  A resource pile: worth the player's own
+// valuation of that resource times the amount (gold counts hundreds), plus
+// the combat value of any custom guardians the map maker attached.  The
+// guarded flag is the top bit of the cell's extra info; when it is set the
+// amount is the low nineteen bits and get_treasure_data supplies the army.
+//
+// Residual (88.51%): retail reads the guarded flag and the amount as a
+// bitfield typed arm of NewmapCell::extraInfo (a `guarded:1` at bit 31
+// gives `shr ecx,0x1f / test cl,1`, an `amount:19` gives `& 0x7ffff`);
+// no such arm exists in mapcell.h and this lane may not add one, so the
+// explicit `(extraInfo>>31)&1` folds to a `test edi,0x80000000` sign-bit
+// test and the downstream player-pointer register (ecx vs edx) drifts
+// with it. The arithmetic and control flow are otherwise exact.
 VA(0x0052a7c0, 0xa8)  // anchor-callee, dc 0x112260
 long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* player)
 {
-    // @stub
+    long combat_value = 0;
+    long amount;
+    int resource_type = cell->objectIndex;
+    if ((cell->extraInfo >> 31) & 1) {
+        TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+        amount = cell->extraInfo & 0x7ffff;
+        if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies())
+            combat_value = AI_value_of_combat(current_hero, 0,
+                treasure->Guardians, 0, cell);
+    } else {
+        amount = cell->extraInfo;
+    }
+    if (resource_type == GOLD)
+        amount *= 100;
+    return static_cast<long>(static_cast<double>(amount)
+            * player->resourceValue[resource_type]
+        + static_cast<double>(combat_value));
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2931.  Exact cross-TU callee set {hero::get_number_in_backpack,
 // hero::get_player}; value_of_black_market (subset, single callee) ruled out by the
