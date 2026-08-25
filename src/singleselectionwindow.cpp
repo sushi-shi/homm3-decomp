@@ -5,6 +5,7 @@
 #include <va.h>
 #include "resourcemanager.h"
 #include "singleselectionwindow.h"
+#include "singleselectionwindow_priv.h"
 #include "textresource.h"
 
 #if 0  // @carcass: untouched bodies outside the admitted retail function
@@ -1633,19 +1634,40 @@ void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1575
-DC_ONLY(0x148ad8, 0x44)
+VA(0x0057c9d0, 0x2a)  // CChatSlider vtable slot 13, dc 0x148ad8
 void CChatSlider::SetResolution(int num)
 {
-    // @stub
+    if (num > 0)
+        numStates = num;
+    else
+        numStates = 1;
+    if (numStates < currentState) {
+        currentState = numStates;
+        oldState = numStates;
+    }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1589
-DC_ONLY(0x148b1c, 0x7C)
+VA(0x0057ca00, 0x43)  // CChatSlider vtable slot 14, dc 0x148b1c
 void CChatSlider::SetState(int state)
 {
-    // @stub
+    int n = numStates;
+    if (state >= n)
+        state = n - 1;
+    if (state < 0)
+        state = 0;
+    currentState = state;
+    oldState = state;
+    if (n <= 1)
+        knobPos = 0x10;
+    else
+        knobPos = knobRange * state / (n - 1) + 0x10;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1600
 DC_ONLY(0x148b98, 0x38)
