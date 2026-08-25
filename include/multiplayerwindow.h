@@ -39,6 +39,75 @@ SIZE(CHotSeatMan, 0xac);
 
 DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
+// The text-entry widgets the two multiplayer dialogs use. All three add the
+// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
+// dialog can chase focus around its field ring; the hierarchy is proven by
+// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
+// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
+//
+// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
+// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
+// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
+// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
+// constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
+// CMPEdit overrides SetFocus(14)/OnKeyPress(15); CMPInputEdit re-overrides
+// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
+// OnKeyPress(15). Only the constructors and the two inline setters are
+// reached from this TU; the override bodies live in their own carve rows.
+class CMPEdit : public textEntryWidget {
+public:
+    CMPEdit* nextEdit;   // +0x70
+    CMPEdit* prevEdit;   // +0x74
+
+    CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
+            const char* fontName, font::TColor color, unsigned justification,
+            const char* backgroundIcon, int backgroundFrame, int id,
+            int style, int readType, int insetX, int insetY);
+    void SetNextEdit(CMPEdit* pNextEdit) { nextEdit = pNextEdit; }
+    void SetPrevEdit(CMPEdit* pPrevEdit) { prevEdit = pPrevEdit; }
+    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
+    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
+};
+
+class CMPInputEdit : public CMPEdit {
+public:
+    CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                  backgroundIcon, backgroundFrame, id, style, readType, insetX,
+                  insetY)
+    {
+    }
+    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50de50
+};
+
+class CHotSeatEdit : public textEntryWidget {
+public:
+    CHotSeatEdit* nextEdit;   // +0x70
+    CHotSeatEdit* prevEdit;   // +0x74
+
+    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+        nextEdit = 0;
+        prevEdit = 0;
+    }
+    void SetNextEdit(CHotSeatEdit* pNextEdit) { nextEdit = pNextEdit; }
+    void SetPrevEdit(CHotSeatEdit* pPrevEdit) { prevEdit = pPrevEdit; }
+    virtual void OnKillFocus();                   // slot 11, retail 0x50dee0
+    virtual void SetFocus(unsigned char state);   // slot 14, retail 0x510890
+    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50df60
+};
+
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
 // CHeroWindowEx is four bytes wider, and the retail getter at 0x512530 reads
@@ -48,11 +117,15 @@ DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 class CHotSeatDlg : public CHeroWindowEx {
 public:
     enum {
+        BACKGROUND_ID = 500,
+        FIRST_EDIT_ID = 509,
+        HEADER_ID = 517,
+        ROLLOVER_ID = 518,
         OKAY_ID = 519,
         BACK_ID = 520
     };
 
-    textWidget* edit[8];         // +0x50
+    CHotSeatEdit* edit[8];       // +0x50
     textWidget* m_rollover;      // +0x70
     THelpText gHotSeatHelp[20];  // +0x74, DC identity/extent after repack
 
@@ -87,8 +160,8 @@ public:
         ROLLOVER_ID = 507
     };
 
-    textWidget* field1;    // +0x50 (DC CMPInputEdit*)
-    textWidget* field2;    // +0x54 (DC CMPInputEdit*)
+    CMPInputEdit* field1;  // +0x50
+    CMPInputEdit* field2;  // +0x54
     textWidget* header1;   // +0x58
     textWidget* header2;   // +0x5c
     textWidget* rollover;  // +0x60
