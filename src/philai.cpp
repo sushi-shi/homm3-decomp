@@ -147,13 +147,6 @@ unsigned char should_garrison_town(const hero* current_hero, const town* current
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:811
-DC_ONLY(0x10e678, 0x70)
-void AI_friendly_hero_meeting(hero* current_hero, hero* second_hero)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:833
 DC_ONLY(0x10e6e8, 0x1AA)
 void mark_shipyards(playerData* player)
@@ -217,13 +210,6 @@ long type_spellvalue::get_value_of_increase(long base_value, long power_change, 
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1717
-DC_ONLY(0x10feb8, 0x3C)
-float value_of_experience(const hero* current_hero, const armyGroup* current_army)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1725
 DC_ONLY(0x10fef4, 0x124)
 void AI_set_hero_bonuses(hero* our_hero)
@@ -241,13 +227,6 @@ void philAI::GetTurnAIVars(int whichPlayer)
 // E:\gamedcs\philai.cpp:1815
 DC_ONLY(0x110174, 0x170)
 int NetValueOfArtifact(const hero* current_hero, int artifact_value, int gold_cost, int resource_cost, EGameResource resource_type)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1833
-DC_ONLY(0x1102e4, 0xAC)
-int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType)
 {
     // @stub
 }
@@ -403,6 +382,17 @@ void buy_special_building(const hero* current_hero, town* current_town)
 // E:\gamedcs\philai.cpp:594
 VA(0x00525ca0, 0x11e)  // anchor-callee, dc 0x10e118
 void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:811.  Two friendly heroes meeting exchange creatures
+// and artifacts.  Identity: unique cross-TU edge AI_swap_artifacts (called by
+// exactly this DC philai fn and this retail row), plus the paired
+// get_primary_skill_total / playerData::hasGivenArtifact / creature-swapper
+// construction of a two-hero exchange.
+VA(0x00525dc0, 0xB1)  // anchor-callee, dc 0x10e678
+void AI_friendly_hero_meeting(hero* current_hero, hero* second_hero)
 {
     // @stub
 }
@@ -708,6 +698,16 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell)
     return raw - best;
 }
 
+#if 0  // @carcass -- philai body-evidence claim (retail RVA order)
+// E:\gamedcs\philai.cpp:1717.  Exact cross-TU callee set {armyGroup::get_AI_value,
+// hero::GetExperienceIncrement} - the only DC philai fn with precisely that pair.
+VA(0x00527710, 0x4C)  // anchor-callee, dc 0x10feb8
+float value_of_experience(const hero* current_hero, const armyGroup* current_army)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:1945
 VA(0x00527aa0, 0x56)  // anchor-global, dc 0x110574
 int hero::ValueOfSpell(SpellID spell) const
@@ -806,7 +806,9 @@ long value_of_hill_fort(const hero* current_hero, long move_cost)
 }
 
 // E:\gamedcs\philai.cpp:2513
-DC_ONLY(0x111630, 0x10A)
+VA(0x00527bb0, 0x11D)  // anchor-callee, dc 0x111630 -- exact xmod callee set
+                       // {UpgradedCreatureType, get_upgrade_cost}; value_of_hill_fort
+                       // ruled out (its armyGroup::get_AI_value cross-TU edge absent)
 void AI_visit_hill_fort(hero* current_hero)
 {
     // @stub
@@ -854,13 +856,6 @@ int ValueOfMine(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2668
-DC_ONLY(0x111a9c, 0xE0)
-long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point point)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2692
 DC_ONLY(0x111b7c, 0xC6)
 int MoraleIncreaseValue(const hero* current_hero, int value)
@@ -903,20 +898,6 @@ int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2794
-DC_ONLY(0x111ea4, 0xAE)
-int ValueOfPrison(NewmapCell* cell, playerData* player)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2811
-DC_ONLY(0x111f54, 0x118)
-long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2845
 DC_ONLY(0x11206c, 0x7C)
 long get_value_of_well(const hero* current_hero, unsigned short move_cost)
@@ -945,13 +926,6 @@ void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2931
-DC_ONLY(0x1123ac, 0xDC)
-int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2948
 DC_ONLY(0x112488, 0x88)
 int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell)
@@ -966,12 +940,6 @@ int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3007
-DC_ONLY(0x11260c, 0xC4)
-int AI_VisitSirens(const hero* current_hero, armyGroup* army)
-{
-    // @stub
-}
 
 // E:\gamedcs\philai.cpp:3044
 DC_ONLY(0x1126d0, 0x9C)
@@ -987,12 +955,6 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3277
-DC_ONLY(0x112dd4, 0x10C)
-unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
-{
-    // @stub
-}
 
 // E:\gamedcs\philai.cpp:3297
 DC_ONLY(0x112ee0, 0x8A)
@@ -1122,6 +1084,24 @@ int hero::LuckIncreaseValue(int value)
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
+// E:\gamedcs\philai.cpp:3007.  Sirens grant experience for sacrificed troops.
+// Exact cross-TU callee set {hero::GetExperienceBonusFactor} - the only DC philai
+// fn that calls it.
+VA(0x00527ec0, 0x93)  // anchor-callee, dc 0x11260c
+int AI_VisitSirens(const hero* current_hero, armyGroup* army)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3277.  Exact cross-TU callee set {AI_value_of_combat,
+// armyGroup::armyGroup, armyGroup::get_AI_value, hero::get_player}; ret 0xc matches
+// the 3 stack args of the 5-parameter fastcall signature.
+VA(0x00527f60, 0x73)  // anchor-callee, dc 0x112dd4
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
 // object-type dispatch that reaches nearly every value_of_* helper below
 // (calls value_of_town, ValueOfScroll, MoraleIncreaseValue, AI_value_of_luck
@@ -1161,6 +1141,33 @@ long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short
     // @stub
 }
 
+// E:\gamedcs\philai.cpp:2668.  Value a wandering monster stack: exact cross-TU
+// callee set {armyGroup::armyGroup(TCreatureType,int), AI_value_of_combat} - the
+// only DC philai fn with precisely that pair.
+VA(0x0052a140, 0x96)  // anchor-callee, dc 0x111a9c
+long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2794.  A Prison holds a hero to free; its value is the
+// freed army's strength.  Exact cross-TU callee set {armyGroup::get_AI_value} -
+// the only DC philai fn with precisely that singleton.
+VA(0x0052a3a0, 0x61)  // anchor-callee, dc 0x111ea4
+int ValueOfPrison(NewmapCell* cell, playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2811.  A Pyramid: army-guarded spell reward.  Identity:
+// unique cross-TU edge armyGroup::Add (called by exactly this DC philai fn and
+// this retail row) plus AI_get_spell_value + AI_value_of_combat over an armyGroup.
+VA(0x0052a410, 0xF5)  // anchor-callee, dc 0x111f54
+long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:2208
 VA(0x0052a710, 0xad)  // anchor-callee, dc 0x110c90
 long value_of_recruiting(const hero* current_hero, TCreatureType creature, short amount)
@@ -1175,9 +1182,27 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* pla
     // @stub
 }
 
+// E:\gamedcs\philai.cpp:2931.  Exact cross-TU callee set {hero::get_number_in_backpack,
+// hero::get_player}; value_of_black_market (subset, single callee) ruled out by the
+// two-element exact match.
+VA(0x0052a870, 0x4F)  // anchor-callee, dc 0x1123ac
+int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:2964
 VA(0x0052a8c0, 0x9a)  // anchor-callee, dc 0x112510
 int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1833.  Value of upgrading a creature stack: unique cross-TU
+// edge hero::CreatureTypeCount (called by exactly this DC philai fn and this retail
+// row, twice - source and destination type counts).
+VA(0x0052aac0, 0xB9)  // anchor-callee, dc 0x1102e4
+int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType)
 {
     // @stub
 }
