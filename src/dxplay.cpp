@@ -114,12 +114,9 @@ unsigned char CDPlay::JoinSession(_GUID* lpSessionGuid, char* pPassword)
 #endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:212
-// Residual (78.8%): retail defers the edi push into the alloc block AND merges
-// the success/fail exits (delete; buf=0; return buf) into one tail while the
-// early NULL returns share a separate no-edi tail. The merged-return spelling
-// pushes edi at the prologue (61.2%); the early-return-buf spelling below gets
-// the deferred push but a split tail. The two are coupled (register-homing /
-// merged-return class); 3 structures measured, this is the best.
+// Residual (78.8%): retail defers the edi push into the alloc block and couples
+// it with a merged success/fail tail; the two are register-homing-coupled. The
+// early-return-buf form below is the best of 3 structures measured.
 VA(0x00496f20, 0x6D)  // anchor-vtable CDPlay slot24 (GetCurrSession), dc 0x8a15c
 DPSESSIONDESC2* CDPlay::GetCurrSession()
 {
@@ -635,14 +632,29 @@ unsigned char CDPlayLobby::Init()
     // @stub
 }
 
+#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1318
 VA(0x00498ae0, 0x8C)  // anchor-callee IDirectPlayLobby::GetConnectionSettings ([ecx+0x20]); ret 8, src-order (Init..SetGroupConn triple), dc 0x8b614
 DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigned long* pSize)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(dwAppId, 0, &dwSize);
+    if (pSize)
+        *pSize = dwSize;
+    if (dwSize == 0)
+        return 0;
+    DPLCONNECTION* buf = static_cast<DPLCONNECTION*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(dwAppId, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
-
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
@@ -651,30 +663,45 @@ unsigned char CDPlayLobby::TestLobbied()
     // @stub
 }
 
+#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1385
 VA(0x00498be0, 0x31)  // anchor-callee IDirectPlayLobby::SetConnectionSettings ([ecx+0x30]); ret 8, src-order, dc 0x8b6a0
 unsigned char CDPlayLobby::SetConnectionSettings(unsigned long dwAppId, DPLCONNECTION* pConnection)
 {
-    // @stub
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->SetConnectionSettings(0, dwAppId, pConnection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
 
 // E:\gamedcs\dxplay.cpp:1399
 VA(0x00498c20, 0x29)  // anchor-vtable CDPlayLobby slot64 (SetGroupConnectionSettings), dc 0x8b6dc
 unsigned char CDPlayLobby::SetGroupConnectionSettings(unsigned long dpidGroup, DPLCONNECTION* pConnection)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetGroupConnectionSettings(0, dpidGroup, pConnection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
 
 // E:\gamedcs\dxplay.cpp:1412
 VA(0x00498c50, 0x80)  // anchor-vtable CDPlayLobby slot65 (GetGroupConnectionSettings), dc 0x8b708
 DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(unsigned long dpidGroup)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupConnectionSettings(0, dpidGroup, 0, &dwSize);
+    if (dwSize == 0)
+        return 0;
+    DPLCONNECTION* buf = static_cast<DPLCONNECTION*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupConnectionSettings(0, dpidGroup, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
-
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1441
 VA(0x00498cd0, 0xAB)  // anchor-callee IDirectPlayLobby GetConnectionSettings([ecx+0x20])+Release([ecx+8]); ret 0 (0 params, unique among remaining lobby non-virtuals), dc 0x8b780

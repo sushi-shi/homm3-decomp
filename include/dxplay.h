@@ -247,7 +247,9 @@ public:
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
 
-private:
+protected:
+    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
+    // m_isHost and the array pointers directly, exactly as retail does.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
