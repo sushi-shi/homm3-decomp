@@ -9,7 +9,7 @@ advmgr	advspells	0x1b0da	0x1c2f0	4630	30
 advspells	ai	0x1c482	0x1eac0	9790	20	
 ai	ai_combat	0x224d9	0x23c80	6055	25	
 ai_combat	ai_player	0x276bf	0x280e0	2593	17	
-ai_player	ai_tactical	0x2a2a7	0x35830	46473	131	
+ai_player	ai_tactical	0x2c3a6	0x35830	38026	111	
 ai_tactical	army	0x3cb08	0x3d540	2616	16	
 army	armygrp	0x48d1b	0x496a0	2437	19	
 armygrp	artifact	0x4c606	0x4cd50	1866	10	
