@@ -8,6 +8,7 @@
 #include <string.h>
 #include "window.h"
 #include "textwdgt.h"
+#include "textntry.h"
 #include "va.h"
 
 // DC's nested char[21][8] type gives this class its complete 0xac-byte
@@ -121,13 +122,74 @@ public:
     unsigned long allocSize;  // +0xc
     unsigned long size;       // +0x10
 
-    virtual ~CAutoArray();
-    virtual unsigned char Add(T* element);
-    virtual T* Get(unsigned long elementNbr);
-    virtual unsigned char Put(unsigned long elementNbr, T* element);
-    virtual unsigned char Delete(unsigned long elementNbr);
-    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
-    virtual unsigned long GetCount();
+    CAutoArray()
+    {
+        step = 25;
+        size = 0;
+        allocSize = 0;
+        pArray = 0;
+    }
+
+    // The delete-every-element teardown the compiler-generated scalar
+    // deleting destructor inlines (retail 0x512670 for <CDPlaySession>).
+    virtual ~CAutoArray()
+    {
+        for (unsigned long i = 0; i < size; i++)
+            delete Get(i);
+        if (pArray)
+            delete pArray;
+        pArray = 0;
+        allocSize = 0;
+        size = 0;
+    }
+
+    virtual unsigned char Add(T* element)
+    {
+        if (size >= allocSize) {
+            allocSize += step;
+            T** newArray = new T*[allocSize];
+            for (unsigned long i = 0; i < size; i++)
+                newArray[i] = pArray[i];
+            if (pArray)
+                delete pArray;
+            pArray = newArray;
+        }
+        pArray[size] = element;
+        size++;
+        return 1;
+    }
+
+    virtual T* Get(unsigned long elementNbr)
+    {
+        if (elementNbr < size)
+            return pArray[elementNbr];
+        return 0;
+    }
+
+    virtual unsigned char Put(unsigned long elementNbr, T* element)
+    {
+        pArray[elementNbr] = element;
+        return 1;
+    }
+
+    virtual unsigned char Delete(unsigned long elementNbr)
+    {
+        for (unsigned long i = elementNbr; i + 1 < size; i++)
+            pArray[i] = pArray[i + 1];
+        size--;
+        return 1;
+    }
+
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element)
+    {
+        Add(element);
+        for (unsigned long i = size - 1; i > nextElementNbr; i--)
+            pArray[i] = pArray[i - 1];
+        pArray[nextElementNbr] = element;
+        return 1;
+    }
+
+    virtual unsigned long GetCount() { return size; }
 
     void Destroy(unsigned char deleteData = 1)
     {
@@ -141,6 +203,26 @@ public:
         allocSize = 0;
         size = 0;
     }
+};
+
+// CMultiPlayerWindowEdit - the text-entry widget the session-host name field
+// uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
+// its only addition is the key-handler override that gives it a distinct
+// vtable (retail 0x640054, stored by the TMultiPlayerWindow constructor).
+class CMultiPlayerWindowEdit : public textEntryWidget {
+public:
+    CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
+                           const char* text, const char* fontName,
+                           font::TColor color, unsigned justification,
+                           const char* backgroundIcon, int backgroundFrame,
+                           int id, int style, int readType, int insetX,
+                           int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+    virtual int Main(message* msg);  // slot 2 override
 };
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.

@@ -5,6 +5,13 @@
 #include "multiplayerwindow.h"
 #include "winmgr.h"
 #include "csprite.h"
+#include "border.h"
+#include "button.h"
+#include "slider.h"
+#include "resourcemanager.h"
+#include "textresource.h"
+#include "gametypewindow.h"
+#include "winfile.h"
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -367,13 +374,141 @@ void CMPInputDlg::DisableOK()
 // that does NOT follow the Dreamcast emission order (the reference block above
 // keeps DC order), so they claim their retail RVAs in a dedicated ascending
 // block. Bodies left @stub - the classes are not yet modelled in the header.
-#if 0  // @carcass
-VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
-void TMultiPlayerWindow::TMultiPlayerWindow()
+// File-scope storage the constructor reaches. gMultiPlayerHelp is the
+// rollover/right-click help table indexed by (widget id - 101); the two char
+// buffers hold the local player name shown in the entry field and the name of
+// the most recently loaded game (checked for the remote-temp prefix).
+DATA(0x0069880a) char gLoadedGameName[13];
+DATA(0x00698817) char gLocalPlayerName[21];
+DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
+
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// Slider callback for the session list; scrolls the displayed window of games.
+void SliderGames(int state, heroWindow* parent_window)
 {
-    // @stub
+    static_cast<TMultiPlayerWindow*>(parent_window)->currentIndex = state;
 }
-#endif
+
+// Residual (80.46%): every widget, its screen coordinates, def/pcx name,
+// widget id and the whole add order (push_back for the members, single-element
+// insert for the slider / session rows / map border) are byte-exact, and the
+// frame matches retail's 0x1e0. Two pervasive CL-generation deltas remain, both
+// register/inliner rather than source: (1) retail hoists 0 into ebx at entry
+// (`xor ebx,ebx`) and reuses it for the base-ctor zero args, hostJoinScreen,
+// the EH-state clears and every `new` null test (`cmp eax,ebx`); our SP3 CL
+// materialises those as immediates and establishes ebx=0 later - and it swaps
+// the EH-state-byte store past the null test at each `new` site. (2) the STL
+// single-element `insert` over-inlines `_Ucopy` (7 sites vs retail's 12); the
+// caller is already maximal so no shrink lever applies. Storing the slider/map
+// widgets through a local before the insert (rather than re-reading the member)
+// was worth +1.5.
+VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
+TMultiPlayerWindow::TMultiPlayerWindow()
+    : CHeroWindowEx(0, 0, 800, 600, 0)
+{
+    x = 173;
+    y = 55;
+    width = 454;
+    height = 490;
+    type = 16;
+    gpMultiPlayerWindow = this;
+    hostJoinScreen = 0;
+
+    Widgets.reserve(77);
+
+    Widgets.push_back(new bitmapBorder(0, 0, 454, 490, 100, "mupopup.pcx", 0x800));
+
+    hotSeat = 0;
+    if (!gbRestrictedGameTypeMenu)
+        hotSeat = new button(373, 78, 64, 48, 102, "muBhot.def", 0, 1, 0, 0, 2);
+
+    ipx = new button(373, 135, 64, 48, 103, "muBipx.def", 0, 1, 0, 0, 2);
+    tcp = new button(373, 192, 64, 48, 104, "muBtcp.def", 0, 1, 0, 0, 2);
+    modem = new button(373, 249, 64, 48, 105, "muBmodm.def", 0, 1, 0, 0, 2);
+    direct = new button(373, 306, 64, 48, 106, "muBdrct.def", 0, 1, 0, 0, 2);
+    online = new button(373, 363, 64, 48, 101, "mubonl.def", 0, 1, 0, 0, 2);
+
+    host = 0;
+    if (!gbRestrictedGameTypeMenu)
+        host = new button(373, 78, 64, 48, 107, "muBhost.def", 0, 1, 0, 0, 2);
+
+    join = new button(373, 135, 64, 48, 108, "muBjoin.def", 0, 1, 0, 0, 2);
+    search = new button(373, 192, 64, 48, 109, "muBsrch.def", 0, 1, 0, 0, 2);
+    cancel = new button(373, 424, 64, 48, 124, "muBcanc.def", 0, 1, 0, 1, 2);
+
+    sessNameHeader = new textWidget(216 - x, 146 - y, 127, 18,
+                                    gpGeneralText->GetText(41), "smalfont.fnt",
+                                    font::PRIMARY, 127, 1, 0, 8);
+    userNameHeader = new textWidget(346 - x, 146 - y, 127, 18,
+                                    gpGeneralText->GetText(42), "smalfont.fnt",
+                                    font::PRIMARY, 128, 1, 0, 8);
+    playerName = new CMultiPlayerWindowEdit(19, 436, 334, 18, 21,
+                                            gLocalPlayerName, "smalfont.fnt",
+                                            font::WHITE, 0, 0, 0, 125, 0x100, 0,
+                                            7, 5);
+
+    if (hotSeat)
+        Widgets.push_back(hotSeat);
+    Widgets.push_back(ipx);
+    Widgets.push_back(tcp);
+    Widgets.push_back(modem);
+    Widgets.push_back(direct);
+    Widgets.push_back(online);
+    Widgets.push_back(host);
+    Widgets.push_back(join);
+    Widgets.push_back(search);
+    Widgets.push_back(cancel);
+    Widgets.push_back(sessNameHeader);
+    Widgets.push_back(userNameHeader);
+    Widgets.push_back(playerName);
+
+    RolloverWidget = new textWidget(8, 465, 438, 18, 0, "smalfont.fnt",
+                                    font::PRIMARY, 123, 1, 32, 8);
+    Widgets.push_back(RolloverWidget);
+
+    widget* gs = new slider(337, 81, 16, 330, 122, 10, SliderGames,
+                            slider::BLUE, 0, 0);
+    gameSlider = gs;
+    Widgets.insert(Widgets.end(), gs);
+
+    int sessionRowY = 112;
+    for (int i = 0; sessionRowY < 412; sessionRowY += 25, i++)
+        Widgets.insert(Widgets.end(),
+                       new textWidget(18, sessionRowY, 317, 22, 0,
+                                      "smalfont.fnt", font::PRIMARY, 110 + i, 1,
+                                      0, 8));
+
+    widget* mapBorder = new bitmapBorder(16, 77, 338, 335, 129, "mumap.pcx", 0x800);
+    splash = mapBorder;
+    Widgets.insert(Widgets.end(), mapBorder);
+
+    AddWidgetsToMessageStream();
+    SetFocus(playerName->id);
+    static_cast<slider*>(gameSlider)->SetResolution(0);
+
+    pSessions = new CAutoArray<CDPlaySession>;
+    sessTimer = 0;
+    localIPAddress[0] = 0;
+    sessionRefreshTimeout = 0;
+    GameState = ResourceManager::GetSprite("muGstat.def");
+    inSessionList = 0;
+    currentIndex = 0;
+    currentGame = 0;
+
+    SetHelpText(gMultiPlayerHelp, 101, 110, 0);
+    gameSlider->set_help_text(gMultiPlayerHelp[21].text,
+                              gMultiPlayerHelp[21].rclick, 0);
+    cancel->set_help_text(gMultiPlayerHelp[23].text,
+                          gMultiPlayerHelp[23].rclick, 0);
+
+    if (!strnicmp(gLoadedGameName, "RMT", 3)) {
+        char tempPath[452];
+        sprintf(tempPath, "%s%s", ".\\DATA\\", gLoadedGameName);
+        DeleteFileA(tempPath);
+    }
+
+    GoMainMenu();
+}
 
 // E:\gamedcs\MultiPlayerWindow.h:91
 VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
@@ -631,15 +766,15 @@ int CHotSeatDlg::WindowHandler(message* msg)
 
 VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 
+// Compiler-generated scalar deleting destructor for CAutoArray<CDPlaySession>,
+// emitted by the `new CAutoArray<CDPlaySession>` in the TMultiPlayerWindow
+// constructor above (stores vtable 0x6400d8, inlines the delete-every-element
+// teardown). dc 0x103200.
+VA_COMPGEN(0x00512670, 0x6C, SCALAR_DELETING_DTOR, CAutoArray)
+
 #if 0  // @carcass: remaining untouched bodies
 
 // TMultiPlayerWindow::`scalar deleting destructor' promoted to VA(0x0050edb0) above.
-
-VA(0x00512670, 0x6C)  // anchor-vtable 0x6400d8 slot 0 (CAutoArray<CDPlaySession> scalar deleting dtor); body stores vtable 0x6400d8 into this (instantiation-specific, not ICF-folded), dc 0x103200
-void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
 
 // E:\gamedcs\multiplayerwindow.cpp:1000
 DC_ONLY(0x102fcc, 0x3C)
