@@ -1525,7 +1525,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x98be0	49	in-span	dxplay	dxplay	CDPlayLobby_SetConnectionSettings
 0x98c20	41	in-span	dxplay	dxplay	CDPlayLobby_SetGroupConnectionSettings
 0x98c50	128	in-span	dxplay	dxplay	CDPlayLobby_GetGroupConnectionSettings
-0x98cd0	171	in-span	dxplay	dxplay	game_155ef0_sub02_98cd0
+0x98cd0	171	in-span	dxplay	dxplay	CDPlayLobby_Connect
 0x98d80	969	in-span	dxplay	dxplay	CDPlayLobby_CreateTCPIPConnection
 0x99150	854	in-span	dxplay	dxplay	CDPlayLobby_CreateIPXConnection
 0x994b0	590	in-span	dxplay	dxplay	CDPlayLobby_CreateModemConnection

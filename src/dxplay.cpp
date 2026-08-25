@@ -458,6 +458,13 @@ DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(unsigned long dpidGroup)
     // @stub
 }
 
+// E:\gamedcs\dxplay.cpp:1441
+VA(0x00498cd0, 0xAB)  // anchor-callee IDirectPlayLobby GetConnectionSettings([ecx+0x20])+Release([ecx+8]); ret 0 (0 params, unique among remaining lobby non-virtuals), dc 0x8b780
+unsigned char CDPlayLobby::Connect()
+{
+    // @stub
+}
+
 // E:\gamedcs\dxplay.cpp:1540
 VA(0x00498d80, 0x3C9)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateTCPIPConnection), dc 0x8b950
 CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(char* sIPAddress, char* sName, CDPlayConnection* pConnAppend)
@@ -635,13 +642,6 @@ void CDPlay::CDPlay()
 // E:\gamedcs\dxplay.cpp:890
 DC_ONLY(0x8af4c, 0x4)
 unsigned char CDPlay::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1441
-DC_ONLY(0x8b780, 0x88)
-unsigned char CDPlayLobby::Connect()
 {
     // @stub
 }
