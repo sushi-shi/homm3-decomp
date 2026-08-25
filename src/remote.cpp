@@ -130,6 +130,14 @@ CDPlayHeroes::~CDPlayHeroes()
     DestroyMsgQueue();
 }
 
+// E:\gamedcs\remote.cpp:214 - derived slot 56 forwards to the base handler.
+VA(0x00552b40, 0x14)
+unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(
+    DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
+{
+    return CDPlay::SysMsgCreatePlayerOrGroup(message, toId);
+}
+
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
 // call graph.
