@@ -300,21 +300,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x29ad0	640	in-span	ai_player	ai_player	?calculate_reserve@type_AI_player@@QAEXXZ
 0x29d50	1017	in-span	ai_player	ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z
 0x2a150	343	in-span	ai_player	ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z
-<<<<<<< HEAD
-0x2a2b0	447	in-span	ai_player	ai_player	game_2a150_sub00_2a2b0
-0x2a470	272	in-span	ai_player	ai_player	game_2ae00_sub01_2a470
-0x2a580	1470	in-span	ai_player	ai_player	game_2a150_sub01_2a580
-0x2ab40	209	in-span	ai_player	ai_player	game_2a470_sub00_2ab40
-0x2ac20	478	in-span	ai_player	ai_player	game_2a470_sub01_2ac20
-0x2ae00	1816	in-span	ai_player	ai_player	game_28dd0_sub04_2ae00
-=======
 0x2a2b0	447	in-span	ai_player	ai_player	type_AI_player_check_trade_supply
 0x2a470	272	in-span	ai_player	ai_player	type_AI_player_trade_resources
 0x2a580	1470	in-span	ai_player	ai_player	type_AI_player_can_trade_resources
 0x2ab40	209	in-span	ai_player	ai_player	type_AI_player_build_markets
 0x2ac20	478	in-span	ai_player	ai_player	type_AI_player_do_resource_trade
 0x2ae00	1816	in-span	ai_player	ai_player	type_AI_player_purchase_building
->>>>>>> lane/campaign-game
 0x2b520	139	in-span	ai_player	ai_player	game_2ae00_sub02_2b520
 0x2b5b0	190	in-span	ai_player	ai_player	game_2ae00_sub03_2b5b0
 0x2b670	273	in-span	ai_player	ai_player	game_2ae00_sub04_2b670
@@ -323,21 +314,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x2b8b0	304	in-span	ai_player	ai_player	game_2ae00_sub07_2b8b0
 0x2b9e0	69	in-span	ai_player	ai_player	game_is_human_ally
 0x2ba30	36	in-span	ai_player	ai_player	game_GetTown
-<<<<<<< HEAD
-0x2ba60	1095	in-span	ai_player	ai_player	game_1253d0_sub00_2ba60
-0x2beb0	391	in-span	ai_player	ai_player	game_1253d0_sub01_2beb0
-0x2c040	21	in-span	ai_player	ai_player	??0type_AI_creature_swapper@@QAE@XZ
-0x2c060	195	in-span	ai_player	ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ
-0x2c130	326	in-span	ai_player	ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z
-0x2c280	294	in-span	ai_player	ai_player	game_2ba60_sub00_2c280
-=======
 0x2ba60	1095	in-span	ai_player	ai_player	type_AI_player_buy_creatures
 0x2beb0	391	in-span	ai_player	ai_player	type_AI_player_buy_mage_guild
 0x2c040	21	in-span	ai_player	ai_player	??0type_AI_creature_swapper@@QAE@XZ
 0x2c060	195	in-span	ai_player	ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ
 0x2c130	326	in-span	ai_player	ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z
 0x2c280	294	in-span	ai_player	ai_player	type_AI_creature_swapper_do_best_swap
->>>>>>> lane/campaign-game
 0x2c3b0	227	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	game_124370_sub01_2c3b0
 0x2c4a0	264	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	game_128040_sub00_2c4a0
 0x2c5b0	209	bracketed	ai_player..ai_tactical	ai_player,ai_tactical	?dump_extra_creature@type_AI_creature_swapper@@IAEXXZ
