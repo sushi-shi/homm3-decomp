@@ -41,9 +41,24 @@ enum EMarketWidgetId {
     MARKET_BUY_GEMS_ID = 0x44,
     MARKET_BUY_GOLD_ID = 0x45,
 
+    // The buy-artifact window's right-column label (its SetRolloverText reads
+    // gBuyArtHelpText[3] for this id). Provisional name.
+    MARKET_BUY_RIGHT_LABEL_ID = 0x13,
+
     // The shared exit/command widget (the same 0x7802 combatwindow names
     // COMBAT_PLACEMENT_COMMAND_1_ID).
     MARKET_COMMAND_ID = 0x7802
+};
+
+// The buy-artifact left column: one widget id per artifact-for-sale slot
+// (0x3f..0x45). The same numeric range other windows use for the buy-side
+// resource buttons here selects an artifact out of gpMarketArtifacts, so it
+// needs its own named cases.
+enum EMarketBuyArtifactSlotId {
+    BUY_ARTIFACT_SLOT_0_ID = 0x3f,
+    BUY_ARTIFACT_SLOT_1_ID, BUY_ARTIFACT_SLOT_2_ID,
+    BUY_ARTIFACT_SLOT_3_ID, BUY_ARTIFACT_SLOT_4_ID,
+    BUY_ARTIFACT_SLOT_5_ID, BUY_ARTIFACT_SLOT_6_ID   // 0x45
 };
 
 // The sell-artifact left column: one widget id per selectable artifact slot,
@@ -71,6 +86,17 @@ enum EMarketCreatureSlotId {
     MARKET_CREATURE_SLOT_1_ID, MARKET_CREATURE_SLOT_2_ID,
     MARKET_CREATURE_SLOT_3_ID, MARKET_CREATURE_SLOT_4_ID,
     MARKET_CREATURE_SLOT_5_ID, MARKET_CREATURE_SLOT_6_ID   // 0x91
+};
+
+// The give-resource recipient column: one widget id per selectable player
+// slot (0x46..0x4c). TGiveResourceWindow::SetRolloverText formats each with
+// the player-colour name of the slot's stored colour id, so the seven ids
+// need named cases rather than a magic-label range. Provisional names.
+enum EGiveRecipientId {
+    GIVE_RECIPIENT_SLOT_0_ID = 0x46,
+    GIVE_RECIPIENT_SLOT_1_ID, GIVE_RECIPIENT_SLOT_2_ID,
+    GIVE_RECIPIENT_SLOT_3_ID, GIVE_RECIPIENT_SLOT_4_ID,
+    GIVE_RECIPIENT_SLOT_5_ID, GIVE_RECIPIENT_SLOT_6_ID   // 0x4c
 };
 
 #endif  /* HOMM3_TRADPOST_WIDGETS_H */

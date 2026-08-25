@@ -39,12 +39,22 @@ public:
 };
 
 class TGiveResourceWindow : public CAdvPopup {
+    // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
+    // per-slot player-colour array; SetRolloverText's byte-proven
+    // `[this + 4*id - 0xb4]` read fixes the array at +0x64, hence the leading
+    // dword. The trailing members (retail object size 0x8c) are not attested
+    // by any reconstructed body yet, so only what the rollover handler reads
+    // is modelled.
+    int field_60;
+    int slotPlayerColor[7];   // +0x64
 public:
+    void SetRolloverText(int codeY);
     virtual ~TGiveResourceWindow();
 };
 
 class TBuyArtifactWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TBuyArtifactWindow();
 };
 
