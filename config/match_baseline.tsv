@@ -1646,6 +1646,7 @@ multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?GetRolloverWidget@CMPInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x110970
 multiplayerwindow	?GetRolloverWidget@TMultiPlayerWindow@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x10ed50
+multiplayerwindow	?GoMainMenu@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10efc0
 multiplayerwindow	?GoSessionList@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10eef0
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420

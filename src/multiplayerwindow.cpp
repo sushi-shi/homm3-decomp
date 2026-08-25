@@ -71,13 +71,6 @@ void TMultiPlayerWindow::GoSessionList()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1049
-DC_ONLY(0x10051c, 0xE0)
-void TMultiPlayerWindow::GoMainMenu()
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:1083
 DC_ONLY(0x1005fc, 0x3A6)
 void TMultiPlayerWindow::Update()
@@ -518,6 +511,47 @@ void TMultiPlayerWindow::GoSessionList()
                                  widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
     sessNameHeader->send_message(widget::WIDGET_SET_STATUS,
                                  widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1049
+VA(0x0050efc0, 0x12b)  // main-menu widget transition + session teardown, dc 0x10051c
+void TMultiPlayerWindow::GoMainMenu()
+{
+    inSessionList = 0;
+    showSplash = 1;
+    sessTimer = 0;
+    hostJoinScreen = 0;
+    splash->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_SET_STATUS,
+                              widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_SET_STATUS,
+                      widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_SET_STATUS,
+                      widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_SET_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_CLEAR_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_CLEAR_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_SET_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    widget* w = GetWidget(126);
+    if (w)
+        w->send_message(widget::WIDGET_CLEAR_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    pSessions->Destroy();
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:465
