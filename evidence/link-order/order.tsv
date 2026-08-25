@@ -81,7 +81,7 @@ position	unit	first_rva	end_rva	gap_to_next
 75	resource	0x158720	0x1587a7	1017
 76	resourcedisplay	0x158ba0	0x1590c4	44
 77	resourcemanager	0x1590f0	0x15c12a	15110
-78	sacrifice_window	0x15fc30	0x166758	1608
+78	sacrifice_window	0x15fc30	0x1669ef	945
 79	sample	0x166da0	0x166e89	10615
 80	scenarioinfo	0x169800	0x1699b2	1822
 81	search	0x16a0d0	0x16a352	12430

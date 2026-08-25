@@ -81,7 +81,7 @@ remote	resource	0x157f71	0x158720	1967	13
 resource	resourcedisplay	0x1587a7	0x158ba0	1017	11	
 resourcedisplay	resourcemanager	0x1590c4	0x1590f0	44	1	
 resourcemanager	sacrifice_window	0x15c12a	0x15fc30	15110	89	ressw
-sacrifice_window	sample	0x166758	0x166da0	1608	5	
+sacrifice_window	sample	0x1669ef	0x166da0	945	4	
 sample	scenarioinfo	0x166e89	0x169800	10615	17	
 scenarioinfo	search	0x1699b2	0x16a0d0	1822	12	
 search	seerhut	0x16a352	0x16d3e0	12430	42	

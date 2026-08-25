@@ -5771,6 +5771,37 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
+// Two NewfullMap map-object-data broadcast twins, immediately after
+// PlaceObject in the mapcell link-order bracket and confidently owned by
+// this TU: `this` reaches a std::vector at +0xb4/+0xb8 (the _First/_Last of
+// NewfullMap::mapObjectData, game.h:278 puts that vector at NewfullMap+0xb0),
+// walks it re-reading _First and _Last every pass (the do-not-cache shape),
+// and calls one CMapObjectData virtual per element with two stack arguments
+// (ret 8).  0x505d20 dispatches virtual slot +0x24, 0x505d60 slot +0x28 -
+// exactly the NewMapVFn24/NewMapVFn28 slots game.h's CMapObjectDataNewMapView
+// view already anticipates.  Neither is in the DC mapcell.cpp roster because
+// the Dreamcast build inlined the broadcast into its callers; retail emits it
+// out of line and it is reached from the adventure-event/pickup path
+// (xref 0x4ad470 -> DoEvent/whirlpool -> DoEventBlackBox/DoAdvCommand).
+// Reconstruction is BLOCKED on a shared-header change: the loop body wants
+// `mapObjectData[i]->NewMapVFn24(a, b)` through CMapObjectDataNewMapView, but
+// that view's slots are declared nullary in game.h and the two-argument
+// signature (plus enabling HOMM3_GAME_NEW_MAP_DECLS in this TU) must be
+// coordinated with the game.h owner - so these stay @stub for now.
+VA(0x00505d20, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x24 to every record, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505D20()
+{
+    // @stub
+}
+
+VA(0x00505d60, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x28 to every record, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505D60()
+{
+    // @stub
+}
+#endif  // @carcass
+
 // These Dinkumware template members are already emitted by NewfullMap's
 // vector members.  The annotations only pair their named VC6 COMDATs with
 // the contiguous retail run; there are deliberately no source definitions.
