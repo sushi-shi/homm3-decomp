@@ -913,6 +913,14 @@ unsigned char CDPlay::SysMsgAddGroupToGroup(
     return 1;
 }
 
+// E:\gamedcs\dxplay.cpp:878 - vtable slot 55.
+VA(0x004981d0, 0x8)
+unsigned char CDPlay::SysMsgHost(DPMSG_GENERIC* message, unsigned long toId)
+{
+    m_isHost = 1;
+    return 1;
+}
+
 // E:\gamedcs\dxplay.cpp:885 - representative shared by slots 56 and 57.
 VA(0x004981e0, 0x5)
 unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
