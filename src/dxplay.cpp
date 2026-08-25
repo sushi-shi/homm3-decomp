@@ -14,6 +14,8 @@ DATA(0x00643e28) extern const GUID IID_IDirectPlay4A;
 
 static unsigned char s_coInitialized;
 
+int PASCAL EnumAddressCallback(const GUID&, unsigned long, const void*,
+    void*);
 int PASCAL EnumConnectionsCallback(const GUID*, void*, unsigned long,
     const DPNAME*, unsigned long, void*);
 int PASCAL EnumGroupsCallback(unsigned long, unsigned long, const DPNAME*,
@@ -1593,6 +1595,19 @@ unsigned char CDPlayLobby::EnumGroupPlayersRemote(
     return ok;
 }
 
+VA(0x00499b20, 0x89)  // anchor-vtable CDPlayLobby slot69, dc 0x8ba68
+unsigned char CDPlayLobby::EnumAddress(
+    void* connection, unsigned long size,
+    CAutoArray<CDPlayAddressElement>* addresses)
+{
+    m_pAddressArray = addresses;
+    addresses->Destroy(1);
+    m_hRes = m_lpLobby->EnumAddress(
+        EnumAddressCallback, connection, size, this);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 VA(0x00499bb0, 0xAA)
 unsigned char CDPlayLobby::AddAddressEnum(
     const GUID* type, unsigned long size, const void* data)
@@ -1629,11 +1644,11 @@ unsigned char CDPlayLobby::GetIPAddress(
 
 // E:\gamedcs\dxplay.cpp:1948
 VA(0x00499e20, 0x23)  // address-taken by CDPlayLobby::EnumAddress, dc 0x8bba4
-int PASCAL EnumAddressCallback(const GUID* guidDataType,
+int PASCAL EnumAddressCallback(const GUID& guidDataType,
     unsigned long dwDataSize, const void* lpData, void* lpContext)
 {
     return static_cast<CDPlayLobby*>(lpContext)->AddAddressEnum(
-        guidDataType, dwDataSize, lpData);
+        &guidDataType, dwDataSize, lpData);
 }
 
 // E:\gamedcs\dxplay.cpp:1948
@@ -1678,6 +1693,10 @@ int PASCAL EnumPlayersCallback(unsigned long dpid,
 VA(0x00499fc0, 0x1D)
 template CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(
     unsigned long elementNbr);
+
+VA(0x00499fe0, 0x22)  // anchor-vtable slot3, dc 0x8c260
+template unsigned char CAutoArray<CDPlayAddressElement>::Put(
+    unsigned long elementNbr, CDPlayAddressElement* element);
 
 VA(0x0049a010, 0x4)
 template unsigned long CAutoArray<CDPlayAddressElement>::GetCount();

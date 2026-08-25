@@ -197,7 +197,7 @@ SIZE(CDPlay, 0x58);
 // in retail, so this is also the complete PC layout needed by CDPlayHeroes.
 class CDPlayLobby : public CDPlay {
 public:
-    friend int PASCAL EnumAddressCallback(const GUID* type,
+    friend int PASCAL EnumAddressCallback(const GUID& type,
         unsigned long size, const void* data, void* context);
 
     CDPlayLobby();
