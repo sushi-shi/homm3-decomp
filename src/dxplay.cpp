@@ -989,25 +989,89 @@ have_conn:
     return ok;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
+// Residual (98.6%): the append-enumerate/copy loop, SP+INet element build and
+// connection wrap are byte-right (the local array's out-of-line Destroy(1) on the
+// EnumAddress-fail path emits CAutoArray::Destroy). The delta is guid struct-copy
+// store scheduling and one EH-state byte placement - register-homing class.
 // E:\gamedcs\dxplay.cpp:1540
 VA(0x00498d80, 0x3C9)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateTCPIPConnection), dc 0x8b950
 CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(char* sIPAddress, char* sName, CDPlayConnection* pConnAppend)
 {
-    // @stub
+    DPCOMPOUNDADDRESSELEMENT elements[10];
+    CAutoArray<CDPlayAddressElement> addresses;
+    unsigned long dwAddressSize = 0;
+    unsigned long count = 0;
+    if (pConnAppend) {
+        if (!EnumAddress(pConnAppend->pConnection, pConnAppend->size, &addresses))
+            return 0;
+        while (count < addresses.GetCount()) {
+            CDPlayAddressElement* elem = addresses.Get(count);
+            elements[count].guidDataType = elem->m_guid;
+            elements[count].dwDataSize = elem->m_dataSize;
+            elements[count].lpData = elem->m_pData;
+            ++count;
+        }
+    }
+    elements[count].guidDataType = s_dpaidServiceProvider;
+    elements[count].dwDataSize = sizeof(GUID);
+    elements[count].lpData = &s_spTCPIP;
+    ++count;
+    if (sIPAddress) {
+        elements[count].guidDataType = s_dpaidINet;
+        elements[count].dwDataSize = strlen(sIPAddress) + 1;
+        elements[count].lpData = sIPAddress;
+        ++count;
+    }
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, 0, &dwAddressSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    void* pAddress = ::operator new(dwAddressSize);
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, pAddress, &dwAddressSize);
+    if (m_hRes < 0) {
+        ::operator delete(pAddress);
+        return 0;
+    }
+    CDPlayConnection* pConn = new CDPlayConnection(&s_spTCPIP, dwAddressSize, pAddress, sName);
+    ::operator delete(pAddress);
+    return pConn;
 }
-
 
 // E:\gamedcs\dxplay.cpp:1617
 VA(0x00499150, 0x356)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateIPXConnection), dc 0x8b954
 CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection* pConnAppend)
 {
-    // @stub
+    DPCOMPOUNDADDRESSELEMENT elements[10];
+    CAutoArray<CDPlayAddressElement> addresses;
+    unsigned long dwAddressSize = 0;
+    unsigned long count = 0;
+    if (pConnAppend) {
+        if (!EnumAddress(pConnAppend->pConnection, pConnAppend->size, &addresses))
+            return 0;
+        while (count < addresses.GetCount()) {
+            CDPlayAddressElement* elem = addresses.Get(count);
+            elements[count].guidDataType = elem->m_guid;
+            elements[count].dwDataSize = elem->m_dataSize;
+            elements[count].lpData = elem->m_pData;
+            ++count;
+        }
+    }
+    elements[count].guidDataType = s_dpaidServiceProvider;
+    elements[count].dwDataSize = sizeof(GUID);
+    elements[count].lpData = &s_spIPX;
+    ++count;
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, 0, &dwAddressSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    void* pAddress = ::operator new(dwAddressSize);
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, pAddress, &dwAddressSize);
+    if (m_hRes < 0) {
+        ::operator delete(pAddress);
+        return 0;
+    }
+    CDPlayConnection* pConn = new CDPlayConnection(&s_spIPX, dwAddressSize, pAddress, sName);
+    ::operator delete(pAddress);
+    return pConn;
 }
-
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1686
 VA(0x004994b0, 0x24E)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateModemConnection), dc 0x8b958
