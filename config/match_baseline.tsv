@@ -1106,6 +1106,7 @@ events	advManager_ReceiveHeroTownData	0.0000	0.0000	0.0000	0xaeee0
 events	advManager_SendHeroTownData	0.0000	0.0000	0.0000	0xaeb50
 events	advManager_do_event_undead_lair	0.0000	0.0000	0.0000	0xac490
 events	advManager_monsters_give_reward	0.0000	0.0000	0.0000	0xa6b30
+events	type_university_window_type_university_window	0.0000	0.0000	0.0000	0xaaa40
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
