@@ -181,12 +181,19 @@ unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1078
 VA(0x00577bb0, 0x2f)  // arity ret4; scans field [slot+0x70]==pos over 8 stride-0x7c slots, returns slot* (no computer filter), dc 0x130604
 CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayerInPos(int pos)
 {
-    // @stub
+    for (int i = 0; i < MAX_PLAYERS; ++i)
+        if (humanPlayers[i].playerPos == pos)
+            return &humanPlayers[i];
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1089
 DC_ONLY(0x130654, 0x1A)
@@ -236,19 +243,34 @@ unsigned char CNetPlayerHandler::PlayerExists(unsigned long dpid)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1156
 VA(0x00577ce0, 0x2e)  // arity ret4; 8-slot stride-0x7c dpid scan then shl-5 (x0x7c) pointer compute (returns player*), dc 0x1307dc
 CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayer(unsigned long dpid)
 {
-    // @stub
+    for (int i = 0; i < MAX_PLAYERS; ++i)
+        if (humanPlayers[i].dpid == dpid)
+            return &humanPlayers[i];
+    return 0;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1167
 VA(0x00577d10, 0x5a)  // arity ret8 (this+2); stride-0x7c scan + checks face field [slot+0x2c], dc 0x130828
 unsigned char CNetPlayerHandler::IsFaceTaken(int face, int exclude)
 {
-    // @stub
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (i != exclude) {
+            CNetPlayerHandlerPlayer* pPlayer = GetPlayerInPos(i);
+            if (pPlayer && pPlayer->heroIndex != -1 &&
+                pPlayer->availableHeroes[pPlayer->heroIndex] == face)
+                return 1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1193
 DC_ONLY(0x130898, 0x40)
