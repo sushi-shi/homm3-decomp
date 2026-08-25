@@ -170,6 +170,20 @@ int ResourceManager::t_lod_file_adapter::Read(void* data, int size)
     return lod_file->read(data, size) ? 0 : size;
 }
 
+#if 0  // @carcass: claim-only home for the header COMDAT below
+
+// Both adapter vtables point their inline Write methods at this first
+// identical COMDAT. The linker also folds CHeroWindowEx's default
+// OnWidgetDeselect onto the same five retail bytes; the compiled definition
+// remains in resourcemanager_file_adapter.h.
+VA(0x00559140, 0x5)  // two adapter vtables + exact body, retail-only
+int ResourceManager::t_stdio_file_adapter::Write(const void*, int)
+{
+    return 0;
+}
+
+#endif  // @carcass
+
 // The eight archive globals are constructed through this small wrapper.
 // Retail proves the archive-name pointer at +0, the LODFile subobject at +4,
 // and the 0x190-byte stride independently in both the initializer and every

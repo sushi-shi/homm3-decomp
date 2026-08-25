@@ -339,7 +339,6 @@ control-flow (why-branch)	9	95.9231	225	smackmgr	?VideoClose@@YIXXZ	why-branch	l
 register-homing (why-reg)	9	98.4598	558	font	?DrawStringExecute@font@@QAEXPBDHPAVBitmap16Bit@@HHHHHHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	8	98.6070	609	townmgr	?DoTownGate@townManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	8	96.6709	254	recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	8	98.5808	574	adventuremapwindow	?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	8	96.1585	208	mapcell	?is_diggable@NewmapCell@@QAEEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	8	96.6265	228	remote	?KillOldChat@CChatManager@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	8	98.8073	643	hero	?get_skill_award@@YI?AW4TSecondarySkill@@PBVhero@@W4TSkillMastery@@1W41@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)

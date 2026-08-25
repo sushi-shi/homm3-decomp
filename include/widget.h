@@ -179,7 +179,18 @@ public:
     void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
-#ifdef HOMM3_WIDGET_SET_VISIBLE_DECLS
+#ifdef HOMM3_WIDGET_SET_VISIBLE_INLINE
+    // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
+    // callers fold this body into their owning function; the one retained
+    // out-of-line copy is supplied by sacrifice_window.cpp.
+    void set_visible(unsigned char arg)
+    {
+        if (arg)
+            send_message(WIDGET_SET_STATUS, WIDGET_DRAWN);
+        else
+            send_message(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
+    }
+#elif defined(HOMM3_WIDGET_SET_VISIBLE_DECLS)
     void set_visible(unsigned char arg);
 #endif
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
