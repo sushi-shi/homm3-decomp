@@ -69,6 +69,7 @@ register-homing (why-reg)	120	90.7049	1286	hiscore	??0THighScoreWindow@@QAE@XZ	w
 control-flow (why-branch)	117	92.5000	1566	systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	117	98.1326	6268	systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline (133 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	114	85.9771	816	town	?create_building@town@@QAE?AW4type_building_id@@W42@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline
+inliner (predict-inline)	114	86.7845	863	sacrifice_window	?all_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (2 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	114	81.6384	620	campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	why-branch	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	113	94.9534	2240	army	?DrawToBuffer@army@@QAEXHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	113	91.4600	1318	army	?attack_wall@army@@QAEXW4TWallTargetId@@J@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
