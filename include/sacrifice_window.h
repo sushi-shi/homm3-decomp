@@ -38,6 +38,11 @@ enum ESacrificeArtifactSlotFrame {
     SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90
 };
 
+enum ESacrificeGeneralText {
+    SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
+    SACRIFICE_GENERAL_TEXT_CREATURE = 482
+};
+
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
 DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];

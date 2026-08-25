@@ -411,6 +411,7 @@ unclassified	0	99.9511	554	game	?RandomizeHolyGrail@game@@QAEXXZ	why-reg	run why
 register-homing (why-reg)	0	99.7778	118	town	?initialize_hordes@town@@SIXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	0	99.9485	506	seerhut	?LoadFromMap@type_artifact_quest@@UAEXPAVTAbstractFile@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	0	99.9482	494	seerhut	?Load@type_artifact_quest@@UAEXPAVTAbstractFile@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+unclassified	0	99.9744	930	sacrifice_window	?update_creature_offering@type_sacrifice_window@@QAEXPAUtype_creature_offering@@@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	0	99.5833	56	hero	?get_primary_skill_total@hero@@QAEFXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	0	99.9554	343	ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	why-reg	run why-reg / why-branch for the full search
 inliner (predict-inline)	0	99.9912	1627	armygrp	??0TSplitWindow@@QAE@HHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (32 name-unresolvable pair(s) discounted)
