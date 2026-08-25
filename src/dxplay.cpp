@@ -423,6 +423,27 @@ unsigned char CDPlayLobby::Init()
     // @stub
 }
 
+// E:\gamedcs\dxplay.cpp:1318
+VA(0x00498ae0, 0x8C)  // anchor-callee IDirectPlayLobby::GetConnectionSettings ([ecx+0x20]); ret 8, src-order (Init..SetGroupConn triple), dc 0x8b614
+DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigned long* pSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1351
+VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
+unsigned char CDPlayLobby::TestLobbied()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1385
+VA(0x00498be0, 0x31)  // anchor-callee IDirectPlayLobby::SetConnectionSettings ([ecx+0x30]); ret 8, src-order, dc 0x8b6a0
+unsigned char CDPlayLobby::SetConnectionSettings(unsigned long dwAppId, DPLCONNECTION* pConnection)
+{
+    // @stub
+}
+
 // E:\gamedcs\dxplay.cpp:1399
 VA(0x00498c20, 0x29)  // anchor-vtable CDPlayLobby slot64 (SetGroupConnectionSettings), dc 0x8b6dc
 unsigned char CDPlayLobby::SetGroupConnectionSettings(unsigned long dpidGroup, DPLCONNECTION* pConnection)
@@ -578,27 +599,6 @@ void CDPlay::CDPlay()
 // E:\gamedcs\dxplay.cpp:890
 DC_ONLY(0x8af4c, 0x4)
 unsigned char CDPlay::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1318
-DC_ONLY(0x8b614, 0x88)
-DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigned long* pSize)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1351
-DC_ONLY(0x8b69c, 0x4)
-unsigned char CDPlayLobby::TestLobbied()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1385
-DC_ONLY(0x8b6a0, 0x3A)
-unsigned char CDPlayLobby::SetConnectionSettings(unsigned long dwAppId, DPLCONNECTION* pConnection)
 {
     // @stub
 }
