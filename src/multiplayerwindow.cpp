@@ -486,6 +486,40 @@ TMultiPlayerWindow::~TMultiPlayerWindow()
     delete pSessions;
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:1025
+VA(0x0050eef0, 0xC9)  // session-list widget transition, dc 0x100498
+void TMultiPlayerWindow::GoSessionList()
+{
+    inSessionList = 1;
+    showSplash = 0;
+    splash->send_message(widget::WIDGET_CLEAR_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_CLEAR_STATUS,
+                              widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_CLEAR_STATUS,
+                      widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_CLEAR_STATUS,
+                      widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_CLEAR_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_CLEAR_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS,
+                           widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS,
+                       widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_CLEAR_STATUS,
+                         widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_SET_STATUS,
+                                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_SET_STATUS,
+                                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:465
 VA(0x005108a0, 0x4E)  // scalar-dtor callee + vtable 0x6400f4, dc 0x102718
 CMPInputDlg::~CMPInputDlg()
