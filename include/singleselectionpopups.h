@@ -6,6 +6,7 @@
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
 #include "widget.h"
+#include "dialogbox.h"
 
 class CSprite;
 class Bitmap816;
@@ -48,6 +49,30 @@ public:
     virtual void Draw();
 };
 
+class CSingleSelPopup : public TDialogBox {
+public:
+    unsigned char gameMode;
+
+    CSingleSelPopup(int type, unsigned char newGameMode)
+        : TDialogBox(type)
+    {
+        gameMode = newGameMode;
+    }
+    virtual int handle_message(message& msg);
+};
+
+class CTeamAlignmentDlg : public CSingleSelPopup {
+public:
+    int teamMasks[8];
+    int numTeams;
+
+    CTeamAlignmentDlg(unsigned char newGameMode);
+    virtual ~CTeamAlignmentDlg();
+    unsigned char CreateWin();
+    int CountNumPlayers(int teamNbr);
+    void GetTeams();
+};
+
 // --- CBonusDlg ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:214, dc 0x12dfa8) void CBonusDlg::CBonusDlg(unsigned char newGameMode);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:218, dc 0x12dff0) unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
@@ -81,13 +106,6 @@ public:
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:71, dc 0x12f0c8) void CSpriteWidget::Draw();
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f11c) void* CSpriteWidget::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f150) void CSpriteWidget::~CSpriteWidget();
-
-// --- CTeamAlignmentDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:359, dc 0x12eac8) void CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:365, dc 0x12eb24) unsigned char CTeamAlignmentDlg::CreateWin();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:411, dc 0x12ed7c) int CTeamAlignmentDlg::CountNumPlayers(int teamNbr);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:424, dc 0x12edd4) void CTeamAlignmentDlg::GetTeams();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:361, dc 0x12f3a0) void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags);
 
 // --- CTownDlg ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:298, dc 0x12e690) void CTownDlg::CTownDlg(unsigned char newGameMode);

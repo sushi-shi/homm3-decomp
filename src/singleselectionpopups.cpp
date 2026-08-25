@@ -6,6 +6,7 @@
 #include "bitmap816.h"
 #include "bitmap16.h"
 #include "csprite.h"
+#include "game.h"
 #include "window.h"
 #include "winmgr.h"
 
@@ -320,4 +321,44 @@ void CBitmapWidget::Draw()
     image->Draw(0, 0, image->Width, image->Height,
                 gpWindowManager->screenBitmap,
                 x + parentWindow->x, y + parentWindow->y, 1);
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:359
+VA(0x005764d0, 0x53)  // vtable 0x641ab8 + GetTeams call, dc 0x12eac8
+CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
+{
+    GetTeams();
+}
+
+CTeamAlignmentDlg::~CTeamAlignmentDlg()
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:424
+VA(0x00576930, 0xD1)  // team-mask builder, dc 0x12edd4
+void CTeamAlignmentDlg::GetTeams()
+{
+    unsigned char assigned[8] = { 0 };
+    int player;
+
+    memset(teamMasks, 0, sizeof(teamMasks));
+    numTeams = 0;
+    for (player = 0; player < 8; ++player) {
+        if (gpGame->setup.playerPos[player] < 0)
+            continue;
+        if (assigned[player])
+            continue;
+        assigned[player] = 1;
+        teamMasks[numTeams] = 1 << player;
+        for (int other = player + 1; other < 8; ++other) {
+            if (gpGame->setup.playerPos[other] < 0)
+                continue;
+            if (gpGame->OnSameTeam(player, other)) {
+                assigned[other] = 1;
+                teamMasks[numTeams] |= 1 << other;
+            }
+        }
+        ++numTeams;
+    }
 }
