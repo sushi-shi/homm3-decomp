@@ -1007,23 +1007,76 @@ CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection
 }
 
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1686
 VA(0x004994b0, 0x24E)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateModemConnection), dc 0x8b958
 CDPlayConnection* CDPlayLobby::CreateModemConnection(char* sName, char* sPhoneNbr, char* sModemString)
 {
-    // @stub
+    DPCOMPOUNDADDRESSELEMENT elements[3];
+    unsigned long dwAddressSize = 0;
+    elements[0].guidDataType = s_dpaidServiceProvider;
+    elements[0].dwDataSize = sizeof(GUID);
+    elements[0].lpData = &s_spModem;
+    unsigned long count = 1;
+    if (sModemString) {
+        elements[1].guidDataType = s_dpaidModem;
+        elements[1].dwDataSize = strlen(sModemString) + 1;
+        elements[1].lpData = sModemString;
+        count = 2;
+    }
+    if (sPhoneNbr) {
+        elements[count].guidDataType = s_dpaidPhone;
+        elements[count].dwDataSize = strlen(sPhoneNbr) + 1;
+        elements[count].lpData = sPhoneNbr;
+        ++count;
+    }
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, 0, &dwAddressSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    void* pAddress = ::operator new(dwAddressSize);
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, pAddress, &dwAddressSize);
+    if (m_hRes < 0) {
+        ::operator delete(pAddress);
+        return 0;
+    }
+    CDPlayConnection* pConn = new CDPlayConnection(&s_spModem, dwAddressSize, pAddress, sName);
+    ::operator delete(pAddress);
+    return pConn;
 }
 
-
+// Residual (99.2%): compound-address body is byte-right; the sole delta is one
+// EH-state store our CL emits on the new-CDPlayConnection null-alloc merge that
+// retail keeps inside the construct arm, plus cosmetic per-dword GUID reloc names.
 // E:\gamedcs\dxplay.cpp:1751
 VA(0x00499700, 0x1F4)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateSerialConnection), dc 0x8b95c
 CDPlayConnection* CDPlayLobby::CreateSerialConnection(char* sName, _DPCOMPORTADDRESS* comPortInfo)
 {
-    // @stub
+    DPCOMPOUNDADDRESSELEMENT elements[2];
+    unsigned long dwAddressSize = 0;
+    elements[0].guidDataType = s_dpaidServiceProvider;
+    elements[0].dwDataSize = sizeof(GUID);
+    elements[0].lpData = &s_spSerial;
+    unsigned long count = 1;
+    if (comPortInfo) {
+        elements[1].guidDataType = s_dpaidComPort;
+        elements[1].dwDataSize = 0x14;
+        elements[1].lpData = comPortInfo;
+        count = 2;
+    }
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, 0, &dwAddressSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    void* pAddress = ::operator new(dwAddressSize);
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, pAddress, &dwAddressSize);
+    if (m_hRes < 0) {
+        ::operator delete(pAddress);
+        return 0;
+    }
+    CDPlayConnection* pConn = new CDPlayConnection(&s_spSerial, dwAddressSize, pAddress, sName);
+    ::operator delete(pAddress);
+    return pConn;
 }
-
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1807
 VA(0x00499900, 0x97)  // anchor-vtable CDPlayLobby slot63 (EnumLobbyConnections), dc 0x8b964

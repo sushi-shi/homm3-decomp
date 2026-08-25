@@ -893,7 +893,9 @@ dxplay	?CloseSession@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x97290
 dxplay	?Connect@CDPlayLobby@@QAEEXZ	100.0000	100.0000	100.0000	0x98cd0
 dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
 dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x970e0
+dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	99.3389	99.3389	99.3389	0x994b0
 dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	81.3400	81.3400	81.3400	0x96fc0
+dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	99.2434	99.2434	99.2434	0x99700
 dxplay	?DeleteGroupFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x97180
 dxplay	?DeletePlayerFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x98220
 dxplay	?DestroyGroup@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97150
@@ -957,8 +959,6 @@ dxplay	?UpdateSessionDesc@CDPlay@@UAEEPAUDPSESSIONDESC2@@@Z	100.0000	100.0000	10
 dxplay	CAutoArray_CAutoArray	0.0000	0.0000	0.0000	0x99f00
 dxplay	CAutoArray_Destroy	0.0000	0.0000	0.0000	0x99f60
 dxplay	CDPlayLobby_CreateIPXConnection	0.0000	0.0000	0.0000	0x99150
-dxplay	CDPlayLobby_CreateModemConnection	0.0000	0.0000	0.0000	0x994b0
-dxplay	CDPlayLobby_CreateSerialConnection	0.0000	0.0000	0.0000	0x99700
 dxplay	CDPlayLobby_CreateTCPIPConnection	0.0000	0.0000	0.0000	0x98d80
 dxplay	CDPlay_FlushReceiveQueue	0.0000	0.0000	0.0000	0x976b0
 dxplay	CDPlay_GetErrorDesc	0.0000	0.0000	0.0000	0x97c50
