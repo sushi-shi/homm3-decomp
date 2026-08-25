@@ -10,6 +10,7 @@
 class Bitmap816;
 class hero;
 class heroWindow;
+class CNetMsgHandler;
 
 class message;
 
@@ -29,8 +30,8 @@ public:
     unsigned char field_5c;  // +0x5c  set for a two-human cross-owner network trade
     unsigned char field_5d;  // +0x5d  default 1; else = IsLeftHero() (we hold left hero)
     // +0x5e, +0x5f pad
-    int field_60;            // +0x60  (read by Close)
-    int field_64;            // +0x64  (zeroed at construction)
+    CNetMsgHandler* field_60;  // +0x60  saved previous handler (restored by Close)
+    CNetMsgHandler* field_64;  // +0x64  owned net-msg handler (0 at construction; deleted by Close)
     // The retail object continues well past +0x64 (its teardown frees std::string
     // members near +0x3f2 and +0x884); only the ctor-touched prefix is modelled.
     // Do NOT rely on sizeof(swapManager).
