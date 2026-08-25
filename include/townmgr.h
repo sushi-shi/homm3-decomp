@@ -229,6 +229,20 @@ public:
         EXIT_BUTTON_ID = 0x7800
     };
 
+    // The rank grid the rollover setter dispatches on: four category rows over
+    // eight player columns, so the hovered cell id (codeY) is category*10 plus
+    // the column. Only the first three rows go through SetRolloverText's
+    // compressed switch; the fourth (30..37) is handled by a range test, and
+    // gaps 9/18/19 fall to the empty line.
+    enum {
+        RANK_A0 = 1, RANK_A1, RANK_A2, RANK_A3,
+        RANK_A4, RANK_A5, RANK_A6, RANK_A7,
+        RANK_B0 = 10, RANK_B1, RANK_B2, RANK_B3,
+        RANK_B4, RANK_B5, RANK_B6, RANK_B7,
+        RANK_C0 = 20, RANK_C1, RANK_C2, RANK_C3,
+        RANK_C4, RANK_C5, RANK_C6, RANK_C7
+    };
+
     char pad_60[0x20];
     // +0x80: attested only as the destructor's first teardown - deleted
     // through slot 0 before the widget list, so it is an owned object
@@ -240,6 +254,9 @@ public:
     // Retail 0x5dda10, the compiland's second largest body and the
     // constructor's last statement. Declared, not reconstructed.
     void SetupThievesGuild(int iThievesGuilds);
+    // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
+    void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5c9930
 };
 
 // The town hall page: one background per town type over a grid of
