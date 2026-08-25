@@ -160,7 +160,7 @@ rva	size	unit	current_label	provenance
 0x78890	110	command	?ResetMouse@combatManager@@QAEXXZ	src-VA+ir
 0x78900	656	command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	src-VA+ir
 0x78b90	485	command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	src-VA+ir
-0x78d80	4180	command	combatManager_ProcessNextAction	src-VA
+0x78d80	4180	command	calls_timeGetTime_78d80	working-label
 0x79de0	335	command	?ResetCyclingCreatures@combatManager@@QAEXXZ	src-VA+ir
 0x79f30	139	command	?ResetCycleTimers@combatManager@@QAEXXZ	src-VA+ir
 0x79fc0	305	command	?SetCombatGrid@combatManager@@QAEXHHHE@Z	src-VA+ir
@@ -181,7 +181,7 @@ rva	size	unit	current_label	provenance
 0x95a10	471	drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	src-VA+base
 0x95f50	380	drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z	src-VA+base
 0x97790	33	dxplay	game_22ae70_sub00_97790	working-label
-0x99e20	35	dxplay	game_99b20_sub00_99e20	working-label
+0x99e20	35	dxplay	EnumAddressCallback	src-VA
 0x9a620	33	event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_move_hero	src-VA_COMPGEN
 0x9abe0	7	event_record	game_9a620_sub00_9abe0	working-label
 0x9bbd0	33	event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_shroud	src-VA_COMPGEN
