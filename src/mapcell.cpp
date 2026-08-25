@@ -5771,6 +5771,13 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
+VA(0x00505d60, 0x3F)
+void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
+{
+    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
+        mapObjectData[i]->NewMapVFn28(point, player);
+}
+
 VA(0x00505ea0, 0x80)
 CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
 {
