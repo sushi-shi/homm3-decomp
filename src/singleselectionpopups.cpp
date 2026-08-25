@@ -21,77 +21,273 @@
 // the folded twins keep DC_ONLY rows below (one retail address = one claim).
 // Widget/CSingleSelPopup ctors and the trivial zBufferDraw/Draw stubs are
 // inlined or ICF-folded out of this TU (0x404140 / 0x404df0 shared empties).
+// All three widget non-deleting dtors fold to 0x575a60 (jmp ~widget) and all
+// four dialog non-deleting dtors fold to 0x576530 (jmp ~TDialogBox); they are
+// emitted here as empty out-of-line bodies with no claim of their own.
+//
+// CreateWin family status: the two CBonusDlg::CreateWin overloads are
+// reconstructed (98.00 / 95.51) and cap on the register-homing family - the
+// schedule is aligned (why-reg flow-distance 0) but retail binds `this` to edi
+// and the per-widget temp to esi where our CL binds them the other way, a swap
+// the vc6 catalog reports as not source-addressable. The remaining three
+// (CHeroDlg 0x575a90, CTownDlg 0x575e60, CTeamAlignmentDlg 0x576540) stay
+// @stub: they share the same register cap AND add gpGeneralText font-table
+// reads (gpGeneralText->[0x20]->[0x138/0x13c]) plus sprintf/town-type/team
+// display logic, so they cannot reach 100.0000 from this TU. Reconstruct on
+// the CBonusDlg template (Add + the inlined CSpriteWidget/CBitmapWidget ctors)
+// when the register-homing binding becomes addressable.
 #include <va.h>
 #include "singleselectionpopups.h"
+#include "bitmap816.h"
+#include "bitmap16.h"
+#include "csprite.h"
+#include "winmgr.h"
+#include "remote.h"
+#include "kbwin.h"
+#include "game.h"
+#include "textwdgt.h"
 
 // ============================================================================
-// Located claims in retail link order (strictly increasing RVA). Bodies are
-// unreconstructed carcass @stubs (order/size/class gate-checked, not compiled)
-// except CSpriteWidget::Main, reconstructed below. VA_COMPGEN pairs the
-// compiler-generated scalar deleting destructors.
+// CHotspotWidget - a bare rectangular click target.
 // ============================================================================
-
-#if 0  // @carcass -- located, not reconstructed
 
 // E:\gamedcs\singleselectionpopups.cpp:114
+// The ctor calls ??0widget@@QAE@XZ (default base ctor) and stores five dwords
+// straight into the widget base; DC's trailing `focus` byte is not a retail
+// parameter (`ret 0x14`).
 VA(0x00575220, 0x40)  // anchor-vtable CHotspotWidget ctor stores vtbl 0x6419a4, calls ??0widget, ret 0x14 (5 args; DC lists 6), dc 0x12de28
-void CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId, unsigned char focus)
+CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId)
 {
-    // @stub
+    x = xPos;
+    y = yPos;
+    width = w;
+    height = h;
+    id = widgetId;
+}
+
+CHotspotWidget::~CHotspotWidget()
+{
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:121
 VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)  // vtbl 0x6419a4 slot0, dc 0x12f2b8
 
-// E:\gamedcs\singleselectionpopups.cpp:124
+// E:\gamedcs\singleselectionpopups.cpp:124 - slot 2 of vtable 0x6419a4, the
+// same hotspot mouse handler border::Main runs one file over: a field_2C
+// asleep guard, a not-active bail to widget::Main, and a jump-table switch on
+// msg->id with the disabled DOWN/UP arms falling through to their right-button
+// twins. mouseX/mouseY are int (heroWindow::x/y are int, +8.9 over short).
+//
+// Residual (94.28%): the SAME merged-return generation class border::Main
+// carries (its residual note quotes the identical DUP-EXIT). Retail merges
+// the RIGHT_BUTTON_UP not-selected exit into the shared return-0 block the
+// field_2C guard opens (backward `je`); this C2 duplicates it as a fifth
+// `ret`. Plain `return 0;` at every exit is the closest (94.28); a
+// `goto returnZero` from any later exit re-sinks the guard to `jg` and drops
+// it to 90.06 - the `--branches` DUP-EXIT with the guard block moved. Not
+// source-reachable, same as border::Main.
 VA(0x00575290, 0x179)  // anchor-vtable CHotspotWidget vtbl 0x6419a4 slot2 (Main override), ret 4, dc 0x12dea8
 int CHotspotWidget::Main(message* msg)
 {
-    // @stub
+    if (field_2C > 0)
+        return 0;
+
+    if (!(status & WIDGET_ACTIVE))
+        return widget::Main(msg);
+
+    unsigned char isDisabled = 0;
+    if (status & WIDGET_DISABLED)
+        isDisabled = 1;
+
+    switch (msg->id) {
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_DOWN: {
+        int mouseX = msg->codeX - parentWindow->x;
+        int mouseY = msg->codeY - parentWindow->y;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            return 0;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->codeX = WIDGET_RIGHT_SELECT;
+        } else {
+            status |= WIDGET_SELECTED;
+            msg->codeX = WIDGET_SELECT;
+        }
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = id;
+        return 2;
+    }
+
+    case MESSAGE_LEFT_BUTTON_UP:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_UP:
+        if (!(status & WIDGET_SELECTED))
+            return 0;
+        status &= ~WIDGET_SELECTED;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = WIDGET_DESELECT;
+        msg->codeY = id;
+        return 2;
+    }
+    return widget::Main(msg);
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:214
+// ============================================================================
+// CBonusDlg - the two-CreateWin bonus dialog.
+// ============================================================================
+
+// E:\gamedcs\singleselectionpopups.cpp:214 - the inlined CSingleSelPopup ctor:
+// push 0x12 through TDialogBox, store the CBonusDlg vtable, store gameMode.
 VA(0x00575410, 0x20)  // anchor-vtable CBonusDlg ctor stores vtbl 0x6419d8, calls ??0TDialogBox(0x12), ret 4, dc 0x12dfa8
-void CBonusDlg::CBonusDlg(unsigned char newGameMode)
+CBonusDlg::CBonusDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
 {
-    // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.h:45
-VA(0x00575430, 0x8f)  // anchor-vtable CSingleSelPopup::handle_message = shared slot3 of all four dialog vtables, ret 4, dc 0x12ef28
-int CSingleSelPopup::handle_message(message* msg)
+CBonusDlg::~CBonusDlg()
 {
-    // @stub
+}
+
+CHeroDlg::~CHeroDlg()
+{
+}
+
+CTownDlg::~CTownDlg()
+{
+}
+
+CTeamAlignmentDlg::~CTeamAlignmentDlg()
+{
+}
+
+// E:\gamedcs\singleselectionpopups.h:45 - slot 3 of every dialog vtable. A
+// right-click (RIGHT_BUTTON_UP) or a network abort-popup ends the dialog with
+// WIDGET_END_DIALOG in both codeX/codeY; everything else falls through to the
+// base heroWindow::handle_message (folded onto inputManager::Main 0x4ec560).
+// The two end-dialog paths keep their own dialogReturn/id stores and share
+// only the codeX/codeY/return tail, exactly as retail cross-jumps them; the
+// `id = MESSAGE_WIDGET` store must precede `dialogReturn = codeY` (id store
+// stays per-block, +12.8) and the netmsg chain nests inside the id!=0x40 arm
+// so the default `return` sinks between the two arms (+45 over the flat form).
+//
+// Residual (99.96%): every instruction byte matches; the only deltas are
+// three reloc-NAME cosmetics the model does not resolve here - bVideoPaused
+// (data_29954c) and pDPlay (data_29d808) are unnamed tree-wide (their owning
+// objs delink them to working labels too), and the tail call names the folded
+// heroWindow::handle_message where the model carries only its ICF twin
+// inputManager::Main (0x4ec560). Reloc-name-only, not source-reachable from
+// this TU (the names live in shared headers / other objs).
+VA(0x00575430, 0x8f)  // anchor-vtable CSingleSelPopup::handle_message = shared slot3 of all four dialog vtables, ret 4, dc 0x12ef28
+int CSingleSelPopup::handle_message(message& msg)
+{
+    if (msg.id != MESSAGE_RIGHT_BUTTON_UP) {
+        if (bVideoPaused && pDPlay) {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (handler) {
+                handler->CheckHandleNet(1, 0);
+                if (handler->GetAbortPopupMsg()) {
+                    msg.id = MESSAGE_WIDGET;
+                    gpWindowManager->dialogReturn = msg.codeY;
+                    msg.codeX = widget::WIDGET_END_DIALOG;
+                    msg.codeY = widget::WIDGET_END_DIALOG;
+                    return 2;
+                }
+            }
+        }
+        return heroWindow::handle_message(msg);
+    }
+    msg.id = MESSAGE_WIDGET;
+    gpWindowManager->dialogReturn = msg.codeY;
+    msg.codeX = widget::WIDGET_END_DIALOG;
+    msg.codeY = widget::WIDGET_END_DIALOG;
+    return 2;
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:215
 VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // vtbl 0x6419d8 slot0, dc 0x12f304
 
-// E:\gamedcs\singleselectionpopups.cpp:218
+// E:\gamedcs\singleselectionpopups.cpp:218 - the sprite-bonus dialog: a
+// medfont title, the centred CSpriteWidget icon (its ctor inlined here,
+// storing vtbl 0x641a00 and normalising the frame via GetNumFrames(0)), and
+// two smalfont captions. Setup fixes the 300x225 frame; each widget is heap-
+// allocated and registered through Add.
 VA(0x005754f0, 0x254)  // anchor-vtable CBonusDlg::CreateWin(sprite) inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0x14 (5 args), dc 0x12dff0
 unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
-    // @stub
+    if (!Setup(300, 225, 200, 150))
+        return 0;
+    Add(new textWidget(10, 26, width - 20, 36, title, "medfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new CSpriteWidget((width - sprite->Width) / 2, 60, sprite, frame));
+    Add(new textWidget(10, 95, width - 20, 18, botTitle, "smalfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new textWidget(15, 120, width - 30, height - 120, description,
+        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    return 1;
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:71
+// ============================================================================
+// CSpriteWidget - a widget wrapping a CSprite.
+// ============================================================================
+
+// E:\gamedcs\singleselectionpopups.cpp:71 - slot 4 of vtable 0x641a00. Draws
+// the sprite through the screen bitmap: the DC Bitmap16Bit overload of
+// CSprite::Draw, whose header wrapper expands the dst->map/Width/Height/Pitch
+// reads inline.
 VA(0x00575750, 0x54)  // anchor-vtable CSpriteWidget vtbl 0x641a00 slot4 (Draw override), size = DC exact, dc 0x12f0c8
 void CSpriteWidget::Draw()
 {
-    // @stub
+    sprite->Draw(0, frame, 0, 0, width, height,
+        gpWindowManager->screenBitmap, x + parentWindow->x,
+        y + parentWindow->y, 0, 1);
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin that
+// builds a sprite icon (dc 0x12f018, no standalone retail body). Stores the
+// sprite/frame past the widget base and normalises frame against sequence 0's
+// count; GetNumFrames(0)'s else arm folds to the literal-0 divisor.
+CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frameArg)
+{
+    sprite = pSprite;
+    frame = frameArg;
+    x = xPos;
+    y = yPos;
+    width = pSprite->Width;
+    height = pSprite->Height;
+    frame %= pSprite->GetNumFrames(0);
+}
+
+CSpriteWidget::~CSpriteWidget()
+{
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:73
 VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // vtbl 0x641a00 slot0; ICF folds CBitmapWidget dtor (dc 0x12f26c), dc 0x12f11c
 
-// E:\gamedcs\singleselectionpopups.cpp:234
+// E:\gamedcs\singleselectionpopups.cpp:234 - the bitmap-bonus twin of the
+// sprite CreateWin above: same medfont title / smalfont captions, with a
+// centred CBitmapWidget (ctor inlined, storing vtbl 0x641a34) in place of the
+// sprite icon.
 VA(0x005757e0, 0x226)  // anchor-vtable CBonusDlg::CreateWin(bitmap) inlines CBitmapWidget ctor (stores vtbl 0x641a34), ret 0x10 (4 args), dc 0x12e1cc
 unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description)
 {
-    // @stub
+    if (!Setup(300, 225, 200, 150))
+        return 0;
+    Add(new textWidget(10, 26, width - 20, 36, title, "medfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new CBitmapWidget((width - pImage->Width) / 2, 60, pImage));
+    Add(new textWidget(10, 95, width - 20, 18, botTitle, "smalfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new textWidget(15, 120, width - 30, height - 120, description,
+        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\singleselectionpopups.cpp:61
 VA(0x00575a10, 0x10)  // anchor-vtable CSpriteWidget vtbl 0x641a00 slot2 (Main override; ICF folds CBitmapWidget::Main), dc 0x12f0ac
@@ -100,21 +296,48 @@ int CSpriteWidget::Main(message* msg)
     return widget::Main(msg);
 }
 
-#if 0  // @carcass -- located, not reconstructed
+// ============================================================================
+// CBitmapWidget - a widget wrapping a Bitmap816.
+// ============================================================================
 
-// E:\gamedcs\singleselectionpopups.cpp:103
+// E:\gamedcs\singleselectionpopups.cpp:103 - slot 4 of vtable 0x641a34. Blits
+// the image at full size through the screen bitmap; no null guard on image.
 VA(0x00575a20, 0x3e)  // anchor-vtable CBitmapWidget vtbl 0x641a34 slot4 (Draw override), calls Bitmap816::Draw, dc 0x12f1fc
 void CBitmapWidget::Draw()
 {
-    // @stub
+    image->Draw(0, 0, image->Width, image->Height,
+        gpWindowManager->screenBitmap, x + parentWindow->x,
+        y + parentWindow->y, 1);
 }
+
+// E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap CreateWin
+// callers (dc 0x12f168, no standalone retail body). Stores the image past the
+// widget base with the bitmap's own extent.
+CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
+{
+    image = pImage;
+    x = xPos;
+    y = yPos;
+    width = pImage->Width;
+    height = pImage->Height;
+}
+
+CBitmapWidget::~CBitmapWidget()
+{
+}
+
+// ============================================================================
+// CHeroDlg
+// ============================================================================
 
 // E:\gamedcs\singleselectionpopups.cpp:255
 VA(0x00575a70, 0x20)  // anchor-vtable CHeroDlg ctor stores vtbl 0x641a68, calls ??0TDialogBox(0x12), ret 4, dc 0x12e3a0
-void CHeroDlg::CHeroDlg(unsigned char newGameMode)
+CHeroDlg::CHeroDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
 {
-    // @stub
 }
+
+#if 0  // @carcass -- located, not reconstructed
 
 // E:\gamedcs\singleselectionpopups.cpp:260
 VA(0x00575a90, 0x380)  // anchor-vtable CHeroDlg::CreateWin inlines CBitmapWidget (vtbl 0x641a34) + CSpriteWidget (vtbl 0x641a00) ctors, ret 0x18 (6 args), dc 0x12e3f0
@@ -123,15 +346,23 @@ unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSp
     // @stub
 }
 
+#endif  // @carcass
+
+// ============================================================================
+// CTownDlg
+// ============================================================================
+
 // E:\gamedcs\singleselectionpopups.cpp:298
 VA(0x00575e10, 0x20)  // anchor-vtable CTownDlg ctor stores vtbl 0x641a90, calls ??0TDialogBox(0x12), ret 4, dc 0x12e690
-void CTownDlg::CTownDlg(unsigned char newGameMode)
+CTownDlg::CTownDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
 {
-    // @stub
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:299
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
+
+#if 0  // @carcass -- located, not reconstructed
 
 // E:\gamedcs\singleselectionpopups.cpp:302
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
@@ -140,12 +371,23 @@ unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:359
+#endif  // @carcass
+
+// ============================================================================
+// CTeamAlignmentDlg
+// ============================================================================
+
+// E:\gamedcs\singleselectionpopups.cpp:359 - the only dialog ctor with an
+// fs:[0] EH frame: it calls GetTeams in the body, so the TDialogBox base must
+// be unwound if GetTeams throws.
 VA(0x005764d0, 0x53)  // anchor-vtable CTeamAlignmentDlg ctor stores vtbl 0x641ab8, calls ??0TDialogBox(0x12) + GetTeams (0x576930), fs:[0] EH frame, ret 4, dc 0x12eac8
-void CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
 {
-    // @stub
+    GetTeams();
 }
+
+#if 0  // @carcass -- located, not reconstructed
 
 // E:\gamedcs\singleselectionpopups.cpp:365
 VA(0x00576540, 0x3e8)  // anchor-vtable CTeamAlignmentDlg::CreateWin (0 args, ret), dc 0x12eb24
@@ -154,12 +396,40 @@ unsigned char CTeamAlignmentDlg::CreateWin()
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:424
+#endif  // @carcass
+
+// E:\gamedcs\singleselectionpopups.cpp:424 - build the team-mask table off
+// gpGame: for each present player (setup.playerPos >= 0) not yet grouped,
+// open a new team seeded with that player's bit, then fold in every later
+// present player sharing its mapHeader.teamInfo entry.
 VA(0x00576930, 0xd1)  // anchor-callee called by CTeamAlignmentDlg ctor (0x5764d0), void/ret, touches team bss 0x2994e8, dc 0x12edd4
 void CTeamAlignmentDlg::GetTeams()
 {
-    // @stub
+    unsigned char assigned[8] = { 0 };
+    int player;
+
+    memset(teamMasks, 0, sizeof(teamMasks));
+    numTeams = 0;
+    for (player = 0; player < 8; ++player) {
+        if (gpGame->setup.playerPos[player] < 0)
+            continue;
+        if (assigned[player])
+            continue;
+        assigned[player] = 1;
+        teamMasks[numTeams] = 1 << player;
+        for (int other = player + 1; other < 8; ++other) {
+            if (gpGame->setup.playerPos[other] < 0)
+                continue;
+            if (gpGame->OnSameTeam(player, other)) {
+                assigned[other] = 1;
+                teamMasks[numTeams] |= 1 << other;
+            }
+        }
+        ++numTeams;
+    }
 }
+
+#if 0  // @carcass -- located, not reconstructed
 
 // ============================================================================
 // Unclaimed DC roster rows: inlined away, ICF-folded onto a claimed twin, or
@@ -220,27 +490,6 @@ void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
 // E:\gamedcs\singleselectionpopups.cpp:93
 DC_ONLY(0x12f1e0, 0x18)   // folds -> 0x575a10 (return widget::Main)
 int CBitmapWidget::Main(message* msg)
-{
-    // @stub
-}
-
-// --- Non-deleting destructors: inlined into the scalar deleting dtors or
-//     emitted as 5-byte jmp thunks (excluded class). ---
-// E:\gamedcs\singleselectionpopups.cpp:73
-DC_ONLY(0x12f150, 0x18)   // thunk / inlined into scalar deleting dtor
-void CSpriteWidget::~CSpriteWidget()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:106
-DC_ONLY(0x12f2a0, 0x18)   // thunk / inlined
-void CBitmapWidget::~CBitmapWidget()
-{
-    // @stub
-}
-// E:\gamedcs\singleselectionpopups.cpp:121
-DC_ONLY(0x12f2ec, 0x18)   // 5-byte jmp thunk 0x575a60 (excluded class)
-void CHotspotWidget::~CHotspotWidget()
 {
     // @stub
 }
