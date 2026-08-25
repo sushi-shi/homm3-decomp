@@ -913,6 +913,17 @@ unsigned char CDPlay::SysMsgAddGroupToGroup(
     return 1;
 }
 
+// E:\gamedcs\dxplay.cpp:89 - vtable slot 0.
+VA_COMPGEN(0x00496ce0, 0x2F, SCALAR_DELETING_DTOR, CDPlay)
+
+// E:\gamedcs\dxplay.cpp:92 - release the DirectPlay COM interface.
+VA(0x00496d10, 0x14)
+CDPlay::~CDPlay()
+{
+    if (m_lpDP)
+        m_lpDP->Release();
+}
+
 // E:\gamedcs\dxplay.cpp:878 - vtable slot 55.
 VA(0x004981d0, 0x8)
 unsigned char CDPlay::SysMsgHost(DPMSG_GENERIC* message, unsigned long toId)
