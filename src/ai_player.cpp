@@ -2188,16 +2188,60 @@ void type_AI_creature_swapper::add_creatures(
 // add_creatures and value_of_adding_army (all claimed) and is itself called by
 // buy_creatures (claimed). arity ret 4 (this+1: can_take_all), returns long;
 // do_swap/get_swap_value/calculate_improvement inline into it (they stay
-// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Claimed @stub here so the RVA
-// stays in increasing file order between add_creatures and dump_extra_creature;
-// the DC-order carcass stub was removed to avoid a duplicate row.
-#if 0  // @carcass
+// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Placed in file order between
+// add_creatures and dump_extra_creature to keep the RVA strictly increasing.
 VA(0x0042c280, 0x126)  // anchor-callee + arity, dc 0x3166c
-long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
+long type_AI_creature_swapper::do_best_swap(bool can_take_all)
 {
-    // @stub
+    long best_value = 0;
+    short best_army_slot = -1;
+    short best_source_slot = -1;
+    short best_amount = 0;
+    get_alignments();
+
+    for (short source = 0; source < armyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
+        TCreatureType type = adjacent_army->armyTypes[source];
+        if (type == CREATURE_NONE)
+            continue;
+        short count = adjacent_army->numTroops[source];
+        short slot;
+        long value;
+        if (can_take_all) {
+            value = value_of_adding_army(type, count, slot, false);
+        } else {
+            value = value_of_adding_army(type, count, slot, true);
+            if (count > 1) {
+                short reduced_slot;
+                long reduced_value = value_of_adding_army(
+                    type, count - 1, reduced_slot, false);
+                if (reduced_value > value) {
+                    count = count - 1;
+                    value = reduced_value;
+                    slot = reduced_slot;
+                }
+            }
+        }
+        long weighted = improvement * value / 10;
+        if (weighted > best_value) {
+            best_value = weighted;
+            best_source_slot = source;
+            best_army_slot = slot;
+            best_amount = count;
+        }
+    }
+
+    if (best_value <= 0)
+        return best_value;
+
+    TCreatureType swap_type = adjacent_army->armyTypes[best_source_slot];
+    if (static_cast<short>(adjacent_army->numTroops[best_source_slot])
+        == best_amount)
+        adjacent_army->Dismiss(best_source_slot);
+    else
+        adjacent_army->numTroops[best_source_slot] -= best_amount;
+    add_creatures(swap_type, best_amount, best_army_slot);
+    return best_value;
 }
-#endif  // @carcass
 
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;
