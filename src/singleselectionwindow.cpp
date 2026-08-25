@@ -3,7 +3,9 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <string.h>
 #include <va.h>
+#include "resourcemanager.h"
 #include "singleselectionwindow.h"
+#include "textresource.h"
 
 #if 0  // @carcass: untouched bodies outside the admitted retail function
 
@@ -84,26 +86,55 @@ unsigned char HasRandomHero(int gamePos)
     // @stub
 }
 
+#endif  // @carcass
+
+DATA(0x0069fc28) static TTextResource* gpVictoryConditionText;
+DATA(0x0069fb70) static char* gVictoryConditionDesc[14];
+DATA(0x0069fbf4) static TTextResource* gpLossConditionText;
+DATA(0x0069fc18) static char* gLossConditionDesc[4];
+DATA(0x0069fb14) static TTextResource* gpTurnDurationText;
+DATA(0x0069fb44) static char* gTurnDurationText[11];
+
 // E:\gamedcs\singleselectionwindow.cpp:821
-DC_ONLY(0x12ff40, 0x62)
+VA(0x00577a50, 0x30)  // ResourceManager::GetText("vcdesc.txt"), dc 0x12ff40
 unsigned char InitializeVCDescriptions()
 {
-    // @stub
+    gpVictoryConditionText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834ac, victoryConditionTextName, "vcdesc.txt"));
+    if (!gpVictoryConditionText)
+        return 0;
+    for (int i = 0; i < 14; i++)
+        gVictoryConditionDesc[i] = gpVictoryConditionText->Text[i];
+    return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:841
-DC_ONLY(0x12ffa4, 0x62)
+VA(0x00577a80, 0x30)  // ResourceManager::GetText("lcdesc.txt"), dc 0x12ffa4
 unsigned char InitializeLCDescriptions()
 {
-    // @stub
+    gpLossConditionText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834b8, lossConditionTextName, "lcdesc.txt"));
+    if (!gpLossConditionText)
+        return 0;
+    for (int i = 0; i < 4; i++)
+        gLossConditionDesc[i] = gpLossConditionText->Text[i];
+    return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:867
-DC_ONLY(0x130008, 0x62)
+VA(0x00577ab0, 0x30)  // ResourceManager::GetText("turndur.txt"), dc 0x130008
 unsigned char InitializeTurnDurationText()
 {
-    // @stub
+    gpTurnDurationText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834c4, turnDurationTextName, "turndur.txt"));
+    if (!gpTurnDurationText)
+        return 0;
+    for (int i = 0; i < 11; i++)
+        gTurnDurationText[i] = gpTurnDurationText->Text[i];
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:890
 DC_ONLY(0x13006c, 0x22)
