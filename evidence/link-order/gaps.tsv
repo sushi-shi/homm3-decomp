@@ -43,8 +43,7 @@ diff	dimensiondoorwindow	0x912ff	0x916f0	1009	11
 dimensiondoorwindow	drawing	0x91edc	0x93710	6196	16	
 drawing	dxplay	0x96c4d	0x96d10	195	7	ds_engine
 dxplay	event_record	0x99ef3	0x9a5e0	1773	20	
-event_record	events	0x9dcec	0x9e2e0	1524	15	
-events	exec	0xacba6	0xb0a10	15978	43	
+event_record	exec	0x9dcec	0xb0a10	77092	148	events
 exec	findpath	0xb0f35	0xb1330	1019	11	
 findpath	fly	0xb3f61	0xb46c0	1887	14	
 fly	font	0xb5012	0xb5070	94	2	
@@ -58,8 +57,8 @@ hillfortwindow	hiscore	0xe8bb9	0xe8fb0	1015	11
 hiscore	iconwdgt	0xe9e41	0xea720	2271	5	
 iconwdgt	initialize	0xeb33d	0xebb10	2003	12	
 initialize	inputmgr	0xebce9	0xec0e0	1015	11	
-inputmgr	kb	0xeccca	0xed230	1382	15	
-kb	kbwin	0xf42b7	0xf7a30	14201	21	
+inputmgr	kb	0xeccca	0xf3540	26742	47	
+kb	kbwin	0xf368b	0xf7a30	17317	29	
 kbwin	levelupwindow	0xf8490	0xf8880	1008	11	
 levelupwindow	lodfile	0xf9bc0	0xfa610	2640	14	
 lodfile	mainmenu	0xfa655	0xfb2a0	3147	18	
@@ -79,7 +78,7 @@ questlogwindow	quickherowindow	0x12e42d	0x12ead0	1699	13
 quickherowindow	quickinfowindow	0x12f43b	0x12f8c0	1157	12	
 quickinfowindow	quicktownwindow	0x12fd2b	0x130120	1013	11	
 quicktownwindow	recruit	0x130d3d	0x14e750	121363	302	
-recruit	remote	0x15174b	0x152530	3557	20	
+recruit	remote	0x15174b	0x153220	6869	27	
 remote	resource	0x157f71	0x158720	1967	13	
 resource	resourcedisplay	0x1587a7	0x158ba0	1017	11	
 resourcedisplay	resourcemanager	0x1590c4	0x1590f0	44	1	
@@ -98,7 +97,7 @@ spellbookwindow	spelldefs	0x19c9a0	0x19e060	5824	6
 spelldefs	spells	0x19e4af	0x1a3700	21073	29	
 spells	strip	0x1a939c	0x1a9d20	2436	15	
 strip	subwindow	0x1aa31e	0x1aa340	34	1	
-subwindow	swapmgr	0x1aa68a	0x1aaa80	1014	11	
+subwindow	swapmgr	0x1aa68a	0x1ae370	15590	12	
 swapmgr	systemoptionswindow	0x1b139c	0x1b1790	1012	11	
 systemoptionswindow	text	0x1b375e	0x1b90f0	22930	94	
 text	textntry	0x1b9109	0x1ba920	6167	38	
