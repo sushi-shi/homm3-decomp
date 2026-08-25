@@ -879,7 +879,9 @@ drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@s
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390
 drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370
 dxplay	??1CDPlay@@UAE@XZ	100.0000	100.0000	100.0000	0x96d10
+dxplay	??1CDPlayLobby@@UAE@XZ	100.0000	100.0000	100.0000	0x98930
 dxplay	??_GCDPlay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x96ce0
+dxplay	??_GCDPlayLobby@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x98900
 dxplay	?AddPlayerToGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x981f0
 dxplay	?CloseSession@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x97290
 dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
@@ -927,7 +929,6 @@ dxplay	CAutoArray_GetCount	0.0000	0.0000	0.0000	0x9a010
 dxplay	CAutoArray_Put	0.0000	0.0000	0.0000	0x99fe0
 dxplay	CDPlayLobby_AddAddressEnum	0.0000	0.0000	0.0000	0x99bb0
 dxplay	CDPlayLobby_CDPlayLobby	0.0000	0.0000	0.0000	0x98870
-dxplay	CDPlayLobby_CDPlayLobby_98930	0.0000	0.0000	0.0000	0x98930
 dxplay	CDPlayLobby_Connect	0.0000	0.0000	0.0000	0x98cd0
 dxplay	CDPlayLobby_CreateIPXConnection	0.0000	0.0000	0.0000	0x99150
 dxplay	CDPlayLobby_CreateModemConnection	0.0000	0.0000	0.0000	0x994b0
@@ -942,7 +943,6 @@ dxplay	CDPlayLobby_GetIPAddress	0.0000	0.0000	0.0000	0x99c60
 dxplay	CDPlayLobby_Init	0.0000	0.0000	0.0000	0x98a60
 dxplay	CDPlayLobby_RegisterApp	0.0000	0.0000	0.0000	0x989a0
 dxplay	CDPlayLobby_TestLobbied	0.0000	0.0000	0.0000	0x98b70
-dxplay	CDPlayLobby__scalar_deleting_destructor	0.0000	0.0000	0.0000	0x98900
 dxplay	CDPlay_AddConnectionEnum	0.0000	0.0000	0.0000	0x97b70
 dxplay	CDPlay_AddGroupEnum	0.0000	0.0000	0.0000	0x97a90
 dxplay	CDPlay_AddPlayerEnum	0.0000	0.0000	0.0000	0x97b00
