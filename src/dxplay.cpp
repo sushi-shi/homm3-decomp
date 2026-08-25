@@ -1057,6 +1057,37 @@ unsigned char CDPlay::EnumGroupPlayers(
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:490
+VA(0x00497500, 0x53)
+unsigned char CDPlay::SendChat(
+    char* message, unsigned long fromId, unsigned long toId)
+{
+    if (!m_lpDP)
+        return 0;
+    DPCHAT chat;
+    chat.dwSize = sizeof(chat);
+    chat.dwFlags = 0;
+    chat.lpszMessageA = message;
+    m_hRes = m_lpDP->SendChatMessage(fromId, toId, 0, &chat);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:515
+VA(0x00497560, 0x48)
+unsigned char CDPlay::Send(void* data, unsigned long size,
+    unsigned long fromId, unsigned long toId, unsigned char guaranteed)
+{
+    if (!m_lpDP)
+        return 0;
+    unsigned long flags = DPSEND_GUARANTEED;
+    if (!guaranteed)
+        flags = 0;
+    m_hRes = m_lpDP->Send(fromId, toId, flags, data, size);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:654
 VA(0x00497a90, 0x6B)
 unsigned char CDPlay::AddGroupEnum(
