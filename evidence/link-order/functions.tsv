@@ -1468,7 +1468,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x96cc0	5	bracketed	drawing..dxplay	drawing,ds_engine,dxplay	CDPlay_ReceiveMsg
 0x96cd0	5	bracketed	drawing..dxplay	drawing,ds_engine,dxplay	CDPlay_SysMsgAddGroupToGroup
 0x96ce0	47	in-span	dxplay	dxplay	CDPlay__scalar_deleting_destructor
-0x96d10	20	in-span	dxplay	dxplay	game_22aef0_sub00_96d10
+0x96d10	20	in-span	dxplay	dxplay	CDPlay_CDPlay
 0x96d30	58	in-span	dxplay	dxplay	CDPlay_Init
 0x96d70	51	in-span	dxplay	dxplay	CDPlay_InitConnection
 0x96db0	176	in-span	dxplay	dxplay	CDPlay_HostSession
@@ -1542,8 +1542,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x99e70	43	bracketed	dxplay..event_record	dxplay,event_record	game_971b0_sub00_99e70
 0x99ea0	35	bracketed	dxplay..event_record	dxplay,event_record	game_972c0_sub00_99ea0
 0x99ed0	35	bracketed	dxplay..event_record	dxplay,event_record	game_97340_sub00_99ed0
-0x99f00	91	bracketed	dxplay..event_record	dxplay,event_record	game_22af10_sub00_99f00
-0x99f60	96	bracketed	dxplay..event_record	dxplay,event_record	game_98d80_sub00_99f60
+0x99f00	91	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_CAutoArray
+0x99f60	96	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_Destroy
 0x99fc0	29	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_Get
 0x99fe0	34	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_Put
 0x9a010	4	bracketed	dxplay..event_record	dxplay,event_record	CAutoArray_GetCount
