@@ -1552,6 +1552,27 @@ void widget::set_visible(unsigned char arg)
         send_message(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
 }
 
+// E:\gamedcs\sacrifice_window.cpp:800
+// The 8-byte by-value argument and the artifact-traits name lookup fix this
+// free helper. An empty slot hides the widget and clears both help strings;
+// an occupied slot selects its artifact frame, shows it and installs the
+// artifact's display name as rollover text.
+VA(0x005639e0, 0x5b)  // linkorder + body/ABI, dc 0x125a4c
+void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
+{
+    if (artifact.artifactId == -1) {
+        slot_widget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                  widget::WIDGET_DRAWN);
+        slot_widget->set_help_text(0, 0, 1);
+    } else {
+        slot_widget->SetIconFrame(artifact.artifactId);
+        slot_widget->send_message(widget::WIDGET_SET_STATUS,
+                                  widget::WIDGET_DRAWN);
+        slot_widget->set_help_text(
+            akArtifactTraits[artifact.artifactId].name, 0, 1);
+    }
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1815
 // Slot 6. A byte test at +0x75 selects between two same-class helpers, and an
 // exhaustive order-map of the Dreamcast roster over the run between the

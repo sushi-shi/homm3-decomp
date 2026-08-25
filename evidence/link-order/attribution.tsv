@@ -457,7 +457,6 @@ rva	size	unit	current_label	provenance
 0x163150	321	sacrifice_window	game_164910_sub00_163150	working-label
 0x1632a0	1047	sacrifice_window	game_15fce0_sub00_1632a0	working-label
 0x1636c0	794	sacrifice_window	game_15fd10_sub00_1636c0	working-label
-0x1639e0	91	sacrifice_window	game_1636c0_sub02_1639e0	working-label
 0x163a40	49	sacrifice_window	game_164340_sub00_163a40	working-label
 0x163a80	795	sacrifice_window	game_15fd40_sub00_163a80	working-label
 0x163da0	338	sacrifice_window	game_160380_sub00_163da0	working-label
@@ -586,9 +585,7 @@ rva	size	unit	current_label	provenance
 0x1e7c80	8149	tradpost	game_tpmrkcrs_pcx_1e7c80	working-label
 0x1e9c80	33	tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	src-VA+base
 0x1e9d20	313	tradpost	game_1d3240_sub13_1e9d20	working-label
-0x1e9e60	56	tradpost	game_a84f0_sub74_1e9e60	working-label
 0x1e9ea0	315	tradpost	game_1d3240_sub14_1e9ea0	working-label
-0x1e9fe0	220	tradpost	game_1d3240_sub15_1e9fe0	working-label
 0x1ea130	1180	tradpost	game_1e9d20_sub00_1ea130	working-label
 0x1ea5d0	259	tradpost	game_1ebe80_sub00_1ea5d0	working-label
 0x1ea6e0	2146	tradpost	game_n1_d_1ea6e0	working-label

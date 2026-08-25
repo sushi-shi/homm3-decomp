@@ -4,6 +4,7 @@
 #include <va.h>
 #include "tradpost.h"
 #include "game.h"
+#include "townmgr.h"
 #include "widget.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -192,6 +193,53 @@ DATA(0x006aaa78) static hero* gpMarketHero;
 DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
+
+// E:\gamedcs\tradpost.cpp:618
+// The retail entry points expand this file-local helper: count every owned
+// town whose Marketplace bit is active, then cap the efficiency index at ten.
+static inline void CountMarkets()
+{
+    gMarketCount = 0;
+    for (int i = 0; i < gpCurrentPlayer->numTowns; ++i) {
+        town* currentTown = gpGame->GetTown(gpCurrentPlayer->townIds[i]);
+        if (currentTown->active & bitNumber[MARKETPLACE_ID])
+            ++gMarketCount;
+    }
+    if (gMarketCount > 10)
+        gMarketCount = 10;
+}
+
+// E:\gamedcs\tradpost.cpp:648
+// Retail's DispatchEvent case 213 (Freelancer's Guild) passes the active hero
+// in ECX, proving Complete's one-parameter fastcall divergence from the
+// Dreamcast no-argument form. The other four stores select the sell-creature
+// market with guild pricing before the shared tail.
+VA(0x005e9e60, 0x38)  // object-213 caller + market-state body, dc 0x188518
+void DoFreelancersGuild(hero* inHero)
+{
+    gMarketCount = 5;
+    gpMarketHero = inHero;
+    gpMarketArtifacts = gpGame->field_1f664;
+    gMarketWindow = 4;
+    gMarketSource = 3;
+    DoMarket();
+}
+
+// E:\gamedcs\tradpost.cpp:667
+// The ordinary town Marketplace uses the active-Marketplace count for efficiency,
+// trades against the game's shared artifact buffer, and gives the window the
+// hero currently visiting the displayed town (or null when there is none).
+VA(0x005e9fe0, 0xdc)  // townManager caller + market-state body, dc 0x188640
+void DoMarketplace()
+{
+    gpMarketArtifacts = gpGame->field_1f664;
+    CountMarkets();
+    gpMarketHero = gpGame->GetHero(
+        gpTownManager->townToView->visitingHeroId);
+    gMarketWindow = 0;
+    gMarketSource = 0;
+    DoMarket();
+}
 
 // E:\gamedcs\tradpost.cpp:683
 VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c

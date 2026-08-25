@@ -3,8 +3,8 @@
 # span that no match_baseline row claims.
 unit	functions	bytes
 game	125	55116
-tradpost	15	45736
-sacrifice_window	35	25816
+tradpost	13	45460
+sacrifice_window	34	25725
 townmgr	11	21803
 recruit	4	9176
 command	2	8609
