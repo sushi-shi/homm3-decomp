@@ -215,12 +215,23 @@ void DoMarketplace()
 // read by SetRolloverText; the .rclick side (the odd 4-byte cells retail keeps
 // between them) is the 8-byte stride byte-proven by the widget ids' fixed
 // element offsets. tradpost-private (no other unit references this band).
+DATA(0x006a53a8) static THelpText gGiveHelpText[5];
 DATA(0x006a5868) static THelpText gMarketHelpText[6];
 DATA(0x006a6c50) static THelpText gSellArtHelpText[5];
+DATA(0x006a7da8) static THelpText gBuyArtHelpText[5];
 DATA(0x006a7e98) static THelpText gSellCreaHelpText[5];
 
 DATA(0x006aaa70) static int gBackpackStart;
-DATA(0x006aaa74) static char* gpMarketArtifacts;
+// The marketplace artifact list. The entry points seed it with a raw byte
+// buffer (gpGame->field_1f664, or DoBlackMarket's char*), and the buy/sell
+// panels then read it as artifact ids. The retail source aliases a char*
+// against artifact-id reads; the two views are paired here in a union so the
+// id read stays a plain member access rather than a pointer cast.
+union TMarketArtifactList {
+    char* asBytes;
+    const TArtifact* asArtifacts;
+};
+DATA(0x006aaa74) static TMarketArtifactList gpMarketArtifacts;
 DATA(0x006aaa78) static hero* gpMarketHero;
 DATA(0x006aaa90) static int gSelectedArtifact;
 DATA(0x006aaa98) static int gMarketCount;
@@ -258,7 +269,7 @@ void DoArtifactMerchants()
         return;
     }
 
-    gpMarketArtifacts = gpGame->field_1f664;
+    gpMarketArtifacts.asBytes = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(
         gpTownManager->townToView->visitingHeroId);
@@ -277,7 +288,7 @@ void DoFreelancersGuild(hero* inHero)
 {
     gMarketCount = 5;
     gpMarketHero = inHero;
-    gpMarketArtifacts = gpGame->field_1f664;
+    gpMarketArtifacts.asBytes = gpGame->field_1f664;
     gMarketWindow = 4;
     gMarketSource = 3;
     DoMarket();
@@ -299,7 +310,7 @@ void DoFreelancersGuild(town* currentTown)
         return;
     }
 
-    gpMarketArtifacts = gpGame->field_1f664;
+    gpMarketArtifacts.asBytes = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(currentTown->visitingHeroId);
     gMarketWindow = 4;
@@ -314,7 +325,7 @@ void DoFreelancersGuild(town* currentTown)
 VA(0x005e9fe0, 0xdc)  // townManager caller + market-state body, dc 0x188640
 void DoMarketplace()
 {
-    gpMarketArtifacts = gpGame->field_1f664;
+    gpMarketArtifacts.asBytes = gpGame->field_1f664;
     CountMarkets();
     gpMarketHero = gpGame->GetHero(
         gpTownManager->townToView->visitingHeroId);
@@ -328,7 +339,7 @@ VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c
 void DoTradingPost()
 {
     gMarketCount = 5;
-    gpMarketArtifacts = gpGame->field_1f664;
+    gpMarketArtifacts.asBytes = gpGame->field_1f664;
     gMarketWindow = 0;
     gMarketSource = 1;
     DoMarket();
@@ -339,7 +350,7 @@ VA(0x005ea100, 0x2A)  // anchor-callee (DoMarket) + arity screen, dc 0x1886d4
 void DoBlackMarket(hero* inHero, char* blackArtifacts)
 {
     gpMarketHero = inHero;
-    gpMarketArtifacts = blackArtifacts;
+    gpMarketArtifacts.asBytes = blackArtifacts;
     gMarketCount = 5;
     gMarketWindow = 2;
     gMarketSource = 2;
@@ -799,12 +810,50 @@ int TGiveResourceWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:2688
+// Rollover text for the give-resource panel. The fixed panel labels come from
+// the window's own help-text pairs; the sell-side resource ids (0x1c..0x22)
+// name a resource; the recipient buttons (0x46..0x4c) format the player-colour
+// name of the slot's stored colour id through general-text line 198.
 VA(0x005ed850, 0x190)  // anchor-callee (TGiveResourceWindow::WindowHandler), dc 0x18bb40
 void TGiveResourceWindow::SetRolloverText(int codeY)
 {
-    // @stub
+    switch (codeY) {
+    case MARKET_LEFT_PANEL_ID:  strcpy(gText, gGiveHelpText[0].text); break;
+    case MARKET_RIGHT_PANEL_ID: strcpy(gText, gGiveHelpText[1].text); break;
+    case MARKET_LEFT_COUNT_ID:  strcpy(gText, gGiveHelpText[2].text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(gText, gGiveHelpText[3].text); break;
+    case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+    case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+    case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+    case MARKET_SELL_GOLD_ID:
+        strcpy(gText, gResourceNames[codeY - MARKET_SELL_WOOD_ID]);
+        break;
+    case GIVE_RECIPIENT_SLOT_0_ID: case GIVE_RECIPIENT_SLOT_1_ID:
+    case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
+    case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
+    case GIVE_RECIPIENT_SLOT_6_ID:
+        sprintf(gText, (*gpGeneralText)[198],
+                gPlayerColorNames[slotPlayerColor[codeY - GIVE_RECIPIENT_SLOT_0_ID]]);
+        break;
+    case MARKET_COMMAND_ID: strcpy(gText, gGiveHelpText[4].text); break;
+    default: strcpy(gText, emptyRolloverText); break;
+    }
+    BroadcastMessage(0x200, 3, 0x93, 0);
+    DrawWindow(0, 0x92, 0x93);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
+    // Residual (99.96%): branch sequence agrees 10/10; the sole delta is the
+    // resource-range read `gResourceNames[codeY - 0x1c]`, which cl folds to a
+    // DIR32 to gResourceNames with addend -0x70 while retail delinks the same
+    // interior address (0x6a5df4) as its own bss_ symbol (addend 0) - the same
+    // reloc-alias residual TTradeResourceWindow::SetRolloverText carries.
+    // Closing it needs an interior reloc-alias row (owner gResourceNames,
+    // addend -0x70) in config/delink-reloc-aliases.tsv, outside a lane's files.
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:2743
 VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
@@ -813,12 +862,55 @@ int TBuyArtifactWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:2871
+// Rollover text for the buy-artifact panel. The fixed panel labels come from
+// the window's own help-text pairs; the right column (0x1c..0x22) names a
+// resource; the artifact-for-sale buttons (0x3f..0x45) name the artifact under
+// the cursor from the shared market artifact list (empty slots -> the empty
+// rollover string).
 VA(0x005eddd0, 0x188)  // anchor-callee (TBuyArtifactWindow::WindowHandler), dc 0x18bee8
 void TBuyArtifactWindow::SetRolloverText(int codeY)
 {
-    // @stub
+    switch (codeY) {
+    case MARKET_LEFT_PANEL_ID:      strcpy(gText, gBuyArtHelpText[0].text); break;
+    case MARKET_LEFT_COUNT_ID:      strcpy(gText, gBuyArtHelpText[1].text); break;
+    case MARKET_LEFT_LABEL_ID:      strcpy(gText, gBuyArtHelpText[2].text); break;
+    case MARKET_BUY_RIGHT_LABEL_ID: strcpy(gText, gBuyArtHelpText[3].text); break;
+    case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+    case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+    case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+    case MARKET_SELL_GOLD_ID:
+        strcpy(gText, gResourceNames[codeY - MARKET_SELL_WOOD_ID]);
+        break;
+    case BUY_ARTIFACT_SLOT_0_ID: case BUY_ARTIFACT_SLOT_1_ID:
+    case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
+    case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
+    case BUY_ARTIFACT_SLOT_6_ID: {
+        TArtifact art =
+            gpMarketArtifacts.asArtifacts[codeY - BUY_ARTIFACT_SLOT_0_ID];
+        if (art == ARTIFACT_NONE)
+            strcpy(gText, emptyRolloverText);
+        else
+            strcpy(gText, akArtifactTraits[art].name);
+        break;
+    }
+    case MARKET_COMMAND_ID: strcpy(gText, gBuyArtHelpText[4].text); break;
+    default: strcpy(gText, emptyRolloverText); break;
+    }
+    BroadcastMessage(0x200, 3, 0x93, 0);
+    DrawWindow(0, 0x92, 0x93);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
+    // Residual (99.96%): branch sequence agrees 11/11; the sole delta is the
+    // resource-range read gResourceNames[codeY - 0x1c] folding to a DIR32 to
+    // gResourceNames with addend -0x70 where retail delinks the interior
+    // address (0x6a5df4) as its own bss_ symbol - the shared reloc-alias
+    // residual (see TTradeResourceWindow::SetRolloverText), fixed only by an
+    // interior alias row in config/delink-reloc-aliases.tsv.
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:2932
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
