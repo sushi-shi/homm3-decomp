@@ -1129,6 +1129,7 @@ game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	96.9556	96.9556	96.9556	0xc6c50
+game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840
 # DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
 # reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
 # inline the one CMCHideHero constructor and they disagree on where its

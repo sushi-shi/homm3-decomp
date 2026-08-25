@@ -79,7 +79,9 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "kbwin.h"
 #include "kb.h"
 #include "cursor.h"
+#include "mousemgr.h"
 #include "puzzlewindow.h"
+#include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "herospec.h"
 #include "savegame.h"
@@ -7448,11 +7450,44 @@ void game::ShowHeroesLogo()
 }
 
 // E:\gamedcs\game.cpp:9748
-DC_ONLY(0xb6640, 0x236)
+#endif  // @carcass
+VA(0x004ca840, 0x19C)  // complete retail call/data shape, dc 0xb6640
 void game::WaitForPlayer(char* cText, int iPlayer)
 {
-    // @stub
+    if (!gUnnamed6993dc || gUnnamed699274 <= 1 || gNetworkActive69954c)
+        return;
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    gCompleteDrawAllCells = 1;
+    if (gpCurrentPlayer->isHuman && gpCurrentPlayer->isLocal)
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_1, 9999999);
+    else
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, 9999999);
+
+    gpSoundManager->field_84 = 1;
+    gpSoundManager->StopMP3();
+    SAMPLE2 sample2 = LoadPlaySample(
+        DATA_COMPGEN(0x00677ec8, newWeekSample, "newweek.wav"));
+
+    gpAdvManager->CompleteDraw(1);
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateTownLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateQuestLogButton(1);
+    gpAdvManager->advWindow->UpdateButtons(1, 0);
+    gpAdvManager->advWindow->ResourceDisplay->Clear();
+    GameFn_004CA780();
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+
+    gCompleteDrawAllCells = 0;
+    NormalDialog(cText, 1, -1, -1, 10, iPlayer,
+                 -1, 0, -1, 0, -1, 0);
+    WaitEndSample(sample2, -1);
+
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateTownLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateQuestLogButton(1);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9798
 DC_ONLY(0xb6878, 0x6)

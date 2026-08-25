@@ -2051,10 +2051,9 @@ public:
     // convention. advManager::Open calls it when the incoming player is
     // not the local human; the row is not claimed here.
     void GameFn_004CA5B0();
-    // Retail-only 0x4ca840 (the body that plays newweek.wav). Open hands
-    // it the formatted turn banner and the acting game position when the
-    // protocol is hotseat; the row is not claimed here.
-    void GameFn_004CA840(char* text, int gamePos);
+    // Open hands it the formatted turn banner and the acting game position
+    // when the protocol is hotseat.
+    void WaitForPlayer(char* text, int gamePos);          // 0x4ca840
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
