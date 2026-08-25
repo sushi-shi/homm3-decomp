@@ -380,15 +380,42 @@ unsigned char CDPlay::Send(void* lpData, unsigned long dwSize, unsigned long idF
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
+// Residual (75.6%): the realloc loop + dispatch is byte-right, but retail keeps
+// each of the three `return 0` exits (!m_lpDP / NOMESSAGES / m_hRes<0) as its own
+// inline epilogue, where our SP3 CL cross-jumps them into one shared tail
+// (merged-return class), and it homes dwSize to a stack slot our CL keeps in a
+// register. Both are the documented tail-merge / register-homing walls.
 // E:\gamedcs\dxplay.cpp:544
 VA(0x004975b0, 0xF3)  // anchor-vtable CDPlay slot34 (Receive), dc 0x8a678
 unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPlayMsg* pMsg, unsigned long dwFlags)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwSize = pMsg->dataSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+    while (m_hRes != DPERR_NOMESSAGES) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            goto dispatch;
+        if (dwSize >= pMsg->dataSize) {
+            if (pMsg->pData)
+                delete [] pMsg->pData;
+            pMsg->pData = new unsigned char[dwSize];
+            pMsg->dataSize = dwSize;
+        }
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            goto dispatch;
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+    }
+    return 0;
+dispatch:
+    if (m_hRes < 0)
+        return 0;
+    if (*pFromID)
+        return ReceiveMsg(*pFromID, *pToID, pMsg);
+    return ReceiveSystemMsg(*pToID, pMsg);
 }
 
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:574
 VA(0x004976b0, 0xDC)  // anchor-vtable CDPlay slot37 (FlushReceiveQueue), dc 0x8a744
@@ -734,17 +761,35 @@ unsigned char CDPlay::GetReceiveQueueSize(unsigned long from, unsigned long to, 
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
+// E:\gamedcs\dxplay.cpp:66 - the CDPlay base ctor has no standalone retail body;
+// it is emitted only inlined into the CDPlayLobby (and CDPlayHeroes) ctors. The
+// process is CoInitialized once, guarded by a file-scope flag.
+CDPlay::CDPlay()
+{
+    m_lpDP = 0;
+    m_connected = 0;
+    m_inSession = 0;
+    m_isHost = 0;
+    m_hRes = 0;
+    m_guid = s_guidNull;
+    m_pSessionArray = 0;
+    m_pConnectionArray = 0;
+    m_pGroupArray = 0;
+    m_pPlayerArray = 0;
+    memset(m_caps, 0, sizeof(m_caps));
+    if (!s_coInitialized) {
+        CoInitialize(0);
+        s_coInitialized = 1;
+    }
+}
 
 // E:\gamedcs\dxplay.cpp:1211
 VA(0x00498870, 0x82)  // anchor-vtable CDPlayLobby ctor: stores CDPlay(0x63dc28)+CDPlayLobby(0x63dd20) vtables, CoInitialize, dc 0x8b56c
-void CDPlayLobby::CDPlayLobby()
+CDPlayLobby::CDPlayLobby()
 {
-    // @stub
+    m_lpLobby = 0;
+    m_pAddressArray = 0;
 }
-
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1215
 VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
