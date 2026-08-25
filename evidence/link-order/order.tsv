@@ -96,8 +96,8 @@ position	unit	first_rva	end_rva	gap_to_next
 90	spelldefs	0x19e060	0x19e4af	21073
 91	spells	0x1a3700	0x1a939c	2436
 92	strip	0x1a9d20	0x1aa31e	34
-93	subwindow	0x1aa340	0x1aa68a	27894
-94	swapmgr	0x1b1380	0x1b139c	1012
+93	subwindow	0x1aa340	0x1aa68a	1014
+94	swapmgr	0x1aaa80	0x1b139c	1012
 95	systemoptionswindow	0x1b1790	0x1b375e	22930
 96	text	0x1b90f0	0x1b9109	6167
 97	textntry	0x1ba920	0x1bbab4	236
