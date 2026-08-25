@@ -33,35 +33,35 @@
 #if 0  // @carcass
 
 // E:\gamedcs\command.cpp:63
-DC_ONLY(0x6af98, 0x194)
+VA(0x00473c00, 0x29F)  // anchor-callee: Main's only automate callee w/ Random discriminator + order-map, dc 0x6af98
 unsigned char combatManager::automate_catapult()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:193
-DC_ONLY(0x6b12c, 0x13C)
+VA(0x00473ea0, 0x196)  // anchor-callee: Main's other automate callee (no-Random sibling) + order-map, dc 0x6b12c
 unsigned char combatManager::automate_first_aid_tent()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:266
-DC_ONLY(0x6b268, 0xB0)
+VA(0x00474040, 0x8C)  // anchor-callee: PollSound/CycleCombatScreen/GameTime frame loop + order-map, dc 0x6b268
 void combatManager::do_animations()
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:291
-DC_ONLY(0x6b318, 0x352)
+VA(0x004740d0, 0x5AB)  // anchor-vtable combatManager slot02 + dispatcher: calls automate_catapult/first_aid + ProcessCombatMsg/CheckWin/ResetRound, dc 0x6b318
 int combatManager::Main(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\command.cpp:475
-DC_ONLY(0x6b66c, 0x410)
+VA(0x00474690, 0x36B)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::SetCombatDirections(int hex)
 {
     // @stub
@@ -1371,12 +1371,9 @@ void combatManager::process_first_aid(army* current_army)
     // @stub
 }
 
-// E:\gamedcs\command.cpp:3461
-DC_ONLY(0x6f984, 0x82A)
-int combatManager::ProcessNextAction(message* msg, unsigned char automaticTurn)
-{
-    // @stub
-}
+// E:\gamedcs\command.cpp:3461 ProcessNextAction promoted to VA(0x00478d80)
+// at its RVA-ordered position below (between process_first_aid and
+// ResetCyclingCreatures).
 
 // E:\gamedcs\command.cpp:3742
 DC_ONLY(0x701b0, 0x10A)
@@ -1874,6 +1871,20 @@ void combatManager::process_first_aid(army* currentArmy)
         }
     }
 }
+
+// E:\gamedcs\command.cpp:3461 - located, not yet reconstructed (4180 B).
+// Single command.cpp function between process_first_aid (0x6f824) and
+// ResetCyclingCreatures (0x701b0); retail body's callee set matches DC
+// ProcessNextAction exhaustively (IsQuickCombat, CheckWin, NextArmy,
+// CheckApplyGoodMorale, process_move_then_attack, process_first_aid,
+// ResetRound, CheckChangeSelector, ResetMouse, DrawFrame, ...).
+#if 0  // @carcass
+VA(0x00478d80, 0x1054)  // anchor-callee exhaustive + single-fn gap, dc 0x6f984
+int combatManager::ProcessNextAction(message* msg, unsigned char automaticTurn)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\command.cpp:3742. Retail expands army::Is and the Complete-era
 // MarkCreatureEffect tower arm inside the first walk. If any live stack was
