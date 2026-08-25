@@ -65,6 +65,30 @@ enum EDPlayResult {
     DPERR_NOMESSAGES = 0x887700be
 };
 
+// DirectPlay system-message discriminants. ReceiveSystemMsg reads dwType off the
+// leading DPMSG_GENERIC and dispatches to the matching SysMsg* handler.
+enum EDPlaySysMsgType {
+    DPSYS_CREATEPLAYERORGROUP = 0x03,
+    DPSYS_DESTROYPLAYERORGROUP = 0x05,
+    DPSYS_ADDPLAYERTOGROUP = 0x07,
+    DPSYS_DELETEPLAYERFROMGROUP = 0x21,
+    DPSYS_SESSIONLOST = 0x31,
+    DPSYS_HOST = 0x101,
+    DPSYS_SETPLAYERORGROUPDATA = 0x102,
+    DPSYS_SETPLAYERORGROUPNAME = 0x103,
+    DPSYS_SETSESSIONDESC = 0x104,
+    DPSYS_ADDGROUPTOGROUP = 0x105,
+    DPSYS_DELETEGROUPFROMGROUP = 0x106,
+    DPSYS_SECUREMESSAGE = 0x107,
+    DPSYS_STARTSESSION = 0x108,
+    DPSYS_CHAT = 0x109
+};
+
+// The common message prefix: every DPMSG_* system message leads with dwType.
+struct DPMSG_GENERIC {
+    unsigned long dwType;
+};
+
 // DirectPlay value structures consumed only by this TU's wrapper bodies. The
 // DPCAPS extent (0x28) is fixed by GetCaps's memset; DPCHAT (0xc) by SendChat.
 struct DPCAPS {
