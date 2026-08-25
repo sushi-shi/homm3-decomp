@@ -86,8 +86,8 @@ sample	scenarioinfo	0x166e89	0x169800	10615	17
 scenarioinfo	search	0x1699b2	0x16a0d0	1822	12	
 search	seerhut	0x16a352	0x16d3e0	12430	42	
 seerhut	singleselectionpopups	0x17460c	0x175a10	5124	25	
-singleselectionpopups	singleselectionwindow	0x175a20	0x177c90	8816	44	
-singleselectionwindow	slider	0x177cdd	0x196050	123763	204	
+singleselectionpopups	singleselectionwindow	0x175a20	0x177a50	8240	38	
+singleselectionwindow	slider	0x17c6c3	0x196050	104845	187	
 slider	smackmgr	0x197185	0x1971b0	43	1	
 smackmgr	soundmgr	0x197cf4	0x1994b0	6076	23	
 soundmgr	spellbookwindow	0x19b295	0x19c8f0	5723	26	
