@@ -65,7 +65,7 @@ public:
     int slotPlayerColor[7];   // +0x64
     int field_80;             // +0x80
     slider* resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
-    int field_88;             // +0x88
+    int lastHoverId;          // +0x88, last widget the hover handler rolled over
 
     TGiveResourceWindow(int x2, int y2);
     void Update(unsigned char bUpdate);
