@@ -33,6 +33,7 @@
 #include "remote.h"
 #include "kbwin.h"
 #include "game.h"
+#include "textwdgt.h"
 
 // ============================================================================
 // CHotspotWidget - a bare rectangular click target.
@@ -199,16 +200,25 @@ int CSingleSelPopup::handle_message(message& msg)
 // E:\gamedcs\singleselectionpopups.cpp:215
 VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)  // vtbl 0x6419d8 slot0, dc 0x12f304
 
-#if 0  // @carcass -- located, not reconstructed
-
-// E:\gamedcs\singleselectionpopups.cpp:218
+// E:\gamedcs\singleselectionpopups.cpp:218 - the sprite-bonus dialog: a
+// medfont title, the centred CSpriteWidget icon (its ctor inlined here,
+// storing vtbl 0x641a00 and normalising the frame via GetNumFrames(0)), and
+// two smalfont captions. Setup fixes the 300x225 frame; each widget is heap-
+// allocated and registered through Add.
 VA(0x005754f0, 0x254)  // anchor-vtable CBonusDlg::CreateWin(sprite) inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0x14 (5 args), dc 0x12dff0
 unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
 {
-    // @stub
+    if (!Setup(300, 225, 200, 150))
+        return 0;
+    Add(new textWidget(10, 26, width - 20, 36, title, "medfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new CSpriteWidget((width - sprite->Width) / 2, 60, sprite, frame));
+    Add(new textWidget(10, 95, width - 20, 18, botTitle, "smalfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new textWidget(15, 120, width - 30, height - 120, description,
+        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    return 1;
 }
-
-#endif  // @carcass
 
 // ============================================================================
 // CSpriteWidget - a widget wrapping a CSprite.
@@ -226,6 +236,21 @@ void CSpriteWidget::Draw()
         y + parentWindow->y, 0, 1);
 }
 
+// E:\gamedcs\singleselectionpopups.cpp:47 - inlined into every CreateWin that
+// builds a sprite icon (dc 0x12f018, no standalone retail body). Stores the
+// sprite/frame past the widget base and normalises frame against sequence 0's
+// count; GetNumFrames(0)'s else arm folds to the literal-0 divisor.
+CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frameArg)
+{
+    sprite = pSprite;
+    frame = frameArg;
+    x = xPos;
+    y = yPos;
+    width = pSprite->Width;
+    height = pSprite->Height;
+    frame %= pSprite->GetNumFrames(0);
+}
+
 CSpriteWidget::~CSpriteWidget()
 {
 }
@@ -233,16 +258,24 @@ CSpriteWidget::~CSpriteWidget()
 // E:\gamedcs\singleselectionpopups.cpp:73
 VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)  // vtbl 0x641a00 slot0; ICF folds CBitmapWidget dtor (dc 0x12f26c), dc 0x12f11c
 
-#if 0  // @carcass -- located, not reconstructed
-
-// E:\gamedcs\singleselectionpopups.cpp:234
+// E:\gamedcs\singleselectionpopups.cpp:234 - the bitmap-bonus twin of the
+// sprite CreateWin above: same medfont title / smalfont captions, with a
+// centred CBitmapWidget (ctor inlined, storing vtbl 0x641a34) in place of the
+// sprite icon.
 VA(0x005757e0, 0x226)  // anchor-vtable CBonusDlg::CreateWin(bitmap) inlines CBitmapWidget ctor (stores vtbl 0x641a34), ret 0x10 (4 args), dc 0x12e1cc
 unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description)
 {
-    // @stub
+    if (!Setup(300, 225, 200, 150))
+        return 0;
+    Add(new textWidget(10, 26, width - 20, 36, title, "medfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new CBitmapWidget((width - pImage->Width) / 2, 60, pImage));
+    Add(new textWidget(10, 95, width - 20, 18, botTitle, "smalfont.fnt",
+        font::PRIMARY, -1, 1, 0, 8));
+    Add(new textWidget(15, 120, width - 30, height - 120, description,
+        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\singleselectionpopups.cpp:61
 VA(0x00575a10, 0x10)  // anchor-vtable CSpriteWidget vtbl 0x641a00 slot2 (Main override; ICF folds CBitmapWidget::Main), dc 0x12f0ac
@@ -263,6 +296,18 @@ void CBitmapWidget::Draw()
     image->Draw(0, 0, image->Width, image->Height,
         gpWindowManager->screenBitmap, x + parentWindow->x,
         y + parentWindow->y, 1);
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:82 - inlined into the bitmap CreateWin
+// callers (dc 0x12f168, no standalone retail body). Stores the image past the
+// widget base with the bitmap's own extent.
+CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
+{
+    image = pImage;
+    x = xPos;
+    y = yPos;
+    width = pImage->Width;
+    height = pImage->Height;
 }
 
 CBitmapWidget::~CBitmapWidget()
