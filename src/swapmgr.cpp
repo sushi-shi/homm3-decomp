@@ -11,6 +11,7 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "remote.h"
+#include "widget.h"
 #include "winmgr.h"
 
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
@@ -51,14 +52,56 @@ void TSwapWindow::~TSwapWindow()
     // @stub
 }
 
-// E:\gamedcs\swapmgr.cpp:465
-VA(0x005ae430, 0xCB)  // corroborates TSwapWindow-ctor sub, send_message widget x7, ret 0, dc 0x15c384
-void swapManager::UpdateArrows()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\swapmgr.cpp:465
+// DC symbol is TSwapWindow::UpdateArrows (dc 0x15c384); the carcass mislabelled
+// it swapManager::UpdateArrows. `this` reads widget pointers at +0x54/+0x58/+0x5c
+// (a swapManager would have selection ints there), and it consults the separate
+// gpSwapManager singleton for the side/hero state - so this is the window method.
+// Residual: 10/11 blocks byte-exact. B2 differs by one instruction - retail loads
+// gpSwapManager via eax then copies to edi and schedules the gpGame load after the
+// field_5d test; our CL loads gpSwapManager straight into edi and hoists the gpGame
+// load ahead of the test. A register-homing scheduling residual (naming/reordering
+// gpSwapManager or gpGame either regressed the CFG or was byte-inert).
+VA(0x005ae430, 0xCB)  // corroborates TSwapWindow-ctor sub, send_message widget x7, ret 0, dc 0x15c384
+void TSwapWindow::UpdateArrows()
+{
+    if (!field_54)
+        return;
+    if (!field_58)
+        return;
+
+    swapManager* sm = gpSwapManager;
+    if (sm->field_5d)
+    {
+        if (sm->heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+        {
+            field_54->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        else
+        {
+            field_54->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        field_5c->enable(1);
+    }
+    else
+    {
+        if (sm->heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
+        {
+            field_54->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        else
+        {
+            field_54->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            field_58->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        }
+        field_5c->enable(0);
+    }
+}
 
 // E:\gamedcs\swapmgr.cpp:583
 VA(0x005ae500, 0xA9)  // anchor-callee ??0baseManager + IsHuman, ret 8, dc 0x15c470
