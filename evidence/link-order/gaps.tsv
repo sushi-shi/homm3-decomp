@@ -68,7 +68,7 @@ mapcell	misc	0x105d12	0x10b1d0	21694	80
 misc	monframeinfo	0x10c7e2	0x10c810	46	1	
 monframeinfo	mousemgr	0x10cb26	0x10cb50	42	1	
 mousemgr	multiplayerwindow	0x10da57	0x10e050	1529	14	
-multiplayerwindow	newgame	0x112534	0x1132b0	3452	36	
+multiplayerwindow	newgame	0x1126dc	0x1132b0	3028	31	
 newgame	overview	0x113320	0x11e330	45072	154	
 overview	palette	0x11e66a	0x122940	17110	21	
 palette	path	0x12294b	0x1239d0	4229	27	
