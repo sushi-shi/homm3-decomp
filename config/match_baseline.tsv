@@ -1556,6 +1556,9 @@ mapcell	?size@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QBEIXZ	100
 mapcell	?upgrade_cell_extra_info@@YIXPAVNewmapCell@@H@Z	96.2635	96.2635	96.2635	0xfe6c0
 mapcell	NewfullMap_NewfullMapFn_00505D20	0.0000	0.0000	0.0000	0x105d20
 mapcell	NewfullMap_NewfullMapFn_00505D60	0.0000	0.0000	0.0000	0x105d60
+mapcell	NewfullMap_NewfullMapFn_00505DA0	0.0000	0.0000	0.0000	0x105da0
+mapcell	NewfullMap_NewfullMapFn_00505EA0	0.0000	0.0000	0.0000	0x105ea0
+mapcell	NewfullMap_NewfullMapFn_00505F20	0.0000	0.0000	0.0000	0x105f20
 misc	??0TPickANumber@@QAE@HH@Z	100.0000	100.0000	100.0000	0x10c6e0
 misc	?CheckConfigFile@@YIXXZ	98.5030	98.5030	98.5030	0x10b260
 misc	?FileSize@@YIJPAD@Z	100.0000	100.0000	100.0000	0x10c5a0

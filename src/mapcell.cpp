@@ -5800,6 +5800,47 @@ void NewfullMap::NewfullMapFn_00505D60()
 {
     // @stub
 }
+
+// The objects.txt object-type loader, run once from startup
+// (LoadMenu/WinMain path) to populate NewfullMap::objectTypeIndex: `this`
+// reaches the same +0xdc array (`lea ecx,[esi+edx+0xdc]` /
+// `mov edx,[esi+edx+0xe4]`), it EH-guards a per-record parse it delegates to
+// 0x506080, and destroys a std::string temporary per row.  A NewfullMap
+// member, retail-only, reconstruction blocked on the same game.h declaration.
+// Its parse callee 0x506080 (and that callee's small helpers 0x506780 /
+// 0x5067e0 / 0x506820) are the rest of this family and are left for a lane
+// that can confirm whether they are members or file-local statics.
+VA(0x00505da0, 0xF8)  // linkorder + this@+0xdc=objectTypeIndex; objects.txt loader, startup caller, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505DA0()
+{
+    // @stub
+}
+
+// Two more NewfullMap objectTypeIndex helpers in the same gap, both owned by
+// this TU: `this` reaches the `std::vector<CObjectType> objectTypeIndex[232]`
+// array at NewfullMap+0xdc (game.h:295, stride 16, element CObjectType 0x44).
+// 0x505ea0 (called by game::ConvertObject) reverse-scans
+// objectTypeIndex[objectClass] for the record whose `extra` (CObjectType+0x3c)
+// equals the second argument and returns &objectTypeIndex[objectClass][i]
+// (i == -1 sentinel when absent) - the size()-1..0 reverse-scan tell, reading
+// _First/_Last per pass.  0x505f20 (called by game::InsertObject) is the
+// larger objectTypeIndex mutator over the same array.  Neither is in the DC
+// mapcell.cpp roster (DC inlined them); both are retail-only bodies.
+// Reconstruction is BLOCKED the same way as the twins above: the bodies are
+// NewfullMap members and their declarations live in game.h's NewfullMap class,
+// a shared header this lane must not edit - so they stay @stub pending
+// coordination with the game.h owner.
+VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only (DC-inlined)
+CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectClass, int extra)
+{
+    // @stub
+}
+
+VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505F20()
+{
+    // @stub
+}
 #endif  // @carcass
 
 // These Dinkumware template members are already emitted by NewfullMap's
