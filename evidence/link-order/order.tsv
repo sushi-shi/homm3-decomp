@@ -68,7 +68,7 @@ position	unit	first_rva	end_rva	gap_to_next
 62	misc	0x10b1d0	0x10c7e2	46
 63	monframeinfo	0x10c810	0x10cb26	42
 64	mousemgr	0x10cb50	0x10da57	1529
-65	multiplayerwindow	0x10e050	0x112534	3452
+65	multiplayerwindow	0x10e050	0x1126dc	3028
 66	newgame	0x1132b0	0x113320	45072
 67	overview	0x11e330	0x11e66a	17110
 68	palette	0x122940	0x12294b	4229
