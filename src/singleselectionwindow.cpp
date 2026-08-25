@@ -237,14 +237,14 @@ unsigned char CNetPlayerHandler::PlayerExists(unsigned long dpid)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1156
-DC_ONLY(0x1307dc, 0x4C)
+VA(0x00577ce0, 0x2e)  // arity ret4; 8-slot stride-0x7c dpid scan then shl-5 (x0x7c) pointer compute (returns player*), dc 0x1307dc
 CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayer(unsigned long dpid)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1167
-DC_ONLY(0x130828, 0x70)
+VA(0x00577d10, 0x5a)  // arity ret8 (this+2); stride-0x7c scan + checks face field [slot+0x2c], dc 0x130828
 unsigned char CNetPlayerHandler::IsFaceTaken(int face, int exclude)
 {
     // @stub
