@@ -2269,6 +2269,7 @@ singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	10
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
+singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
 singleselectionwindow	?InitializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a80
@@ -2279,7 +2280,6 @@ singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	73.4823	73.4823	
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
-singleselectionwindow	CChatWidget_Draw	0.0000	0.0000	0.0000	0x17ca90
 singleselectionwindow	CEnterNameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17cdc0
 singleselectionwindow	CEnterNameEdit_OnKillFocus	0.0000	0.0000	0.0000	0x17cee0
 singleselectionwindow	CSaveGameEdit_IgnoreKey	0.0000	0.0000	0.0000	0x17cfe0
