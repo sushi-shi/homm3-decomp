@@ -160,7 +160,7 @@ rva	size	unit	current_label	provenance
 0x78890	110	command	?ResetMouse@combatManager@@QAEXXZ	src-VA+ir
 0x78900	656	command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	src-VA+ir
 0x78b90	485	command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	src-VA+ir
-0x78d80	4180	command	calls_timeGetTime_78d80	working-label
+0x78d80	4180	command	combatManager_ProcessNextAction	src-VA
 0x79de0	335	command	?ResetCyclingCreatures@combatManager@@QAEXXZ	src-VA+ir
 0x79f30	139	command	?ResetCycleTimers@combatManager@@QAEXXZ	src-VA+ir
 0x79fc0	305	command	?SetCombatGrid@combatManager@@QAEXHHHE@Z	src-VA+ir
@@ -627,7 +627,6 @@ rva	size	unit	current_label	provenance
 0x1629b0	34	sacrifice_window	?set_visible@widget@@QAEXE@Z	src-VA+ir
 0x1639e0	91	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	src-VA+base
 0x1654b0	5	sacrifice_window	game_15fd70_sub00_1654b0	working-label
-0x1654f0	2620	sacrifice_window	game_sktrnbk_pcx_1654f0	working-label
 0x165f30	33	sacrifice_window	??_Gtype_skeleton_window@@UAEPAXI@Z	src-VA+base
 0x166030	1117	sacrifice_window	game_d_s_166030	working-label
 0x166490	600	sacrifice_window	game_1654c0_sub00_166490	working-label
