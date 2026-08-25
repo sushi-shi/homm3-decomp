@@ -417,13 +417,35 @@ void TMultiPlayerWindow::GoSessionList()
     sessNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
-#if 0  // @carcass
-VA(0x0050efc0, 0x12B)  // anchor-bracket: second no-arg void member in the ~TMPW..Update run; send_message x13 + GetWidget + operator delete (teardown), dc 0x10051c
+// E:\gamedcs\multiplayerwindow.cpp:1049
+VA(0x0050efc0, 0x12B)  // anchor-bracket: send_message x13 + GetWidget + pSessions->Destroy() teardown, dc 0x10051c
 void TMultiPlayerWindow::GoMainMenu()
 {
-    // @stub
+    inSessionList = 0;
+    showSplash = 1;
+    sessTimer = 0;
+    hostJoinScreen = 0;
+    splash->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    widget* w = GetWidget(126);
+    if (w)
+        w->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    pSessions->Destroy();
 }
 
+#if 0  // @carcass
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
 void TMultiPlayerWindow::Update()
 {

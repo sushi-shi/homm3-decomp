@@ -104,7 +104,44 @@ SIZE(CMPInputDlg, 0x64);
 
 class CSprite;
 class CDPlaySession;
-template<class T> class CAutoArray;
+
+// CAutoArray<T> - E:\gamedcs\array.h's hand-rolled auto-growing pointer
+// array. DC field list 0x2967 (no STLport shift; a plain class): vfptr@0,
+// step@4, pArray@8, allocSize@0xc, size@0x10; total 0x14. The 7-slot vtable
+// (0x6400d8 for <CDPlaySession>) is ~/sdd, Add, Get, Put, Delete, Insert,
+// GetCount. Destroy() (NH3API name) is the inlined "delete every element via
+// the virtual Get, free pArray, reset to empty" that ~TMPW and GoMainMenu
+// both expand; elements are freed with a bare operator delete because T is
+// incomplete here (matches retail's ??3 with no element dtor).
+template<class T>
+class CAutoArray {
+public:
+    unsigned long step;       // +0x4
+    T** pArray;               // +0x8
+    unsigned long allocSize;  // +0xc
+    unsigned long size;       // +0x10
+
+    virtual ~CAutoArray();
+    virtual unsigned char Add(T* element);
+    virtual T* Get(unsigned long elementNbr);
+    virtual unsigned char Put(unsigned long elementNbr, T* element);
+    virtual unsigned char Delete(unsigned long elementNbr);
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
+    virtual unsigned long GetCount();
+
+    void Destroy(unsigned char deleteData = 1)
+    {
+        if (deleteData) {
+            for (unsigned long i = 0; i < size; i++)
+                delete Get(i);
+        }
+        if (pArray)
+            delete pArray;
+        pArray = 0;
+        allocSize = 0;
+        size = 0;
+    }
+};
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
 // DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
