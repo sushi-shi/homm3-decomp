@@ -59,8 +59,8 @@ public:
     // per-slot player-colour array; SetRolloverText's byte-proven
     // `[this + 4*id - 0xb4]` read fixes the array at +0x64, hence the leading
     // dword. DoMarket fills field_60 (recipient count) and slotPlayerColor;
-    // the ctor stores resourceSlider at +0x84. field_80/field_88 are proven
-    // only by the 0x8c object size so far.
+    // the ctor stores resourceSlider at +0x84 and WindowHandler's hover uses
+    // lastHoverId at +0x88. field_80 is proven only by the 0x8c object size.
     int field_60;
     int slotPlayerColor[7];   // +0x64
     int field_80;             // +0x80
