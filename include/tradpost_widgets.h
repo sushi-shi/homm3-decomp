@@ -9,6 +9,17 @@
 #ifndef HOMM3_TRADPOST_WIDGETS_H
 #define HOMM3_TRADPOST_WIDGETS_H
 
+// The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
+// the order the classes are declared. Byte-proven by DoMarket's jump table and
+// the per-case `new <size>` immediates (0x68/0x8c/0x64/0x64/0x68).
+enum EMarketWindow {
+    MARKET_WINDOW_TRADE = 0,
+    MARKET_WINDOW_GIVE = 1,
+    MARKET_WINDOW_BUY = 2,
+    MARKET_WINDOW_SELL_ARTIFACT = 3,
+    MARKET_WINDOW_SELL_CREATURE = 4
+};
+
 // The seven resource names, indexed by resource id. Shared table; seerhut.cpp
 // carries the retail address claim (0x6a5e64). Declared here (consumer-side
 // plain extern, the ai_player.h / advmgr.h pattern) for the resource-trade

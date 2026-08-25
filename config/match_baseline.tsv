@@ -2637,6 +2637,7 @@ tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
 tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
 tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0
+tradpost	?DoMarket@@YIXXZ	91.8669	91.8669	91.8669	0x1ea130
 tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	99.9624	99.9624	99.9624	0x1eddd0
@@ -2647,7 +2648,6 @@ tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	99.2905	99.2905	99.2905	
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
 tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0
-tradpost	DoMarket	0.0000	0.0000	0.0000	0x1ea130
 tradpost	TBuyArtifactWindow_TBuyArtifactWindow	0.0000	0.0000	0.0000	0x1e3730
 tradpost	TBuyArtifactWindow_Update	0.0000	0.0000	0.0000	0x1eb6a0
 tradpost	TBuyArtifactWindow_WindowHandler	0.0000	0.0000	0.0000	0x1ed9e0

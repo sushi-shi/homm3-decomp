@@ -13,6 +13,7 @@
 #include "widget.h"
 #include "message.h"
 #include "winmgr.h"
+#include "mousemgr.h"
 #include "tradpost_widgets.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -238,6 +239,28 @@ DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
 
+// The five constructed dialog objects; DoMarket news one per gMarketWindow
+// value, keeps its pointer here for the modal loop, and deletes it on close.
+DATA(0x006aaab4) static TTradeResourceWindow* gpTradeWindow;
+DATA(0x006aaa8c) static TGiveResourceWindow* gpGiveWindow;
+DATA(0x006aaae4) static TBuyArtifactWindow* gpBuyWindow;
+DATA(0x006aaac8) static TSellArtifactWindow* gpSellArtWindow;
+DATA(0x006aaabc) static TSellCreatureWindow* gpSellCreatureWindow;
+
+// The shared trade selection reset before every window opens (DoMarket) and
+// driven by the resource-trade handlers. gLeftResource/gRightResource(=
+// gSelectedArtifact) index gpCurrentPlayer's resource row; gLeftDenominated is
+// the ratio orientation flag; gRightAmount is the pending right-side quantity.
+// Names provisional (no producer attests the spellings yet).
+DATA(0x006aaaac) static int gLeftDenominated;
+DATA(0x006aaab0) static int gRightAmount;
+DATA(0x006aaacc) static int gLeftResource;
+
+// The window origin DoMarket stamps (0x64, 3) before constructing each dialog
+// and passes as the (x2, y2) constructor arguments.
+DATA(0x006aaa9c) static int gWindowX;
+DATA(0x006aaaa0) static int gWindowY;
+
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
@@ -357,16 +380,133 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts)
     DoMarket();
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:704
+// The shared marketplace modal loop every entry point tails into. It builds
+// the dialog gMarketWindow selects, seeds the shared trade selection, runs the
+// dialog modally, then follows gpWindowManager->dialogReturn from one pane to
+// the next until a window requests the exit command.
 VA(0x005ea130, 0x49c)  // anchor-callee (from 6 entry points) + linkorder, dc 0x188708
 void DoMarket()
 {
-    // @stub
-}
+    message msg = {0, 0, 0, 0, 0, 0, 0, 0};
 
-#endif  // @carcass
+    gWindowX = 0x64;
+    gWindowY = 3;
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpMouseManager->ShowPointer(1);
+
+    while (gMarketWindow != MARKET_COMMAND_ID) {
+        switch (gMarketWindow) {
+        case MARKET_WINDOW_TRADE:
+            gpTradeWindow = new TTradeResourceWindow(gWindowX, gWindowY);
+            if (gpTradeWindow == 0)
+                MemError();
+            msg.id = 0x200;
+            msg.codeX = 13;
+            msg.codeY = 0;
+            msg.extra = gpGame->GetLocalPlayerGamePos();
+            gpTradeWindow->BroadcastMessage(&msg);
+            gLeftDenominated = 0;
+            gBackpackStart = 0;
+            gSelectedArtifact = -1;
+            gLeftResource = -1;
+            gRightAmount = 0;
+            gpTradeWindow->Update(0);
+            gpTradeWindow->DoModal(0);
+            delete gpTradeWindow;
+            break;
+
+        case MARKET_WINDOW_GIVE: {
+            gpGiveWindow = new TGiveResourceWindow(gWindowX, gWindowY);
+            if (gpGiveWindow == 0)
+                MemError();
+            msg.id = 0x200;
+            msg.codeX = 13;
+            msg.codeY = 0;
+            msg.extra = gpGame->GetLocalPlayerGamePos();
+            gpGiveWindow->BroadcastMessage(&msg);
+            gLeftDenominated = 0;
+            gBackpackStart = 0;
+            gSelectedArtifact = -1;
+            gLeftResource = -1;
+            gRightAmount = 0;
+            gpGiveWindow->field_60 = 0;
+            for (int i = 0; i < 8; ++i) {
+                if (i != gNetLocalGamePos && gpGame->playerDisabled[i] == 0) {
+                    gpGiveWindow->slotPlayerColor[gpGiveWindow->field_60] = i;
+                    ++gpGiveWindow->field_60;
+                }
+            }
+            gpGiveWindow->Update(0);
+            gpGiveWindow->DoModal(0);
+            delete gpGiveWindow;
+            break;
+        }
+
+        case MARKET_WINDOW_BUY:
+            gpBuyWindow = new TBuyArtifactWindow(gWindowX, gWindowY);
+            if (gpBuyWindow == 0)
+                MemError();
+            msg.id = 0x200;
+            msg.codeX = 13;
+            msg.codeY = 0;
+            msg.extra = gpGame->GetLocalPlayerGamePos();
+            gpBuyWindow->BroadcastMessage(&msg);
+            gLeftDenominated = 0;
+            gBackpackStart = 0;
+            gSelectedArtifact = -1;
+            gLeftResource = -1;
+            gRightAmount = 0;
+            gpBuyWindow->Update(0);
+            gpBuyWindow->DoModal(0);
+            delete gpBuyWindow;
+            break;
+
+        case MARKET_WINDOW_SELL_ARTIFACT:
+            gpSellArtWindow = new TSellArtifactWindow(gWindowX, gWindowY);
+            if (gpSellArtWindow == 0)
+                MemError();
+            msg.id = 0x200;
+            msg.codeX = 13;
+            msg.codeY = 0;
+            msg.extra = gpGame->GetLocalPlayerGamePos();
+            gpSellArtWindow->BroadcastMessage(&msg);
+            gLeftDenominated = 0;
+            gBackpackStart = 0;
+            gSelectedArtifact = -1;
+            gLeftResource = -1;
+            gRightAmount = 0;
+            gpSellArtWindow->Update(0);
+            gpSellArtWindow->DoModal(0);
+            delete gpSellArtWindow;
+            break;
+
+        case MARKET_WINDOW_SELL_CREATURE:
+            gpSellCreatureWindow = new TSellCreatureWindow(gWindowX, gWindowY);
+            if (gpSellCreatureWindow == 0)
+                MemError();
+            msg.id = 0x200;
+            msg.codeX = 13;
+            msg.codeY = 0;
+            msg.extra = gpGame->GetLocalPlayerGamePos();
+            gpSellCreatureWindow->BroadcastMessage(&msg);
+            gLeftDenominated = 0;
+            gBackpackStart = 0;
+            gSelectedArtifact = -1;
+            gLeftResource = -1;
+            gRightAmount = 0;
+            gpSellCreatureWindow->Update(0);
+            gpSellCreatureWindow->DoModal(0);
+            delete gpSellCreatureWindow;
+            break;
+
+        default:
+            gMarketWindow = MARKET_COMMAND_ID;
+            return;
+        }
+        gMarketWindow = gpWindowManager->dialogReturn;
+    }
+}
 
 // E:\gamedcs\tradpost.cpp:860
 // Configures the shared message widget for one artifact slot of the left

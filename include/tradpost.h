@@ -32,50 +32,89 @@
 // call are attested by the destructors, so no member is modelled and no
 // size is asserted; the constructors that would prove the tails are 8 KB
 // EH-bearing rows still deferred.
+// The three dialogs that build a `slider` (TradeResourceSlider,
+// GiveResourceSlider, SellCreatureSlider) hold its widget pointer as a member;
+// forward-declared here for the pointer, defined where the ctor `new`s it.
+class slider;
+
+// Object sizes are byte-proven by DoMarket's `new` immediates
+// (0x68/0x8c/0x64/0x64/0x68) and each ctor's `push <size>`. Members past the
+// CAdvPopup base (0x60) are named where a reconstructed body attests the store
+// and left as field_NN placeholders where only the size is proven so far.
 class TTradeResourceWindow : public CAdvPopup {
+    slider* resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
+    int field_64;             // +0x64
 public:
+    TTradeResourceWindow(int x2, int y2);
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TTradeResourceWindow();
 };
+SIZE(TTradeResourceWindow, 0x68);
 
 class TGiveResourceWindow : public CAdvPopup {
+public:
     // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
     // per-slot player-colour array; SetRolloverText's byte-proven
     // `[this + 4*id - 0xb4]` read fixes the array at +0x64, hence the leading
-    // dword. The trailing members (retail object size 0x8c) are not attested
-    // by any reconstructed body yet, so only what the rollover handler reads
-    // is modelled.
+    // dword. DoMarket fills field_60 (recipient count) and slotPlayerColor;
+    // the ctor stores resourceSlider at +0x84. field_80/field_88 are proven
+    // only by the 0x8c object size so far.
     int field_60;
     int slotPlayerColor[7];   // +0x64
-public:
+    int field_80;             // +0x80
+    slider* resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
+    int field_88;             // +0x88
+
+    TGiveResourceWindow(int x2, int y2);
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TGiveResourceWindow();
 };
+SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
+    int field_60;             // +0x60
 public:
+    TBuyArtifactWindow(int x2, int y2);
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TBuyArtifactWindow();
 };
+SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
+    int field_60;             // +0x60
 public:
+    TSellArtifactWindow(int x2, int y2);
     void update_sell_artifact_widget(message* msg, long i);
+    void Update(unsigned char bUpdate);
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
                             int* iInMaxUnitsToTrade);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TSellArtifactWindow();
 };
+SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
+    slider* creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
+    int field_64;             // +0x64
 public:
+    TSellCreatureWindow(int x2, int y2);
+    void Update(unsigned char bUpdate);
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
                             int* iInMaxUnitsToTrade);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TSellCreatureWindow();
 };
+SIZE(TSellCreatureWindow, 0x68);
 
 long get_market_value(EGameResource resource);
 
