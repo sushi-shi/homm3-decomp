@@ -877,6 +877,20 @@ VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 // emitted by the `new CAutoArray<CDPlaySession>` in the TMultiPlayerWindow
 // constructor above (stores vtable 0x6400d8, inlines the delete-every-element
 // teardown). dc 0x103200.
+//
+// BLOCKED at 0.0% - needs TWO fixes, neither in this lane's file scope:
+//   1. Emission: `delete pSessions` reaches ??_G only through the vtable, and
+//      for a class TEMPLATE VC6 emits the vtable + its non-destructor virtuals
+//      but does NOT instantiate the destructor chain (??_G/??_E/~) at a virtual
+//      delete site. `template class CAutoArray<CDPlaySession>;` forces it out,
+//      but emits every member as a strong external where retail keeps COMDATs.
+//   2. Join key: even once emitted, the base symbol is the template-mangled
+//      ??_G?$CAutoArray@VCDPlaySession@@@@... whose demangle key keeps the `?$`
+//      (retail_labels/source.py:612 does `split("@")[0]`), giving
+//      `?$cautoarray_?$cautoarray@gdtor`, while the VA_COMPGEN claim key is the
+//      plain `cautoarray_cautoarray@gdtor` (source.py:855). They never match.
+//      The fix is one line - strip the `?$Class@...` prefix in the ??_G branch
+//      exactly as the ??_D branch already does at source.py:637.
 VA_COMPGEN(0x00512670, 0x6C, SCALAR_DELETING_DTOR, CAutoArray)
 
 #if 0  // @carcass: remaining untouched bodies
