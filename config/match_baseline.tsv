@@ -2748,8 +2748,8 @@ townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
+townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0
 townmgr	GetBuildingInfo	0.0000	0.0000	0.0000	0x1d2a40
-townmgr	TBuyBuildWindow_set_prerequisite_text	0.0000	0.0000	0.0000	0x1d5be0
 townmgr	TThievesGuildWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1c9710
 townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
 townmgr	TThievesGuildWindow_WindowHandler	0.0000	0.0000	0.0000	0x1c9930

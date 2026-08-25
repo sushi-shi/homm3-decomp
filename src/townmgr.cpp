@@ -4838,16 +4838,105 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
     window->BroadcastMessage(&msg);
 }
 
-// Located, not reconstructed: the buy-build window's prerequisite-text
-// formatter, between ~TBuyBuildWindow (0x5d5b70) and BuyBuild (0x5d5f30).
-#if 0  // @carcass: located, not reconstructed
+// The buy-build window's prerequisite-text formatter. It starts from the
+// town's hierarchy mask for this building, drops the special free-Grail
+// slot in the network-owner case, removes the buildings already active,
+// and prunes every requirement transitively included by another set bit
+// (skipping the two roots 18/24). What remains is the set of missing
+// prerequisites: their names are assembled into gText, comma-separated and
+// word-wrapped to the rollover widget's pixel width by rewriting a
+// separator byte into '\n' whenever get_string_width overflows. Building 13
+// (a second capitol) and 6 (a dock with no water) short-circuit to their
+// own refusal lines; a building the town can never build gets the generic
+// refusal; otherwise the assembled list (or GetText(220) when nothing is
+// missing) becomes the rollover text.
+//
+// The three runtime message pointers at 0x6a7428/2c/30 are filled by an
+// unlocated init TU (retail writer near 0x461cxx) and only read here; the
+// SetArmyCommand round-1 precedent above DATA-claims such townmgr-consumed
+// message globals - kept on townmgr as nearest consumer until that TU lands.
+DATA(0x006a7428) extern const char* gUnnamed6a7428;
+DATA(0x006a742c) extern const char* gUnnamed6a742c;
+DATA(0x006a7430) extern const char* gUnnamed6a7430;
+
+// Residual (87.42%): a register-homing wall (why-reg: flow-distance 0,
+// register-distance 68). Retail keeps lineStart in ebx across both
+// get_string_width calls and spills namePos to [ebp-0xc]; our CL makes the
+// opposite choice (namePos in ebx, lineStart reloaded from its slot), so the
+// two locals' ebx/slot bindings and the count/namePos slot pair are swapped.
+// The branch graph and schedule align exactly. why-reg tried nine catalog
+// mutations (decl-order swap, flag naming, zero-store hoist, count/local
+// volatile) and NONE moved the divergence - the knob is outside its library.
+// The one remaining data delta is the gHierarchyMask high-dword read
+// (`[8*ecx+4]` vs the delinker's split bss_29779c symbol at +4), an __int64
+// symbol-split artifact no source form reaches. Tried and rejected:
+// `lineStart = gText` in the count==0 arm (87.42 -> 80.04); reversing the
+// lineStart/namePos decl order (byte-flat).
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
-void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId)
+void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int building)
 {
-    // @stub
+    int count = 0;
+    __int64 mask = gHierarchyMask[current_town->type][building];
+
+    if (gpGame->field_1f69d && building == DWELLING_2_ID && current_town->type == 0)
+        mask &= ~bitNumber[BLACKSMITH_ID];
+
+    mask &= ~current_town->active;
+
+    for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
+        if ((bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
+            mask &= ~town::included_buildings[current_town->type][i];
+    }
+
+    char* lineStart = gText;
+    char* namePos = gText;
+    font* pFont = rolloverText->Font;
+    for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
+        if ((bitNumber[j] & mask) != 0) {
+            if (count == 0) {
+                strcpy(gText, gpGeneralText->GetText(53));
+                strcat(gText, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
+            } else {
+                strcat(gText, DATA_COMPGEN(0x00660db4, commaText, ","));
+                if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                    namePos[-1] = '\n';
+                    lineStart = namePos;
+                }
+                strcat(gText, DATA_COMPGEN(0x0068c3d0, doubleSpaceText, "  "));
+            }
+            ++count;
+            namePos = lineStart + strlen(lineStart);
+            strcat(gText, GetBuildingName(current_town->type, j));
+            if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                namePos[-1] = '\n';
+                lineStart = namePos;
+            }
+        }
+    }
+
+    if (building == HALL_CAPITOL_ID) {
+        if (gpGame->players[current_town->owner].HasCapitol()) {
+            rolloverText->SetText(gUnnamed6a7428);
+            return;
+        }
+    } else if (building == DOCK_ID) {
+        if (!gpTownManager->townToView->CanBuildDock()) {
+            rolloverText->SetText(gUnnamed6a742c);
+            return;
+        }
+    }
+
+    if (!gpTownManager->townToView->can_ever_build(building)) {
+        rolloverText->SetText(gUnnamed6a7430);
+        return;
+    }
+
+    if (count != 0)
+        rolloverText->SetText(gText);
+    else
+        rolloverText->SetText(gpGeneralText->GetText(220));
 }
-#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:7354
 VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
