@@ -1220,16 +1220,63 @@ int ValueOfPrison(NewmapCell* cell, playerData* player)
         + player->resourceValue[GOLD] * 2500.0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\philai.cpp:2811.  A Pyramid: army-guarded spell reward.  Identity:
 // unique cross-TU edge armyGroup::Add (called by exactly this DC philai fn and
 // this retail row) plus AI_get_spell_value + AI_value_of_combat over an armyGroup.
+// A pyramid this player has already looted (his bit is set in the visited-player
+// mask at bits 5+ and the fresh flag is clear) is worthless.  Otherwise it is
+// worth beating its two fixed guardian stacks plus the average value of the
+// level-5 spells the hero could still learn from it.  PYRAMID_SPELL_LEVEL
+// mirrors game.cpp's own constant for the reward tier.  owner is read as a
+// short because retail's visited-cell ABI is `short player` (SetCellVisited).
+//
+// Residual (95.95%): the visited-player test.  Retail reads the 8-bit
+// visited_bits field through a NewmapCell typed arm (byte `test cl,al` then
+// `setne`), which mapcell.h does not expose as an accessor and this lane
+// may not add; the explicit `(extraInfo>>5)&(1<<owner)` keeps a dword test
+// with no bool materialisation.  Everything else - the two guardian Adds,
+// the level-5 spell-averaging loop and the closing AI_value_of_combat - is
+// byte-exact.
+const int PYRAMID_SPELL_LEVEL = 5;
 VA(0x0052a410, 0xF5)  // anchor-callee, dc 0x111f54
 long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
 {
-    // @stub
+    short owner = current_hero->owner;
+    if (owner >= 0 && owner < 8
+            && ((cell->extraInfo >> 5) & (1 << owner)) != 0
+            && (cell->extraInfo & 1) == 0)
+        return 0;
+
+    armyGroup guardians;
+    long value = 0;
+    long count = 0;
+    guardians.Add(0x74, 0x28, -1);
+    guardians.Add(0x75, 0x14, -1);
+
+    if (current_hero->wisdomLevel >= 3) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+            if (akSpellTraits[spell].level == PYRAMID_SPELL_LEVEL) {
+                if (!current_hero->available_spells[spell]) {
+                    long spell_value;
+                    if (current_hero->in_spellbook[spell])
+                        spell_value = 0;
+                    else if (const_cast<hero*>(current_hero)->IsWieldingArtifact(
+                                 ARTIFACT_SPELLBOOK))
+                        spell_value = AI_get_spell_value(current_hero, spell);
+                    else
+                        spell_value = 0;
+                    value += spell_value;
+                }
+                count++;
+            }
+        }
+        value = value / count;
+    }
+
+    return AI_value_of_combat(current_hero, 0, guardians, 0, cell) + value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:2208
 VA(0x0052a710, 0xad)  // anchor-callee, dc 0x110c90
