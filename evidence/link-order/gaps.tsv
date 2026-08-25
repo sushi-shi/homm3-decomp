@@ -41,7 +41,8 @@ customcampaign	dialogbox	0x8b2d7	0x8fdc0	19177	88	dc_input,dc_precompiledheaders
 dialogbox	diff	0x90b67	0x90f60	1017	11	
 diff	dimensiondoorwindow	0x912ff	0x916f0	1009	11	
 dimensiondoorwindow	drawing	0x91edc	0x93710	6196	16	
-drawing	event_record	0x96c4d	0x9a5e0	14739	101	ds_engine,dxplay
+drawing	dxplay	0x96c4d	0x96ce0	147	6	ds_engine
+dxplay	event_record	0x99ef3	0x9a5e0	1773	20	
 event_record	events	0x9dcec	0x9e2e0	1524	15	
 events	exec	0xacba6	0xb0a10	15978	43	
 exec	findpath	0xb0f35	0xb1330	1019	11	
