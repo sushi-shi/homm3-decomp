@@ -888,6 +888,7 @@ dxplay	?AddPlayerToGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x981f0
 dxplay	?CloseSession@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x97290
 dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
 dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x970e0
+dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	81.3400	81.3400	81.3400	0x96fc0
 dxplay	?DeleteGroupFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x97180
 dxplay	?DeletePlayerFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x98220
 dxplay	?DestroyGroup@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97150
@@ -952,7 +953,6 @@ dxplay	CDPlayLobby_RegisterApp	0.0000	0.0000	0.0000	0x989a0
 dxplay	CDPlayLobby_TestLobbied	0.0000	0.0000	0.0000	0x98b70
 dxplay	CDPlay_AddConnectionEnum	0.0000	0.0000	0.0000	0x97b70
 dxplay	CDPlay_AddSessionEnum	0.0000	0.0000	0.0000	0x977c0
-dxplay	CDPlay_CreatePlayer	0.0000	0.0000	0.0000	0x96fc0
 dxplay	CDPlay_FlushReceiveQueue	0.0000	0.0000	0.0000	0x976b0
 dxplay	CDPlay_GetErrorDesc	0.0000	0.0000	0.0000	0x97c50
 dxplay	CDPlay_GetGroupName	0.0000	0.0000	0.0000	0x98500
