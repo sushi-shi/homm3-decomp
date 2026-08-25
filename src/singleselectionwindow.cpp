@@ -1865,8 +1865,24 @@ void CSaveGameEdit::~CSaveGameEdit()
     // @stub
 }
 
+#endif  // @carcass
+
+// The compiler-generated scalar deleting destructor (vtable 0x241cac slot 0);
+// its ??_G body is the ~dtor call + conditional operator delete VC6 emits once
+// the class destructor is defined here. The out-of-line ~TSingleSelectionWindow
+// the ??_G calls lives at retail 0x583b40 (893 B, unclaimed); its full body is
+// the large-method reconstruction the pad-modeled class still blocks, so the
+// definition below is the accurate empty destructor for the current model - it
+// only emits the vtable store + ~CAdvPopup base call the ??_G reaches by name.
+// E:\gamedcs\singleselectionwindow.cpp:4012
+TSingleSelectionWindow::~TSingleSelectionWindow()
+{
+}
+
 // TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
 VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4071
 DC_ONLY(0x14961c, 0x38)
