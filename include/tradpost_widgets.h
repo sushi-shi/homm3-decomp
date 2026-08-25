@@ -114,6 +114,14 @@ enum EMarketArtifactSlotId {
     MARKET_ARTIFACT_SLOT_21_ID, MARKET_ARTIFACT_SLOT_22_ID   // 0x81
 };
 
+// The two backpack scroll arrows on the sell-artifact panel; its WindowHandler
+// pages gBackpackStart on these and re-blits the five visible backpack-icon
+// widgets (ids 0x66..0x6a). Provisional names.
+enum EMarketArtifactArrowId {
+    MARKET_ARTIFACT_LEFT_ARROW_ID = 0x82,
+    MARKET_ARTIFACT_RIGHT_ARROW_ID = 0x83
+};
+
 // The sell-creature left column: one widget id per army slot (0x8b..0x91).
 enum EMarketCreatureSlotId {
     MARKET_CREATURE_SLOT_0_ID = 0x8b,

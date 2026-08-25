@@ -87,7 +87,7 @@ public:
 SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
-    int field_60;             // +0x60
+    int lastHoverId;          // +0x60, last widget the hover handler rolled over
 public:
     TSellArtifactWindow(int x2, int y2);
     void update_sell_artifact_widget(message* msg, long i);
