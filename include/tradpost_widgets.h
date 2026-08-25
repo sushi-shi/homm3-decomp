@@ -73,4 +73,15 @@ enum EMarketCreatureSlotId {
     MARKET_CREATURE_SLOT_5_ID, MARKET_CREATURE_SLOT_6_ID   // 0x91
 };
 
+// The give-resource recipient column: one widget id per selectable player
+// slot (0x46..0x4c). TGiveResourceWindow::SetRolloverText formats each with
+// the player-colour name of the slot's stored colour id, so the seven ids
+// need named cases rather than a magic-label range. Provisional names.
+enum EGiveRecipientId {
+    GIVE_RECIPIENT_SLOT_0_ID = 0x46,
+    GIVE_RECIPIENT_SLOT_1_ID, GIVE_RECIPIENT_SLOT_2_ID,
+    GIVE_RECIPIENT_SLOT_3_ID, GIVE_RECIPIENT_SLOT_4_ID,
+    GIVE_RECIPIENT_SLOT_5_ID, GIVE_RECIPIENT_SLOT_6_ID   // 0x4c
+};
+
 #endif  /* HOMM3_TRADPOST_WIDGETS_H */
