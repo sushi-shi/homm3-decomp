@@ -151,11 +151,13 @@ public:
 protected:
     virtual int ExitDialog(message* msg);                      // slot 14
 private:
+    void put_down_artifact(unsigned char change_experience);
     void return_artifact(const type_artifact_offering& artifact);
     void clear();
     long get_max_amount(long slot) const;
     static int all_creatures(message& msg);
     static int max_creatures(message& msg);
+    static int sacrifice(message& msg);
     static int sacrifice_creatures(message& msg);
     static int exit_click(message& msg);
     static int sacrifice_artifacts(message& msg);

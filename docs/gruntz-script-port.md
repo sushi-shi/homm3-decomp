@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the 617-byte sacrifice action is behavior-complete at a
+  96.62% control-flow plateau.** The constructor callback store at 0x56019e
+  and adjacent Dreamcast roster row identify
+  `type_sacrifice_window::sacrifice` at 0x5646a0. Retail proves the artifact
+  and creature reset paths, troop dismissal, slider/button reset and common
+  experience award. The Dreamcast line table additionally proves that the
+  artifact path calls the retained `put_down_artifact(false)` helper; its
+  update-experience gate, offering refresh, pointer reset, slot refresh and
+  redraw are reconstructed at their original helper boundary.
+
+  Naming the original `armyGroup*` and loop-index locals restores retail's
+  frame and register homes, taking the first transcription from 83.84% to
+  96.62%. All eleven branch mnemonics and all three returns agree; one
+  zero-slot branch landing exposes the remaining cross-jump. This SP3
+  compile merges the helper's
+  redraw with the creature-path redraw, while retail keeps the two identical
+  six-instruction sites. Direct duplication, a shared-call spelling, an
+  explicit join and forced inlining all preserve or worsen that wall, so the
+  source-authentic closest spelling is banked. The synchronized checkpoint
+  remains **1960/2376 linked exact** and **1891/2307 game exact**, with
+  **96.60% game fuzzy** and **44.06% executable coverage**. No external
+  implementation body was used.
+
 - **2026-08-25 — the creature-mode and exit callbacks add 725 exact retail
   bytes.** Constructor callback stores at 0x560c82 and 0x560201, together
   with the adjacent Dreamcast private-static roster rows, identify
