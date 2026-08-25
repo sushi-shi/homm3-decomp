@@ -458,7 +458,6 @@ rva	size	unit	current_label	provenance
 0x1646a0	617	sacrifice_window	game_15fdd0_sub02_1646a0	working-label
 0x164910	356	sacrifice_window	game_160380_sub04_164910	working-label
 0x164a80	369	sacrifice_window	game_15fdd0_sub03_164a80	working-label
-0x164e70	356	sacrifice_window	game_1610f0_sub02_164e70	working-label
 0x164fe0	916	sacrifice_window	game_15fda0_sub00_164fe0	working-label
 0x1654b0	5	sacrifice_window	game_15fd70_sub00_1654b0	working-label
 0x1654f0	2620	sacrifice_window	game_sktrnbk_pcx_1654f0	working-label

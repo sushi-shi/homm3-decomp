@@ -1881,6 +1881,7 @@ sacrifice_window	?handle_click@type_transformer_slot@@UAEEEE@Z	100.0000	100.0000
 sacrifice_window	?handle_widget_hover@type_sacrifice_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1653f0
 sacrifice_window	?handle_widget_hover@type_skeleton_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x166720
 sacrifice_window	?max_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164de0
+sacrifice_window	?sacrifice_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164e70
 sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x162a20
 sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x163150
 sacrifice_window	?set_creature_sacrifice@type_sacrifice_window@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x164c00

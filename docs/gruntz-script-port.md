@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice-artifacts callback reproduces all 356 retail
+  bytes.** The constructor's callback pointer at 0x561bfe and the Dreamcast
+  private-static signature identify 0x564e70. Retail then proves both
+  source-inlined helpers in full: `clear` walks the 16-byte offering vector,
+  calls `return_artifact` for each nonempty record and for the held artifact,
+  clears their ids and resets `total_experience`; `return_artifact` tries the
+  original equipped slot, any legal equipped slot, the backpack and one final
+  arbitrary equipped-slot fallback in that order. The callback restores
+  artifact mode and redraws the window after cleanup.
+
+  The natural helper spelling and callback match all 24 blocks, 15 branches,
+  three returns and every normalized instruction on their first measured
+  compile. The synchronized checkpoint reaches **1957/2372 linked exact**,
+  **1888/2303 game exact**, **96.59% game fuzzy** and **43.95% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the sacrifice creature controls add 599 exact retail bytes
   and recover one missing function boundary.** Retail 0x564c00 compares and
   rewrites one 32-byte offering record, adjusts `total_experience` by the

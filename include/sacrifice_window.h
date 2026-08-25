@@ -147,9 +147,12 @@ public:
 protected:
     virtual int ExitDialog(message* msg);                      // slot 14
 private:
+    void return_artifact(const type_artifact_offering& artifact);
+    void clear();
     long get_max_amount(long slot) const;
     static int all_creatures(message& msg);
     static int max_creatures(message& msg);
+    static int sacrifice_artifacts(message& msg);
     static void creature_slider_change(int state, heroWindow* parent_window);
 };
 SIZE(type_sacrifice_window, 0x23c);
