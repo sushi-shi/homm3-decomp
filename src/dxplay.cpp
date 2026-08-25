@@ -364,12 +364,40 @@ unsigned char CDPlay::FlushReceiveQueue()
 }
 
 
+#endif  // @carcass
+
+// Residual (73.8%): the CDPlaySession field-copy body is byte-right, but retail
+// defers the ebx/esi/edi pushes into the alloc path and duplicates the
+// Add(pSession)/return tail across the password branches rather than sharing it
+// (register-homing / merged-return class). Field mapping and order are exact.
 // E:\gamedcs\dxplay.cpp:605
 VA(0x004977c0, 0x144)  // anchor-vtable CDPlay slot60 (AddSessionEnum); ret 8, dc 0x8a7e0
 unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long dwFlags)
 {
-    // @stub
+    if (dwFlags & 1)
+        return 0;
+    CDPlaySession* pSession = new CDPlaySession;
+    if (pSession && lpDPSessionDesc) {
+        pSession->dwFlags = lpDPSessionDesc->dwFlags;
+        pSession->guidInstance = lpDPSessionDesc->guidInstance;
+        pSession->guidApp = lpDPSessionDesc->guidApplication;
+        pSession->maxPlayers = lpDPSessionDesc->dwMaxPlayers;
+        pSession->playerCount = lpDPSessionDesc->dwCurrentPlayers;
+        pSession->dwUser1 = lpDPSessionDesc->dwUser1;
+        pSession->dwUser2 = lpDPSessionDesc->dwUser2;
+        pSession->dwUser3 = lpDPSessionDesc->dwUser3;
+        pSession->dwUser4 = lpDPSessionDesc->dwUser4;
+        strcpy(pSession->sessionName, lpDPSessionDesc->lpszSessionNameA);
+        if (lpDPSessionDesc->lpszPasswordA)
+            strcpy(pSession->password, lpDPSessionDesc->lpszPasswordA);
+        else
+            pSession->password[0] = 0;
+    }
+    m_pSessionArray->Add(pSession);
+    return 1;
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 
 // E:\gamedcs\dxplay.cpp:617
