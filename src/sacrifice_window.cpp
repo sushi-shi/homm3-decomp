@@ -3118,13 +3118,72 @@ type_skeleton_window::~type_skeleton_window()
 // the WindowHandler note below also cites. unselect() and update_buttons()
 // (both ret 0) have no surviving slot and are inlined away. Located, not yet
 // reconstructed.
-#if 0  // @carcass: located skeleton body, claim-only
+// Refreshes one army slot's icon, count label and rollover help. An empty
+// slot hides its widgets; a filled one frames the creature icon, prints the
+// count, and builds the rollover text - group 0 (the source army) shows the
+// creature name, group 1 (the death preview) shows what it will leave behind,
+// distinguishing the "already undead" case from the ordinary transform and
+// naming the resulting undead through the death table. The count/name pair
+// then feeds each widget's help text.
+// Residual (59.05%): the branch shape is correct (empty path and the
+// singular/plural name selection match in flow) but two codegen facts still
+// diverge. Retail memory-homes creature_type at [ebp-0x10] and reloads it,
+// keeping this/group/index in esi/edi/ebx, whereas VC6 gives creature_type
+// edi and spills index; every "==" flow block therefore differs by one or
+// two register moves. And the reused std::string's c_str()/COW-teardown
+// expansion emits more join blocks than retail's (60 vs 44). Both are the
+// register-home / string-internal families; no spelling tried here moved
+// them and closing it needs the creature_type home flipped to memory.
 VA(0x00566030, 0x45d)  // linkorder + update(long,long) arity, dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
-    // @stub
+    TCreatureType creature_type = armies[group]->armyTypes[index];
+    if (creature_type == CREATURE_NONE) {
+        army_widget[group][index]->send_message(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        army_label[group][index]->send_message(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        select_border[group][index]->set_help_text(0, 0, 1);
+        army_widget[group][index]->set_help_text(0, 0, 1);
+        army_label[group][index]->set_help_text(0, 0, 1);
+    } else {
+        std::string text;
+        const char* name =
+            GetArmyName(creature_type, armies[group]->numTroops[index]);
+
+        army_widget[group][index]->SetIconFrame(creature_type + 2);
+        text = format_string("%d", armies[group]->numTroops[index]);
+        army_label[group][index]->SetText(text.c_str());
+        army_widget[group][index]->send_message(
+            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        army_label[group][index]->send_message(
+            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+
+        if (group == 0) {
+            text = format_string(
+                gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+        } else {
+            long death = giDeathCreature[creature_type];
+            if (death == creature_type) {
+                if (armies[group]->numTroops[index] == 1)
+                    text = format_string(gpGeneralText->GetText(491), name);
+                else
+                    text = format_string(gpGeneralText->GetText(492), name);
+            } else {
+                const char* death_name =
+                    GetArmyName(death, armies[group]->numTroops[index]);
+                text = format_string(
+                    gpGeneralText->GetText(490), name, death_name);
+            }
+        }
+
+        army_widget[group][index]->set_help_text(text.c_str(), 0, 1);
+        select_border[group][index]->set_help_text(text.c_str(), 0, 1);
+        text = format_string(
+            "%d %s", armies[group]->numTroops[index], name);
+        army_label[group][index]->set_help_text(text.c_str(), 0, 1);
+    }
 }
-#endif  // @carcass
 
 // The transformer slot forwards (side, slot) ahead of right_click. A right
 // click - or a repeated click on the already-selected slot - opens the
