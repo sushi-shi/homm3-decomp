@@ -1093,6 +1093,67 @@ void* CDPlay::GetPlayerData(unsigned long playerId, unsigned long* size,
     return data;
 }
 
+// E:\gamedcs\dxplay.cpp:1129
+VA(0x00498710, 0x8C)
+unsigned char* CDPlay::GetPlayerAddress(
+    unsigned long playerId, unsigned long* size)
+{
+    unsigned long dataSize = 0;
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->GetPlayerAddress(playerId, 0, &dataSize);
+    if (dataSize == 0)
+        return 0;
+    if (size)
+        *size = dataSize;
+    unsigned char* data = static_cast<unsigned char*>(
+        ::operator new(dataSize));
+    m_hRes = m_lpDP->GetPlayerAddress(playerId, data, &dataSize);
+    if (m_hRes < 0) {
+        ::operator delete(data);
+        return 0;
+    }
+    return data;
+}
+
+// E:\gamedcs\dxplay.cpp:1158
+VA(0x004987a0, 0x42)
+unsigned char CDPlay::GetCaps(DPCAPS* caps, unsigned char guaranteed)
+{
+    memset(caps, 0, sizeof(*caps));
+    caps->dwSize = sizeof(*caps);
+    unsigned long flags = 0;
+    if (guaranteed)
+        flags = 1;
+    m_hRes = m_lpDP->GetCaps(caps, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1176
+VA(0x004987f0, 0x31)
+unsigned char CDPlay::GetSendQueueSize(unsigned long fromId,
+    unsigned long toId, unsigned long* numMessages,
+    unsigned long* numBytes)
+{
+    m_hRes = m_lpDP->GetMessageQueue(
+        fromId, toId, 1, numMessages, numBytes);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1189
+VA(0x00498830, 0x31)
+unsigned char CDPlay::GetReceiveQueueSize(unsigned long fromId,
+    unsigned long toId, unsigned long* numMessages,
+    unsigned long* numBytes)
+{
+    m_hRes = m_lpDP->GetMessageQueue(
+        fromId, toId, 2, numMessages, numBytes);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:1215 - vtable slot 0.
 VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
 
