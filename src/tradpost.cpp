@@ -1269,16 +1269,158 @@ void TBuyArtifactWindow::Update(unsigned char bUpdate)
         DrawWindow(1, 0xffff0001, 0xffff);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:1716
+// Refreshes the sell-artifact dialog: the trade-description line, the market
+// subtitle and hero-name labels, the resource-button and backpack-arrow enable
+// state, the per-side selected-artifact preview, the buy-resource column
+// (icon, price ratio, highlight), and the equipped/backpack artifact slot
+// column via update_sell_artifact_widget. The final repaint is bUpdate-gated.
 VA(0x005ebe80, 0x6cb)  // ordermap clean run + arity ret 4, dc 0x18a02c
 void TSellArtifactWindow::Update(unsigned char bUpdate)
 {
-    // @stub
-}
+    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
 
-#endif  // @carcass
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        int q = gRatioInverted ? gGiveQuantity : 1;
+        int selArtId;
+        if (gSelectedArtifact < 18) {
+            selArtId = gpMarketHero->equipped[gSelectedArtifact].artifactId;
+        } else {
+            long n = gpMarketHero->get_number_in_backpack(1);
+            selArtId = gpMarketHero->backpack[
+                ((gBackpackStart & 0xff) + gSelectedArtifact - 18) % n].artifactId;
+        }
+        sprintf(gText, (*gpGeneralText)[269],
+                q, (q > 1) ? (*gpGeneralText)[161] : (*gpGeneralText)[162],
+                gResourceNames[gLeftResource], akArtifactTraits[selArtId].name);
+    } else {
+        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
+                                        : (*gpGeneralText)[164]);
+    }
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, gMarketSubtitle);
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, (*gpGeneralText)[272], gpMarketHero->name);
+    msg.codeY = 0xe;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[169]);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xf;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   9,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 9,   0x1000);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 9,   0x1006);
+    }
+
+    if (gpMarketHero->get_number_in_backpack(1) < 6) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, MARKET_ARTIFACT_LEFT_ARROW_ID,  0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, MARKET_ARTIFACT_RIGHT_ARROW_ID, 0x1000);
+    }
+
+    for (int i2 = 0; i2 < 2; ++i2) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            if (i2 == 0) {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 9;
+                if (gSelectedArtifact < 18) {
+                    msg.extra = gpMarketHero->equipped[gSelectedArtifact].artifactId;
+                } else {
+                    long n = gpMarketHero->get_number_in_backpack(1);
+                    msg.extra = gpMarketHero->backpack[
+                        ((gBackpackStart & 0xff) + gSelectedArtifact - 18) % n].artifactId;
+                }
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
+            } else {
+                msg.extra = gLeftResource;
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 0xb;
+                BroadcastMessage(&msg);
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRatioInverted ? gRightAmount * gGiveQuantity : gRightAmount);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0xc;
+                msg.extraText = gText;
+            }
+            BroadcastMessage(&msg);
+        }
+
+        for (int i = 0; i < 7; ++i) {
+            if (i2 == 1) {
+                msg.codeY = i + 0x2a;
+                msg.codeX = widget::WIDGET_SET_STATUS;
+                msg.extra = 6;
+                BroadcastMessage(&msg);
+                msg.codeY = i + 0x3f;
+                BroadcastMessage(&msg);
+                msg.codeY = i + 0x4d;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = i + 0x4d;
+                msg.extraText = gText;
+                if (gSelectedArtifact != -1) {
+                    type_artifact art = (gSelectedArtifact < 18)
+                        ? gpMarketHero->equipped[gSelectedArtifact]
+                        : gpMarketHero->backpack[gSelectedArtifact - 18];
+                    float v = static_cast<float>(akArtifactTraits[art.artifactId].cost)
+                            * fArtifactPurchaseEfficency[gMarketCount];
+                    float ratio = v / static_cast<float>(gMarketValues[i]);
+                    if (ratio < 1.0f)
+                        ratio = 1.0f;
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            static_cast<long>(ratio + 0.5));
+                } else {
+                    sprintf(gText, emptyRolloverText);
+                }
+                BroadcastMessage(&msg);
+                msg.codeX = (gLeftResource == i) ? widget::WIDGET_SET_STATUS
+                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = i + 0x3f;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    for (int slot = 0; slot < 0x17; ++slot) {
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = slot + 0x6b;
+        msg.extra = 6;
+        BroadcastMessage(&msg);
+        update_sell_artifact_widget(&msg, slot);
+        BroadcastMessage(&msg);
+    }
+
+    if (bUpdate)
+        DrawWindow(1, 0xffff0001, 0xffff);
+}
 
 // E:\gamedcs\tradpost.cpp:1920
 // Refreshes every widget of the sell-creature dialog from the current trade
