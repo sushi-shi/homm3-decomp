@@ -4,6 +4,34 @@
 // COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
 #include "dxplay.h"
 
+// The enum trampolines' backing records: a 0x100-byte name buffer followed by
+// the DPID at +0x100 (0x104 total). AddGroupEnum/AddPlayerEnum new one, strcpy
+// the enumerated short name in, and store the id. CDPlayGroup/CDPlayPlayer are
+// only forward-declared in the shared header; completed here for this TU.
+class CDPlayGroup {
+public:
+    CDPlayGroup(char* sName, unsigned long dpid)
+    {
+        strcpy(m_sName, sName);
+        m_dpid = dpid;
+    }
+
+    char m_sName[0x100];      // +0x00
+    unsigned long m_dpid;     // +0x100
+};
+
+class CDPlayPlayer {
+public:
+    CDPlayPlayer(char* sName, unsigned long dpid)
+    {
+        strcpy(m_sName, sName);
+        m_dpid = dpid;
+    }
+
+    char m_sName[0x100];      // +0x00
+    unsigned long m_dpid;     // +0x100
+};
+
 // DirectPlay HRESULTs the wrapper bodies branch on. The two-call Get* pattern
 // probes with a null buffer and expects DPERR_BUFFERTOOSMALL before allocating.
 enum EDPlayResult {

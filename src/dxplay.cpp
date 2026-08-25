@@ -293,16 +293,22 @@ unsigned char CDPlay::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, u
     return ok;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
 // E:\gamedcs\dxplay.cpp:446
 VA(0x00497440, 0xB5)  // anchor-vtable CDPlay slot26 (EnumSessions), dc 0x8a558
 unsigned char CDPlay::EnumSessions(CAutoArray<CDPlaySession>* pSessionArray, unsigned long timeOut, unsigned long dwFlags)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_pSessionArray = pSessionArray;
+    pSessionArray->Destroy(1);
+    DPSESSIONDESC2 desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.guidApplication = m_guid;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumSessions(&desc, timeOut, EnumSession, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:490
 VA(0x00497500, 0x53)  // anchor-vtable CDPlay slot33 (SendChat), dc 0x8a5dc
@@ -366,21 +372,27 @@ unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
 }
 
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:654
 VA(0x00497a90, 0x6B)  // anchor-vtable CDPlay slot58 (AddGroupEnum), dc 0x8a9cc
 unsigned char CDPlay::AddGroupEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
 {
-    // @stub
+    CDPlayGroup* pGroup = new CDPlayGroup(lpName->lpszShortNameA, dpid);
+    m_pGroupArray->Add(pGroup);
+    return 1;
 }
-
 
 // E:\gamedcs\dxplay.cpp:663
 VA(0x00497b00, 0x6B)  // anchor-vtable CDPlay slot59 (AddPlayerEnum), dc 0x8aa14
 unsigned char CDPlay::AddPlayerEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
 {
-    // @stub
+    CDPlayPlayer* pPlayer = new CDPlayPlayer(lpName->lpszShortNameA, dpid);
+    m_pPlayerArray->Add(pPlayer);
+    return 1;
 }
 
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:678
 VA(0x00497b70, 0xDF)  // anchor-vtable CDPlay slot61 (AddConnectionEnum), dc 0x8aa5c
