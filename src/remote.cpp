@@ -1480,19 +1480,16 @@ CAnimatedDlg::CAnimatedDlg()
 VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
 // E:\gamedcs\remote.cpp:1547 - the EH frame, sprite Dispose virtual call and
-// CDialog teardown match retail instruction for instruction.  The readiness
-// wrapper's two cleanup paths call this body out of line, so suppressing
-// automatic inlining is part of that already-proven source contract.  VC6
-// would prefer to expand this body in the separately emitted implicit derived
-// destructor, but claiming that row would regress the historical wrapper.
-#pragma auto_inline(off)
+// CDialog teardown match retail instruction for instruction.
+// MATCHING_DEBT(progress branch): leaving the TU's default auto-inlining on
+// improves the later implicit CWaitForReadyPlayersDlg destructor from 79.75%
+// to 90.92%, but regresses WaitForReadyToPlayMsg from 84.02% to 75.80%.
 VA(0x00554ab0, 0x55)  // anchor-vtable + dc-order-map, dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
 {
     if (m_pSprite)
         m_pSprite->Dispose();
 }
-#pragma auto_inline(on)
 
 // E:\gamedcs\remote.cpp:1553
 // Slot 13 records the animation resource/sequence and delegates the text and
@@ -1823,6 +1820,13 @@ int CWaitForReadyPlayersDlg::handle_message(message& msg)
 // WaitForReadyToPlayMsg cleanup boundary.
 VA_COMPGEN(0x005554b0, 0x21, SCALAR_DELETING_DTOR,
            CWaitForReadyPlayersDlg)
+
+// E:\gamedcs\remote.cpp:1820 - implicit destructor called by ??_G above.
+// MATCHING_DEBT(progress branch, 90.916664%): the full nested teardown is
+// expanded, but CNetMsgHandler's register homes differ and the empty
+// CTextDialog layer remains an out-of-line call instead of folding through to
+// TDialogBox. Making that empty body TU-visible regresses exact CAnimatedDlg.
+VA_COMPGEN(0x005554e0, 0xC9, IMPLICIT_DTOR, CWaitForReadyPlayersDlg)
 
 // E:\gamedcs\remote.cpp:1841 - DC supplies the identity and source-level
 // global names.  Retail independently proves the singleton guard, the
