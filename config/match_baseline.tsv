@@ -269,6 +269,7 @@ ai_player	type_AI_player_check_trade_supply	0.0000	0.0000	0.0000	0x2a2b0
 ai_player	type_AI_player_do_resource_trade	0.0000	0.0000	0.0000	0x2ac20
 ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_player	type_AI_player_trade_resources	0.0000	0.0000	0.0000	0x2a470
+ai_player	value_of_building	0.0000	0.0000	0.0000	0x33130
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0
