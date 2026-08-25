@@ -9,6 +9,10 @@
 
 #include "slider.h"
 #include "textresource.h"
+#include "remotedlg.h"
+#include "textntry.h"
+#include "netmsg.h"
+#include "winmgr.h"
 
 // The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into
@@ -26,6 +30,52 @@ class CChatSlider : public slider {
 public:
     virtual void SetResolution(int num);  // slot 13
     virtual void SetState(int state);     // slot 14
+};
+
+// The free remote.obj poll wrapper (0x554400), fastcall under /Gr; one arg.
+CNetMsg* GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed);
+
+// The host-wait animated dialog. CAnimatedDlg base is 0x78; handle_message
+// proves the two tail fields (the polled message pointer at +0x78, the awaited
+// dpid at +0x7c). Its vtable 0x241cf8 replaces CAnimatedDlg slot 0 (the ??_G)
+// and slot 3 (handle_message).
+class CHostWaitDlg : public CAnimatedDlg {
+public:
+    virtual ~CHostWaitDlg();
+    virtual int handle_message(message& msg);  // slot 3
+
+    CNetMsg* m_pMsg;         // +0x78
+    unsigned long m_forWho;  // +0x7c
+};
+
+// The selection window's net-message handler. Its scalar deleting destructor
+// at 0x58e2e0 calls ~CAdvMgrNetMsgHandler, proving the base; CheckHandleNet
+// polls through GetRemoteData into the compression flag at +0xc. vtable
+// 0x241ce8 overrides slot 1 (CheckHandleNet) and slot 3 (HandleNetMsg).
+class CSingleSelectionNetMsgHandler : public CAdvMgrNetMsgHandler {
+public:
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
+
+    unsigned char m_wasCompressed;  // +0x0c
+};
+
+// The chat text widget. It snapshots the screen region under itself into a
+// CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
+// so Draw restores the background before repainting. m_save at +0x50; vtable
+// 0x241bdc overrides slot 4 (Draw vs the textWidget base).
+class CChatWidget : public textWidget {
+public:
+    class CChatSave : public Bitmap16Bit {
+    public:
+        unsigned char bSaved;  // +0x38
+        unsigned char IsSaved() const { return bSaved; }
+    };
+
+    virtual void Draw();  // slot 4
+
+    CChatSave* m_save;  // +0x50
 };
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_PRIV_H */
