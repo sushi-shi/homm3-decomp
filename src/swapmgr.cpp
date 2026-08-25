@@ -5,6 +5,9 @@
 #include "swapmgr.h"
 #include "game.h"
 #include "hero.h"
+#include "advmgr.h"
+#include "bitmap816.h"
+#include "winmgr.h"
 
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
@@ -99,11 +102,27 @@ int swapManager::Open(int newPriority)
 }
 
 // E:\gamedcs\swapmgr.cpp:789
-DC_ONLY(0x15ca44, 0x98)
+#endif  // @carcass
+VA(0x005aed20, 0x9B)  // exact retail teardown, dc 0x15ca44
 void swapManager::Close()
 {
-    // @stub
+    if (gHeroScreenDraggedArtifact.artifactId != -1)
+    {
+        heroes[0]->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
+        gHeroScreenDraggedArtifact.artifactId = -1;
+    }
+    border->Dispose();
+    gpWindowManager->RemoveWindow(parent);
+    delete parent;
+    status = 0;
+    if (pDPlay)
+        pDPlay->SetNetMsgHandler(field_60);
+    delete field_64;
+    gpAdvManager->status = 1;
+    gpAdvManager->EnableButtons();
+    gpAdvManager->Reseed(0, 0);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:816
 DC_ONLY(0x15cadc, 0x1EE)

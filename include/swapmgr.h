@@ -59,8 +59,8 @@ public:
     unsigned char field_5c;  // +0x5c  two-human cross-owner network trade
     unsigned char field_5d;  // +0x5d  default 1; otherwise local-player side
     // +0x5e, +0x5f pad
-    int field_60;            // +0x60  (read by Close)
-    int field_64;            // +0x64  (zeroed at construction)
+    CNetMsgHandler* field_60;  // +0x60  saved previous handler (restored by Close)
+    CNetMsgHandler* field_64;  // +0x64  owned handler (deleted by Close)
     // Retail continues past +0x64; only the ctor-touched prefix is modelled.
     // Do not rely on sizeof(swapManager).
 
