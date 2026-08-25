@@ -25,6 +25,14 @@
 #include "dxplay.h"
 #include "dxplay_com.h"
 
+// File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
+// forward-declared so the Enum* wrappers above them can take their addresses.
+int __stdcall EnumAddressCallback(const GUID*, unsigned long, const void*, void*);
+int __stdcall EnumSession(const DPSESSIONDESC2*, unsigned long*, unsigned long, void*);
+int __stdcall EnumConnectionsCallback(const GUID*, void*, unsigned long, const DPNAME*, unsigned long, void*);
+int __stdcall EnumGroupsCallback(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
+int __stdcall EnumPlayersCallback(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
+
 // --- reconstructed bodies (compiled) - the three retail-lowest RVAs ---
 
 // E:\gamedcs\dxplay.h:371
@@ -250,31 +258,40 @@ unsigned char CDPlay::CloseSession()
     m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Close();
     return m_hRes >= 0;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
 // E:\gamedcs\dxplay.cpp:397
 VA(0x004972c0, 0x71)  // anchor-vtable CDPlay slot27 (EnumGroups), dc 0x8a484
 unsigned char CDPlay::EnumGroups(CAutoArray<CDPlayGroup>* pGroupArray, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pGroupArray = pGroupArray;
+    pGroupArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroups(lpGuidInstance, EnumGroupsCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
 
 // E:\gamedcs\dxplay.cpp:413
 VA(0x00497340, 0x71)  // anchor-vtable CDPlay slot28 (EnumPlayers), dc 0x8a4c8
 unsigned char CDPlay::EnumPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumPlayers(lpGuidInstance, EnumPlayersCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
 
 // E:\gamedcs\dxplay.cpp:429
 VA(0x004973c0, 0x75)  // anchor-vtable CDPlay slot29 (EnumGroupPlayers), dc 0x8a50c
 unsigned char CDPlay::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroupPlayers(dpidGroup, lpGuidInstance, EnumPlayersCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:446
 VA(0x00497440, 0xB5)  // anchor-vtable CDPlay slot26 (EnumSessions), dc 0x8a558
