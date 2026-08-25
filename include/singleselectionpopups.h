@@ -10,6 +10,15 @@
 class CSprite;
 class Bitmap816;
 
+class CHotspotWidget : public widget {
+public:
+    CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
+    virtual ~CHotspotWidget();
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
+};
+
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
 // independently fixes the four overrides below.

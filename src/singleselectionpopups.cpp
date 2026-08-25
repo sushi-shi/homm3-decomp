@@ -279,6 +279,24 @@ void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
+// E:\gamedcs\singleselectionpopups.cpp:114
+VA(0x00575220, 0x40)  // vtable 0x6419a4 + default widget ctor, dc 0x12de28
+CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h,
+                               int widgetId)
+{
+    x = xPos;
+    y = yPos;
+    width = w;
+    height = h;
+    id = widgetId;
+}
+
+CHotspotWidget::~CHotspotWidget()
+{
+}
+
+VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)
+
 // E:\gamedcs\singleselectionpopups.cpp:71
 VA(0x00575750, 0x54)  // CSpriteWidget vtable 0x641a00 slot 4, dc 0x12f0c8
 void CSpriteWidget::Draw()

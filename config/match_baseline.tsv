@@ -2087,6 +2087,8 @@ seerhut	?read@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	96.2963	96.2963	96.2963	0x17
 seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173520
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0
+singleselectionpopups	??0CHotspotWidget@@QAE@HHHHH@Z	100.0000	100.0000	100.0000	0x175220
+singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175260
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
