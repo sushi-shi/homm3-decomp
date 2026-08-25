@@ -28,6 +28,8 @@ enum ECommaFormatting {
 };
 
 enum ESacrificeWindowHelp {
+    SACRIFICE_HELP_EXIT_BUTTON = 0,
+    SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON = 4,
     SACRIFICE_HELP_MAX_CREATURES = 10,
     SACRIFICE_HELP_ALL_CREATURES = 11,
     SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON = 12,
@@ -154,6 +156,8 @@ private:
     long get_max_amount(long slot) const;
     static int all_creatures(message& msg);
     static int max_creatures(message& msg);
+    static int sacrifice_creatures(message& msg);
+    static int exit_click(message& msg);
     static int sacrifice_artifacts(message& msg);
     static void creature_slider_change(int state, heroWindow* parent_window);
 };
