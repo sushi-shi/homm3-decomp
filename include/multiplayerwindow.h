@@ -8,6 +8,7 @@
 #include <string.h>
 #include "window.h"
 #include "textwdgt.h"
+#include "textntry.h"
 #include "va.h"
 
 // DC's nested char[21][8] type gives this class its complete 0xac-byte
@@ -43,7 +44,6 @@ class CDPlaySession;
 class bitmapBorder;
 class button;
 class slider;
-class textEntryWidget;
 
 // E:\gamedcs\array.h's five-dword auto-growing pointer array.  The DC
 // field list and retail's inlined Destroy path agree on this layout.
@@ -120,7 +120,61 @@ SIZE(TMultiPlayerWindow, 0x100);
 
 DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
 
-class CMPInputEdit;
+// The dialog edit controls share the two-link tail at +0x70/+0x74. Retail's
+// constructors and vtable stores prove the inheritance split below.
+class CMPEdit : public textEntryWidget {
+public:
+    CMPEdit* nextEdit;
+    CMPEdit* prevEdit;
+
+    CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
+            const char* fontName, font::TColor color, unsigned justification,
+            const char* backgroundIcon, int backgroundFrame, int id,
+            int style, int readType, int insetX, int insetY);
+    void SetNextEdit(CMPEdit* next) { nextEdit = next; }
+    void SetPrevEdit(CMPEdit* prev) { prevEdit = prev; }
+    virtual void SetFocus(unsigned char state);
+    virtual int OnKeyPress(message* msg);
+};
+
+class CMPInputEdit : public CMPEdit {
+public:
+    CMPInputEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
+                  backgroundIcon, backgroundFrame, id, style, readType,
+                  insetX, insetY)
+    {
+    }
+    virtual int OnKeyPress(message* msg);
+};
+
+class CHotSeatEdit : public textEntryWidget {
+public:
+    CHotSeatEdit* nextEdit;
+    CHotSeatEdit* prevEdit;
+
+    CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+        nextEdit = 0;
+        prevEdit = 0;
+    }
+    void SetNextEdit(CHotSeatEdit* next) { nextEdit = next; }
+    void SetPrevEdit(CHotSeatEdit* prev) { prevEdit = prev; }
+    virtual void OnKillFocus();
+    virtual void SetFocus(unsigned char state);
+    virtual int OnKeyPress(message* msg);
+};
 
 // DC supplies the five-member tail at +0x4c..+0x5c and the CHeroWindowEx
 // base. Retail's base is four bytes wider; the getter at 0x510970 proves the
@@ -163,11 +217,15 @@ SIZE(CMPInputDlg, 0x64);
 class CHotSeatDlg : public CHeroWindowEx {
 public:
     enum {
+        BACKGROUND_ID = 500,
+        FIRST_EDIT_ID = 509,
+        HEADER_ID = 517,
+        ROLLOVER_ID = 518,
         OKAY_ID = 519,
         BACK_ID = 520
     };
 
-    textWidget* edit[8];         // +0x50
+    CHotSeatEdit* edit[8];       // +0x50
     textWidget* m_rollover;      // +0x70
     THelpText gHotSeatHelp[20];  // +0x74, DC identity/extent after repack
 
