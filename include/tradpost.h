@@ -58,6 +58,9 @@ public:
 
 class TSellCreatureWindow : public CAdvPopup {
 public:
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio, int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
     virtual ~TSellCreatureWindow();
 };
 

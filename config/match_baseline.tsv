@@ -2705,6 +2705,7 @@ tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620
 tradpost	?ComputeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	99.6735	99.6735	99.6735	0x1ecdc0
+tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	97.5961	97.5961	97.5961	0x1ece80
 tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
 tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
@@ -2727,7 +2728,6 @@ tradpost	TSellArtifactWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1ee6c0
 tradpost	TSellArtifactWindow_TSellArtifactWindow	0.0000	0.0000	0.0000	0x1e5730
 tradpost	TSellArtifactWindow_Update	0.0000	0.0000	0.0000	0x1ebe80
 tradpost	TSellArtifactWindow_WindowHandler	0.0000	0.0000	0.0000	0x1edf60
-tradpost	TSellCreatureWindow_ComputeTradeRatios	0.0000	0.0000	0.0000	0x1ece80
 tradpost	TSellCreatureWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1eebd0
 tradpost	TSellCreatureWindow_TSellCreatureWindow	0.0000	0.0000	0.0000	0x1e7c80
 tradpost	TSellCreatureWindow_Update	0.0000	0.0000	0.0000	0x1ec550
