@@ -2493,6 +2493,17 @@ townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
+townmgr	DoTavern	0.0000	0.0000	0.0000	0x1d7ec0
+townmgr	GetBuildingInfo	0.0000	0.0000	0.0000	0x1d2a40
+townmgr	TBuyBuildWindow_set_prerequisite_text	0.0000	0.0000	0.0000	0x1d5be0
+townmgr	TThievesGuildWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1c9710
+townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
+townmgr	TThievesGuildWindow_WindowHandler	0.0000	0.0000	0.0000	0x1c9930
+townmgr	TTownScreenWindow_set_bonus_display	0.0000	0.0000	0.0000	0x1c5b40
+townmgr	townManager_Main	0.0000	0.0000	0.0000	0x1d3240
+townmgr	townManager_Open	0.0000	0.0000	0.0000	0x1c63c0
+townmgr	townManager_SetArmyCommand	0.0000	0.0000	0.0000	0x1c7400
+townmgr	townManager_SetCommandAndText	0.0000	0.0000	0.0000	0x1c77a0
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0
 tradpost	??1TGiveResourceWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e36c0
 tradpost	??1TSellArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e7c10
