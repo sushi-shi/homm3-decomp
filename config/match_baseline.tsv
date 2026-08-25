@@ -2417,6 +2417,11 @@ spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970
+spellbookwindow	TSpellbookWindow_GotoPage	0.0000	0.0000	0.0000	0x19c9a0
+spellbookwindow	TSpellbookWindow_TSpellbookWindow	0.0000	0.0000	0.0000	0x19bdf0
+spellbookwindow	TSpellbookWindow_WindowHandler	0.0000	0.0000	0.0000	0x19d040
+spellbookwindow	TSpellbookWindow_get_spell_description	0.0000	0.0000	0.0000	0x19baa0
+spellbookwindow	unsigned_char_TSpellbookWindow_TSpellbookEntry_operator	0.0000	0.0000	0.0000	0x19dbe0
 spelldefs	?InitializeSpellTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x19e150
 spelldefs	?InitializeSpellTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x19e090
 spelldefs	?SpellTargetsASingleArmy@@YIEHH@Z	100.0000	100.0000	100.0000	0x19e060
