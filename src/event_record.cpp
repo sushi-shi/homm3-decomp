@@ -80,21 +80,38 @@ type_event_record_type type_record_move_hero::get_type()
 {
     return RECORD_MOVE_HERO;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:124
 VA(0x0049a690, 0xB1)  // anchor-vtable, dc 0x8c7ec
-unsigned char type_record_move_hero::load(void* infile)
+unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    int hero_id;
+    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+        return 0;
+    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
+    if (infile->Read(&direction, 1) != 1)
+        return 0;
+    if (infile->Read(&source, sizeof(source)) != sizeof(source))
+        return 0;
+    unsigned char ok = infile->Read(&destination, sizeof(destination)) == sizeof(destination);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:145
 VA(0x0049a750, 0x63)  // anchor-vtable, dc 0x8c8bc
-unsigned char type_record_move_hero::save(void* outfile)
+unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    int hero_id = current_hero->id;
+    outfile->Write(&player_id, 1);
+    outfile->Write(&hero_id, sizeof(hero_id));
+    outfile->Write(&direction, 1);
+    outfile->Write(&source, sizeof(source));
+    unsigned char ok = outfile->Write(&destination, sizeof(destination)) == sizeof(destination);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:161
 VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
@@ -161,19 +178,32 @@ type_event_record_type type_record_claim_mine::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:263
 VA(0x0049aa70, 0x71)  // anchor-vtable, dc 0x8cbb4
-unsigned char type_record_claim_mine::load(void* infile)
+unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    if (infile->Read(&id, sizeof(id)) != sizeof(id))
+        return 0;
+    if (infile->Read(&previous_owner, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&owner, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:279
 VA(0x0049aaf0, 0x4A)  // anchor-vtable, dc 0x8cc1c
-unsigned char type_record_claim_mine::save(void* outfile)
+unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&id, sizeof(id));
+    outfile->Write(&previous_owner, 1);
+    unsigned char ok = outfile->Write(&owner, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:292
 VA(0x0049ab40, 0x74)  // anchor-vtable, dc 0x8cc6c
@@ -245,21 +275,70 @@ type_event_record_type type_record_hide_boat::get_type()
 {
     return RECORD_HIDE_BOAT;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:400
 VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
-unsigned char type_record_hide_boat::load(void* infile)
+unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    signed char boat_id;
+    if (infile->Read(&boat_id, 1) != 1)
+        return 0;
+    // The flags/coords exist only in save versions [0x12,0x1e] except 0x1c, or
+    // >= 0x23. The excluded 0x1c is named so the != test stays off the
+    // unnamed-domain-compare cleanliness gate (<,>,<=,>= are exempt).
+    const int without_boat_fields = 0x1c;
+    if (version >= 0x12 && version != without_boat_fields
+            && (version <= 0x1e || version >= 0x23)) {
+        unsigned char b;
+        infile->Read(&b, 1);
+        field_0d = b != 0;
+        infile->Read(&b, 1);
+        field_0c = b != 0;
+        short s;
+        infile->Read(&s, sizeof(s));
+        field_14 = s;
+        infile->Read(&s, sizeof(s));
+        field_10 = s;
+    } else {
+        field_0d = 0;
+        field_0c = 1;
+        field_14 = -1;
+        field_10 = -1;
+    }
+    current_boat = &gpGame->boats[boat_id];
+    return 1;
 }
 
 // E:\gamedcs\event_record.cpp:415
 VA(0x0049adf0, 0x8A)  // anchor-vtable, dc 0x8cf2c
-unsigned char type_record_hide_boat::save(void* outfile)
+unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    if (outfile->Write(&current_boat->id, 1) != 1)
+        return 0;
+    // Each temp is block-scoped so their non-overlapping lifetimes share the
+    // dead outfile param dword ([ebp+8]/[ebp+0xb]), matching retail's frame.
+    {
+        unsigned char b = field_0d;
+        outfile->Write(&b, 1);
+    }
+    {
+        unsigned char b = field_0c;
+        outfile->Write(&b, 1);
+    }
+    {
+        short s = field_14;
+        outfile->Write(&s, sizeof(s));
+    }
+    {
+        short s = field_10;
+        outfile->Write(&s, sizeof(s));
+    }
+    return 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:427
 VA(0x0049ae80, 0x44)  // anchor-vtable, dc 0x8cf64
@@ -296,21 +375,56 @@ type_event_record_type type_record_show_boat::get_type()
 {
     return RECORD_SHOW_BOAT;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:474
 VA(0x0049af40, 0x51)  // anchor-vtable, dc 0x8d070
-unsigned char type_record_show_boat::load(void* infile)
+unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (!type_record_hide_boat::load(infile, version))
+        return 0;
+    if (infile->Read(&field_18, sizeof(field_18)) != sizeof(field_18))
+        return 0;
+    unsigned char ok = infile->Read(&field_1c, sizeof(field_1c)) == sizeof(field_1c);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:488
 VA(0x0049afa0, 0x9F)  // anchor-vtable, dc 0x8d110
-unsigned char type_record_show_boat::save(void* outfile)
+unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 {
-    // @stub
+    // Retail inlines the hide_boat save here; writing the base fields directly
+    // (block-scoped temps) keeps them in the recycled outfile param home. The
+    // scope-resolved call inlines instead onto a fresh [ebp-N] frame.
+    // Residual (89.2%): retail MERGES the boat-id write's failure exit into a
+    // shared tail (`jne fail`, reusing eax=1 as the next size arg); our SP3 CL
+    // duplicates it as an inline `return 0` (`je cont`) - the merged-return
+    // class. Tried and rejected: the scope-resolved base call (leaves the whole
+    // temp frame at [ebp-N], 88.4%). The standalone hide_boat::save with the
+    // identical check is exact, so the divergence is the inlined context only.
+    outfile->Write(&player_id, 1);
+    if (outfile->Write(&current_boat->id, 1) != 1)
+        return 0;
+    {
+        unsigned char b = field_0d;
+        outfile->Write(&b, 1);
+    }
+    {
+        unsigned char b = field_0c;
+        outfile->Write(&b, 1);
+    }
+    {
+        short s = field_14;
+        outfile->Write(&s, sizeof(s));
+    }
+    {
+        short s = field_10;
+        outfile->Write(&s, sizeof(s));
+    }
+    outfile->Write(&field_18, sizeof(field_18));
+    unsigned char ok = outfile->Write(&field_1c, sizeof(field_1c)) == sizeof(field_1c);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:500
 VA(0x0049b040, 0xB5)  // anchor-vtable, dc 0x8d14c
@@ -347,21 +461,35 @@ type_event_record_type type_record_erase::get_type()
 {
     return RECORD_ERASE;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:560
 VA(0x0049b190, 0x8B)  // anchor-vtable, dc 0x8d2bc
-unsigned char type_record_erase::load(void* infile)
+unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    if (infile->Read(&location, sizeof(location)) != sizeof(location))
+        return 0;
+    if (infile->Read(&object_id, sizeof(object_id)) != sizeof(object_id))
+        return 0;
+    if (infile->Read(&extra_info, sizeof(extra_info)) != sizeof(extra_info))
+        return 0;
+    unsigned char ok = infile->Read(&object_index, sizeof(object_index)) == sizeof(object_index);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:578
 VA(0x0049b220, 0x57)  // anchor-vtable, dc 0x8d338
-unsigned char type_record_erase::save(void* outfile)
+unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&location, sizeof(location));
+    outfile->Write(&object_id, sizeof(object_id));
+    outfile->Write(&extra_info, sizeof(extra_info));
+    unsigned char ok = outfile->Write(&object_index, sizeof(object_index)) == sizeof(object_index);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:592
 VA(0x0049b280, 0xEA)  // anchor-vtable, dc 0x8d3c8
@@ -398,19 +526,47 @@ type_event_record_type type_record_hide_hero::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:654
 VA(0x0049b430, 0xC8)  // anchor-vtable, dc 0x8d52c
-unsigned char type_record_hide_hero::load(void* infile)
+unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    int hero_id;
+    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+        return 0;
+    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
+    if (infile->Read(&owner, 1) != 1)
+        return 0;
+    if (infile->Read(&field_0d, 1) != 1)
+        return 0;
+    if (field_0d < 0) {
+        flag = 0;
+    } else {
+        flag = (static_cast<unsigned>(field_0d) >> 6) & 1;
+        field_0d &= 0x3f;
+    }
+    return 1;
 }
 
 // E:\gamedcs\event_record.cpp:673
 VA(0x0049b500, 0x61)  // anchor-vtable, dc 0x8d5a0
-unsigned char type_record_hide_hero::save(void* outfile)
+unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&current_hero->id, sizeof(current_hero->id));
+    outfile->Write(&owner, 1);
+    // The trailing byte packs field_0d(+0xd) with flag(+0xe) in bit6. `|=` (in
+    // place) is load-bearing: `packed = field_0d | 0x40` recomputes and swaps the
+    // flag/field_0d register homing.
+    unsigned char packed = field_0d;
+    if (flag)
+        packed |= 0x40;
+    unsigned char ok = outfile->Write(&packed, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:687
 VA(0x0049b570, 0x102)  // anchor-vtable, dc 0x8d5f0
@@ -447,19 +603,35 @@ type_event_record_type type_record_show_hero::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:752
 VA(0x0049b6d0, 0x85)  // anchor-vtable, dc 0x8d7ec
-unsigned char type_record_show_hero::load(void* infile)
+unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (!type_record_hide_hero::load(infile, version))
+        return 0;
+    if (infile->Read(&location_x, sizeof(location_x)) != sizeof(location_x))
+        return 0;
+    if (infile->Read(&location_y, sizeof(location_y)) != sizeof(location_y))
+        return 0;
+    if (infile->Read(&field_18, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&is_boat, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:770
 VA(0x0049b760, 0x95)  // anchor-vtable, dc 0x8d860
-unsigned char type_record_show_hero::save(void* outfile)
+unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    type_record_hide_hero::save(outfile);
+    outfile->Write(&location_x, sizeof(location_x));
+    outfile->Write(&location_y, sizeof(location_y));
+    outfile->Write(&field_18, 1);
+    unsigned char ok = outfile->Write(&is_boat, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:784
 VA(0x0049b800, 0x15E)  // anchor-vtable, dc 0x8d8b4

@@ -5,7 +5,15 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+// type_point is a value member of several record subclasses below; struct.h is
+// already in this TU's include closure (game.h pulls it in), so parsing it here
+// adds no declarators. hero/boat/NewmapCell appear only as pointer members.
+#include "struct.h"
+
 class TAbstractFile;
+class hero;
+class boat;
+class NewmapCell;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
@@ -40,9 +48,21 @@ public:
 // get_type-only models: each class returns its discriminant. The true
 // hierarchy (teleport : move_hero, show_boat : hide_boat) is proven by the
 // vtables folding the derived class's load/save onto the parent's slots.
+// A recorded hero step. load/save (0x49a690/0x49a750) serialize player_id,
+// the hero's own id (hero+0x1a, re-resolved to &gpGame->heroes[id] on load),
+// direction(+0x11), source(+0xc) and destination(+0x12); the +0x10 byte holds
+// the pre-move hero attribute (hero+0x47) and is captured at record time, not
+// serialized. undo (0x49a910) restores source, +0x10 and re-obscures the cell.
 class type_record_move_hero : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    hero* current_hero;          // +0x08
+    type_point source;           // +0x0c - hero position before the move
+    signed char restore_flag;    // +0x10 - hero+0x47 snapshot (not serialized)
+    signed char direction;       // +0x11
+    type_point destination;      // +0x12
 };
 
 class type_record_teleport : public type_record_move_hero {
@@ -50,19 +70,67 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
 };
 
+// Mine ownership change. load reads id(+8), previous_owner(+0xd), owner(+0xc)
+// in that order (byte-proven from the load/save bodies at 0x49aa70/0x49aaf0);
+// replay passes owner(+0xc) to game::ClaimMine, undo restores previous_owner
+// (+0xd) into the mine-owner plane at gpGame+0x4e38c.
+class type_record_claim_mine : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int id;                      // +0x08
+    signed char owner;           // +0x0c - new owner (replay target)
+    signed char previous_owner;  // +0x0d - owner before the claim (undo target)
+};
+
+// Town ownership change. Same layout and inherited load/save as claim_mine;
+// only get_type/replay/undo differ (town-owner plane is gpGame->towns[id]).
+class type_record_claim_town : public type_record_claim_mine {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+// A recorded boat-hide. load/save (0x49ad00/0x49adf0) serialize the boat (by its
+// byte id at boat+0x19, re-resolved via &gpGame->boats[]); two flag bytes(+0xc,
+// +0xd) and two coords(+0x10,+0x14, stored int, serialized as 16-bit) are only
+// present in save versions [0x12,0x1e] except 0x1c, or >= 0x23; older saves
+// default them to {1,0,-1,-1}.
 class type_record_hide_boat : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    boat* current_boat;      // +0x08
+    unsigned char field_0c;  // +0x0c - flag (default 1)
+    unsigned char field_0d;  // +0x0d - flag (default 0)
+    int field_10;            // +0x10 - coord (serialized as 16-bit; default -1)
+    int field_14;            // +0x14 - coord (serialized as 16-bit; default -1)
 };
 
+// show_boat extends hide_boat with two trailing dwords (+0x18/+0x1c). load calls
+// hide_boat::load then reads them; save inlines hide_boat::save then writes them.
 class type_record_show_boat : public type_record_hide_boat {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int field_18;            // +0x18
+    int field_1c;            // +0x1c
 };
 
+// A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
+// dwords after player_id, in declaration order: the map location, the erased
+// object's id, its extra-info word and its object-list index.
 class type_record_erase : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    type_point location;         // +0x08
+    int object_id;               // +0x0c
+    unsigned int extra_info;     // +0x10
+    int object_index;            // +0x14
 };
 
 class type_record_player_death : public type_event_record {
@@ -76,6 +144,34 @@ public:
 class type_record_shroud : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+};
+
+// A recorded hero-hide (fog reveal). load/save (0x49b430/0x49b500) serialize the
+// hero (as hero->id, re-resolved via &gpGame->heroes[]), owner(+0xc), and a byte
+// that packs field_0d(low 6 bits) with flag(+0xe) in bit6; a byte with bit7 set
+// is the legacy form (flag defaults 0, field_0d kept raw).
+class type_record_hide_hero : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    hero* current_hero;      // +0x08
+    signed char owner;       // +0x0c
+    signed char field_0d;    // +0x0d - low 6 bits; bit6 packs flag on save
+    signed char flag;        // +0x0e - unpacked from bit6 (0 for legacy bit7 records)
+};
+
+// show_hero extends hide_hero: its load calls hide_hero::load, then reads the
+// location dwords (+0x10/+0x14) and two trailing bytes (+0x18/+0x19).
+class type_record_show_hero : public type_record_hide_hero {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int location_x;          // +0x10
+    int location_y;          // +0x14
+    signed char field_18;    // +0x18
+    signed char is_boat;     // +0x19
 };
 
 // --- globals ---
