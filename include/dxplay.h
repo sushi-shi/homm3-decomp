@@ -248,7 +248,7 @@ private:
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
     char m_caps[0x28];                  // +0x04
-    void* m_lpDP;                       // +0x2c
+    IUnknown* m_lpDP;                   // +0x2c
     GUID m_guid;                        // +0x30
     int m_hRes;                         // +0x40
     CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
