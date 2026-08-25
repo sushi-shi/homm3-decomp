@@ -62,6 +62,16 @@ public:
     virtual int handle_message(message& msg);
 };
 
+class CBonusDlg : public CSingleSelPopup {
+public:
+    CBonusDlg(unsigned char newGameMode);
+    virtual ~CBonusDlg();
+    unsigned char CreateWin(const char* title, CSprite* sprite, int frame,
+                            const char* botTitle, const char* description);
+    unsigned char CreateWin(const char* title, Bitmap816* image,
+                            const char* botTitle, const char* description);
+};
+
 class CHeroDlg : public CSingleSelPopup {
 public:
     CHeroDlg(unsigned char newGameMode);
@@ -89,12 +99,6 @@ public:
     int CountNumPlayers(int teamNbr);
     void GetTeams();
 };
-
-// --- CBonusDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:214, dc 0x12dfa8) void CBonusDlg::CBonusDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:218, dc 0x12dff0) unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:234, dc 0x12e1cc) unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:215, dc 0x12f304) void* CBonusDlg::`scalar deleting destructor'(unsigned __flags);
 
 // --- CHotspotWidget ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:114, dc 0x12de28) void CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId, unsigned char focus);
