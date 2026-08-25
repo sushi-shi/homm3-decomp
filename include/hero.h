@@ -926,7 +926,7 @@ public:
     // 0x4e4840, claimed in hero.cpp - cmbtmgr's
     // CalculateGainedExperience (0x46a350) scales the whole award by it
     // with a single-precision fmul.
-    float GetExperienceBonusFactor();
+    float GetExperienceBonusFactor() const;
     int GiveExperience(int howMuch, int bCheckLevel,
                        unsigned char show_cap_window);
     void GiveResource(int whichRes, int howMuch);

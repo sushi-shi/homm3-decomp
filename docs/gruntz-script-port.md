@@ -260,6 +260,41 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice artifact helper and equipped-slot handler are
+  exact; the backpack handler is behavior-complete at 86.13%.** The retained
+  171-byte row at 0x55fc30 is the public
+  `type_artifact_offering::set`: backpack_click calls it with the offering
+  record, source slot and hero, while the adjacent Dreamcast roster supplies
+  its identity and signature. The doll/backpack widget call targets and the
+  next two Dreamcast rows then identify `artifact_click` at 0x5632a0 and
+  `backpack_click` at 0x5636c0. Retail proves pickup/drop behavior, spellbook
+  and catapult handling, legal-slot checks, backpack errors, pointer changes,
+  experience accounting and every refresh edge.
+
+  The decisive source fact comes from Dreamcast line 126: the offering helper
+  caches the artifact class before lines 128-131 copy the four record fields.
+  Restoring that local makes the retained helper exact and simultaneously
+  aligns both copies expanded into the 1,047-byte equipped-slot handler. The
+  sacrifice-specific war-machine warning is general-text row 483; correcting
+  that last immediate makes `artifact_click` exact across all 36 blocks, 18
+  branches and four returns. CodeView also corrects
+  `hero::GetExperienceBonusFactor` to its original const member signature,
+  retaining its exact retail body and migrating the claim at the same RVA.
+
+  `backpack_click` has its first 25 semantic blocks exact. The remaining SP3
+  inliner wall is bounded: this compile expands `update_all_slots` at both
+  helper sites, while retail expands the pickup site and calls it at the final
+  put-down site; retail also cross-jumps the first redraw into the common
+  redraw where this compiler duplicates an epilogue. `predict-inline` reports
+  exactly one over-inline and one under-inline. The DC nested if/else-if source
+  shape is retained without a per-site steering pragma. The synchronized
+  checkpoint reaches **1962/2379 linked exact**, **1893/2310 game exact**,
+  **96.60% game fuzzy** and **44.16% executable coverage**. All 51 unit tests,
+  five freshness controls, VC6 negative controls, link-order checks and fatal
+  gates pass; the regenerated queue contains 417 residual functions / 29.5
+  KiB recoverable and only the two known inlined-away `create_included_mask`
+  diagnostics. No external implementation body was used.
+
 - **2026-08-25 — the 617-byte sacrifice action is behavior-complete at a
   96.62% control-flow plateau.** The constructor callback store at 0x56019e
   and adjacent Dreamcast roster row identify

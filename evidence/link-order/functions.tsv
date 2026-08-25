@@ -2236,7 +2236,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xe4420	346	in-span	hero	hero	?GetEagleEyeChance@hero@@QAEMXZ
 0xe4580	348	in-span	hero	hero	?GetSurrenderCostFactor@hero@@QAEMXZ
 0xe46e0	348	in-span	hero	hero	?GetMagicResistanceFactor@hero@@QAEMXZ
-0xe4840	102	in-span	hero	hero	?GetExperienceBonusFactor@hero@@QAEMXZ
+0xe4840	102	in-span	hero	hero	?GetExperienceBonusFactor@hero@@QBEMXZ
 0xe48b0	102	in-span	hero	hero	?GetIntelligenceFactor@hero@@QAEMXZ
 0xe4920	102	in-span	hero	hero	?GetFirstAidFactor@hero@@QAEMXZ
 0xe4990	1014	in-span	hero	hero	?GetMobility@hero@@QAEHE@Z
@@ -3472,7 +3472,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x15f3b0	118	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_148040_sub01_15f3b0
 0x15f430	33	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_15f430
 0x15f460	7	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_148040_sub02_15f460
-0x15fc30	171	bracketed	resourcemanager..sacrifice_window	resourcemanager,ressw,sacrifice_window	game_1636c0_sub00_15fc30
+0x15fc30	171	in-span	sacrifice_window	sacrifice_window	?set@type_artifact_offering@@QAEXPBUtype_artifact@@JPBVhero@@@Z
 0x15fce0	38	in-span	sacrifice_window	sacrifice_window	?handle_click@type_doll_slot_widget@@UAEEEE@Z
 0x15fd10	38	in-span	sacrifice_window	sacrifice_window	?handle_click@type_backpack_slot_widget@@UAEEEE@Z
 0x15fd40	38	in-span	sacrifice_window	sacrifice_window	?handle_click@type_artifact_offering_widget@@UAEEEE@Z
@@ -3493,8 +3493,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x162c70	292	in-span	sacrifice_window	sacrifice_window	?update_offering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z
 0x162da0	930	in-span	sacrifice_window	sacrifice_window	?update_creature_offering@type_sacrifice_window@@QAEXPAUtype_creature_offering@@@Z
 0x163150	321	in-span	sacrifice_window	sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ
-0x1632a0	1047	in-span	sacrifice_window	sacrifice_window	game_15fce0_sub00_1632a0
-0x1636c0	794	in-span	sacrifice_window	sacrifice_window	game_15fd10_sub00_1636c0
+0x1632a0	1047	in-span	sacrifice_window	sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z
+0x1636c0	794	in-span	sacrifice_window	sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z
 0x1639e0	91	in-span	sacrifice_window	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z
 0x163a40	49	in-span	sacrifice_window	sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z
 0x163a80	795	in-span	sacrifice_window	sacrifice_window	game_15fd40_sub00_163a80

@@ -1160,7 +1160,7 @@ hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4310
 hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4420
 hero	?GetEstatesBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4390
 hero	?GetExperience@hero@@SIHH@Z	100.0000	100.0000	100.0000	0xda3a0
-hero	?GetExperienceBonusFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4840
+hero	?GetExperienceBonusFactor@hero@@QBEMXZ	100.0000	100.0000	100.0000	0xe4840
 hero	?GetExperienceIncrement@hero@@SIHH@Z	98.1013	98.1013	98.1013	0xda420
 hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920
 hero	?GetHeroSpellBonus@hero@@QBEHHHH@Z	100.0000	100.0000	100.0000	0xe5ff0
@@ -1872,6 +1872,8 @@ sacrifice_window	?DoModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0
 sacrifice_window	?ExitDialog@type_sacrifice_window@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x165430
 sacrifice_window	?WindowHandler@type_skeleton_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1666f0
 sacrifice_window	?all_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164cf0
+sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0
+sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
 sacrifice_window	?creature_click@type_sacrifice_window@@QAEXJEE@Z	100.0000	100.0000	100.0000	0x164fe0
 sacrifice_window	?exit_click@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164a80
@@ -1886,6 +1888,7 @@ sacrifice_window	?max_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.000
 sacrifice_window	?sacrifice@type_sacrifice_window@@CIHAAVmessage@@@Z	96.6244	96.6244	96.6244	0x1646a0
 sacrifice_window	?sacrifice_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164e70
 sacrifice_window	?sacrifice_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164910
+sacrifice_window	?set@type_artifact_offering@@QAEXPBUtype_artifact@@JPBVhero@@@Z	100.0000	100.0000	100.0000	0x15fc30
 sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x162a20
 sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x163150
 sacrifice_window	?set_creature_sacrifice@type_sacrifice_window@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x164c00

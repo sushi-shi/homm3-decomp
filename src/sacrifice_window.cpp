@@ -12,6 +12,7 @@
 #include "mousemgr.h"
 #include "sample.h"
 #include "slider.h"
+#include "spellbookwindow.h"
 #include "textresource.h"
 #include "soundmgr.h"
 #include "viewarmywindow.h"
@@ -1486,6 +1487,52 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// type_artifact stores the retail id as an int while the source interface to
+// get_backpack_error keeps the CodeView TArtifact enum. The union is the
+// established in-tree representation bridge and compiles to no code.
+inline TArtifact artifact_from_int(int value)
+{
+    union {
+        int integer;
+        TArtifact artifact;
+    } converted;
+    converted.integer = value;
+    return converted.artifact;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:125
+// Complete expands this source helper into each artifact pickup. The retail
+// jump table independently proves the four class/value pairs, and the x87
+// multiply by the hero's experience factor proves the terminal conversion.
+VA(0x0055fc30, 0xab)  // retained public helper + dc name/order, dc 0x123e8c
+void type_artifact_offering::set(const type_artifact* artifact, long slot,
+                                 const hero* owner)
+{
+    long artifact_class =
+        akArtifactTraits[artifact->artifactId].artifactClass;
+    artifactId = artifact->artifactId;
+    extra = artifact->extra;
+    source = slot;
+    value = 0;
+
+    switch (artifact_class) {
+    case SACRIFICE_ARTIFACT_CLASS_TREASURE:
+        value = 1000;
+        break;
+    case SACRIFICE_ARTIFACT_CLASS_MINOR:
+        value = 1500;
+        break;
+    case SACRIFICE_ARTIFACT_CLASS_MAJOR:
+        value = 3000;
+        break;
+    case SACRIFICE_ARTIFACT_CLASS_RELIC:
+        value = 6000;
+        break;
+    }
+    value = static_cast<long>(
+        value * owner->GetExperienceBonusFactor());
+}
+
 // E:\gamedcs\sacrifice_window.cpp:178
 // The doll-slot twin of the two below: one carve row ahead of them, in the
 // Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
@@ -1899,6 +1946,26 @@ void type_sacrifice_window::set_creature_mode()
     update_experience();
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1036
+// Retail expands this helper at the click sites. The DC line map fixes the
+// source order and argument ABI; the Complete mouse-pointer and refresh call
+// graph independently proves the body.
+void type_sacrifice_window::pick_up_artifact(
+    type_artifact artifact, long slot, unsigned char new_artifact)
+{
+    holding_artifact.set(&artifact, slot, current_hero);
+    if (new_artifact) {
+        total_experience += holding_artifact.value;
+        update_experience();
+    }
+    update_offering(current_artifact_widget, current_artifact_value,
+                    &holding_artifact);
+    gpMouseManager->SetPointer(holding_artifact.artifactId,
+                               mouseManager::ARTIFACT_SET);
+    update_all_slots();
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1053
 // The Dreamcast line table and xref graph prove this helper boundary at each
 // artifact-drop site. Complete folds the false change-experience arm into
@@ -1916,6 +1983,128 @@ void type_sacrifice_window::put_down_artifact(
     gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
     update_all_slots();
     DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1071
+// The doll-slot widget's sole call target, the adjacent Dreamcast roster row
+// and the Complete body agree on this identity. Retail's two pickup paths
+// expand type_artifact_offering::set and pick_up_artifact in full; the drop
+// path likewise expands put_down_artifact.
+// Exact. The decisive source fact is type_artifact_offering::set's class
+// cache: the DC line table puts that lookup on line 126, before the four
+// record stores on lines 128-131. Restoring the local aligns both expanded
+// pickup runs; retail's sacrifice-specific general-text row 483 closes the
+// last two immediate bytes.
+VA(0x005632a0, 0x417)  // widget call edge + dc name/order, dc 0x1262e4
+void type_sacrifice_window::artifact_click(
+    long slot, unsigned char right_click)
+{
+    type_artifact old_artifact = current_hero->equipped[slot];
+
+    if (holding_artifact.artifactId == ARTIFACT_NONE) {
+        if (old_artifact.artifactId == ARTIFACT_NONE)
+            return;
+
+        if (right_click) {
+            current_hero->HeroFn_004D9A00(&old_artifact, right_click);
+            return;
+        }
+
+        if (old_artifact.artifactId == ARTIFACT_SPELLBOOK) {
+            TSpellbookWindow spellbook(
+                current_hero, 0, TSpellbookWindow::eContextNeither,
+                current_hero->get_special_terrain());
+            spellbook.DoModal(0);
+            return;
+        }
+
+        if (old_artifact.artifactId == ARTIFACT_CATAPULT) {
+            NormalDialog(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+
+        current_hero->remove_artifact(slot);
+        update_slot(slot);
+        pick_up_artifact(old_artifact, slot, 1);
+        return;
+    }
+
+    if (right_click)
+        return;
+    if (!current_hero->HeroFn_004E2840(
+            holding_artifact.artifactId, slot))
+        return;
+
+    if (old_artifact.artifactId != ARTIFACT_NONE)
+        current_hero->remove_artifact(slot);
+    current_hero->equip_artifact(&holding_artifact, slot);
+    update_slot(slot);
+    put_down_artifact(1);
+    if (old_artifact.artifactId != ARTIFACT_NONE)
+        pick_up_artifact(old_artifact, slot, 1);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1127
+// Complete expands this helper into both halves of backpack_click. Its widget
+// vector walk and shared scrolling-state byte are directly visible there.
+void type_sacrifice_window::update_backpack()
+{
+    for (unsigned long i = 0; i < backpack_widgets.size(); ++i)
+        update_artifact_widget(backpack_widgets[i],
+                               current_hero->backpack[i]);
+
+    unsigned char scroll_backpack =
+        current_hero->get_last_backpack_index() + 1
+        > backpack_widgets.size();
+    left_backpack_button->enable(scroll_backpack);
+    right_backpack_button->enable(scroll_backpack);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1150
+// The backpack widget's call target and the adjacent DC roster row fix the
+// boundary. Complete's first branch removes and picks up an existing record;
+// the second inserts the held record or presents hero::get_backpack_error.
+// Residual (86.13%): the first 25 semantic blocks agree. This SP3 compile
+// expands update_all_slots at both helper sites (two update_slot calls),
+// while retail expands the pickup site but keeps the final put-down site's
+// update_all_slots call (one of each); it also duplicates the first redraw
+// epilogue where retail cross-jumps to the common redraw. `predict-inline`
+// reports exactly that one over-inline/one under-inline pair. Rewriting the
+// handler in the DC line table's nested if/else-if form is byte-flat, so the
+// closest source-authentic spelling is retained without a per-site pragma.
+VA(0x005636c0, 0x31a)  // widget call edge + dc name/order, dc 0x1264dc
+void type_sacrifice_window::backpack_click(
+    long slot, unsigned char right_click)
+{
+    type_artifact old_artifact = current_hero->backpack[slot];
+
+    if (holding_artifact.artifactId == ARTIFACT_NONE) {
+        if (old_artifact.artifactId != ARTIFACT_NONE) {
+            if (right_click) {
+                current_hero->HeroFn_004D9A00(
+                    &old_artifact, right_click);
+            } else {
+                current_hero->remove_backpack_artifact(slot);
+                update_backpack();
+                pick_up_artifact(old_artifact, 19, 1);
+            }
+        }
+    } else if (!right_click) {
+        if (!current_hero->add_to_backpack(&holding_artifact, slot)) {
+            NormalDialog(
+                current_hero
+                    ->get_backpack_error(
+                        artifact_from_int(holding_artifact.artifactId))
+                    .c_str(),
+                1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            update_backpack();
+            put_down_artifact(1);
+        }
+    }
 }
 
 // The retained copy of the source helper above. The 8-byte by-value argument
