@@ -10,3 +10,4 @@
 # merely stopped being emitted is NOT a waiver case - restore it.
 #
 # rva<TAB>reason
+0x105f20	Withdrawn false admission: omitted objdiff fuzzy_match_percent was protobuf-default 0.0, not 100.0.
