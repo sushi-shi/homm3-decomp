@@ -41,6 +41,8 @@ public:
     virtual void Close();               // slot 1
     virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
+    void Reset();
+    void DrawSelector();
 };
 
 // --- CGiveMeStuffMsg ---
