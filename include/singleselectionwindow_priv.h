@@ -78,4 +78,24 @@ public:
     CChatSave* m_save;  // +0x50
 };
 
+// A cross-module dword at 0x6989f0 the game-selection window branches on
+// during teardown; DoModal and ExitDialog each take a distinct path when it
+// equals 3, the only value recoverable here. House ordinal placeholder,
+// exactly the textntry.h EField68 rule - names the domain member so the
+// branch is not a magic compare, without claiming an attested identity.
+enum EWindowMode6989f0 {
+    WINDOW_MODE_6989F0_3 = 3
+};
+extern int gUnnamed6989f0;
+
+// 0x69954c, the paused-video gate DoModal/ExitDialog test. DECLARATION ONLY
+// (kbwin.cpp owns the DATA claim); declared here rather than by pulling
+// kbwin.h into this closure, the same reason hero.h states for its own copy.
+extern int bVideoPaused;
+
+// The free game-selection message pump (retail dialogDrawFunction, dc
+// 0x145128), passed by address to DoDialogDraw alongside HeroWindowHandler.
+// message& (not message*) so it binds the int(*)(message&) TDialogHandler.
+int Update(message& msg);
+
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_PRIV_H */

@@ -9,41 +9,18 @@
 #include "advmgr_popup.h"
 #include "va.h"
 
-// Bootstrap VIEW of the game-selection megawindow. DC reports size 2928
-// with SH4 STL; the retail extent below is frame-derived from advmgr's
-// SaveGame, whose window local spans ebp-0x19ec..ebp-0x7c around an
-// __alloca_probe frame. Layout unmodeled - the ctor (retail 0x579960,
-// DC gameMode int: 2 = the save flavor), the destructor (0x583b40) and
-// the modal runner (0x584bf0, DoModal's (unsigned char) shape) are all
-// advmgr's SaveGame needs. Its own TU will replace this view.
-class TSingleSelectionWindow : public CAdvPopup {
-public:
-    char pad_60[0x1970 - 0x60];
-
-    TSingleSelectionWindow(int gameMode);
-    virtual ~TSingleSelectionWindow();
-    virtual int DoModal(unsigned char fadeIn);
-};
-SIZE(TSingleSelectionWindow, 0x1970);
-
-// Four cross-TU cells advmgr's SaveGame drives; the selection window's
-// own TU is their natural owner, so they are declared here (the
-// gUnnamed69d808 precedent) until it lands.
-//   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
-//   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
-//   0x69774c  campaign-game byte: picks the .CGM extension
-//   0x697774  set to 1 the moment a save filename is committed
-extern char gUnnamed69fc2c[];
-extern char gUnnamed691268[];
-extern unsigned char gUnnamed69774c;
-extern int gUnnamed697774;
+// Forward-declared for TSingleSelectionWindow's file-list slider member
+// (+0x1840); the full slider layout stays in the private header so this
+// public header's include closure is unchanged for advmgr/townmgr.
+class slider;
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
 // a 0x7c stride and clears dpid/+0x20/+0x24/+0x70; the constructor at
 // 0x57c790 proves the remaining initialized offsets and the full record
 // extent.  The containing handler's two eight-record arrays and four tail
-// dwords are the complete 0x7d0-byte Windows layout.
+// dwords are the complete 0x7d0-byte Windows layout.  Defined ahead of
+// TSingleSelectionWindow because that window embeds one at +0x1064.
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
     int heroIndex;             // +0x20
@@ -92,6 +69,44 @@ public:
     unsigned char SetNextPlayer(int pos);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
+
+// The game-selection megawindow. DC reports size 2928 with SH4 STL; the
+// retail extent 0x1970 is frame-derived from advmgr's SaveGame (window local
+// ebp-0x19ec..ebp-0x7c around an __alloca_probe frame). The members below are
+// the ones the reconstructed methods reach and each is retail-byte proven:
+// two mode bytes at +0x64/+0x65 (DoModal/ExitDialog test them), the embedded
+// CNetPlayerHandler at +0x1064 (ExitDialog walks it at a 0x7c stride) and the
+// file-list slider* at +0x1840 (DoModal calls its SetState). The ctor at
+// 0x579960 and destructor at 0x583b40 remain the reconstruction the pads
+// still block.
+class TSingleSelectionWindow : public CAdvPopup {
+public:
+    char pad_60[0x64 - 0x60];
+    unsigned char m_flag64;            // 0x64
+    unsigned char m_flag65;            // 0x65
+    char pad_66[0x1064 - 0x66];
+    CNetPlayerHandler m_players;       // 0x1064
+    char pad_1834[0x1840 - 0x1834];
+    slider* m_fileSlider;              // 0x1840
+    char pad_1844[0x1970 - 0x1844];
+
+    TSingleSelectionWindow(int gameMode);
+    virtual ~TSingleSelectionWindow();
+    virtual int DoModal(unsigned char fadeIn);
+};
+SIZE(TSingleSelectionWindow, 0x1970);
+
+// Four cross-TU cells advmgr's SaveGame drives; the selection window's
+// own TU is their natural owner, so they are declared here (the
+// gUnnamed69d808 precedent) until it lands.
+//   0x69fc2c  the chosen save filename (empty = the dialog was cancelled)
+//   0x691268  the extension scratch SaveGame sprintf's (.GM%d / .CGM)
+//   0x69774c  campaign-game byte: picks the .CGM extension
+//   0x697774  set to 1 the moment a save filename is committed
+extern char gUnnamed69fc2c[];
+extern char gUnnamed691268[];
+extern unsigned char gUnnamed69774c;
+extern int gUnnamed697774;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:164, dc 0x12f6d4) const char* GetResourceBonusCaption(int townType);
