@@ -73,7 +73,7 @@ newgame	0x1132b0	0x113320	112	2	0	2	2	0
 overview	0x11e330	0x11e66a	826	1	0	1	1	0
 palette	0x122940	0x12294b	11	1	0	1	1	0
 path	0x1239d0	0x123edf	1295	8	0	8	8	0
-philai	0x1242d0	0x12bbcc	30972	23	0	85	23	62
+philai	0x1242d0	0x12bbcc	30972	24	0	85	24	61
 puzzlewindow	0x12c1e0	0x12cf0b	3371	7	0	8	7	1
 questlogwindow	0x12e1e0	0x12e42d	589	3	0	3	3	0
 quickherowindow	0x12ead0	0x12f43b	2411	2	0	3	2	1
