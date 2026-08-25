@@ -1792,6 +1792,7 @@ philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290
 philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x1271c0
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
+philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	99.9310	99.9310	99.9310	0x127710
 philai	AI_VisitSirens	0.0000	0.0000	0.0000	0x127ec0
 philai	AI_bribe_monsters	0.0000	0.0000	0.0000	0x127f60
@@ -1818,7 +1819,6 @@ philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
 philai	philAI_DoAI	0.0000	0.0000	0.0000	0x125e80
 philai	type_spellvalue_type_spellvalue_126d40	0.0000	0.0000	0.0000	0x126d40
 philai	value_of_bank	0.0000	0.0000	0.0000	0x129920
-philai	value_of_custom_item	0.0000	0.0000	0.0000	0x129890
 philai	value_of_enemy_town	0.0000	0.0000	0.0000	0x129cb0
 philai	value_of_monsters	0.0000	0.0000	0.0000	0x12a140
 philai	value_of_pyramid	0.0000	0.0000	0.0000	0x12a410
