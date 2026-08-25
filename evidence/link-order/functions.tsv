@@ -4326,8 +4326,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1c58e0	130	in-span	townmgr	townmgr	??1TTownScreenWindow@@UAE@XZ
 0x1c5970	292	in-span	townmgr	townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z
 0x1c5aa0	149	in-span	townmgr	townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ
-0x1c5b40	2168	in-span	townmgr	townmgr	game_1c66d0_sub00_1c5b40
-0x1c63c0	737	in-span	townmgr	townmgr	calls_timeGetTime_1c63c0
+0x1c5b40	2168	in-span	townmgr	townmgr	TTownScreenWindow_set_bonus_display
+0x1c63c0	737	in-span	townmgr	townmgr	townManager_Open
 0x1c66b0	32	in-span	townmgr	townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z
 0x1c66d0	409	in-span	townmgr	townmgr	?UpdateTownInfo@townManager@@QAEXXZ
 0x1c6870	1439	in-span	townmgr	townmgr	?SetupTown@townManager@@QAEXE@Z
@@ -4335,14 +4335,14 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1c70b0	250	in-span	townmgr	townmgr	?UnloadTown@townManager@@QAEXXZ
 0x1c71b0	156	in-span	townmgr	townmgr	?Close@townManager@@UAEXXZ
 0x1c7250	427	in-span	townmgr	townmgr	?SetHeroCommand@townManager@@QAEXXZ
-0x1c7400	913	in-span	townmgr	townmgr	game_1c77a0_sub01_1c7400
-0x1c77a0	2269	in-span	townmgr	townmgr	game_guipop_1c77a0
+0x1c7400	913	in-span	townmgr	townmgr	townManager_SetArmyCommand
+0x1c77a0	2269	in-span	townmgr	townmgr	townManager_SetCommandAndText
 0x1c8080	264	in-span	townmgr	townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z
 0x1c8190	5320	in-span	townmgr	townmgr	??0TThievesGuildWindow@@QAE@H@Z
 0x1c9660	33	in-span	townmgr	townmgr	??_GTThievesGuildWindow@@UAEPAXI@Z
 0x1c9690	123	in-span	townmgr	townmgr	??1TThievesGuildWindow@@UAE@XZ
-0x1c9710	543	in-span	townmgr	townmgr	game_1c9930_sub00_1c9710
-0x1c9930	684	in-span	townmgr	townmgr	game_1c9930
+0x1c9710	543	in-span	townmgr	townmgr	TThievesGuildWindow_SetRolloverText
+0x1c9930	684	in-span	townmgr	townmgr	TThievesGuildWindow_WindowHandler
 0x1c9be0	11504	in-span	townmgr	townmgr	??0THallWindow@@QAE@H@Z
 0x1cc8d0	16	in-span	townmgr	townmgr	?GetText@TTextResource@@QBEPBDH@Z
 0x1cc8e0	33	in-span	townmgr	townmgr	??_GTHallWindow@@UAEPAXI@Z
@@ -4386,7 +4386,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1d2da0	488	in-span	townmgr	townmgr	?DoUniversity@townManager@@QAEXXZ
 0x1d2f90	306	in-span	townmgr	townmgr	?DoSkeletonTransformer@townManager@@QAEXXZ
 0x1d30d0	360	in-span	townmgr	townmgr	?handle_hall_click@townManager@@QAEXXZ
-0x1d3240	6607	in-span	townmgr	townmgr	calls_timeGetTime_1d3240
+0x1d3240	6607	in-span	townmgr	townmgr	townManager_Main
 0x1d4c10	1340	in-span	townmgr	townmgr	?DoCommand@townManager@@QAEXHEPAVtype_garrison_base_window@@@Z
 0x1d5150	194	in-span	townmgr	townmgr	?SwapHeroes@townManager@@QAEXXZ
 0x1d5220	487	in-span	townmgr	townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ
@@ -4395,7 +4395,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1d55c0	1400	in-span	townmgr	townmgr	??0TBuyBuildWindow@@QAE@HHH@Z
 0x1d5b40	33	in-span	townmgr	townmgr	??_GTBuyBuildWindow@@UAEPAXI@Z
 0x1d5b70	107	in-span	townmgr	townmgr	??1TBuyBuildWindow@@UAE@XZ
-0x1d5be0	844	in-span	townmgr	townmgr	game_1d55c0_sub00_1d5be0
+0x1d5be0	844	in-span	townmgr	townmgr	TBuyBuildWindow_set_prerequisite_text
 0x1d5f30	2266	in-span	townmgr	townmgr	?BuyBuild@townManager@@QAEHHHH@Z
 0x1d6810	251	in-span	townmgr	townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z
 0x1d6910	366	in-span	townmgr	townmgr	?CycleOutline@townManager@@QAEXHHHHH@Z
@@ -4409,7 +4409,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1d7e20	66	in-span	townmgr	townmgr	?Open@TTavernWindow@@UAEHHE@Z
 0x1d7e70	27	in-span	townmgr	townmgr	?Close@TTavernWindow@@UAEXE@Z
 0x1d7e90	48	in-span	townmgr	townmgr	?DoMapTavern@@YIXUtype_point@@@Z
-0x1d7ec0	1002	in-span	townmgr	townmgr	game_1d7e90_sub01_1d7ec0
+0x1d7ec0	1002	in-span	townmgr	townmgr	DoTavern
 0x1d82b0	464	in-span	townmgr	townmgr	?DoTownTavern@townManager@@QAEXXZ
 0x1d8480	609	in-span	townmgr	townmgr	?DoTownGate@townManager@@QAEXXZ
 0x1d86f0	17498	in-span	townmgr	townmgr	??0TCastleWindow@@QAE@XZ
@@ -4419,7 +4419,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1dce50	294	in-span	townmgr	townmgr	?Recruit@TCastleWindow@@QAEXH@Z
 0x1dcf80	1025	in-span	townmgr	townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z
 0x1dd390	1662	in-span	townmgr	townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z
-0x1dda10	5215	in-span	townmgr	townmgr	game_itgflags_def_1dda10
+0x1dda10	5215	in-span	townmgr	townmgr	TThievesGuildWindow_SetupThievesGuild
 0x1dee70	752	in-span	townmgr	townmgr	?GetCategoryStats@@YIXHPAJPAC@Z
 0x1df160	159	in-span	townmgr	townmgr	?SortStats@@YIXPAJPAC@Z
 0x1df5f0	8204	bracketed	townmgr..tradpost	townmgr,tradpost	game_tpmrkres_pcx_1df5f0
