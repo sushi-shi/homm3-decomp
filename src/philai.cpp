@@ -259,13 +259,6 @@ int ValueOfArena(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1867
-DC_ONLY(0x1103c4, 0x42)
-long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_value)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1883
 DC_ONLY(0x110408, 0x16A)
 int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
@@ -1136,6 +1129,13 @@ int hero::LuckIncreaseValue(int value)
 // game_128040_subNN for exactly that reason.
 VA(0x00528040, 0x1648)  // anchor-callee, dc 0x113e24
 long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1867
+VA(0x00529890, 0x40)  // anchor-callee, dc 0x1103c4
+long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_value)
 {
     // @stub
 }
