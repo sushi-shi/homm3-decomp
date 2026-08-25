@@ -86,8 +86,8 @@ position	unit	first_rva	end_rva	gap_to_next
 80	scenarioinfo	0x169800	0x1699b2	1822
 81	search	0x16a0d0	0x16a352	12430
 82	seerhut	0x16d3e0	0x17460c	5124
-83	singleselectionpopups	0x175a10	0x175a20	8816
-84	singleselectionwindow	0x177c90	0x177cdd	123763
+83	singleselectionpopups	0x175a10	0x175a20	8240
+84	singleselectionwindow	0x177a50	0x17c6c3	104845
 85	slider	0x196050	0x197185	43
 86	smackmgr	0x1971b0	0x197cf4	6076
 87	soundmgr	0x1994b0	0x19b295	5723
