@@ -4709,10 +4709,7 @@ void game::NewMap(TAbstractFile* mapFile, int* playerHeroFaces,
 
     for (unsigned int mapDataIndex = 0;
          mapDataIndex < worldMap.mapObjectData.size(); ++mapDataIndex) {
-        CMapObjectDataNewMapView* mapData =
-            static_cast<CMapObjectDataNewMapView*>(
-                worldMap.mapObjectData[mapDataIndex]);
-        mapData->NewMapVFn38();
+        worldMap.mapObjectData[mapDataIndex]->NewMapVFn38();
     }
 
     memset(playerDisabled, 0, sizeof(playerDisabled));

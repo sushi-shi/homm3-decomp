@@ -64,23 +64,12 @@ class CObjectType;
 class CObject;
 class type_event_record;
 class MonsterData;
-// Retail NewfullMap::Init proves a pointer-owning vector at +0xb0: every
-// non-null element is destroyed through virtual slot zero before the vector
-// is cleared. The concrete derived records are selected while map objects are
-// loaded; their common base identity is not present in the surviving retail
-// symbols, so only this byte-proven ownership interface is named here.
+// Retail NewfullMap::Init proves the deleting destructor at slot zero.
+// NewMap and the mapcell broadcasts prove the remaining slot count and the
+// signatures at +0x28 and +0x38; the other names remain address-based.
 class CMapObjectData {
 public:
     virtual ~CMapObjectData();
-};
-
-#ifdef HOMM3_GAME_NEW_MAP_DECLS
-// NewMap calls virtual slot +0x38 on every loaded map-data record.  The
-// common base's surviving evidence proves only its deleting destructor, so
-// keep the rest as a TU-local vtable view rather than inventing members on
-// CMapObjectData for every game.h consumer.
-class CMapObjectDataNewMapView : public CMapObjectData {
-public:
     virtual void NewMapVFn04();
     virtual void NewMapVFn08();
     virtual void NewMapVFn0c();
@@ -90,14 +79,12 @@ public:
     virtual void NewMapVFn1c();
     virtual void NewMapVFn20();
     virtual void NewMapVFn24();
-    virtual void NewMapVFn28();
+    virtual void NewMapVFn28(type_point point, int player);
     virtual void NewMapVFn2c();
     virtual void NewMapVFn30();
     virtual void NewMapVFn34();
     virtual void NewMapVFn38();
 };
-
-#endif
 
 // DC CodeView supplies the three field names and order. Retail widens the
 // STL string from 12 to 16 bytes, then proves the flag at +0x10 and the
