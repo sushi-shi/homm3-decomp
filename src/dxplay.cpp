@@ -981,6 +981,118 @@ unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
     return 1;
 }
 
+// E:\gamedcs\dxplay.cpp:920
+VA(0x00498250, 0x4D)
+unsigned char CDPlay::SetPlayerName(unsigned long playerId, char* shortName,
+    char* longName, unsigned long flags)
+{
+    if (!longName)
+        longName = shortName;
+    DPNAME name;
+    name.dwSize = sizeof(name);
+    name.dwFlags = 0;
+    name.lpszShortNameA = shortName;
+    name.lpszLongNameA = longName;
+    m_hRes = m_lpDP->SetPlayerName(playerId, &name, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:977
+VA(0x004983c0, 0x2C)
+unsigned char CDPlay::SetGroupData(unsigned long groupId, void* data,
+    unsigned long dataSize, unsigned long flags)
+{
+    m_hRes = m_lpDP->SetGroupData(groupId, data, dataSize, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:987
+VA(0x004983f0, 0xB1)
+void* CDPlay::GetGroupData(unsigned long groupId, unsigned long* size,
+    unsigned long flags)
+{
+    void* data = 0;
+    unsigned long dataSize = 0;
+    if (size)
+        dataSize = *size;
+    m_hRes = m_lpDP->GetGroupData(groupId, 0, &dataSize, flags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dataSize == 0)
+            return 0;
+        data = ::operator new(dataSize);
+        m_hRes = m_lpDP->GetGroupData(
+            groupId, data, &dataSize, flags);
+        if (m_hRes < 0) {
+            ::operator delete(data);
+            return 0;
+        }
+    }
+    if (size)
+        *size = dataSize;
+    return data;
+}
+
+// E:\gamedcs\dxplay.cpp:1024
+VA(0x004984b0, 0x4D)
+unsigned char CDPlay::SetGroupName(unsigned long groupId, char* shortName,
+    char* longName, unsigned long flags)
+{
+    if (!longName)
+        longName = shortName;
+    DPNAME name;
+    name.dwSize = sizeof(name);
+    name.dwFlags = 0;
+    name.lpszShortNameA = shortName;
+    name.lpszLongNameA = longName;
+    m_hRes = m_lpDP->SetGroupName(groupId, &name, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1081
+VA(0x00498620, 0x2C)
+unsigned char CDPlay::SetPlayerData(unsigned long playerId, void* data,
+    unsigned long dataSize, unsigned long flags)
+{
+    m_hRes = m_lpDP->SetPlayerData(playerId, data, dataSize, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1091
+VA(0x00498650, 0xB1)
+void* CDPlay::GetPlayerData(unsigned long playerId, unsigned long* size,
+    unsigned long flags)
+{
+    void* data = 0;
+    unsigned long dataSize = 0;
+    if (size)
+        dataSize = *size;
+    m_hRes = m_lpDP->GetPlayerData(playerId, 0, &dataSize, flags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dataSize == 0)
+            return 0;
+        data = ::operator new(dataSize);
+        m_hRes = m_lpDP->GetPlayerData(
+            playerId, data, &dataSize, flags);
+        if (m_hRes < 0) {
+            ::operator delete(data);
+            return 0;
+        }
+    }
+    if (size)
+        *size = dataSize;
+    return data;
+}
+
 // E:\gamedcs\dxplay.cpp:1215 - vtable slot 0.
 VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
 
