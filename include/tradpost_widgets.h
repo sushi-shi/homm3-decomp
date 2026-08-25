@@ -43,6 +43,16 @@ enum EMarketWindow {
     MARKET_WINDOW_SELL_CREATURE = 4
 };
 
+// The gMarketSource pricing/mode selector the entry points seed (marketplace,
+// trading post, black market, freelancer's guild). The Update methods branch
+// label visibility and the title text on it.
+enum EMarketSource {
+    MARKET_SOURCE_MARKETPLACE = 0,
+    MARKET_SOURCE_TRADING_POST = 1,
+    MARKET_SOURCE_BLACK_MARKET = 2,
+    MARKET_SOURCE_FREELANCER = 3
+};
+
 // The seven resource names, indexed by resource id. Shared table; seerhut.cpp
 // carries the retail address claim (0x6a5e64). Declared here (consumer-side
 // plain extern, the ai_player.h / advmgr.h pattern) for the resource-trade
