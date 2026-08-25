@@ -2645,6 +2645,7 @@ tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	99.9627	99.9627	99.9627	0
 tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	98.5563	98.5563	98.5563	0x1ee6c0
 tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	84.3657	84.3657	84.3657	0x1eebd0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	99.2905	99.2905	99.2905	0x1ed3a0
+tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	95.1827	95.1827	95.1827	0x1ed9e0
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	91.0171	91.0171	91.0171	0x1ee890
 tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	98.5816	98.5816	98.5816	0x1ecfe0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
@@ -2652,7 +2653,6 @@ tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0
 tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0
 tradpost	TBuyArtifactWindow_TBuyArtifactWindow	0.0000	0.0000	0.0000	0x1e3730
 tradpost	TBuyArtifactWindow_Update	0.0000	0.0000	0.0000	0x1eb6a0
-tradpost	TBuyArtifactWindow_WindowHandler	0.0000	0.0000	0.0000	0x1ed9e0
 tradpost	TGiveResourceWindow_TGiveResourceWindow	0.0000	0.0000	0.0000	0x1e16c0
 tradpost	TGiveResourceWindow_Update	0.0000	0.0000	0.0000	0x1eaf50
 tradpost	TGiveResourceWindow_WindowHandler	0.0000	0.0000	0.0000	0x1ed550

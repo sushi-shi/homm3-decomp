@@ -76,7 +76,7 @@ public:
 SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
-    int field_60;             // +0x60
+    int lastHoverId;          // +0x60, last widget the hover handler rolled over
 public:
     TBuyArtifactWindow(int x2, int y2);
     void Update(unsigned char bUpdate);
