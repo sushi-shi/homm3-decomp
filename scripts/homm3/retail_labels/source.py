@@ -609,7 +609,14 @@ def _demangle_key(mangled: str):
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
-        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        owner = mangled[4:]
+        if owner.startswith("?$"):
+            # A class-template owner starts `?$Class@...`; only the stable
+            # template name joins, exactly as the ??_D arm below already does
+            # (pairs CAutoArray<T> scalar-deleting-dtors in dxplay/mpw).
+            cls = owner[2:].split("@", 1)[0]
+        else:
+            cls = owner.split("@@", 1)[0].split("@")[0]
         return f"{cls}_{cls}".lower() + "@gdtor"
     if mangled.startswith("??_E"):
         # vector deleting destructor - another real named COFF public,
