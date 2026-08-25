@@ -496,21 +496,26 @@ type_event_record_type type_record_player_death::get_type()
 {
     return RECORD_PLAYER_DEATH;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:866
 VA(0x0049ba40, 0x3D)  // anchor-vtable, dc 0x8daec
-unsigned char type_record_player_death::load(void* infile)
+unsigned char type_record_player_death::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&extra, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:878
 VA(0x0049ba80, 0x30)  // anchor-vtable, dc 0x8db2c
-unsigned char type_record_player_death::save(void* outfile)
+unsigned char type_record_player_death::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    unsigned char ok = outfile->Write(&extra, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:889
 VA(0x0049bab0, 0x11A)  // anchor-vtable, dc 0x8db94
