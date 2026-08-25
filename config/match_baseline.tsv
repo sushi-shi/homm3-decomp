@@ -1855,13 +1855,13 @@ multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?GetRolloverWidget@CMPInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x110970
 multiplayerwindow	?GetRolloverWidget@TMultiPlayerWindow@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x10ed50
+multiplayerwindow	?GoMainMenu@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10efc0
 multiplayerwindow	?GoSessionList@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x10eef0
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0
 multiplayerwindow	CHotSeatDlg_CHotSeatDlg	0.0000	0.0000	0.0000	0x111e20
 multiplayerwindow	CMPInputDlg_CMPInputDlg	0.0000	0.0000	0.0000	0x110060
-multiplayerwindow	TMultiPlayerWindow_GoMainMenu	0.0000	0.0000	0.0000	0x10efc0
 multiplayerwindow	TMultiPlayerWindow_HostSession	0.0000	0.0000	0.0000	0x10fab0
 multiplayerwindow	TMultiPlayerWindow_InitRemote	0.0000	0.0000	0.0000	0x10fbc0
 multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x10f4e0
