@@ -1734,6 +1734,9 @@ mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333	82.9333	82.93
 mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x10d5b0
 mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x10da20
 mousemgr	?Update@mouseManager@@QAEXE@Z	94.1675	94.1675	94.1675	0x10cd90
+multiplayerwindow	??0CHotSeatDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x111e20
+multiplayerwindow	??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x110760
+multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x110060
 multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	80.4609	80.4609	80.4609	0x10e050
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
@@ -1749,8 +1752,6 @@ multiplayerwindow	?GoSessionList@TMultiPlayerWindow@@QAEXXZ	100.0000	100.0000	10
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
 multiplayerwindow	?OnWidgetDeselect@CMPInputDlg@@UAEHHPAE@Z	83.3750	83.3750	83.3750	0x1108f0
-multiplayerwindow	CHotSeatDlg_CHotSeatDlg	0.0000	0.0000	0.0000	0x111e20
-multiplayerwindow	CMPInputDlg_CMPInputDlg	0.0000	0.0000	0.0000	0x110060
 multiplayerwindow	TMultiPlayerWindow_HostSession	0.0000	0.0000	0.0000	0x10fab0
 multiplayerwindow	TMultiPlayerWindow_InitRemote	0.0000	0.0000	0.0000	0x10fbc0
 multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x10f4e0

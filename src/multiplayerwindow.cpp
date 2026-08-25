@@ -382,6 +382,15 @@ DATA(0x0069880a) char gLoadedGameName[13];
 DATA(0x00698817) char gLocalPlayerName[21];
 DATA(0x006a6578) THelpText gMultiPlayerHelp[30];
 
+// The rollover/right-click help pointers the CMPInputDlg and CHotSeatDlg
+// constructors hand to widget::set_help_text. The OK/Back pair (0x6a7760/
+// 0x6a7768) is shared by both dialogs; the CHotSeatDlg edit ring uses its own
+// pair (0x6a7758/0x6a775c). No DC name; provisional house names.
+DATA(0x006a7758) char* gHotSeatEditRollover;
+DATA(0x006a775c) char* gHotSeatEditRightClick;
+DATA(0x006a7760) char* gDialogOkHelp;
+DATA(0x006a7768) char* gDialogBackHelp;
+
 // E:\gamedcs\multiplayerwindow.cpp:1005
 // Slider callback for the session list; scrolls the displayed window of games.
 void SliderGames(int state, heroWindow* parent_window)
@@ -613,13 +622,68 @@ unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const cha
     // @stub
 }
 
+#endif
+
+// E:\gamedcs\multiplayerwindow.cpp:418
 VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
-void CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+    : CHeroWindowEx(284, 194, 232, 212, 18)
 {
-    // @stub
+    Widgets.reserve(6);
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
+                                       "MuDialog.pcx", 0x800));
+
+    field1 = new CMPInputEdit(17, 66, 198, 23, maxChars1, "", "smalfont.fnt",
+                              font::WHITE, 0, 0, 0, FIELD1_ID, 0x100, 0, 7, 5);
+    field2 = new CMPInputEdit(17, 115, 198, 23, maxChars2, "", "smalfont.fnt",
+                              font::WHITE, 0, 0, 0, FIELD2_ID, 0x100, 0, 7, 5);
+    field1->SetNextEdit(field2);
+    field2->SetNextEdit(field1);
+    field1->SetPrevEdit(field2);
+    field2->SetPrevEdit(field1);
+
+    header1 = new textWidget(17, 43, 198, 18, "", "smalfont.fnt", font::WHITE,
+                             -1, 1, 0, 8);
+    header2 = new textWidget(17, 92, 198, 18, "", "smalfont.fnt", font::WHITE,
+                             -1, 1, 0, 8);
+
+    Widgets.push_back(field1);
+    Widgets.push_back(field2);
+    Widgets.push_back(header1);
+    Widgets.push_back(header2);
+    Widgets.push_back(new button(26, 143, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+                                 0, 28, 2));
+    Widgets.push_back(new button(142, 143, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+                                 0, 1, 2));
+
+    rollover = new textWidget(8, 186, 216, 18, 0, "smalfont.fnt", font::PRIMARY,
+                              ROLLOVER_ID, 1, 32, 8);
+    Widgets.push_back(rollover);
+
+    AddWidgetsToMessageStream();
+    SetFocus(field1->id);
+    field1->SetAutoDraw(1);
+    field2->SetAutoDraw(1);
+    GetWidget(OKAY_ID)->set_help_text(gDialogOkHelp, 0, 0);
+    GetWidget(BACK_ID)->set_help_text(gDialogBackHelp, 0, 0);
 }
 
-#endif
+// E:\gamedcs\multiplayerwindow.cpp:263 - CMPEdit's out-of-line constructor,
+// forwarding all sixteen textEntryWidget arguments and zeroing the two edit
+// links. CMPInputEdit's inline ctor calls this then stores its own vtable.
+VA(0x00510760, 0x62)  // anchor-callee from CMPInputDlg ctor (0x5101cd/0x51022d), dc 0x102014
+CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
+                 const char* fontName, font::TColor color,
+                 unsigned justification, const char* backgroundIcon,
+                 int backgroundFrame, int id, int style, int readType,
+                 int insetX, int insetY)
+    : textEntryWidget(x, y, w, h, textSize, text, fontName, color, justification,
+                      backgroundIcon, backgroundFrame, id, style, readType,
+                      insetX, insetY)
+{
+    nextEdit = 0;
+    prevEdit = 0;
+}
 
 // E:\gamedcs\multiplayerwindow.cpp:465
 VA(0x005108a0, 0x4E)  // anchor-callee: ~dtor reached from scalar-dtor 0x5109e0, dc 0x102718
@@ -670,13 +734,56 @@ textWidget* CMPInputDlg::GetRolloverWidget()
 // E:\gamedcs\multiplayerwindow.cpp:523
 VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
-#if 0  // @carcass
+// E:\gamedcs\multiplayerwindow.cpp:629
 VA(0x00511e20, 0x5A1)  // anchor-vtable 0x6401d8 into this + CHeroWindowEx base + muhotsea.pcx, dc 0x1028c4
-void CHotSeatDlg::CHotSeatDlg()
+CHotSeatDlg::CHotSeatDlg()
+    : CHeroWindowEx(218, 96, 363, 407, 18)
 {
-    // @stub
+    Widgets.reserve(19);
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, BACKGROUND_ID,
+                                       "muhotsea.pcx", 0x800));
+    Widgets.push_back(new textWidget(0, 30, width, 150,
+                                     gpGeneralText->GetText(447), "bigfont.fnt",
+                                     font::WHITE, HEADER_ID, 1, 0, 8));
+
+    int sy = 178;
+    for (int i = 0; i < 8; i++) {
+        edit[i] = new CHotSeatEdit(277 - x, sy - y, 281, 18, 21, "",
+                                   "smalfont.fnt", font::WHITE, 0, 0, 0,
+                                   FIRST_EDIT_ID + i, 0x100, 0, 7, 5);
+        edit[i]->set_help_text(gHotSeatEditRollover, gHotSeatEditRightClick, 0);
+        Widgets.push_back(edit[i]);
+        sy += 30;
+    }
+
+    int j;
+    for (j = 0; j < 7; j++)
+        edit[j]->SetNextEdit(edit[j + 1]);
+    for (j = 1; j < 8; j++)
+        edit[j]->SetPrevEdit(edit[j - 1]);
+    edit[0]->SetPrevEdit(edit[7]);
+    edit[7]->SetNextEdit(edit[0]);
+
+    Widgets.push_back(new button(95, 338, 64, 32, OKAY_ID, "mubchck.def", 0, 1,
+                                 0, 28, 2));
+    Widgets.push_back(new button(205, 338, 64, 32, BACK_ID, "mubcanc.def", 0, 1,
+                                 0, 1, 2));
+
+    m_rollover = new textWidget(10, 382, width - 20, 18, 0, "smalfont.fnt",
+                                font::PRIMARY, ROLLOVER_ID, 1, 32, 8);
+    Widgets.push_back(m_rollover);
+
+    AddWidgetsToMessageStream();
+    edit[0]->SetText(gpMultiPlayerWindow->playerName->Text.c_str());
+    SetFocus(edit[0]->id);
+    for (j = 0; j < 8; j++)
+        edit[j]->SetAutoDraw(1);
+    widget* w = GetWidget(OKAY_ID);
+    w->set_help_text(gDialogOkHelp, 0, 0);
+    w->enable(0);
+    w = GetWidget(BACK_ID);
+    w->set_help_text(gDialogBackHelp, 0, 0);
 }
-#endif
 
 // E:\gamedcs\multiplayerwindow.cpp:700
 VA(0x005123d0, 0x4E)  // retail vtable teardown, dc 0x102c28
