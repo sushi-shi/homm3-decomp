@@ -1077,12 +1077,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x734f0	135	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub01_734f0
 0x73580	118	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub02_73580
 0x73600	521	bracketed	combatwindow..command	combatwindow,command	game_72e90_sub03_73600
-0x73c00	671	in-span	command	command	game_740d0_sub03_73c00
-0x73ea0	406	in-span	command	command	game_740d0_sub04_73ea0
-0x74040	140	in-span	command	command	calls_timeGetTime_74040
-0x740d0	1451	in-span	command	command	combatManager_vslot02
+0x73c00	671	in-span	command	command	combatManager_automate_catapult
+0x73ea0	406	in-span	command	command	combatManager_automate_first_aid_tent
+0x74040	140	in-span	command	command	combatManager_do_animations
+0x740d0	1451	in-span	command	command	combatManager_Main
 0x74680	12	in-span	command	command	game_22a1f0_sub00_74680
-0x74690	875	in-span	command	command	game_74d80_sub13_74690
+0x74690	875	in-span	command	command	combatManager_SetCombatDirections
 0x74a00	408	in-span	command	command	game_74d80_sub14_74a00
 0x74ba0	74	in-span	command	command	game_93930_sub01_74ba0
 0x74bf0	392	in-span	command	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z
@@ -1108,7 +1108,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x78890	110	in-span	command	command	?ResetMouse@combatManager@@QAEXXZ
 0x78900	656	in-span	command	command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z
 0x78b90	485	in-span	command	command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z
-0x78d80	4180	in-span	command	command	calls_timeGetTime_78d80
+0x78d80	4180	in-span	command	command	combatManager_ProcessNextAction
 0x79de0	335	in-span	command	command	?ResetCyclingCreatures@combatManager@@QAEXXZ
 0x79f30	139	in-span	command	command	?ResetCycleTimers@combatManager@@QAEXXZ
 0x79fc0	305	in-span	command	command	?SetCombatGrid@combatManager@@QAEXHHHE@Z
