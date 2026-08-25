@@ -8,6 +8,10 @@
 #include "swapmgr.h"
 #include "game.h"
 #include "hero.h"
+#include "advmgr.h"
+#include "bitmap816.h"
+#include "remote.h"
+#include "winmgr.h"
 
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
@@ -101,12 +105,30 @@ CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:789
 VA(0x005aed20, 0x9B)  // anchor-callee RemoveWindow/EnableButtons/SetNetMsgHandler, ret 0, dc 0x15ca44
 void swapManager::Close()
 {
-    // @stub
+    if (gHeroScreenDraggedArtifact.artifactId != -1)
+    {
+        heroes[0]->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
+        gHeroScreenDraggedArtifact.artifactId = -1;
+    }
+    border->Dispose();
+    gpWindowManager->RemoveWindow(parent);
+    delete parent;
+    status = 0;
+    if (pDPlay)
+        pDPlay->SetNetMsgHandler(field_60);
+    delete field_64;
+    gpAdvManager->status = 1;
+    gpAdvManager->EnableButtons();
+    gpAdvManager->Reseed(0, 0);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)  // corroborates reads selection +0x48/+0x50 then Bitmap816::Draw/UpdateScreen, ret 0, dc 0x15cadc
