@@ -1785,6 +1785,7 @@ philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
 philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630
 philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	81.8182	81.8182	81.8182	0x12a3a0
+philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	88.5082	88.5082	88.5082	0x12a7c0
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0
@@ -1807,7 +1808,6 @@ philai	ComputeUpgradeValue	0.0000	0.0000	0.0000	0x12aac0
 philai	DetermineHeroToMove	0.0000	0.0000	0.0000	0x126a90
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	ValueOfGenerator	0.0000	0.0000	0.0000	0x129a30
-philai	ValueOfResource	0.0000	0.0000	0.0000	0x12a7c0
 philai	ValueOfScroll	0.0000	0.0000	0.0000	0x12a8c0
 philai	ValueOfSeaChest	0.0000	0.0000	0.0000	0x12a870
 philai	buy_artifacts	0.0000	0.0000	0.0000	0x124400
