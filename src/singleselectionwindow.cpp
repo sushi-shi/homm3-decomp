@@ -1667,6 +1667,71 @@ void CChatSlider::SetState(int state)
         knobPos = knobRange * state / (n - 1) + 0x10;
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:1675
+VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget slot 4, dc 0x148df4
+void CChatWidget::Draw()
+{
+    CChatSave* save = m_save;
+    if (!save->IsSaved()) {
+        if (save) {
+            int py = y + parentWindow->y;
+            int px = x + parentWindow->x;
+            save->bSaved = 1;
+            save->Grab(gpWindowManager->screenBitmap->map, px, py,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch);
+            textWidget::Draw();
+            return;
+        }
+    } else {
+        save->Draw(0, 0, width, height,
+                   gpWindowManager->screenBitmap->map,
+                   x + parentWindow->x, y + parentWindow->y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch, 0);
+    }
+    textWidget::Draw();
+}
+
+TSingleSelectionWindow::~TSingleSelectionWindow()
+{
+}
+
+VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
+
+// E:\gamedcs\singleselectionwindow.cpp:454
+VA(0x005891b0, 0x45)  // anchor-vtable CHostWaitDlg slot 3, dc 0x1477b0
+int CHostWaitDlg::handle_message(message& msg)
+{
+    int ret = CAnimatedDlg::handle_message(msg);
+    m_pMsg = GetRemoteData(1, 0);
+    if (m_pMsg && m_pMsg->field_04 == m_forWho)
+        return ExitDialog(msg);
+    return ret;
+}
+
+VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
+
+// Retail 0x589230 is an OPT:ICF tail to CAnimatedDlg::~CAnimatedDlg. It stays
+// unclaimed because its standalone row is not exact; this definition exists
+// only so VC6 can emit the exact deleting destructor above.
+CHostWaitDlg::~CHostWaitDlg()
+{
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8764
+VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler slot 1, dc 0x1451a0
+CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(
+    unsigned char inPopup, unsigned char* msgReceived)
+{
+    CNetMsg* pMsg = GetRemoteData(0, &m_wasCompressed);
+    if (!pMsg)
+        return 0;
+    return HandleNetMsg(pMsg);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1600
