@@ -84,7 +84,11 @@ public:
         return -1;
     }
 
+    CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
+    unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
     bool DeletePlayer(unsigned long dpid);
+    CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
+    unsigned char IsFaceTaken(int face, int exclude);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
