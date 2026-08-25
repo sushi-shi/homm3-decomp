@@ -84,21 +84,21 @@ unsigned char HasRandomHero(int gamePos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:821
-DC_ONLY(0x12ff40, 0x62)
+VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
 unsigned char InitializeVCDescriptions()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:841
-DC_ONLY(0x12ffa4, 0x62)
+VA(0x00577a80, 0x30)  // anchor-callee ResourceManager::GetText + lcdesc resource key (data_2834b8) + 0x10-byte copy loop, ret0, dc 0x12ffa4
 unsigned char InitializeLCDescriptions()
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:867
-DC_ONLY(0x130008, 0x62)
+VA(0x00577ab0, 0x30)  // anchor-callee ResourceManager::GetText + turndur resource key (data_2834c4) + 0x2c-byte copy loop, ret0, dc 0x130008
 unsigned char InitializeTurnDurationText()
 {
     // @stub
@@ -175,7 +175,7 @@ void CNetPlayerHandler::CNetPlayerHandler()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1020
-DC_ONLY(0x1304a8, 0x15C)
+VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes handler turn-state fields 0x7c0/0x7c8/0x7cc, dc 0x1304a8
 unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 {
     // @stub
@@ -196,7 +196,7 @@ CNetPlayerHandlerPlayer* CNetPlayerHandler::GetCompPlayerInPos(int pos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1095
-DC_ONLY(0x130670, 0xC8)
+VA(0x00577be0, 0xaf)  // arity ret4; 8-slot stride-0x7c dpid scan + max-count [this+0x7c4]==8, inits new slot fields 0x70/0x24/0x20 (mirror of DeletePlayer), dc 0x130670
 unsigned char CNetPlayerHandler::AddNewPlayer(CNetPlayerInfo* pNetPlayer)
 {
     // @stub
@@ -279,7 +279,7 @@ int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
-DC_ONLY(0x1309f0, 0x4D6C)
+VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor (??0CAdvPopup@@QAE@HHHHI@Z) + SavedGameHeader member ctor at this+0x38c+0x700, fs:[0] EH frame, ret4, dc 0x1309f0
 void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 {
     // @stub
