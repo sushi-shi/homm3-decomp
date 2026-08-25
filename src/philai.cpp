@@ -182,13 +182,6 @@ int AI_resource_cost(long player_id, const int* resources)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1339
-// RETAIL_LOCATED(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
-void type_spellvalue::type_spellvalue(const hero* new_hero)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1529
 DC_ONLY(0x10f94c, 0x136)
 long type_spellvalue::get_summoning_value(long damage, long times_castable)
@@ -337,6 +330,27 @@ int hero::SoD_get_seer_skill_value(int skill, int level)
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
+// E:\gamedcs\philai.cpp:3469.  Retail 0x524690/1668 B: (ecx=hero, edx=skill,
+// stack=complex_choice) returning a long, opening on `skillLevel[skill]` and
+// walking the seven army slots - the DC get_skill_value shape exactly,
+// 1334 -> 1668 B.  AI_choose_secondary_skill (0x52bbd0) calls it twice, at the
+// two sites DC's own body has.
+VA(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
+long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3645.  Retail 0x524dd0/243 B: same (hero, skill, uchar)
+// shape returning a byte, sweeping the 28 skill slots against the hero class's
+// gainSecondarySkillChance row and calling get_skill_value above.  312 -> 243 B,
+// and AI_choose_secondary_skill's tail is its one caller.
+VA(0x00524dd0, 0xF3)  // anchor-callee, dc 0x113ae4
+unsigned char wants_skill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:3744
 VA(0x00524ed0, 0xed)  // anchor-callee, dc 0x113cbc
 void AI_visit_university(hero* current_hero, NewmapCell* cell)
@@ -424,6 +438,16 @@ void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* ex
 // E:\gamedcs\philai.cpp:1156
 VA(0x00526a90, 0x1d4)  // anchor-callee, dc 0x10eeb0
 hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1339.  The spell-appraisal object's constructor; retail
+// inlines fill_creature_value_list / get_summoning_value / get_value_of_increase
+// into it (134 -> 915 B), so those DC methods have no separate retail body.
+// anchor-global (dc 0x10f37c).
+VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
+void type_spellvalue::type_spellvalue(const hero* new_hero)
 {
     // @stub
 }
@@ -1001,29 +1025,6 @@ long get_value_of_spring(const hero* current_hero, const NewmapCell* cell, unsig
 // E:\gamedcs\philai.cpp:3444
 DC_ONLY(0x11350c, 0xA0)
 long get_school_value(const hero* our_hero, TSecondarySkill skill)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3469
-// Retail 0x524690/1668 B: (ecx=hero, edx=skill, stack=complex_choice)
-// returning a long, opening on `skillLevel[skill]` and walking the seven
-// army slots - the DC get_skill_value shape exactly, 1334 -> 1668 B.
-// AI_choose_secondary_skill (0x52bbd0) calls it twice, at the two sites
-// DC's own body has.
-// RETAIL_LOCATED(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
-long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3645
-// Retail 0x524dd0/243 B: same (hero, skill, uchar) shape returning a
-// byte, sweeping the 28 skill slots against the hero class's
-// gainSecondarySkillChance row and calling get_skill_value above.
-// 312 -> 243 B, and AI_choose_secondary_skill's tail is its one caller.
-// RETAIL_LOCATED(0x00524dd0, 0xF3)  // anchor-callee, dc 0x113ae4
-unsigned char wants_skill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
 {
     // @stub
 }
