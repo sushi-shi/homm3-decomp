@@ -689,14 +689,204 @@ void TSellCreatureWindow::SetWidgetDisabled(short id)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:995
+// Refreshes the resource-trade dialog: the exchange-description line (with
+// singular/plural agreement on both sides), the market title, the panel
+// enable-dim state, the Artifact-Merchant and Freelancer's-Guild tab gates, and
+// the two-column loop over the sell and buy resources (icon, stock, exchange
+// ratio, highlight). The final repaint is bUpdate-gated.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::Update(unsigned char bUpdate)
 {
-    // @stub
-}
+    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
 
-#endif  // @carcass
+    if (gSelectedArtifact != -1 && gLeftResource != -1 &&
+        gSelectedArtifact != gLeftResource) {
+        int qtyLeft = gRatioInverted ? gGiveQuantity : 1;
+        int qtyRight = gRatioInverted ? 1 : gGiveQuantity;
+        const char* wordLeft = (qtyLeft > 1) ? (*gpGeneralText)[161]
+                                             : (*gpGeneralText)[162];
+        const char* wordRight = (qtyRight > 1) ? (*gpGeneralText)[161]
+                                               : (*gpGeneralText)[162];
+        sprintf(gText, (*gpGeneralText)[158],
+                qtyLeft, wordLeft, gResourceNames[gLeftResource],
+                qtyRight, wordRight, gResourceNames[gSelectedArtifact]);
+    } else {
+        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
+                                        : (*gpGeneralText)[164]);
+    }
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    switch (gMarketSource) {
+    case MARKET_SOURCE_MARKETPLACE:
+        strcpy(gText, (*gpGeneralText)[159]);
+        break;
+    case MARKET_SOURCE_TRADING_POST:
+        strcpy(gText, (*gpGeneralText)[160]);
+        break;
+    case MARKET_SOURCE_FREELANCER:
+        strcpy(gText, gMarketSource3Name);
+        break;
+    }
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, (*gpGeneralText)[271]);
+    msg.codeY = 0xe;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[169]);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xf;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1 &&
+        gSelectedArtifact != gLeftResource) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        resourceSlider->enable(1);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        resourceSlider->SetState(0);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,   0x1000);
+    }
+
+    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero != 0 &&
+        gMarketSource != MARKET_SOURCE_FREELANCER &&
+        (gpTownManager->townToView->type == TOWN_TOWER ||
+         gpTownManager->townToView->type == TOWN_DUNGEON) &&
+        (gpTownManager->townToView->built & bitNumber[17])) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
+    }
+
+    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero != 0 &&
+        gMarketSource != MARKET_SOURCE_FREELANCER &&
+        gpTownManager->townToView->type == TOWN_STRONGHOLD &&
+        (gpTownManager->townToView->built & bitNumber[21])) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_TITLE_ID, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1000);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_TITLE_ID, 0x1006);
+    }
+
+    for (int side = 0; side < 2; ++side) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1 &&
+            gSelectedArtifact != gLeftResource) {
+            if (side == 0) {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 3;
+                msg.extra = gSelectedArtifact;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
+            } else {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 0xb;
+                msg.extra = gLeftResource;
+                BroadcastMessage(&msg);
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRatioInverted ? gRightAmount * gGiveQuantity : gRightAmount);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0xc;
+                msg.extraText = gText;
+            }
+            BroadcastMessage(&msg);
+        }
+
+        for (int i = 0; i < 7; ++i) {
+            msg.codeX = widget::WIDGET_SET_STATUS;
+            if (side == 0) {
+                msg.extra = 6;
+                msg.codeY = 0x15 + i;
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_SELL_WOOD_ID + i;
+                BroadcastMessage(&msg);
+                msg.codeY = 0x23 + i;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0x23 + i;
+                msg.extraText = gText;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gpCurrentPlayer->resources[i]);
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_Y;
+                msg.extra = gResourceValueWidgetY[i];
+                BroadcastMessage(&msg);
+                msg.codeX = (gSelectedArtifact == i) ? widget::WIDGET_SET_STATUS
+                                                     : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_SELL_WOOD_ID + i;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            } else {
+                msg.extra = 6;
+                msg.codeY = 0x2a + i;
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_BUY_WOOD_ID + i;
+                BroadcastMessage(&msg);
+                msg.codeY = 0x4d + i;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0x4d + i;
+                msg.extraText = gText;
+                if (gSelectedArtifact == -1) {
+                    sprintf(gText, emptyRolloverText);
+                } else if (gSelectedArtifact == i) {
+                    sprintf(gText, (*gpGeneralText)[165]);
+                } else {
+                    float ratio = static_cast<float>(gMarketValues[i])
+                        / (static_cast<float>(gMarketValues[gSelectedArtifact])
+                           * fTradingPostEfficency[gMarketCount]);
+                    if (ratio >= 1.0f) {
+                        long n = static_cast<long>(ratio + 0.5);
+                        if (n == 1)
+                            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                        else
+                            sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), n);
+                    } else {
+                        long n = static_cast<long>(1.0f / ratio + 0.5);
+                        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                    }
+                }
+                BroadcastMessage(&msg);
+                msg.codeX = (gLeftResource == i) ? widget::WIDGET_SET_STATUS
+                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_BUY_WOOD_ID + i;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    if (bUpdate)
+        DrawWindow(1, 0xffff0001, 0xffff);
+}
 
 // E:\gamedcs\tradpost.cpp:1240
 // Refreshes the give-resource dialog: the gift-summary line, the market title,
