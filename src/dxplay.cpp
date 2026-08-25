@@ -607,6 +607,10 @@ unsigned char CDPlay::SetPlayerName(unsigned long playerId, char* sShort, char* 
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
+// Residual (90.4%): two-call get through a local CDPlayMsg buffer is byte-right;
+// retail homes the DPNAME buffer (pName) in ebx and the alloc size in edi, our CL
+// takes the opposite pair - a register-allocation wall - plus cosmetic EH-scope
+// reloc names.
 // E:\gamedcs\dxplay.cpp:939
 VA(0x004982a0, 0x115)  // anchor-vtable CDPlay slot19 (GetPlayerName), dc 0x8b0d8
 unsigned char CDPlay::GetPlayerName(unsigned long playerId, char* sShort, int maxShort, char* sLong, int maxLong)
@@ -922,6 +926,9 @@ DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigne
     }
     return buf;
 }
+// Residual (88.4%): the two-call probe is byte-right; retail's final `m_hRes >= 0`
+// return is a jge branch to separate return-1/return-0 epilogues, where our CL
+// collapses it to `setge al` - measured both polarities, VC6 folds either.
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
 unsigned char CDPlayLobby::TestLobbied()
