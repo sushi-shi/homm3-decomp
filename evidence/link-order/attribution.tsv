@@ -177,7 +177,6 @@ rva	size	unit	current_label	provenance
 0x957b0	293	drawing	?DrawWall@combatManager@@QAEHPBVBitmap816@@HHHHHH@Z	src-VA+base
 0x95a10	471	drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	src-VA+base
 0x95f50	380	drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z	src-VA+base
-0x96d10	20	dxplay	game_22aef0_sub00_96d10	working-label
 0x97790	33	dxplay	game_22ae70_sub00_97790	working-label
 0x98ae0	140	dxplay	game_155ef0_sub00_98ae0	working-label
 0x98b70	110	dxplay	game_155920_sub00_98b70	working-label

@@ -66,6 +66,13 @@ void* CDPlay::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
+// E:\gamedcs\dxplay.cpp:92
+VA(0x00496d10, 0x14)  // anchor-body: stores CDPlay vtable (0x63dc28) + releases m_lpDP ([this+0x2c]->vt[8]); SH4->x86 shrink 0x36->0x14, dc 0x8a0e4
+void CDPlay::~CDPlay()
+{
+    // @stub
+}
+
 // E:\gamedcs\dxplay.cpp:100
 VA(0x00496d30, 0x3A)  // anchor-vtable CDPlay slot1 (Init); calls CoCreateInstance, dc 0x8a11c
 unsigned char CDPlay::Init()
@@ -507,6 +514,20 @@ unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
     // @stub
 }
 
+// E:\gamedcs\array.h:46
+VA(0x00499f00, 0x5B)  // anchor-body: stores CAutoArray vtable (0x63de44) + inlined Destroy loop, no flags param (plain dtor), dc 0x8c148
+void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+VA(0x00499f60, 0x60)  // anchor-body: ret 4 (deleteData param at [ebp+8]) + Destroy loop, no vtable store; called from CreateTCPIPConnection, dc 0x8c180
+void CAutoArray<CDPlayAddressElement>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
 // E:\gamedcs\array.h:95
 VA(0x00499fc0, 0x1D)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot2 (Get), dc 0x8c24c
 CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(unsigned long elementNbr)
@@ -550,13 +571,6 @@ void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __
 // E:\gamedcs\dxplay.cpp:66
 DC_ONLY(0x8a074, 0x70)
 void CDPlay::CDPlay()
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:92
-DC_ONLY(0x8a0e4, 0x36)
-void CDPlay::~CDPlay()
 {
     // @stub
 }
@@ -851,20 +865,6 @@ void CAutoArray<CDPlaySession>::Destroy(unsigned char deleteData)
 // E:\gamedcs\array.h:37
 DC_ONLY(0x8c118, 0x30)
 void CAutoArray<CDPlayAddressElement>::CAutoArray<CDPlayAddressElement>()
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:46
-DC_ONLY(0x8c148, 0x38)
-void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
-{
-    // @stub
-}
-
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8c180, 0x64)
-void CAutoArray<CDPlayAddressElement>::Destroy(unsigned char deleteData)
 {
     // @stub
 }
