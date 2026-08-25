@@ -124,6 +124,9 @@ enum EDPlaySendError {
 // menu and oldmain. Retail bodies also prove the complete base data layout.
 class CDPlay {
 public:
+    friend int PASCAL EnumSession(const DPSESSIONDESC2* session,
+        unsigned long* timeout, unsigned long flags, void* context);
+
     CDPlay();
     virtual ~CDPlay();
     virtual unsigned char Init();
