@@ -581,6 +581,7 @@ rva	size	unit	current_label	provenance
 0x1a8950	2457	spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	src-VA+ir
 0x1a92f0	99	spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	src-VA+ir
 0x1aa390	33	subwindow	??_GTSubWindow@@UAEPAXI@Z	src-VA+base
+0x1afd70	123	swapmgr	game_22b281_sub00_1afd70	working-label
 0x1b3010	33	systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	src-VA+base
 0x1baae0	98	textntry	??1textEntryWidget@@UAE@XZ	src-VA+ir
 0x1bac50	1277	textntry	?OnKeyPress@textEntryWidget@@UAEHPAVmessage@@@Z	src-VA+ir
