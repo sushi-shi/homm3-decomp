@@ -54,6 +54,7 @@ public:
 
 class TBuyArtifactWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TBuyArtifactWindow();
 };
 
