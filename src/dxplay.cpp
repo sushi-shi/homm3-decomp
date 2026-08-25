@@ -3,6 +3,7 @@
 // 124 functions in link order.
 #include <va.h>
 #include "dxplay.h"
+#include "dxplay_records.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -908,6 +909,26 @@ CDPlay::~CDPlay()
 {
     if (m_lpDP)
         m_lpDP->Release();
+}
+
+// E:\gamedcs\dxplay.cpp:654
+VA(0x00497a90, 0x6B)
+unsigned char CDPlay::AddGroupEnum(
+    unsigned long id, const DPNAME* name, unsigned long flags)
+{
+    CDPlayGroup* group = new CDPlayGroup(name->lpszShortNameA, id);
+    m_pGroupArray->Add(group);
+    return 1;
+}
+
+// E:\gamedcs\dxplay.cpp:663
+VA(0x00497b00, 0x6B)
+unsigned char CDPlay::AddPlayerEnum(
+    unsigned long id, const DPNAME* name, unsigned long flags)
+{
+    CDPlayPlayer* player = new CDPlayPlayer(name->lpszShortNameA, id);
+    m_pPlayerArray->Add(player);
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:878 - vtable slot 55.
