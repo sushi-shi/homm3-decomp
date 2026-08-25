@@ -8,6 +8,14 @@
 #define HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 
 #include "slider.h"
+#include "textresource.h"
+
+// The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
+// under /Gr. Declared file-locally rather than pulling resourcemanager.h into
+// singleselectionwindow.cpp's include closure.
+namespace ResourceManager {
+    TTextResource* GetText(const char* name);
+}
 
 // The chat/duration/file-menu slider. DC gives it a `slider` base and a
 // SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
