@@ -880,11 +880,14 @@ dxplay	CDPlayLobby_EnumGroupPlayers	0.0000	0.0000	0.0000	0x99a20
 dxplay	CDPlayLobby_EnumGroupPlayersRemote	0.0000	0.0000	0.0000	0x99aa0
 dxplay	CDPlayLobby_EnumGroupsInGroup	0.0000	0.0000	0.0000	0x999a0
 dxplay	CDPlayLobby_EnumLobbyConnections	0.0000	0.0000	0.0000	0x99900
+dxplay	CDPlayLobby_GetConnectionSettings	0.0000	0.0000	0.0000	0x98ae0
 dxplay	CDPlayLobby_GetGroupConnectionSettings	0.0000	0.0000	0.0000	0x98c50
 dxplay	CDPlayLobby_GetIPAddress	0.0000	0.0000	0.0000	0x99c60
 dxplay	CDPlayLobby_Init	0.0000	0.0000	0.0000	0x98a60
 dxplay	CDPlayLobby_RegisterApp	0.0000	0.0000	0.0000	0x989a0
+dxplay	CDPlayLobby_SetConnectionSettings	0.0000	0.0000	0.0000	0x98be0
 dxplay	CDPlayLobby_SetGroupConnectionSettings	0.0000	0.0000	0.0000	0x98c20
+dxplay	CDPlayLobby_TestLobbied	0.0000	0.0000	0.0000	0x98b70
 dxplay	CDPlayLobby__scalar_deleting_destructor	0.0000	0.0000	0.0000	0x98900
 dxplay	CDPlay_AddConnectionEnum	0.0000	0.0000	0.0000	0x97b70
 dxplay	CDPlay_AddGroupEnum	0.0000	0.0000	0.0000	0x97a90
