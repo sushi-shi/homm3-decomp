@@ -377,21 +377,35 @@ type_event_record_type type_record_erase::get_type()
 {
     return RECORD_ERASE;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:560
 VA(0x0049b190, 0x8B)  // anchor-vtable, dc 0x8d2bc
-unsigned char type_record_erase::load(void* infile)
+unsigned char type_record_erase::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    if (infile->Read(&location, sizeof(location)) != sizeof(location))
+        return 0;
+    if (infile->Read(&object_id, sizeof(object_id)) != sizeof(object_id))
+        return 0;
+    if (infile->Read(&extra_info, sizeof(extra_info)) != sizeof(extra_info))
+        return 0;
+    unsigned char ok = infile->Read(&object_index, sizeof(object_index)) == sizeof(object_index);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:578
 VA(0x0049b220, 0x57)  // anchor-vtable, dc 0x8d338
-unsigned char type_record_erase::save(void* outfile)
+unsigned char type_record_erase::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&location, sizeof(location));
+    outfile->Write(&object_id, sizeof(object_id));
+    outfile->Write(&extra_info, sizeof(extra_info));
+    unsigned char ok = outfile->Write(&object_index, sizeof(object_index)) == sizeof(object_index);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:592
 VA(0x0049b280, 0xEA)  // anchor-vtable, dc 0x8d3c8
