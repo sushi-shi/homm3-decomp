@@ -871,6 +871,7 @@ dxplay	CAutoArray_Put	0.0000	0.0000	0.0000	0x99fe0
 dxplay	CDPlayLobby_AddAddressEnum	0.0000	0.0000	0.0000	0x99bb0
 dxplay	CDPlayLobby_CDPlayLobby	0.0000	0.0000	0.0000	0x98870
 dxplay	CDPlayLobby_CDPlayLobby_98930	0.0000	0.0000	0.0000	0x98930
+dxplay	CDPlayLobby_Connect	0.0000	0.0000	0.0000	0x98cd0
 dxplay	CDPlayLobby_CreateIPXConnection	0.0000	0.0000	0.0000	0x99150
 dxplay	CDPlayLobby_CreateModemConnection	0.0000	0.0000	0.0000	0x994b0
 dxplay	CDPlayLobby_CreateSerialConnection	0.0000	0.0000	0.0000	0x99700
