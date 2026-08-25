@@ -6,6 +6,9 @@
 #include "game.h"
 #include "hero.h"
 
+// swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
+DATA(0x006a3d30) swapManager* gpSwapManager;
+
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\swapmgr.cpp:210
@@ -30,11 +33,33 @@ void TSwapWindow::UpdateArrows()
 }
 
 // E:\gamedcs\swapmgr.cpp:583
-DC_ONLY(0x15c470, 0xC4)
-void swapManager::swapManager(hero* leftHero, hero* rightHero)
+#endif  // @carcass
+VA(0x005ae500, 0xA9)  // anchor-callee ??0baseManager + IsHuman, ret 8, dc 0x15c470
+swapManager::swapManager(hero* leftHero, hero* rightHero)
 {
-    // @stub
+    heroes[0] = leftHero;
+    heroes[1] = rightHero;
+    parent = 0;
+    border = 0;
+    field_48 = -1;
+    field_4c = -1;
+    field_58 = -1;
+    field_50 = -1;
+    field_54 = -1;
+    field_5d = 1;
+    field_5c = 0;
+    if (bVideoPaused
+        && leftHero->owner != rightHero->owner
+        && gpGame->IsHuman(leftHero->owner)
+        && gpGame->IsHuman(rightHero->owner))
+    {
+        field_5c = 1;
+        field_5d = (heroes[0]->owner == gpGame->GetLocalPlayerGamePos());
+    }
+    gpSwapManager = this;
+    field_64 = 0;
 }
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\swapmgr.cpp:617
 DC_ONLY(0x15c534, 0x114)
