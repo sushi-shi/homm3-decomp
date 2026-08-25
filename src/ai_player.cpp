@@ -1305,14 +1305,21 @@ void type_AI_player::purchase_buildings()
 }
 
 // E:\gamedcs\ai_player.cpp:1850
-DC_ONLY(0x310f4, 0x2A2)
+// anchor-callee: orchestrates the creature swapper + purchaser + consolidate -
+// calls do_best_swap, dump_extra_creature, purchaser::set, do_purchase,
+// get_purchase_value and AI_consolidate_army (all claimed). arity ret 8
+// (this+2: hero*, town*); size 674->1095 (1.6). Retail 0x2ba60.
+VA(0x0042ba60, 0x447)  // anchor-callee + arity, dc 0x310f4
 void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1954
-DC_ONLY(0x31398, 0x17C)
+// anchor-callee: calls trade_resources (claimed) to fund the guild. arity ret 8
+// (this+2: hero*, town*); source order after buy_creatures; size 380->391
+// (1.03). Retail 0x2beb0.
+VA(0x0042beb0, 0x187)  // anchor-callee + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
 {
     // @stub
