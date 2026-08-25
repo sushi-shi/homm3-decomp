@@ -222,7 +222,7 @@ DATA(0x006a6c50) static THelpText gSellArtHelpText[5];
 DATA(0x006a7da8) static THelpText gBuyArtHelpText[5];
 DATA(0x006a7e98) static THelpText gSellCreaHelpText[5];
 
-DATA(0x006aaa70) static int gBackpackStart;
+DATA(0x006aaa70) static unsigned char gBackpackStart;
 // The marketplace artifact list. The entry points seed it with a raw byte
 // buffer (gpGame->field_1f664, or DoBlackMarket's char*), and the buy/sell
 // panels then read it as artifact ids. The retail source aliases a char*
