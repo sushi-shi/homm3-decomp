@@ -1234,6 +1234,77 @@ long value_of_custom_item(const hero* current_hero, NewmapCell* cell,
     return item_value;
 }
 
+VA(0x0052a3a0, 0x61)
+int ValueOfPrison(NewmapCell* cell, playerData* player)
+{
+    if (gpCurrentPlayer->numHeroes >= 8)
+        return 0;
+    hero& prisoner = gpGame->heroes[cell->extraInfo];
+    long army_value = prisoner.army.get_AI_value();
+    return static_cast<int>(player->resourceValue[GOLD] * 2500.0
+        + army_value);
+}
+
+const int PYRAMID_SPELL_LEVEL = 5;
+VA(0x0052a410, 0xF5)
+long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
+{
+    short owner = current_hero->owner;
+    if (cell->PlayerKnowsCell(owner) && !cell->pyramid_is_guarded())
+        return 0;
+
+    armyGroup guardians;
+    long value = 0;
+    long count = 0;
+    guardians.Add(0x74, 0x28, -1);
+    guardians.Add(0x75, 0x14, -1);
+
+    if (current_hero->wisdomLevel >= 3) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+            if (akSpellTraits[spell].level == PYRAMID_SPELL_LEVEL) {
+                if (!current_hero->available_spells[spell]) {
+                    long spell_value;
+                    if (current_hero->in_spellbook[spell])
+                        spell_value = 0;
+                    else if (const_cast<hero*>(current_hero)->IsWieldingArtifact(
+                                 ARTIFACT_SPELLBOOK))
+                        spell_value = AI_get_spell_value(current_hero, spell);
+                    else
+                        spell_value = 0;
+                    value += spell_value;
+                }
+                count++;
+            }
+        }
+        value = value / count;
+    }
+
+    return AI_value_of_combat(current_hero, 0, guardians, 0, cell) + value;
+}
+
+VA(0x0052a7c0, 0xA8)
+long ValueOfResource(const hero* current_hero, NewmapCell* cell,
+    playerData* player)
+{
+    long combat_value = 0;
+    long amount;
+    int resource_type = cell->objectIndex;
+    if (!cell->IsCustomized()) {
+        amount = cell->extraInfo;
+    } else {
+        TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+        amount = cell->extraInfo & 0x7ffff;
+        if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies())
+            combat_value = AI_value_of_combat(current_hero, 0,
+                treasure->Guardians, 0, cell);
+    }
+    if (resource_type == GOLD)
+        amount *= 100;
+    return static_cast<long>(static_cast<double>(amount)
+            * player->resourceValue[resource_type]
+        + static_cast<double>(combat_value));
+}
+
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
 // skills.  When the hero either knows both or knows neither, the two
 // appraisals decide and a tie keeps the FIRST offer.  Otherwise exactly
