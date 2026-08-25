@@ -1346,12 +1346,8 @@ void type_AI_creature_swapper::add_creatures(TCreatureType type, short amount, s
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2096
-DC_ONLY(0x3166c, 0x168)
-long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
-{
-    // @stub
-}
+// do_best_swap (dc 0x3166c) promoted to VA(0x0042c280) below, placed in RVA
+// order between add_creatures and dump_extra_creature.
 
 // E:\gamedcs\ai_player.cpp:2171
 DC_ONLY(0x317d4, 0x34)
@@ -2245,6 +2241,22 @@ void type_AI_creature_swapper::add_creatures(
     }
     army->Add(type, amount, slot);
 }
+
+// E:\gamedcs\ai_player.cpp:2096
+// anchor-callee: the swapper's per-swap orchestrator - calls get_alignments,
+// add_creatures and value_of_adding_army (all claimed) and is itself called by
+// buy_creatures (claimed). arity ret 4 (this+1: can_take_all), returns long;
+// do_swap/get_swap_value/calculate_improvement inline into it (they stay
+// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Claimed @stub here so the RVA
+// stays in increasing file order between add_creatures and dump_extra_creature;
+// the DC-order carcass stub was removed to avoid a duplicate row.
+#if 0  // @carcass
+VA(0x0042c280, 0x126)  // anchor-callee + arity, dc 0x3166c
+long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;
