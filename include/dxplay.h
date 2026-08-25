@@ -232,6 +232,10 @@ protected:
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     virtual unsigned char SysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
+public:
+    // The DirectPlay enum trampolines are file-scope callbacks that forward to
+    // these virtuals through the lpContext object; keep them reachable without
+    // reordering (vtable slots 58-61 are unchanged).
     virtual unsigned char AddGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     virtual unsigned char AddPlayerEnum(
@@ -243,7 +247,9 @@ protected:
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
 
-private:
+protected:
+    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
+    // m_isHost and the array pointers directly, exactly as retail does.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods; DPCAPS stays opaque until a retail body needs it.
@@ -313,6 +319,8 @@ public:
 protected:
     virtual unsigned char HandleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
+public:
+    // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char AddAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
