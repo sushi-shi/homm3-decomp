@@ -10,6 +10,7 @@
 #include "textresource.h"
 #include "townmgr.h"
 #include "widget.h"
+#include "message.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -192,8 +193,10 @@ void DoMarketplace()
 // Both are also the two rows the Dreamcast source order puts immediately
 // before DoMarket.
 
+DATA(0x006aaa70) static int gBackpackStart;
 DATA(0x006aaa74) static char* gpMarketArtifacts;
 DATA(0x006aaa78) static hero* gpMarketHero;
+DATA(0x006aaa90) static int gSelectedArtifact;
 DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
@@ -327,11 +330,46 @@ void DoMarket()
 }
 
 // E:\gamedcs\tradpost.cpp:860
-DC_ONLY(0x188bd4, 0xF4)
+#endif  // @carcass
+
+VA(0x005ea5d0, 0x103)
 void TSellArtifactWindow::update_sell_artifact_widget(message* msg, long i)
 {
-    // @stub
+    type_artifact art;
+    if (i < 18) {
+        art = gpMarketHero->equipped[i];
+    } else {
+        long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+        if (numInBackpack < 6)
+            art = gpMarketHero->backpack[i - 18];
+        else
+            art = gpMarketHero->backpack[
+                ((gBackpackStart & 0xff) + i - 18) % numInBackpack];
+    }
+
+    if (art.artifactId == -1) {
+        msg->codeY = i + 0x54;
+    } else {
+        msg->codeX = 5;
+        msg->extra = 2;
+        BroadcastMessage(msg);
+        msg->codeX = 5;
+        msg->codeY = i + 0x54;
+        msg->extra = 6;
+        BroadcastMessage(msg);
+        msg->codeX = 4;
+        msg->extra = art.artifactId;
+    }
+    BroadcastMessage(msg);
+    if (gSelectedArtifact == i)
+        msg->codeX = 5;
+    else
+        msg->codeX = 6;
+    msg->extra = 4;
+    msg->codeY = i + 0x6b;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:905
 DC_ONLY(0x188cc8, 0x38)
