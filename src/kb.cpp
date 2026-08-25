@@ -3,6 +3,7 @@
 // 121 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <stdio.h>
+#include <string.h>
 #include "kb.h"
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
@@ -303,11 +304,34 @@ void game::ShowMoraleInfo(hero* thisHero, int iMBType)
 }
 
 // E:\gamedcs\kb.cpp:3830
-DC_ONLY(0xe3b84, 0x160)
+#endif  // @carcass
+
+VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)
 {
-    // @stub
+    int icon;
+    int luck = thisHero->GetLuck(0, 0, 1);
+
+    if (luck > 0) {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[0]);
+        icon = 11;
+    } else if (luck == 0) {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[1]);
+        icon = 12;
+    } else {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[2]);
+        icon = 13;
+    }
+
+    std::string modifiers = thisHero->get_luck_description();
+    strcat(gText,
+           modifiers.length() == 0 ? gLuckTexts[18] : modifiers.c_str());
+
+    NormalDialog(gText, iMBType, -1, 28, icon, 0,
+                 -1, 0, -1, 0, -1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3867
 // Located by shape + lineage: the carve's "unexpected program

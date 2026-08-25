@@ -2173,7 +2173,7 @@ public:
     // role-derived and PROVISIONAL - no surviving symbol covers either -
     // and the pair is gated to the one compiland that calls them.
     void ShowMoraleInfo(const hero* who, int dialogType);
-    void ShowLuckInfo(const hero* who, int dialogType);
+    void ShowLuckInfo(hero* who, int dialogType);
     // Retail-only 0x49c720. SwapHeroes, hero::Deallocate (0x4d9ec0) and
     // playerData::add_garrison_hero (0x4b9fc0) all prove this
     // three-argument member queues a hero-state record; no surviving name
