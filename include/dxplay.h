@@ -363,7 +363,7 @@ public:
         guidSP = *lpGuid;
         size = connSize;
         pConnection = new unsigned char[connSize];
-        memcpy(pConnection, lpConn, connSize);
+        memcpy(pConnection, lpConn, size);
         strcpy(sName, name);
     }
 

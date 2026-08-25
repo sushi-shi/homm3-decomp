@@ -928,18 +928,19 @@ VA(0x00498cd0, 0xAB)  // anchor-callee IDirectPlayLobby GetConnectionSettings([e
 unsigned char CDPlayLobby::Connect()
 {
     unsigned long dwSize = 0;
-    DPLCONNECTION* pConn = 0;
+    DPLCONNECTION* pConn;
     if (m_lpLobby) {
         m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(0, 0, &dwSize);
         if (dwSize != 0) {
             pConn = static_cast<DPLCONNECTION*>(::operator new(dwSize));
             m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(0, pConn, &dwSize);
-            if (m_hRes < 0) {
-                ::operator delete(pConn);
-                pConn = 0;
-            }
+            if (m_hRes >= 0)
+                goto have_conn;
+            ::operator delete(pConn);
         }
     }
+    pConn = 0;
+have_conn:
     if (pConn->dwFlags & DPLAY_CONNECTION_CREATE_SESSION)
         m_isHost = 1;
     else

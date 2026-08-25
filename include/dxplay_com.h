@@ -45,7 +45,7 @@ public:
         m_guid = *lpGuid;
         m_dataSize = dataSize;
         m_pData = new char[dataSize];
-        memcpy(m_pData, pData, dataSize);
+        memcpy(m_pData, pData, m_dataSize);
     }
 
     ~CDPlayAddressElement()
