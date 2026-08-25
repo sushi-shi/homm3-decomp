@@ -16,6 +16,11 @@
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
 
+// Selector display mode (bss 0x6a3d08, adjacent to gpSwapManager): Reset clears it,
+// DrawSelector dispatches on 0/1/other. All image-wide references sit inside
+// swapmgr's bracket, so this compiland owns it (townmgr's gUnnamed6aaa50 precedent).
+DATA(0x006a3d08) static int gUnnamed6a3d08;
+
 #if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:210
@@ -82,14 +87,58 @@ swapManager::swapManager(hero* leftHero, hero* rightHero)
     field_64 = 0;
 }
 
-#if 0  // @carcass -- located, not reconstructed (RVA order)
-
 // E:\gamedcs\swapmgr.cpp:617
+// Residual (~70%): the four morale/luck clamps to [-3,3]. Message build and the
+// five selection resets are byte-exact and the constant 3 CSEs into ebx as retail
+// does. The remainder is a register-homing residual: retail keeps the GetMorale/
+// GetLuck result live in eax across BOTH clamp comparisons and computes the low
+// bound's address lazily inside the taken branch (`jge; lea &lo; jmp`), so the min
+// step reads `cmp eax,3` directly; our CL computes `lea &lo` eagerly and reloads
+// the max reference (`cmp [eax],3`). Tried and rejected: by-value _cpp_min/_cpp_max
+// (CSEs -3 not 3), std::_cpp_min/_cpp_max (this spelling), block-scoped named locals.
 VA(0x005ae5b0, 0x19B)  // corroborates 5x -1 selection init at +0x48..+0x58, ret 0, dc 0x15c534
 void swapManager::Reset()
 {
-    // @stub
+    field_54 = -1;
+    field_50 = -1;
+    field_58 = -1;
+    field_4c = -1;
+    field_48 = -1;
+    gUnnamed6a3d08 = 0;
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 5;
+    msg.extra = 0x1000;
+    msg.codeY = 0x67;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x68;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = 4;
+    msg.codeY = 0x6b;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[0]->GetMorale(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6c;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[1]->GetMorale(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6d;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[0]->GetLuck(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = 0x6e;
+    msg.extra = std::_cpp_min(std::_cpp_max(heroes[1]->GetLuck(0, 0, 1), -3), 3) + 3;
+    parent->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:665
 VA(0x005ae750, 0x3A2)  // anchor-callee AddWindow/DisableButtons/CNetMsgHandler + tradesel.pcx, ret 4, dc 0x15c66c
