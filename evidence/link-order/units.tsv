@@ -58,6 +58,7 @@ hiscore	0xe8fb0	0xe9e41	3729	13	0	16	13	3
 iconwdgt	0xea720	0xeb33d	3101	10	0	11	10	1
 initialize	0xebb10	0xebce9	473	3	0	3	3	0
 inputmgr	0xec0e0	0xeccca	3050	10	0	12	10	2
+kb	0xed230	0xf42b7	28807	21	0	41	21	20
 kbwin	0xf7a30	0xf8490	2656	12	0	12	12	0
 levelupwindow	0xf8880	0xf9bc0	4928	3	0	4	3	1
 lodfile	0xfa610	0xfa655	69	1	0	1	1	0
