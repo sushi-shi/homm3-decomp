@@ -681,14 +681,51 @@ void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightReso
     // block-scoped leftArtifact (no change).
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2250
+// The left column is the hero's army; the exchange is the resource's market
+// value over the creature's gold cost scaled by efficiency. When each creature
+// buys at least one unit of the resource the ratio is left-denominated; below
+// that it inverts to units-per-resource. The tradeable count is the stack size
+// (less one when it is the hero's only army) divided by the ratio.
 VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
 void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
-    // @stub
+    float denominator = static_cast<float>(akCreatureTypeTraits[
+                            gpMarketHero->army.armies[inLeftResource]].cost[6])
+                      * fCreatureSaleEfficency[gMarketCount];
+    float ratio = static_cast<float>(gMarketValues[inRightResource]) / denominator;
+    if (ratio >= 1.0f) {
+        *bInLeftDenominated = 0;
+        *iInTradeRatio = static_cast<long>(ratio + 0.5);
+        if (gpMarketHero->army.GetNumArmies() == 1)
+            *iInMaxUnitsToTrade =
+                (gpMarketHero->army.numTroops[inLeftResource] - 1) / *iInTradeRatio;
+        else
+            *iInMaxUnitsToTrade =
+                gpMarketHero->army.numTroops[inLeftResource] / *iInTradeRatio;
+    } else {
+        *bInLeftDenominated = 1;
+        if (ratio == 0.0f) {
+            *iInTradeRatio = 0;
+            *iInMaxUnitsToTrade = 0;
+        } else {
+            *iInTradeRatio = static_cast<long>(1.0f / ratio + 0.5);
+            if (gpMarketHero->army.GetNumArmies() == 1)
+                *iInMaxUnitsToTrade =
+                    gpMarketHero->army.numTroops[inLeftResource] - 1;
+            else
+                *iInMaxUnitsToTrade =
+                    gpMarketHero->army.numTroops[inLeftResource];
+        }
+    }
+    // Residual (97.60%): the inverted (ratio < 1) arm allocates its throwaway
+    // pointer/scratch registers as edx/eax/ecx where retail rotates ecx/edx/eax
+    // (retail compares the GetNumArmies result in place before reusing eax for
+    // the hero reload; the denominated arm's idiv pins iInTradeRatio in esi and
+    // matches exactly). A register wall - the float math and control flow agree.
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:2368
 VA(0x005ecfe0, 0x3ba)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
