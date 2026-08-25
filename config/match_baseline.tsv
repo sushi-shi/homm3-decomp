@@ -1672,6 +1672,9 @@ mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333	82.9333	82.93
 mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x10d5b0
 mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x10da20
 mousemgr	?Update@mouseManager@@QAEXE@Z	94.1675	94.1675	94.1675	0x10cd90
+multiplayerwindow	??0CHotSeatDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x111e20
+multiplayerwindow	??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x110760
+multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x110060
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
 multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
