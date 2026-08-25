@@ -894,7 +894,9 @@ dxplay	?EnumGroupsCallback@@YGHKKPBUDPNAME@@KPAX@Z	100.0000	100.0000	100.0000	0x
 dxplay	?EnumPlayersCallback@@YGHKKPBUDPNAME@@KPAX@Z	100.0000	100.0000	100.0000	0x99ed0
 dxplay	?EnumSession@@YGHPBUDPSESSIONDESC2@@PAKKPAX@Z	100.0000	100.0000	100.0000	0x99e50
 dxplay	?GetCaps@CDPlay@@UAEEPAUDPCAPS@@E@Z	100.0000	100.0000	100.0000	0x987a0
+dxplay	?GetConnectionSettings@CDPlayLobby@@QAEPAUDPLCONNECTION@@KPAK@Z	100.0000	100.0000	100.0000	0x98ae0
 dxplay	?GetCurrSession@CDPlay@@UAEPAUDPSESSIONDESC2@@XZ	78.8235	78.8235	78.8235	0x96f20
+dxplay	?GetGroupConnectionSettings@CDPlayLobby@@UAEPAUDPLCONNECTION@@K@Z	100.0000	100.0000	100.0000	0x98c50
 dxplay	?GetGroupData@CDPlay@@UAEPAXKPAKK@Z	100.0000	100.0000	100.0000	0x983f0
 dxplay	?GetGuid@CDPlay@@UAEPAU_GUID@@XZ	100.0000	100.0000	100.0000	0x96ca0
 dxplay	?GetPlayerAddress@CDPlay@@UAEPAEKPAK@Z	100.0000	100.0000	100.0000	0x98710
@@ -906,6 +908,8 @@ dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?ReceiveMsg@CDPlay@@MAEEKKPAVCDPlayMsg@@@Z	100.0000	100.0000	100.0000	0x96cc0
 dxplay	?Send@CDPlay@@UAEEPAXKKKE@Z	100.0000	100.0000	100.0000	0x97560
 dxplay	?SendChat@CDPlay@@UAEEPADKK@Z	100.0000	100.0000	100.0000	0x97500
+dxplay	?SetConnectionSettings@CDPlayLobby@@QAEEKPAUDPLCONNECTION@@@Z	100.0000	100.0000	100.0000	0x98be0
+dxplay	?SetGroupConnectionSettings@CDPlayLobby@@UAEEKPAUDPLCONNECTION@@@Z	100.0000	100.0000	100.0000	0x98c20
 dxplay	?SetGroupData@CDPlay@@UAEEKPAXKK@Z	100.0000	100.0000	100.0000	0x983c0
 dxplay	?SetGroupName@CDPlay@@UAEEKPAD0K@Z	100.0000	100.0000	100.0000	0x984b0
 dxplay	?SetGuid@CDPlay@@UAEXU_GUID@@@Z	100.0000	100.0000	100.0000	0x96c70
@@ -934,13 +938,9 @@ dxplay	CDPlayLobby_EnumGroupPlayers	0.0000	0.0000	0.0000	0x99a20
 dxplay	CDPlayLobby_EnumGroupPlayersRemote	0.0000	0.0000	0.0000	0x99aa0
 dxplay	CDPlayLobby_EnumGroupsInGroup	0.0000	0.0000	0.0000	0x999a0
 dxplay	CDPlayLobby_EnumLobbyConnections	0.0000	0.0000	0.0000	0x99900
-dxplay	CDPlayLobby_GetConnectionSettings	0.0000	0.0000	0.0000	0x98ae0
-dxplay	CDPlayLobby_GetGroupConnectionSettings	0.0000	0.0000	0.0000	0x98c50
 dxplay	CDPlayLobby_GetIPAddress	0.0000	0.0000	0.0000	0x99c60
 dxplay	CDPlayLobby_Init	0.0000	0.0000	0.0000	0x98a60
 dxplay	CDPlayLobby_RegisterApp	0.0000	0.0000	0.0000	0x989a0
-dxplay	CDPlayLobby_SetConnectionSettings	0.0000	0.0000	0.0000	0x98be0
-dxplay	CDPlayLobby_SetGroupConnectionSettings	0.0000	0.0000	0.0000	0x98c20
 dxplay	CDPlayLobby_TestLobbied	0.0000	0.0000	0.0000	0x98b70
 dxplay	CDPlayLobby__scalar_deleting_destructor	0.0000	0.0000	0.0000	0x98900
 dxplay	CDPlay_AddConnectionEnum	0.0000	0.0000	0.0000	0x97b70

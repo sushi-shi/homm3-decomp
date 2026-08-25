@@ -96,4 +96,27 @@ struct IDirectPlay4A {
     virtual long __stdcall GetMessageQueue(unsigned long idFrom, unsigned long idTo, unsigned long dwFlags, unsigned long* lpdwNumMsgs, unsigned long* lpdwNumBytes) = 0; // 0xc8
 };
 
+// IDirectPlayLobby3A - the lobby object at CDPlayLobby::m_lpLobby (+0x58).
+struct IDirectPlayLobby3A {
+    virtual long __stdcall QueryInterface(const GUID& riid, void** ppv) = 0;                 // 0x00
+    virtual unsigned long __stdcall AddRef() = 0;                                            // 0x04
+    virtual unsigned long __stdcall Release() = 0;                                           // 0x08
+    virtual long __stdcall Connect(unsigned long dwFlags, void** lplpDP, void* pUnk) = 0;    // 0x0c
+    virtual long __stdcall CreateAddress(const GUID& guidSP, const GUID& guidDataType, const void* lpData, unsigned long dwDataSize, void* lpAddress, unsigned long* lpdwAddressSize) = 0; // 0x10
+    virtual long __stdcall EnumAddress(void* lpEnumAddressCallback, const void* lpAddress, unsigned long dwAddressSize, void* lpContext) = 0; // 0x14
+    virtual long __stdcall EnumAddressTypes(void* lpCallback, const GUID& guidSP, void* lpContext, unsigned long dwFlags) = 0; // 0x18
+    virtual long __stdcall EnumLocalApplications(void* lpCallback, void* lpContext, unsigned long dwFlags) = 0; // 0x1c
+    virtual long __stdcall GetConnectionSettings(unsigned long dwAppID, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x20
+    virtual long __stdcall ReceiveLobbyMessage(unsigned long dwFlags, unsigned long dwAppID, unsigned long* lpdwMessageFlags, void* lpData, unsigned long* lpdwDataSize) = 0; // 0x24
+    virtual long __stdcall RunApplication(unsigned long dwFlags, unsigned long* lpdwAppID, void* lpConn, void* hReceiveEvent) = 0; // 0x28
+    virtual long __stdcall SendLobbyMessage(unsigned long dwFlags, unsigned long dwAppID, void* lpData, unsigned long dwDataSize) = 0; // 0x2c
+    virtual long __stdcall SetConnectionSettings(unsigned long dwFlags, unsigned long dwAppID, void* lpConn) = 0; // 0x30
+    virtual long __stdcall SetLobbyMessageEvent(unsigned long dwFlags, unsigned long dwAppID, void* hReceiveEvent) = 0; // 0x34
+    virtual long __stdcall CreateCompoundAddress(const void* lpElements, unsigned long dwElementCount, void* lpAddress, unsigned long* lpdwAddressSize) = 0; // 0x38
+    virtual long __stdcall ConnectEx(unsigned long dwFlags, const GUID& riid, void** lplpDP, void* pUnk) = 0; // 0x3c
+    virtual long __stdcall RegisterApplication(unsigned long dwFlags, void* lpAppDesc) = 0;  // 0x40
+    virtual long __stdcall UnregisterApplication(unsigned long dwFlags, const GUID& guidApplication) = 0; // 0x44
+    virtual long __stdcall WaitForConnectionSettings(unsigned long dwFlags) = 0;             // 0x48
+};
+
 #endif  /* HOMM3_DXPLAY_COM_H */
