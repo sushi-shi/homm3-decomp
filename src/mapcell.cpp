@@ -39,6 +39,7 @@
 #include "csprite.h"
 #include "advmgr.h"
 #include "game.h"
+#include "mapcell_newmap_view.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -5789,17 +5790,26 @@ void NewfullMap::NewfullMapFn_00505D20()
     // @stub
 }
 
-// 0x505d60 broadcasts virtual slot +0x28 across mapObjectData with a
-// (type_point, int) pair; game.h declares it as
-// NewfullMapFn_00505D60(type_point, int).  Reconstructable from this TU via a
-// mapcell-private CMapObjectData vtable view - kept @stub here pending that
-// header; not blocked on a shared header.
+#endif  // @carcass
+
+// 0x505d60 (declared game.h:461) broadcasts virtual slot +0x28 across the
+// mapObjectData vector (+0xb0), handing every record a (point, player) pair.
+// The loop re-reads _First/_Last each pass, the same std::vector broadcast
+// shape ~NewfullMap emits for `sprites[i]->Dispose()` above.  The +0x28 call
+// dispatches through a mapcell-private CMapObjectData vtable view
+// (mapcell_newmap_view.h), since game.h's shared view declares that slot
+// nullary.  Reached only from events.cpp's monsters_flee/join/sell_out
+// (0x4a6eda/0x4a70ee/0x4a7444) and DoCombat.  Not in the DC mapcell.cpp
+// roster (DC inlined it); retail-only body.
 VA(0x00505d60, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x28 to every record, retail-only (DC-inlined)
-void NewfullMap::NewfullMapFn_00505D60()
+void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
 {
-    // @stub
+    for (unsigned int i = 0; i < mapObjectData.size(); ++i)
+        static_cast<CMapObjectDataMapcellView*>(mapObjectData[i])
+            ->BroadcastToRecord(point, player);
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
 // The objects.txt object-type loader at 0x505da0, run once from startup
 // (LoadMenu/WinMain path) to populate NewfullMap::objectTypeIndex: `this`
 // reaches the same +0xdc array (`lea ecx,[esi+edx+0xdc]` /
@@ -5853,6 +5863,10 @@ CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
 // _Nullstr) are cosmetic cross-TU unclaimed STL COMDATs and do not score.
 // Tried and rejected: a `candidate` reference (reschedules the loop body, -3);
 // swapping the extra-compare operands (moves the cmp, not the schedule).
+// The baseline hist 100.0000 above this max is an objdiff target-padding-span
+// / delink-generation artifact recorded by a transitional --fast; the settled
+// build->delink->build value is 99.9771 and the frame-slot delta is real
+// bytes, so 99.9771 is the honest number - do not chase the 100.
 VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
 void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
                                        int objectIndex, int terrain)
