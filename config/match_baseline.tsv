@@ -2393,13 +2393,13 @@ singleselectionwindow	?InitializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?InitializeTurnDurationText@@YIEXZ	100.0000	100.0000	100.0000	0x177ab0
 singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a50
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
+singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	73.4823	73.4823	73.4823	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	CChatWidget_Draw	0.0000	0.0000	0.0000	0x17ca90
 singleselectionwindow	CEnterNameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17cdc0
 singleselectionwindow	CEnterNameEdit_OnKillFocus	0.0000	0.0000	0.0000	0x17cee0
 singleselectionwindow	CHostWaitDlg_handle_message	0.0000	0.0000	0.0000	0x1891b0
-singleselectionwindow	CNetPlayerHandler_SetNextPlayer	0.0000	0.0000	0.0000	0x177ae0
 singleselectionwindow	CSaveGameEdit_IgnoreKey	0.0000	0.0000	0.0000	0x17cfe0
 singleselectionwindow	CSaveGameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17d0b0
 singleselectionwindow	CSingleSelectionNetMsgHandler_CheckHandleNet	0.0000	0.0000	0.0000	0x18e310

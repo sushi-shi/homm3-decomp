@@ -211,14 +211,59 @@ void CNetPlayerHandler::CNetPlayerHandler()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1020
 VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes handler turn-state fields 0x7c0/0x7c8/0x7cc, dc 0x1304a8
+// Residual (73.5%): register-homing wall. Every block, branch, both scans and
+// all field writes match retail; the delta is the 3-callee-saved assignment.
+// Retail keeps pos in ebx (loaded once, `cmp [edx],ebx` direct memory compare)
+// with the candidate in esi and the -1 constant in edi, and shares eax across
+// BOTH loops; our CL homes pos in esi (materializing [edx] into edi to compare)
+// and re-reads [ebp+8] once esi is clobbered by the second loop, permuting
+// esi/edi/ebx. Order sweeps do not move it (documented register-homing class).
 unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 {
-    // @stub
-}
+    CNetPlayerHandlerPlayer* pCurrent = GetPlayerInPos(pos);
 
-#endif  // @carcass
+    int nextPos = 0;
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (humanPlayers[i].dpid != 0 && humanPlayers[i].playerPos == -1) {
+            nextPos = i;
+            break;
+        }
+    }
+
+    if (pCurrent) {
+        nextPos = pCurrent->color + 1;
+        pCurrent->playerPos = -1;
+    }
+
+    if (pos != playerPos) {
+        playerPos = pos;
+        unused = -1;
+        assignedPos = -1;
+    } else if (assignedPos != -1) {
+        pCurrent->playerPos = assignedPos;
+        assignedPos = -1;
+    }
+
+    if (nextPos >= MAX_PLAYERS) {
+        pCurrent->playerPos = -1;
+        return 1;
+    }
+
+    for (int j = nextPos; j < MAX_PLAYERS; ++j) {
+        if (humanPlayers[j].dpid != 0) {
+            assignedPos = humanPlayers[j].playerPos;
+            humanPlayers[j].playerPos = pos;
+            humanPlayers[j].heroIndex = -1;
+            humanPlayers[j].townIndex = -1;
+            break;
+        }
+    }
+    return 1;
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:1078
 VA(0x00577bb0, 0x2f)  // arity ret4; scans field [slot+0x70]==pos over 8 stride-0x7c slots, returns slot* (no computer filter), dc 0x130604
