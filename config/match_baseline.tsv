@@ -249,6 +249,17 @@ ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
+ai_player	AI_build_ship	0.0000	0.0000	0.0000	0x30f80
+ai_player	AI_get_value_of_artifact	0.0000	0.0000	0.0000	0x336c0
+ai_player	AI_swap_artifacts	0.0000	0.0000	0.0000	0x33fe0
+ai_player	attempt_step	0.0000	0.0000	0.0000	0x2fc50
+ai_player	consider_hiring	0.0000	0.0000	0.0000	0x31800
+ai_player	find_all_destinations	0.0000	0.0000	0.0000	0x2edd0
+ai_player	get_full_value	0.0000	0.0000	0.0000	0x33c60
+ai_player	mark_danger_zones	0.0000	0.0000	0.0000	0x2de50
+ai_player	mark_destinations	0.0000	0.0000	0.0000	0x2f570
+ai_player	net_value_of_location	0.0000	0.0000	0.0000	0x2f980
+ai_player	split_armies	0.0000	0.0000	0.0000	0x2db20
 ai_player	type_AI_creature_swapper_do_best_swap	0.0000	0.0000	0.0000	0x2c280
 ai_player	type_AI_player_build_markets	0.0000	0.0000	0.0000	0x2ab40
 ai_player	type_AI_player_buy_creatures	0.0000	0.0000	0.0000	0x2ba60

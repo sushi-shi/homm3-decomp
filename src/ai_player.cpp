@@ -1468,12 +1468,7 @@ long split_army(armyGroup* current_army, short index, short limit, short open_sl
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2817
-DC_ONLY(0x32670, 0x1EC)
-void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
-{
-    // @stub
-}
+// split_armies (dc 0x32670) promoted to VA(0x0042db20) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:2952
 DC_ONLY(0x3285c, 0x36)
@@ -1482,12 +1477,7 @@ void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, cons
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2975
-DC_ONLY(0x32894, 0x164)
-void mark_danger_zones(const hero* our_hero, hero* enemy_hero, long* danger_zones)
-{
-    // @stub
-}
+// mark_danger_zones (dc 0x32894) promoted to VA(0x0042de50) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3013
 DC_ONLY(0x329f8, 0x8A)
@@ -1496,12 +1486,7 @@ void AI_mark_danger_zones(hero* current_hero, long* danger_zones)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3044
-DC_ONLY(0x32a84, 0x3AC)
-long mark_destinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
-{
-    // @stub
-}
+// mark_destinations (dc 0x32a84) promoted to VA(0x0042f570) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3164
 DC_ONLY(0x32e30, 0x208)
@@ -1510,12 +1495,7 @@ void check_holy_grail(const hero* current_hero, const searchArray* search_array,
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3225
-DC_ONLY(0x33038, 0x3CA)
-long find_all_destinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
-{
-    // @stub
-}
+// find_all_destinations (dc 0x33038) promoted to VA(0x0042edd0) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3390
 DC_ONLY(0x33404, 0x450)
@@ -1524,12 +1504,7 @@ void mark_strategic_map(hero* current_hero, long* strategic_map, std::vector<Her
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3498
-DC_ONLY(0x33854, 0x1F6)
-int net_value_of_location(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
-{
-    // @stub
-}
+// net_value_of_location (dc 0x33854) promoted to VA(0x0042f980) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3573
 DC_ONLY(0x33a4c, 0x2AC)
@@ -1552,12 +1527,7 @@ void ConsiderHidingMouse(hero* current_hero, int direction)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3832
-DC_ONLY(0x341f4, 0x1CE)
-unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
-{
-    // @stub
-}
+// attempt_step (dc 0x341f4) promoted to VA(0x0042fc50) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3910
 DC_ONLY(0x343c4, 0x142)
@@ -1608,12 +1578,7 @@ long total_artifact_value(hero* candidate, long player_id)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:4476
-DC_ONLY(0x354bc, 0x32E)
-unsigned char consider_hiring(long player_id, hero* candidate)
-{
-    // @stub
-}
+// consider_hiring (dc 0x354bc) promoted to VA(0x00431800) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:4565
 DC_ONLY(0x357ec, 0x9C)
@@ -1629,12 +1594,7 @@ unsigned char get_map_shipyard(const playerData* player, long x, long y, long z)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:4607
-DC_ONLY(0x35910, 0xFE)
-void AI_build_ship(const hero* our_hero, long x, long y, long z)
-{
-    // @stub
-}
+// AI_build_ship (dc 0x35910) promoted to VA(0x00430f80) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:4643
 DC_ONLY(0x35a10, 0xB6)
@@ -1930,12 +1890,7 @@ long type_creature_growth_artifact::get_value(const hero* owner, unsigned char e
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5557
-DC_ONLY(0x37194, 0x2D0)
-long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
+// AI_get_value_of_artifact (dc 0x37194) promoted to VA(0x004336c0) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:5643
 DC_ONLY(0x37464, 0xAE)
@@ -1951,12 +1906,7 @@ long AI_get_value_of_artifact(const type_artifact* artifact, long player_id)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5708
-DC_ONLY(0x37588, 0x266)
-long get_full_value(const hero* our_hero)
-{
-    // @stub
-}
+// get_full_value (dc 0x37588) promoted to VA(0x00433c60) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:5792
 DC_ONLY(0x377f0, 0xA8)
@@ -1979,12 +1929,7 @@ void AI_equip_artifacts(hero* our_hero)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5967
-DC_ONLY(0x37acc, 0xEE)
-void AI_swap_artifacts(hero* source, hero* dest)
-{
-    // @stub
-}
+// AI_swap_artifacts (dc 0x37acc) promoted to VA(0x00433fe0) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:6012
 DC_ONLY(0x37bbc, 0x7A)
@@ -2757,6 +2702,30 @@ void AI_consolidate_army(armyGroup* current_army)
     AI_consolidate_army_impl(current_army);
 }
 
+// Callee-fingerprint locates (ai_player is RVA-scrambled; join against
+// evidence/dc-xref-graph.tsv). split_armies: retail 0x2db20 calls
+// armyGroup::GetNumArmies + hero::get_combat_value_modifier - the latter shared
+// with only get_full_value (0x33c60), so split_armies takes 0x2db20 by
+// elimination; r=0.92. mark_danger_zones: retail 0x2de50 is the ONLY row calling
+// AI_value_of_combat and mark_danger_zones the only ai_player fn calling it
+// (unique-callee proof), corroborated by CheckDoMain + hero::GetMobility. Claimed
+// @stub in RVA order so the va-claims ORDER gate holds; sizes carve-exact.
+#if 0  // @carcass
+// E:\gamedcs\ai_player.cpp:2817
+VA(0x0042db20, 0x249)  // anchor-callee + arity, dc 0x32670
+void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:2975
+VA(0x0042de50, 0x25c)  // anchor-callee unique (AI_value_of_combat), dc 0x32894
+void mark_danger_zones(const hero* our_hero, hero* enemy_hero, long* danger_zones)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\findpath.h:270
 VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
 long searchArray::get_danger_value(type_point point) const
@@ -2805,6 +2774,91 @@ NewmapCell* game::get_cell(type_point point)
     return &worldMap.cellData[(point.z * worldMap.Size + point.y) * worldMap.Size
                               + point.x];
 }
+
+// The nine functions below are located by the callee-fingerprint join against
+// evidence/dc-xref-graph.tsv: for each retail carve row the cross-unit resolved
+// calls (homm3 sema disasm) form a set that matches a unique ai_player DC
+// callee-set through the RVA scramble. Reciprocal-best pairs; sizes carve-exact
+// from config/retail-functions.tsv; claimed @stub in RVA order (ORDER gate).
+//   0x2edd0 find_all_destinations - 7 shared (game::GetTownId, CheckDoMain,
+//           AI_value_of_event, hero::is_in_patrol_radius, ...), marginR=12.
+//   0x2f570 mark_destinations - searchArray ctor/dtor + is_in_patrol_radius +
+//           type_point::is_valid (6 shared), marginD=7, r=1.10.
+//   0x2f980 net_value_of_location - Random + advManager::FindAdjacentMonster
+//           are each unique to this fn in both dc-xref and retail (proof).
+//   0x2fc50 attempt_step - NewmapCell::cell_is_trigger, ::get_map_object and
+//           hero::can_summon_boat are all unique-callee proofs.
+//   0x30f80 AI_build_ship - game::CreateBoat + hero::belongs_to_human unique.
+//   0x31800 consider_hiring - town::hire unique + 5 more (searchArray, town::*).
+//   0x336c0 AI_get_value_of_artifact - hero::GetFirstAidFactor unique.
+//   0x33c60 get_full_value - armyGroup::GetArmyLuck/GetArmyMorale and
+//           type_spellvalue::get_best_spell_value all unique to this fn.
+//   0x33fe0 AI_swap_artifacts - 4 backpack callees (equip/remove_artifact,
+//           get_last_backpack_index, remove_backpack_artifact), r=1.03.
+#if 0  // @carcass
+// E:\gamedcs\ai_player.cpp:3225
+VA(0x0042edd0, 0x79b)  // anchor-callee + arity, dc 0x33038
+long find_all_destinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:3044
+VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
+long mark_destinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:3498
+VA(0x0042f980, 0x2c9)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
+int net_value_of_location(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:3832
+VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc 0x341f4
+unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:4607
+VA(0x00430f80, 0x1d2)  // anchor-callee unique (game::CreateBoat), dc 0x35910
+void AI_build_ship(const hero* our_hero, long x, long y, long z)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:4476
+VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
+unsigned char consider_hiring(long player_id, hero* candidate)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5557
+VA(0x004336c0, 0x320)  // anchor-callee unique (hero::GetFirstAidFactor), dc 0x37194
+long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5708
+VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588
+long get_full_value(const hero* our_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5967
+VA(0x00433fe0, 0xf5)  // anchor-callee + arity, dc 0x37acc
+void AI_swap_artifacts(hero* source, hero* dest)
+{
+    // @stub
+}
+#endif  // @carcass
 
 #if 0  // @carcass
 
