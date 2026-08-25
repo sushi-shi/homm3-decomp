@@ -84,26 +84,61 @@ unsigned char HasRandomHero(int gamePos)
     // @stub
 }
 
+#endif  // @carcass
+
+// The three game-selection description tables: each caches a fixed-count
+// prefix of a text resource into a flat char*[] the info panels index. The
+// copy loop mirrors events.obj's InitializeArtifactEventText - the induction
+// variable runs the byte offset from 4 and stores through (array - 4), and
+// retail reloads Text._First every iteration because the store could alias
+// it. Array base = store displacement + 4 (the events precedent).
+DATA(0x0069fc28) static TTextResource* gpVictoryConditionText;
+DATA(0x0069fb70) static char* gVictoryConditionDesc[14];
+DATA(0x0069fbf4) static TTextResource* gpLossConditionText;
+DATA(0x0069fc18) static char* gLossConditionDesc[4];
+DATA(0x0069fb14) static TTextResource* gpTurnDurationText;
+DATA(0x0069fb44) static char* gTurnDurationText[11];
+
 // E:\gamedcs\singleselectionwindow.cpp:821
 VA(0x00577a50, 0x30)  // anchor-callee ResourceManager::GetText + vcdesc resource key (data_2834ac) + 0x38-byte copy loop, ret0, dc 0x12ff40
 unsigned char InitializeVCDescriptions()
 {
-    // @stub
+    gpVictoryConditionText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834ac, victoryConditionTextName, "vcdesc.txt"));
+    if (!gpVictoryConditionText)
+        return 0;
+    for (int i = 0; i < 14; i++)
+        gVictoryConditionDesc[i] = gpVictoryConditionText->Text[i];
+    return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:841
 VA(0x00577a80, 0x30)  // anchor-callee ResourceManager::GetText + lcdesc resource key (data_2834b8) + 0x10-byte copy loop, ret0, dc 0x12ffa4
 unsigned char InitializeLCDescriptions()
 {
-    // @stub
+    gpLossConditionText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834b8, lossConditionTextName, "lcdesc.txt"));
+    if (!gpLossConditionText)
+        return 0;
+    for (int i = 0; i < 4; i++)
+        gLossConditionDesc[i] = gpLossConditionText->Text[i];
+    return 1;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:867
 VA(0x00577ab0, 0x30)  // anchor-callee ResourceManager::GetText + turndur resource key (data_2834c4) + 0x2c-byte copy loop, ret0, dc 0x130008
 unsigned char InitializeTurnDurationText()
 {
-    // @stub
+    gpTurnDurationText = ResourceManager::GetText(
+        DATA_COMPGEN(0x006834c4, turnDurationTextName, "turndur.txt"));
+    if (!gpTurnDurationText)
+        return 0;
+    for (int i = 0; i < 11; i++)
+        gTurnDurationText[i] = gpTurnDurationText->Text[i];
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:890
 DC_ONLY(0x13006c, 0x22)
