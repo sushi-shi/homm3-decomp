@@ -161,19 +161,32 @@ type_event_record_type type_record_claim_mine::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:263
 VA(0x0049aa70, 0x71)  // anchor-vtable, dc 0x8cbb4
-unsigned char type_record_claim_mine::load(void* infile)
+unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    if (infile->Read(&id, sizeof(id)) != sizeof(id))
+        return 0;
+    if (infile->Read(&previous_owner, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&owner, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:279
 VA(0x0049aaf0, 0x4A)  // anchor-vtable, dc 0x8cc1c
-unsigned char type_record_claim_mine::save(void* outfile)
+unsigned char type_record_claim_mine::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&id, sizeof(id));
+    outfile->Write(&previous_owner, 1);
+    unsigned char ok = outfile->Write(&owner, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:292
 VA(0x0049ab40, 0x74)  // anchor-vtable, dc 0x8cc6c

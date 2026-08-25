@@ -50,6 +50,27 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
 };
 
+// Mine ownership change. load reads id(+8), previous_owner(+0xd), owner(+0xc)
+// in that order (byte-proven from the load/save bodies at 0x49aa70/0x49aaf0);
+// replay passes owner(+0xc) to game::ClaimMine, undo restores previous_owner
+// (+0xd) into the mine-owner plane at gpGame+0x4e38c.
+class type_record_claim_mine : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int id;                      // +0x08
+    signed char owner;           // +0x0c - new owner (replay target)
+    signed char previous_owner;  // +0x0d - owner before the claim (undo target)
+};
+
+// Town ownership change. Same layout and inherited load/save as claim_mine;
+// only get_type/replay/undo differ (town-owner plane is gpGame->towns[id]).
+class type_record_claim_town : public type_record_claim_mine {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
 class type_record_hide_boat : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
