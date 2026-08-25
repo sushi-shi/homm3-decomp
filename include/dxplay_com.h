@@ -4,6 +4,12 @@
 // COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
 #include "dxplay.h"
 
+// DirectPlay HRESULTs the wrapper bodies branch on. The two-call Get* pattern
+// probes with a null buffer and expects DPERR_BUFFERTOOSMALL before allocating.
+enum EDPlayResult {
+    DPERR_BUFFERTOOSMALL = 0x8877001e
+};
+
 // DirectPlay value structures consumed only by this TU's wrapper bodies. The
 // DPCAPS extent (0x28) is fixed by GetCaps's memset; DPCHAT (0xc) by SendChat.
 struct DPCAPS {

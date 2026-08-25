@@ -111,15 +111,33 @@ unsigned char CDPlay::JoinSession(_GUID* lpSessionGuid, char* pPassword)
     // @stub
 }
 
+#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:212
+// Residual (78.8%): retail defers the edi push into the alloc block AND merges
+// the success/fail exits (delete; buf=0; return buf) into one tail while the
+// early NULL returns share a separate no-edi tail. The merged-return spelling
+// pushes edi at the prologue (61.2%); the early-return-buf spelling below gets
+// the deferred push but a split tail. The two are coupled (register-homing /
+// merged-return class); 3 structures measured, this is the best.
 VA(0x00496f20, 0x6D)  // anchor-vtable CDPlay slot24 (GetCurrSession), dc 0x8a15c
 DPSESSIONDESC2* CDPlay::GetCurrSession()
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwSize = 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(0, &dwSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    if (dwSize == 0)
+        return 0;
+    DPSESSIONDESC2* buf = static_cast<DPSESSIONDESC2*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(buf, &dwSize);
+    if (m_hRes >= 0)
+        return buf;
+    ::operator delete(buf);
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:239
 VA(0x00496f90, 0x22)  // anchor-vtable CDPlay slot23 (UpdateSessionDesc), dc 0x8a1d0
@@ -433,16 +451,33 @@ unsigned char CDPlay::SetGroupData(unsigned long groupId, void* pData, unsigned 
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:987
 VA(0x004983f0, 0xB1)  // anchor-vtable CDPlay slot16 (GetGroupData), dc 0x8b1e0
 void* CDPlay::GetGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long dwFlags)
 {
-    // @stub
+    void* buf = 0;
+    unsigned long dwDataSize = 0;
+    if (pdwSize)
+        dwDataSize = *pdwSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupData(groupId, 0, &dwDataSize, dwFlags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dwDataSize == 0)
+            return 0;
+        buf = ::operator new(dwDataSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupData(groupId, buf, &dwDataSize, dwFlags);
+        if (m_hRes < 0) {
+            ::operator delete(buf);
+            return 0;
+        }
+    }
+    if (pdwSize)
+        *pdwSize = dwDataSize;
+    return buf;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1024
 VA(0x004984b0, 0x4D)  // anchor-vtable CDPlay slot12 (SetGroupName), dc 0x8b284
@@ -479,24 +514,54 @@ unsigned char CDPlay::SetPlayerData(unsigned long playerId, void* pData, unsigne
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1091
 VA(0x00498650, 0xB1)  // anchor-vtable CDPlay slot18 (GetPlayerData), dc 0x8b3ec
 void* CDPlay::GetPlayerData(unsigned long playerId, unsigned long* pdwSize, unsigned long dwFlags)
 {
-    // @stub
+    void* buf = 0;
+    unsigned long dwDataSize = 0;
+    if (pdwSize)
+        dwDataSize = *pdwSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerData(playerId, 0, &dwDataSize, dwFlags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dwDataSize == 0)
+            return 0;
+        buf = ::operator new(dwDataSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerData(playerId, buf, &dwDataSize, dwFlags);
+        if (m_hRes < 0) {
+            ::operator delete(buf);
+            return 0;
+        }
+    }
+    if (pdwSize)
+        *pdwSize = dwDataSize;
+    return buf;
 }
-
 
 // E:\gamedcs\dxplay.cpp:1129
 VA(0x00498710, 0x8C)  // anchor-vtable CDPlay slot38 (GetPlayerAddress), dc 0x8b494
 unsigned char* CDPlay::GetPlayerAddress(unsigned long dpid, unsigned long* pSize)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerAddress(dpid, 0, &dwSize);
+    if (dwSize == 0)
+        return 0;
+    if (pSize)
+        *pSize = dwSize;
+    unsigned char* buf = static_cast<unsigned char*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerAddress(dpid, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1158
 VA(0x004987a0, 0x42)  // anchor-vtable CDPlay slot39 (GetCaps), dc 0x8b51c
