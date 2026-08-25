@@ -307,6 +307,9 @@ private:
         long group_number, long item_number, long& widget_id,
         iconWidget** icon_widgets, iconWidget** selection_widgets,
         textWidget** text_widgets);
+    static int all_creatures(message& msg);
+    static int exit_click(message& msg);
+    static int sacrifice(message& msg);
 };
 
 // The transformer dialog's creature slots. Retail 0x5654c0 forwards TWO
