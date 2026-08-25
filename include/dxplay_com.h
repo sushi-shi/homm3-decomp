@@ -44,7 +44,7 @@ public:
     {
         m_guid = *lpGuid;
         m_dataSize = dataSize;
-        m_pData = new unsigned char[dataSize];
+        m_pData = new char[dataSize];
         memcpy(m_pData, pData, dataSize);
     }
 
@@ -54,7 +54,7 @@ public:
     }
 
     GUID m_guid;              // +0x00
-    unsigned char* m_pData;   // +0x10
+    char* m_pData;            // +0x10
     unsigned long m_dataSize; // +0x14
 };
 

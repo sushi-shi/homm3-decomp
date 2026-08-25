@@ -1011,16 +1011,29 @@ unsigned char CDPlayLobby::AddAddressEnum(const GUID* guid, unsigned long dataSi
     return 1;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
 // E:\gamedcs\dxplay.cpp:1901
 VA(0x00499c60, 0x1B8)  // anchor-vtable CDPlayLobby slot70 (GetIPAddress), dc 0x8bafc
 unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
 {
-    // @stub
+    sIPAddress[0] = 0;
+    unsigned long dwSize;
+    unsigned char* buf = GetPlayerAddress(dpid, &dwSize);
+    if (!buf)
+        return 0;
+    CAutoArray<CDPlayAddressElement> addresses;
+    EnumAddress(buf, dwSize, &addresses);
+    for (unsigned long i = 0; i < addresses.GetCount(); ++i) {
+        CDPlayAddressElement* elem = addresses.Get(i);
+        if (memcmp(&elem->m_guid, &s_dpaidINet, sizeof(GUID)) == 0) {
+            strcpy(sIPAddress, elem->m_pData);
+            break;
+        }
+    }
+    ::operator delete(buf);
+    if (!sIPAddress[0])
+        return 0;
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:1941 - DirectPlay enum callbacks (stdcall), each
 // address-taken as the callback pointer by its CDPlay(Lobby) Enum* method.
