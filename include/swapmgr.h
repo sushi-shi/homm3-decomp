@@ -6,11 +6,12 @@
 #define HOMM3_SWAPMGR_H
 
 #include "basemgr.h"
+#include "window.h"
 
 class Bitmap816;
 class hero;
-class heroWindow;
 class CNetMsgHandler;
+class widget;
 
 class message;
 
@@ -43,6 +44,22 @@ public:
     bool IsLeftHero();
     void Reset();
     void DrawSelector();
+};
+
+// The trade window itself (a heroWindow subclass). Only the UpdateArrows-touched
+// prefix is modelled: heroWindow is 0x4c bytes (CHeroWindowEx proves rolloverId
+// at +0x4c), then two unclassified members, then the three army-arrow widgets.
+// The full object continues far past +0x5c (its ctor 0x5aaa80 is 0x38E9 B); do
+// NOT rely on sizeof(TSwapWindow).
+class TSwapWindow : public heroWindow {
+public:
+    int field_4c;       // +0x4c
+    int field_50;       // +0x50
+    widget* field_54;   // +0x54  left-army count arrow widget
+    widget* field_58;   // +0x58  right-army count arrow widget
+    widget* field_5c;   // +0x5c  the swap/transfer control (enable/disable)
+
+    void UpdateArrows();
 };
 
 // --- CGiveMeStuffMsg ---
