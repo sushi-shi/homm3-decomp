@@ -1952,8 +1952,8 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xc7ba0	172	in-span	game	game	game_GrowCoverOfDarkness
 0xc7c50	905	in-span	game	game	game_ResetAllPlayerVisibility
 0xc7fe0	1122	in-span	game	game	game_PerDay
-0xc8450	584	in-span	game	game	game_bfe70_sub09_c8450
-0xc86a0	213	in-span	game	game	game_d7890_sub00_c86a0
+0xc8450	584	in-span	game	game	game_set_weekly_recruits
+0xc86a0	213	in-span	game	game	game_replace_recruit
 0xc8780	1975	in-span	game	game	game_PerWeek
 0xc8f40	888	in-span	game	game	game_PerMonth
 0xc92c0	514	in-span	game	game	?GetRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z
@@ -1979,7 +1979,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xcb1ec	23	in-span	game	game	game_CheckHeroConsistency
 0xcb206	2782	in-span	game	game	game_TransmitSaveGame
 0xcbcf0	75	in-span	game	game	game_157760_sub00_cbcf0
-0xcbd40	2691	in-span	game	game	calls_timeGetTime_cbd40
+0xcbd40	2691	in-span	game	game	game_ReceiveSaveGame
 0xcc7d0	1534	in-span	game	game	game_DoNewTurn
 0xccdd0	86	in-span	game	game	game_GetBoatsBuilt
 0xcce30	184	in-span	game	game	?GetNumThievesGuilds@game@@QAEHH@Z
@@ -2010,7 +2010,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xcec20	37	in-span	game	game	?GetGamePosFromDPID@game@@QAEHK@Z
 0xcec50	62	in-span	game	game	?IsLastHuman@game@@QBE_NH@Z
 0xcec90	24	in-span	game	game	?IsMultiplayer@game@@QBE_NXZ
-0xcecb0	129	in-span	game	game	game_5b1e0_sub05_cecb0
+0xcecb0	129	in-span	game	game	game_ResetGame
 0xced40	464	in-span	game	game	game_1013b0_sub00_ced40
 0xcef10	104	in-span	game	game	game_16ef20_sub00_cef10
 0xcef80	18	in-span	game	game	game_4ae60_sub03_cef80
@@ -4104,9 +4104,9 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1ae750	930	in-span	swapmgr	swapmgr	swapManager_Open
 0x1aeb00	531	in-span	swapmgr	swapmgr	CSwapMgrNetMsgHandler_HandleNetMsg
 0x1aed20	155	in-span	swapmgr	swapmgr	?Close@swapManager@@UAEXXZ
-0x1aedc0	320	in-span	swapmgr	swapmgr	swapManager_DrawSelector
+0x1aedc0	320	in-span	swapmgr	swapmgr	?DrawSelector@swapManager@@QAEXXZ
 0x1aef00	588	in-span	swapmgr	swapmgr	swapManager_UpdateSlot
-0x1af150	343	in-span	swapmgr	swapmgr	swapManager_UpdateBackpack
+0x1af150	343	in-span	swapmgr	swapmgr	?UpdateBackpack@swapManager@@QAEXH@Z
 0x1af2b0	733	in-span	swapmgr	swapmgr	swapManager_HandleMonster
 0x1af590	1015	in-span	swapmgr	swapmgr	swapManager_handle_artifact_click
 0x1af990	593	in-span	swapmgr	swapmgr	swapManager_handle_backpack_click
@@ -4115,7 +4115,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1afdf0	2747	in-span	swapmgr	swapmgr	swapManager_Main
 0x1b08b0	1263	in-span	swapmgr	swapmgr	swapManager_SetRolloverText
 0x1b0da0	321	in-span	swapmgr	swapmgr	swapManager_SwapMons
-0x1b0ef0	468	in-span	swapmgr	swapmgr	swapManager_update_all_slots
+0x1b0ef0	468	in-span	swapmgr	swapmgr	?update_all_slots@swapManager@@QAEXXZ
 0x1b10d0	680	in-span	swapmgr	swapmgr	swapManager_OnWidgetDeselect
 0x1b1380	28	in-span	swapmgr	swapmgr	?IsLeftHero@swapManager@@QAE_NXZ
 0x1b1790	6268	in-span	systemoptionswindow	systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ
