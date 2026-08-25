@@ -511,34 +511,6 @@ unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
     // @stub
 }
 
-// E:\gamedcs\dxplay.cpp:1941
-DC_ONLY(0x8bba4, 0x20)
-int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1963
-DC_ONLY(0x8bbdc, 0x30)
-int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1976
-DC_ONLY(0x8bc0c, 0x1C)
-int EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
-// E:\gamedcs\dxplay.cpp:1991
-DC_ONLY(0x8bc28, 0x5C)
-int EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
 // C:\WCEDreamcast\inc\objbase.h:519
 DC_ONLY(0x8bc84, 0x1C)
 int operator==(const _GUID* guidOne, const _GUID* guidOther)
@@ -959,12 +931,51 @@ CDPlayLobby::~CDPlayLobby()
 }
 
 // E:\gamedcs\dxplay.cpp:1948
+VA(0x00499e20, 0x23)  // address-taken by CDPlayLobby::EnumAddress, dc 0x8bba4
+int PASCAL EnumAddressCallback(const GUID* guidDataType,
+    unsigned long dwDataSize, const void* lpData, void* lpContext)
+{
+    return static_cast<CDPlayLobby*>(lpContext)->AddAddressEnum(
+        guidDataType, dwDataSize, lpData);
+}
+
+// E:\gamedcs\dxplay.cpp:1948
 VA(0x00499e50, 0x1F)  // address-taken by CDPlay::EnumSessions, dc 0x8bbc4
 int PASCAL EnumSession(const DPSESSIONDESC2* lpDPSessionDesc,
     unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
 {
     return static_cast<CDPlay*>(lpContext)->AddSessionEnum(
         lpDPSessionDesc, dwFlags);
+}
+
+// E:\gamedcs\dxplay.cpp:1963
+VA(0x00499e70, 0x2B)  // address-taken by CDPlay::EnumConnections, dc 0x8bbdc
+int PASCAL EnumConnectionsCallback(const GUID* lpguidSP, void* lpConnection,
+    unsigned long dwConnectionSize, const DPNAME* lpName,
+    unsigned long dwFlags, void* lpContext)
+{
+    return static_cast<CDPlay*>(lpContext)->AddConnectionEnum(
+        lpguidSP, lpConnection, dwConnectionSize, lpName, dwFlags);
+}
+
+// E:\gamedcs\dxplay.cpp:1976
+VA(0x00499ea0, 0x23)  // address-taken by CDPlay::EnumGroups, dc 0x8bc0c
+int PASCAL EnumGroupsCallback(unsigned long dpid,
+    unsigned long dwPlayerType, const DPNAME* lpName,
+    unsigned long dwFlags, void* lpContext)
+{
+    return static_cast<CDPlay*>(lpContext)->AddGroupEnum(
+        dpid, lpName, dwFlags);
+}
+
+// E:\gamedcs\dxplay.cpp:1991
+VA(0x00499ed0, 0x23)  // address-taken by CDPlay::EnumPlayers, dc 0x8bc28
+int PASCAL EnumPlayersCallback(unsigned long dpid,
+    unsigned long dwPlayerType, const DPNAME* lpName,
+    unsigned long dwFlags, void* lpContext)
+{
+    return static_cast<CDPlay*>(lpContext)->AddPlayerEnum(
+        dpid, lpName, dwFlags);
 }
 
 // E:\gamedcs\array.h:95 - slot 2 of the retail
