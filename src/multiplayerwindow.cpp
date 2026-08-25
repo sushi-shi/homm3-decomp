@@ -49,26 +49,7 @@ void SliderGames(int state, heroWindow* parent_window)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1025
-DC_ONLY(0x100498, 0x84)
-void TMultiPlayerWindow::GoSessionList()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1049
-DC_ONLY(0x10051c, 0xE0)
-void TMultiPlayerWindow::GoMainMenu()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1083
-DC_ONLY(0x1005fc, 0x3A6)
-void TMultiPlayerWindow::Update()
-{
-    // @stub
-}
+// GoSessionList / GoMainMenu / Update promoted to VA claims (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1344
 DC_ONLY(0x100c44, 0x5A)
@@ -84,19 +65,7 @@ unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const cha
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1378
-DC_ONLY(0x100d0c, 0x10A)
-unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1420
-DC_ONLY(0x100e18, 0x7A)
-unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const char* sExtra, _DPCOMPORTADDRESS* comportInfo)
-{
-    // @stub
-}
+// HostSession / InitRemote promoted to VA claims (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:1449
 DC_ONLY(0x100e94, 0x3A)
@@ -385,12 +354,7 @@ void CMPInputDlg::DisableOK()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:523
-DC_ONLY(0x102890, 0x34)
-void* CMPInputDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// CMPInputDlg::`scalar deleting destructor' promoted to VA(0x005109e0) below.
 
 // E:\gamedcs\multiplayerwindow.cpp:700
 #endif
@@ -415,8 +379,32 @@ textWidget* TMultiPlayerWindow::GetRolloverWidget()
     // @stub
 }
 
+VA(0x0050edb0, 0x21)  // anchor-vtable 0x6400a0 slot 0 (scalar deleting dtor); body calls ~TMPW 0x50ee40 + operator delete, ret 4, dc 0x102f98
+void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
 VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x10edb0, dc 0x100430
 void TMultiPlayerWindow::~TMultiPlayerWindow()
+{
+    // @stub
+}
+
+VA(0x0050eef0, 0xC9)  // anchor-bracket: sole no-arg void member (ret 0, ecx=this) between ~TMPW and Update; toggles widget set via widget::send_message x12, dc 0x100498
+void TMultiPlayerWindow::GoSessionList()
+{
+    // @stub
+}
+
+VA(0x0050efc0, 0x12B)  // anchor-bracket: second no-arg void member in the ~TMPW..Update run; send_message x13 + GetWidget + operator delete (teardown), dc 0x10051c
+void TMultiPlayerWindow::GoMainMenu()
+{
+    // @stub
+}
+
+VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
+void TMultiPlayerWindow::Update()
 {
     // @stub
 }
@@ -431,6 +419,18 @@ VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = 
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
 int TMultiPlayerWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+VA(0x0050fab0, 0x106)  // anchor-callee: 2-arg member (ret 8) called from every host flow (0x50fc50/0x50fda0); sprintf-formats a 256B session-name buffer, size 0.98x DC, dc 0x100d0c
+unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
+{
+    // @stub
+}
+
+VA(0x0050fbc0, 0x86)  // anchor-callee: sole 3-arg member (ret 0xC) calling free InitRemote/InitConnection; stores netGameType global, dc 0x100e18
+unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const char* sExtra, _DPCOMPORTADDRESS* comportInfo)
 {
     // @stub
 }
@@ -455,6 +455,12 @@ int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 
 VA(0x00510970, 0x4)  // anchor-vtable 0x6400f4 slot 13 (GetRolloverWidget), dc 0x1027ec
 textWidget* CMPInputDlg::GetRolloverWidget()
+{
+    // @stub
+}
+
+VA(0x005109e0, 0x21)  // anchor-vtable 0x6400f4 slot 0 (scalar deleting dtor); body calls ~CMPInputDlg 0x5108a0 + operator delete, ret 4, dc 0x102890
+void* CMPInputDlg::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -556,9 +562,10 @@ VA_COMPGEN(0x00512540, 0x21, SCALAR_DELETING_DTOR, CHotSeatDlg)
 
 #if 0  // @carcass: remaining untouched bodies
 
-// E:\gamedcs\multiplayerwindow.cpp:1000
-DC_ONLY(0x102f98, 0x34)
-void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
+// TMultiPlayerWindow::`scalar deleting destructor' promoted to VA(0x0050edb0) above.
+
+VA(0x00512670, 0x6C)  // anchor-vtable 0x6400d8 slot 0 (CAutoArray<CDPlaySession> scalar deleting dtor); body stores vtable 0x6400d8 into this (instantiation-specific, not ICF-folded), dc 0x103200
+void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -640,10 +647,5 @@ unsigned long CAutoArray<CDPlaySession>::GetCount()
     // @stub
 }
 
-// ..\stlport\stl_string.h:144
-DC_ONLY(0x103200, 0x34)
-void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// CAutoArray<CDPlaySession>::`scalar deleting destructor' promoted to VA(0x00512670) above.
 #endif  // @carcass
