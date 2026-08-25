@@ -67,6 +67,19 @@ public:
     signed char old_owner;  // +0x0d
 };
 
+// The town variant has the same four-field tail. replay writes new_owner to
+// towns[id].owner; undo restores old_owner from the following byte.
+class type_record_claim_town : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void undo() OVERRIDE;
+
+    int id;                 // +0x08
+    signed char new_owner;  // +0x0c
+    signed char old_owner;  // +0x0d
+};
+
 class type_record_hide_boat : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;

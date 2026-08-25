@@ -876,6 +876,7 @@ event_record	?save@type_event_record@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000
 event_record	?save@type_record_player_death@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9ba80
 event_record	?save_recorded_events@game@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9dc60
 event_record	?undo@type_record_claim_mine@@UAEXXZ	100.0000	100.0000	100.0000	0x9abc0
+event_record	?undo@type_record_claim_town@@UAEXXZ	100.0000	100.0000	100.0000	0x9aca0
 events	?DoEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaaaa0
 events	?DoEventAnchor@advManager@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x9e670
 events	?DoEventArena@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0x9e7d0
