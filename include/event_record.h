@@ -5,7 +5,15 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+// type_point is a value member of several record subclasses below; struct.h is
+// already in this TU's include closure (game.h pulls it in), so parsing it here
+// adds no declarators. hero/boat/NewmapCell appear only as pointer members.
+#include "struct.h"
+
 class TAbstractFile;
+class hero;
+class boat;
+class NewmapCell;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
@@ -40,9 +48,21 @@ public:
 // get_type-only models: each class returns its discriminant. The true
 // hierarchy (teleport : move_hero, show_boat : hide_boat) is proven by the
 // vtables folding the derived class's load/save onto the parent's slots.
+// A recorded hero step. load/save (0x49a690/0x49a750) serialize player_id,
+// the hero's own id (hero+0x1a, re-resolved to &gpGame->heroes[id] on load),
+// direction(+0x11), source(+0xc) and destination(+0x12); the +0x10 byte holds
+// the pre-move hero attribute (hero+0x47) and is captured at record time, not
+// serialized. undo (0x49a910) restores source, +0x10 and re-obscures the cell.
 class type_record_move_hero : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    hero* current_hero;          // +0x08
+    type_point source;           // +0x0c - hero position before the move
+    signed char restore_flag;    // +0x10 - hero+0x47 snapshot (not serialized)
+    signed char direction;       // +0x11
+    type_point destination;      // +0x12
 };
 
 class type_record_teleport : public type_record_move_hero {

@@ -80,21 +80,38 @@ type_event_record_type type_record_move_hero::get_type()
 {
     return RECORD_MOVE_HERO;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:124
 VA(0x0049a690, 0xB1)  // anchor-vtable, dc 0x8c7ec
-unsigned char type_record_move_hero::load(void* infile)
+unsigned char type_record_move_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    int hero_id;
+    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+        return 0;
+    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
+    if (infile->Read(&direction, 1) != 1)
+        return 0;
+    if (infile->Read(&source, sizeof(source)) != sizeof(source))
+        return 0;
+    unsigned char ok = infile->Read(&destination, sizeof(destination)) == sizeof(destination);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:145
 VA(0x0049a750, 0x63)  // anchor-vtable, dc 0x8c8bc
-unsigned char type_record_move_hero::save(void* outfile)
+unsigned char type_record_move_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    int hero_id = current_hero->id;
+    outfile->Write(&player_id, 1);
+    outfile->Write(&hero_id, sizeof(hero_id));
+    outfile->Write(&direction, 1);
+    outfile->Write(&source, sizeof(source));
+    unsigned char ok = outfile->Write(&destination, sizeof(destination)) == sizeof(destination);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:161
 VA(0x0049a7c0, 0x144)  // anchor-vtable, dc 0x8c91c
