@@ -854,7 +854,20 @@ drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370
 dxplay	?GetGuid@CDPlay@@UAEPAU_GUID@@XZ	100.0000	100.0000	100.0000	0x96ca0
 dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?SetGuid@CDPlay@@UAEXU_GUID@@@Z	100.0000	100.0000	100.0000	0x96c70
+event_record	?clear_event_records@game@@QAEXXZ	100.0000	100.0000	100.0000	0x9d630
+event_record	?get_type@type_record_erase@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9b180
+event_record	?get_type@type_record_hide_boat@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9acf0
+event_record	?get_type@type_record_move_hero@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9a680
+event_record	?get_type@type_record_player_death@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9ba30
+event_record	?get_type@type_record_show_boat@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9af30
+event_record	?get_type@type_record_shroud@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9bc80
+event_record	?get_type@type_record_teleport@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9a9b0
+event_record	?load@type_event_record@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9a5e0
+event_record	?load@type_record_player_death@@UAEEPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x9ba40
 event_record	?replay_available@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70
+event_record	?save@type_event_record@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9a600
+event_record	?save@type_record_player_death@@UAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9ba80
+event_record	?save_recorded_events@game@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9dc60
 events	?DoEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaaaa0
 events	?DoEventAnchor@advManager@@QAEXPAVhero@@_N@Z	100.0000	100.0000	100.0000	0x9e670
 events	?DoEventArena@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0x9e7d0
@@ -2160,6 +2173,7 @@ subwindow	?Draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0
 subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470
+swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
 systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
@@ -2364,6 +2378,7 @@ tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0
 tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
+tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
 trees	@_tr_flush_block@16	100.0000	100.0000	100.0000	0x2071c0
 trees	@_tr_init@4	100.0000	100.0000	100.0000	0x206dd0

@@ -5,13 +5,76 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+class TAbstractFile;
+
+// Record discriminant returned by get_type(); values byte-proven from the
+// retail get_type bodies (mov eax,N / ret) reached through each class vtable.
+enum type_event_record_type {
+    RECORD_MOVE_HERO    = 1,
+    RECORD_TELEPORT     = 2,
+    RECORD_CLAIM_MINE   = 3,
+    RECORD_CLAIM_TOWN   = 4,
+    RECORD_HIDE_BOAT    = 5,
+    RECORD_SHOW_BOAT    = 6,
+    RECORD_ERASE        = 7,
+    RECORD_HIDE_HERO    = 8,
+    RECORD_SHOW_HERO    = 9,
+    RECORD_PLAYER_DEATH = 10,
+    RECORD_SHROUD       = 11,
+};
+
 // Polymorphic base of the recorded adventure actions. Retail's
 // replay_available reads the signed owner byte immediately after the vptr;
 // Dreamcast supplies the class and `player_id` identity at the same offset.
+// Virtual layout (byte-proven from the type_record_* vtables): slot 0 is the
+// scalar deleting destructor, slot 1 get_type, then load/save/replay/undo.
 class type_event_record {
 public:
     virtual ~type_event_record();
+    virtual type_event_record_type get_type();
+    virtual unsigned char load(TAbstractFile* infile, int version);
+    virtual unsigned char save(TAbstractFile* outfile);
     signed char player_id;  // +0x04
+};
+
+// get_type-only models. The inheritance is proven by the retail vtables:
+// teleport reuses move_hero's load/save slots and show_boat reuses hide_boat's.
+class type_record_move_hero : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+class type_record_teleport : public type_record_move_hero {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+class type_record_hide_boat : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+class type_record_show_boat : public type_record_hide_boat {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+class type_record_erase : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+};
+
+class type_record_player_death : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    unsigned char extra;  // +0x08 - second serialized byte (role TBD)
+};
+
+class type_record_shroud : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
 };
 
 // --- globals ---

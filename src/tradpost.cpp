@@ -693,3 +693,16 @@ long get_market_value(EGameResource resource)
 {
     return gMarketValues[resource];
 }
+
+// E:\gamedcs\tradpost.cpp:2168
+VA(0x005ecd20, 0x94)  // free fn ret 8 + float ratio body, dc 0x18ab9c
+double get_trade_ratio(EGameResource source, EGameResource dest, double efficiency)
+{
+    double ratio = static_cast<double>(gMarketValues[dest])
+                 / (static_cast<double>(gMarketValues[source]) * efficiency);
+    if (ratio >= 1.0)
+        ratio = static_cast<double>(static_cast<long>(ratio + 0.999));
+    else
+        ratio = 1.0 / static_cast<double>(static_cast<long>(1.0 / ratio));
+    return ratio;
+}

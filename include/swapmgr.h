@@ -10,15 +10,33 @@
 class Bitmap816;
 class hero;
 class heroWindow;
+class message;
 
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
-// prove the two hero pointers at +0x40/+0x44; no parallel local view is used.
+// prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
+// proves the rest of the ctor-touched prefix store-for-store.
 class swapManager : public baseManager {
 public:
-    heroWindow* parent;  // +0x38
-    Bitmap816* border;   // +0x3c
-    hero* heroes[2];     // +0x40
+    heroWindow* parent;      // +0x38
+    Bitmap816* border;       // +0x3c
+    hero* heroes[2];         // +0x40 / +0x44
+    int field_48;            // +0x48  selection state (all -1 at construction)
+    int field_4c;            // +0x4c
+    int field_50;            // +0x50
+    int field_54;            // +0x54
+    int field_58;            // +0x58
+    unsigned char field_5c;  // +0x5c  two-human cross-owner network trade
+    unsigned char field_5d;  // +0x5d  default 1; otherwise local-player side
+    // +0x5e, +0x5f pad
+    int field_60;            // +0x60  (read by Close)
+    int field_64;            // +0x64  (zeroed at construction)
+    // Retail continues past +0x64; only the ctor-touched prefix is modelled.
+    // Do not rely on sizeof(swapManager).
 
+    swapManager(hero* leftHero, hero* rightHero);
+    virtual int Open(int newPriority);  // baseManager vtable slot 0
+    virtual void Close();               // slot 1
+    virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
 };
 
