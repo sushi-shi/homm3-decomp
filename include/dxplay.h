@@ -169,7 +169,8 @@ protected:
         unsigned long connectionSize, const DPNAME* name,
         unsigned long flags);
 
-private:
+protected:
+    // CDPlayLobby's retail bodies access these base members directly.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
     // with the PC methods.
@@ -211,13 +212,11 @@ public:
     CDPlayConnection* CreateSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     unsigned char TestLobbied();
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
     DPLCONNECTION* GetConnectionSettings(
         unsigned long appId, unsigned long* size);
     unsigned char SetConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char Connect();
-#endif
     virtual unsigned char EnumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
     virtual unsigned char SetGroupConnectionSettings(
