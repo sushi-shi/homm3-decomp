@@ -465,6 +465,13 @@ void CHotSeatDlg::CHotSeatDlg()
 // E:\gamedcs\multiplayerwindow.cpp:700
 #endif
 
+// E:\gamedcs\multiplayerwindow.cpp:1012 - vtable 0x6400a0 slot 13.
+VA(0x0050ed50, 0x7)
+textWidget* TMultiPlayerWindow::GetRolloverWidget()
+{
+    return RolloverWidget;
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:505 - vtable 0x6400f4 slot 13.
 VA(0x00510970, 0x4)
 textWidget* CMPInputDlg::GetRolloverWidget()
