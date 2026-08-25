@@ -601,20 +601,20 @@ void CDPlayLobby::CDPlayLobby()
 }
 
 
-// E:\gamedcs\dxplay.cpp:1215
-VA(0x00498900, 0x21)  // anchor-vtable CDPlayLobby slot0 (scalar deleting dtor), dc 0x8bf78
-void* CDPlayLobby::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+#endif  // @carcass
 
+// E:\gamedcs\dxplay.cpp:1215
+VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
 
 // E:\gamedcs\dxplay.cpp:1218
 VA(0x00498930, 0x62)  // anchor-vtable ~CDPlayLobby real dtor: stores CDPlayLobby+CDPlay vtables, dc 0x8b5c8
-void CDPlayLobby::~CDPlayLobby()
+CDPlayLobby::~CDPlayLobby()
 {
-    // @stub
+    if (m_lpLobby)
+        static_cast<IDirectPlayLobby3A*>(m_lpLobby)->Release();
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 
 // E:\gamedcs\dxplay.cpp:1224
