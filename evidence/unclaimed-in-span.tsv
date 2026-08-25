@@ -2,17 +2,19 @@
 # Functions inside an EXISTING unit's inferred link-order
 # span that no match_baseline row claims.
 unit	functions	bytes
-game	125	55116
 tradpost	11	44832
+game	94	29777
 townmgr	11	21803
 sacrifice_window	7	11505
 recruit	4	9176
 command	2	8609
+singleselectionwindow	14	7046
 combatcontrolsubwindow	3	5796
 ai_tactical	1	1786
 advmgr	1	1439
+ai_player	8	1271
+event_record	4	529
 cmbtmgr	4	253
-remote	1	201
 resourcemanager	2	127
 mapcell	1	42
 hero	1	25
