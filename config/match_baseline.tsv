@@ -1341,6 +1341,7 @@ game	game_PerWeek	0.0000	0.0000	0.0000	0xc8780
 game	game_ProcessOnMapTowns	0.0000	0.0000	0.0000	0xcaa70
 game	game_ReceiveSaveGame	0.0000	0.0000	0.0000	0xcbd40
 game	game_ResetAllPlayerVisibility	0.0000	0.0000	0.0000	0xc7c50
+game	game_ResetGame	0.0000	0.0000	0.0000	0xcecb0
 game	game_SetMapRumour	0.0000	0.0000	0.0000	0xccfb0
 game	game_SetMarketArtifacts	0.0000	0.0000	0.0000	0xccf20
 game	game_SetSpecialRumour	0.0000	0.0000	0.0000	0xcd170
