@@ -26,13 +26,6 @@ int CHotspotWidget::Main(message* msg)
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:214
-DC_ONLY(0x12dfa8, 0x48)
-void CBonusDlg::CBonusDlg(unsigned char newGameMode)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionpopups.cpp:218
 DC_ONLY(0x12dff0, 0x1DC)
 unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
@@ -167,13 +160,6 @@ void CSpriteWidget::Draw()
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:73
-DC_ONLY(0x12f11c, 0x34)
-void* CSpriteWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionpopups.cpp:73
 DC_ONLY(0x12f150, 0x18)
 void CSpriteWidget::~CSpriteWidget()
 {
@@ -236,13 +222,6 @@ void CHotspotWidget::~CHotspotWidget()
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:215
-DC_ONLY(0x12f304, 0x34)
-void* CBonusDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // E:\gamedcs\singleselectionpopups.cpp:114
@@ -263,6 +242,20 @@ CHotspotWidget::~CHotspotWidget()
 
 VA_COMPGEN(0x00575260, 0x21, SCALAR_DELETING_DTOR, CHotspotWidget)
 
+CBonusDlg::~CBonusDlg()
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:214
+VA(0x00575410, 0x20)  // vtable 0x6419d8 + CSingleSelPopup base, dc 0x12dfa8
+CBonusDlg::CBonusDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:215
+VA_COMPGEN(0x005754c0, 0x21, SCALAR_DELETING_DTOR, CBonusDlg)
+
 // E:\gamedcs\singleselectionpopups.cpp:71
 VA(0x00575750, 0x54)  // CSpriteWidget vtable 0x641a00 slot 4, dc 0x12f0c8
 void CSpriteWidget::Draw()
@@ -271,6 +264,13 @@ void CSpriteWidget::Draw()
                  gpWindowManager->screenBitmap,
                  x + parentWindow->x, y + parentWindow->y, 0, 1);
 }
+
+CSpriteWidget::~CSpriteWidget()
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:73
+VA_COMPGEN(0x005757b0, 0x21, SCALAR_DELETING_DTOR, CSpriteWidget)
 
 // E:\gamedcs\singleselectionpopups.cpp:61
 VA(0x00575a10, 0x10)  // CSpriteWidget vtable 0x641a00, slot 2
