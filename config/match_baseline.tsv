@@ -2647,6 +2647,7 @@ tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	84.3657	84.3657	84.3657	0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	99.2905	99.2905	99.2905	0x1ed3a0
 tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	81.1528	81.1528	81.1528	0x1eb6a0
 tradpost	?Update@TGiveResourceWindow@@QAEXE@Z	82.0995	82.0995	82.0995	0x1eaf50
+tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	86.3678	86.3678	86.3678	0x1ebe80
 tradpost	?Update@TSellCreatureWindow@@QAEXE@Z	81.4336	81.4336	81.4336	0x1ec550
 tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	82.9430	82.9430	82.9430	0x1ea6e0
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	95.1827	95.1827	95.1827	0x1ed9e0
@@ -2660,7 +2661,6 @@ tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	1
 tradpost	TBuyArtifactWindow_TBuyArtifactWindow	0.0000	0.0000	0.0000	0x1e3730
 tradpost	TGiveResourceWindow_TGiveResourceWindow	0.0000	0.0000	0.0000	0x1e16c0
 tradpost	TSellArtifactWindow_TSellArtifactWindow	0.0000	0.0000	0.0000	0x1e5730
-tradpost	TSellArtifactWindow_Update	0.0000	0.0000	0.0000	0x1ebe80
 tradpost	TSellCreatureWindow_TSellCreatureWindow	0.0000	0.0000	0.0000	0x1e7c80
 tradpost	TTradeResourceWindow_TTradeResourceWindow	0.0000	0.0000	0.0000	0x1df5f0
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
