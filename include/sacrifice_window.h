@@ -259,17 +259,20 @@ SIZE(type_army_slot_widget, 0x50);
 
 // The skeleton-transformer dialog, over the same 0x60-byte CAdvPopup base
 // its Dreamcast virtual roster attests (WindowHandler / ExitDialog /
-// handle_widget_hover, exactly type_sacrifice_window's set). Only the
-// rollover pointer is admitted: handle_widget_hover 0x566720 reads it as the
-// FIRST derived dword and dispatches slot 13 (textWidget::SetText) through
-// it. The rest of the object stays unmodelled, so no size is asserted.
+// handle_widget_hover, exactly type_sacrifice_window's set). Retail accesses
+// the derived fields at the offsets recorded below.
 class type_skeleton_window : public CAdvPopup {
 public:
     textWidget* rolloverText;  // +0x60
-    // 0x64..0x15b is the Dreamcast field roster's buttons, selection pair,
-    // armyGroup and three parallel widget arrays. The destructor touches
-    // none of them, so none is admitted; the pad only has to carry them.
-    unsigned char pad_64[0xf8];
+    type_func_button* sacrifice_button;         // +0x64
+    type_func_button* all_creatures_button;     // +0x68
+    long selected_group;                        // +0x6c
+    long selected_index;                        // +0x70
+    armyGroup selected_creatures;               // +0x74
+    armyGroup* armies[2];                        // +0xac
+    iconWidget* army_widget[2][7];               // +0xb4
+    iconWidget* select_border[2][7];             // +0xec
+    textWidget* army_label[2][7];                // +0x124
     // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
     // disposes every sample in it, then lets the member's own _Tidy run
     // (operator delete on _First at +0x160, then the 0x160/0x164/0x168
@@ -289,6 +292,7 @@ public:
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int WindowHandler(message* msg);                   // slot 9
 private:
+    void update(long group, long index);
     void create_creature_icons(
         long icon_x, long icon_y, long columns, long rows,
         long group_number, long item_number, long& widget_id,
