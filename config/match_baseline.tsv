@@ -2385,6 +2385,7 @@ singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CHeroDlg
 singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CHotspotWidget	0.0000	0.0000	0.0000	0x175260
 singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CSpriteWidget	0.0000	0.0000	0.0000	0x1757b0
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
+singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
@@ -2398,7 +2399,6 @@ singleselectionwindow	CChatWidget_Draw	0.0000	0.0000	0.0000	0x17ca90
 singleselectionwindow	CEnterNameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17cdc0
 singleselectionwindow	CEnterNameEdit_OnKillFocus	0.0000	0.0000	0.0000	0x17cee0
 singleselectionwindow	CHostWaitDlg_handle_message	0.0000	0.0000	0.0000	0x1891b0
-singleselectionwindow	CNetPlayerHandler_AddNewPlayer	0.0000	0.0000	0.0000	0x177be0
 singleselectionwindow	CNetPlayerHandler_SetNextPlayer	0.0000	0.0000	0.0000	0x177ae0
 singleselectionwindow	CSaveGameEdit_IgnoreKey	0.0000	0.0000	0.0000	0x17cfe0
 singleselectionwindow	CSaveGameEdit_OnKeyPress	0.0000	0.0000	0.0000	0x17d0b0

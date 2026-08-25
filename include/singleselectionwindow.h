@@ -88,6 +88,7 @@ public:
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
     unsigned char IsFaceTaken(int face, int exclude);
+    unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 
