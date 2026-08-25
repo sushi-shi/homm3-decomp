@@ -10,6 +10,11 @@ struct type_point;
 unsigned char DoTavern();
 void DoMapTavern(type_point point);
 
+// hero.obj's four primary-stat column headers (0x6a7540, claimed in hero.cpp),
+// reused by TThievesGuildWindow::WindowHandler as the NormalDialog title on a
+// rank-cell right-click. Declared here because hero.h does not carry it.
+extern const char* gPrimaryStatNames[4];
+
 // The nine columns of the thieves' guild table, in the order
 // SetupThievesGuild builds them and GetCategoryStats dispatches them.
 // The Dreamcast dump declares no enum for this domain - both bodies pass
@@ -240,10 +245,20 @@ public:
         RANK_B0 = 10, RANK_B1, RANK_B2, RANK_B3,
         RANK_B4, RANK_B5, RANK_B6, RANK_B7,
         RANK_C0 = 20, RANK_C1, RANK_C2, RANK_C3,
-        RANK_C4, RANK_C5, RANK_C6, RANK_C7
+        RANK_C4, RANK_C5, RANK_C6, RANK_C7,
+        // The two portrait rows the right-click opens into a detail view: one
+        // hero and one creature cell per player column.
+        HERO_P0 = 0x2ee, HERO_P1, HERO_P2, HERO_P3,
+        HERO_P4, HERO_P5, HERO_P6, HERO_P7,
+        CREATURE_P0 = 0x352, CREATURE_P1, CREATURE_P2, CREATURE_P3,
+        CREATURE_P4, CREATURE_P5, CREATURE_P6, CREATURE_P7
     };
 
-    char pad_60[0x20];
+    // +0x60: one game-position per player column, filled by SetupThievesGuild.
+    // WindowHandler's right-click arms gate the hero/creature view on
+    // owners[player] == GetLocalPlayerGamePos(), so only the local player's own
+    // column opens the detail view.
+    int owners[8];
     // +0x80: attested only as the destructor's first teardown - deleted
     // through slot 0 before the widget list, so it is an owned object
     // with a virtual destructor and nothing else about it is proven.

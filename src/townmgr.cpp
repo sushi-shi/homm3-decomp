@@ -1764,7 +1764,9 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // fills them); declared here as the two consumers' externs.
 DATA(0x006a9e00) extern int heroWidgetMap[];
 DATA(0x006a98ec) extern int creatureWidgetMap1[];
-DATA(0x006aa660) extern int creatureSlotMap[];
+// One armyGroup per player column: SetRolloverText reads a single slot out of a
+// row, WindowHandler hands a whole row to game::ViewArmy.
+DATA(0x006aa660) extern armyGroup creatureArmies[];
 
 // Located, not reconstructed: the thieves' guild rollover-text setter and
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
@@ -1856,8 +1858,7 @@ void TThievesGuildWindow::SetRolloverText(int codeY)
                 strcpy(gText, emptyRolloverText);
             }
         } else {
-            int col = creatureWidgetMap1[codeY];
-            int slot = creatureSlotMap[col + 14 * (codeY - 0x352)];
+            int slot = creatureArmies[codeY - 0x352].armies[creatureWidgetMap1[codeY]];
             if (slot >= 0 && slot <= 0x96)
                 strcpy(gText, akCreatureTypeTraits[slot].m_plural_name);
             else
@@ -1877,14 +1878,82 @@ void TThievesGuildWindow::SetRolloverText(int codeY)
     gpWindowManager->UpdateScreen(x + 8, y + 0x22c, 0x2e0, 0x12);
 }
 
-#if 0  // @carcass: located, not reconstructed
+// The thieves' guild's message handler, reconstructed 2026-08-25 from the
+// prior lane's decode. Right-clicks (WIDGET_RIGHT_SELECT) on a rank cell open a
+// NormalDialog headed by the matching gPrimaryStatNames column; right-clicks on
+// a hero or creature portrait open that unit's detail view, but only for the
+// local player's own column (owners[player] == GetLocalPlayerGamePos()). Mouse
+// moves refresh the rollover line through the window manager's hover latch.
+// The two big-value portrait rows dispatch through a second compressed switch;
+// the creature row hands game::ViewArmy a whole armyGroup out of the same
+// 0x6aa660 storage SetRolloverText reads one slot from.
 // E:\gamedcs\townmgr.cpp:4154
 VA(0x005c9930, 0x2AC)  // anchor-vtable 0x643764 slot 9 + anchor-callee(SetRolloverText 0x5c9710 + ViewArmy/HeroView/ConvertToHover) + arity(ret 4), dc 0x16e43c
 int TThievesGuildWindow::WindowHandler(message* msg)
 {
-    // @stub
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    switch (msg->id) {
+    case MESSAGE_WIDGET:
+        if (msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+            if (msg->codeY <= 37) {
+                if (msg->codeY < 30) {
+                    switch (msg->codeY) {
+                    case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
+                    case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
+                        NormalDialog(gPrimaryStatNames[0], 4, -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                        return MESSAGE_DISPATCH_CONSUME;
+                    case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
+                    case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
+                        NormalDialog(gPrimaryStatNames[1], 4, -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                        return MESSAGE_DISPATCH_CONSUME;
+                    case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
+                    case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
+                        NormalDialog(gPrimaryStatNames[2], 4, -1, -1, -1, 0,
+                                     -1, 0, -1, 0, -1, 0);
+                        return MESSAGE_DISPATCH_CONSUME;
+                    }
+                } else {
+                    NormalDialog(gPrimaryStatNames[3], 4, -1, -1, -1, 0,
+                                 -1, 0, -1, 0, -1, 0);
+                    return MESSAGE_DISPATCH_CONSUME;
+                }
+            } else {
+                switch (msg->codeY) {
+                case HERO_P0: case HERO_P1: case HERO_P2: case HERO_P3:
+                case HERO_P4: case HERO_P5: case HERO_P6: case HERO_P7:
+                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - HERO_P0])
+                        HeroView(heroWidgetMap[msg->codeY], 1, 0, 1);
+                    return MESSAGE_DISPATCH_CONSUME;
+                case CREATURE_P0: case CREATURE_P1: case CREATURE_P2:
+                case CREATURE_P3: case CREATURE_P4: case CREATURE_P5:
+                case CREATURE_P6: case CREATURE_P7:
+                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - CREATURE_P0]) {
+                        int player = msg->codeY - CREATURE_P0;
+                        gpGame->ViewArmy(creatureArmies[player],
+                                         creatureWidgetMap1[player + CREATURE_P0],
+                                         0, 0, 0x77, 0x14, 0, 1);
+                    }
+                    return MESSAGE_DISPATCH_CONSUME;
+                }
+            }
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != gpWindowManager->lastHover) {
+            gpWindowManager->lastHover = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        break;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
 }
-#endif  // @carcass
 
 // The town hall, and the compiland's largest reconstructed body: one page
 // per town type, each a background and a grid of building slots read out
