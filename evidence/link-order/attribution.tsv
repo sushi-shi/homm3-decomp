@@ -432,7 +432,7 @@ rva	size	unit	current_label	provenance
 0x155180	5	remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	src-VA+ir
 0x155190	793	remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	src-VA+ir
 0x1554b0	33	remote	??_GCWaitForReadyPlayersDlg@@UAEPAXI@Z	src-VA+base
-0x1554e0	201	remote	game_1554b0_sub00_1554e0	working-label
+0x1554e0	201	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	src-VA+base
 0x1555b0	294	remote	?CreateDPlayObject@@YIEXZ	src-VA+ir
 0x1556e0	548	remote	?InitConnection@@YIEPADPAU_DPCOMPORTADDRESS@@@Z	src-VA+ir
 0x155910	8	remote	?DestroyMsg@@YIXPAVCNetMsg@@@Z	src-VA+ir

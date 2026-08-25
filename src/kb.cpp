@@ -17,46 +17,49 @@
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:240
-DC_ONLY(0xdf160, 0x7C)
+VA(0x004ed230, 0x6A)  // linkorder order-map + dc-xref CSprite::Draw, dc 0xdf160
 void DrawProgressCount()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:252
-DC_ONLY(0xdf1dc, 0x4A)
+VA(0x004ed2a0, 0xA7)  // linkorder order-map (4:4 bijection cinit..PollSound), dc 0xdf1dc
 void IncProgressBar(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:269
-DC_ONLY(0xdf228, 0x7C)
+VA(0x004ed350, 0xF3)  // anchor-global loadbar.pcx + linkorder, dc 0xdf228
 void ShowProgressBar()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:292
-DC_ONLY(0xdf2a4, 0x8C)
+VA(0x004ed450, 0x3D)  // linkorder order-map (4:4 bijection cinit..PollSound), dc 0xdf2a4
 void UnloadProgressBar()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:318
-// RETAIL_LOCATED(0x004ed490, 0x1B5)  // anchor-global, dc 0xdf330
+VA(0x004ed490, 0x1B5)  // anchor-global, dc 0xdf330
 void PollSound()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:431
-// Located by exhaustive order-mapping of the six carve rows after
-// PollSound onto the six DC kb.cpp functions PollSound..oldmain
-// (492->1256 B: the WinCE build strips the Win32 menu loading that
-// gives the retail body its LoadMenuA call). WinMain's first gate.
-// RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
+// Retail body is the manager-constructor: dc-xref shows InitMainClasses
+// calls the 12 manager ctors (executive/inputManager/mouseManager/
+// soundManager/highScoreManager/game/advManager/combatManager/
+// townManager/searchArray/philAI/heroWindowManager), and retail
+// 0x004edb40 constructs exactly those via exe_new (598 B, 1.22x). The
+// earlier note's 0x004ed650 is its CALLER (loads text then calls
+// 0x004edb40); it merges DC EarlySetup+LoadGameData and stays DC_ONLY.
+VA(0x004edb40, 0x256)  // anchor-callee dc-xref (12 manager ctors), dc 0xdf4e4
 int InitMainClasses()
 {
     // @stub
@@ -91,7 +94,7 @@ int EarlySetup()
 }
 
 // E:\gamedcs\kb.cpp:722
-DC_ONLY(0xdfa3c, 0x520)
+VA(0x004edda0, 0x407)  // anchor-global credits.fnt + linkorder, dc 0xdfa3c
 void CreditsWait()
 {
     // @stub
@@ -105,7 +108,7 @@ void ShowCredits()
 }
 
 // E:\gamedcs\kb.cpp:879
-DC_ONLY(0xdffe4, 0x174)
+VA(0x004ee2b0, 0x121)  // anchor-global ultimatelose + linkorder, dc 0xdffe4
 void LostGame()
 {
     // @stub
@@ -114,7 +117,7 @@ void LostGame()
 // E:\gamedcs\kb.cpp:962
 // Located by the same PollSound..oldmain order-mapping (4532->7172 B);
 // WinMain's final call - the game main loop.
-// RETAIL_LOCATED(0x004ee3e0, 0x1C04)  // linkorder, dc 0xe0158
+VA(0x004ee3e0, 0x1C04)  // anchor-import MessageBoxA + dc-xref (37 shared callees), dc 0xe0158
 int oldmain()
 {
     // @stub
@@ -191,7 +194,7 @@ int ExitNormalDialog(message* msg)
 }
 
 // E:\gamedcs\kb.cpp:2367
-DC_ONLY(0xe1ccc, 0x118)
+VA(0x004f08d0, 0x20C)  // anchor-callee GetNetMsgHandler/CTurnDuration::IsExpired, dc 0xe1ccc
 int NormalDialogHandler(message* msg)
 {
     // @stub
@@ -205,14 +208,14 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
 }
 
 // E:\gamedcs\kb.cpp:2452
-DC_ONLY(0xe1e58, 0x214)
+VA(0x004f0b20, 0x491)  // anchor-callee NormalDialog + type_artifact::get_description, dc 0xe1e58
 unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:2549
-DC_ONLY(0xe206c, 0x1EE)
+VA(0x004f0fc0, 0x1C3)  // anchor-callee heroWindow::GetWidget (called by NormalDialogHandler), dc 0xe206c
 int EventWindowHandler(message* msg)
 {
     // @stub
@@ -226,7 +229,7 @@ int TrueFalseDialogHandler(message* msg)
 }
 
 // E:\gamedcs\kb.cpp:2636
-DC_ONLY(0xe226c, 0x234)
+VA(0x004f11a0, 0x2BC)  // anchor-callee game::Claim{Garrison,Mine,Generator,Shipyard}+HandleRemoteDeadPlayerExit, dc 0xe226c
 void PlayerDead(int iWhichPlayer)
 {
     // @stub
@@ -261,7 +264,7 @@ void SendPlayerLost()
 }
 
 // E:\gamedcs\kb.cpp:2888
-DC_ONLY(0xe29a8, 0xB1A)
+VA(0x004f15e0, 0x1348)  // anchor-global "you have defeated all" + called by CheckEndGame, dc 0xe29a8
 unsigned char DisplayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
 {
     // @stub
@@ -275,14 +278,14 @@ int GetEnemyCount()
 }
 
 // E:\gamedcs\kb.cpp:3440
-DC_ONLY(0xe3558, 0x228)
+VA(0x004f2960, 0x37E)  // anchor-callee dc-xref getLocalPlayerGamePos/getPlayerName/getTownId + called by CheckEndGame, dc 0xe3558
 unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:3566
-DC_ONLY(0xe3780, 0x282)
+VA(0x004f2ce0, 0x5BA)  // anchor-callee calls DisplayVCWinLoss+DisplayLCWinLoss+PlayerDead, dc 0xe3780
 void CheckEndGame(int bForceWin)
 {
     // @stub
@@ -296,14 +299,14 @@ void InitVars()
 }
 
 // E:\gamedcs\kb.cpp:3798
-DC_ONLY(0xe3a64, 0x11E)
+VA(0x004f32a0, 0x29C)  // anchor-callee dc-xref (3 shared), dc 0xe3a64
 void game::ShowMoraleInfo(hero* thisHero, int iMBType)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:3830
-DC_ONLY(0xe3b84, 0x160)
+VA(0x004f3540, 0x14B)  // anchor-callee dc-xref, dc 0xe3b84
 void game::ShowLuckInfo(hero* thisHero, int iMBType)
 {
     // @stub
@@ -313,7 +316,7 @@ void game::ShowLuckInfo(hero* thisHero, int iMBType)
 // Located by shape + lineage: the carve's "unexpected program
 // termination" routine, called from executive::DoDialog's four
 // manager-add failure arms (homm2's ShutDown(gExecutiveText...)).
-// RETAIL_LOCATED(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
+VA(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
 void ShutDown(const char* cInExitMessage)
 {
     // @stub
@@ -327,7 +330,7 @@ void FileError(const char* cBuf)
 }
 
 // E:\gamedcs\kb.cpp:3970
-DC_ONLY(0xe3e48, 0x450)
+VA(0x004f3ab0, 0x374)  // anchor-global hiscore.fnt + dc-xref (11 shared), dc 0xe3e48
 void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
 {
     // @stub
@@ -348,7 +351,7 @@ short game::get_map_score()
 }
 
 // E:\gamedcs\kb.cpp:4102
-DC_ONLY(0xe4330, 0x1BE)
+VA(0x004f3f60, 0x357)  // anchor-global win-scenario + dc-xref (9 shared), dc 0xe4330
 void ShowCongrats(int hsType)
 {
     // @stub
