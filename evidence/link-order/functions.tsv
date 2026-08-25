@@ -2516,11 +2516,11 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x105610	1016	in-span	mapcell	mapcell	?calc_cell_extra@NewfullMap@@QAEXPAVNewmapCell@@E@Z
 0x105a10	264	in-span	mapcell	mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z
 0x105b20	498	in-span	mapcell	mapcell	?PlaceObject@NewfullMap@@QAEHHE@Z
-0x105d20	63	bracketed	mapcell..misc	mapcell,misc	game_ad470_sub06_105d20
-0x105d60	63	bracketed	mapcell..misc	mapcell,misc	game_a6df0_sub01_105d60
-0x105da0	248	bracketed	mapcell..misc	mapcell,misc	game_objects_txt_105da0
-0x105ea0	128	bracketed	mapcell..misc	mapcell,misc	game_c9990_sub01_105ea0
-0x105f20	343	bracketed	mapcell..misc	mapcell,misc	game_c9890_sub00_105f20
+0x105d20	63	bracketed	mapcell..misc	mapcell,misc	NewfullMap_NewfullMapFn_00505D20
+0x105d60	63	bracketed	mapcell..misc	mapcell,misc	NewfullMap_NewfullMapFn_00505D60
+0x105da0	248	bracketed	mapcell..misc	mapcell,misc	NewfullMap_NewfullMapFn_00505DA0
+0x105ea0	128	bracketed	mapcell..misc	mapcell,misc	NewfullMap_NewfullMapFn_00505EA0
+0x105f20	343	bracketed	mapcell..misc	mapcell,misc	NewfullMap_NewfullMapFn_00505F20
 0x106080	468	bracketed	mapcell..misc	mapcell,misc	game_105da0_sub00_106080
 0x106260	56	bracketed	mapcell..misc	mapcell,misc	??1?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAE@XZ
 0x1062a0	33	bracketed	mapcell..misc	mapcell,misc	?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QBEIXZ
