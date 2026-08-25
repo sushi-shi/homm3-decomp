@@ -34,6 +34,7 @@
 // EH-bearing rows still deferred.
 class TTradeResourceWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TTradeResourceWindow();
 };
 
