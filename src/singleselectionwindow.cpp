@@ -441,14 +441,35 @@ void CChatSlider::SetState(int state)
         knobPos = knobRange * state / (n - 1) + 0x10;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:1675
 VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget vtbl 0x241bdc slot4 (Draw override vs textWidget base), dc 0x148df4
 void CChatWidget::Draw()
 {
-    // @stub
+    CChatSave* save = m_save;
+    if (!save->IsSaved()) {
+        if (save) {
+            int py = y + parentWindow->y;
+            int px = x + parentWindow->x;
+            save->bSaved = 1;
+            save->Grab(gpWindowManager->screenBitmap->map, px, py,
+                       gpWindowManager->screenBitmap->Width,
+                       gpWindowManager->screenBitmap->Height,
+                       gpWindowManager->screenBitmap->Pitch);
+            textWidget::Draw();
+            return;
+        }
+    } else {
+        save->Draw(0, 0, width, height,
+                   gpWindowManager->screenBitmap->map,
+                   x + parentWindow->x, y + parentWindow->y,
+                   gpWindowManager->screenBitmap->Width,
+                   gpWindowManager->screenBitmap->Height,
+                   gpWindowManager->screenBitmap->Pitch, 0);
+    }
+    textWidget::Draw();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1810
 VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0

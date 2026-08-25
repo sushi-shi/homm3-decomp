@@ -12,6 +12,7 @@
 #include "remotedlg.h"
 #include "textntry.h"
 #include "netmsg.h"
+#include "winmgr.h"
 
 // The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into
@@ -58,6 +59,23 @@ public:
     virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
 
     unsigned char m_wasCompressed;  // +0x0c
+};
+
+// The chat text widget. It snapshots the screen region under itself into a
+// CChatSave (Bitmap16Bit + a saved flag at +0x38, the CTextEntrySave shape)
+// so Draw restores the background before repainting. m_save at +0x50; vtable
+// 0x241bdc overrides slot 4 (Draw vs the textWidget base).
+class CChatWidget : public textWidget {
+public:
+    class CChatSave : public Bitmap16Bit {
+    public:
+        unsigned char bSaved;  // +0x38
+        unsigned char IsSaved() const { return bSaved; }
+    };
+
+    virtual void Draw();  // slot 4
+
+    CChatSave* m_save;  // +0x50
 };
 
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_PRIV_H */
