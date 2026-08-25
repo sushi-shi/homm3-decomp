@@ -97,7 +97,7 @@ spelldefs	0x19e060	0x19e4af	1103	3	0	3	3	0
 spells	0x1a3700	0x1a939c	23708	9	0	40	9	31
 strip	0x1a9d20	0x1aa31e	1534	5	0	5	5	0
 subwindow	0x1aa340	0x1aa68a	842	8	0	9	8	1
-swapmgr	0x1b1380	0x1b139c	28	1	0	1	1	0
+swapmgr	0x1aaa80	0x1b139c	26908	23	0	24	23	1
 systemoptionswindow	0x1b1790	0x1b375e	8142	4	0	5	4	1
 text	0x1b90f0	0x1b9109	25	1	0	1	1	0
 textntry	0x1ba920	0x1bbab4	4500	6	0	13	6	7
