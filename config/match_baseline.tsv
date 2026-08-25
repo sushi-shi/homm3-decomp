@@ -2384,6 +2384,7 @@ singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CBonusDl
 singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CHeroDlg	0.0000	0.0000	0.0000	0x175e30
 singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CHotspotWidget	0.0000	0.0000	0.0000	0x175260
 singleselectionpopups	__h3cg$singleselectionpopups$scalar_deleting_dtor$CSpriteWidget	0.0000	0.0000	0.0000	0x1757b0
+singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
@@ -2412,7 +2413,6 @@ singleselectionwindow	TSingleSelectionWindow_UpdateAllyEnemyFlags	0.0000	0.0000	
 singleselectionwindow	TSingleSelectionWindow_UpdatePlayerPositions	0.0000	0.0000	0.0000	0x188330
 singleselectionwindow	TSingleSelectionWindow_WindowHandler	0.0000	0.0000	0.0000	0x187d00
 singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$CHostWaitDlg	0.0000	0.0000	0.0000	0x189200
-singleselectionwindow	__h3cg$singleselectionwindow$scalar_deleting_dtor$TSingleSelectionWindow	0.0000	0.0000	0.0000	0x17d130
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
