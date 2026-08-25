@@ -1840,6 +1840,7 @@ remote	??1CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157430
 remote	??1CNetMsgHandler@@UAE@XZ	41.8750	41.8750	41.8750	0x1578d0
 remote	??1CNetMsgHandlerPause@@UAE@XZ	91.1111	91.1111	91.1111	0x157ee0
 remote	??1CSaveScreen@@UAE@XZ	100.0000	100.0000	100.0000	0x157340
+remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	79.7500	79.7500	79.7500	0x1554e0
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
 remote	??_GCDPlayHeroes@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1522f0
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
@@ -1939,6 +1940,13 @@ remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.00
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190
 remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1570f0
+remote	CDPlayHeroes_GetRemoteData	0.0000	0.0000	0.0000	0x153040
+remote	CDPlayHeroes_HandleLowLevelMsg	0.0000	0.0000	0.0000	0x152db0
+remote	CDPlayHeroes_PollRemote	0.0000	0.0000	0.0000	0x152b60
+remote	CDPlayHeroes_SysMsgCreatePlayerOrGroup	0.0000	0.0000	0.0000	0x152b40
+remote	CDPlayHeroes_SysMsgDestroyPlayerOrGroup	0.0000	0.0000	0.0000	0x152920
+remote	CDPlayHeroes_SysMsgHost	0.0000	0.0000	0.0000	0x152530
+remote	CDPlayHeroes_SysMsgSessionLost	0.0000	0.0000	0.0000	0x152740
 remote	__h3cg$remote$static_ctor$logFile	100.0000	100.0000	100.0000	0x152260
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0
