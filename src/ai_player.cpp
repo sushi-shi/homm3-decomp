@@ -1127,19 +1127,8 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 // twice in retail. See the live 99.90% body above; no unclaimed row remains in
 // this ai_player span.
 
-// E:\gamedcs\ai_player.cpp:834
-DC_ONLY(0x2f4b0, 0x96)
-long value_of_dwelling(town* current_town, short dwelling, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:865
-DC_ONLY(0x2f548, 0xB4)
-long value_of_dwelling_upgrade(town* current_town, short dwelling, int* extra_cost)
-{
-    // @stub
-}
+// value_of_dwelling (dc 0x2f4b0) promoted to VA(0x0042b520) in RVA order above.
+// value_of_dwelling_upgrade (dc 0x2f548) promoted to VA(0x0042b5b0) above.
 
 // E:\gamedcs\ai_player.cpp:895
 DC_ONLY(0x2f5fc, 0x98)
@@ -1169,19 +1158,8 @@ long value_of_silo(town* current_town, playerData* player)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1056
-DC_ONLY(0x2f9bc, 0xCC)
-long value_of_horde(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:1082
-DC_ONLY(0x2fa88, 0xA2)
-long value_of_horde_upgrade(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
+// value_of_horde (dc 0x2f9bc) promoted to VA(0x0042b790) in RVA order above.
+// value_of_horde_upgrade (dc 0x2fa88) promoted to VA(0x0042b800) above.
 
 // E:\gamedcs\ai_player.cpp:1109
 DC_ONLY(0x2fb2c, 0x280)
@@ -1364,6 +1342,40 @@ void type_AI_player::do_resource_trade(int* supply)
 // Retail 0x2ae00.
 VA(0x0042ae00, 0x718)  // anchor-callee + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
+{
+    // @stub
+}
+
+// Retail relocated the value_of_* building-value helpers here, directly after
+// their purchase_building/value_of_building caller region (DC source order puts
+// them at 0x2f4b0..). Two adjacency-locked pairs, each arity- and body-matched:
+// dwelling/dwelling_upgrade read town growth (get_castle_growth_bonus /
+// get_growth_rate); horde/horde_upgrade read town->get_horde_effect. DC free
+// fastcall arities transfer exactly (p4->ret8, p3->ret4).
+// E:\gamedcs\ai_player.cpp:834
+VA(0x0042b520, 0x8b)  // value_of_* block + get_castle_growth_bonus + ret8/p4, dc 0x2f4b0
+long value_of_dwelling(town* current_town, short dwelling, unsigned char* prohibited, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:865
+VA(0x0042b5b0, 0xbe)  // adjacent to value_of_dwelling + get_growth_rate + ret4/p3, dc 0x2f548
+long value_of_dwelling_upgrade(town* current_town, short dwelling, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:1056
+VA(0x0042b790, 0x62)  // get_horde_effect + ret8/p4; pairs with horde_upgrade, dc 0x2f9bc
+long value_of_horde(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:1082
+VA(0x0042b800, 0xa2)  // get_horde_effect + ret8/p4; size 0xa2 carve-exact, dc 0x2fa88
+long value_of_horde_upgrade(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
 {
     // @stub
 }
