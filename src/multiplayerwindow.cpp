@@ -4,6 +4,7 @@
 #include <va.h>
 #include "multiplayerwindow.h"
 #include "winmgr.h"
+#include "csprite.h"
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -372,37 +373,79 @@ void TMultiPlayerWindow::TMultiPlayerWindow()
 {
     // @stub
 }
+#endif
 
+// E:\gamedcs\MultiPlayerWindow.h:91
 VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
 textWidget* TMultiPlayerWindow::GetRolloverWidget()
 {
-    // @stub
+    return RolloverWidget;
 }
 
-VA(0x0050edb0, 0x21)  // anchor-vtable 0x6400a0 slot 0 (scalar deleting dtor); body calls ~TMPW 0x50ee40 + operator delete, ret 4, dc 0x102f98
-void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
+VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
+
+// E:\gamedcs\multiplayerwindow.cpp:1012
+VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x50edb0, dc 0x100430
+TMultiPlayerWindow::~TMultiPlayerWindow()
 {
-    // @stub
+    gpMultiPlayerWindow = 0;
+    GameState->Dispose();
+    delete_widgets();
+    pSessions->Destroy();
+    delete pSessions;
 }
 
-VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x10edb0, dc 0x100430
-void TMultiPlayerWindow::~TMultiPlayerWindow()
-{
-    // @stub
-}
-
-VA(0x0050eef0, 0xC9)  // anchor-bracket: sole no-arg void member (ret 0, ecx=this) between ~TMPW and Update; toggles widget set via widget::send_message x12, dc 0x100498
+// E:\gamedcs\multiplayerwindow.cpp:1025
+VA(0x0050eef0, 0xC9)  // anchor-bracket: no-arg void member; toggles widget set via widget::send_message x12, dc 0x100498
 void TMultiPlayerWindow::GoSessionList()
 {
-    // @stub
+    inSessionList = 1;
+    showSplash = 0;
+    splash->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
 }
 
-VA(0x0050efc0, 0x12B)  // anchor-bracket: second no-arg void member in the ~TMPW..Update run; send_message x13 + GetWidget + operator delete (teardown), dc 0x10051c
+// E:\gamedcs\multiplayerwindow.cpp:1049
+VA(0x0050efc0, 0x12B)  // anchor-bracket: send_message x13 + GetWidget + pSessions->Destroy() teardown, dc 0x10051c
 void TMultiPlayerWindow::GoMainMenu()
 {
-    // @stub
+    inSessionList = 0;
+    showSplash = 1;
+    sessTimer = 0;
+    hostJoinScreen = 0;
+    splash->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (hotSeat)
+        hotSeat->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    ipx->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    tcp->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    modem->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    direct->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    if (host)
+        host->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    join->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    search->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    online->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    userNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    sessNameHeader->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    widget* w = GetWidget(126);
+    if (w)
+        w->send_message(widget::WIDGET_CLEAR_STATUS, widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    pSessions->Destroy();
 }
 
+#if 0  // @carcass
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
 void TMultiPlayerWindow::Update()
 {
@@ -441,30 +484,58 @@ void CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
     // @stub
 }
 
-VA(0x005108a0, 0x4E)  // anchor-callee: ~dtor reached from scalar-dtor 0x1109e0, dc 0x102718
-void CMPInputDlg::~CMPInputDlg()
+#endif
+
+// E:\gamedcs\multiplayerwindow.cpp:465
+VA(0x005108a0, 0x4E)  // anchor-callee: ~dtor reached from scalar-dtor 0x5109e0, dc 0x102718
+CMPInputDlg::~CMPInputDlg()
 {
-    // @stub
+    delete_widgets();
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:470
 VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
 int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
-    // @stub
+    // Residual (83.4%): merged-return CL-generation class. Retail sinks the
+    // shared `return 0` join (reached by the default dispatch and the empty-
+    // field reject) to the very end, past the OKAY accept block; our SP3 CL
+    // places it between the OKAY test and the accept block. Dispatch, guards
+    // and both accept blocks are byte-exact. Tried and rejected: `&&`+return
+    // (dispatch regresses to je-BACK, 77%), `||`+break, nested-if+return 0
+    // (same 77%). The _Nullstr vs adventureTownRolloverEmptyText reloc is the
+    // c_str() null fallback and is cosmetic (OnOK matches with the same base
+    // reloc). break form is closest.
+    switch (id) {
+    case OKAY_ID:
+        if (field1->status & widget::WIDGET_ACTIVE) {
+            if (!strlen(field1->Text.c_str()))
+                break;
+        }
+        *bExitFlag = 1;
+        gpWindowManager->dialogReturn = DIALOG_RETURN_OK;
+        return 1;
+
+    case BACK_ID:
+        *bExitFlag = 1;
+        gpWindowManager->dialogReturn = DIALOG_RETURN_CANCEL;
+        return 1;
+    }
+
+    return 0;
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:505
 VA(0x00510970, 0x4)  // anchor-vtable 0x6400f4 slot 13 (GetRolloverWidget), dc 0x1027ec
 textWidget* CMPInputDlg::GetRolloverWidget()
 {
-    // @stub
+    return rollover;
 }
 
-VA(0x005109e0, 0x21)  // anchor-vtable 0x6400f4 slot 0 (scalar deleting dtor); body calls ~CMPInputDlg 0x5108a0 + operator delete, ret 4, dc 0x102890
-void* CMPInputDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// E:\gamedcs\multiplayerwindow.cpp:523
+VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
+#if 0  // @carcass
 VA(0x00511e20, 0x5A1)  // anchor-vtable 0x6401d8 into this + CHeroWindowEx base + muhotsea.pcx, dc 0x1028c4
 void CHotSeatDlg::CHotSeatDlg()
 {

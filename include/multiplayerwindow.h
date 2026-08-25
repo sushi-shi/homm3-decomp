@@ -63,6 +63,144 @@ public:
 };
 SIZE(CHotSeatDlg, 0x114);
 
+// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
+// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
+// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
+// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
+// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
+// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
+// The vtable 0x6400f4 is 14 slots (CHeroWindowEx's roster): overrides at slot
+// 0 (sdd/dtor), 12 (OnWidgetDeselect), 13 (GetRolloverWidget) - exactly the
+// CHotSeatDlg shape. UpdateOK/DisableOK/OnOK are non-virtual. field1/field2
+// are DC CMPInputEdit* but reached only as textWidget here.
+class CMPInputDlg : public CHeroWindowEx {
+public:
+    enum {
+        BACKGROUND_ID = 500,
+        FIELD1_ID = 501,
+        FIELD2_ID = 502,
+        HEADER1_ID = 503,
+        HEADER2_ID = 504,
+        OKAY_ID = 505,
+        BACK_ID = 506,
+        ROLLOVER_ID = 507
+    };
+
+    textWidget* field1;    // +0x50 (DC CMPInputEdit*)
+    textWidget* field2;    // +0x54 (DC CMPInputEdit*)
+    textWidget* header1;   // +0x58
+    textWidget* header2;   // +0x5c
+    textWidget* rollover;  // +0x60
+
+    CMPInputDlg(int maxChars1, int maxChars2);
+    virtual ~CMPInputDlg();
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    unsigned char OnOK();
+    void UpdateOK();
+    void DisableOK();
+};
+SIZE(CMPInputDlg, 0x64);
+
+class CSprite;
+class CDPlaySession;
+
+// CAutoArray<T> - E:\gamedcs\array.h's hand-rolled auto-growing pointer
+// array. DC field list 0x2967 (no STLport shift; a plain class): vfptr@0,
+// step@4, pArray@8, allocSize@0xc, size@0x10; total 0x14. The 7-slot vtable
+// (0x6400d8 for <CDPlaySession>) is ~/sdd, Add, Get, Put, Delete, Insert,
+// GetCount. Destroy() (NH3API name) is the inlined "delete every element via
+// the virtual Get, free pArray, reset to empty" that ~TMPW and GoMainMenu
+// both expand; elements are freed with a bare operator delete because T is
+// incomplete here (matches retail's ??3 with no element dtor).
+template<class T>
+class CAutoArray {
+public:
+    unsigned long step;       // +0x4
+    T** pArray;               // +0x8
+    unsigned long allocSize;  // +0xc
+    unsigned long size;       // +0x10
+
+    virtual ~CAutoArray();
+    virtual unsigned char Add(T* element);
+    virtual T* Get(unsigned long elementNbr);
+    virtual unsigned char Put(unsigned long elementNbr, T* element);
+    virtual unsigned char Delete(unsigned long elementNbr);
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
+    virtual unsigned long GetCount();
+
+    void Destroy(unsigned char deleteData = 1)
+    {
+        if (deleteData) {
+            for (unsigned long i = 0; i < size; i++)
+                delete Get(i);
+        }
+        if (pArray)
+            delete pArray;
+        pArray = 0;
+        allocSize = 0;
+        size = 0;
+    }
+};
+
+// TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
+// DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
+// byte-wider base shifts every trailing member +4 (all are pointers, a char
+// array, or small scalars, so the shift is uniform). Retail proofs:
+// GetRolloverWidget reads RolloverWidget@0xfc; InitRemote reads playerName
+// @0xbc and sessTimer@0x68; ~dtor reads GameState@0x50 and pSessions@0x60;
+// GoSessionList/GoMainMenu toggle the button run @0xc4..0xf8. Total 0x100.
+// The 14-slot vtable 0x6400a0 overrides slot 0 (sdd/dtor), 9 (WindowHandler),
+// 12 (OnWidgetDeselect), 13 (GetRolloverWidget).
+//
+// The DC types of the widget members are bitmapBorder* (splash), button*
+// (the ten screen buttons), slider* (gameSlider) and textWidget* (the three
+// headers); they are modelled as their widget/textWidget base here because
+// every reconstructed body reaches them only through widget::send_message /
+// textWidget::Text, and narrowing the include set avoids the declarator wall.
+class TMultiPlayerWindow : public CHeroWindowEx {
+public:
+    CSprite* GameState;                     // +0x50
+    unsigned char inSessionList;            // +0x54
+    unsigned char showSplash;               // +0x55
+    int currentGame;                        // +0x58
+    int currentIndex;                       // +0x5c
+    CAutoArray<CDPlaySession>* pSessions;   // +0x60
+    unsigned long sessTimer;                // +0x64
+    unsigned long sessionRefreshTimeout;    // +0x68
+    char localIPAddress[80];                // +0x6c
+    textWidget* playerName;                 // +0xbc (DC textEntryWidget*)
+    unsigned char hostJoinScreen;           // +0xc0
+    widget* splash;                         // +0xc4 (DC bitmapBorder*)
+    widget* hotSeat;                        // +0xc8 (DC button*)
+    widget* ipx;                            // +0xcc
+    widget* tcp;                            // +0xd0
+    widget* modem;                          // +0xd4
+    widget* direct;                         // +0xd8
+    widget* online;                         // +0xdc
+    widget* host;                           // +0xe0
+    widget* join;                           // +0xe4
+    widget* search;                         // +0xe8
+    widget* cancel;                         // +0xec
+    widget* gameSlider;                     // +0xf0 (DC slider*)
+    textWidget* sessNameHeader;             // +0xf4
+    textWidget* userNameHeader;             // +0xf8
+    textWidget* RolloverWidget;             // +0xfc
+
+    TMultiPlayerWindow();
+    virtual ~TMultiPlayerWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    void GoSessionList();
+    void GoMainMenu();
+};
+SIZE(TMultiPlayerWindow, 0x100);
+
+// The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
+// nulls (0x50ee40+0x51). No DC public names it - provisional house name.
+DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:872, dc 0xffb40) void DeleteTempSaveGame(const char* filename);
