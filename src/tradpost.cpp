@@ -34,53 +34,31 @@ void SellCreatureSlider(int state, heroWindow* parent_window)
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:93
-DC_ONLY(0x181a88, 0x1338)
-void TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:196
-DC_ONLY(0x182e24, 0x10A8)
-void TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:299
-DC_ONLY(0x183f30, 0x1274)
-void TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:393
-DC_ONLY(0x185208, 0x1A2C)
-void TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:522
-DC_ONLY(0x186c98, 0x16F4)
-void TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
-// --- the five marketplace dialog destructors --------------------------
-// Retail emits each dialog as (constructor, ??_G, destructor); the
-// constructors above are the 8 KB EH-bearing rows still deferred, so the
-// ten rows below are written here in image order rather than in the
-// compiland's source order. Identity evidence is in tradpost.h.
+// --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
+// Retail emits each dialog as (constructor, ??_G, destructor) in image order;
+// the constructor of each class sits immediately before its ??_G/destructor
+// pair (the first, TTradeResourceWindow, at 0x5df5f0 in the townmgr->tradpost
+// gap just below this bracket). Each constructor is proven by the derived
+// vtable it stores - 0x6439f8/0x643a34/0x643a70/0x643aac/0x643ae8 - which is
+// the same one-to-one map tradpost.h derives from the PCX each ctor names.
+// They are 8 KB EH-bearing rows, claimed here in image order with deferred
+// @stub bodies (no member is modelled yet).
 //
 // Every one of the five destructors is the same body: store the derived
 // vptr, delete each non-null entry of heroWindow::Widgets, then run the
 // CAdvPopup base. They differ only in the vtable immediate and their EH
 // state table, which is also why /OPT:ICF could not fold them.
+
+#if 0  // @carcass -- located/reconstruction-pending body
+// E:\gamedcs\tradpost.cpp:93
+VA(0x005df5f0, 0x200c)  // anchor-vtable 0x6439f8 store, dc 0x181a88
+void TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+{
+    // @stub
+}
+#endif  // @carcass
 
 VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
 
@@ -94,6 +72,15 @@ TTradeResourceWindow::~TTradeResourceWindow()
     }
 }
 
+#if 0  // @carcass -- located/reconstruction-pending body
+// E:\gamedcs\tradpost.cpp:196
+VA(0x005e16c0, 0x1fab)  // anchor-vtable 0x643a34 store, dc 0x182e24
+void TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+{
+    // @stub
+}
+#endif  // @carcass
+
 VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
 
 // E:\gamedcs\tradpost.cpp:290
@@ -105,6 +92,15 @@ TGiveResourceWindow::~TGiveResourceWindow()
             delete *it;
     }
 }
+
+#if 0  // @carcass -- located/reconstruction-pending body
+// E:\gamedcs\tradpost.cpp:299
+VA(0x005e3730, 0x1f56)  // anchor-vtable 0x643a70 store, dc 0x183f30
+void TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+{
+    // @stub
+}
+#endif  // @carcass
 
 VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
 
@@ -118,6 +114,15 @@ TBuyArtifactWindow::~TBuyArtifactWindow()
     }
 }
 
+#if 0  // @carcass -- located/reconstruction-pending body
+// E:\gamedcs\tradpost.cpp:393
+VA(0x005e5730, 0x24a7)  // anchor-vtable 0x643aac store, dc 0x185208
+void TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+{
+    // @stub
+}
+#endif  // @carcass
+
 VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
 
 // E:\gamedcs\tradpost.cpp:513
@@ -129,6 +134,15 @@ TSellArtifactWindow::~TSellArtifactWindow()
             delete *it;
     }
 }
+
+#if 0  // @carcass -- located/reconstruction-pending body
+// E:\gamedcs\tradpost.cpp:522
+VA(0x005e7c80, 0x1fd5)  // anchor-vtable 0x643ae8 store, dc 0x186c98
+void TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+{
+    // @stub
+}
+#endif  // @carcass
 
 VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
 
@@ -320,14 +334,14 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts)
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:704
-DC_ONLY(0x188708, 0x4CC)
+VA(0x005ea130, 0x49c)  // anchor-callee (from 6 entry points) + linkorder, dc 0x188708
 void DoMarket()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:860
-DC_ONLY(0x188bd4, 0xF4)
+VA(0x005ea5d0, 0x103)  // ordermap clean run + arity ret 8, dc 0x188bd4
 void TSellArtifactWindow::update_sell_artifact_widget(message* msg, long i)
 {
     // @stub
@@ -439,246 +453,121 @@ void TSellCreatureWindow::SetWidgetDisabled(short id)
 }
 
 // E:\gamedcs\tradpost.cpp:995
-DC_ONLY(0x188fa4, 0x602)
+VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::Update(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:1240
-DC_ONLY(0x1895a8, 0x504)
+VA(0x005eaf50, 0x744)  // ordermap clean run + arity ret 4, dc 0x1895a8
 void TGiveResourceWindow::Update(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:1466
-DC_ONLY(0x189aac, 0x580)
+VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::Update(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:1716
-DC_ONLY(0x18a02c, 0x522)
+VA(0x005ebe80, 0x6cb)  // ordermap clean run + arity ret 4, dc 0x18a02c
 void TSellArtifactWindow::Update(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:1920
-DC_ONLY(0x18a550, 0x63A)
+VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::Update(unsigned char bUpdate)
 {
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:2160
-DC_ONLY(0x18ab8c, 0xE)
-long get_market_value(EGameResource resource)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2168
-DC_ONLY(0x18ab9c, 0x1AC)
-double get_trade_ratio(EGameResource source, EGameResource dest, double efficiency)
-{
-    // @stub
-}
+// The members below are folded into their callers on x86: the carve places
+// nothing where the DC roster lists them (the 16 SetWidgetOn/Off/Disabled
+// members between update_sell_artifact_widget 0x5ea5d0 and Update 0x5ea6e0,
+// the Trade/Give/Buy ComputeTradeRatios, the five SetupNewTrade and the three
+// TSellArtifactWindow backpack members). They keep no retail body and stay
+// DC_ONLY. Only TSellArtifactWindow's and TSellCreatureWindow's
+// ComputeTradeRatios survive out of line (claimed below get_market_value).
 
 // E:\gamedcs\tradpost.cpp:2181
-DC_ONLY(0x18ad48, 0x140)
+DC_ONLY(0x18ad48, 0x140)  // inlined away on x86 (no carve slot)
 void TTradeResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2202
-DC_ONLY(0x18ae88, 0x6C)
+DC_ONLY(0x18ae88, 0x6C)  // inlined away on x86 (no carve slot)
 void TGiveResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2209
-DC_ONLY(0x18aef4, 0xE0)
+DC_ONLY(0x18aef4, 0xE0)  // inlined away on x86 (no carve slot)
 void TBuyArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:2229
-DC_ONLY(0x18afd4, 0x140)
-void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2250
-DC_ONLY(0x18b114, 0x1D4)
-void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:2286
-DC_ONLY(0x18b2e8, 0x40)
+DC_ONLY(0x18b2e8, 0x40)  // inlined away on x86 (no carve slot)
 void TTradeResourceWindow::SetupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2294
-DC_ONLY(0x18b328, 0x40)
+DC_ONLY(0x18b328, 0x40)  // inlined away on x86 (no carve slot)
 void TGiveResourceWindow::SetupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2302
-DC_ONLY(0x18b368, 0x40)
+DC_ONLY(0x18b368, 0x40)  // inlined away on x86 (no carve slot)
 void TBuyArtifactWindow::SetupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2312
-DC_ONLY(0x18b3a8, 0x2A)
+DC_ONLY(0x18b3a8, 0x2A)  // inlined away on x86 (no carve slot)
 void TSellArtifactWindow::SetupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2319
-DC_ONLY(0x18b3d4, 0x40)
+DC_ONLY(0x18b3d4, 0x40)  // inlined away on x86 (no carve slot)
 void TSellCreatureWindow::SetupNewTrade()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2327
-DC_ONLY(0x18b414, 0x76)
+DC_ONLY(0x18b414, 0x76)  // inlined away on x86 (no carve slot)
 void TSellArtifactWindow::UpdateMarketBackpack()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2344
-DC_ONLY(0x18b48c, 0x3A)
+DC_ONLY(0x18b48c, 0x3A)  // inlined away on x86 (no carve slot)
 void TSellArtifactWindow::increment_backpack_start()
 {
     // @stub
 }
 
 // E:\gamedcs\tradpost.cpp:2356
-DC_ONLY(0x18b4c8, 0x78)
+DC_ONLY(0x18b4c8, 0x78)  // inlined away on x86 (no carve slot)
 void TSellArtifactWindow::decrement_backpack_start()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2368
-DC_ONLY(0x18b540, 0x284)
-int TTradeResourceWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2507
-DC_ONLY(0x18b7c4, 0x110)
-void TTradeResourceWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2566
-DC_ONLY(0x18b8d4, 0x26C)
-int TGiveResourceWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2688
-DC_ONLY(0x18bb40, 0x124)
-void TGiveResourceWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2743
-DC_ONLY(0x18bc64, 0x284)
-int TBuyArtifactWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2871
-DC_ONLY(0x18bee8, 0x124)
-void TBuyArtifactWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2932
-DC_ONLY(0x18c00c, 0x36C)
-int TSellArtifactWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:3109
-DC_ONLY(0x18c378, 0x144)
-void TSellArtifactWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:3189
-DC_ONLY(0x18c4bc, 0x2F4)
-int TSellCreatureWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:3324
-DC_ONLY(0x18c7b0, 0x134)
-void TSellCreatureWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:183
-DC_ONLY(0x18c8e4, 0x34)
-void* TTradeResourceWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:286
-DC_ONLY(0x18c918, 0x34)
-void* TGiveResourceWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:380
-DC_ONLY(0x18c94c, 0x34)
-void* TBuyArtifactWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:509
-DC_ONLY(0x18c980, 0x34)
-void* TSellArtifactWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:606
-DC_ONLY(0x18c9b4, 0x34)
-void* TSellCreatureWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
@@ -693,3 +582,118 @@ long get_market_value(EGameResource resource)
 {
     return gMarketValues[resource];
 }
+
+// --- trade-math helper and the per-window handler / rollover tails --------
+// Every row below sits ABOVE get_market_value in the image, so it is claimed
+// here (after it) to keep the file's VA order strictly increasing; in DC
+// source order these precede get_market_value. Identity is hard-proven:
+// WindowHandler is vtable slot 9 of each class (0x6439f8/.../0x643ae8), each
+// SetRolloverText is the direct-call target of its class's WindowHandler, and
+// the two surviving ComputeTradeRatios are named by their callers
+// (TSellArtifactWindow::WindowHandler -> 0x5ecdc0; TSellCreatureWindow::Update
+// and ::WindowHandler -> 0x5ece80, which also calls armyGroup::GetNumArmies).
+// Bodies deferred: the window classes carry no modelled members yet.
+// get_trade_ratio (below) needs none and is reconstructed; it inlines the two
+// get_market_value lookups (unsigned short widened through a dword slot), and
+// returns the integer-rounded exchange rate - the smaller side floored to 1.
+
+// E:\gamedcs\tradpost.cpp:2168
+VA(0x005ecd20, 0x94)  // free fn ret 8 + float ratio body, dc 0x18ab9c
+double get_trade_ratio(EGameResource source, EGameResource dest, double efficiency)
+{
+    double ratio = static_cast<double>(gMarketValues[dest])
+                 / (static_cast<double>(gMarketValues[source]) * efficiency);
+    if (ratio >= 1.0)
+        ratio = static_cast<double>(static_cast<long>(ratio + 0.999));
+    else
+        ratio = 1.0 / static_cast<double>(static_cast<long>(1.0 / ratio));
+    return ratio;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+// E:\gamedcs\tradpost.cpp:2229
+VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
+void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2250
+VA(0x005ece80, 0x157)  // anchor-callee (TSellCreatureWindow::Update+WindowHandler) + GetNumArmies, dc 0x18b114
+void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2368
+VA(0x005ecfe0, 0x3ba)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
+int TTradeResourceWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2507
+VA(0x005ed3a0, 0x1a2)  // anchor-callee (TTradeResourceWindow::WindowHandler), dc 0x18b7c4
+void TTradeResourceWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2566
+VA(0x005ed550, 0x2f1)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
+int TGiveResourceWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2688
+VA(0x005ed850, 0x190)  // anchor-callee (TGiveResourceWindow::WindowHandler), dc 0x18bb40
+void TGiveResourceWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2743
+VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
+int TBuyArtifactWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2871
+VA(0x005eddd0, 0x188)  // anchor-callee (TBuyArtifactWindow::WindowHandler), dc 0x18bee8
+void TBuyArtifactWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2932
+VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
+int TSellArtifactWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3109
+VA(0x005ee6c0, 0x1cf)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18c378
+void TSellArtifactWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3189
+VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
+int TSellCreatureWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3324
+VA(0x005eebd0, 0x1a1)  // anchor-callee (TSellCreatureWindow::WindowHandler), dc 0x18c7b0
+void TSellCreatureWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+#endif  // @carcass
