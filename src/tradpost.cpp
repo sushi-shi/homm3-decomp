@@ -288,6 +288,10 @@ DATA(0x006a542c) static char gMarketSubtitle[1];
 DATA(0x0068c482) static unsigned short gMarketValues[7];
 DATA(0x0068c492) static unsigned short gArtifactMarketValues[7];
 
+// The char* title the Trade/Give Updates copy for the freelancer-guild source
+// (gMarketSource == 3); runtime-set, single-use. Provisional name.
+DATA(0x006a7d40) static char* gMarketSource3Name;
+
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
@@ -692,14 +696,186 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:1240
+// Refreshes the give-resource dialog: the gift-summary line, the market title,
+// the panel enable-dim state, the Artifact-Merchant tab gate, and a two-pass
+// loop over the paying resources and the recipient player slots (colour icon,
+// colour name, selection). The inlined SetWidgetOn/Off/Disabled helpers expand
+// to the status broadcasts; the final repaint is bUpdate-gated.
 VA(0x005eaf50, 0x744)  // ordermap clean run + arity ret 4, dc 0x1895a8
 void TGiveResourceWindow::Update(unsigned char bUpdate)
 {
-    // @stub
-}
+    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
 
-#endif  // @carcass
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        sprintf(gText, (*gpGeneralText)[166],
+                gResourceNames[gSelectedArtifact],
+                gPlayerColorNames[slotPlayerColor[gLeftResource]]);
+    } else {
+        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[167]
+                                        : (*gpGeneralText)[168]);
+    }
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    switch (gMarketSource) {
+    case MARKET_SOURCE_MARKETPLACE:
+        strcpy(gText, (*gpGeneralText)[159]);
+        break;
+    case MARKET_SOURCE_TRADING_POST:
+        strcpy(gText, (*gpGeneralText)[160]);
+        break;
+    case MARKET_SOURCE_FREELANCER:
+        strcpy(gText, gMarketSource3Name);
+        break;
+    }
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, (*gpGeneralText)[271]);
+    msg.codeY = 0xe;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[170]);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xf;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xd, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xd, 0x1000);
+        resourceSlider->enable(1);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xd, 0x1006);
+        resourceSlider->SetState(0);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,   0x1000);
+    }
+
+    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero != 0 &&
+        gMarketSource != MARKET_SOURCE_FREELANCER &&
+        (gpTownManager->townToView->type == TOWN_TOWER ||
+         gpTownManager->townToView->type == TOWN_DUNGEON) &&
+        (gpTownManager->townToView->built & bitNumber[17])) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
+    }
+
+    for (int j = 0; j < 2; ++j) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+            if (j == 0) {
+                msg.codeY = 3;
+                msg.extra = gSelectedArtifact;
+                BroadcastMessage(&msg);
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                BroadcastMessage(&msg);
+            } else {
+                msg.codeY = 0xd;
+                msg.extra = slotPlayerColor[gLeftResource];
+                BroadcastMessage(&msg);
+                strcpy(gText, gPlayerColorNames[slotPlayerColor[gLeftResource]]);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0xc;
+                msg.extraText = gText;
+                BroadcastMessage(&msg);
+            }
+        }
+
+        for (int k = 0; k < 7; ++k) {
+            if (j == 0) {
+                msg.codeX = widget::WIDGET_SET_STATUS;
+                msg.codeY = 0x15 + k;
+                msg.extra = 6;
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_SELL_WOOD_ID + k;
+                BroadcastMessage(&msg);
+                msg.codeY = 0x23 + k;
+                BroadcastMessage(&msg);
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gpCurrentPlayer->resources[k]);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0x23 + k;
+                msg.extraText = gText;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_Y;
+                msg.codeY = 0x23 + k;
+                msg.extra = gResourceValueWidgetY[k];
+                BroadcastMessage(&msg);
+                msg.codeX = (gSelectedArtifact == k) ? widget::WIDGET_SET_STATUS
+                                                     : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_SELL_WOOD_ID + k;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            } else {
+                if (k < field_60) {
+                    strcpy(gText, gPlayerColorNames[slotPlayerColor[k]]);
+                    msg.codeX = widget::WIDGET_SET_TEXT;
+                    msg.codeY = 0x4d + k;
+                    msg.extraText = gText;
+                    BroadcastMessage(&msg);
+                    msg.codeX = widget::WIDGET_SET_STATUS;
+                    msg.codeY = 0x4d + k;
+                    msg.extra = 6;
+                    BroadcastMessage(&msg);
+                    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                    msg.codeY = 0x31 + k;
+                    msg.extra = slotPlayerColor[k];
+                    BroadcastMessage(&msg);
+                    msg.codeX = widget::WIDGET_SET_STATUS;
+                    msg.codeY = 0x31 + k;
+                    msg.extra = 6;
+                    BroadcastMessage(&msg);
+                } else {
+                    msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg.codeY = 0x4d + k;
+                    msg.extra = 6;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x31 + k;
+                    BroadcastMessage(&msg);
+                }
+                msg.codeX = (k < field_60) ? widget::WIDGET_SET_STATUS
+                                           : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = GIVE_RECIPIENT_SLOT_0_ID + k;
+                msg.extra = 2;
+                BroadcastMessage(&msg);
+                msg.codeX = (gLeftResource == k) ? widget::WIDGET_SET_STATUS
+                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = GIVE_RECIPIENT_SLOT_0_ID + k;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    if (bUpdate)
+        DrawWindow(1, 0xffff0001, 0xffff);
+}
 
 // E:\gamedcs\tradpost.cpp:1466
 // Refreshes the buy-artifact dialog: the exchange-rate/idle title, the market
