@@ -11,6 +11,16 @@ DATA(0x006a3d30) swapManager* gpSwapManager;
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
+#endif  // @carcass
+// E:\gamedcs\swapmgr.cpp:196
+VA(0x005ae370, 0x1D)  // anchor-callee + vtable-forward, dc 0x15f13c
+void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
+{
+    ::SendChat(sChat, toWho);
+    SendChatCleanup();
+}
+#if 0  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:210
 DC_ONLY(0x159328, 0x2FF8)
 void TSwapWindow::TSwapWindow(hero** heroes)
@@ -309,13 +319,6 @@ void CGiveMeStuffMsg::CGiveMeStuffMsg()
 // E:\gamedcs\swapmgr.cpp:192
 DC_ONLY(0x15f0a4, 0x98)
 void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
-// E:\gamedcs\swapmgr.cpp:196
-DC_ONLY(0x15f13c, 0x28)
-void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
 {
     // @stub
 }

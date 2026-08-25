@@ -7,10 +7,33 @@
 
 #include "basemgr.h"
 
+// MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
+// for its private CGameChatEdit-derived editor. Remove this gate use when the
+// canonical chat-edit hierarchy is split from remote.h into its own header.
+#define HOMM3_CHAT_EDIT_DECLS
+#include "remote.h"
+#undef HOMM3_CHAT_EDIT_DECLS
+
 class Bitmap816;
 class hero;
 class heroWindow;
 class message;
+
+// Dreamcast proves the inheritance and method identities. Retail independently
+// proves that SendChatCleanup follows CChatEdit::SendChat in the vtable: the
+// swap editor dispatches it through the immediately following slot (+0x64).
+class CGameChatEdit : public CChatEdit {
+public:
+    virtual int OnKeyPress(message* msg) OVERRIDE;
+    virtual int OnEscape(message msg) OVERRIDE;
+    virtual void SendChatCleanup();
+    virtual void Activate();
+};
+
+class CSwapManagerChatEdit : public CGameChatEdit {
+public:
+    virtual void SendChat(const char* text, int toWho) OVERRIDE;
+};
 
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
 // prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
