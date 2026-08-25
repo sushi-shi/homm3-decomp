@@ -890,6 +890,26 @@ CDPlay::~CDPlay()
         m_lpDP->Release();
 }
 
+// E:\gamedcs\dxplay.cpp:121
+VA(0x00496d70, 0x33)
+unsigned char CDPlay::InitConnection(CDPlayConnection* connection)
+{
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->InitializeConnection(connection->pConnection, 0);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:239
+VA(0x00496f90, 0x22)
+unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* session)
+{
+    m_hRes = m_lpDP->SetSessionDesc(session, 0);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:359
 VA(0x004971b0, 0x94)
 unsigned char CDPlay::EnumConnections(
@@ -903,6 +923,26 @@ unsigned char CDPlay::EnumConnections(
         0, EnumConnectionsCallback, this, 1);
     unsigned char ok = m_hRes >= 0;
     return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:377
+VA(0x00497250, 0x34)
+unsigned char CDPlay::StartSession(unsigned long groupId)
+{
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->StartSession(0, groupId);
+    return m_hRes >= 0;
+}
+
+// E:\gamedcs\dxplay.cpp:387
+VA(0x00497290, 0x22)
+unsigned char CDPlay::CloseSession()
+{
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->Close();
+    return m_hRes >= 0;
 }
 
 // E:\gamedcs\dxplay.cpp:397
