@@ -4,6 +4,7 @@
 #include <va.h>
 #include "event_record.h"
 #include "game.h"
+#include "abstractfile.h"
 
 #if 0  // @carcass
 
@@ -701,13 +702,6 @@ unsigned char game::replay_available()
 // E:\gamedcs\event_record.cpp:1380
 DC_ONLY(0x8ead0, 0xF4)
 unsigned char game::load_recorded_events(void* infile)
-{
-    // @stub
-}
-
-// E:\gamedcs\event_record.cpp:1426
-DC_ONLY(0x8ebc4, 0x98)
-unsigned char game::save_recorded_events(void* outfile)
 {
     // @stub
 }
@@ -1528,4 +1522,19 @@ unsigned char game::replay_available() const
             return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\event_record.cpp:1426
+VA(0x0049dc60, 0x8C)  // linkorder dc-label, dc 0x8ebc4
+unsigned char game::save_recorded_events(TAbstractFile* outfile)
+{
+    int count = eventRecords.size();
+    outfile->Write(&count, 4);
+    for (int i = 0; i < count; ++i) {
+        unsigned char type = eventRecords[i]->get_type();
+        outfile->Write(&type, 1);
+        if (!eventRecords[i]->save(outfile))
+            return 0;
+    }
+    return 1;
 }

@@ -863,6 +863,7 @@ event_record	?get_type@type_record_show_boat@@UAE?AW4type_event_record_type@@XZ	
 event_record	?get_type@type_record_shroud@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9bc80
 event_record	?get_type@type_record_teleport@@UAE?AW4type_event_record_type@@XZ	100.0000	100.0000	100.0000	0x9a9b0
 event_record	?replay_available@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70
+event_record	?save_recorded_events@game@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x9dc60
 event_record	__h3cg$event_record$scalar_deleting_dtor$type_event_record	0.0000	0.0000	0.0000	0x9a5b0
 event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_move_hero	0.0000	0.0000	0.0000	0x9a620
 event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_shroud	0.0000	0.0000	0.0000	0x9bbd0

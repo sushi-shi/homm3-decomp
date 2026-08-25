@@ -5,6 +5,8 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+class TAbstractFile;
+
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
 enum type_event_record_type {
@@ -30,6 +32,8 @@ class type_event_record {
 public:
     virtual ~type_event_record();
     virtual type_event_record_type get_type();
+    virtual unsigned char load(TAbstractFile* infile);
+    virtual unsigned char save(TAbstractFile* outfile);
     signed char player_id;  // +0x04
 };
 
