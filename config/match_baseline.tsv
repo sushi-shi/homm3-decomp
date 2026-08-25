@@ -2088,9 +2088,11 @@ seerhut	?save@TQuestGuard@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0
 seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x173fd0
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0
 singleselectionpopups	??0CHotspotWidget@@QAE@HHHHH@Z	100.0000	100.0000	100.0000	0x175220
+singleselectionpopups	??0CTeamAlignmentDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x1764d0
 singleselectionpopups	??_GCHotspotWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x175260
 singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175a20
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750
+singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
