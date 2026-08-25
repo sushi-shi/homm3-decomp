@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — artifact-slot rendering and two market entry points add
+  367 exact retail bytes.** The 91-byte free helper at 0x5639e0 has the
+  Dreamcast `update_artifact_widget(iconWidget*, type_artifact)` ABI and
+  xrefs, while retail independently proves the eight-byte by-value record,
+  empty-slot visibility/help reset, icon-frame selection and
+  `akArtifactTraits` name lookup. The direct source form is byte-exact.
+
+  In tradpost.obj, retail's event-dispatch case for object 213 (Freelancer's
+  Guild) passes the active hero in ECX to 0x5e9e60. That proves Complete
+  changed Dreamcast's no-argument entry to a one-hero fastcall; its five
+  market-state stores and tail into `DoMarket` reproduce all 56 bytes on the
+  first spelling. The adjacent 220-byte `DoMarketplace` retains Dreamcast's
+  no-argument identity and expands the DC `CountMarkets` helper: it counts
+  the acting player's active Marketplace bits, caps efficiency at ten,
+  selects the displayed town's visiting hero, and opens the resource-trade
+  pane. Using `built` first gave an otherwise instruction-identical
+  99.9688%; retail's +0x158 read proves `active`, which closes the body.
+  The synchronized checkpoint reaches **1941/2355 linked exact**,
+  **1872/2286 game exact**, **96.57% game fuzzy** and **43.69% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — `type_sacrifice_window::ExitDialog` reproduces all 128
   retail bytes.** Vtable 0x641620 slot 14 fixes the body at 0x565430 as the
   sacrifice dialog's protected exit handler, and the Dreamcast roster

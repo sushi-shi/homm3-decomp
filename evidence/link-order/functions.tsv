@@ -3495,7 +3495,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x163150	321	in-span	sacrifice_window	sacrifice_window	game_164910_sub00_163150
 0x1632a0	1047	in-span	sacrifice_window	sacrifice_window	game_15fce0_sub00_1632a0
 0x1636c0	794	in-span	sacrifice_window	sacrifice_window	game_15fd10_sub00_1636c0
-0x1639e0	91	in-span	sacrifice_window	sacrifice_window	game_1636c0_sub02_1639e0
+0x1639e0	91	in-span	sacrifice_window	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z
 0x163a40	49	in-span	sacrifice_window	sacrifice_window	game_164340_sub00_163a40
 0x163a80	795	in-span	sacrifice_window	sacrifice_window	game_15fd40_sub00_163a80
 0x163da0	338	in-span	sacrifice_window	sacrifice_window	game_160380_sub00_163da0
@@ -4437,9 +4437,9 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1e9c80	33	in-span	tradpost	tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z
 0x1e9cb0	107	in-span	tradpost	tradpost	??1TSellCreatureWindow@@UAE@XZ
 0x1e9d20	313	in-span	tradpost	tradpost	game_1d3240_sub13_1e9d20
-0x1e9e60	56	in-span	tradpost	tradpost	game_a84f0_sub74_1e9e60
+0x1e9e60	56	in-span	tradpost	tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z
 0x1e9ea0	315	in-span	tradpost	tradpost	game_1d3240_sub14_1e9ea0
-0x1e9fe0	220	in-span	tradpost	tradpost	game_1d3240_sub15_1e9fe0
+0x1e9fe0	220	in-span	tradpost	tradpost	?DoMarketplace@@YIXXZ
 0x1ea0c0	50	in-span	tradpost	tradpost	?DoTradingPost@@YIXXZ
 0x1ea100	42	in-span	tradpost	tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z
 0x1ea130	1180	in-span	tradpost	tradpost	game_1e9d20_sub00_1ea130

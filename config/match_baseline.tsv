@@ -1877,6 +1877,7 @@ sacrifice_window	?handle_click@type_transformer_slot@@UAEEEE@Z	100.0000	100.0000
 sacrifice_window	?handle_widget_hover@type_sacrifice_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1653f0
 sacrifice_window	?handle_widget_hover@type_skeleton_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x166720
 sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b0
+sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0
 sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000	100.0000	100.0000	0x166da0
 sample	??1sample@@UAE@XZ	100.0000	100.0000	100.0000	0x166e60
 sample	??_Gsample@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x166e30
@@ -2327,6 +2328,8 @@ tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
+tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
+tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
