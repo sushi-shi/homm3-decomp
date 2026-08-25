@@ -10,14 +10,25 @@
 #include "town.h"
 #include "tradpost.h"
 #include "game.h"
+#include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
+                     // adventure-object appraisals (custom item / scroll / ...)
 
 // ai_tactical.h's current TSkillMastery view collides with herospec.h's
 // independently reconstructed enum, already included through philai.h.
-// These are the two cross-TU declarations this compiland actually needs;
+// These cross-TU declarations are what this compiland actually needs;
 // their /Gr register ABI and return type are byte-proven by the exact
 // definitions at 0x435830 / 0x435960 and by both call sites below.
 double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
+
+// ai_combat.h's whole-of-combat appraisal, declared file-locally rather
+// than pulling that header's declarator population into this closure. The
+// /Gr fastcall ABI and (const hero*, const hero*, const armyGroup&,
+// const town*, NewmapCell*) -> long shape are byte-proven by every
+// value_of_* call site below (0x52a410 / 0x529890 / 0x52a870 ...).
+long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
+    const armyGroup& defending_army, const town* defending_town,
+    NewmapCell* cell);
 
 #if 0  // @carcass
 
@@ -722,15 +733,27 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell)
     return raw - best;
 }
 
-#if 0  // @carcass -- philai body-evidence claim (retail RVA order)
 // E:\gamedcs\philai.cpp:1717.  Exact cross-TU callee set {armyGroup::get_AI_value,
 // hero::GetExperienceIncrement} - the only DC philai fn with precisely that pair.
+// What one experience level is worth to this army: the gold-equivalent reward
+// (the hero-purchase constant plus the army's own strength) divided by the
+// experience the hero's next level costs, forty of which one visit grants.
+// The numerator adds in FLOAT (each operand converted separately), so the
+// army value is cast to float and gHeroGoldCost promoted into the add.
+//
+// Residual (99.93%): sole delta is the data reloc NAME - our claimed
+// ?gHeroGoldCost@@3HA vs the delinker's generic data_27814c at the same
+// 0x67814c. Every TU that reads gHeroGoldCost (town/hero/townmgr) delinks
+// it the same generic way, so this is the DoDialog data-name cosmetic, not
+// a code-byte difference.
 VA(0x00527710, 0x4C)  // anchor-callee, dc 0x10feb8
 float value_of_experience(const hero* current_hero, const armyGroup* current_army)
 {
-    // @stub
+    int increment = hero::GetExperienceIncrement(current_hero->level);
+    return (static_cast<float>(const_cast<armyGroup*>(current_army)->get_AI_value())
+            + gHeroGoldCost)
+        / static_cast<float>(increment * 40);
 }
-#endif  // @carcass
 
 // E:\gamedcs\philai.cpp:1945
 VA(0x00527aa0, 0x56)  // anchor-global, dc 0x110574
@@ -1083,25 +1106,50 @@ int hero::LuckIncreaseValue(int value)
     return static_cast<int>(value_added);
 }
 
-#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
-
 // E:\gamedcs\philai.cpp:3007.  Sirens grant experience for sacrificed troops.
 // Exact cross-TU callee set {hero::GetExperienceBonusFactor} - the only DC philai
-// fn that calls it.
+// fn that calls it.  Each stack over one troop sacrifices seven tenths of itself
+// (the remainder stays), and the experience earned is the survivors' hit points
+// scaled by the hero's experience-bonus factor.
 VA(0x00527ec0, 0x93)  // anchor-callee, dc 0x11260c
 int AI_VisitSirens(const hero* current_hero, armyGroup* army)
 {
-    // @stub
+    long total = 0;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        int creature = army->armies[i];
+        if (creature != CREATURE_NONE) {
+            int troops = army->numTroops[i];
+            if (troops > 1) {
+                short sacrifice = static_cast<short>(
+                    static_cast<float>(troops) * 0.7);
+                army->numTroops[i] = sacrifice;
+                total += akCreatureTypeTraits[creature].hitPoints
+                    * (troops - sacrifice);
+            }
+        }
+    }
+    return static_cast<int>(total
+        * const_cast<hero*>(current_hero)->GetExperienceBonusFactor());
 }
 
 // E:\gamedcs\philai.cpp:3277.  Exact cross-TU callee set {AI_value_of_combat,
 // armyGroup::armyGroup, armyGroup::get_AI_value, hero::get_player}; ret 0xc matches
-// the 3 stack args of the 5-parameter fastcall signature.
+// the 3 stack args of the 5-parameter fastcall signature.  Bribing is worth it
+// when the monster stack's own strength, minus what the bribe gold is worth to
+// this player, still beats what fighting the stack would net.
 VA(0x00527f60, 0x73)  // anchor-callee, dc 0x112dd4
-unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
+    TCreatureType type, short amount, long gold_cost)
 {
-    // @stub
+    armyGroup monster_army(type, amount);
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    long bribe_worth = static_cast<long>(monster_army.get_AI_value()
+        - gold_cost * player->resourceValue[GOLD]);
+    long fight_worth = AI_value_of_combat(current_hero, 0, monster_army, 0, cell);
+    return bribe_worth > fight_worth;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:3834.  The per-map-object event valuator: a giant
 // object-type dispatch that reaches nearly every value_of_* helper below
@@ -1114,12 +1162,22 @@ long AI_value_of_event(const hero* current_hero, type_point point, long* move_co
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1867
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:1867.  A map object carrying a custom artifact reward:
+// its value is the item's own worth plus, when the map maker gave it custom
+// guardians, what beating those guardians is worth.
 VA(0x00529890, 0x40)  // anchor-callee, dc 0x1103c4
 long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_value)
 {
-    // @stub
+    TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+    if (treasure->HasCustomGuardians)
+        return AI_value_of_combat(current_hero, 0, treasure->Guardians, 0, cell)
+            + item_value;
+    return item_value;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2054
 VA(0x00529920, 0x10d)  // anchor-callee, dc 0x110808
@@ -1151,23 +1209,87 @@ long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point po
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:2794.  A Prison holds a hero to free; its value is the
 // freed army's strength.  Exact cross-TU callee set {armyGroup::get_AI_value} -
-// the only DC philai fn with precisely that singleton.
+// the only DC philai fn with precisely that singleton.  The current player
+// cannot take the hero when his roster is already full (numHeroes >= 8), and
+// the gold half of the reward is his own gold valuation scaled by 2500.
+//
+// Residual (81.82%): identical instruction multiset, register-homing
+// post-RA schedule transposition (why-reg register-distance 4, flow 0).
+// Retail computes resourceValue*2500 (fld/fmul) BEFORE spilling and
+// converting the get_AI_value() result, keeping it live in eax across the
+// fld/fmul; VC6 spills the call result first regardless of operand order
+// (both `army + gold` and `gold + army` canonicalise to the same object).
 VA(0x0052a3a0, 0x61)  // anchor-callee, dc 0x111ea4
 int ValueOfPrison(NewmapCell* cell, playerData* player)
 {
-    // @stub
+    if (gpCurrentPlayer->numHeroes >= 8)
+        return 0;
+    hero& prisoner = gpGame->heroes[cell->extraInfo];
+    return static_cast<int>(prisoner.army.get_AI_value()
+        + player->resourceValue[GOLD] * 2500.0);
 }
 
 // E:\gamedcs\philai.cpp:2811.  A Pyramid: army-guarded spell reward.  Identity:
 // unique cross-TU edge armyGroup::Add (called by exactly this DC philai fn and
 // this retail row) plus AI_get_spell_value + AI_value_of_combat over an armyGroup.
+// A pyramid this player has already looted (his bit is set in the visited-player
+// mask at bits 5+ and the fresh flag is clear) is worthless.  Otherwise it is
+// worth beating its two fixed guardian stacks plus the average value of the
+// level-5 spells the hero could still learn from it.  PYRAMID_SPELL_LEVEL
+// mirrors game.cpp's own constant for the reward tier.  owner is read as a
+// short because retail's visited-cell ABI is `short player` (SetCellVisited).
+//
+// Residual (95.95%): the visited-player test.  Retail reads the 8-bit
+// visited_bits field through a NewmapCell typed arm (byte `test cl,al` then
+// `setne`), which mapcell.h does not expose as an accessor and this lane
+// may not add; the explicit `(extraInfo>>5)&(1<<owner)` keeps a dword test
+// with no bool materialisation.  Everything else - the two guardian Adds,
+// the level-5 spell-averaging loop and the closing AI_value_of_combat - is
+// byte-exact.
+const int PYRAMID_SPELL_LEVEL = 5;
 VA(0x0052a410, 0xF5)  // anchor-callee, dc 0x111f54
 long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
 {
-    // @stub
+    short owner = current_hero->owner;
+    if (owner >= 0 && owner < 8
+            && ((cell->extraInfo >> 5) & (1 << owner)) != 0
+            && (cell->extraInfo & 1) == 0)
+        return 0;
+
+    armyGroup guardians;
+    long value = 0;
+    long count = 0;
+    guardians.Add(0x74, 0x28, -1);
+    guardians.Add(0x75, 0x14, -1);
+
+    if (current_hero->wisdomLevel >= 3) {
+        for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
+            if (akSpellTraits[spell].level == PYRAMID_SPELL_LEVEL) {
+                if (!current_hero->available_spells[spell]) {
+                    long spell_value;
+                    if (current_hero->in_spellbook[spell])
+                        spell_value = 0;
+                    else if (const_cast<hero*>(current_hero)->IsWieldingArtifact(
+                                 ARTIFACT_SPELLBOOK))
+                        spell_value = AI_get_spell_value(current_hero, spell);
+                    else
+                        spell_value = 0;
+                    value += spell_value;
+                }
+                count++;
+            }
+        }
+        value = value / count;
+    }
+
+    return AI_value_of_combat(current_hero, 0, guardians, 0, cell) + value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:2208
 VA(0x0052a710, 0xad)  // anchor-callee, dc 0x110c90
@@ -1176,12 +1298,44 @@ long value_of_recruiting(const hero* current_hero, TCreatureType creature, short
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2903
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2903.  A resource pile: worth the player's own
+// valuation of that resource times the amount (gold counts hundreds), plus
+// the combat value of any custom guardians the map maker attached.  The
+// guarded flag is the top bit of the cell's extra info; when it is set the
+// amount is the low nineteen bits and get_treasure_data supplies the army.
+//
+// Residual (88.51%): retail reads the guarded flag and the amount as a
+// bitfield typed arm of NewmapCell::extraInfo (a `guarded:1` at bit 31
+// gives `shr ecx,0x1f / test cl,1`, an `amount:19` gives `& 0x7ffff`);
+// no such arm exists in mapcell.h and this lane may not add one, so the
+// explicit `(extraInfo>>31)&1` folds to a `test edi,0x80000000` sign-bit
+// test and the downstream player-pointer register (ecx vs edx) drifts
+// with it. The arithmetic and control flow are otherwise exact.
 VA(0x0052a7c0, 0xa8)  // anchor-callee, dc 0x112260
 long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* player)
 {
-    // @stub
+    long combat_value = 0;
+    long amount;
+    int resource_type = cell->objectIndex;
+    if ((cell->extraInfo >> 31) & 1) {
+        TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
+        amount = cell->extraInfo & 0x7ffff;
+        if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies())
+            combat_value = AI_value_of_combat(current_hero, 0,
+                treasure->Guardians, 0, cell);
+    } else {
+        amount = cell->extraInfo;
+    }
+    if (resource_type == GOLD)
+        amount *= 100;
+    return static_cast<long>(static_cast<double>(amount)
+            * player->resourceValue[resource_type]
+        + static_cast<double>(combat_value));
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2931.  Exact cross-TU callee set {hero::get_number_in_backpack,
 // hero::get_player}; value_of_black_market (subset, single callee) ruled out by the
