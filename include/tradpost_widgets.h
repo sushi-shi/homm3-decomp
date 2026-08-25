@@ -9,6 +9,29 @@
 #ifndef HOMM3_TRADPOST_WIDGETS_H
 #define HOMM3_TRADPOST_WIDGETS_H
 
+#include "netmsg.h"
+
+// The give-resource execute path builds a gift network message on the stack
+// (subtype 0x432, the CGiftMsg immediate ai_player.h attests) and hands it to
+// TransmitRemoteData. CNetMsg carries no vtable, so this tradpost-private
+// mirror of that record inlines byte-for-byte with retail's construction; the
+// shared spelling lives in ai_player.h (out of this lane's file scope).
+class TGiveNetMsg : public CNetMsg {
+public:
+    int m_giver;
+    int m_resource;
+    int m_qty;
+
+    TGiveNetMsg(int giver, int resource, int qty)
+        : CNetMsg(0x432, sizeof(TGiveNetMsg)),
+          m_giver(giver), m_resource(resource), m_qty(qty) {}
+};
+
+// The free-function overload the give path calls (remote.h:438); declared here
+// to avoid pulling remote.h's DirectPlay closure into this TU.
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg,
+                       bool guaranteed);
+
 // The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
 // the order the classes are declared. Byte-proven by DoMarket's jump table and
 // the per-case `new <size>` immediates (0x68/0x8c/0x64/0x64/0x68).

@@ -1084,16 +1084,121 @@ void TTradeResourceWindow::SetRolloverText(int codeY)
     // -0x70 / -0xfc) - outside a reconstruction lane's files.
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2566
+// The give-resource dialog handler. Subtype 0xc selects the resource to give
+// (0x1c..0x22) or the recipient player slot (0x46..0x4c), arming a 1:1 transfer;
+// subtype 0xd runs the give/max panels and the tab-command buttons. Executing
+// the gift moves the resource into the recipient's row and, when the recipient
+// is a networked human, transmits the gift message. Hover copies the rollover.
 VA(0x005ed550, 0x2f1)  // anchor-vtable 0x643a34 slot 9, dc 0x18b8d4
 int TGiveResourceWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
 
-#endif  // @carcass
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+            case MARKET_SELL_GOLD_ID: {
+                int res = msg->codeY - MARKET_SELL_WOOD_ID;
+                if (res == gSelectedArtifact)
+                    return 1;
+                gSelectedArtifact = res;
+                if (gLeftResource != -1) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = 1;
+                    gMaxTradeUnits = gpCurrentPlayer->resources[gSelectedArtifact];
+                    resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            case GIVE_RECIPIENT_SLOT_0_ID: case GIVE_RECIPIENT_SLOT_1_ID:
+            case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
+            case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
+            case GIVE_RECIPIENT_SLOT_6_ID: {
+                int recip = msg->codeY - GIVE_RECIPIENT_SLOT_0_ID;
+                if (recip == gLeftResource)
+                    return 1;
+                gLeftResource = recip;
+                if (gSelectedArtifact != -1) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = 1;
+                    gMaxTradeUnits = gpCurrentPlayer->resources[gSelectedArtifact];
+                    resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID: {
+                if (gRightAmount == 0)
+                    return 1;
+                gpCurrentPlayer->resources[gSelectedArtifact] -= gRightAmount;
+                int color = slotPlayerColor[gLeftResource];
+                gpGame->players[color].resources[gSelectedArtifact] += gRightAmount;
+                if (gNetworkActive69954c && gpGame->players[color].IsHuman()) {
+                    TGiveNetMsg m(gpGame->GetLocalPlayerGamePos(),
+                                  gSelectedArtifact, gRightAmount);
+                    TransmitRemoteData(&m, color, false, true);
+                }
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+            }
+            case MARKET_RIGHT_PANEL_ID:
+                gRightAmount = gMaxTradeUnits;
+                resourceSlider->SetState(gMaxTradeUnits);
+                break;
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_RIGHT_LABEL_ID:
+                bExit = 1;
+                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+            default:
+                return 1;
+            }
+            break;
+
+        default:
+            return 1;
+        }
+
+        Update(1);
+        if (bExit) {
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return 2;
+        }
+        return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
 
 // E:\gamedcs\tradpost.cpp:2688
 // Rollover text for the give-resource panel. The fixed panel labels come from
