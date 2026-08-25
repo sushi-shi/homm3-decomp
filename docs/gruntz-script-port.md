@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice creature controls add 599 exact retail bytes
+  and recover one missing function boundary.** Retail 0x564c00 compares and
+  rewrites one 32-byte offering record, adjusts `total_experience` by the
+  old/new x87-rounded sacrifice values, refreshes that army slot and mirrors
+  the amount into the selected record when necessary. The direct
+  `set_creature_sacrifice` spelling reproduces all four blocks and 230 bytes
+  on its first compile.
+
+  The constructor's two callback pointers and Dreamcast's private-static
+  signatures identify `all_creatures` at 0x564cf0 and `max_creatures` at
+  0x564de0. The latter address had been absent from the bootstrap carve, but
+  the retail pointer at 0x561962, its standalone entry, final `ret` at
+  0x564e67 and eight alignment NOPs before the already carved 0x564e70 row
+  prove the 136-byte boundary, now admitted to `retail-functions.tsv`.
+  `get_max_amount` preserves one troop only when every other group is already
+  offered to its limit; its early return and the all-slots callback's
+  post-decrement loop are the two source shapes VC6 needs for the exact
+  seventeen-block 233-byte body. The max callback expands the Dreamcast-
+  attested `creature_slider_change` helper and matches all six blocks.
+
+  The synchronized checkpoint reaches **1956/2371 linked exact**,
+  **1887/2302 game exact**, **96.59% game fuzzy** and **43.93% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the sacrifice creature-offering refresh is instruction-
   exact across all 930 retail bytes.** Dreamcast supplies the retained method,
   its `type_creature_offering` parameter and the inline edges to
