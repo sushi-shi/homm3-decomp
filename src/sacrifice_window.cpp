@@ -19,6 +19,38 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
+static const int giDeathCreature[145] = {
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON,
+    CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
+};
+
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
 
 // E:\gamedcs\sacrifice_window.cpp:125
@@ -2975,6 +3007,70 @@ type_skeleton_window::~type_skeleton_window()
         death_samples[i]->Dispose();
     }
     delete_widgets();
+}
+
+VA(0x00566490, 0x258)
+void type_skeleton_window::creature_click(
+    long side, long slot, unsigned char right_click)
+{
+    TCreatureType creature_type = armies[side]->armyTypes[slot];
+
+    if (right_click
+        || (slot == selected_index && side == selected_group)) {
+        if (creature_type != CREATURE_NONE) {
+            TViewArmyWindow view_army_window(
+                creature_type, 0x77, 0x20,
+                static_cast<unsigned char>(!right_click));
+            view_army_window.CenterWindow(-1, -1);
+            if (right_click)
+                view_army_window.QuickView();
+            else
+                view_army_window.DoModal();
+        }
+    } else if (selected_group < 0) {
+        selected_index = slot;
+        selected_group = side;
+        select_border[side][slot]->send_message(
+            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        select_border[side][slot]->Draw();
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    } else {
+        if (creature_type
+            == armies[selected_group]->armyTypes[selected_index]) {
+            armies[side]->Add(
+                creature_type,
+                armies[selected_group]->numTroops[selected_index], slot);
+            armies[selected_group]->Dismiss(selected_index);
+        } else {
+            long troops = armies[side]->numTroops[slot];
+            armies[side]->armyTypes[slot] =
+                armies[selected_group]->armyTypes[selected_index];
+            armies[side]->numTroops[slot] =
+                armies[selected_group]->numTroops[selected_index];
+            armies[selected_group]->armyTypes[selected_index] = creature_type;
+            armies[selected_group]->numTroops[selected_index] = troops;
+        }
+        select_border[selected_group][selected_index]->send_message(
+            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+        update(side, slot);
+        update(selected_group, selected_index);
+
+        widget::last_hover_widget = 0;
+        selected_group = -1;
+        selected_index = -1;
+
+        long i;
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            long type = armies[1]->armyTypes[i];
+            if (type == CREATURE_NONE)
+                continue;
+            if (type != giDeathCreature[type])
+                break;
+        }
+        sacrifice_button->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+        all_creatures_button->enable(armies[0]->HasCreatures());
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2281

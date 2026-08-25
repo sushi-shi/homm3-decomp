@@ -5771,6 +5771,17 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
+VA(0x00505ea0, 0x80)
+CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
+{
+    int i = objectTypeIndex[objectType].size();
+    while (i--) {
+        if (objectTypeIndex[objectType][i].extra == extra)
+            break;
+    }
+    return &objectTypeIndex[objectType][i];
+}
+
 // These Dinkumware template members are already emitted by NewfullMap's
 // vector members.  The annotations only pair their named VC6 COMDATs with
 // the contiguous retail run; there are deliberately no source definitions.
