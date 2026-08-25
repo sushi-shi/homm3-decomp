@@ -5,6 +5,7 @@
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
 #include <va.h>
 #include "sacrifice_window.h"
+#include "border.h"
 #include "button.h"
 #include "game.h"
 #include "kb.h"
@@ -3003,19 +3004,91 @@ type_transformer_slot::type_transformer_slot(
     group = new_group;
 }
 
+// The transformer window's three-record button help array, retail .bss at
+// 0x6a77d0: entry 0 rolls over the all-creatures button, entry 1 the sacrifice
+// button, entry 2 the exit button.
+DATA(0x006a77d0) extern THelpText gSkeletonWindowHelp[3];
+
 // E:\gamedcs\sacrifice_window.cpp:2056
 // The skeleton transformer dialog's constructor. Its row head loads
 // sktrnbk.pcx (string-proven), it is thiscall (armyGroup* new_army) -> ret 4,
 // and the prior vtable scan (see the 0x565f30 note below) already fixed this
 // 0xa3c body at 0x5654f0 as the second of exactly two references to vtable
-// 0x641694. Located, not yet reconstructed.
-#if 0  // @carcass: located constructor body, claim-only
+// 0x641694. Both armies are laid out as a two-pane 3x2 grid plus a seventh
+// slot, wired by four create_creature_icons calls; the three buttons and the
+// four labels bracket them, and every slot of the source army is refreshed
+// through update() before the widgets join the message stream.
+// Residual (98.35%): every block through the rollover-text widget is exact;
+// the sole divergence is the FINAL Widgets.push_back, where retail's /Ob2
+// budget expands vector::size() inline in the reallocation path (base x0 vs
+// retail x1, +4 instrs) while ours emits the call. Pure last-site inline
+// margin (predict-inline: 1 under-inline); no spelling moves it and it may
+// shift once the builder bodies change this TU's declarator population.
 VA(0x005654f0, 0xa3c)  // vtable 0x641694 + sktrnbk.pcx string + arity, dc 0x1275c0
-void type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+    : CAdvPopup(100, 67, 600, 485, 18)
 {
-    // @stub
+    long widget_id = 100;
+    selected_creatures.Initialize();
+    armies[0] = new_army;
+    armies[1] = &selected_creatures;
+    selected_group = -1;
+    selected_index = -1;
+
+    bitmapBorder* background = new bitmapBorder(
+        0, 0, 600, 485, widget_id++, "SkTrnBk.pcx", 0x800);
+    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
+    Widgets.push_back(background);
+
+    Widgets.push_back(new textWidget(
+        25, 21, 257, 18, gpGeneralText->GetText(486), "smalfont.fnt",
+        font::HEADING, -1, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        320, 21, 257, 18, gpGeneralText->GetText(487), "smalfont.fnt",
+        font::HEADING, -1, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        25, 55, 257, 42, gpGeneralText->GetText(488), "medfont.fnt",
+        font::HEADING, -1, 1, 0, 8));
+    Widgets.push_back(new textWidget(
+        320, 55, 257, 42, gpGeneralText->GetText(489), "medfont.fnt",
+        font::HEADING, -1, 1, 0, 8));
+
+    create_creature_icons(45, 109, 3, 2, 0, 0, widget_id,
+                          army_widget[0], select_border[0], army_label[0]);
+    create_creature_icons(128, 305, 1, 1, 0, 6, widget_id,
+                          &army_widget[0][6], &select_border[0][6],
+                          &army_label[0][6]);
+    create_creature_icons(334, 109, 3, 2, 1, 0, widget_id,
+                          army_widget[1], select_border[1], army_label[1]);
+    create_creature_icons(417, 305, 1, 1, 1, 6, widget_id,
+                          &army_widget[1][6], &select_border[1][6],
+                          &army_label[1][6]);
+
+    all_creatures_button = new type_func_button(
+        146, 416, 64, 32, widget_id++, "AltArmy.def", all_creatures, 0, 1);
+    all_creatures_button->set_help_text(gSkeletonWindowHelp[0].text, 0, 1);
+    Widgets.push_back(all_creatures_button);
+
+    sacrifice_button = new type_func_button(
+        269, 416, 64, 32, widget_id++, "AltSacr.def", sacrifice, 0, 1);
+    sacrifice_button->set_help_text(gSkeletonWindowHelp[1].text, 0, 1);
+    sacrifice_button->enable(0);
+    Widgets.push_back(sacrifice_button);
+
+    type_func_button* exit_button = new type_func_button(
+        392, 416, 64, 32, widget_id++, "iCancel.def", exit_click, 0, 1);
+    exit_button->set_help_text(gSkeletonWindowHelp[2].text, 0, 1);
+    Widgets.push_back(exit_button);
+
+    rolloverText = new textWidget(
+        8, 459, 585, 19, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(rolloverText);
+
+    for (long i = 0; i < 7; ++i)
+        update(0, i);
+    AddWidgetsToMessageStream();
 }
-#endif  // @carcass
 
 // The transformer dialog's own pair, found by the same vtable-uniqueness
 // scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
