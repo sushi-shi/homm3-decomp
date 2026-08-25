@@ -6,8 +6,27 @@
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
 #include "widget.h"
+#include "dialogbox.h"
+#include "message.h"
 
 class CSprite;
+class Bitmap816;
+enum TTownType;
+
+// A bare rectangular click target. Retail's 0x575220 ctor calls
+// ??0widget@@QAE@XZ (the default base ctor) and writes x/y/width/height/id
+// straight into the widget base (DC's trailing `focus` byte is not a retail
+// parameter: `ret 0x14` is five dwords). Vtable 0x6419a4; zBufferDraw/Draw
+// are the folded shared empties (0x404140 / 0x404df0) so they stay
+// declaration-only, and the scalar deleting dtor tail-jumps to ~widget.
+class CHotspotWidget : public widget {
+public:
+    CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId);
+    virtual ~CHotspotWidget();
+    virtual int Main(message* msg);  // slot 2, retail 0x575290
+    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void Draw();             // slot 4, folded onto 0x404df0
+};
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
@@ -19,64 +38,84 @@ public:
 
     CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int spriteFrame);
     virtual ~CSpriteWidget();
-    virtual int Main(message* msg);
-    virtual void zBufferDraw();
-    virtual void Draw();
+    virtual int Main(message* msg);  // slot 2, retail 0x575a10
+    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void Draw();             // slot 4, retail 0x575750
 };
 SIZE(CSpriteWidget, 0x38);
 
-// --- CBitmapWidget ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:82, dc 0x12f168) void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:93, dc 0x12f1e0) int CBitmapWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:99, dc 0x12f1f8) void CBitmapWidget::zBufferDraw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:103, dc 0x12f1fc) void CBitmapWidget::Draw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:106, dc 0x12f26c) void* CBitmapWidget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:106, dc 0x12f2a0) void CBitmapWidget::~CBitmapWidget();
+// A widget wrapping a Bitmap816. image sits at +0x30 (first past widget),
+// byte-proven by Draw reading it at [this+0x30]. Vtable 0x641a34; Main
+// ICF-folds onto CSpriteWidget::Main (0x575a10, `return widget::Main`) and
+// zBufferDraw onto the shared empty.
+class CBitmapWidget : public widget {
+public:
+    Bitmap816* image;
 
-// --- CBonusDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:214, dc 0x12dfa8) void CBonusDlg::CBonusDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:218, dc 0x12dff0) unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:234, dc 0x12e1cc) unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:215, dc 0x12f304) void* CBonusDlg::`scalar deleting destructor'(unsigned __flags);
+    CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
+    virtual ~CBitmapWidget();
+    virtual int Main(message* msg);  // slot 2, folds onto 0x575a10
+    virtual void zBufferDraw();      // slot 3, folded onto 0x404140
+    virtual void Draw();             // slot 4, retail 0x575a20
+};
 
-// --- CHeroDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:255, dc 0x12e3a0) void CHeroDlg::CHeroDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:260, dc 0x12e3f0) unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:256, dc 0x12f338) void* CHeroDlg::`scalar deleting destructor'(unsigned __flags);
+class CNetMsgHandler;
 
-// --- CHotspotWidget ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:114, dc 0x12de28) void CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId, unsigned char focus);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:124, dc 0x12dea8) int CHotspotWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:120, dc 0x12f010) void CHotspotWidget::zBufferDraw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:121, dc 0x12f014) void CHotspotWidget::Draw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:121, dc 0x12f2b8) void* CHotspotWidget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:121, dc 0x12f2ec) void CHotspotWidget::~CHotspotWidget();
+// The shared base of the four single-selection dialogs. Never directly
+// instantiated (no own retail vtable): its ctor, Add and ExitDialog are all
+// inlined into the derived dialogs, and only handle_message (slot 3 of every
+// derived vtable, 0x575430) survives out of line. Adds one byte, gameMode,
+// at +0x54 - the first byte past the 0x54-byte TDialogBox base.
+class CSingleSelPopup : public TDialogBox {
+public:
+    unsigned char gameMode;
 
-// --- CSingleSelPopup ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:34, dc 0x12eeac) void CSingleSelPopup::CSingleSelPopup(int type, unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:39, dc 0x12eef4) void CSingleSelPopup::Add(widget* w);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:45, dc 0x12ef28) int CSingleSelPopup::handle_message(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:75, dc 0x12efc0) int CSingleSelPopup::ExitDialog(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.h:79, dc 0x12efdc) void* CSingleSelPopup::`scalar deleting destructor'(unsigned __flags);
+    CSingleSelPopup(int type, unsigned char newGameMode)
+        : TDialogBox(type)
+    {
+        gameMode = newGameMode;
+    }
+    virtual int handle_message(message& msg);  // slot 3, retail 0x575430
+};
 
-// --- CSpriteWidget ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:47, dc 0x12f018) void CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frame);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:61, dc 0x12f0ac) int CSpriteWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:67, dc 0x12f0c4) void CSpriteWidget::zBufferDraw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:71, dc 0x12f0c8) void CSpriteWidget::Draw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f11c) void* CSpriteWidget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:73, dc 0x12f150) void CSpriteWidget::~CSpriteWidget();
+// The four dialogs. Each ctor pushes 0x12 through TDialogBox, stores its own
+// vtable and the gameMode byte (the inlined CSingleSelPopup ctor). None adds
+// storage except CTeamAlignmentDlg (its team table below).
+class CBonusDlg : public CSingleSelPopup {
+public:
+    CBonusDlg(unsigned char newGameMode);       // retail 0x575410
+    virtual ~CBonusDlg();
+    unsigned char CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description);
+    unsigned char CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description);
+};
 
-// --- CTeamAlignmentDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:359, dc 0x12eac8) void CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:365, dc 0x12eb24) unsigned char CTeamAlignmentDlg::CreateWin();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:411, dc 0x12ed7c) int CTeamAlignmentDlg::CountNumPlayers(int teamNbr);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:424, dc 0x12edd4) void CTeamAlignmentDlg::GetTeams();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:361, dc 0x12f3a0) void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags);
+class CHeroDlg : public CSingleSelPopup {
+public:
+    CHeroDlg(unsigned char newGameMode);        // retail 0x575a70
+    virtual ~CHeroDlg();
+    unsigned char CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc);
+};
 
-// --- CTownDlg ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:298, dc 0x12e690) void CTownDlg::CTownDlg(unsigned char newGameMode);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:302, dc 0x12e708) unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:299, dc 0x12f36c) void* CTownDlg::`scalar deleting destructor'(unsigned __flags);
+class CTownDlg : public CSingleSelPopup {
+public:
+    CTownDlg(unsigned char newGameMode);        // retail 0x575e10
+    virtual ~CTownDlg();
+    unsigned char CreateWin(CSprite* town, int frame, TTownType townType);
+};
+
+// The team-alignment picker adds a team-mask table at +0x58 and a count at
+// +0x78, byte-proven by GetTeams (rep stosd over [+0x58..+0x78], count at
+// [+0x78]).
+class CTeamAlignmentDlg : public CSingleSelPopup {
+public:
+    int teamMasks[8];
+    int numTeams;
+
+    CTeamAlignmentDlg(unsigned char newGameMode);  // retail 0x5764d0
+    virtual ~CTeamAlignmentDlg();
+    unsigned char CreateWin();
+    int CountNumPlayers(int teamNbr);
+    void GetTeams();
+};
 
 #endif  /* HOMM3_SINGLESELECTIONPOPUPS_H */
