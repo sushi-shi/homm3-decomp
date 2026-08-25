@@ -2096,7 +2096,11 @@ singleselectionpopups	?Draw@CBitmapWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1
 singleselectionpopups	?Draw@CSpriteWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x175750
 singleselectionpopups	?GetTeams@CTeamAlignmentDlg@@QAEXXZ	100.0000	100.0000	100.0000	0x176930
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
+singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
+singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
+singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
+singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
