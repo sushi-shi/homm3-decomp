@@ -34,16 +34,21 @@
 // EH-bearing rows still deferred.
 class TTradeResourceWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TTradeResourceWindow();
 };
 
 class TGiveResourceWindow : public CAdvPopup {
+    int field_60;
+    int slotPlayerColor[7];
 public:
+    void SetRolloverText(int codeY);
     virtual ~TGiveResourceWindow();
 };
 
 class TBuyArtifactWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TBuyArtifactWindow();
 };
 
