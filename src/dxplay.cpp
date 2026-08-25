@@ -910,6 +910,78 @@ unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* session)
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:276
+VA(0x00497040, 0x2B)
+unsigned char CDPlay::DestroyPlayer(unsigned long playerId)
+{
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->DestroyPlayer(playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:289
+VA(0x00497070, 0x66)
+unsigned long CDPlay::CreateGroup(char* groupName, void* groupData,
+    unsigned long groupDataSize, unsigned char stagingArea)
+{
+    if (!m_lpDP)
+        return 0;
+    unsigned long flags = 0;
+    DPNAME name;
+    name.dwSize = sizeof(name);
+    name.dwFlags = 0;
+    name.lpszShortNameA = groupName;
+    name.lpszLongNameA = groupName;
+    if (stagingArea)
+        flags = DPGROUP_STAGINGAREA;
+    unsigned long groupId;
+    m_hRes = m_lpDP->CreateGroup(
+        &groupId, &name, groupData, groupDataSize, flags);
+    return m_hRes >= 0 ? groupId : 0;
+}
+
+// E:\gamedcs\dxplay.cpp:314
+VA(0x004970e0, 0x62)
+unsigned long CDPlay::CreateGroupInGroup(unsigned long parentId,
+    char* groupName, void* groupData, unsigned long groupDataSize,
+    unsigned char stagingArea)
+{
+    unsigned long flags = 0;
+    DPNAME name;
+    name.dwSize = sizeof(name);
+    name.dwFlags = 0;
+    name.lpszShortNameA = groupName;
+    name.lpszLongNameA = groupName;
+    if (stagingArea)
+        flags = DPGROUP_STAGINGAREA;
+    unsigned long groupId;
+    m_hRes = m_lpDP->CreateGroupInGroup(
+        parentId, &groupId, &name, groupData, groupDataSize, flags);
+    return m_hRes >= 0 ? groupId : 0;
+}
+
+// E:\gamedcs\dxplay.cpp:336
+VA(0x00497150, 0x2F)
+unsigned char CDPlay::DestroyGroup(unsigned long groupId)
+{
+    if (!m_lpDP)
+        return 0;
+    m_hRes = m_lpDP->DestroyGroup(groupId);
+    return m_hRes >= 0;
+}
+
+// E:\gamedcs\dxplay.cpp:346
+VA(0x00497180, 0x27)
+unsigned char CDPlay::DeleteGroupFromGroup(
+    unsigned long parentId, unsigned long groupId)
+{
+    m_hRes = m_lpDP->DeleteGroupFromGroup(parentId, groupId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:359
 VA(0x004971b0, 0x94)
 unsigned char CDPlay::EnumConnections(
@@ -1019,6 +1091,26 @@ unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
     return 1;
+}
+
+// E:\gamedcs\dxplay.cpp:896
+VA(0x004981f0, 0x24)
+unsigned char CDPlay::AddPlayerToGroup(
+    unsigned long groupId, unsigned long playerId)
+{
+    m_hRes = m_lpDP->AddPlayerToGroup(groupId, playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:908
+VA(0x00498220, 0x24)
+unsigned char CDPlay::DeletePlayerFromGroup(
+    unsigned long groupId, unsigned long playerId)
+{
+    m_hRes = m_lpDP->DeletePlayerFromGroup(groupId, playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:920
