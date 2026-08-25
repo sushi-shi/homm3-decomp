@@ -914,6 +914,27 @@ void TTownScreenWindow::UpdateTownLocators()
     DrawWindow(0, 0x9b, 0xa3);
 }
 
+// Located, not reconstructed: the bonus-display formatter and the town
+// page's Open. Both sit between UpdateTownLocators (0x5c5aa0) and
+// HandleGiftMsg (0x5c66b0) in retail link order; the two DC helpers
+// DoTownKnob/bonus_right_click that precede set_bonus_display in the DC
+// roster have no distinct retail carve row (inlined here).
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:2562
+VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
+void TTownScreenWindow::set_bonus_display(town* currTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2716
+VA(0x005c63c0, 0x2E1)  // anchor-caller(the three pure managers Open/Close/Main) + order-map + arity(ret 4, int), dc 0x16b718
+int townManager::Open(int newPriority)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // The town page's one network hook: a gift arriving while the player is
 // inside a town is handled exactly as the adventure map handles it, and
 // then the town's own resource bar is redrawn so the new stock shows.
@@ -1417,6 +1438,26 @@ void townManager::SetHeroCommand()
     strcpy(statusText, gUnnamed6a5da8);
 }
 
+// Located, not reconstructed: SetArmyCommand and SetCommandAndText sit
+// between SetHeroCommand (0x5c7250) and select_army (0x5c8080) in retail
+// link order; SetCommandAndText2 (dc 0x16ceb4) has no distinct retail
+// carve row here.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:3274
+VA(0x005c7400, 0x391)  // order-map(SetHeroCommand 0x5c7250 .. select_army 0x5c8080) + anchor-callee(select_army 0x5c8080 + GetNumArmies) + arity(ret 8, 2 args), dc 0x16c6a8
+void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3383
+VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
+void townManager::SetCommandAndText(message* msg)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
 // full-screen CAdvPopup with eight player columns and thirteen category
 // rows. Anchored by its own vftable 0x643764 (already proven
@@ -1595,6 +1636,25 @@ TThievesGuildWindow::~TThievesGuildWindow()
             delete *it;
     }
 }
+
+// Located, not reconstructed: the thieves' guild rollover-text setter and
+// its message handler. show_side (dc 0x16df0c) has no distinct retail carve
+// row (inlined into the ctor/SetupThievesGuild).
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:4070
+VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
+void TThievesGuildWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4154
+VA(0x005c9930, 0x2AC)  // anchor-vtable 0x643764 slot 9 + anchor-callee(SetRolloverText 0x5c9710 + ViewArmy/HeroView/ConvertToHover) + arity(ret 4), dc 0x16e43c
+int TThievesGuildWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // The town hall, and the compiland's largest reconstructed body: one page
 // per town type, each a background and a grid of building slots read out
@@ -3888,6 +3948,18 @@ void townManager::DoPortalOfSummoning()
 // condition rather than to a nested if: retail's `jl` skips the
 // assignment and leaves the already-chosen hero standing.
 
+// Located, not reconstructed: the building-description formatter. The
+// residual note below already proves it a townmgr.cpp static at 0x5d2a40
+// with fourteen call sites; the delinked PDB even names it GetBuildingInfo.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:5586
+VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
+char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // The university record's default set, and this compiland owns the body.
 // Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
 // a bare `ret` - a frameless constructor returning `this` - and it sits at
@@ -4137,6 +4209,20 @@ static void MoveHeroToGarrison(townManager* mgr)
     mgr->field_11c = 0;
     mgr->NewStrips();
 }
+
+// Located, not reconstructed: the town manager's modal message loop, the
+// third of the three pure managers (Open/Close/Main) and the compiland's
+// largest control body. ExitTownManager (dc 0x174f60) and GetBuildingInfo
+// precede it in the DC roster; Main is the last unclaimed body before
+// DoCommand in retail link order.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:5854
+VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
+int townManager::Main(message* msg)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:6598
 VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634
@@ -4634,6 +4720,17 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
     msg.codeY = 0;
     window->BroadcastMessage(&msg);
 }
+
+// Located, not reconstructed: the buy-build window's prerequisite-text
+// formatter, between ~TBuyBuildWindow (0x5d5b70) and BuyBuild (0x5d5f30).
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:7272
+VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
+void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:7354
 VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
@@ -6076,6 +6173,14 @@ void DoMapTavern(type_point point)
 // fetch is dereferenced UNGUARDED (`mov al,[edi+0x34]` with no null
 // test), which is retail's own code and not a spelling artefact: the
 // hire two calls earlier is what makes the id non-negative.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:8055
+VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
+unsigned char DoTavern()
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8164
 VA(0x005d82b0, 0x1D0)  // order-map(after DoMapTavern) + DoTavern/RedrawTownScreen edges + arity(bare ret), dc 0x17b154
@@ -7579,6 +7684,18 @@ void townManager::SetupWell(TCastleWindow* wellWin)
                                   textMessage.extra);
     }
 }
+
+// Located, not reconstructed: the thieves' guild scoreboard builder, the
+// largest body between SetupWell (0x5dd390) and GetCategoryStats (0x5dee70)
+// in retail link order.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:9296
+VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
+void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
 // its own; this is the file-local fallback the header discipline allows.
