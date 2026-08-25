@@ -4,6 +4,32 @@
 // COM interface so retail's __stdcall virtual dispatch reproduces byte-for-byte.
 #include "dxplay.h"
 
+// DirectPlay value structures consumed only by this TU's wrapper bodies. The
+// DPCAPS extent (0x28) is fixed by GetCaps's memset; DPCHAT (0xc) by SendChat.
+struct DPCAPS {
+    unsigned long dwSize;              // +0x00
+    unsigned long dwFlags;            // +0x04
+    unsigned long dwMaxBufferSize;    // +0x08
+    unsigned long dwMaxQueueSize;     // +0x0c
+    unsigned long dwMaxPlayers;       // +0x10
+    unsigned long dwHundredBaud;      // +0x14
+    unsigned long dwLatency;          // +0x18
+    unsigned long dwMaxLocalPlayers;  // +0x1c
+    unsigned long dwHeaderLength;     // +0x20
+    unsigned long dwTimeout;          // +0x24
+};
+SIZE(DPCAPS, 0x28);
+
+struct DPCHAT {
+    unsigned long dwSize;             // +0x00
+    unsigned long dwFlags;            // +0x04
+    union {
+        unsigned short* lpszMessage;  // +0x08
+        char* lpszMessageA;
+    };
+};
+SIZE(DPCHAT, 0x0c);
+
 // DirectPlay COM interface, modeled privately for this TU only (m_lpDP is a
 // void* in the shared header, static_cast here). Retail dispatches every
 // DirectPlay call as a __stdcall virtual with the interface pointer pushed as
