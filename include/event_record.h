@@ -34,6 +34,8 @@ public:
     virtual type_event_record_type get_type();
     virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
+    virtual void replay(unsigned char draw);
+    virtual void undo();
     signed char player_id;  // +0x04
 };
 
@@ -47,6 +49,22 @@ public:
 class type_record_teleport : public type_record_move_hero {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+};
+
+// Retail serializes these four fields in address order except that the two
+// owner bytes are written old-then-new. replay reads new_owner at +0x0c;
+// undo reads old_owner at +0x0d and restores mines[id].playerOwner.
+class type_record_claim_mine : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void undo() OVERRIDE;
+
+    int id;                 // +0x08
+    signed char new_owner;  // +0x0c
+    signed char old_owner;  // +0x0d
 };
 
 class type_record_hide_boat : public type_event_record {
