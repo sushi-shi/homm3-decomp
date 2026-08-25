@@ -1301,7 +1301,7 @@ unsigned char spell_level_order::operator()(SpellID first, SpellID second)
 }
 
 // E:\gamedcs\events.cpp:5140
-DC_ONLY(0x9ce08, 0x38)
+// RETAIL_LOCATED(0x004aaa40, 0x5C)  // located @stub (promoted to active VA), dc 0x9ce08
 void type_university_window::~type_university_window()
 {
     // @stub
@@ -5446,6 +5446,18 @@ void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell,
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
 VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
 void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// E:\gamedcs\events.cpp:5140.  Located, not reconstructed.  The carcass note
+// above 0x4aaa40 identifies it: a 2-vector destructor (this+0xdc/+0xec freed
+// in reverse decl order) tail-calling ~CAdvPopup (0x41b120) - the only
+// events.obj CAdvPopup child carrying exactly two std::vector members.
+#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+VA(0x004aaa40, 0x5C)  // anchor-callee ~CAdvPopup + 2-vector teardown, ret 0, dc 0x9ce08
+void type_university_window::~type_university_window()
 {
     // @stub
 }
