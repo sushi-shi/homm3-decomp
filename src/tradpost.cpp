@@ -1249,16 +1249,131 @@ void TSellArtifactWindow::SetRolloverText(int codeY)
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:3189
+// The sell-creature dialog handler. Subtype 0xc picks the buy-side resource or
+// an army slot (each re-selection re-runs ComputeTradeRatios); subtype 0xd runs
+// the sell/max panels and the two tab-command buttons; subtype 0xe right-clicks
+// an army slot into ViewArmy. Hover copies the rollover string.
 VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
 int TSellCreatureWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
 
-#endif  // @carcass
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+            case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+            case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+            case MARKET_BUY_GOLD_ID: {
+                int resIdx = msg->codeY - MARKET_BUY_WOOD_ID;
+                if (resIdx == gLeftResource)
+                    return 1;
+                int prevSel = gSelectedArtifact;
+                gLeftResource = resIdx;
+                if (prevSel != -1) {
+                    ComputeTradeRatios(prevSel, resIdx,
+                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+                    creatureSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
+            case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
+            case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
+            case MARKET_CREATURE_SLOT_6_ID: {
+                int slotIdx = msg->codeY - MARKET_CREATURE_SLOT_0_ID;
+                if (slotIdx == gSelectedArtifact)
+                    return 1;
+                int prevRes = gLeftResource;
+                gSelectedArtifact = slotIdx;
+                if (prevRes != -1) {
+                    ComputeTradeRatios(slotIdx, prevRes,
+                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+                    creatureSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (gRightAmount == 0)
+                    return 1;
+                if (gRatioInverted) {
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gGiveQuantity * gRightAmount;
+                    gpMarketHero->army.numTroops[gSelectedArtifact] -= gRightAmount;
+                } else {
+                    gpMarketHero->army.numTroops[gSelectedArtifact] -=
+                        gGiveQuantity * gRightAmount;
+                    gpCurrentPlayer->resources[gLeftResource] += gRightAmount;
+                }
+                if (gpMarketHero->army.numTroops[gSelectedArtifact] == 0)
+                    gpMarketHero->army.armies[gSelectedArtifact] = -1;
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+            case MARKET_RIGHT_PANEL_ID:
+                gRightAmount = gMaxTradeUnits;
+                creatureSlider->SetState(gMaxTradeUnits);
+                break;
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
+                bExit = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_RIGHT_SELECT:
+            if (msg->codeY < MARKET_CREATURE_SLOT_0_ID ||
+                msg->codeY > MARKET_CREATURE_SLOT_6_ID)
+                return 1;
+            gpGame->ViewArmy(gpMarketHero->army,
+                             msg->codeY - MARKET_CREATURE_SLOT_0_ID,
+                             gpMarketHero, 0, 119, 20, 0, 1);
+            return 1;
+
+        default:
+            return 1;
+        }
+
+        Update(1);
+        if (bExit) {
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return 2;
+        }
+        return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
 
 // E:\gamedcs\tradpost.cpp:3324
 // Rollover text for the sell-creature panel. The left column (army slot

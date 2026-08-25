@@ -103,7 +103,7 @@ SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
     slider* creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
-    int field_64;             // +0x64
+    int lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
     TSellCreatureWindow(int x2, int y2);
     void Update(unsigned char bUpdate);
