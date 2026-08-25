@@ -25,14 +25,14 @@ const char* get_level_string(SpellID spell)
 }
 
 // E:\gamedcs\spellbookwindow.cpp:128
-DC_ONLY(0x14bcf4, 0x194)
+VA(0x0059baa0, 0x341)  // anchor-callee: called by WindowHandler 0x59d040; EH std::string, ret 0x10 = UDT-ret+3 args; dc 0x14bcf4
 std::basic_string<char,std::char_traits<char>,std::allocator<char> TSpellbookWindow::get_spell_description(__$ReturnUdt, SpellID spell, const hero* current_hero, unsigned char rollover)
 {
     // @stub
 }
 
 // E:\gamedcs\spellbookwindow.cpp:180
-DC_ONLY(0x14be88, 0x9DC)
+VA(0x0059bdf0, 0xAC9)  // anchor-bracket: immediately precedes scalar-del-dtor 0x59c8c0; EH, ret 0x10 = 4 args; spelback.pcx setup; dc 0x14be88
 void TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbookWindow::TSpellContext context, int magic_terrain)
 {
     // @stub
@@ -70,7 +70,7 @@ void TSpellbookWindow::Close(unsigned char update)
 
 #if 0  // @carcass: untouched Dreamcast-only bodies
 // E:\gamedcs\spellbookwindow.cpp:526
-DC_ONLY(0x14c904, 0x50C)
+VA(0x0059c9a0, 0x691)  // anchor-callee: called by WindowHandler; immediately follows Close 0x59c990; ret 4 = page arg; spleva.def; dc 0x14c904
 void TSpellbookWindow::GotoPage(int page)
 {
     // @stub
@@ -91,14 +91,14 @@ int TSpellbookWindow::convertID2HelpID(int id)
 }
 
 // E:\gamedcs\spellbookwindow.cpp:755
-DC_ONLY(0x14cecc, 0x3C2)
+VA(0x0059d040, 0xBA0)  // anchor-callee: calls GotoPage/get_spell_description/GetManaCost/SetIconFrame, msg jump-table, ret 4; absorbs inlined DisplayNewSchool+convertID2HelpID; dc 0x14cecc
 int TSpellbookWindow::WindowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\spellbookwindow.cpp:1049
-DC_ONLY(0x14d290, 0x90)
+VA(0x0059dbe0, 0x84)  // anchor-bracket: follows WindowHandler; compares akSpellTraits level/school + strcmpi name, ret 4; dc 0x14d290
 unsigned char TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookWindow::TSpellbookEntry* y)
 {
     // @stub
