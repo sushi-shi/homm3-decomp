@@ -3,6 +3,7 @@
 // 121 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <stdio.h>
+#include <string.h>
 #include "kb.h"
 #define HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
@@ -17,49 +18,46 @@
 #if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:240
-VA(0x004ed230, 0x6A)  // linkorder order-map + dc-xref CSprite::Draw, dc 0xdf160
+DC_ONLY(0xdf160, 0x7C)
 void DrawProgressCount()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:252
-VA(0x004ed2a0, 0xA7)  // linkorder order-map (4:4 bijection cinit..PollSound), dc 0xdf1dc
+DC_ONLY(0xdf1dc, 0x4A)
 void IncProgressBar(unsigned char bUpdate)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:269
-VA(0x004ed350, 0xF3)  // anchor-global loadbar.pcx + linkorder, dc 0xdf228
+DC_ONLY(0xdf228, 0x7C)
 void ShowProgressBar()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:292
-VA(0x004ed450, 0x3D)  // linkorder order-map (4:4 bijection cinit..PollSound), dc 0xdf2a4
+DC_ONLY(0xdf2a4, 0x8C)
 void UnloadProgressBar()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:318
-VA(0x004ed490, 0x1B5)  // anchor-global, dc 0xdf330
+// RETAIL_LOCATED(0x004ed490, 0x1B5)  // anchor-global, dc 0xdf330
 void PollSound()
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:431
-// Retail body is the manager-constructor: dc-xref shows InitMainClasses
-// calls the 12 manager ctors (executive/inputManager/mouseManager/
-// soundManager/highScoreManager/game/advManager/combatManager/
-// townManager/searchArray/philAI/heroWindowManager), and retail
-// 0x004edb40 constructs exactly those via exe_new (598 B, 1.22x). The
-// earlier note's 0x004ed650 is its CALLER (loads text then calls
-// 0x004edb40); it merges DC EarlySetup+LoadGameData and stays DC_ONLY.
-VA(0x004edb40, 0x256)  // anchor-callee dc-xref (12 manager ctors), dc 0xdf4e4
+// Located by exhaustive order-mapping of the six carve rows after
+// PollSound onto the six DC kb.cpp functions PollSound..oldmain
+// (492->1256 B: the WinCE build strips the Win32 menu loading that
+// gives the retail body its LoadMenuA call). WinMain's first gate.
+// RETAIL_LOCATED(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
 int InitMainClasses()
 {
     // @stub
@@ -94,7 +92,7 @@ int EarlySetup()
 }
 
 // E:\gamedcs\kb.cpp:722
-VA(0x004edda0, 0x407)  // anchor-global credits.fnt + linkorder, dc 0xdfa3c
+DC_ONLY(0xdfa3c, 0x520)
 void CreditsWait()
 {
     // @stub
@@ -108,7 +106,7 @@ void ShowCredits()
 }
 
 // E:\gamedcs\kb.cpp:879
-VA(0x004ee2b0, 0x121)  // anchor-global ultimatelose + linkorder, dc 0xdffe4
+DC_ONLY(0xdffe4, 0x174)
 void LostGame()
 {
     // @stub
@@ -117,7 +115,7 @@ void LostGame()
 // E:\gamedcs\kb.cpp:962
 // Located by the same PollSound..oldmain order-mapping (4532->7172 B);
 // WinMain's final call - the game main loop.
-VA(0x004ee3e0, 0x1C04)  // anchor-import MessageBoxA + dc-xref (37 shared callees), dc 0xe0158
+// RETAIL_LOCATED(0x004ee3e0, 0x1C04)  // linkorder, dc 0xe0158
 int oldmain()
 {
     // @stub
@@ -194,7 +192,7 @@ int ExitNormalDialog(message* msg)
 }
 
 // E:\gamedcs\kb.cpp:2367
-VA(0x004f08d0, 0x20C)  // anchor-callee GetNetMsgHandler/CTurnDuration::IsExpired, dc 0xe1ccc
+DC_ONLY(0xe1ccc, 0x118)
 int NormalDialogHandler(message* msg)
 {
     // @stub
@@ -208,14 +206,14 @@ void type_normal_dialog_frame::type_normal_dialog_frame(long _x, long _y, long _
 }
 
 // E:\gamedcs\kb.cpp:2452
-VA(0x004f0b20, 0x491)  // anchor-callee NormalDialog + type_artifact::get_description, dc 0xe1e58
+DC_ONLY(0xe1e58, 0x214)
 unsigned char type_normal_dialog_frame::handle_click(unsigned char down_click, unsigned char right_click)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:2549
-VA(0x004f0fc0, 0x1C3)  // anchor-callee heroWindow::GetWidget (called by NormalDialogHandler), dc 0xe206c
+DC_ONLY(0xe206c, 0x1EE)
 int EventWindowHandler(message* msg)
 {
     // @stub
@@ -229,7 +227,7 @@ int TrueFalseDialogHandler(message* msg)
 }
 
 // E:\gamedcs\kb.cpp:2636
-VA(0x004f11a0, 0x2BC)  // anchor-callee game::Claim{Garrison,Mine,Generator,Shipyard}+HandleRemoteDeadPlayerExit, dc 0xe226c
+DC_ONLY(0xe226c, 0x234)
 void PlayerDead(int iWhichPlayer)
 {
     // @stub
@@ -264,7 +262,7 @@ void SendPlayerLost()
 }
 
 // E:\gamedcs\kb.cpp:2888
-VA(0x004f15e0, 0x1348)  // anchor-global "you have defeated all" + called by CheckEndGame, dc 0xe29a8
+DC_ONLY(0xe29a8, 0xB1A)
 unsigned char DisplayVCWinLoss(VictoryConditionStruct* VictoryCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
 {
     // @stub
@@ -278,14 +276,14 @@ int GetEnemyCount()
 }
 
 // E:\gamedcs\kb.cpp:3440
-VA(0x004f2960, 0x37E)  // anchor-callee dc-xref getLocalPlayerGamePos/getPlayerName/getTownId + called by CheckEndGame, dc 0xe3558
+DC_ONLY(0xe3558, 0x228)
 unsigned char DisplayLCWinLoss(LossConditionStruct* LossCondition, int* bGameWon, int* bGameLost, unsigned char remoteCheck)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:3566
-VA(0x004f2ce0, 0x5BA)  // anchor-callee calls DisplayVCWinLoss+DisplayLCWinLoss+PlayerDead, dc 0xe3780
+DC_ONLY(0xe3780, 0x282)
 void CheckEndGame(int bForceWin)
 {
     // @stub
@@ -299,24 +297,47 @@ void InitVars()
 }
 
 // E:\gamedcs\kb.cpp:3798
-VA(0x004f32a0, 0x29C)  // anchor-callee dc-xref (3 shared), dc 0xe3a64
+DC_ONLY(0xe3a64, 0x11E)
 void game::ShowMoraleInfo(hero* thisHero, int iMBType)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:3830
-VA(0x004f3540, 0x14B)  // anchor-callee dc-xref, dc 0xe3b84
+#endif  // @carcass
+
+VA(0x004f3540, 0x14B)
 void game::ShowLuckInfo(hero* thisHero, int iMBType)
 {
-    // @stub
+    int icon;
+    int luck = thisHero->GetLuck(0, 0, 1);
+
+    if (luck > 0) {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[0]);
+        icon = 11;
+    } else if (luck == 0) {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[1]);
+        icon = 12;
+    } else {
+        sprintf(gText, gLuckTexts[3], gLuckTexts[2]);
+        icon = 13;
+    }
+
+    std::string modifiers = thisHero->get_luck_description();
+    strcat(gText,
+           modifiers.length() == 0 ? gLuckTexts[18] : modifiers.c_str());
+
+    NormalDialog(gText, iMBType, -1, 28, icon, 0,
+                 -1, 0, -1, 0, -1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\kb.cpp:3867
 // Located by shape + lineage: the carve's "unexpected program
 // termination" routine, called from executive::DoDialog's four
 // manager-add failure arms (homm2's ShutDown(gExecutiveText...)).
-VA(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
+// RETAIL_LOCATED(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
 void ShutDown(const char* cInExitMessage)
 {
     // @stub
@@ -330,7 +351,7 @@ void FileError(const char* cBuf)
 }
 
 // E:\gamedcs\kb.cpp:3970
-VA(0x004f3ab0, 0x374)  // anchor-global hiscore.fnt + dc-xref (11 shared), dc 0xe3e48
+DC_ONLY(0xe3e48, 0x450)
 void CongratsWait(int mode, char* rank, int iBase, int iScore, int iDayz)
 {
     // @stub
@@ -351,7 +372,7 @@ short game::get_map_score()
 }
 
 // E:\gamedcs\kb.cpp:4102
-VA(0x004f3f60, 0x357)  // anchor-global win-scenario + dc-xref (9 shared), dc 0xe4330
+DC_ONLY(0xe4330, 0x1BE)
 void ShowCongrats(int hsType)
 {
     // @stub
@@ -926,17 +947,6 @@ int GameUnsaved()
     return 0;
 }
 
-#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
-// E:\gamedcs\kb.cpp:4477.  Sole caller is AppCommand's default arm
-// (retail 0x4f8060); dc-xref join shares 13 callees. Body not yet
-// reconstructed - claim only.
-VA(0x004f4350, 0x7F2)  // anchor-callee dc-xref (13 shared), dc 0xe49b0
-int HandleAppSpecificMenuCommands(int idItem)
-{
-    // @stub
-}
-#endif
-
 // E:\gamedcs\kb.cpp:4761.  AppExit's tail callee: drop the window's menu
 // bar, then destroy the two loaded menus.  The `activeMenu = 0` store is
 // OUTSIDE the guard - both early exits land on it - and the two
@@ -979,31 +989,6 @@ int GetNextHumanPlayer(int start)
     return -1;
 }
 
-#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
-// dc-xref: HandleRemoteDeadPlayerExit is called by PlayerDead(0x4f11a0);
-// [4] shared callees. type_dialog_icon::set matches on 5 distinctive
-// callees (font metrics + getBuildingName + getSprite);
-// CalculateNormalDialogSize on 4 distinctive font-measure methods
-// (LineLength/longest_word_length/longestLineWidth/longestWrappedLineWidth).
-VA(0x004f4c00, 0x2AA)  // anchor-callee dc-xref, called by PlayerDead, dc 0xe5214
-void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
-{
-    // @stub
-}
-
-VA(0x004f4eb0, 0xEC9)  // anchor-callee dc-xref (font metrics + getBuildingName), dc 0xe52b8
-void type_dialog_icon::set(EGameResource _resource, long _qualifier)
-{
-    // @stub
-}
-
-VA(0x004f5d80, 0x51C)  // anchor-callee dc-xref (4 distinctive font-measure methods), dc 0xe5960
-void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
-{
-    // @stub
-}
-#endif
-
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
 // same argument-reordering wrapper as the Dreamcast body, shortened to
 // 52 bytes by x86 stack loads: /Gr keeps cText/iMBType in ecx/edx, so
@@ -1018,31 +1003,6 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
                  iResType2, iResExtra2, iSpecial, timeOut,
                  iResType3, iResExtra3);
 }
-
-#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
-// dc-xref: NormalDialog(0x4f6570) is called by handle_click/DisplayLCWinLoss/
-// CheckEndGame and sits before DoNormalDialog(0x4f6990, [19] shared callees);
-// extended_dialog(0x4f7690, delinker-named) sits after it - both build a
-// TNormalDialogInfo and call CalculateNormalDialogSize+type_dialog_icon::set+
-// DoNormalDialog, with order deciding which is which. Body not reconstructed.
-VA(0x004f6570, 0x29B)  // anchor-callee (called by handle_click/CheckEndGame), dc 0xe5fbc
-void NormalDialog(const char* cText, int iMBType, int x, int y, int iResType1, int iResExtra1, int iResType2, int iResExtra2, int iSpecial, int iTimeout, int iResType3, int iResExtra3)
-{
-    // @stub
-}
-
-VA(0x004f6990, 0xC8C)  // anchor-callee dc-xref (19 shared callees), dc 0xe60dc
-void DoNormalDialog(TNormalDialogInfo dialog_info)
-{
-    // @stub
-}
-
-VA(0x004f7690, 0x312)  // anchor-global (delinker-named) + calls DoNormalDialog+CalcNDSize, dc 0xe6cf0
-void extended_dialog(const char* text, std::vector<type_dialog_resource>* resources, long x, long y, long timeout)
-{
-    // @stub
-}
-#endif
 
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
 unsigned short GetMapExtra(int x, int y, int z)

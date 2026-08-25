@@ -1507,6 +1507,10 @@ public:
     // the Dreamcast's own signature.
     void DoEventBlackBox(class hero* current_hero, NewmapCell* cell,
                          type_point point, bool human_player);
+    // The movement-only map event shares Pandora's Box's record and reward
+    // machinery but does not prompt for acceptance.
+    void HandleMapEvent(class hero* current_hero, NewmapCell* cell,
+                        type_point point, bool human_player);
     // The reward payer the box hands its record to (0x49fa90), a PRIVATE
     // member on the Dreamcast returning bool. DECLARED only; the row is not
     // claimed here.

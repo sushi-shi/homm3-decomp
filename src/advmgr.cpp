@@ -856,7 +856,7 @@ int advManager::Open(int newPriority)
         char text[172];
         sprintf(text, gpGeneralText->GetText(14), gpCurrentPlayer->GetName());
         gpWindowManager->isWaitingForFadeIn = 0;
-        gpGame->GameFn_004CA840(text, gNetLocalGamePos);
+        gpGame->WaitForPlayer(text, gNetLocalGamePos);
         RedrawAdvScreen(1, 0);
         bottomViewOverride = BOTTOM_VIEW_1;
         bottomViewDeadline = GameTime::Get() + 3000;

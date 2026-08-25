@@ -206,6 +206,14 @@ public:
     // the body; the linker never runs over these objects.
     hero& operator=(const hero& other);
 
+    // Dreamcast names this header inline; hide-hero undo proves its retail
+    // expansion as the base operation with the hero object type and id.
+    using type_obscuring_object::obscure_cell;
+    void obscure_cell()
+    {
+        type_obscuring_object::obscure_cell(HERO, id);
+    }
+
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
         CLASS_NAME_OVERRIDE_SCENARIO = 15,

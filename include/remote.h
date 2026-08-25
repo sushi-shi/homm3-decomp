@@ -143,6 +143,13 @@ public:
     void HandlePlayerDrop(unsigned long dpid);
 
 protected:
+#ifdef HOMM3_REMOTE_CDPLAYHEROES_LAYOUT
+    // MATCHING_DEBT: keep this override declaration in the existing remote-TU
+    // layout view. Exposing the otherwise unused virtual to recruit.obj changes
+    // VC6's optimizer state and regresses recruitUnit::Update.
+    virtual unsigned char SysMsgCreatePlayerOrGroup(
+        DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
+#endif
     // Retail 0x5532b0, DC remote.cpp:425. Accessed by the two original
     // free-function friends below; the Dreamcast class record marks it
     // protected rather than public.
