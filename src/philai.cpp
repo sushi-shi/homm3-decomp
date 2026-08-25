@@ -753,13 +753,6 @@ int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2208
-DC_ONLY(0x110c90, 0x66)
-long value_of_recruiting(const hero* current_hero, TCreatureType creature, short amount)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2220
 DC_ONLY(0x110cf8, 0xBC)
 long value_of_garrison(const hero* current_hero, NewmapCell* cell)
@@ -945,13 +938,6 @@ int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell)
 // E:\gamedcs\philai.cpp:2891
 DC_ONLY(0x112208, 0x58)
 void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2903
-DC_ONLY(0x112260, 0x14C)
-long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* player)
 {
     // @stub
 }
@@ -1175,6 +1161,20 @@ int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* 
 // E:\gamedcs\philai.cpp:2306
 VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
 long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2208
+VA(0x0052a710, 0xad)  // anchor-callee, dc 0x110c90
+long value_of_recruiting(const hero* current_hero, TCreatureType creature, short amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2903
+VA(0x0052a7c0, 0xa8)  // anchor-callee, dc 0x112260
+long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* player)
 {
     // @stub
 }
