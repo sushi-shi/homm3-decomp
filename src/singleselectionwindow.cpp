@@ -737,13 +737,31 @@ void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer
     // @stub
 }
 
+#endif  // @carcass
+
 // CHostWaitDlg (CAnimatedDlg subclass) - relocated here for RVA order.
 // E:\gamedcs\singleselectionwindow.cpp:454
 VA(0x005891b0, 0x45)  // anchor-vtable CHostWaitDlg vtbl 0x241cf8 slot3 (handle_message override vs CAnimatedDlg base 0x240e94) + fingerprint w2.25, dc 0x1477b0
-int CHostWaitDlg::handle_message(message* msg)
+int CHostWaitDlg::handle_message(message& msg)
 {
-    // @stub
+    int ret = CAnimatedDlg::handle_message(msg);
+    m_pMsg = GetRemoteData(1, 0);
+    if (m_pMsg && m_pMsg->field_04 == m_forWho)
+        return ExitDialog(msg);
+    return ret;
 }
+
+// CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
+VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
+
+// ~CHostWaitDlg adds no destructible members, so OPT:ICF folds it to a 5-byte
+// jmp into the CAnimatedDlg base dtor. E:\gamedcs\singleselectionwindow.cpp:465
+VA(0x00589230, 0x5)  // dc 0x147860
+CHostWaitDlg::~CHostWaitDlg()
+{
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6443
 DC_ONLY(0x13fd74, 0x6A0)
@@ -1214,12 +1232,19 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:8764
 VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
 CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
-    // @stub
+    CNetMsg* pMsg = GetRemoteData(0, &m_wasCompressed);
+    if (!pMsg)
+        return 0;
+    return HandleNetMsg(pMsg);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:8775
 VA(0x0058e340, 0x379)  // anchor-vtable vtbl 0x241ce8 slot3 (HandleNetMsg; cf CNetMsgHandler layout) + fingerprint w0.75, dc 0x1451e8
@@ -1427,16 +1452,6 @@ void CHostWaitDlg::CHostWaitDlg()
 // E:\gamedcs\singleselectionwindow.cpp:437
 DC_ONLY(0x1476dc, 0xD4)
 void CHostWaitDlg::Wait(unsigned long forWho)
-{
-    // @stub
-}
-
-// CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
-VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
-
-// E:\gamedcs\singleselectionwindow.cpp:465
-DC_ONLY(0x147860, 0x1C)
-void CHostWaitDlg::~CHostWaitDlg()
 {
     // @stub
 }
