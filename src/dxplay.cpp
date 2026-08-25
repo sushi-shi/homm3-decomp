@@ -349,13 +349,6 @@ void CDPlayLobby::CDPlayLobby()
     // @stub
 }
 
-// E:\gamedcs\dxplay.cpp:1218
-DC_ONLY(0x8b5c8, 0x42)
-void CDPlayLobby::~CDPlayLobby()
-{
-    // @stub
-}
-
 // E:\gamedcs\dxplay.cpp:1224
 DC_ONLY(0x8b60c, 0x4)
 unsigned char CDPlayLobby::RegisterApp(char* szAppName, char* szFile, char* szCmd, _GUID appGuid)
@@ -931,6 +924,17 @@ unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
     return 1;
+}
+
+// E:\gamedcs\dxplay.cpp:1215 - vtable slot 0.
+VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
+
+// E:\gamedcs\dxplay.cpp:1218
+VA(0x00498930, 0x62)  // derived/base vtable stores + COM releases, dc 0x8b5c8
+CDPlayLobby::~CDPlayLobby()
+{
+    if (m_lpLobby)
+        m_lpLobby->Release();
 }
 
 // E:\gamedcs\dxplay.cpp:1948
