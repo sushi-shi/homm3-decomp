@@ -126,6 +126,15 @@ class CDPlay {
 public:
     friend int PASCAL EnumSession(const DPSESSIONDESC2* session,
         unsigned long* timeout, unsigned long flags, void* context);
+    friend int PASCAL EnumConnectionsCallback(const GUID* serviceProvider,
+        void* connection, unsigned long connectionSize, const DPNAME* name,
+        unsigned long flags, void* context);
+    friend int PASCAL EnumGroupsCallback(unsigned long groupId,
+        unsigned long playerType, const DPNAME* name, unsigned long flags,
+        void* context);
+    friend int PASCAL EnumPlayersCallback(unsigned long playerId,
+        unsigned long playerType, const DPNAME* name, unsigned long flags,
+        void* context);
 
     CDPlay();
     virtual ~CDPlay();
@@ -270,6 +279,9 @@ SIZE(CDPlay, 0x58);
 // in retail, so this is also the complete PC layout needed by CDPlayHeroes.
 class CDPlayLobby : public CDPlay {
 public:
+    friend int PASCAL EnumAddressCallback(const GUID* type,
+        unsigned long size, const void* data, void* context);
+
     CDPlayLobby();
     virtual ~CDPlayLobby();
     virtual unsigned char Init();
