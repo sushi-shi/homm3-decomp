@@ -175,13 +175,6 @@ void move_all_heroes(long player_id, long* danger_zones)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:1261
-DC_ONLY(0x10f16c, 0xC0)
-void philAI::DoAI(int whichPlayer)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:1319
 DC_ONLY(0x10f22c, 0xCA)
 int AI_resource_cost(const playerData* player, const int* resources)
@@ -372,6 +365,13 @@ int hero::SoD_get_seer_skill_value(int skill, int level)
 
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
+// E:\gamedcs\philai.cpp:3744
+VA(0x00524ed0, 0xed)  // anchor-callee, dc 0x113cbc
+void AI_visit_university(hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
 // E:\gamedcs\philai.cpp:561
 VA(0x00524fc0, 0x156)  // anchor-callee, dc 0x10e064
 void visit_war_factory(hero* current_hero, TArtifact engine)
@@ -410,6 +410,16 @@ void buy_special_building(const hero* current_hero, town* current_town)
 // E:\gamedcs\philai.cpp:594
 VA(0x00525ca0, 0x11e)  // anchor-callee, dc 0x10e118
 void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1261.  Retail inlines the whole per-hero move loop
+// (move_all_heroes / DetermineHeroToMove path) into DoAI, so the body is ~4.5x
+// the DC size; identity is proven by the philai-unique start_turn/end_turn/
+// UpdBottomView edges, not by size.
+VA(0x00525e80, 0x362)  // anchor-callee, dc 0x10f16c
+void philAI::DoAI(int whichPlayer)
 {
     // @stub
 }
@@ -1070,23 +1080,9 @@ long value_of_university(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3744
-DC_ONLY(0x113cbc, 0xE4)
-void AI_visit_university(hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:3796
 DC_ONLY(0x113da0, 0x84)
 int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:4126
-DC_ONLY(0x1147ac, 0x2AE)
-void AI_examine_map()
 {
     // @stub
 }
@@ -1196,6 +1192,13 @@ long value_of_town(const hero* current_hero, int x, int y, int z, short move_cos
 // E:\gamedcs\philai.cpp:3096
 VA(0x0052b090, 0x14e)  // anchor-callee, dc 0x112830
 long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:4126
+VA(0x0052b9c0, 0x20c)  // anchor-callee, dc 0x1147ac
+void AI_examine_map()
 {
     // @stub
 }
