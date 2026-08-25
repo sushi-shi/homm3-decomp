@@ -1758,6 +1758,34 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // Located, not reconstructed: the thieves' guild rollover-text setter and
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
 // row (inlined into the ctor/SetupThievesGuild).
+//
+// SetRolloverText DECODE (2026-08-25, for the next lane). A dispatch over
+// codeY = the hovered widget id, writing the rollover into gText:
+//   - codeY 1..27  : VC6 COMPRESSED JUMP TABLE (byte-index at func+0x204,
+//                    jump table of 4 entries at func+0x1f4 - both embedded in
+//                    the body as self-relocs, the high-repro-risk part).
+//                    Decoded byte-index (codeY-1 = 0..26) and jt targets:
+//                      codeY 1..8   -> sprintf(gText, gRankFormat[0]=0x6a5390)
+//                      codeY 10..17 -> sprintf(gText, gRankFormat[1]=0x6a5394)
+//                      codeY 20..27 -> sprintf(gText, gRankFormat[2]=0x6a5398)
+//                      codeY 9,18,19-> default (adventureRolloverEmptyText)
+//   - codeY 30..37 : sprintf(gText, gRankFormat[3]=0x6a539c) - a range test
+//                    (`cmp 0x1e/jge`) SPLIT OUT ahead of the jump table.
+//   - codeY 750..757 (0x2ee..0x2f5): heroIdx = table 0x6a9e00[codeY]; if not
+//                    -1, strcpy(gText, gpGame heroes[heroIdx].name) with hero
+//                    stride 1170 (0x492) at gpGame+0x21620, name at hero+0x23.
+//   - codeY 850..857 (0x352..0x359): idx = 0x6a98ec[codeY]; slot =
+//                    0x6aa660[7*(codeY-0x352)+idx]; if 0<=slot<=0x96 strcpy the
+//                    creature-traits name at akCreatureTypeTraits+0x18 (base
+//                    0x6747b0, stride 0x2c) else adventureRolloverEmptyText.
+//   - codeY 0x7800 : strcpy(gText, gpGeneralText->GetText(601)).
+//   - else         : strcpy(gText, adventureRolloverEmptyText).
+// Tail (all arms): BroadcastMessage(0x200,3,0x29,gText) then vslot20(0,0x28,
+//   0x29) then gpWindowManager->UpdateScreen(x+8, y+0x22c, 0x2e0, 0x12).
+// The four gRankFormat char* (0x6a5390..0x6a539c) and the widget->hero/creature
+// maps (0x6a9e00, 0x6a98ec, 0x6aa660) are unmodelled; reconstruction needs the
+// compressed-switch reproduced AND those tables + the hero-record stride
+// declared. Deferred as the flagged high-repro-risk class.
 #if 0  // @carcass: located, not reconstructed
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
