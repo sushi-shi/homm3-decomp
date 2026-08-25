@@ -5,6 +5,12 @@
 #ifndef HOMM3_TEXT_H
 #define HOMM3_TEXT_H
 
+// DC public gSpecialBuildingNames has eleven text columns per row. Retail
+// InitializeSpecialBuildingText writes 110 pointers at 0x6a53d4 from
+// bldgspec.txt, proving ten rows; market entry points consume the
+// faction-specific building-name column when no visiting hero is present.
+extern const char* gSpecialBuildingNames[10][11];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\text.cpp:49, dc 0x160ff4) void CheckTextResource();
 // CODEVIEW(E:\gamedcs\text.cpp:86, dc 0x160ff8) void CheckSpreadsheetResource();

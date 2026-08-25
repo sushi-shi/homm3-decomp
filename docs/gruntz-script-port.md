@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the two town special-building market entries add 628
+  exact retail bytes.** `townManager::Main` independently fixes both
+  identities and Complete-era ABIs. Its building-17 arm admits only town
+  types 2, 5 and 8 (Tower, Dungeon and Conflux) before calling 0x5e9d20,
+  which is the DC-roster `DoArtifactMerchants`; the retail body retains the
+  no-argument form and reloads `gpTownManager->townToView` after the inlined
+  market count. Removing a source local that crossed those paths eliminated
+  an EBP frame and made all 313 bytes exact.
+
+  The neighboring call loads `townToView` into ECX and selects 0x5e9ea0
+  only for town type 6 (Stronghold), proving a new
+  `DoFreelancersGuild(town*)` overload beside the already matched
+  adventure-object `hero*` form. The 315-byte body was exact on its first
+  natural spelling. Both no-hero arms inline DC's attested
+  `TTextResource::operator[]`, use retail general-text row 274, and name the
+  building through the 10x11 `gSpecialBuildingNames` table populated by
+  retail `InitializeSpecialBuildingText` from `bldgspec.txt`. The synchronized
+  checkpoint reaches **1943/2357 linked exact**, **1874/2288 game exact**,
+  **96.58% game fuzzy** and **43.72% executable coverage**. No external
+  implementation body was used.
+
 - **2026-08-25 — artifact-slot rendering and two market entry points add
   367 exact retail bytes.** The 91-byte free helper at 0x5639e0 has the
   Dreamcast `update_artifact_widget(iconWidget*, type_artifact)` ABI and
