@@ -926,6 +926,17 @@ int GameUnsaved()
     return 0;
 }
 
+#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
+// E:\gamedcs\kb.cpp:4477.  Sole caller is AppCommand's default arm
+// (retail 0x4f8060); dc-xref join shares 13 callees. Body not yet
+// reconstructed - claim only.
+VA(0x004f4350, 0x7F2)  // anchor-callee dc-xref (13 shared), dc 0xe49b0
+int HandleAppSpecificMenuCommands(int idItem)
+{
+    // @stub
+}
+#endif
+
 // E:\gamedcs\kb.cpp:4761.  AppExit's tail callee: drop the window's menu
 // bar, then destroy the two loaded menus.  The `activeMenu = 0` store is
 // OUTSIDE the guard - both early exits land on it - and the two
@@ -968,6 +979,31 @@ int GetNextHumanPlayer(int start)
     return -1;
 }
 
+#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
+// dc-xref: HandleRemoteDeadPlayerExit is called by PlayerDead(0x4f11a0);
+// [4] shared callees. type_dialog_icon::set matches on 5 distinctive
+// callees (font metrics + getBuildingName + getSprite);
+// CalculateNormalDialogSize on 4 distinctive font-measure methods
+// (LineLength/longest_word_length/longestLineWidth/longestWrappedLineWidth).
+VA(0x004f4c00, 0x2AA)  // anchor-callee dc-xref, called by PlayerDead, dc 0xe5214
+void HandleRemoteDeadPlayerExit(int iDPGamePos, unsigned char showMsg)
+{
+    // @stub
+}
+
+VA(0x004f4eb0, 0xEC9)  // anchor-callee dc-xref (font metrics + getBuildingName), dc 0xe52b8
+void type_dialog_icon::set(EGameResource _resource, long _qualifier)
+{
+    // @stub
+}
+
+VA(0x004f5d80, 0x51C)  // anchor-callee dc-xref (4 distinctive font-measure methods), dc 0xe5960
+void CalculateNormalDialogSize(TNormalDialogInfo* dialog_info)
+{
+    // @stub
+}
+#endif
+
 // E:\gamedcs\kb.cpp:5488.  The retail predecessor of NormalDialog is the
 // same argument-reordering wrapper as the Dreamcast body, shortened to
 // 52 bytes by x86 stack loads: /Gr keeps cText/iMBType in ecx/edx, so
@@ -982,6 +1018,31 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
                  iResType2, iResExtra2, iSpecial, timeOut,
                  iResType3, iResExtra3);
 }
+
+#if 0  // @carcass - interleaved to keep VA claims in strict RVA order
+// dc-xref: NormalDialog(0x4f6570) is called by handle_click/DisplayLCWinLoss/
+// CheckEndGame and sits before DoNormalDialog(0x4f6990, [19] shared callees);
+// extended_dialog(0x4f7690, delinker-named) sits after it - both build a
+// TNormalDialogInfo and call CalculateNormalDialogSize+type_dialog_icon::set+
+// DoNormalDialog, with order deciding which is which. Body not reconstructed.
+VA(0x004f6570, 0x29B)  // anchor-callee (called by handle_click/CheckEndGame), dc 0xe5fbc
+void NormalDialog(const char* cText, int iMBType, int x, int y, int iResType1, int iResExtra1, int iResType2, int iResExtra2, int iSpecial, int iTimeout, int iResType3, int iResExtra3)
+{
+    // @stub
+}
+
+VA(0x004f6990, 0xC8C)  // anchor-callee dc-xref (19 shared callees), dc 0xe60dc
+void DoNormalDialog(TNormalDialogInfo dialog_info)
+{
+    // @stub
+}
+
+VA(0x004f7690, 0x312)  // anchor-global (delinker-named) + calls DoNormalDialog+CalcNDSize, dc 0xe6cf0
+void extended_dialog(const char* text, std::vector<type_dialog_resource>* resources, long x, long y, long timeout)
+{
+    // @stub
+}
+#endif
 
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
 unsigned short GetMapExtra(int x, int y, int z)
