@@ -1885,6 +1885,7 @@ sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b
 sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x1629e0
 sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x163a40
 sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0
+sacrifice_window	?update_creature_offering@type_sacrifice_window@@QAEXPAUtype_creature_offering@@@Z	99.9744	99.9744	99.9744	0x162da0
 sacrifice_window	?update_experience@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x162500
 sacrifice_window	?update_offering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z	100.0000	100.0000	100.0000	0x162c70
 sacrifice_window	?update_slot@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x162840

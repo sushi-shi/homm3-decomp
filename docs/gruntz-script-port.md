@@ -260,6 +260,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice creature-offering refresh is instruction-
+  exact across all 930 retail bytes.** Dreamcast supplies the retained method,
+  its `type_creature_offering` parameter and the inline edges to
+  `sacrifice_value` and the shared `GetArmyName` header helper. Retail
+  independently proves the six widget fields, terminal group/amount pair,
+  hero-army reads and the AI-value calculation `(AI_value / 40) * 5`.
+  Reversing the floating multiply operands is source-significant under VC6:
+  putting `GetExperienceBonusFactor` on the right evaluates it first and
+  keeps its result live on the x87 stack while the integer sacrifice product
+  is formed, exactly as retail does. The constant plural call to
+  `GetArmyName` then folds its singular arm but retains the two creature-id
+  bounds and shared empty-text fallback.
+
+  All forty-two CFG blocks, every block size, all twenty symbolic branches
+  and every ordinary instruction agree. The strict score is **99.9744%**;
+  its flat diff contains only the established stripped-target relocation-name
+  class (`basic_string` `_Nullstr`/`npos`/`assign`, three honest globals and
+  synthetic EH records), with no executable source delta. The synchronized
+  checkpoint remains **1953/2368 linked exact** and **1884/2299 game exact**,
+  while game fuzzy stays **96.59%** and executable coverage rises to
+  **43.91%**. No external implementation body was used.
+
 - **2026-08-25 — both sacrifice mode switches add 911 exact retail bytes.**
   The 590-byte `set_artifact_mode` and 321-byte `set_creature_mode` are fixed
   by `DoModal`'s two arms and the Dreamcast roster; retail independently

@@ -3491,7 +3491,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1629e0	51	in-span	sacrifice_window	sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ
 0x162a20	590	in-span	sacrifice_window	sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ
 0x162c70	292	in-span	sacrifice_window	sacrifice_window	?update_offering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z
-0x162da0	930	in-span	sacrifice_window	sacrifice_window	game_163150_sub00_162da0
+0x162da0	930	in-span	sacrifice_window	sacrifice_window	?update_creature_offering@type_sacrifice_window@@QAEXPAUtype_creature_offering@@@Z
 0x163150	321	in-span	sacrifice_window	sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ
 0x1632a0	1047	in-span	sacrifice_window	sacrifice_window	game_15fce0_sub00_1632a0
 0x1636c0	794	in-span	sacrifice_window	sacrifice_window	game_15fd10_sub00_1636c0

@@ -9,6 +9,7 @@
 #include "message.h"
 #include "misc.h"
 #include "sample.h"
+#include "textresource.h"
 #include "soundmgr.h"
 #include "winmgr.h"
 
@@ -1772,6 +1773,88 @@ void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
         value_widget->set_help_text(
             gSacrificeWindowHelp[SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE].text,
             0, 1);
+    }
+}
+
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94). The constant plural count
+// folds the inner choice at this caller, while retail retains both range
+// tests and the shared empty-rollover fallback.
+static inline const char* GetArmyName(int type, int count)
+{
+    return type >= 0 && type <= 0x96
+               ? (count == 1 ? akCreatureTypeTraits[type].m_name
+                             : akCreatureTypeTraits[type].m_plural_name)
+               : emptyRolloverText;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:914
+// Inlined at both retail callers. The AI-value load at +0x40 and the signed
+// divide-by-forty reciprocal fix this integer value exactly.
+long sacrifice_value(TCreatureType creature)
+{
+    return akCreatureTypeTraits[creature].AI_value / 40 * 5;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:924
+// Retail proves the record layout through its six widget loads and terminal
+// group/amount pair. The two general-text indices are the folded +0x1ec and
+// +0x788 rows of gpGeneralText's pointer table.
+VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph
+void type_sacrifice_window::update_creature_offering(
+    type_creature_offering* creature)
+{
+    TCreatureType creature_type;
+    long available;
+    if (creature->group < 0) {
+        creature_type = CREATURE_NONE;
+        creature->amount = 0;
+    } else {
+        creature_type = current_hero->army.armyTypes[creature->group];
+        available = current_hero->army.numTroops[creature->group];
+    }
+
+    if (creature_type == CREATURE_NONE) {
+        creature->icon_widget->set_visible(0);
+        creature->field_08->set_visible(0);
+        creature->selection_widget->set_visible(0);
+        creature->field_14->set_visible(0);
+    } else {
+        long experience = static_cast<long>(
+            (sacrifice_value(creature_type) * creature->amount)
+            * current_hero->GetExperienceBonusFactor());
+        std::string text;
+
+        creature->icon_widget->SetIconFrame(creature_type + 2);
+        creature->icon_widget->set_visible(1);
+        if (!creature->field_04)
+            text = convert_with_commas(creature->amount);
+        else
+            text = convert_with_commas(available);
+        creature->field_08->SetText(text.c_str());
+        creature->field_08->set_visible(1);
+
+        creature->selection_widget->SetIconFrame(creature_type + 2);
+        creature->selection_widget->set_visible(creature->amount > 0);
+        text = convert_with_commas(experience);
+        text = format_string(
+            gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
+            text.c_str());
+        creature->field_14->SetText(text.c_str());
+        creature->field_14->set_visible(creature->amount > 0);
+    }
+
+    if (creature->field_04) {
+        if (creature_type == CREATURE_NONE) {
+            creature->field_04->set_help_text(0, 0, 1);
+            creature->field_10->set_help_text(0, 0, 1);
+        } else {
+            std::string help;
+            help = format_string(
+                gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE),
+                GetArmyName(creature_type, 0));
+            creature->field_04->set_help_text(help.c_str(), 0, 1);
+            creature->field_10->set_help_text(help.c_str(), 0, 1);
+        }
     }
 }
 
