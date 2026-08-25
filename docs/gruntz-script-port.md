@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — `type_sacrifice_window::creature_click` reproduces all 916
+  retail bytes.** The sole army-slot-widget caller forwards the retail
+  `(long, unsigned char, unsigned char)` argument family, and the adjacent
+  Dreamcast roster row plus its xrefs identify 0x564fe0. Retail proves both
+  paths in full: a new left-click selection refreshes the old and new
+  32-byte offering records, creature-name row, maximum sacrifice count,
+  slider and max button; a repeated or right click opens the creature detail
+  window, subtracting the offered amount for the left pane and using the
+  quick-view pump only for a right click.
+
+  Dreamcast block scopes and retail's EH-state numbering settle the otherwise
+  non-obvious source order: the quick-view arm is lexical first even though
+  VC6 lays the selection arm first. Removing cached creature-type/record
+  values then restores retail's deliberate re-reads. Finally, repeating
+  `maximum > 0` at the two enable calls lets VC6 retain one byte result in
+  `BL`; a named temporary adds two instructions. The result matches all 47
+  blocks, 26 branches, three returns and every normalized instruction. The
+  synchronized checkpoint reaches **1958/2373 linked exact**, **1889/2304
+  game exact**, **96.60% game fuzzy** and **44.00% executable coverage**. No
+  external implementation body was used.
+
 - **2026-08-25 — the sacrifice-artifacts callback reproduces all 356 retail
   bytes.** The constructor's callback pointer at 0x561bfe and the Dreamcast
   private-static signature identify 0x564e70. Retail then proves both
