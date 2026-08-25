@@ -267,9 +267,19 @@ class type_skeleton_window : public CAdvPopup {
 public:
     textWidget* rolloverText;  // +0x60
     // 0x64..0x15b is the Dreamcast field roster's buttons, selection pair,
-    // armyGroup and three parallel widget arrays. The destructor touches
-    // none of them, so none is admitted; the pad only has to carry them.
-    unsigned char pad_64[0xf8];
+    // armyGroup and three parallel widget arrays, each landed by the proven
+    // 8-byte CAdvPopup delta off its DC offset (rollover_widget DC +0x58 ->
+    // +0x60, death_samples DC +0x154 -> +0x15c). The two arrays are two-pane
+    // (side 0/1), seven slots each, exactly as the DC roster records them.
+    type_func_button* sacrifice_button;         // +0x64
+    type_func_button* all_creatures_button;     // +0x68
+    long selected_group;                        // +0x6c
+    long selected_index;                        // +0x70
+    armyGroup selected_creatures;               // +0x74
+    armyGroup* armies[2];                        // +0xac
+    iconWidget* army_widget[2][7];               // +0xb4
+    iconWidget* select_border[2][7];             // +0xec
+    textWidget* army_label[2][7];                // +0x124
     // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
     // disposes every sample in it, then lets the member's own _Tidy run
     // (operator delete on _First at +0x160, then the 0x160/0x164/0x168
@@ -289,6 +299,9 @@ public:
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int WindowHandler(message* msg);                   // slot 9
 private:
+    void unselect();
+    void update_buttons();
+    void update(long group, long index);
     void create_creature_icons(
         long icon_x, long icon_y, long columns, long rows,
         long group_number, long item_number, long& widget_id,
