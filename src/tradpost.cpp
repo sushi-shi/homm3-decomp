@@ -217,6 +217,7 @@ void DoMarketplace()
 // element offsets. tradpost-private (no other unit references this band).
 DATA(0x006a5868) static THelpText gMarketHelpText[6];
 DATA(0x006a6c50) static THelpText gSellArtHelpText[5];
+DATA(0x006a7e98) static THelpText gSellCreaHelpText[5];
 
 DATA(0x006aaa70) static int gBackpackStart;
 DATA(0x006aaa74) static char* gpMarketArtifacts;
@@ -888,11 +889,48 @@ int TSellCreatureWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:3324
+// Rollover text for the sell-creature panel. The left column (army slot
+// widgets 0x8b..0x91) formats the stack's creature name from the hero's army;
+// the right column (0x3f..0x45) names a resource; the fixed labels come from
+// the window's help-text pairs. The creature and empty arms use sprintf (the
+// name doubles as the format string) where the others copy directly.
 VA(0x005eebd0, 0x1a1)  // anchor-callee (TSellCreatureWindow::WindowHandler), dc 0x18c7b0
 void TSellCreatureWindow::SetRolloverText(int codeY)
 {
-    // @stub
+    switch (codeY) {
+    case MARKET_LEFT_PANEL_ID: strcpy(gText, gSellCreaHelpText[0].text); break;
+    case MARKET_RIGHT_PANEL_ID: strcpy(gText, gSellCreaHelpText[1].text); break;
+    case MARKET_LEFT_COUNT_ID: strcpy(gText, gSellCreaHelpText[2].text); break;
+    case MARKET_LEFT_LABEL_ID: strcpy(gText, gSellCreaHelpText[3].text); break;
+    case MARKET_COMMAND_ID: strcpy(gText, gSellCreaHelpText[4].text); break;
+    case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+    case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+    case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+    case MARKET_BUY_GOLD_ID:
+        strcpy(gText, gResourceNames[codeY - MARKET_BUY_WOOD_ID]);
+        break;
+    case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
+    case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
+    case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
+    case MARKET_CREATURE_SLOT_6_ID: {
+        int creatureType = gpMarketHero->army.armies[codeY - MARKET_CREATURE_SLOT_0_ID];
+        if (creatureType >= 0 && creatureType <= 0x96)
+            sprintf(gText, akCreatureTypeTraits[creatureType].m_plural_name);
+        else
+            sprintf(gText, emptyRolloverText);
+        break;
+    }
+    default: strcpy(gText, emptyRolloverText); break;
+    }
+    BroadcastMessage(0x200, 3, 0x93, 0);
+    DrawWindow(0, 0x92, 0x93);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
+    // Residual (84.37%): control flow agrees (12/12 branches). The interleaved
+    // sprintf arms (creature name / empty) split the strcpy inlines into two
+    // cross-jumped tails that cl merges with a different length-spill register
+    // (eax vs retail's edx) and block order than retail's - the sunk-join /
+    // cross-jump class - plus the resource range's reloc-alias interior read.
 }
-
-#endif  // @carcass
