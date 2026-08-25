@@ -71,8 +71,8 @@ position	unit	first_rva	end_rva	gap_to_next
 65	newgame	0x1132b0	0x113320	45072
 66	overview	0x11e330	0x11e66a	17110
 67	palette	0x122940	0x12294b	4229
-68	path	0x1239d0	0x123edf	15297
-69	philai	0x127aa0	0x127af6	18154
+68	path	0x1239d0	0x123edf	1009
+69	philai	0x1242d0	0x12bbcc	1556
 70	puzzlewindow	0x12c1e0	0x12cf0b	4821
 71	questlogwindow	0x12e1e0	0x12e42d	1699
 72	quickherowindow	0x12ead0	0x12f43b	1157

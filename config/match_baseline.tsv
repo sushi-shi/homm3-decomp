@@ -1749,6 +1749,15 @@ multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	?GetRolloverWidget@CHotSeatDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x112530
 multiplayerwindow	?OnOK@CHotSeatDlg@@QAEEXZ	100.0000	100.0000	100.0000	0x112470
 multiplayerwindow	?OnWidgetDeselect@CHotSeatDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0x112420
+multiplayerwindow	CHotSeatDlg_CHotSeatDlg	0.0000	0.0000	0.0000	0x111e20
+multiplayerwindow	CMPInputDlg_CMPInputDlg	0.0000	0.0000	0.0000	0x110060
+multiplayerwindow	CMPInputDlg_CMPInputDlg_1108a0	0.0000	0.0000	0.0000	0x1108a0
+multiplayerwindow	CMPInputDlg_GetRolloverWidget	0.0000	0.0000	0.0000	0x110970
+multiplayerwindow	CMPInputDlg_OnWidgetDeselect	0.0000	0.0000	0.0000	0x1108f0
+multiplayerwindow	TMultiPlayerWindow_GetRolloverWidget	0.0000	0.0000	0.0000	0x10ed50
+multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	0.0000	0.0000	0.0000	0x10f4e0
+multiplayerwindow	TMultiPlayerWindow_TMultiPlayerWindow	0.0000	0.0000	0.0000	0x10e050
+multiplayerwindow	TMultiPlayerWindow_TMultiPlayerWindow_10ee40	0.0000	0.0000	0.0000	0x10ee40
 newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	100.0000	100.0000	100.0000	0x11e330
