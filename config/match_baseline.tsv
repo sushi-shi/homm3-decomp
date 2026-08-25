@@ -1920,6 +1920,13 @@ remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.00
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190
 remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1570f0
+remote	CDPlayHeroes_GetRemoteData	0.0000	0.0000	0.0000	0x153040
+remote	CDPlayHeroes_HandleLowLevelMsg	0.0000	0.0000	0.0000	0x152db0
+remote	CDPlayHeroes_PollRemote	0.0000	0.0000	0.0000	0x152b60
+remote	CDPlayHeroes_SysMsgCreatePlayerOrGroup	0.0000	0.0000	0.0000	0x152b40
+remote	CDPlayHeroes_SysMsgDestroyPlayerOrGroup	0.0000	0.0000	0.0000	0x152920
+remote	CDPlayHeroes_SysMsgHost	0.0000	0.0000	0.0000	0x152530
+remote	CDPlayHeroes_SysMsgSessionLost	0.0000	0.0000	0.0000	0x152740
 remote	__h3cg$remote$static_ctor$logFile	100.0000	100.0000	100.0000	0x152260
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0
