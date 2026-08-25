@@ -46,4 +46,11 @@ public:
     CChatSave* m_save;
 };
 
+enum EWindowMode6989f0 {
+    WINDOW_MODE_6989F0_3 = 3
+};
+extern int gUnnamed6989f0;
+extern int bVideoPaused;
+int Update(message& msg);
+
 #endif  /* HOMM3_SINGLESELECTIONWINDOW_PRIV_H */
