@@ -216,6 +216,7 @@ void DoMarketplace()
 // between them) is the 8-byte stride byte-proven by the widget ids' fixed
 // element offsets. tradpost-private (no other unit references this band).
 DATA(0x006a5868) static THelpText gMarketHelpText[6];
+DATA(0x006a6c50) static THelpText gSellArtHelpText[5];
 
 DATA(0x006aaa70) static int gBackpackStart;
 DATA(0x006aaa74) static char* gpMarketArtifacts;
@@ -825,12 +826,60 @@ int TSellArtifactWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:3109
+// Rollover text for the sell-artifact panel. The left column (slot widgets
+// 0x6b..0x81) names the equipped/backpack artifact under the cursor via the
+// same paging update_sell_artifact_widget uses; the right column (0x3f..0x45)
+// names a resource; the fixed labels come from the window's help-text pairs.
 VA(0x005ee6c0, 0x1cf)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18c378
 void TSellArtifactWindow::SetRolloverText(int codeY)
 {
-    // @stub
+    switch (codeY) {
+    case MARKET_LEFT_PANEL_ID: strcpy(gText, gSellArtHelpText[0].text); break;
+    case MARKET_LEFT_COUNT_ID: strcpy(gText, gSellArtHelpText[1].text); break;
+    case MARKET_LEFT_LABEL_ID: strcpy(gText, gSellArtHelpText[2].text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(gText, gSellArtHelpText[3].text); break;
+    case MARKET_COMMAND_ID: strcpy(gText, gSellArtHelpText[4].text); break;
+    case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+    case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+    case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+    case MARKET_BUY_GOLD_ID:
+        strcpy(gText, gResourceNames[codeY - MARKET_BUY_WOOD_ID]);
+        break;
+    case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
+    case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
+    case MARKET_ARTIFACT_SLOT_04_ID: case MARKET_ARTIFACT_SLOT_05_ID:
+    case MARKET_ARTIFACT_SLOT_06_ID: case MARKET_ARTIFACT_SLOT_07_ID:
+    case MARKET_ARTIFACT_SLOT_08_ID: case MARKET_ARTIFACT_SLOT_09_ID:
+    case MARKET_ARTIFACT_SLOT_10_ID: case MARKET_ARTIFACT_SLOT_11_ID:
+    case MARKET_ARTIFACT_SLOT_12_ID: case MARKET_ARTIFACT_SLOT_13_ID:
+    case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
+    case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_17_ID:
+    case MARKET_ARTIFACT_SLOT_18_ID: case MARKET_ARTIFACT_SLOT_19_ID:
+    case MARKET_ARTIFACT_SLOT_20_ID: case MARKET_ARTIFACT_SLOT_21_ID:
+    case MARKET_ARTIFACT_SLOT_22_ID: {
+        long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
+        type_artifact art;
+        if (slot < 18) {
+            art = gpMarketHero->equipped[slot];
+        } else {
+            long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+            art = gpMarketHero->backpack[
+                ((gBackpackStart & 0xff) + slot - 18) % numInBackpack];
+        }
+        strcpy(gText, akArtifactTraits[art.artifactId].name);
+        break;
+    }
+    default: strcpy(gText, emptyRolloverText); break;
+    }
+    BroadcastMessage(0x200, 3, 0x93, 0);
+    DrawWindow(0, 0x92, 0x93);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:3189
 VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc

@@ -2712,6 +2712,7 @@ tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
 tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0
 tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
+tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	98.5563	98.5563	98.5563	0x1ee6c0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	99.2905	99.2905	99.2905	0x1ed3a0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
@@ -2725,7 +2726,6 @@ tradpost	TGiveResourceWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1ed850
 tradpost	TGiveResourceWindow_TGiveResourceWindow	0.0000	0.0000	0.0000	0x1e16c0
 tradpost	TGiveResourceWindow_Update	0.0000	0.0000	0.0000	0x1eaf50
 tradpost	TGiveResourceWindow_WindowHandler	0.0000	0.0000	0.0000	0x1ed550
-tradpost	TSellArtifactWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1ee6c0
 tradpost	TSellArtifactWindow_TSellArtifactWindow	0.0000	0.0000	0.0000	0x1e5730
 tradpost	TSellArtifactWindow_Update	0.0000	0.0000	0.0000	0x1ebe80
 tradpost	TSellArtifactWindow_WindowHandler	0.0000	0.0000	0.0000	0x1edf60
