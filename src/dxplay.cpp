@@ -896,3 +896,12 @@ unsigned char CDPlay::IsHost()
 {
     return m_isHost;
 }
+
+// E:\gamedcs\array.h:144 - slot 6 of the retail
+// CAutoArray<CDPlayAddressElement> vtable at 0x63de44.
+VA(0x0049a010, 0x4)
+template unsigned long CAutoArray<CDPlayAddressElement>::GetCount();
+
+// MATCHING_DEBT: remove this emission anchor once a reconstructed dxplay
+// owner naturally instantiates the CDPlayAddressElement array vtable.
+template class CAutoArray<CDPlayAddressElement>;

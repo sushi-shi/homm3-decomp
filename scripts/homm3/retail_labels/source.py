@@ -142,6 +142,7 @@ TEMPLATE_ARGS_RE = re.compile(r"<[^<>]*>")
 # without parsing it; a shape this does not match simply fails to join
 # (a missed rename, never a wrong one).
 TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*?@(\w+)@@")
+GLOBAL_TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*@@@@")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR", "SCALAR_DELETING_DTOR",
@@ -644,6 +645,12 @@ def _demangle_key(mangled: str):
     if mangled.startswith("??4"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         return f"{cls}_{cls}_operator".lower()
+    m = GLOBAL_TEMPLATE_MEMBER_RE.match(mangled)
+    if m:
+        # member of a global class template: template_member. Global owners
+        # end in four @ characters; there is no namespace component between
+        # the template argument list and the member-function type.
+        return f"{m.group(2)}_{m.group(1)}".lower()
     m = TEMPLATE_MEMBER_RE.match(mangled)
     if m:
         # member of a class template: namespace_template_member, the same
@@ -1314,6 +1321,10 @@ def selftest() -> list[str]:
             "V?$allocator@D@2@@std@@QAEXXZ") != \
             "basic_ostringstream__vbase_destructor":
         failures.append("template vbase destructor owner was not normalized")
+    if _demangle_key(
+            "?GetCount@?$CAutoArray@VCDPlayAddressElement@@@@UAEKXZ") != \
+            "cautoarray_getcount":
+        failures.append("global class-template member key regressed")
     if _demangle_key("??_Gios_base@std@@UAEPAXI@Z") != \
             "ios_base_ios_base@gdtor":
         failures.append("MSVC scalar deleting destructor key regressed")
