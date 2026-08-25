@@ -1175,12 +1175,8 @@ long value_of_hall(town* current_town, type_building_id building)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1147
-DC_ONLY(0x2fdac, 0x29C)
-long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
-{
-    // @stub
-}
+// E:\gamedcs\ai_player.cpp:1147 - value_of_building (dc 0x2fdac) promoted to
+// VA(0x00433130) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:1279
 DC_ONLY(0x30048, 0x106)
@@ -2834,6 +2830,18 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z)
 // E:\gamedcs\ai_player.cpp:4476
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
 unsigned char consider_hiring(long player_id, hero* candidate)
+{
+    // @stub
+}
+
+// value_of_building: retail 0x33130 is the only row calling BOTH
+// armyGroup::get_AI_value AND town::get_army, and value_of_building is the only
+// ai_player DC fn calling both (unique-pair proof); the two other-module fns with
+// that pair - philai MoveHero (calls move_hero/mark_shipyards, absent here) and
+// philai value_of_reinforcing (228B) - are ruled out by callees and size. r=0.93.
+// Arity ret 0xc suggests retail carries a 5th param vs the DC 4-arg signature.
+VA(0x00433130, 0x26f)  // anchor-callee unique-pair (get_AI_value+get_army), dc 0x2fdac
+long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
 {
     // @stub
 }
