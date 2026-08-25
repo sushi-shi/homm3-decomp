@@ -75,6 +75,8 @@ public:
     virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
     void DrawSelector();
+    void SwapMons();
+    unsigned char CanModHero(int hero);
 };
 
 // --- CGiveMeStuffMsg ---
