@@ -6698,14 +6698,14 @@ THeroID get_new_hero(THeroClass hero_class)
 }
 
 // E:\gamedcs\game.cpp:8308
-DC_ONLY(0xb3e60, 0x1EE)
+VA(0x004c8450, 0x248)  // anchor-callee (GetNewHeroId, SetRandomHeroArmies, hero::equip_artifact, hero::remove_backpack_artifact - xref 4/4), dc 0xb3e60
 void game::set_weekly_recruits(THeroID* recruits, TTownType alignment)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8358
-DC_ONLY(0xb4050, 0xA4)
+VA(0x004c86a0, 0xD5)  // anchor-callee (GetNewHeroId, SetRandomHeroArmies; no get_alignment => not set_recruits) + order, dc 0xb4050
 void game::replace_recruit(THeroID* recruits, long recruit_slot, TTownType alignment)
 {
     // @stub
@@ -7511,7 +7511,7 @@ int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame,
 }
 
 // E:\gamedcs\game.cpp:10587
-DC_ONLY(0xb85c4, 0xE44)
+VA(0x004cbd40, 0xA83)  // anchor-callee (40/41 xref: File::*, CGameTransferSmack/Dlg, CNetMsgHandlerPause, remote.obj, TrimLoopingSounds), dc 0xb85c4
 int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
 {
     // @stub
