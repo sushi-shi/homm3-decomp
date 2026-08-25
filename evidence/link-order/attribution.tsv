@@ -503,9 +503,6 @@ rva	size	unit	current_label	provenance
 0x10ed60	67	multiplayerwindow	game_10ed60	working-label
 0x10edb0	33	multiplayerwindow	TMultiPlayerWindow__scalar_deleting_destructor	src-VA
 0x10ede0	33	multiplayerwindow	mouseManager_vslot00	working-label
-0x10ee40	171	multiplayerwindow	TMultiPlayerWindow_TMultiPlayerWindow_10ee40	src-VA
-0x10eef0	201	multiplayerwindow	TMultiPlayerWindow_GoSessionList	src-VA
-0x10efc0	299	multiplayerwindow	TMultiPlayerWindow_GoMainMenu	src-VA
 0x10f0f0	998	multiplayerwindow	TMultiPlayerWindow_Update	src-VA
 0x10f4e0	1112	multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	src-VA
 0x10f940	197	multiplayerwindow	TMultiPlayerWindow_WindowHandler	src-VA
@@ -520,9 +517,6 @@ rva	size	unit	current_label	provenance
 0x110850	27	multiplayerwindow	game_110850	working-label
 0x110870	27	multiplayerwindow	game_110870	working-label
 0x110890	16	multiplayerwindow	game_110890	working-label
-0x1108a0	78	multiplayerwindow	CMPInputDlg_CMPInputDlg_1108a0	src-VA
-0x1108f0	114	multiplayerwindow	CMPInputDlg_OnWidgetDeselect	src-VA
-0x110970	4	multiplayerwindow	CMPInputDlg_GetRolloverWidget	src-VA
 0x110980	93	multiplayerwindow	game_110980	working-label
 0x1109e0	33	multiplayerwindow	CMPInputDlg__scalar_deleting_destructor	src-VA
 0x110a10	664	multiplayerwindow	game_110f40_sub00_110a10	working-label
@@ -534,7 +528,6 @@ rva	size	unit	current_label	provenance
 0x111660	1638	multiplayerwindow	game_mudialog_pcx_111660	working-label
 0x111cd0	98	multiplayerwindow	game_111660_sub01_111cd0	working-label
 0x111d40	209	multiplayerwindow	game_10f4e0_sub05_111d40	working-label
-0x111e20	1441	multiplayerwindow	CHotSeatDlg_CHotSeatDlg	src-VA
 0x112540	33	multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	src-VA+base
 0x112570	83	multiplayerwindow	game_111660_sub02_112570	working-label
 0x1125d0	58	multiplayerwindow	CAutoArray_CDPlayAddressElement_vslot04	working-label
