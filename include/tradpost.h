@@ -34,6 +34,7 @@
 // EH-bearing rows still deferred.
 class TTradeResourceWindow : public CAdvPopup {
 public:
+    void SetRolloverText(int codeY);
     virtual ~TTradeResourceWindow();
 };
 
@@ -49,11 +50,20 @@ public:
 
 class TSellArtifactWindow : public CAdvPopup {
 public:
+    void update_sell_artifact_widget(message* msg, long i);
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio, int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
+    void SetRolloverText(int codeY);
     virtual ~TSellArtifactWindow();
 };
 
 class TSellCreatureWindow : public CAdvPopup {
 public:
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio, int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
+    void SetRolloverText(int codeY);
     virtual ~TSellCreatureWindow();
 };
 
@@ -82,6 +92,16 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts);
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. Owner definition has not yet been admitted.
 extern float fTradingPostEfficency[];
+
+// The two eleven-float efficiency rows immediately after fTradingPostEfficency
+// (0x678370, 0x67839c), byte-verified from the retail image. The artifact-sale
+// window divides an artifact's gold cost by the first; the creature-sale window
+// divides a creature's gold cost by the second - both indexed by the owned
+// Marketplace count. fArtifactPurchaseEfficency carries philai.h's spelling
+// (get_artifact_purchase_price shares it); the creature row's name is
+// provisional. Owner definition not yet admitted, as with the trade row.
+extern float fArtifactPurchaseEfficency[];
+extern float fCreatureSaleEfficency[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);
