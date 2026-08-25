@@ -1816,6 +1816,13 @@ int CWaitForReadyPlayersDlg::handle_message(message& msg)
 VA_COMPGEN(0x005554b0, 0x21, SCALAR_DELETING_DTOR,
            CWaitForReadyPlayersDlg)
 
+// E:\gamedcs\remote.cpp:1820 - the implicit ~CWaitForReadyPlayersDlg body the
+// scalar deleting dtor above calls (0x5554b0 -> 0x5554e0).  Located, not
+// reconstructed: retail tears down vtables 0x640f04/0x640f14/0x640e94 and
+// unhooks pDPlay->+0xf0.  Pairing only - the body is intentionally not
+// compiled (see note above); this names the compiler-generated symbol.
+VA_COMPGEN(0x005554e0, 0xC9, IMPLICIT_DTOR, CWaitForReadyPlayersDlg)
+
 // E:\gamedcs\remote.cpp:1841 - DC supplies the identity and source-level
 // global names.  Retail independently proves the singleton guard, the
 // 0xf4 allocation, virtual Init/SetGuid calls, GUID value, and pushed-this
