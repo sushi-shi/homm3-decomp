@@ -54,6 +54,7 @@ public:
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
                             int* iInMaxUnitsToTrade);
+    void SetRolloverText(int codeY);
     virtual ~TSellArtifactWindow();
 };
 

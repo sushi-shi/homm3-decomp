@@ -18,6 +18,7 @@ extern const char* gResourceNames[7];
 enum EMarketWidgetId {
     MARKET_LEFT_PANEL_ID = 5,
     MARKET_RIGHT_PANEL_ID = 7,
+    MARKET_LEFT_COUNT_ID = 16,
     MARKET_LEFT_LABEL_ID = 17,
     MARKET_RIGHT_LABEL_ID = 18,
     MARKET_TITLE_ID = 20,
@@ -43,6 +44,25 @@ enum EMarketWidgetId {
     // The shared exit/command widget (the same 0x7802 combatwindow names
     // COMBAT_PLACEMENT_COMMAND_1_ID).
     MARKET_COMMAND_ID = 0x7802
+};
+
+// The sell-artifact left column: one widget id per selectable artifact slot,
+// starting at 0x6b (update_sell_artifact_widget stamps id = slot + 0x6b).
+// Equipped slots 0..17 then the visible backpack rows; the SetRolloverText
+// switch needs each as a named case rather than a magic label.
+enum EMarketArtifactSlotId {
+    MARKET_ARTIFACT_SLOT_00_ID = 0x6b,
+    MARKET_ARTIFACT_SLOT_01_ID, MARKET_ARTIFACT_SLOT_02_ID,
+    MARKET_ARTIFACT_SLOT_03_ID, MARKET_ARTIFACT_SLOT_04_ID,
+    MARKET_ARTIFACT_SLOT_05_ID, MARKET_ARTIFACT_SLOT_06_ID,
+    MARKET_ARTIFACT_SLOT_07_ID, MARKET_ARTIFACT_SLOT_08_ID,
+    MARKET_ARTIFACT_SLOT_09_ID, MARKET_ARTIFACT_SLOT_10_ID,
+    MARKET_ARTIFACT_SLOT_11_ID, MARKET_ARTIFACT_SLOT_12_ID,
+    MARKET_ARTIFACT_SLOT_13_ID, MARKET_ARTIFACT_SLOT_14_ID,
+    MARKET_ARTIFACT_SLOT_15_ID, MARKET_ARTIFACT_SLOT_16_ID,
+    MARKET_ARTIFACT_SLOT_17_ID, MARKET_ARTIFACT_SLOT_18_ID,
+    MARKET_ARTIFACT_SLOT_19_ID, MARKET_ARTIFACT_SLOT_20_ID,
+    MARKET_ARTIFACT_SLOT_21_ID, MARKET_ARTIFACT_SLOT_22_ID   // 0x81
 };
 
 #endif  /* HOMM3_TRADPOST_WIDGETS_H */
