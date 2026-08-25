@@ -415,6 +415,14 @@ DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
 DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
 DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
 DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
+// SetArmyCommand's own status formats, on the same standing (sole reader
+// is SetArmyCommand 0x5c7400, nothing in the image writes them): 0x6a5d88
+// and 0x6a5d98 are the two nothing-changed refusal lines it strcpy's when
+// the divide flag is up, and 0x6a5d8c the "divide this stack" one-name
+// format its own-owner else-arm takes the creature name into.
+DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
+DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
+DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
 DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
 DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
 DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
@@ -1438,18 +1446,127 @@ void townManager::SetHeroCommand()
     strcpy(statusText, gUnnamed6a5da8);
 }
 
-// Located, not reconstructed: SetArmyCommand and SetCommandAndText sit
-// between SetHeroCommand (0x5c7250) and select_army (0x5c8080) in retail
-// link order; SetCommandAndText2 (dc 0x16ceb4) has no distinct retail
-// carve row here.
-#if 0  // @carcass: located, not reconstructed
+// The army-strip counterpart of SetHeroCommand: given the anchor cell
+// (field_134/field_138) and the cell under the cursor (field_12c/field_130)
+// it writes the status line for the pending troop move and stamps a command
+// number into field_19c. `splitEnabled` is the divide flag, `join_dialog`
+// the owner-cell flag it forwards to select_army. The `flag` local records
+// whether the source stack is the town's only army - the two "you cannot
+// leave the town empty" refusal lines it strcpy's turn on it. Every creature
+// name is materialised inline through akCreatureTypeTraits with retail's own
+// `id in 0..150 ? .name/.plural : emptyRolloverText` guard.
 // E:\gamedcs\townmgr.cpp:3274
 VA(0x005c7400, 0x391)  // order-map(SetHeroCommand 0x5c7250 .. select_army 0x5c8080) + anchor-callee(select_army 0x5c8080 + GetNumArmies) + arity(ret 8, 2 args), dc 0x16c6a8
 void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
 {
-    // @stub
+    char flag = 0;
+    field_19c = -1;
+    if (field_12c->group->GetNumArmies() == 1) {
+        if (townToView) {
+            if (field_12c == field_120 || townToView->garrisonHeroId != -1) {
+                if (field_134 != field_12c)
+                    flag = 1;
+            }
+        } else if (field_12c == field_120 && field_134 != field_12c) {
+            flag = 1;
+        }
+    }
+
+    if (field_12c == field_134 && field_130 == field_138) {
+        int id = field_12c->group->armies[field_130];
+        const char* name;
+        if (id >= 0 && id <= 150)
+            name = akCreatureTypeTraits[id].m_plural_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5d94, name);
+        field_19c = 1;
+        return;
+    }
+
+    long selOwner = field_12c->owner;
+    if (selOwner != gNetLocalGamePos) {
+        select_army(field_134, field_138, join_dialog);
+        return;
+    }
+
+    int anchorId = field_134->group->armies[field_138];
+    int selId = field_12c->group->armies[field_130];
+    if (anchorId == selId && selOwner == field_134->owner) {
+        if (splitEnabled) {
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d84, name);
+            field_19c = 5;
+            return;
+        }
+        if (flag) {
+            strcpy(statusText, gUnnamed6a5d88);
+            return;
+        }
+        const char* name;
+        if (selId >= 0 && selId <= 150)
+            name = akCreatureTypeTraits[selId].m_name;
+        else
+            name = emptyRolloverText;
+        sprintf(statusText, gUnnamed6a5d8c, name);
+        field_19c = 2;
+        return;
+    }
+
+    if (splitEnabled) {
+        if (anchorId == -1) {
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d90, name);
+            field_19c = 5;
+            return;
+        }
+    } else {
+        if (anchorId == -1) {
+            if (flag) {
+                strcpy(statusText, gUnnamed6a5d98);
+                return;
+            }
+            const char* name;
+            if (selId >= 0 && selId <= 150)
+                name = akCreatureTypeTraits[selId].m_plural_name;
+            else
+                name = emptyRolloverText;
+            sprintf(statusText, gUnnamed6a5d9c, name);
+            field_19c = 3;
+            return;
+        }
+    }
+
+    if (field_134->owner != selOwner) {
+        select_army(field_134, field_138, join_dialog);
+        return;
+    }
+    const char* nameAnchor;
+    if (anchorId >= 0 && anchorId <= 150)
+        nameAnchor = akCreatureTypeTraits[anchorId].m_plural_name;
+    else
+        nameAnchor = emptyRolloverText;
+    const char* nameSel;
+    if (selId >= 0 && selId <= 150)
+        nameSel = akCreatureTypeTraits[selId].m_plural_name;
+    else
+        nameSel = emptyRolloverText;
+    sprintf(statusText, gUnnamed6a5da0, nameSel, nameAnchor);
+    field_19c = 3;
 }
 
+// Located, not reconstructed: SetCommandAndText sits between SetArmyCommand
+// (0x5c7400) and select_army (0x5c8080) in retail link order;
+// SetCommandAndText2 (dc 0x16ceb4) has no distinct retail carve row here.
+#if 0  // @carcass: located, not reconstructed
 // E:\gamedcs\townmgr.cpp:3383
 VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
 void townManager::SetCommandAndText(message* msg)
