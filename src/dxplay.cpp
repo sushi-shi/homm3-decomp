@@ -152,16 +152,24 @@ unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* lpSessionDesc)
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
+// Residual (81.3%): retail stores m_hRes = eax unconditionally at the merge,
+// where eax is the CreatePlayer result when hosting and the still-live m_lpDP
+// otherwise; the conditional-assignment source reloads m_hRes instead. That
+// recycled-eax store is not cleanly spellable (register-homing class).
 // E:\gamedcs\dxplay.cpp:251
 VA(0x00496fc0, 0x72)  // anchor-vtable CDPlay slot7 (CreatePlayer), dc 0x8a1f8
 unsigned long CDPlay::CreatePlayer(char* sPlayerName, void* lpData, unsigned long dwSize, void* hEvent)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    DPNAME dpName = {0};
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.lpszShortNameA = sPlayerName;
+    unsigned long idPlayer;
+    if (m_isHost)
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->CreatePlayer(&idPlayer, &dpName, hEvent, lpData, dwSize, 0x100);
+    return m_hRes >= 0 ? idPlayer : 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:276
 VA(0x00497040, 0x2B)  // anchor-vtable CDPlay slot8 (DestroyPlayer), dc 0x8a28c
