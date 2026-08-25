@@ -44,6 +44,9 @@ public:
     bool IsLeftHero();
     void Reset();
     void DrawSelector();
+    // DC types slot TArtifactSlot (an int-width enum, hero.h) - spelled int
+    // here so the declaration needs no hero.h include; byte-identical codegen.
+    void UpdateSlot(int iHero, int slot);
     void update_all_slots();
     void UpdateBackpack(int iHero);
 };
