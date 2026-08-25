@@ -5,6 +5,8 @@
 #include "event_record.h"
 #include "game.h"
 #include "abstractfile.h"
+#include "advmgr.h"
+#include "kb.h"
 
 #if 0  // @carcass
 
@@ -563,13 +565,13 @@ unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 {
     if (!type_record_hide_hero::load(infile, version))
         return 0;
-    if (infile->Read(&location_x, sizeof(location_x)) != sizeof(location_x))
+    if (infile->Read(&location, sizeof(location)) != sizeof(location))
         return 0;
-    if (infile->Read(&location_y, sizeof(location_y)) != sizeof(location_y))
+    if (infile->Read(&previous_location, sizeof(previous_location)) != sizeof(previous_location))
         return 0;
-    if (infile->Read(&field_18, 1) != 1)
+    if (infile->Read(&on_boat, 1) != 1)
         return 0;
-    unsigned char ok = infile->Read(&is_boat, 1) == 1;
+    unsigned char ok = infile->Read(&previous_boat, 1) == 1;
     return ok;
 }
 
@@ -578,20 +580,50 @@ VA(0x0049b760, 0x95)  // anchor-vtable, dc 0x8d860
 unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 {
     type_record_hide_hero::save(outfile);
-    outfile->Write(&location_x, sizeof(location_x));
-    outfile->Write(&location_y, sizeof(location_y));
-    outfile->Write(&field_18, 1);
-    unsigned char ok = outfile->Write(&is_boat, 1) == 1;
+    outfile->Write(&location, sizeof(location));
+    outfile->Write(&previous_location, sizeof(previous_location));
+    outfile->Write(&on_boat, 1);
+    unsigned char ok = outfile->Write(&previous_boat, 1) == 1;
     return ok;
 }
 #if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:784
-DC_ONLY(0x8d8b4, 0x140)
+#endif  // @carcass
+VA(0x0049b800, 0x15E)  // complete retail replay path, dc 0x8d8b4
 void type_record_show_hero::replay(unsigned char draw)
 {
-    // @stub
+    int player = player_id;
+    if (gNetLocalGamePos != player) {
+        gpAdvManager->DeactivateCurrTown(0);
+        gpAdvManager->DeactivateCurrHero(0);
+    }
+
+    gNetLocalGamePos = player;
+    gpCurrentPlayer = &gpGame->players[player];
+    gUnnamed69ccc4 = 1 << player;
+
+    current_hero->x = location.x;
+    current_hero->y = location.y;
+    current_hero->z = location.z;
+    current_hero->obscure_cell();
+    current_hero->owner = new_owner;
+    if (on_boat)
+        current_hero->flags |= 0x40000;
+    else
+        current_hero->flags &= ~0x40000;
+
+    if (draw && (GetMapExtra(location.x, location.y, location.z)
+                 & gMapVisibilityBit)) {
+        if (gpCurrentPlayer->currHeroId != current_hero->id
+            || !gpAdvManager->inDialog) {
+            gpAdvManager->SetHeroContext(current_hero->id, 1, 0, draw);
+        }
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+    }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:817
 DC_ONLY(0x8d9f4, 0x8C)

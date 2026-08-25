@@ -169,8 +169,9 @@ public:
     unsigned char extra;  // +0x08 - second serialized byte (role TBD)
 };
 
-// show_hero extends hide_hero: its load calls hide_hero::load, then reads the
-// location dwords (+0x10/+0x14) and two trailing bytes (+0x18/+0x19).
+// show_hero extends hide_hero with the replay and undo map locations followed
+// by the corresponding aboard-boat flags. Retail replay reads the first pair;
+// undo reads the second pair.
 class type_record_show_hero : public type_record_hide_hero {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
@@ -178,10 +179,10 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
-    int location_x;          // +0x10
-    int location_y;          // +0x14
-    signed char field_18;    // +0x18
-    signed char is_boat;     // +0x19
+    type_point location;          // +0x10 - replay destination
+    type_point previous_location; // +0x14 - restored by undo
+    unsigned char on_boat;        // +0x18 - replay state
+    unsigned char previous_boat;  // +0x19 - restored by undo
 };
 
 class type_record_shroud : public type_event_record {
