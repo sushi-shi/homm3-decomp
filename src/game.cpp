@@ -79,7 +79,9 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "kbwin.h"
 #include "kb.h"
 #include "cursor.h"
+#include "mousemgr.h"
 #include "puzzlewindow.h"
+#include "resourcedisplay.h"
 #include "resourcemanager.h"
 #include "herospec.h"
 #include "savegame.h"
@@ -6027,28 +6029,28 @@ void randomize_witch_hut(NewmapCell* cell)
 }
 
 // E:\gamedcs\game.cpp:5600
-VA(0x004c2450, 0x88E)  // anchor-callee, dc 0xadb88
+DC_ONLY(0xadb88, 0x3B0)
 int game::LoadMap(char* mapName)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:5687
-VA(0x004c2ce0, 0x3A8)  // linkorder, dc 0xadf38
+DC_ONLY(0xadf38, 0x67A)
 int NewSMapHeader::readVictoryCondition(char type, void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:5921
-VA(0x004c3200, 0x398)  // anchor-callee, dc 0xae5b4
+DC_ONLY(0xae5b4, 0x5AE)
 int NewSMapHeader::saveVictoryCondition(char type, void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:6110
-VA(0x004c35a0, 0x2E8)  // linkorder, dc 0xaeb64
+DC_ONLY(0xaeb64, 0x5B4)
 int NewSMapHeader::loadVictoryCondition(char type, void* infile)
 {
     // @stub
@@ -6062,7 +6064,7 @@ int NewSMapHeader::readLossCondition(char type, void* infile)
 }
 
 // E:\gamedcs\game.cpp:6390
-VA(0x004c3c80, 0x10B)  // linkorder, dc 0xaf2b4
+DC_ONLY(0xaf2b4, 0x1D4)
 int NewSMapHeader::saveLossCondition(char type, void* outfile)
 {
     // @stub
@@ -6083,7 +6085,7 @@ int NewSMapHeader::Read(void* infile)
 }
 
 // E:\gamedcs\game.cpp:6792
-VA(0x004c4f10, 0x71D)  // anchor-callee, dc 0xb0188
+DC_ONLY(0xb0188, 0x5CC)
 int NewSMapHeader::Save(void* outfile)
 {
     // @stub
@@ -6649,35 +6651,35 @@ void game::TurnOffAIMusic()
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7603
-VA(0x004c6fe0, 0x947)  // anchor-callee, dc 0xb1fd0
+DC_ONLY(0xb1fd0, 0xB04)
 void game::NextPlayer()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7898
-VA(0x004c7930, 0x266)  // anchor-callee, dc 0xb2ad4
+DC_ONLY(0xb2ad4, 0x55C)
 int game::ComputeDailyGold(int iWhichPlayer, unsigned char include_silo)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7958
-VA(0x004c7ba0, 0xAC)  // anchor-callee, dc 0xb3030
+DC_ONLY(0xb3030, 0x14C)
 unsigned char game::GrowCoverOfDarkness()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7978
-VA(0x004c7c50, 0x389)  // anchor-callee, dc 0xb317c
+DC_ONLY(0xb317c, 0x6DA)
 void game::ResetAllPlayerVisibility()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8094
-VA(0x004c7fe0, 0x462)  // anchor-callee, dc 0xb3858
+DC_ONLY(0xb3858, 0x532)
 void game::PerDay()
 {
     // @stub
@@ -6698,14 +6700,14 @@ THeroID get_new_hero(THeroClass hero_class)
 }
 
 // E:\gamedcs\game.cpp:8308
-VA(0x004c8450, 0x248)  // anchor-callee (GetNewHeroId, SetRandomHeroArmies, hero::equip_artifact, hero::remove_backpack_artifact - xref 4/4), dc 0xb3e60
+DC_ONLY(0xb3e60, 0x1EE)
 void game::set_weekly_recruits(THeroID* recruits, TTownType alignment)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8358
-VA(0x004c86a0, 0xD5)  // anchor-callee (GetNewHeroId, SetRandomHeroArmies; no get_alignment => not set_recruits) + order, dc 0xb4050
+DC_ONLY(0xb4050, 0xA4)
 void game::replace_recruit(THeroID* recruits, long recruit_slot, TTownType alignment)
 {
     // @stub
@@ -6719,14 +6721,14 @@ void game::set_recruits()
 }
 
 // E:\gamedcs\game.cpp:8398
-VA(0x004c8780, 0x7B7)  // anchor-callee, dc 0xb41e0
+DC_ONLY(0xb41e0, 0x5D8)
 void game::PerWeek()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8593
-VA(0x004c8f40, 0x378)  // anchor-callee, dc 0xb47b8
+DC_ONLY(0xb47b8, 0x39E)
 void game::PerMonth()
 {
     // @stub
@@ -7420,39 +7422,72 @@ int game::ExperienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9596
-VA(0x004ca410, 0x116)  // anchor-callee, dc 0xb61d0
+DC_ONLY(0xb61d0, 0x128)
 void game::SetupAdjacentMons()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9636
-VA(0x004ca530, 0x80)  // anchor-callee, dc 0xb62f8
+DC_ONLY(0xb62f8, 0x64)
 void game::CancelComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9660
-VA(0x004ca5b0, 0x1C9)  // anchor-callee, dc 0xb635c
+DC_ONLY(0xb635c, 0x1DC)
 void game::ShowComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9720
-VA(0x004ca780, 0xB4)  // anchor-callee, dc 0xb6538
+DC_ONLY(0xb6538, 0x108)
 void game::ShowHeroesLogo()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9748
-VA(0x004ca840, 0x19C)  // anchor-callee, dc 0xb6640
+#endif  // @carcass
+VA(0x004ca840, 0x19C)  // complete retail call/data shape, dc 0xb6640
 void game::WaitForPlayer(char* cText, int iPlayer)
 {
-    // @stub
+    if (!gUnnamed6993dc || gUnnamed699274 <= 1 || gNetworkActive69954c)
+        return;
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    gCompleteDrawAllCells = 1;
+    if (gpCurrentPlayer->isHuman && gpCurrentPlayer->isLocal)
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_1, 9999999);
+    else
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, 9999999);
+
+    gpSoundManager->field_84 = 1;
+    gpSoundManager->StopMP3();
+    SAMPLE2 sample2 = LoadPlaySample(
+        DATA_COMPGEN(0x00677ec8, newWeekSample, "newweek.wav"));
+
+    gpAdvManager->CompleteDraw(1);
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateTownLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateQuestLogButton(1);
+    gpAdvManager->advWindow->UpdateButtons(1, 0);
+    gpAdvManager->advWindow->ResourceDisplay->Clear();
+    GameFn_004CA780();
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+
+    gCompleteDrawAllCells = 0;
+    NormalDialog(cText, 1, -1, -1, 10, iPlayer,
+                 -1, 0, -1, 0, -1, 0);
+    WaitEndSample(sample2, -1);
+
+    gpAdvManager->advWindow->UpdateHeroLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateTownLocators(0, 1, 0);
+    gpAdvManager->advWindow->UpdateQuestLogButton(1);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9798
 DC_ONLY(0xb6878, 0x6)
@@ -7469,21 +7504,21 @@ const char* GetRandomTownName(int townType)
 }
 
 // E:\gamedcs\game.cpp:9821
-VA(0x004caa40, 0x26)  // linkorder, dc 0xb69b8
+DC_ONLY(0xb69b8, 0x3A)
 void ResetRandomTownNames()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9833
-VA(0x004caa70, 0x39C)  // anchor-callee, dc 0xb69f4
+DC_ONLY(0xb69f4, 0x290)
 void game::ProcessOnMapTowns()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9912
-VA(0x004cae10, 0x1B1)  // anchor-callee, dc 0xb6c84
+DC_ONLY(0xb6c84, 0x57E)
 void initialize_hero(hero* current_hero, const HeroExtra* setup)
 {
     // @stub
@@ -7497,35 +7532,35 @@ void game::ProcessOnMapHeroes()
 }
 
 // E:\gamedcs\game.cpp:10132
-VA(0x004cb1ec, 0x17)  // linkorder, dc 0xb7554
+DC_ONLY(0xb7554, 0xC)
 void game::CheckHeroConsistency()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:10142
-VA(0x004cb206, 0xADE)  // anchor-callee, dc 0xb7560
+DC_ONLY(0xb7560, 0x1064)
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:10587
-VA(0x004cbd40, 0xA83)  // anchor-callee (40/41 xref: File::*, CGameTransferSmack/Dlg, CNetMsgHandlerPause, remote.obj, TrimLoopingSounds), dc 0xb85c4
+DC_ONLY(0xb85c4, 0xE44)
 int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11028
-VA(0x004cc7d0, 0x5FE)  // anchor-callee, dc 0xb9408
+DC_ONLY(0xb9408, 0x5C6)
 void game::DoNewTurn()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11170
-VA(0x004ccdd0, 0x56)  // linkorder, dc 0xb99d0
+DC_ONLY(0xb99d0, 0x62)
 int game::GetBoatsBuilt()
 {
     // @stub
@@ -7597,7 +7632,7 @@ int game::TownIDToTownPos(playerData* pPlayer, int id)
 }
 
 // E:\gamedcs\game.cpp:11241
-VA(0x004ccf20, 0x8E)  // linkorder, dc 0xb9c04
+DC_ONLY(0xb9c04, 0xA6)
 void game::SetMarketArtifacts()
 {
     // @stub
@@ -7618,14 +7653,14 @@ void game::SetCannedRumour()
 }
 
 // E:\gamedcs\game.cpp:11311
-VA(0x004ccfb0, 0x1BD)  // linkorder, dc 0xb9e7c
+DC_ONLY(0xb9e7c, 0x1C2)
 void game::SetMapRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11358
-VA(0x004cd170, 0x59B)  // anchor-callee, dc 0xba040
+DC_ONLY(0xba040, 0xBC4)
 void game::SetSpecialRumour()
 {
     // @stub
@@ -7639,7 +7674,7 @@ void game::SetupNewRumour()
 }
 
 // E:\gamedcs\game.cpp:11459
-VA(0x004cd710, 0x200)  // anchor-callee, dc 0xbaca4
+DC_ONLY(0xbaca4, 0x20C)
 void game::GiveTimeEventReward(const TTimedEvent* thisEvent)
 {
     // @stub
@@ -7653,18 +7688,50 @@ void game::GiveTownEventReward(const TTownEvent* thisEvent)
 }
 
 // E:\gamedcs\game.cpp:11512
-VA(0x004cd910, 0xF5)  // linkorder, dc 0xbaef4
+DC_ONLY(0xbaef4, 0xF8)
 void game::CheckForTimeEvent()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11540
-VA(0x004cda10, 0x164)  // anchor-callee, dc 0xbafec
+#endif  // @carcass
+VA(0x004cda10, 0x164)  // complete town-event eligibility/date loop, dc 0xbafec
 void game::CheckForTownEvent()
 {
-    // @stub
+    int day = static_cast<short>(
+        (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e);
+
+    for (unsigned int i = 0; i < worldMap.TownEventList.size(); ++i) {
+        TTownEvent* thisEvent = &worldMap.TownEventList[i];
+        int playerIndex = gNetLocalGamePos;
+        if (playerIndex >= 8 || playerIndex < 0)
+            playerIndex = 0;
+        if (!(players[playerIndex].isHuman
+                  ? thisEvent->ApplyToHuman
+                  : thisEvent->ApplyToComputer)) {
+            continue;
+        }
+        if (!(gUnnamed69ccc4 & thisEvent->PlayerFlags))
+            continue;
+
+        if (thisEvent->FirstTime == day) {
+            town* thisTown = GetTown(thisEvent->TownNum);
+            if (gNetLocalGamePos == thisTown->owner) {
+                GiveTimeEventReward(thisEvent);
+                thisTown->give_event_reward(thisEvent);
+            }
+        } else if (thisEvent->Interval && day > thisEvent->FirstTime
+                   && (day - thisEvent->FirstTime) % thisEvent->Interval == 0) {
+            town* thisTown = GetTown(thisEvent->TownNum);
+            if (gNetLocalGamePos == thisTown->owner) {
+                GiveTimeEventReward(thisEvent);
+                thisTown->give_event_reward(thisEvent);
+            }
+        }
+    }
 }
+#if 0  // @carcass
 
 #endif  // @carcass
 
@@ -8180,21 +8247,6 @@ bool game::IsMultiplayer() const
     return false;
 }
 
-#if 0  // @carcass
-// game::ResetGame is RVA-scrambled out of dc order: its dc 0xbc418 sits
-// with the trailing @carcass roster, but the linker placed its body at
-// 0x4cecb0 - between IsMultiplayer (0x4cec90) and the save_vector template
-// COMDAT (0x4d2ac0). Located by xref (playerData::Init +
-// CTurnDuration::Clear, 2/2); carcass-claimed here so the VA order gate
-// holds without a game.h declarator. The DC_ONLY roster row is removed.
-// E:\gamedcs\game.cpp:11895
-VA(0x004cecb0, 0x81)  // anchor-callee (playerData::Init, CTurnDuration::Clear - xref 2/2), dc 0xbc418
-void game::ResetGame()
-{
-    // @stub
-}
-#endif  // @carcass
-
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
 // vectors (the eight lithPools, the eight lithExitPools, then
@@ -8238,8 +8290,12 @@ void game::mark_campaign_map_won()
     // @stub
 }
 
-// E:\gamedcs\game.cpp:11895 - game::ResetGame promoted to a VA carcass
-// claim near its real link position (0x4cecb0); see above IsMultiplayer.
+// E:\gamedcs\game.cpp:11895
+DC_ONLY(0xbc418, 0xE8)
+void game::ResetGame()
+{
+    // @stub
+}
 
 // E:\gamedcs\game.cpp:11918
 DC_ONLY(0xbc500, 0x9C)

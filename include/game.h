@@ -2051,14 +2051,20 @@ public:
     // convention. advManager::Open calls it when the incoming player is
     // not the local human; the row is not claimed here.
     void GameFn_004CA5B0();
-    // Retail-only 0x4ca840 (the body that plays newweek.wav). Open hands
-    // it the formatted turn banner and the acting game position when the
-    // protocol is hotseat; the row is not claimed here.
-    void GameFn_004CA840(char* text, int gamePos);
+    // Open hands it the formatted turn banner and the acting game position
+    // when the protocol is hotseat.
+    void WaitForPlayer(char* text, int gamePos);          // 0x4ca840
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
                        unsigned char remote_move);            // 0x49cdd0
+    // MATCHING_DEBT: events.obj loses an exact row if these game.obj-only
+    // declarators enter its class-type stream. Reuse the existing sole-TU
+    // gate until game.h's codegen-sensitive declaration surface is split.
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+    void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
+    void CheckForTownEvent();                                 // 0x4cda10
+#endif
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80
@@ -2167,7 +2173,7 @@ public:
     // role-derived and PROVISIONAL - no surviving symbol covers either -
     // and the pair is gated to the one compiland that calls them.
     void ShowMoraleInfo(const hero* who, int dialogType);
-    void ShowLuckInfo(const hero* who, int dialogType);
+    void ShowLuckInfo(hero* who, int dialogType);
     // Retail-only 0x49c720. SwapHeroes, hero::Deallocate (0x4d9ec0) and
     // playerData::add_garrison_hero (0x4b9fc0) all prove this
     // three-argument member queues a hero-state record; no surviving name

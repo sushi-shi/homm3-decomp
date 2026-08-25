@@ -8,18 +8,44 @@
 #include "basemgr.h"
 #include "window.h"
 
+// MATCHING_DEBT: swapmgr.obj needs the existing chat-edit declaration view
+// for its private CGameChatEdit-derived editor. Remove this gate use when the
+// canonical chat-edit hierarchy is split from remote.h into its own header.
+#define HOMM3_CHAT_EDIT_DECLS
+#include "remote.h"
+#undef HOMM3_CHAT_EDIT_DECLS
+
 class Bitmap816;
 class hero;
-class CNetMsgHandler;
-class widget;
-
 class message;
+
+// Dreamcast proves the inheritance and method identities. Retail independently
+// proves that SendChatCleanup follows CChatEdit::SendChat in the vtable: the
+// swap editor dispatches it through the immediately following slot (+0x64).
+class CGameChatEdit : public CChatEdit {
+public:
+    virtual int OnKeyPress(message* msg) OVERRIDE;
+    virtual int OnEscape(message msg) OVERRIDE;
+    virtual void SendChatCleanup();
+    virtual void Activate();
+};
+
+class CSwapManagerChatEdit : public CGameChatEdit {
+public:
+    virtual void SendChat(const char* text, int toWho) OVERRIDE;
+};
+
+// Dreamcast proves the direct heroWindow base and contributes no additional
+// virtuals. Retail's destructor walks the inherited Widgets vector verbatim.
+class TSwapWindow : public heroWindow {
+public:
+    virtual ~TSwapWindow();
+    void UpdateArrows();
+};
 
 // Canonical partial retail layout. IsLeftHero and its sole retail caller
 // prove the two hero pointers at +0x40/+0x44; the swapManager ctor (0x5ae500)
 // proves the rest of the ctor-touched prefix store-for-store.
-// The selection side held in field_48 (-1 when nothing is selected):
-// DrawSelector draws the highlight over the left or the right hero column.
 enum ESwapSelectSide {
     kSwapSelectLeft = 0,
     kSwapSelectRight = 1,
@@ -35,43 +61,20 @@ public:
     int field_50;            // +0x50
     int field_54;            // +0x54
     int field_58;            // +0x58
-    unsigned char field_5c;  // +0x5c  set for a two-human cross-owner network trade
-    unsigned char field_5d;  // +0x5d  default 1; else = IsLeftHero() (we hold left hero)
+    unsigned char field_5c;  // +0x5c  two-human cross-owner network trade
+    unsigned char field_5d;  // +0x5d  default 1; otherwise local-player side
     // +0x5e, +0x5f pad
     CNetMsgHandler* field_60;  // +0x60  saved previous handler (restored by Close)
-    CNetMsgHandler* field_64;  // +0x64  owned net-msg handler (0 at construction; deleted by Close)
-    // The retail object continues well past +0x64 (its teardown frees std::string
-    // members near +0x3f2 and +0x884); only the ctor-touched prefix is modelled.
-    // Do NOT rely on sizeof(swapManager).
+    CNetMsgHandler* field_64;  // +0x64  owned handler (deleted by Close)
+    // Retail continues past +0x64; only the ctor-touched prefix is modelled.
+    // Do not rely on sizeof(swapManager).
 
     swapManager(hero* leftHero, hero* rightHero);
     virtual int Open(int newPriority);  // baseManager vtable slot 0
     virtual void Close();               // slot 1
     virtual int Main(message& msg);     // slot 2
     bool IsLeftHero();
-    void Reset();
     void DrawSelector();
-    // DC types slot TArtifactSlot (an int-width enum, hero.h) - spelled int
-    // here so the declaration needs no hero.h include; byte-identical codegen.
-    void UpdateSlot(int iHero, int slot);
-    void update_all_slots();
-    void UpdateBackpack(int iHero);
-};
-
-// The trade window itself (a heroWindow subclass). Only the UpdateArrows-touched
-// prefix is modelled: heroWindow is 0x4c bytes (CHeroWindowEx proves rolloverId
-// at +0x4c), then two unclassified members, then the three army-arrow widgets.
-// The full object continues far past +0x5c (its ctor 0x5aaa80 is 0x38E9 B); do
-// NOT rely on sizeof(TSwapWindow).
-class TSwapWindow : public heroWindow {
-public:
-    int field_4c;       // +0x4c
-    int field_50;       // +0x50
-    widget* field_54;   // +0x54  left-army count arrow widget
-    widget* field_58;   // +0x58  right-army count arrow widget
-    widget* field_5c;   // +0x5c  the swap/transfer control (enable/disable)
-
-    void UpdateArrows();
 };
 
 // --- CGiveMeStuffMsg ---

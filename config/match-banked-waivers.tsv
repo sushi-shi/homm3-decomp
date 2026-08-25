@@ -10,3 +10,12 @@
 # merely stopped being emitted is NOT a waiver case - restore it.
 #
 # rva<TAB>reason
+0x105f20	Withdrawn false admission: omitted objdiff fuzzy_match_percent was protobuf-default 0.0, not 100.0.
+# --- master-merge (2026-08-25): campaign partials superseded by master's curated @stub source (user directive: "union, master source wins"). Partial reconstructions deferred to future recon lanes; hist retains the peaks. ---
+0x09ad00	master-merge: event_record hide_boat::load partial (99.96%) reverted to master's curated @stub; recon deferred
+0x09afa0	master-merge: event_record show_boat::save partial (89.23%) reverted to master's curated @stub; recon deferred
+0x1554e0	master-merge: remote ~CWaitForReadyPlayersDlg partial (79.75%) reverted to master's curated @stub; recon deferred
+0x1ae430	master-merge: swapmgr TSwapWindow::UpdateArrows partial (98.27%) reverted to master's curated @stub; recon deferred
+0x1ae5b0	master-merge: swapmgr swapManager::Reset partial (68.03%) reverted to master's curated @stub; recon deferred
+0x1af150	master-merge: swapmgr swapManager::UpdateBackpack partial (93.28%) reverted to master's curated @stub; recon deferred
+0x1b0ef0	master-merge: swapmgr swapManager::update_all_slots partial (89.21%) reverted to master's curated @stub; recon deferred
