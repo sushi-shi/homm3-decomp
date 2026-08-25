@@ -101,9 +101,18 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
 };
 
+// A recorded object erasure. load/save (0x49b190/0x49b220) serialize four
+// dwords after player_id, in declaration order: the map location, the erased
+// object's id, its extra-info word and its object-list index.
 class type_record_erase : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    type_point location;         // +0x08
+    int object_id;               // +0x0c
+    unsigned int extra_info;     // +0x10
+    int object_index;            // +0x14
 };
 
 class type_record_player_death : public type_event_record {
