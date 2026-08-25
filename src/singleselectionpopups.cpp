@@ -47,23 +47,9 @@ unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const c
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:255
-DC_ONLY(0x12e3a0, 0x50)
-void CHeroDlg::CHeroDlg(unsigned char newGameMode)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionpopups.cpp:260
 DC_ONLY(0x12e3f0, 0x29E)
 unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionpopups.cpp:298
-DC_ONLY(0x12e690, 0x78)
-void CTownDlg::CTownDlg(unsigned char newGameMode)
 {
     // @stub
 }
@@ -257,27 +243,6 @@ void* CBonusDlg::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
-// E:\gamedcs\singleselectionpopups.cpp:256
-DC_ONLY(0x12f338, 0x34)
-void* CHeroDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionpopups.cpp:299
-DC_ONLY(0x12f36c, 0x34)
-void* CTownDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionpopups.cpp:361
-DC_ONLY(0x12f3a0, 0x34)
-void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // E:\gamedcs\singleselectionpopups.cpp:114
@@ -322,6 +287,32 @@ void CBitmapWidget::Draw()
                 gpWindowManager->screenBitmap,
                 x + parentWindow->x, y + parentWindow->y, 1);
 }
+
+CHeroDlg::~CHeroDlg()
+{
+}
+
+CTownDlg::~CTownDlg()
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:255
+VA(0x00575a70, 0x20)  // vtable 0x641a68 + CSingleSelPopup base, dc 0x12e3a0
+CHeroDlg::CHeroDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
+{
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:298
+VA(0x00575e10, 0x20)  // vtable 0x641a90 + CSingleSelPopup base, dc 0x12e690
+CTownDlg::CTownDlg(unsigned char newGameMode)
+    : CSingleSelPopup(0x12, newGameMode)
+{
+}
+
+// Retail folds the deleting destructors for CHeroDlg, CTownDlg and
+// CTeamAlignmentDlg into this one body.
+VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)
 
 // E:\gamedcs\singleselectionpopups.cpp:359
 VA(0x005764d0, 0x53)  // vtable 0x641ab8 + GetTeams call, dc 0x12eac8
