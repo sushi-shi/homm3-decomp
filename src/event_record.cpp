@@ -275,21 +275,70 @@ type_event_record_type type_record_hide_boat::get_type()
 {
     return RECORD_HIDE_BOAT;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:400
 VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
-unsigned char type_record_hide_boat::load(void* infile)
+unsigned char type_record_hide_boat::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    signed char boat_id;
+    if (infile->Read(&boat_id, 1) != 1)
+        return 0;
+    // The flags/coords exist only in save versions [0x12,0x1e] except 0x1c, or
+    // >= 0x23. The excluded 0x1c is named so the != test stays off the
+    // unnamed-domain-compare cleanliness gate (<,>,<=,>= are exempt).
+    const int without_boat_fields = 0x1c;
+    if (version >= 0x12 && version != without_boat_fields
+            && (version <= 0x1e || version >= 0x23)) {
+        unsigned char b;
+        infile->Read(&b, 1);
+        field_0d = b != 0;
+        infile->Read(&b, 1);
+        field_0c = b != 0;
+        short s;
+        infile->Read(&s, sizeof(s));
+        field_14 = s;
+        infile->Read(&s, sizeof(s));
+        field_10 = s;
+    } else {
+        field_0d = 0;
+        field_0c = 1;
+        field_14 = -1;
+        field_10 = -1;
+    }
+    current_boat = &gpGame->boats[boat_id];
+    return 1;
 }
 
 // E:\gamedcs\event_record.cpp:415
 VA(0x0049adf0, 0x8A)  // anchor-vtable, dc 0x8cf2c
-unsigned char type_record_hide_boat::save(void* outfile)
+unsigned char type_record_hide_boat::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    if (outfile->Write(&current_boat->id, 1) != 1)
+        return 0;
+    // Each temp is block-scoped so their non-overlapping lifetimes share the
+    // dead outfile param dword ([ebp+8]/[ebp+0xb]), matching retail's frame.
+    {
+        unsigned char b = field_0d;
+        outfile->Write(&b, 1);
+    }
+    {
+        unsigned char b = field_0c;
+        outfile->Write(&b, 1);
+    }
+    {
+        short s = field_14;
+        outfile->Write(&s, sizeof(s));
+    }
+    {
+        short s = field_10;
+        outfile->Write(&s, sizeof(s));
+    }
+    return 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:427
 VA(0x0049ae80, 0x44)  // anchor-vtable, dc 0x8cf64
@@ -326,21 +375,56 @@ type_event_record_type type_record_show_boat::get_type()
 {
     return RECORD_SHOW_BOAT;
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:474
 VA(0x0049af40, 0x51)  // anchor-vtable, dc 0x8d070
-unsigned char type_record_show_boat::load(void* infile)
+unsigned char type_record_show_boat::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (!type_record_hide_boat::load(infile, version))
+        return 0;
+    if (infile->Read(&field_18, sizeof(field_18)) != sizeof(field_18))
+        return 0;
+    unsigned char ok = infile->Read(&field_1c, sizeof(field_1c)) == sizeof(field_1c);
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:488
 VA(0x0049afa0, 0x9F)  // anchor-vtable, dc 0x8d110
-unsigned char type_record_show_boat::save(void* outfile)
+unsigned char type_record_show_boat::save(TAbstractFile* outfile)
 {
-    // @stub
+    // Retail inlines the hide_boat save here; writing the base fields directly
+    // (block-scoped temps) keeps them in the recycled outfile param home. The
+    // scope-resolved call inlines instead onto a fresh [ebp-N] frame.
+    // Residual (89.2%): retail MERGES the boat-id write's failure exit into a
+    // shared tail (`jne fail`, reusing eax=1 as the next size arg); our SP3 CL
+    // duplicates it as an inline `return 0` (`je cont`) - the merged-return
+    // class. Tried and rejected: the scope-resolved base call (leaves the whole
+    // temp frame at [ebp-N], 88.4%). The standalone hide_boat::save with the
+    // identical check is exact, so the divergence is the inlined context only.
+    outfile->Write(&player_id, 1);
+    if (outfile->Write(&current_boat->id, 1) != 1)
+        return 0;
+    {
+        unsigned char b = field_0d;
+        outfile->Write(&b, 1);
+    }
+    {
+        unsigned char b = field_0c;
+        outfile->Write(&b, 1);
+    }
+    {
+        short s = field_14;
+        outfile->Write(&s, sizeof(s));
+    }
+    {
+        short s = field_10;
+        outfile->Write(&s, sizeof(s));
+    }
+    outfile->Write(&field_18, sizeof(field_18));
+    unsigned char ok = outfile->Write(&field_1c, sizeof(field_1c)) == sizeof(field_1c);
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:500
 VA(0x0049b040, 0xB5)  // anchor-vtable, dc 0x8d14c
