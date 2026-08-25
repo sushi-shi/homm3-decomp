@@ -9,6 +9,50 @@
 #ifndef HOMM3_TRADPOST_WIDGETS_H
 #define HOMM3_TRADPOST_WIDGETS_H
 
+#include "netmsg.h"
+
+// The give-resource execute path builds a gift network message on the stack
+// (subtype 0x432, the CGiftMsg immediate ai_player.h attests) and hands it to
+// TransmitRemoteData. CNetMsg carries no vtable, so this tradpost-private
+// mirror of that record inlines byte-for-byte with retail's construction; the
+// shared spelling lives in ai_player.h (out of this lane's file scope).
+class TGiveNetMsg : public CNetMsg {
+public:
+    int m_giver;
+    int m_resource;
+    int m_qty;
+
+    TGiveNetMsg(int giver, int resource, int qty)
+        : CNetMsg(0x432, sizeof(TGiveNetMsg)),
+          m_giver(giver), m_resource(resource), m_qty(qty) {}
+};
+
+// The free-function overload the give path calls (remote.h:438); declared here
+// to avoid pulling remote.h's DirectPlay closure into this TU.
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg,
+                       bool guaranteed);
+
+// The gMarketWindow selector DoMarket dispatches on: the five dialog panes in
+// the order the classes are declared. Byte-proven by DoMarket's jump table and
+// the per-case `new <size>` immediates (0x68/0x8c/0x64/0x64/0x68).
+enum EMarketWindow {
+    MARKET_WINDOW_TRADE = 0,
+    MARKET_WINDOW_GIVE = 1,
+    MARKET_WINDOW_BUY = 2,
+    MARKET_WINDOW_SELL_ARTIFACT = 3,
+    MARKET_WINDOW_SELL_CREATURE = 4
+};
+
+// The gMarketSource pricing/mode selector the entry points seed (marketplace,
+// trading post, black market, freelancer's guild). The Update methods branch
+// label visibility and the title text on it.
+enum EMarketSource {
+    MARKET_SOURCE_MARKETPLACE = 0,
+    MARKET_SOURCE_TRADING_POST = 1,
+    MARKET_SOURCE_BLACK_MARKET = 2,
+    MARKET_SOURCE_FREELANCER = 3
+};
+
 // The seven resource names, indexed by resource id. Shared table; seerhut.cpp
 // carries the retail address claim (0x6a5e64). Declared here (consumer-side
 // plain extern, the ai_player.h / advmgr.h pattern) for the resource-trade
@@ -78,6 +122,14 @@ enum EMarketArtifactSlotId {
     MARKET_ARTIFACT_SLOT_17_ID, MARKET_ARTIFACT_SLOT_18_ID,
     MARKET_ARTIFACT_SLOT_19_ID, MARKET_ARTIFACT_SLOT_20_ID,
     MARKET_ARTIFACT_SLOT_21_ID, MARKET_ARTIFACT_SLOT_22_ID   // 0x81
+};
+
+// The two backpack scroll arrows on the sell-artifact panel; its WindowHandler
+// pages gBackpackStart on these and re-blits the five visible backpack-icon
+// widgets (ids 0x66..0x6a). Provisional names.
+enum EMarketArtifactArrowId {
+    MARKET_ARTIFACT_LEFT_ARROW_ID = 0x82,
+    MARKET_ARTIFACT_RIGHT_ARROW_ID = 0x83
 };
 
 // The sell-creature left column: one widget id per army slot (0x8b..0x91).
