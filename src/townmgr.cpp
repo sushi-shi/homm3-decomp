@@ -23,6 +23,7 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
+#include "buildinginfo.h"
 #include "button.h"
 #include "castle.h"
 // gpExecutive: TCastleWindow::Recruit needs the global.
@@ -1757,6 +1758,34 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // Located, not reconstructed: the thieves' guild rollover-text setter and
 // its message handler. show_side (dc 0x16df0c) has no distinct retail carve
 // row (inlined into the ctor/SetupThievesGuild).
+//
+// SetRolloverText DECODE (2026-08-25, for the next lane). A dispatch over
+// codeY = the hovered widget id, writing the rollover into gText:
+//   - codeY 1..27  : VC6 COMPRESSED JUMP TABLE (byte-index at func+0x204,
+//                    jump table of 4 entries at func+0x1f4 - both embedded in
+//                    the body as self-relocs, the high-repro-risk part).
+//                    Decoded byte-index (codeY-1 = 0..26) and jt targets:
+//                      codeY 1..8   -> sprintf(gText, gRankFormat[0]=0x6a5390)
+//                      codeY 10..17 -> sprintf(gText, gRankFormat[1]=0x6a5394)
+//                      codeY 20..27 -> sprintf(gText, gRankFormat[2]=0x6a5398)
+//                      codeY 9,18,19-> default (adventureRolloverEmptyText)
+//   - codeY 30..37 : sprintf(gText, gRankFormat[3]=0x6a539c) - a range test
+//                    (`cmp 0x1e/jge`) SPLIT OUT ahead of the jump table.
+//   - codeY 750..757 (0x2ee..0x2f5): heroIdx = table 0x6a9e00[codeY]; if not
+//                    -1, strcpy(gText, gpGame heroes[heroIdx].name) with hero
+//                    stride 1170 (0x492) at gpGame+0x21620, name at hero+0x23.
+//   - codeY 850..857 (0x352..0x359): idx = 0x6a98ec[codeY]; slot =
+//                    0x6aa660[7*(codeY-0x352)+idx]; if 0<=slot<=0x96 strcpy the
+//                    creature-traits name at akCreatureTypeTraits+0x18 (base
+//                    0x6747b0, stride 0x2c) else adventureRolloverEmptyText.
+//   - codeY 0x7800 : strcpy(gText, gpGeneralText->GetText(601)).
+//   - else         : strcpy(gText, adventureRolloverEmptyText).
+// Tail (all arms): BroadcastMessage(0x200,3,0x29,gText) then vslot20(0,0x28,
+//   0x29) then gpWindowManager->UpdateScreen(x+8, y+0x22c, 0x2e0, 0x12).
+// The four gRankFormat char* (0x6a5390..0x6a539c) and the widget->hero/creature
+// maps (0x6a9e00, 0x6a98ec, 0x6aa660) are unmodelled; reconstruction needs the
+// compressed-switch reproduced AND those tables + the hero-record stride
+// declared. Deferred as the flagged high-repro-risk class.
 #if 0  // @carcass: located, not reconstructed
 // E:\gamedcs\townmgr.cpp:4070
 VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
@@ -4065,17 +4094,75 @@ void townManager::DoPortalOfSummoning()
 // condition rather than to a nested if: retail's `jl` skips the
 // assignment and leaves the already-chosen hero standing.
 
-// Located, not reconstructed: the building-description formatter. The
-// residual note below already proves it a townmgr.cpp static at 0x5d2a40
-// with fourteen call sites; the delinked PDB even names it GetBuildingInfo.
-#if 0  // @carcass: located, not reconstructed
+// The building-description formatter: fourteen call sites, a townmgr.cpp
+// static. Bands the buildingId exactly as GetBuildingName does, copying the
+// matching description into a local buffer, then (for Rampart's special
+// building 17 and grail 21, when `extended`) appends the town's own custom
+// text via GetText(678)/format_string(GetText(679), ...). Dwellings (>=30)
+// return their description straight. The result is prefixed with the bracketed
+// building name when bIncludeTitle, and returned through gInfoText.
+//
+// Residual (99.96%): BYTE-IDENTICAL - the masked instruction diff is empty.
+// The gap is compgen string-literal reloc naming only: our base emits the
+// pooled "\n\n"/"{%s}\n\n" literals as local ??_C@ COMDATs and the c_str()
+// null fallback as _Nullstr, where the delinked target names them
+// advmgr/townmgr $-compgen symbols and adventureTownRolloverEmptyText. Same
+// class the multiplayerwindow OnWidgetDeselect note calls cosmetic; the sibling
+// castle::GetBuildingName reaches 100.0 because it carries no string literals.
+// The format_string result MUST be an unnamed temporary
+// (`format_string(...).c_str()`), not a named std::string - the named form
+// spills the COW _Ptr to a slot and costs the whole arm (92.94 -> 96.34 was
+// the >=30 sink, 96.34 -> 99.96 was the temporary).
 // E:\gamedcs\townmgr.cpp:5586
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
 {
-    // @stub
+    char buffer[0x1ac];
+    int type = this_town->type;
+
+    if (buildingId < SPECIAL_BUILDING_ID) {
+        if (buildingId == BLACKSMITH_ID)
+            strcpy(buffer, gBuildingDescBlacksmith[type]);
+        else if (buildingId == MARKETPLACE_SILO_ID)
+            strcpy(buffer, gBuildingDescDwelling[type * 11]);
+        else
+            strcpy(buffer, gBuildingDescCommon[buildingId]);
+    } else if (buildingId < DWELLING_0_ID) {
+        strcpy(buffer, gBuildingDescTown[type * 11 + buildingId]);
+        if (type == 1 && extended) {
+            if (buildingId == EXTRA_0_ID) {
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                strcat(buffer, gRampartExtraDesc);
+                goto emit_custom;
+            }
+            if (buildingId == SPECIAL_BUILDING_ID) {
+            emit_custom:
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                if (this_town->field_34 == 0) {
+                    strcat(buffer, gpGeneralText->GetText(678));
+                } else {
+                    strcat(buffer, format_string(
+                                       gpGeneralText->GetText(679),
+                                       this_town->field_34,
+                                       gRampartCustomText[this_town->field_38])
+                                       .c_str());
+                }
+            }
+        }
+    } else {
+        strcpy(gInfoText, gBuildingDescUpgrade[buildingId + type * 14]);
+        return gInfoText;
+    }
+
+    if (bIncludeTitle) {
+        sprintf(gInfoText, DATA_COMPGEN(0x0068c3b8, buildingTitleFormat, "{%s}\n\n"),
+                GetBuildingName(type, buildingId));
+        strcat(gInfoText, buffer);
+    } else {
+        strcpy(gInfoText, buffer);
+    }
+    return gInfoText;
 }
-#endif  // @carcass
 
 // The university record's default set, and this compiland owns the body.
 // Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
@@ -4838,16 +4925,105 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
     window->BroadcastMessage(&msg);
 }
 
-// Located, not reconstructed: the buy-build window's prerequisite-text
-// formatter, between ~TBuyBuildWindow (0x5d5b70) and BuyBuild (0x5d5f30).
-#if 0  // @carcass: located, not reconstructed
+// The buy-build window's prerequisite-text formatter. It starts from the
+// town's hierarchy mask for this building, drops the special free-Grail
+// slot in the network-owner case, removes the buildings already active,
+// and prunes every requirement transitively included by another set bit
+// (skipping the two roots 18/24). What remains is the set of missing
+// prerequisites: their names are assembled into gText, comma-separated and
+// word-wrapped to the rollover widget's pixel width by rewriting a
+// separator byte into '\n' whenever get_string_width overflows. Building 13
+// (a second capitol) and 6 (a dock with no water) short-circuit to their
+// own refusal lines; a building the town can never build gets the generic
+// refusal; otherwise the assembled list (or GetText(220) when nothing is
+// missing) becomes the rollover text.
+//
+// The three runtime message pointers at 0x6a7428/2c/30 are filled by an
+// unlocated init TU (retail writer near 0x461cxx) and only read here; the
+// SetArmyCommand round-1 precedent above DATA-claims such townmgr-consumed
+// message globals - kept on townmgr as nearest consumer until that TU lands.
+DATA(0x006a7428) extern const char* gUnnamed6a7428;
+DATA(0x006a742c) extern const char* gUnnamed6a742c;
+DATA(0x006a7430) extern const char* gUnnamed6a7430;
+
+// Residual (87.42%): a register-homing wall (why-reg: flow-distance 0,
+// register-distance 68). Retail keeps lineStart in ebx across both
+// get_string_width calls and spills namePos to [ebp-0xc]; our CL makes the
+// opposite choice (namePos in ebx, lineStart reloaded from its slot), so the
+// two locals' ebx/slot bindings and the count/namePos slot pair are swapped.
+// The branch graph and schedule align exactly. why-reg tried nine catalog
+// mutations (decl-order swap, flag naming, zero-store hoist, count/local
+// volatile) and NONE moved the divergence - the knob is outside its library.
+// The one remaining data delta is the gHierarchyMask high-dword read
+// (`[8*ecx+4]` vs the delinker's split bss_29779c symbol at +4), an __int64
+// symbol-split artifact no source form reaches. Tried and rejected:
+// `lineStart = gText` in the count==0 arm (87.42 -> 80.04); reversing the
+// lineStart/namePos decl order (byte-flat).
 // E:\gamedcs\townmgr.cpp:7272
 VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
-void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId)
+void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int building)
 {
-    // @stub
+    int count = 0;
+    __int64 mask = gHierarchyMask[current_town->type][building];
+
+    if (gpGame->field_1f69d && building == DWELLING_2_ID && current_town->type == 0)
+        mask &= ~bitNumber[BLACKSMITH_ID];
+
+    mask &= ~current_town->active;
+
+    for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
+        if ((bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
+            mask &= ~town::included_buildings[current_town->type][i];
+    }
+
+    char* lineStart = gText;
+    char* namePos = gText;
+    font* pFont = rolloverText->Font;
+    for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
+        if ((bitNumber[j] & mask) != 0) {
+            if (count == 0) {
+                strcpy(gText, gpGeneralText->GetText(53));
+                strcat(gText, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
+            } else {
+                strcat(gText, DATA_COMPGEN(0x00660db4, commaText, ","));
+                if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                    namePos[-1] = '\n';
+                    lineStart = namePos;
+                }
+                strcat(gText, DATA_COMPGEN(0x0068c3d0, doubleSpaceText, "  "));
+            }
+            ++count;
+            namePos = lineStart + strlen(lineStart);
+            strcat(gText, GetBuildingName(current_town->type, j));
+            if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                namePos[-1] = '\n';
+                lineStart = namePos;
+            }
+        }
+    }
+
+    if (building == HALL_CAPITOL_ID) {
+        if (gpGame->players[current_town->owner].HasCapitol()) {
+            rolloverText->SetText(gUnnamed6a7428);
+            return;
+        }
+    } else if (building == DOCK_ID) {
+        if (!gpTownManager->townToView->CanBuildDock()) {
+            rolloverText->SetText(gUnnamed6a742c);
+            return;
+        }
+    }
+
+    if (!gpTownManager->townToView->can_ever_build(building)) {
+        rolloverText->SetText(gUnnamed6a7430);
+        return;
+    }
+
+    if (count != 0)
+        rolloverText->SetText(gText);
+    else
+        rolloverText->SetText(gpGeneralText->GetText(220));
 }
-#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:7354
 VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
