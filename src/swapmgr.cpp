@@ -9,6 +9,7 @@
 #include "bitmap816.h"
 #include "winmgr.h"
 
+DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
 
@@ -122,14 +123,68 @@ void swapManager::Close()
     gpAdvManager->EnableButtons();
     gpAdvManager->Reseed(0, 0);
 }
-#if 0  // @carcass
-
 // E:\gamedcs\swapmgr.cpp:816
-DC_ONLY(0x15cadc, 0x1EE)
+VA(0x005aedc0, 0x140)
 void swapManager::DrawSelector()
 {
-    // @stub
+    int x = 0;
+    int y = 0;
+
+    if (field_48 == -1)
+        return;
+    if (field_50 == -1)
+        return;
+
+    if (gUnnamed6a3d08)
+    {
+        int selectedType = heroes[field_48]->army.armies[field_50];
+        x = 0x43;
+        for (int hero = 0; hero < 2; hero++)
+        {
+            for (int slot = 0; slot < 7; slot++, x += 0x24)
+            {
+                if (!(hero == field_48 && slot == field_50))
+                {
+                    int creature = heroes[hero]->army.armies[slot];
+                    if (creature == -1 || creature == selectedType)
+                    {
+                        border->Draw(0, 0, 0x24, 0x24,
+                                     gpWindowManager->screenBitmap,
+                                     x - 2, 0x81, true);
+                        gpWindowManager->UpdateScreen(x - 2, 0x81,
+                                                      0x24, 0x24);
+                    }
+                }
+            }
+            x = 0x1e5;
+        }
+    }
+    else
+    {
+        switch (field_48)
+        {
+        case kSwapSelectLeft:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x41;
+                y = 0x81;
+            }
+            break;
+        case kSwapSelectRight:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x1e3;
+                y = 0x81;
+            }
+            break;
+        }
+        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap,
+                     x, y, true);
+        gpWindowManager->UpdateScreen(x, y, 0x24, 0x24);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\swapmgr.cpp:914
 DC_ONLY(0x15cccc, 0x5E)
