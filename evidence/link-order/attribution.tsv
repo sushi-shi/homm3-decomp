@@ -441,12 +441,11 @@ rva	size	unit	current_label	provenance
 0x15be60	576	resourcemanager	?LoadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	src-VA+ir
 0x15fd70	33	sacrifice_window	game_15fd70	working-label
 0x15fdd0	1396	sacrifice_window	game_smalfont_fnt_15fdd0	working-label
-0x160350	33	sacrifice_window	game_160350	working-label
+0x160350	33	sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z	src-VA+base
 0x160380	3431	sacrifice_window	game_altrart2_pcx_160380	working-label
 0x1610f0	3699	sacrifice_window	game_altarmon_pcx_1610f0	working-label
 0x161f70	1063	sacrifice_window	game_smalfont_fnt_161f70	working-label
-0x1623a0	347	sacrifice_window	game_a84f0_sub67_1623a0	working-label
-0x162500	346	sacrifice_window	game_162a20_sub01_162500	working-label
+0x162660	469	sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	src-VA+base
 0x1629b0	34	sacrifice_window	?set_visible@widget@@QAEXE@Z	src-VA+ir
 0x162a20	590	sacrifice_window	game_164e70_sub00_162a20	working-label
 0x162da0	930	sacrifice_window	game_163150_sub00_162da0	working-label

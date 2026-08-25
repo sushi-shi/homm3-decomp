@@ -57,23 +57,35 @@ public:
     // delta lands it exactly here - the same widening that already places
     // current_hero and the rollover pointer below.
     unsigned char can_sacrifice_artifacts;
-    unsigned char pad_76[0x16];
+    unsigned char can_sacrifice_creatures;   // +0x76
+    unsigned char pad_77;
+    long total_experience;                   // +0x78
+    textWidget* experience_widget;           // +0x7c
+    textWidget* experience_total_widget;     // +0x80
+    unsigned char pad_84[0x8];
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
     // type_skeleton_window keeps at +0x60 and type_university_window at
     // +0x70. Offsets either side of it are unchanged.
     textWidget* rolloverText;
-    // DC places the intervening current-artifact/slider/button pointers at
-    // +0x88..+0xb0. Retail's proven 8-byte base delta moves that opaque run
-    // to +0x90..+0xb8; update_artifact_offering then directly proves the
-    // three following VC6 vector _First pointers at +0xc0/+0xd0/+0xe0.
-    unsigned char pad_90[0x2c];
+    // DC places the current-artifact/slider/button pointers at +0x88..+0xb0.
+    // Retail's proven 8-byte base delta moves that run to +0x90..+0xb8;
+    // update_experience independently proves sacrifice_button at +0xa4.
+    unsigned char pad_90[0x14];
+    widget* sacrifice_button;                 // +0xa4
+    unsigned char pad_a8[0x14];
     std::vector<type_artifact_offering> artifact_offerings; // +0xbc
     std::vector<textWidget*> artifact_value_widgets;        // +0xcc
     std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
     std::vector<iconWidget*> slot_back_widgets;              // +0xec
     std::vector<iconWidget*> slot_widgets;                   // +0xfc
-    unsigned char pad_10c[0x130];
+    std::vector<iconWidget*> backpack_widgets;               // +0x10c
+    // DC places seven 32-byte creature-offering records and one current
+    // record in this 0x100-byte band. None owns storage; the retail dtor
+    // steps directly from backpack_widgets to artifact_widgets.
+    unsigned char pad_11c[0x100];
+    std::vector<widget*> artifact_widgets;                   // +0x21c
+    std::vector<widget*> creature_widgets;                   // +0x22c
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
@@ -87,8 +99,10 @@ public:
     // order-map of the Dreamcast roster over the segment between the
     // destructor and DoModal: set_artifact_mode 0x562a20, set_creature_mode
     // 0x563150. Bodies still deferred.
+    virtual ~type_sacrifice_window();
     void set_artifact_mode();
     void set_creature_mode();
+    void update_experience();
     void update_slot(long slot);
     void update_all_slots();
     void update_artifact_offering(long slot);

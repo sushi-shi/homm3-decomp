@@ -1864,7 +1864,9 @@ resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertRes
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740
 resourcemanager	@game_null_159510@12	77.3910	77.3910	77.3910	0x159510
 resourcemanager	@game_sprite_1599e0@12	70.5441	70.5441	70.5441	0x1599e0
+sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60
+sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x160350
 sacrifice_window	??_Gtype_skeleton_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x165f30
 sacrifice_window	?DoModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1653b0
 sacrifice_window	?ExitDialog@type_sacrifice_window@@MAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x165430
@@ -1881,6 +1883,7 @@ sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b
 sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x1629e0
 sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x163a40
 sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0
+sacrifice_window	?update_experience@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x162500
 sacrifice_window	?update_offering@@YIXPAViconWidget@@PAVtextWidget@@PBUtype_artifact_offering@@@Z	100.0000	100.0000	100.0000	0x162c70
 sacrifice_window	?update_slot@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x162840
 sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000	100.0000	100.0000	0x166da0
