@@ -3497,11 +3497,11 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1636c0	794	in-span	sacrifice_window	sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z
 0x1639e0	91	in-span	sacrifice_window	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z
 0x163a40	49	in-span	sacrifice_window	sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z
-0x163a80	795	in-span	sacrifice_window	sacrifice_window	game_15fd40_sub00_163a80
-0x163da0	338	in-span	sacrifice_window	sacrifice_window	game_160380_sub00_163da0
-0x163f00	338	in-span	sacrifice_window	sacrifice_window	game_160380_sub01_163f00
-0x164060	723	in-span	sacrifice_window	sacrifice_window	game_160380_sub02_164060
-0x164340	863	in-span	sacrifice_window	sacrifice_window	game_160380_sub03_164340
+0x163a80	795	in-span	sacrifice_window	sacrifice_window	?offering_click@type_sacrifice_window@@QAEXJE@Z
+0x163da0	338	in-span	sacrifice_window	sacrifice_window	?scroll_backpack_left@type_sacrifice_window@@CIHAAVmessage@@@Z
+0x163f00	338	in-span	sacrifice_window	sacrifice_window	?scroll_backpack_right@type_sacrifice_window@@CIHAAVmessage@@@Z
+0x164060	723	in-span	sacrifice_window	sacrifice_window	?empty_backpack@type_sacrifice_window@@CIHAAVmessage@@@Z
+0x164340	863	in-span	sacrifice_window	sacrifice_window	?all_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z
 0x1646a0	617	in-span	sacrifice_window	sacrifice_window	?sacrifice@type_sacrifice_window@@CIHAAVmessage@@@Z
 0x164910	356	in-span	sacrifice_window	sacrifice_window	?sacrifice_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z
 0x164a80	369	in-span	sacrifice_window	sacrifice_window	?exit_click@type_sacrifice_window@@CIHAAVmessage@@@Z

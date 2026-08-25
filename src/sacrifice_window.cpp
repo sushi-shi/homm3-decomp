@@ -2124,6 +2124,202 @@ void type_sacrifice_window::update_artifact_offering(long slot)
                     &artifact_offerings[slot]);
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1200
+// The offering widget's sole target and adjacent DC roster row fix the
+// identity. A click exchanges the complete 16-byte offering record with the
+// held artifact while retaining its original source slot and sacrifice value;
+// right click only opens the ordinary artifact description.
+VA(0x00563a80, 0x31b)  // widget call edge + dc name/order, dc 0x126640
+void type_sacrifice_window::offering_click(
+    long slot, unsigned char right_click)
+{
+    type_artifact_offering old_artifact = artifact_offerings[slot];
+
+    if (holding_artifact.artifactId == ARTIFACT_NONE) {
+        if (old_artifact.artifactId != ARTIFACT_NONE) {
+            if (right_click) {
+                current_hero->HeroFn_004D9A00(
+                    &old_artifact, right_click);
+            } else {
+                artifact_offerings[slot].artifactId = ARTIFACT_NONE;
+                update_artifact_offering(slot);
+                pick_up_artifact(
+                    old_artifact, old_artifact.source, 0);
+            }
+        }
+    } else if (!right_click) {
+        artifact_offerings[slot] = holding_artifact;
+        update_artifact_offering(slot);
+        put_down_artifact(0);
+        if (old_artifact.artifactId != ARTIFACT_NONE)
+            pick_up_artifact(old_artifact, old_artifact.source, 0);
+    }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1236
+// create_artifact_widgets takes this callback's address for the left scroll
+// button. The Complete body calls hero::rotate_backpack_left and expands the
+// adjacent update_backpack helper before redrawing the dialog.
+VA(0x00563da0, 0x152)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::scroll_backpack_left(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[
+                SACRIFICE_HELP_SCROLL_BACKPACK_LEFT].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->current_hero->rotate_backpack_left();
+        window->update_backpack();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1262
+// The right scroll button supplies the symmetric address-taken callback. Its
+// body is byte-for-byte parallel except for the help row and hero operation.
+VA(0x00563f00, 0x152)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::scroll_backpack_right(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[
+                SACRIFICE_HELP_SCROLL_BACKPACK_RIGHT].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->current_hero->rotate_backpack_right();
+        window->update_backpack();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1289
+// Complete expands this helper into both artifact-batch callbacks. It fills
+// the first empty offering, adds that record's scaled value, and refreshes
+// the corresponding pair of offering widgets.
+unsigned char type_sacrifice_window::add_artifact(
+    type_artifact artifact, long source)
+{
+    unsigned long i;
+    for (i = 0; i < artifact_offerings.size(); ++i) {
+        if (artifact_offerings[i].artifactId == ARTIFACT_NONE)
+            break;
+    }
+    if (i == artifact_offerings.size())
+        return 0;
+
+    artifact_offerings[i].set(&artifact, source, current_hero);
+    total_experience += artifact_offerings[i].value;
+    update_artifact_offering(i);
+    return 1;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1310
+// The helper is expanded at each callback. Retail scans the fixed 64-record
+// backpack for its next occupied slot and stops if the offering pane fills.
+void type_sacrifice_window::empty_backpack()
+{
+    type_artifact artifact;
+    while (current_hero->get_number_in_backpack(1) > 0) {
+        long i;
+        for (i = 0; i < SACRIFICE_BACKPACK_ARTIFACT_COUNT; ++i) {
+            artifact = current_hero->backpack[i];
+            if (artifact.artifactId != ARTIFACT_NONE)
+                break;
+        }
+        if (!add_artifact(artifact, SACRIFICE_BACKPACK_SOURCE_SLOT))
+            break;
+        current_hero->remove_backpack_artifact(i);
+    }
+    update_backpack();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1338
+// create_artifact_widgets stores this private static callback on the empty-
+// backpack button. Both add_artifact and empty_backpack expand in Complete.
+VA(0x00564060, 0x2d3)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::empty_backpack(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->empty_backpack();
+        window->update_experience();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1365
+// The all-artifacts callback first offers each of the sixteen admissible doll
+// slots, then expands empty_backpack to fill whatever offering slots remain.
+// Residual (86.78%): the first 37 semantic blocks agree. This compile expands
+// empty_backpack but keeps its nested update_backpack call, whereas retail
+// expands both. An ordinary inline hint is byte-flat; force-inlining either
+// helper improves this site to about 91.4% but regresses the exact standalone
+// empty-backpack callback (and force-inlining update_backpack also regresses
+// backpack_click), so the source-authentic call graph is retained.
+VA(0x00564340, 0x35f)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::all_artifacts(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        type_artifact artifact;
+        for (long slot = 0; slot < SACRIFICE_EQUIPPED_SLOT_COUNT; ++slot) {
+            artifact = window->current_hero->equipped[slot];
+            if (artifact.artifactId != ARTIFACT_NONE) {
+                if (!window->add_artifact(artifact, slot))
+                    break;
+                window->current_hero->remove_artifact(slot);
+                window->update_slot(slot);
+            }
+        }
+        window->empty_backpack();
+        window->update_experience();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1407
 // The constructor stores this private static callback at 0x56019e. Retail
 // proves both mode-specific reset paths and the common experience award.

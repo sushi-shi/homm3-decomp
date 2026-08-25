@@ -33,6 +33,8 @@ enum ECommaFormatting {
 
 enum ESacrificeWindowHelp {
     SACRIFICE_HELP_EXIT_BUTTON = 0,
+    SACRIFICE_HELP_EMPTY_BACKPACK = 2,
+    SACRIFICE_HELP_ALL_ARTIFACTS = 3,
     SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON = 4,
     SACRIFICE_HELP_MAX_CREATURES = 10,
     SACRIFICE_HELP_ALL_CREATURES = 11,
@@ -41,11 +43,16 @@ enum ESacrificeWindowHelp {
     SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE = 15,
     SACRIFICE_HELP_SACRIFICE_ARTIFACTS = 16,
     SACRIFICE_HELP_SACRIFICE_CREATURES = 17,
+    SACRIFICE_HELP_SCROLL_BACKPACK_LEFT = 18,
+    SACRIFICE_HELP_SCROLL_BACKPACK_RIGHT = 19,
     SACRIFICE_HELP_COUNT = 20
 };
 
 enum ESacrificeArtifactSlotFrame {
-    SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90
+    SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90,
+    SACRIFICE_EQUIPPED_SLOT_COUNT = 16,
+    SACRIFICE_BACKPACK_SOURCE_SLOT = 19,
+    SACRIFICE_BACKPACK_ARTIFACT_COUNT = 64
 };
 
 // ARTRAITS.TXT's parser maps T/N/J/R to these bit values, and the retained
@@ -169,6 +176,8 @@ private:
                           unsigned char new_artifact);
     void put_down_artifact(unsigned char change_experience);
     void update_backpack();
+    unsigned char add_artifact(type_artifact artifact, long source);
+    void empty_backpack();
     void return_artifact(const type_artifact_offering& artifact);
     void clear();
     long get_max_amount(long slot) const;
@@ -178,6 +187,10 @@ private:
     static int sacrifice_creatures(message& msg);
     static int exit_click(message& msg);
     static int sacrifice_artifacts(message& msg);
+    static int scroll_backpack_left(message& msg);
+    static int scroll_backpack_right(message& msg);
+    static int empty_backpack(message& msg);
+    static int all_artifacts(message& msg);
     static void creature_slider_change(int state, heroWindow* parent_window);
 };
 SIZE(type_sacrifice_window, 0x23c);

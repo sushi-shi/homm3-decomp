@@ -260,6 +260,41 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice offering/scroll/batch chain adds 2,194 exact
+  retail bytes; the 863-byte all-artifacts callback is behavior-complete at
+  86.78%.** The offering widget's sole call target and the adjacent
+  Dreamcast roster row identify `offering_click` at 0x563a80. Its natural
+  nested source exactly reproduces the complete 16-byte offering exchange,
+  retained source/value fields, right-click artifact view and both expanded
+  pickup/drop paths across all 26 semantic blocks and 795 bytes.
+
+  The next two constructor callback pointers identify the symmetric
+  `scroll_backpack_left` / `scroll_backpack_right` rows at 0x563da0 and
+  0x563f00. Retail independently fixes HELP.TXT rows 18/19, the corresponding
+  hero rotation methods and each expanded backpack refresh; both 338-byte
+  callbacks match immediately. The following callbacks at 0x564060 and
+  0x564340 are `empty_backpack(message&)` and `all_artifacts(message&)`, not
+  the intervening Dreamcast-only helper rows. Complete expands the attested
+  `add_artifact` and `empty_backpack()` helpers: they fill the first free
+  offering, scale and add its experience, remove up to 64 backpack records,
+  and in the all-artifacts case first walk the sixteen admissible equipped
+  slots. The 723-byte empty-backpack callback is exact.
+
+  `all_artifacts` agrees through its first 37 semantic blocks. The remaining
+  inliner wall is bounded: this compile expands `empty_backpack` but retains
+  its nested `update_backpack` call, while retail expands both. A plain
+  `inline` hint is byte-flat; force-inlining either helper raises this site to
+  about 91.4% but regresses the exact empty-backpack callback to 98.49%, and
+  force-inlining `update_backpack` also regresses `backpack_click`. The
+  source-authentic call graph is therefore banked without a global steering
+  attribute. The synchronized checkpoint reaches **1966/2384 linked exact**,
+  **1897/2315 game exact**, **96.59% game fuzzy** and **44.31% executable
+  coverage**. All 51 unit tests, five freshness controls, 23 VC6 oracle
+  probes, link-order checks and fatal gates pass; the regenerated queue has
+  417 residual functions / 29.5 KiB recoverable and only the two known
+  inlined-away `create_included_mask` diagnostics. No external implementation
+  body was used.
+
 - **2026-08-25 — the sacrifice artifact helper and equipped-slot handler are
   exact; the backpack handler is behavior-complete at 86.13%.** The retained
   171-byte row at 0x55fc30 is the public
