@@ -116,6 +116,7 @@ protected:
 
     void get_alignments();
     void add_creatures(TCreatureType type, short amount, short slot);
+    long do_best_swap(bool can_take_all);
     void dump_extra_creature();
     long choose_weakest_army(bool is_shooter, bool check_alignments);
     long value_of_adding_army(TCreatureType type, short count,
@@ -206,6 +207,8 @@ public:
     bool can_trade_resources(const int* cost, int* supply,
                              std::vector<long>& trade_qty);
     void trade_resources(const int* cost, long number);
+    bool build_markets(int* supply);
+    void do_resource_trade(int* supply);
 
 private:
     static float attack_computer_bonus;

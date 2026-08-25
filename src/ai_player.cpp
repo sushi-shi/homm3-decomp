@@ -73,6 +73,21 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
 const std::bitset<9>& ArmyGrpFn_0044A460();
+// castle.cpp's affordability gate (retail 0x5b6be0): /Gr fastcall, town* in
+// ECX and the building id in EDX. Declared file-locally rather than pulling in
+// castle.h, matching the AI_resource_cost pattern above.
+int CanBuy(const town* currTown, int buildingId);
+// tradpost.cpp's marketplace exchange-rate helper (retail 0x5ecd20): the value
+// of one dest unit in source units, scaled by the market-count efficiency.
+double get_trade_ratio(EGameResource source, EGameResource dest,
+                       double efficiency);
+// int -> EGameResource without tripping the enum-cast floor (philai's idiom).
+inline EGameResource game_resource_from_int(int value)
+{
+    EGameResource resource;
+    memcpy(&resource, &value, sizeof resource);
+    return resource;
+}
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -1257,23 +1272,82 @@ unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1587
 // arity: ret 4 (this+1), returns al (uchar); reads this+0 short (player id) and
-// player record at gpGame+0x20ad0; size 154->209 (1.36). Retail 0x2ab40.
+// player record at gpGame+0x20ad0. Retail 0x2ab40. Builds a marketplace in
+// each of the player's towns while affordable; a CanBuy failure stops the run.
 VA(0x0042ab40, 0xD1)  // linkorder + arity/return, dc 0x309d4
-unsigned char type_AI_player::build_markets(int* supply)
+bool type_AI_player::build_markets(int* supply)
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    bool built = false;
+    if (supply[0] < 0 || player->turnProductionResource[0] <= 0)
+        return false;
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (!(current_town->active & bitNumber[MARKETPLACE_ID])
+            && current_town->can_build(MARKETPLACE_ID)) {
+            if (!CanBuy(current_town, MARKETPLACE_ID))
+                return built;
+            current_town->buy_building(MARKETPLACE_ID);
+            built = true;
+        }
+    }
+    return built;
 }
 
 // E:\gamedcs\ai_player.cpp:1620
 // arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
-// source order after build_markets. size 762->478 (0.63). Retail 0x2ac20.
+// source order after build_markets. Retail 0x2ac20. Counts the player's
+// marketplaces, caps the trade efficiency at ten, then sells every resource
+// surplus down against every deficit through get_trade_ratio.
 VA(0x0042ac20, 0x1DE)  // linkorder + arity + anchor-callee calculate_demand, dc 0x30a70
 void type_AI_player::do_resource_trade(int* supply)
 {
-    // @stub
+    int market_count = 0;
+    playerData* player = &gpGame->players[team];
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (current_town->active & bitNumber[MARKETPLACE_ID])
+            ++market_count;
+    }
+
+    int efficiency = _cpp_min(market_count, 10);
+    if (efficiency == 0)
+        return;
+
+    double market_efficiency = fTradingPostEfficency[efficiency];
+    for (int source = 0; source < 7; ++source) {
+        if (supply[source] <= 0)
+            continue;
+        for (int dest = 0; dest < 7; ++dest) {
+            if (supply[dest] >= 0)
+                continue;
+            double ratio = get_trade_ratio(game_resource_from_int(source),
+                                           game_resource_from_int(dest),
+                                           market_efficiency);
+            long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
+            long limit = static_cast<long>(
+                static_cast<long>(supply[source] / ratio) * ratio);
+            if (traded > limit)
+                traded = limit;
+            supply[source] -= traded;
+            player->resources[source] -= traded;
+            long cost = static_cast<long>(traded / ratio);
+            supply[dest] += cost;
+            player->resources[dest] += cost;
+            if (supply[dest] > 0)
+                supply[dest] = 0;
+            if (supply[source] <= 0)
+                break;
+        }
+    }
+    calculate_demand();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1686
 // anchor-callee: calls get_total_value + trade_resources + calculate_demand
@@ -2188,16 +2262,60 @@ void type_AI_creature_swapper::add_creatures(
 // add_creatures and value_of_adding_army (all claimed) and is itself called by
 // buy_creatures (claimed). arity ret 4 (this+1: can_take_all), returns long;
 // do_swap/get_swap_value/calculate_improvement inline into it (they stay
-// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Claimed @stub here so the RVA
-// stays in increasing file order between add_creatures and dump_extra_creature;
-// the DC-order carcass stub was removed to avoid a duplicate row.
-#if 0  // @carcass
+// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Placed in file order between
+// add_creatures and dump_extra_creature to keep the RVA strictly increasing.
 VA(0x0042c280, 0x126)  // anchor-callee + arity, dc 0x3166c
-long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
+long type_AI_creature_swapper::do_best_swap(bool can_take_all)
 {
-    // @stub
+    long best_value = 0;
+    short best_army_slot = -1;
+    short best_source_slot = -1;
+    short best_amount = 0;
+    get_alignments();
+
+    for (short source = 0; source < armyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
+        TCreatureType type = adjacent_army->armyTypes[source];
+        if (type == CREATURE_NONE)
+            continue;
+        short count = adjacent_army->numTroops[source];
+        short slot;
+        long value;
+        if (can_take_all) {
+            value = value_of_adding_army(type, count, slot, false);
+        } else {
+            value = value_of_adding_army(type, count, slot, true);
+            if (count > 1) {
+                short reduced_slot;
+                long reduced_value = value_of_adding_army(
+                    type, count - 1, reduced_slot, false);
+                if (reduced_value > value) {
+                    count = count - 1;
+                    value = reduced_value;
+                    slot = reduced_slot;
+                }
+            }
+        }
+        long weighted = improvement * value / 10;
+        if (weighted > best_value) {
+            best_value = weighted;
+            best_source_slot = source;
+            best_army_slot = slot;
+            best_amount = count;
+        }
+    }
+
+    if (best_value <= 0)
+        return best_value;
+
+    TCreatureType swap_type = adjacent_army->armyTypes[best_source_slot];
+    if (static_cast<short>(adjacent_army->numTroops[best_source_slot])
+        == best_amount)
+        adjacent_army->Dismiss(best_source_slot);
+    else
+        adjacent_army->numTroops[best_source_slot] -= best_amount;
+    add_creatures(swap_type, best_amount, best_army_slot);
+    return best_value;
 }
-#endif  // @carcass
 
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;
