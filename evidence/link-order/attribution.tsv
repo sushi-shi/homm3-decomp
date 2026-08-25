@@ -144,6 +144,9 @@ rva	size	unit	current_label	provenance
 0x72db0	64	combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	src-VA+ir
 0x72e90	862	combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	src-VA+ir
 0x731f0	153	combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ	src-VA+ir
+0x74680	12	command	game_22a1f0_sub00_74680	working-label
+0x74a00	408	command	game_74d80_sub14_74a00	working-label
+0x74ba0	74	command	game_93930_sub01_74ba0	working-label
 0x74d80	4429	command	game_true_74d80	working-label
 0x76200	225	command	?auto_resolve_combat@combatManager@@QAEXXZ	src-VA+ir
 0x762f0	246	command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	src-VA+ir
@@ -157,7 +160,7 @@ rva	size	unit	current_label	provenance
 0x78890	110	command	?ResetMouse@combatManager@@QAEXXZ	src-VA+ir
 0x78900	656	command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	src-VA+ir
 0x78b90	485	command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	src-VA+ir
-0x78d80	4180	command	calls_timeGetTime_78d80	working-label
+0x78d80	4180	command	combatManager_ProcessNextAction	src-VA
 0x79de0	335	command	?ResetCyclingCreatures@combatManager@@QAEXXZ	src-VA+ir
 0x79f30	139	command	?ResetCycleTimers@combatManager@@QAEXXZ	src-VA+ir
 0x79fc0	305	command	?SetCombatGrid@combatManager@@QAEXHHHE@Z	src-VA+ir

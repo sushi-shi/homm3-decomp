@@ -30,7 +30,7 @@ combatcontrolsubwindow	0x6b610	0x6dc2b	9755	13	0	21	13	8
 combatoptionswindow	0x6e3b0	0x6feda	6954	4	0	5	4	1
 combatresultswindow	0x702d0	0x71c14	6468	6	0	7	6	1
 combatwindow	0x72010	0x732e2	4818	8	0	18	8	10
-command	0x74bf0	0x7a2cd	22237	11	0	28	11	17
+command	0x73c00	0x7a2cd	26317	16	0	36	16	20
 creature_bank	0x7aad0	0x7ab2e	94	1	0	1	1	0
 creaturetype	0x7b120	0x7b211	241	3	0	3	3	0
 csequence	0x7b840	0x7b8c6	134	3	0	3	3	0
