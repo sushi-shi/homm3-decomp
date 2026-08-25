@@ -1293,12 +1293,8 @@ void CHostWaitDlg::Wait(unsigned long forWho)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:465
-DC_ONLY(0x147828, 0x38)
-void* CHostWaitDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
+VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
 
 // E:\gamedcs\singleselectionwindow.cpp:465
 DC_ONLY(0x147860, 0x1C)
@@ -1790,12 +1786,8 @@ void CSaveGameEdit::~CSaveGameEdit()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:2632
-DC_ONLY(0x1495e4, 0x38)
-void* TSingleSelectionWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
+VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
 
 // E:\gamedcs\singleselectionwindow.cpp:4071
 DC_ONLY(0x14961c, 0x38)
