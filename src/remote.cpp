@@ -239,49 +239,49 @@ void CDPlayHeroes::DestroyMsgQueue()
 }
 
 // E:\gamedcs\remote.cpp:179
-DC_ONLY(0x11bad8, 0x48)
+VA(0x00552530, 0x20E)  // anchor-vtable slot55 (0x640d04+0xdc) + dc-order-map, dc 0x11bad8
 unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:192
-DC_ONLY(0x11bb20, 0x20)
+VA(0x00552740, 0x1DE)  // anchor-vtable slot50 (0x640d04+0xc8) + dc-order-map, dc 0x11bb20
 unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:204
-DC_ONLY(0x11bb40, 0x20)
+VA(0x00552920, 0x216)  // anchor-vtable slot57 (0x640d04+0xe4) + playerDroppedLog string + dc-order-map, dc 0x11bb40
 unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:214
-DC_ONLY(0x11bb60, 0x3A)
+VA(0x00552B40, 0x14)  // anchor-vtable slot56 (0x640d04+0xe0), thunk to base slot71 (0x4981e0) + dc-order-map, dc 0x11bb60
 unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:222
-DC_ONLY(0x11bb9c, 0xEC)
+VA(0x00552B60, 0x24B)  // anchor-arity (ret 0, thiscall) + dplay-receive-error + calls HandleLowLevelMsg + dc-order-map, dc 0x11bb9c
 unsigned char CDPlayHeroes::PollRemote()
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:304
-DC_ONLY(0x11bc88, 0xD2)
+VA(0x00552DB0, 0x28F)  // anchor-arity (ret 4, CNetMsg*) + calls SendIt/AddChat/GetPlayerName + dc-order-map, dc 0x11bc88
 unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\remote.cpp:350
-DC_ONLY(0x11bd5c, 0xF4)
+VA(0x00553040, 0x1D1)  // anchor-arity (ret 8) + uncompress@16 call + dc-order-map, dc 0x11bd5c
 CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed)
 {
     // @stub
