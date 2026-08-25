@@ -70,13 +70,6 @@ void TMultiPlayerWindow::Update()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1336
-DC_ONLY(0x100c1c, 0x28)
-int TMultiPlayerWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:1344
 DC_ONLY(0x100c44, 0x5A)
 void TMultiPlayerWindow::RefreshSessions()
@@ -430,6 +423,14 @@ void TMultiPlayerWindow::~TMultiPlayerWindow()
 
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
+                      // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
+                      // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
+int TMultiPlayerWindow::WindowHandler(message* msg)
 {
     // @stub
 }
