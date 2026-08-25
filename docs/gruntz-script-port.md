@@ -260,6 +260,31 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice equipped-slot refresh pair adds 409 exact
+  retail bytes.** The 51-byte `update_all_slots` is fixed by its sole callee
+  and two artifact-mode callers. Complete selects eighteen or nineteen
+  equipped positions with the established `gpGame->f_1f698 >= 2` Shadow of
+  Death gate, then forwards each index to the adjacent one-slot updater; the
+  direct loop was exact on its first spelling.
+
+  The 358-byte `update_slot` is independently called from twelve retail
+  sites, and Dreamcast supplies its name, ABI, helper graph and one local
+  `type_artifact`. Retail proves the packed hero artifact read at +0x12d and
+  the sacrifice window's next two vector `_First` loads at +0xf0/+0x100,
+  admitting `slot_back_widgets` and `slot_widgets` at +0xec/+0xfc. A held
+  artifact legal in the slot moves the equipped icon to the back layer and
+  paints drop frame 0x90 in front; otherwise the front layer shows the
+  equipped artifact, with an empty slot taking its name from
+  `akArtifactSlotTraits`. The last fallback is after the held-artifact
+  branch, not inside its `else`: that retail edge lets VC6 share one
+  `set_help_text` tail and closes all twelve blocks. One explicit
+  `inline_depth(0)` preserves the nested `set_visible` edge that retail kept
+  after expanding `update_artifact_widget`; the reduced live TU otherwise
+  has spare inline budget that the original 211-function compiland did not.
+  The synchronized checkpoint reaches **1948/2362 linked exact**,
+  **1879/2293 game exact**, **96.58% game fuzzy** and **43.78% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the sacrifice artifact-offering chain adds 810 exact
   retail bytes.** Dreamcast supplies the names, signatures and order of the
   static `convert_with_commas` / `update_offering` pair; retail independently

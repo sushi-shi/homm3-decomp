@@ -4,6 +4,7 @@
 #define HOMM3_WIDGET_SET_VISIBLE_DECLS
 #include <va.h>
 #include "sacrifice_window.h"
+#include "game.h"
 #include "message.h"
 #include "misc.h"
 #include "sample.h"
@@ -1564,6 +1565,72 @@ std::string convert_with_commas(long value)
     return result;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:800
+// The source helper precedes update_slot; retail deferred its retained
+// out-of-line COMDAT to 0x5639e0. Its annotated redeclaration therefore sits
+// at that retail position below, while the real definition stays here in the
+// source order proved by the Dreamcast line map.
+void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
+{
+    if (artifact.artifactId == ARTIFACT_NONE) {
+        slot_widget->set_visible(0);
+        slot_widget->set_help_text(0, 0, 1);
+    } else {
+        slot_widget->SetIconFrame(artifact.artifactId);
+        slot_widget->set_visible(1);
+        slot_widget->set_help_text(
+            akArtifactTraits[artifact.artifactId].name, 0, 1);
+    }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:841
+// update_all_slots and eleven other retail callers fix this one-slot
+// updater. The equipped record at hero +0x12d and the two widget-vector
+// _First loads at window +0xf0/+0x100 independently prove every object
+// access. A held artifact that is legal in this slot moves the real icon to
+// the back layer and shows frame 0x90 on the drop target; otherwise the front
+// layer shows the equipped artifact or the slot's ARTSLOTS.TXT name.
+VA(0x00562840, 0x166)  // caller/callee graph + dc name/ABI, dc 0x125b3c
+void type_sacrifice_window::update_slot(long slot)
+{
+    type_artifact artifact = current_hero->equipped[slot];
+
+    if (holding_artifact.artifactId != ARTIFACT_NONE
+        && current_hero->HeroFn_004E2840(
+               holding_artifact.artifactId, slot)) {
+        iconWidget* slot_widget = slot_back_widgets[slot];
+        if (artifact.artifactId == ARTIFACT_NONE) {
+            slot_widget->send_message(widget::WIDGET_CLEAR_STATUS,
+                                      widget::WIDGET_DRAWN);
+            slot_widget->set_help_text(0, 0, 1);
+        } else {
+            slot_widget->SetIconFrame(artifact.artifactId);
+            // In retail this is nested inside the helper expansion above,
+            // after its first set_visible site spent the available depth.
+            // The reduced live TU lacks that earlier inline context, so pin
+            // this one nested edge at the same out-of-line boundary.
+#pragma inline_depth(0)
+            slot_widget->set_visible(1);
+#pragma inline_depth()
+            slot_widget->set_help_text(
+                akArtifactTraits[artifact.artifactId].name, 0, 1);
+        }
+
+        slot_widgets[slot]->set_visible(1);
+        slot_widgets[slot]->SetIconFrame(SACRIFICE_ARTIFACT_SLOT_DROP_FRAME);
+        slot_widgets[slot]->set_help_text(
+            slot_back_widgets[slot]->get_help_text(), 0, 1);
+    } else {
+        slot_back_widgets[slot]->set_visible(0);
+        update_artifact_widget(slot_widgets[slot], artifact);
+    }
+
+    if (artifact.artifactId == ARTIFACT_NONE) {
+        slot_widgets[slot]->set_help_text(
+            akArtifactSlotTraits[slot].name, 0, 1);
+    }
+}
+
 // Header-inline on Dreamcast; the Complete linker retained the copy emitted
 // in this compiland. Its DC signature and the HD masked identity agree.
 VA(0x005629b0, 0x22)  // hd-crossbuild; Widget.h:263, dc 0x56df8
@@ -1573,6 +1640,18 @@ void widget::set_visible(unsigned char arg)
         send_message(WIDGET_SET_STATUS, WIDGET_DRAWN);
     else
         send_message(WIDGET_CLEAR_STATUS, WIDGET_DRAWN);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:865
+// Its only callee is the adjacent one-slot updater, and both retail callers
+// are artifact-mode paths. Complete adds the nineteenth SoD equipment slot
+// exactly when the established map-version field reaches two.
+VA(0x005629e0, 0x33)  // body/call graph + dc name/signature, dc 0x125c34
+void type_sacrifice_window::update_all_slots()
+{
+    long slot_count = gpGame->f_1f698 >= 2 ? 19 : 18;
+    for (long slot = 0; slot < slot_count; ++slot)
+        update_slot(slot);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:821
@@ -1613,26 +1692,10 @@ void update_offering(iconWidget* artifact_widget, textWidget* value_widget,
     }
 }
 
-// E:\gamedcs\sacrifice_window.cpp:800
-// The 8-byte by-value argument and the artifact-traits name lookup fix this
-// free helper. An empty slot hides the widget and clears both help strings;
-// an occupied slot selects its artifact frame, shows it and installs the
-// artifact's display name as rollover text.
+// The retained copy of the source helper above. The 8-byte by-value argument
+// and artifact-traits lookup independently fix this exact retail COMDAT.
 VA(0x005639e0, 0x5b)  // linkorder + body/ABI, dc 0x125a4c
-void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
-{
-    if (artifact.artifactId == -1) {
-        slot_widget->send_message(widget::WIDGET_CLEAR_STATUS,
-                                  widget::WIDGET_DRAWN);
-        slot_widget->set_help_text(0, 0, 1);
-    } else {
-        slot_widget->SetIconFrame(artifact.artifactId);
-        slot_widget->send_message(widget::WIDGET_SET_STATUS,
-                                  widget::WIDGET_DRAWN);
-        slot_widget->set_help_text(
-            akArtifactTraits[artifact.artifactId].name, 0, 1);
-    }
-}
+void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact);
 
 // E:\gamedcs\sacrifice_window.cpp:1189
 // The three indexed _First loads independently prove the adjacent vector
