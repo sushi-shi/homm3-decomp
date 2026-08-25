@@ -472,12 +472,22 @@ textWidget* TMultiPlayerWindow::GetRolloverWidget()
     return RolloverWidget;
 }
 
+// E:\gamedcs\multiplayerwindow.cpp:465
+VA(0x005108a0, 0x4E)  // scalar-dtor callee + vtable 0x6400f4, dc 0x102718
+CMPInputDlg::~CMPInputDlg()
+{
+    delete_widgets();
+}
+
 // E:\gamedcs\multiplayerwindow.cpp:505 - vtable 0x6400f4 slot 13.
 VA(0x00510970, 0x4)
 textWidget* CMPInputDlg::GetRolloverWidget()
 {
     return rollover;
 }
+
+// E:\gamedcs\multiplayerwindow.cpp:523
+VA_COMPGEN(0x005109e0, 0x21, SCALAR_DELETING_DTOR, CMPInputDlg)
 
 // E:\gamedcs\multiplayerwindow.cpp:700
 VA(0x005123d0, 0x4E)  // retail vtable teardown, dc 0x102c28

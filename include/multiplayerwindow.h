@@ -109,7 +109,7 @@ public:
     virtual ~CMPInputDlg();
     virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);
     virtual textWidget* GetRolloverWidget();
-    virtual void UpdateOK();
+    void UpdateOK();
     unsigned char OnOK();
     void DisableOK();
 };
