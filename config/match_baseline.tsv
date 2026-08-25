@@ -223,6 +223,7 @@ ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAFE@Z	100.0000	100.0000
 ai_player	??1type_AI_creature_purchaser@@QAE@XZ	100.0000	100.0000	100.0000	0x286e0
 ai_player	?AI_consolidate_army@@YIXPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x2d870
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
+ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
@@ -261,7 +262,6 @@ ai_player	mark_danger_zones	0.0000	0.0000	0.0000	0x2de50
 ai_player	mark_destinations	0.0000	0.0000	0.0000	0x2f570
 ai_player	net_value_of_location	0.0000	0.0000	0.0000	0x2f980
 ai_player	split_armies	0.0000	0.0000	0.0000	0x2db20
-ai_player	type_AI_player_build_markets	0.0000	0.0000	0.0000	0x2ab40
 ai_player	type_AI_player_buy_creatures	0.0000	0.0000	0.0000	0x2ba60
 ai_player	type_AI_player_buy_mage_guild	0.0000	0.0000	0.0000	0x2beb0
 ai_player	type_AI_player_can_trade_resources	0.0000	0.0000	0.0000	0x2a580

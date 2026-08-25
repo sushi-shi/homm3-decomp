@@ -73,6 +73,10 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
 const std::bitset<9>& ArmyGrpFn_0044A460();
+// castle.cpp's affordability gate (retail 0x5b6be0): /Gr fastcall, town* in
+// ECX and the building id in EDX. Declared file-locally rather than pulling in
+// castle.h, matching the AI_resource_cost pattern above.
+int CanBuy(const town* currTown, int buildingId);
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -1257,14 +1261,33 @@ unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1587
 // arity: ret 4 (this+1), returns al (uchar); reads this+0 short (player id) and
-// player record at gpGame+0x20ad0; size 154->209 (1.36). Retail 0x2ab40.
+// player record at gpGame+0x20ad0. Retail 0x2ab40. Builds a marketplace in
+// each of the player's towns while affordable; a CanBuy failure stops the run.
 VA(0x0042ab40, 0xD1)  // linkorder + arity/return, dc 0x309d4
-unsigned char type_AI_player::build_markets(int* supply)
+bool type_AI_player::build_markets(int* supply)
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    bool built = false;
+    if (supply[0] < 0 || player->turnProductionResource[0] <= 0)
+        return false;
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (!(current_town->active & bitNumber[MARKETPLACE_ID])
+            && current_town->can_build(MARKETPLACE_ID)) {
+            if (!CanBuy(current_town, MARKETPLACE_ID))
+                return built;
+            current_town->buy_building(MARKETPLACE_ID);
+            built = true;
+        }
+    }
+    return built;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1620
 // arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
