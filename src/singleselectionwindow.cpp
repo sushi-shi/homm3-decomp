@@ -3,6 +3,7 @@
 // 265 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "singleselectionwindow.h"
+#include "singleselectionwindow_priv.h"
 
 #if 0  // @carcass: untouched bodies outside the admitted retail function
 
@@ -313,19 +314,40 @@ void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
 // --- vtable (textEntryWidget 0x242d40 / slider 0x241d50 / textWidget 0x242db0).
 // --- Bodies unreconstructed (RoE-vs-SoD divergent); dc offsets retained.
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1575
 VA(0x0057c9d0, 0x2A)  // anchor-vtable CChatSlider vtbl 0x241b8c slot13 (SetResolution override), dc 0x148ad8
 void CChatSlider::SetResolution(int num)
 {
-    // @stub
+    if (num > 0)
+        numStates = num;
+    else
+        numStates = 1;
+    if (numStates < currentState) {
+        currentState = numStates;
+        oldState = numStates;
+    }
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1589
 VA(0x0057ca00, 0x43)  // anchor-vtable CChatSlider vtbl 0x241b8c slot14 (SetState override), dc 0x148b1c
 void CChatSlider::SetState(int state)
 {
-    // @stub
+    int n = numStates;
+    if (state >= n)
+        state = n - 1;
+    if (state < 0)
+        state = 0;
+    currentState = state;
+    oldState = state;
+    if (n <= 1)
+        knobPos = 0x10;
+    else
+        knobPos = knobRange * state / (n - 1) + 0x10;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1675
 VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget vtbl 0x241bdc slot4 (Draw override vs textWidget base), dc 0x148df4
