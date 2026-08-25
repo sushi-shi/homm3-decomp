@@ -44,7 +44,9 @@ enum ESacrificeArtifactSlotFrame {
 
 enum ESacrificeGeneralText {
     SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
-    SACRIFICE_GENERAL_TEXT_CREATURE = 482
+    SACRIFICE_GENERAL_TEXT_CREATURE = 482,
+    SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE = 484,
+    SACRIFICE_GENERAL_TEXT_CREATURE_NAME = 485
 };
 
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8

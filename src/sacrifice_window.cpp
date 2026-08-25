@@ -13,6 +13,7 @@
 #include "slider.h"
 #include "textresource.h"
 #include "soundmgr.h"
+#include "viewarmywindow.h"
 #include "winmgr.h"
 
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
@@ -2100,6 +2101,76 @@ int type_sacrifice_window::sacrifice_artifacts(message& msg)
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1721
+// The army-slot widget is the sole retail caller and forwards the slot plus
+// its right-click/left-pane bytes unchanged. Retail proves both source arms:
+// a left click changes the selected offering and slider bounds, while a
+// repeated or right click opens the creature detail window.
+VA(0x00564fe0, 0x394)  // anchor-caller + dc name/signature/order, dc 0x1270f0
+void type_sacrifice_window::creature_click(
+    long slot, unsigned char right_click, unsigned char left_pane)
+{
+    if (right_click || slot == current_creature.group || slot < 0) {
+        if (slot < 0)
+            slot = current_creature.group;
+        if (slot < 0) {
+            if (right_click) {
+                NormalDialog(
+                    gpGeneralText->GetText(
+                        SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE),
+                    4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            }
+            return;
+        }
+
+        TCreatureType creature_type = current_hero->army.armyTypes[slot];
+        long amount = creature_offerings[slot].amount;
+        if (left_pane)
+            amount = current_hero->army.numTroops[slot] - amount;
+        if (creature_type != CREATURE_NONE && amount > 0) {
+            TViewArmyWindow view_army_window(
+                creature_type, 0x77, 0x20,
+                static_cast<unsigned char>(!right_click));
+            view_army_window.CenterWindow(-1, -1);
+            if (right_click)
+                view_army_window.QuickView();
+            else
+                view_army_window.DoModal();
+        }
+    } else {
+        if (current_creature.group >= 0) {
+            creature_offerings[current_creature.group].field_10->set_visible(0);
+            creature_offerings[current_creature.group].field_04->set_visible(0);
+        }
+
+        current_creature.group = slot;
+        current_creature.amount = creature_offerings[slot].amount;
+        update_creature_offering(&current_creature);
+        update_creature_offering(&creature_offerings[slot]);
+
+        if (current_hero->army.armyTypes[slot] == CREATURE_NONE) {
+            creature_name_widget->set_visible(0);
+        } else {
+            std::string buffer;
+            buffer = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_CREATURE_NAME),
+                GetArmyName(current_hero->army.armyTypes[slot], 0));
+            creature_name_widget->SetText(buffer.c_str());
+            creature_name_widget->set_visible(1);
+            creature_offerings[slot].field_10->set_visible(1);
+            creature_offerings[slot].field_04->set_visible(1);
+        }
+
+        long maximum = get_max_amount(slot);
+        creature_slider->SetResolution(maximum + 1);
+        creature_slider->SetState(current_creature.amount);
+        creature_slider->enable(maximum > 0);
+        max_creatures_button->enable(maximum > 0);
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
