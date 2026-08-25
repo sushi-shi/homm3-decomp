@@ -2510,6 +2510,7 @@ swapmgr	?Close@swapManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1aed20
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
 swapmgr	?Reset@swapManager@@QAEXXZ	68.0294	68.0294	68.0294	0x1ae5b0
 swapmgr	?UpdateArrows@TSwapWindow@@QAEXXZ	98.2667	98.2667	98.2667	0x1ae430
+swapmgr	?UpdateBackpack@swapManager@@QAEXH@Z	93.2778	93.2778	93.2778	0x1af150
 swapmgr	CSwapManagerChatEdit_SendChat	0.0000	0.0000	0.0000	0x1ae370
 swapmgr	CSwapMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x1aeb00
 swapmgr	TSwapWindow_TSwapWindow	0.0000	0.0000	0.0000	0x1aaa80
@@ -2523,7 +2524,6 @@ swapmgr	swapManager_Open	0.0000	0.0000	0.0000	0x1ae750
 swapmgr	swapManager_SendHeroUpdate	0.0000	0.0000	0.0000	0x1afbf0
 swapmgr	swapManager_SetRolloverText	0.0000	0.0000	0.0000	0x1b08b0
 swapmgr	swapManager_SwapMons	0.0000	0.0000	0.0000	0x1b0da0
-swapmgr	swapManager_UpdateBackpack	0.0000	0.0000	0.0000	0x1af150
 swapmgr	swapManager_UpdateSlot	0.0000	0.0000	0.0000	0x1aef00
 swapmgr	swapManager_handle_artifact_click	0.0000	0.0000	0.0000	0x1af590
 swapmgr	swapManager_handle_backpack_click	0.0000	0.0000	0.0000	0x1af990
