@@ -13,6 +13,7 @@
 #include "remote.h"
 #include "widget.h"
 #include "winmgr.h"
+#include "kb.h"
 
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
 DATA(0x006a3d30) swapManager* gpSwapManager;
@@ -220,14 +221,64 @@ void swapManager::Close()
     gpAdvManager->Reseed(0, 0);
 }
 
-#if 0  // @carcass -- located, not reconstructed (RVA order)
-
 // E:\gamedcs\swapmgr.cpp:816
 VA(0x005aedc0, 0x140)  // corroborates reads selection +0x48/+0x50 then Bitmap816::Draw/UpdateScreen, ret 0, dc 0x15cadc
 void swapManager::DrawSelector()
 {
-    // @stub
+    int x = 0;
+    int y = 0;
+
+    if (field_48 == -1)
+        return;
+    if (field_50 == -1)
+        return;
+
+    if (gUnnamed6a3d08)
+    {
+        int selectedType = heroes[field_48]->army.armies[field_50];
+        x = 0x43;
+        for (int hero = 0; hero < 2; hero++)
+        {
+            for (int slot = 0; slot < 7; slot++, x += 0x24)
+            {
+                if (!(hero == field_48 && slot == field_50))
+                {
+                    int creature = heroes[hero]->army.armies[slot];
+                    if (creature == -1 || creature == selectedType)
+                    {
+                        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap, x - 2, 0x81, true);
+                        gpWindowManager->UpdateScreen(x - 2, 0x81, 0x24, 0x24);
+                    }
+                }
+            }
+            x = 0x1e5;
+        }
+    }
+    else
+    {
+        switch (field_48)
+        {
+        case kSwapSelectLeft:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x41;
+                y = 0x81;
+            }
+            break;
+        case kSwapSelectRight:
+            if (field_58 == 0)
+            {
+                x = field_50 * 36 + 0x1e3;
+                y = 0x81;
+            }
+            break;
+        }
+        border->Draw(0, 0, 0x24, 0x24, gpWindowManager->screenBitmap, x, y, true);
+        gpWindowManager->UpdateScreen(x, y, 0x24, 0x24);
+    }
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:940
 VA(0x005aef00, 0x24C)  // corroborates heroes[side].artifact[slot] (8B stride @+0x12d), ret 8, dc 0x15cd2c
@@ -236,12 +287,80 @@ void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:1004
+// Residual (93.28%): flow-exact (why-reg flow-distance 0); the 5-slot backpack
+// loop and the four arrow-widget broadcasts are byte-exact. The only delta is
+// the loop's induction-variable binding - retail keeps the backpack byte offset
+// in ebx (stride 8, bound 0x28) with widgetId as a live memory counter, while
+// our CL keeps `i` in ebx (stride 1) and folds widgetId to base+i. A
+// register-homing residual (the documented dominant class here). Tried and
+// rejected: iterating widgetId as the loop var with backpack[widgetId-base]
+// (49.49, the subtraction spills), the by-index form above is the closest.
 VA(0x005af150, 0x157)  // corroborates hero::get_last_backpack_index, ret 4, dc 0x15cea4
 void swapManager::UpdateBackpack(int iHero)
 {
-    // @stub
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    int widgetId = 5 * iHero + 0x59;
+    for (int i = 0; i < 5; i++)
+    {
+        message slotMsg;
+        slotMsg.id = 0;
+        slotMsg.codeX = 0;
+        slotMsg.codeY = 0;
+        slotMsg.qualifier = 0;
+        slotMsg.mouseX = 0;
+        slotMsg.mouseY = 0;
+        slotMsg.extra = 0;
+        slotMsg.window = 0;
+
+        type_artifact art = heroes[iHero]->backpack[i];
+        slotMsg.id = MESSAGE_WIDGET;
+        slotMsg.codeY = widgetId;
+        if (art.artifactId == -1)
+        {
+            slotMsg.codeX = 6;
+        }
+        else
+        {
+            slotMsg.extra = art.artifactId;
+            slotMsg.codeX = 4;
+            parent->BroadcastMessage(&slotMsg);
+            slotMsg.codeX = 5;
+        }
+        slotMsg.extra = 4;
+        parent->BroadcastMessage(&slotMsg);
+        widgetId++;
+    }
+
+    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 > 5) ? 6 : 5;
+    msg.extra = 0x1000;
+    msg.codeY = iHero + 0x63;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = iHero + 0x65;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 <= 5) ? 6 : 5;
+    msg.extra = 2;
+    msg.codeY = iHero + 0x63;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = iHero + 0x65;
+    parent->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:1031
 VA(0x005af2b0, 0x2DD)  // anchor-callee SplitArmy/ViewArmy + SwapMons(0x5b0da0), ret 0x10, dc 0x15cf54
@@ -301,12 +420,84 @@ void swapManager::SwapMons()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:962
 VA(0x005b0ef0, 0x1D4)  // corroborates loops artifact slots calling UpdateSlot(0x5aef00) + sprintf hero names, ret 0, dc 0x15cdbc
 void swapManager::update_all_slots()
 {
-    // @stub
+    message msg;
+    msg.id = MESSAGE_WIDGET;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+
+    int i;
+    for (int side = 0; side < 2; side++)
+    {
+        msg.codeX = 3;
+        msg.extraText = gText;
+        for (i = 0; i < 4; i++)
+        {
+            msg.codeY = 3 + side * 5 + i;
+            signed char stat = heroes[side]->stats[i];
+            int val;
+            if (stat > 99)
+                val = 99;
+            else if (stat > 0)
+                val = stat;
+            else
+                val = (i >= 2);
+            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), val);
+            parent->BroadcastMessage(&msg);
+        }
+        for (i = 0; i < 7; i++)
+        {
+            msg.codeY = 0xd + side * 7 + i;
+            if (heroes[side]->army.armies[i] == -1)
+            {
+                msg.codeX = 6;
+                msg.extra = 4;
+            }
+            else
+            {
+                msg.codeX = 5;
+                msg.extra = 4;
+                parent->BroadcastMessage(&msg);
+                msg.codeX = 4;
+                msg.extra = heroes[side]->army.armies[i] + 2;
+            }
+            parent->BroadcastMessage(&msg);
+        }
+        for (i = 0; i < 7; i++)
+        {
+            msg.codeY = 0x41 + side * 7 + i;
+            if (heroes[side]->army.armies[i] == -1)
+            {
+                msg.codeX = 6;
+                msg.extra = 4;
+            }
+            else
+            {
+                msg.codeX = 5;
+                msg.extra = 4;
+                parent->BroadcastMessage(&msg);
+                msg.codeX = 3;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        heroes[side]->army.numTroops[i]);
+                msg.extraText = gText;
+            }
+            parent->BroadcastMessage(&msg);
+        }
+    }
+
+    for (int iHero = 0; iHero < 2; iHero++)
+        for (int slot = 0; slot < 0x13; slot++)
+            UpdateSlot(iHero, slot);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:2165
 VA(0x005b10d0, 0x2A8)  // anchor-callee hero::rotate_backpack_left/right + UpdateBackpack/SendHeroUpdate, ret 8, dc 0x15ec58
