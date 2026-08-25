@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice creature-icon grid reproduces all 1,063
+  retail bytes.** The helper is the sole call target from
+  `create_creature_widgets`; its position in the Dreamcast roster and
+  CodeView signature identify it as
+  `type_sacrifice_window::create_creature_icons` at 0x561f70. Complete
+  independently proves the 83-by-98 grid stride, small-font count labels,
+  HELP.TXT row 13, case-distinct `twcrport.def` / `TwCrPort.def` portraits,
+  selection frame and all six widget-vector insertions for each cell.
+
+  Both `type_army_slot_widget` constructions are expanded at this site, so
+  their base `iconWidget` arguments and the derived slot/left-pane stores are
+  byte-proven even though no retained constructor body exists to claim. The
+  natural nested-loop reconstruction reached 99.81% with all 34 semantic
+  blocks exact. VC6's remaining register-homing difference was resolved by
+  restoring the declaration order `count`, `text_x`, `text_y`: the long-lived
+  count occupies EAX while the front end's reverse pseudo walk assigns the
+  two coordinate initializers to retail's EDX/ECX pair. The synchronized
+  checkpoint reaches **1968/2386 linked exact**, **1899/2317 game exact**,
+  **96.60% game fuzzy** and **44.43% executable coverage**; the full ratchet,
+  banked-row, claim, single-view and zero-debt cleanliness gates pass.
+
 - **2026-08-25 — the sacrifice-window constructor reproduces all 1,396
   retail bytes.** Its direct calls to the next two large retail rows, in the
   Dreamcast roster's `create_artifact_widgets` / `create_creature_widgets`

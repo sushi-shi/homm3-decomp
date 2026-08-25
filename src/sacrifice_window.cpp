@@ -1597,6 +1597,20 @@ unsigned char type_army_slot_widget::handle_click(
     return 0;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:263
+// Complete expands both calls in create_creature_icons and retains no
+// separately claimable copy. The base constructor arguments and the three
+// trailing stores are byte-proven by those two expansions.
+type_army_slot_widget::type_army_slot_widget(
+    long new_x, long new_y, long new_w, long new_h, long new_slot,
+    long new_id, const char* image, unsigned char new_left_pane)
+    : iconWidget(new_x, new_y, new_w, new_h, new_id, image,
+                 0, 0, 0, 0, 16)
+{
+    slot = new_slot;
+    left_pane = new_left_pane;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:287
 // The two direct calls after the 150-entry Widgets reserve identify the
 // following artifact/creature builder rows in the Dreamcast roster's own
@@ -1672,6 +1686,59 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
         else
             MemError();
     }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:699
+// The creature builder's sole retail caller, the two inlined army-slot
+// constructors and the Dreamcast name/signature/order identify this row.
+// Complete proves both 83x98 grids, the paired case-sensitive portrait
+// resources, help row 13, all six vector insertions per cell and the running
+// item/count result.
+VA(0x00561f70, 0x427)  // anchor-caller + dc name/signature/order, dc 0x1255cc
+long type_sacrifice_window::create_creature_icons(
+    long icon_x, long icon_y, long columns, long rows, long item_number,
+    long& widget_id, iconWidget** icon_widgets,
+    iconWidget** selection_widgets, textWidget** text_widgets,
+    unsigned char left_pane)
+{
+    long count = 0;
+    long text_x = icon_x - 4;
+    long text_y = icon_y + 68;
+
+    for (long row = 0; row < rows; ++row) {
+        for (long column = 0; column < columns; ++column) {
+            text_widgets[count] = new textWidget(
+                text_x, text_y, 66, 16, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+            text_widgets[count]->set_help_text(
+                gSacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLOT].text,
+                0, 1);
+            Widgets.push_back(text_widgets[count]);
+            creature_widgets.push_back(text_widgets[count]);
+
+            icon_widgets[count] = new type_army_slot_widget(
+                icon_x, icon_y, 58, 64, item_number + count, widget_id++,
+                "twcrport.def", left_pane);
+            Widgets.push_back(icon_widgets[count]);
+            creature_widgets.push_back(icon_widgets[count]);
+
+            selection_widgets[count] = new type_army_slot_widget(
+                icon_x, icon_y, 58, 64, item_number + count, widget_id++,
+                "TwCrPort.def", left_pane);
+            Widgets.push_back(selection_widgets[count]);
+            creature_widgets.push_back(selection_widgets[count]);
+            selection_widgets[count]->SetIconFrame(1);
+
+            ++count;
+            text_x += 83;
+            icon_x += 83;
+        }
+        text_x -= columns * 83;
+        icon_x -= columns * 83;
+        text_y += 98;
+        icon_y += 98;
+    }
+    return count;
 }
 
 // Vtable 0x641620 slot 0 is the canonical VC6 deleting wrapper for the

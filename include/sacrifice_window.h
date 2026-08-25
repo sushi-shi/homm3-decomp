@@ -40,6 +40,7 @@ enum ESacrificeWindowHelp {
     SACRIFICE_HELP_MAX_CREATURES = 10,
     SACRIFICE_HELP_ALL_CREATURES = 11,
     SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON = 12,
+    SACRIFICE_HELP_CREATURE_SLOT = 13,
     SACRIFICE_HELP_EMPTY_ARTIFACT_OFFERING = 14,
     SACRIFICE_HELP_ARTIFACT_OFFERING_VALUE = 15,
     SACRIFICE_HELP_SACRIFICE_ARTIFACTS = 16,
@@ -178,6 +179,11 @@ protected:
 private:
     void create_artifact_widgets(long& widget_id, int cur_player);
     void create_creature_widgets(long& widget_id, int cur_player);
+    long create_creature_icons(
+        long icon_x, long icon_y, long columns, long rows,
+        long item_number, long& widget_id, iconWidget** icon_widgets,
+        iconWidget** selection_widgets, textWidget** text_widgets,
+        unsigned char left_pane);
     void pick_up_artifact(type_artifact artifact, long slot,
                           unsigned char new_artifact);
     void put_down_artifact(unsigned char change_experience);
@@ -241,6 +247,10 @@ class type_army_slot_widget : public iconWidget {
 public:
     long slot;
     unsigned char left_pane;
+
+    type_army_slot_widget(long new_x, long new_y, long new_w, long new_h,
+                          long new_slot, long new_id, const char* image,
+                          unsigned char new_left_pane);
 
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);
