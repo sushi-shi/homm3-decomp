@@ -2417,6 +2417,7 @@ tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
+tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
 trees	@_tr_flush_block@16	100.0000	100.0000	100.0000	0x2071c0
 trees	@_tr_init@4	100.0000	100.0000	100.0000	0x206dd0

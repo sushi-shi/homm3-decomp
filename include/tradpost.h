@@ -49,6 +49,7 @@ public:
 
 class TSellArtifactWindow : public CAdvPopup {
 public:
+    void update_sell_artifact_widget(message* msg, long i);
     virtual ~TSellArtifactWindow();
 };
 
