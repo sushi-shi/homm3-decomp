@@ -2709,6 +2709,7 @@ townmgr	?DoTavern@@YIEXZ	96.4800	96.4800	96.4800	0x1d7ec0
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0
 townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0
+townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	99.9592	99.9592	99.9592	0x1d2a40
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
@@ -2749,7 +2750,6 @@ townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0
-townmgr	GetBuildingInfo	0.0000	0.0000	0.0000	0x1d2a40
 townmgr	TThievesGuildWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1c9710
 townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
 townmgr	TThievesGuildWindow_WindowHandler	0.0000	0.0000	0.0000	0x1c9930

@@ -23,6 +23,7 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
+#include "buildinginfo.h"
 #include "button.h"
 #include "castle.h"
 // gpExecutive: TCastleWindow::Recruit needs the global.
@@ -4065,17 +4066,75 @@ void townManager::DoPortalOfSummoning()
 // condition rather than to a nested if: retail's `jl` skips the
 // assignment and leaves the already-chosen hero standing.
 
-// Located, not reconstructed: the building-description formatter. The
-// residual note below already proves it a townmgr.cpp static at 0x5d2a40
-// with fourteen call sites; the delinked PDB even names it GetBuildingInfo.
-#if 0  // @carcass: located, not reconstructed
+// The building-description formatter: fourteen call sites, a townmgr.cpp
+// static. Bands the buildingId exactly as GetBuildingName does, copying the
+// matching description into a local buffer, then (for Rampart's special
+// building 17 and grail 21, when `extended`) appends the town's own custom
+// text via GetText(678)/format_string(GetText(679), ...). Dwellings (>=30)
+// return their description straight. The result is prefixed with the bracketed
+// building name when bIncludeTitle, and returned through gInfoText.
+//
+// Residual (99.96%): BYTE-IDENTICAL - the masked instruction diff is empty.
+// The gap is compgen string-literal reloc naming only: our base emits the
+// pooled "\n\n"/"{%s}\n\n" literals as local ??_C@ COMDATs and the c_str()
+// null fallback as _Nullstr, where the delinked target names them
+// advmgr/townmgr $-compgen symbols and adventureTownRolloverEmptyText. Same
+// class the multiplayerwindow OnWidgetDeselect note calls cosmetic; the sibling
+// castle::GetBuildingName reaches 100.0 because it carries no string literals.
+// The format_string result MUST be an unnamed temporary
+// (`format_string(...).c_str()`), not a named std::string - the named form
+// spills the COW _Ptr to a slot and costs the whole arm (92.94 -> 96.34 was
+// the >=30 sink, 96.34 -> 99.96 was the temporary).
 // E:\gamedcs\townmgr.cpp:5586
 VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
 char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
 {
-    // @stub
+    char buffer[0x1ac];
+    int type = this_town->type;
+
+    if (buildingId < SPECIAL_BUILDING_ID) {
+        if (buildingId == BLACKSMITH_ID)
+            strcpy(buffer, gBuildingDescBlacksmith[type]);
+        else if (buildingId == MARKETPLACE_SILO_ID)
+            strcpy(buffer, gBuildingDescDwelling[type * 11]);
+        else
+            strcpy(buffer, gBuildingDescCommon[buildingId]);
+    } else if (buildingId < DWELLING_0_ID) {
+        strcpy(buffer, gBuildingDescTown[type * 11 + buildingId]);
+        if (type == 1 && extended) {
+            if (buildingId == EXTRA_0_ID) {
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                strcat(buffer, gRampartExtraDesc);
+                goto emit_custom;
+            }
+            if (buildingId == SPECIAL_BUILDING_ID) {
+            emit_custom:
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                if (this_town->field_34 == 0) {
+                    strcat(buffer, gpGeneralText->GetText(678));
+                } else {
+                    strcat(buffer, format_string(
+                                       gpGeneralText->GetText(679),
+                                       this_town->field_34,
+                                       gRampartCustomText[this_town->field_38])
+                                       .c_str());
+                }
+            }
+        }
+    } else {
+        strcpy(gInfoText, gBuildingDescUpgrade[buildingId + type * 14]);
+        return gInfoText;
+    }
+
+    if (bIncludeTitle) {
+        sprintf(gInfoText, DATA_COMPGEN(0x0068c3b8, buildingTitleFormat, "{%s}\n\n"),
+                GetBuildingName(type, buildingId));
+        strcat(gInfoText, buffer);
+    } else {
+        strcpy(gInfoText, buffer);
+    }
+    return gInfoText;
 }
-#endif  // @carcass
 
 // The university record's default set, and this compiland owns the body.
 // Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
