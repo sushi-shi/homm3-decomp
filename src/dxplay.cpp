@@ -458,18 +458,48 @@ unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsi
     return 1;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
-
-
+// Residual (71.8%): all 14 SysMsg* arm bodies and the DPSYS discriminants match;
+// retail lays the dense-range jump-table dispatch FIRST (the null->dwType=-1 path
+// falls straight into its range check) and the sparse compare chain second, where
+// our SP3 CL emits the compare chain as the fall-through. That dispatch-order
+// choice is a VC6 switch-lowering wall - unmoved by ternary vs if/else null guard.
 // E:\gamedcs\dxplay.cpp:617
 VA(0x00497910, 0x180)  // anchor-vtable CDPlay slot43 (ReceiveSystemMsg); dispatches SysMsg slots, dc 0x8a828
 unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
 {
-    // @stub
+    DPMSG_GENERIC* pGeneric = static_cast<DPMSG_GENERIC*>(static_cast<void*>(pMsg->pData));
+    switch (pGeneric ? pGeneric->dwType : 0xFFFFFFFF) {
+    case DPSYS_CREATEPLAYERORGROUP:
+        return SysMsgCreatePlayerOrGroup(static_cast<DPMSG_CREATEPLAYERORGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DESTROYPLAYERORGROUP:
+        return SysMsgDestroyPlayerOrGroup(static_cast<DPMSG_DESTROYPLAYERORGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_ADDPLAYERTOGROUP:
+        return SysMsgAddPlayerToGroup(static_cast<DPMSG_ADDPLAYERTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DELETEPLAYERFROMGROUP:
+        return SysMsgDeletePlayerFromGroup(static_cast<DPMSG_ADDPLAYERTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SESSIONLOST:
+        return SysMsgSessionLost(pGeneric, toID);
+    case DPSYS_HOST:
+        return SysMsgHost(pGeneric, toID);
+    case DPSYS_SETPLAYERORGROUPDATA:
+        return SysMsgSetPlayerOrGroupData(static_cast<DPMSG_SETPLAYERORGROUPDATA*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SETPLAYERORGROUPNAME:
+        return SysMsgSetPlayerOrGroupName(static_cast<DPMSG_SETPLAYERORGROUPNAME*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SETSESSIONDESC:
+        return SysMsgSetSessionDesc(static_cast<DPMSG_SETSESSIONDESC*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_ADDGROUPTOGROUP:
+        return SysMsgAddGroupToGroup(static_cast<DPMSG_ADDGROUPTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DELETEGROUPFROMGROUP:
+        return SysMsgDeleteGroupFromGroup(static_cast<DPMSG_ADDGROUPTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SECUREMESSAGE:
+        return SysMsgSecureMessage(static_cast<DPMSG_SECUREMESSAGE*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_STARTSESSION:
+        return SysMsgStartSession(static_cast<DPMSG_STARTSESSION*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_CHAT:
+        return SysMsgChat(static_cast<DPMSG_CHAT*>(static_cast<void*>(pGeneric)), toID);
+    }
+    return 1;
 }
-
-
-#endif  // @carcass
 
 // E:\gamedcs\dxplay.cpp:654
 VA(0x00497a90, 0x6B)  // anchor-vtable CDPlay slot58 (AddGroupEnum), dc 0x8a9cc
@@ -802,6 +832,10 @@ CDPlayLobby::~CDPlayLobby()
         static_cast<IDirectPlayLobby3A*>(m_lpLobby)->Release();
 }
 
+// Residual (91.7%): the DPAPPLICATIONDESC field set is byte-right, but the
+// scheduler interleaves the guidApplication struct-copy dwords and the curDir
+// pointer stores differently from retail (register-homing / store-scheduling
+// class); measured worse both ways when the assignment order is permuted.
 // E:\gamedcs\dxplay.cpp:1224
 VA(0x004989a0, 0xB7)  // anchor-vtable CDPlayLobby slot62 (RegisterApp); GetCurrentDirectoryA, dc 0x8b60c
 unsigned char CDPlayLobby::RegisterApp(char* appName, char* fileName, char* commandLine, GUID appGuid, char* executableName)
@@ -817,8 +851,8 @@ unsigned char CDPlayLobby::RegisterApp(char* appName, char* fileName, char* comm
     desc.lpszDescriptionW = 0;
     if (!GetCurrentDirectoryA(0x105, curDir))
         return 0;
-    desc.guidApplication = appGuid;
     desc.lpszFilenameA = fileName;
+    desc.guidApplication = appGuid;
     desc.lpszCommandLineA = commandLine;
     desc.lpszPathA = curDir;
     desc.lpszCurrentDirectoryA = curDir;
