@@ -1190,8 +1190,16 @@ long value_of_hall(town* current_town, type_building_id building)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1147 - value_of_building (dc 0x2fdac) promoted to
-// VA(0x00433130) in RVA order below.
+// value_of_building's earlier VA(0x00433130) claim was a misattribution: 0x33130
+// is type_angelic_alliance_artifact::get_value (proven by its artifact type-vftable
+// slot at 0x63b760, re-homed below). value_of_building has no located retail body
+// (likely inlined into purchase_building/get_total_value); kept DC-only.
+// E:\gamedcs\ai_player.cpp:1147
+DC_ONLY(0x2fdac, 0x29c)
+long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:1279
 DC_ONLY(0x30048, 0x106)
@@ -1641,12 +1649,7 @@ long value_of_hiring(town* current_town, hero* candidate, searchArray* search_ar
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:4457
-DC_ONLY(0x35400, 0xBC)
-long total_artifact_value(hero* candidate, long player_id)
-{
-    // @stub
-}
+// total_artifact_value (dc 0x35400) promoted to VA(0x004339e0) in RVA order below.
 
 // consider_hiring (dc 0x354bc) promoted to VA(0x00431800) in RVA order below.
 
@@ -1845,12 +1848,7 @@ long remove_negative_artifacts(hero* our_hero)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5835
-DC_ONLY(0x37898, 0x1C0)
-unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change)
-{
-    // @stub
-}
+// add_artifact (dc 0x37898) promoted to VA(0x00433e20) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:5940
 DC_ONLY(0x37a58, 0x74)
@@ -2952,14 +2950,55 @@ long type_creature_growth_artifact::get_value(const hero* owner, unsigned char e
     // @stub
 }
 
-// value_of_building: retail 0x33130 is the only row calling BOTH
-// armyGroup::get_AI_value AND town::get_army, and value_of_building is the only
-// ai_player DC fn calling both (unique-pair proof); the two other-module fns with
-// that pair - philai MoveHero (calls move_hero/mark_shipyards, absent here) and
-// philai value_of_reinforcing (228B) - are ruled out by callees and size. r=0.93.
-// Arity ret 0xc suggests retail carries a 5th param vs the DC 4-arg signature.
-VA(0x00433130, 0x26f)  // anchor-callee unique-pair (get_AI_value+get_army), dc 0x2fdac
-long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
+// Retail-only artifact-effect get_value virtuals (Complete/SoD added 6 concrete
+// types beyond the DC 18). Each is proven a virtual get_value by its type-vftable
+// slot in .rdata at 0x63b6b0.. (slot 0 = the shared ICF-folded scalar deleting
+// dtor 0x33080, slot 1 = get_value); all are thiscall ret 0xc = get_value(const
+// hero*, bool equipped, bool exact) per NH3API adventure_AI.hpp. Type names are
+// provisional (carve/NH3API elimination) except where noted; the RVA/size and the
+// get_value CATEGORY are vtable-proven. No DC offset (post-DC types).
+VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
+long type_spell_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
+long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// CORRECTION (2026-08-26): 0x33130 was claimed value_of_building on a unique-pair
+// heuristic (it calls armyGroup::get_AI_value AND town::get_army, and DC
+// value_of_building calls both). But 0x33130 is slot 1 of the artifact type-vftable
+// at 0x63b760 - a FREE function can never sit in a vtable - and its body is
+// thiscall ret 0xc reading the owner hero ([ebp+8], id [ecx+0x22]) and scanning
+// the hero's worn artifacts (0x20ad0/0x21620 arrays), the shape of a get_value, not
+// value_of_building's (town*, building_id, ...). By elimination against the 6
+// retail-only concrete types it is the Angelic Alliance combo artifact (623B,
+// army-value-dependent). value_of_building (dc 0x2fdac) has no proven retail body
+// here (likely inlined into purchase_building); withdrawn to DC_ONLY below.
+VA(0x00433130, 0x26f)  // vtable-slot 0x63b760 + get_army/get_AI_value + elimination, retail-only
+long type_angelic_alliance_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
+long type_undead_king_cloak_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x00433520, 0x5a)  // vtable-slot 0x63b77c (provisional type), retail-only
+long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x00433580, 0x13a)  // vtable-slot 0x63b774 (provisional type), retail-only
+long type_statue_of_legion_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -2971,9 +3010,29 @@ long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigne
     // @stub
 }
 
+// total_artifact_value: loops the hero's 0x13 equipped slots calling
+// AI_get_value_of_artifact (0x336c0) and the hero worn/backpack iterators
+// HeroFn_004E2550/004E2840; size 184 ~= DC 188 (r=0.98). ret 8 (4 dwords) vs DC
+// p2 - Complete extended the signature (equipped/exact), same as the other AI
+// artifact-value entries.
+VA(0x004339e0, 0xb8)  // anchor-callee (AI_get_value_of_artifact) + size, dc 0x35400
+long total_artifact_value(const hero* our_hero, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
 // E:\gamedcs\ai_player.cpp:5708
 VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588
 long get_full_value(const hero* our_hero)
+{
+    // @stub
+}
+
+// add_artifact: retail 447B ~= DC 448 (r=0.998); calls hero::equip_artifact,
+// add_to_backpack, get_number_in_backpack, get_full_value - the DC add_artifact
+// callee set. ret 0x18 = 6 stack dwords (type_artifact passed by value spans two).
+VA(0x00433e20, 0x1bf)  // anchor-callee + size (add_to_backpack/equip_artifact), dc 0x37898
+unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change)
 {
     // @stub
 }
