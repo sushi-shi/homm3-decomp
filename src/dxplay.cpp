@@ -621,15 +621,27 @@ void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __
 }
 #endif  // @carcass
 
-// The rows below are DC-evidenced but not yet given retail claims: the CDPlay
-// and CDPlayLobby non-deleting ctors/dtors that retail inlines or that are not
-// yet located; the SysMsg*/HandleSystemLobbyMsg stubs /OPT:ICF folded onto the
-// two representatives claimed above (0x496cd0, 0x4981e0); the CAutoArray Add/
-// Delete/Insert bodies folded with identical instantiations OUTSIDE this gap
-// (0x158410, 0x1125d0, 0x112610); the small value-class ctors/dtors that inline
-// into remote.obj; and the five DirectPlay Enum* callbacks + operator== plus a
-// handful of lobby non-virtuals (TestLobbied, Get/SetConnectionSettings,
-// Connect, Send/ReceiveLobbyMsg) still unlocated among the gap's ret-8 helpers.
+// The rows below are DC-evidenced but not yet given retail claims:
+//  - CDPlay::CDPlay (dc 0x8a074) inlined into the CDPlayLobby ctor (0x498870,
+//    which stores the CDPlay base vtable first).
+//  - SysMsg*/HandleSystemLobbyMsg stubs /OPT:ICF-folded onto the two reps
+//    claimed above (0x496cd0 for slots 44-54, 0x4981e0 for slots 56/57/L71).
+//  - CAutoArray<CDPlayAddressElement>::Add/Delete/Insert (dc 0x8c1e4/0x8c278/
+//    0x8c2b4) folded with identical instantiations OUTSIDE this gap
+//    (0x158410, 0x1125d0, 0x112610) - not resident here.
+//  - CAutoArray<CDPlay{Connection,Group,Player,Session}>::Destroy and the small
+//    value-class ctors/dtors (CDPlaySession/Connection/Msg/Player/Group/
+//    AddressElement) that inline into remote.obj (see the header notes).
+//  - SendStandardLobbyMsg/SendLobbyMsg/ReceiveLobbyMsg (dc 0x8b808/0x8b864/
+//    0x8b8a8): no physical slot in the gap - inlined into their remote.obj
+//    callers (only Connect survived out of line, claimed above at 0x498cd0).
+//  - operator== (dc 0x8bc84): inlined/not located.
+// NEXT LANE - two physical gap functions remain unclaimed inside the span:
+//    0x497790 (33B): frees [this]+0/[this]+4 via scalar delete - ~CDPlayMsg or
+//      CDPlayMsg::Destroy (ICF-folded pair; the scalar delete disagrees with the
+//      header's delete[], resolve before claiming).
+//    0x49a0c0 (249B, ret 4, EH, called from 0x1b500): substantial, unidentified
+//      1-param value-class method/dtor variant.
 
 #if 0  // @carcass -- DC_ONLY, unclaimed (folded / inlined / unlocated)
 // E:\gamedcs\dxplay.cpp:66
