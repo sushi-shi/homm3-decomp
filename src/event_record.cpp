@@ -442,19 +442,47 @@ type_event_record_type type_record_hide_hero::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:654
 VA(0x0049b430, 0xC8)  // anchor-vtable, dc 0x8d52c
-unsigned char type_record_hide_hero::load(void* infile)
+unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+    int hero_id;
+    if (infile->Read(&hero_id, sizeof(hero_id)) != sizeof(hero_id))
+        return 0;
+    current_hero = (hero_id == -1) ? NULL : &gpGame->heroes[hero_id];
+    if (infile->Read(&owner, 1) != 1)
+        return 0;
+    if (infile->Read(&field_0d, 1) != 1)
+        return 0;
+    if (field_0d < 0) {
+        flag = 0;
+    } else {
+        flag = (static_cast<unsigned>(field_0d) >> 6) & 1;
+        field_0d &= 0x3f;
+    }
+    return 1;
 }
 
 // E:\gamedcs\event_record.cpp:673
 VA(0x0049b500, 0x61)  // anchor-vtable, dc 0x8d5a0
-unsigned char type_record_hide_hero::save(void* outfile)
+unsigned char type_record_hide_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&player_id, 1);
+    outfile->Write(&current_hero->id, sizeof(current_hero->id));
+    outfile->Write(&owner, 1);
+    // The trailing byte packs field_0d(+0xd) with flag(+0xe) in bit6. `|=` (in
+    // place) is load-bearing: `packed = field_0d | 0x40` recomputes and swaps the
+    // flag/field_0d register homing.
+    unsigned char packed = field_0d;
+    if (flag)
+        packed |= 0x40;
+    unsigned char ok = outfile->Write(&packed, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:687
 VA(0x0049b570, 0x102)  // anchor-vtable, dc 0x8d5f0
@@ -491,19 +519,35 @@ type_event_record_type type_record_show_hero::get_type()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:752
 VA(0x0049b6d0, 0x85)  // anchor-vtable, dc 0x8d7ec
-unsigned char type_record_show_hero::load(void* infile)
+unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (!type_record_hide_hero::load(infile, version))
+        return 0;
+    if (infile->Read(&location_x, sizeof(location_x)) != sizeof(location_x))
+        return 0;
+    if (infile->Read(&location_y, sizeof(location_y)) != sizeof(location_y))
+        return 0;
+    if (infile->Read(&field_18, 1) != 1)
+        return 0;
+    unsigned char ok = infile->Read(&is_boat, 1) == 1;
+    return ok;
 }
 
 // E:\gamedcs\event_record.cpp:770
 VA(0x0049b760, 0x95)  // anchor-vtable, dc 0x8d860
-unsigned char type_record_show_hero::save(void* outfile)
+unsigned char type_record_show_hero::save(TAbstractFile* outfile)
 {
-    // @stub
+    type_record_hide_hero::save(outfile);
+    outfile->Write(&location_x, sizeof(location_x));
+    outfile->Write(&location_y, sizeof(location_y));
+    outfile->Write(&field_18, 1);
+    unsigned char ok = outfile->Write(&is_boat, 1) == 1;
+    return ok;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:784
 VA(0x0049b800, 0x15E)  // anchor-vtable, dc 0x8d8b4

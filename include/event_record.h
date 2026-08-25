@@ -128,6 +128,34 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
 };
 
+// A recorded hero-hide (fog reveal). load/save (0x49b430/0x49b500) serialize the
+// hero (as hero->id, re-resolved via &gpGame->heroes[]), owner(+0xc), and a byte
+// that packs field_0d(low 6 bits) with flag(+0xe) in bit6; a byte with bit7 set
+// is the legacy form (flag defaults 0, field_0d kept raw).
+class type_record_hide_hero : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    hero* current_hero;      // +0x08
+    signed char owner;       // +0x0c
+    signed char field_0d;    // +0x0d - low 6 bits; bit6 packs flag on save
+    signed char flag;        // +0x0e - unpacked from bit6 (0 for legacy bit7 records)
+};
+
+// show_hero extends hide_hero: its load calls hide_hero::load, then reads the
+// location dwords (+0x10/+0x14) and two trailing bytes (+0x18/+0x19).
+class type_record_show_hero : public type_record_hide_hero {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    int location_x;          // +0x10
+    int location_y;          // +0x14
+    signed char field_18;    // +0x18
+    signed char is_boat;     // +0x19
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\event_record.cpp:65, dc 0x8c6b8) void set_player(char new_player);
 
