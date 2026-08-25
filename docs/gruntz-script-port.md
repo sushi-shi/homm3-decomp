@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the creature-mode and exit callbacks add 725 exact retail
+  bytes.** Constructor callback stores at 0x560c82 and 0x560201, together
+  with the adjacent Dreamcast private-static roster rows, identify
+  `type_sacrifice_window::sacrifice_creatures` at 0x564910 and
+  `type_sacrifice_window::exit_click` at 0x564a80. Retail proves their shared
+  right-click help arm and the left-click `clear` expansion. The first then
+  restores creature mode and redraws the dialog; the second writes the
+  standard end-dialog message fields directly and forwards the message,
+  rather than calling the virtual `ExitDialog` override.
+
+  Retaining the natural `message&` callback ABI and spelling both paths in
+  their source order reproduces all 48 blocks, 30 branches, six returns and
+  every normalized instruction across the two functions. The synchronized
+  checkpoint reaches **1960/2375 linked exact**, **1891/2306 game exact**,
+  **96.60% game fuzzy** and **44.03% executable coverage**. No external
+  implementation body was used.
+
 - **2026-08-25 — `type_sacrifice_window::creature_click` reproduces all 916
   retail bytes.** The sole army-slot-widget caller forwards the retail
   `(long, unsigned char, unsigned char)` argument family, and the adjacent

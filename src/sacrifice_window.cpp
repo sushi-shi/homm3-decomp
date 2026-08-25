@@ -1915,6 +1915,34 @@ void type_sacrifice_window::update_artifact_offering(long slot)
                     &artifact_offerings[slot]);
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1472
+// create_artifact_widgets stores this private static callback at 0x560c82.
+// Complete expands clear and return_artifact exactly as in the later
+// artifact-mode twin, then restores creature mode and redraws the dialog.
+VA(0x00564910, 0x164)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::sacrifice_creatures(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->clear();
+        window->set_creature_mode();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
 // The Dreamcast line map places this one-purpose helper at source line 1499.
 // Complete expands it into clear. The same order is independently repeated
 // by ExitDialog: original equipped slot, any legal equipped slot, backpack,
@@ -1950,6 +1978,34 @@ void type_sacrifice_window::clear()
         holding_artifact.artifactId = ARTIFACT_NONE;
     }
     total_experience = 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1544
+// The constructor stores this private static callback at 0x560201. Complete
+// expands clear, then closes the modal dialog with the standard widget
+// message fields rather than calling the virtual ExitDialog override.
+VA(0x00564a80, 0x171)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::exit_click(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->clear();
+        msg.id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = 0;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return 0;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1572
