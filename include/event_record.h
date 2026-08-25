@@ -5,6 +5,8 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+#include <vector>
+
 // type_point is a value member of several record subclasses below; struct.h is
 // already in this TU's include closure (game.h pulls it in), so parsing it here
 // adds no declarators. hero/boat/NewmapCell appear only as pointer members.
@@ -187,7 +189,15 @@ public:
 
 class type_record_shroud : public type_event_record {
 public:
+    struct type_shroud_change : public type_point {
+        unsigned short old_value;
+        unsigned short new_value;
+    };
+
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+
+    std::vector<type_shroud_change> changes;
 };
 
 // --- globals ---
