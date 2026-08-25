@@ -88,8 +88,8 @@ sacrifice_window	sample	0x1669ef	0x166da0	945	4
 sample	scenarioinfo	0x166e89	0x169800	10615	17	
 scenarioinfo	search	0x1699b2	0x16a0d0	1822	12	
 search	seerhut	0x16a352	0x16d3e0	12430	42	
-seerhut	singleselectionpopups	0x17460c	0x175a10	5124	25	
-singleselectionpopups	singleselectionwindow	0x175a20	0x177a50	8240	38	
+seerhut	singleselectionpopups	0x17460c	0x175220	3092	15	
+singleselectionpopups	singleselectionwindow	0x176a01	0x177a50	4175	27	
 singleselectionwindow	slider	0x18e6b9	0x196050	31127	71	
 slider	smackmgr	0x197185	0x1971b0	43	1	
 smackmgr	soundmgr	0x197cf4	0x1994b0	6076	23	

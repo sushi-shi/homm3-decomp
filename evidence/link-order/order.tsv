@@ -88,8 +88,8 @@ position	unit	first_rva	end_rva	gap_to_next
 82	sample	0x166da0	0x166e89	10615
 83	scenarioinfo	0x169800	0x1699b2	1822
 84	search	0x16a0d0	0x16a352	12430
-85	seerhut	0x16d3e0	0x17460c	5124
-86	singleselectionpopups	0x175a10	0x175a20	8240
+85	seerhut	0x16d3e0	0x17460c	3092
+86	singleselectionpopups	0x175220	0x176a01	4175
 87	singleselectionwindow	0x177a50	0x18e6b9	31127
 88	slider	0x196050	0x197185	43
 89	smackmgr	0x1971b0	0x197cf4	6076
