@@ -1435,16 +1435,211 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
     // interior alias row in config/delink-reloc-aliases.tsv.
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2932
+// The sell-artifact dialog handler. Subtype 0xc selects the paid-in resource
+// (0x1c..0x22), a sellable artifact slot (equipped/backpack, with the inlined
+// artifact-ratio compute), or refuses the war-machine/spellbook slots; subtype
+// 0xd executes the sale (credit resources, strip the artifact), pages the
+// backpack scroll arrows (re-blitting the visible icons), or posts a tab
+// command; subtype 0xe right-clicks a slot into its info popup. Hover copies
+// the rollover string.
 VA(0x005edf60, 0x75f)  // anchor-vtable 0x643aac slot 9, dc 0x18c00c
 int TSellArtifactWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
 
-#endif  // @carcass
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+            case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+            case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+            case MARKET_BUY_GOLD_ID: {
+                int resource = msg->codeY - MARKET_BUY_WOOD_ID;
+                if (resource == gLeftResource)
+                    return 1;
+                int selected = gSelectedArtifact;
+                gLeftResource = resource;
+                if (selected != -1) {
+                    ComputeTradeRatios(selected, resource,
+                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+                    gRightAmount = 1;
+                }
+                break;
+            }
+            case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
+            case MARKET_ARTIFACT_SLOT_15_ID: case MARKET_ARTIFACT_SLOT_16_ID:
+            case MARKET_ARTIFACT_SLOT_17_ID:
+                NormalDialog((*gpGeneralText)[22], 1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+                return 1;
+            case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
+            case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
+            case MARKET_ARTIFACT_SLOT_04_ID: case MARKET_ARTIFACT_SLOT_05_ID:
+            case MARKET_ARTIFACT_SLOT_06_ID: case MARKET_ARTIFACT_SLOT_07_ID:
+            case MARKET_ARTIFACT_SLOT_08_ID: case MARKET_ARTIFACT_SLOT_09_ID:
+            case MARKET_ARTIFACT_SLOT_10_ID: case MARKET_ARTIFACT_SLOT_11_ID:
+            case MARKET_ARTIFACT_SLOT_12_ID: case MARKET_ARTIFACT_SLOT_18_ID:
+            case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
+            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
+                int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
+                if (slot == gSelectedArtifact)
+                    return 1;
+                int resource = gLeftResource;
+                gSelectedArtifact = slot;
+                if (resource != -1) {
+                    type_artifact art = (slot < 18)
+                        ? gpMarketHero->equipped[slot]
+                        : gpMarketHero->backpack[slot - 18];
+                    float ratio = static_cast<float>(akArtifactTraits[art.artifactId].cost)
+                                * fArtifactPurchaseEfficency[gMarketCount]
+                                / static_cast<float>(gMarketValues[resource]);
+                    if (ratio < 1.0f)
+                        ratio = 1.0f;
+                    gRatioInverted = 1;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits = 1;
+                    gRightAmount = 1;
+                }
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (gRightAmount == 0)
+                    return 1;
+                if (gRatioInverted) {
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gGiveQuantity * gRightAmount;
+                    if (gSelectedArtifact < 18) {
+                        gpMarketHero->remove_artifact(static_cast<long>(gSelectedArtifact));
+                    } else {
+                        long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+                        gpMarketHero->remove_backpack_artifact(static_cast<short>(
+                            ((gBackpackStart & 0xff) + gSelectedArtifact - 18)
+                            % numInBackpack));
+                    }
+                }
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+            case MARKET_RIGHT_LABEL_ID:
+                bExit = 1;
+                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+            case MARKET_ARTIFACT_LEFT_ARROW_ID:
+            case MARKET_ARTIFACT_RIGHT_ARROW_ID: {
+                long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+                if (numInBackpack > 5) {
+                    long step = (msg->codeY == MARKET_ARTIFACT_LEFT_ARROW_ID)
+                                    ? numInBackpack - 1 : 1;
+                    gBackpackStart = static_cast<unsigned char>(
+                        ((gBackpackStart & 0xff) + step) % numInBackpack);
+                    numInBackpack = gpMarketHero->get_number_in_backpack(1);
+                    message icon;
+                    icon.codeY = 0;
+                    icon.qualifier = 0;
+                    icon.mouseX = 0;
+                    icon.mouseY = 0;
+                    icon.extra = 0;
+                    icon.window = 0;
+                    icon.id = MESSAGE_WIDGET;
+                    icon.codeX = widget::WIDGET_SET_ICON_FRAME;
+                    for (int k = 0; k < numInBackpack && k < 5; ++k) {
+                        icon.codeY = k + 0x66;
+                        icon.extra = gpMarketHero->backpack[
+                            ((gBackpackStart & 0xff) + k) % numInBackpack].artifactId;
+                        BroadcastMessage(&icon);
+                    }
+                }
+                type_artifact art = (gSelectedArtifact < 18)
+                    ? gpMarketHero->equipped[gSelectedArtifact]
+                    : gpMarketHero->backpack[gSelectedArtifact - 18];
+                float ratio = static_cast<float>(akArtifactTraits[art.artifactId].cost)
+                            * fArtifactPurchaseEfficency[gMarketCount]
+                            / static_cast<float>(gMarketValues[gLeftResource]);
+                if (ratio < 1.0f)
+                    ratio = 1.0f;
+                gRatioInverted = 1;
+                gGiveQuantity = static_cast<long>(ratio + 0.5);
+                gMaxTradeUnits = 1;
+                gRightAmount = 1;
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_RIGHT_SELECT:
+            switch (msg->codeY) {
+            case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
+            case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
+            case MARKET_ARTIFACT_SLOT_04_ID: case MARKET_ARTIFACT_SLOT_05_ID:
+            case MARKET_ARTIFACT_SLOT_06_ID: case MARKET_ARTIFACT_SLOT_07_ID:
+            case MARKET_ARTIFACT_SLOT_08_ID: case MARKET_ARTIFACT_SLOT_09_ID:
+            case MARKET_ARTIFACT_SLOT_10_ID: case MARKET_ARTIFACT_SLOT_11_ID:
+            case MARKET_ARTIFACT_SLOT_12_ID: case MARKET_ARTIFACT_SLOT_13_ID:
+            case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
+            case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_18_ID:
+            case MARKET_ARTIFACT_SLOT_19_ID: case MARKET_ARTIFACT_SLOT_20_ID:
+            case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
+                int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
+                type_artifact art;
+                art.artifactId = -1;
+                art.extra = -1;
+                if (slot < 18) {
+                    art = gpMarketHero->equipped[slot];
+                } else {
+                    long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+                    art = gpMarketHero->backpack[
+                        ((gBackpackStart & 0xff) + slot - 18) % numInBackpack];
+                }
+                gpMarketHero->HeroFn_004D9A00(&art, 1);
+                return 1;
+            }
+            default:
+                return 1;
+            }
+
+        default:
+            return 1;
+        }
+
+        Update(1);
+        if (bExit) {
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return 2;
+        }
+        return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
 
 // E:\gamedcs\tradpost.cpp:3109
 // Rollover text for the sell-artifact panel. The left column (slot widgets
