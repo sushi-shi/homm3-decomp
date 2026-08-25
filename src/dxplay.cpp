@@ -897,6 +897,30 @@ unsigned char CDPlay::IsHost()
     return m_isHost;
 }
 
+// E:\gamedcs\dxplay.h:434 - vtable slot 42.
+VA(0x00496cc0, 0x5)
+unsigned char CDPlay::ReceiveMsg(unsigned long from, unsigned long to,
+                                 CDPlayMsg* message)
+{
+    return 1;
+}
+
+// E:\gamedcs\dxplay.h:440 - representative shared by slots 44 through 54.
+VA(0x00496cd0, 0x5)
+unsigned char CDPlay::SysMsgAddGroupToGroup(
+    DPMSG_ADDGROUPTOGROUP* message, unsigned long toId)
+{
+    return 1;
+}
+
+// E:\gamedcs\dxplay.cpp:885 - representative shared by slots 56 and 57.
+VA(0x004981e0, 0x5)
+unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
+    DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
+{
+    return 1;
+}
+
 // E:\gamedcs\array.h:144 - slot 6 of the retail
 // CAutoArray<CDPlayAddressElement> vtable at 0x63de44.
 VA(0x0049a010, 0x4)
