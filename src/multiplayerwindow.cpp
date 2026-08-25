@@ -42,23 +42,9 @@ void DeleteTempSaveGame(const char* filename)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:889
-DC_ONLY(0xffb70, 0x898)
-void TMultiPlayerWindow::TMultiPlayerWindow()
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:1005
 DC_ONLY(0x100408, 0x28)
 void SliderGames(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1012
-DC_ONLY(0x100430, 0x68)
-void TMultiPlayerWindow::~TMultiPlayerWindow()
 {
     // @stub
 }
@@ -80,20 +66,6 @@ void TMultiPlayerWindow::GoMainMenu()
 // E:\gamedcs\multiplayerwindow.cpp:1083
 DC_ONLY(0x1005fc, 0x3A6)
 void TMultiPlayerWindow::Update()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1192
-DC_ONLY(0x1009a4, 0x276)
-int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1336
-DC_ONLY(0x100c1c, 0x28)
-int TMultiPlayerWindow::WindowHandler(message* msg)
 {
     // @stub
 }
@@ -252,13 +224,6 @@ long CDPlay::GetLastError()
     // @stub
 }
 
-// E:\gamedcs\MultiPlayerWindow.h:91
-DC_ONLY(0x101da0, 0x8)
-textWidget* TMultiPlayerWindow::GetRolloverWidget()
-{
-    // @stub
-}
-
 // E:\gamedcs\remote.h:186
 DC_ONLY(0x101da8, 0x1C)
 void CHotSeatMan::CHotSeatMan()
@@ -399,37 +364,9 @@ void CMPInputEdit::~CMPInputEdit()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:418
-DC_ONLY(0x1022f4, 0x424)
-void CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:465
-DC_ONLY(0x102718, 0x44)
-void CMPInputDlg::~CMPInputDlg()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:470
-DC_ONLY(0x10275c, 0x58)
-int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
-{
-    // @stub
-}
-
 // E:\gamedcs\multiplayerwindow.cpp:493
 DC_ONLY(0x1027b4, 0x38)
 unsigned char CMPInputDlg::OnOK()
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:505
-DC_ONLY(0x1027ec, 0x6)
-textWidget* CMPInputDlg::GetRolloverWidget()
 {
     // @stub
 }
@@ -455,14 +392,78 @@ void* CMPInputDlg::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:629
-DC_ONLY(0x1028c4, 0x364)
-void CHotSeatDlg::CHotSeatDlg()
+// E:\gamedcs\multiplayerwindow.cpp:700
+#endif
+
+// --- Retail-located TMultiPlayerWindow / CMPInputDlg / CHotSeatDlg cores ---
+// Located by class vtable slots (0x6400a0 TMultiPlayerWindow, 0x6400f4
+// CMPInputDlg, 0x6401d8 CHotSeatDlg) read from the retail image, plus the
+// scalar-deleting-dtor->~dtor call edges. Retail lays these out in an order
+// that does NOT follow the Dreamcast emission order (the reference block above
+// keeps DC order), so they claim their retail RVAs in a dedicated ascending
+// block. Bodies left @stub - the classes are not yet modelled in the header.
+#if 0  // @carcass
+VA(0x0050e050, 0xCFC)  // anchor-vtable 0x6400a0 + CHeroWindowEx base + DeleteFileA + 800x600 dims, dc 0xffb70
+void TMultiPlayerWindow::TMultiPlayerWindow()
 {
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:700
+VA(0x0050ed50, 0x7)  // anchor-vtable 0x6400a0 slot 13 (GetRolloverWidget), dc 0x101da0
+textWidget* TMultiPlayerWindow::GetRolloverWidget()
+{
+    // @stub
+}
+
+VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x10edb0, dc 0x100430
+void TMultiPlayerWindow::~TMultiPlayerWindow()
+{
+    // @stub
+}
+
+VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
+int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
+                      // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
+                      // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
+int TMultiPlayerWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
+void CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+{
+    // @stub
+}
+
+VA(0x005108a0, 0x4E)  // anchor-callee: ~dtor reached from scalar-dtor 0x1109e0, dc 0x102718
+void CMPInputDlg::~CMPInputDlg()
+{
+    // @stub
+}
+
+VA(0x005108f0, 0x72)  // anchor-vtable 0x6400f4 slot 12 (OnWidgetDeselect), dc 0x10275c
+int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+VA(0x00510970, 0x4)  // anchor-vtable 0x6400f4 slot 13 (GetRolloverWidget), dc 0x1027ec
+textWidget* CMPInputDlg::GetRolloverWidget()
+{
+    // @stub
+}
+
+VA(0x00511e20, 0x5A1)  // anchor-vtable 0x6401d8 into this + CHeroWindowEx base + muhotsea.pcx, dc 0x1028c4
+void CHotSeatDlg::CHotSeatDlg()
+{
+    // @stub
+}
 #endif
 
 // E:\gamedcs\multiplayerwindow.cpp:700
