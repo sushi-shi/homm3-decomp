@@ -14,6 +14,7 @@
 class armyGroup;
 class sample;
 class slider;
+class type_func_button;
 
 // DC field list: a 16-byte type_artifact-derived record, with the wearable
 // source slot at +8 and the displayed sacrifice value at +12.
@@ -66,6 +67,8 @@ enum ESacrificeArtifactClass {
 
 enum ESacrificeGeneralText {
     SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
+    SACRIFICE_GENERAL_TEXT_NEXT_LEVEL = 476,
+    SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE = 477,
     SACRIFICE_GENERAL_TEXT_CREATURE = 482,
     SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT = 483,
     SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE = 484,
@@ -99,6 +102,7 @@ SIZE(type_creature_offering, 0x20);
 // callback widgets need the real derived type, not a synthetic window view.
 class type_sacrifice_window : public CAdvPopup {
 public:
+    type_sacrifice_window(hero* new_hero, int cur_player);
     hero* current_hero;
     type_artifact_offering holding_artifact;  // +0x64
     unsigned char sacrificing_artifacts;      // +0x74
@@ -125,15 +129,15 @@ public:
     // update_experience independently proves sacrifice_button at +0xa4.
     iconWidget* current_artifact_widget;      // +0x90
     slider* creature_slider;                  // +0x94
-    widget* left_backpack_button;             // +0x98
-    widget* right_backpack_button;            // +0x9c
-    widget* empty_backpack_button;            // +0xa0
-    widget* sacrifice_button;                 // +0xa4
-    widget* all_artifacts_button;              // +0xa8
-    widget* creatures_button;                  // +0xac
-    widget* max_creatures_button;              // +0xb0
-    widget* all_creatures_button;              // +0xb4
-    widget* artifacts_button;                  // +0xb8
+    type_func_button* left_backpack_button;   // +0x98
+    type_func_button* right_backpack_button;  // +0x9c
+    type_func_button* empty_backpack_button;  // +0xa0
+    type_func_button* sacrifice_button;       // +0xa4
+    type_func_button* all_artifacts_button;   // +0xa8
+    type_func_button* creatures_button;       // +0xac
+    type_func_button* max_creatures_button;   // +0xb0
+    type_func_button* all_creatures_button;   // +0xb4
+    type_func_button* artifacts_button;       // +0xb8
     std::vector<type_artifact_offering> artifact_offerings; // +0xbc
     std::vector<textWidget*> artifact_value_widgets;        // +0xcc
     std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
@@ -172,6 +176,8 @@ public:
 protected:
     virtual int ExitDialog(message* msg);                      // slot 14
 private:
+    void create_artifact_widgets(long& widget_id, int cur_player);
+    void create_creature_widgets(long& widget_id, int cur_player);
     void pick_up_artifact(type_artifact artifact, long slot,
                           unsigned char new_artifact);
     void put_down_artifact(unsigned char change_experience);

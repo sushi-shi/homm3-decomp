@@ -550,7 +550,7 @@ bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.
 bottomviewsubwindow	?animate@TBottomViewNewTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x511a0
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0
 button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400	88.4400	88.4400	0x56a50
-button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30
+button	??0type_func_button@@QAE@JJJJJPBDP6IHAAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30
 button	??1button@@UAE@XZ	100.0000	100.0000	100.0000	0x560f0
 button	??1textButton@@UAE@XZ	100.0000	100.0000	100.0000	0x56bf0
 button	??1type_func_button@@UAE@XZ	100.0000	100.0000	100.0000	0x56db0
@@ -1864,6 +1864,7 @@ resourcemanager	?insert_wrapper@TCacheMap@ResourceManager@@QAE?AUTCacheInsertRes
 resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIterator@2@PAU32@ABUTCacheMapKey@2@@Z	100.0000	100.0000	100.0000	0x15e740
 resourcemanager	@game_null_159510@12	77.3910	77.3910	77.3910	0x159510
 resourcemanager	@game_sprite_1599e0@12	70.5441	70.5441	70.5441	0x1599e0
+sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60
 sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x160350

@@ -109,7 +109,7 @@ inline TCreatureType creature_type_from_int(int value)
 // MESSAGE_WIDGET; msg->codeX = 10; msg->codeY = OK_ID; return
 // MESSAGE_DISPATCH_FORWARD; } return 0;`. DECLARED ONLY - defining it
 // would put an unpaired function in this object.
-int ViewArmyCastSpellHandler(message* msg);
+int ViewArmyCastSpellHandler(message& msg);
 
 // The shooter bit, byte-proven by initialize_creatures and consumed here
 // by create_shots_widget's single `test byte [traits+0x10], 4` guard.

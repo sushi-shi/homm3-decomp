@@ -99,8 +99,8 @@ SIZE(TCombatPlacementSubWindow, 0x3c);
 // compiland; they are declared here because this is the only consumer and
 // this header may not reach into another unit's. Names are provisional -
 // nothing attests them.
-int combat_log_scroll_up(message* msg);    // 0x472df0, uncarved
-int combat_log_scroll_down(message* msg);  // 0x472e40, uncarved
+int combat_log_scroll_up(message& msg);    // 0x472df0, uncarved
+int combat_log_scroll_down(message& msg);  // 0x472e40, uncarved
 
 // Retail's two construction sites allocate 0x5c bytes. The constructor and
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
