@@ -584,8 +584,6 @@ rva	size	unit	current_label	provenance
 0x1e7be0	33	tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	src-VA+base
 0x1e7c80	8149	tradpost	game_tpmrkcrs_pcx_1e7c80	working-label
 0x1e9c80	33	tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	src-VA+base
-0x1e9d20	313	tradpost	game_1d3240_sub13_1e9d20	working-label
-0x1e9ea0	315	tradpost	game_1d3240_sub14_1e9ea0	working-label
 0x1ea130	1180	tradpost	game_1e9d20_sub00_1ea130	working-label
 0x1ea5d0	259	tradpost	game_1ebe80_sub00_1ea5d0	working-label
 0x1ea6e0	2146	tradpost	game_n1_d_1ea6e0	working-label

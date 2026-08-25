@@ -9,6 +9,9 @@
 DATA(0x006a5d5c)
 TTextResource* gpGeneralText;
 
+DATA(0x006a53d4)
+const char* gSpecialBuildingNames[10][11];
+
 #if 0  // @carcass
 
 // E:\gamedcs\text.cpp:49

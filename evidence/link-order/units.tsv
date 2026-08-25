@@ -105,7 +105,7 @@ textwdgt	0x1bc3b0	0x1bc86c	1212	6	0	9	6	3
 town	0x1bd700	0x1c14b9	15801	49	1	50	49	1
 towngatewindow	0x1c2370	0x1c23ff	143	1	0	1	1	0
 townmgr	0x1c3310	0x1df1ff	114415	76	1	103	76	27
-tradpost	0x1e1650	0x1ecd1b	46795	10	0	27	10	17
+tradpost	0x1e1650	0x1ecd1b	46795	12	0	27	12	15
 u2dvers	0x1eeda0	0x1ef065	709	3	0	3	3	0
 university_window	0x1f0dc0	0x1f11ad	1005	3	0	3	3	0
 victorylossconditions	0x1f15a0	0x1f2f70	6608	17	0	19	17	2

@@ -66,9 +66,12 @@ long get_market_value(EGameResource resource);
 void DoMarket();
 void DoTradingPost();
 void DoMarketplace();
+void DoArtifactMerchants();
 // Complete's object-213 dispatch passes its active hero in ECX; the
 // Dreamcast no-argument signature therefore changed on the retail branch.
 void DoFreelancersGuild(hero* inHero);
+// The town-screen Stronghold arm separately passes townToView in ECX.
+void DoFreelancersGuild(town* currentTown);
 // DC types the second parameter TArtifact*. The game-side buffer this is
 // aliased against - gpGame's char[0x1c] at +0x1f664, which DoTradingPost
 // passes here - is not admitted as an artifact array yet, so the pointer

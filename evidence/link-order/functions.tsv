@@ -4436,9 +4436,9 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x1e7c80	8149	in-span	tradpost	tradpost	game_tpmrkcrs_pcx_1e7c80
 0x1e9c80	33	in-span	tradpost	tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z
 0x1e9cb0	107	in-span	tradpost	tradpost	??1TSellCreatureWindow@@UAE@XZ
-0x1e9d20	313	in-span	tradpost	tradpost	game_1d3240_sub13_1e9d20
+0x1e9d20	313	in-span	tradpost	tradpost	?DoArtifactMerchants@@YIXXZ
 0x1e9e60	56	in-span	tradpost	tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z
-0x1e9ea0	315	in-span	tradpost	tradpost	game_1d3240_sub14_1e9ea0
+0x1e9ea0	315	in-span	tradpost	tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z
 0x1e9fe0	220	in-span	tradpost	tradpost	?DoMarketplace@@YIXXZ
 0x1ea0c0	50	in-span	tradpost	tradpost	?DoTradingPost@@YIXXZ
 0x1ea100	42	in-span	tradpost	tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z
