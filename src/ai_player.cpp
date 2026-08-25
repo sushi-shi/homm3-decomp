@@ -1236,42 +1236,55 @@ void mark_values(long* full_value, long total_value, __int64 requirements)
 }
 
 // E:\gamedcs\ai_player.cpp:1383
-DC_ONLY(0x30334, 0x196)
+// linkorder (mark_values inlined away) + arity: ret 0x10 (this+4), returns al
+// (uchar); size 406->447 (1.10). Retail 0x2a2b0.
+VA(0x0042a2b0, 0x1BF)  // linkorder + arity/return, dc 0x30334
 unsigned char type_AI_player::check_trade_supply(const int* cost, long number, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1446
-DC_ONLY(0x304cc, 0xE6)
+// arity: ret 8 (this+2), void, fs:[0] EH frame; size 230->272 (1.18). Retail 0x2a470.
+VA(0x0042a470, 0x110)  // linkorder + arity/return, dc 0x304cc
 void type_AI_player::trade_resources(const int* cost, long number)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1474
-DC_ONLY(0x305b4, 0x41E)
+// arity: ret 0xc (this+3), returns al (uchar), fs:[0] EH frame; size 1054->1470
+// (1.39). Retail 0x2a580.
+VA(0x0042a580, 0x5BE)  // linkorder + arity/return, dc 0x305b4
 unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1587
-DC_ONLY(0x309d4, 0x9A)
+// arity: ret 4 (this+1), returns al (uchar); reads this+0 short (player id) and
+// player record at gpGame+0x20ad0; size 154->209 (1.36). Retail 0x2ab40.
+VA(0x0042ab40, 0xD1)  // linkorder + arity/return, dc 0x309d4
 unsigned char type_AI_player::build_markets(int* supply)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1620
-DC_ONLY(0x30a70, 0x2FA)
+// arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
+// source order after build_markets. size 762->478 (0.63). Retail 0x2ac20.
+VA(0x0042ac20, 0x1DE)  // linkorder + arity + anchor-callee calculate_demand, dc 0x30a70
 void type_AI_player::do_resource_trade(int* supply)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1686
-DC_ONLY(0x30d6c, 0x2C2)
+// anchor-callee: calls get_total_value + trade_resources + calculate_demand
+// (all claimed); arity ret 4 (this+1), returns uchar; source order after
+// do_resource_trade. size 706->1816 (2.6, retail inlines six small helpers).
+// Retail 0x2ae00.
+VA(0x0042ae00, 0x718)  // anchor-callee + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
 {
     // @stub
@@ -1292,14 +1305,21 @@ void type_AI_player::purchase_buildings()
 }
 
 // E:\gamedcs\ai_player.cpp:1850
-DC_ONLY(0x310f4, 0x2A2)
+// anchor-callee: orchestrates the creature swapper + purchaser + consolidate -
+// calls do_best_swap, dump_extra_creature, purchaser::set, do_purchase,
+// get_purchase_value and AI_consolidate_army (all claimed). arity ret 8
+// (this+2: hero*, town*); size 674->1095 (1.6). Retail 0x2ba60.
+VA(0x0042ba60, 0x447)  // anchor-callee + arity, dc 0x310f4
 void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1954
-DC_ONLY(0x31398, 0x17C)
+// anchor-callee: calls trade_resources (claimed) to fund the guild. arity ret 8
+// (this+2: hero*, town*); source order after buy_creatures; size 380->391
+// (1.03). Retail 0x2beb0.
+VA(0x0042beb0, 0x187)  // anchor-callee + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
 {
     // @stub
@@ -1326,12 +1346,8 @@ void type_AI_creature_swapper::add_creatures(TCreatureType type, short amount, s
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2096
-DC_ONLY(0x3166c, 0x168)
-long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
-{
-    // @stub
-}
+// do_best_swap (dc 0x3166c) promoted to VA(0x0042c280) below, placed in RVA
+// order between add_creatures and dump_extra_creature.
 
 // E:\gamedcs\ai_player.cpp:2171
 DC_ONLY(0x317d4, 0x34)
@@ -2225,6 +2241,22 @@ void type_AI_creature_swapper::add_creatures(
     }
     army->Add(type, amount, slot);
 }
+
+// E:\gamedcs\ai_player.cpp:2096
+// anchor-callee: the swapper's per-swap orchestrator - calls get_alignments,
+// add_creatures and value_of_adding_army (all claimed) and is itself called by
+// buy_creatures (claimed). arity ret 4 (this+1: can_take_all), returns long;
+// do_swap/get_swap_value/calculate_improvement inline into it (they stay
+// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Claimed @stub here so the RVA
+// stays in increasing file order between add_creatures and dump_extra_creature;
+// the DC-order carcass stub was removed to avoid a duplicate row.
+#if 0  // @carcass
+VA(0x0042c280, 0x126)  // anchor-callee + arity, dc 0x3166c
+long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;

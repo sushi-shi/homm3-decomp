@@ -249,6 +249,15 @@ ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
+ai_player	type_AI_creature_swapper_do_best_swap	0.0000	0.0000	0.0000	0x2c280
+ai_player	type_AI_player_build_markets	0.0000	0.0000	0.0000	0x2ab40
+ai_player	type_AI_player_buy_creatures	0.0000	0.0000	0.0000	0x2ba60
+ai_player	type_AI_player_buy_mage_guild	0.0000	0.0000	0.0000	0x2beb0
+ai_player	type_AI_player_can_trade_resources	0.0000	0.0000	0.0000	0x2a580
+ai_player	type_AI_player_check_trade_supply	0.0000	0.0000	0.0000	0x2a2b0
+ai_player	type_AI_player_do_resource_trade	0.0000	0.0000	0.0000	0x2ac20
+ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
+ai_player	type_AI_player_trade_resources	0.0000	0.0000	0.0000	0x2a470
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0
