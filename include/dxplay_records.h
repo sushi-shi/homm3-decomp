@@ -30,4 +30,26 @@ public:
 };
 SIZE(CDPlayPlayer, 0x104);
 
+class CDPlayAddressElement {
+public:
+    CDPlayAddressElement(const GUID* type, const void* data,
+        unsigned long dataSize)
+    {
+        m_guid = *type;
+        m_dataSize = dataSize;
+        m_pData = new char[dataSize];
+        memcpy(m_pData, data, m_dataSize);
+    }
+
+    ~CDPlayAddressElement()
+    {
+        delete [] m_pData;
+    }
+
+    GUID m_guid;
+    char* m_pData;
+    unsigned long m_dataSize;
+};
+SIZE(CDPlayAddressElement, 0x18);
+
 #endif  /* HOMM3_DXPLAY_RECORDS_H */

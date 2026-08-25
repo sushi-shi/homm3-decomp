@@ -5,6 +5,15 @@
 #include "dxplay.h"
 #include "dxplay_records.h"
 
+DATA(0x00643d58) extern const GUID GUID_NULL;
+DATA(0x00643d78) extern const GUID DPAID_INet;
+DATA(0x00643db8) extern const GUID CLSID_DirectPlayLobby;
+DATA(0x00643dc8) extern const GUID IID_IDirectPlayLobby3A;
+DATA(0x00643e18) extern const GUID CLSID_DirectPlay;
+DATA(0x00643e28) extern const GUID IID_IDirectPlay4A;
+
+static unsigned char s_coInitialized;
+
 int PASCAL EnumConnectionsCallback(const GUID*, void*, unsigned long,
     const DPNAME*, unsigned long, void*);
 int PASCAL EnumGroupsCallback(unsigned long, unsigned long, const DPNAME*,
@@ -890,6 +899,20 @@ CDPlay::~CDPlay()
         m_lpDP->Release();
 }
 
+VA(0x00496d30, 0x3A)
+unsigned char CDPlay::Init()
+{
+    if (m_lpDP) {
+        m_lpDP->Release();
+        m_lpDP = 0;
+    }
+    m_hRes = CoCreateInstance(
+        CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER, IID_IDirectPlay4A,
+        static_cast<void**>(static_cast<void*>(&m_lpDP)));
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:121
 VA(0x00496d70, 0x33)
 unsigned char CDPlay::InitConnection(CDPlayConnection* connection)
@@ -899,6 +922,27 @@ unsigned char CDPlay::InitConnection(CDPlayConnection* connection)
     m_hRes = m_lpDP->InitializeConnection(connection->pConnection, 0);
     unsigned char ok = m_hRes >= 0;
     return ok;
+}
+
+VA(0x00496e60, 0xB8)
+unsigned char CDPlay::JoinSession(GUID* sessionGuid, char* password)
+{
+    if (!m_lpDP)
+        return 0;
+    DPSESSIONDESC2 desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.lpszPasswordA = password;
+    if (sessionGuid)
+        desc.guidInstance = *sessionGuid;
+    if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) != 0)
+        desc.guidApplication = m_guid;
+    m_hRes = m_lpDP->Open(&desc, DPOPEN_JOIN);
+    if (m_hRes < 0)
+        return 0;
+    m_isHost = 0;
+    GetCaps(static_cast<DPCAPS*>(static_cast<void*>(m_caps)), 1);
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:239
@@ -1105,6 +1149,17 @@ unsigned char CDPlay::AddPlayerEnum(
 {
     CDPlayPlayer* player = new CDPlayPlayer(name->lpszShortNameA, id);
     m_pPlayerArray->Add(player);
+    return 1;
+}
+
+VA(0x00497b70, 0xDF)
+unsigned char CDPlay::AddConnectionEnum(
+    const GUID* serviceProvider, void* connection,
+    unsigned long connectionSize, const DPNAME* name, unsigned long flags)
+{
+    CDPlayConnection* item = new CDPlayConnection(
+        serviceProvider, connectionSize, connection, name->lpszShortNameA);
+    m_pConnectionArray->Add(item);
     return 1;
 }
 
@@ -1317,6 +1372,32 @@ unsigned char CDPlay::GetReceiveQueueSize(unsigned long fromId,
     return ok;
 }
 
+CDPlay::CDPlay()
+{
+    m_lpDP = 0;
+    m_connected = 0;
+    m_inSession = 0;
+    m_isHost = 0;
+    m_hRes = 0;
+    m_guid = GUID_NULL;
+    m_pSessionArray = 0;
+    m_pConnectionArray = 0;
+    m_pGroupArray = 0;
+    m_pPlayerArray = 0;
+    memset(m_caps, 0, sizeof(m_caps));
+    if (!s_coInitialized) {
+        CoInitialize(0);
+        s_coInitialized = 1;
+    }
+}
+
+VA(0x00498870, 0x82)
+CDPlayLobby::CDPlayLobby()
+{
+    m_lpLobby = 0;
+    m_pAddressArray = 0;
+}
+
 // E:\gamedcs\dxplay.cpp:1215 - vtable slot 0.
 VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
 
@@ -1326,6 +1407,30 @@ CDPlayLobby::~CDPlayLobby()
 {
     if (m_lpLobby)
         m_lpLobby->Release();
+}
+
+VA(0x00498a60, 0x72)
+unsigned char CDPlayLobby::Init()
+{
+    if (m_lpDP) {
+        m_lpDP->Release();
+        m_lpDP = 0;
+    }
+    m_hRes = CoCreateInstance(
+        CLSID_DirectPlay, 0, CLSCTX_INPROC_SERVER, IID_IDirectPlay4A,
+        static_cast<void**>(static_cast<void*>(&m_lpDP)));
+    if (m_hRes < 0)
+        return 0;
+    if (m_lpLobby) {
+        m_lpLobby->Release();
+        m_lpLobby = 0;
+    }
+    m_hRes = CoCreateInstance(
+        CLSID_DirectPlayLobby, 0, CLSCTX_INPROC_SERVER,
+        IID_IDirectPlayLobby3A,
+        static_cast<void**>(static_cast<void*>(&m_lpLobby)));
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1318
@@ -1395,6 +1500,40 @@ DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(
     return connection;
 }
 
+VA(0x00498cd0, 0xAB)
+unsigned char CDPlayLobby::Connect()
+{
+    unsigned long size = 0;
+    DPLCONNECTION* connection;
+    if (m_lpLobby) {
+        m_hRes = m_lpLobby->GetConnectionSettings(0, 0, &size);
+        if (size != 0) {
+            connection = static_cast<DPLCONNECTION*>(::operator new(size));
+            m_hRes = m_lpLobby->GetConnectionSettings(
+                0, connection, &size);
+            if (m_hRes >= 0)
+                goto have_connection;
+            ::operator delete(connection);
+        }
+    }
+    connection = 0;
+have_connection:
+    if (connection->dwFlags & DPLCONNECTION_CREATESESSION)
+        m_isHost = 1;
+    else
+        m_isHost = 0;
+    ::operator delete(connection);
+    if (m_lpDP) {
+        m_lpDP->Release();
+        m_lpDP = 0;
+    }
+    m_hRes = m_lpLobby->ConnectEx(
+        0, IID_IDirectPlay4A,
+        static_cast<void**>(static_cast<void*>(&m_lpDP)), 0);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:1807
 VA(0x00499900, 0x97)
 unsigned char CDPlayLobby::EnumLobbyConnections(
@@ -1454,6 +1593,40 @@ unsigned char CDPlayLobby::EnumGroupPlayersRemote(
     return ok;
 }
 
+VA(0x00499bb0, 0xAA)
+unsigned char CDPlayLobby::AddAddressEnum(
+    const GUID* type, unsigned long size, const void* data)
+{
+    CDPlayAddressElement* element =
+        new CDPlayAddressElement(type, data, size);
+    m_pAddressArray->Add(element);
+    return 1;
+}
+
+VA(0x00499c60, 0x1B8)
+unsigned char CDPlayLobby::GetIPAddress(
+    unsigned long playerId, char* ipAddress)
+{
+    ipAddress[0] = 0;
+    unsigned long size;
+    unsigned char* address = GetPlayerAddress(playerId, &size);
+    if (!address)
+        return 0;
+    CAutoArray<CDPlayAddressElement> addresses;
+    EnumAddress(address, size, &addresses);
+    for (unsigned long i = 0; i < addresses.GetCount(); ++i) {
+        CDPlayAddressElement* element = addresses.Get(i);
+        if (memcmp(&element->m_guid, &DPAID_INet, sizeof(GUID)) == 0) {
+            strcpy(ipAddress, element->m_pData);
+            break;
+        }
+    }
+    ::operator delete(address);
+    if (!ipAddress[0])
+        return 0;
+    return 1;
+}
+
 // E:\gamedcs\dxplay.cpp:1948
 VA(0x00499e20, 0x23)  // address-taken by CDPlayLobby::EnumAddress, dc 0x8bba4
 int PASCAL EnumAddressCallback(const GUID* guidDataType,
@@ -1502,16 +1675,9 @@ int PASCAL EnumPlayersCallback(unsigned long dpid,
         dpid, lpName, dwFlags);
 }
 
-// E:\gamedcs\array.h:95 - slot 2 of the retail
-// CAutoArray<CDPlayAddressElement> vtable at 0x63de44.
 VA(0x00499fc0, 0x1D)
 template CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(
     unsigned long elementNbr);
 
-// E:\gamedcs\array.h:144 - slot 6 of the same vtable.
 VA(0x0049a010, 0x4)
 template unsigned long CAutoArray<CDPlayAddressElement>::GetCount();
-
-// MATCHING_DEBT: remove this emission anchor once a reconstructed dxplay
-// owner naturally instantiates the CDPlayAddressElement array vtable.
-template class CAutoArray<CDPlayAddressElement>;
