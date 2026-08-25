@@ -65,4 +65,12 @@ enum EMarketArtifactSlotId {
     MARKET_ARTIFACT_SLOT_21_ID, MARKET_ARTIFACT_SLOT_22_ID   // 0x81
 };
 
+// The sell-creature left column: one widget id per army slot (0x8b..0x91).
+enum EMarketCreatureSlotId {
+    MARKET_CREATURE_SLOT_0_ID = 0x8b,
+    MARKET_CREATURE_SLOT_1_ID, MARKET_CREATURE_SLOT_2_ID,
+    MARKET_CREATURE_SLOT_3_ID, MARKET_CREATURE_SLOT_4_ID,
+    MARKET_CREATURE_SLOT_5_ID, MARKET_CREATURE_SLOT_6_ID   // 0x91
+};
+
 #endif  /* HOMM3_TRADPOST_WIDGETS_H */
