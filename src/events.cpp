@@ -93,13 +93,6 @@ void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell, type_poi
     // @stub
 }
 
-// E:\gamedcs\events.cpp:570
-DC_ONLY(0x90ad8, 0x180)
-void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:629
 DC_ONLY(0x90c58, 0xB8)
 void advManager::DoArtifactSkillRequirement(hero* current_hero, NewmapCell* cell, type_point point, TSecondarySkill skill, const char* dialog_text, unsigned char human_player)
@@ -138,13 +131,6 @@ void show_rewards(std::basic_string<char,std::char_traits<char>,std::allocator<c
 // E:\gamedcs\events.cpp:838
 DC_ONLY(0x91308, 0x84)
 void add_reward(std::basic_string<char,std::char_traits<char>,std::allocator<char>* text, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* alternate, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards, EGameResource resource, long qualifier)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:852
-DC_ONLY(0x9138c, 0x870)
-unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
 {
     // @stub
 }
@@ -2217,12 +2203,30 @@ void advManager::GiveArtifact(hero* current_hero, type_point point,
     current_hero->CheckLevel();
 }
 
+// E:\gamedcs\events.cpp:570
+#if 0  // @carcass
+VA(0x0049ed50, 0x2e8)  // order-map artifact gap; unique 7-arg (ret 0x1c) + GiveArtifact/EraseObj, dc 0x90ad8
+void advManager::PayForArtifact(hero* current_hero, NewmapCell* cell, type_point point, const char* dialog_text, short gold_cost, short resource_cost, unsigned char human_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
     unsigned index = (cell->extraInfo >> 19) & 0xfff;
     return &fullMap->customTreasure[index];
 }
+
+// E:\gamedcs\events.cpp:852
+#if 0  // @carcass
+VA(0x0049fa90, 0x106b)  // order-map artifact gap; 6-arg (ret 0x18) + format_string, DoEventBlackBox sub, dc 0x9138c
+unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
+{
+    // @stub
+}
+#endif  // @carcass
 
 VA(0x004a0c20, 0x23)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
