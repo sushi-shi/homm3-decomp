@@ -38,12 +38,48 @@ const char* TCheatCode::b = "nopqrstuvwxyzabcdefghijklm";
 
 #if 0  // @carcass
 
-// E:\gamedcs\adventuremapwindow.cpp:52
+// E:\gamedcs\adventuremapwindow.cpp:52. Retail has no own body: the DC
+// roster types it non-virtual (VANILLA, ?SleepAllWidgets@...@@QAAX_N@Z) and
+// retail delegates to the base heroWindow::SleepAllWidgets (0x5ff5b0), so the
+// TADW wrapper is inlined/dropped. Kept DC-only.
 DC_ONLY(0x370, 0x3E)
 void TAdventureMapWindow::SleepAllWidgets(unsigned char put_to_sleep)
 {
     // @stub
 }
+
+// Three RETAIL-ONLY heroWindow virtual overrides the Dreamcast TADW class
+// never carried (its field list marks every method VANILLA bar the dtor).
+// All three are proven here by address-take: the retail TADW vtable
+// ??_7TAdventureMapWindow@@6B@ (0x63a5e4) stores these entries where they
+// diverge from heroWindow's own vtable (0x643cc4):
+//   slot 1  0x401400 (167 B) (heroWindow::Open    0x5feae0) -> Open
+//   slot 2  0x4014d0 ( 60 B) (heroWindow::Close   0x5fec60) -> Close
+//   slot 8  0x4040b0 ( 56 B) (heroWindow::_vslot8 0x5ff5f0) -> unnamed
+// They sit in the pre-band /Gy COMDAT region, not the linear TU body.
+// Reconstruction is BLOCKED on advmgr.h: TAdventureMapWindow needs the three
+// virtual declarations added to its class before a body can compile, and the
+// header is owned outside this file - so these carry RETAIL_LOCATED markers
+// (like the constructor below), NOT VA claims, because an uncompilable @stub
+// would only bank a dead 0.0000 row against the unit.
+//
+// slot 1: int Open(int, unsigned char) - ret 8, thiscall, returns int
+//   (heroWindow::Open is ?Open@heroWindow@@UAEHHE@Z). Creates the owned
+//   +0x9c member.
+//   RETAIL_LOCATED(0x00401400, 0xA7)  // anchor-vtable slot 1, retail-only
+// slot 2: void Close(unsigned char) - ret 4. Deletes the +0x9c member
+//   (call sub_b6e40 then operator delete), nulls it, then tail-calls
+//   heroWindow::Close (0x5fec60, ?Close@heroWindow@@UAEXE@Z) - proving both
+//   the override and that +0x9c is an owned pointer, not the pad_09c[4] the
+//   header currently models.
+//   RETAIL_LOCATED(0x004014d0, 0x3C)  // anchor-vtable slot 2, retail-only
+// slot 8: void f(unsigned char) - ret 4. Overrides heroWindow's retail-era
+//   slot-8 virtual (0x5ff5f0, the model's placeholder _vslot8, beyond the six
+//   named heroWindow virtuals the DC dump carries), calls that base first,
+//   then toggles the +0x9c member via sub_b6f50/sub_b6f30 on the bool arg.
+//   Location, class and signature are proven; the METHOD NAME is not (no DC or
+//   sibling attestation), so it stays unnamed.
+//   RETAIL_LOCATED(0x004040b0, 0x38)  // anchor-vtable slot 8, retail-only
 
 // E:\gamedcs\adventuremapwindow.cpp:318
 // RETAIL_LOCATED(0x00401510, 0xCB5)  // anchor-global, dc 0x89c
