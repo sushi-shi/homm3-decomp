@@ -68,6 +68,9 @@ public:
 class type_record_player_death : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    unsigned char extra;  // +0x08 - second serialized byte (role TBD)
 };
 
 class type_record_shroud : public type_event_record {
