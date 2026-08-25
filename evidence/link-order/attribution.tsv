@@ -3,756 +3,756 @@
 # date: 2026-08-25
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	unit	current_label	provenance
-0x2a30	161	adventuremapwindow	?encode@TCheatCode@@AAEXPBD@Z	src-VA+ir
-0x2ae0	33	adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	src-VA+base
-0x2e70	405	adventuremapwindow	?ProcessRightSelect@TAdventureMapWindow@@QAEEPBVmessage@@@Z	src-VA+ir
-0x3010	522	adventuremapwindow	?ProcessHover@TAdventureMapWindow@@QAEEHH@Z	src-VA+ir
-0x39b0	490	adventuremapwindow	?UpdateQuestLogButton@TAdventureMapWindow@@QAEXE@Z	src-VA+ir
-0x3cc0	533	adventuremapwindow	?SetSleepImage@TAdventureMapWindow@@QAEXH@Z	src-VA+ir
-0x5680	16	adventureoptionswindow	?handle_message@CHeroWindowEx@@UAEHAAVmessage@@@Z	src-VA+ir
-0x5690	33	adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	src-VA+base
-0x6480	1439	advmgr	hero_hero	working-label
-0x77b0	33	advmgr	??_GCAdvMgrNetMsgHandler@@UAEPAXI@Z	src-VA+base
-0x7b10	111	advmgr	?get_map_center@advManager@@QBE?AUtype_point@@XZ	src-VA+ir
-0x8770	49	advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	src-VA+ir
-0xabe0	893	advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	src-VA+ir
-0xd670	595	advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	src-VA+ir
-0xec80	10	advmgr	?Reseed@advManager@@QAEXHH@Z	src-VA+ir
-0xf240	43	advmgr	cinit0033_f240	working-label
-0xfca0	122	advmgr	?hasFlag@@YI_NH@Z	src-VA+ir
-0x192b0	68	advmgr	??0type_point@@QAE@FFF@Z	src-VA+ir
-0x19c80	369	advmgr	?PopupPlayerTurnInfo@@YIXXZ	src-VA+ir
-0x1f380	39	ai	?IsIncapacitated@army@@QBEEXZ	src-VA+ir
-0x20cf0	38	ai	??1type_spellvalue@@QAE@XZ	src-VA+base
-0x20f00	251	ai	?SOD_choose_faerie_dragon_spell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	src-VA+ir
-0x21590	225	ai	?mark_moat@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	src-VA+ir
-0x28580	289	ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	src-VA+ir
-0x286b0	33	ai_player	??0type_creature_source@@QAE@W4TCreatureType@@PAFE@Z	src-VA+ir
-0x286e0	38	ai_player	??1type_AI_creature_purchaser@@QAE@XZ	src-VA+base
-0x29d50	1017	ai_player	?fill_prohibited_array@@YIXPAVplayerData@@PAE@Z	src-VA+ir
-0x2b520	139	ai_player	game_2ae00_sub02_2b520	working-label
-0x2b5b0	190	ai_player	game_2ae00_sub03_2b5b0	working-label
-0x2b670	273	ai_player	game_2ae00_sub04_2b670	working-label
-0x2b790	98	ai_player	game_2ae00_sub05_2b790	working-label
-0x2b800	162	ai_player	game_2ae00_sub06_2b800	working-label
-0x2b8b0	304	ai_player	game_2ae00_sub07_2b8b0	working-label
-0x2b9e0	69	ai_player	game_is_human_ally	working-label
-0x2ba30	36	ai_player	game_GetTown	working-label
-0x2c040	21	ai_player	??0type_AI_creature_swapper@@QAE@XZ	src-VA+ir
-0x2c060	195	ai_player	?get_alignments@type_AI_creature_swapper@@IAEXXZ	src-VA+ir
-0x2c130	326	ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	src-VA+ir
-0x36bf0	58	ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	src-VA+base
-0x37a00	1786	ai_tactical	army_army	working-label
-0x3c620	477	ai_tactical	?get_faerie_dragon_spell_value@type_AI_spellcaster@@QAEJJJH@Z	src-VA+ir
-0x3d5c0	358	army	?InitClean@army@@QAEXXZ	src-VA+base
-0x3ea00	103	army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	src-VA+base
-0x3ea70	477	army	?add_aura@army@@QAEXXZ	src-VA+base
-0x3ec50	436	army	?remove_aura@army@@QAEXXZ	src-VA+base
-0x3ee10	450	army	?remove_binding@army@@QAEXXZ	src-VA+base
-0x3efe0	207	army	?set_inside_area_effect@army@@QAEEE@Z	src-VA+base
-0x3f0b0	518	army	?Walk@army@@QAEXHEE@Z	src-VA+base
-0x40140	31	army	?get_controlling_side@army@@QBEHXZ	src-VA+base
-0x40160	422	army	?range_attack@army@@QAEXXZ	src-VA+base
-0x40310	491	army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	src-VA+base
-0x409c0	505	army	?do_fire_shield@army@@QAEXJ@Z	src-VA+base
-0x41cb0	702	army	?do_attack@army@@QAEXH@Z	src-VA+base
-0x41f70	38	army	?check_obstacle_attacks@army@@QAEEE@Z	src-VA+base
-0x43320	1300	army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	src-VA+base
-0x43e30	257	army	?get_estimated_damage@army@@QBEJPBV1@JEJ@Z	src-VA+base
-0x456d0	356	army	?GoBerserk@army@@QAEXXZ	src-VA+base
-0x45840	102	army	?get_attack_direction@army@@QBEJJPBV1@J@Z	src-VA+base
-0x45a60	621	army	?attack_hex@army@@QAEEHE@Z	src-VA+base
-0x45cd0	56	army	?OffsetToFront@army@@QBEHH@Z	src-VA+base
-0x45d30	393	army	?AttackWall@army@@QAEXH@Z	src-VA+base
-0x45ec0	268	army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	src-VA+base
-0x46940	766	army	?PlayAnimation@army@@QAEXHHH@Z	src-VA+base
-0x46c40	481	army	?CanFit@army@@QBEHHHPAH@Z	src-VA+base
-0x47120	522	army	?ResetRound@army@@QAEXXZ	src-VA+base
-0x47330	156	army	?get_resurrection_size@army@@QBEJPBV1@@Z	src-VA+base
-0x473d0	317	army	?can_cast_resurrect@army@@QBEEJ@Z	src-VA+base
-0x47510	424	army	?FaerieDragonSpell@army@@QAEXXZ	src-VA+base
-0x476c0	954	army	?can_cast_spell@army@@QBEEJ@Z	src-VA+base
-0x47a80	1065	army	?spell_is_valid_on_target@@YIEHPBVarmy@@@Z	src-VA+base
-0x47fe0	638	army	?Unnamed447fe0@army@@QAEEXZ	src-VA+base
-0x487f0	67	army	?get_mirror_effect@army@@QBEHXZ	src-VA+base
-0x49df0	33	armygrp	??_GTSplitWindow@@UAEPAXI@Z	src-VA+base
-0x4a460	85	armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	src-VA+ir
-0x4c1c0	965	armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	src-VA+ir
-0x4fdb0	59	bitmap816	?Draw@Bitmap816@@QBEXHHHHPAVBitmap16Bit@@HH_N@Z	src-VA+ir
-0x4fdf0	59	bitmap816	?zBufferDraw@Bitmap816@@UBEXHHHHPAGHHH@Z	src-VA+ir
-0x4fe30	9	bitmap816	?GetSize@Bitmap816@@UBEIXZ	src-VA+ir
-0x4ff50	11	border	??1border@@UAE@XZ	src-VA+ir
-0x4ff60	461	border	?Main@border@@UAEHPAVmessage@@@Z	src-VA+ir
-0x50130	109	border	??0coloredBorderFrame@@QAE@HHHHHHH@Z	src-VA+ir
-0x501a0	33	border	??_GcoloredBorderFrame@@UAEPAXI@Z	src-VA+base
-0x501d0	11	border	??1coloredBorderFrame@@UAE@XZ	src-VA+ir
-0x501e0	91	border	?Draw@coloredBorderFrame@@UAEXXZ	src-VA+ir
-0x50240	130	border	?Main@coloredBorderFrame@@UAEHPAVmessage@@@Z	src-VA+ir
-0x502d0	140	border	??0bitmapBorder@@QAE@HHHHHPBDH@Z	src-VA+ir
-0x50360	33	border	??_GbitmapBorder@@UAEPAXI@Z	src-VA+base
-0x50550	306	border	?Main@bitmapBorder@@UAEHPAVmessage@@@Z	src-VA+ir
-0x50690	140	border	??0bitmapBorder16@@QAE@HHHHHPBDH@Z	src-VA+ir
-0x50720	33	border	??_GbitmapBorder16@@UAEPAXI@Z	src-VA+base
-0x510f0	33	bottomviewsubwindow	??_GTBottomViewNewTurn@@UAEPAXI@Z	src-VA+base
-0x515c0	16	bottomviewsubwindow	??0ios_base@std@@IAE@XZ	src-VA+base
-0x515d0	33	bottomviewsubwindow	??_Gios_base@std@@UAEPAXI@Z	src-VA+base
-0x51600	229	bottomviewsubwindow	??0strstreambuf@std@@QAE@H@Z	src-VA+base
-0x516f0	33	bottomviewsubwindow	??_Gstrstreambuf@std@@UAEPAXI@Z	src-VA+base
-0x51720	48	bottomviewsubwindow	??_Gostrstream@std@@UAEPAXI@Z	src-VA+base
-0x51750	20	bottomviewsubwindow	??_Dostrstream@std@@QAEXXZ	src-VA+base
-0x51770	33	bottomviewsubwindow	??_GTBottomViewResourceMessage@@UAEPAXI@Z	src-VA+base
-0x51a00	33	bottomviewsubwindow	??_GTBottomViewMessage@@UAEPAXI@Z	src-VA+base
-0x52140	33	bottomviewsubwindow	??_GTBottomViewHero@@UAEPAXI@Z	src-VA+base
-0x52ad0	33	bottomviewsubwindow	??_GTBottomViewTown@@UAEPAXI@Z	src-VA+base
-0x531a0	33	bottomviewsubwindow	??_GTBottomViewKingdom@@UAEPAXI@Z	src-VA+base
-0x53640	33	bottomviewsubwindow	??_GTBottomViewEnemyTurn@@UAEPAXI@Z	src-VA+base
-0x56a10	16	button	?_vslot12@button@@UAEXH@Z	src-VA+ir
-0x56a20	33	button	??_GtextButton@@UAEPAXI@Z	src-VA+base
-0x56d80	33	button	??_Gtype_func_button@@UAEPAXI@Z	src-VA+base
-0x5f0e0	33	campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	src-VA+base
-0x5f110	256	campaignwindow	??1SCampaign@@QAE@XZ	src-VA+ir
-0x62890	21	cmbtmgr	game_62760_sub00_62890	working-label
-0x628b0	110	cmbtmgr	game_62760_sub01_628b0	working-label
-0x62930	84	cmbtmgr	game_62760_sub02_62930	working-label
-0x639e0	14	cmbtmgr	?StopCombatSounds@combatManager@@QAEXXZ	src-VA+ir
-0x647a0	378	cmbtmgr	?GetGridIndex@combatManager@@QBEHHH@Z	src-VA+ir
-0x64d40	525	cmbtmgr	?Unnamed464d40@combatManager@@QAEEPAVarmy@@@Z	src-VA+ir
-0x64f50	291	cmbtmgr	?Unnamed464f50@combatManager@@QAEEPBVarmy@@0@Z	src-VA+ir
-0x65f20	178	cmbtmgr	?Unnamed465f20@combatManager@@QAEXXZ	src-VA+ir
-0x66260	38	cmbtmgr	game_229860_sub00_66260	working-label
-0x693a0	159	cmbtmgr	?Unnamed4693a0@combatManager@@QAEXH@Z	src-VA+ir
-0x69440	434	cmbtmgr	?CheckRebirth@combatManager@@QAEXXZ	src-VA+ir
-0x69e50	193	cmbtmgr	?Unnamed469e50@combatManager@@QAEEHPAVarmy@@E@Z	src-VA+ir
-0x6a460	57	cmbtmgr	?mark_tower_army@combatManager@@QAEXPBVarmy@@@Z	src-VA+ir
-0x6bb80	33	combatcontrolsubwindow	??_Gtype_combat_sub_window@@UAEPAXI@Z	src-VA+base
-0x6bea0	33	combatcontrolsubwindow	??_GTCombatControlSubWindow@@UAEPAXI@Z	src-VA+base
-0x6c1e0	33	combatcontrolsubwindow	??_GTCombatPlacementSubWindow@@UAEPAXI@Z	src-VA+base
-0x6c370	2044	combatcontrolsubwindow	game_chrpop_pcx_6c370	working-label
-0x6cb70	33	combatcontrolsubwindow	??_GTCombatHeroSubWindow@@UAEPAXI@Z	src-VA+base
-0x6cc10	471	combatcontrolsubwindow	game_74d80_sub04_6cc10	working-label
-0x6ceb0	3281	combatcontrolsubwindow	game_ccrpop_pcx_6ceb0	working-label
-0x6db90	33	combatcontrolsubwindow	??_GTCombatCreatureSubWindow@@UAEPAXI@Z	src-VA+base
-0x6f6d0	33	combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	src-VA+base
-0x71a40	33	combatresultswindow	??_GTCombatResultsWindow@@UAEPAXI@Z	src-VA+base
-0x72890	5	combatwindow	??1CCombatChatEdit@@UAE@XZ	src-VA+base
-0x728a0	33	combatwindow	??_GTCombatWindow@@UAEPAXI@Z	src-VA+base
-0x72900	334	combatwindow	??1TCombatWindow@@UAE@XZ	src-VA+ir
-0x72a50	292	combatwindow	?ProcessRightSelect@TCombatWindow@@QAEEPBVmessage@@@Z	src-VA+ir
-0x72b80	103	combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	src-VA+ir
-0x72bf0	54	combatwindow	?ClearCombatMessages@TCombatWindow@@QAEXXZ	src-VA+ir
-0x72c30	371	combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z	src-VA+ir
-0x72db0	64	combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	src-VA+ir
-0x72e90	862	combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	src-VA+ir
-0x731f0	153	combatwindow	?EndPlacementPhase@TCombatWindow@@QAEXXZ	src-VA+ir
-0x74680	12	command	game_22a1f0_sub00_74680	working-label
-0x74a00	408	command	game_74d80_sub14_74a00	working-label
-0x74ba0	74	command	game_93930_sub01_74ba0	working-label
-0x74d80	4429	command	game_true_74d80	working-label
-0x76200	225	command	?auto_resolve_combat@combatManager@@QAEXXZ	src-VA+ir
-0x762f0	246	command	?CheckWin@combatManager@@QAEHPAVmessage@@@Z	src-VA+ir
-0x763f0	77	command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	src-VA+ir
-0x77ac0	149	command	?CheckChangeSelector@combatManager@@QAEXXZ	src-VA+ir
-0x77b60	182	command	?TurnOffSelector@combatManager@@QAEXE@Z	src-VA+ir
-0x77c20	484	command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	src-VA+ir
-0x77e10	194	command	?TurnOffHighlighter@combatManager@@QAEXE@Z	src-VA+ir
-0x77ee0	997	command	?CheckGetAIMove@combatManager@@QAEXXZ	src-VA+ir
-0x782d0	1461	command	?GetControl@combatManager@@QAEXXZ	src-VA+ir
-0x78890	110	command	?ResetMouse@combatManager@@QAEXXZ	src-VA+ir
-0x78900	656	command	?process_move_then_attack@combatManager@@QAEEPAVmessage@@@Z	src-VA+ir
-0x78b90	485	command	?process_first_aid@combatManager@@QAEXPAVarmy@@@Z	src-VA+ir
-0x78d80	4180	command	combatManager_ProcessNextAction	src-VA
-0x79de0	335	command	?ResetCyclingCreatures@combatManager@@QAEXXZ	src-VA+ir
-0x79f30	139	command	?ResetCycleTimers@combatManager@@QAEXXZ	src-VA+ir
-0x79fc0	305	command	?SetCombatGrid@combatManager@@QAEXHHHE@Z	src-VA+ir
-0x7bd50	6	csprite	?GetSize@CSprite@@UBEIXZ	src-VA+ir
-0x7c460	247	cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	src-VA+ir
-0x7c560	7	cspriteframe	?GetSize@CSpriteFrame@@UBEIXZ	src-VA+ir
-0x8fe30	33	dialogbox	??_GTDialogBox@@UAEPAXI@Z	src-VA+base
-0x90740	33	dialogbox	??_GCTextDialog@@UAEPAXI@Z	src-VA+base
-0x91860	33	dimensiondoorwindow	??_GTDimensionDoorWindow@@UAEPAXI@Z	src-VA+base
-0x91c60	33	dimensiondoorwindow	??_GTSkuttleBoatWindow@@UAEPAXI@Z	src-VA+base
-0x93780	68	drawing	?UpdateCombatArea@combatManager@@QAEXXZ	src-VA+base
-0x94370	32	drawing	__h3cg$drawing$static_dtor$old_hexes	src-VA_COMPGEN
-0x94390	167	drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	src-VA+base
-0x953b0	324	drawing	?DrawSpellEffect@combatManager@@QAEHPBVCSprite@@HHHEE@Z	src-VA+base
-0x95500	322	drawing	?DrawSpriteObject@combatManager@@QAEHPBVCSprite@@HHHE@Z	src-VA+base
-0x95730	115	drawing	?DrawObstacle@combatManager@@QAEHABVhexcell@@@Z	src-VA+base
-0x957b0	293	drawing	?DrawWall@combatManager@@QAEHPBVBitmap816@@HHHHHH@Z	src-VA+base
-0x95a10	471	drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	src-VA+base
-0x95f50	380	drawing	?ComputeExtent@combatManager@@QAEXPBVCSprite@@HHHHPAUSLimitData@@HE@Z	src-VA+base
-0x97790	33	dxplay	game_22ae70_sub00_97790	working-label
-0x99e20	35	dxplay	game_99b20_sub00_99e20	working-label
-0x9a620	33	event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_move_hero	src-VA_COMPGEN
-0x9abe0	7	event_record	game_9a620_sub00_9abe0	working-label
-0x9bbd0	33	event_record	__h3cg$event_record$scalar_deleting_dtor$type_record_shroud	src-VA_COMPGEN
-0x9bc00	44	event_record	game_9bbd0_sub00_9bc00	working-label
-0x9bc30	66	event_record	game_9bc30	working-label
-0x9dac0	412	event_record	game_bcda0_sub03_9dac0	working-label
-0x9e670	348	events	?DoEventAnchor@advManager@@QAEXPAVhero@@_N@Z	src-VA+ir
-0x9e7d0	280	events	?DoEventArena@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0x9e8f0	326	events	?GiveArtifact@advManager@@QAEXPAVhero@@Utype_point@@_N@Z	src-VA+ir
-0x9ea40	772	events	game_pickup_02d_82m_9ea40	working-label
-0x9f040	35	events	?get_treasure_data@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	src-VA+ir
-0x9f070	1893	events	game_pickup_02d_82m_9f070	working-label
-0x9f7e0	676	events	game_a84f0_sub03_9f7e0	working-label
-0xa0b00	274	events	game_9fa90_sub00_a0b00	working-label
-0xa0c20	35	events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	src-VA+ir
-0xa0c50	631	events	?DoEventBlackBox@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa1010	269	events	?DoEventBoat@advManager@@QAEXPAVhero@@PAVNewmapCell@@@Z	src-VA+ir
-0xa1120	452	events	?DoEventCampfire@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa12f0	435	events	?DoEventIdol@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa14b0	236	events	?DoEventCoverOfDarkness@advManager@@QAEXPAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa2050	228	events	?DoEventDefenseTower@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa2140	232	events	?do_event_dragon_city@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa2230	592	events	?DoEventFlotsam@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa2480	364	events	?DoEventFountain@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa25f0	275	events	?DoEventFountainOfYouth@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa2710	228	events	?DoEventGarden@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa2800	319	events	?do_event_hero@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa31a0	223	events	?DoEventLeanTo@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa3280	348	events	?DoEventLibrary@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa33e0	429	events	?DoEventMagicSchool@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa3590	412	events	?DoEventMagicSpring@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa3730	382	events	?DoEventMagicWell@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa38b0	228	events	?DoEventMercenaryCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa39a0	541	events	?DoEventMine@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	src-VA+ir
-0xa3bc0	220	events	?DoEventMysticalGarden@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa3ca0	284	events	?DoEventOasis@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa3dc0	228	events	?DoEventPowerSchool@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa4230	650	events	?do_event_pyramid@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa44c0	310	events	?DoEventRallyFlag@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa4600	380	events	?DoEventRefugeeCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa4be0	473	events	?DoEventResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	src-VA+ir
-0xa4dc0	611	events	?DoEventScholar@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa5030	622	events	?DoEventSeaChest@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa52a0	478	events	?DoEventSurvivor@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa5480	391	events	?DoEventSkeleton@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa5960	22	events	?GetTeam@game@@QBEHH@Z	src-VA+ir
-0xa5980	256	events	?DoEventSiren@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa5ea0	505	events	?DoEventSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa60a0	352	events	?DoEventStables@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa6200	300	events	?DoEventTemple@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa6330	262	events	?DoEventTrainingGrounds@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa6520	493	events	?DoEventTreasure@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa6710	669	events	?DoEventTreeOfKnowledge@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa69b0	376	events	?DoEventWagon@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa6c60	392	events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa6df0	523	events	?monsters_flee@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	src-VA+ir
-0xa7000	584	events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	src-VA+ir
-0xa7250	879	events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	src-VA+ir
-0xa75c0	253	events	?get_like_modifier@advManager@@SIHPAVhero@@W4TCreatureType@@@Z	src-VA+ir
-0xa76c0	117	events	?get_force_modifier@advManager@@SIHM@Z	src-VA+ir
-0xa7740	638	events	?DoWanderingMonsterResult@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	src-VA+ir
-0xa79c0	121	events	?DoEventWanderingMonster@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	src-VA+ir
-0xa7a40	490	events	?DoEventWarSchool@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa7c30	417	events	?do_event_warrior_tomb@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa7de0	177	events	?do_event_water_wheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa7ea0	273	events	?do_event_watering_hole@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa7fc0	189	events	?do_event_windmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa8080	421	events	?do_event_witch_hut@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	src-VA+ir
-0xa8230	340	events	?do_event_lith_one_way@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa8390	341	events	?do_event_lith_two_way@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	src-VA+ir
-0xa84f0	9538	events	advManager_do_event_whirlpool	working-label
-0xaaa40	92	events	advManager_DispatchEvent	working-label
-0xaaaa0	272	events	?DoEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@@Z	src-VA+ir
-0xaabb0	569	events	?EraseObj@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	src-VA+ir
-0xaafd0	1073	events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	src-VA+ir
-0xab410	1586	events	?EventSound@advManager@@QAEXHH@Z	src-VA+ir
-0xac930	355	events	?HeroLoses@advManager@@QAEXPAVhero@@H@Z	src-VA+ir
-0xb3b90	32	findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	src-VA+ir
-0xb5110	103	font	??1font@@UAE@XZ	src-VA+ir
-0xb5250	12	font	?GetSize@font@@UBEIXZ	src-VA+ir
-0xb9230	62	game	game_5bcd0_sub03_b9230	working-label
-0xba1c0	80	game	game_1021c0_sub00_ba1c0	working-label
-0xba210	80	game	game_1bcd60_sub00_ba210	working-label
-0xbacb0	202	game	?hasGivenArtifact@playerData@@QAE_NH@Z	src-VA+ir
-0xbbc20	542	game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	src-VA+ir
-0xbc0e0	593	game	??0SavedGameHeader@@QAE@XZ	src-VA+ir
-0xbc340	14	game	??0VictoryConditionStruct@@QAE@XZ	src-VA+base
-0xbc350	625	game	?Reset@SavedGameHeader@@QAEXXZ	src-VA+ir
-0xbc5d0	378	game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	src-VA+ir
-0xbc750	981	game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	src-VA+ir
-0xbdc70	777	game	game_bcda0_sub15_bdc70	working-label
-0xbdf80	433	game	SavedGameHeader_SavedGameHeader_bdf80	working-label
-0xbe140	286	game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	src-VA+ir
-0xbe260	392	game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	src-VA+ir
-0xbf107	122	game	game_bf107	working-label
-0xbf1a0	387	game	?SetupOrigData@game@@QAEXXZ	src-VA+ir
-0xbf330	571	game	?LoadGame@game@@QAEHPBDHH@Z	src-VA+ir
-0xbf570	515	game	?GiveTroopsToNeutralTown@game@@QAEXH@Z	src-VA+ir
-0xc0520	262	game	?NewMap@game@@QAEEPBD0PAHH@Z	src-VA+ir
-0xc2330	39	game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	src-VA+ir
-0xc2360	39	game	?SetWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	src-VA+ir
-0xc2390	33	game	?SetWagon@ExtraInfoUnion@@QAEXH@Z	src-VA+ir
-0xc23c0	28	game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	src-VA+ir
-0xc23e0	49	game	??0CMCClaimGarrison@@QAE@HH@Z	src-VA+ir
-0xc2420	38	game	??1type_creature_bank@@QAE@XZ	src-VA+ir
-0xc3090	354	game	game_c2ce0_sub00_c3090	working-label
-0xc3890	996	game	game_c5630_sub00_c3890	working-label
-0xc3d90	350	game	game_c5630_sub01_c3d90	working-label
-0xc3ef0	1176	game	game_c4390_sub02_c3ef0	working-label
-0xc4390	2350	game	game_87d30_sub00_c4390	working-label
-0xc4cc0	304	game	game_c4390_sub03_c4cc0	working-label
-0xc4df0	62	game	game_22c13b_sub00_c4df0	working-label
-0xc4e30	211	game	game_c2450_sub01_c4e30	working-label
-0xc5630	1997	game	game_bc750_sub02_c5630	working-label
-0xc5e00	528	game	game_creature_generator_3_fou_c5e00	working-label
-0xc6010	462	game	game_c2450_sub02_c6010	working-label
-0xc6690	67	game	?get_alignment@game@@QBEHH@Z	src-VA+ir
-0xc8450	584	game	game_bfe70_sub09_c8450	working-label
-0xc86a0	213	game	game_d7890_sub00_c86a0	working-label
-0xca9e0	36	game	cinit0403_ca9e0	working-label
-0xcafd0	540	game	game_data_cafd0	working-label
-0xcbcf0	75	game	game_157760_sub00_cbcf0	working-label
-0xcbd40	2691	game	calls_timeGetTime_cbd40	working-label
-0xce520	74	game	game_cdf20_sub02_ce520	working-label
-0xce570	50	game	??1playerData@@QAE@XZ	src-VA+ir
-0xcecb0	129	game	game_5b1e0_sub05_cecb0	working-label
-0xced40	464	game	game_1013b0_sub00_ced40	working-label
-0xcef10	104	game	game_16ef20_sub00_cef10	working-label
-0xcef80	18	game	game_4ae60_sub03_cef80	working-label
-0xcefa0	103	game	game_c2450_sub03_cefa0	working-label
-0xcf010	46	game	game_c92c0_sub00_cf010	working-label
-0xcf040	106	game	game_c4390_sub04_cf040	working-label
-0xcf0b0	59	game	game_ce5b0_sub00_cf0b0	working-label
-0xcf0f0	726	game	game_bcda0_sub17_cf0f0	working-label
-0xcf3d0	59	game	game_ce5b0_sub01_cf3d0	working-label
-0xcf410	673	game	game_bcda0_sub18_cf410	working-label
-0xcf6c0	35	game	game_be3f0_sub10_cf6c0	working-label
-0xcf6f0	56	game	game_ce5b0_sub02_cf6f0	working-label
-0xcf730	19	game	game_b9340_sub00_cf730	working-label
-0xcf750	33	game	game_b9a00_sub00_cf750	working-label
-0xcf780	56	game	game_22c463_sub00_cf780	working-label
-0xcf7c0	56	game	game_22c471_sub00_cf7c0	working-label
-0xcf800	103	game	game_c0cc0_sub09_cf800	working-label
-0xcf870	83	game	game_c0cc0_sub10_cf870	working-label
-0xcf8d0	28	game	game_c0cc0_sub11_cf8d0	working-label
-0xcf8f0	103	game	game_c0cc0_sub12_cf8f0	working-label
-0xcf960	52	game	game_c3ef0_sub00_cf960	working-label
-0xcf9a0	99	game	game_c2450_sub04_cf9a0	working-label
-0xcfa10	37	game	game_c2450_sub05_cfa10	working-label
-0xcfa40	19	game	game_bdc70_sub00_cfa40	working-label
-0xcfa60	99	game	game_c92c0_sub01_cfa60	working-label
-0xcfad0	55	game	game_c92c0_sub02_cfad0	working-label
-0xcfb10	796	game	game_c3ef0_sub01_cfb10	working-label
-0xcfe30	143	game	game_c3ef0_sub02_cfe30	working-label
-0xcfec0	35	game	game_c3ef0_sub03_cfec0	working-label
-0xcfef0	52	game	game_be3f0_sub11_cfef0	working-label
-0xcff30	23	game	game_bcda0_sub19_cff30	working-label
-0xcff50	277	game	game_c4390_sub05_cff50	working-label
-0xd0070	99	game	game_c4390_sub06_d0070	working-label
-0xd00e0	764	game	game_c0cc0_sub13_d00e0	working-label
-0xd03e0	68	game	game_bcda0_sub20_d03e0	working-label
-0xd0430	796	game	game_caa70_sub00_d0430	working-label
-0xd0750	109	game	game_caa70_sub01_d0750	working-label
-0xd07c0	38	game	game_cf410_sub00_d07c0	working-label
-0xd07f0	796	game	game_b9070_sub01_d07f0	working-label
-0xd0b10	143	game	game_b9070_sub02_d0b10	working-label
-0xd0ba0	619	game	game_b9340_sub01_d0ba0	working-label
-0xd0e10	68	game	game_b9340_sub02_d0e10	working-label
-0xd0e60	522	game	game_bb250_sub00_d0e60	working-label
-0xd1070	740	game	game_b9a00_sub01_d1070	working-label
-0xd1360	68	game	game_b9a00_sub02_d1360	working-label
-0xd13b0	35	game	game_ce5b0_sub03_d13b0	working-label
-0xd13e0	768	game	game_bbe40_sub00_d13e0	working-label
-0xd16e0	127	game	game_bbe40_sub01_d16e0	working-label
-0xd1760	35	game	game_ce5b0_sub04_d1760	working-label
-0xd1790	21	game	game_c0cc0_sub14_d1790	working-label
-0xd17b0	17	game	game_c0cc0_sub15_d17b0	working-label
-0xd17d0	52	game	game_c0cc0_sub16_d17d0	working-label
-0xd1810	21	game	game_c0cc0_sub17_d1810	working-label
-0xd1830	23	game	game_c0cc0_sub18_d1830	working-label
-0xd1850	200	game	game_invalid_bitset_n_positio_d1850	working-label
-0xd1920	857	game	game_c9990_sub00_d1920	working-label
-0xd1c80	200	game	game_invalid_bitset_n_positio_d1c80	working-label
-0xd1d50	761	game	game_cff50_sub00_d1d50	working-label
-0xd2050	50	game	game_c4f10_sub01_d2050	working-label
-0xd2090	200	game	game_invalid_bitset_n_positio_d2090	working-label
-0xd2160	49	game	game_cf0f0_sub00_d2160	working-label
-0xd21a0	62	game	game_cf410_sub01_d21a0	working-label
-0xd21e0	44	game	game_cf410_sub02_d21e0	working-label
-0xd2210	59	game	game_d0e60_sub00_d2210	working-label
-0xd2250	49	game	game_d0e60_sub01_d2250	working-label
-0xd2290	882	game	game_c0cc0_sub19_d2290	working-label
-0xd2610	200	game	game_invalid_bitset_n_positio_d2610	working-label
-0xd26e0	200	game	game_invalid_bitset_n_positio_d26e0	working-label
-0xd27b0	179	game	game_cff50_sub01_d27b0	working-label
-0xd2870	589	game	game_bcda0_sub21_d2870	working-label
-0xd5860	33	gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	src-VA+base
-0xd8b30	1076	hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	src-VA+ir
-0xd8f70	62	hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	src-VA+ir
-0xd8fb0	160	hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	src-VA+ir
-0xdbe80	164	hero	?HeroFn_004DBE80@hero@@QAEEH@Z	src-VA+ir
-0xdbf30	307	hero	?HeroFn_004DBF30@hero@@QAEEHJ@Z	src-VA+ir
-0xdc070	135	hero	?HeroFn_004DC070@hero@@QAEXJ@Z	src-VA+ir
-0xdc100	535	hero	?HeroFn_004DC100@hero@@QAEXJ@Z	src-VA+ir
-0xe1370	431	hero	?set_hotkey@button@@QAEXH@Z	src-VA+base
-0xe1520	33	hero	??_GTHeroScreenWindow@@UAEPAXI@Z	src-VA+base
-0xe2550	748	hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	src-VA+ir
-0xe2840	412	hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	src-VA+ir
-0xe29dc	25	hero	game_e29dc	working-label
-0xe3c60	112	hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	src-VA+ir
-0xe4ec0	214	hero	?HeroFn_004E4EC0@hero@@QAE?AW4TAdventureObjectType@@XZ	src-VA+ir
-0xe5de0	45	hero	?HeroFn_004E5DE0@hero@@QAEHXZ	src-VA+ir
-0xe9710	44	hiscore	?OnKeyPress@CHighScoreEdit@@UAEHPAVmessage@@@Z	src-VA+base
-0xe9800	33	hiscore	??_GCHSInputDlg@@UAEPAXI@Z	src-VA+base
-0xe9d90	33	hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	src-VA+base
-0xea7b0	85	iconwdgt	??1iconWidget@@UAE@XZ	src-VA+ir
-0xec590	174	inputmgr	?GetEvent@inputManager@@QAE?AVmessage@@XZ	src-VA+ir
-0xec640	173	inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	src-VA+ir
-0xed650	1256	kb	calls_LoadMenuA_ed650	working-label
-0xee1b0	246	kb	game_ee3e0_sub15_ee1b0	working-label
-0xefff0	25	kb	game_ee3e0_sub17_efff0	working-label
-0xf0010	59	kb	game_ee3e0_sub18_f0010	working-label
-0xf0050	71	kb	game_ee3e0_sub19_f0050	working-label
-0xf00a0	1006	kb	game_ee3e0_sub20_f00a0	working-label
-0xf0490	251	kb	game_ee3e0_sub21_f0490	working-label
-0xf0590	113	kb	game_ee3e0_sub22_f0590	working-label
-0xf0610	119	kb	game_ee3e0_sub23_f0610	working-label
-0xf0690	568	kb	game_ed650_sub20_f0690	working-label
-0xf0ae0	33	kb	game_f0ae0	working-label
-0xf0b10	5	kb	game_f0ae0_sub00_f0b10	working-label
-0xf1190	5	kb	game_12e410_sub00_f1190	working-label
-0xf1460	370	kb	game_f15e0_sub00_f1460	working-label
-0xf2930	35	kb	game_f15e0_sub01_f2930	working-label
-0xf3940	169	kb	combatManager_combatManager_f3940	working-label
-0xf39f0	109	kb	advManager_advManager_f39f0	working-label
-0xf3a60	77	kb	game_cb1ec_sub00_f3a60	working-label
-0xf3e30	122	kb	game_f3f60_sub06_f3e30	working-label
-0xf3eb0	167	kb	game_89820_sub05_f3eb0	working-label
-0xf9700	33	levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	src-VA+base
-0xfb630	33	mainmenu	??_GTMainMenu@@UAEPAXI@Z	src-VA+base
-0xfb660	117	mainmenu	??1TMainMenu@@UAE@XZ	src-VA+ir
-0xfca60	62	mapcell	??1TreasureData@@QAE@XZ	src-VA+base
-0xfd1c0	24	mapcell	??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXXZ	src-VA+base
-0xfd460	88	mapcell	??_ENewmapCell@@QAEPAXI@Z	src-VA+base
-0xfd650	62	mapcell	??0NewmapCell@@QAE@XZ	src-VA+ir
-0xfd950	616	mapcell	?NewfullMapFn_004FD950@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	src-VA+ir
-0xfe6c0	596	mapcell	?upgrade_cell_extra_info@@YIXPAVNewmapCell@@H@Z	src-VA+ir
-0xffdf0	176	mapcell	??1BlackBoxData@@QAE@XZ	src-VA+ir
-0x100de0	569	mapcell	?LoadShipyards@NewfullMap@@QAEXXZ	src-VA+ir
-0x102b60	667	mapcell	?SoD_transformRandomDwellings@NewfullMap@@QAEXXZ	src-VA+ir
-0x104260	46	mapcell	cinit0549_104260	working-label
-0x104290	42	mapcell	game_104260_sub00_104290	working-label
-0x1042c0	421	mapcell	?NewfullMapFn_005042C0@NewfullMap@@QAEXXZ	src-VA+ir
-0x104a40	295	mapcell	?saveMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@@Z	src-VA+ir
-0x10cbc0	44	mousemgr	??_GmouseManager@@UAEPAXI@Z	src-VA+base
-0x10ed50	7	multiplayerwindow	TMultiPlayerWindow_GetRolloverWidget	src-VA
-0x10ed60	67	multiplayerwindow	game_10ed60	working-label
-0x10edb0	33	multiplayerwindow	game_10edb0	working-label
-0x10ede0	33	multiplayerwindow	mouseManager_vslot00	working-label
-0x10ee40	171	multiplayerwindow	TMultiPlayerWindow_TMultiPlayerWindow_10ee40	src-VA
-0x10eef0	201	multiplayerwindow	game_10f4e0_sub00_10eef0	working-label
-0x10efc0	299	multiplayerwindow	game_10e050_sub00_10efc0	working-label
-0x10f0f0	998	multiplayerwindow	game_10ed60_sub00_10f0f0	working-label
-0x10f4e0	1112	multiplayerwindow	TMultiPlayerWindow_OnWidgetDeselect	src-VA
-0x10f940	197	multiplayerwindow	TMultiPlayerWindow_WindowHandler	src-VA
-0x10fa10	159	multiplayerwindow	game_111660_sub00_10fa10	working-label
-0x10fab0	262	multiplayerwindow	game_s_c_s_10fab0	working-label
-0x10fbc0	134	multiplayerwindow	game_10fda0_sub00_10fbc0	working-label
-0x10fc50	335	multiplayerwindow	calls_ShowCursor_10fc50	working-label
-0x10fda0	695	multiplayerwindow	calls_ShowCursor_10fda0	working-label
-0x110060	1783	multiplayerwindow	CMPInputDlg_CMPInputDlg	src-VA
-0x110760	98	multiplayerwindow	game_110060_sub00_110760	working-label
-0x1107d0	115	multiplayerwindow	calls_GetKeyState_1107d0	working-label
-0x110850	27	multiplayerwindow	game_110850	working-label
-0x110870	27	multiplayerwindow	game_110870	working-label
-0x110890	16	multiplayerwindow	game_110890	working-label
-0x1108a0	78	multiplayerwindow	CMPInputDlg_CMPInputDlg_1108a0	src-VA
-0x1108f0	114	multiplayerwindow	CMPInputDlg_OnWidgetDeselect	src-VA
-0x110970	4	multiplayerwindow	CMPInputDlg_GetRolloverWidget	src-VA
-0x110980	93	multiplayerwindow	game_110980	working-label
-0x1109e0	33	multiplayerwindow	game_1109e0	working-label
-0x110a10	664	multiplayerwindow	game_110f40_sub00_110a10	working-label
-0x110cb0	642	multiplayerwindow	game_110f40_sub01_110cb0	working-label
-0x110f40	896	multiplayerwindow	game_10f4e0_sub02_110f40	working-label
-0x1112c0	28	multiplayerwindow	game_110f40_sub02_1112c0	working-label
-0x1112e0	257	multiplayerwindow	game_1113f0_sub00_1112e0	working-label
-0x1113f0	611	multiplayerwindow	calls_timeGetTime_1113f0	working-label
-0x111660	1638	multiplayerwindow	game_mudialog_pcx_111660	working-label
-0x111cd0	98	multiplayerwindow	game_111660_sub01_111cd0	working-label
-0x111d40	209	multiplayerwindow	game_10f4e0_sub05_111d40	working-label
-0x111e20	1441	multiplayerwindow	CHotSeatDlg_CHotSeatDlg	src-VA
-0x124360	3	philai	game_1b500_sub02_124360	working-label
-0x124370	115	philai	game_a84f0_sub60_124370	working-label
-0x1243f0	8	philai	game_a84f0_sub61_1243f0	working-label
-0x124550	210	philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	src-VA+ir
-0x124630	96	philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	src-VA+ir
-0x124690	1668	philai	game_124630_sub00_124690	working-label
-0x124d20	163	philai	game_124690_sub00_124d20	working-label
-0x124dd0	243	philai	game_124630_sub01_124dd0	working-label
-0x125bf0	172	philai	game_1253d0_sub05_125bf0	working-label
-0x125dc0	177	philai	game_a2800_sub02_125dc0	working-label
-0x125e80	866	philai	philAI_DoAI	src-VA
-0x126c70	72	philai	AI_resource_cost	working-label
-0x126cc0	85	philai	AI_resource_cost_126cc0	working-label
-0x126d20	30	philai	game_1bf3c0_sub00_126d20	working-label
-0x126d40	915	philai	type_spellvalue_type_spellvalue	working-label
-0x1270e0	223	philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	src-VA+ir
-0x1271c0	193	philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	src-VA+ir
-0x127290	308	philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	src-VA+ir
-0x1273d0	477	philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	src-VA+ir
-0x1275b0	138	philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	src-VA+ir
-0x127640	203	philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	src-VA+ir
-0x127710	76	philai	game_27330_sub03_127710	working-label
-0x127760	498	philai	game_2fc50_sub04_127760	working-label
-0x127960	320	philai	game_125e80_sub04_127960	working-label
-0x127b00	164	philai	game_a18b0_sub02_127b00	working-label
-0x127bb0	285	philai	game_a84f0_sub64_127bb0	working-label
-0x127cd0	27	philai	game_a33e0_sub00_127cd0	working-label
-0x127cf0	137	philai	?MoraleIncreaseValue@hero@@QAEHH@Z	src-VA+ir
-0x127d80	144	philai	?LuckIncreaseValue@hero@@QAEHH@Z	src-VA+ir
-0x127e10	171	philai	game_a4600_sub01_127e10	working-label
-0x127ec0	147	philai	game_a5980_sub00_127ec0	working-label
-0x127f60	115	philai	game_a7250_sub00_127f60	working-label
-0x127fe0	81	philai	game_a6440_sub00_127fe0	working-label
-0x128040	5704	philai	AI_value_of_event	src-VA
-0x129690	51	philai	ExtraInfoUnion_PlayerKnowsCell	working-label
-0x1296d0	55	philai	game_OnSameTeam	working-label
-0x129710	52	philai	game_UpgradedCreatureType	working-label
-0x129750	120	philai	get_artifact_purchase_value	working-label
-0x1297d0	54	philai	game_128040_sub07_1297d0	working-label
-0x129810	124	philai	game_128040_sub08_129810	working-label
-0x1298d0	75	philai	game_128040_sub10_1298d0	working-label
-0x129f90	114	philai	game_128040_sub14_129f90	working-label
-0x12a010	298	philai	game_128040_sub15_12a010	working-label
-0x12a140	150	philai	game_128040_sub16_12a140	working-label
-0x12a1e0	195	philai	game_128040_sub17_12a1e0	working-label
-0x12a2b0	197	philai	game_128040_sub18_12a2b0	working-label
-0x12a380	28	philai	game_128040_sub19_12a380	working-label
-0x12a3a0	97	philai	game_128040_sub20_12a3a0	working-label
-0x12a410	245	philai	game_128040_sub21_12a410	working-label
-0x12a510	223	philai	game_128040_sub22_12a510	working-label
-0x12a5f0	264	philai	game_128040_sub23_12a5f0	working-label
-0x12a700	16	philai	game_128040_sub24_12a700	working-label
-0x12a870	79	philai	game_128040_sub26_12a870	working-label
-0x12a960	344	philai	game_128040_sub28_12a960	working-label
-0x12aac0	185	philai	game_128040_sub29_12aac0	working-label
-0x12b1e0	756	philai	game_12ab80_sub01_12b1e0	working-label
-0x12b4e0	191	philai	game_128040_sub31_12b4e0	working-label
-0x12b5a0	353	philai	game_128040_sub32_12b5a0	working-label
-0x12b710	126	philai	game_128040_sub33_12b710	working-label
-0x12b790	113	philai	game_128040_sub34_12b790	working-label
-0x12b810	225	philai	game_128040_sub35_12b810	working-label
-0x12b900	182	philai	game_128040_sub36_12b900	working-label
-0x12c570	33	puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	src-VA+base
-0x12f3a0	33	quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	src-VA+base
-0x12fcf0	33	quickinfowindow	??_GTQuickCreatureWindow@@UAEPAXI@Z	src-VA+base
-0x1307a0	33	quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	src-VA+base
-0x14e850	4757	recruit	game_tprcrt_pcx_14e850	working-label
-0x14faf0	33	recruit	??_GTRecruitWindow@@UAEPAXI@Z	src-VA+base
-0x14fb90	781	recruit	game_14e850_sub00_14fb90	working-label
-0x14fea0	1070	recruit	game_s_s_14fea0	working-label
-0x150940	2568	recruit	calls_timeGetTime_150940	working-label
-0x1516b0	33	recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	src-VA+base
-0x1532b0	185	remote	?CompressMsg@CDPlayHeroes@@IAEPAVCNetMsg@@PAV2@@Z	src-VA+ir
-0x1533d0	427	remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	src-VA+ir
-0x153580	496	remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	src-VA+ir
-0x154a80	33	remote	??_GCAnimatedDlg@@UAEPAXI@Z	src-VA+base
-0x154ab0	85	remote	??1CAnimatedDlg@@UAE@XZ	src-VA+ir
-0x155150	28	remote	?Copy@CNetMsgHandler@@QAEXPAV1@@Z	src-VA+ir
-0x155170	5	remote	?CheckHandleNet@CNetMsgHandlerPause@@UAEPAVCNetMsg@@EPAE@Z	src-VA+ir
-0x155180	5	remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	src-VA+ir
-0x155190	793	remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	src-VA+ir
-0x1554b0	33	remote	??_GCWaitForReadyPlayersDlg@@UAEPAXI@Z	src-VA+base
-0x1554e0	201	remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	src-VA+base
-0x1555b0	294	remote	?CreateDPlayObject@@YIEXZ	src-VA+ir
-0x1556e0	548	remote	?InitConnection@@YIEPADPAU_DPCOMPORTADDRESS@@@Z	src-VA+ir
-0x155910	8	remote	?DestroyMsg@@YIXPAVCNetMsg@@@Z	src-VA+ir
-0x155920	369	remote	?TestIfLobbyLaunched@@YIEXZ	src-VA+ir
-0x155aa0	1091	remote	?HandleMPlayerLaunch@@YIEXZ	src-VA+ir
-0x155ef0	996	remote	?LobbyLaunchConnect@@YIEXZ	src-VA+ir
-0x1562e0	334	remote	?UpdateCurrentPlayers@@YIXXZ	src-VA+ir
-0x156430	417	remote	?HandlePlayerDrop@@YIXK@Z	src-VA+ir
-0x1565e0	414	remote	?OnPlayerDropUpdateMsg@@YIXK@Z	src-VA+ir
-0x156780	448	remote	?HandlePlayerDead@@YIXHE@Z	src-VA+ir
-0x1569f0	180	remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	src-VA+ir
-0x156b70	33	remote	??_GCLevelPickWaitDlg@@UAEPAXI@Z	src-VA+base
-0x156ba0	114	remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	src-VA+ir
-0x156c20	757	remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	src-VA+ir
-0x156f20	316	remote	??0CWaitForRemoteBattleDlg@@QAE@XZ	src-VA+ir
-0x157060	33	remote	??_GCWaitForRemoteBattleDlg@@UAEPAXI@Z	src-VA+base
-0x157090	92	remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	src-VA+ir
-0x1570f0	489	remote	?handle_message@CWaitForRemoteBattleDlg@@UAEHAAVmessage@@@Z	src-VA+ir
-0x157310	33	remote	??_GCSaveScreen@@UAEPAXI@Z	src-VA+base
-0x157340	5	remote	??1CSaveScreen@@UAE@XZ	src-VA+base
-0x1574b0	301	remote	?SetPercentage@CGameTransferSmack@@QAEXM@Z	src-VA+ir
-0x157760	33	remote	??_GCGameTransferDlg@@UAEPAXI@Z	src-VA+base
-0x157810	69	remote	??_GCNetMsgHandler@@UAEPAXI@Z	src-VA+base
-0x1578d0	48	remote	??1CNetMsgHandler@@UAE@XZ	src-VA+ir
-0x157900	4	remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	src-VA+ir
-0x157920	343	remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	src-VA+ir
-0x157eb0	33	remote	??_GCNetMsgHandlerPause@@UAEPAXI@Z	src-VA+base
-0x158770	35	resource	??_Gresource@@UAEPAXI@Z	src-VA+base
-0x158e50	33	resourcedisplay	??_GTResourceDisplay@@UAEPAXI@Z	src-VA+base
-0x159110	33	resourcemanager	?Read@t_lod_file_adapter@ResourceManager@@UAEHPAXH@Z	src-VA+ir
-0x159140	5	resourcemanager	?Write@t_stdio_file_adapter@ResourceManager@@UAEHPBXH@Z	src-VA+base
-0x159150	132	resourcemanager	cinit0778_159150	working-label
-0x1591e0	26	resourcemanager	??0TResourceLODSlot@@QAE@PBD@Z	src-VA+ir
-0x159230	46	resourcemanager	cinit0779_159230	working-label
-0x1592b0	97	resourcemanager	cinit0780_1592b0	working-label
-0x159320	209	resourcemanager	cinit0781_159320	working-label
-0x159400	39	resourcemanager	cinit0782_159400	working-label
-0x159440	110	resourcemanager	game_159440	working-label
-0x1594f0	20	resourcemanager	??_D?$basic_ostringstream@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QAEXXZ	src-VA+base
-0x159510	1217	resourcemanager	@game_null_159510@12	src-VA+ir
-0x1599e0	1096	resourcemanager	@game_sprite_1599e0@12	src-VA+ir
-0x159e30	485	resourcemanager	?RemapGraphics@ResourceManager@@YIXXZ	src-VA+ir
-0x15a020	545	resourcemanager	?SaturateGraphics@ResourceManager@@YIXXZ	src-VA+ir
-0x15a250	753	resourcemanager	?Open@ResourceManager@@YI_N_N0PAH@Z	src-VA+ir
-0x15a550	103	resourcemanager	?Close@ResourceManager@@YIXXZ	src-VA+ir
-0x15a5c0	226	resourcemanager	?SetPath@ResourceManager@@YIXPBD@Z	src-VA+ir
-0x15a6b0	239	resourcemanager	?SetPixelFormat@ResourceManager@@YIXKKK@Z	src-VA+ir
-0x15a7a0	33	resourcemanager	??_Gt_stdio_file_adapter@ResourceManager@@UAEPAXI@Z	src-VA+base
-0x15a7d0	33	resourcemanager	??_Gt_lod_file_adapter@ResourceManager@@UAEPAXI@Z	src-VA+base
-0x15a800	1055	resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	src-VA+ir
-0x15ac20	32	resourcemanager	??0TCacheMapKey@ResourceManager@@QAE@PBD@Z	src-VA+ir
-0x15ac40	904	resourcemanager	?LoadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	src-VA+ir
-0x15afd0	138	resourcemanager	?GetBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	src-VA+ir
-0x15b060	887	resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	src-VA+ir
-0x15b3e0	138	resourcemanager	?GetPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	src-VA+ir
-0x15b470	721	resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	src-VA+ir
-0x15b750	361	resourcemanager	?LoadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	src-VA+ir
-0x15b8b9	17	resourcemanager	game_15b8b9	working-label
-0x15b8d0	553	resourcemanager	?LoadFont@ResourceManager@@YIPAVfont@@PBD@Z	src-VA+ir
-0x15bb00	138	resourcemanager	?GetFont@ResourceManager@@YIPAVfont@@PBD@Z	src-VA+ir
-0x15bb90	576	resourcemanager	?LoadText@ResourceManager@@YIPAVTTextResource@@PBD@Z	src-VA+ir
-0x15bdd0	138	resourcemanager	?GetText@ResourceManager@@YIPAVTTextResource@@PBD@Z	src-VA+ir
-0x15be60	576	resourcemanager	?LoadSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	src-VA+ir
-0x15fd70	33	sacrifice_window	game_15fd70	working-label
-0x160350	33	sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z	src-VA+base
-0x160380	3431	sacrifice_window	game_altrart2_pcx_160380	working-label
-0x1610f0	3699	sacrifice_window	game_altarmon_pcx_1610f0	working-label
-0x162660	469	sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	src-VA+base
-0x1629b0	34	sacrifice_window	?set_visible@widget@@QAEXE@Z	src-VA+ir
-0x1639e0	91	sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	src-VA+base
-0x1654b0	5	sacrifice_window	game_15fd70_sub00_1654b0	working-label
-0x1654f0	2620	sacrifice_window	game_sktrnbk_pcx_1654f0	working-label
-0x165f30	33	sacrifice_window	??_Gtype_skeleton_window@@UAEPAXI@Z	src-VA+base
-0x166030	1117	sacrifice_window	game_d_s_166030	working-label
-0x166490	600	sacrifice_window	game_1654c0_sub00_166490	working-label
-0x166e30	33	sample	??_Gsample@@UAEPAXI@Z	src-VA+base
-0x16e990	160	seerhut	??1type_experience_quest@@UAE@XZ	src-VA+base
-0x16ed40	69	seerhut	?NotifyMonsterDefeated@type_monster_quest@@UAEXUtype_point@@H@Z	src-VA+ir
-0x16f4a0	33	seerhut	??_Gtype_artifact_quest@@UAEPAXI@Z	src-VA+base
-0x16f4d0	194	seerhut	??1type_artifact_quest@@UAE@XZ	src-VA+base
-0x170370	33	seerhut	??_Gtype_creature_quest@@UAEPAXI@Z	src-VA+base
-0x1703a0	215	seerhut	??1type_creature_quest@@UAE@XZ	src-VA+base
-0x171530	33	seerhut	??_Gtype_experience_quest@@UAEPAXI@Z	src-VA+base
-0x1717b0	75	seerhut	?is_satisfied@type_resource_quest@@UAEEPAVhero@@@Z	src-VA+ir
-0x171800	61	seerhut	?TakePayment@type_resource_quest@@UAEXPAVhero@@@Z	src-VA+ir
-0x171840	669	seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	src-VA+ir
-0x171ae0	154	seerhut	?DoProgressDialog@type_resource_quest@@UAEXXZ	src-VA+ir
-0x172b60	510	seerhut	?DoEvent@TQuestGuard@@QAEXPAVhero@@_NPAVNewmapCell@@Utype_point@@@Z	src-VA+ir
-0x173240	572	seerhut	?create_quest@@YIPAVtype_quest@@HE@Z	src-VA+ir
-0x173480	82	seerhut	?load@TQuestGuard@@QAEHPAVTAbstractFile@@H@Z	src-VA+ir
-0x1735a0	195	seerhut	?getValue@TSeerHut@@QAEHPAVhero@@@Z	src-VA+ir
-0x173670	1024	seerhut	?DoSeerEvent@TSeerHut@@QAEXPAVhero@@_N@Z	src-VA+ir
-0x173a70	528	seerhut	?getValue@TSeerReward@@QAEHPBVhero@@@Z	src-VA+ir
-0x173c80	656	seerhut	?giveReward@TSeerReward@@QAEXPAVhero@@_N@Z	src-VA+ir
-0x173f10	188	seerhut	?GetRewardExtra@TSeerReward@@QAEHPBVhero@@@Z	src-VA+ir
-0x173fd0	145	seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	src-VA+ir
-0x174070	312	seerhut	?getSeerLogText@TSeerHut@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	src-VA+ir
-0x177d70	108	singleselectionwindow	game_177d70	working-label
-0x177de0	552	singleselectionwindow	calls_timeGetTime_177de0	working-label
-0x178010	626	singleselectionwindow	game_177de0_sub00_178010	working-label
-0x178290	427	singleselectionwindow	game_178a90_sub00_178290	working-label
-0x178440	786	singleselectionwindow	game_178010_sub02_178440	working-label
-0x178760	462	singleselectionwindow	game_2320d3_sub00_178760	working-label
-0x178930	178	singleselectionwindow	game_178930	working-label
-0x1789f0	158	singleselectionwindow	game_18a280_sub00_1789f0	working-label
-0x178a90	880	singleselectionwindow	calls_timeGetTime_178a90	working-label
-0x178e00	607	singleselectionwindow	game_178a90_sub01_178e00	working-label
-0x179060	593	singleselectionwindow	game_178a90_sub02_179060	working-label
-0x1792c0	721	singleselectionwindow	game_179060_sub00_1792c0	working-label
-0x1795a0	714	singleselectionwindow	game_1795a0	working-label
-0x179870	234	singleselectionwindow	game_1795a0_sub02_179870	working-label
-0x199b90	171	soundmgr	?ResumeSamples@soundManager@@QAEXXZ	src-VA+ir
-0x199c40	331	soundmgr	?PauseSamples@soundManager@@QAEXXZ	src-VA+ir
-0x19a030	135	soundmgr	?GetSampleInfo@soundManager@@QAEHPAVds_memsample@@F@Z	src-VA+ir
-0x19a6b0	275	soundmgr	?WaitEndSampleThread@@YAXPAX@Z	src-VA+ir
-0x19a7d0	81	soundmgr	?service_sounds@soundManager@@QAEXXZ	src-VA+ir
-0x1a3950	104	spells	?find_spell_target@combatManager@@QAEPAVarmy@@HJJEJ@Z	src-VA+ir
-0x1a3c80	58	spells	?ValidSpellTargetArmy@combatManager@@QAEEHHPBVarmy@@EJ@Z	src-VA+ir
-0x1a3cc0	373	spells	?find_resurrection_target@combatManager@@QAEPAVarmy@@HHJ@Z	src-VA+ir
-0x1a3e40	269	spells	?find_demonic_resurrection_target@combatManager@@QAEPAVarmy@@HH@Z	src-VA+ir
-0x1a3f50	369	spells	?find_animate_dead_target@combatManager@@QAEPAVarmy@@HH@Z	src-VA+ir
-0x1a40d0	155	spells	?HasValidSpellTarget@combatManager@@QAEEHJJEJ@Z	src-VA+ir
-0x1a4170	692	spells	?mark_area_effect@combatManager@@QAEXJJEAAV?$vector@JV?$allocator@J@std@@@std@@@Z	src-VA+ir
-0x1a4430	696	spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@JV?$allocator@J@std@@@std@@@Z	src-VA+ir
-0x1a46f0	275	spells	?mark_hex_area_effect@combatManager@@QAEXJJEAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	src-VA+ir
-0x1a4810	271	spells	?mark_berserk_area_effect@combatManager@@QAEXJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	src-VA+ir
-0x1a4920	66	spells	?mark_area_effect@combatManager@@QAEXHJJAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	src-VA+ir
-0x1a4970	585	spells	?AreaEffect@combatManager@@QAEXJHJJ@Z	src-VA+ir
-0x1a4bc0	1689	spells	?Armageddon@combatManager@@QAEXHH@Z	src-VA+ir
-0x1a5260	476	spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	src-VA+ir
-0x1a5440	1612	spells	?DrawBolt@combatManager@@QAEXPAUSBolt@@H@Z	src-VA+ir
-0x1a5a90	387	spells	?AddBolt@combatManager@@QAEXPAUSBolt@@HHHHHHHHHHHH@Z	src-VA+ir
-0x1a5c20	1474	spells	?DoBolt@combatManager@@QAEXHHHHHHHHHHHHHHHHH@Z	src-VA+ir
-0x1a61f0	355	spells	?GetNextChainLightningTarget@combatManager@@QAEJPBVarmy@@J@Z	src-VA+ir
-0x1a6360	842	spells	?ChainLightning@combatManager@@QAEXHHH@Z	src-VA+ir
-0x1a66d0	229	spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	src-VA+ir
-0x1a6c70	1029	spells	?MirrorImage@combatManager@@QAEXHH@Z	src-VA+ir
-0x1a7320	104	spells	?remove_corpse@combatManager@@QAEXPAVhexcell@@JJ@Z	src-VA+ir
-0x1a7390	459	spells	?demonic_resurrection@combatManager@@QAEXPBVarmy@@PAV2@@Z	src-VA+ir
-0x1a7560	815	spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	src-VA+ir
-0x1a7890	77	spells	?ComputeSpellDamage@combatManager@@QAEJHJJPAVhero@@0PBVarmy@@E@Z	src-VA+ir
-0x1a78e0	717	spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	src-VA+ir
-0x1a7bb0	197	spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	src-VA+ir
-0x1a8640	73	spells	?SpellCastWorks@combatManager@@QAEEHJPBVarmy@@EJ@Z	src-VA+ir
-0x1a8690	701	spells	?SpellTargetMessage@combatManager@@QAEXHHE@Z	src-VA+ir
-0x1a8950	2457	spells	?ShowSpellMessage@combatManager@@QAEXHHPAVarmy@@@Z	src-VA+ir
-0x1a92f0	99	spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	src-VA+ir
-0x1aa390	33	subwindow	??_GTSubWindow@@UAEPAXI@Z	src-VA+base
-0x1afd70	123	swapmgr	swapManager_swapManager_1afd70	src-VA
-0x1b3010	33	systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	src-VA+base
-0x1baae0	98	textntry	??1textEntryWidget@@UAE@XZ	src-VA+ir
-0x1bac50	1277	textntry	?OnKeyPress@textEntryWidget@@UAEHPAVmessage@@@Z	src-VA+ir
-0x1bb150	678	textntry	?Main@textEntryWidget@@UAEHPAVmessage@@@Z	src-VA+ir
-0x1bb400	596	textntry	?Draw@textEntryWidget@@UAEXXZ	src-VA+ir
-0x1bb660	743	textntry	?SetupDisplayString@textEntryWidget@@QAEXPADG@Z	src-VA+ir
-0x1bb950	208	textntry	?SetText@textEntryWidget@@UAEXPBD@Z	src-VA+ir
-0x1bba20	34	textntry	?IgnoreKey@textEntryWidget@@UAEEPAVmessage@@@Z	src-VA+ir
-0x1bbe20	27	textresource	?GetSize@TTextResource@@UBEIXZ	src-VA+ir
-0x1bbe40	33	textresource	??_GTSpreadsheetResource@@UAEPAXI@Z	src-VA+base
-0x1bc160	7	textresource	?GetSize@TSpreadsheetResource@@UBEIXZ	src-VA+ir
-0x1bc690	1	textwdgt	border_vslot04	working-label
-0x1bc6a0	33	textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	src-VA+base
-0x1bc7e0	3	textwdgt	border_vslot03	working-label
-0x1bde40	49	town	?GetPrimarySkill@hero@@QBEHH@Z	src-VA+base
-0x1c58b0	33	townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	src-VA+base
-0x1c9660	33	townmgr	??_GTThievesGuildWindow@@UAEPAXI@Z	src-VA+base
-0x1c9be0	11504	townmgr	??0THallWindow@@QAE@H@Z	src-VA+ir
-0x1cc8d0	16	townmgr	?GetText@TTextResource@@QBEPBDH@Z	src-VA+base
-0x1cc8e0	33	townmgr	??_GTHallWindow@@UAEPAXI@Z	src-VA+base
-0x1ce120	33	townmgr	??_GTMageGuildWindow@@UAEPAXI@Z	src-VA+base
-0x1d0550	33	townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	src-VA+base
-0x1d0d60	33	townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	src-VA+base
-0x1d1090	33	townmgr	??_GTGarrisonWindow@@UAEPAXI@Z	src-VA+base
-0x1d1a00	33	townmgr	??_GTBlacksmithWindow@@UAEPAXI@Z	src-VA+base
-0x1d2500	33	townmgr	??_GTShipWindow@@UAEPAXI@Z	src-VA+base
-0x1d2d80	30	townmgr	??0type_university@@QAE@XZ	src-VA+ir
-0x1d2da0	488	townmgr	?DoUniversity@townManager@@QAEXXZ	src-VA+ir
-0x1d5b40	33	townmgr	??_GTBuyBuildWindow@@UAEPAXI@Z	src-VA+base
-0x1d7880	33	townmgr	??_GTTavernWindow@@UAEPAXI@Z	src-VA+base
-0x1dcb50	33	townmgr	??_GTCastleWindow@@UAEPAXI@Z	src-VA+base
-0x1e1620	33	tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	src-VA+base
-0x1e3690	33	tradpost	??_GTGiveResourceWindow@@UAEPAXI@Z	src-VA+base
-0x1e5690	33	tradpost	??_GTBuyArtifactWindow@@UAEPAXI@Z	src-VA+base
-0x1e7be0	33	tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	src-VA+base
-0x1e9c80	33	tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	src-VA+base
-0x1f2810	69	victorylossconditions	?CheckForTimeSurvival@VictoryConditionStruct@@QAEEXZ	src-VA+ir
-0x1f2e10	47	victorylossconditions	?HeroKilled@LossConditionStruct@@QAEEPBVhero@@@Z	src-VA+ir
-0x1f3b20	33	viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	src-VA+base
-0x1fe3b0	92	widget	??_Gwidget@@UAEPAXI@Z	src-VA+base
-0x1fea50	33	window	??_GheroWindow@@UAEPAXI@Z	src-VA+base
-0x1ff5b0	51	window	?SleepAllWidgets@heroWindow@@QAEXE@Z	src-VA+ir
-0x1ff5f0	79	window	?_vslot8@heroWindow@@UAEXE@Z	src-VA+ir
-0x1ff6b0	33	window	??_GCHeroWindowEx@@UAEPAXI@Z	src-VA+base
-0x1ff6e0	174	window	?ProcessHover@CHeroWindowEx@@UAEEHH@Z	src-VA+ir
-0x1ff790	130	window	?ProcessRightSelect@CHeroWindowEx@@UAEEH@Z	src-VA+ir
-0x1ff820	165	window	?WindowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	src-VA+ir
-0x1ff8d0	3	window	?GetRolloverWidget@CHeroWindowEx@@UAEPAVtextWidget@@XZ	src-VA+ir
-0x2014c0	6	wingraph	?GetDesktopWidth@@YIHXZ	src-VA+ir
-0x2023b0	231	winmgr	?AddWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	src-VA+ir
-0x202bd0	124	winmgr	?UpdateScreen@heroWindowManager@@QAEXHHHH@Z	src-VA+ir
+0x2a30	161	adventuremapwindow		
+0x2ae0	33	adventuremapwindow		
+0x2e70	405	adventuremapwindow		
+0x3010	522	adventuremapwindow		
+0x39b0	490	adventuremapwindow		
+0x3cc0	533	adventuremapwindow		
+0x5680	16	adventureoptionswindow		
+0x5690	33	adventureoptionswindow		
+0x6480	1439	advmgr		
+0x77b0	33	advmgr		
+0x7b10	111	advmgr		
+0x8770	49	advmgr		
+0xabe0	893	advmgr		
+0xd670	595	advmgr		
+0xec80	10	advmgr		
+0xf240	43	advmgr		
+0xfca0	122	advmgr		
+0x192b0	68	advmgr		
+0x19c80	369	advmgr		
+0x1f380	39	ai		
+0x20cf0	38	ai		
+0x20f00	251	ai		
+0x21590	225	ai		
+0x28580	289	ai_player		
+0x286b0	33	ai_player		
+0x286e0	38	ai_player		
+0x29d50	1017	ai_player		
+0x2b520	139	ai_player		
+0x2b5b0	190	ai_player		
+0x2b670	273	ai_player		
+0x2b790	98	ai_player		
+0x2b800	162	ai_player		
+0x2b8b0	304	ai_player		
+0x2b9e0	69	ai_player		
+0x2ba30	36	ai_player		
+0x2c040	21	ai_player		
+0x2c060	195	ai_player		
+0x2c130	326	ai_player		
+0x36bf0	58	ai_tactical		
+0x37a00	1786	ai_tactical		
+0x3c620	477	ai_tactical		
+0x3d5c0	358	army		
+0x3ea00	103	army		
+0x3ea70	477	army		
+0x3ec50	436	army		
+0x3ee10	450	army		
+0x3efe0	207	army		
+0x3f0b0	518	army		
+0x40140	31	army		
+0x40160	422	army		
+0x40310	491	army		
+0x409c0	505	army		
+0x41cb0	702	army		
+0x41f70	38	army		
+0x43320	1300	army		
+0x43e30	257	army		
+0x456d0	356	army		
+0x45840	102	army		
+0x45a60	621	army		
+0x45cd0	56	army		
+0x45d30	393	army		
+0x45ec0	268	army		
+0x46940	766	army		
+0x46c40	481	army		
+0x47120	522	army		
+0x47330	156	army		
+0x473d0	317	army		
+0x47510	424	army		
+0x476c0	954	army		
+0x47a80	1065	army		
+0x47fe0	638	army		
+0x487f0	67	army		
+0x49df0	33	armygrp		
+0x4a460	85	armygrp		
+0x4c1c0	965	armygrp		
+0x4fdb0	59	bitmap816		
+0x4fdf0	59	bitmap816		
+0x4fe30	9	bitmap816		
+0x4ff50	11	border		
+0x4ff60	461	border		
+0x50130	109	border		
+0x501a0	33	border		
+0x501d0	11	border		
+0x501e0	91	border		
+0x50240	130	border		
+0x502d0	140	border		
+0x50360	33	border		
+0x50550	306	border		
+0x50690	140	border		
+0x50720	33	border		
+0x510f0	33	bottomviewsubwindow		
+0x515c0	16	bottomviewsubwindow		
+0x515d0	33	bottomviewsubwindow		
+0x51600	229	bottomviewsubwindow		
+0x516f0	33	bottomviewsubwindow		
+0x51720	48	bottomviewsubwindow		
+0x51750	20	bottomviewsubwindow		
+0x51770	33	bottomviewsubwindow		
+0x51a00	33	bottomviewsubwindow		
+0x52140	33	bottomviewsubwindow		
+0x52ad0	33	bottomviewsubwindow		
+0x531a0	33	bottomviewsubwindow		
+0x53640	33	bottomviewsubwindow		
+0x56a10	16	button		
+0x56a20	33	button		
+0x56d80	33	button		
+0x5f0e0	33	campaignwindow		
+0x5f110	256	campaignwindow		
+0x62890	21	cmbtmgr		
+0x628b0	110	cmbtmgr		
+0x62930	84	cmbtmgr		
+0x639e0	14	cmbtmgr		
+0x647a0	378	cmbtmgr		
+0x64d40	525	cmbtmgr		
+0x64f50	291	cmbtmgr		
+0x65f20	178	cmbtmgr		
+0x66260	38	cmbtmgr		
+0x693a0	159	cmbtmgr		
+0x69440	434	cmbtmgr		
+0x69e50	193	cmbtmgr		
+0x6a460	57	cmbtmgr		
+0x6bb80	33	combatcontrolsubwindow		
+0x6bea0	33	combatcontrolsubwindow		
+0x6c1e0	33	combatcontrolsubwindow		
+0x6c370	2044	combatcontrolsubwindow		
+0x6cb70	33	combatcontrolsubwindow		
+0x6cc10	471	combatcontrolsubwindow		
+0x6ceb0	3281	combatcontrolsubwindow		
+0x6db90	33	combatcontrolsubwindow		
+0x6f6d0	33	combatoptionswindow		
+0x71a40	33	combatresultswindow		
+0x72890	5	combatwindow		
+0x728a0	33	combatwindow		
+0x72900	334	combatwindow		
+0x72a50	292	combatwindow		
+0x72b80	103	combatwindow		
+0x72bf0	54	combatwindow		
+0x72c30	371	combatwindow		
+0x72db0	64	combatwindow		
+0x72e90	862	combatwindow		
+0x731f0	153	combatwindow		
+0x74680	12	command		
+0x74a00	408	command		
+0x74ba0	74	command		
+0x74d80	4429	command		
+0x76200	225	command		
+0x762f0	246	command		
+0x763f0	77	command		
+0x77ac0	149	command		
+0x77b60	182	command		
+0x77c20	484	command		
+0x77e10	194	command		
+0x77ee0	997	command		
+0x782d0	1461	command		
+0x78890	110	command		
+0x78900	656	command		
+0x78b90	485	command		
+0x78d80	4180	command		
+0x79de0	335	command		
+0x79f30	139	command		
+0x79fc0	305	command		
+0x7bd50	6	csprite		
+0x7c460	247	cspriteframe		
+0x7c560	7	cspriteframe		
+0x8fe30	33	dialogbox		
+0x90740	33	dialogbox		
+0x91860	33	dimensiondoorwindow		
+0x91c60	33	dimensiondoorwindow		
+0x93780	68	drawing		
+0x94370	32	drawing		
+0x94390	167	drawing		
+0x953b0	324	drawing		
+0x95500	322	drawing		
+0x95730	115	drawing		
+0x957b0	293	drawing		
+0x95a10	471	drawing		
+0x95f50	380	drawing		
+0x97790	33	dxplay		
+0x99e20	35	dxplay		
+0x9a620	33	event_record		
+0x9abe0	7	event_record		
+0x9bbd0	33	event_record		
+0x9bc00	44	event_record		
+0x9bc30	66	event_record		
+0x9dac0	412	event_record		
+0x9e670	348	events		
+0x9e7d0	280	events		
+0x9e8f0	326	events		
+0x9ea40	772	events		
+0x9f040	35	events		
+0x9f070	1893	events		
+0x9f7e0	676	events		
+0xa0b00	274	events		
+0xa0c20	35	events		
+0xa0c50	631	events		
+0xa1010	269	events		
+0xa1120	452	events		
+0xa12f0	435	events		
+0xa14b0	236	events		
+0xa2050	228	events		
+0xa2140	232	events		
+0xa2230	592	events		
+0xa2480	364	events		
+0xa25f0	275	events		
+0xa2710	228	events		
+0xa2800	319	events		
+0xa31a0	223	events		
+0xa3280	348	events		
+0xa33e0	429	events		
+0xa3590	412	events		
+0xa3730	382	events		
+0xa38b0	228	events		
+0xa39a0	541	events		
+0xa3bc0	220	events		
+0xa3ca0	284	events		
+0xa3dc0	228	events		
+0xa4230	650	events		
+0xa44c0	310	events		
+0xa4600	380	events		
+0xa4be0	473	events		
+0xa4dc0	611	events		
+0xa5030	622	events		
+0xa52a0	478	events		
+0xa5480	391	events		
+0xa5960	22	events		
+0xa5980	256	events		
+0xa5ea0	505	events		
+0xa60a0	352	events		
+0xa6200	300	events		
+0xa6330	262	events		
+0xa6520	493	events		
+0xa6710	669	events		
+0xa69b0	376	events		
+0xa6c60	392	events		
+0xa6df0	523	events		
+0xa7000	584	events		
+0xa7250	879	events		
+0xa75c0	253	events		
+0xa76c0	117	events		
+0xa7740	638	events		
+0xa79c0	121	events		
+0xa7a40	490	events		
+0xa7c30	417	events		
+0xa7de0	177	events		
+0xa7ea0	273	events		
+0xa7fc0	189	events		
+0xa8080	421	events		
+0xa8230	340	events		
+0xa8390	341	events		
+0xa84f0	9538	events		
+0xaaa40	92	events		
+0xaaaa0	272	events		
+0xaabb0	569	events		
+0xaafd0	1073	events		
+0xab410	1586	events		
+0xac930	355	events		
+0xb3b90	32	findpath		
+0xb5110	103	font		
+0xb5250	12	font		
+0xb9230	62	game		
+0xba1c0	80	game		
+0xba210	80	game		
+0xbacb0	202	game		
+0xbbc20	542	game		
+0xbc0e0	593	game		
+0xbc340	14	game		
+0xbc350	625	game		
+0xbc5d0	378	game		
+0xbc750	981	game		
+0xbdc70	777	game		
+0xbdf80	433	game		
+0xbe140	286	game		
+0xbe260	392	game		
+0xbf107	122	game		
+0xbf1a0	387	game		
+0xbf330	571	game		
+0xbf570	515	game		
+0xc0520	262	game		
+0xc2330	39	game		
+0xc2360	39	game		
+0xc2390	33	game		
+0xc23c0	28	game		
+0xc23e0	49	game		
+0xc2420	38	game		
+0xc3090	354	game		
+0xc3890	996	game		
+0xc3d90	350	game		
+0xc3ef0	1176	game		
+0xc4390	2350	game		
+0xc4cc0	304	game		
+0xc4df0	62	game		
+0xc4e30	211	game		
+0xc5630	1997	game		
+0xc5e00	528	game		
+0xc6010	462	game		
+0xc6690	67	game		
+0xc8450	584	game		
+0xc86a0	213	game		
+0xca9e0	36	game		
+0xcafd0	540	game		
+0xcbcf0	75	game		
+0xcbd40	2691	game		
+0xce520	74	game		
+0xce570	50	game		
+0xcecb0	129	game		
+0xced40	464	game		
+0xcef10	104	game		
+0xcef80	18	game		
+0xcefa0	103	game		
+0xcf010	46	game		
+0xcf040	106	game		
+0xcf0b0	59	game		
+0xcf0f0	726	game		
+0xcf3d0	59	game		
+0xcf410	673	game		
+0xcf6c0	35	game		
+0xcf6f0	56	game		
+0xcf730	19	game		
+0xcf750	33	game		
+0xcf780	56	game		
+0xcf7c0	56	game		
+0xcf800	103	game		
+0xcf870	83	game		
+0xcf8d0	28	game		
+0xcf8f0	103	game		
+0xcf960	52	game		
+0xcf9a0	99	game		
+0xcfa10	37	game		
+0xcfa40	19	game		
+0xcfa60	99	game		
+0xcfad0	55	game		
+0xcfb10	796	game		
+0xcfe30	143	game		
+0xcfec0	35	game		
+0xcfef0	52	game		
+0xcff30	23	game		
+0xcff50	277	game		
+0xd0070	99	game		
+0xd00e0	764	game		
+0xd03e0	68	game		
+0xd0430	796	game		
+0xd0750	109	game		
+0xd07c0	38	game		
+0xd07f0	796	game		
+0xd0b10	143	game		
+0xd0ba0	619	game		
+0xd0e10	68	game		
+0xd0e60	522	game		
+0xd1070	740	game		
+0xd1360	68	game		
+0xd13b0	35	game		
+0xd13e0	768	game		
+0xd16e0	127	game		
+0xd1760	35	game		
+0xd1790	21	game		
+0xd17b0	17	game		
+0xd17d0	52	game		
+0xd1810	21	game		
+0xd1830	23	game		
+0xd1850	200	game		
+0xd1920	857	game		
+0xd1c80	200	game		
+0xd1d50	761	game		
+0xd2050	50	game		
+0xd2090	200	game		
+0xd2160	49	game		
+0xd21a0	62	game		
+0xd21e0	44	game		
+0xd2210	59	game		
+0xd2250	49	game		
+0xd2290	882	game		
+0xd2610	200	game		
+0xd26e0	200	game		
+0xd27b0	179	game		
+0xd2870	589	game		
+0xd5860	33	gametypewindow		
+0xd8b30	1076	hero		
+0xd8f70	62	hero		
+0xd8fb0	160	hero		
+0xdbe80	164	hero		
+0xdbf30	307	hero		
+0xdc070	135	hero		
+0xdc100	535	hero		
+0xe1370	431	hero		
+0xe1520	33	hero		
+0xe2550	748	hero		
+0xe2840	412	hero		
+0xe29dc	25	hero		
+0xe3c60	112	hero		
+0xe4ec0	214	hero		
+0xe5de0	45	hero		
+0xe9710	44	hiscore		
+0xe9800	33	hiscore		
+0xe9d90	33	hiscore		
+0xea7b0	85	iconwdgt		
+0xec590	174	inputmgr		
+0xec640	173	inputmgr		
+0xed650	1256	kb		
+0xee1b0	246	kb		
+0xefff0	25	kb		
+0xf0010	59	kb		
+0xf0050	71	kb		
+0xf00a0	1006	kb		
+0xf0490	251	kb		
+0xf0590	113	kb		
+0xf0610	119	kb		
+0xf0690	568	kb		
+0xf0ae0	33	kb		
+0xf0b10	5	kb		
+0xf1190	5	kb		
+0xf1460	370	kb		
+0xf2930	35	kb		
+0xf3940	169	kb		
+0xf39f0	109	kb		
+0xf3a60	77	kb		
+0xf3e30	122	kb		
+0xf3eb0	167	kb		
+0xf9700	33	levelupwindow		
+0xfb630	33	mainmenu		
+0xfb660	117	mainmenu		
+0xfca60	62	mapcell		
+0xfd1c0	24	mapcell		
+0xfd460	88	mapcell		
+0xfd650	62	mapcell		
+0xfd950	616	mapcell		
+0xfe6c0	596	mapcell		
+0xffdf0	176	mapcell		
+0x100de0	569	mapcell		
+0x102b60	667	mapcell		
+0x104260	46	mapcell		
+0x104290	42	mapcell		
+0x1042c0	421	mapcell		
+0x104a40	295	mapcell		
+0x10cbc0	44	mousemgr		
+0x10ed50	7	multiplayerwindow		
+0x10ed60	67	multiplayerwindow		
+0x10edb0	33	multiplayerwindow		
+0x10ede0	33	multiplayerwindow		
+0x10ee40	171	multiplayerwindow		
+0x10eef0	201	multiplayerwindow		
+0x10efc0	299	multiplayerwindow		
+0x10f0f0	998	multiplayerwindow		
+0x10f4e0	1112	multiplayerwindow		
+0x10f940	197	multiplayerwindow		
+0x10fa10	159	multiplayerwindow		
+0x10fab0	262	multiplayerwindow		
+0x10fbc0	134	multiplayerwindow		
+0x10fc50	335	multiplayerwindow		
+0x10fda0	695	multiplayerwindow		
+0x110060	1783	multiplayerwindow		
+0x110760	98	multiplayerwindow		
+0x1107d0	115	multiplayerwindow		
+0x110850	27	multiplayerwindow		
+0x110870	27	multiplayerwindow		
+0x110890	16	multiplayerwindow		
+0x1108a0	78	multiplayerwindow		
+0x1108f0	114	multiplayerwindow		
+0x110970	4	multiplayerwindow		
+0x110980	93	multiplayerwindow		
+0x1109e0	33	multiplayerwindow		
+0x110a10	664	multiplayerwindow		
+0x110cb0	642	multiplayerwindow		
+0x110f40	896	multiplayerwindow		
+0x1112c0	28	multiplayerwindow		
+0x1112e0	257	multiplayerwindow		
+0x1113f0	611	multiplayerwindow		
+0x111660	1638	multiplayerwindow		
+0x111cd0	98	multiplayerwindow		
+0x111d40	209	multiplayerwindow		
+0x111e20	1441	multiplayerwindow		
+0x124360	3	philai		
+0x124370	115	philai		
+0x1243f0	8	philai		
+0x124550	210	philai		
+0x124630	96	philai		
+0x124690	1668	philai		
+0x124d20	163	philai		
+0x124dd0	243	philai		
+0x125bf0	172	philai		
+0x125dc0	177	philai		
+0x125e80	866	philai		
+0x126c70	72	philai		
+0x126cc0	85	philai		
+0x126d20	30	philai		
+0x126d40	915	philai		
+0x1270e0	223	philai		
+0x1271c0	193	philai		
+0x127290	308	philai		
+0x1273d0	477	philai		
+0x1275b0	138	philai		
+0x127640	203	philai		
+0x127710	76	philai		
+0x127760	498	philai		
+0x127960	320	philai		
+0x127b00	164	philai		
+0x127bb0	285	philai		
+0x127cd0	27	philai		
+0x127cf0	137	philai		
+0x127d80	144	philai		
+0x127e10	171	philai		
+0x127ec0	147	philai		
+0x127f60	115	philai		
+0x127fe0	81	philai		
+0x128040	5704	philai		
+0x129690	51	philai		
+0x1296d0	55	philai		
+0x129710	52	philai		
+0x129750	120	philai		
+0x1297d0	54	philai		
+0x129810	124	philai		
+0x1298d0	75	philai		
+0x129f90	114	philai		
+0x12a010	298	philai		
+0x12a140	150	philai		
+0x12a1e0	195	philai		
+0x12a2b0	197	philai		
+0x12a380	28	philai		
+0x12a3a0	97	philai		
+0x12a410	245	philai		
+0x12a510	223	philai		
+0x12a5f0	264	philai		
+0x12a700	16	philai		
+0x12a870	79	philai		
+0x12a960	344	philai		
+0x12aac0	185	philai		
+0x12b1e0	756	philai		
+0x12b4e0	191	philai		
+0x12b5a0	353	philai		
+0x12b710	126	philai		
+0x12b790	113	philai		
+0x12b810	225	philai		
+0x12b900	182	philai		
+0x12c570	33	puzzlewindow		
+0x12f3a0	33	quickherowindow		
+0x12fcf0	33	quickinfowindow		
+0x1307a0	33	quicktownwindow		
+0x14e850	4757	recruit		
+0x14faf0	33	recruit		
+0x14fb90	781	recruit		
+0x14fea0	1070	recruit		
+0x150940	2568	recruit		
+0x1516b0	33	recruit		
+0x1532b0	185	remote		
+0x1533d0	427	remote		
+0x153580	496	remote		
+0x154a80	33	remote		
+0x154ab0	85	remote		
+0x155150	28	remote		
+0x155170	5	remote		
+0x155180	5	remote		
+0x155190	793	remote		
+0x1554b0	33	remote		
+0x1554e0	201	remote		
+0x1555b0	294	remote		
+0x1556e0	548	remote		
+0x155910	8	remote		
+0x155920	369	remote		
+0x155aa0	1091	remote		
+0x155ef0	996	remote		
+0x1562e0	334	remote		
+0x156430	417	remote		
+0x1565e0	414	remote		
+0x156780	448	remote		
+0x1569f0	180	remote		
+0x156b70	33	remote		
+0x156ba0	114	remote		
+0x156c20	757	remote		
+0x156f20	316	remote		
+0x157060	33	remote		
+0x157090	92	remote		
+0x1570f0	489	remote		
+0x157310	33	remote		
+0x157340	5	remote		
+0x1574b0	301	remote		
+0x157760	33	remote		
+0x157810	69	remote		
+0x1578d0	48	remote		
+0x157900	4	remote		
+0x157920	343	remote		
+0x157eb0	33	remote		
+0x158770	35	resource		
+0x158e50	33	resourcedisplay		
+0x159110	33	resourcemanager		
+0x159140	5	resourcemanager		
+0x159150	132	resourcemanager		
+0x1591e0	26	resourcemanager		
+0x159230	46	resourcemanager		
+0x1592b0	97	resourcemanager		
+0x159320	209	resourcemanager		
+0x159400	39	resourcemanager		
+0x159440	110	resourcemanager		
+0x1594f0	20	resourcemanager		
+0x159510	1217	resourcemanager		
+0x1599e0	1096	resourcemanager		
+0x159e30	485	resourcemanager		
+0x15a020	545	resourcemanager		
+0x15a250	753	resourcemanager		
+0x15a550	103	resourcemanager		
+0x15a5c0	226	resourcemanager		
+0x15a6b0	239	resourcemanager		
+0x15a7a0	33	resourcemanager		
+0x15a7d0	33	resourcemanager		
+0x15a800	1055	resourcemanager		
+0x15ac20	32	resourcemanager		
+0x15ac40	904	resourcemanager		
+0x15afd0	138	resourcemanager		
+0x15b060	887	resourcemanager		
+0x15b3e0	138	resourcemanager		
+0x15b470	721	resourcemanager		
+0x15b750	361	resourcemanager		
+0x15b8b9	17	resourcemanager		
+0x15b8d0	553	resourcemanager		
+0x15bb00	138	resourcemanager		
+0x15bb90	576	resourcemanager		
+0x15bdd0	138	resourcemanager		
+0x15be60	576	resourcemanager		
+0x15fd70	33	sacrifice_window		
+0x160350	33	sacrifice_window		
+0x160380	3431	sacrifice_window		
+0x1610f0	3699	sacrifice_window		
+0x162660	469	sacrifice_window		
+0x1629b0	34	sacrifice_window		
+0x1639e0	91	sacrifice_window		
+0x1654b0	5	sacrifice_window		
+0x1654f0	2620	sacrifice_window		
+0x165f30	33	sacrifice_window		
+0x166030	1117	sacrifice_window		
+0x166490	600	sacrifice_window		
+0x166e30	33	sample		
+0x16e990	160	seerhut		
+0x16ed40	69	seerhut		
+0x16f4a0	33	seerhut		
+0x16f4d0	194	seerhut		
+0x170370	33	seerhut		
+0x1703a0	215	seerhut		
+0x171530	33	seerhut		
+0x1717b0	75	seerhut		
+0x171800	61	seerhut		
+0x171840	669	seerhut		
+0x171ae0	154	seerhut		
+0x172b60	510	seerhut		
+0x173240	572	seerhut		
+0x173480	82	seerhut		
+0x1735a0	195	seerhut		
+0x173670	1024	seerhut		
+0x173a70	528	seerhut		
+0x173c80	656	seerhut		
+0x173f10	188	seerhut		
+0x173fd0	145	seerhut		
+0x174070	312	seerhut		
+0x177d70	108	singleselectionwindow		
+0x177de0	552	singleselectionwindow		
+0x178010	626	singleselectionwindow		
+0x178290	427	singleselectionwindow		
+0x178440	786	singleselectionwindow		
+0x178760	462	singleselectionwindow		
+0x178930	178	singleselectionwindow		
+0x1789f0	158	singleselectionwindow		
+0x178a90	880	singleselectionwindow		
+0x178e00	607	singleselectionwindow		
+0x179060	593	singleselectionwindow		
+0x1792c0	721	singleselectionwindow		
+0x1795a0	714	singleselectionwindow		
+0x179870	234	singleselectionwindow		
+0x199b90	171	soundmgr		
+0x199c40	331	soundmgr		
+0x19a030	135	soundmgr		
+0x19a6b0	275	soundmgr		
+0x19a7d0	81	soundmgr		
+0x1a3950	104	spells		
+0x1a3c80	58	spells		
+0x1a3cc0	373	spells		
+0x1a3e40	269	spells		
+0x1a3f50	369	spells		
+0x1a40d0	155	spells		
+0x1a4170	692	spells		
+0x1a4430	696	spells		
+0x1a46f0	275	spells		
+0x1a4810	271	spells		
+0x1a4920	66	spells		
+0x1a4970	585	spells		
+0x1a4bc0	1689	spells		
+0x1a5260	476	spells		
+0x1a5440	1612	spells		
+0x1a5a90	387	spells		
+0x1a5c20	1474	spells		
+0x1a61f0	355	spells		
+0x1a6360	842	spells		
+0x1a66d0	229	spells		
+0x1a6c70	1029	spells		
+0x1a7320	104	spells		
+0x1a7390	459	spells		
+0x1a7560	815	spells		
+0x1a7890	77	spells		
+0x1a78e0	717	spells		
+0x1a7bb0	197	spells		
+0x1a8640	73	spells		
+0x1a8690	701	spells		
+0x1a8950	2457	spells		
+0x1a92f0	99	spells		
+0x1aa390	33	subwindow		
+0x1afd70	123	swapmgr		
+0x1b3010	33	systemoptionswindow		
+0x1baae0	98	textntry		
+0x1bac50	1277	textntry		
+0x1bb150	678	textntry		
+0x1bb400	596	textntry		
+0x1bb660	743	textntry		
+0x1bb950	208	textntry		
+0x1bba20	34	textntry		
+0x1bbe20	27	textresource		
+0x1bbe40	33	textresource		
+0x1bc160	7	textresource		
+0x1bc690	1	textwdgt		
+0x1bc6a0	33	textwdgt		
+0x1bc7e0	3	textwdgt		
+0x1bde40	49	town		
+0x1c58b0	33	townmgr		
+0x1c9660	33	townmgr		
+0x1c9be0	11504	townmgr		
+0x1cc8d0	16	townmgr		
+0x1cc8e0	33	townmgr		
+0x1ce120	33	townmgr		
+0x1d0550	33	townmgr		
+0x1d0d60	33	townmgr		
+0x1d1090	33	townmgr		
+0x1d1a00	33	townmgr		
+0x1d2500	33	townmgr		
+0x1d2d80	30	townmgr		
+0x1d2da0	488	townmgr		
+0x1d5b40	33	townmgr		
+0x1d7880	33	townmgr		
+0x1dcb50	33	townmgr		
+0x1e1620	33	tradpost		
+0x1e3690	33	tradpost		
+0x1e5690	33	tradpost		
+0x1e7be0	33	tradpost		
+0x1e9c80	33	tradpost		
+0x1f2810	69	victorylossconditions		
+0x1f2e10	47	victorylossconditions		
+0x1f3b20	33	viewarmywindow		
+0x1fe3b0	92	widget		
+0x1fea50	33	window		
+0x1ff5b0	51	window		
+0x1ff5f0	79	window		
+0x1ff6b0	33	window		
+0x1ff6e0	174	window		
+0x1ff790	130	window		
+0x1ff820	165	window		
+0x1ff8d0	3	window		
+0x2014c0	6	wingraph		
+0x2023b0	231	winmgr		
+0x202bd0	124	winmgr		

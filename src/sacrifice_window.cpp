@@ -1688,6 +1688,27 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
     }
 }
 
+// E:\gamedcs\sacrifice_window.cpp:360 / :536
+// The ctor's two builder calls above (after Widgets.reserve(150)) fix these
+// rows in the Dreamcast roster's order. The artifact builder's row head loads
+// altrart2.pcx and the creature builder's loads altarmon.pcx (string-proven),
+// both are thiscall (long& widget_id, int cur_player) -> ret 8, and both sit
+// between the ctor (0x55fdd0) and create_creature_icons (0x561f70) in retail
+// link order. Located, not yet reconstructed.
+#if 0  // @carcass: located builder bodies, claim-only
+VA(0x00560380, 0xd67)  // ctor caller + altrart2.pcx string + arity, dc 0x1246b8
+void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player)
+{
+    // @stub
+}
+
+VA(0x005610f0, 0xe73)  // ctor caller + altarmon.pcx string + arity, dc 0x124e60
+void type_sacrifice_window::create_creature_widgets(long* widget_id, int cur_player)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // E:\gamedcs\sacrifice_window.cpp:699
 // The creature builder's sole retail caller, the two inlined army-slot
 // constructors and the Dreamcast name/signature/order identify this row.
@@ -2958,6 +2979,20 @@ type_transformer_slot::type_transformer_slot(
     group = new_group;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:2056
+// The skeleton transformer dialog's constructor. Its row head loads
+// sktrnbk.pcx (string-proven), it is thiscall (armyGroup* new_army) -> ret 4,
+// and the prior vtable scan (see the 0x565f30 note below) already fixed this
+// 0xa3c body at 0x5654f0 as the second of exactly two references to vtable
+// 0x641694. Located, not yet reconstructed.
+#if 0  // @carcass: located constructor body, claim-only
+VA(0x005654f0, 0xa3c)  // vtable 0x641694 + sktrnbk.pcx string + arity, dc 0x1275c0
+void type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+{
+    // @stub
+}
+#endif  // @carcass
+
 // The transformer dialog's own pair, found by the same vtable-uniqueness
 // scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
 // deleting destructor whose only image-wide reference is slot 0 of vtable
@@ -2976,6 +3011,29 @@ type_skeleton_window::~type_skeleton_window()
     }
     delete_widgets();
 }
+
+// E:\gamedcs\sacrifice_window.cpp:2172 / :2216
+// The two large skeleton members between the destructor and WindowHandler in
+// retail link order. update(long group, long index) -> ret 8 and
+// creature_click(long side, long slot, unsigned char right_click) -> ret 0xc
+// match the Dreamcast signatures by arity; creature_click 0x566490 is the call
+// target the transformer slot's handle_click pins (see 0x5654c0 above), which
+// the WindowHandler note below also cites. unselect() and update_buttons()
+// (both ret 0) have no surviving slot and are inlined away. Located, not yet
+// reconstructed.
+#if 0  // @carcass: located skeleton bodies, claim-only
+VA(0x00566030, 0x45d)  // linkorder + update(long,long) arity, dc 0x127b68
+void type_skeleton_window::update(long group, long index)
+{
+    // @stub
+}
+
+VA(0x00566490, 0x258)  // transformer-slot caller + creature_click arity, dc 0x127e50
+void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\sacrifice_window.cpp:2281
 // Slot 9, sitting two rows past creature_click 0x566490 - the call target the
