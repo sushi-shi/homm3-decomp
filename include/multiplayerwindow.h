@@ -38,6 +38,40 @@ SIZE(CHotSeatMan, 0xac);
 
 DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
+class CMPInputEdit;
+
+// DC supplies the five-member tail at +0x4c..+0x5c and the CHeroWindowEx
+// base. Retail's base is four bytes wider; the getter at 0x510970 proves the
+// translated rollover offset +0x60 independently.
+class CMPInputDlg : public CHeroWindowEx {
+public:
+    enum {
+        BACKGROUND_ID = 500,
+        FIELD1_ID = 501,
+        FIELD2_ID = 502,
+        HEADER1_ID = 503,
+        HEADER2_ID = 504,
+        OKAY_ID = 505,
+        BACK_ID = 506,
+        ROLLOVER_ID = 507
+    };
+
+    CMPInputEdit* field1;  // +0x50
+    CMPInputEdit* field2;  // +0x54
+    textWidget* header1;   // +0x58
+    textWidget* header2;   // +0x5c
+    textWidget* rollover;  // +0x60
+
+    CMPInputDlg(int maxChars1, int maxChars2);
+    virtual ~CMPInputDlg();
+    virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);
+    virtual textWidget* GetRolloverWidget();
+    virtual void UpdateOK();
+    unsigned char OnOK();
+    void DisableOK();
+};
+SIZE(CMPInputDlg, 0x64);
+
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
 // CHeroWindowEx is four bytes wider, and the retail getter at 0x512530 reads
