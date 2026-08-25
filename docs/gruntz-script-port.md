@@ -260,6 +260,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice experience/destructor checkpoint adds 726
+  exact retail bytes.** Dreamcast supplies the adjacent names, signatures
+  and source order; retail independently identifies `update_experience` at
+  0x562500 through its packed hero +0x51/+0x55 reads and sole
+  `hero::GetExperience` call. The direct source computes experience to the
+  next level, formats that value and `total_experience`, updates the two
+  adjacent text widgets and enables `sacrifice_button` iff the total is
+  positive. All twenty blocks of the 346-byte body match without a compiler
+  control.
+
+  Vtable 0x641620 slot zero fixes the 33-byte deleting wrapper at 0x560350
+  and its 347-byte destructor callee at 0x5623a0. The destructor's reverse
+  storage loads at +0x230/+0x220/+0x110/+0x100/+0xf0/+0xe0 prove the six
+  still-opaque vector positions; the remaining two vector destructors and
+  final `CAdvPopup` call close the complete eight-member teardown. A plain
+  `delete_widgets()` body then reproduces the destructor and generated
+  wrapper exactly. `convert_with_commas` remains in Dreamcast source order,
+  while an annotated redeclaration records its later retained-COMDAT address
+  in retail. The synchronized checkpoint reaches **1951/2365 linked exact**,
+  **1882/2296 game exact**, **96.58% game fuzzy** and **43.82% executable
+  coverage**. No external implementation body was used.
+
 - **2026-08-25 — the sacrifice equipped-slot refresh pair adds 409 exact
   retail bytes.** The 51-byte `update_all_slots` is fixed by its sole callee
   and two artifact-mode callers. Complete selects eighteen or nineteen

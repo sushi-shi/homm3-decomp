@@ -1543,11 +1543,28 @@ unsigned char type_army_slot_widget::handle_click(
     return 0;
 }
 
+// Vtable 0x641620 slot 0 is the canonical VC6 deleting wrapper for the
+// destructor below.
+VA_COMPGEN(0x00560350, 0x21, SCALAR_DELETING_DTOR,
+           type_sacrifice_window)
+
+// E:\gamedcs\sacrifice_window.cpp:752
+// Retail first deletes the registered window widgets, then unwinds the eight
+// vector members in reverse declaration order before reaching CAdvPopup.
+// The +0x230/+0x220/+0x110/+0x100/+0xf0/+0xe0 storage loads independently
+// prove the remaining vector placement and the opaque POD band between them.
+VA(0x005623a0, 0x15b)  // vtable slot 0 + dc name/order, dc 0x125824
+type_sacrifice_window::~type_sacrifice_window()
+{
+    delete_widgets();
+}
+
 // E:\gamedcs\sacrifice_window.cpp:760
 // Retail first formats the signed value as decimal, then walks the resulting
 // string backward. The post-decrement loop and iterator insert account for
 // the characteristic index/check and inlined Dinkumware string machinery.
-VA(0x00562660, 0x1d5)  // dc order/name + body/ABI, dc 0x1258ac
+// The definition stays in source order; its annotated redeclaration below
+// records the later position of the retained retail COMDAT.
 std::string convert_with_commas(long value)
 {
     long digits = 0;
@@ -1564,6 +1581,28 @@ std::string convert_with_commas(long value)
     }
     return result;
 }
+
+// E:\gamedcs\sacrifice_window.cpp:784
+// The next-level threshold call and the packed hero +0x51/+0x55 reads fix
+// the first value. Retail then formats the running total at window +0x78,
+// writes the two adjacent text widgets and enables the button at +0xa4 iff
+// there is experience available to sacrifice.
+VA(0x00562500, 0x15a)  // dc order/name + body/field graph, dc 0x125998
+void type_sacrifice_window::update_experience()
+{
+    std::string text;
+    text = convert_with_commas(
+        hero::GetExperience(current_hero->level + 1)
+        - current_hero->experience);
+    experience_widget->SetText(text.c_str());
+
+    text = convert_with_commas(total_experience);
+    experience_total_widget->SetText(text.c_str());
+    sacrifice_button->enable(total_experience > 0);
+}
+
+VA(0x00562660, 0x1d5)  // dc order/name + body/ABI, dc 0x1258ac
+std::string convert_with_commas(long value);
 
 // E:\gamedcs\sacrifice_window.cpp:800
 // The source helper precedes update_slot; retail deferred its retained

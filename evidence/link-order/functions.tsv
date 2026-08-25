@@ -3479,12 +3479,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0x15fd70	33	in-span	sacrifice_window	sacrifice_window	game_15fd70
 0x15fda0	42	in-span	sacrifice_window	sacrifice_window	?handle_click@type_army_slot_widget@@UAEEEE@Z
 0x15fdd0	1396	in-span	sacrifice_window	sacrifice_window	game_smalfont_fnt_15fdd0
-0x160350	33	in-span	sacrifice_window	sacrifice_window	game_160350
+0x160350	33	in-span	sacrifice_window	sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z
 0x160380	3431	in-span	sacrifice_window	sacrifice_window	game_altrart2_pcx_160380
 0x1610f0	3699	in-span	sacrifice_window	sacrifice_window	game_altarmon_pcx_1610f0
 0x161f70	1063	in-span	sacrifice_window	sacrifice_window	game_smalfont_fnt_161f70
-0x1623a0	347	in-span	sacrifice_window	sacrifice_window	game_a84f0_sub67_1623a0
-0x162500	346	in-span	sacrifice_window	sacrifice_window	game_162a20_sub01_162500
+0x1623a0	347	in-span	sacrifice_window	sacrifice_window	??1type_sacrifice_window@@UAE@XZ
+0x162500	346	in-span	sacrifice_window	sacrifice_window	?update_experience@type_sacrifice_window@@QAEXXZ
 0x162660	469	in-span	sacrifice_window	sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z
 0x162840	358	in-span	sacrifice_window	sacrifice_window	?update_slot@type_sacrifice_window@@QAEXJ@Z
 0x1629b0	34	in-span	sacrifice_window	sacrifice_window	?set_visible@widget@@QAEXE@Z
