@@ -77,6 +77,17 @@ const std::bitset<9>& ArmyGrpFn_0044A460();
 // ECX and the building id in EDX. Declared file-locally rather than pulling in
 // castle.h, matching the AI_resource_cost pattern above.
 int CanBuy(const town* currTown, int buildingId);
+// tradpost.cpp's marketplace exchange-rate helper (retail 0x5ecd20): the value
+// of one dest unit in source units, scaled by the market-count efficiency.
+double get_trade_ratio(EGameResource source, EGameResource dest,
+                       double efficiency);
+// int -> EGameResource without tripping the enum-cast floor (philai's idiom).
+inline EGameResource game_resource_from_int(int value)
+{
+    EGameResource resource;
+    memcpy(&resource, &value, sizeof resource);
+    return resource;
+}
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -1287,16 +1298,56 @@ bool type_AI_player::build_markets(int* supply)
     return built;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:1620
 // arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
-// source order after build_markets. size 762->478 (0.63). Retail 0x2ac20.
+// source order after build_markets. Retail 0x2ac20. Counts the player's
+// marketplaces, caps the trade efficiency at ten, then sells every resource
+// surplus down against every deficit through get_trade_ratio.
 VA(0x0042ac20, 0x1DE)  // linkorder + arity + anchor-callee calculate_demand, dc 0x30a70
 void type_AI_player::do_resource_trade(int* supply)
 {
-    // @stub
+    int market_count = 0;
+    playerData* player = &gpGame->players[team];
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (current_town->active & bitNumber[MARKETPLACE_ID])
+            ++market_count;
+    }
+
+    int efficiency = _cpp_min(market_count, 10);
+    if (efficiency == 0)
+        return;
+
+    double market_efficiency = fTradingPostEfficency[efficiency];
+    for (int source = 0; source < 7; ++source) {
+        if (supply[source] <= 0)
+            continue;
+        for (int dest = 0; dest < 7; ++dest) {
+            if (supply[dest] >= 0)
+                continue;
+            double ratio = get_trade_ratio(game_resource_from_int(source),
+                                           game_resource_from_int(dest),
+                                           market_efficiency);
+            long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
+            long limit = static_cast<long>(
+                static_cast<long>(supply[source] / ratio) * ratio);
+            if (traded > limit)
+                traded = limit;
+            supply[source] -= traded;
+            player->resources[source] -= traded;
+            long cost = static_cast<long>(traded / ratio);
+            supply[dest] += cost;
+            player->resources[dest] += cost;
+            if (supply[dest] > 0)
+                supply[dest] = 0;
+            if (supply[source] <= 0)
+                break;
+        }
+    }
+    calculate_demand();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1686
 // anchor-callee: calls get_total_value + trade_resources + calculate_demand
