@@ -1328,6 +1328,73 @@ CDPlayLobby::~CDPlayLobby()
         m_lpLobby->Release();
 }
 
+// E:\gamedcs\dxplay.cpp:1318
+VA(0x00498ae0, 0x8C)
+DPLCONNECTION* CDPlayLobby::GetConnectionSettings(
+    unsigned long appId, unsigned long* size)
+{
+    unsigned long dataSize = 0;
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = m_lpLobby->GetConnectionSettings(appId, 0, &dataSize);
+    if (size)
+        *size = dataSize;
+    if (dataSize == 0)
+        return 0;
+    DPLCONNECTION* connection = static_cast<DPLCONNECTION*>(
+        ::operator new(dataSize));
+    m_hRes = m_lpLobby->GetConnectionSettings(
+        appId, connection, &dataSize);
+    if (m_hRes < 0) {
+        ::operator delete(connection);
+        return 0;
+    }
+    return connection;
+}
+
+// E:\gamedcs\dxplay.cpp:1385
+VA(0x00498be0, 0x31)
+unsigned char CDPlayLobby::SetConnectionSettings(
+    unsigned long appId, DPLCONNECTION* connection)
+{
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = m_lpLobby->SetConnectionSettings(0, appId, connection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1399
+VA(0x00498c20, 0x29)
+unsigned char CDPlayLobby::SetGroupConnectionSettings(
+    unsigned long groupId, DPLCONNECTION* connection)
+{
+    m_hRes = m_lpDP->SetGroupConnectionSettings(0, groupId, connection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1412
+VA(0x00498c50, 0x80)
+DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(
+    unsigned long groupId)
+{
+    unsigned long dataSize = 0;
+    m_hRes = m_lpDP->GetGroupConnectionSettings(
+        0, groupId, 0, &dataSize);
+    if (dataSize == 0)
+        return 0;
+    DPLCONNECTION* connection = static_cast<DPLCONNECTION*>(
+        ::operator new(dataSize));
+    m_hRes = m_lpDP->GetGroupConnectionSettings(
+        0, groupId, connection, &dataSize);
+    if (m_hRes < 0) {
+        ::operator delete(connection);
+        return 0;
+    }
+    return connection;
+}
+
 // E:\gamedcs\dxplay.cpp:1948
 VA(0x00499e20, 0x23)  // address-taken by CDPlayLobby::EnumAddress, dc 0x8bba4
 int PASCAL EnumAddressCallback(const GUID* guidDataType,
