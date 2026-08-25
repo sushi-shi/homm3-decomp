@@ -2705,6 +2705,7 @@ townmgr	?DoMapTavern@@YIXUtype_point@@@Z	100.0000	100.0000	100.0000	0x1d7e90
 townmgr	?DoPortalOfSummoning@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2950
 townmgr	?DoShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720
 townmgr	?DoSkeletonTransformer@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2f90
+townmgr	?DoTavern@@YIEXZ	96.4800	96.4800	96.4800	0x1d7ec0
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0
 townmgr	?DoUniversity@townManager@@QAEXXZ	93.6951	93.6951	93.6951	0x1d2da0
@@ -2717,6 +2718,7 @@ townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?RedrawTownScreen@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5410
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
+townmgr	?SetArmyCommand@townManager@@QAEXHE@Z	100.0000	100.0000	100.0000	0x1c7400
 townmgr	?SetCommandAndText@type_garrison_base_window@@QAEXPAVmessage@@@Z	95.6856	95.6856	95.6856	0x1d05f0
 townmgr	?SetHeroCommand@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c7250
 townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0
@@ -2746,7 +2748,6 @@ townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0
 townmgr	?handle_hall_click@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d30d0
 townmgr	?handle_mage_guild_click@townManager@@QAEXXZ	97.4888	97.4888	97.4888	0x1ce560
 townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
-townmgr	DoTavern	0.0000	0.0000	0.0000	0x1d7ec0
 townmgr	GetBuildingInfo	0.0000	0.0000	0.0000	0x1d2a40
 townmgr	TBuyBuildWindow_set_prerequisite_text	0.0000	0.0000	0.0000	0x1d5be0
 townmgr	TThievesGuildWindow_SetRolloverText	0.0000	0.0000	0.0000	0x1c9710
@@ -2755,7 +2756,6 @@ townmgr	TThievesGuildWindow_WindowHandler	0.0000	0.0000	0.0000	0x1c9930
 townmgr	TTownScreenWindow_set_bonus_display	0.0000	0.0000	0.0000	0x1c5b40
 townmgr	townManager_Main	0.0000	0.0000	0.0000	0x1d3240
 townmgr	townManager_Open	0.0000	0.0000	0.0000	0x1c63c0
-townmgr	townManager_SetArmyCommand	0.0000	0.0000	0.0000	0x1c7400
 townmgr	townManager_SetCommandAndText	0.0000	0.0000	0.0000	0x1c77a0
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0
 tradpost	??1TGiveResourceWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e36c0
