@@ -32,6 +32,10 @@ enum ESacrificeWindowHelp {
     SACRIFICE_HELP_COUNT = 20
 };
 
+enum ESacrificeArtifactSlotFrame {
+    SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90
+};
+
 // HELP.TXT's second pass at 0x5b9b52 fills exactly twenty stride-8
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
 DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];
@@ -67,7 +71,9 @@ public:
     std::vector<type_artifact_offering> artifact_offerings; // +0xbc
     std::vector<textWidget*> artifact_value_widgets;        // +0xcc
     std::vector<iconWidget*> artifact_offering_widgets;     // +0xdc
-    unsigned char pad_ec[0x150];
+    std::vector<iconWidget*> slot_back_widgets;              // +0xec
+    std::vector<iconWidget*> slot_widgets;                   // +0xfc
+    unsigned char pad_10c[0x130];
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
@@ -83,6 +89,8 @@ public:
     // 0x563150. Bodies still deferred.
     void set_artifact_mode();
     void set_creature_mode();
+    void update_slot(long slot);
+    void update_all_slots();
     void update_artifact_offering(long slot);
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4

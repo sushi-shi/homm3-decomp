@@ -179,6 +179,9 @@ public:
     void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
+    // Dreamcast Widget.h:231. Retail callers reduce it to the +0x20
+    // RollOver load, so no out-of-line body survives.
+    const char* get_help_text() const { return RollOver; }
 #ifdef HOMM3_WIDGET_SET_VISIBLE_INLINE
     // DC-attested header inline (E:\gamedcs\Widget.h:263). Most retail
     // callers fold this body into their owning function; the one retained
