@@ -277,6 +277,17 @@ DATA(0x006aaaa0) static int gWindowY;
 DATA(0x0068c4c0) static int gCreatureRowY[7];
 DATA(0x006a54ec) static char* gSellCreatureColumnLabel;
 
+// The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
+// each value widget (WIDGET_SET_Y), and the char[] subtitle the Buy/SellArt
+// Updates copy for the marketplace-mode caption. Provisional names.
+DATA(0x0068c4a0) static int gResourceValueWidgetY[7];
+DATA(0x006a542c) static char gMarketSubtitle[1];
+
+// The seven per-resource market values; get_market_value and the resource-trade
+// math read gMarketValues, the buy-artifact price math the second row.
+DATA(0x0068c482) static unsigned short gMarketValues[7];
+DATA(0x0068c492) static unsigned short gArtifactMarketValues[7];
+
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
@@ -688,12 +699,211 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:1466
+// Refreshes the buy-artifact dialog: the exchange-rate/idle title, the market
+// subtitle, the panel enable-dim state, and a two-column loop over the paying
+// resources and the artifact-for-sale slots (icon, per-artifact price via the
+// inlined ratio math, selection highlight). The final repaint is bUpdate-gated.
+// The inlined SetWidgetOn/Off/Disabled helpers expand to the status broadcasts.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::Update(unsigned char bUpdate)
 {
-    // @stub
+    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        int qty;
+        const char* word;
+        if (gRatioInverted) {
+            qty = 1;
+            word = (*gpGeneralText)[162];
+        } else if (gGiveQuantity <= 1) {
+            qty = gGiveQuantity;
+            word = (*gpGeneralText)[162];
+        } else {
+            qty = gGiveQuantity;
+            word = (*gpGeneralText)[161];
+        }
+        sprintf(gText, (*gpGeneralText)[268],
+                akArtifactTraits[gpMarketArtifacts.asIds[gLeftResource]].name,
+                qty, word, gResourceNames[gSelectedArtifact]);
+    } else {
+        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
+                                        : (*gpGeneralText)[164]);
+    }
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gMarketSource == MARKET_SOURCE_MARKETPLACE)
+        strcpy(gText, gMarketSubtitle);
+    else if (gMarketSource == MARKET_SOURCE_BLACK_MARKET)
+        sprintf(gText, (*gpGeneralText)[350]);
+
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, (*gpGeneralText)[271]);
+    msg.codeY = 0xe;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[169]);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xf;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gSelectedArtifact == -1 || gLeftResource == -1) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
+    } else {
+        if (gRightAmount != 0) {
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 6);
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5, 0x1000);
+        } else {
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5, 0x1000);
+        }
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   8,   6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 8,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
+    }
+
+    if (gMarketSource == MARKET_SOURCE_BLACK_MARKET ||
+        gMarketSource == MARKET_SOURCE_FREELANCER) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_COUNT_ID,      6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_LEFT_LABEL_ID,      6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_BUY_RIGHT_LABEL_ID, 6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1000);
+    }
+
+    for (int col = 0; col < 2; ++col) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            if (col == 0) {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.extra = gSelectedArtifact;
+                msg.codeY = 3;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
+                BroadcastMessage(&msg);
+            } else {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 8;
+                msg.extra = gpMarketArtifacts.asIds[gLeftResource];
+                BroadcastMessage(&msg);
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gRightAmount);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0xc;
+                msg.extraText = gText;
+                BroadcastMessage(&msg);
+            }
+        }
+
+        for (int i = 0; i < 7; ++i) {
+            if (col == 0) {
+                msg.codeX = widget::WIDGET_SET_STATUS;
+                msg.extra = 6;
+                msg.codeY = 0x15 + i;
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_SELL_WOOD_ID + i;
+                BroadcastMessage(&msg);
+                msg.codeY = 0x23 + i;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.extraText = gText;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gpCurrentPlayer->resources[i]);
+                msg.codeY = 0x23 + i;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_Y;
+                msg.extra = gResourceValueWidgetY[i];
+                BroadcastMessage(&msg);
+                msg.codeX = (gSelectedArtifact == i) ? widget::WIDGET_SET_STATUS
+                                                     : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_SELL_WOOD_ID + i;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            } else {
+                msg.extra = 6;
+                if (gpMarketArtifacts.asIds[i] != -1) {
+                    msg.codeX = widget::WIDGET_SET_STATUS;
+                    msg.codeY = 0x38 + i;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x4d + i;
+                    BroadcastMessage(&msg);
+                    msg.extra = 2;
+                    msg.codeY = 0x3f + i;
+                    BroadcastMessage(&msg);
+                    if (gSelectedArtifact != -1) {
+                        float valEff = static_cast<float>(gArtifactMarketValues[gSelectedArtifact])
+                                     * fArtifactPurchaseEfficency[gMarketCount];
+                        float cost = static_cast<float>(
+                            akArtifactTraits[gpMarketArtifacts.asIds[i]].cost);
+                        long q;
+                        if (valEff == 0.0f || cost == 0.0f)
+                            q = 0;
+                        else
+                            q = static_cast<long>(cost / valEff + 0.5);
+                        sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), q);
+                    } else {
+                        sprintf(gText, emptyRolloverText);
+                    }
+                    msg.codeX = widget::WIDGET_SET_TEXT;
+                    msg.codeY = 0x4d + i;
+                    msg.extraText = gText;
+                    BroadcastMessage(&msg);
+                    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                    msg.codeY = 0x38 + i;
+                    msg.extra = gpMarketArtifacts.asIds[i];
+                    BroadcastMessage(&msg);
+                } else {
+                    msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                    msg.codeY = 0x38 + i;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x4d + i;
+                    BroadcastMessage(&msg);
+                    msg.extra = 2;
+                    msg.codeY = 0x3f + i;
+                    BroadcastMessage(&msg);
+                }
+                msg.codeX = (gLeftResource == i) ? widget::WIDGET_SET_STATUS
+                                                 : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = 0x3f + i;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    if (bUpdate)
+        DrawWindow(1, 0xffff0001, 0xffff);
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:1716
 VA(0x005ebe80, 0x6cb)  // ordermap clean run + arity ret 4, dc 0x18a02c
@@ -989,13 +1199,6 @@ void TSellArtifactWindow::decrement_backpack_start()
 }
 
 #endif  // @carcass
-
-DATA(0x0068c482) static unsigned short gMarketValues[7];
-// Retail .data 0x68c492, the second seven-short resource-value row (0x10 above
-// gMarketValues). The buy-artifact window divides an artifact's gold cost by
-// this row's value (scaled by fArtifactPurchaseEfficency) rather than by the
-// resource-trade row. Name provisional; identity is the byte-proven address.
-DATA(0x0068c492) static unsigned short gArtifactMarketValues[7];
 
 // E:\gamedcs\tradpost.cpp:2160
 VA(0x005ecd10, 0x0B)
