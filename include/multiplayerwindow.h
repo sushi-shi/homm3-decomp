@@ -205,15 +205,14 @@ public:
 
     // The delete-every-element teardown the compiler-generated scalar
     // deleting destructor inlines (retail 0x512670 for <CDPlaySession>).
+    // Delegating to Destroy() rather than writing the loop here is what keeps
+    // retail's virtual Get(i) dispatch: in a destructor VC6 devirtualizes+
+    // inlines a virtual call on `this`, but inside the inlined Destroy (a
+    // normal member) the exact type is not assumed, so Get stays a vtable
+    // dispatch - the same shape GoMainMenu's inlined Destroy already matches.
     virtual ~CAutoArray()
     {
-        for (unsigned long i = 0; i < size; i++)
-            delete Get(i);
-        if (pArray)
-            delete pArray;
-        pArray = 0;
-        allocSize = 0;
-        size = 0;
+        Destroy();
     }
 
     virtual unsigned char Add(T* element)
