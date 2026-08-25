@@ -6,6 +6,7 @@
 #define HOMM3_EVENT_RECORD_H
 
 class TAbstractFile;
+class hero;
 
 // Record discriminant returned by get_type(); values byte-proven from the
 // retail get_type bodies (mov eax,N / ret) reached through each class vtable.
@@ -93,6 +94,23 @@ public:
 class type_record_erase : public type_event_record {
 public:
     virtual type_event_record_type get_type() OVERRIDE;
+};
+
+// Dreamcast names the complete tail; retail independently proves each
+// offset through load/save/replay/undo. The final byte records whether the
+// hero was a town garrison, in which case undo must not put it on the map.
+class type_record_hide_hero : public type_event_record {
+public:
+    virtual type_event_record_type get_type() OVERRIDE;
+    virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
+    virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    virtual void replay(unsigned char draw) OVERRIDE;
+    virtual void undo() OVERRIDE;
+
+    hero* current_hero;          // +0x08
+    signed char new_owner;       // +0x0c
+    signed char prev_owner;      // +0x0d
+    unsigned char town_garrison; // +0x0e
 };
 
 class type_record_player_death : public type_event_record {

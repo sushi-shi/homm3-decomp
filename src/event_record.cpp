@@ -426,11 +426,15 @@ void type_record_hide_hero::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:712
-DC_ONLY(0x8d688, 0x80)
+#endif  // @carcass
+VA(0x0049b680, 0x1F)  // anchor-vtable + inlined hero::obscure_cell, dc 0x8d688
 void type_record_hide_hero::undo()
 {
-    // @stub
+    current_hero->owner = prev_owner;
+    if (!town_garrison)
+        current_hero->obscure_cell();
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:725
 DC_ONLY(0x8d708, 0xB6)
