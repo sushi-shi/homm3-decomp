@@ -9,6 +9,7 @@
 #include "kb.h"
 #include "message.h"
 #include "misc.h"
+#include "mousemgr.h"
 #include "sample.h"
 #include "slider.h"
 #include "textresource.h"
@@ -1898,6 +1899,25 @@ void type_sacrifice_window::set_creature_mode()
     update_experience();
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1053
+// The Dreamcast line table and xref graph prove this helper boundary at each
+// artifact-drop site. Complete folds the false change-experience arm into
+// sacrifice, but retains the helper's redraw as a distinct inline tail.
+void type_sacrifice_window::put_down_artifact(
+    unsigned char change_experience)
+{
+    if (change_experience) {
+        total_experience -= holding_artifact.value;
+        update_experience();
+    }
+    holding_artifact.artifactId = ARTIFACT_NONE;
+    update_offering(current_artifact_widget, current_artifact_value,
+                    &holding_artifact);
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    update_all_slots();
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
 // The retained copy of the source helper above. The 8-byte by-value argument
 // and artifact-traits lookup independently fix this exact retail COMDAT.
 VA(0x005639e0, 0x5b)  // linkorder + body/ABI, dc 0x125a4c
@@ -1913,6 +1933,74 @@ void type_sacrifice_window::update_artifact_offering(long slot)
     update_offering(artifact_offering_widgets[slot],
                     artifact_value_widgets[slot],
                     &artifact_offerings[slot]);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1407
+// The constructor stores this private static callback at 0x56019e. Retail
+// proves both mode-specific reset paths and the common experience award.
+// RESIDUAL: all eleven branch mnemonics and three returns agree, but this
+// compile tail-merges put_down_artifact's redraw with the creature redraw;
+// retail keeps both source-authentic sites (96.62%, one 21-byte flow wall).
+VA(0x005646a0, 0x269)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::sacrifice(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_ARTIFACTS].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        if (window->sacrificing_artifacts) {
+            for (unsigned long i = 0;
+                 i < window->artifact_offerings.size(); ++i) {
+                window->artifact_offerings[i].artifactId = ARTIFACT_NONE;
+                window->update_artifact_offering(i);
+            }
+            if (window->holding_artifact.artifactId != ARTIFACT_NONE)
+                window->put_down_artifact(0);
+        } else {
+            armyGroup* army = &window->current_hero->army;
+            long group;
+            for (group = 0;
+                 group < armyGroup::ARMY_GROUP_SLOT_COUNT; ++group) {
+                army->numTroops[group] -=
+                    window->creature_offerings[group].amount;
+                if (army->numTroops[group] <= 0)
+                    army->Dismiss(group);
+                window->creature_offerings[group].amount = 0;
+                window->update_creature_offering(
+                    &window->creature_offerings[group]);
+                window->creature_offerings[group].field_04->set_visible(0);
+                window->creature_offerings[group].field_10->set_visible(0);
+            }
+            window->current_creature.group = -1;
+            window->update_creature_offering(&window->current_creature);
+            window->creature_name_widget->set_visible(0);
+            window->all_creatures_button->enable(
+                army->get_creature_total() > 1);
+            window->creature_slider->SetResolution(1);
+            window->creature_slider->SetState(0);
+            window->creature_slider->enable(0);
+            window->max_creatures_button->enable(0);
+            window->DrawWindow(
+                1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        }
+
+        window->current_hero->GiveExperience(
+            window->total_experience, 1, 1);
+        window->total_experience = 0;
+        window->update_experience();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1472

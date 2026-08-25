@@ -1,13 +1,13 @@
 <!-- # generator: homm3.vc6.report | # date: 2026-08-25 | # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - regenerate, never hand-edit | plateaus in [50.0, 99.999%); base-vs-delinked-target diagnosis, no recompiles -->
 # vc6 plateau diagnosis (read-only; solvers propose, never land)
 
-413 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
+414 function(s). why-reg = register-homing knobs; why-branch = control-flow knobs; predict-inline = out-of-line CALL multiset divergence (a callee inlined on one side only - dominated by STL basic_string/vector ops + small dtors retail inlines and we do not). CALIBRATION 2026-08-19: this column USED to be dominated by a NAME artifact - retail's side names an unclaimed callee with a synth working label our compiled side can never emit, so one call booked as both an under- and an over-inline and the inliner route (which sits upstream of registers and blocks) buried the true diagnosis. inline_model.divergence now pairs those off by count: on the tree of that date the inliner class fell from 135 rows to 46 of 211, and register-homing (108) overtook it as the dominant plateau class. MECHANISM (RE'd, docs/vc6/inliner.md): /Ob2 budget = clamp(2*caller_cb,1000,35000) spent sequentially; our leaner reconstructions sit at the 1000 floor and STARVE, so retail inlines what we call. FIX = finish the caller's body (budget follows statement mass, byte-inert counts) - do NOT chase _Tidy/vector spellings or pragmas. So on LOW-% rows inline divergence largely self-resolves as reconstruction completes; it is the pure wall only on high-% rows. Mixed walls list both distances.
 
 ## Wall-class summary
 
 - **199** register-homing (why-reg)
 - **105** inliner (predict-inline)
-- **80** control-flow (why-branch)
+- **81** control-flow (why-branch)
 - **29** unclassified
 
 | fuzzy | unit | function | wall class | reg-dist | flow-dist | knob to try |
@@ -288,6 +288,7 @@
 | 96.53 | hero | `?DestroySiegeWeaponArtifact@hero@@QAEXH@Z` | register-homing (why-reg) | 17 | 0 | cache-vs-reload a member/local (B13) / homing (B2/B3) |
 | 96.53 | seerhut | `?SetDefaultText@type_skill_quest@@UAEXXZ` | register-homing (why-reg) | 21 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 96.56 | armygrp | `?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVt..` | register-homing (why-reg) | 75 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
+| 96.62 | sacrifice_window | `?sacrifice@type_sacrifice_window@@CIHAAVmess..` | control-flow (why-branch) | 6 | 3 | loop-form / merged-return placement / case order (D1-D9) |
 | 96.63 | remote | `?KillOldChat@CChatManager@@QAEXXZ` | register-homing (why-reg) | 28 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 96.63 | remote | `?AddChat@@YAXPAVCChatManager@@PBDZZ` | register-homing (why-reg) | 9 | 0 | name a value to steer pseudo order->EAX (B14) / decl order (B6) |
 | 96.64 | advmgr | `?garrison_quick_view@advManager@@QAEXHHH@Z` | control-flow (why-branch) | 8 | 8 | loop-form / merged-return placement / case order (D1-D9) |
