@@ -320,7 +320,7 @@ protected:
         const GUID* type, unsigned long size, const void* data);
 
 private:
-    void* m_lpLobby;                         // +0x58
+    IUnknown* m_lpLobby;                     // +0x58
     CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
