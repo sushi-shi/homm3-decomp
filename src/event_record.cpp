@@ -222,11 +222,13 @@ void type_record_claim_town::replay(unsigned char draw)
 }
 
 // E:\gamedcs\event_record.cpp:367
-DC_ONLY(0x8ce48, 0x2A)
+#endif  // @carcass
+VA(0x0049aca0, 0x1D)  // anchor-vtable, dc 0x8ce48
 void type_record_claim_town::undo()
 {
-    // @stub
+    gpGame->towns[id].owner = old_owner;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:376
 DC_ONLY(0x8ce74, 0x3A)
