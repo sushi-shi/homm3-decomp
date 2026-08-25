@@ -589,13 +589,142 @@ void TMultiPlayerWindow::GoMainMenu()
     pSessions->Destroy();
 }
 
-#if 0  // @carcass
+// The session-list draw. Reads the live session count off pSessions (the
+// virtual GetCount), draws the muGstat status icon and three text columns
+// (name / user / player-count, split out of each session's "name\xfa user"
+// string) for up to twelve rows, and toggles the connection buttons on whether
+// the local player has typed a name. Splash-visible and empty-list states take
+// the two short branches; the full list re-uses the same UpdateScreen tail.
+// Structure is byte-exact: reading playerCount into numPlayers once shortens
+// sess's live range so it stays in esi across the loop (retail's allocation),
+// the !showSplash/count>0 inversion sinks the splash+empty arms as retail does,
+// and `count > 0` gives retail's jbe selector.
+// Residual (95.11%): three CL-generation deltas, all register/schedule, none
+// source-visible. (1) the `wy += 0x70` row-Y bias schedules before the for-
+// entry guard where retail schedules it after; (2) VC6 picks eax/ecx where
+// retail picks ecx/edx for the &delim / nameBuf lea and evaluates the Get
+// receiver before its argument; (3) the color==0 arm of the `||` is sunk here
+// and inline in retail (je vs jne). The _Nullstr vs adventureTownRolloverEmpty-
+// Text reloc is the c_str() null fallback and is cosmetic (see OnWidgetDeselect
+// note). Tried and rejected: declaring anySelected after pn to move its zero
+// store past the name test regresses the slot layout (95.11 -> 83.38).
 VA(0x0050f0f0, 0x3E6)  // anchor-callee: sole big drawing method (font::DrawBoundedString x3, CSprite::Draw, session-name strncpy/sprintf), size 0.99x DC, dc 0x1005fc
 void TMultiPlayerWindow::Update()
 {
-    // @stub
+    char userBuf[256];
+    char nameBuf[256];
+    char countBuf[100];
+
+    int wx = x;
+    int wy = y;
+    unsigned long count = pSessions->GetCount();
+    int nShown = 0;
+    unsigned char haveName = 0;
+    unsigned char anySelected = 0;
+
+    const char* pn = playerName->Text.c_str();
+    if (pn && strlen(pn))
+        haveName = 1;
+
+    if (!showSplash) {
+        if (count > 0) {
+            DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+            if (count >= 12)
+                count = 12;
+            wy += 0x70;
+            for (int nRow = 0; nRow < count; nRow++) {
+                CDPlaySession* sess = pSessions->Get(nRow + currentIndex);
+                if (!sess)
+                    return;
+
+                char delim[2];
+                delim[0] = static_cast<char>(0xfa);
+                delim[1] = 0;
+                const char* sep = strstr(sess->sessionName, delim);
+                int nameLen = strlen(sess->sessionName);
+                if (sep)
+                    nameLen = sep - sess->sessionName;
+                strncpy(nameBuf, sess->sessionName, nameLen);
+                nameBuf[nameLen] = 0;
+                if (sep)
+                    strcpy(userBuf, sep + 1);
+                else
+                    userBuf[0] = 0;
+
+                int color = 1;
+                unsigned long numPlayers = sess->playerCount;
+                if ((sess->dwFlags & 0x21) || numPlayers == sess->maxPlayers)
+                    color = 0;
+                else if (sess->dwFlags & 0x400)
+                    color = 2;
+
+                int isSelected = currentGame == nRow + currentIndex;
+                if (color != 0) {
+                    if (isSelected)
+                        anySelected = 1;
+                    nShown++;
+                }
+
+                GameState->Draw(0, color, 0, 0,
+                                gpMultiPlayerWindow->GameState->Width,
+                                gpMultiPlayerWindow->GameState->Height,
+                                gpWindowManager->screenBitmap, wx + 0x12, wy, 0,
+                                1);
+                int fontColor = isSelected ? 5 : 1;
+                gUnnamed698a08->DrawBoundedString(nameBuf,
+                                                  gpWindowManager->screenBitmap,
+                                                  wx + 0x2b, wy, 0x80, 0x16,
+                                                  fontColor, 5, -1);
+                gUnnamed698a08->DrawBoundedString(userBuf,
+                                                  gpWindowManager->screenBitmap,
+                                                  wx + 0xad, wy, 0x80, 0x16,
+                                                  fontColor, 5, -1);
+                sprintf(countBuf, "%d", numPlayers);
+                gUnnamed698a08->DrawBoundedString(countBuf,
+                                                  gpWindowManager->screenBitmap,
+                                                  wx + 0x130, wy, 0x1e, 0x16,
+                                                  fontColor, 5, -1);
+                wy += 0x19;
+            }
+
+            if (nShown > 0 && haveName && anySelected)
+                join->enable(1);
+            else
+                join->enable(0);
+            if (host) {
+                host->enable(haveName);
+                host->Draw();
+            }
+            join->Draw();
+        } else {
+            if (hostJoinScreen)
+                join->enable(haveName);
+            else
+                join->enable(0);
+            if (host)
+                host->enable(haveName);
+            DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        }
+    } else {
+        if (hostJoinScreen) {
+            if (host)
+                host->enable(haveName);
+            join->enable(haveName);
+        } else {
+            if (hotSeat)
+                hotSeat->enable(haveName);
+            ipx->enable(haveName);
+            tcp->enable(haveName);
+            modem->enable(haveName);
+            direct->enable(haveName);
+        }
+        DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
+
+    gpWindowManager->UpdateScreen(x, y, width, height);
 }
 
+#if 0  // @carcass
 VA(0x0050f4e0, 0x458)  // anchor-vtable 0x6400a0 slot 12 (OnWidgetDeselect), dc 0x1009a4
 int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
