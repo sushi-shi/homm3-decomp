@@ -19,7 +19,19 @@
 // remote-side caller (0x1556e0) in source order; the two CDPlayLobby ctor/dtor
 // rows are proven by their dual base+derived vtable stores.
 #include <va.h>
+// dxplay.cpp is the DirectPlay TU: it sees the complete DP6 value structures and
+// the lobby non-virtual member set, exactly as retail did.
+#define HOMM3_REMOTE_LOBBY_DECLS
 #include "dxplay.h"
+#include "dxplay_com.h"
+
+// File-scope DirectPlay enumeration trampolines (defined at the tail of this TU),
+// forward-declared so the Enum* wrappers above them can take their addresses.
+int __stdcall EnumAddressCallback(const GUID*, unsigned long, const void*, void*);
+int __stdcall EnumSession(const DPSESSIONDESC2*, unsigned long*, unsigned long, void*);
+int __stdcall EnumConnectionsCallback(const GUID*, void*, unsigned long, const DPNAME*, unsigned long, void*);
+int __stdcall EnumGroupsCallback(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
+int __stdcall EnumPlayersCallback(unsigned long, unsigned long, const DPNAME*, unsigned long, void*);
 
 // --- reconstructed bodies (compiled) - the three retail-lowest RVAs ---
 
@@ -44,34 +56,32 @@ unsigned char CDPlay::IsHost()
     return m_isHost;
 }
 
-#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
+
 // E:\gamedcs\dxplay.h:434
 VA(0x00496cc0, 0x5)  // anchor-vtable CDPlay slot42 +0xa8 (ReceiveMsg), dc 0x8bf14
 unsigned char CDPlay::ReceiveMsg(unsigned long from, unsigned long to, CDPlayMsg* pMsg)
 {
-    // @stub
+    return 1;
 }
 
 // E:\gamedcs\dxplay.h:440
 VA(0x00496cd0, 0x5)  // anchor-vtable CDPlay slots44-54 ICF-folded (SysMsg* stub rep), dc 0x8bf18
 unsigned char CDPlay::SysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* pSysMsg, unsigned long toID)
 {
-    // @stub
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:89
-VA(0x00496ce0, 0x2F)  // anchor-vtable CDPlay slot0 (scalar deleting dtor), dc 0x8bf44
-void* CDPlay::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+VA_COMPGEN(0x00496ce0, 0x2F, SCALAR_DELETING_DTOR, CDPlay)
 
 // E:\gamedcs\dxplay.cpp:92
 VA(0x00496d10, 0x14)  // anchor-body: stores CDPlay vtable (0x63dc28) + releases m_lpDP ([this+0x2c]->vt[8]); SH4->x86 shrink 0x36->0x14, dc 0x8a0e4
-void CDPlay::~CDPlay()
+CDPlay::~CDPlay()
 {
-    // @stub
+    if (m_lpDP)
+        static_cast<IDirectPlay4A*>(m_lpDP)->Release();
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:100
 VA(0x00496d30, 0x3A)  // anchor-vtable CDPlay slot1 (Init); calls CoCreateInstance, dc 0x8a11c
@@ -80,12 +90,19 @@ unsigned char CDPlay::Init()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:121
 VA(0x00496d70, 0x33)  // anchor-vtable CDPlay slot2 (InitConnection), dc 0x8a120
 unsigned char CDPlay::InitConnection(CDPlayConnection* pConnection)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->InitializeConnection(pConnection->pConnection, 0);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:134
 VA(0x00496db0, 0xB0)  // anchor-vtable CDPlay slot3 (HostSession); ret 0x10, dc 0x8a154
@@ -94,6 +111,7 @@ unsigned char CDPlay::HostSession(char* sessionName, unsigned long dwFlags, unsi
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:175
 VA(0x00496e60, 0xB8)  // anchor-vtable CDPlay slot4 (JoinSession), dc 0x8a158
 unsigned char CDPlay::JoinSession(_GUID* lpSessionGuid, char* pPassword)
@@ -101,124 +119,234 @@ unsigned char CDPlay::JoinSession(_GUID* lpSessionGuid, char* pPassword)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:212
+// Residual (78.8%): retail defers the edi push into the alloc block and couples
+// it with a merged success/fail tail; the two are register-homing-coupled. The
+// early-return-buf form below is the best of 3 structures measured.
 VA(0x00496f20, 0x6D)  // anchor-vtable CDPlay slot24 (GetCurrSession), dc 0x8a15c
 DPSESSIONDESC2* CDPlay::GetCurrSession()
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwSize = 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(0, &dwSize);
+    if (m_hRes != DPERR_BUFFERTOOSMALL)
+        return 0;
+    if (dwSize == 0)
+        return 0;
+    DPSESSIONDESC2* buf = static_cast<DPSESSIONDESC2*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(buf, &dwSize);
+    if (m_hRes >= 0)
+        return buf;
+    ::operator delete(buf);
+    return 0;
 }
 
 // E:\gamedcs\dxplay.cpp:239
 VA(0x00496f90, 0x22)  // anchor-vtable CDPlay slot23 (UpdateSessionDesc), dc 0x8a1d0
 unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* lpSessionDesc)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetSessionDesc(lpSessionDesc, 0);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
+// Residual (81.3%): retail stores m_hRes = eax unconditionally at the merge,
+// where eax is the CreatePlayer result when hosting and the still-live m_lpDP
+// otherwise; the conditional-assignment source reloads m_hRes instead. That
+// recycled-eax store is not cleanly spellable (register-homing class).
 // E:\gamedcs\dxplay.cpp:251
 VA(0x00496fc0, 0x72)  // anchor-vtable CDPlay slot7 (CreatePlayer), dc 0x8a1f8
 unsigned long CDPlay::CreatePlayer(char* sPlayerName, void* lpData, unsigned long dwSize, void* hEvent)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    DPNAME dpName = {0};
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.lpszShortNameA = sPlayerName;
+    unsigned long idPlayer;
+    if (m_isHost)
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->CreatePlayer(&idPlayer, &dpName, hEvent, lpData, dwSize, 0x100);
+    return m_hRes >= 0 ? idPlayer : 0;
 }
 
 // E:\gamedcs\dxplay.cpp:276
 VA(0x00497040, 0x2B)  // anchor-vtable CDPlay slot8 (DestroyPlayer), dc 0x8a28c
 unsigned char CDPlay::DestroyPlayer(unsigned long playerId)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->DestroyPlayer(playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:289
 VA(0x00497070, 0x66)  // anchor-vtable CDPlay slot9 (CreateGroup), dc 0x8a2bc
 unsigned long CDPlay::CreateGroup(char* sGroupName, void* pGroupData, unsigned long dwGroupDataSize, unsigned char stagingArea)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwFlags = 0;
+    DPNAME dpName;
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.dwFlags = 0;
+    dpName.lpszShortNameA = sGroupName;
+    dpName.lpszLongNameA = sGroupName;
+    if (stagingArea)
+        dwFlags = 0x800;
+    unsigned long idGroup;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->CreateGroup(&idGroup, &dpName, pGroupData, dwGroupDataSize, dwFlags);
+    return m_hRes >= 0 ? idGroup : 0;
 }
 
 // E:\gamedcs\dxplay.cpp:314
 VA(0x004970e0, 0x62)  // anchor-vtable CDPlay slot20 (CreateGroupInGroup), dc 0x8a31c
 unsigned long CDPlay::CreateGroupInGroup(unsigned long dpidParent, char* sGroupName, void* pGroupData, unsigned long dataSize, unsigned char stagingArea)
 {
-    // @stub
+    unsigned long dwFlags = 0;
+    DPNAME dpName;
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.dwFlags = 0;
+    dpName.lpszShortNameA = sGroupName;
+    dpName.lpszLongNameA = sGroupName;
+    if (stagingArea)
+        dwFlags = 0x800;
+    unsigned long idGroup;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->CreateGroupInGroup(dpidParent, &idGroup, &dpName, pGroupData, dataSize, dwFlags);
+    return m_hRes >= 0 ? idGroup : 0;
 }
 
 // E:\gamedcs\dxplay.cpp:336
 VA(0x00497150, 0x2F)  // anchor-vtable CDPlay slot10 (DestroyGroup), dc 0x8a378
 unsigned char CDPlay::DestroyGroup(unsigned long groupId)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->DestroyGroup(groupId);
+    return m_hRes >= 0;
 }
 
 // E:\gamedcs\dxplay.cpp:346
 VA(0x00497180, 0x27)  // anchor-vtable CDPlay slot11 (DeleteGroupFromGroup), dc 0x8a3a4
 unsigned char CDPlay::DeleteGroupFromGroup(unsigned long dpidParent, unsigned long dpidGroup)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->DeleteGroupFromGroup(dpidParent, dpidGroup);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
-
 // E:\gamedcs\dxplay.cpp:359
 VA(0x004971b0, 0x94)  // anchor-vtable CDPlay slot25 (EnumConnections), dc 0x8a3cc
 unsigned char CDPlay::EnumConnections(CAutoArray<CDPlayConnection>* pConnectionArray)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_pConnectionArray = pConnectionArray;
+    pConnectionArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumConnections(0, EnumConnectionsCallback, this, 1);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:377
 VA(0x00497250, 0x34)  // anchor-vtable CDPlay slot5 (StartSession), dc 0x8a414
 unsigned char CDPlay::StartSession(unsigned long groupId)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->StartSession(0, groupId);
+    return m_hRes >= 0;
 }
 
 // E:\gamedcs\dxplay.cpp:387
 VA(0x00497290, 0x22)  // anchor-vtable CDPlay slot6 (CloseSession), dc 0x8a458
 unsigned char CDPlay::CloseSession()
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Close();
+    return m_hRes >= 0;
 }
-
 // E:\gamedcs\dxplay.cpp:397
 VA(0x004972c0, 0x71)  // anchor-vtable CDPlay slot27 (EnumGroups), dc 0x8a484
 unsigned char CDPlay::EnumGroups(CAutoArray<CDPlayGroup>* pGroupArray, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pGroupArray = pGroupArray;
+    pGroupArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroups(lpGuidInstance, EnumGroupsCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:413
 VA(0x00497340, 0x71)  // anchor-vtable CDPlay slot28 (EnumPlayers), dc 0x8a4c8
 unsigned char CDPlay::EnumPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumPlayers(lpGuidInstance, EnumPlayersCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:429
 VA(0x004973c0, 0x75)  // anchor-vtable CDPlay slot29 (EnumGroupPlayers), dc 0x8a50c
 unsigned char CDPlay::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroupPlayers(dpidGroup, lpGuidInstance, EnumPlayersCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:446
 VA(0x00497440, 0xB5)  // anchor-vtable CDPlay slot26 (EnumSessions), dc 0x8a558
 unsigned char CDPlay::EnumSessions(CAutoArray<CDPlaySession>* pSessionArray, unsigned long timeOut, unsigned long dwFlags)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_pSessionArray = pSessionArray;
+    pSessionArray->Destroy(1);
+    DPSESSIONDESC2 desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.guidApplication = m_guid;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumSessions(&desc, timeOut, EnumSession, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:490
 VA(0x00497500, 0x53)  // anchor-vtable CDPlay slot33 (SendChat), dc 0x8a5dc
 unsigned char CDPlay::SendChat(char* sMsg, unsigned long idFrom, unsigned long idTo)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    DPCHAT chat;
+    chat.dwSize = sizeof(DPCHAT);
+    chat.dwFlags = 0;
+    chat.lpszMessageA = sMsg;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SendChatMessage(idFrom, idTo, 0, &chat);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:515
 VA(0x00497560, 0x48)  // anchor-vtable CDPlay slot32 (Send), dc 0x8a624
 unsigned char CDPlay::Send(void* lpData, unsigned long dwSize, unsigned long idFrom, unsigned long idTo, unsigned char guaranteed)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwFlags = 1;
+    if (!guaranteed)
+        dwFlags = 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Send(idFrom, idTo, dwFlags, lpData, dwSize);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:544
 VA(0x004975b0, 0xF3)  // anchor-vtable CDPlay slot34 (Receive), dc 0x8a678
@@ -227,6 +355,7 @@ unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPl
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:574
 VA(0x004976b0, 0xDC)  // anchor-vtable CDPlay slot37 (FlushReceiveQueue), dc 0x8a744
 unsigned char CDPlay::FlushReceiveQueue()
@@ -234,12 +363,42 @@ unsigned char CDPlay::FlushReceiveQueue()
     // @stub
 }
 
+
+#endif  // @carcass
+
+// Residual (73.8%): the CDPlaySession field-copy body is byte-right, but retail
+// defers the ebx/esi/edi pushes into the alloc path and duplicates the
+// Add(pSession)/return tail across the password branches rather than sharing it
+// (register-homing / merged-return class). Field mapping and order are exact.
 // E:\gamedcs\dxplay.cpp:605
 VA(0x004977c0, 0x144)  // anchor-vtable CDPlay slot60 (AddSessionEnum); ret 8, dc 0x8a7e0
 unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long dwFlags)
 {
-    // @stub
+    if (dwFlags & 1)
+        return 0;
+    CDPlaySession* pSession = new CDPlaySession;
+    if (pSession && lpDPSessionDesc) {
+        pSession->dwFlags = lpDPSessionDesc->dwFlags;
+        pSession->guidInstance = lpDPSessionDesc->guidInstance;
+        pSession->guidApp = lpDPSessionDesc->guidApplication;
+        pSession->maxPlayers = lpDPSessionDesc->dwMaxPlayers;
+        pSession->playerCount = lpDPSessionDesc->dwCurrentPlayers;
+        pSession->dwUser1 = lpDPSessionDesc->dwUser1;
+        pSession->dwUser2 = lpDPSessionDesc->dwUser2;
+        pSession->dwUser3 = lpDPSessionDesc->dwUser3;
+        pSession->dwUser4 = lpDPSessionDesc->dwUser4;
+        strcpy(pSession->sessionName, lpDPSessionDesc->lpszSessionNameA);
+        if (lpDPSessionDesc->lpszPasswordA)
+            strcpy(pSession->password, lpDPSessionDesc->lpszPasswordA);
+        else
+            pSession->password[0] = 0;
+    }
+    m_pSessionArray->Add(pSession);
+    return 1;
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
+
 
 // E:\gamedcs\dxplay.cpp:617
 VA(0x00497910, 0x180)  // anchor-vtable CDPlay slot43 (ReceiveSystemMsg); dispatches SysMsg slots, dc 0x8a828
@@ -248,19 +407,28 @@ unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
     // @stub
 }
 
+
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:654
 VA(0x00497a90, 0x6B)  // anchor-vtable CDPlay slot58 (AddGroupEnum), dc 0x8a9cc
 unsigned char CDPlay::AddGroupEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
 {
-    // @stub
+    CDPlayGroup* pGroup = new CDPlayGroup(lpName->lpszShortNameA, dpid);
+    m_pGroupArray->Add(pGroup);
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:663
 VA(0x00497b00, 0x6B)  // anchor-vtable CDPlay slot59 (AddPlayerEnum), dc 0x8aa14
 unsigned char CDPlay::AddPlayerEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
 {
-    // @stub
+    CDPlayPlayer* pPlayer = new CDPlayPlayer(lpName->lpszShortNameA, dpid);
+    m_pPlayerArray->Add(pPlayer);
+    return 1;
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:678
 VA(0x00497b70, 0xDF)  // anchor-vtable CDPlay slot61 (AddConnectionEnum), dc 0x8aa5c
@@ -269,6 +437,7 @@ unsigned char CDPlay::AddConnectionEnum(const _GUID* lpguidSP, void* lpConnectio
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:687
 VA(0x00497c50, 0x57B)  // anchor-vtable CDPlay slot35 (GetErrorDesc); DPERR switch, dc 0x8aad4
 void CDPlay::GetErrorDesc(long error, char* sDesc)
@@ -276,40 +445,58 @@ void CDPlay::GetErrorDesc(long error, char* sDesc)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:878
 VA(0x004981d0, 0x8)  // anchor-vtable CDPlay slot55 (SysMsgHost), dc 0x8af3c
 unsigned char CDPlay::SysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
 {
-    // @stub
+    m_isHost = 1;
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:885
 VA(0x004981e0, 0x5)  // anchor-vtable CDPlay slots56-57 ICF-folded (SysMsgCreate/DestroyPlayerOrGroup rep), dc 0x8af48
 unsigned char CDPlay::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
 {
-    // @stub
+    return 1;
 }
 
 // E:\gamedcs\dxplay.cpp:896
 VA(0x004981f0, 0x24)  // anchor-vtable CDPlay slot21 (AddPlayerToGroup), dc 0x8af50
 unsigned char CDPlay::AddPlayerToGroup(unsigned long groupId, unsigned long playerId)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->AddPlayerToGroup(groupId, playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:908
 VA(0x00498220, 0x24)  // anchor-vtable CDPlay slot22 (DeletePlayerFromGroup), dc 0x8af78
 unsigned char CDPlay::DeletePlayerFromGroup(unsigned long groupId, unsigned long playerId)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->DeletePlayerFromGroup(groupId, playerId);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:920
 VA(0x00498250, 0x4D)  // anchor-vtable CDPlay slot14 (SetPlayerName), dc 0x8b098
 unsigned char CDPlay::SetPlayerName(unsigned long playerId, char* sShort, char* sLong, unsigned long dwFlags)
 {
-    // @stub
+    char* pLong = sLong;
+    if (!pLong)
+        pLong = sShort;
+    DPNAME dpName;
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.dwFlags = 0;
+    dpName.lpszShortNameA = sShort;
+    dpName.lpszLongNameA = pLong;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetPlayerName(playerId, &dpName, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:939
 VA(0x004982a0, 0x115)  // anchor-vtable CDPlay slot19 (GetPlayerName), dc 0x8b0d8
@@ -318,26 +505,61 @@ unsigned char CDPlay::GetPlayerName(unsigned long playerId, char* sShort, int ma
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:977
 VA(0x004983c0, 0x2C)  // anchor-vtable CDPlay slot13 (SetGroupData), dc 0x8b1b0
 unsigned char CDPlay::SetGroupData(unsigned long groupId, void* pData, unsigned long dwDataSize, unsigned long dwFlags)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetGroupData(groupId, pData, dwDataSize, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:987
 VA(0x004983f0, 0xB1)  // anchor-vtable CDPlay slot16 (GetGroupData), dc 0x8b1e0
 void* CDPlay::GetGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long dwFlags)
 {
-    // @stub
+    void* buf = 0;
+    unsigned long dwDataSize = 0;
+    if (pdwSize)
+        dwDataSize = *pdwSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupData(groupId, 0, &dwDataSize, dwFlags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dwDataSize == 0)
+            return 0;
+        buf = ::operator new(dwDataSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupData(groupId, buf, &dwDataSize, dwFlags);
+        if (m_hRes < 0) {
+            ::operator delete(buf);
+            return 0;
+        }
+    }
+    if (pdwSize)
+        *pdwSize = dwDataSize;
+    return buf;
 }
 
 // E:\gamedcs\dxplay.cpp:1024
 VA(0x004984b0, 0x4D)  // anchor-vtable CDPlay slot12 (SetGroupName), dc 0x8b284
 unsigned char CDPlay::SetGroupName(unsigned long groupId, char* sShort, char* sLong, unsigned long dwFlags)
 {
-    // @stub
+    char* pLong = sLong;
+    if (!pLong)
+        pLong = sShort;
+    DPNAME dpName;
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.dwFlags = 0;
+    dpName.lpszShortNameA = sShort;
+    dpName.lpszLongNameA = pLong;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetGroupName(groupId, &dpName, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1043
 VA(0x00498500, 0x115)  // anchor-vtable CDPlay slot17 (GetGroupName), dc 0x8b2c4
@@ -346,47 +568,97 @@ unsigned char CDPlay::GetGroupName(unsigned long groupId, char* sShort, int maxS
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1081
 VA(0x00498620, 0x2C)  // anchor-vtable CDPlay slot15 (SetPlayerData), dc 0x8b3bc
 unsigned char CDPlay::SetPlayerData(unsigned long playerId, void* pData, unsigned long dwDataSize, unsigned long dwFlags)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetPlayerData(playerId, pData, dwDataSize, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1091
 VA(0x00498650, 0xB1)  // anchor-vtable CDPlay slot18 (GetPlayerData), dc 0x8b3ec
 void* CDPlay::GetPlayerData(unsigned long playerId, unsigned long* pdwSize, unsigned long dwFlags)
 {
-    // @stub
+    void* buf = 0;
+    unsigned long dwDataSize = 0;
+    if (pdwSize)
+        dwDataSize = *pdwSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerData(playerId, 0, &dwDataSize, dwFlags);
+    if (m_hRes < 0) {
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            return 0;
+        m_hRes = 0;
+        if (dwDataSize == 0)
+            return 0;
+        buf = ::operator new(dwDataSize);
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerData(playerId, buf, &dwDataSize, dwFlags);
+        if (m_hRes < 0) {
+            ::operator delete(buf);
+            return 0;
+        }
+    }
+    if (pdwSize)
+        *pdwSize = dwDataSize;
+    return buf;
 }
 
 // E:\gamedcs\dxplay.cpp:1129
 VA(0x00498710, 0x8C)  // anchor-vtable CDPlay slot38 (GetPlayerAddress), dc 0x8b494
 unsigned char* CDPlay::GetPlayerAddress(unsigned long dpid, unsigned long* pSize)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    if (!m_lpDP)
+        return 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerAddress(dpid, 0, &dwSize);
+    if (dwSize == 0)
+        return 0;
+    if (pSize)
+        *pSize = dwSize;
+    unsigned char* buf = static_cast<unsigned char*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetPlayerAddress(dpid, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
 
 // E:\gamedcs\dxplay.cpp:1158
 VA(0x004987a0, 0x42)  // anchor-vtable CDPlay slot39 (GetCaps), dc 0x8b51c
 unsigned char CDPlay::GetCaps(DPCAPS* dpCaps, unsigned char guaranteed)
 {
-    // @stub
+    memset(dpCaps, 0, sizeof(DPCAPS));
+    dpCaps->dwSize = sizeof(DPCAPS);
+    unsigned long dwFlags = 0;
+    if (guaranteed)
+        dwFlags = 1;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetCaps(dpCaps, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1176
 VA(0x004987f0, 0x31)  // anchor-vtable CDPlay slot40 (GetSendQueueSize), dc 0x8b564
 unsigned char CDPlay::GetSendQueueSize(unsigned long from, unsigned long to, unsigned long* numMsgs, unsigned long* numBytes)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetMessageQueue(from, to, 1, numMsgs, numBytes);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1189
 VA(0x00498830, 0x31)  // anchor-vtable CDPlay slot41 (GetReceiveQueueSize), dc 0x8b568
 unsigned char CDPlay::GetReceiveQueueSize(unsigned long from, unsigned long to, unsigned long* numMsgs, unsigned long* numBytes)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetMessageQueue(from, to, 2, numMsgs, numBytes);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1211
 VA(0x00498870, 0x82)  // anchor-vtable CDPlayLobby ctor: stores CDPlay(0x63dc28)+CDPlayLobby(0x63dd20) vtables, CoInitialize, dc 0x8b56c
@@ -395,19 +667,22 @@ void CDPlayLobby::CDPlayLobby()
     // @stub
 }
 
+
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1215
-VA(0x00498900, 0x21)  // anchor-vtable CDPlayLobby slot0 (scalar deleting dtor), dc 0x8bf78
-void* CDPlayLobby::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+VA_COMPGEN(0x00498900, 0x21, SCALAR_DELETING_DTOR, CDPlayLobby)
 
 // E:\gamedcs\dxplay.cpp:1218
 VA(0x00498930, 0x62)  // anchor-vtable ~CDPlayLobby real dtor: stores CDPlayLobby+CDPlay vtables, dc 0x8b5c8
-void CDPlayLobby::~CDPlayLobby()
+CDPlayLobby::~CDPlayLobby()
 {
-    // @stub
+    if (m_lpLobby)
+        static_cast<IDirectPlayLobby3A*>(m_lpLobby)->Release();
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
+
 
 // E:\gamedcs\dxplay.cpp:1224
 VA(0x004989a0, 0xB7)  // anchor-vtable CDPlayLobby slot62 (RegisterApp); GetCurrentDirectoryA, dc 0x8b60c
@@ -416,6 +691,7 @@ unsigned char CDPlayLobby::RegisterApp(char* szAppName, char* szFile, char* szCm
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:1268
 VA(0x00498a60, 0x72)  // anchor-vtable CDPlayLobby slot1 (Init); CoCreateInstance, dc 0x8b610
 unsigned char CDPlayLobby::Init()
@@ -423,12 +699,29 @@ unsigned char CDPlayLobby::Init()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1318
 VA(0x00498ae0, 0x8C)  // anchor-callee IDirectPlayLobby::GetConnectionSettings ([ecx+0x20]); ret 8, src-order (Init..SetGroupConn triple), dc 0x8b614
 DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigned long* pSize)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(dwAppId, 0, &dwSize);
+    if (pSize)
+        *pSize = dwSize;
+    if (dwSize == 0)
+        return 0;
+    DPLCONNECTION* buf = static_cast<DPLCONNECTION*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->GetConnectionSettings(dwAppId, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1351
 VA(0x00498b70, 0x6E)  // anchor-callee IDirectPlayLobby::GetConnectionSettings probe + GlobalAlloc/GlobalLock; ret 0, src-order, dc 0x8b69c
@@ -437,26 +730,45 @@ unsigned char CDPlayLobby::TestLobbied()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1385
 VA(0x00498be0, 0x31)  // anchor-callee IDirectPlayLobby::SetConnectionSettings ([ecx+0x30]); ret 8, src-order, dc 0x8b6a0
 unsigned char CDPlayLobby::SetConnectionSettings(unsigned long dwAppId, DPLCONNECTION* pConnection)
 {
-    // @stub
+    if (!m_lpLobby)
+        return 0;
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->SetConnectionSettings(0, dwAppId, pConnection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1399
 VA(0x00498c20, 0x29)  // anchor-vtable CDPlayLobby slot64 (SetGroupConnectionSettings), dc 0x8b6dc
 unsigned char CDPlayLobby::SetGroupConnectionSettings(unsigned long dpidGroup, DPLCONNECTION* pConnection)
 {
-    // @stub
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->SetGroupConnectionSettings(0, dpidGroup, pConnection);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1412
 VA(0x00498c50, 0x80)  // anchor-vtable CDPlayLobby slot65 (GetGroupConnectionSettings), dc 0x8b708
 DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(unsigned long dpidGroup)
 {
-    // @stub
+    unsigned long dwSize = 0;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupConnectionSettings(0, dpidGroup, 0, &dwSize);
+    if (dwSize == 0)
+        return 0;
+    DPLCONNECTION* buf = static_cast<DPLCONNECTION*>(::operator new(dwSize));
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetGroupConnectionSettings(0, dpidGroup, buf, &dwSize);
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        return 0;
+    }
+    return buf;
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1441
 VA(0x00498cd0, 0xAB)  // anchor-callee IDirectPlayLobby GetConnectionSettings([ecx+0x20])+Release([ecx+8]); ret 0 (0 params, unique among remaining lobby non-virtuals), dc 0x8b780
@@ -465,12 +777,14 @@ unsigned char CDPlayLobby::Connect()
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:1540
 VA(0x00498d80, 0x3C9)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateTCPIPConnection), dc 0x8b950
 CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(char* sIPAddress, char* sName, CDPlayConnection* pConnAppend)
 {
     // @stub
 }
+
 
 // E:\gamedcs\dxplay.cpp:1617
 VA(0x00499150, 0x356)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateIPXConnection), dc 0x8b954
@@ -479,12 +793,14 @@ CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:1686
 VA(0x004994b0, 0x24E)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateModemConnection), dc 0x8b958
 CDPlayConnection* CDPlayLobby::CreateModemConnection(char* sName, char* sPhoneNbr, char* sModemString)
 {
     // @stub
 }
+
 
 // E:\gamedcs\dxplay.cpp:1751
 VA(0x00499700, 0x1F4)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateSerialConnection), dc 0x8b95c
@@ -493,33 +809,56 @@ CDPlayConnection* CDPlayLobby::CreateSerialConnection(char* sName, _DPCOMPORTADD
     // @stub
 }
 
+
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1807
 VA(0x00499900, 0x97)  // anchor-vtable CDPlayLobby slot63 (EnumLobbyConnections), dc 0x8b964
 unsigned char CDPlayLobby::EnumLobbyConnections(CAutoArray<CDPlayConnection>* pConnectionArray)
 {
-    // @stub
+    if (!m_lpDP)
+        return 0;
+    m_pConnectionArray = pConnectionArray;
+    pConnectionArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumConnections(&m_guid, EnumConnectionsCallback, this, 2);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1831
 VA(0x004999a0, 0x75)  // anchor-vtable CDPlayLobby slot66 (EnumGroupsInGroup), dc 0x8b968
 unsigned char CDPlayLobby::EnumGroupsInGroup(CAutoArray<CDPlayGroup>* pGroupArray, unsigned long dpidParent, unsigned long dwFlags)
 {
-    // @stub
+    m_pGroupArray = pGroupArray;
+    pGroupArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroupsInGroup(dpidParent, 0, EnumGroupsCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1847
 VA(0x00499a20, 0x72)  // anchor-vtable CDPlayLobby slot67 (EnumGroupPlayers), dc 0x8b9b0
 unsigned char CDPlayLobby::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroupPlayers(dpidGroup, 0, EnumPlayersCallback, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1863
 VA(0x00499aa0, 0x78)  // anchor-vtable CDPlayLobby slot68 (EnumGroupPlayersRemote), dc 0x8b9f8
 unsigned char CDPlayLobby::EnumGroupPlayersRemote(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, _GUID* lpGuidInstance, unsigned long dwFlags)
 {
-    // @stub
+    m_pPlayerArray = pPlayerArray;
+    pPlayerArray->Destroy(1);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumGroupPlayers(dpidGroup, lpGuidInstance, EnumPlayersCallback, this, dwFlags | 0x80);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
+
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\dxplay.cpp:1881
 VA(0x00499b20, 0x89)  // anchor-vtable CDPlayLobby slot69 (EnumAddress), dc 0x8ba68
@@ -528,12 +867,14 @@ unsigned char CDPlayLobby::EnumAddress(void* pConn, unsigned long size, CAutoArr
     // @stub
 }
 
+
 // E:\gamedcs\dxplay.cpp:1894
 VA(0x00499bb0, 0xAA)  // anchor-vtable CDPlayLobby slot72 (AddAddressEnum), dc 0x8bab0
 unsigned char CDPlayLobby::AddAddressEnum(const _GUID* guid, unsigned long dataSize, const void* pData)
 {
     // @stub
 }
+
 
 // E:\gamedcs\dxplay.cpp:1901
 VA(0x00499c60, 0x1B8)  // anchor-vtable CDPlayLobby slot70 (GetIPAddress), dc 0x8bafc
@@ -542,41 +883,44 @@ unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\dxplay.cpp:1941 - DirectPlay enum callbacks (stdcall), each
 // address-taken as the callback pointer by its CDPlay(Lobby) Enum* method.
 VA(0x00499e20, 0x23)  // anchor-address-take: pushed by EnumAddress@0x99b20; ret 0x10 (4 params), dc 0x8bba4
-int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
+int __stdcall EnumAddressCallback(const GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
 {
-    // @stub
+    return static_cast<CDPlayLobby*>(lpContext)->AddAddressEnum(guidDataType, dwDataSize, lpData);
 }
 
 // E:\gamedcs\dxplay.cpp:1948
 VA(0x00499e50, 0x1F)  // anchor-address-take: pushed by EnumSessions@0x97440; ret 0x10 (4 params), dc 0x8bbc4
-int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
+int __stdcall EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
 {
-    // @stub
+    return static_cast<CDPlay*>(lpContext)->AddSessionEnum(lpDPSessionDesc, dwFlags);
 }
 
 // E:\gamedcs\dxplay.cpp:1963
 VA(0x00499e70, 0x2B)  // anchor-address-take: pushed by EnumConnections@0x971b0; ret 0x18 (6 params), dc 0x8bbdc
-int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+int __stdcall EnumConnectionsCallback(const GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
 {
-    // @stub
+    return static_cast<CDPlay*>(lpContext)->AddConnectionEnum(lpguidSP, lpConnection, dwConnectionSize, lpName, dwFlags);
 }
 
 // E:\gamedcs\dxplay.cpp:1976
 VA(0x00499ea0, 0x23)  // anchor-address-take: pushed by EnumGroups@0x972c0 + EnumGroupsInGroup@0x999a0; ret 0x14 (5 params), dc 0x8bc0c
-int EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+int __stdcall EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
 {
-    // @stub
+    return static_cast<CDPlay*>(lpContext)->AddGroupEnum(dpid, lpName, dwFlags);
 }
 
 // E:\gamedcs\dxplay.cpp:1991
 VA(0x00499ed0, 0x23)  // anchor-address-take: pushed by EnumPlayers@0x97340 + EnumGroupPlayers*; ret 0x14 (5 params), dc 0x8bc28
-int EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+int __stdcall EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
 {
-    // @stub
+    return static_cast<CDPlay*>(lpContext)->AddPlayerEnum(dpid, lpName, dwFlags);
 }
+#if 0  // @carcass -- located @stub bodies, PROVEN, in retail RVA order
 
 // E:\gamedcs\array.h:46
 VA(0x00499f00, 0x5B)  // anchor-body: stores CAutoArray vtable (0x63de44) + inlined Destroy loop, no flags param (plain dtor), dc 0x8c148
@@ -585,12 +929,14 @@ void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
     // @stub
 }
 
+
 // E:\gamedcs\array.h:51
 VA(0x00499f60, 0x60)  // anchor-body: ret 4 (deleteData param at [ebp+8]) + Destroy loop, no vtable store; called from CreateTCPIPConnection, dc 0x8c180
 void CAutoArray<CDPlayAddressElement>::Destroy(unsigned char deleteData)
 {
     // @stub
 }
+
 
 // E:\gamedcs\array.h:95
 VA(0x00499fc0, 0x1D)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot2 (Get), dc 0x8c24c
@@ -599,12 +945,14 @@ CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(unsigned long elemen
     // @stub
 }
 
+
 // E:\gamedcs\array.h:103
 VA(0x00499fe0, 0x22)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot3 (Put), dc 0x8c260
 unsigned char CAutoArray<CDPlayAddressElement>::Put(unsigned long elementNbr, CDPlayAddressElement* element)
 {
     // @stub
 }
+
 
 // E:\gamedcs\array.h:144
 VA(0x0049a010, 0x4)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot6 (GetCount), dc 0x8c324
@@ -613,12 +961,14 @@ unsigned long CAutoArray<CDPlayAddressElement>::GetCount()
     // @stub
 }
 
+
 // ..\stlport\stl_bvector.h:144
 VA(0x0049a020, 0x73)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot0 (scalar deleting dtor), dc 0x8c35c
 void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
+
 #endif  // @carcass
 
 // The rows below are DC-evidenced but not yet given retail claims:
