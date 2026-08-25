@@ -1127,19 +1127,8 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited)
 // twice in retail. See the live 99.90% body above; no unclaimed row remains in
 // this ai_player span.
 
-// E:\gamedcs\ai_player.cpp:834
-DC_ONLY(0x2f4b0, 0x96)
-long value_of_dwelling(town* current_town, short dwelling, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:865
-DC_ONLY(0x2f548, 0xB4)
-long value_of_dwelling_upgrade(town* current_town, short dwelling, int* extra_cost)
-{
-    // @stub
-}
+// value_of_dwelling (dc 0x2f4b0) promoted to VA(0x0042b520) in RVA order above.
+// value_of_dwelling_upgrade (dc 0x2f548) promoted to VA(0x0042b5b0) above.
 
 // E:\gamedcs\ai_player.cpp:895
 DC_ONLY(0x2f5fc, 0x98)
@@ -1169,19 +1158,8 @@ long value_of_silo(town* current_town, playerData* player)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1056
-DC_ONLY(0x2f9bc, 0xCC)
-long value_of_horde(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:1082
-DC_ONLY(0x2fa88, 0xA2)
-long value_of_horde_upgrade(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
-{
-    // @stub
-}
+// value_of_horde (dc 0x2f9bc) promoted to VA(0x0042b790) in RVA order above.
+// value_of_horde_upgrade (dc 0x2fa88) promoted to VA(0x0042b800) above.
 
 // E:\gamedcs\ai_player.cpp:1109
 DC_ONLY(0x2fb2c, 0x280)
@@ -1190,8 +1168,16 @@ long value_of_hall(town* current_town, type_building_id building)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:1147 - value_of_building (dc 0x2fdac) promoted to
-// VA(0x00433130) in RVA order below.
+// value_of_building's earlier VA(0x00433130) claim was a misattribution: 0x33130
+// is type_angelic_alliance_artifact::get_value (proven by its artifact type-vftable
+// slot at 0x63b760, re-homed below). value_of_building has no located retail body
+// (likely inlined into purchase_building/get_total_value); kept DC-only.
+// E:\gamedcs\ai_player.cpp:1147
+DC_ONLY(0x2fdac, 0x29c)
+long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:1279
 DC_ONLY(0x30048, 0x106)
@@ -1356,6 +1342,40 @@ void type_AI_player::do_resource_trade(int* supply)
 // Retail 0x2ae00.
 VA(0x0042ae00, 0x718)  // anchor-callee + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
+{
+    // @stub
+}
+
+// Retail relocated the value_of_* building-value helpers here, directly after
+// their purchase_building/value_of_building caller region (DC source order puts
+// them at 0x2f4b0..). Two adjacency-locked pairs, each arity- and body-matched:
+// dwelling/dwelling_upgrade read town growth (get_castle_growth_bonus /
+// get_growth_rate); horde/horde_upgrade read town->get_horde_effect. DC free
+// fastcall arities transfer exactly (p4->ret8, p3->ret4).
+// E:\gamedcs\ai_player.cpp:834
+VA(0x0042b520, 0x8b)  // value_of_* block + get_castle_growth_bonus + ret8/p4, dc 0x2f4b0
+long value_of_dwelling(town* current_town, short dwelling, unsigned char* prohibited, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:865
+VA(0x0042b5b0, 0xbe)  // adjacent to value_of_dwelling + get_growth_rate + ret4/p3, dc 0x2f548
+long value_of_dwelling_upgrade(town* current_town, short dwelling, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:1056
+VA(0x0042b790, 0x62)  // get_horde_effect + ret8/p4; pairs with horde_upgrade, dc 0x2f9bc
+long value_of_horde(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:1082
+VA(0x0042b800, 0xa2)  // get_horde_effect + ret8/p4; size 0xa2 carve-exact, dc 0x2fa88
+long value_of_horde_upgrade(town* current_town, type_building_id building, unsigned char* prohibited, int* extra_cost)
 {
     // @stub
 }
@@ -1641,12 +1661,7 @@ long value_of_hiring(town* current_town, hero* candidate, searchArray* search_ar
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:4457
-DC_ONLY(0x35400, 0xBC)
-long total_artifact_value(hero* candidate, long player_id)
-{
-    // @stub
-}
+// total_artifact_value (dc 0x35400) promoted to VA(0x004339e0) in RVA order below.
 
 // consider_hiring (dc 0x354bc) promoted to VA(0x00431800) in RVA order below.
 
@@ -1694,13 +1709,6 @@ void initialize_artifact_effects()
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5043
-DC_ONLY(0x361c8, 0x2C)
-void type_artifact_effect::type_artifact_effect()
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5050
 DC_ONLY(0x361f4, 0x20)
 void type_artifact_effect::~type_artifact_effect()
@@ -1715,37 +1723,9 @@ void type_scouting_artifact::type_scouting_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5065
-DC_ONLY(0x36258, 0x1C)
-long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5073
-DC_ONLY(0x36274, 0x44)
-void type_combat_artifact::type_combat_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5081
-DC_ONLY(0x362b8, 0x26)
-long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5090
 DC_ONLY(0x362e0, 0x40)
 void type_might_artifact::type_might_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5098
-DC_ONLY(0x36320, 0x2E)
-long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1757,23 +1737,9 @@ void type_power_artifact::type_power_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5116
-DC_ONLY(0x36390, 0x24)
-long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5127
 DC_ONLY(0x363b4, 0x3C)
 void type_knowledge_artifact::type_knowledge_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5134
-DC_ONLY(0x363f0, 0x24)
-long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1785,23 +1751,9 @@ void type_necromancy_artifact::type_necromancy_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5152
-DC_ONLY(0x36450, 0x8A)
-long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5182
 DC_ONLY(0x364dc, 0x50)
 void type_movement_artifact::type_movement_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5189
-DC_ONLY(0x3652c, 0x2A)
-long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
 }
@@ -1813,23 +1765,9 @@ void type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5205
-DC_ONLY(0x3659c, 0x46)
-long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5219
 DC_ONLY(0x365e4, 0x48)
 void type_morale_artifact::type_morale_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5226
-DC_ONLY(0x3662c, 0xAA)
-long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1841,23 +1779,9 @@ void type_luck_artifact::type_luck_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5250
-DC_ONLY(0x36720, 0xAA)
-long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5267
 DC_ONLY(0x367cc, 0x48)
 void type_duration_artifact::type_duration_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5274
-DC_ONLY(0x36814, 0x24)
-long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1869,23 +1793,9 @@ void type_school_artifact::type_school_artifact(TSpellSchool new_school, long ne
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5293
-DC_ONLY(0x3687c, 0x160)
-long type_school_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5347
 DC_ONLY(0x369dc, 0x40)
 void type_antimagic_artifact::type_antimagic_artifact(long _max_level)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5355
-DC_ONLY(0x36a1c, 0x98)
-long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1897,23 +1807,9 @@ void type_antimorale_artifact::type_antimorale_artifact()
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5387
-DC_ONLY(0x36afc, 0x142)
-long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5406
 DC_ONLY(0x36c40, 0x50)
 void type_antiluck_artifact::type_antiluck_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5413
-DC_ONLY(0x36c90, 0x142)
-long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1925,13 +1821,6 @@ void type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5441
-DC_ONLY(0x36e28, 0xBE)
-long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5477
 DC_ONLY(0x36ee8, 0x6C)
 void type_income_artifact::type_income_artifact(long new_amount, EGameResource new_resource)
@@ -1939,23 +1828,9 @@ void type_income_artifact::type_income_artifact(long new_amount, EGameResource n
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5486
-DC_ONLY(0x36f54, 0x96)
-long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5495
 DC_ONLY(0x36fec, 0x60)
 void type_creature_growth_artifact::type_creature_growth_artifact(long new_level, long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5505
-DC_ONLY(0x3704c, 0x148)
-long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1985,12 +1860,7 @@ long remove_negative_artifacts(hero* our_hero)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5835
-DC_ONLY(0x37898, 0x1C0)
-unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change)
-{
-    // @stub
-}
+// add_artifact (dc 0x37898) promoted to VA(0x00433e20) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:5940
 DC_ONLY(0x37a58, 0x74)
@@ -2952,14 +2822,195 @@ unsigned char consider_hiring(long player_id, hero* candidate)
     // @stub
 }
 
-// value_of_building: retail 0x33130 is the only row calling BOTH
-// armyGroup::get_AI_value AND town::get_army, and value_of_building is the only
-// ai_player DC fn calling both (unique-pair proof); the two other-module fns with
-// that pair - philai MoveHero (calls move_hero/mark_shipyards, absent here) and
-// philai value_of_reinforcing (228B) - are ruled out by callees and size. r=0.93.
-// Arity ret 0xc suggests retail carries a 5th param vs the DC 4-arg signature.
-VA(0x00433130, 0x26f)  // anchor-callee unique-pair (get_AI_value+get_army), dc 0x2fdac
-long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
+// E:\gamedcs\ai_player.cpp:5043
+VA(0x00432500, 0x7)  // anchor-vtable (??_7type_artifact_effect ctor), dc 0x361c8
+void type_artifact_effect::type_artifact_effect()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5065
+VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
+long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5073
+VA(0x00432540, 0x15)  // anchor-vtable (??_7type_combat_artifact ctor), dc 0x36274
+void type_combat_artifact::type_combat_artifact(long new_bonus)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5081
+VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
+long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5098
+VA(0x004325a0, 0x40)  // artifact get_value cluster order-map + get_AI_value, dc 0x36320
+long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5116
+VA(0x004325e0, 0x21)  // artifact get_value cluster order-map, dc 0x36390
+long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5134
+VA(0x00432610, 0x21)  // artifact get_value cluster order-map, dc 0x363f0
+long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5152
+VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
+long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5189
+VA(0x004326e0, 0x38)  // artifact get_value cluster order-map + get_AI_value, dc 0x3652c
+long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5205
+VA(0x00432720, 0x54)  // artifact get_value cluster order-map + get_AI_value, dc 0x3659c
+long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5226
+VA(0x00432780, 0x68)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x3662c
+long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5250
+VA(0x004327f0, 0x68)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36720
+long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5274
+VA(0x00432860, 0x21)  // artifact get_value cluster order-map, dc 0x36814
+long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5293
+VA(0x00432890, 0x1b2)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x3687c
+long type_school_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5355
+VA(0x00432a50, 0xc3)  // artifact get_value cluster order-map + get_AI_value, dc 0x36a1c
+long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5387
+VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
+long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5413
+VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
+long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5441
+VA(0x00432c20, 0xf5)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x36e28
+long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5486
+VA(0x00432d20, 0x49)  // artifact get_value cluster order-map, dc 0x36f54
+long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5505
+VA(0x00432d70, 0x219)  // artifact get_value cluster order-map, dc 0x3704c
+long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// Retail-only artifact-effect get_value virtuals (Complete/SoD added 6 concrete
+// types beyond the DC 18). Each is proven a virtual get_value by its type-vftable
+// slot in .rdata at 0x63b6b0.. (slot 0 = the shared ICF-folded scalar deleting
+// dtor 0x33080, slot 1 = get_value); all are thiscall ret 0xc = get_value(const
+// hero*, bool equipped, bool exact) per NH3API adventure_AI.hpp. Type names are
+// provisional (carve/NH3API elimination) except where noted; the RVA/size and the
+// get_value CATEGORY are vtable-proven. No DC offset (post-DC types).
+VA(0x00432f90, 0xe4)  // vtable-slot 0x63b750 + get_raw_spell_value, retail-only
+long type_spell_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
+long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// CORRECTION (2026-08-26): 0x33130 was claimed value_of_building on a unique-pair
+// heuristic (it calls armyGroup::get_AI_value AND town::get_army, and DC
+// value_of_building calls both). But 0x33130 is slot 1 of the artifact type-vftable
+// at 0x63b760 - a FREE function can never sit in a vtable - and its body is
+// thiscall ret 0xc reading the owner hero ([ebp+8], id [ecx+0x22]) and scanning
+// the hero's worn artifacts (0x20ad0/0x21620 arrays), the shape of a get_value, not
+// value_of_building's (town*, building_id, ...). By elimination against the 6
+// retail-only concrete types it is the Angelic Alliance combo artifact (623B,
+// army-value-dependent). value_of_building (dc 0x2fdac) has no proven retail body
+// here (likely inlined into purchase_building); withdrawn to DC_ONLY below.
+VA(0x00433130, 0x26f)  // vtable-slot 0x63b760 + get_army/get_AI_value + elimination, retail-only
+long type_angelic_alliance_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x004333a0, 0x174)  // vtable-slot 0x63b768 (provisional type), retail-only
+long type_undead_king_cloak_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x00433520, 0x5a)  // vtable-slot 0x63b77c (provisional type), retail-only
+long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+VA(0x00433580, 0x13a)  // vtable-slot 0x63b774 (provisional type), retail-only
+long type_statue_of_legion_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -2971,9 +3022,29 @@ long AI_get_value_of_artifact(type_artifact artifact, const hero* owner, unsigne
     // @stub
 }
 
+// total_artifact_value: loops the hero's 0x13 equipped slots calling
+// AI_get_value_of_artifact (0x336c0) and the hero worn/backpack iterators
+// HeroFn_004E2550/004E2840; size 184 ~= DC 188 (r=0.98). ret 8 (4 dwords) vs DC
+// p2 - Complete extended the signature (equipped/exact), same as the other AI
+// artifact-value entries.
+VA(0x004339e0, 0xb8)  // anchor-callee (AI_get_value_of_artifact) + size, dc 0x35400
+long total_artifact_value(const hero* our_hero, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
 // E:\gamedcs\ai_player.cpp:5708
 VA(0x00433c60, 0x1b3)  // anchor-callee unique (armyGroup::GetArmyMorale), dc 0x37588
 long get_full_value(const hero* our_hero)
+{
+    // @stub
+}
+
+// add_artifact: retail 447B ~= DC 448 (r=0.998); calls hero::equip_artifact,
+// add_to_backpack, get_number_in_backpack, get_full_value - the DC add_artifact
+// callee set. ret 0x18 = 6 stack dwords (type_artifact passed by value spans two).
+VA(0x00433e20, 0x1bf)  // anchor-callee + size (add_to_backpack/equip_artifact), dc 0x37898
+unsigned char add_artifact(hero* our_hero, type_artifact artifact, long* base_value, hero* source_hero, TArtifactSlot source_slot, long* source_value, long best_change)
 {
     // @stub
 }
