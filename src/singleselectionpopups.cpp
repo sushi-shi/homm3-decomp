@@ -3,6 +3,11 @@
 // 38 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "singleselectionpopups.h"
+#include "bitmap816.h"
+#include "bitmap16.h"
+#include "csprite.h"
+#include "window.h"
+#include "winmgr.h"
 
 #if 0  // @carcass
 
@@ -274,9 +279,27 @@ void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
+// E:\gamedcs\singleselectionpopups.cpp:71
+VA(0x00575750, 0x54)  // CSpriteWidget vtable 0x641a00 slot 4, dc 0x12f0c8
+void CSpriteWidget::Draw()
+{
+    sprite->Draw(0, frame, 0, 0, width, height,
+                 gpWindowManager->screenBitmap,
+                 x + parentWindow->x, y + parentWindow->y, 0, 1);
+}
+
 // E:\gamedcs\singleselectionpopups.cpp:61
 VA(0x00575a10, 0x10)  // CSpriteWidget vtable 0x641a00, slot 2
 int CSpriteWidget::Main(message* msg)
 {
     return widget::Main(msg);
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:103
+VA(0x00575a20, 0x3E)  // CBitmapWidget vtable 0x641a34 slot 4, dc 0x12f1fc
+void CBitmapWidget::Draw()
+{
+    image->Draw(0, 0, image->Width, image->Height,
+                gpWindowManager->screenBitmap,
+                x + parentWindow->x, y + parentWindow->y, 1);
 }

@@ -8,6 +8,7 @@
 #include "widget.h"
 
 class CSprite;
+class Bitmap816;
 
 // Retail's constructor allocates 0x38 bytes and writes the sprite and frame
 // immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
@@ -25,13 +26,18 @@ public:
 };
 SIZE(CSpriteWidget, 0x38);
 
-// --- CBitmapWidget ---
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:82, dc 0x12f168) void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:93, dc 0x12f1e0) int CBitmapWidget::Main(message* msg);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:99, dc 0x12f1f8) void CBitmapWidget::zBufferDraw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:103, dc 0x12f1fc) void CBitmapWidget::Draw();
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:106, dc 0x12f26c) void* CBitmapWidget::`scalar deleting destructor'(unsigned __flags);
-// CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:106, dc 0x12f2a0) void CBitmapWidget::~CBitmapWidget();
+// Bitmap816 wrapper; retail Draw reads the image at the first dword after
+// widget's proven 0x30-byte base.
+class CBitmapWidget : public widget {
+public:
+    Bitmap816* image;
+
+    CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
+    virtual ~CBitmapWidget();
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
+};
 
 // --- CBonusDlg ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:214, dc 0x12dfa8) void CBonusDlg::CBonusDlg(unsigned char newGameMode);
