@@ -2306,6 +2306,7 @@ subwindow	?Draw@TSubWindow@@QAEXEHH@Z	100.0000	100.0000	100.0000	0x1aa4f0
 subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa610
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470
+swapmgr	??0swapManager@@QAE@PAVhero@@0@Z	100.0000	100.0000	100.0000	0x1ae500
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
 swapmgr	CSwapManagerChatEdit_SendChat	0.0000	0.0000	0.0000	0x1ae370
 swapmgr	CSwapMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x1aeb00
@@ -2327,7 +2328,6 @@ swapmgr	swapManager_UpdateBackpack	0.0000	0.0000	0.0000	0x1af150
 swapmgr	swapManager_UpdateSlot	0.0000	0.0000	0.0000	0x1aef00
 swapmgr	swapManager_handle_artifact_click	0.0000	0.0000	0.0000	0x1af590
 swapmgr	swapManager_handle_backpack_click	0.0000	0.0000	0.0000	0x1af990
-swapmgr	swapManager_swapManager	0.0000	0.0000	0.0000	0x1ae500
 swapmgr	swapManager_swapManager_1afd70	0.0000	0.0000	0.0000	0x1afd70
 swapmgr	swapManager_update_all_slots	0.0000	0.0000	0.0000	0x1b0ef0
 systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
