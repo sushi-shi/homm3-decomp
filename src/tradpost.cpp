@@ -270,6 +270,13 @@ DATA(0x006aaac0) static int gGiveQuantity;
 DATA(0x006aaa9c) static int gWindowX;
 DATA(0x006aaaa0) static int gWindowY;
 
+// Two single-use tables the sell-creature Update reads: the per-army-row Y
+// coordinates it stamps on each populated creature widget (WIDGET_SET_Y) and
+// the char* caption it copies into the left-column label. Referenced only by
+// TSellCreatureWindow::Update; names provisional, addresses byte-proven.
+DATA(0x0068c4c0) static int gCreatureRowY[7];
+DATA(0x006a54ec) static char* gSellCreatureColumnLabel;
+
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
@@ -695,12 +702,206 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\tradpost.cpp:1920
+// Refreshes every widget of the sell-creature dialog from the current trade
+// selection: the header line, the fixed labels, the enable/dim state of the
+// panels and slider, and, in a two-pane loop, each army slot (creature icon +
+// count) and each buy-resource button (icon, exchange ratio, highlight). The
+// final repaint is gated by bUpdate.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::Update(unsigned char bUpdate)
 {
-    // @stub
+    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
+
+    if (gSelectedArtifact == -1 || gLeftResource == -1) {
+        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
+                                        : (*gpGeneralText)[164]);
+    } else {
+        int cid = gpMarketHero->army.armies[gSelectedArtifact];
+        const char* name;
+        const char* word;
+        int n1, n2;
+        if (gRatioInverted) {
+            name = akCreatureTypeTraits[cid].m_name;
+            word = (gGiveQuantity > 1) ? (*gpGeneralText)[161]
+                                       : (*gpGeneralText)[162];
+            n1 = gGiveQuantity;
+            n2 = 1;
+        } else {
+            name = (gGiveQuantity > 1) ? akCreatureTypeTraits[cid].m_plural_name
+                                       : akCreatureTypeTraits[cid].m_name;
+            word = (*gpGeneralText)[162];
+            n1 = 1;
+            n2 = gGiveQuantity;
+        }
+        sprintf(gText, (*gpGeneralText)[270],
+                n1, word, gResourceNames[gLeftResource], n2, name);
+    }
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, gSellCreatureColumnLabel);
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    sprintf(gText, (*gpGeneralText)[273], gpMarketHero->name);
+    msg.codeY = 0xe;
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[169]);
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0xf;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,    6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,    0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,    6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,    0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,    6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,    0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb,  6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb,  0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc,  6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc,  0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xa,  6);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa,  0x1000);
+        creatureSlider->enable(1);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,    0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,    0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,    0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb,  0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc,  0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa,  0x1006);
+        creatureSlider->SetState(0);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,    0x1000);
+    }
+
+    if (gMarketSource == MARKET_SOURCE_FREELANCER) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID,     0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
+    }
+
+    for (int j = 0; j < 2; ++j) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+            if (j == 0) {
+                msg.codeY = 0xa;
+                msg.extra = gpMarketHero->army.armies[gSelectedArtifact] + 2;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
+            } else {
+                msg.codeY = 0xb;
+                msg.extra = gLeftResource;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0xc;
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                msg.extraText = gText;
+            }
+            BroadcastMessage(&msg);
+        }
+
+        for (int slot = 0; slot < 7; ++slot) {
+            if (j == 0) {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_CREATURE_SLOT_0_ID + slot;
+                msg.extra = 6;
+                BroadcastMessage(&msg);
+                if (gpMarketHero->army.numTroops[slot] == 0) {
+                    msg.codeY = 0x84 + slot;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x23 + slot;
+                    BroadcastMessage(&msg);
+                } else {
+                    msg.codeX = widget::WIDGET_SET_STATUS;
+                    msg.extra = 2;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x84 + slot;
+                    msg.extra = 6;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x23 + slot;
+                    BroadcastMessage(&msg);
+                    msg.codeY = 0x84 + slot;
+                    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                    msg.extra = gpMarketHero->army.armies[slot] + 2;
+                    BroadcastMessage(&msg);
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gpMarketHero->army.numTroops[slot]);
+                    msg.codeX = widget::WIDGET_SET_TEXT;
+                    msg.codeY = 0x23 + slot;
+                    msg.extraText = gText;
+                    BroadcastMessage(&msg);
+                    msg.codeX = widget::WIDGET_SET_Y;
+                    msg.extra = gCreatureRowY[slot];
+                    BroadcastMessage(&msg);
+                }
+                msg.codeX = (gSelectedArtifact == slot) ? widget::WIDGET_SET_STATUS
+                                                        : widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = MARKET_CREATURE_SLOT_0_ID + slot;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            } else {
+                msg.codeX = widget::WIDGET_SET_STATUS;
+                msg.codeY = 0x2a + slot;
+                msg.extra = 6;
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_BUY_WOOD_ID + slot;
+                BroadcastMessage(&msg);
+                msg.codeY = 0x4d + slot;
+                BroadcastMessage(&msg);
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = 0x4d + slot;
+                msg.extraText = gText;
+                if (gSelectedArtifact == -1) {
+                    sprintf(gText, emptyRolloverText);
+                } else {
+                    int iInTradeRatio, bInLeftDenominated, iInMaxUnitsToTrade;
+                    ComputeTradeRatios(gSelectedArtifact, slot, &iInTradeRatio,
+                                       &bInLeftDenominated, &iInMaxUnitsToTrade);
+                    if (bInLeftDenominated == 0 && iInTradeRatio != 1)
+                        sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"),
+                                iInTradeRatio);
+                    else
+                        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                                iInTradeRatio);
+                }
+                BroadcastMessage(&msg);
+                msg.codeY = MARKET_BUY_WOOD_ID + slot;
+                msg.codeX = (gLeftResource == slot) ? widget::WIDGET_SET_STATUS
+                                                    : widget::WIDGET_CLEAR_STATUS;
+                msg.extra = widget::WIDGET_DRAWN;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    if (bUpdate)
+        DrawWindow(1, 0xffff0001, 0xffff);
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // The members below are folded into their callers on x86: the carve places
 // nothing where the DC roster lists them (the 16 SetWidgetOn/Off/Disabled
