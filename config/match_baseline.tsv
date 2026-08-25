@@ -1783,7 +1783,9 @@ philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0
 philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x1271c0
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
 philai	AI_enter_town	0.0000	0.0000	0.0000	0x1253d0
+philai	AI_examine_map	0.0000	0.0000	0.0000	0x12b9c0
 philai	AI_value_of_event	0.0000	0.0000	0.0000	0x128040
+philai	AI_visit_university	0.0000	0.0000	0.0000	0x124ed0
 philai	CheckDoMain	0.0000	0.0000	0.0000	0x1242d0
 philai	DetermineHeroToMove	0.0000	0.0000	0.0000	0x126a90
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
@@ -1795,6 +1797,7 @@ philai	buy_siege_engine	0.0000	0.0000	0.0000	0x125ca0
 philai	buy_special_building	0.0000	0.0000	0.0000	0x1259e0
 philai	consider_garrisoning	0.0000	0.0000	0.0000	0x125200
 philai	move_hero	0.0000	0.0000	0.0000	0x1267b0
+philai	philAI_DoAI	0.0000	0.0000	0.0000	0x125e80
 philai	value_of_bank	0.0000	0.0000	0.0000	0x129920
 philai	value_of_enemy_town	0.0000	0.0000	0.0000	0x129cb0
 philai	value_of_recruiting	0.0000	0.0000	0.0000	0x12a710
