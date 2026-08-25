@@ -2408,6 +2408,50 @@ void advManager::DoEventBlackBox(hero* current_hero, NewmapCell* cell,
     EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
+// E:\gamedcs\events.cpp:1170.  The movement-only custom map event: show
+// its message, fight its optional guardians, pay its shared black-box reward,
+// consume one-shot cells, and re-check the two count-based victory conditions.
+VA(0x004a0ed0, 0x13D)  // MoveHero call arm + DC roster order/call set, dc 0x91db8
+void advManager::HandleMapEvent(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    unsigned index = cell->extraInfo & 0x3ff;
+    BlackBoxData* BlackBox = &fullMap->blackBoxes[index];
+    const char* text = BlackBox->Message.c_str();
+
+    if (BlackBox->HasCustomGuardians && BlackBox->Guardians.GetNumArmies()) {
+        if (human_player) {
+            if (!*text) {
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BLACK_BOX_GUARDED),
+                             1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+            } else {
+                NormalDialog(text, 1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+                text = emptyRolloverText;
+            }
+        }
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &BlackBox->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+    }
+
+    GiveBlackBoxReward(text, current_hero, cell, point, human_player,
+                       BlackBox);
+
+    if (cell->extraInfo & 0x80000) {
+        cell->cellFlags &= 0xefff;
+        cell->extraInfo = 0;
+        cell->type_value = NOTHING;
+    }
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalCreatures())
+        CheckEndGame(0);
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalResources())
+        CheckEndGame(0);
+}
+
 // E:\gamedcs\events.cpp:1219.  Boarding a boat, jump-table arm 0x08 =
 // OBJECT_BOAT, and the only handler in this file that takes just the hero
 // and the cell - there is no dialog to gate, so no human_player.
