@@ -5,6 +5,13 @@
 #include "dxplay.h"
 #include "dxplay_records.h"
 
+int PASCAL EnumConnectionsCallback(const GUID*, void*, unsigned long,
+    const DPNAME*, unsigned long, void*);
+int PASCAL EnumGroupsCallback(unsigned long, unsigned long, const DPNAME*,
+    unsigned long, void*);
+int PASCAL EnumPlayersCallback(unsigned long, unsigned long, const DPNAME*,
+    unsigned long, void*);
+
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\dxplay.cpp:66
@@ -881,6 +888,61 @@ CDPlay::~CDPlay()
 {
     if (m_lpDP)
         m_lpDP->Release();
+}
+
+// E:\gamedcs\dxplay.cpp:359
+VA(0x004971b0, 0x94)
+unsigned char CDPlay::EnumConnections(
+    CAutoArray<CDPlayConnection>* connectionArray)
+{
+    if (!m_lpDP)
+        return 0;
+    m_pConnectionArray = connectionArray;
+    connectionArray->Destroy(1);
+    m_hRes = m_lpDP->EnumConnections(
+        0, EnumConnectionsCallback, this, 1);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:397
+VA(0x004972c0, 0x71)
+unsigned char CDPlay::EnumGroups(CAutoArray<CDPlayGroup>* groupArray,
+    GUID* instance, unsigned long flags)
+{
+    m_pGroupArray = groupArray;
+    groupArray->Destroy(1);
+    m_hRes = m_lpDP->EnumGroups(
+        instance, EnumGroupsCallback, this, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:413
+VA(0x00497340, 0x71)
+unsigned char CDPlay::EnumPlayers(CAutoArray<CDPlayPlayer>* playerArray,
+    GUID* instance, unsigned long flags)
+{
+    m_pPlayerArray = playerArray;
+    playerArray->Destroy(1);
+    m_hRes = m_lpDP->EnumPlayers(
+        instance, EnumPlayersCallback, this, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:429
+VA(0x004973c0, 0x75)
+unsigned char CDPlay::EnumGroupPlayers(
+    CAutoArray<CDPlayPlayer>* playerArray, unsigned long groupId,
+    GUID* instance, unsigned long flags)
+{
+    m_pPlayerArray = playerArray;
+    playerArray->Destroy(1);
+    m_hRes = m_lpDP->EnumGroupPlayers(
+        groupId, instance, EnumPlayersCallback, this, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:654

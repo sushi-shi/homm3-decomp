@@ -6,6 +6,7 @@
 #define HOMM3_DXPLAY_H
 
 #include <windows.h>
+#include <dplobby.h>
 #include <va.h>
 
 class CDPlayConnection;
@@ -31,93 +32,6 @@ class CDPlayPlayer;
 #endif
 class CDPlaySession;
 template<class T> class CAutoArray;
-struct DPCAPS;
-struct DPLCONNECTION;
-struct DPNAME;
-struct DPSESSIONDESC2;
-struct DPMSG_ADDGROUPTOGROUP;
-struct DPMSG_ADDPLAYERTOGROUP;
-struct DPMSG_CHAT;
-struct DPMSG_CREATEPLAYERORGROUP;
-struct DPMSG_DESTROYPLAYERORGROUP;
-struct DPMSG_GENERIC;
-struct DPMSG_SECUREMESSAGE;
-struct DPMSG_SETPLAYERORGROUPDATA;
-struct DPMSG_SETPLAYERORGROUPNAME;
-struct DPMSG_SETSESSIONDESC;
-struct DPMSG_STARTSESSION;
-
-#ifdef HOMM3_REMOTE_LOBBY_DECLS
-// DirectPlay 6 structures used by remote's retail lobby-connect path. The
-// layouts are published in the Dreamcast CodeView stream and independently
-// fixed on PC by the field loads in LobbyLaunchConnect.
-struct DPNAME {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    union {
-        unsigned short* lpszShortName;
-        char* lpszShortNameA;
-    };
-    union {
-        unsigned short* lpszLongName;
-        char* lpszLongNameA;
-    };
-};
-SIZE(DPNAME, 0x10);
-
-struct DPSESSIONDESC2 {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    GUID guidInstance;
-    GUID guidApplication;
-    unsigned long dwMaxPlayers;
-    unsigned long dwCurrentPlayers;
-    union {
-        unsigned short* lpszSessionName;
-        char* lpszSessionNameA;
-    };
-    union {
-        unsigned short* lpszPassword;
-        char* lpszPasswordA;
-    };
-    unsigned long dwReserved1;
-    unsigned long dwReserved2;
-    unsigned long dwUser1;
-    unsigned long dwUser2;
-    unsigned long dwUser3;
-    unsigned long dwUser4;
-};
-SIZE(DPSESSIONDESC2, 0x50);
-
-struct DPLCONNECTION {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    DPSESSIONDESC2* lpSessionDesc;
-    DPNAME* lpPlayerName;
-    GUID guidSP;
-    void* lpAddress;
-    unsigned long dwAddressSize;
-};
-SIZE(DPLCONNECTION, 0x28);
-
-enum EDPlayConnectionFlags {
-    DPLAY_CONNECTION_CREATE_SESSION = 0x2
-};
-
-enum EDPlaySessionFlags {
-    DPLAY_SESSION_MIGRATE_HOST = 0x4,
-    DPLAY_SESSION_KEEP_ALIVE = 0x40
-};
-#endif
-
-// The SDK macro values are also the exact HRESULT immediates used by the
-// DirectPlay send path. The domain lives here instead of importing DPLAY.H's
-// anonymous typedef structs over these hand-owned forward declarations.
-enum EDPlaySendError {
-    DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
-    DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
-};
-
 // Dreamcast CodeView proves this complete virtual order. Retail's
 // CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
 // IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main
@@ -258,9 +172,9 @@ protected:
 private:
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
-    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
+    // with the PC methods.
     char m_caps[0x28];                  // +0x04
-    IUnknown* m_lpDP;                   // +0x2c
+    IDirectPlay4A* m_lpDP;              // +0x2c
     GUID m_guid;                        // +0x30
     int m_hRes;                         // +0x40
     CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
@@ -332,7 +246,7 @@ protected:
         const GUID* type, unsigned long size, const void* data);
 
 private:
-    IUnknown* m_lpLobby;                     // +0x58
+    IDirectPlayLobby3A* m_lpLobby;           // +0x58
     CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);

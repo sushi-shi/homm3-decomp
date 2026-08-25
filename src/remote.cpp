@@ -538,8 +538,8 @@ bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
         bool sent = Send(pMsg, pMsg->size, gsThisNetPlayerInfo.dpid,
                          dpidTo, guaranteed);
         if ((!sent
-             && GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER)
-            || GetLastError() == DPLAY_SEND_ERROR_INVALID_PARAMETER) {
+             && GetLastError() == DPERR_INVALIDPLAYER)
+            || GetLastError() == DPERR_INVALIDPARAMS) {
             GetErrorDesc(GetLastError(), errorDescription);
             logFile.Log(DATA_COMPGEN(0x00682adc, dplaySendErrorLog,
                                     "DPlay Send error [%s]"),
@@ -547,7 +547,7 @@ bool CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo,
             logFile.Log(DATA_COMPGEN(0x00682abc, invalidSendPlayerLog,
                                     "Sending to invalid player? [%d]"),
                         dpidTo);
-            if (GetLastError() == DPLAY_SEND_ERROR_INVALID_PLAYER) {
+            if (GetLastError() == DPERR_INVALIDPLAYER) {
                 DestroyPlayer(dpidTo);
                 HandlePlayerDrop(dpidTo);
             }
@@ -2113,9 +2113,9 @@ unsigned char LobbyLaunchConnect()
     if (!connection)
         return 0;
 
-    if (connection->dwFlags & DPLAY_CONNECTION_CREATE_SESSION) {
+    if (connection->dwFlags & DPLCONNECTION_CREATESESSION) {
         connection->lpSessionDesc->dwFlags |=
-            DPLAY_SESSION_MIGRATE_HOST | DPLAY_SESSION_KEEP_ALIVE;
+            DPSESSION_MIGRATEHOST | DPSESSION_KEEPALIVE;
         logFile.Log(DATA_COMPGEN(0x00682d68, lobbyIsHost,
                                 "We are the host...."));
     } else {
