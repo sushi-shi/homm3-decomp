@@ -73,6 +73,15 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
 const std::bitset<9>& ArmyGrpFn_0044A460();
+int CanBuy(const town* currTown, int buildingId);
+double get_trade_ratio(EGameResource source, EGameResource dest,
+                       double efficiency);
+inline EGameResource game_resource_from_int(int value)
+{
+    EGameResource resource;
+    memcpy(&resource, &value, sizeof resource);
+    return resource;
+}
 const unsigned int CTA_SHOOTER = 0x4;
 
 // struct.h's original three-coordinate constructor was header-inline.  This
@@ -2139,6 +2148,72 @@ long* get_danger_cell(long* danger_zones, type_point point)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\ai_player.cpp:1587
+VA(0x0042ab40, 0xD1)  // dc 0x309d4
+bool type_AI_player::build_markets(int* supply)
+{
+    playerData* player = &gpGame->players[team];
+    bool built = false;
+    if (supply[0] < 0 || player->turnProductionResource[0] <= 0)
+        return false;
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (!(current_town->active & bitNumber[MARKETPLACE_ID])
+            && current_town->can_build(MARKETPLACE_ID)) {
+            if (!CanBuy(current_town, MARKETPLACE_ID))
+                return built;
+            current_town->buy_building(MARKETPLACE_ID);
+            built = true;
+        }
+    }
+    return built;
+}
+
+// E:\gamedcs\ai_player.cpp:1620
+VA(0x0042ac20, 0x1DE)  // dc 0x30a70
+void type_AI_player::do_resource_trade(int* supply)
+{
+    int market_count = 0;
+    playerData* player = &gpGame->players[team];
+    for (int town_index = 0; town_index < player->numTowns; ++town_index) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (current_town->active & bitNumber[MARKETPLACE_ID])
+            ++market_count;
+    }
+
+    int efficiency = _cpp_min(market_count, 10);
+    if (efficiency == 0)
+        return;
+
+    double market_efficiency = fTradingPostEfficency[efficiency];
+    for (int source = 0; source < 7; ++source) {
+        if (supply[source] <= 0)
+            continue;
+        for (int dest = 0; dest < 7; ++dest) {
+            if (supply[dest] >= 0)
+                continue;
+            double ratio = get_trade_ratio(game_resource_from_int(source),
+                                           game_resource_from_int(dest),
+                                           market_efficiency);
+            long traded = static_cast<long>(0.99999 - supply[dest] * ratio);
+            long limit = static_cast<long>(
+                static_cast<long>(supply[source] / ratio) * ratio);
+            if (traded > limit)
+                traded = limit;
+            supply[source] -= traded;
+            player->resources[source] -= traded;
+            long cost = static_cast<long>(traded / ratio);
+            supply[dest] += cost;
+            player->resources[dest] += cost;
+            if (supply[dest] > 0)
+                supply[dest] = 0;
+            if (supply[source] <= 0)
+                break;
+        }
+    }
+    calculate_demand();
+}
 
 // Complete inserts has_angelic_alliance at +8 relative to the DC roster;
 // the five stores below are the whole retail constructor at 0x42c040. The

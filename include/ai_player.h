@@ -206,6 +206,8 @@ public:
     bool can_trade_resources(const int* cost, int* supply,
                              std::vector<long>& trade_qty);
     void trade_resources(const int* cost, long number);
+    bool build_markets(int* supply);
+    void do_resource_trade(int* supply);
 
 private:
     static float attack_computer_bonus;
