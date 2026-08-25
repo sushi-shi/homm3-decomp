@@ -4,6 +4,7 @@
 #include <va.h>
 #include "multiplayerwindow.h"
 #include "winmgr.h"
+#include "csprite.h"
 
 #if 0  // @carcass: untouched bodies before the admitted CHotSeatDlg tail
 
@@ -381,19 +382,18 @@ textWidget* TMultiPlayerWindow::GetRolloverWidget()
     return RolloverWidget;
 }
 
-#if 0  // @carcass
-VA(0x0050edb0, 0x21)  // anchor-vtable 0x6400a0 slot 0 (scalar deleting dtor); body calls ~TMPW 0x50ee40 + operator delete, ret 4, dc 0x102f98
-void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 
-VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x10edb0, dc 0x100430
-void TMultiPlayerWindow::~TMultiPlayerWindow()
+// E:\gamedcs\multiplayerwindow.cpp:1012
+VA(0x0050ee40, 0xAB)  // anchor-callee: ~dtor reached from scalar-dtor 0x50edb0, dc 0x100430
+TMultiPlayerWindow::~TMultiPlayerWindow()
 {
-    // @stub
+    gpMultiPlayerWindow = 0;
+    GameState->Dispose();
+    delete_widgets();
+    pSessions->Destroy();
+    delete pSessions;
 }
-#endif
 
 // E:\gamedcs\multiplayerwindow.cpp:1025
 VA(0x0050eef0, 0xC9)  // anchor-bracket: no-arg void member; toggles widget set via widget::send_message x12, dc 0x100498
