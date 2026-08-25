@@ -342,7 +342,7 @@ void TSingleSelectionWindow::TurnOffAdvancedOptions()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
-DC_ONLY(0x1371fc, 0xB2C)
+VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
 unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
 {
     // @stub
@@ -440,7 +440,7 @@ int TSingleSelectionWindow::Update(message* msg)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4420
-DC_ONLY(0x13b104, 0x74)
+VA(0x00584bf0, 0x50)  // anchor-vtable vtbl 0x241cac slot6 (DoModal override; cf sibling THeroScreenWindow slot6 DoModal@heroWindow), dc 0x13b104
 void TSingleSelectionWindow::DoModal(unsigned char fade)
 {
     // @stub
@@ -475,7 +475,7 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg, unsign
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4704
-DC_ONLY(0x13b9fc, 0x262)
+VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
 void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 {
     // @stub
@@ -517,14 +517,14 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg, unsigned char* bExitF
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:5933
-DC_ONLY(0x13ea70, 0x150)
+VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
 int TSingleSelectionWindow::ExitDialog(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:5976
-DC_ONLY(0x13ebc0, 0xB86)
+VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
 int TSingleSelectionWindow::WindowHandler(message* msg)
 {
     // @stub
@@ -538,7 +538,7 @@ int TSingleSelectionWindow::GetThisPlayerGamePos()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6301
-DC_ONLY(0x13f770, 0x602)
+VA(0x00588330, 0x462)  // anchor-callee mutual call-graph: OnGameTransmitInitMsg(0x589b20) calls this per DC edge; fingerprint w4.14 + monotone, dc 0x13f770
 void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer)
 {
     // @stub
@@ -608,7 +608,7 @@ void UpdateTurnDuration()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6778
-DC_ONLY(0x1406ec, 0x1AC)
+VA(0x00589b20, 0x13C)  // anchor-callee mutual call-graph: calls UpdatePlayerPositions(0x588330) per DC edge; fingerprint w2.50 + monotone, dc 0x1406ec
 unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
 {
     // @stub
@@ -1014,14 +1014,14 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
-DC_ONLY(0x1451a0, 0x48)
+VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
 CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8775
-DC_ONLY(0x1451e8, 0x204)
+VA(0x0058e340, 0x379)  // anchor-vtable vtbl 0x241ce8 slot3 (HandleNetMsg; cf CNetMsgHandler layout) + fingerprint w0.75, dc 0x1451e8
 CNetMsg* CSingleSelectionNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
