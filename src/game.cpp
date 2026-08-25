@@ -6027,28 +6027,28 @@ void randomize_witch_hut(NewmapCell* cell)
 }
 
 // E:\gamedcs\game.cpp:5600
-DC_ONLY(0xadb88, 0x3B0)
+VA(0x004c2450, 0x88E)  // anchor-callee, dc 0xadb88
 int game::LoadMap(char* mapName)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:5687
-DC_ONLY(0xadf38, 0x67A)
+VA(0x004c2ce0, 0x3A8)  // linkorder, dc 0xadf38
 int NewSMapHeader::readVictoryCondition(char type, void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:5921
-DC_ONLY(0xae5b4, 0x5AE)
+VA(0x004c3200, 0x398)  // anchor-callee, dc 0xae5b4
 int NewSMapHeader::saveVictoryCondition(char type, void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:6110
-DC_ONLY(0xaeb64, 0x5B4)
+VA(0x004c35a0, 0x2E8)  // linkorder, dc 0xaeb64
 int NewSMapHeader::loadVictoryCondition(char type, void* infile)
 {
     // @stub
@@ -6062,7 +6062,7 @@ int NewSMapHeader::readLossCondition(char type, void* infile)
 }
 
 // E:\gamedcs\game.cpp:6390
-DC_ONLY(0xaf2b4, 0x1D4)
+VA(0x004c3c80, 0x10B)  // linkorder, dc 0xaf2b4
 int NewSMapHeader::saveLossCondition(char type, void* outfile)
 {
     // @stub
@@ -6083,7 +6083,7 @@ int NewSMapHeader::Read(void* infile)
 }
 
 // E:\gamedcs\game.cpp:6792
-DC_ONLY(0xb0188, 0x5CC)
+VA(0x004c4f10, 0x71D)  // anchor-callee, dc 0xb0188
 int NewSMapHeader::Save(void* outfile)
 {
     // @stub
@@ -6649,35 +6649,35 @@ void game::TurnOffAIMusic()
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7603
-DC_ONLY(0xb1fd0, 0xB04)
+VA(0x004c6fe0, 0x947)  // anchor-callee, dc 0xb1fd0
 void game::NextPlayer()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7898
-DC_ONLY(0xb2ad4, 0x55C)
+VA(0x004c7930, 0x266)  // anchor-callee, dc 0xb2ad4
 int game::ComputeDailyGold(int iWhichPlayer, unsigned char include_silo)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7958
-DC_ONLY(0xb3030, 0x14C)
+VA(0x004c7ba0, 0xAC)  // anchor-callee, dc 0xb3030
 unsigned char game::GrowCoverOfDarkness()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:7978
-DC_ONLY(0xb317c, 0x6DA)
+VA(0x004c7c50, 0x389)  // anchor-callee, dc 0xb317c
 void game::ResetAllPlayerVisibility()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8094
-DC_ONLY(0xb3858, 0x532)
+VA(0x004c7fe0, 0x462)  // anchor-callee, dc 0xb3858
 void game::PerDay()
 {
     // @stub
@@ -6719,14 +6719,14 @@ void game::set_recruits()
 }
 
 // E:\gamedcs\game.cpp:8398
-DC_ONLY(0xb41e0, 0x5D8)
+VA(0x004c8780, 0x7B7)  // anchor-callee, dc 0xb41e0
 void game::PerWeek()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:8593
-DC_ONLY(0xb47b8, 0x39E)
+VA(0x004c8f40, 0x378)  // anchor-callee, dc 0xb47b8
 void game::PerMonth()
 {
     // @stub
@@ -7420,35 +7420,35 @@ int game::ExperienceValueOfStack(const armyGroup* whichGroup, const hero* whichH
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9596
-DC_ONLY(0xb61d0, 0x128)
+VA(0x004ca410, 0x116)  // anchor-callee, dc 0xb61d0
 void game::SetupAdjacentMons()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9636
-DC_ONLY(0xb62f8, 0x64)
+VA(0x004ca530, 0x80)  // anchor-callee, dc 0xb62f8
 void game::CancelComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9660
-DC_ONLY(0xb635c, 0x1DC)
+VA(0x004ca5b0, 0x1C9)  // anchor-callee, dc 0xb635c
 void game::ShowComputerScreen()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9720
-DC_ONLY(0xb6538, 0x108)
+VA(0x004ca780, 0xB4)  // anchor-callee, dc 0xb6538
 void game::ShowHeroesLogo()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9748
-DC_ONLY(0xb6640, 0x236)
+VA(0x004ca840, 0x19C)  // anchor-callee, dc 0xb6640
 void game::WaitForPlayer(char* cText, int iPlayer)
 {
     // @stub
@@ -7469,21 +7469,21 @@ const char* GetRandomTownName(int townType)
 }
 
 // E:\gamedcs\game.cpp:9821
-DC_ONLY(0xb69b8, 0x3A)
+VA(0x004caa40, 0x26)  // linkorder, dc 0xb69b8
 void ResetRandomTownNames()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9833
-DC_ONLY(0xb69f4, 0x290)
+VA(0x004caa70, 0x39C)  // anchor-callee, dc 0xb69f4
 void game::ProcessOnMapTowns()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:9912
-DC_ONLY(0xb6c84, 0x57E)
+VA(0x004cae10, 0x1B1)  // anchor-callee, dc 0xb6c84
 void initialize_hero(hero* current_hero, const HeroExtra* setup)
 {
     // @stub
@@ -7497,14 +7497,14 @@ void game::ProcessOnMapHeroes()
 }
 
 // E:\gamedcs\game.cpp:10132
-DC_ONLY(0xb7554, 0xC)
+VA(0x004cb1ec, 0x17)  // linkorder, dc 0xb7554
 void game::CheckHeroConsistency()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:10142
-DC_ONLY(0xb7560, 0x1064)
+VA(0x004cb206, 0xADE)  // anchor-callee, dc 0xb7560
 int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
 {
     // @stub
@@ -7518,14 +7518,14 @@ int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigne
 }
 
 // E:\gamedcs\game.cpp:11028
-DC_ONLY(0xb9408, 0x5C6)
+VA(0x004cc7d0, 0x5FE)  // anchor-callee, dc 0xb9408
 void game::DoNewTurn()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11170
-DC_ONLY(0xb99d0, 0x62)
+VA(0x004ccdd0, 0x56)  // linkorder, dc 0xb99d0
 int game::GetBoatsBuilt()
 {
     // @stub
@@ -7597,7 +7597,7 @@ int game::TownIDToTownPos(playerData* pPlayer, int id)
 }
 
 // E:\gamedcs\game.cpp:11241
-DC_ONLY(0xb9c04, 0xA6)
+VA(0x004ccf20, 0x8E)  // linkorder, dc 0xb9c04
 void game::SetMarketArtifacts()
 {
     // @stub
@@ -7618,14 +7618,14 @@ void game::SetCannedRumour()
 }
 
 // E:\gamedcs\game.cpp:11311
-DC_ONLY(0xb9e7c, 0x1C2)
+VA(0x004ccfb0, 0x1BD)  // linkorder, dc 0xb9e7c
 void game::SetMapRumour()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11358
-DC_ONLY(0xba040, 0xBC4)
+VA(0x004cd170, 0x59B)  // anchor-callee, dc 0xba040
 void game::SetSpecialRumour()
 {
     // @stub
@@ -7639,7 +7639,7 @@ void game::SetupNewRumour()
 }
 
 // E:\gamedcs\game.cpp:11459
-DC_ONLY(0xbaca4, 0x20C)
+VA(0x004cd710, 0x200)  // anchor-callee, dc 0xbaca4
 void game::GiveTimeEventReward(const TTimedEvent* thisEvent)
 {
     // @stub
@@ -7653,14 +7653,14 @@ void game::GiveTownEventReward(const TTownEvent* thisEvent)
 }
 
 // E:\gamedcs\game.cpp:11512
-DC_ONLY(0xbaef4, 0xF8)
+VA(0x004cd910, 0xF5)  // linkorder, dc 0xbaef4
 void game::CheckForTimeEvent()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:11540
-DC_ONLY(0xbafec, 0xF8)
+VA(0x004cda10, 0x164)  // anchor-callee, dc 0xbafec
 void game::CheckForTownEvent()
 {
     // @stub
