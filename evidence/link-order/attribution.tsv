@@ -98,7 +98,7 @@ rva	size	unit	current_label	provenance
 0x32f90	228	ai_player	type_spell_artifact_vslot01	working-label
 0x33080	33	ai_player	type_scouting_artifact_vslot00	working-label
 0x330b0	115	ai_player	type_shooter_bonus_artifact_vslot01	working-label
-0x33130	623	ai_player	type_angelic_alliance_artifact_vslot01	working-label
+0x33130	623	ai_player	value_of_building	src-VA
 0x333a0	372	ai_player	type_undead_king_cloak_artifact_vslot01	working-label
 0x33520	90	ai_player	type_elixir_of_life_artifact_vslot01	working-label
 0x33580	314	ai_player	type_statue_of_legion_artifact_vslot01	working-label
