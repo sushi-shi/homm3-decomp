@@ -524,13 +524,6 @@ int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, con
     // @stub
 }
 
-// E:\gamedcs\dxplay.cpp:1948
-DC_ONLY(0x8bbc4, 0x18)
-int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
-{
-    // @stub
-}
-
 // E:\gamedcs\dxplay.cpp:1963
 DC_ONLY(0x8bbdc, 0x30)
 int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
@@ -938,6 +931,15 @@ unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
     DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId)
 {
     return 1;
+}
+
+// E:\gamedcs\dxplay.cpp:1948
+VA(0x00499e50, 0x1F)  // address-taken by CDPlay::EnumSessions, dc 0x8bbc4
+int PASCAL EnumSession(const DPSESSIONDESC2* lpDPSessionDesc,
+    unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
+{
+    return static_cast<CDPlay*>(lpContext)->AddSessionEnum(
+        lpDPSessionDesc, dwFlags);
 }
 
 // E:\gamedcs\array.h:95 - slot 2 of the retail
