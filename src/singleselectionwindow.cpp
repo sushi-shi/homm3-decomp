@@ -182,7 +182,7 @@ unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:1078
-DC_ONLY(0x130604, 0x4E)
+VA(0x00577bb0, 0x2f)  // arity ret4; scans field [slot+0x70]==pos over 8 stride-0x7c slots, returns slot* (no computer filter), dc 0x130604
 CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayerInPos(int pos)
 {
     // @stub
