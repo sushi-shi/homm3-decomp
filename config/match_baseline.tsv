@@ -893,11 +893,14 @@ dxplay	?CloseSession@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x97290
 dxplay	?Connect@CDPlayLobby@@QAEEXZ	100.0000	100.0000	100.0000	0x98cd0
 dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
 dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x970e0
+dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	97.7363	97.7363	97.7363	0x99150
 dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	99.3389	99.3389	99.3389	0x994b0
 dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	81.3400	81.3400	81.3400	0x96fc0
 dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	99.2434	99.2434	99.2434	0x99700
+dxplay	?CreateTCPIPConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD0PAV2@@Z	98.6338	98.6338	98.6338	0x98d80
 dxplay	?DeleteGroupFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x97180
 dxplay	?DeletePlayerFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x98220
+dxplay	?Destroy@?$CAutoArray@VCDPlayAddressElement@@@@QAEXE@Z	100.0000	100.0000	100.0000	0x99f60
 dxplay	?DestroyGroup@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97150
 dxplay	?DestroyPlayer@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97040
 dxplay	?EnumAddress@CDPlayLobby@@UAEEPAXKPAV?$CAutoArray@VCDPlayAddressElement@@@@@Z	100.0000	100.0000	100.0000	0x99b20
@@ -957,9 +960,6 @@ dxplay	?SysMsgHost@CDPlay@@MAEEPAUDPMSG_GENERIC@@K@Z	100.0000	100.0000	100.0000	
 dxplay	?TestLobbied@CDPlayLobby@@QAEEXZ	88.4210	88.4210	88.4210	0x98b70
 dxplay	?UpdateSessionDesc@CDPlay@@UAEEPAUDPSESSIONDESC2@@@Z	100.0000	100.0000	100.0000	0x96f90
 dxplay	CAutoArray_CAutoArray	0.0000	0.0000	0.0000	0x99f00
-dxplay	CAutoArray_Destroy	0.0000	0.0000	0.0000	0x99f60
-dxplay	CDPlayLobby_CreateIPXConnection	0.0000	0.0000	0.0000	0x99150
-dxplay	CDPlayLobby_CreateTCPIPConnection	0.0000	0.0000	0.0000	0x98d80
 dxplay	CDPlay_FlushReceiveQueue	0.0000	0.0000	0.0000	0x976b0
 dxplay	CDPlay_GetErrorDesc	0.0000	0.0000	0.0000	0x97c50
 dxplay	void_CAutoArray_scalar_deleting_destructor	0.0000	0.0000	0.0000	0x9a020
