@@ -32,7 +32,7 @@ class type_event_record {
 public:
     virtual ~type_event_record();
     virtual type_event_record_type get_type();
-    virtual unsigned char load(TAbstractFile* infile);
+    virtual unsigned char load(TAbstractFile* infile, int version);
     virtual unsigned char save(TAbstractFile* outfile);
     signed char player_id;  // +0x04
 };

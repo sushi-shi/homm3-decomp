@@ -22,19 +22,21 @@ void type_event_record::~type_event_record()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:51
 VA(0x0049a5e0, 0x1D)  // anchor-vtable, dc 0x8c678
-unsigned char type_event_record::load(void* infile)
+unsigned char type_event_record::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    return infile->Read(&player_id, 1) == 1;
 }
 
 // E:\gamedcs\event_record.cpp:60
 VA(0x0049a600, 0x1D)  // anchor-vtable, dc 0x8c698
-unsigned char type_event_record::save(void* outfile)
+unsigned char type_event_record::save(TAbstractFile* outfile)
 {
-    // @stub
+    return outfile->Write(&player_id, 1) == 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:65
 DC_ONLY(0x8c6b8, 0x50)
