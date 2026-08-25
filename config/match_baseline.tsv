@@ -2042,6 +2042,15 @@ seerhut	?save@TSeerHut@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x17
 seerhut	?skill_requirement_text@type_skill_quest@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAY03$$CBC@Z	100.0000	100.0000	100.0000	0x16dfa0
 singleselectionpopups	?Main@CSpriteWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x175a10
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
+singleselectionwindow	CNetPlayerHandler_AddNewPlayer	0.0000	0.0000	0.0000	0x177be0
+singleselectionwindow	CNetPlayerHandler_GetPlayer	0.0000	0.0000	0.0000	0x177ce0
+singleselectionwindow	CNetPlayerHandler_GetPlayerInPos	0.0000	0.0000	0.0000	0x177bb0
+singleselectionwindow	CNetPlayerHandler_IsFaceTaken	0.0000	0.0000	0.0000	0x177d10
+singleselectionwindow	CNetPlayerHandler_SetNextPlayer	0.0000	0.0000	0.0000	0x177ae0
+singleselectionwindow	InitializeLCDescriptions	0.0000	0.0000	0.0000	0x177a80
+singleselectionwindow	InitializeTurnDurationText	0.0000	0.0000	0.0000	0x177ab0
+singleselectionwindow	InitializeVCDescriptions	0.0000	0.0000	0.0000	0x177a50
+singleselectionwindow	TSingleSelectionWindow_TSingleSelectionWindow	0.0000	0.0000	0.0000	0x179960
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180
 slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
