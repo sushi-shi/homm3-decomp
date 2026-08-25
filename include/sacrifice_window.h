@@ -7,12 +7,20 @@
 
 #include <vector>
 #include "advmgr_popup.h"
+#include "hero.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
 
 class armyGroup;
-class hero;
 class sample;
+
+// DC field list: a 16-byte type_artifact-derived record, with the wearable
+// source slot at +8 and the displayed sacrifice value at +12.
+struct type_artifact_offering : public type_artifact {
+    long source;
+    long value;
+};
+SIZE(type_artifact_offering, 16);
 
 // Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
 // at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
@@ -23,7 +31,8 @@ class sample;
 class type_sacrifice_window : public CAdvPopup {
 public:
     hero* current_hero;
-    unsigned char pad_64[0x11];
+    type_artifact_offering holding_artifact;  // +0x64
+    unsigned char sacrificing_artifacts;      // +0x74
     // +0x75: DoModal 0x5653b0 tests this byte to choose set_artifact_mode
     // over set_creature_mode. The Dreamcast field roster puts
     // can_sacrifice_artifacts at DC +0x6d, and the proven 8-byte CAdvPopup
@@ -55,6 +64,8 @@ public:
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int DoModal(unsigned char fadeIn);                 // slot 6
+protected:
+    virtual int ExitDialog(message* msg);                      // slot 14
 };
 SIZE(type_sacrifice_window, 0x23c);
 
