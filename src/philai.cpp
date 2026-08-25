@@ -722,15 +722,27 @@ long AI_get_spell_value(const hero* our_hero, SpellID spell)
     return raw - best;
 }
 
-#if 0  // @carcass -- philai body-evidence claim (retail RVA order)
 // E:\gamedcs\philai.cpp:1717.  Exact cross-TU callee set {armyGroup::get_AI_value,
 // hero::GetExperienceIncrement} - the only DC philai fn with precisely that pair.
+// What one experience level is worth to this army: the gold-equivalent reward
+// (the hero-purchase constant plus the army's own strength) divided by the
+// experience the hero's next level costs, forty of which one visit grants.
+// The numerator adds in FLOAT (each operand converted separately), so the
+// army value is cast to float and gHeroGoldCost promoted into the add.
+//
+// Residual (99.93%): sole delta is the data reloc NAME - our claimed
+// ?gHeroGoldCost@@3HA vs the delinker's generic data_27814c at the same
+// 0x67814c. Every TU that reads gHeroGoldCost (town/hero/townmgr) delinks
+// it the same generic way, so this is the DoDialog data-name cosmetic, not
+// a code-byte difference.
 VA(0x00527710, 0x4C)  // anchor-callee, dc 0x10feb8
 float value_of_experience(const hero* current_hero, const armyGroup* current_army)
 {
-    // @stub
+    int increment = hero::GetExperienceIncrement(current_hero->level);
+    return (static_cast<float>(const_cast<armyGroup*>(current_army)->get_AI_value())
+            + gHeroGoldCost)
+        / static_cast<float>(increment * 40);
 }
-#endif  // @carcass
 
 // E:\gamedcs\philai.cpp:1945
 VA(0x00527aa0, 0x56)  // anchor-global, dc 0x110574
@@ -1151,14 +1163,31 @@ long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point po
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:2794.  A Prison holds a hero to free; its value is the
 // freed army's strength.  Exact cross-TU callee set {armyGroup::get_AI_value} -
-// the only DC philai fn with precisely that singleton.
+// the only DC philai fn with precisely that singleton.  The current player
+// cannot take the hero when his roster is already full (numHeroes >= 8), and
+// the gold half of the reward is his own gold valuation scaled by 2500.
+//
+// Residual (81.82%): identical instruction multiset, register-homing
+// post-RA schedule transposition (why-reg register-distance 4, flow 0).
+// Retail computes resourceValue*2500 (fld/fmul) BEFORE spilling and
+// converting the get_AI_value() result, keeping it live in eax across the
+// fld/fmul; VC6 spills the call result first regardless of operand order
+// (both `army + gold` and `gold + army` canonicalise to the same object).
 VA(0x0052a3a0, 0x61)  // anchor-callee, dc 0x111ea4
 int ValueOfPrison(NewmapCell* cell, playerData* player)
 {
-    // @stub
+    if (gpCurrentPlayer->numHeroes >= 8)
+        return 0;
+    hero& prisoner = gpGame->heroes[cell->extraInfo];
+    return static_cast<int>(prisoner.army.get_AI_value()
+        + player->resourceValue[GOLD] * 2500.0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:2811.  A Pyramid: army-guarded spell reward.  Identity:
 // unique cross-TU edge armyGroup::Add (called by exactly this DC philai fn and

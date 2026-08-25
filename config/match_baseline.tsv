@@ -1784,6 +1784,7 @@ philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
 philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630
+philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	81.8182	81.8182	81.8182	0x12a3a0
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0
@@ -1791,6 +1792,7 @@ philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290
 philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x1271c0
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
+philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	99.9310	99.9310	99.9310	0x127710
 philai	AI_VisitSirens	0.0000	0.0000	0.0000	0x127ec0
 philai	AI_bribe_monsters	0.0000	0.0000	0.0000	0x127f60
 philai	AI_enter_town	0.0000	0.0000	0.0000	0x1253d0
@@ -1804,7 +1806,6 @@ philai	ComputeUpgradeValue	0.0000	0.0000	0.0000	0x12aac0
 philai	DetermineHeroToMove	0.0000	0.0000	0.0000	0x126a90
 philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	ValueOfGenerator	0.0000	0.0000	0.0000	0x129a30
-philai	ValueOfPrison	0.0000	0.0000	0.0000	0x12a3a0
 philai	ValueOfResource	0.0000	0.0000	0.0000	0x12a7c0
 philai	ValueOfScroll	0.0000	0.0000	0.0000	0x12a8c0
 philai	ValueOfSeaChest	0.0000	0.0000	0.0000	0x12a870
@@ -1819,7 +1820,6 @@ philai	type_spellvalue_type_spellvalue_126d40	0.0000	0.0000	0.0000	0x126d40
 philai	value_of_bank	0.0000	0.0000	0.0000	0x129920
 philai	value_of_custom_item	0.0000	0.0000	0.0000	0x129890
 philai	value_of_enemy_town	0.0000	0.0000	0.0000	0x129cb0
-philai	value_of_experience	0.0000	0.0000	0.0000	0x127710
 philai	value_of_monsters	0.0000	0.0000	0.0000	0x12a140
 philai	value_of_pyramid	0.0000	0.0000	0.0000	0x12a410
 philai	value_of_recruiting	0.0000	0.0000	0.0000	0x12a710
