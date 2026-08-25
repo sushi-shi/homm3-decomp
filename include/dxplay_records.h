@@ -4,20 +4,6 @@
 #include <string.h>
 #include "dxplay.h"
 
-struct DPNAME {
-    unsigned long dwSize;
-    unsigned long dwFlags;
-    union {
-        unsigned short* lpszShortName;
-        char* lpszShortNameA;
-    };
-    union {
-        unsigned short* lpszLongName;
-        char* lpszLongNameA;
-    };
-};
-SIZE(DPNAME, 0x10);
-
 class CDPlayGroup {
 public:
     CDPlayGroup(char* name, unsigned long id)
