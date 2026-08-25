@@ -992,7 +992,7 @@ unsigned char CDPlay::EnumConnections(
     m_pConnectionArray = connectionArray;
     connectionArray->Destroy(1);
     m_hRes = m_lpDP->EnumConnections(
-        0, EnumConnectionsCallback, this, 1);
+        0, EnumConnectionsCallback, this, DPCONNECTION_DIRECTPLAY);
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
@@ -1393,6 +1393,65 @@ DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(
         return 0;
     }
     return connection;
+}
+
+// E:\gamedcs\dxplay.cpp:1807
+VA(0x00499900, 0x97)
+unsigned char CDPlayLobby::EnumLobbyConnections(
+    CAutoArray<CDPlayConnection>* connectionArray)
+{
+    if (!m_lpDP)
+        return 0;
+    m_pConnectionArray = connectionArray;
+    connectionArray->Destroy(1);
+    m_hRes = m_lpDP->EnumConnections(
+        &m_guid, EnumConnectionsCallback, this,
+        DPCONNECTION_DIRECTPLAYLOBBY);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1831
+VA(0x004999a0, 0x75)
+unsigned char CDPlayLobby::EnumGroupsInGroup(
+    CAutoArray<CDPlayGroup>* groupArray, unsigned long parentId,
+    unsigned long flags)
+{
+    m_pGroupArray = groupArray;
+    groupArray->Destroy(1);
+    m_hRes = m_lpDP->EnumGroupsInGroup(
+        parentId, 0, EnumGroupsCallback, this, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1847
+VA(0x00499a20, 0x72)
+unsigned char CDPlayLobby::EnumGroupPlayers(
+    CAutoArray<CDPlayPlayer>* playerArray, unsigned long groupId,
+    unsigned long flags)
+{
+    m_pPlayerArray = playerArray;
+    playerArray->Destroy(1);
+    m_hRes = m_lpDP->EnumGroupPlayers(
+        groupId, 0, EnumPlayersCallback, this, flags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
+// E:\gamedcs\dxplay.cpp:1863
+VA(0x00499aa0, 0x78)
+unsigned char CDPlayLobby::EnumGroupPlayersRemote(
+    CAutoArray<CDPlayPlayer>* playerArray, unsigned long groupId,
+    GUID* instance, unsigned long flags)
+{
+    m_pPlayerArray = playerArray;
+    playerArray->Destroy(1);
+    m_hRes = m_lpDP->EnumGroupPlayers(
+        groupId, instance, EnumPlayersCallback, this,
+        flags | DPENUMPLAYERS_SESSION);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
 }
 
 // E:\gamedcs\dxplay.cpp:1948
