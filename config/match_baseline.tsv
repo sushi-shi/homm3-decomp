@@ -851,6 +851,7 @@ drawing	?UpdateGrid@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x93930
 drawing	?UpdateMouseGrid@combatManager@@QAEXHAAV?$vector@JV?$allocator@J@std@@@std@@E@Z	100.0000	100.0000	100.0000	0x93ea0
 drawing	?UpdateMouseGrid@combatManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0x94390
 drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370
+dxplay	?GetCount@?$CAutoArray@VCDPlayAddressElement@@@@UAEKXZ	100.0000	100.0000	100.0000	0x9a010
 dxplay	?GetGuid@CDPlay@@UAEPAU_GUID@@XZ	100.0000	100.0000	100.0000	0x96ca0
 dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?SetGuid@CDPlay@@UAEXU_GUID@@@Z	100.0000	100.0000	100.0000	0x96c70
