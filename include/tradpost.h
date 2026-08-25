@@ -43,7 +43,7 @@ class slider;
 // and left as field_NN placeholders where only the size is proven so far.
 class TTradeResourceWindow : public CAdvPopup {
     slider* resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
-    int field_64;             // +0x64
+    int lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
     TTradeResourceWindow(int x2, int y2);
     void Update(unsigned char bUpdate);

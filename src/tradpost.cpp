@@ -14,6 +14,7 @@
 #include "message.h"
 #include "winmgr.h"
 #include "mousemgr.h"
+#include "slider.h"
 #include "tradpost_widgets.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -255,6 +256,13 @@ DATA(0x006aaabc) static TSellCreatureWindow* gpSellCreatureWindow;
 DATA(0x006aaaac) static int gLeftDenominated;
 DATA(0x006aaab0) static int gRightAmount;
 DATA(0x006aaacc) static int gLeftResource;
+
+// Resource-trade computation state the resource handler seeds and the execute
+// arm consumes. gRatioInverted picks which side denominates the exchange rate;
+// gGiveQuantity is the units-per-trade ratio; gMaxTradeUnits caps the slider.
+DATA(0x006aaa80) static int gRatioInverted;
+DATA(0x006aaa94) static int gMaxTradeUnits;
+DATA(0x006aaac0) static int gGiveQuantity;
 
 // The window origin DoMarket stamps (0x64, 3) before constructing each dialog
 // and passes as the (x2, y2) constructor arguments.
@@ -888,16 +896,145 @@ void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightReso
     // matches exactly). A register wall - the float math and control flow agree.
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\tradpost.cpp:2368
+// The resource-trade dialog handler. Widget subtype 0xd carries the two trade
+// panels (execute the pending trade, jump the slider to max) and the tab
+// buttons that hand the next pane back to DoMarket; subtype 0xc carries the
+// sell/buy resource buttons, each re-selecting a side and recomputing the
+// exchange ratio through the inlined ComputeTradeRatios. Hover events copy the
+// rollover string.
 VA(0x005ecfe0, 0x3ba)  // anchor-vtable 0x6439f8 slot 9, dc 0x18b540
 int TTradeResourceWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
 
-#endif  // @carcass
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+    switch (msg->codeX) {
+    case widget::WIDGET_DESELECT:
+        switch (msg->codeY) {
+        case MARKET_LEFT_PANEL_ID:
+            if (gRightAmount == 0)
+                return 1;
+            if (gRatioInverted) {
+                gpCurrentPlayer->resources[gLeftResource] +=
+                    gGiveQuantity * gRightAmount;
+                gpCurrentPlayer->resources[gSelectedArtifact] -= gRightAmount;
+            } else {
+                gpCurrentPlayer->resources[gSelectedArtifact] -=
+                    gGiveQuantity * gRightAmount;
+                gpCurrentPlayer->resources[gLeftResource] += gRightAmount;
+            }
+            gLeftDenominated = 1;
+            gLeftResource = -1;
+            gSelectedArtifact = -1;
+            break;
+        case MARKET_RIGHT_PANEL_ID:
+            gRightAmount = gMaxTradeUnits;
+            resourceSlider->SetState(gMaxTradeUnits);
+            break;
+        case MARKET_LEFT_LABEL_ID:
+        case MARKET_RIGHT_LABEL_ID:
+        case MARKET_TITLE_ID:
+            gpWindowManager->dialogReturn = msg->codeY - 0x10;
+            bExit = 1;
+            gLeftResource = -1;
+            gSelectedArtifact = -1;
+            gLeftDenominated = 0;
+            break;
+        default:
+            return 1;
+        }
+        break;
+    case widget::WIDGET_SELECT:
+        switch (msg->codeY) {
+        case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+        case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+        case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+        case MARKET_SELL_GOLD_ID: {
+            int sellRes = msg->codeY - MARKET_SELL_WOOD_ID;
+            if (sellRes == gSelectedArtifact)
+                return 1;
+            int buyRes = gLeftResource;
+            gSelectedArtifact = sellRes;
+            if (buyRes != -1) {
+                float denom = static_cast<float>(gMarketValues[sellRes])
+                            * fTradingPostEfficency[gMarketCount];
+                float ratio = static_cast<float>(gMarketValues[buyRes]) / denom;
+                if (ratio >= 1.0f) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits =
+                        gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
+                } else {
+                    ratio = 1.0f / ratio;
+                    gRatioInverted = 1;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
+                }
+                resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                gRightAmount = 0;
+            }
+            break;
+        }
+        case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+        case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+        case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+        case MARKET_BUY_GOLD_ID: {
+            int buyRes = msg->codeY - MARKET_BUY_WOOD_ID;
+            if (buyRes == gLeftResource)
+                return 1;
+            int sellRes = gSelectedArtifact;
+            gLeftResource = buyRes;
+            if (sellRes != -1) {
+                float denom = static_cast<float>(gMarketValues[sellRes])
+                            * fTradingPostEfficency[gMarketCount];
+                float ratio = static_cast<float>(gMarketValues[buyRes]) / denom;
+                if (ratio >= 1.0f) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits =
+                        gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
+                } else {
+                    ratio = 1.0f / ratio;
+                    gRatioInverted = 1;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
+                }
+                resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                gRightAmount = 0;
+            }
+            break;
+        }
+        default:
+            return 1;
+        }
+        break;
+    default:
+        return 1;
+    }
+
+    Update(1);
+    if (bExit) {
+        msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+        return 2;
+    }
+    return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
 
 // E:\gamedcs\tradpost.cpp:2507
 // Copies the hovered widget's rollover string into gText, then repaints the
