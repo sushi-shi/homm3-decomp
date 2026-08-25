@@ -1236,42 +1236,55 @@ void mark_values(long* full_value, long total_value, __int64 requirements)
 }
 
 // E:\gamedcs\ai_player.cpp:1383
-DC_ONLY(0x30334, 0x196)
+// linkorder (mark_values inlined away) + arity: ret 0x10 (this+4), returns al
+// (uchar); size 406->447 (1.10). Retail 0x2a2b0.
+VA(0x0042a2b0, 0x1BF)  // linkorder + arity/return, dc 0x30334
 unsigned char type_AI_player::check_trade_supply(const int* cost, long number, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1446
-DC_ONLY(0x304cc, 0xE6)
+// arity: ret 8 (this+2), void, fs:[0] EH frame; size 230->272 (1.18). Retail 0x2a470.
+VA(0x0042a470, 0x110)  // linkorder + arity/return, dc 0x304cc
 void type_AI_player::trade_resources(const int* cost, long number)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1474
-DC_ONLY(0x305b4, 0x41E)
+// arity: ret 0xc (this+3), returns al (uchar), fs:[0] EH frame; size 1054->1470
+// (1.39). Retail 0x2a580.
+VA(0x0042a580, 0x5BE)  // linkorder + arity/return, dc 0x305b4
 unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1587
-DC_ONLY(0x309d4, 0x9A)
+// arity: ret 4 (this+1), returns al (uchar); reads this+0 short (player id) and
+// player record at gpGame+0x20ad0; size 154->209 (1.36). Retail 0x2ab40.
+VA(0x0042ab40, 0xD1)  // linkorder + arity/return, dc 0x309d4
 unsigned char type_AI_player::build_markets(int* supply)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1620
-DC_ONLY(0x30a70, 0x2FA)
+// arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
+// source order after build_markets. size 762->478 (0.63). Retail 0x2ac20.
+VA(0x0042ac20, 0x1DE)  // linkorder + arity + anchor-callee calculate_demand, dc 0x30a70
 void type_AI_player::do_resource_trade(int* supply)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1686
-DC_ONLY(0x30d6c, 0x2C2)
+// anchor-callee: calls get_total_value + trade_resources + calculate_demand
+// (all claimed); arity ret 4 (this+1), returns uchar; source order after
+// do_resource_trade. size 706->1816 (2.6, retail inlines six small helpers).
+// Retail 0x2ae00.
+VA(0x0042ae00, 0x718)  // anchor-callee + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
 {
     // @stub
