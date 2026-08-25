@@ -285,6 +285,61 @@ void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
     // @stub
 }
 
+// --- Member-widget class virtual overrides, relocated here for RVA order.
+// --- All vtable-proven: the TSingleSelectionWindow ctor stores each class's
+// --- vtable, and the overridden slot is named from the exact base-class
+// --- vtable (textEntryWidget 0x242d40 / slider 0x241d50 / textWidget 0x242db0).
+// --- Bodies unreconstructed (RoE-vs-SoD divergent); dc offsets retained.
+
+// E:\gamedcs\singleselectionwindow.cpp:1575
+VA(0x0057c9d0, 0x2A)  // anchor-vtable CChatSlider vtbl 0x241b8c slot13 (SetResolution override), dc 0x148ad8
+void CChatSlider::SetResolution(int num)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1589
+VA(0x0057ca00, 0x43)  // anchor-vtable CChatSlider vtbl 0x241b8c slot14 (SetState override), dc 0x148b1c
+void CChatSlider::SetState(int state)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1675
+VA(0x0057ca90, 0xA9)  // anchor-vtable CChatWidget vtbl 0x241bdc slot4 (Draw override vs textWidget base), dc 0x148df4
+void CChatWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1810
+VA(0x0057cdc0, 0x11D)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot15 (OnKeyPress override vs textEntryWidget base), dc 0x1491e0
+int CEnterNameEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1830
+VA(0x0057cee0, 0xFD)  // anchor-vtable CEnterNameEdit vtbl 0x241c14 slot11 (OnKillFocus override), dc 0x149290
+void CEnterNameEdit::OnKillFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1892
+VA(0x0057cfe0, 0xCF)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot16 (IgnoreKey override vs textEntryWidget base), dc 0x1493c8
+unsigned char CSaveGameEdit::IgnoreKey(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1931
+VA(0x0057d0b0, 0x50)  // anchor-vtable CSaveGameEdit vtbl 0x241c60 slot15 (OnKeyPress override), dc 0x149514
+int CSaveGameEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:2635
 DC_ONLY(0x13575c, 0x348)
 void TSingleSelectionWindow::SetupLoadGameMode()
@@ -342,7 +397,7 @@ void TSingleSelectionWindow::TurnOffAdvancedOptions()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:3219
-DC_ONLY(0x1371fc, 0xB2C)
+VA(0x005822d0, 0x868)  // anchor-vtable TSingleSelectionWindow vtbl 0x241cac slot11 (ProcessRightSelect override; cf sibling THeroScreenWindow slot11 ProcessRightSelect@CHeroWindowEx), dc 0x1371fc
 unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
 {
     // @stub
@@ -440,7 +495,7 @@ int TSingleSelectionWindow::Update(message* msg)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4420
-DC_ONLY(0x13b104, 0x74)
+VA(0x00584bf0, 0x50)  // anchor-vtable vtbl 0x241cac slot6 (DoModal override; cf sibling THeroScreenWindow slot6 DoModal@heroWindow), dc 0x13b104
 void TSingleSelectionWindow::DoModal(unsigned char fade)
 {
     // @stub
@@ -475,7 +530,7 @@ void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg, unsign
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4704
-DC_ONLY(0x13b9fc, 0x262)
+VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
 void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
 {
     // @stub
@@ -517,14 +572,14 @@ int TSingleSelectionWindow::OnWidgetDeselect(message* msg, unsigned char* bExitF
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:5933
-DC_ONLY(0x13ea70, 0x150)
+VA(0x00587bc0, 0x138)  // anchor-vtable vtbl 0x241cac slot14 (ExitDialog override; cf sibling THeroScreenWindow slot14 ExitDialog); label "starting_multiplayer_game", dc 0x13ea70
 int TSingleSelectionWindow::ExitDialog(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:5976
-DC_ONLY(0x13ebc0, 0xB86)
+VA(0x00587d00, 0x624)  // anchor-vtable vtbl 0x241cac slot9 (WindowHandler override; cf sibling THeroScreenWindow slot9 WindowHandler) + fingerprint w2.43, dc 0x13ebc0
 int TSingleSelectionWindow::WindowHandler(message* msg)
 {
     // @stub
@@ -538,8 +593,16 @@ int TSingleSelectionWindow::GetThisPlayerGamePos()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6301
-DC_ONLY(0x13f770, 0x602)
+VA(0x00588330, 0x462)  // anchor-callee mutual call-graph: OnGameTransmitInitMsg(0x589b20) calls this per DC edge; fingerprint w4.14 + monotone, dc 0x13f770
 void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer)
+{
+    // @stub
+}
+
+// CHostWaitDlg (CAnimatedDlg subclass) - relocated here for RVA order.
+// E:\gamedcs\singleselectionwindow.cpp:454
+VA(0x005891b0, 0x45)  // anchor-vtable CHostWaitDlg vtbl 0x241cf8 slot3 (handle_message override vs CAnimatedDlg base 0x240e94) + fingerprint w2.25, dc 0x1477b0
+int CHostWaitDlg::handle_message(message* msg)
 {
     // @stub
 }
@@ -608,7 +671,7 @@ void UpdateTurnDuration()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:6778
-DC_ONLY(0x1406ec, 0x1AC)
+VA(0x00589b20, 0x13C)  // anchor-callee mutual call-graph: calls UpdatePlayerPositions(0x588330) per DC edge; fingerprint w2.50 + monotone, dc 0x1406ec
 unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
 {
     // @stub
@@ -1014,14 +1077,14 @@ void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8764
-DC_ONLY(0x1451a0, 0x48)
+VA(0x0058e310, 0x21)  // anchor-vtable CSingleSelectionNetMsgHandler vtbl 0x241ce8 slot1 (CheckHandleNet; cf CNetMsgHandler layout), dc 0x1451a0
 CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
 {
     // @stub
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:8775
-DC_ONLY(0x1451e8, 0x204)
+VA(0x0058e340, 0x379)  // anchor-vtable vtbl 0x241ce8 slot3 (HandleNetMsg; cf CNetMsgHandler layout) + fingerprint w0.75, dc 0x1451e8
 CNetMsg* CSingleSelectionNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
@@ -1230,19 +1293,8 @@ void CHostWaitDlg::Wait(unsigned long forWho)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:454
-DC_ONLY(0x1477b0, 0x78)
-int CHostWaitDlg::handle_message(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:465
-DC_ONLY(0x147828, 0x38)
-void* CHostWaitDlg::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// CHostWaitDlg vtable 0x241cf8 slot 0. E:\gamedcs\singleselectionwindow.cpp:465
+VA_COMPGEN(0x00589200, 0x21, SCALAR_DELETING_DTOR, CHostWaitDlg)  // dc 0x147828
 
 // E:\gamedcs\singleselectionwindow.cpp:465
 DC_ONLY(0x147860, 0x1C)
@@ -1566,20 +1618,6 @@ void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void 
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1575
-DC_ONLY(0x148ad8, 0x44)
-void CChatSlider::SetResolution(int num)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1589
-DC_ONLY(0x148b1c, 0x7C)
-void CChatSlider::SetState(int state)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1600
 DC_ONLY(0x148b98, 0x38)
 void* CChatSlider::`scalar deleting destructor'(unsigned __flags)
@@ -1625,13 +1663,6 @@ void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWi
 // E:\gamedcs\singleselectionwindow.cpp:1670
 DC_ONLY(0x148d78, 0x7C)
 void CChatWidget::~CChatWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1675
-DC_ONLY(0x148df4, 0x54)
-void CChatWidget::Draw()
 {
     // @stub
 }
@@ -1713,23 +1744,9 @@ void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWi
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1810
-DC_ONLY(0x1491e0, 0x58)
-int CEnterNameEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1820
 DC_ONLY(0x149238, 0x58)
 int CEnterNameEdit::OnEnter()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1830
-DC_ONLY(0x149290, 0x28)
-void CEnterNameEdit::OnKillFocus()
 {
     // @stub
 }
@@ -1755,20 +1772,6 @@ void CSaveGameEdit::CSaveGameEdit(int textWidgetX, int textWidgetY, int textWidg
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:1892
-DC_ONLY(0x1493c8, 0x14C)
-unsigned char CSaveGameEdit::IgnoreKey(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1931
-DC_ONLY(0x149514, 0x7C)
-int CSaveGameEdit::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:1941
 DC_ONLY(0x149590, 0x38)
 void* CSaveGameEdit::`scalar deleting destructor'(unsigned __flags)
@@ -1783,12 +1786,8 @@ void CSaveGameEdit::~CSaveGameEdit()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:2632
-DC_ONLY(0x1495e4, 0x38)
-void* TSingleSelectionWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// TSingleSelectionWindow vtable 0x241cac slot 0. E:\gamedcs\singleselectionwindow.cpp:2632
+VA_COMPGEN(0x0057d130, 0x21, SCALAR_DELETING_DTOR, TSingleSelectionWindow)  // dc 0x1495e4
 
 // E:\gamedcs\singleselectionwindow.cpp:4071
 DC_ONLY(0x14961c, 0x38)
