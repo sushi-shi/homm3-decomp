@@ -940,8 +940,13 @@ unsigned char CDPlay::SysMsgCreatePlayerOrGroup(
     return 1;
 }
 
-// E:\gamedcs\array.h:144 - slot 6 of the retail
+// E:\gamedcs\array.h:95 - slot 2 of the retail
 // CAutoArray<CDPlayAddressElement> vtable at 0x63de44.
+VA(0x00499fc0, 0x1D)
+template CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(
+    unsigned long elementNbr);
+
+// E:\gamedcs\array.h:144 - slot 6 of the same vtable.
 VA(0x0049a010, 0x4)
 template unsigned long CAutoArray<CDPlayAddressElement>::GetCount();
 
