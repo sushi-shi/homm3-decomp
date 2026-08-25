@@ -1694,13 +1694,6 @@ void initialize_artifact_effects()
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5043
-DC_ONLY(0x361c8, 0x2C)
-void type_artifact_effect::type_artifact_effect()
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5050
 DC_ONLY(0x361f4, 0x20)
 void type_artifact_effect::~type_artifact_effect()
@@ -1715,37 +1708,9 @@ void type_scouting_artifact::type_scouting_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5065
-DC_ONLY(0x36258, 0x1C)
-long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5073
-DC_ONLY(0x36274, 0x44)
-void type_combat_artifact::type_combat_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5081
-DC_ONLY(0x362b8, 0x26)
-long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5090
 DC_ONLY(0x362e0, 0x40)
 void type_might_artifact::type_might_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5098
-DC_ONLY(0x36320, 0x2E)
-long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1757,23 +1722,9 @@ void type_power_artifact::type_power_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5116
-DC_ONLY(0x36390, 0x24)
-long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5127
 DC_ONLY(0x363b4, 0x3C)
 void type_knowledge_artifact::type_knowledge_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5134
-DC_ONLY(0x363f0, 0x24)
-long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1785,23 +1736,9 @@ void type_necromancy_artifact::type_necromancy_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5152
-DC_ONLY(0x36450, 0x8A)
-long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5182
 DC_ONLY(0x364dc, 0x50)
 void type_movement_artifact::type_movement_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5189
-DC_ONLY(0x3652c, 0x2A)
-long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
 }
@@ -1813,23 +1750,9 @@ void type_spellcaster_artifact::type_spellcaster_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5205
-DC_ONLY(0x3659c, 0x46)
-long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5219
 DC_ONLY(0x365e4, 0x48)
 void type_morale_artifact::type_morale_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5226
-DC_ONLY(0x3662c, 0xAA)
-long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1841,23 +1764,9 @@ void type_luck_artifact::type_luck_artifact(long new_bonus)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5250
-DC_ONLY(0x36720, 0xAA)
-long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5267
 DC_ONLY(0x367cc, 0x48)
 void type_duration_artifact::type_duration_artifact(long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5274
-DC_ONLY(0x36814, 0x24)
-long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
@@ -1869,23 +1778,9 @@ void type_school_artifact::type_school_artifact(TSpellSchool new_school, long ne
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5293
-DC_ONLY(0x3687c, 0x160)
-long type_school_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5347
 DC_ONLY(0x369dc, 0x40)
 void type_antimagic_artifact::type_antimagic_artifact(long _max_level)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5355
-DC_ONLY(0x36a1c, 0x98)
-long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1897,23 +1792,9 @@ void type_antimorale_artifact::type_antimorale_artifact()
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5387
-DC_ONLY(0x36afc, 0x142)
-long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5406
 DC_ONLY(0x36c40, 0x50)
 void type_antiluck_artifact::type_antiluck_artifact()
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5413
-DC_ONLY(0x36c90, 0x142)
-long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -1925,13 +1806,6 @@ void type_tome_artifact::type_tome_artifact(TSpellSchool new_school)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5441
-DC_ONLY(0x36e28, 0xBE)
-long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5477
 DC_ONLY(0x36ee8, 0x6C)
 void type_income_artifact::type_income_artifact(long new_amount, EGameResource new_resource)
@@ -1939,23 +1813,9 @@ void type_income_artifact::type_income_artifact(long new_amount, EGameResource n
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5486
-DC_ONLY(0x36f54, 0x96)
-long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai_player.cpp:5495
 DC_ONLY(0x36fec, 0x60)
 void type_creature_growth_artifact::type_creature_growth_artifact(long new_level, long new_bonus)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_player.cpp:5505
-DC_ONLY(0x3704c, 0x148)
-long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
@@ -2948,6 +2808,146 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z)
 // E:\gamedcs\ai_player.cpp:4476
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
 unsigned char consider_hiring(long player_id, hero* candidate)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5043
+VA(0x00432500, 0x7)  // anchor-vtable (??_7type_artifact_effect ctor), dc 0x361c8
+void type_artifact_effect::type_artifact_effect()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5065
+VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
+long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5073
+VA(0x00432540, 0x15)  // anchor-vtable (??_7type_combat_artifact ctor), dc 0x36274
+void type_combat_artifact::type_combat_artifact(long new_bonus)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5081
+VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
+long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5098
+VA(0x004325a0, 0x40)  // artifact get_value cluster order-map + get_AI_value, dc 0x36320
+long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5116
+VA(0x004325e0, 0x21)  // artifact get_value cluster order-map, dc 0x36390
+long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5134
+VA(0x00432610, 0x21)  // artifact get_value cluster order-map, dc 0x363f0
+long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5152
+VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
+long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5189
+VA(0x004326e0, 0x38)  // artifact get_value cluster order-map + get_AI_value, dc 0x3652c
+long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5205
+VA(0x00432720, 0x54)  // artifact get_value cluster order-map + get_AI_value, dc 0x3659c
+long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5226
+VA(0x00432780, 0x68)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x3662c
+long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5250
+VA(0x004327f0, 0x68)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36720
+long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5274
+VA(0x00432860, 0x21)  // artifact get_value cluster order-map, dc 0x36814
+long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5293
+VA(0x00432890, 0x1b2)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x3687c
+long type_school_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5355
+VA(0x00432a50, 0xc3)  // artifact get_value cluster order-map + get_AI_value, dc 0x36a1c
+long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5387
+VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
+long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5413
+VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
+long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5441
+VA(0x00432c20, 0xf5)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x36e28
+long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5486
+VA(0x00432d20, 0x49)  // artifact get_value cluster order-map, dc 0x36f54
+long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.cpp:5505
+VA(0x00432d70, 0x219)  // artifact get_value cluster order-map, dc 0x3704c
+long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
