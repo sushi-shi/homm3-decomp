@@ -1914,6 +1914,43 @@ void type_sacrifice_window::update_artifact_offering(long slot)
                     &artifact_offerings[slot]);
 }
 
+// The Dreamcast line map places this one-purpose helper at source line 1499.
+// Complete expands it into clear. The same order is independently repeated
+// by ExitDialog: original equipped slot, any legal equipped slot, backpack,
+// then a final arbitrary equipped-slot fallback.
+void type_sacrifice_window::return_artifact(
+    const type_artifact_offering& artifact)
+{
+    if (artifact.source < 19) {
+        if (current_hero->equip_artifact(&artifact, artifact.source))
+            return;
+        if (current_hero->equip_artifact(&artifact, -1))
+            return;
+    }
+    if (current_hero->add_to_backpack(&artifact, -1))
+        return;
+    current_hero->equip_artifact(&artifact, -1);
+}
+
+// The Dreamcast line map places clear at source line 1521. Complete expands
+// it into sacrifice_artifacts; retail's vector walk, held-record cleanup and
+// terminal total reset expose the entire body.
+void type_sacrifice_window::clear()
+{
+    for (unsigned long i = 0; i < artifact_offerings.size(); ++i) {
+        if (artifact_offerings[i].artifactId != ARTIFACT_NONE) {
+            return_artifact(artifact_offerings[i]);
+            artifact_offerings[i].artifactId = ARTIFACT_NONE;
+        }
+    }
+
+    if (holding_artifact.artifactId != ARTIFACT_NONE) {
+        return_artifact(holding_artifact);
+        holding_artifact.artifactId = ARTIFACT_NONE;
+    }
+    total_experience = 0;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1572
 // The three retail callers and the two retained updater calls identify this
 // row. Direct array subscripts preserve VC6's shared pre-base index, while
@@ -2030,6 +2067,34 @@ int type_sacrifice_window::max_creatures(message& msg)
         int maximum = window->creature_slider->get_maximum() - 1;
         window->creature_slider->SetState(maximum);
         creature_slider_change(maximum, window);
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1692
+// The constructor stores this private static callback at 0x561bfe. Complete
+// expands both clear and return_artifact, so the body itself proves every
+// artifact-return fallback as well as the final mode refresh.
+VA(0x00564e70, 0x164)  // callback address-take + dc name/signature/order
+int type_sacrifice_window::sacrifice_artifacts(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT) {
+        NormalDialog(
+            gSacrificeWindowHelp[
+                SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_sacrifice_window* window =
+            static_cast<type_sacrifice_window*>(msg.window);
+        window->clear();
+        window->set_artifact_mode();
         window->DrawWindow(
             1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
