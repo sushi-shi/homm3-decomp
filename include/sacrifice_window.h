@@ -20,6 +20,10 @@ class slider;
 struct type_artifact_offering : public type_artifact {
     long source;
     long value;
+
+    // Dreamcast types the slot as TArtifactSlot. Retail passes the same
+    // four-byte domain used by the live sacrifice-window click handlers.
+    void set(const type_artifact* artifact, long slot, const hero* owner);
 };
 SIZE(type_artifact_offering, 16);
 
@@ -44,9 +48,19 @@ enum ESacrificeArtifactSlotFrame {
     SACRIFICE_ARTIFACT_SLOT_DROP_FRAME = 0x90
 };
 
+// ARTRAITS.TXT's parser maps T/N/J/R to these bit values, and the retained
+// offering helper maps the same four values to its experience ladder.
+enum ESacrificeArtifactClass {
+    SACRIFICE_ARTIFACT_CLASS_TREASURE = 2,
+    SACRIFICE_ARTIFACT_CLASS_MINOR = 4,
+    SACRIFICE_ARTIFACT_CLASS_MAJOR = 8,
+    SACRIFICE_ARTIFACT_CLASS_RELIC = 16
+};
+
 enum ESacrificeGeneralText {
     SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
     SACRIFICE_GENERAL_TEXT_CREATURE = 482,
+    SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT = 483,
     SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE = 484,
     SACRIFICE_GENERAL_TEXT_CREATURE_NAME = 485
 };
@@ -151,7 +165,10 @@ public:
 protected:
     virtual int ExitDialog(message* msg);                      // slot 14
 private:
+    void pick_up_artifact(type_artifact artifact, long slot,
+                          unsigned char new_artifact);
     void put_down_artifact(unsigned char change_experience);
+    void update_backpack();
     void return_artifact(const type_artifact_offering& artifact);
     void clear();
     long get_max_amount(long slot) const;

@@ -75,6 +75,7 @@ inliner (predict-inline)	113	91.4600	1318	army	?attack_wall@army@@QAEXW4TWallTar
 inliner (predict-inline)	111	85.6339	775	advmgr	?ViewPuzzle@advManager@@QAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	111	94.1675	1904	mousemgr	?Update@mouseManager@@QAEXE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	111	95.1207	2266	townmgr	?BuyBuild@townManager@@QAEHHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
+inliner (predict-inline)	110	86.1308	794	sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	109	76.9111	474	mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	109	93.1695	1596	army	?animate_missile@army@@QAEXPAV1@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	109	84.5280	703	soundmgr	?Open@soundManager@@UAEHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)

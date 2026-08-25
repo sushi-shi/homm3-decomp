@@ -6821,7 +6821,7 @@ float hero::GetMagicResistanceFactor()
 
 // E:\gamedcs\hero.cpp:5684
 VA(0x004e4840, 0x66)  // anchor-global, dc 0xd4960
-float hero::GetExperienceBonusFactor()
+float hero::GetExperienceBonusFactor() const
 {
     float factor = kLearningFactors[skillLevel[eSecSkillLearning]];
     if (skillLevel[eSecSkillLearning] > 0) {
