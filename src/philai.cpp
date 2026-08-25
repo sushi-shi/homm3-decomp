@@ -29,7 +29,7 @@ int OnMySide(int iWhichPlayer)
 }
 
 // E:\gamedcs\philai.cpp:67
-DC_ONLY(0x10d47c, 0x92)
+VA(0x005242d0, 0x82)  // anchor-callee, dc 0x10d47c
 void CheckDoMain(int bForceMouseCheck, int bMouseOnly)
 {
     // @stub
@@ -92,7 +92,7 @@ long get_artifact_purchase_value(TArtifact artifact, long market_count, long* fu
 }
 
 // E:\gamedcs\philai.cpp:326
-DC_ONLY(0x10da30, 0xB8)
+VA(0x00524400, 0x149)  // anchor-callee, dc 0x10da30
 void buy_artifacts(hero* current_hero, TArtifact* artifact_list, long market_count)
 {
     // @stub
@@ -119,20 +119,6 @@ void buy_artifacts(hero* current_hero, town* current_town)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:445
-DC_ONLY(0x10dcc4, 0x1E2)
-void buy_special_building(const hero* current_hero, town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:519
-DC_ONLY(0x10dea8, 0x17E)
-long value_of_war_factory(const hero* current_hero, TArtifact engine, long move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:551
 DC_ONLY(0x10e028, 0x3C)
 long value_of_war_factory(const hero* current_hero, long move_cost)
@@ -140,23 +126,9 @@ long value_of_war_factory(const hero* current_hero, long move_cost)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:561
-DC_ONLY(0x10e064, 0x94)
-void visit_war_factory(hero* current_hero, TArtifact engine)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:583
 DC_ONLY(0x10e0f8, 0x20)
 void AI_visit_war_factory(hero* current_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:594
-DC_ONLY(0x10e118, 0x114)
-void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
 {
     // @stub
 }
@@ -171,20 +143,6 @@ const hero* get_best_hero(long player_id)
 // E:\gamedcs\philai.cpp:662
 DC_ONLY(0x10e298, 0x9A)
 unsigned char should_garrison_town(const hero* current_hero, const town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:687
-DC_ONLY(0x10e334, 0xC2)
-void consider_garrisoning(hero* current_hero, town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:732
-DC_ONLY(0x10e3f8, 0x280)
-void AI_enter_town(hero* current_hero, town* current_town)
 {
     // @stub
 }
@@ -206,27 +164,6 @@ void mark_shipyards(playerData* player)
 // E:\gamedcs\philai.cpp:896
 DC_ONLY(0x10e894, 0x114)
 void clear_shipyards(playerData* player)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:934
-DC_ONLY(0x10e9a8, 0x2B0)
-void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* explore_mode)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1056
-DC_ONLY(0x10ec58, 0x258)
-void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero, unsigned char* explore_mode)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:1156
-DC_ONLY(0x10eeb0, 0x220)
-hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
 {
     // @stub
 }
@@ -432,6 +369,73 @@ int hero::SoD_get_seer_skill_value(int skill, int level)
     }
     return get_skill_value(this, typed_skill.skill, 1);
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+
+// E:\gamedcs\philai.cpp:561
+VA(0x00524fc0, 0x156)  // anchor-callee, dc 0x10e064
+void visit_war_factory(hero* current_hero, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:519
+VA(0x00525120, 0xe0)  // anchor-callee, dc 0x10dea8
+long value_of_war_factory(const hero* current_hero, TArtifact engine, long move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:687
+VA(0x00525200, 0x1d0)  // anchor-callee, dc 0x10e334
+void consider_garrisoning(hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:732
+VA(0x005253d0, 0x60c)  // anchor-callee, dc 0x10e3f8
+void AI_enter_town(hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:445
+VA(0x005259e0, 0x205)  // anchor-callee, dc 0x10dcc4
+void buy_special_building(const hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:594
+VA(0x00525ca0, 0x11e)  // anchor-callee, dc 0x10e118
+void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1056
+VA(0x005261f0, 0x5ba)  // anchor-callee, dc 0x10ec58
+void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero, unsigned char* explore_mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:934
+VA(0x005267b0, 0x2da)  // anchor-callee, dc 0x10e9a8
+void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* explore_mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1156
+VA(0x00526a90, 0x1d4)  // anchor-callee, dc 0x10eeb0
+hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // The AI's spell-appraisal curve, one 32-byte row per "times castable"
 // step.  Retail reaches all four columns off the same 32-byte stride
@@ -742,13 +746,6 @@ int ValueOfCampfire(playerData* player, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2128
-DC_ONLY(0x1109b8, 0x24C)
-int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2183
 DC_ONLY(0x110c04, 0x52)
 void AI_PurchaseCreatures(hero* current_hero, generator* current_generator)
@@ -801,13 +798,6 @@ int ValueOfGarden(const hero* current_hero, NewmapCell* cell)
 // E:\gamedcs\philai.cpp:2294
 DC_ONLY(0x111028, 0x32)
 int ValueOfLeanTo(NewmapCell* cell, playerData* player)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:2306
-DC_ONLY(0x11105c, 0x2CC)
-long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
 {
     // @stub
 }
@@ -987,13 +977,6 @@ int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:2964
-DC_ONLY(0x112510, 0xDC)
-int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
-{
-    // @stub
-}
-
 // E:\gamedcs\philai.cpp:2997
 DC_ONLY(0x1125ec, 0x1E)
 int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
@@ -1025,13 +1008,6 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
 // E:\gamedcs\philai.cpp:3096
 DC_ONLY(0x112830, 0xE4)
 long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:3131
-DC_ONLY(0x112914, 0x4BE)
-long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost)
 {
     // @stub
 }
@@ -1189,6 +1165,38 @@ int hero::LuckIncreaseValue(int value)
                    * army.get_AI_value() / 40;
     return static_cast<int>(value_added);
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+
+// E:\gamedcs\philai.cpp:2128
+VA(0x00529a30, 0x27f)  // anchor-callee, dc 0x1109b8
+int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2306
+VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
+long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2964
+VA(0x0052a8c0, 0x9a)  // anchor-callee, dc 0x112510
+int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3131
+VA(0x0052ab80, 0x505)  // anchor-callee, dc 0x112914
+long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost)
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
 // skills.  When the hero either knows both or knows neither, the two
