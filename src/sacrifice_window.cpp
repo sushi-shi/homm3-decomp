@@ -5,6 +5,7 @@
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
 #include <va.h>
 #include "sacrifice_window.h"
+#include "button.h"
 #include "game.h"
 #include "kb.h"
 #include "message.h"
@@ -1594,6 +1595,83 @@ unsigned char type_army_slot_widget::handle_click(
         return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:287
+// The two direct calls after the 150-entry Widgets reserve identify the
+// following artifact/creature builder rows in the Dreamcast roster's own
+// order. Retail independently proves every base-window field, all eight
+// vector initializers, the seven terminal widgets, and the hero-class town
+// tests below. The callbacks are reference-taking fastcall entries in this
+// TU; type_func_button stores the same machine pointer behind its historical
+// message* interface, so the casts change no bytes or calling convention.
+VA(0x0055fdd0, 0x574)  // ctor call graph + dc name/signature/order, dc 0x12419c
+type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
+    : CAdvPopup(0, 0, 800, 600, 0)
+{
+    current_hero = new_hero;
+    x = 100;
+    y = 2;
+    width = 600;
+    height = 593;
+    type = 18;
+
+    long widget_id = 100;
+    widget* new_widget;
+    Widgets.reserve(150);
+    create_artifact_widgets(widget_id, cur_player);
+    create_creature_widgets(widget_id, cur_player);
+
+    Widgets.push_back(new textWidget(
+        24, 414, 104, 50,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_NEXT_LEVEL),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8));
+
+    experience_widget = new textWidget(
+        44, 468, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(experience_widget);
+
+    Widgets.push_back(new textWidget(
+        24, 492, 104, 42,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8));
+
+    experience_total_widget = new textWidget(
+        41, 536, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(experience_total_widget);
+
+    sacrifice_button = new type_func_button(
+        269, 520, 64, 32, widget_id++, "AltSacr.def",
+        sacrifice, 0, 1);
+    Widgets.push_back(sacrifice_button);
+
+    new_widget = new type_func_button(
+        515, 520, 64, 30, widget_id++, "iOkay.def",
+        exit_click, 0, 1);
+    static_cast<type_func_button*>(new_widget)->set_hotkey(28);
+    new_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_EXIT_BUTTON].text, 0, 1);
+    Widgets.push_back(new_widget);
+
+    rolloverText = new textWidget(
+        8, 567, 584, 18, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(rolloverText);
+
+    int town_type = akHeroClasses[current_hero->heroClass].townType;
+    can_sacrifice_artifacts =
+        !(town_type > TOWN_TOWER && town_type < TOWN_STRONGHOLD);
+    can_sacrifice_creatures = town_type > TOWN_TOWER;
+    total_experience = 0;
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
 
 // Vtable 0x641620 slot 0 is the canonical VC6 deleting wrapper for the

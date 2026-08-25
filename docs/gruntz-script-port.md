@@ -260,6 +260,35 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-25 — the sacrifice-window constructor reproduces all 1,396
+  retail bytes.** Its direct calls to the next two large retail rows, in the
+  Dreamcast roster's `create_artifact_widgets` / `create_creature_widgets`
+  order, pin the constructor at 0x55fdd0. Complete then independently proves
+  the 150-entry widget reserve, seven terminal widgets, callbacks and help
+  row, the hero-class town gates, all eight member-vector initializers and
+  the final AddWidget walk. Dreamcast's field records further correct all
+  nine action-button members from generic `widget*` to `type_func_button*`.
+
+  Natural reconstruction initially reached 92.11%; moving `current_hero`
+  from the initializer list to the body reproduced retail's member-init
+  order and raised it to 96.75%. The last structural mismatch was not an
+  optimizer guess: Dreamcast CodeView names the constructor's two locals as
+  `widget_id` and `widget* new_widget`. Restoring the latter for the OK
+  button produces retail's extra stack home and null-path lowering, making
+  all 38 semantic blocks exact. The adjacent 33-byte deleting destructor and
+  five-byte destructor tail remain deliberately unclaimed because five
+  trivial slot-widget classes share those ICF-folded bodies and retail does
+  not prove an owning class.
+
+  The full cleanliness gate also exposed the old pointer-parameter model for
+  `type_func_button` callbacks: Dreamcast types the stored handler as
+  `int(message&)`, while the header had `int(message*)` and forced two new
+  casts here. Correcting the shared handler type removes those casts with no
+  byte change and keeps the button constructor/Main plus all affected callers
+  exact. The synchronized checkpoint reaches **1967/2385 linked exact**,
+  **1898/2316 game exact**, **96.60% game fuzzy** and **44.38% executable
+  coverage**; the full build ratchet and zero-debt cleanliness floors pass.
+
 - **2026-08-25 — the sacrifice offering/scroll/batch chain adds 2,194 exact
   retail bytes; the 863-byte all-artifacts callback is behavior-complete at
   86.78%.** The offering widget's sole call target and the adjacent

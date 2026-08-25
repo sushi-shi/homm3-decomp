@@ -143,9 +143,12 @@ public:
 // a fastcall message handler at 0x68 (call [this+0x68] with ecx=msg).
 class type_func_button : public button {
 public:
-    int (*handler)(message* msg);
+    typedef int (*handler_type)(message& msg);
+    handler_type handler;
 
-    type_func_button(long x, long y, long w, long h, long id, const char* image, int (*newHandler)(message* msg), int normal, int selected);
+    type_func_button(long x, long y, long w, long h, long id,
+                     const char* image, handler_type newHandler,
+                     int normal, int selected);
     virtual int Main(message* msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0

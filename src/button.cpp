@@ -554,7 +554,10 @@ void textButton::Draw()
 
 // E:\gamedcs\button.cpp:557
 VA(0x00456d30, 0x46)  // linkorder bracket; button-ctor delegate byte-proven, dc 0x57c4c
-type_func_button::type_func_button(long x, long y, long w, long h, long id, const char* image, int (*newHandler)(message* msg), int normal, int selected)
+type_func_button::type_func_button(long x, long y, long w, long h, long id,
+                                   const char* image,
+                                   handler_type newHandler,
+                                   int normal, int selected)
     : button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
 {
     handler = newHandler;
@@ -595,7 +598,7 @@ int type_func_button::Main(message* msg)
     if (result != 1 && (status & WIDGET_ACTIVE) && field_2C <= 0
         && msg->id == MESSAGE_WIDGET && msg->codeY == id) {
         msg->window = parentWindow;
-        return handler(msg);
+        return handler(*msg);
     }
     return result;
 }
