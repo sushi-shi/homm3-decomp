@@ -1229,35 +1229,17 @@ int ValueOfPrison(NewmapCell* cell, playerData* player)
     if (gpCurrentPlayer->numHeroes >= 8)
         return 0;
     hero& prisoner = gpGame->heroes[cell->extraInfo];
-    return static_cast<int>(prisoner.army.get_AI_value()
-        + player->resourceValue[GOLD] * 2500.0);
+    long army_value = prisoner.army.get_AI_value();
+    return static_cast<int>(player->resourceValue[GOLD] * 2500.0
+        + army_value);
 }
 
-// E:\gamedcs\philai.cpp:2811.  A Pyramid: army-guarded spell reward.  Identity:
-// unique cross-TU edge armyGroup::Add (called by exactly this DC philai fn and
-// this retail row) plus AI_get_spell_value + AI_value_of_combat over an armyGroup.
-// A pyramid this player has already looted (his bit is set in the visited-player
-// mask at bits 5+ and the fresh flag is clear) is worthless.  Otherwise it is
-// worth beating its two fixed guardian stacks plus the average value of the
-// level-5 spells the hero could still learn from it.  PYRAMID_SPELL_LEVEL
-// mirrors game.cpp's own constant for the reward tier.  owner is read as a
-// short because retail's visited-cell ABI is `short player` (SetCellVisited).
-//
-// Residual (95.95%): the visited-player test.  Retail reads the 8-bit
-// visited_bits field through a NewmapCell typed arm (byte `test cl,al` then
-// `setne`), which mapcell.h does not expose as an accessor and this lane
-// may not add; the explicit `(extraInfo>>5)&(1<<owner)` keeps a dword test
-// with no bool materialisation.  Everything else - the two guardian Adds,
-// the level-5 spell-averaging loop and the closing AI_value_of_combat - is
-// byte-exact.
 const int PYRAMID_SPELL_LEVEL = 5;
-VA(0x0052a410, 0xF5)  // anchor-callee, dc 0x111f54
+VA(0x0052a410, 0xF5)
 long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
 {
     short owner = current_hero->owner;
-    if (owner >= 0 && owner < 8
-            && ((cell->extraInfo >> 5) & (1 << owner)) != 0
-            && (cell->extraInfo & 1) == 0)
+    if (cell->PlayerKnowsCell(owner) && !cell->pyramid_is_guarded())
         return 0;
 
     armyGroup guardians;
@@ -1319,14 +1301,14 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* pla
     long combat_value = 0;
     long amount;
     int resource_type = cell->objectIndex;
-    if ((cell->extraInfo >> 31) & 1) {
+    if (!cell->IsCustomized()) {
+        amount = cell->extraInfo;
+    } else {
         TreasureData* treasure = gpAdvManager->get_treasure_data(cell);
         amount = cell->extraInfo & 0x7ffff;
         if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies())
             combat_value = AI_value_of_combat(current_hero, 0,
                 treasure->Guardians, 0, cell);
-    } else {
-        amount = cell->extraInfo;
     }
     if (resource_type == GOLD)
         amount *= 100;

@@ -1846,8 +1846,8 @@ philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
 philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630
-philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	81.8182	81.8182	81.8182	0x12a3a0
-philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	88.5082	88.5082	88.5082	0x12a7c0
+philai	?ValueOfPrison@@YIHPAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a3a0
+philai	?ValueOfResource@@YIJPBVhero@@PAVNewmapCell@@PAVplayerData@@@Z	100.0000	100.0000	100.0000	0x12a7c0
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
 philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0
@@ -1857,7 +1857,7 @@ philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_experience@@YIMPBVhero@@PBVarmyGroup@@@Z	99.9310	99.9310	99.9310	0x127710
-philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	95.9468	95.9468	95.9468	0x12a410
+philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410
 philai	AI_enter_town	0.0000	0.0000	0.0000	0x1253d0
 philai	AI_examine_map	0.0000	0.0000	0.0000	0x12b9c0
 philai	AI_friendly_hero_meeting	0.0000	0.0000	0.0000	0x125dc0
