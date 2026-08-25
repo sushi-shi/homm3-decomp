@@ -70,12 +70,14 @@ type_event_record* type_record_move_hero::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:116
 VA(0x0049a680, 0x6)  // anchor-vtable, dc 0x8c7e8
 type_event_record_type type_record_move_hero::get_type()
 {
-    // @stub
+    return RECORD_MOVE_HERO;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:124
 VA(0x0049a690, 0xB1)  // anchor-vtable, dc 0x8c7ec
@@ -119,12 +121,14 @@ type_event_record* type_record_teleport::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:219
 VA(0x0049a9b0, 0x6)  // anchor-vtable, dc 0x8caec
 type_event_record_type type_record_teleport::get_type()
 {
-    // @stub
+    return RECORD_TELEPORT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:227
 VA(0x0049a9c0, 0x7B)  // anchor-vtable, dc 0x8caf0
@@ -231,12 +235,14 @@ type_event_record* type_record_hide_boat::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:392
 VA(0x0049acf0, 0x6)  // anchor-vtable, dc 0x8ced8
 type_event_record_type type_record_hide_boat::get_type()
 {
-    // @stub
+    return RECORD_HIDE_BOAT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:400
 VA(0x0049ad00, 0xE7)  // anchor-vtable, dc 0x8cedc
@@ -280,12 +286,14 @@ type_event_record* type_record_show_boat::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:466
 VA(0x0049af30, 0x6)  // anchor-vtable, dc 0x8d06c
 type_event_record_type type_record_show_boat::get_type()
 {
-    // @stub
+    return RECORD_SHOW_BOAT;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:474
 VA(0x0049af40, 0x51)  // anchor-vtable, dc 0x8d070
@@ -329,12 +337,14 @@ type_event_record* type_record_erase::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:552
 VA(0x0049b180, 0x6)  // anchor-vtable, dc 0x8d2b8
 type_event_record_type type_record_erase::get_type()
 {
-    // @stub
+    return RECORD_ERASE;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:560
 VA(0x0049b190, 0x8B)  // anchor-vtable, dc 0x8d2bc
@@ -476,12 +486,14 @@ type_event_record* type_record_player_death::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:858
 VA(0x0049ba30, 0x6)  // anchor-vtable, dc 0x8dae8
 type_event_record_type type_record_player_death::get_type()
 {
-    // @stub
+    return RECORD_PLAYER_DEATH;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:866
 VA(0x0049ba40, 0x3D)  // anchor-vtable, dc 0x8daec
@@ -525,12 +537,14 @@ type_event_record* type_record_shroud::create()
     // @stub
 }
 
+#endif  // @carcass
 // E:\gamedcs\event_record.cpp:927
 VA(0x0049bc80, 0x6)  // anchor-vtable, dc 0x8dcd4
 type_event_record_type type_record_shroud::get_type()
 {
-    // @stub
+    return RECORD_SHROUD;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:935
 VA(0x0049bc90, 0x151)  // anchor-vtable, dc 0x8dcd8
