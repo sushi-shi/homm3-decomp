@@ -44,6 +44,8 @@ public:
     bool IsLeftHero();
     void Reset();
     void DrawSelector();
+    void update_all_slots();
+    void UpdateBackpack(int iHero);
 };
 
 // The trade window itself (a heroWindow subclass). Only the UpdateArrows-touched

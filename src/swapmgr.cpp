@@ -236,12 +236,80 @@ void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\swapmgr.cpp:1004
+// Residual (93.28%): flow-exact (why-reg flow-distance 0); the 5-slot backpack
+// loop and the four arrow-widget broadcasts are byte-exact. The only delta is
+// the loop's induction-variable binding - retail keeps the backpack byte offset
+// in ebx (stride 8, bound 0x28) with widgetId as a live memory counter, while
+// our CL keeps `i` in ebx (stride 1) and folds widgetId to base+i. A
+// register-homing residual (the documented dominant class here). Tried and
+// rejected: iterating widgetId as the loop var with backpack[widgetId-base]
+// (49.49, the subtraction spills), the by-index form above is the closest.
 VA(0x005af150, 0x157)  // corroborates hero::get_last_backpack_index, ret 4, dc 0x15cea4
 void swapManager::UpdateBackpack(int iHero)
 {
-    // @stub
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    int widgetId = 5 * iHero + 0x59;
+    for (int i = 0; i < 5; i++)
+    {
+        message slotMsg;
+        slotMsg.id = 0;
+        slotMsg.codeX = 0;
+        slotMsg.codeY = 0;
+        slotMsg.qualifier = 0;
+        slotMsg.mouseX = 0;
+        slotMsg.mouseY = 0;
+        slotMsg.extra = 0;
+        slotMsg.window = 0;
+
+        type_artifact art = heroes[iHero]->backpack[i];
+        slotMsg.id = MESSAGE_WIDGET;
+        slotMsg.codeY = widgetId;
+        if (art.artifactId == -1)
+        {
+            slotMsg.codeX = 6;
+        }
+        else
+        {
+            slotMsg.extra = art.artifactId;
+            slotMsg.codeX = 4;
+            parent->BroadcastMessage(&slotMsg);
+            slotMsg.codeX = 5;
+        }
+        slotMsg.extra = 4;
+        parent->BroadcastMessage(&slotMsg);
+        widgetId++;
+    }
+
+    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 > 5) ? 6 : 5;
+    msg.extra = 0x1000;
+    msg.codeY = iHero + 0x63;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = iHero + 0x65;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeX = (heroes[iHero]->get_last_backpack_index() + 1 <= 5) ? 6 : 5;
+    msg.extra = 2;
+    msg.codeY = iHero + 0x63;
+    parent->BroadcastMessage(&msg);
+
+    msg.codeY = iHero + 0x65;
+    parent->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass -- located, not reconstructed (RVA order)
 
 // E:\gamedcs\swapmgr.cpp:1031
 VA(0x005af2b0, 0x2DD)  // anchor-callee SplitArmy/ViewArmy + SwapMons(0x5b0da0), ret 0x10, dc 0x15cf54
