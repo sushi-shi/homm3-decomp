@@ -213,55 +213,48 @@ void CNetPlayerHandler::CNetPlayerHandler()
 
 #endif  // @carcass
 
-// E:\gamedcs\singleselectionwindow.cpp:1020
-// Residual (73.5%): register-homing wall. Every block, branch, both scans and
-// all field writes match retail; the delta is the 3-callee-saved assignment.
-// Retail keeps pos in ebx (loaded once, `cmp [edx],ebx` direct memory compare)
-// with the candidate in esi and the -1 constant in edi, and shares eax across
-// BOTH loops; our CL homes pos in esi (materializing [edx] into edi to compare)
-// and re-reads [ebp+8] once esi is clobbered by the second loop, permuting
-// esi/edi/ebx. Order sweeps do not move it (documented register-homing class).
-VA(0x00577ae0, 0xd0)  // arity ret4 (this+1); dual 8-slot dpid scan then writes handler turn-state fields 0x7c0/0x7c8/0x7cc, dc 0x1304a8
+// Residual (96.24%): the final scan rotates one guard (13 branches vs retail
+// 12); CodeView-guided for/while/do/continue/goto spellings all plateau.
+VA(0x00577ae0, 0xd0)
 unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
 {
-    CNetPlayerHandlerPlayer* pCurrent = GetPlayerInPos(pos);
+    CNetPlayerHandlerPlayer* pPlayer = GetPlayerInPos(pos);
 
-    int nextPos = 0;
-    for (int i = 0; i < MAX_PLAYERS; ++i) {
-        if (humanPlayers[i].dpid != 0 && humanPlayers[i].playerPos == -1) {
-            nextPos = i;
-            break;
+    int start = GetUnassignedPlayerPos();
+    if (start == -1)
+        start = 0;
+
+    if (pPlayer) {
+        start = pPlayer->color + 1;
+        pPlayer->playerPos = -1;
+    }
+
+    if (pos == playerPos) {
+        if (assignedPos != -1) {
+            pPlayer->playerPos = assignedPos;
+            assignedPos = -1;
         }
-    }
-
-    if (pCurrent) {
-        nextPos = pCurrent->color + 1;
-        pCurrent->playerPos = -1;
-    }
-
-    if (pos != playerPos) {
+    } else {
         playerPos = pos;
         unused = -1;
         assignedPos = -1;
-    } else if (assignedPos != -1) {
-        pCurrent->playerPos = assignedPos;
-        assignedPos = -1;
     }
 
-    if (nextPos >= MAX_PLAYERS) {
-        pCurrent->playerPos = -1;
+    if (start >= MAX_PLAYERS) {
+        pPlayer->playerPos = -1;
         return 1;
     }
 
-    for (int j = nextPos; j < MAX_PLAYERS; ++j) {
-        if (humanPlayers[j].dpid != 0) {
-            assignedPos = humanPlayers[j].playerPos;
-            humanPlayers[j].playerPos = pos;
-            humanPlayers[j].heroIndex = -1;
-            humanPlayers[j].townIndex = -1;
-            break;
-        }
+    int i = start;
+    while (humanPlayers[i].dpid == 0) {
+        ++i;
+        if (i >= MAX_PLAYERS)
+            return 1;
     }
+    assignedPos = humanPlayers[i].playerPos;
+    humanPlayers[i].playerPos = pos;
+    humanPlayers[i].heroIndex = -1;
+    humanPlayers[i].townIndex = -1;
     return 1;
 }
 
@@ -381,12 +374,19 @@ unsigned char CNetPlayerHandler::SetComputer(int pos)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1214
-DC_ONLY(0x130904, 0x64)
 int CNetPlayerHandler::GetUnassignedPlayerPos()
 {
-    // @stub
+    for (int i = 0; i < MAX_PLAYERS; ++i) {
+        if (humanPlayers[i].dpid != 0 && humanPlayers[i].playerPos == -1)
+            return i;
+    }
+    return -1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:1225
 DC_ONLY(0x130968, 0x88)
