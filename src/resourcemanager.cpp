@@ -1308,27 +1308,22 @@ palette_ready:
     return result.release();
 }
 
-// WALL (95.6292%): both archive searches, both missing-resource reports, the
-// deliberately original-name getItemIndex call, both adapters, and the
-// ordinary-file try/catch are reproduced. Giving the fallback search its own
-// archive scope recovers retail's second global-context load and raises this
-// body from 86.5787 to 95.6292.
-//
-// The remaining dominant residual is the established VC6 string-temporary
-// midpoint: retail inlines c_str() but expands the temporary destructor only
-// through its out-of-line _Tidy(true) child. With no pin our compiler inlines
-// the complete destructor (78.9326); inline_depth(1) is byte-flat, while the
-// retained statement-scoped inline_depth(0) calls both c_str and the parent
-// destructor. No depth spells "inline parent, call child" (the same bounded
-// class is documented at TTimedEvent::Load). Two induction-address choices
-// in the first archive walk are the other residual; the freshly scoped
-// fallback twin proves the source expression and compiles those sites exact.
+// EXACT 2026-08-26. Both archive searches, missing-resource reports, the
+// original-name getItemIndex call, both adapters and the ordinary-file
+// try/catch agree. The last residual was VC6's string-temporary midpoint:
+// retail inlines c_str() but leaves the temporary's _Tidy(true) child as a
+// call. Giving the natural path-open expression its own explicit inline
+// helper supplies that caller context without a pragma; the helper itself is
+// fully expanded and every instruction/relocation then matches retail.
+static inline FILE* OpenResourcePath(const char* name)
+{
+    return fopen((gResourcePath + name).c_str(), "rb");
+}
+
 VA(0x0055b8d0, 0x229)  // dc GetFont semantics split at retail stream helper
 font* ResourceManager::LoadFont(const char* name)
 {
-#pragma inline_depth(0)
-    FILE* file = fopen((gResourcePath + name).c_str(), "rb");
-#pragma inline_depth()
+    FILE* file = OpenResourcePath(name);
 
     if (file) {
         try {
