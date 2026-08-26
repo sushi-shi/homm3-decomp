@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "netmsg.h"
+#include "turn_update_msg.h"
 #include "armygrp.h"
 
 class hero;
@@ -41,20 +42,6 @@ public:
 SIZE(CNetMsg, 20);
 SIZE(CGiftMsg, 32);
 SIZE(CGiftRequestMsg, 28);
-
-// The turn-start broadcast. Class name, size 24 and the m_gamePos member
-// are the Dreamcast's (LF_INTERFACE CTurnUpdateMsg, member at +20); the
-// 0x3f8 subtype constant is retail's own immediate in
-// advManager::StartLocalPlayerTurn, and the DC eRS_Messages ladder names
-// 1016 RS_TURN_UPDATE (the CGiftMsg 0x432 raw-constant precedent).
-class CTurnUpdateMsg : public CNetMsg {
-public:
-    int m_gamePos;
-
-    CTurnUpdateMsg(int gamePos)
-        : CNetMsg(0x3f8, sizeof(CTurnUpdateMsg)), m_gamePos(gamePos) {}
-};
-SIZE(CTurnUpdateMsg, 24);
 
 // Retail and Dreamcast both make this an 8-byte strategy object: a
 // three-slot vptr followed by the current player id. start_turn inlines

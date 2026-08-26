@@ -40,6 +40,7 @@
 #include "bitset_iterator.h"
 #include "initialize.h"
 #include "terrain.h"
+#include "inputmgr.h"
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -71,6 +72,7 @@
 #include "soundmgr.h"
 #include "smackmgr.h"
 #include "remote.h"
+#include "turn_update_msg.h"
 #include "spellbookwindow.h"
 #include "townmgr_globals.h"
 // puzzlewindow.h contains the complete UI class and tile layout. game.obj
@@ -111,6 +113,12 @@ type_point AI_attempt_puzzle_guess(long player);
 #if defined(_MSC_VER) && !defined(__clang__)
 #undef _MT
 #endif
+
+// Retail/HD evidence names the hourglass animation phase; NextPlayer is its
+// game.obj writer. The second dword is the byte-proven autosave preference
+// gate, but no surviving symbol attests a semantic spelling for it.
+DATA(0x00691684) int iCurHourGlassPhase;
+DATA(0x00698770) int gUnnamed698770;
 
 inline type_point::type_point(short new_x, short new_y, short new_z)
 {
@@ -8816,11 +8824,241 @@ void game::TurnOffAIMusic()
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7603
+// Live retail reconstruction follows this carcass bracket.
 DC_ONLY(0xb1fd0, 0xB04)
 void game::NextPlayer()
 {
     // @stub
 }
+
+#endif  // @carcass
+
+// E:\gamedcs\game.cpp:7603
+// The retail body preserves the HoMM2 turn-transition skeleton while adding
+// Complete's victory-condition sweep, local-human turn timer, network-state
+// transfer/retry and visiting/recruit hero refreshes. The roster adjacency
+// (immediately after TurnOffAIMusic), five retail callers and the complete DC
+// callee set independently identify the row.
+//
+// RECONSTRUCTED 2026-08-26 (83.3584%). The frame is retail's exact 0x150 and
+// the 256-byte sText home, 40-byte inlined AI-theme scratch, turn message,
+// saved-player slot and retained autosave-census write all land in the retail
+// stack bands. The remaining structural residual is 69 candidate branches
+// against 73 retail. Most of its visible churn is one allocation family around
+// the failed-transfer tail retry: our VC6 homes the receiver and carries it in
+// ESI while keeping zero in EBX; retail keeps the receiver in EBX and zero in
+// ESI. Explicit backward goto, a structured retry loop and recursive-inlining
+// pragma all reproduced the same allocation family. Forcing the week-transition
+// value to a volatile byte worsened the score to 80.1988% and grew the frame.
+VA(0x004c6fe0, 0x947)  // dc-name/order + retail caller/callee/body, dc 0xb1fd0
+void game::NextPlayer()
+{
+    int iToWho;
+    int weekSave;
+    volatile int iHumans;
+    int i;
+    unsigned char last_was_human;
+    int giCurPlayerSave;
+    int save;
+    unsigned char makeOrig;
+
+    mapHeader.victoryCondition.CheckForArtifactWin();
+    mapHeader.victoryCondition.CheckForTotalCreatures();
+    mapHeader.victoryCondition.CheckForTotalResources();
+    mapHeader.victoryCondition.CheckForUpgradedTown();
+    mapHeader.victoryCondition.CheckForGrailBuildingWin();
+    CheckEndGame(0);
+    if (gbGameOver)
+        return;
+
+    giCurPlayerSave = gNetLocalGamePos;
+
+    for (i = 0; i < 2; ++i) {
+        int recruitId = gpCurrentPlayer->recruits[i];
+        if (recruitId != -1)
+            heroes[recruitId].flags &= ~HERO_RECRUIT_RESERVED_FLAG;
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        gTurnDuration69d630.Clear();
+    iCurHourGlassPhase = 0;
+
+    if (gpCurrentPlayer->IsLocalHuman() && gUnnamed698770) {
+        for (i = 0; i < 8; ++i) {
+            if (!playerDisabled[i]) {
+                iHumans = i;
+                if (i >= 8 || i < 0)
+                    iHumans = 0;
+            }
+        }
+        gpAdvManager->DrawRolloverText(
+            const_cast<char*>(gpGeneralText->GetText(108)));
+        SaveGame(gpGeneralText->GetText(77), 1, 0, 1, 0);
+        gpAdvManager->DrawRolloverText(
+            DATA_COMPGEN(0x00691210, nextPlayerEmptyRollover, ""));
+    }
+
+    if (gpGame->players[gNetLocalGamePos].iDeathCountDown > 0)
+        --gpGame->players[gNetLocalGamePos].iDeathCountDown;
+    gpAdvManager->DeactivateCurrTown(0);
+    gpAdvManager->DeactivateCurrHero(0);
+
+    makeOrig = 0;
+    last_was_human = players[gNetLocalGamePos].IsHuman();
+    for (;;) {
+        ++gNetLocalGamePos;
+        if (gNetLocalGamePos < 8) {
+            if (!playerDisabled[gNetLocalGamePos]
+                && static_cast<unsigned char>(
+                       players[gNetLocalGamePos].IsHuman())
+                       == last_was_human) {
+                break;
+            }
+        } else {
+            weekSave = !last_was_human;
+            if (weekSave) {
+                makeOrig = 1;
+                PerDay();
+                if (gNetworkActive69954c) {
+                    mapHeader.lossCondition.CheckForTimeLimitExpired();
+                    CheckEndGame(0);
+                    if (gbGameOver)
+                        return;
+                }
+            }
+            last_was_human = static_cast<unsigned char>(weekSave);
+            gNetLocalGamePos = -1;
+        }
+    }
+
+    if (gUnnamed691209 && makeOrig
+        && (!gNetworkActive69954c || gUnnamed699274 == 1)) {
+        gpAdvManager->DrawRolloverText(
+            const_cast<char*>(gpGeneralText->GetText(108)));
+        SaveGame(gpGeneralText->GetText(77), 1, 0, 1, 0);
+        gpAdvManager->DrawRolloverText(
+            DATA_COMPGEN(0x00691210, nextPlayerSoloEmptyRollover, ""));
+
+        save = gNetworkActive69954c;
+        gNetworkActive69954c = 1;
+        gUnnamed691209 = 0;
+        NormalDialogTimeOut(gpGeneralText->GetText(663), 2, 2000,
+                            -1, -1, -1, 0, -1, 0, -1, -1, 0);
+        gNetworkActive69954c = save;
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE) {
+            gpGame->players[gUnnamed69120c].isHuman = 1;
+            gpGame->players[gUnnamed69120c].isLocal = 1;
+            gUnnamed691209 = 0;
+            gMapVisibilityBit = 1 << gUnnamed69120c;
+        } else {
+            gUnnamed691209 = 1;
+        }
+    }
+
+    gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+    gUnnamed69ccc4 = 1 << gNetLocalGamePos;
+
+    if (gNetworkActive69954c && !gpCurrentPlayer->IsHuman()) {
+        CTurnUpdateMsg msg(gNetLocalGamePos);
+        TransmitRemoteData(&msg, 0x7f, false, true);
+    }
+    clear_event_records(static_cast<char>(gNetLocalGamePos));
+
+    for (i = 0; i < gpCurrentPlayer->numHeroes; ++i) {
+        hero* current_hero = &heroes[gpCurrentPlayer->heroes[i]];
+        int mobility = current_hero->GetMobility();
+        current_hero->maxMovePoints = mobility;
+        current_hero->movePoints = mobility;
+    }
+    for (i = 0; i < 2; ++i) {
+        int recruitId = gpCurrentPlayer->recruits[i];
+        if (recruitId != -1) {
+            hero* current_hero = &heroes[recruitId];
+            int mobility = current_hero->GetMobility();
+            current_hero->maxMovePoints = mobility;
+            current_hero->movePoints = mobility;
+        }
+    }
+    for (i = 0; i < gpCurrentPlayer->numTowns; ++i) {
+        town* current_town = GetTown(gpCurrentPlayer->townIds[i]);
+        if (current_town->visitingHeroId >= 0) {
+            hero* current_hero = GetHero(current_town->visitingHeroId);
+            int mobility = current_hero->GetMobility();
+            current_hero->maxMovePoints = mobility;
+            current_hero->movePoints = mobility;
+            current_hero->field_11c = 0;
+        }
+    }
+
+    if (!gpCurrentPlayer->IsLocalHuman()) {
+        gpMouseManager->SetPointer(2, mouseManager::DEFAULT_SET);
+        gpAdvManager->HideRoute(1, 0, 1);
+        StartAITheme();
+        gpSoundManager->field_84 = 0;
+        SetNoDialogMenus(0);
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_8, -1);
+        ShowComputerScreen();
+        gCompleteDrawEnabled = 0;
+
+        if (gNetworkActive69954c && IsHuman(gNetLocalGamePos)) {
+            iToWho = gNetLocalGamePos;
+            makeOrig = 0;
+            gbThisNetGotAdventureControl = 0;
+            if (gUnnamed69d80d) {
+                iToWho = 0x7f;
+                gUnnamed69d80d = 0;
+            }
+            if (IsLastHuman(GetLocalPlayerGamePos())) {
+                iToWho = 0x7f;
+                gUnnamed69d80d = 0;
+                makeOrig = 1;
+            }
+            save = TransmitSaveGame(iToWho, 0, 1, makeOrig);
+            if (!save && gUnnamed69d80d) {
+                gNetLocalGamePos = giCurPlayerSave;
+                gUnnamed69d80d = 0;
+                gpCurrentPlayer = &gpGame->players[gNetLocalGamePos];
+                gUnnamed69ccc4 = 1 << gNetLocalGamePos;
+                NextPlayer();
+                return;
+            }
+            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+            gUnnamed69d810 = gNetLocalGamePos;
+        }
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
+    } else {
+        SetNoDialogMenus(1);
+        gpInputManager->Flush();
+        gUnnamed69778c = gNetLocalGamePos;
+        gMapVisibilityBit = gUnnamed69ccc4;
+
+        if (gUnnamed6993dc && gUnnamed699274 > 1) {
+            char sText[256];
+            sprintf(sText, gpGeneralText->GetText(
+                        GENERAL_TEXT_PLAYER_TURN_FORMAT),
+                    gpCurrentPlayer->GetName());
+            WaitForPlayer(sText, gNetLocalGamePos);
+        }
+
+        if (gpCurrentPlayer->IsLocalHuman()
+            || (gNetworkActive69954c && gpCurrentPlayer->IsHuman())) {
+            gCompleteDrawEnabled = 1;
+            gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+            gpAdvManager->advWindow->GetWidget(8)->enable(1);
+            gpAdvManager->advWindow->GetWidget(7)->enable(1);
+            gpAdvManager->advWindow->GetWidget(6)->enable(1);
+            gpAdvManager->advWindow->GetWidget(12)->enable(1);
+        }
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        gTurnDuration69d630.Start();
+    GameFn_004CC7D0(this);
+    if (gpCurrentPlayer->IsLocalHuman())
+        gpAdvManager->ForceNewHover();
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7898
 DC_ONLY(0xb2ad4, 0x55C)

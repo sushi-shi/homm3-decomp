@@ -2207,6 +2207,10 @@ public:
     void PerDay();
     void PerWeek();
     void PerMonth();
+    int TransmitSaveGame(int iToWho, int thisPlayerDead,
+                         unsigned char inGame, unsigned char makeOrig);
+    void DoNewTurn();
+    void clear_event_records(char playerId);
     // Game.h:1390 in the DC roster. Retail expands this short calendar
     // accessor at every game.obj call site and retains no standalone row.
     short get_current_turn()
@@ -2543,6 +2547,9 @@ DATA(0x0069fbf8) extern int gNewMapStartingBonus[8];
 // gNetLocalGamePos.  StartLocalPlayerTurn later consumes the same cell;
 // no surviving symbol attests a semantic spelling.
 DATA(0x0069d810) extern int gUnnamed69d810;
+// remote.obj owns the DATA claim. NextPlayer consumes the adjacent recovery
+// latch while retrying a failed turn-state transfer.
+extern unsigned char gUnnamed69d80d;
 // advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
 // latch after rebuilding the session.
 extern int gbThisNetGotAdventureControl;
