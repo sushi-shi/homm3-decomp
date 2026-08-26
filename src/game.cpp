@@ -49,6 +49,7 @@
 #include <memory>
 #define HOMM3_GAME_CLAIM_TOWN_DECLS
 #define HOMM3_GAME_CREATURE_BANK_DTOR_DECL
+#define HOMM3_GAME_CREATURE_BANK_LOAD_DECL
 #define HOMM3_GAME_GARRISON_HERO_DECLS
 #define HOMM3_GAME_LOAD_TAIL_DECLS
 #define HOMM3_GAME_OBJ_DECLS
@@ -3754,7 +3755,9 @@ int game::Load(TAbstractFile* infile)
                          short_buffer * sizeof(type_university));
         }
     }
+#pragma inline_depth(0)
     load_object_vector(infile, &creatureBanks);
+#pragma inline_depth()
 
     if (!load_recorded_events(infile, saved.version))
         return -1;
@@ -10452,6 +10455,9 @@ VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
 // passes its element destructor to VC6's nine-element teardown iterator.
 VA_COMPGEN(0x004c4df0, 0x3E, PAIR_CONST_INT_DTOR, type_map_hero_info)
 VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, TPickRandomTownName)
+// The transfer dialog tears down its CGameTransferSmack member at +0x58,
+// then its CTextDialog base. Retail retained that implicit COMDAT in game.obj.
+VA_COMPGEN(0x004cbcf0, 0x4B, IMPLICIT_DTOR, CGameTransferDlg)
 
 // InitNewGame's exception path retains Dinkumware's string-taking
 // std::logic_error constructor. The late STL anchor emits the identical named
@@ -10568,6 +10574,58 @@ VA_COMPGEN(0x004d4eb0, 0xCB, BITSET_XRAN, Bitset12)
 VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
 VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
+
+// E:\gamedcs\game.cpp:2774
+// Retail inlines this record reader into load_object_vector below. The fixed
+// bands are the 0x38-byte army, seven 4-byte resources, the creature id and
+// reward count; the trailing short sizes the four-byte artifact vector.
+inline unsigned char type_creature_bank::load(void* input)
+{
+    TAbstractFile* infile = static_cast<TAbstractFile*>(input);
+    short artifactCount;
+
+    if (infile->Read(&guards, sizeof(guards)) != sizeof(guards))
+        return 0;
+    if (infile->Read(resources, sizeof(resources)) != sizeof(resources))
+        return 0;
+    if (infile->Read(&reward_creature, sizeof(reward_creature)) !=
+        sizeof(reward_creature))
+        return 0;
+    if (infile->Read(&reward_creatures, sizeof(reward_creatures)) !=
+        sizeof(reward_creatures))
+        return 0;
+    std::vector<TArtifact>& artifactVector = artifacts;
+    if (infile->Read(&artifactCount, sizeof(artifactCount)) <
+        sizeof(artifactCount))
+        return 0;
+
+    artifactVector.resize(artifactCount);
+    if (infile->Read(artifactVector.begin(),
+                     artifactCount * sizeof(TArtifact)) <
+        artifactCount * sizeof(TArtifact))
+        return 0;
+    return 1;
+}
+
+// E:\gamedcs\game.cpp:2733
+// The two-byte vector count and 0x6c element stride identify the creature-bank
+// specialization. VC6 expands the record reader above into the loop body.
+VA(0x004d2870, 0x24D)  // sole game::Load caller + DC specialization order
+unsigned char load_object_vector(
+    TAbstractFile* infile,
+    std::vector<type_creature_bank>* dest_vector)
+{
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return 0;
+
+    dest_vector->resize(count);
+    for (int i = 0; i < count; ++i) {
+        if (!(*dest_vector)[i].load(infile))
+            return 0;
+    }
+    return 1;
+}
 
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
@@ -15772,6 +15830,11 @@ void CObjectType::~CObjectType()
 
 #endif  // @carcass
 
+// Kept below every reconstructed game body: only the emission anchor needs
+// the complete transfer-dialog layout, and importing the remote UI closure at
+// the TU head would perturb game.cpp's codegen-sensitive include population.
+#include "remotedlg.h"
+
 // STL COMDAT emission anchor. The original game bodies that exhausted VC6's
 // inline budget are not reconstructed yet, so this late definition restores
 // only their named out-of-line members without changing any runtime caller.
@@ -15826,6 +15889,11 @@ template<> std::bitset<128>& std::bitset<128>::reset()
 #pragma auto_inline(on)
 
 #pragma inline_depth(0)
+void h3_game_class_comdat_anchor(unsigned char sending)
+{
+    CGameTransferDlg transferDialog(sending);
+}
+
 void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<144>& artifacts,
                                const std::string& message,
