@@ -3854,6 +3854,16 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
     return 0;
 }
 
+// E:\gamedcs\ai_tactical.cpp:2876
+// The default enchantment pricer. Retail's address-take at 0x43b7ff lands
+// on this 16-byte-aligned leaf; unsupported spells are deliberately worth 0.
+VA(0x0043b680, 0x10)  // address-take + retail leaf bytes, dc 0x41a74
+long type_AI_spellcaster::unimplemented(const army* enemy,
+                                        type_enchant_data caster)
+{
+    return 0;
+}
+
 // E:\gamedcs\ai_tactical.cpp:2884
 // The enchantment dispatch: one pointer-to-member per priceable spell,
 // and `unimplemented` for everything else. Retail lowers it as a
@@ -4057,13 +4067,6 @@ void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:2876
-DC_ONLY(0x41a74, 0x8)
-long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data caster)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_tactical.cpp:3093
 // Same case as consider_mass_damage above: consider_spell's summon arm
