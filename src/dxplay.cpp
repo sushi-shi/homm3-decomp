@@ -1118,14 +1118,14 @@ CDPlayConnection* CDPlayLobby::CreateModemConnection(char* sName, char* sPhoneNb
     return pConn;
 }
 
-// Residual (99.2%): compound-address body is byte-right; the sole delta is one
-// EH-state store our CL emits on the new-CDPlayConnection null-alloc merge that
-// retail keeps inside the construct arm, plus cosmetic per-dword GUID reloc names.
+// Residual (99.3%): the extent tree uniquely selects elements[10], making the
+// 0xf8 frame exact.  One EH-state store remains; 30 clean allocation, delete,
+// declaration, scope, and return spellings were byte-flat under this frame.
 // E:\gamedcs\dxplay.cpp:1751
 VA(0x00499700, 0x1F4)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateSerialConnection), dc 0x8b95c
 CDPlayConnection* CDPlayLobby::CreateSerialConnection(char* sName, _DPCOMPORTADDRESS* comPortInfo)
 {
-    DPCOMPOUNDADDRESSELEMENT elements[2];
+    DPCOMPOUNDADDRESSELEMENT elements[10];
     unsigned long dwAddressSize = 0;
     elements[0].guidDataType = s_dpaidServiceProvider;
     elements[0].dwDataSize = sizeof(GUID);
