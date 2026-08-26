@@ -2544,6 +2544,7 @@ tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000
 tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed850
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
+tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
 tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0
