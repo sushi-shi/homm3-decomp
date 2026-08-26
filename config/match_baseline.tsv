@@ -1345,6 +1345,7 @@ game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60
 game	?set@?$bitset@$0JM@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd0070
 game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	100.0000	100.0000	100.0000	0xc2330
+game	?set_recruits@game@@QAEXH@Z	100.0000	100.0000	100.0000	0xc8450
 game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc23c0
 game	?setup_shipyards@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbcb30
 game	?size@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf750
