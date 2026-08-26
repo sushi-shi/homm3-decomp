@@ -67,6 +67,7 @@ public:
     unsigned char IsFaceTaken(int face, int exclude);
     unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
     unsigned char SetNextPlayer(int pos);
+    int GetUnassignedPlayerPos();
 };
 SIZE(CNetPlayerHandler, 0x7d0);
 

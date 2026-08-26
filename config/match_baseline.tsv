@@ -2340,7 +2340,7 @@ singleselectionwindow	?InitializeLCDescriptions@@YIEXZ	100.0000	100.0000	100.000
 singleselectionwindow	?InitializeTurnDurationText@@YIEXZ	100.0000	100.0000	100.0000	0x177ab0
 singleselectionwindow	?InitializeVCDescriptions@@YIEXZ	100.0000	100.0000	100.0000	0x177a50
 singleselectionwindow	?IsFaceTaken@CNetPlayerHandler@@QAEEHH@Z	100.0000	100.0000	100.0000	0x177d10
-singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	73.4823	73.4823	73.4823	0x177ae0
+singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	96.2353	0x177ae0
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?handle_message@CHostWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1891b0
