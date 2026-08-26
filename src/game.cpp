@@ -15378,9 +15378,45 @@ void CObjectType::~CObjectType()
 // only their named out-of-line members without changing any runtime caller.
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
-// The private bitset<70>::_Tidy at 0x4cfa10 remains unclaimed: these public
-// calls cannot emit it, and a whole-template instantiation would drag in a
-// broad, collision-prone COMDAT family.
+// Retail's real game callers also retain four private `_Tidy` COMDATs after
+// exhausting their inline budgets.  These narrow reset specializations take
+// the private member's address from inside its own class and make the anchor's
+// calls harmless ODR uses.  That retains the original Dinkumware bodies and
+// names without a collision-prone whole-template instantiation.
+#pragma auto_inline(off)
+template<> std::bitset<5>& std::bitset<5>::reset()
+{
+    typedef void (std::bitset<5>::*TidyMember)(unsigned long);
+    TidyMember volatile tidy = &std::bitset<5>::_Tidy;
+    (this->*tidy)(0);
+    return *this;
+}
+
+template<> std::bitset<8>& std::bitset<8>::reset()
+{
+    typedef void (std::bitset<8>::*TidyMember)(unsigned long);
+    TidyMember volatile tidy = &std::bitset<8>::_Tidy;
+    (this->*tidy)(0);
+    return *this;
+}
+
+template<> std::bitset<28>& std::bitset<28>::reset()
+{
+    typedef void (std::bitset<28>::*TidyMember)(unsigned long);
+    TidyMember volatile tidy = &std::bitset<28>::_Tidy;
+    (this->*tidy)(0);
+    return *this;
+}
+
+template<> std::bitset<70>& std::bitset<70>::reset()
+{
+    typedef void (std::bitset<70>::*TidyMember)(unsigned long);
+    TidyMember volatile tidy = &std::bitset<70>::_Tidy;
+    (this->*tidy)(0);
+    return *this;
+}
+#pragma auto_inline(on)
+
 #pragma inline_depth(0)
 void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<144>& artifacts,
@@ -15389,8 +15425,14 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::vector<type_university>& universities,
                                std::bitset<156>& availableHeroes,
                                std::bitset<28>& availableSkills,
-                               std::bitset<128>& objectTypes)
+                               std::bitset<128>& objectTypes,
+                               std::bitset<5>& spellLevels,
+                               std::bitset<8>& heroPool)
 {
+    spellLevels.reset();
+    heroPool.reset();
+    availableSkills.reset();
+    spells.reset();
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
@@ -15402,3 +15444,8 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     objectTypes.test(0);
 }
 #pragma inline_depth()
+
+VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
+VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
+VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
+VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
