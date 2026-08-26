@@ -135,7 +135,6 @@ unclaimed (no source binding)	243	0.0000	243	philai	wants_skill	reconstruct	no s
 inliner (predict-inline)	242	77.7273	1088	levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 over-inline (3 name-unresolvable pair(s) discounted)
 inliner (predict-inline)	238	87.6468	1927	findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (7 name-unresolvable pair(s) discounted)
 unclaimed (no source binding)	238	0.0000	238	events	advManager_do_event_undead_lair	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-control-flow (why-branch)	237	86.3678	1739	tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	237	0.0000	237	philai	AI_visit_university	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	237	89.6892	2297	ai	?choose_melee_target@combatManager@@QAEEPBVarmy@@EPAJPAUtype_AI_combat_parameters@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 control-flow (why-branch)	234	75.8636	968	victorylossconditions	?CheckForDefeatedHeroLoss@LossConditionStruct@@QAEEPBVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -352,6 +351,7 @@ inliner (predict-inline)	38	94.7045	721	resourcemanager	?GetPalette24@ResourceMa
 register-homing (why-reg)	38	93.8148	615	game	?SaveGame@game@@QAEEPBDEEEE@Z	why-reg	spill to dead-parameter slot (B4)
 inliner (predict-inline)	38	93.9578	626	hero	?mark_spells@@YI?AV?$bitset@$0EG@@std@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (11 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	38	93.1850	555	ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	why-reg	spill to dead-parameter slot (B4)
+register-homing (why-reg)	38	97.8264	1739	tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	38	84.7170	247	cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	38	96.1467	975	advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	38	84.1667	237	diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	why-reg	register-homing knob (B-family)
