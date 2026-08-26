@@ -154,6 +154,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_COPY_ASSIGN",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
+                 "BITSET_ITERATOR_DEREF",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
@@ -571,9 +572,10 @@ def unit_ir_names(path) -> dict | None:
     return None if ir is None else ir_va_names(ir)
 
 
-def _bitset_width(mangled: str) -> int | None:
-    """Decode VC6's non-type template argument in ``bitset<N>`` names."""
-    match = re.search(r"\?\$bitset@\$0([0-9A-P]+)@", mangled)
+def _template_width(mangled: str, template_name: str) -> int | None:
+    """Decode VC6's non-type argument in a one-width class template."""
+    match = re.search(
+        rf"\?\${re.escape(template_name)}@\$0([0-9A-P]+)@", mangled)
     if not match:
         return None
     encoded = match.group(1)
@@ -585,6 +587,10 @@ def _bitset_width(mangled: str) -> int | None:
             return None
         value = value * 16 + ord(digit) - ord("A")
     return value
+
+
+def _bitset_width(mangled: str) -> int | None:
+    return _template_width(mangled, "bitset")
 
 
 def _demangle_key(mangled: str):
@@ -641,6 +647,10 @@ def _demangle_key(mangled: str):
             if mangled.startswith(f"?{member}@?$bitset@"):
                 return (f"bitset{bitset_width}@bitset_"
                         f"{member.lstrip('_').lower()}")
+    iterator_width = _template_width(mangled, "bitset_iterator")
+    if iterator_width is not None and mangled.startswith(
+            "??D?$bitset_iterator@"):
+        return f"bitset{iterator_width}@bitset_iterator_deref"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -896,6 +906,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_ctor$" in r["name"]
                                or "$bitset_subscript$" in r["name"]
                                or "$bitset_reference_assign$" in r["name"]
+                               or "$bitset_iterator_deref$" in r["name"]
                                or "$bitset_flip$" in r["name"]
                                or "$bitset_count$" in r["name"]
                                or "$bitset_any$" in r["name"]
@@ -990,6 +1001,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$bitset_iterator_deref$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@bitset_iterator_deref", []).append(row)
             continue
         if "$tree_min$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1484,6 +1500,8 @@ def selftest() -> list[str]:
         "??0?$bitset@$0BM@@std@@QAE@K@Z": "bitset28@bitset_ctor",
         "??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z":
             "bitset145@bitset_subscript",
+        "??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ":
+            "bitset145@bitset_iterator_deref",
         "??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z":
             "bitset5@bitset_reference_assign",
         "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":
