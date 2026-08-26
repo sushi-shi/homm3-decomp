@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — four more public game STL helpers close through the late
+  emission anchor.** Retail's immediate bounds and element stride identify
+  52-byte `bitset<4>::test` at `0x4cf960`, 19-byte
+  `vector<type_university>::capacity` at `0x4cfa40`, 99-byte
+  `bitset<156>::set` at `0x4d0070`, and 52-byte `bitset<28>::test` at
+  `0x4d17d0`. Each is a named public already supported by a typed
+  `VA_COMPGEN` contract; extending the non-runtime game STL anchor makes VC6
+  emit all four byte-exact without disturbing an existing row.
+
+  The synchronized build reaches **2239/2672 linked exact**, **96.84% linked
+  fuzzy**, and **48.79% executable coverage** with every gate clean. Private
+  bitset `_Tidy` residuals remain excluded from this technique because public
+  calls cannot emit them and whole-template instantiation is too broad.
+
 - **2026-08-26 — the retained game `std::logic_error` constructor is exact.**
   Retail `0x4c3090` is Dinkumware's 354-byte string-taking
   `std::logic_error` constructor. Its public name fixes the class and overload,
