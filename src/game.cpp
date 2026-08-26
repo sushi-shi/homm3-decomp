@@ -6029,6 +6029,14 @@ static __forceinline bool test_new_map_spell(
     return spells[spell];
 }
 
+static __forceinline void assign_map_hero_name(
+    std::string& destination, const std::string& source)
+{
+#pragma inline_depth(0)
+    destination.assign(source, 0, std::string::npos);
+#pragma inline_depth()
+}
+
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
 // artifact/spell masks into the Complete-width live rows, then reads the
@@ -6248,6 +6256,136 @@ bool game::LoadMap(TAbstractFile* mapFile)
 
     return worldMap.Read(mapFile, mapHeader.Size, mapHeader.HasTwoLayers,
                          mapHeader.version) >= 0;
+}
+
+// Complete appends one optional customization record for each of the 156
+// fixed hero identities. Missing records leave SetupOrigData's defaults
+// intact; present fields overlay only the editor-selected portions. The
+// second argument is part of the proved retail arity (`ret 8`) but this body
+// never reads it.
+//
+// Residual (86.08842%, 2026-08-26): all 39 reachable blocks, every branch,
+// the 0x5c frame and the normal return are instruction-for-instruction exact.
+// The candidate has 42 blocks against retail's 40 solely because VC6 expands
+// two more layers of bitset<70>::set's unreachable range-error construction:
+// it expands basic_string::_Tidy and logic_error's constructor where retail
+// calls them. predict-inline reports the same six-call census on both sides
+// and identifies exactly those two over-inline decisions. inline_depth 1..4,
+// set/operator[] spellings and byte-inert candidate-site sweeps do not move
+// that decision in this compiland; depth zero incorrectly calls set itself.
+//
+// The artifact records are assigned as complete two-dword values. Besides
+// expressing the map format directly, that is the source shape which gives
+// retail's `movsx / store / or -1 / store` loop. assign_map_hero_name keeps
+// the returned string temporary as the direct assign argument while pinning
+// only assign itself, reproducing the complete normal-path cleanup transcript.
+VA(0x004c2ce0, 0x3A8)  // sole caller LoadMap + HeroExtra field-offset walk
+void game::read_map_hero_setups(TAbstractFile* mapFile, int mapVersion)
+{
+    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+        HeroExtra* heroRecord = &heroSetup[heroId];
+
+        char hasSetup;
+        mapFile->Read(&hasSetup, sizeof(hasSetup));
+        if (!hasSetup)
+            continue;
+
+        char customExperience;
+        mapFile->Read(&customExperience, sizeof(customExperience));
+        if (customExperience) {
+            heroRecord->bCustomExperience = 1;
+            int experience;
+            mapFile->Read(&experience, sizeof(experience));
+            heroRecord->Experience = experience;
+        }
+
+        char customSecondarySkills;
+        mapFile->Read(&customSecondarySkills,
+                      sizeof(customSecondarySkills));
+        if (customSecondarySkills) {
+            heroRecord->bCustomSecondarySkills = 1;
+            int numSecondarySkills;
+            mapFile->Read(&numSecondarySkills, sizeof(numSecondarySkills));
+            heroRecord->NumSecondarySkills = numSecondarySkills;
+            for (int skill = 0;
+                 skill < heroRecord->NumSecondarySkills; ++skill) {
+                char secondarySkill;
+                mapFile->Read(&secondarySkill, sizeof(secondarySkill));
+                heroRecord->secondarySkill[skill] = secondarySkill;
+                char secondarySkillLevel;
+                mapFile->Read(&secondarySkillLevel,
+                              sizeof(secondarySkillLevel));
+                heroRecord->secondarySkillLevel[skill] =
+                    secondarySkillLevel;
+            }
+        }
+
+        char customArtifacts;
+        mapFile->Read(&customArtifacts, sizeof(customArtifacts));
+        if (customArtifacts) {
+            heroRecord->bCustomArtifacts = 1;
+            for (int equipped = 0; equipped < 19; ++equipped) {
+                short artifact;
+                mapFile->Read(&artifact, sizeof(artifact));
+                heroRecord->artifacts[equipped] =
+                    type_artifact(artifact, -1);
+            }
+
+            short backpackCount;
+            mapFile->Read(&backpackCount, sizeof(backpackCount));
+            heroRecord->numInBackpack =
+                static_cast<unsigned char>(backpackCount);
+            for (int carried = 0;
+                 carried < heroRecord->numInBackpack; ++carried) {
+                short artifact;
+                mapFile->Read(&artifact, sizeof(artifact));
+                heroRecord->backpack[carried] =
+                    type_artifact(artifact, -1);
+            }
+
+            heroRecord->artifacts[hero::EQUIPPED_SLOT_WAR_MACHINE_4] =
+                type_artifact(ARTIFACT_CATAPULT, -1);
+        }
+
+        char customName;
+        mapFile->Read(&customName, sizeof(customName));
+        if (customName) {
+            heroRecord->customName = 1;
+            assign_map_hero_name(heroRecord->name,
+                                 ReadLengthPrefixedString(mapFile));
+        }
+
+        signed char sexByte;
+        mapFile->Read(&sexByte, sizeof(sexByte));
+        int sex = sexByte;
+        if (sex != -1)
+            heroRecord->sex = sex;
+
+        char customSpells;
+        mapFile->Read(&customSpells, sizeof(customSpells));
+        if (customSpells) {
+            heroRecord->customSpells = 1;
+            unsigned char spellMask[9];
+            mapFile->Read(spellMask, sizeof(spellMask));
+            for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                heroRecord->spells.set(
+                    spell,
+                    (spellMask[spell / 8] & (1 << (spell % 8))) != 0);
+            }
+        }
+
+        char customPrimarySkills;
+        mapFile->Read(&customPrimarySkills,
+                      sizeof(customPrimarySkills));
+        if (customPrimarySkills) {
+            heroRecord->customPrimarySkills = 1;
+            for (int skill = 0; skill < 4; ++skill) {
+                char primarySkill;
+                mapFile->Read(&primarySkill, sizeof(primarySkill));
+                heroRecord->primarySkills[skill] = primarySkill;
+            }
+        }
+    }
 }
 
 // PC-only post-header normalization. The available-hero bitset controls the
