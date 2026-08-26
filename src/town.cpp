@@ -349,12 +349,12 @@ int town::HasGarrison()
 // towns grant the five six-spell guild rows through Wisdom + 2; a Conflux
 // with its Grail grants every eligible spell outside the town's 70-bit veto
 // set, excluding Titan's Lightning Bolt.
-// Residual (95.0327%): all 37 retail blocks and both spell-granting paths are
-// reconstructed. VC6 proves `2 - (forceHero != 0)` is positive and removes
-// retail's otherwise-dead outer-loop `test`/`jle` preheader, shifting the
-// subsequent block layout. Making the count volatile and using a checked
-// `for` retain that branch but perturb the dominant register assignment and
-// score 92.92% and 87.28%, respectively.
+// Residual (99.92157%): the checked outer loop retains retail's preheader;
+// all 37 blocks and all 23 branch sequences now agree. The sole instruction
+// difference is at the ordinary Mage Guild loop latch: retail reloads `level`
+// before `this`, while VC6 schedules those two independent loads in reverse.
+// A 656-shape tree search plus clean loop, lifetime, condition, and CodeView-
+// backed const-member variants either emit this same order or score worse.
 #endif  // @carcass
 
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
@@ -365,7 +365,7 @@ void town::GiveSpells(hero* forceHero)
 
     int heroIndex = 0;
     int heroCount = 2 - (forceHero != 0);
-    do {
+    while (heroIndex < heroCount) {
         hero* currentHero;
         if (forceHero) {
             currentHero = forceHero;
@@ -401,7 +401,7 @@ void town::GiveSpells(hero* forceHero)
             }
         }
         ++heroIndex;
-    } while (heroIndex < heroCount);
+    }
 }
 
 #if 0  // @carcass
