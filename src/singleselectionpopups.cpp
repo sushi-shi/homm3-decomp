@@ -334,16 +334,38 @@ CHeroDlg::CHeroDlg(unsigned char newGameMode)
 {
 }
 
-#if 0  // @carcass -- located, not reconstructed
-
 // E:\gamedcs\singleselectionpopups.cpp:260
+// Residual (93.93%): all 24 blocks, 9 branches / 2 returns, and the ordered
+// call multiset agree. why-reg reports a 174-slot register-visible distance:
+// the Widgets vector base and per-widget allocation result trade EBX/EDI even
+// though their definition slots agree, the C1 front-end-handle-state class.
 VA(0x00575a90, 0x380)  // anchor-vtable CHeroDlg::CreateWin inlines CBitmapWidget (vtbl 0x641a34) + CSpriteWidget (vtbl 0x641a00) ctors, ret 0x18 (6 args), dc 0x12e3f0
 unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
 {
-    // @stub
-}
+    char sTemp[256];
 
-#endif  // @carcass
+    if (!Setup(250, 172, 300, 256))
+        return 0;
+
+    Add(new textWidget(30, 26, width - 60, 36,
+        gpGeneralText->GetText(78), "medfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+    Add(new CBitmapWidget((width - heroPick->Width) / 2, 56, heroPick));
+
+    sprintf(sTemp, DATA_COMPGEN(
+        0x0066033c, rolloverOwnedObjectFormat, "%s - %s"), heroName, desc);
+    Add(new textWidget(30, 91, width - 60, 18, sTemp,
+        "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+
+    Add(new textWidget(30, 122, width - 60, 36,
+        gpGeneralText->GetText(79), "medfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+    Add(new CSpriteWidget((width - specialtyIcon->Width) / 2, 149,
+        specialtyIcon, frame));
+    Add(new textWidget(30, specialtyIcon->Height + 151, width - 60, 36,
+        specialtyName, "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+    return 1;
+}
 
 // ============================================================================
 // CTownDlg
@@ -359,16 +381,63 @@ CTownDlg::CTownDlg(unsigned char newGameMode)
 // E:\gamedcs\singleselectionpopups.cpp:299
 VA_COMPGEN(0x00575e30, 0x21, SCALAR_DELETING_DTOR, CHeroDlg)  // vtbl 0x641a68/0x641a90/0x641ab8 slot0; ICF folds CTownDlg (dc 0x12f36c) + CTeamAlignmentDlg (dc 0x12f3a0) dtors, dc 0x12f338
 
-#if 0  // @carcass -- located, not reconstructed
-
 // E:\gamedcs\singleselectionpopups.cpp:302
+// Residual (87.28%): the 24-branch / 2-return sequence and ordered call
+// multiset agree. The remaining frame/register class is one slot (our 0x14
+// frame vs retail 0x18) plus a 273-slot visible distance. A bounded 1,785-form
+// depth-1..3 AST tree over 25 clean mutations found no improvement.
 VA(0x00575e60, 0x670)  // anchor-vtable CTownDlg::CreateWin inlines CSpriteWidget ctor (stores vtbl 0x641a00), ret 0xc (3 args), dc 0x12e708
 unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
 {
-    // @stub
-}
+    if (!Setup(272, 140, 256, 320))
+        return 0;
 
-#endif  // @carcass
+    Add(new textWidget(10, 26, width - 20, 36,
+        gpGeneralText->GetText(81), "medfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+    Add(new CSpriteWidget((width - town->Width) / 2, 60, town, frame));
+    Add(new textWidget(10, 95, width - 20, 18,
+        gUnnamed6a74f4[townType], "smalfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+    Add(new textWidget(10, 127, width - 20, 36,
+        gpGeneralText->GetText(80), "medfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+
+    int iconX = width / 2 - 68;
+    int textX = iconX - 10;
+    int creatureBase = townType * (2 * TOWN_DWELLING_COUNT);
+    int slot;
+    for (slot = 0; slot < 3; ++slot) {
+        int creature = gTownDwellingCreatures[creatureBase + slot];
+        iconWidget* portrait = new iconWidget(
+            iconX, 159, 32, 32, slot, "cprsmall.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+        Add(portrait);
+        portrait->SetIconFrame(creature + 2);
+        Add(new textWidget(textX, 193, 52, 32,
+            akCreatureTypeTraits[creature].m_name, "tiny.fnt",
+            font::PRIMARY, -1, 1, 0, 8));
+        iconX += 52;
+        textX += 52;
+    }
+
+    iconX = width / 2 - 88;
+    textX = iconX - 10;
+    for (slot = 3; slot < TOWN_DWELLING_COUNT; ++slot) {
+        int creature = gTownDwellingCreatures[creatureBase + slot];
+        iconWidget* portrait = new iconWidget(
+            iconX, 235, 32, 32, slot, "cprsmall.def",
+            0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+        Add(portrait);
+        portrait->SetIconFrame(creature + 2);
+        Add(new textWidget(textX, 267, 52, 32,
+            akCreatureTypeTraits[creature].m_name, "tiny.fnt",
+            font::PRIMARY, -1, 1, 0, 8));
+        iconX += 52;
+        textX += 52;
+    }
+    return 1;
+}
 
 // ============================================================================
 // CTeamAlignmentDlg
@@ -390,7 +459,9 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
 // shapes; follow-up trees measured 32 local lifetimes, 32 xStart computations,
 // and 20 CountNumPlayers inline-body forms. All clean variants were flat or
 // worse. `volatile xStart` cuts the distance to 8 but is not source evidence,
-// so it and TU-state noise remain deliberately excluded.
+// so it and synthetic TU-state noise remain deliberately excluded. Restoring
+// the two preceding real CreateWin bodies (CHeroDlg and CTownDlg), both with
+// retail-exact branch and call structure, leaves this score unchanged.
 VA(0x00576540, 0x3e8)  // anchor-vtable, dc 0x12eb24
 unsigned char CTeamAlignmentDlg::CreateWin()
 {
