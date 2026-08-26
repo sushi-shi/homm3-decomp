@@ -16,8 +16,13 @@
 // (GetCommand 92.5714 -> 92.5357 for ONE declarator) show it is
 // sensitive to. Both arms of the member below still describe the same
 // 48 bytes, so the class layout is identical everywhere.
-#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
+#if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW) \
+        || defined(HOMM3_ARMY_COPY_VIEW)
 #include <deque>
+#endif
+#ifdef HOMM3_ARMY_COPY_VIEW
+#include "resource.h"
+#include "monframeinfo.h"
 #endif
 
 class hero;
@@ -25,6 +30,59 @@ class armyGroup;
 class town;
 class sample;
 class CSprite;
+
+#ifdef HOMM3_ARMY_COPY_VIEW
+// Retail army copies retain each loaded sprite/sample by incrementing the
+// resource header's reference count, and release an already-built member
+// through virtual Dispose while unwinding.  The wrapper is one pointer wide;
+// this narrow view exposes that original member semantics only in the TU that
+// causes VC6 to retain army's compiler-generated copy constructor.
+template<class T>
+class TArmyResourceRef {
+public:
+    TArmyResourceRef(const TArmyResourceRef& that) : ptr(that.ptr)
+    {
+        if (ptr)
+            ++ptr->ReferenceCount;
+    }
+
+    ~TArmyResourceRef()
+    {
+        if (ptr)
+            ptr->Dispose();
+    }
+
+private:
+    resource* ptr;
+};
+
+// One embedded retail TCreatureTypeTraits row.  Keeping it as one named POD
+// member is significant for the retained copy constructor: VC6 copies the
+// 0x74-byte record with one rep-movsd, exactly as retail does.  The ordinary
+// views keep their directly named slices; ai_tactical qualifies the handful
+// of fields it reads through this faithful aggregate.
+struct TArmyCreatureTraitsCopy {
+    int townType;
+    int level;
+    const char* samplePrefix;
+    int field_0c;
+    int creatureId;
+    const char* name;
+    const char* pluralName;
+    int field_1c[9];
+    int AIValue;
+    int field_44[2];
+    int hitPoints;
+    int field_c4;
+    int attackSkill;
+    int defenseSkill;
+    int minDamage;
+    int maxDamage;
+    int shotsLeft;
+    int numSpellCasts;
+    int field_6c[2];
+};
+#endif
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -206,7 +264,18 @@ public:
     // animation loop then drives all five. They arrive as their own view
     // rather than by widening the move view because that one carries
     // twenty declarators cmbtmgr.obj has no use for.
-#ifdef HOMM3_ARMY_POW_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    // The retained copy proves these five animation-state bytes and the
+    // byte at +0x0c are independent members: retail copies each one and
+    // leaves their alignment bytes untouched.
+    unsigned char bShowAttackFrames;     // +0x00
+    unsigned char bShowRangeFrames;      // +0x01
+    signed char iShowAttackFrameType;    // +0x02
+    signed char iNextFrameType;          // +0x03
+    signed char iRemainingFramesToPlay;  // +0x04
+    int iDrawPriority;                   // +0x08
+    unsigned char field_0c;              // +0x0c
+#elif defined(HOMM3_ARMY_POW_VIEW)
     unsigned char bShowAttackFrames;     // +0x00
     unsigned char bShowRangeFrames;      // +0x01
     signed char iShowAttackFrameType;    // +0x02
@@ -241,7 +310,12 @@ public:
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
-#ifdef HOMM3_ARMY_ROUND_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    unsigned char bShowPowEffect;       // +0x20
+    int iMirrorSourceIndex;             // +0x24
+    int iMirrorDestIndex;               // +0x28
+    int iRoundsLeftBeforeVanish;        // +0x2c
+#elif defined(HOMM3_ARMY_ROUND_VIEW)
     // DC army.bShowPowEffect (members.csv army@32) and
     // army.iRoundsLeftBeforeVanish (army@44) - the low run this class
     // already pairs UNSHIFTED, IsMoving 48/+0x30 through origSpeed
@@ -292,7 +366,9 @@ public:
     // winmgr.h, bitmap16.h), which are army.cpp-local and move nothing.
     // Both arms spell the SAME four bytes, so the two views cannot
     // disagree about the layout; only the name is scoped.
-#ifdef HOMM3_ARMY_MOVE_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    unsigned char LetsPretendImNotHere; // +0x31
+#elif defined(HOMM3_ARMY_MOVE_VIEW)
     unsigned char LetsPretendImNotHere;  // +0x31
     char pad_32[0x2];
 #else
@@ -362,7 +438,11 @@ public:
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
-#ifdef HOMM3_ARMY_ROUND_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    int origWalkCycleTime;        // +0x68
+    int origHitPoints;            // +0x6c
+    int iLuckStatus;              // +0x70
+#elif defined(HOMM3_ARMY_ROUND_VIEW)
     // DC army.origWalkCycleTime (members.csv army@104), the slot the
     // iLuckStatus note below always placed here. Sliced 2026-08-20 by
     // CancelIndividualSpell (0x444510): its HASTE and SLOW arms both
@@ -395,6 +475,10 @@ public:
     // 0x78 is sMonInfo + 4, TCreatureTypeTraits::level. The embedded
     // record is not modelled as such yet; that is a layout change for
     // the whole army run.
+#ifdef HOMM3_ARMY_COPY_VIEW
+    TArmyCreatureTraitsCopy sMonInfo;  // +0x74 .. +0xe7
+    unsigned char show_fire_shield;    // +0xe8
+#else
     int monInfoTownType;          // +0x74 == sMonInfo.townType
     int monInfoLevel;             // +0x78 == sMonInfo.level
     // TCreatureTypeTraits::cSamplePrefix (+0x8 of the row), byte-proven
@@ -516,6 +600,7 @@ public:
 #else
     char pad_dc[0xd];
 #endif
+#endif  // HOMM3_ARMY_COPY_VIEW
     // NAMED 2026-08-15 from the Dreamcast member table, and the three
     // bytes come out of it as one run: DC army@212/213/214 are
     // show_fire_shield / bSomeUnitsDamaged / bAllUnitsKilled against
@@ -540,14 +625,18 @@ public:
     // out of the same shared `or eax,-1` it uses for originalIndex and
     // the iMirror pair, which is a second and independent witness that
     // +0xec is a dword field and not pad.
-#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_ROUND_VIEW)
+#ifdef HOMM3_ARMY_COPY_VIEW
+    int iPostPowSpellToCast;         // +0xec
+#elif defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_ROUND_VIEW)
     char pad_eb[0x1];
     int iPostPowSpellToCast;         // +0xec
 #else
     char pad_eb[0x5];
 #endif
     unsigned char hitByCreature;  // +0xf0
+#ifndef HOMM3_ARMY_COPY_VIEW
     char pad_f1[0x3];
+#endif
     // The side that OWNS this stack, written once by Init and never by
     // a spell: the hypnotize flip is applied ON READ by
     // get_controlling_side (0x440140), which is why is_enemy (0x442880)
@@ -582,6 +671,18 @@ public:
     // statement and nothing located yet reads it. BEHIND A VIEW like
     // every other name this header scopes: the bytes are identical in
     // both arms, only the name is TU-local.
+#ifdef HOMM3_ARMY_COPY_VIEW
+    // These five scalars precede the embedded SMonFrameInfo row in the
+    // Dreamcast roster and retail copies them individually.  Naming the
+    // already-proven 0x54-byte row itself gives VC6 retail's single
+    // 21-dword aggregate copy.
+    unsigned long iLastFidgetTime; // +0xfc
+    int field_100;                 // +0x100
+    int field_104;                 // +0x104
+    int bPowSequenceComplete;      // +0x108
+    char* yModify;                 // +0x10c
+    SMonFrameInfo sMonFrameInfo;   // +0x110 .. +0x163
+#else
 #ifdef HOMM3_ARMY_RANGE_VIEW
     // DC army.iLastFidgetTime (members.csv army@232, the flat +0x14
     // this band carries from hitByCreature onward - the same shift that
@@ -682,12 +783,17 @@ public:
     // frame count.
     int frameInfoAttackStartCycleTime; // +0x15c
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
+#endif
     // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
     // walk sequence's frame count through CSprite::GetNumFrames, which
     // is what fixes the type: the retail expansion is that inline's
     // exact three-part shape (numSequences at +0x28, validSeqMask at
     // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
+#ifdef HOMM3_ARMY_COPY_VIEW
+    TArmyResourceRef<CSprite> stdIcon;  // +0x164
+#else
     CSprite* stdIcon;             // +0x164
+#endif
     // DC army.missileIcon (members.csv army@340, right between stdIcon
     // @336 = +0x164 and image_height @344 = +0x16c). attack_wall
     // (0x445fd0) hands it to ShootBallisticMissile as the CSprite*
@@ -699,7 +805,10 @@ public:
     // view because this header is included tree-wide and the slice adds
     // declarators (see the include-set note at the top of army.cpp);
     // army.cpp is the only consumer.
-#ifdef HOMM3_ARMY_MIDPOINT_FIELD_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    TArmyResourceRef<CSprite> missileIcon;  // +0x168
+    int image_height;             // +0x16c
+#elif defined(HOMM3_ARMY_MIDPOINT_FIELD_VIEW)
     CSprite* missileIcon;         // +0x168
     int image_height;             // +0x16c
 #else
@@ -707,7 +816,11 @@ public:
 #endif
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
+#ifdef HOMM3_ARMY_COPY_VIEW
+    TArmyResourceRef<sample> armySample[8];  // +0x170
+#else
     sample* armySample[8];        // +0x170
+#endif
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
@@ -734,6 +847,18 @@ public:
     // ResetRound and the round view's other twenty-six declarators to
     // do it. HOMM3_ARMY_SPELL_ROW_VIEW opens the union alone, plus the
     // spell_level row it is paired with below.
+#ifdef HOMM3_ARMY_COPY_VIEW
+    // The retained implicit copy constructor sees the two spell tables as
+    // their original aggregate rows.  Opening the named-field union in this
+    // TU makes VC6 copy both spellInfluence arms; one row apiece is what the
+    // retail constructor proves with consecutive 81-dword rep-movsd runs.
+    int numSpellInfluences;       // +0x194
+    int spellInfluence[81];       // +0x198 .. +0x2db
+    int spell_level[81];          // +0x2dc .. +0x41f
+    typedef std::deque<int> TSpellQueue;
+    TSpellQueue SpellInfluenceQueue;  // +0x420 .. +0x44f
+    float PaletteEffect;          // +0x450 (DC army@1068)
+#else
 #if defined(HOMM3_ARMY_ROUND_VIEW) || defined(HOMM3_ARMY_SPELL_ROW_VIEW)
     int numSpellInfluences;       // +0x194
     // THE ROW ITSELF, and the array is retail's own model rather than
@@ -933,6 +1058,7 @@ public:
 #else
     char pad_2c4[0x190];
 #endif
+#endif
     // Retaliations left this round: simulate_attack (0x4359b0) only
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
@@ -1022,7 +1148,9 @@ public:
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
     float fireShieldStrength;     // +0x4a0
-#ifdef HOMM3_ARMY_ROUND_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    float poisonPenalty;              // +0x4a4
+#elif defined(HOMM3_ARMY_ROUND_VIEW)
     // DC army.poison_penalty (members.csv army@1152), the word straight
     // after fire_shield_strength 1148/+0x4a0 in the same DC run. It is
     // a MULTIPLIER, not a count: ResetRound subtracts 0.1f from it once
@@ -1051,7 +1179,12 @@ public:
     // that do not ask for the view: with neither view the run is still
     // one pad_4a4[0x14], and with the round view alone it is still
     // poisonPenalty + pad_4a8[0x10]. Every field is declared once.
-#ifdef HOMM3_ARMY_PROTECTION_VIEW
+#ifdef HOMM3_ARMY_COPY_VIEW
+    float protectionFromAirFactor;   // +0x4a8
+    float protectionFromFireFactor;  // +0x4ac
+    float protectionFromWaterFactor; // +0x4b0
+    float protectionFromEarthFactor; // +0x4b4
+#elif defined(HOMM3_ARMY_PROTECTION_VIEW)
     float protectionFromAirFactor;   // +0x4a8
     float protectionFromFireFactor;  // +0x4ac
     float protectionFromWaterFactor; // +0x4b0
@@ -1071,7 +1204,9 @@ public:
     // and the retail body loads each with a byte `mov`/`test` pair.
     unsigned char residualBlindness;  // +0x4c0
     unsigned char residualParalyze;   // +0x4c1
+#ifndef HOMM3_ARMY_COPY_VIEW
     char pad_4c2[0x2];
+#endif
     // Forgetfulness's mastery level, the gate can_shoot pairs with
     // forgetfulnessRounds: `>= 2` (advanced or expert) stops the stack
     // shooting outright. It does NOT land on any of the per-spell rows
@@ -1098,9 +1233,11 @@ public:
     // per-stack "this side has one of these" marker whose meaning that
     // latch does not name either. Behind the pow view, which the same
     // TU already defines.
-#ifdef HOMM3_ARMY_POW_VIEW
+#if defined(HOMM3_ARMY_POW_VIEW) || defined(HOMM3_ARMY_COPY_VIEW)
     unsigned char field_4d8;      // +0x4d8
+#ifndef HOMM3_ARMY_COPY_VIEW
     char pad_4d9[0x3];
+#endif
     // The DEFEND stance's banked defense bonus: new_turn (0x446e30)
     // subtracts it back out of defenseSkill and clears creatureId bit
     // 27 in the same breath, so the bit is "is defending" and this word
@@ -1173,7 +1310,9 @@ public:
     // either block.
 #if defined(HOMM3_ARMY_AURA_VIEW) || defined(HOMM3_ARMY_AURA_SOURCES_DECL)
     unsigned char is_area_effect_target;  // +0x4f1
+#ifndef HOMM3_ARMY_COPY_VIEW
     char pad_4f2[0x2];
+#endif
     std::vector<army*> bound_armies;   // +0x4f4
     std::vector<army*> binders;        // +0x504
     std::vector<army*> aura_clients;   // +0x514
@@ -1225,10 +1364,10 @@ public:
     // movsd` and no EH frame, so `army` owns non-trivial members
     // (the DC roster's std::vector<army*> / std::deque<SpellID>) -
     // declaring the pair here is what reproduces the retail calls.
-    // DECLARED, NOT DEFINED: the memberwise implicit form depends on the
-    // original source member granularity, which this partial layout does not
-    // yet preserve closely enough to reproduce the retained retail body.
-    army(const army& other);
+    // Let VC6 synthesize the memberwise copy constructor at its first use.
+    // This declaration used to suppress implicit generation while the class
+    // layout was still partial; the retained retail body at 0x437a00 is the
+    // compiler-generated constructor itself.
     ~army();
 
     // CONSTNESS THROUGHOUT THIS CLASS IS THE DUMP'S S_PUB32 MANGLED-NAME
@@ -1698,8 +1837,13 @@ public:
     // none of those bodies has.
     unsigned char Is(unsigned attribute) const
     {
+#ifdef HOMM3_ARMY_COPY_VIEW
+        return static_cast<unsigned char>(
+            static_cast<unsigned>(sMonInfo.creatureId) >> attribute);
+#else
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
+#endif
     }
 #ifdef HOMM3_ARMY_AREA_HIGHLIGHT_VIEW
     // DC Army.h:881, a class-body byte accessor. CycleCombatScreen is the
@@ -2074,8 +2218,13 @@ public:
 #if defined(HOMM3_ARMY_MOVE_VIEW) || defined(HOMM3_ARMY_CAN_RETALIATE_VIEW)
     unsigned char can_retaliate(const army& attacker) const
     {
+#ifdef HOMM3_ARMY_COPY_VIEW
+        return !(attacker.Is(16) & 1) && !spellInfluence[70]
+               && retaliationCount > 0;
+#else
         return !(attacker.Is(16) & 1) && !disabled_2b0
                && retaliationCount > 0;
+#endif
     }
 #endif
     // 0x446e30 (737 B), the DC roster's army::new_turn (army.cpp:5177,

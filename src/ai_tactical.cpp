@@ -31,6 +31,12 @@
 // check_adjacent_hexes breaks a tie toward the LONGER approach for the
 // two jousters.
 #define HOMM3_ARMY_SPELL_ROW_VIEW
+#define HOMM3_ARMY_COPY_VIEW
+// The retained army copy constructor at 0x437a00 must see the four actual
+// vector members rather than the byte-layout arm used by TUs that never copy
+// an army.  These two narrow declarations expose only that tail block.
+#define HOMM3_ARMY_RESET_LATCH_DECL
+#define HOMM3_ARMY_AURA_SOURCES_DECL
 #include <va.h>
 #include <math.h>
 #include <string.h>
@@ -42,6 +48,34 @@
 #include "spells.h"
 // cast_spell jitters the chosen spell's value through Random().
 #include "misc.h"
+
+static int creature_base_hit_points(TCreatureType type)
+{
+    return akCreatureTypeTraits[type].hitPoints;
+}
+
+// HOMM3_ARMY_COPY_VIEW restores the embedded traits row as one POD member so
+// VC6 copies it with retail's single rep-movsd.  Keep the reconstruction's
+// established field vocabulary at the call sites while making that aggregate
+// explicit in this TU.
+#define creatureId sMonInfo.creatureId
+#define hitPoints sMonInfo.hitPoints
+#define field_c4 sMonInfo.field_c4
+#define attackSkill sMonInfo.attackSkill
+#define defenseSkill sMonInfo.defenseSkill
+#define minDamage sMonInfo.minDamage
+#define maxDamage sMonInfo.maxDamage
+
+// In the copy view the spell-state storage stays in its original aggregate
+// row, avoiding the anonymous-union duplicate that VC6 would otherwise emit
+// in army's retained implicit copy constructor.  These are the five named
+// slots this TU reads outside its row-walking code.
+#define magicMirrorRounds spellInfluence[36]
+#define bloodlustRounds spellInfluence[43]
+#define hypnotizeFlag spellInfluence[60]
+#define disabled_290 spellInfluence[62]
+#define disabled_2b0 spellInfluence[70]
+#define disabled_2c0 spellInfluence[74]
 
 // The reference-returning min/max this TU's call sites were compiled
 // against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
@@ -223,6 +257,12 @@ double AI_value_of_luck(long luck, long change)
 // ai.obj's 0x420f00, the retail-only spell chooser that lane found.
 // The two anomalies corroborate each other.
 //
+// VC6 emits this non-trivial memberwise constructor at the first copy site
+// in this TU. Retail and the Dreamcast CodeView roster independently name
+// the same body; the direct-symbol compiler-generated claim keeps that
+// provenance distinct from an authored ai_tactical function.
+VA_COMPGEN(0x00437a00, 0x6FA, IMPLICIT_COPY_CTOR, army)
+
 // get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
 // ai_tactical.cpp:109 and 155) are claimed FURTHER DOWN, at 0x436620
 // and 0x436760: retail emits both after check_adjacent_hexes, which is
@@ -3633,7 +3673,7 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice, const ar
                                              creature_cast))
             continue;
         long resurrected = (akSpellTraits[choice.spell].mastery_bonus[choice.mastery]
-                            + akCreatureTypeTraits[victim->creatureType].hitPoints
+                            + creature_base_hit_points(victim->creatureType)
                             + choice.power)
                            * victim->numTroops / healed_army->hitPoints;
         long missing = healed_army->origNumTroops - healed_army->numTroops;

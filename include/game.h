@@ -235,6 +235,24 @@ struct TScenarioTown {
 };
 SIZE(TScenarioTown, 0x88);
 
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+// ProcessOnMapTowns consumes the same 0x88-byte map record through the
+// complete read-map view above and town::initialize's narrower TownExtra
+// view. The union is a representation bridge between those two admitted
+// layouts; both offsets and the common extent are independently proven.
+union TScenarioTownSetupView {
+    const TScenarioTown* scenarioTown;
+    const TownExtra* townExtra;
+};
+
+inline const TownExtra* town_setup_view(const TScenarioTown* setup)
+{
+    TScenarioTownSetupView view;
+    view.scenarioTown = setup;
+    return view.townExtra;
+}
+#endif
+
 class NewfullMap {
 public:
     // advManager::EraseObj indexes objects with a TWELVE-byte stride out of
@@ -2009,12 +2027,10 @@ public:
 // advmgr.obj joins the gate for the one declarator below. The guard is
 // SPLIT around it rather than moved, so the preprocessed text every
 // events-view consumer sees is unchanged, line for line.
-    // Retail-only 0x4ca780, 180 B, an ordinal placeholder on
-    // GameFn_004C7C50's convention. Loads aishield.pcx, blits it over the
-    // radar rect, calls UpdateScreen and latches gpAdvManager->field_38c;
-    // advManager::UpdateRadar is the caller that needs the declarator and
-    // the row is not claimed here.
-    void GameFn_004CA780();
+    // game.cpp:9720 in the Dreamcast roster (dc 0xb6538). Retail preserves
+    // the network-popup guard, aishield.pcx radar blit and field_38c latch
+    // at 0x4ca780; advManager::UpdateRadar is the other caller.
+    void ShowHeroesLogo();
     // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
     // twin of SetVisibility below and the same five parameters in the same
     // order. DoEventCoverOfDarkness is the caller that needs the
@@ -2023,21 +2039,22 @@ public:
                          int whichPlayer, int range);          // 0x49d3d0
 // advmgr.obj joins the gate for the declarator below (its Open calls the
 // sweep after SetInitialMapOrigin). Split guard, GameFn_004CA780's pattern.
-    // Retail-only 0x4c7c50, an ordinal placeholder. A no-argument sweep of
-    // all 156 hero records (stride 0x492)
-    // that re-runs game::SetVisibility for every hero still on the map -
-    // which is what has to happen after ResetVisibility blanks a disc.
-    // No surviving symbol names it; the row is not claimed here.
-    void GameFn_004C7C50();
+    // game.cpp:7978 in the Dreamcast roster (dc 0xb317c). Retail's four
+    // callers line up with the DC caller set (advManager::Open,
+    // DoEventCoverOfDarkness and the next daily-turn body), while the body
+    // has the same GetVisibility / HasBuilding / SetVisibility callee set
+    // and the same hero, town, mine, generator, garrison and shipyard
+    // sweeps. The retail row is 0x4c7c50.
+    void ResetAllPlayerVisibility();
     // Retail-only 0x4cbd40, an ordinal placeholder: HandleNetMsg's
     // game-transmit-init arm hands it the message's three leading
     // payload dwords, a set flag and the trailing byte; nonzero answer
     // lets the remote-load path run. Not claimed here.
     int GameFn_004CBD40(int a, int b, int c, int d, unsigned char e);
-    // Retail-only 0x4ca5b0, an ordinal placeholder on GameFn_004CA410's
-    // convention. advManager::Open calls it when the incoming player is
-    // not the local human; the row is not claimed here.
-    void GameFn_004CA5B0();
+    // game.cpp:9660 in the Dreamcast roster (dc 0xb635c). Retail preserves
+    // the computer-turn widget/update sweep at 0x4ca5b0; advManager::Open
+    // calls it when the incoming player is not the local human.
+    void ShowComputerScreen();
     // Open hands it the formatted turn banner and the acting game position
     // when the protocol is hotseat.
     void WaitForPlayer(char* text, int gamePos);          // 0x4ca840
@@ -2049,7 +2066,17 @@ public:
     // declarators enter its class-type stream. Reuse the existing sole-TU
     // gate until game.h's codegen-sensitive declaration surface is split.
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
+    void PerDay();
+    void PerWeek();
+    void PerMonth();
+    // Game.h:1390 in the DC roster. Retail expands this short calendar
+    // accessor at every game.obj call site and retains no standalone row.
+    short get_current_turn()
+    {
+        return (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e;
+    }
     void GiveTimeEventReward(const TTimedEvent* thisEvent);   // 0x4cd710
+    void CheckForTimeEvent();                                 // 0x4cd910
     void CheckForTownEvent();                                 // 0x4cda10
 #endif
     unsigned char get_random_lith(const std::vector<type_point>* points,
@@ -2123,6 +2150,19 @@ public:
     void ProcessOnMapTowns();
     void ProcessOnMapHeroes();
     void set_recruits(int player);
+    // Complete folds the recruit array into playerData and therefore takes
+    // the player position plus slot; the Dreamcast row instead receives an
+    // external two-entry array and a town alignment.
+    void replace_recruit(int playerPos, long recruitSlot);
+    bool GrowCoverOfDarkness();
+    // Complete's reset wrapper is a PC-only ABI expansion: the retail body
+    // receives the three values below and forwards them, plus a null stream,
+    // to InitNewGame.  The Dreamcast public retained a no-argument spelling.
+    void InitNewGame(int difficulty, int version,
+                     NewSMapHeader* mapHeader, TAbstractFile* infile);
+    void ResetGame(int difficulty, int version, NewSMapHeader* mapHeader);
+    void CancelComputerScreen();
+    int GetBoatsBuilt();
     void SetCannedRumour();
     void SetMapRumour();
     void SetSpecialRumour();
@@ -2338,10 +2378,10 @@ DATA(0x00677a54) extern const char* gTownCapitolObjectDefs[9];
 // Calendar-state globals saved across advManager::LoadRemote. Dreamcast
 // supplies the names; retail fixes these four dword cells and their paired
 // reset/restore use around game::LoadGame.
-DATA(0x00697750) extern int giMonthType;
-DATA(0x006983fc) extern int giMonthTypeExtra;
-DATA(0x00697748) extern int giWeekType;
-DATA(0x00698834) extern int giWeekTypeExtra;
+DATA(0x00697750) extern int giWeekType;
+DATA(0x006983fc) extern int giWeekTypeExtra;
+DATA(0x00697748) extern int giMonthType;
+DATA(0x00698834) extern int giMonthTypeExtra;
 // Shared UI text table: attack, defense, spell power, and knowledge.
 DATA(0x006a5390) extern const char* gPrimarySkillNames[4];
 DATA(0x00677978) extern int mine_production[6];
@@ -2364,6 +2404,9 @@ DATA(0x0069fbf8) extern int gNewMapStartingBonus[8];
 // gNetLocalGamePos.  StartLocalPlayerTurn later consumes the same cell;
 // no surviving symbol attests a semantic spelling.
 DATA(0x0069d810) extern int gUnnamed69d810;
+// advmgr.cpp owns the retail datum; ResetGame only clears the turn-control
+// latch after rebuilding the session.
+extern int gbThisNetGotAdventureControl;
 #endif
 DATA(0x0067814c) extern int gHeroGoldCost;
 DATA(0x0069774c) extern unsigned char gbUnk69774c;
@@ -2501,6 +2544,13 @@ extern int gLocalGamePos;                   // .bss 0x699554
 // gPlayerColorNames[color] over an empty/default name. Defined by a TU
 // not yet located - extern only (the bitNumber pattern).
 extern char* gPlayerColorNames[];           // .bss 0x6a7df8
+#ifdef HOMM3_GAME_SPECIAL_RUMOUR_DECLS
+// SetSpecialRumour shares the nine-way direction table with seer-hut quest
+// descriptions, and indexes the terrain-name table by a Grail cell's ground
+// set when producing the alternative location hint.
+extern const char* gQuestMonsterDirections[9];
+DATA(0x006a5d24) extern const char* const gGrailTerrainNames[];
+#endif
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call

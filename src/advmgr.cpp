@@ -828,7 +828,7 @@ int advManager::Open(int newPriority)
         ProcessHover(mouseX, mouseY);
     }
     if (!gpCurrentPlayer->IsLocalHuman())
-        gpGame->GameFn_004CA5B0();
+        gpGame->ShowComputerScreen();
 
     if (iMPNetProtocol == MP_HOTSEAT) {
         gUnnamed6993dc = 1;
@@ -837,7 +837,7 @@ int advManager::Open(int newPriority)
     bottomViewType = BOTTOM_VIEW_DEFAULT;
     bottomViewOverride = BOTTOM_VIEW_DEFAULT;
     gpSoundManager->AdjustSoundVolumes();
-    gpGame->GameFn_004C7C50();
+    gpGame->ResetAllPlayerVisibility();
     SetInitialMapOrigin();
     RedrawAdvScreen(1, 0);
 
@@ -6303,7 +6303,7 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 
     if (!gpCurrentPlayer->IsHuman() && field_38c == 0
         && (!gNetworkActive69954c || gbUnk691209))
-        gpGame->GameFn_004CA780();
+        gpGame->ShowHeroesLogo();
 
     if (!gNetworkActive69954c && !gpCurrentPlayer->IsHuman()
         && !gbUnk691209)

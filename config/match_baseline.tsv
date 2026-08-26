@@ -251,6 +251,7 @@ ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
+ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
 ai_tactical	??0type_AI_spellcaster@@QAE@PAVcombatManager@@JE@Z	93.1850	93.1850	93.1850	0x369c0
@@ -1091,12 +1092,14 @@ game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
+game	?CancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530
+game	?CheckForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910
 game	?CheckForTownEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcda10
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
 game	?ClaimGenerator@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xc67b0
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
-game	?ClaimTown@game@@QAEXHHEE@Z	97.9199	97.9199	97.9199	0xc61e0
+game	?ClaimTown@game@@QAEXHHEE@Z	99.3282	99.3282	99.3282	0xc61e0
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
@@ -1105,6 +1108,7 @@ game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	98.6076	0xca040
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
+game	?GetBoatsBuilt@game@@QAEHXZ	100.0000	100.0000	100.0000	0xccdd0
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20
 game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900
 game	?GetHeroBoat@game@@QAEPAVboat@@HE@Z	100.0000	100.0000	100.0000	0xce900
@@ -1116,14 +1120,16 @@ game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
 game	?GetNumThievesGuilds@game@@QAEHH@Z	100.0000	100.0000	100.0000	0xcce30
 game	?GetPlayerName@game@@QAEPADH@Z	100.0000	100.0000	100.0000	0xceb60
 game	?GetRandomArtifactId@game@@QAE?AW4TArtifact@@H@Z	94.7260	94.7260	94.7260	0xc94d0
-game	?GetRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	86.7929	86.7929	86.7929	0xc92c0
+game	?GetRandomMonster@game@@QAE?AW4TCreatureType@@HH@Z	92.2308	92.2308	92.2308	0xc92c0
 game	?GetRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0
 game	?GetStartingHeroId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb400
 game	?GetTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870
 game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160
 game	?GiveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000	100.0000	100.0000	0xca340
+game	?GiveTimeEventReward@game@@QAEXPBVTTimedEvent@@@Z	100.0000	100.0000	100.0000	0xcd710
 game	?GiveTroopsToNeutralTown@game@@QAEXH@Z	100.0000	100.0000	100.0000	0xbf570
 game	?Grow@generator@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8a60
+game	?GrowCoverOfDarkness@game@@QAE_NXZ	100.0000	100.0000	100.0000	0xc7ba0
 game	?HasCapitol@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xb9f40
 game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90
 game	?HeroExtraFn_004B8450@HeroExtra@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8450
@@ -1154,10 +1160,17 @@ game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.00
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
+game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0
+game	?PerMonth@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc8f40
+game	?PerWeek@game@@QAEXXZ	99.7274	99.7274	99.7274	0xc8780
+game	?ProcessOnMapHeroes@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcae10
+game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?RandomizeEvents@game@@QAEXXZ	86.9275	86.9275	86.9275	0xc0cc0
-game	?RandomizeHolyGrail@game@@QAEXXZ	99.9511	99.9511	99.9511	0xc0870
+game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870
 game	?Reset@SavedGameHeader@@QAEXXZ	100.0000	100.0000	100.0000	0xbc350
+game	?ResetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50
+game	?ResetGame@game@@QAEXHHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0xcecb0
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
 game	?Save@game@@QAEHPAVTAbstractFile@@@Z	96.4044	96.4044	96.4044	0xbe3f0
 game	?SaveAbstractString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60
@@ -1167,6 +1180,8 @@ game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
 game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbc20
 game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270
+game	?SetCannedRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xccf20
+game	?SetMapRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xccfb0
 # game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
 # promoted source names in the same change. Two are renames rather
 # than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
@@ -1176,11 +1191,15 @@ game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb
 # 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
 game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
 game	?SetRandomHeroArmies@game@@QAEXHHE@Z	100.0000	100.0000	100.0000	0xc9730
+game	?SetSpecialRumour@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd170
 game	?SetWagon@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc2390
 game	?SetWagon@ExtraInfoUnion@@QAEXW4EGameResource@@F@Z	100.0000	100.0000	100.0000	0xc2360
+game	?SetupAdjacentMons@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca410
 game	?SetupFirstPlayer@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0630
 game	?SetupOrigData@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbf1a0
 game	?SetupPuzzlePieces@game@@QAEHHH@Z	98.9637	98.9637	98.9637	0xbaf00
+game	?ShowComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca5b0
+game	?ShowHeroesLogo@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca780
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
@@ -1214,6 +1233,7 @@ game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba
 game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
 game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0
+game	?replace_recruit@game@@QAEXHJ@Z	100.0000	100.0000	100.0000	0xc86a0
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670
@@ -1767,6 +1787,7 @@ quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x130
 quicktownwindow	?QuickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30
 quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x130ca0
 quicktownwindow	?initialize_army_display@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990
+recruit	??0TRecruitWindow@@QAE@HHHPAVrecruitUnit@@@Z	99.0102	99.0102	99.0102	0x14e850
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	97.9750	97.9750	97.9750	0x151350
 recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	96.6709	96.6709	96.6709	0x151460
 recruit	??0recruitUnit@@QAE@PAVtown@@HH@Z	100.0000	100.0000	100.0000	0x151560
@@ -1776,6 +1797,11 @@ recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
+recruit	?Main@recruitUnit@@UAEHAAVmessage@@@Z	99.1111	99.1111	99.1111	0x150940
+recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0
+recruit	?QuickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750
+recruit	?QuickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780
+recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x14e800
 # DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
 # cause is PROVEN rather than guessed: recruit.cpp and every header it
 # sees are byte-identical to the pre-merge tree, yet this row moved
@@ -1811,6 +1837,7 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # generation moved, recruit.cpp and its headers untouched by the
 # regression commit. Same mechanism as above; hist keeps the peak.
 recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
+recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
@@ -1983,6 +2010,7 @@ resourcemanager	?lower_bound_iterator@TCacheMap@ResourceManager@@QAEPAUTCacheIte
 resourcemanager	@game_null_159510@12	77.3910	77.3910	77.3910	0x159510
 resourcemanager	@game_sprite_1599e0@12	70.5441	70.5441	70.5441	0x1599e0
 sacrifice_window	??0type_sacrifice_window@@QAE@PAVhero@@H@Z	100.0000	100.0000	100.0000	0x15fdd0
+sacrifice_window	??0type_skeleton_window@@QAE@PAVarmyGroup@@@Z	98.3508	98.3508	98.3508	0x1654f0
 sacrifice_window	??1type_sacrifice_window@@UAE@XZ	100.0000	100.0000	100.0000	0x1623a0
 sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60
 sacrifice_window	??_Gtype_sacrifice_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x160350
@@ -1992,15 +2020,20 @@ sacrifice_window	?ExitDialog@type_sacrifice_window@@MAEHPAVmessage@@@Z	100.0000	
 sacrifice_window	?WindowHandler@type_skeleton_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1666f0
 sacrifice_window	?all_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	86.7845	86.7845	86.7845	0x164340
 sacrifice_window	?all_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164cf0
+sacrifice_window	?all_creatures@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x1669f0
 sacrifice_window	?artifact_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x1632a0
 sacrifice_window	?backpack_click@type_sacrifice_window@@QAEXJE@Z	86.1308	86.1308	86.1308	0x1636c0
 sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@J@Z	100.0000	100.0000	100.0000	0x162660
+sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760
+sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0
 sacrifice_window	?creature_click@type_sacrifice_window@@QAEXJEE@Z	100.0000	100.0000	100.0000	0x164fe0
 sacrifice_window	?creature_click@type_skeleton_window@@QAEXJJE@Z	100.0000	100.0000	100.0000	0x166490
+sacrifice_window	?creature_slider_change@type_sacrifice_window@@CIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x165380
 sacrifice_window	?empty_backpack@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164060
 sacrifice_window	?exit_click@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164a80
+sacrifice_window	?exit_click@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x166b30
 sacrifice_window	?handle_click@type_army_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fda0
 sacrifice_window	?handle_click@type_artifact_offering_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd40
 sacrifice_window	?handle_click@type_backpack_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd10
@@ -2011,6 +2044,7 @@ sacrifice_window	?handle_widget_hover@type_skeleton_window@@UAEXPAVwidget@@@Z	10
 sacrifice_window	?max_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164de0
 sacrifice_window	?offering_click@type_sacrifice_window@@QAEXJE@Z	100.0000	100.0000	100.0000	0x163a80
 sacrifice_window	?sacrifice@type_sacrifice_window@@CIHAAVmessage@@@Z	96.6244	96.6244	96.6244	0x1646a0
+sacrifice_window	?sacrifice@type_skeleton_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x166c20
 sacrifice_window	?sacrifice_artifacts@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164e70
 sacrifice_window	?sacrifice_creatures@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x164910
 sacrifice_window	?scroll_backpack_left@type_sacrifice_window@@CIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x163da0
@@ -2020,6 +2054,7 @@ sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0
 sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x163150
 sacrifice_window	?set_creature_sacrifice@type_sacrifice_window@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x164c00
 sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b0
+sacrifice_window	?update@type_skeleton_window@@AAEXJJ@Z	100.0000	100.0000	100.0000	0x166030
 sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x1629e0
 sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x163a40
 sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0
@@ -2512,15 +2547,28 @@ tradpost	??_GTGiveResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e3690
 tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620
+tradpost	?ComputeTradeRatios@TSellArtifactWindow@@QAEXHHPAH00@Z	100.0000	100.0000	100.0000	0x1ecdc0
+tradpost	?ComputeTradeRatios@TSellCreatureWindow@@QAEXHHPAH00@Z	97.5961	97.5961	97.5961	0x1ece80
 tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
 tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
 tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0
+tradpost	?DoMarket@@YIXXZ	94.6104	94.6104	94.6104	0x1ea130
 tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0
 tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed850
+tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	98.5915	98.5915	98.5915	0x1ee6c0
+tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	84.4030	84.4030	84.4030	0x1eebd0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0
+tradpost	?Update@TGiveResourceWindow@@QAEX_N@Z	100.0000	100.0000	100.0000	0x1eaf50
+tradpost	?Update@TSellArtifactWindow@@QAEX_N@Z	95.7397	95.7397	95.7397	0x1ebe80
+tradpost	?Update@TSellCreatureWindow@@QAEX_N@Z	94.7292	94.7292	94.7292	0x1ec550
+tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed9e0
+tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
+tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	87.1958	87.1958	87.1958	0x1edf60
+tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ee890
+tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
 tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0

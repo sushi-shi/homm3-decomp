@@ -30,6 +30,7 @@
 #define HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
 #include "advmgr_objects.h"
 #include "advmgr.h"
+#include "bitset_iterator.h"
 #include "initialize.h"
 #include "terrain.h"
 #include <stdio.h>
@@ -45,6 +46,7 @@
 #define HOMM3_GAME_LOAD_TAIL_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_GAME_RANDOM_OBJECTS_DECLS
+#define HOMM3_GAME_SPECIAL_RUMOUR_DECLS
 #define HOMM3_GAME_TOWN_HEROES_DECLS
 #define HOMM3_GAME_VALIDATE_VLC_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
@@ -58,6 +60,9 @@
 #include "misc.h"
 #include "soundmgr.h"
 #include "smackmgr.h"
+#include "remote.h"
+#include "spellbookwindow.h"
+#include "townmgr_globals.h"
 // puzzlewindow.h contains the complete UI class and tile layout. game.obj
 // needs only this narrow cross-TU entry point; keeping the declaration here
 // avoids importing unrelated UI types into its codegen-sensitive closure.
@@ -83,6 +88,7 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "puzzlewindow.h"
 #include "resourcedisplay.h"
 #include "resourcemanager.h"
+#include "bitmap816.h"
 #include "herospec.h"
 #include "savegame.h"
 #include "winmgr.h"
@@ -126,6 +132,20 @@ inline TArtifact artifact_from_int(int value)
     } converted;
     converted.integer = value;
     return converted.artifact;
+}
+
+// The present retail hero layout records the class slot as a raw dword,
+// while GetNewHeroId's ABI uses THeroClass.  Preserve that representation
+// across the boundary without an enum cast (and therefore without changing
+// the codegen-sensitive hero.obj model).
+inline THeroClass hero_class_from_int(int value)
+{
+    union {
+        int integer;
+        THeroClass heroClass;
+    } converted;
+    converted.integer = value;
+    return converted.heroClass;
 }
 
 inline type_creature_bank_type creature_bank_type_from_int(int value)
@@ -193,6 +213,59 @@ const int SAVED_HERO_PRE25_SECOND = 0x81;
 const int HERO_PRE25_FIRST_REMAP = 0x92;
 const int HERO_PRE25_SECOND_REMAP = 0x9c;
 
+// E:\gamedcs\game.cpp's file-static `resources` row (dc game.obj static
+// 0x2ffc). Complete retains the same four rare-resource ids in retail
+// game.obj at 0x63e668; PerDay indexes it with Random(0, 3) for the
+// Rampart's Mystic Pond.
+DATA(0x0063e668) static const int resources[4] = {
+    MERCURY, SULFUR, CRYSTAL, GEMS
+};
+
+// E:\gamedcs\game.cpp's file-static `giMonType` row (DC type: const
+// char[12]). Retail PerMonth indexes these exact Complete-roster creature
+// ids when it rolls an ordinary creature month.
+DATA(0x0063e678) static const char giMonType[12] = {
+    0x68, 0x04, 0x0e, 0x1c, 0x55, 0x2c,
+    0x46, 0x48, 0x64, 0x14, 0x56, 0x3c
+};
+
+// Complete artifact 138, the Wizard's Well combination. PerDay is the
+// identifying retail body: wearing it restores full mana every day instead
+// of applying the ordinary Mysticism increment.
+const int ARTIFACT_WIZARDS_WELL_ID = 0x8a;
+
+// Calendar-period values written by PerWeek. The ordinary creature week is
+// followed by the Inferno Grail's forced Imp week.
+const int WEEK_TYPE_NORMAL = 0;
+const int WEEK_TYPE_CREATURE = 1;
+const int WEEK_TYPE_INFERNO_GRAIL = 2;
+const int WEEK_NAME_LAST = 14;
+const int WEEKS_PER_MONTH = 4;
+const int SPECIAL_WEEK_ROLL_MAX = 4;
+const int CREATURE_WEEK_GROWTH_BONUS = 5;
+const int CREATURE_IMP_ID = 0x2a;
+const int CREATURE_FAMILIAR_ID = 0x2b;
+const int MONTH_EFFECT_NORMAL = 0;
+const int MONTH_EFFECT_CREATURE = 1;
+const int MONTH_EFFECT_PLAGUE = 2;
+const int MONTH_ROLL_MAX = 10;
+const int MONTH_NORMAL_ROLL_MAX = 5;
+const int MONTH_CREATURE_ROLL_MAX = 9;
+const int MONTH_CREATURE_TABLE_LAST = 11;
+const int MONTH_MONSTER_SPAWN_ROLL_MAX = 200;
+const int MONTH_MONSTER_DISPOSITION_MAX = 10;
+const unsigned int HERO_RECRUIT_RESERVED_FLAG = 0x20000;
+const unsigned int HERO_WEEKLY_VISIT_FLAG = 2;
+const int RUMOUR_MAP_THRESHOLD = 33;
+const int RUMOUR_SPECIAL_THRESHOLD = 66;
+const int NEUTRAL_TOWN_OPEN_REINFORCEMENT_CHANCE = 40;
+const int NEUTRAL_TOWN_FORTIFIED_REINFORCEMENT_CHANCE = 80;
+
+// The 256 canned-rumour text pointers are filled by the game-data loader.
+// Its first store is 0x696d9c and SetCannedRumour is the table's only
+// runtime reader.
+DATA(0x00696d9c) extern const char* gCannedRumours[256];
+
 // The PC-only save-version remap is a real inline source boundary. Retail's
 // three expansions read through an unsigned dword buffer, keep the decoded id
 // in EAX, and join each direct-return arm at the caller's destination store.
@@ -238,6 +311,20 @@ const int START_LEVEL_CAMPAIGN = 8;
 const int START_LEVEL_SCENARIO = 3;
 const int START_LEVEL_HERO_ID = 151;
 const int START_LEVEL_BONUS = 5;
+
+const int CAMPAIGN_POPULATION_EVENT_CAMPAIGN = 8;
+const int CAMPAIGN_POPULATION_EVENT_SCENARIO = 0;
+const int CAMPAIGN_POPULATION_EVENT_DAY = 36;
+
+const int SPECIAL_RUMOUR_FIRST_CATEGORY = 6;
+const int SPECIAL_RUMOUR_LAST_CATEGORY = 9;
+const int SPECIAL_RUMOUR_ATTEMPTS = 200;
+const int SPECIAL_RUMOUR_CHANCE = 80;
+const int SPECIAL_RUMOUR_LOCATION_CHANCE = 50;
+const int SPECIAL_RUMOUR_CATEGORY_TEXT = 209;
+const int SPECIAL_RUMOUR_GRAIL_OBJECT_TEXT = 213;
+const int SPECIAL_RUMOUR_GRAIL_ABOVE_TEXT = 264;
+const int SPECIAL_RUMOUR_GRAIL_BELOW_TEXT = 265;
 
 const int FIRST_ARMAGEDDONS_BLADE_CAMPAIGN = 7;
 const int NEW_MAP_RUMOUR_MAP_THRESHOLD = 33;
@@ -1548,7 +1635,13 @@ int playerData::load(TAbstractFile* infile, int saveVersion)
 VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
 int playerData::save(TAbstractFile* outfile)
 {
-    char value = color;
+    unsigned long flags;
+    int number;
+    int count;
+    unsigned char flag;
+    char value;
+
+    value = color;
     if (outfile->Write(&value, sizeof(value)) < sizeof(value))
         return -1;
     value = numHeroes;
@@ -1558,9 +1651,8 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    int i;
-    for (i = 0; i < 8; i++) {
-        value = static_cast<char>(heroes[i]);
+    for (count = 0; count < 8; count++) {
+        value = static_cast<char>(heroes[count]);
         if (outfile->Write(&value, sizeof(value)) < sizeof(value))
             return -1;
     }
@@ -1572,11 +1664,11 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    unsigned char flag = startingNumHeroes;
+    flag = startingNumHeroes;
     if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
         return -1;
 
-    int number = personality;
+    number = personality;
     if (outfile->Write(&number, sizeof(number)) < sizeof(number))
         return -1;
 
@@ -1597,19 +1689,19 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&value, sizeof(value)) < sizeof(value))
         return -1;
 
-    for (i = 0; i < 0x48; i++) {
-        value = townIds[i];
+    for (count = 0; count < 0x48; count++) {
+        value = townIds[count];
         if (outfile->Write(&value, sizeof(value)) < sizeof(value))
             return -1;
     }
 
-    for (i = 0; i < 7; i++) {
-        number = resources[i];
+    for (count = 0; count < 7; count++) {
+        number = resources[count];
         if (outfile->Write(&number, sizeof(number)) < sizeof(number))
             return -1;
     }
 
-    unsigned long flags = MysticalGardenFlags;
+    flags = MysticalGardenFlags;
     if (outfile->Write(&flags, sizeof(flags)) < sizeof(flags))
         return -1;
     flags = MagicSpringFlags;
@@ -1626,11 +1718,14 @@ int playerData::save(TAbstractFile* outfile)
     if (outfile->Write(&flag, sizeof(flag)) < sizeof(flag))
         return -1;
 
-    // Residual (99.9557%, name-only relocation): the explicit bitset pointer
-    // and loop-counter lifetime reproduce retail's EBX/EDI roles, word clear,
-    // and complete byte-packing instruction stream.  The sole diff is our
-    // `_Xran` relocation name versus the delinker's unclaimed synthetic name
-    // for the same retail range-check callee.
+    // Residual (99.9557%): all 49 blocks, every branch and every opcode agree.
+    // The remaining operand deltas are one stack-home cycle: this compile puts
+    // count/flags/bits at -0xc/-0x8/-0x4, retail at -0x8/-0xc/-0x6. The int
+    // buffer at -0x10 and both byte buffers are exact. Dreamcast proves the
+    // top-scope uint_buffer/int_buffer/count/x/uchar_buffer/char_buffer roster;
+    // scoped counters and every declaration ordering measured flat or worse.
+    // The flat relocation view also spells the same bitset<12>::_Xran callee
+    // with a synthetic target label because its retail row is unclaimed.
     unsigned char bits[2];
     const std::bitset<12>* combinations = &assembledCombinations;
     unsigned int bit = 0;
@@ -5026,15 +5121,11 @@ void game::randomize_university(NewmapCell* cell)
 // counts diggable cells on the chosen level (flipping levels once if needed),
 // and selects one by ordinal on a second pass.
 //
-// 99.95109% wall: all 34 blocks, 22 branches, and every explicit instruction
-// are exact.  The only three objdiff lines are DIR32 symbol-label differences
-// at the same retail storage: our provisional gMapWidth/gMapHeight externs
-// resolve to 0x6783c8/0x6783cc, while the delinked target must still call them
-// data_2783c8/data_2783cc.  Neither datum's defining TU has been reconstructed,
-// and DATA() is definition-only, so claiming either on these header externs (or
-// manufacturing a game.cpp definition) would violate the annotation contract.
-// Moving numValidCells's initialization ahead of the four bound calculations
-// is essential: it reproduces retail's complete stack-slot/register schedule.
+// EXACT: all 34 blocks, 22 branches and all 554 bytes agree. Dreamcast's
+// distinct `z` level counter and `i` selection ordinal are material on x86:
+// reusing one function-scope local swaps their stack homes. Moving
+// numValidCells's initialization ahead of the four bound calculations is the
+// other load-bearing source-order detail.
 VA(0x004c0870, 0x22A)  // dc-order + is_diggable caller, dc 0xac1a4
 void game::RandomizeHolyGrail()
 {
@@ -5067,8 +5158,7 @@ void game::RandomizeHolyGrail()
     if (ultimateYHigh > gMapWidth - 9)
         ultimateYHigh = gMapWidth - 9;
 
-    int i;
-    for (i = 0; i < worldMap.GetNumLevels(); ++i) {
+    for (int z = 0; z < worldMap.GetNumLevels(); ++z) {
         for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
             for (int y = ultimateYLow; y <= ultimateYHigh; ++y) {
                 NewmapCell* tempCell =
@@ -5082,7 +5172,7 @@ void game::RandomizeHolyGrail()
         ultimateArtifactZ = 1 - ultimateArtifactZ;
     }
 
-    i = Random(0, numValidCells - 1);
+    int i = Random(0, numValidCells - 1);
     numValidCells = 0;
     for (int x = ultimateXLow; x <= ultimateXHigh; ++x) {
         for (int y = ultimateYLow; y <= ultimateYHigh; ++y) {
@@ -6139,17 +6229,15 @@ static int claim_town_team(game* thisGame, int playerNum)
 // Reusing that single index for both generator sweeps fixes the second
 // sweep's frame slot and raises 97.8269 -> 97.9199.
 //
-// Residual (97.9199%): both sides have 50 branches and one return. Retail
-// materialises the negated is_human_ally result (`test/sete/test/je`) where
-// this CL folds it to `test/jne`; `== false`, scoped bool/unsigned-char
-// result locals, and redeclaring the return unsigned char are byte-flat.
-// Retail's eight-player search also ends its miss path with `jge exit; jmp
-// loop`, against our equivalent `jl loop; jmp exit`; a top-tested `while`
-// is byte-flat. The remaining instruction-order rows are the two inlined
-// HasBuilding masks (built words versus constant masks loaded first).
-// Dreamcast proves exactly two HasBuilding calls, and why-reg finds identical
-// first bindings with a past-first-def divergence, so those are scheduler
-// transpositions rather than a license to replace the calls with mask tests.
+// Residual (99.3282%, 2026-08-26): the unbounded loop with an explicit
+// bottom break reproduces retail's `jge exit; jmp loop` miss path and also
+// puts both inlined HasBuilding masks into their exact schedule. All 76
+// blocks and the complete CFG now agree. The sole residual block is the
+// negated is_human_ally result: retail materialises it as
+// `test/sete/test/je`, while this CL folds it to `test/jne`. `== false`,
+// scoped bool/unsigned-char locals, and a force-inlined result adapter are
+// byte-flat, so the remaining delta is front-end boolean folding rather than
+// a missing operation.
 VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
 void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
 {
@@ -6179,12 +6267,15 @@ void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove
             if (newTeam >= 0) {
                 int player = 0;
                 signed char* teams = mapHeader.teamInfo;
-                for (; player < 8; ++player) {
+                for (;;) {
                     if (teams[player] == newTeam
                         && gpGame->IsHuman(player)) {
                         whichTown->field_02 = 0;
                         break;
                     }
+                    ++player;
+                    if (player >= 8)
+                        break;
                 }
             }
         }
@@ -6733,6 +6824,599 @@ void game::PerMonth()
 
 #endif  // @carcass
 
+// E:\gamedcs\game.cpp:7958
+// Every built Necropolis Cover of Darkness blanks a radius-20 visibility
+// disc for the town owner.  The retail mask loads are the two halves of
+// bitNumber[SPECIAL_BUILDING_ID], and the Dreamcast callee set independently
+// identifies town::HasBuilding and game::ResetVisibility.
+VA(0x004c7ba0, 0xAC)  // unique x86 twin + complete DC callee set
+bool game::GrowCoverOfDarkness()
+{
+    bool changed = false;
+    for (int i = 0; i < towns.size(); ++i) {
+        town* currentTown = &towns[i];
+        if (towns[i].type == TOWN_NECROPOLIS
+            && currentTown->HasBuilding(SPECIAL_BUILDING_ID, 0)) {
+            gpGame->ResetVisibility(currentTown->mapX, currentTown->mapY,
+                                    currentTown->mapZ, currentTown->owner,
+                                    20);
+            changed = true;
+        }
+    }
+    return changed;
+}
+
+// E:\gamedcs\game.cpp:7978
+// The retail and Dreamcast bodies traverse the same six owning pools and
+// finish with the same trigger-shipyard map sweep. The four retail callers
+// independently align with the DC caller graph; Complete adds only the
+// inlined Dinkumware vector and NewfullMap accessors expected on x86.
+VA(0x004c7c50, 0x389)  // unique body/caller/callee graph, dc 0xb317c
+void game::ResetAllPlayerVisibility()
+{
+    int i;
+    for (i = 0; i < HERO_COUNT; ++i) {
+        if (heroes[i].owner != -1) {
+            SetVisibility(heroes[i].x, heroes[i].y, heroes[i].z,
+                          heroes[i].owner, heroes[i].GetVisibility(), 0);
+        }
+    }
+
+    for (i = 0; i < towns.size(); ++i) {
+        int range = 5;
+        if (towns[i].type == TOWN_TOWER
+            && towns[i].HasBuilding(EXTRA_0_ID, 0)) {
+            range = 20;
+        }
+
+        if (towns[i].owner != -1) {
+            SetVisibility(towns[i].mapX, towns[i].mapY, towns[i].mapZ,
+                          towns[i].owner, range, 0);
+            if (field_1f63e == 1 && field_1f640 == 1 && field_1f642 == 1
+                && towns[i].type == TOWN_TOWER
+                && towns[i].HasBuilding(HOLY_GRAIL_ID, 0)) {
+                SetVisibility(gMapWidth / 2, gMapHeight / 2, 0,
+                              towns[i].owner, gMapWidth, 0);
+                if (worldMap.GetNumLevels() > 1) {
+                    SetVisibility(gMapWidth / 2, gMapHeight / 2, 1,
+                                  towns[i].owner, gMapWidth, 0);
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < mines.size(); ++i) {
+        if (mines[i].playerOwner != -1) {
+            SetVisibility(mines[i].mapX, mines[i].mapY, mines[i].mapZ,
+                          mines[i].playerOwner, 3, 0);
+        }
+    }
+
+    for (i = 0; i < generators.size(); ++i) {
+        if (generators[i].playerOwner != -1) {
+            SetVisibility(generators[i].mapX, generators[i].mapY,
+                          generators[i].mapZ, generators[i].playerOwner,
+                          3, 0);
+        }
+    }
+
+    for (i = 0; i < garrisons.size(); ++i) {
+        if (garrisons[i].playerOwner != -1) {
+            SetVisibility(garrisons[i].mapX, garrisons[i].mapY,
+                          garrisons[i].mapZ, garrisons[i].playerOwner,
+                          3, 0);
+        }
+    }
+
+    for (int z = 0; z < gpGame->worldMap.GetNumLevels(); ++z) {
+        for (int y = 0; y < gMapHeight; ++y) {
+            for (int x = 0; x < gMapWidth; ++x) {
+                NewmapCell* tempCell = gpGame->worldMap.cell(x, y, z);
+                ShipyardInfo* shipyardInfo = static_cast<ShipyardInfo*>(
+                    static_cast<void*>(&tempCell->extraInfo));
+                if (tempCell->is_trigger && tempCell->type == SHIPYARD
+                    && shipyardInfo->owner != -1) {
+                    SetVisibility(x, y, z, shipyardInfo->owner, 3, 0);
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:8094
+// The date rollover, town-delay, hero reset, production, mana and Mage Guild
+// phases align statement-for-statement with the Dreamcast line table. Retail
+// adds the Complete-era Wizard's Well arm and keeps the header GetMaxMana and
+// town::HasBuilding helpers inline.
+VA(0x004c7fe0, 0x462)  // unique successor/call graph + dc lines, dc 0xb3858
+void game::PerDay()
+{
+    ++field_1f63e;
+    if (!gbGameOver) {
+        if (field_1f63e > 7) {
+            field_1f63e = 1;
+            PerWeek();
+        }
+        if (static_cast<unsigned short>(field_1f640) > 4) {
+            field_1f640 = 1;
+            PerMonth();
+        }
+    }
+
+    int i;
+    for (i = 0; i < towns.size(); ++i) {
+        if (gpGame->setup.difficulty < 2) {
+            int team = towns[i].owner;
+            if (team >= 0)
+                team = mapHeader.teamInfo[team];
+            if (!is_human_ally(team) && towns[i].field_02) {
+                --towns[i].field_02;
+                continue;
+            }
+        }
+        towns[i].field_02 = 0;
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        hero* currHero = &heroes[i];
+        currHero->flags &= 0xfffdfffeU;
+        currHero->disguiseLevel = -1;
+        currHero->flightLevel = -1;
+        currHero->waterWalkLevel = -1;
+        currHero->field_129 = -1;
+        currHero->dWalkSpellsCast = 0;
+    }
+
+#pragma inline_depth(0)
+    if (GrowCoverOfDarkness())
+#pragma inline_depth()
+        ResetAllPlayerVisibility();
+
+    if (field_1f63e == 1) {
+        for (i = 0; i < towns.size(); ++i) {
+            town* current_town = &towns[i];
+            if (current_town->type == TOWN_RAMPART
+                && current_town->HasBuilding(SPECIAL_BUILDING_ID, 1)) {
+                current_town->field_38 = resources[Random(0, 3)];
+                current_town->field_34 = Random(1, 4);
+            } else {
+                current_town->field_38 = -1;
+                current_town->field_34 = 0;
+            }
+        }
+    }
+
+    calculate_production();
+    for (i = 0; i < 8; ++i) {
+        if (!playerDisabled[i]) {
+            long* production = players[i].turnProductionResource;
+            long* playerResources = players[i].resources;
+            for (int j = 0; j < NUM_RESOURCES; ++j)
+                playerResources[j] += production[j];
+        }
+    }
+
+    if (mapHeader.victoryCondition.CheckForTotalResources())
+        CheckEndGame(0);
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        hero* currHero = &heroes[i];
+        int iMaxMana = currHero->GetMaxMana();
+        if (currHero->IsWieldingArtifact(ARTIFACT_WIZARDS_WELL_ID)) {
+            if (iMaxMana > currHero->mana)
+                currHero->mana = iMaxMana;
+        } else {
+            int iTempMana = currHero->mana;
+            iTempMana += currHero->GetMysticismBonus();
+            if (iTempMana > iMaxMana)
+                iTempMana = iMaxMana;
+            if (iTempMana > currHero->mana)
+                currHero->mana = iTempMana;
+        }
+    }
+
+    for (i = 0; i < towns.size(); ++i) {
+        town* currTown = GetTown(i);
+        if (currTown->HasBuilding(MAGE_GUILD_ID, 1)) {
+            if (currTown->visitingHeroId != -1) {
+                hero* currHero = GetHero(currTown->visitingHeroId);
+                int iMaxMana = currHero->GetMaxMana();
+                if (iMaxMana > currHero->mana)
+                    currHero->mana = static_cast<short>(iMaxMana);
+            }
+            if (currTown->garrisonHeroId != -1) {
+                hero* currHero = GetHero(currTown->garrisonHeroId);
+                int iMaxMana = currHero->GetMaxMana();
+                if (iMaxMana > currHero->mana)
+                    currHero->mana = static_cast<short>(iMaxMana);
+            }
+        }
+    }
+
+    field_90 = 0;
+}
+
+// E:\gamedcs\game.cpp:8358
+// Complete owns the two recruit ids inside playerData.  It excludes the
+// opposite slot's hero class from the replacement roll, reserves the new
+// hero, restores mana from the clamped Knowledge/Intelligence calculation,
+// and rebuilds the default army.  The retail `ret 8` settles the PC-only
+// player-position/slot ABI against the Dreamcast's three-argument row.
+VA(0x004c86a0, 0xD5)  // unique x86 twin + retail arity/field layout
+void game::replace_recruit(int playerPos, long recruitSlot)
+{
+    THeroClass otherClass = kNumHeroClasses;
+    playerData* player = &players[playerPos];
+    if (player->recruits[1 - recruitSlot] != -1)
+        otherClass = hero_class_from_int(
+            GetHero(player->recruits[1 - recruitSlot])->heroClass);
+
+    int heroId = GetNewHeroId(playerPos, otherClass, 0, kNumHeroClasses);
+    player->recruits[recruitSlot] = heroId;
+    if (heroId != -1) {
+        heroAvailability[heroId] = 64;
+        heroes[heroId].mana = static_cast<short>(heroes[heroId].GetMaxMana());
+        SetRandomHeroArmies(heroId, 0, 1);
+    }
+}
+
+// E:\gamedcs\game.cpp:8398
+// Complete's weekly pass retains the Dreamcast phase order and call graph,
+// but its creature domain includes the Complete roster and its map-cell
+// monster count uses the retail split 16-bit encoding. The retail successor
+// relationship from PerDay and predecessor relationship to PerMonth close the
+// otherwise ambiguous Dreamcast bracket.
+//
+// Residual (99.7274%): the full 128-block retail CFG and every operation agree.
+// The opening creature-week scan has the C1 handle-state ESI/EDI permutation
+// (`this` versus `i`) that why-reg proves source-unaddressable, and the neutral
+// fortification test retains one D3/D13 cross-jumped `jne` versus retail's
+// `je`. The remaining printed differences are cosmetic relocation names.
+VA(0x004c8780, 0x7B7)  // PerDay/PerMonth bracket + dc lines/callees, dc 0xb41e0
+void game::PerWeek()
+{
+    TCreatureType bonus_creature = CREATURE_NONE;
+    TCreatureType alternate_bonus = CREATURE_NONE;
+    long bonus_amount;
+    int iAlign;
+    int i = 0;
+
+    giWeekType = WEEK_TYPE_NORMAL;
+    giWeekTypeExtra = Random(0, WEEK_NAME_LAST);
+    bonus_amount = CREATURE_WEEK_GROWTH_BONUS;
+
+    if (field_1f640 != WEEKS_PER_MONTH
+        && Random(1, SPECIAL_WEEK_ROLL_MAX) == 1) {
+        giWeekType = WEEK_TYPE_CREATURE;
+
+        for (iAlign = f_1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+             iAlign--;) {
+            if ((f_1f698
+                 || (iAlign != CREATURE_AIR_ELEMENTAL
+                     && iAlign != CREATURE_EARTH_ELEMENTAL
+                     && iAlign != CREATURE_FIRE_ELEMENTAL
+                     && iAlign != CREATURE_WATER_ELEMENTAL))
+                && akCreatureTypeTraits[iAlign].townType != -1
+                && akCreatureTypeTraits[iAlign].level >= 0)
+                ++i;
+        }
+
+        i = rand() % i;
+        for (iAlign = f_1f698 ? CREATURE_CATAPULT : CREATURE_PIXIE;
+             iAlign--;) {
+            if ((f_1f698
+                 || (iAlign != CREATURE_AIR_ELEMENTAL
+                     && iAlign != CREATURE_EARTH_ELEMENTAL
+                     && iAlign != CREATURE_FIRE_ELEMENTAL
+                     && iAlign != CREATURE_WATER_ELEMENTAL))
+                && akCreatureTypeTraits[iAlign].townType != -1
+                && akCreatureTypeTraits[iAlign].level >= 0) {
+                if ((f_1f698
+                     || iAlign == CREATURE_AIR_ELEMENTAL
+                     || iAlign == CREATURE_EARTH_ELEMENTAL
+                     || iAlign == CREATURE_FIRE_ELEMENTAL
+                     || iAlign == CREATURE_WATER_ELEMENTAL
+                     || akCreatureTypeTraits[iAlign].townType != TOWN_CONFLUX)
+                    && i-- <= 0)
+                    break;
+            }
+        }
+        giWeekTypeExtra = iAlign;
+        bonus_creature = creature_type_from_int(iAlign);
+    }
+
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].type == TOWN_INFERNO
+            && towns[i].HasBuilding(HOLY_GRAIL_ID, 0)) {
+            giWeekType = WEEK_TYPE_INFERNO_GRAIL;
+            bonus_creature = creature_type_from_int(CREATURE_IMP_ID);
+            alternate_bonus = creature_type_from_int(CREATURE_FAMILIAR_ID);
+            bonus_amount = akCreatureTypeTraits[CREATURE_IMP_ID].growthRate;
+            giWeekTypeExtra = CREATURE_IMP_ID;
+            break;
+        }
+    }
+
+    for (i = 0; i < towns.size(); ++i)
+        towns[i].increase_population(
+            bonus_creature, alternate_bonus, bonus_amount);
+
+    for (i = 0; i < towns.size(); ++i)
+        towns[i].field_33 = 1;
+
+    ++field_1f640;
+
+    for (i = 0; i < 8; ++i) {
+        for (int j = 0; j < 2; ++j) {
+            int heroId = players[i].recruits[j];
+            if (heroId >= 0) {
+#pragma inline_depth(0)
+                hero* recruitHero = GetHero(heroId);
+#pragma inline_depth()
+                if (!(recruitHero->flags & HERO_RECRUIT_RESERVED_FLAG)) {
+                    heroAvailability[heroId] = -1;
+                    players[i].recruits[j] = -1;
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < 8; ++i) {
+        if (!playerDisabled[i])
+            set_recruits(i);
+    }
+
+    for (i = 0; i < generators.size(); ++i) {
+        generator* current_generator = &generators[i];
+#pragma inline_depth(0)
+        current_generator->Grow(0);
+#pragma inline_depth()
+    }
+
+    int x;
+    int y;
+    int z;
+    NewmapCell* map_cell;
+    hero* obscuring_hero;
+    int luck_bonus;
+
+    for (z = 0; z < worldMap.GetNumLevels(); ++z) {
+        y = 0;
+        if (gMapHeight > 0) {
+            do {
+                for (x = 0; x < gMapWidth; ++x) {
+                map_cell = worldMap.cell(x, y, z);
+                if (!map_cell->is_trigger)
+                    continue;
+
+                if (map_cell->type != HERO) {
+                    obscuring_hero = 0;
+                } else {
+                    if (map_cell->extraInfo == static_cast<unsigned long>(-1))
+                        obscuring_hero = 0;
+                    else
+                        obscuring_hero = &heroes[map_cell->extraInfo];
+                    obscuring_hero->restore_cell();
+                }
+
+                switch (map_cell->type) {
+                case MAGIC_SPRING:
+                    map_cell->extraInfo |= 0x40;
+                    break;
+
+                case MONSTER: {
+                    if (!(map_cell->extraInfo & 0x40000)) {
+                        int iCount = ((map_cell->extraInfo & 0xfff) << 4)
+                            + ((map_cell->extraInfo >> 27) & 0xf);
+                        int iIncrease = iCount / 10;
+                        iCount += iIncrease;
+                        if (iCount > 64000)
+                            iCount = 64000;
+                        volatile unsigned long* packed_info =
+                            &map_cell->extraInfo;
+                        // The retail setter reloads the packed dword before
+                        // replacing its split count lanes.
+                        unsigned long original_info = *packed_info;
+                        map_cell->extraInfo =
+                            ((iCount >> 4) & 0xfff)
+                            | ((iCount & 0xf) << 27)
+                            | (original_info & 0x87fff000);
+                    }
+                    break;
+                }
+
+                case MYSTICAL_GARDEN: {
+                    int resource = Random(0, 1) ? GOLD : GEMS;
+                    map_cell->extraInfo =
+                        (map_cell->extraInfo & 0xfffffc3f)
+                        | (((resource & 0xf) | 0x10) << 6);
+                    break;
+                }
+
+                case REFUGEE_CAMP: {
+                    TCreatureType creature = gpGame->GetRandomMonster(0, 6);
+                    map_cell->objectIndex = creature;
+                    map_cell->extraInfo =
+                        akCreatureTypeTraits[creature].growthRate;
+                    break;
+                }
+
+                case WATER_WHEEL: {
+                    map_cell->extraInfo =
+                        (map_cell->extraInfo & 0xffffffe2) | 2;
+                    break;
+                }
+
+                case WINDMILL: {
+                    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+                        static_cast<void*>(&map_cell->extraInfo));
+                    int resQty = Random(3, 6);
+                    EGameResource resType =
+                        game_resource_from_int(Random(1, 5));
+                    info->set_windmill(resType, resQty);
+                    break;
+                }
+
+                case FOUNTAIN_OF_FORTUNE: {
+                    luck_bonus = Random(0, 3);
+                    if (luck_bonus == 0)
+                        map_cell->extraInfo =
+                            map_cell->extraInfo | 0x1e000;
+                    else
+                        map_cell->extraInfo =
+                            (map_cell->extraInfo & 0xfffe1fff)
+                            | ((luck_bonus & 0xf) << 13);
+                    break;
+                }
+                }
+
+                if (obscuring_hero)
+                    obscuring_hero->obscure_cell();
+                }
+                ++y;
+            } while (y < gMapHeight);
+        }
+    }
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        hero* currHero = &heroes[i];
+        if (currHero->flags & HERO_WEEKLY_VISIT_FLAG)
+            currHero->flags -= HERO_WEEKLY_VISIT_FLAG;
+    }
+
+    int rumourType = Random(1, 100);
+    if (rumourType < RUMOUR_MAP_THRESHOLD)
+        SetCannedRumour();
+    else if (rumourType < RUMOUR_SPECIAL_THRESHOLD)
+        SetMapRumour();
+    else
+        SetSpecialRumour();
+
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].owner < 0) {
+            if ((towns[i].built & bitNumber[CASTLE_FORT_ID])
+                || (towns[i].built & bitNumber[CASTLE_CITADEL_ID])
+                || (towns[i].built & bitNumber[CASTLE_CASTLE_ID])) {
+                if (Random(0, 100)
+                    < NEUTRAL_TOWN_FORTIFIED_REINFORCEMENT_CHANCE)
+                    GiveTroopsToNeutralTown(i);
+            } else {
+                if (Random(0, 100)
+                    < NEUTRAL_TOWN_OPEN_REINFORCEMENT_CHANCE)
+                    GiveTroopsToNeutralTown(i);
+            }
+        }
+    }
+
+    for (i = 0; i < 8; ++i) {
+        if (!playerDisabled[i]) {
+            for (int j = 0; j < players[i].numTowns; ++j) {
+                town* current_town = GetTown(players[i].townIds[j]);
+                if (current_town->type == TOWN_DUNGEON
+                    && current_town->HasBuilding(EXTRA_1_ID, 1))
+                    current_town->SetSummoningGenerator();
+            }
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:8593
+// The monthly calendar pass is the retail successor of PerWeek and the
+// direct target of PerDay. It selects a normal, creature, or plague month;
+// applies the population effect to every town; scatters creature-month
+// stacks onto eligible map cells; refreshes adjacency and the seven Black
+// Market artifact slots; and redraws the adventure map. The Dreamcast
+// line/local/callee roster fixes that phase order, while Complete's retail
+// bytes fix the twelve-creature table and packed monster fields.
+VA(0x004c8f40, 0x378)  // PerWeek/GetRandomMonster bracket, dc 0xb47b8
+void game::PerMonth()
+{
+    const int NUM_CREATURE_MONTH_CREATURES = 14;
+    int growth;
+    int x;
+    int y;
+    int i;
+    NewmapCell* tempCell;
+    int z;
+    int j;
+    town* currTown;
+
+    ++field_1f642;
+    int month_roll = Random(1, MONTH_ROLL_MAX);
+    if (giWeekType == WEEK_TYPE_INFERNO_GRAIL) {
+        giMonthTypeExtra = MONTH_EFFECT_CREATURE;
+        giMonthType = CREATURE_IMP_ID;
+    } else if (month_roll > MONTH_NORMAL_ROLL_MAX && !field_1f69d) {
+        if (month_roll <= MONTH_CREATURE_ROLL_MAX) {
+            giMonthTypeExtra = MONTH_EFFECT_CREATURE;
+            giMonthType = giMonType[Random(0, MONTH_CREATURE_TABLE_LAST)];
+        } else {
+            giMonthTypeExtra = MONTH_EFFECT_PLAGUE;
+        }
+    } else {
+        giMonthTypeExtra = MONTH_EFFECT_NORMAL;
+        giMonthType = Random(0, MONTH_CREATURE_ROLL_MAX);
+    }
+
+    for (i = 0; i < towns.size(); ++i) {
+        for (j = 0; j <= NUM_CREATURE_MONTH_CREATURES; ++j) {
+            currTown = GetTown(i);
+            growth = currTown->get_growth_rate(j);
+            if (growth > 0) {
+                if (giMonthTypeExtra == MONTH_EFFECT_CREATURE
+                    && giWeekType != WEEK_TYPE_INFERNO_GRAIL
+                    && gTownDwellingCreatures[
+                        currTown->type * TOWN_DWELLING_SLOTS + j]
+                       == giMonthType) {
+                    currTown->population[j] *= 2;
+                }
+
+                if (giMonthTypeExtra == MONTH_EFFECT_PLAGUE) {
+                    growth = currTown->get_growth_rate(j);
+                    currTown->population[j] -= growth;
+                    if (currTown->population[j] < 0)
+                        currTown->population[j] = 0;
+                    currTown->population[j] >>= 1;
+                }
+            }
+        }
+    }
+
+    if (giMonthTypeExtra == MONTH_EFFECT_CREATURE) {
+        for (z = 0; z < worldMap.GetNumLevels(); ++z) {
+            for (y = 0; y < gMapWidth; ++y) {
+                for (x = 0; x < gMapHeight; ++x) {
+                    tempCell = worldMap.cell(x, y, z);
+                    if (!tempCell->is_trigger
+                        && tempCell->Passable
+                        && tempCell->GroundSet != eTerrainWater
+                        && tempCell->GroundSet != eTerrainRock
+                        && tempCell->type != EVENT
+                        && Random(1, MONTH_MONSTER_SPAWN_ROLL_MAX) == 1) {
+                        InsertObject(x, y, z, RANDOM_MONSTER,
+                                     giMonthType, 0);
+                        tempCell->monster_info.qty = 2 * Random(
+                            akCreatureTypeTraits[giMonthType].wanderingLow,
+                            akCreatureTypeTraits[giMonthType].wanderingHigh);
+                        tempCell->monster_info.disposition =
+                            Random(1, MONTH_MONSTER_DISPOSITION_MAX);
+                    }
+                }
+            }
+        }
+        SetupAdjacentMons();
+    }
+
+    field_1f664[0] = GetRandomArtifactId(2);
+    field_1f664[1] = GetRandomArtifactId(2);
+    field_1f664[2] = GetRandomArtifactId(2);
+    field_1f664[3] = GetRandomArtifactId(4);
+    field_1f664[4] = GetRandomArtifactId(4);
+    field_1f664[5] = GetRandomArtifactId(4);
+    field_1f664[6] = GetRandomArtifactId(8);
+    gpAdvManager->CompleteDraw(0);
+}
+
 // E:\gamedcs\game.cpp:8707
 // Roll a creature id whose level falls in [minLevel, maxLevel], out of a
 // bitset that starts all-ones and is punched down by the expansion and
@@ -6750,33 +7434,25 @@ void game::PerMonth()
 // neutral specials go, plus, in a Shadow of Death campaign, the ten
 // Conflux-exclusive creatures.
 //
-// Every strike is spelled `monsterOk[id] = false;` UNIFORMLY. Retail
-// shows three different shapes for it - a bare call to bitset::set, an
-// inlined operator[] with an out-of-line reference::operator=, and both
-// out of line - but that is /Ob2 budget decay across one source
-// spelling, not three spellings. Do not write .set() for some of them.
+// Every strike is spelled `monsterOk[id] = false;` uniformly. Retail shows
+// three different shapes for it - a bare call to bitset::set, an inlined
+// operator[] with an out-of-line reference::operator=, and both out of line -
+// because /Ob2's budget decays across one source spelling.
 //
 // The final scan has NO bound and no `count() == 0` guard: on an empty
 // bitset retail rolls Random(0, -1) and walks off the end. Transcribed
 // faithfully.
 //
-// Residual (86.7929%): ONE block, the no-expansion clear loop. Every
-// other instruction pairs off - the thirteen strike-out calls, the
-// traits sweep, count/Random and the final scan all match, and the
-// remaining rows are cosmetic reloc names (the STL COMDATs and
-// gbUnk69774c have no name on the target side yet). Retail's loop
-// variable there is an EIGHT-BYTE object {bitset<145>*, size_t}: it
-// calls a nullary const member that returns a copy of both words by
-// value (0x4d4ca0) and then reference::operator= on the temporary, and
-// its exit test compares BOTH fields against {&monsterOk, 145}. That is
-// a bitset ITERATOR - `for (it = begin() + CREATURE_PIXIE; it != end();
-// ++it) *it = false;` - and VC6's std::bitset has none, so the type came
-// from the game's own source. 0x4d4ca0 has exactly one caller in the
-// whole image, so nothing else can pin it, and no name for it exists in
-// this tree. An index loop is the closest spelling available; binding
-// each element to a named bitset<145>::reference first was measured and
-// changes nothing (86.7929 either way) because VC6 folds operator[] plus
-// reference::operator= straight back into bitset::set.
+// Residual (92.2308%): the eight-byte pointer/offset iterator is now
+// reconstructed. Retail's 0x4d4ca0 helper copies those two words into a
+// bitset::reference, while Dreamcast CodeView independently exposes the same
+// `_Bit_iter` layout and operator*. This recovers retail's 0x24-byte frame,
+// all 19 blocks, all 10 branches, and the complete no-expansion loop.
+// Six blocks remain: VC6 deletes retail's otherwise-dead default offset zero;
+// two late strike-outs are one call deeper in retail's /Ob2 phase; the traits
+// sweep and final selection carry three scratch-register scheduling ties.
+// Explicitly pinning the late strike calls makes that block exact but shifts
+// the final scan and scores 91.63%; making the offset volatile scores 82.28%.
 VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
 TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
 {
@@ -6789,8 +7465,14 @@ TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
     monsterOk.set();
 
     if (!f_1f698) {
-        for (i = CREATURE_PIXIE; i < CREATURE_CATAPULT; ++i)
-            monsterOk[i] = false;
+        bitset_iterator<CREATURE_CATAPULT> it;
+        it = bitset_iterator<CREATURE_CATAPULT>(monsterOk, CREATURE_PIXIE);
+        bitset_iterator<CREATURE_CATAPULT> end(monsterOk, CREATURE_CATAPULT);
+        for (; it != end; ++it) {
+#pragma inline_depth(0)
+            *it = false;
+#pragma inline_depth()
+        }
     } else {
         monsterOk[CREATURE_AZURE_DRAGON] = false;
         monsterOk[CREATURE_CRYSTAL_DRAGON] = false;
@@ -7448,6 +8130,132 @@ void game::ShowHeroesLogo()
 
 // E:\gamedcs\game.cpp:9748
 #endif  // @carcass
+
+// E:\gamedcs\game.cpp:9596
+// Rebuild the map-extra monster-adjacency bit for every square.  The
+// Dreamcast caller/callee graph fixes the identity; retail independently
+// fixes the x/y/z loop order, the invalid excluded point, and both sides of
+// the 0x100 flag update.
+//
+// EXACT 2026-08-26. The one cross-build source divergence is the excluded
+// point: Dreamcast reports (-1,-1,-1), but retail's packed-field stores clear
+// bits 8..9 and set only bits 0..7, proving three widened 0xff values. That
+// spelling also restores retail's 0x20 frame and all previously displaced
+// local homes; all 15 blocks and 278 bytes then agree.
+VA(0x004ca410, 0x116)  // dc-name + retail body/call graph, dc 0xb61d0
+void game::SetupAdjacentMons()
+{
+    type_point excluded(0xff, 0xff, 0xff);
+    type_point monster;
+    int x;
+    int y;
+    int z;
+    unsigned short mask = ~MAP_EXTRA_MONSTER;
+
+    for (z = 0; z < worldMap.GetNumLevels(); ++z) {
+        for (x = 0; x < gMapWidth; ++x) {
+            for (y = 0; y < gMapHeight; ++y) {
+                if (gpAdvManager->FindAdjacentMonster(
+                        type_point(x, y, z), &monster, excluded)) {
+                    unsigned short* extraByte = GetMapExtraPtr(x, y, z);
+                    *extraByte |= MAP_EXTRA_MONSTER;
+                } else {
+                    unsigned short* extraByte = GetMapExtraPtr(x, y, z);
+                    *extraByte &= mask;
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:9636
+VA(0x004ca530, 0x80)  // dc 0xb62f8 + UpdateRadar/widget call graph
+void game::CancelComputerScreen()
+{
+    gCompleteDrawEnabled = 1;
+    gpAdvManager->UpdateRadar(1, 1, 0, 0, 0);
+    gpAdvManager->advWindow->GetWidget(8)->enable(1);
+    gpAdvManager->advWindow->GetWidget(7)->enable(1);
+    gpAdvManager->advWindow->GetWidget(6)->enable(1);
+    gpAdvManager->advWindow->GetWidget(12)->enable(1);
+}
+
+// E:\gamedcs\game.cpp:9660
+// Complete's body is the PC form of the named Dreamcast routine: it
+// disables the four turn controls, redraws either through the forced
+// all-cells path or the ordinary adventure-window path, then overlays the
+// AI shield for a computer player.
+VA(0x004ca5b0, 0x1C9)  // DC name/order + complete retail call/data shape
+void game::ShowComputerScreen()
+{
+    gpAdvManager->advWindow->GetWidget(8)->enable(0);
+    gpAdvManager->advWindow->GetWidget(7)->enable(0);
+    gpAdvManager->advWindow->GetWidget(6)->enable(0);
+    gpAdvManager->advWindow->GetWidget(12)->enable(0);
+
+    if (gUnnamed698790 && !gpCurrentPlayer->IsHuman()) {
+        gpCurrentPlayer->isLocal = 1;
+        gCompleteDrawAllCells = 1;
+        gpAdvManager->CompleteDraw(1);
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 0);
+        gpAdvManager->advWindow->UpdateTownLocators(-1, 1, 0);
+        gpAdvManager->advWindow->UpdateQuestLogButton(1);
+        gpAdvManager->UpdBottomView(1, 1, 1);
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+        gpAdvManager->UpdateScreen(0, 1);
+        gCompleteDrawAllCells = 0;
+        gpCurrentPlayer->isLocal = 0;
+    } else {
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 0);
+        gpAdvManager->advWindow->UpdateTownLocators(-1, 1, 0);
+        gpAdvManager->advWindow->UpdateQuestLogButton(1);
+        gpAdvManager->UpdBottomView(1, 1, 1);
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+        gpAdvManager->advWindow->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        gpWindowManager->UpdateScreen(
+            0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    }
+
+    if (!gpCurrentPlayer->IsHuman())
+        ShowHeroesLogo();
+}
+
+// E:\gamedcs\game.cpp:9720
+// The Dreamcast local roster and call graph name this AI-turn shield;
+// Complete keeps the same popup guard, aishield.pcx resource, radar-widget
+// rectangle, screen blit and field_38c latch.
+VA(0x004ca780, 0xB4)  // DC name/order + complete retail call/data shape
+void game::ShowHeroesLogo()
+{
+    CNetMsgHandler* pNetMsgHandler;
+    Bitmap816* heroLogo;
+    int w;
+    int h;
+    int x;
+    int y;
+
+    if (gNetworkActive69954c && pDPlay) {
+        pNetMsgHandler = pDPlay->GetNetMsgHandler();
+        if (pNetMsgHandler && pNetMsgHandler->IsInPopup())
+            return;
+    }
+
+    if (gpAdvManager->field_38c)
+        return;
+
+    gpAdvManager->field_38c = 1;
+    heroLogo = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x00677eb8, heroesLogoBitmapName, "aishield.pcx"));
+    x = gpAdvManager->advWindow->RadarWidget->x;
+    y = gpAdvManager->advWindow->RadarWidget->y;
+    w = gpAdvManager->advWindow->RadarWidget->width;
+    h = gpAdvManager->advWindow->RadarWidget->height;
+    heroLogo->Draw(0, 0, w, h, gpWindowManager->screenBitmap, x, y, false);
+    gpWindowManager->UpdateScreen(x, y, w, h);
+    heroLogo->Dispose();
+}
+
 VA(0x004ca840, 0x19C)  // complete retail call/data shape, dc 0xb6640
 void game::WaitForPlayer(char* cText, int iPlayer)
 {
@@ -7472,7 +8280,7 @@ void game::WaitForPlayer(char* cText, int iPlayer)
     gpAdvManager->advWindow->UpdateQuestLogButton(1);
     gpAdvManager->advWindow->UpdateButtons(1, 0);
     gpAdvManager->advWindow->ResourceDisplay->Clear();
-    GameFn_004CA780();
+    ShowHeroesLogo();
     gpWindowManager->UpdateScreen(0, 0, 800, 600);
 
     gCompleteDrawAllCells = 0;
@@ -7570,6 +8378,156 @@ int game::GetBoatsBuilt()
 // player's towns testing building masks - the thieves-guild count the
 // advmgr quick views threshold at 1/2.
 #endif  // @carcass
+
+// The nine-faction no-repeat town-name samplers are file-static in game.cpp.
+// Retail's vector-constructor iterator at 0x4ca9e0 proves nine 24-byte
+// TPickRandomTownName objects and its element wrapper proves [0, 15].
+DATA(0x006971a0)
+static TPickRandomTownName gRandomTownNames[9];
+
+// The Complete table has a 17-pointer faction stride. The picker intentionally
+// uses only indices 0..15; the seventeenth entry is outside its random domain.
+DATA(0x006a6048)
+const char* gTownNames[9][17];
+
+inline void ResetRandomTownNames()
+{
+    for (int i = 0; i < 9; ++i)
+        gRandomTownNames[i].Reset();
+}
+
+inline const char* GetRandomTownName(int townType)
+{
+    int name = gRandomTownNames[townType].Pick();
+    while (name == -1) {
+        townType = Random(0, 8);
+        name = gRandomTownNames[townType].Pick();
+    }
+    return gTownNames[townType][name];
+}
+
+// E:\gamedcs\game.cpp:9833
+// The Dreamcast locals and callees fix the setup sweep. Complete widens the
+// map setup record and town-name storage, but retains the same resize,
+// z/y/x map scan, random-town conversion, name selection and initialize
+// phases. RESIDUAL (80.3907%, 2026-08-26): retail expands one more layer of
+// Dinkumware inside vector::resize and the non-custom string assignment,
+// while this build calls the nested vector::size/_Grow helpers. Explicitly
+// spelling resize scored 66.13, assign(ptr,strlen(ptr)) scored 79.45, and
+// statement-local inline_depth(3) was byte-flat; retain the semantic source.
+VA(0x004caa70, 0x39C)  // DC name/order + retail map/vector/string shape
+void game::ProcessOnMapTowns()
+{
+    int numMapLayers;
+    town* currTown;
+    int x;
+    int y;
+    NewmapCell* tempCell;
+    int z;
+    TScenarioTown* townExtra;
+    int townnum;
+    int owner;
+
+    ResetRandomTownNames();
+
+    towns.resize(scenarioTowns.size());
+
+    numMapLayers = 1;
+    if (gpGame->mapHeader.HasTwoLayers)
+        numMapLayers = 2;
+
+    for (z = 0; z < numMapLayers; ++z) {
+        for (y = 0; y < gMapHeight; ++y) {
+            for (x = 0; x < gMapWidth; ++x) {
+                tempCell = worldMap.cell(x, y, z);
+                if ((tempCell->type == TOWN
+                     || tempCell->type == RANDOM_TOWN)
+                    && tempCell->is_trigger) {
+                    townnum = tempCell->extraInfo;
+                    townExtra = &scenarioTowns[townnum];
+                    currTown = &towns[townnum];
+
+                    currTown->mapX = x;
+                    currTown->mapY = y;
+                    currTown->mapZ = z;
+                    currTown->id = townnum;
+
+                    if (tempCell->type == RANDOM_TOWN) {
+                        tempCell->type = TOWN;
+                        tempCell->objectIndex = townExtra->townType;
+                        ConvertObject(tempCell);
+                    }
+
+                    if (townExtra->bCustomName)
+                        currTown->cName = townExtra->name;
+                    else
+                        currTown->cName.assign(
+                            GetRandomTownName(townExtra->townType));
+
+                    currTown->initialize(town_setup_view(townExtra));
+                    ConvertObject(tempCell);
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:10060
+// The 156-entry HeroExtra sweep is fixed independently by the retail 0x334
+// stride and by the DC local/callee roster. Complete folds initialize_hero
+// into hero::HeroFn_004D8B30, but keeps the same prison test, owning-player
+// roster insertion, obscuring-object update and visibility reveal.
+VA(0x004cae10, 0x1B1)  // DC name/order + exact retail HeroExtra/hero strides
+void game::ProcessOnMapHeroes()
+{
+    HeroExtra* heroExtra;
+    hero* currHero;
+    int i;
+    NewmapCell* townCell;
+    type_point town_loc;
+
+    for (i = 0; i < HERO_COUNT; ++i) {
+        heroExtra = &heroSetup[i];
+        if (heroExtra->location.x >= 0) {
+            town_loc = heroExtra->location;
+            --town_loc.x;
+            townCell = worldMap.cell(town_loc.x, town_loc.y, town_loc.z);
+            if (townCell->type == TOWN && townCell->is_trigger
+                && heroAvailability[heroExtra->id]
+                    != hero::HERO_AVAILABILITY_PRISON) {
+                --heroExtra->location.x;
+            }
+
+            currHero = GetHero(heroExtra->id);
+            currHero->HeroFn_004D8B30(heroExtra);
+
+            if (heroAvailability[heroExtra->id]
+                != hero::HERO_AVAILABILITY_PRISON) {
+                players[currHero->owner].heroes[
+                    players[currHero->owner].numHeroes] = currHero->id;
+                ++players[currHero->owner].numHeroes;
+                currHero->obscure_cell();
+                SetVisibility(currHero->x, currHero->y, currHero->z,
+                              currHero->owner, currHero->GetVisibility(), 1);
+            }
+        } else {
+            currHero = GetHero(heroExtra->id);
+            currHero->HeroFn_004D8B30(heroExtra);
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:11170
+VA(0x004ccdd0, 0x56)  // dc 0xb99d0 + boat-vector layout/stride
+int game::GetBoatsBuilt()
+{
+    int count = 0;
+    for (unsigned int i = 0; i < boats.size(); i++) {
+        if (boats[i].allocated)
+            count++;
+    }
+    return count;
+}
 
 // The building test is the Tavern, plus - for a Castle only - the
 // Brotherhood of the Sword, which is the Castle's upgraded Tavern.
@@ -7693,6 +8651,286 @@ void game::CheckForTimeEvent()
 
 // E:\gamedcs\game.cpp:11540
 #endif  // @carcass
+
+// E:\gamedcs\game.cpp:11273
+VA(0x004ccf20, 0x8E)  // dc 0xb9d58 + currentRumour/rumourState layout
+void game::SetCannedRumour()
+{
+    int available = 0;
+    int i;
+    for (i = 0; i < 256; i++) {
+        if (!rumourState[i])
+            available++;
+    }
+
+    if (!available) {
+        memset(rumourState, 0, sizeof(rumourState));
+        available = 256;
+    }
+
+    int selected = Random(1, available);
+    int seen = 0;
+    for (i = 0; i < 256; i++) {
+        if (!rumourState[i])
+            seen++;
+        if (seen == selected) {
+            rumourState[i] = 1;
+            strcpy(currentRumour, gCannedRumours[selected]);
+            return;
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:11311
+// Map-authored rumours carry their own consumed byte. The two-pass chooser
+// mirrors SetCannedRumour: count unconsumed rows, reset the pool when empty,
+// roll a one-based ordinal, then select and mark that ordinal.
+VA(0x004ccfb0, 0x1BD)  // DC name/order + retail 20-byte TRumour stride
+void game::SetMapRumour()
+{
+    int rumourIndex;
+    int x;
+    int numValidRumours = 0;
+
+    if (rumours.size() == 0) {
+        SetCannedRumour();
+        return;
+    }
+
+    for (x = 0; x < rumours.size(); ++x) {
+        if (!rumours[x].field_10)
+            ++numValidRumours;
+    }
+
+    if (!numValidRumours) {
+        for (x = 0; x < rumours.size(); ++x)
+            rumours[x].field_10 = 0;
+        numValidRumours = rumours.size();
+    }
+
+    rumourIndex = Random(1, numValidRumours);
+    numValidRumours = 0;
+    for (x = 0; x < rumours.size(); ++x) {
+        if (!rumours[x].field_10)
+            ++numValidRumours;
+        if (numValidRumours == rumourIndex) {
+            rumours[x].field_10 = 1;
+            strcpy(currentRumour, rumours[x].text.c_str());
+            return;
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:11358
+// Prefer a non-tied late-game thieves'-guild leader. When no such result is
+// available, describe either the Grail's map region or the object occupying
+// its cell; an absent Grail falls back to the canned-rumour pool.
+VA(0x004cd170, 0x59B)  // complete retail body/order, dc 0xba040
+void game::SetSpecialRumour()
+{
+    if (Random(1, 100) < SPECIAL_RUMOUR_CHANCE && get_current_turn() > 1) {
+        long values[8];
+        int attempt;
+        signed char rankedPlayers[8];
+
+        attempt = 0;
+        while (attempt++ < SPECIAL_RUMOUR_ATTEMPTS) {
+            int category = Random(SPECIAL_RUMOUR_FIRST_CATEGORY,
+                                  SPECIAL_RUMOUR_LAST_CATEGORY);
+            GetCategoryStats(category, values, rankedPlayers);
+            SortStats(values, rankedPlayers);
+
+            if (values[0] != values[1]) {
+                if (category == SPECIAL_RUMOUR_FIRST_CATEGORY) {
+                    sprintf(currentRumour,
+                            gpGeneralText->GetText(
+                                SPECIAL_RUMOUR_CATEGORY_TEXT),
+                            GetPlayerName(rankedPlayers[0]));
+                } else if (category
+                           == SPECIAL_RUMOUR_FIRST_CATEGORY + 1) {
+                    sprintf(currentRumour,
+                            gpGeneralText->GetText(
+                                SPECIAL_RUMOUR_CATEGORY_TEXT + 1),
+                            GetPlayerName(rankedPlayers[0]));
+                    return;
+                } else if (category
+                           == SPECIAL_RUMOUR_FIRST_CATEGORY + 2) {
+                    sprintf(currentRumour,
+                            gpGeneralText->GetText(
+                                SPECIAL_RUMOUR_CATEGORY_TEXT + 2),
+                            GetPlayerName(rankedPlayers[0]));
+                } else {
+                    sprintf(currentRumour,
+                            gpGeneralText->GetText(
+                                SPECIAL_RUMOUR_CATEGORY_TEXT + 3),
+                            GetPlayerName(rankedPlayers[0]));
+                }
+                return;
+            }
+        }
+    }
+
+    if (!ultimateArtifactPresent) {
+        SetCannedRumour();
+        return;
+    }
+
+    if (Random(1, 100) <= SPECIAL_RUMOUR_LOCATION_CHANCE) {
+        int direction;
+
+        // The source's nine-region tree repeats X in both coordinate tests.
+        // VC6 consequently folds away directions 1, 0 and 4, but retains the
+        // repeated comparisons that identify this exact retail body.
+        if (static_cast<double>(ultimateArtifactX)
+                    < static_cast<double>(mapHeader.Size) * 0.33
+            && static_cast<double>(ultimateArtifactX)
+                   < static_cast<double>(mapHeader.Size) * 0.33)
+            direction = 7;
+        else if (static_cast<double>(ultimateArtifactX)
+                         < static_cast<double>(mapHeader.Size) * 0.33
+                     && static_cast<double>(ultimateArtifactX)
+                            > static_cast<double>(mapHeader.Size) * 0.66)
+            direction = 5;
+        else if (static_cast<double>(ultimateArtifactX)
+                 < static_cast<double>(mapHeader.Size) * 0.33)
+            direction = 6;
+        else if (static_cast<double>(ultimateArtifactX)
+                         > static_cast<double>(mapHeader.Size) * 0.66
+                     && static_cast<double>(ultimateArtifactX)
+                            < static_cast<double>(mapHeader.Size) * 0.33)
+            direction = 1;
+        else if (static_cast<double>(ultimateArtifactX)
+                         > static_cast<double>(mapHeader.Size) * 0.66
+                     && static_cast<double>(ultimateArtifactX)
+                            > static_cast<double>(mapHeader.Size) * 0.66)
+            direction = 3;
+        else if (static_cast<double>(ultimateArtifactX)
+                 > static_cast<double>(mapHeader.Size) * 0.66)
+            direction = 2;
+        else if (static_cast<double>(ultimateArtifactX)
+                 < static_cast<double>(mapHeader.Size) * 0.33)
+            direction = 0;
+        else if (static_cast<double>(ultimateArtifactX)
+                 > static_cast<double>(mapHeader.Size) * 0.66)
+            direction = 4;
+        else
+            direction = 8;
+
+        if (!ultimateArtifactZ) {
+            sprintf(currentRumour,
+                    gpGeneralText->GetText(
+                        SPECIAL_RUMOUR_GRAIL_ABOVE_TEXT),
+                    gQuestMonsterDirections[direction]);
+        } else {
+            sprintf(currentRumour,
+                    gpGeneralText->GetText(
+                        SPECIAL_RUMOUR_GRAIL_BELOW_TEXT),
+                    gQuestMonsterDirections[direction]);
+        }
+    } else {
+        type_point artifactLocation(ultimateArtifactX, ultimateArtifactY,
+                                    ultimateArtifactZ);
+        NewmapCell* cell = gpAdvManager->GetCell(artifactLocation);
+        sprintf(currentRumour,
+                gpGeneralText->GetText(SPECIAL_RUMOUR_GRAIL_OBJECT_TEXT),
+                gGrailTerrainNames[cell->GroundSet]);
+    }
+}
+
+// E:\gamedcs\game.cpp:11459
+// Apply each resource delta to the local player, clamping the stored total at
+// zero while retaining the actually displayable delta for the event dialog.
+// Retail's campaign tail is a scenario-specific population transform on day
+// 36; it halves the population bands [0..3] and [7..10].
+VA(0x004cd710, 0x200)  // unique retail/DC body + TTimedEvent resource layout
+void game::GiveTimeEventReward(const TTimedEvent* thisEvent)
+{
+    std::vector<type_dialog_resource> rewards;
+    type_dialog_resource reward;
+    int j;
+    int iResToShow;
+    int i;
+
+    for (j = 0; j < NUM_RESOURCES; ++j) {
+        iResToShow = thisEvent->ResQty[j];
+        if (-iResToShow
+            > gpGame->players[gNetLocalGamePos].resources[j]) {
+            iResToShow =
+                -gpGame->players[gNetLocalGamePos].resources[j];
+        }
+
+        gpGame->players[gNetLocalGamePos].resources[j]
+            += thisEvent->ResQty[j];
+        if (gpGame->players[gNetLocalGamePos].resources[j] < 0)
+            gpGame->players[gNetLocalGamePos].resources[j] = 0;
+
+        if (j <= GOLD && iResToShow < 0)
+            iResToShow -= 100000;
+        if (iResToShow) {
+            reward.resource = j;
+            reward.qualifier = iResToShow;
+            rewards.push_back(reward);
+        }
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+        extended_dialog(thisEvent->Message.c_str(), rewards, -1, -1, 0);
+
+        if (gbUnk69774c) {
+            short currentTurn = get_current_turn();
+            if (currentTurn == CAMPAIGN_POPULATION_EVENT_DAY
+                && campaign.currentCampaign
+                    == CAMPAIGN_POPULATION_EVENT_CAMPAIGN
+                && campaign.currentMap
+                    == CAMPAIGN_POPULATION_EVENT_SCENARIO) {
+                for (i = 0; i < gpCurrentPlayer->numTowns; ++i) {
+                    town* currentTown = GetTown(gpCurrentPlayer->townIds[i]);
+                    for (j = 0; j < 4; ++j) {
+                        currentTown->population[j]
+                            = currentTown->population[j] / 2;
+                        currentTown->population[j + 7]
+                            = currentTown->population[j + 7] / 2;
+                    }
+                }
+            }
+        }
+    }
+}
+
+// E:\gamedcs\game.cpp:11512
+// Complete keeps the DC event predicate intact: select the local player's
+// human/computer eligibility byte, intersect the event's player mask, then
+// fire either on FirstTime or on a positive recurring interval.
+VA(0x004cd910, 0xF5)  // unique body/order + 0x34-byte TTimedEvent stride
+void game::CheckForTimeEvent()
+{
+    int iDay = static_cast<short>(
+        (field_1f642 * 4 + field_1f640 - 5) * 7 + field_1f63e);
+
+    for (unsigned int i = 0; i < worldMap.TimedEventList.size(); ++i) {
+        TTimedEvent* thisEvent = &worldMap.TimedEventList[i];
+        int playerIndex = gNetLocalGamePos;
+        if (playerIndex >= 8 || playerIndex < 0)
+            playerIndex = 0;
+        if (!(players[playerIndex].isHuman
+                  ? thisEvent->ApplyToHuman
+                  : thisEvent->ApplyToComputer)) {
+            continue;
+        }
+        if (!(gUnnamed69ccc4 & thisEvent->PlayerFlags))
+            continue;
+
+        if (thisEvent->FirstTime == iDay) {
+            GiveTimeEventReward(thisEvent);
+        } else if (thisEvent->Interval && iDay > thisEvent->FirstTime
+                   && (iDay - thisEvent->FirstTime) % thisEvent->Interval
+                       == 0) {
+            GiveTimeEventReward(thisEvent);
+        }
+    }
+}
+
 VA(0x004cda10, 0x164)  // complete town-event eligibility/date loop, dc 0xbafec
 void game::CheckForTownEvent()
 {
@@ -8242,6 +9480,30 @@ bool game::IsMultiplayer() const
     if (bVideoPaused || iMPNetProtocol == MP_HOTSEAT)
         return true;
     return false;
+}
+
+// E:\gamedcs\game.cpp:11895
+// Retail widens the Dreamcast no-argument wrapper with the three setup
+// values it forwards to InitNewGame.  The executable fixes both that ABI
+// (`ret 0xc`) and the otherwise anonymous final call as
+// TSpellbookWindow::Reset: the Dreamcast ResetGame xref set contains the
+// same five named callees in the same order.
+VA(0x004cecb0, 0x81)  // retail ABI + complete DC callee-set correspondence
+void game::ResetGame(int difficulty, int version,
+                     NewSMapHeader* defaultMapHeader)
+{
+    for (int playerIndex = 0; playerIndex < 8; ++playerIndex)
+        gpGame->players[playerIndex].Init();
+
+    setup.fileInitialized = 0;
+    gbGameOver = 0;
+    gBuildAllBuildings = 0;
+    SetupOrigData();
+    InitNewGame(difficulty, version, defaultMapHeader, 0);
+    gTurnDuration69d630.Clear();
+    gbThisNetGotAdventureControl = 0;
+    TSpellbookWindow::Reset();
+    memset(borderTentVisitFlags, 0, sizeof(borderTentVisitFlags));
 }
 
 // E:\gamedcs\game.cpp:2716

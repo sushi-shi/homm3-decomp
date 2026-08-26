@@ -971,8 +971,7 @@ VA(0x004f4ba0, 0x5F)  // anchor-caller (remote 0x556780), dc 0xe519c
 int GetNextHumanPlayer(int start)
 {
     int checked = 0;
-    int player = start;
-    player = (player + 1) % 8;
+    int player = (start + 1) % 8;
 
     for (;;) {
         if (gpGame->IsHuman(player)

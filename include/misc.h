@@ -55,6 +55,21 @@ public:
     int Pick();
 };
 
+// Dreamcast's named game.cpp wrapper over TPickANumber. Complete keeps no
+// extra state: its compiler-generated default constructor passes [0, 15] to
+// the base and its Reset body is fully inlined into ProcessOnMapTowns.
+class TPickRandomTownName : public TPickANumber {
+public:
+    TPickRandomTownName() : TPickANumber(0, 15) {}
+
+    void Reset()
+    {
+        for (int i = 0; i < marks.size(); ++i)
+            marks[i] = 1;
+        count = marks.size();
+    }
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:41, dc 0xfd81c) int SafeRandom(int min, int max);
 // CODEVIEW(E:\gamedcs\misc.cpp:58, dc 0xfd868) int Random(int min, int max);

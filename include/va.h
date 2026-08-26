@@ -21,6 +21,7 @@
  *                                  DEFAULT_CTOR_CLOSURE /
  *                                  VECTOR_DELETING_DTOR / VECTOR_DTOR /
  *                                  VECTOR_* / BITSET_TIDY / STD_* /
+ *                                  IMPLICIT_COPY_CTOR /
  *                                  IMPLICIT_COPY_ASSIGN / IMPLICIT_DTOR;
  *                                  owner names the
  *                                  global, class, vector element, or

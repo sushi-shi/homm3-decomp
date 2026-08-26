@@ -8,6 +8,27 @@
 #include "town.h"
 #include "advmgr_popup.h"
 
+class slider;
+
+// DoMarket's jump table accepts exactly these five consecutive pane ids;
+// every arm is fixed by its constructor and direct Update call.
+enum EMarketWindow {
+    MARKET_TRADE_RESOURCES = 0,
+    MARKET_GIVE_RESOURCES = 1,
+    MARKET_BUY_ARTIFACTS = 2,
+    MARKET_SELL_ARTIFACTS = 3,
+    MARKET_SELL_CREATURES = 4
+};
+
+// The shared entry-point state records which physical market opened the
+// current pane. The six located setters prove all four values.
+enum EMarketSource {
+    MARKET_SOURCE_TOWN = 0,
+    MARKET_SOURCE_TRADING_POST = 1,
+    MARKET_SOURCE_BLACK_MARKET = 2,
+    MARKET_SOURCE_ARTIFACT_MERCHANTS = 3
+};
+
 // --- the five marketplace dialogs -------------------------------------
 // Retail lays the compiland out in source order as five (constructor,
 // scalar-deleting-destructor, destructor) triples, and each constructor
@@ -34,34 +55,84 @@
 // EH-bearing rows still deferred.
 class TTradeResourceWindow : public CAdvPopup {
 public:
+    slider* amountSlider;           // +0x60, WindowHandler slider calls
+    int lastHoverId;                // +0x64, WindowHandler rollover cache
+    TTradeResourceWindow(int x2, int y2);
+    void Update(bool bUpdate);
+    virtual int WindowHandler(message* msg);
     void SetRolloverText(int codeY);
     virtual ~TTradeResourceWindow();
 };
+SIZE(TTradeResourceWindow, 0x68);
 
 class TGiveResourceWindow : public CAdvPopup {
+public:
     int field_60;
     int slotPlayerColor[7];
+private:
+    char pad_80[4];
 public:
+    slider* amountSlider;           // +0x84, Update's two virtual calls
+    int lastHoverId;                // +0x88, WindowHandler rollover cache
+public:
+    TGiveResourceWindow(int x2, int y2);
+    void Update(bool bUpdate);
+    virtual int WindowHandler(message* msg);
     void SetRolloverText(int codeY);
     virtual ~TGiveResourceWindow();
 };
+SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
 public:
+    int lastHoverId;                // +0x60, WindowHandler rollover cache
+    TBuyArtifactWindow(int x2, int y2);
+    void Update(bool bUpdate);
+    virtual int WindowHandler(message* msg);
     void SetRolloverText(int codeY);
     virtual ~TBuyArtifactWindow();
 };
+SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
 public:
+    int lastHoverId;                // +0x60, WindowHandler rollover cache
+    TSellArtifactWindow(int x2, int y2);
+    void Update(bool bUpdate);
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio,
+                            int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
+    void SetupNewTrade();
+    void UpdateMarketBackpack();
+    void increment_backpack_start();
+    void decrement_backpack_start();
     void update_sell_artifact_widget(message* msg, long i);
+    virtual int WindowHandler(message* msg);
+    void SetRolloverText(int codeY);
     virtual ~TSellArtifactWindow();
 };
+SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
 public:
+    slider* amountSlider;           // +0x60, Update's two virtual calls
+    int lastHoverId;                // +0x64, WindowHandler rollover cache
+public:
+    TSellCreatureWindow(int x2, int y2);
+    void SetWidgetOn(short id);
+    void SetWidgetOff(short id);
+    void SetWidgetDisabled(short id);
+    void Update(bool bUpdate);
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio,
+                            int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
+    virtual int WindowHandler(message* msg);
+    void SetRolloverText(int codeY);
     virtual ~TSellCreatureWindow();
 };
+SIZE(TSellCreatureWindow, 0x68);
 
 long get_market_value(EGameResource resource);
 
@@ -88,6 +159,14 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts);
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. Owner definition has not yet been admitted.
 extern float fTradingPostEfficency[];
+
+// DC public ?fArtifactEfficency@@3PAMA; retail Update indexes the eleven
+// market-count rows at the same 0x678370 storage.
+extern float fArtifactEfficency[];
+
+// DC public ?fCreatureEfficency@@3PAMA; retail ComputeTradeRatios indexes the
+// eleven market-count rows at 0x67839c.
+extern float fCreatureEfficency[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);
