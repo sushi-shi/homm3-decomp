@@ -9506,11 +9506,16 @@ void game::ResetGame(int difficulty, int version,
     memset(borderTentVisitFlags, 0, sizeof(borderTentVisitFlags));
 }
 
+// Sign's one-string destructor is emitted out of line and is the callee used
+// by the vector helpers below.
+VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
+
 // Retail keeps this run of Dinkumware vector COMDATs between ResetGame and
 // save_vector. Their element types are fixed independently by the pool
 // callers and by the byte strides in the bodies. The mine size/erase rows are
 // also used by the layout-identical garrison vector; the linker retained one
-// representative for both specializations.
+// representative for both specializations. Sign and TRumour likewise share
+// the 20-byte size helper and the TreasureData destructor retained elsewhere.
 VA_COMPGEN(0x004cf0b0, 0x3B, VECTOR_DTOR, TScenarioTown)
 VA_COMPGEN(0x004cf0f0, 0x2D6, VECTOR_RESIZE, TBlackMarket)
 VA_COMPGEN(0x004cf3d0, 0x3B, VECTOR_DTOR, town)
@@ -9518,24 +9523,46 @@ VA_COMPGEN(0x004cf410, 0x2A1, VECTOR_RESIZE, town)
 VA_COMPGEN(0x004cf6c0, 0x23, VECTOR_SIZE, town)
 VA_COMPGEN(0x004cf6f0, 0x38, VECTOR_DTOR, Sign)
 VA_COMPGEN(0x004cf730, 0x13, VECTOR_SIZE, mine)
+VA_COMPGEN(0x004cf750, 0x21, VECTOR_SIZE, TRumour)
 VA_COMPGEN(0x004cf780, 0x38, VECTOR_DTOR, type_creature_bank)
+VA_COMPGEN(0x004cf7c0, 0x38, VECTOR_DTOR, TRumour)
 VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, TBlackMarket)
 VA_COMPGEN(0x004d03e0, 0x44, VECTOR_ERASE, TBlackMarket)
 VA_COMPGEN(0x004d0430, 0x31C, VECTOR_INSERT, town)
 VA_COMPGEN(0x004d0750, 0x6D, VECTOR_ERASE, town)
 VA_COMPGEN(0x004d07c0, 0x26, VECTOR_DESTROY, town)
+VA_COMPGEN(0x004d07f0, 0x31C, VECTOR_INSERT, Sign)
+VA_COMPGEN(0x004d0b10, 0x8F, VECTOR_ERASE, Sign)
 VA_COMPGEN(0x004d0ba0, 0x26B, VECTOR_INSERT, mine)
 VA_COMPGEN(0x004d0e10, 0x44, VECTOR_ERASE, mine)
 VA_COMPGEN(0x004d0e60, 0x20A, VECTOR_INSERT, boat)
 VA_COMPGEN(0x004d1070, 0x2E4, VECTOR_INSERT, boat)
 VA_COMPGEN(0x004d1360, 0x44, VECTOR_ERASE, boat)
 VA_COMPGEN(0x004d13b0, 0x23, VECTOR_DESTROY, type_creature_bank)
+VA_COMPGEN(0x004d13e0, 0x300, VECTOR_INSERT, TRumour)
+VA_COMPGEN(0x004d16e0, 0x7F, VECTOR_ERASE, TRumour)
+VA_COMPGEN(0x004d1760, 0x23, VECTOR_DESTROY, TRumour)
+VA_COMPGEN(0x004d1920, 0x359, VECTOR_INSERT, type_university)
 VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
 VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
 VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, town)
 VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, boat)
 VA_COMPGEN(0x004d2250, 0x31, VECTOR_UFILL, boat)
 VA_COMPGEN(0x004d2290, 0x372, VECTOR_INSERT, type_creature_bank)
+
+// Calls from those vector bodies fix this bracketed helper tail as game, not
+// the following gametypewindow TU. The two one-string constructors and town
+// assignment remain useful high-fuzzy claims even though their current
+// source-generated bodies are not yet exact.
+VA_COMPGEN(0x004d3630, 0x250, STD_CONSTRUCT, town)
+VA_COMPGEN(0x004d3880, 0x16F, STD_CONSTRUCT, Sign)
+VA_COMPGEN(0x004d39f0, 0x14, STD_CONSTRUCT, boat)
+VA_COMPGEN(0x004d3a10, 0x15B, STD_CONSTRUCT, TRumour)
+VA_COMPGEN(0x004d3d30, 0xBF, STD_CONSTRUCT, type_creature_bank)
+VA_COMPGEN(0x004d3df0, 0x2C2, IMPLICIT_COPY_ASSIGN, town)
+VA_COMPGEN(0x004d4260, 0x1E3, IMPLICIT_COPY_ASSIGN, type_creature_bank)
+VA_COMPGEN(0x004d4450, 0x3E, IMPLICIT_DTOR, TScenarioTown)
+VA_COMPGEN(0x004d4500, 0x2CF, VECTOR_RESIZE, generator)
 
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
