@@ -408,6 +408,34 @@ void TCombatWindow::scroll_rollover(long delta)
     }
 }
 
+// E:\gamedcs\combatwindow.cpp:475
+// The control bar's up arrow. Its address is taken by the button constructor,
+// so the old entry carver missed this static member in the 0x472df0 gap.
+// Retail expands scroll_rollover here and adjusts the selected row by -1.
+VA(0x00472df0, 0x50)  // address-take + dc public, dc 0x69f6c
+int TCombatWindow::scroll_up(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        static_cast<TCombatWindow*>(msg.window)->scroll_rollover(-1);
+        return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\combatwindow.cpp:491
+// The byte-identical down-arrow twin, apart from incrementing the row.
+VA(0x00472e40, 0x50)  // address-take + dc public, dc 0x69f94
+int TCombatWindow::scroll_down(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        static_cast<TCombatWindow*>(msg.window)->scroll_rollover(1);
+        return 1;
+    }
+    return 0;
+}
+
 // EXACT: E:\gamedcs\combatwindow.cpp:508-574. The DC statement map preserves the
 // transient-versus-kept arms, newline split, two-line cap, and final visible
 // range. Retail fixes the live combat-manager guards and the +0x54 message

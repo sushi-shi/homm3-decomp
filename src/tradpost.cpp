@@ -231,7 +231,7 @@ DATA(0x006aaa70) static unsigned char gBackpackStart;
 // id read stays a plain member access rather than a pointer cast.
 union TMarketArtifactList {
     char* asBytes;
-    const TArtifact* asArtifacts;
+    TArtifact* asArtifacts;
     int* asIds;   // the buy/sell panels write -1 back into an emptied slot
 };
 DATA(0x006aaa74) static TMarketArtifactList gpMarketArtifacts;
@@ -582,6 +582,24 @@ void TSellArtifactWindow::update_sell_artifact_widget(message* msg, long i)
     msg->codeY = i + 0x6b;
 }
 
+// Retail inlines all three helpers into Update; the Dreamcast public roster
+// and xref graph prove their source identities and the short parameter.
+inline void TSellCreatureWindow::SetWidgetOn(short id)
+{
+    BroadcastMessage(MESSAGE_WIDGET, 5, id, 6);
+    BroadcastMessage(MESSAGE_WIDGET, 6, id, 0x1000);
+}
+
+inline void TSellCreatureWindow::SetWidgetOff(short id)
+{
+    BroadcastMessage(MESSAGE_WIDGET, 5, id, 0x1000);
+}
+
+inline void TSellCreatureWindow::SetWidgetDisabled(short id)
+{
+    BroadcastMessage(MESSAGE_WIDGET, 6, id, 0x1006);
+}
+
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:905
@@ -914,24 +932,35 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
 // loop over the paying resources and the recipient player slots (colour icon,
 // colour name, selection). The inlined SetWidgetOn/Off/Disabled helpers expand
 // to the status broadcasts; the final repaint is bUpdate-gated.
-// Match plateau: 91.0868%; calls are 47/47, branches 23/23, and all 50 block
-// flows agree. The remaining delta is register/pseudo creation order. A
-// generated field_60 > k spelling reached 91.6293% but is rejected because it
-// changes retail's jge to jle; the other 74 atomic variants and why-reg were flat.
+// Exact with the Dreamcast bool parameter, explicit message-field
+// initialization and the original two-pane loop structure.
 VA(0x005eaf50, 0x744)  // ordermap clean run + arity ret 4, dc 0x1895a8
-void TGiveResourceWindow::Update(unsigned char bUpdate)
+void TGiveResourceWindow::Update(bool bUpdate)
 {
-    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
 
     if (gSelectedArtifact != -1 && gLeftResource != -1) {
         sprintf(gText, (*gpGeneralText)[166],
                 gResourceNames[gSelectedArtifact],
-                gPlayerColorNames[slotPlayerColor[gLeftResource]]);
+                gPlayerColorNames[
+                    slotPlayerColor[gLeftResource]]);
     } else {
-        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[167]
-                                        : (*gpGeneralText)[168]);
+        if (gLeftDenominated)
+            sprintf(gText, (*gpGeneralText)[167]);
+        else
+            sprintf(gText, (*gpGeneralText)[168]);
     }
-    msg.codeX = widget::WIDGET_SET_TEXT;
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 3;
     msg.codeY = 2;
     msg.extraText = gText;
     BroadcastMessage(&msg);
@@ -950,146 +979,167 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    msg.codeY = 0xe;
+    msg.codeY = 14;
     sprintf(gText, (*gpGeneralText)[271]);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[170]);
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = 0xf;
+    msg.codeX = 3;
+    msg.codeY = 15;
     msg.extraText = gText;
     BroadcastMessage(&msg);
 
+    int widgetOff = 6;
     if (gSelectedArtifact != -1 && gLeftResource != -1) {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,   6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc, 6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   3,   6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xd, 6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xd, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 5, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 5, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 4, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 4, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 12, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 12, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 7, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 7, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 3, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 3, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 13, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 13, 0x1000);
         resourceSlider->enable(1);
     } else {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,   0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc, 0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,   0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 3,   0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xd, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 5, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 4, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 12, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 7, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 3, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 13, 0x1006);
         resourceSlider->SetState(0);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,   0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 6, 0x1000);
     }
 
-    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero != 0 &&
-        gMarketSource != MARKET_SOURCE_FREELANCER &&
-        (gpTownManager->townToView->type == TOWN_TOWER ||
-         gpTownManager->townToView->type == TOWN_DUNGEON) &&
-        (gpTownManager->townToView->built & bitNumber[17])) {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   MARKET_RIGHT_LABEL_ID, 6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1000);
+    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero
+        && gMarketSource != MARKET_SOURCE_FREELANCER
+        && (gpTownManager->townToView->type == TOWN_TOWER
+            || gpTownManager->townToView->type == TOWN_DUNGEON)
+        && (gpTownManager->townToView->built
+            & bitNumber[17])) {
+        BroadcastMessage(MESSAGE_WIDGET, 5, MARKET_RIGHT_LABEL_ID,
+                         widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff,
+                         MARKET_RIGHT_LABEL_ID,
+                         0x1000);
     } else {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff,
+                         MARKET_RIGHT_LABEL_ID,
+                         0x1006);
     }
 
-    for (int j = 0; j < 2; ++j) {
+    for (int side = 0; side < 2; ++side) {
         if (gSelectedArtifact != -1 && gLeftResource != -1) {
-            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            if (j == 0) {
+            msg.codeX = 4;
+            if (side == 0) {
                 msg.codeY = 3;
                 msg.extra = gSelectedArtifact;
                 BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeX = 3;
                 msg.codeY = 4;
                 msg.extraText = gText;
                 if (gRatioInverted)
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount);
                 else
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount * gGiveQuantity);
             } else {
                 msg.extra = slotPlayerColor[gLeftResource];
-                msg.codeY = 0xd;
+                msg.codeY = 13;
                 BroadcastMessage(&msg);
-                strcpy(gText, gPlayerColorNames[slotPlayerColor[gLeftResource]]);
-                msg.codeX = widget::WIDGET_SET_TEXT;
-                msg.codeY = 0xc;
+                strcpy(gText,
+                       gPlayerColorNames[
+                           slotPlayerColor[gLeftResource]]);
+                msg.codeX = 3;
+                msg.codeY = 12;
                 msg.extraText = gText;
             }
             BroadcastMessage(&msg);
         }
 
-        for (int k = 0; k < 7; ++k) {
-            if (j == 0) {
-                msg.codeX = widget::WIDGET_SET_STATUS;
-                msg.codeY = 0x15 + k;
-                msg.extra = 6;
+        for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+            if (side == 0) {
+                msg.codeX = 5;
+                msg.codeY = resource + 21;
+                msg.extra = widgetOff;
                 BroadcastMessage(&msg);
-                msg.codeY = MARKET_SELL_WOOD_ID + k;
+                msg.codeY = resource + 28;
                 BroadcastMessage(&msg);
-                msg.codeY = 0x23 + k;
+                msg.codeY = resource + 35;
                 BroadcastMessage(&msg);
+
                 msg.extraText = gText;
-                msg.codeX = widget::WIDGET_SET_TEXT;
-                msg.codeY = 0x23 + k;
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gpCurrentPlayer->resources[k]);
+                msg.codeX = 3;
+                msg.codeY = resource + 35;
+                sprintf(gText,
+                        DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                     "%d"),
+                        gpCurrentPlayer->resources[resource]);
                 BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_Y;
-                msg.codeY = 0x23 + k;
-                msg.extra = gResourceValueWidgetY[k];
+
+                msg.codeX = 53;
+                msg.extra = gResourceValueWidgetY[resource];
                 BroadcastMessage(&msg);
-                msg.codeX = (gSelectedArtifact == k) ? widget::WIDGET_SET_STATUS
-                                                     : widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = MARKET_SELL_WOOD_ID + k;
-                msg.extra = widget::WIDGET_DRAWN;
+
+                msg.codeX =
+                    gSelectedArtifact == resource ? 5 : widgetOff;
+                msg.codeY = resource + 28;
+                msg.extra = 4;
                 BroadcastMessage(&msg);
             } else {
-                if (k < field_60) {
-                    strcpy(gText, gPlayerColorNames[slotPlayerColor[k]]);
-                    msg.codeX = widget::WIDGET_SET_TEXT;
-                    msg.codeY = 0x4d + k;
+                if (resource < field_60) {
+                    strcpy(gText,
+                           gPlayerColorNames[slotPlayerColor[resource]]);
+                    msg.codeX = 3;
+                    msg.codeY = resource + 77;
                     msg.extraText = gText;
                     BroadcastMessage(&msg);
-                    msg.codeX = widget::WIDGET_SET_STATUS;
-                    msg.codeY = 0x4d + k;
-                    msg.extra = 6;
+
+                    msg.codeX = 5;
+                    msg.extra = widgetOff;
                     BroadcastMessage(&msg);
-                    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                    msg.codeY = 0x31 + k;
-                    msg.extra = slotPlayerColor[k];
+
+                    msg.codeX = 4;
+                    msg.codeY = resource + 49;
+                    msg.extra = slotPlayerColor[resource];
                     BroadcastMessage(&msg);
-                    msg.codeX = widget::WIDGET_SET_STATUS;
-                    msg.codeY = 0x31 + k;
-                    msg.extra = 6;
+
+                    msg.codeX = 5;
+                    msg.extra = widgetOff;
                     BroadcastMessage(&msg);
                 } else {
-                    msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                    msg.codeY = 0x4d + k;
-                    msg.extra = 6;
+                    msg.codeX = widgetOff;
+                    msg.codeY = resource + 77;
+                    msg.extra = widgetOff;
                     BroadcastMessage(&msg);
-                    msg.codeY = 0x31 + k;
+                    msg.codeY = resource + 49;
                     BroadcastMessage(&msg);
                 }
-                msg.codeY = GIVE_RECIPIENT_SLOT_0_ID + k;
+
                 msg.extra = 2;
+                msg.codeY = resource + 70;
                 BroadcastMessage(&msg);
-                msg.codeX = (gLeftResource == k) ? widget::WIDGET_SET_STATUS
-                                                 : widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = GIVE_RECIPIENT_SLOT_0_ID + k;
-                msg.extra = widget::WIDGET_DRAWN;
+
+                msg.codeX =
+                    gLeftResource == resource ? 5 : widgetOff;
+                msg.codeY = resource + 70;
+                msg.extra = 4;
                 BroadcastMessage(&msg);
             }
         }
     }
 
     if (bUpdate)
-        DrawWindow(1, 0xffff0001, 0xffff);
+        DrawWindow(1, -65535, 65535);
 }
 
 // E:\gamedcs\tradpost.cpp:1466
@@ -1477,198 +1527,237 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
 // panels and slider, and, in a two-pane loop, each army slot (creature icon +
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
-// Match plateau: 91.2354%; calls are 54/54 and branches 22/22. The remaining
-// header cross-jump and ESI/EDI handle-state permutation did not move under
-// the AST, statement-order, why-branch, or why-reg source-level sweeps.
+// Residual (94.73%): all 22 conditional branches and their symbolic targets
+// agree. The remaining tail differences are VC6 register-family choices while
+// carrying message code 4 through the selected-trade and nested pane loops;
+// retail has 52 CFG blocks versus 51 here because one sprintf path falls
+// through where this include set emits a jump. The Dreamcast-attested inline
+// SetWidgetOn/Off/Disabled helpers recover the source topology without a
+// synthetic register carrier.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
-void TSellCreatureWindow::Update(unsigned char bUpdate)
+void TSellCreatureWindow::Update(bool bUpdate)
 {
-    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
+    int iRightQty;
+    int iLeftQty;
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
 
-    if (gSelectedArtifact == -1 || gLeftResource == -1) {
-        sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
-                                        : (*gpGeneralText)[164]);
-    } else {
-        const char* name;
-        const char* word;
-        int n1, n2;
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
         if (gRatioInverted) {
-            n1 = gGiveQuantity;
-            n2 = 1;
-            int cid = gpMarketHero->army.armies[gSelectedArtifact];
-            name = akCreatureTypeTraits[cid].m_name;
-            word = (gGiveQuantity > 1) ? (*gpGeneralText)[161]
-                                       : (*gpGeneralText)[162];
+            iLeftQty = gGiveQuantity;
+            iRightQty = 1;
         } else {
-            n1 = 1;
-            int cid = gpMarketHero->army.armies[gSelectedArtifact];
-            name = (gGiveQuantity > 1) ? akCreatureTypeTraits[cid].m_plural_name
-                                       : akCreatureTypeTraits[cid].m_name;
-            n2 = gGiveQuantity;
-            word = (*gpGeneralText)[162];
+            iLeftQty = 1;
+            iRightQty = gGiveQuantity;
         }
-        sprintf(gText, (*gpGeneralText)[270],
-                n1, word, gResourceNames[gLeftResource], n2, name);
+        sprintf(gText, (*gpGeneralText)[270], iLeftQty,
+                iLeftQty > 1 ? (*gpGeneralText)[161]
+                             : (*gpGeneralText)[162],
+                gResourceNames[gLeftResource], iRightQty,
+                iRightQty > 1
+                    ? akCreatureTypeTraits[
+                          gpMarketHero->army.armies[gSelectedArtifact]]
+                          .m_plural_name
+                    : akCreatureTypeTraits[
+                          gpMarketHero->army.armies[gSelectedArtifact]]
+                          .m_name);
+    } else {
+        if (gLeftDenominated)
+            sprintf(gText, (*gpGeneralText)[163]);
+        else
+            sprintf(gText, (*gpGeneralText)[164]);
     }
-    msg.codeX = widget::WIDGET_SET_TEXT;
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 3;
     msg.codeY = 2;
     msg.extraText = gText;
     BroadcastMessage(&msg);
 
-    strcpy(gText, gSellCreatureColumnLabel);
+    strcpy(gText, gSellCreaHelpText[0].text);
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    msg.codeY = 0xe;
+    msg.codeY = 14;
     sprintf(gText, (*gpGeneralText)[273], gpMarketHero->name);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[169]);
-    msg.codeX = widget::WIDGET_SET_TEXT;
-    msg.codeY = 0xf;
+    msg.codeX = 3;
+    msg.codeY = 15;
     msg.extraText = gText;
     BroadcastMessage(&msg);
 
+    int widgetOff = 6;
     if (gSelectedArtifact != -1 && gLeftResource != -1) {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,    6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 5,    0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,    6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 7,    0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   4,    6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,    0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xb,  6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb,  0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xc,  6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc,  0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   0xa,  6);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa,  0x1000);
+        SetWidgetOn(5);
+        SetWidgetOn(7);
+        SetWidgetOn(4);
+        SetWidgetOn(11);
+        SetWidgetOn(12);
+        SetWidgetOn(10);
         creatureSlider->enable(1);
     } else {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   5,    0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   7,    0x1000);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 4,    0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xb,  0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xc,  0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa,  0x1006);
+        SetWidgetOff(5);
+        SetWidgetOff(7);
+        SetWidgetDisabled(4);
+        SetWidgetDisabled(11);
+        SetWidgetDisabled(12);
+        SetWidgetDisabled(10);
         creatureSlider->SetState(0);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,   6,    0x1000);
+        SetWidgetOff(6);
     }
 
     if (gMarketSource == MARKET_SOURCE_FREELANCER) {
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_COUNT_ID,      0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_LEFT_LABEL_ID,      0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_RIGHT_LABEL_ID,     0x1006);
-        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, MARKET_BUY_RIGHT_LABEL_ID, 0x1006);
+        SetWidgetDisabled(16);
+        SetWidgetDisabled(17);
+        SetWidgetDisabled(18);
+        SetWidgetDisabled(19);
     }
 
-    for (int j = 0; j < 2; ++j) {
+    for (int side = 0; side < 2; ++side) {
         if (gSelectedArtifact != -1 && gLeftResource != -1) {
-            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-            if (j == 0) {
-                msg.codeY = 0xa;
+            msg.codeX = 4;
+            if (side == 0) {
+                msg.codeY = 10;
                 msg.extra = gpMarketHero->army.armies[gSelectedArtifact] + 2;
                 BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeX = 3;
                 msg.codeY = 4;
                 msg.extraText = gText;
                 if (gRatioInverted)
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount);
                 else
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount * gGiveQuantity);
             } else {
-                msg.codeY = 0xb;
                 msg.extra = gLeftResource;
+                msg.codeY = 11;
                 BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_TEXT;
-                msg.codeY = 0xc;
+                msg.codeX = 3;
+                msg.codeY = 12;
+                msg.extraText = gText;
                 if (gRatioInverted)
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount * gGiveQuantity);
                 else
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
                             gRightAmount);
-                msg.extraText = gText;
             }
             BroadcastMessage(&msg);
         }
 
-        for (int slot = 0; slot < 7; ++slot) {
-            if (j == 0) {
-                msg.codeX = widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = MARKET_CREATURE_SLOT_0_ID + slot;
-                msg.extra = 6;
+        for (int resource = 0; resource < 7; ++resource) {
+            if (side == 0) {
+                msg.codeX = 6;
+                msg.codeY = resource + 139;
+                msg.extra = widgetOff;
                 BroadcastMessage(&msg);
-                if (gpMarketHero->army.numTroops[slot] == 0) {
-                    msg.codeY = 0x84 + slot;
+
+                if (gpMarketHero->army.numTroops[resource] == 0) {
+                    msg.codeY = resource + 132;
                     BroadcastMessage(&msg);
-                    msg.codeY = 0x23 + slot;
+                    msg.codeY = resource + 35;
                 } else {
-                    msg.codeX = widget::WIDGET_SET_STATUS;
+                    msg.codeX = 5;
                     msg.extra = 2;
                     BroadcastMessage(&msg);
-                    msg.codeY = 0x84 + slot;
-                    msg.extra = 6;
+
+                    msg.codeY = resource + 132;
+                    msg.extra = widgetOff;
                     BroadcastMessage(&msg);
-                    msg.codeY = 0x23 + slot;
+
+                    msg.codeY = resource + 35;
                     BroadcastMessage(&msg);
-                    msg.codeY = 0x84 + slot;
-                    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
-                    msg.extra = gpMarketHero->army.armies[slot] + 2;
+
+                    msg.codeX = 4;
+                    msg.codeY = resource + 132;
+                    msg.extra = gpMarketHero->army.armies[resource] + 2;
                     BroadcastMessage(&msg);
-                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                            gpMarketHero->army.numTroops[slot]);
-                    msg.codeX = widget::WIDGET_SET_TEXT;
-                    msg.codeY = 0x23 + slot;
+
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat,
+                                         "%d"),
+                            gpMarketHero->army.numTroops[resource]);
+                    msg.codeX = 3;
+                    msg.codeY = resource + 35;
                     msg.extraText = gText;
                     BroadcastMessage(&msg);
-                    msg.codeX = widget::WIDGET_SET_Y;
-                    msg.extra = gCreatureRowY[slot];
+
+                    msg.codeX = 53;
+                    msg.extra = gCreatureRowY[resource];
                 }
                 BroadcastMessage(&msg);
-                msg.codeX = (gSelectedArtifact == slot) ? widget::WIDGET_SET_STATUS
-                                                        : widget::WIDGET_CLEAR_STATUS;
-                msg.codeY = MARKET_CREATURE_SLOT_0_ID + slot;
-                msg.extra = widget::WIDGET_DRAWN;
+
+                msg.codeX = gSelectedArtifact == resource ? 5 : widgetOff;
+                msg.codeY = resource + 139;
+                msg.extra = 4;
                 BroadcastMessage(&msg);
             } else {
-                msg.codeX = widget::WIDGET_SET_STATUS;
-                msg.codeY = 0x2a + slot;
-                msg.extra = 6;
+                msg.codeX = 5;
+                msg.codeY = resource + 42;
+                msg.extra = widgetOff;
                 BroadcastMessage(&msg);
-                msg.codeY = MARKET_BUY_WOOD_ID + slot;
+                msg.codeY = resource + 63;
                 BroadcastMessage(&msg);
-                msg.codeY = 0x4d + slot;
+                msg.codeY = resource + 77;
                 BroadcastMessage(&msg);
-                msg.codeX = widget::WIDGET_SET_TEXT;
-                msg.codeY = 0x4d + slot;
+
+                msg.codeX = 3;
+                msg.codeY = resource + 77;
                 msg.extraText = gText;
                 if (gSelectedArtifact != -1) {
-                    int iInTradeRatio, bInLeftDenominated, iInMaxUnitsToTrade;
-                    ComputeTradeRatios(gSelectedArtifact, slot, &iInTradeRatio,
-                                       &bInLeftDenominated, &iInMaxUnitsToTrade);
-                    if (bInLeftDenominated == 0 && iInTradeRatio != 1)
-                        sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"),
-                                iInTradeRatio);
+                    int iTempTradeRatio;
+                    int bTempLeftDenominated;
+                    int iTempMaxUnitsToTrade;
+                    ComputeTradeRatios(gSelectedArtifact, resource,
+                                       &iTempTradeRatio,
+                                       &bTempLeftDenominated,
+                                       &iTempMaxUnitsToTrade);
+                    if (!bTempLeftDenominated && iTempTradeRatio != 1)
+                        sprintf(gText,
+                                DATA_COMPGEN(0x0068c5dc,
+                                             creatureInverseFormat,
+                                             "1/%d"),
+                                iTempTradeRatio);
                     else
-                        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                                iInTradeRatio);
+                        sprintf(gText,
+                                DATA_COMPGEN(0x00660a1c,
+                                             decimalFormat,
+                                             "%d"),
+                                iTempTradeRatio);
                 } else {
                     sprintf(gText, emptyRolloverText);
                 }
                 BroadcastMessage(&msg);
-                msg.codeY = MARKET_BUY_WOOD_ID + slot;
-                msg.codeX = (gLeftResource == slot) ? widget::WIDGET_SET_STATUS
-                                                    : widget::WIDGET_CLEAR_STATUS;
-                msg.extra = widget::WIDGET_DRAWN;
+
+                msg.codeX =
+                    gLeftResource == resource ? 5 : widgetOff;
+                msg.codeY = resource + 63;
+                msg.extra = 4;
                 BroadcastMessage(&msg);
             }
         }
     }
 
     if (bUpdate)
-        DrawWindow(1, 0xffff0001, 0xffff);
+        DrawWindow(1, -65535, 65535);
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -1773,25 +1862,23 @@ double get_trade_ratio(EGameResource source, EGameResource dest, double efficien
 VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
 void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
-    type_artifact leftArtifact(ARTIFACT_NONE);
+    type_artifact artifact;
     if (inLeftResource < 18)
-        leftArtifact = *gpMarketHero->get_artifact(inLeftResource);
+        artifact = gpMarketHero->equipped[inLeftResource];
     else
-        leftArtifact = *gpMarketHero->get_backpack(inLeftResource - 18);
+        artifact = gpMarketHero->backpack[inLeftResource - 18];
 
-    float ratio = static_cast<float>(akArtifactTraits[leftArtifact.artifactId].cost)
-                * fArtifactPurchaseEfficency[gMarketCount];
-    ratio /= static_cast<float>(gMarketValues[inRightResource]);
-    if (ratio < 1.0f)
-        ratio = 1.0f;
+    float leftValue =
+        static_cast<float>(akArtifactTraits[artifact.artifactId].cost)
+        * fArtifactPurchaseEfficency[gMarketCount];
+    float result =
+        leftValue / static_cast<float>(gMarketValues[inRightResource]);
+    if (result < 1.0f)
+        result = 1.0f;
+
     *bInLeftDenominated = 1;
-    *iInTradeRatio = static_cast<long>(ratio + 0.5);
+    *iInTradeRatio = static_cast<long>(result + 0.5);
     *iInMaxUnitsToTrade = 1;
-    // Residual (99.67%): the numerator temp (cost*efficiency) homes to a dead
-    // parameter slot [ebp+8] where retail reuses the local slot [ebp-4] that
-    // held leftArtifact.extra - a register-allocator temp-slot choice. Tried
-    // and rejected: single-expression a*b/c (correct slot, wrong fmul order),
-    // block-scoped leftArtifact (no change).
 }
 
 // E:\gamedcs\tradpost.cpp:2250
@@ -2232,145 +2319,158 @@ void TGiveResourceWindow::SetRolloverText(int codeY)
 VA(0x005ed9e0, 0x3e2)  // anchor-vtable 0x643a70 slot 9, dc 0x18bc64
 int TBuyArtifactWindow::WindowHandler(message* msg)
 {
-    int r = CAdvPopup::WindowHandler(msg);
-    if (r != 0)
-        return r;
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
 
-    int bExit = 0;
+    int exitFlag = 0;
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != lastHoverId) {
+            lastHoverId = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        break;
 
-    if (msg->id != MESSAGE_MOUSE_MOVE) {
-        if (msg->id != MESSAGE_WIDGET)
-            return 1;
-
+    case MESSAGE_WIDGET:
         switch (msg->codeX) {
-        case widget::WIDGET_SELECT:
-            switch (msg->codeY) {
-            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
-            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
-            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
-            case MARKET_SELL_GOLD_ID: {
-                int resIdx = msg->codeY - MARKET_SELL_WOOD_ID;
-                if (resIdx == gSelectedArtifact)
-                    return 1;
-                int slotIdx = gLeftResource;
-                gSelectedArtifact = resIdx;
-                if (slotIdx != -1) {
-                    gRatioInverted = 0;
-                    float denom = static_cast<float>(gArtifactMarketValues[resIdx])
-                                * fArtifactPurchaseEfficency[gMarketCount];
-                    float cost = static_cast<float>(
-                        akArtifactTraits[gpMarketArtifacts.asIds[slotIdx]].cost);
-                    long q;
-                    if (denom == 0.0f || cost == 0.0f) {
-                        q = 0;
-                        gGiveQuantity = 0;
-                        gMaxTradeUnits = 0;
-                    } else {
-                        float ratio = cost / denom;
-                        q = static_cast<long>(ratio + 0.5);
-                        gGiveQuantity = q;
-                        gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
-                    }
-                    gRightAmount = gpCurrentPlayer->resources[resIdx] >= q;
-                }
-                break;
-            }
-            case BUY_ARTIFACT_SLOT_0_ID: case BUY_ARTIFACT_SLOT_1_ID:
-            case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
-            case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
-            case BUY_ARTIFACT_SLOT_6_ID: {
-                int slotIdx = msg->codeY - BUY_ARTIFACT_SLOT_0_ID;
-                if (slotIdx == gLeftResource)
-                    return 1;
-                int resIdx = gSelectedArtifact;
-                gLeftResource = slotIdx;
-                if (resIdx != -1) {
-                    gRatioInverted = 0;
-                    float denom = static_cast<float>(gArtifactMarketValues[resIdx])
-                                * fArtifactPurchaseEfficency[gMarketCount];
-                    float cost = static_cast<float>(
-                        akArtifactTraits[gpMarketArtifacts.asIds[slotIdx]].cost);
-                    long q;
-                    if (denom == 0.0f || cost == 0.0f) {
-                        q = 0;
-                        gGiveQuantity = 0;
-                        gMaxTradeUnits = 0;
-                    } else {
-                        float ratio = cost / denom;
-                        q = static_cast<long>(ratio + 0.5);
-                        gGiveQuantity = q;
-                        gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
-                    }
-                    gRightAmount = gpCurrentPlayer->resources[resIdx] >= q;
-                }
-                break;
-            }
-            default:
-                return 1;
-            }
-            break;
-
-        case widget::WIDGET_DESELECT:
+        case MARKET_WIDGET_ACTIVATE:
             switch (msg->codeY) {
             case MARKET_LEFT_PANEL_ID:
                 if (gRightAmount == 0)
-                    return 1;
+                    return MESSAGE_DISPATCH_CONSUME;
                 if (gRatioInverted) {
                     gpCurrentPlayer->resources[gLeftResource] +=
                         gGiveQuantity * gRightAmount;
                 } else {
                     gpCurrentPlayer->resources[gSelectedArtifact] -=
                         gGiveQuantity * gRightAmount;
-                    type_artifact art(gpMarketArtifacts.asIds[gLeftResource], -1);
-                    gpMarketHero->GiveArtifact(&art, 1, 1);
-                    gpMarketArtifacts.asIds[gLeftResource] = -1;
+                    type_artifact artifact(
+                        gpMarketArtifacts.asArtifacts[gLeftResource],
+                        -1);
+                    gpMarketHero->GiveArtifact(&artifact, 1, 1);
+                    gpMarketArtifacts.asArtifacts[gLeftResource] =
+                        ARTIFACT_NONE;
                 }
                 gLeftDenominated = 1;
                 gLeftResource = -1;
                 gSelectedArtifact = -1;
                 break;
+
             case MARKET_LEFT_COUNT_ID:
             case MARKET_LEFT_LABEL_ID:
             case MARKET_BUY_RIGHT_LABEL_ID:
-                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
-                bExit = 1;
+                gpWindowManager->dialogReturn =
+                    msg->codeY - MARKET_LEFT_COUNT_ID;
+                exitFlag = 1;
                 gLeftResource = -1;
                 gSelectedArtifact = -1;
                 gLeftDenominated = 0;
                 break;
+
             default:
-                return 1;
+                return MESSAGE_DISPATCH_CONSUME;
             }
             break;
 
-        case widget::WIDGET_RIGHT_SELECT: {
-            if (msg->codeY < BUY_ARTIFACT_SLOT_0_ID ||
-                msg->codeY > BUY_ARTIFACT_SLOT_6_ID)
-                return 1;
-            type_artifact art(
-                gpMarketArtifacts.asIds[msg->codeY - BUY_ARTIFACT_SLOT_0_ID], -1);
-            gpMarketHero->HeroFn_004D9A00(&art, 1);
-            return 1;
+        case MARKET_WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+            case MARKET_SELL_GOLD_ID: {
+                int source = msg->codeY - MARKET_SELL_WOOD_ID;
+                if (source == gSelectedArtifact)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gSelectedArtifact = source;
+                if (gLeftResource != -1) {
+                    gRatioInverted = 0;
+                    float leftValue =
+                        static_cast<float>(gArtifactMarketValues[source])
+                        * fArtifactPurchaseEfficency[gMarketCount];
+                    float artifactValue = static_cast<float>(
+                        akArtifactTraits[
+                            gpMarketArtifacts.asArtifacts[
+                                gLeftResource]].cost);
+                    if (leftValue == 0.0f || artifactValue == 0.0f) {
+                        gGiveQuantity = 0;
+                        gMaxTradeUnits = 0;
+                    } else {
+                        float ratio = artifactValue / leftValue;
+                        gGiveQuantity = static_cast<long>(ratio + 0.999);
+                        gMaxTradeUnits =
+                            gpCurrentPlayer->resources[source]
+                            / gGiveQuantity;
+                    }
+                    gRightAmount =
+                        gpCurrentPlayer->resources[source] >= gGiveQuantity;
+                }
+                break;
+            }
+
+            case BUY_ARTIFACT_SLOT_0_ID: case BUY_ARTIFACT_SLOT_1_ID:
+            case BUY_ARTIFACT_SLOT_2_ID: case BUY_ARTIFACT_SLOT_3_ID:
+            case BUY_ARTIFACT_SLOT_4_ID: case BUY_ARTIFACT_SLOT_5_ID:
+            case BUY_ARTIFACT_SLOT_6_ID: {
+                int destination = msg->codeY - BUY_ARTIFACT_SLOT_0_ID;
+                if (destination == gLeftResource)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gLeftResource = destination;
+                if (gSelectedArtifact != -1) {
+                    int source = gSelectedArtifact;
+                    gRatioInverted = 0;
+                    float leftValue =
+                        static_cast<float>(gArtifactMarketValues[source])
+                        * fArtifactPurchaseEfficency[gMarketCount];
+                    float artifactValue = static_cast<float>(
+                        akArtifactTraits[
+                            gpMarketArtifacts.asArtifacts[destination]].cost);
+                    if (leftValue == 0.0f || artifactValue == 0.0f) {
+                        gGiveQuantity = 0;
+                        gMaxTradeUnits = 0;
+                    } else {
+                        float ratio = artifactValue / leftValue;
+                        gGiveQuantity = static_cast<long>(ratio + 0.999);
+                        gMaxTradeUnits =
+                            gpCurrentPlayer->resources[source]
+                            / gGiveQuantity;
+                    }
+                    gRightAmount =
+                        gpCurrentPlayer->resources[source] >= gGiveQuantity;
+                }
+                break;
+            }
+
+            default:
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+
+        case MARKET_WIDGET_QUICK_VIEW: {
+            if (msg->codeY < BUY_ARTIFACT_SLOT_0_ID
+                || msg->codeY > BUY_ARTIFACT_SLOT_6_ID)
+                return MESSAGE_DISPATCH_CONSUME;
+            type_artifact artifact(
+                gpMarketArtifacts.asArtifacts[
+                    msg->codeY - BUY_ARTIFACT_SLOT_0_ID],
+                -1);
+            gpMarketHero->HeroFn_004D9A00(&artifact, 1);
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
         default:
-            return 1;
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
-        Update(1);
-        if (bExit) {
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
-            return 2;
+        Update(true);
+        if (exitFlag) {
+            msg->codeX = msg->codeY = 10;
+            return MESSAGE_DISPATCH_FORWARD;
         }
-        return 1;
+        break;
     }
-
-    gpWindowManager->ConvertToHover(*msg);
-    if (msg->codeY != lastHoverId) {
-        lastHoverId = msg->codeY;
-        SetRolloverText(msg->codeY);
-    }
-    return 1;
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\tradpost.cpp:2871
@@ -2636,121 +2736,133 @@ void TSellArtifactWindow::SetRolloverText(int codeY)
 VA(0x005ee890, 0x33f)  // anchor-vtable 0x643ae8 slot 9, dc 0x18c4bc
 int TSellCreatureWindow::WindowHandler(message* msg)
 {
-    int r = CAdvPopup::WindowHandler(msg);
-    if (r != 0)
-        return r;
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
 
-    if (msg->id != MESSAGE_MOUSE_MOVE) {
-        if (msg->id != MESSAGE_WIDGET)
-            return 1;
+    int switchWindow = 0;
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != lastHoverId) {
+            lastHoverId = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        break;
 
-        int bExit = 0;
+    case MESSAGE_WIDGET:
         switch (msg->codeX) {
-        case widget::WIDGET_SELECT:
+        case MARKET_WIDGET_QUICK_VIEW:
+            if (msg->codeY >= MARKET_CREATURE_SLOT_0_ID
+                && msg->codeY <= MARKET_CREATURE_SLOT_6_ID) {
+                gpGame->ViewArmy(
+                    gpMarketHero->army,
+                    msg->codeY - MARKET_CREATURE_SLOT_0_ID,
+                    gpMarketHero, 0, 0x77, 0x14, 0, 1);
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            return MESSAGE_DISPATCH_CONSUME;
+
+        case MARKET_WIDGET_ACTIVATE:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID:
+                if (gRightAmount == 0)
+                    return MESSAGE_DISPATCH_CONSUME;
+                if (gRatioInverted) {
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gGiveQuantity * gRightAmount;
+                    gpMarketHero->army.numTroops[gSelectedArtifact] -=
+                        gRightAmount;
+                } else {
+                    gpMarketHero->army.numTroops[gSelectedArtifact] -=
+                        gGiveQuantity * gRightAmount;
+                    gpCurrentPlayer->resources[gLeftResource] +=
+                        gRightAmount;
+                }
+                if (gpMarketHero->army.numTroops[gSelectedArtifact] == 0)
+                    gpMarketHero->army.armies[gSelectedArtifact] =
+                        CREATURE_NONE;
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+
+            case MARKET_RIGHT_PANEL_ID:
+                gRightAmount = gMaxTradeUnits;
+                creatureSlider->SetState(gRightAmount);
+                break;
+
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_LEFT_LABEL_ID:
+                gpWindowManager->dialogReturn =
+                    msg->codeY - MARKET_LEFT_COUNT_ID;
+                switchWindow = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+
+            default:
+                return MESSAGE_DISPATCH_CONSUME;
+            }
+            break;
+
+        case MARKET_WIDGET_SELECT:
             switch (msg->codeY) {
             case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
             case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
             case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
             case MARKET_BUY_GOLD_ID: {
-                int resIdx = msg->codeY - MARKET_BUY_WOOD_ID;
-                if (resIdx == gLeftResource)
-                    return 1;
-                int prevSel = gSelectedArtifact;
-                gLeftResource = resIdx;
-                if (prevSel != -1) {
-                    ComputeTradeRatios(prevSel, resIdx,
-                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+                int destination = msg->codeY - MARKET_BUY_WOOD_ID;
+                if (destination == gLeftResource)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gLeftResource = destination;
+                if (gSelectedArtifact != -1) {
+                    ComputeTradeRatios(gSelectedArtifact, destination,
+                                       &gGiveQuantity, &gRatioInverted,
+                                       &gMaxTradeUnits);
                     creatureSlider->SetResolution(gMaxTradeUnits + 1);
                     gRightAmount = 0;
                 }
                 break;
             }
+
             case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
             case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
             case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
             case MARKET_CREATURE_SLOT_6_ID: {
-                int slotIdx = msg->codeY - MARKET_CREATURE_SLOT_0_ID;
-                if (slotIdx == gSelectedArtifact)
-                    return 1;
-                int prevRes = gLeftResource;
-                gSelectedArtifact = slotIdx;
-                if (prevRes != -1) {
-                    ComputeTradeRatios(slotIdx, prevRes,
-                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+                int creatureSlot =
+                    msg->codeY - MARKET_CREATURE_SLOT_0_ID;
+                if (creatureSlot == gSelectedArtifact)
+                    return MESSAGE_DISPATCH_CONSUME;
+                gSelectedArtifact = creatureSlot;
+                if (gLeftResource != -1) {
+                    ComputeTradeRatios(creatureSlot, gLeftResource,
+                                       &gGiveQuantity, &gRatioInverted,
+                                       &gMaxTradeUnits);
                     creatureSlider->SetResolution(gMaxTradeUnits + 1);
                     gRightAmount = 0;
                 }
                 break;
             }
+
             default:
-                return 1;
+                return MESSAGE_DISPATCH_CONSUME;
             }
             break;
-
-        case widget::WIDGET_DESELECT:
-            switch (msg->codeY) {
-            case MARKET_LEFT_PANEL_ID:
-                if (gRightAmount == 0)
-                    return 1;
-                if (gRatioInverted) {
-                    gpCurrentPlayer->resources[gLeftResource] +=
-                        gGiveQuantity * gRightAmount;
-                    gpMarketHero->army.numTroops[gSelectedArtifact] -= gRightAmount;
-                } else {
-                    gpMarketHero->army.numTroops[gSelectedArtifact] -=
-                        gGiveQuantity * gRightAmount;
-                    gpCurrentPlayer->resources[gLeftResource] += gRightAmount;
-                }
-                if (gpMarketHero->army.numTroops[gSelectedArtifact] == 0)
-                    gpMarketHero->army.armies[gSelectedArtifact] = -1;
-                gLeftDenominated = 1;
-                gLeftResource = -1;
-                gSelectedArtifact = -1;
-                break;
-            case MARKET_RIGHT_PANEL_ID:
-                gRightAmount = gMaxTradeUnits;
-                creatureSlider->SetState(gMaxTradeUnits);
-                break;
-            case MARKET_LEFT_COUNT_ID:
-            case MARKET_LEFT_LABEL_ID:
-                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
-                bExit = 1;
-                gLeftResource = -1;
-                gSelectedArtifact = -1;
-                gLeftDenominated = 0;
-                break;
-            default:
-                return 1;
-            }
-            break;
-
-        case widget::WIDGET_RIGHT_SELECT:
-            if (msg->codeY < MARKET_CREATURE_SLOT_0_ID ||
-                msg->codeY > MARKET_CREATURE_SLOT_6_ID)
-                return 1;
-            gpGame->ViewArmy(gpMarketHero->army,
-                             msg->codeY - MARKET_CREATURE_SLOT_0_ID,
-                             gpMarketHero, 0, 119, 20, 0, 1);
-            return 1;
 
         default:
-            return 1;
+            return MESSAGE_DISPATCH_CONSUME;
         }
 
-        Update(1);
-        if (bExit) {
-            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
-            return 2;
+        Update(true);
+        if (switchWindow) {
+            msg->codeX = msg->codeY = 10;
+            return MESSAGE_DISPATCH_FORWARD;
         }
-        return 1;
+        break;
     }
-
-    gpWindowManager->ConvertToHover(*msg);
-    if (msg->codeY != lastHoverId) {
-        lastHoverId = msg->codeY;
-        SetRolloverText(msg->codeY);
-    }
-    return 1;
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\tradpost.cpp:3324

@@ -12,7 +12,10 @@
 #include "window.h"
 
 class armyGroup;
+class button;
 class hero;
+class iconWidget;
+class recruitUnit;
 class town;
 
 // Creature-record table POINTER at 0x6747b0 - armygrp.h's
@@ -35,18 +38,40 @@ void GetMonsterCost(int monId, int* resCost);
 // from armygrp.h, which recruit.cpp includes first.
 void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
     long amount, int* cost);
+void QuickViewRecruit(town* newTown, int newDwellingIndex);
+// Retail passes the four-byte enum in ECX (the town overload loads it with
+// `mov ecx, [gTownDwellingCreatures + index*4]`). Dreamcast's older roster
+// says char, contradicted on this x86 image by that load width.
+void QuickViewRecruit(enum TCreatureType MonType, short* numMon);
+
+// Recruit-window message ids, fixed by the constructor's widget ids and by
+// recruitUnit::Main's retail switch tables.
+enum ERecruitWidgetId {
+    RECRUIT_QUANTITY_ID = 0x20e,
+    RECRUIT_MAXIMUM_ID = 0x214,
+    RECRUIT_CREATURE_0_ID = 0x21a,
+    RECRUIT_CREATURE_1_ID = 0x21b,
+    RECRUIT_CREATURE_2_ID = 0x21c,
+    RECRUIT_CREATURE_3_ID = 0x21d,
+    RECRUIT_STATUS_ID = 0x231,
+    RECRUIT_CANCEL_ID = 0x7801,
+    RECRUIT_ACCEPT_ID = 0x7802
+};
+
+enum ERecruitCreatureSlot {
+    RECRUIT_SLOT_0 = 0,
+    RECRUIT_SLOT_1 = 1,
+    RECRUIT_SLOT_2 = 2,
+    RECRUIT_SLOT_3 = 3
+};
 
 // The recruit dialog's own window and its quick-view twin. Both derive
 // DIRECTLY from heroWindow, not from CHeroWindowEx: their retail
 // destructors (0x54fb20 / 0x5516e0) store ONE vptr (0x640c4c /
 // 0x640c7c) and then call heroWindow::~heroWindow (0x5fea80) - an
 // intermediate class with its own vtable would have stored its vptr
-// first. Own data members are NOT modeled: only the destructors are
-// reconstructed so far, and they touch nothing below heroWindow.
-// (recruitUnit::Update reads three widget handles at +0x50/+0x54/+0x58
-// of the global at 0x69d5e8, so TRecruitWindow's own fields start at
-// 0x4c - but that function is not reconstructed yet, so the fields
-// stay unmodeled rather than fabricated. No SIZE assert.)
+// first. The constructor, add_creature_widgets, Open and Update now close
+// TRecruitWindow's own 0x20-byte tail exactly.
 //
 // Three widget handles ARE now byte-proven, by recruitUnit::Update's
 // enable pass (0x550306..0x5503b7): +0x50 is enabled only when
@@ -54,16 +79,27 @@ void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
 // control), +0x54 on maxAvail > 0 && !view_only, and +0x58 is the
 // dialog's slider - the same pass drives its SetResolution/SetState
 // slots. Their NAMES are unattested, so they keep ordinal
-// placeholders; +0x4c stays padding.
+// placeholders. The constructor proves +0x4c is recruit_info and proves
+// +0x50/+0x54 are button pointers: their derived-to-widget conversions
+// materialize the exact temporary consumed by vector<widget*>::push_back.
 class TRecruitWindow : public heroWindow {
 public:
-    char pad_4c[4];
-    widget* field_50;
-    widget* field_54;
+    recruitUnit* recruit_info;
+    button* field_50;
+    button* field_54;
     slider* field_58;
+    // Four creature portraits, byte-proven by
+    // add_creature_widgets' [this + slot*4 + 0x5c] stores. recruitUnit::Open
+    // allocates 0x6c bytes for this class, closing the tail exactly.
+    iconWidget* creature_widgets[4];
 
+    TRecruitWindow(int x2, int y2, int altResource,
+                   recruitUnit* recruit_info);
     virtual ~TRecruitWindow();
+    void add_creature_widgets(long start_x, long start_y, long name_y,
+                              TCreatureType creature, long slot);
 };
+SIZE(TRecruitWindow, 0x6c);
 
 // The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
 // gp<Type> house convention); recruitUnit::Open builds it,
@@ -106,6 +142,7 @@ extern SUnnamed6aacb0* gUnnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
 public:
+    TRecruitQuickWindow(int x2, int y2);
     virtual ~TRecruitQuickWindow();
 };
 
@@ -162,7 +199,7 @@ public:
     unsigned char bCurrArmyGroupIsTownGarrison;
     char pad_a0[4];
     int updateNeeded;
-    char pad_a8[4];
+    int errorExit;
     int maxAvail;
     long totalGold;
     int totalResources;
@@ -199,6 +236,7 @@ public:
     virtual int Main(message& msg) OVERRIDE;         // slot 2, 0x550940
 
     void Update(unsigned char new_monster, long slot);
+    void SetRolloverText(int codeY);
 
 
     // Defined here, not in recruit.cpp, because retail HAS NO
@@ -247,7 +285,7 @@ SIZE(recruitUnit, 188);
 // CODEVIEW(E:\gamedcs\recruit.cpp:492, dc 0x119d98) TCreatureType siege_artifact_to_creature(TArtifact engine);
 // CODEVIEW(E:\gamedcs\recruit.cpp:693, dc 0x11a2f4) int ExitRecruitUnit(message* msg);
 // CODEVIEW(E:\gamedcs\recruit.cpp:1232, dc 0x11affc) void QuickViewRecruit(town* newTown, int newDwellingIndex);
-// CODEVIEW(E:\gamedcs\recruit.cpp:1239, dc 0x11b028) void QuickViewRecruit(char MonType, short* numMon);
+// CODEVIEW(E:\gamedcs\recruit.cpp:1239, dc 0x11b028) void QuickViewRecruit(char MonType, short* numMon); // retail: TCreatureType
 
 // --- TRecruitQuickWindow ---
 // CODEVIEW(E:\gamedcs\recruit.cpp:1219, dc 0x11af24) void TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2);

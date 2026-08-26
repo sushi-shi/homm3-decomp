@@ -5,6 +5,7 @@
 #include "combatcontrolsubwindow.h"
 #include "border.h"
 #include "button.h"
+#include "combatwindow.h"
 #include "cmbtmgr.h"
 #include "game.h"
 #include "inputmgr.h"
@@ -318,8 +319,9 @@ type_combat_sub_window::~type_combat_sub_window()
 // temporary for push_back, which only the derived-to-widget* conversion
 // can explain. Same test as TBottomViewNewTurn::backdrop.
 //
-// The two arrows' handlers are ADDRESS-TAKEN ONLY and uncarved; see the
-// note on their declarations in the header.
+// The two arrows' handlers are ADDRESS-TAKEN ONLY. They were absent from the
+// original carve but are now promoted at 0x472df0/0x472e40 in combatwindow.obj
+// under their Dreamcast-attested static TCombatWindow names.
 //
 // Residual (96.39904%): every widget, literal, help row, hotkey, dim and
 // both loops agree, and the only deltas are two scheduling swaps inside
@@ -348,7 +350,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     widgets.push_back(rolloverWidget);
 
     logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
-        "ComSlide.def", combat_log_scroll_up, 0, 1);
+        "ComSlide.def", TCombatWindow::scroll_up, 0, 1);
     logScrollUpButton->set_help_text(gCombatSubWindowHelp[5].text,
         gCombatSubWindowHelp[5].rclick, 1);
     logScrollUpButton->disabled_frame = 1;
@@ -356,7 +358,7 @@ TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
     widgets.push_back(logScrollUpButton);
 
     logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
-        "ComSlide.def", combat_log_scroll_down, 2, 3);
+        "ComSlide.def", TCombatWindow::scroll_down, 2, 3);
     logScrollDownButton->set_help_text(gCombatSubWindowHelp[5].text,
         gCombatSubWindowHelp[5].rclick, 1);
     logScrollDownButton->set_hotkey(KEYCODE_KP_2);
