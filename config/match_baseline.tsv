@@ -1108,6 +1108,7 @@ game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0
+game	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0
 game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
 game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80
@@ -1301,6 +1302,7 @@ game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.000
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
+game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60
 game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	100.0000	100.0000	100.0000	0xc2330
 game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc23c0
