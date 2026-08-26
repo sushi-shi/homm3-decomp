@@ -1723,37 +1723,9 @@ void TBuyArtifactWindow::SetupNewTrade()
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:2312
-DC_ONLY(0x18b3a8, 0x2A)  // inlined away on x86 (no carve slot)
-void TSellArtifactWindow::SetupNewTrade()
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:2319
 DC_ONLY(0x18b3d4, 0x40)  // inlined away on x86 (no carve slot)
 void TSellCreatureWindow::SetupNewTrade()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2327
-DC_ONLY(0x18b414, 0x76)  // inlined away on x86 (no carve slot)
-void TSellArtifactWindow::UpdateMarketBackpack()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2344
-DC_ONLY(0x18b48c, 0x3A)  // inlined away on x86 (no carve slot)
-void TSellArtifactWindow::increment_backpack_start()
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:2356
-DC_ONLY(0x18b4c8, 0x78)  // inlined away on x86 (no carve slot)
-void TSellArtifactWindow::decrement_backpack_start()
 {
     // @stub
 }
@@ -1801,11 +1773,11 @@ double get_trade_ratio(EGameResource source, EGameResource dest, double efficien
 VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
 void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
 {
-    type_artifact leftArtifact;
+    type_artifact leftArtifact(ARTIFACT_NONE);
     if (inLeftResource < 18)
-        leftArtifact = gpMarketHero->equipped[inLeftResource];
+        leftArtifact = *gpMarketHero->get_artifact(inLeftResource);
     else
-        leftArtifact = gpMarketHero->backpack[inLeftResource - 18];
+        leftArtifact = *gpMarketHero->get_backpack(inLeftResource - 18);
 
     float ratio = static_cast<float>(akArtifactTraits[leftArtifact.artifactId].cost)
                 * fArtifactPurchaseEfficency[gMarketCount];
@@ -1864,6 +1836,62 @@ void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightReso
     // (retail compares the GetNumArmies result in place before reusing eax for
     // the hero reload; the denominated arm's idiv pins iInTradeRatio in esi and
     // matches exactly). A register wall - the float math and control flow agree.
+}
+
+// The four private helpers below survive only as inlined bodies in the retail
+// x86 WindowHandler. Dreamcast names and xrefs prove their source boundaries;
+// their placement here restores the original source order after both surviving
+// ComputeTradeRatios definitions.
+
+// E:\gamedcs\tradpost.cpp:2312
+void TSellArtifactWindow::SetupNewTrade()
+{
+    ComputeTradeRatios(gSelectedArtifact, gLeftResource,
+        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
+    gRightAmount = 1;
+}
+
+// E:\gamedcs\tradpost.cpp:2327
+void TSellArtifactWindow::UpdateMarketBackpack()
+{
+    long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+    message icon;
+    icon.codeY = 0;
+    icon.qualifier = 0;
+    icon.mouseX = 0;
+    icon.mouseY = 0;
+    icon.extra = 0;
+    icon.window = 0;
+    icon.id = MESSAGE_WIDGET;
+    icon.codeX = widget::WIDGET_SET_ICON_FRAME;
+    for (int k = 0; k < 5 && k < numInBackpack; ++k) {
+        icon.codeY = k + 0x66;
+        icon.extra = gpMarketHero->get_backpack(
+            ((gBackpackStart & 0xff) + k) % numInBackpack)->artifactId;
+        BroadcastMessage(&icon);
+    }
+}
+
+// E:\gamedcs\tradpost.cpp:2344
+void TSellArtifactWindow::increment_backpack_start()
+{
+    long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+    if (numInBackpack > 5) {
+        gBackpackStart = static_cast<unsigned char>(
+            ((gBackpackStart & 0xff) + 1) % numInBackpack);
+        UpdateMarketBackpack();
+    }
+}
+
+// E:\gamedcs\tradpost.cpp:2356
+void TSellArtifactWindow::decrement_backpack_start()
+{
+    long numInBackpack = gpMarketHero->get_number_in_backpack(1);
+    if (numInBackpack > 5) {
+        gBackpackStart = static_cast<unsigned char>(
+            ((gBackpackStart & 0xff) + numInBackpack - 1) % numInBackpack);
+        UpdateMarketBackpack();
+    }
 }
 
 // E:\gamedcs\tradpost.cpp:2368
@@ -2403,6 +2431,7 @@ int TSellArtifactWindow::WindowHandler(message* msg)
         return r;
 
     int bExit = 0;
+    int bUpdate = 0;
 
     if (msg->id != MESSAGE_MOUSE_MOVE) {
         if (msg->id != MESSAGE_WIDGET)
@@ -2418,13 +2447,9 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 int resource = msg->codeY - MARKET_BUY_WOOD_ID;
                 if (resource == gLeftResource)
                     return 1;
-                int selected = gSelectedArtifact;
                 gLeftResource = resource;
-                if (selected != -1) {
-                    ComputeTradeRatios(selected, resource,
-                        &gGiveQuantity, &gRatioInverted, &gMaxTradeUnits);
-                    gRightAmount = 1;
-                }
+                if (gSelectedArtifact != -1)
+                    SetupNewTrade();
                 break;
             }
             case MARKET_ARTIFACT_SLOT_13_ID: case MARKET_ARTIFACT_SLOT_14_ID:
@@ -2445,27 +2470,15 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
                 if (slot == gSelectedArtifact)
                     return 1;
-                int resource = gLeftResource;
                 gSelectedArtifact = slot;
-                if (resource != -1) {
-                    type_artifact art = (slot < 18)
-                        ? gpMarketHero->equipped[slot]
-                        : gpMarketHero->backpack[slot - 18];
-                    float ratio = static_cast<float>(akArtifactTraits[art.artifactId].cost)
-                                * fArtifactPurchaseEfficency[gMarketCount]
-                                / static_cast<float>(gMarketValues[resource]);
-                    if (ratio < 1.0f)
-                        ratio = 1.0f;
-                    gRatioInverted = 1;
-                    gGiveQuantity = static_cast<long>(ratio + 0.5);
-                    gMaxTradeUnits = 1;
-                    gRightAmount = 1;
-                }
+                if (gLeftResource != -1)
+                    SetupNewTrade();
                 break;
             }
             default:
                 return 1;
             }
+            bUpdate = 1;
             break;
 
         case widget::WIDGET_DESELECT:
@@ -2499,47 +2512,17 @@ int TSellArtifactWindow::WindowHandler(message* msg)
                 gLeftDenominated = 0;
                 break;
             case MARKET_ARTIFACT_LEFT_ARROW_ID:
-            case MARKET_ARTIFACT_RIGHT_ARROW_ID: {
-                long numInBackpack = gpMarketHero->get_number_in_backpack(1);
-                if (numInBackpack > 5) {
-                    long step = (msg->codeY == MARKET_ARTIFACT_LEFT_ARROW_ID)
-                                    ? numInBackpack - 1 : 1;
-                    gBackpackStart = static_cast<unsigned char>(
-                        ((gBackpackStart & 0xff) + step) % numInBackpack);
-                    numInBackpack = gpMarketHero->get_number_in_backpack(1);
-                    message icon;
-                    icon.codeY = 0;
-                    icon.qualifier = 0;
-                    icon.mouseX = 0;
-                    icon.mouseY = 0;
-                    icon.extra = 0;
-                    icon.window = 0;
-                    icon.id = MESSAGE_WIDGET;
-                    icon.codeX = widget::WIDGET_SET_ICON_FRAME;
-                    for (int k = 0; k < numInBackpack && k < 5; ++k) {
-                        icon.codeY = k + 0x66;
-                        icon.extra = gpMarketHero->backpack[
-                            ((gBackpackStart & 0xff) + k) % numInBackpack].artifactId;
-                        BroadcastMessage(&icon);
-                    }
-                }
-                type_artifact art = (gSelectedArtifact < 18)
-                    ? gpMarketHero->equipped[gSelectedArtifact]
-                    : gpMarketHero->backpack[gSelectedArtifact - 18];
-                float ratio = static_cast<float>(akArtifactTraits[art.artifactId].cost)
-                            * fArtifactPurchaseEfficency[gMarketCount]
-                            / static_cast<float>(gMarketValues[gLeftResource]);
-                if (ratio < 1.0f)
-                    ratio = 1.0f;
-                gRatioInverted = 1;
-                gGiveQuantity = static_cast<long>(ratio + 0.5);
-                gMaxTradeUnits = 1;
-                gRightAmount = 1;
+                decrement_backpack_start();
+                SetupNewTrade();
                 break;
-            }
+            case MARKET_ARTIFACT_RIGHT_ARROW_ID:
+                increment_backpack_start();
+                SetupNewTrade();
+                break;
             default:
                 return 1;
             }
+            bUpdate = 1;
             break;
 
         case widget::WIDGET_RIGHT_SELECT:
@@ -2557,10 +2540,8 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             case MARKET_ARTIFACT_SLOT_21_ID: case MARKET_ARTIFACT_SLOT_22_ID: {
                 int slot = msg->codeY - MARKET_ARTIFACT_SLOT_00_ID;
                 type_artifact art;
-                art.artifactId = -1;
-                art.extra = -1;
                 if (slot < 18) {
-                    art = gpMarketHero->equipped[slot];
+                    art = *gpMarketHero->get_artifact(slot);
                 } else {
                     long numInBackpack = gpMarketHero->get_number_in_backpack(1);
                     art = gpMarketHero->backpack[
@@ -2577,7 +2558,8 @@ int TSellArtifactWindow::WindowHandler(message* msg)
             return 1;
         }
 
-        Update(1);
+        if (bUpdate)
+            Update(1);
         if (bExit) {
             msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
             return 2;
