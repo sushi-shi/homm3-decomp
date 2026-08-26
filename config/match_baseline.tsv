@@ -1246,6 +1246,13 @@ game	?_Ufill@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@st
 game	?_Ufill@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd2250
 game	?_Ufill@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0xd4fc0
 game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd21e0
+game	?_Xran@?$bitset@$03@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1850
+game	?_Xran@?$bitset@$04@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2610
+game	?_Xran@?$bitset@$0BM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd26e0
+game	?_Xran@?$bitset@$0EG@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd1c80
+game	?_Xran@?$bitset@$0IA@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd5000
+game	?_Xran@?$bitset@$0JM@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd2090
+game	?_Xran@?$bitset@$0M@@std@@ABEXXZ	100.0000	100.0000	100.0000	0xd4eb0
 # DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
 # reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
 # inline the one CMCHideHero constructor and they disagree on where its
@@ -1304,19 +1311,21 @@ game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.000
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
+game	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4de0
 game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0
 game	?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcfa60
 game	?set@?$bitset@$0JM@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd0070
 game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	100.0000	100.0000	100.0000	0xc2330
 game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc23c0
 game	?setup_shipyards@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbcb30
-game	?size@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QBEIXZ	99.9286	99.9286	99.9286	0xcf750
+game	?size@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf750
 game	?size@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xd47d0
 game	?size@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf730
 game	?size@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf6c0
 game	?test@?$bitset@$03@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcf960
 game	?test@?$bitset@$07@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfef0
 game	?test@?$bitset@$0BM@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd17d0
+game	?test@?$bitset@$0IA@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xd4e50
 game	?test@?$bitset@$0JB@@std@@QBE_NI@Z	100.0000	100.0000	100.0000	0xcfad0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
