@@ -1140,6 +1140,9 @@ public:
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
     int Read(TAbstractFile* infile, int campaignMap);
+    // Complete's map-condition reader keeps the Dreamcast method identity;
+    // its payload width depends on the map format stored in this header.
+    int readVictoryCondition(char type, TAbstractFile* infile);
     // Retail 0x4c3c80 is the PC counterpart of the Dreamcast-named helper.
     // Its second stack argument is the concrete abstract stream used by Read;
     // the DC declarator obscures that pointer as void*.
