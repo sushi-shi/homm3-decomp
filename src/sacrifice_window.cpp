@@ -5,6 +5,7 @@
 #define HOMM3_WIDGET_HIDE_SHOW_INLINE
 #include <va.h>
 #include "sacrifice_window.h"
+#include "border.h"
 #include "button.h"
 #include "game.h"
 #include "kb.h"
@@ -52,18 +53,24 @@ static const TCreatureType giDeathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
 };
 
+// Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
+static const long slot_definitions[19][2] = {
+    {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
+    {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
+    {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
+    {244, 64}, {244, 110}, {244, 299}, {15, 283}
+};
+
+static const long row_start[5][2] = {
+    {314, 50}, {314, 120}, {314, 190}, {314, 260}, {395, 330}
+};
+static const long row_size[5] = {5, 5, 5, 5, 2};
+
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
 
 // E:\gamedcs\sacrifice_window.cpp:125
 DC_ONLY(0x123e8c, 0x7C)
 void type_artifact_offering::set(const type_artifact* arg, TArtifactSlot slot, const hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:170
-DC_ONLY(0x123f08, 0x80)
-void type_doll_slot_widget::type_doll_slot_widget(const type_doll_slot_definition* def, long _id)
 {
     // @stub
 }
@@ -75,23 +82,9 @@ unsigned char type_doll_slot_widget::handle_click(unsigned char down_click, unsi
     // @stub
 }
 
-// E:\gamedcs\sacrifice_window.cpp:204
-DC_ONLY(0x123fb0, 0x78)
-void type_backpack_slot_widget::type_backpack_slot_widget(const type_icon_definition* def, long _slot, long _id)
-{
-    // @stub
-}
-
 // E:\gamedcs\sacrifice_window.cpp:213
 DC_ONLY(0x124028, 0x28)
 unsigned char type_backpack_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:235
-DC_ONLY(0x124050, 0x74)
-void type_artifact_offering_widget::type_artifact_offering_widget(long new_x, long new_y, long new_width, long new_height, long new_item_number, long new_id, const char* image)
 {
     // @stub
 }
@@ -120,13 +113,6 @@ unsigned char type_army_slot_widget::handle_click(unsigned char down_click, unsi
 // E:\gamedcs\sacrifice_window.cpp:287
 DC_ONLY(0x12419c, 0x51C)
 void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:360
-DC_ONLY(0x1246b8, 0x7A8)
-void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player)
 {
     // @stub
 }
@@ -571,13 +557,6 @@ void type_army_slot_widget::~type_army_slot_widget()
 // E:\gamedcs\sacrifice_window.cpp:352
 DC_ONLY(0x1286e0, 0x34)
 void* type_sacrifice_window::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:352
-DC_ONLY(0x128714, 0x1C)
-void type_artifact_offering::type_artifact_offering()
 {
     // @stub
 }
@@ -1519,6 +1498,48 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
         value * owner->GetExperienceBonusFactor());
 }
 
+// The window member takes the ordinary empty-artifact construction. The
+// builder's local uses type_artifact's one-argument form, whose auxiliary-
+// then-id store order is independently exact in the artifact reward paths.
+inline type_artifact_offering::type_artifact_offering()
+{
+}
+
+inline type_artifact_offering::type_artifact_offering(TArtifact artifact)
+    : type_artifact(artifact)
+{
+}
+
+// E:\gamedcs\sacrifice_window.cpp:170
+// All Complete calls are expanded into the artifact widget builder.
+inline type_doll_slot_widget::type_doll_slot_widget(
+    const type_doll_slot_definition& def, long id)
+    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+                 0, 0, 0, 0, 16)
+{
+    slot = def.slot;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:204
+// All Complete calls are expanded into the artifact widget builder.
+inline type_backpack_slot_widget::type_backpack_slot_widget(
+    const type_icon_definition& def, long new_slot, long id)
+    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+                 0, 0, 0, 0, 16)
+{
+    slot = new_slot;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:235
+// All Complete calls are expanded into the artifact widget builder.
+inline type_artifact_offering_widget::type_artifact_offering_widget(
+    long x, long y, long width, long height, long new_item_number,
+    long id, const char* image)
+    : iconWidget(x, y, width, height, id, image, 0, 0, 0, 0, 16)
+{
+    item_number = new_item_number;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:178
 // The doll-slot twin of the two below: one carve row ahead of them, in the
 // Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
@@ -1671,6 +1692,154 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
         else
             MemError();
     }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:360
+// DC fixes the function identity, local roster, reserve and callee counts.
+// Complete independently exposes all nineteen equipment coordinates, the
+// five-slot backpack strip, the 5/5/5/5/2 offering grid, every callback and
+// help row, and the insertion order into Widgets and artifact_widgets.
+VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
+void type_sacrifice_window::create_artifact_widgets(
+    long& widget_id, int cur_player)
+{
+    artifact_widgets.reserve(80);
+
+    bitmapBorder* background = new bitmapBorder(
+        0, 0, 600, 593, widget_id++,
+        gpGame->f_1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+    background->SetPlayerPaletteColors(cur_player);
+    Widgets.push_back(background);
+    artifact_widgets.push_back(background);
+
+    type_doll_slot_definition def;
+    iconWidget* icon_widget;
+    def.width = 44;
+    def.height = 44;
+    def.image = "artifact.def";
+    long count = gpGame->f_1f698 >= 2 ? 19 : 18;
+    long i;
+    for (i = 0; i < count; ++i) {
+        def.x = slot_definitions[i][0];
+        def.y = slot_definitions[i][1];
+        def.slot = i;
+
+        icon_widget = new iconWidget(
+            def.x, def.y, def.width, def.height, widget_id++, def.image,
+            0, 0, 0, 0, 16);
+        Widgets.push_back(icon_widget);
+        slot_back_widgets.push_back(icon_widget);
+
+        icon_widget = new type_doll_slot_widget(def, widget_id++);
+        Widgets.push_back(icon_widget);
+        slot_widgets.push_back(icon_widget);
+        artifact_widgets.push_back(icon_widget);
+    }
+
+    def.x = 43;
+    def.y = 352;
+    for (i = 0; i < 5; ++i) {
+        icon_widget = new type_backpack_slot_widget(def, i, widget_id++);
+        def.x += 44;
+        Widgets.push_back(icon_widget);
+        backpack_widgets.push_back(icon_widget);
+        artifact_widgets.push_back(icon_widget);
+    }
+
+    left_backpack_button = new type_func_button(
+        20, 352, 22, 46, widget_id++, "hsbtns3.def",
+        scroll_backpack_left, 0, 1);
+    Widgets.push_back(left_backpack_button);
+    artifact_widgets.push_back(left_backpack_button);
+
+    right_backpack_button = new type_func_button(
+        264, 352, 22, 46, widget_id++, "hsbtns5.def",
+        scroll_backpack_right, 0, 1);
+    Widgets.push_back(right_backpack_button);
+    artifact_widgets.push_back(right_backpack_button);
+
+    type_artifact_offering artifact_offering(ARTIFACT_NONE);
+    long item_count = 0;
+    textWidget* text_widget;
+    for (long j = 0; j < 5; ++j) {
+        long item_x = row_start[j][0];
+        long item_y = row_start[j][1];
+        long text_x = item_x - 2;
+        long text_y = item_y + 47;
+        for (count = row_size[j]; count > 0; --count) {
+            text_widget = new textWidget(
+                text_x, text_y, 48, 16, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+            Widgets.push_back(text_widget);
+            artifact_widgets.push_back(text_widget);
+            artifact_value_widgets.push_back(text_widget);
+
+            icon_widget = new type_artifact_offering_widget(
+                item_x, item_y, 44, 44, item_count++,
+                widget_id++, "artifact.def");
+            Widgets.push_back(icon_widget);
+            artifact_widgets.push_back(icon_widget);
+            artifact_offering_widgets.push_back(icon_widget);
+            artifact_offerings.push_back(artifact_offering);
+
+            text_x += 54;
+            item_x += 54;
+        }
+    }
+
+    current_artifact_value = new textWidget(
+        269, 492, 66, 16,
+        DATA_COMPGEN(0x00682a08, artifactZeroText, "0"),
+        "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(current_artifact_value);
+    artifact_widgets.push_back(current_artifact_value);
+
+    current_artifact_widget = new iconWidget(
+        279, 440, 44, 44, widget_id++, "artifact.def",
+        0, 0, 0, 0, 16);
+    current_artifact_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].text, 0, 1);
+    Widgets.push_back(current_artifact_widget);
+    artifact_widgets.push_back(current_artifact_widget);
+
+    empty_backpack_button = new type_func_button(
+        146, 520, 64, 32, widget_id++, "AltEmBk.def",
+        empty_backpack, 0, 1);
+    empty_backpack_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].text, 0, 1);
+    Widgets.push_back(empty_backpack_button);
+    artifact_widgets.push_back(empty_backpack_button);
+
+    all_artifacts_button = new type_func_button(
+        392, 520, 64, 32, widget_id++, "AltFill.def",
+        all_artifacts, 0, 1);
+    all_artifacts_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].text, 0, 1);
+    Widgets.push_back(all_artifacts_button);
+    artifact_widgets.push_back(all_artifacts_button);
+
+    creatures_button = new type_func_button(
+        515, 421, 64, 32, widget_id++, "AltSacC.def",
+        sacrifice_creatures, 0, 1);
+    creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].text,
+        0, 1);
+    Widgets.push_back(creatures_button);
+    artifact_widgets.push_back(creatures_button);
+
+    text_widget = new textWidget(
+        317, 23, 256, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    artifact_widgets.push_back(text_widget);
+
+    text_widget = new textWidget(
+        159, 415, 283, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    artifact_widgets.push_back(text_widget);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:699
