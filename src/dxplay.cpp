@@ -1600,6 +1600,33 @@ CDPlayLobby::~CDPlayLobby()
         m_lpLobby->Release();
 }
 
+// E:\gamedcs\dxplay.cpp:1224
+VA(0x004989a0, 0xB7)  // vtable slot62 + GetCurrentDirectoryA, dc 0x8b60c
+unsigned char CDPlayLobby::RegisterApp(char* appName, char* fileName,
+    char* commandLine, GUID appGuid, char* executableName)
+{
+    if (!m_lpLobby)
+        return 0;
+    char currentDirectory[0x105];
+    DPAPPLICATIONDESC2 desc;
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = 0;
+    desc.lpszApplicationNameA = appName;
+    desc.lpszDescriptionA = 0;
+    desc.lpszDescriptionW = 0;
+    if (!GetCurrentDirectoryA(0x105, currentDirectory))
+        return 0;
+    desc.lpszPathA = currentDirectory;
+    desc.lpszCurrentDirectoryA = currentDirectory;
+    desc.lpszFilenameA = fileName;
+    desc.guidApplication = appGuid;
+    desc.lpszCommandLineA = commandLine;
+    desc.lpszAppLauncherNameA = executableName;
+    m_hRes = m_lpLobby->RegisterApplication(0, &desc);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 VA(0x00498a60, 0x72)
 unsigned char CDPlayLobby::Init()
 {
