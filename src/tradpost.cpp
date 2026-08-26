@@ -219,6 +219,9 @@ DATA(0x006aaab0) static int gRightAmount;
 DATA(0x006aaac0) static int gGiveQuantity;
 DATA(0x006aaacc) static int gLeftResource;
 
+DATA(0x0068c4a0) static int gResourceValueWidgetY[7];
+DATA(0x006a7d40) static char* gMarketSource3Name;
+
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
 // town whose Marketplace bit is active, then cap the efficiency index at ten.
@@ -501,13 +504,6 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:1240
-DC_ONLY(0x1895a8, 0x504)
-void TGiveResourceWindow::Update(unsigned char bUpdate)
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:1466
 DC_ONLY(0x189aac, 0x580)
 void TBuyArtifactWindow::Update(unsigned char bUpdate)
@@ -740,6 +736,207 @@ void* TSellCreatureWindow::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\tradpost.cpp:1240
+VA(0x005eaf50, 0x744)  // ordermap clean run + arity ret 4, dc 0x1895a8
+void TGiveResourceWindow::Update(bool bUpdate)
+{
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        sprintf(gText, (*gpGeneralText)[166],
+                gResourceNames[gSelectedArtifact],
+                gPlayerColorNames[slotPlayerColor[gLeftResource]]);
+    } else {
+        if (gLeftDenominated)
+            sprintf(gText, (*gpGeneralText)[167]);
+        else
+            sprintf(gText, (*gpGeneralText)[168]);
+    }
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = 3;
+    msg.codeY = 2;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    switch (gMarketSource) {
+    case MARKET_SOURCE_MARKETPLACE:
+        strcpy(gText, (*gpGeneralText)[159]);
+        break;
+    case MARKET_SOURCE_TRADING_POST:
+        strcpy(gText, (*gpGeneralText)[160]);
+        break;
+    case MARKET_SOURCE_FREELANCER:
+        strcpy(gText, gMarketSource3Name);
+        break;
+    }
+    msg.codeY = 1;
+    BroadcastMessage(&msg);
+
+    msg.codeY = 14;
+    sprintf(gText, (*gpGeneralText)[271]);
+    BroadcastMessage(&msg);
+
+    strcpy(gText, (*gpGeneralText)[170]);
+    msg.codeX = 3;
+    msg.codeY = 15;
+    msg.extraText = gText;
+    BroadcastMessage(&msg);
+
+    int widgetOff = 6;
+    if (gSelectedArtifact != -1 && gLeftResource != -1) {
+        BroadcastMessage(MESSAGE_WIDGET, 5, 5, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 5, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 4, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 4, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 12, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 12, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 7, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 7, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 3, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 3, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 13, widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff, 13, 0x1000);
+        resourceSlider->enable(1);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, 5, 5, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 4, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 12, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 7, 0x1000);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 3, 0x1006);
+        BroadcastMessage(MESSAGE_WIDGET, 6, 13, 0x1006);
+        resourceSlider->SetState(0);
+        BroadcastMessage(MESSAGE_WIDGET, 5, 6, 0x1000);
+    }
+
+    if (gMarketSource != MARKET_SOURCE_TRADING_POST && gpMarketHero
+        && gMarketSource != MARKET_SOURCE_FREELANCER
+        && (gpTownManager->townToView->type == TOWN_TOWER
+            || gpTownManager->townToView->type == TOWN_DUNGEON)
+        && (gpTownManager->townToView->built & bitNumber[17])) {
+        BroadcastMessage(MESSAGE_WIDGET, 5, MARKET_RIGHT_LABEL_ID,
+                         widgetOff);
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff,
+                         MARKET_RIGHT_LABEL_ID, 0x1000);
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widgetOff,
+                         MARKET_RIGHT_LABEL_ID, 0x1006);
+    }
+
+    for (int side = 0; side < 2; ++side) {
+        if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            msg.codeX = 4;
+            if (side == 0) {
+                msg.codeY = 3;
+                msg.extra = gSelectedArtifact;
+                BroadcastMessage(&msg);
+                msg.codeX = 3;
+                msg.codeY = 4;
+                msg.extraText = gText;
+                if (gRatioInverted)
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                else
+                    sprintf(gText,
+                            DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
+            } else {
+                msg.extra = slotPlayerColor[gLeftResource];
+                msg.codeY = 13;
+                BroadcastMessage(&msg);
+                strcpy(gText,
+                       gPlayerColorNames[slotPlayerColor[gLeftResource]]);
+                msg.codeX = 3;
+                msg.codeY = 12;
+                msg.extraText = gText;
+            }
+            BroadcastMessage(&msg);
+        }
+
+        for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+            if (side == 0) {
+                msg.codeX = 5;
+                msg.codeY = resource + 21;
+                msg.extra = widgetOff;
+                BroadcastMessage(&msg);
+                msg.codeY = resource + 28;
+                BroadcastMessage(&msg);
+                msg.codeY = resource + 35;
+                BroadcastMessage(&msg);
+
+                msg.extraText = gText;
+                msg.codeX = 3;
+                msg.codeY = resource + 35;
+                sprintf(gText,
+                        DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gpCurrentPlayer->resources[resource]);
+                BroadcastMessage(&msg);
+
+                msg.codeX = 53;
+                msg.extra = gResourceValueWidgetY[resource];
+                BroadcastMessage(&msg);
+
+                msg.codeX =
+                    gSelectedArtifact == resource ? 5 : widgetOff;
+                msg.codeY = resource + 28;
+                msg.extra = 4;
+                BroadcastMessage(&msg);
+            } else {
+                if (resource < field_60) {
+                    strcpy(gText,
+                           gPlayerColorNames[slotPlayerColor[resource]]);
+                    msg.codeX = 3;
+                    msg.codeY = resource + 77;
+                    msg.extraText = gText;
+                    BroadcastMessage(&msg);
+
+                    msg.codeX = 5;
+                    msg.extra = widgetOff;
+                    BroadcastMessage(&msg);
+
+                    msg.codeX = 4;
+                    msg.codeY = resource + 49;
+                    msg.extra = slotPlayerColor[resource];
+                    BroadcastMessage(&msg);
+
+                    msg.codeX = 5;
+                    msg.extra = widgetOff;
+                    BroadcastMessage(&msg);
+                } else {
+                    msg.codeX = widgetOff;
+                    msg.codeY = resource + 77;
+                    msg.extra = widgetOff;
+                    BroadcastMessage(&msg);
+                    msg.codeY = resource + 49;
+                    BroadcastMessage(&msg);
+                }
+
+                msg.extra = 2;
+                msg.codeY = resource + 70;
+                BroadcastMessage(&msg);
+
+                msg.codeX =
+                    gLeftResource == resource ? 5 : widgetOff;
+                msg.codeY = resource + 70;
+                msg.extra = 4;
+                BroadcastMessage(&msg);
+            }
+        }
+    }
+
+    if (bUpdate)
+        DrawWindow(1, -65535, 65535);
+}
 
 DATA(0x0068c482) static unsigned short gMarketValues[7];
 
