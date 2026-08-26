@@ -4144,8 +4144,10 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 // duplicating it, which is a compiler transform over two separate cases, not
 // a fallthrough in the source.
 // 45.0977 -> 96.9833 (2026-08-20) ON FIVE `#pragma inline_depth(0)` SITE
-// PINS, and the note this entry used to carry had the diagnosis right and the
-// arithmetic wrong. Read the correction before re-deriving any of it.
+// PINS. MATCHING_DEBT: those narrow site pins remain necessary to reproduce
+// VC6's caller-budget cutoff; they are not source evidence. The note this
+// entry used to carry had the diagnosis right and the arithmetic wrong. Read
+// the correction before re-deriving any of it.
 //
 // The old text said the wall was "id-218 (RANDOM_DWELLING_FACTION) at 574
 // bytes against retail's 149" and that its "two siblings at 155 and 140
@@ -4183,8 +4185,12 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 // Kept from the old note because they still hold:
 //   * `#pragma inline_depth(2)` and `(1)` around the body are ignored under
 //     /O2 /Ob2, byte-identical at 42.5589. Only 0 bites.
-//   * giving each arm its own stream-read local instead of reusing one
-//     function-scope byte is retail's shape (42.5589 -> 42.6246).
+//   * the Dreamcast CodeView roster proves one function-scope `char_buffer`
+//     and one `padding[5]`. On the current retail reconstruction, reusing the
+//     entry byte for the mutually-exclusive byte reads and the five-byte
+//     padding for the dwelling arms raises 96.9833 -> 97.1293. A generated
+//     383-candidate lifetime tree selected that shape; another 840-candidate
+//     tree over the DC-proven `int_buffer`/`count` roster was flat or worse.
 //   * the multi-site hypothesis is DISPROVED: a throwaway second growth site
 //     for vector<TQuestGuard> in another function of this TU moved readObject
 //     by exactly nothing. The /Ob2 budget is per CALLER.
@@ -4192,18 +4198,19 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 //     42.6246 -> 45.0977 and is still in place, but it is no longer what
 //     keeps that arm's insert out of line - see its own note.
 //
-// Residual (96.9833%): register/home only. Retail spills three of the
-// arms' temporaries into the DEAD PARAMETER SLOT at [ebp+0x10] - the
-// `mapVersion` argument - where our compile gives each a fresh negative
-// local: the HERO_PLACEHOLDER record, the SEER arm's quest pointer and the
-// QUEST_GUARD arm's quest pointer all read `[ebp+0x10]` in retail and
-// `[ebp-N]` here. That is the B4 knob, and why-reg's model does not reach a
-// parameter slot from a body spelling.
+// Residual (97.1293%): register/home only, with the branch sequence intact.
+// Retail's frame is 0x28 and ours is 0x2c. Retail spills three of the arms'
+// temporaries into the DEAD PARAMETER SLOT at [ebp+0x10] - the `mapVersion`
+// argument - where our compile gives each a fresh negative local: the
+// HERO_PLACEHOLDER record, the SEER arm's quest pointer and the QUEST_GUARD
+// arm's quest pointer all read `[ebp+0x10]` in retail and `[ebp-N]` here.
+// That is the remaining B4 knob; why-reg's model does not reach a parameter
+// slot from a body spelling.
 VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
                            int mapVersion)
 {
-    unsigned char value;
+    char value;
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
         return -1;
     tempObject->x = value;
@@ -4277,19 +4284,16 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         HeroPlaceholderData placeholder;
         placeholder.object = tempObject;
 
-        unsigned char owner;
-        infile->Read(&owner, sizeof(owner));
-        placeholder.owner = owner;
+        infile->Read(&value, sizeof(value));
+        placeholder.owner = value;
 
-        unsigned char heroId;
-        infile->Read(&heroId, sizeof(heroId));
-        placeholder.heroId = heroId;
+        infile->Read(&value, sizeof(value));
+        placeholder.heroId = value;
         if (placeholder.heroId
                 == HeroPlaceholderData::HERO_ID_BY_POWER_RATING) {
             placeholder.heroId = -1;
-            unsigned char powerRating;
-            infile->Read(&powerRating, sizeof(powerRating));
-            placeholder.powerRating = powerRating;
+            infile->Read(&value, sizeof(value));
+            placeholder.powerRating = value;
         }
 
         heroPlaceholders.push_back(placeholder);
@@ -4301,10 +4305,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case SHIPYARD: {
-        unsigned char owner;
-        if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
             break;
-        tempObject->shipyard_info.owner = owner;
+        tempObject->shipyard_info.owner = value;
 
         char shipyardPadding[3];
         if (infile->Read(shipyardPadding, sizeof(shipyardPadding))
@@ -4321,13 +4324,12 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
         break;
 
     case HOLY_GRAIL: {
-        unsigned char radius;
-        if (infile->Read(&radius, sizeof(radius)) < sizeof(radius))
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
             break;
         gpGame->ultimateArtifactX = tempObject->x;
         gpGame->ultimateArtifactY = tempObject->y;
         gpGame->ultimateArtifactZ = tempObject->z;
-        gpGame->field_1f695 = radius;
+        gpGame->field_1f695 = value;
 
         char grailPadding[3];
         infile->Read(grailPadding, sizeof(grailPadding));
@@ -4361,10 +4363,9 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case SHRINE1:
     case SHRINE2:
     case SHRINE3: {
-        char spell;
-        if (infile->Read(&spell, sizeof(spell)) < sizeof(spell))
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
             break;
-        tempObject->shrine_info.spell = spell;
+        tempObject->shrine_info.spell = value;
 
         char shrinePadding[3];
         infile->Read(shrinePadding, sizeof(shrinePadding));
@@ -4399,12 +4400,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING: {
         RandomDwellingData dwelling;
 
-        unsigned char owner;
-        infile->Read(&owner, sizeof(owner));
-        dwelling.owner = owner;
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
 
-        char dwellingPadding[3];
-        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+        infile->Read(padding, 3);
 
         int castleId;
         infile->Read(&castleId, sizeof(castleId));
@@ -4415,12 +4414,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
             dwelling.factionMask = factionMask;
         }
 
-        unsigned char minLevel;
-        infile->Read(&minLevel, sizeof(minLevel));
-        dwelling.minLevel = minLevel;
-        unsigned char maxLevel;
-        infile->Read(&maxLevel, sizeof(maxLevel));
-        dwelling.maxLevel = maxLevel;
+        infile->Read(&value, sizeof(value));
+        dwelling.minLevel = value;
+        infile->Read(&value, sizeof(value));
+        dwelling.maxLevel = value;
 
         dwelling.object = tempObject;
         randomDwellings.push_back(dwelling);
@@ -4430,12 +4427,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING_LVL: {
         RandomDwellingData dwelling;
 
-        unsigned char owner;
-        infile->Read(&owner, sizeof(owner));
-        dwelling.owner = owner;
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
 
-        char dwellingPadding[3];
-        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+        infile->Read(padding, 3);
 
         int castleId;
         infile->Read(&castleId, sizeof(castleId));
@@ -4465,23 +4460,19 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
     case RANDOM_DWELLING_FACTION: {
         RandomDwellingData dwelling;
 
-        unsigned char owner;
-        infile->Read(&owner, sizeof(owner));
-        dwelling.owner = owner;
+        infile->Read(&value, sizeof(value));
+        dwelling.owner = value;
 
-        char dwellingPadding[3];
-        infile->Read(dwellingPadding, sizeof(dwellingPadding));
+        infile->Read(padding, 3);
 
         dwelling.castleId = 0;
         dwelling.factionMask = static_cast<unsigned short>(
             1 << objectTypes[tempObject->typeIndex].extra);
 
-        unsigned char minLevel;
-        infile->Read(&minLevel, sizeof(minLevel));
-        dwelling.minLevel = minLevel;
-        unsigned char maxLevel;
-        infile->Read(&maxLevel, sizeof(maxLevel));
-        dwelling.maxLevel = maxLevel;
+        infile->Read(&value, sizeof(value));
+        dwelling.minLevel = value;
+        infile->Read(&value, sizeof(value));
+        dwelling.maxLevel = value;
 
         dwelling.object = tempObject;
         {
