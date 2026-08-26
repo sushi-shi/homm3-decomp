@@ -46,6 +46,7 @@
 #define HOMM3_GAME_LOAD_TAIL_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_GAME_RANDOM_OBJECTS_DECLS
+#define HOMM3_GAME_SEER_HUT_DECLS
 #define HOMM3_GAME_SPECIAL_RUMOUR_DECLS
 #define HOMM3_GAME_TOWN_HEROES_DECLS
 #define HOMM3_GAME_VALIDATE_VLC_DECLS
@@ -9506,6 +9507,34 @@ void game::ResetGame(int difficulty, int version,
     gbThisNetGotAdventureControl = 0;
     TSpellbookWindow::Reset();
     memset(borderTentVisitFlags, 0, sizeof(borderTentVisitFlags));
+}
+
+// readMonsterData supplies the stable stream identifier and the packed map
+// point. Retail appends their eight-byte pair to the final game member.
+VA(0x004ced40, 0x1D0)  // sole caller 0x5013b0 + game+0x4e7bc vector layout
+void game::record_monster_identifier(int identifier, type_point point)
+{
+    MonsterIdentifier record;
+    record.identifier = identifier;
+    record.point = point;
+    monsterIdentifiers.push_back(record);
+}
+
+// Quest-monster setup resolves the most recently recorded object with this
+// identifier; absent objects use the packed all-minus-one point sentinel.
+VA(0x004cef10, 0x68)  // sole semantic caller 0x56ef20 + reverse 8-byte walk
+type_point game::GameFn_004CEF10(int identifier)
+{
+    for (unsigned int i = monsterIdentifiers.size(); i-- != 0;) {
+        if (monsterIdentifiers[i].identifier == identifier)
+            return monsterIdentifiers[i].point;
+    }
+
+    type_point point;
+    point.x = -1;
+    point.y = -1;
+    point.z = -1;
+    return point;
 }
 
 // Sign's one-string destructor is emitted out of line and is the callee used

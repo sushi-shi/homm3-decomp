@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — the quest-monster identifier append and reverse lookup are
+  reconstructed byte-exact.** Retail `readMonsterData` supplies an integer
+  stream identifier and packed `type_point` to `game+0x4e7bc`; the natural
+  local-pair plus `vector::push_back` spelling reproduces all 464 bytes at
+  `0x4ced40`, including VC6's capacity growth, copy, insertion, cleanup, and
+  unwind shape. This also upgrades the final game member's eight-byte element
+  layout from a destructor-width hypothesis to executable proof.
+
+  The sole semantic consumer at `0x56ef20` resolves the same identifier for a
+  defeat-monster quest. Expressing its scan as `for (unsigned i = size();
+  i-- != 0;)` reproduces VC6's retail register schedule and all 104 bytes at
+  `0x4cef10`, including the packed all-minus-one miss sentinel. The synchronized
+  build reaches **2230/2663 linked exact**, **96.84% linked fuzzy**, and
+  **48.74% executable coverage** with every gate clean.
+
 - **2026-08-26 — the `HeroExtra` teardown and two more retained bitset
   COMDATs are exact.** The 74-byte body at retail `0x4ce520` releases and
   clears the string triple at `HeroExtra+0x30c`; its address is passed beside
