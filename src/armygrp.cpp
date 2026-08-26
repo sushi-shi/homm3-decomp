@@ -1662,6 +1662,10 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // is the closest compiler spelling.  Declaration swap (79.9609), volatile,
 // alternate indices and goto forms were already lower; this register/CFG
 // family is bounded after four fresh hypotheses.
+// [2026-08-26] The bounded AST tree orders the searched `type` before the
+// indexed slot in the equality, raising 84.8268 -> 84.8548. Both sides still
+// have 36 blocks, 18 conditional branches and two returns; the residual is
+// the already-recorded dedup-tail routing family.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
@@ -1684,7 +1688,7 @@ unsigned char armyGroup::Merge(armyGroup* ag)
             int count = *walkers[0];
             if (count > 0) {
                 for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
-                    if (ag1.armies[i] == type)
+                    if (type == ag1.armies[i])
                         break;
                 }
                 if (i < ARMY_GROUP_SLOT_COUNT)
