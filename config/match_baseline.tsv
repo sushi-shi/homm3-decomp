@@ -1116,6 +1116,7 @@ game	??4reference@?$bitset@$0JM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	
 game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
 game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80
+game	??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ	100.0000	100.0000	100.0000	0xd4ca0
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?CancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530
 game	?CheckForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910

@@ -10550,6 +10550,10 @@ VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, generator)
 VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, type_university)
 VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, type_university)
 VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
+// GetRandomMonster's iterator dereference returns the iterator's bitset
+// pointer and absolute offset as bitset<145>::reference. Retail copies those
+// two words verbatim, and the sole emitted specialization has the same body.
+VA_COMPGEN(0x004d4ca0, 0x14, BITSET_ITERATOR_DEREF, Bitset145)
 // NewSMapHeader::Read materializes the eight-player availability setter and
 // the four-dword default mask initializer. Their immediate bounds/fill counts
 // distinguish these two retained bitset widths from the neighboring rows.
