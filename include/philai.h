@@ -129,7 +129,7 @@ unsigned char wants_skill(const hero* our_hero, TSecondarySkill skill,
 // CODEVIEW(E:\gamedcs\philai.cpp:3007, dc 0x11260c) int AI_VisitSirens(const hero* current_hero, armyGroup* army);
 // CODEVIEW(E:\gamedcs\philai.cpp:3044, dc 0x1126d0) int ValueOfSirens(const hero* current_hero);
 // CODEVIEW(E:\gamedcs\philai.cpp:3069, dc 0x11276c) int ValueOfStables(const hero* current_hero, long* move_cost);
-// CODEVIEW(E:\gamedcs\philai.cpp:3096, dc 0x112830) long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost);
+// CODEVIEW(E:\gamedcs\philai.cpp:3096, dc 0x112830) long value_of_reinforcing(hero* current_hero, town* current_town, short move_cost);
 // CODEVIEW(E:\gamedcs\philai.cpp:3131, dc 0x112914) long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost);
 // CODEVIEW(E:\gamedcs\philai.cpp:3277, dc 0x112dd4) unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost);
 // CODEVIEW(E:\gamedcs\philai.cpp:3297, dc 0x112ee0) unsigned char AI_choose_resource_or_experience(const hero* current_hero, EGameResource resource, int amount, int experience);
