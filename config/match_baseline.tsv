@@ -1351,6 +1351,7 @@ game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e
 game	?save@playerData@@QAEHPAVTAbstractFile@@@Z	99.9557	99.9557	99.9557	0xba670
 game	?saveVictoryCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc35a0
 game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2ac0
+game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2b20
 game	?set@?$bitset@$07@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4cc0
 game	?set@?$bitset@$0IA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xd4de0
 game	?set@?$bitset@$0JA@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xcf9a0

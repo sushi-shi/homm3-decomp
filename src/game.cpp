@@ -12342,6 +12342,23 @@ unsigned char save_vector(TAbstractFile* outfile,
     return written;
 }
 
+// The final plain-block specialization writes the university pool. Retail's
+// divide-by-16 size calculation and two payload shifts independently prove
+// type_university's four-int stride; game::Save supplies the sole call site.
+VA(0x004d2b20, 0x60)  // anchor-callee (game::Save universities), dc 0xc1edc
+unsigned char save_vector(TAbstractFile* outfile,
+                          std::vector<type_university>* src_vector)
+{
+    int count = src_vector->size();
+    if (outfile->Write(&count, sizeof(short)) < sizeof(short))
+        return 0;
+    unsigned char written = outfile->Write(
+        src_vector->begin(),
+        static_cast<short>(count) * sizeof(type_university))
+        >= static_cast<short>(count) * sizeof(type_university);
+    return written;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11869
