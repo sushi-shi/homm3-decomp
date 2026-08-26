@@ -2164,7 +2164,7 @@ remote	?HandleMPlayerLaunch@@YIEXZ	98.3167	98.3167	98.3167	0x155aa0
 remote	?HandleNetMsg@CNetMsgHandler@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x157920
 remote	?HandleNetMsg@CNetMsgHandlerPause@@UAEPAVCNetMsg@@PAV2@@Z	100.0000	100.0000	100.0000	0x155180
 remote	?HandleNormalWinMsg@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569f0
-remote	?HandlePlayerDead@@YIXHE@Z	98.3380	98.3380	98.3380	0x156780
+remote	?HandlePlayerDead@@YIXHE@Z	100.0000	100.0000	100.0000	0x156780
 remote	?HandlePlayerDrop@@YIXK@Z	100.0000	100.0000	100.0000	0x156430
 remote	?HandlePlayerDrop@CDPlayHeroes@@QAEXK@Z	100.0000	100.0000	100.0000	0x153580
 remote	?HandlePlayerLost@@YIXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1569a0

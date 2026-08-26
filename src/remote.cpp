@@ -2365,6 +2365,8 @@ void OnPlayerDropUpdateMsg(unsigned long dpid)
 // and parameter roles.  Retail independently proves playerDisabled, the
 // local-seat cleanup expansion, both general-text indices and dialog payloads,
 // and the GetNextHumanPlayer call used to advance the acting player.
+// EXACT. Assigning gpCurrentPlayer before the two seat globals gives VC6 the
+// retail address-calculation schedule at the recovered-host tail.
 VA(0x00556780, 0x1C0)  // anchor-dispatch + dc-order-map, dc 0x11e39c
 void HandlePlayerDead(int deadGuy, unsigned char showMsg)
 {
@@ -2391,9 +2393,9 @@ void HandlePlayerDead(int deadGuy, unsigned char showMsg)
 
         if (deadGuy == gUnnamed69d810) {
             int nextPlayer = GetNextHumanPlayer(deadGuy);
+            gpCurrentPlayer = &gpGame->players[nextPlayer];
             gNetLocalGamePos = nextPlayer;
             gUnnamed69d810 = nextPlayer;
-            gpCurrentPlayer = &gpGame->players[nextPlayer];
         }
     }
 }
