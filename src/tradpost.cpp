@@ -1984,16 +1984,11 @@ void TTradeResourceWindow::SetRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(gText, gMarketHelpText[5].text); break;
     default: strcpy(gText, emptyRolloverText); break;
     }
-    BroadcastMessage(0x200, 3, 0x93, 0);
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
-    // Residual (99.29%): the two resource-range arms index gResourceNames from a
-    // widget-id origin, so cl folds the base to gResourceNames-0x70 / -0xfc and
-    // emits a DIR32 reloc to gResourceNames with that addend; retail delinks the
-    // same interior address as its own bss_ symbol (addend 0), so objdiff scores
-    // the two relocs as differing. Closing it needs two interior reloc-alias
-    // rows in config/delink-reloc-aliases.tsv (owner gResourceNames, addend
-    // -0x70 / -0xfc) - outside a reconstruction lane's files.
 }
 
 // E:\gamedcs\tradpost.cpp:2566
@@ -2141,16 +2136,11 @@ void TGiveResourceWindow::SetRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(gText, gGiveHelpText[4].text); break;
     default: strcpy(gText, emptyRolloverText); break;
     }
-    BroadcastMessage(0x200, 3, 0x93, 0);
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
-    // Residual (99.96%): branch sequence agrees 10/10; the sole delta is the
-    // resource-range read `gResourceNames[codeY - 0x1c]`, which cl folds to a
-    // DIR32 to gResourceNames with addend -0x70 while retail delinks the same
-    // interior address (0x6a5df4) as its own bss_ symbol (addend 0) - the same
-    // reloc-alias residual TTradeResourceWindow::SetRolloverText carries.
-    // Closing it needs an interior reloc-alias row (owner gResourceNames,
-    // addend -0x70) in config/delink-reloc-aliases.tsv, outside a lane's files.
 }
 
 // E:\gamedcs\tradpost.cpp:2743
@@ -2336,15 +2326,11 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
     case MARKET_COMMAND_ID: strcpy(gText, gBuyArtHelpText[4].text); break;
     default: strcpy(gText, emptyRolloverText); break;
     }
-    BroadcastMessage(0x200, 3, 0x93, 0);
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
-    // Residual (99.96%): branch sequence agrees 11/11; the sole delta is the
-    // resource-range read gResourceNames[codeY - 0x1c] folding to a DIR32 to
-    // gResourceNames with addend -0x70 where retail delinks the interior
-    // address (0x6a5df4) as its own bss_ symbol - the shared reloc-alias
-    // residual (see TTradeResourceWindow::SetRolloverText), fixed only by an
-    // interior alias row in config/delink-reloc-aliases.tsv.
 }
 
 // E:\gamedcs\tradpost.cpp:2932
