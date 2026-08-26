@@ -10,6 +10,7 @@
 #include "town.h"
 #include "tradpost.h"
 #include "game.h"
+#include "recruit.h"
 #include "advmgr.h"  // gpAdvManager + advManager::get_treasure_data, for the
                      // adventure-object appraisals (custom item / scroll / ...)
 
@@ -20,6 +21,11 @@
 // definitions at 0x435830 / 0x435960 and by both call sites below.
 double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
+long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
+                              bool equipped, bool exact);
+long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
+void AI_equip_artifacts(hero* current_hero);
+TCreatureType siege_artifact_to_creature(TArtifact engine);
 
 // ai_combat.h's whole-of-combat appraisal, declared file-locally rather
 // than pulling that header's declarator population into this closure. The
@@ -271,6 +277,74 @@ inline EGameResource game_resource_from_int(int value)
     return resource;
 }
 
+static long get_artifact_purchase_value(
+    TArtifact artifact_id, long market_count, long* funds)
+{
+    if (artifact_id == ARTIFACT_NONE)
+        return 0;
+
+    EGameResource resource;
+    long price = get_artifact_purchase_price(
+        artifact_id, market_count, &resource);
+    if (price > funds[resource])
+        return 0;
+
+    type_artifact artifact(artifact_id, -1);
+    long value = static_cast<long>(
+        static_cast<double>(AI_get_value_of_artifact(
+            artifact, gNetLocalGamePos))
+        - static_cast<double>(price)
+            * gpCurrentPlayer->resourceValue[resource]);
+    if (value < 0)
+        value = 0;
+    return value;
+}
+
+VA(0x0042c4a0, 0x108)
+long type_AI_creature_swapper::get_swap_value(
+    const hero* current_hero, const armyGroup* source_army,
+    const hero* second_hero, unsigned char new_has_angelic_alliance);
+
+// Residual (93.73%): all 15 CFG blocks align; EBX/EDI allocation remains
+// swapped after the inlined appraisal despite five source-order probes.
+VA(0x00524400, 0x149)  // anchor-global, dc 0x10da30
+void buy_artifacts(hero* current_hero, TArtifact* artifact_list,
+                   long market_count)
+{
+    while (current_hero->get_number_in_backpack(1)
+           != HERO_BACKPACK_CAPACITY) {
+        long best_artifact = -1;
+        long best_value = 0;
+
+        for (long i = 0; i < 7; i++) {
+            if (artifact_list[i] != ARTIFACT_NONE) {
+                long value = get_artifact_purchase_value(
+                    artifact_list[i], market_count,
+                    gpCurrentPlayer->resources);
+                if (value > best_value) {
+                    best_value = value;
+                    best_artifact = i;
+                }
+            }
+        }
+
+        if (best_artifact < 0) {
+            AI_equip_artifacts(current_hero);
+            return;
+        }
+
+        EGameResource resource;
+        TArtifact artifact_id = artifact_list[best_artifact];
+        long price = get_artifact_purchase_price(
+            artifact_id, market_count, &resource);
+        gpCurrentPlayer->resources[resource] -= price;
+
+        type_artifact artifact(artifact_id);
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        artifact_list[best_artifact] = ARTIFACT_NONE;
+    }
+}
+
 // E:\gamedcs\philai.cpp:263.  What the AI would really pay for an
 // artifact, and in which resource.  The gold price is the traits-table
 // cost scaled by the marketplace efficiency row; each non-gold resource
@@ -369,19 +443,68 @@ void AI_visit_university(hero* current_hero, NewmapCell* cell)
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:561
-VA(0x00524fc0, 0x156)  // anchor-callee, dc 0x10e064
-void visit_war_factory(hero* current_hero, TArtifact engine)
+#endif  // @carcass
+
+static long value_of_war_factory(const hero* current_hero,
+                                 TArtifact engine, long move_cost);
+
+static void visit_war_factory(hero* current_hero, TArtifact engine)
 {
-    // @stub
+    if (value_of_war_factory(current_hero, engine, 0) > 0) {
+        TCreatureType creature = siege_artifact_to_creature(engine);
+        int* costs = gCreatureRecords
+            + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+        for (int resource = 0; resource < 7; resource++)
+            gpCurrentPlayer->resources[resource] -= costs[resource];
+
+        type_artifact artifact(engine, -1);
+        current_hero->GiveArtifact(&artifact, 1, 1);
+    }
 }
 
-// E:\gamedcs\philai.cpp:519
-VA(0x00525120, 0xe0)  // anchor-callee, dc 0x10dea8
-long value_of_war_factory(const hero* current_hero, TArtifact engine, long move_cost)
+VA(0x00524fc0, 0x156)
+void AI_visit_war_factory(hero* current_hero)
 {
-    // @stub
+    visit_war_factory(current_hero, ARTIFACT_BALLISTA);
+    visit_war_factory(current_hero, ARTIFACT_FIRST_AID_TENT);
+    visit_war_factory(current_hero, ARTIFACT_AMMO_CART);
 }
+
+VA(0x00525120, 0xE0)
+// MATCHING_DEBT: retail keeps this helper out of all three expansions of
+// visit_war_factory; preserve that decision explicitly until understood.
+#pragma auto_inline(off)
+static long value_of_war_factory(const hero* current_hero,
+                                 TArtifact engine, long move_cost)
+{
+    if (!const_cast<hero*>(current_hero)->HasArtifact(engine)
+            && gpGame->setup.difficulty) {
+        long artifact_value = AI_get_value_of_artifact(
+            type_artifact(engine), current_hero, false, true);
+        TCreatureType creature = siege_artifact_to_creature(engine);
+        playerData* player = gpCurrentPlayer;
+        long resource_cost = 0;
+        int* costs = gCreatureRecords
+            + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+        for (int resource = 0; resource < 7; resource++) {
+            long cost = costs[resource];
+            if (player->resources[resource] < cost)
+                return 0;
+            resource_cost = static_cast<long>(
+                static_cast<double>(cost) * player->resourceValue[resource]
+                + static_cast<double>(resource_cost));
+        }
+
+        if (move_cost <= 500)
+            resource_cost = 0;
+        if (resource_cost <= artifact_value)
+            return artifact_value - resource_cost;
+    }
+    return 0;
+}
+#pragma auto_inline(on)
+
+#if 0  // @carcass -- philai body-evidence claims
 
 // E:\gamedcs\philai.cpp:687
 VA(0x00525200, 0x1d0)  // anchor-callee, dc 0x10e334
@@ -1351,12 +1474,41 @@ long value_of_town(const hero* current_hero, int x, int y, int z, short move_cos
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\philai.cpp:3096
 VA(0x0052b090, 0x14e)  // anchor-callee, dc 0x112830
-long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
+long value_of_reinforcing(hero* current_hero, town* current_town, short move_cost)
 {
-    // @stub
+    long player_id = current_hero->owner;
+    playerData* player = &gpGame->players[player_id];
+    type_AI_creature_purchaser purchaser(player_id, current_town);
+
+    hero* garrison_hero = 0;
+    if (current_town->garrisonHeroId >= 0)
+        garrison_hero = gpGame->GetHero(current_town->garrisonHeroId);
+
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    long swap_value = purchaser.get_swap_value(
+        current_hero,
+        &static_cast<const town*>(current_town)->get_army(), garrison_hero,
+        has_angelic_alliance);
+    long purchase_value = purchaser.get_purchase_value(
+        &current_hero->army, current_hero->GetMorale(0, 0, 1),
+        &static_cast<const town*>(current_town)->get_army(), player->resources,
+        has_angelic_alliance);
+
+    if (move_cost >= 400
+        && purchaser.get_army_value_increase()
+               < current_hero->army.get_AI_value() / 3)
+        return 0;
+
+    return purchase_value + swap_value / 2;
 }
+
+#if 0  // @carcass -- philai body-evidence claims
 
 // E:\gamedcs\philai.cpp:4126
 VA(0x0052b9c0, 0x20c)  // anchor-callee, dc 0x1147ac

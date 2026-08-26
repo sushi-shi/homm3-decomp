@@ -1871,7 +1871,7 @@ philai	MoveHero	0.0000	0.0000	0.0000	0x1261f0
 philai	ValueOfGenerator	0.0000	0.0000	0.0000	0x129a30
 philai	ValueOfScroll	0.0000	0.0000	0.0000	0x12a8c0
 philai	ValueOfSeaChest	0.0000	0.0000	0.0000	0x12a870
-philai	buy_artifacts	0.0000	0.0000	0.0000	0x124400
+philai	?buy_artifacts@@YIXPAVhero@@PAW4TArtifact@@J@Z	93.7290	93.7290	93.7290	0x124400
 philai	buy_siege_engine	0.0000	0.0000	0.0000	0x125ca0
 philai	buy_special_building	0.0000	0.0000	0.0000	0x1259e0
 philai	consider_garrisoning	0.0000	0.0000	0.0000	0x125200
@@ -1883,10 +1883,11 @@ philai	value_of_bank	0.0000	0.0000	0.0000	0x129920
 philai	value_of_enemy_town	0.0000	0.0000	0.0000	0x129cb0
 philai	value_of_monsters	0.0000	0.0000	0.0000	0x12a140
 philai	value_of_recruiting	0.0000	0.0000	0.0000	0x12a710
-philai	value_of_reinforcing	0.0000	0.0000	0.0000	0x12b090
+philai	?value_of_reinforcing@@YIJPAVhero@@PAVtown@@F@Z	100.0000	100.0000	100.0000	0x12b090
 philai	value_of_town	0.0000	0.0000	0.0000	0x12ab80
 philai	value_of_war_factory	0.0000	0.0000	0.0000	0x125120
-philai	visit_war_factory	0.0000	0.0000	0.0000	0x124fc0
+philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0
+philai	type_AI_creature_swapper_get_swap_value	0.0000	0.0000	0.0000	0x2c4a0
 philai	wants_skill	0.0000	0.0000	0.0000	0x124dd0
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	98.8426	98.8426	98.8426	0x12c770
