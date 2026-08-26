@@ -1976,6 +1976,7 @@ remote	??1CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157430
 remote	??1CNetMsgHandler@@UAE@XZ	41.8750	41.8750	41.8750	0x1578d0
 remote	??1CNetMsgHandlerPause@@UAE@XZ	91.1111	91.1111	91.1111	0x157ee0
 remote	??1CSaveScreen@@UAE@XZ	100.0000	100.0000	100.0000	0x157340
+remote	??1CWaitForReadyPlayersDlg@@UAE@XZ	90.9167	90.9167	90.9167	0x1554e0
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
 remote	??_GCDPlayHeroes@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1522f0
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
@@ -2071,7 +2072,7 @@ remote	?UpdateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100
 remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0
 remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x157090
 remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0
-remote	?WaitForReadyToPlayMsg@@YIXXZ	84.0248	84.0248	84.0248	0x154f10
+remote	?WaitForReadyToPlayMsg@@YIXXZ	75.7950	75.7950	84.0248	0x154f10
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190
