@@ -59,8 +59,11 @@ public:
 };
 
 class TBuyArtifactWindow : public CAdvPopup {
+    int lastHoverId;
 public:
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);
     virtual ~TBuyArtifactWindow();
 };
 
@@ -101,6 +104,7 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts);
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. Owner definition has not yet been admitted.
 extern float fTradingPostEfficency[];
+extern float fArtifactPurchaseEfficency[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);
