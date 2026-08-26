@@ -2849,6 +2849,165 @@ NewmapCell* game::get_cell(type_point point)
                               + point.x];
 }
 
+double AI_value_of_morale(long morale, long change);
+double AI_value_of_luck(long luck, long change);
+
+VA(0x00432510, 0x24)  // artifact get_value roster; dc 0x36258
+long type_scouting_artifact::get_value(const hero* owner, unsigned char,
+                                       unsigned char) const
+{
+    return owner->maxMovePoints * bonus / 100;
+}
+
+VA(0x00432560, 0x32)  // artifact get_value roster; dc 0x362b8
+long type_combat_artifact::get_value(const hero* owner, unsigned char,
+                                     unsigned char) const
+{
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
+}
+
+VA(0x004325a0, 0x40)  // artifact get_value roster; dc 0x36320
+long type_might_artifact::get_value(const hero* owner, unsigned char,
+                                    unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 40;
+}
+
+VA(0x004325e0, 0x21)  // artifact get_value roster; dc 0x36390
+long type_power_artifact::get_value(const hero* owner, unsigned char,
+                                    unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    return owner->value_of_power * bonus;
+}
+
+VA(0x00432610, 0x21)  // artifact get_value roster; dc 0x363f0
+long type_knowledge_artifact::get_value(const hero* owner, unsigned char,
+                                        unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    return owner->value_of_knowledge * bonus;
+}
+
+VA(0x004326e0, 0x38)  // artifact get_value roster; dc 0x3652c
+long type_movement_artifact::get_value(const hero* owner, unsigned char,
+                                       unsigned char) const
+{
+    return (const_cast<hero*>(owner)->army.get_AI_value() + 2500) * bonus / 100;
+}
+
+VA(0x00432720, 0x54)  // artifact get_value roster; dc 0x3659c
+long type_spellcaster_artifact::get_value(const hero* owner, unsigned char,
+                                          unsigned char) const
+{
+    if (owner->value_of_power == 0)
+        return 0;
+    if (owner->wisdomLevel == 0)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
+}
+
+VA(0x00432780, 0x68)  // artifact get_value roster; dc 0x3662c
+long type_morale_artifact::get_value(const hero* owner, unsigned char equipped,
+                                     unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 0);
+    if (equipped)
+        morale -= bonus;
+    return static_cast<long>(AI_value_of_morale(morale, bonus)
+                             * const_cast<hero*>(owner)->army.get_AI_value());
+}
+
+VA(0x004327f0, 0x68)  // artifact get_value roster; dc 0x36720
+long type_luck_artifact::get_value(const hero* owner, unsigned char equipped,
+                                   unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 0);
+    if (equipped)
+        luck -= bonus;
+    return static_cast<long>(AI_value_of_luck(luck, bonus)
+                             * const_cast<hero*>(owner)->army.get_AI_value());
+}
+
+VA(0x00432860, 0x21)  // artifact get_value roster; dc 0x36814
+long type_duration_artifact::get_value(const hero* owner, unsigned char,
+                                       unsigned char exact) const
+{
+    if (exact)
+        return 0;
+    return owner->value_of_duration * bonus;
+}
+
+VA(0x00432a50, 0xc3)  // artifact get_value roster; dc 0x36a1c
+long type_antimagic_artifact::get_value(const hero* owner,
+                                        unsigned char equipped,
+                                        unsigned char exact) const
+{
+    long value;
+    if (bonus == 0)
+        value = const_cast<hero*>(owner)->army.get_AI_value() / 5;
+    else
+        value = const_cast<hero*>(owner)->army.get_AI_value() / 8;
+    if (exact)
+        return value;
+    if (!equipped)
+        return value;
+    if (bonus == 0) {
+        signed char sp = owner->stats[2];
+        int m;
+        if (sp > 99)
+            m = 99;
+        else if (sp > 0)
+            m = sp;
+        else
+            m = 1;
+        return value - m * 50;
+    }
+    signed char sp = owner->stats[2];
+    int m;
+    if (sp > 99)
+        m = 99;
+    else if (sp > 0)
+        m = sp;
+    else
+        m = 1;
+    return value - m * 25;
+}
+
+VA(0x004330b0, 0x73)  // retail artifact vtable slot
+long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char,
+                                             unsigned char) const
+{
+    long total = 0;
+    for (int i = 0; i < 7; i++) {
+        int type = owner->army.armies[i];
+        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x4))
+            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
+    }
+    return bonus * total / 100;
+}
+
+VA(0x00433520, 0x5a)  // retail artifact vtable slot
+long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char,
+                                              unsigned char) const
+{
+    long total = 0;
+    for (int i = 0; i < 7; i++) {
+        int type = owner->army.armies[i];
+        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x10))
+            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
+    }
+    return total / 8;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.h:1410
