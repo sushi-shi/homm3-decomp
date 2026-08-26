@@ -753,6 +753,19 @@ struct type_map_hero_info : public type_map_hero_identity {
 };
 SIZE(type_map_hero_info, 0x18);
 
+#ifdef HOMM3_GAME_OBJ_DECLS
+// Emission-only access shim for the retained Dinkumware _Tree::_Min COMDAT.
+// The real call is inside CMapHeaderData::Save after iterator::_Inc has been
+// expanded; this derived map exposes the protected static member without
+// changing the authoritative map member's type or any runtime caller.
+class THeroSetupMapMinComdatAnchor
+    : public std::map<int, type_map_hero_info>::_Imp {
+public:
+    typedef _Nodeptr NodePtr;
+    void retain_min();
+};
+#endif
+
 class VictoryConditionStruct {
 public:
     signed char Type;

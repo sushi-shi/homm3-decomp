@@ -1243,6 +1243,7 @@ game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@I
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
 game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0
+game	?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@KIPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0xd2050
 game	?_Tidy@?$bitset@$04@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1790
 game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30
 game	?_Tidy@?$bitset@$0BM@@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1830
