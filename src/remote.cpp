@@ -2321,6 +2321,13 @@ void HandleNewHost()
 // E:\gamedcs\remote.cpp:2317. Dreamcast supplies the public boundary and
 // local CTextDialog/CHourGlass types. Retail independently fixes the recovery
 // filenames, general-text row, player-record updates and the two resume arms.
+// Residual (98.70642%): a 72-variant ordinary-source tree found this highest
+// pointer-lifetime form. Retail acquires its cached ESI after the first local
+// seat query; moving the declaration there reproduces the mask core but keeps
+// the pointer alive through NextPlayer and scores 98.11926%. Retail also folds
+// the empty CTextDialog destructor to its TDialogBox base; exposing that body
+// in the header regresses both this function and an exact caller, so it is
+// rejected.
 VA(0x005565e0, 0x19E)  // anchor-string + callgraph + dc-order-map, dc 0x11e1cc
 void OnPlayerDropUpdateMsg(unsigned long dpid)
 {
@@ -2347,13 +2354,15 @@ void OnPlayerDropUpdateMsg(unsigned long dpid)
     if (playerPos != -1)
         gpGame->players[playerPos].ClearNetInfo();
 
-    int localPlayer = gpGame->GetLocalPlayerGamePos();
+    // Retail keeps this gpGame read live across the two local-seat queries.
+    game* currentGame = gpGame;
+    int localPlayer = currentGame->GetLocalPlayerGamePos();
     gNetLocalGamePos = localPlayer;
     gUnnamed69d810 = localPlayer;
     gpCurrentPlayer = &gpGame->players[localPlayer];
     gUnnamed69ccc4 = 1 << localPlayer;
 
-    int visiblePlayer = gpGame->GetLocalPlayerGamePos();
+    int visiblePlayer = currentGame->GetLocalPlayerGamePos();
     gUnnamed69778c = visiblePlayer;
     gMapVisibilityBit = 1 << visiblePlayer;
 
