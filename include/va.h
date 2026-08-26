@@ -20,7 +20,7 @@
  *                                  STATIC_DTOR / STATIC_CTOR /
  *                                  DEFAULT_CTOR_CLOSURE /
  *                                  VECTOR_DELETING_DTOR / VECTOR_DTOR /
- *                                  VECTOR_* / BITSET_* / STD_* /
+ *                                  VECTOR_* / BITSET_* / TREE_* / STD_* /
  *                                  IMPLICIT_COPY_CTOR /
  *                                  IMPLICIT_COPY_ASSIGN / IMPLICIT_DTOR;
  *                                  owner names the

@@ -154,9 +154,13 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_COPY_ASSIGN",
                  "BITSET_TIDY", "BITSET_CTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
+                 "BITSET_ITERATOR_DEREF",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "BITSET_XRAN", "PAIR_CONST_INT_DTOR",
+                 "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
+                 "TREE_INSERT", "TREE_NODE_INSERT",
+                 "TREE_CONST_ITERATOR_DEC",
+                 "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
@@ -568,9 +572,10 @@ def unit_ir_names(path) -> dict | None:
     return None if ir is None else ir_va_names(ir)
 
 
-def _bitset_width(mangled: str) -> int | None:
-    """Decode VC6's non-type template argument in ``bitset<N>`` names."""
-    match = re.search(r"\?\$bitset@\$0([0-9A-P]+)@", mangled)
+def _template_width(mangled: str, template_name: str) -> int | None:
+    """Decode VC6's non-type argument in a one-width class template."""
+    match = re.search(
+        rf"\?\${re.escape(template_name)}@\$0([0-9A-P]+)@", mangled)
     if not match:
         return None
     encoded = match.group(1)
@@ -584,6 +589,10 @@ def _bitset_width(mangled: str) -> int | None:
     return value
 
 
+def _bitset_width(mangled: str) -> int | None:
+    return _template_width(mangled, "bitset")
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -592,6 +601,17 @@ def _demangle_key(mangled: str):
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor. Assignment (??4) keys to the declarator scanner's stable
     `Class_Class_operator` spelling; other special operators return None."""
+    tree_value = re.search(
+        r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if mangled.startswith("?_Min@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_min"
+    if mangled.startswith("?insert@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_insert"
+    if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_node_insert"
+    if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_const_iterator_dec"
     vector_element = re.search(
         r"\?\$vector@(?:V|U|W4)?([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("??1?$vector@") and vector_element:
@@ -627,6 +647,10 @@ def _demangle_key(mangled: str):
             if mangled.startswith(f"?{member}@?$bitset@"):
                 return (f"bitset{bitset_width}@bitset_"
                         f"{member.lstrip('_').lower()}")
+    iterator_width = _template_width(mangled, "bitset_iterator")
+    if iterator_width is not None and mangled.startswith(
+            "??D?$bitset_iterator@"):
+        return f"bitset{iterator_width}@bitset_iterator_deref"
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -889,12 +913,17 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_ctor$" in r["name"]
                                or "$bitset_subscript$" in r["name"]
                                or "$bitset_reference_assign$" in r["name"]
+                               or "$bitset_iterator_deref$" in r["name"]
                                or "$bitset_flip$" in r["name"]
                                or "$bitset_count$" in r["name"]
                                or "$bitset_any$" in r["name"]
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
                                or "$bitset_xran$" in r["name"]
+                               or "$tree_min$" in r["name"]
+                               or "$tree_insert$" in r["name"]
+                               or "$tree_node_insert$" in r["name"]
+                               or "$tree_const_iterator_dec$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -979,6 +1008,28 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$bitset_iterator_deref$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@bitset_iterator_deref", []).append(row)
+            continue
+        if "$tree_min$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
+            continue
+        if "$tree_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_insert", []).append(row)
+            continue
+        if "$tree_node_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_node_insert", []).append(row)
+            continue
+        if "$tree_const_iterator_dec$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@tree_const_iterator_dec", []).append(row)
             continue
         if "$pair_const_int_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1456,6 +1507,8 @@ def selftest() -> list[str]:
         "??0?$bitset@$0BM@@std@@QAE@K@Z": "bitset28@bitset_ctor",
         "??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z":
             "bitset145@bitset_subscript",
+        "??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ":
+            "bitset145@bitset_iterator_deref",
         "??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z":
             "bitset5@bitset_reference_assign",
         "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":
@@ -1470,6 +1523,28 @@ def selftest() -> list[str]:
     for mangled, expected in bitset_cases.items():
         if _demangle_key(mangled) != expected:
             failures.append(f"MSVC {expected} key regressed")
+    if _demangle_key(
+            "?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@"
+            "U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@"
+            "V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@"
+            "V?$allocator@Utype_map_hero_info@@@2@@std@@KAPAU_Node@12@"
+            "PAU312@@Z") != "type_map_hero_info@tree_min":
+        failures.append("MSVC map tree _Min key regressed")
+    tree_member_cases = {
+        "?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_insert",
+        "?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_node_insert",
+        "?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_const_iterator_dec",
+    }
+    for mangled, expected in tree_member_cases.items():
+        if _demangle_key(mangled) != expected:
+            failures.append(f"MSVC {expected} key regressed")
+    unrelated_tree_key = _demangle_key(
+        "?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@")
+    if unrelated_tree_key in tree_member_cases.values():
+        failures.append("uncontracted MSVC tree member gained a tree key")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \

@@ -50,6 +50,22 @@
 # 0x19b080 member body, then tail-jumps to `__endthread`. Dreamcast CodeView
 # independently publishes `void ProcessMP3Stop(void*)` and its sole outgoing
 # edge to soundManager::ThreadStopMP3. 11934 rows since.
+# BOUNDARY CORRECTION 2026-08-26: game.obj's EH-bearing body at 0xcafd0 is
+# one 0xd14-byte function through 0xcbce4, including its in-line catch handler
+# at 0xcb1ec and the resumed body at 0xcb206. The HandlerType record at retail
+# .rdata 0x64db70 points to 0xcb1ec; the normal path jumps over that handler to
+# 0xcb206, which uses the parent's saved EBP frame and reaches both shared
+# epilogues before the switch tables ending at 0xcbce4. The carve's standalone
+# 0xcb1ec/23 and 0xcb206/2782 rows were therefore interior chunks, not entries.
+# 11939 rows since.
+# BOUNDARY CORRECTION 2026-08-26: game::SaveGame at 0xbeea0 is one 0x2f6-byte
+# EH-bearing function through 0xbf196. Its normal path returns at 0xbf104, the
+# HandlerType record at retail .rdata 0x64d758 points to the typed catch at
+# 0xbf107, and that handler reads the parent's EBP-relative filename before
+# returning the shared continuation 0xbf181. The continuation restores the
+# same SEH frame and returns with the parent's `ret 0x14`; 0xbf196..0xbf19f is
+# alignment padding before SetupOrigData. The carve's 0xbf107/122 row was an
+# interior catch funclet, not an independent entry. 11938 rows since.
 rva	size
 0x1000	89
 0x1060	96
@@ -2370,8 +2386,7 @@ rva	size
 0xbe140	286
 0xbe260	392
 0xbe3f0	2725
-0xbeea0	615
-0xbf107	122
+0xbeea0	758
 0xbf1a0	387
 0xbf330	571
 0xbf570	515
@@ -2446,9 +2461,7 @@ rva	size
 0xcaa40	38
 0xcaa70	924
 0xcae10	433
-0xcafd0	540
-0xcb1ec	23
-0xcb206	2782
+0xcafd0	3348
 0xcbcf0	75
 0xcbd40	2691
 0xcc7d0	1534
