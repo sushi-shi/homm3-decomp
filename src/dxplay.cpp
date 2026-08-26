@@ -1000,6 +1000,26 @@ unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* session)
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:251
+VA(0x00496fc0, 0x72)  // anchor-vtable CDPlay slot7 (CreatePlayer), dc 0x8a1f8
+unsigned long CDPlay::CreatePlayer(char* sPlayerName, void* lpData,
+    unsigned long dwSize, void* hEvent)
+{
+    if (!m_lpDP)
+        return 0;
+    unsigned long flags = 0;
+    DPNAME dpName;
+    memset(&dpName, 0, sizeof(dpName));
+    unsigned long idPlayer;
+    dpName.dwSize = sizeof(DPNAME);
+    dpName.lpszShortNameA = sPlayerName;
+    if (m_isHost)
+        flags = 0x100;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->CreatePlayer(
+        &idPlayer, &dpName, hEvent, lpData, dwSize, flags);
+    return m_hRes >= 0 ? idPlayer : 0;
+}
+
 // E:\gamedcs\dxplay.cpp:276
 VA(0x00497040, 0x2B)
 unsigned char CDPlay::DestroyPlayer(unsigned long playerId)
