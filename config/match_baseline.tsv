@@ -1809,6 +1809,8 @@ recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0
+recruit	?QuickViewRecruit@@YIXPAVtown@@H@Z	100.0000	100.0000	100.0000	0x151750
+recruit	?QuickViewRecruit@@YIXW4TCreatureType@@PAF@Z	100.0000	100.0000	100.0000	0x151780
 # DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
 # cause is PROVEN rather than guessed: recruit.cpp and every header it
 # sees are byte-identical to the pre-merge tree, yet this row moved
