@@ -73,15 +73,9 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // vector in EDX. The owning philai TU is not yet reconstructed.
 int AI_resource_cost(long player_id, const int* resources);
 const std::bitset<9>& ArmyGrpFn_0044A460();
-// castle.cpp's affordability gate (retail 0x5b6be0): /Gr fastcall, town* in
-// ECX and the building id in EDX. Declared file-locally rather than pulling in
-// castle.h, matching the AI_resource_cost pattern above.
 int CanBuy(const town* currTown, int buildingId);
-// tradpost.cpp's marketplace exchange-rate helper (retail 0x5ecd20): the value
-// of one dest unit in source units, scaled by the market-count efficiency.
 double get_trade_ratio(EGameResource source, EGameResource dest,
                        double efficiency);
-// int -> EGameResource without tripping the enum-cast floor (philai's idiom).
 inline EGameResource game_resource_from_int(int value)
 {
     EGameResource resource;
@@ -1168,10 +1162,7 @@ long value_of_hall(town* current_town, type_building_id building)
     // @stub
 }
 
-// value_of_building's earlier VA(0x00433130) claim was a misattribution: 0x33130
-// is type_angelic_alliance_artifact::get_value (proven by its artifact type-vftable
-// slot at 0x63b760, re-homed below). value_of_building has no located retail body
-// (likely inlined into purchase_building/get_total_value); kept DC-only.
+// Retail 0x00433130 is an artifact virtual; this DC body remains unlocated.
 // E:\gamedcs\ai_player.cpp:1147
 DC_ONLY(0x2fdac, 0x29c)
 long value_of_building(town* current_town, type_building_id building, unsigned char* prohibited_creatures, int* extra_cost)
@@ -1233,26 +1224,21 @@ void mark_values(long* full_value, long total_value, __int64 requirements)
 }
 
 // E:\gamedcs\ai_player.cpp:1383
-// linkorder (mark_values inlined away) + arity: ret 0x10 (this+4), returns al
-// (uchar); size 406->447 (1.10). Retail 0x2a2b0.
-VA(0x0042a2b0, 0x1BF)  // linkorder + arity/return, dc 0x30334
+VA(0x0042a2b0, 0x1BF)  // retail link order + arity, dc 0x30334
 unsigned char type_AI_player::check_trade_supply(const int* cost, long number, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1446
-// arity: ret 8 (this+2), void, fs:[0] EH frame; size 230->272 (1.18). Retail 0x2a470.
-VA(0x0042a470, 0x110)  // linkorder + arity/return, dc 0x304cc
+VA(0x0042a470, 0x110)  // retail link order + arity, dc 0x304cc
 void type_AI_player::trade_resources(const int* cost, long number)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1474
-// arity: ret 0xc (this+3), returns al (uchar), fs:[0] EH frame; size 1054->1470
-// (1.39). Retail 0x2a580.
-VA(0x0042a580, 0x5BE)  // linkorder + arity/return, dc 0x305b4
+VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
 unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty)
 {
     // @stub
@@ -1261,10 +1247,7 @@ unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, 
 #endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1587
-// arity: ret 4 (this+1), returns al (uchar); reads this+0 short (player id) and
-// player record at gpGame+0x20ad0. Retail 0x2ab40. Builds a marketplace in
-// each of the player's towns while affordable; a CanBuy failure stops the run.
-VA(0x0042ab40, 0xD1)  // linkorder + arity/return, dc 0x309d4
+VA(0x0042ab40, 0xD1)  // dc 0x309d4
 bool type_AI_player::build_markets(int* supply)
 {
     playerData* player = &gpGame->players[team];
@@ -1285,11 +1268,7 @@ bool type_AI_player::build_markets(int* supply)
 }
 
 // E:\gamedcs\ai_player.cpp:1620
-// arity: ret 4 (this+1), void; reads this+0 short; calls calculate_demand;
-// source order after build_markets. Retail 0x2ac20. Counts the player's
-// marketplaces, caps the trade efficiency at ten, then sells every resource
-// surplus down against every deficit through get_trade_ratio.
-VA(0x0042ac20, 0x1DE)  // linkorder + arity + anchor-callee calculate_demand, dc 0x30a70
+VA(0x0042ac20, 0x1DE)  // dc 0x30a70
 void type_AI_player::do_resource_trade(int* supply)
 {
     int market_count = 0;
@@ -1335,12 +1314,15 @@ void type_AI_player::do_resource_trade(int* supply)
 
 #if 0  // @carcass
 
+// E:\gamedcs\ai_player.cpp:1620
+DC_ONLY(0x30a70, 0x2FA)
+void type_AI_player::do_resource_trade(int* supply)
+{
+    // @stub
+}
+
 // E:\gamedcs\ai_player.cpp:1686
-// anchor-callee: calls get_total_value + trade_resources + calculate_demand
-// (all claimed); arity ret 4 (this+1), returns uchar; source order after
-// do_resource_trade. size 706->1816 (2.6, retail inlines six small helpers).
-// Retail 0x2ae00.
-VA(0x0042ae00, 0x718)  // anchor-callee + arity, dc 0x30d6c
+VA(0x0042ae00, 0x718)  // retail callee set + arity, dc 0x30d6c
 unsigned char type_AI_player::purchase_building(unsigned char* prohibited_creatures)
 {
     // @stub
@@ -1395,21 +1377,14 @@ void type_AI_player::purchase_buildings()
 }
 
 // E:\gamedcs\ai_player.cpp:1850
-// anchor-callee: orchestrates the creature swapper + purchaser + consolidate -
-// calls do_best_swap, dump_extra_creature, purchaser::set, do_purchase,
-// get_purchase_value and AI_consolidate_army (all claimed). arity ret 8
-// (this+2: hero*, town*); size 674->1095 (1.6). Retail 0x2ba60.
-VA(0x0042ba60, 0x447)  // anchor-callee + arity, dc 0x310f4
+VA(0x0042ba60, 0x447)  // retail callee set + arity, dc 0x310f4
 void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:1954
-// anchor-callee: calls trade_resources (claimed) to fund the guild. arity ret 8
-// (this+2: hero*, town*); source order after buy_creatures; size 380->391
-// (1.03). Retail 0x2beb0.
-VA(0x0042beb0, 0x187)  // anchor-callee + arity, dc 0x31398
+VA(0x0042beb0, 0x187)  // retail callee set + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
 {
     // @stub
@@ -1436,8 +1411,12 @@ void type_AI_creature_swapper::add_creatures(TCreatureType type, short amount, s
     // @stub
 }
 
-// do_best_swap (dc 0x3166c) promoted to VA(0x0042c280) below, placed in RVA
-// order between add_creatures and dump_extra_creature.
+// E:\gamedcs\ai_player.cpp:2096
+DC_ONLY(0x3166c, 0x168)
+long type_AI_creature_swapper::do_best_swap(unsigned char can_take_all)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:2171
 DC_ONLY(0x317d4, 0x34)
@@ -1558,7 +1537,7 @@ long split_army(armyGroup* current_army, short index, short limit, short open_sl
     // @stub
 }
 
-// split_armies (dc 0x32670) promoted to VA(0x0042db20) in RVA order below.
+// split_armies (dc 0x32670) is claimed in retail-RVA order below.
 
 // E:\gamedcs\ai_player.cpp:2952
 DC_ONLY(0x3285c, 0x36)
@@ -1567,7 +1546,7 @@ void AI_arrange_army_for_combat(hero* current_hero, const hero* enemy_hero, cons
     // @stub
 }
 
-// mark_danger_zones (dc 0x32894) promoted to VA(0x0042de50) in RVA order below.
+// mark_danger_zones (dc 0x32894) is claimed in retail-RVA order below.
 
 // E:\gamedcs\ai_player.cpp:3013
 DC_ONLY(0x329f8, 0x8A)
@@ -1576,7 +1555,12 @@ void AI_mark_danger_zones(hero* current_hero, long* danger_zones)
     // @stub
 }
 
-// mark_destinations (dc 0x32a84) promoted to VA(0x0042f570) in RVA order below.
+// E:\gamedcs\ai_player.cpp:3044
+DC_ONLY(0x32a84, 0x3AC)
+long mark_destinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:3164
 DC_ONLY(0x32e30, 0x208)
@@ -1585,7 +1569,12 @@ void check_holy_grail(const hero* current_hero, const searchArray* search_array,
     // @stub
 }
 
-// find_all_destinations (dc 0x33038) promoted to VA(0x0042edd0) in RVA order below.
+// E:\gamedcs\ai_player.cpp:3225
+DC_ONLY(0x33038, 0x3CA)
+long find_all_destinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:3390
 DC_ONLY(0x33404, 0x450)
@@ -1594,7 +1583,12 @@ void mark_strategic_map(hero* current_hero, long* strategic_map, std::vector<Her
     // @stub
 }
 
-// net_value_of_location (dc 0x33854) promoted to VA(0x0042f980) in RVA order below.
+// E:\gamedcs\ai_player.cpp:3498
+DC_ONLY(0x33854, 0x1F6)
+int net_value_of_location(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:3573
 DC_ONLY(0x33a4c, 0x2AC)
@@ -1617,7 +1611,12 @@ void ConsiderHidingMouse(hero* current_hero, int direction)
     // @stub
 }
 
-// attempt_step (dc 0x341f4) promoted to VA(0x0042fc50) in RVA order below.
+// E:\gamedcs\ai_player.cpp:3832
+DC_ONLY(0x341f4, 0x1CE)
+unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned char bStandEnd, unsigned char first_step)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:3910
 DC_ONLY(0x343c4, 0x142)
@@ -1663,7 +1662,12 @@ long value_of_hiring(town* current_town, hero* candidate, searchArray* search_ar
 
 // total_artifact_value (dc 0x35400) promoted to VA(0x004339e0) in RVA order below.
 
-// consider_hiring (dc 0x354bc) promoted to VA(0x00431800) in RVA order below.
+// E:\gamedcs\ai_player.cpp:4476
+DC_ONLY(0x354bc, 0x32E)
+unsigned char consider_hiring(long player_id, hero* candidate)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:4565
 DC_ONLY(0x357ec, 0x9C)
@@ -1679,7 +1683,12 @@ unsigned char get_map_shipyard(const playerData* player, long x, long y, long z)
     // @stub
 }
 
-// AI_build_ship (dc 0x35910) promoted to VA(0x00430f80) in RVA order below.
+// E:\gamedcs\ai_player.cpp:4607
+DC_ONLY(0x35910, 0xFE)
+void AI_build_ship(const hero* our_hero, long x, long y, long z)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:4643
 DC_ONLY(0x35a10, 0xB6)
@@ -1835,6 +1844,13 @@ void type_creature_growth_artifact::type_creature_growth_artifact(long new_level
     // @stub
 }
 
+// E:\gamedcs\ai_player.cpp:5505
+DC_ONLY(0x3704c, 0x148)
+long type_creature_growth_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+{
+    // @stub
+}
+
 // AI_get_value_of_artifact (dc 0x37194) promoted to VA(0x004336c0) in RVA order below.
 
 // E:\gamedcs\ai_player.cpp:5643
@@ -1851,7 +1867,12 @@ long AI_get_value_of_artifact(const type_artifact* artifact, long player_id)
     // @stub
 }
 
-// get_full_value (dc 0x37588) promoted to VA(0x00433c60) in RVA order below.
+// E:\gamedcs\ai_player.cpp:5708
+DC_ONLY(0x37588, 0x266)
+long get_full_value(const hero* our_hero)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:5792
 DC_ONLY(0x377f0, 0xA8)
@@ -1869,7 +1890,12 @@ void AI_equip_artifacts(hero* our_hero)
     // @stub
 }
 
-// AI_swap_artifacts (dc 0x37acc) promoted to VA(0x00433fe0) in RVA order below.
+// E:\gamedcs\ai_player.cpp:5967
+DC_ONLY(0x37acc, 0xEE)
+void AI_swap_artifacts(hero* source, hero* dest)
+{
+    // @stub
+}
 
 // E:\gamedcs\ai_player.cpp:6012
 DC_ONLY(0x37bbc, 0x7A)
@@ -2128,13 +2154,7 @@ void type_AI_creature_swapper::add_creatures(
 }
 
 // E:\gamedcs\ai_player.cpp:2096
-// anchor-callee: the swapper's per-swap orchestrator - calls get_alignments,
-// add_creatures and value_of_adding_army (all claimed) and is itself called by
-// buy_creatures (claimed). arity ret 4 (this+1: can_take_all), returns long;
-// do_swap/get_swap_value/calculate_improvement inline into it (they stay
-// DC_ONLY). size 360->294 (0.82). Retail 0x2c280. Placed in file order between
-// add_creatures and dump_extra_creature to keep the RVA strictly increasing.
-VA(0x0042c280, 0x126)  // anchor-callee + arity, dc 0x3166c
+VA(0x0042c280, 0x126)  // dc 0x3166c
 long type_AI_creature_swapper::do_best_swap(bool can_take_all)
 {
     long best_value = 0;
@@ -2686,25 +2706,19 @@ void AI_consolidate_army(armyGroup* current_army)
     AI_consolidate_army_impl(current_army);
 }
 
-// Callee-fingerprint locates (ai_player is RVA-scrambled; join against
-// evidence/dc-xref-graph.tsv). split_armies: retail 0x2db20 calls
-// armyGroup::GetNumArmies + hero::get_combat_value_modifier - the latter shared
-// with only get_full_value (0x33c60), so split_armies takes 0x2db20 by
-// elimination; r=0.92. mark_danger_zones: retail 0x2de50 is the ONLY row calling
-// AI_value_of_combat and mark_danger_zones the only ai_player fn calling it
-// (unique-callee proof), corroborated by CheckDoMain + hero::GetMobility. Claimed
-// @stub in RVA order so the va-claims ORDER gate holds; sizes carve-exact.
 #if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:2817
-VA(0x0042db20, 0x249)  // anchor-callee + arity, dc 0x32670
-void split_armies(hero* current_hero, const hero* enemy_hero, const armyGroup* enemy)
+VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
+void split_armies(hero* current_hero, const hero* enemy_hero,
+                  const armyGroup* enemy)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:2975
-VA(0x0042de50, 0x25c)  // anchor-callee unique (AI_value_of_combat), dc 0x32894
-void mark_danger_zones(const hero* our_hero, hero* enemy_hero, long* danger_zones)
+VA(0x0042de50, 0x25c)  // unique AI_value_of_combat callee, dc 0x32894
+void mark_danger_zones(const hero* our_hero, hero* enemy_hero,
+                       long* danger_zones)
 {
     // @stub
 }
@@ -2757,223 +2771,6 @@ NewmapCell* game::get_cell(type_point point)
 {
     return &worldMap.cellData[(point.z * worldMap.Size + point.y) * worldMap.Size
                               + point.x];
-}
-
-double AI_value_of_morale(long morale, long change);
-double AI_value_of_luck(long luck, long change);
-
-VA(0x00432510, 0x24)  // artifact get_value roster; dc 0x36258
-long type_scouting_artifact::get_value(const hero* owner, unsigned char,
-                                       unsigned char) const
-{
-    return owner->maxMovePoints * bonus / 100;
-}
-
-VA(0x00432560, 0x32)  // artifact get_value roster; dc 0x362b8
-long type_combat_artifact::get_value(const hero* owner, unsigned char,
-                                     unsigned char) const
-{
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
-}
-
-VA(0x004325a0, 0x40)  // artifact get_value roster; dc 0x36320
-long type_might_artifact::get_value(const hero* owner, unsigned char,
-                                    unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 40;
-}
-
-VA(0x004325e0, 0x21)  // artifact get_value roster; dc 0x36390
-long type_power_artifact::get_value(const hero* owner, unsigned char,
-                                    unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    return owner->value_of_power * bonus;
-}
-
-VA(0x00432610, 0x21)  // artifact get_value roster; dc 0x363f0
-long type_knowledge_artifact::get_value(const hero* owner, unsigned char,
-                                        unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    return owner->value_of_knowledge * bonus;
-}
-
-// Residual (82.56%): retail delays one saved-register push until after the
-// skill-level early-out and homes the necromancy percentage only inside the
-// minimum arm. The semantic and control-flow reconstruction is complete.
-VA(0x00432640, 0x97)  // artifact get_value roster; dc 0x36450
-long type_necromancy_artifact::get_value(const hero* owner,
-                                         unsigned char equipped,
-                                         unsigned char) const
-{
-    if (owner->skillLevel[12] == 0)
-        return 0;
-    int necro = static_cast<int>(
-        (1.0f - const_cast<hero*>(owner)->GetNecromancyFactor(0)) * 100.0f);
-    if (equipped) {
-        if (necro > 0)
-            necro = 0;
-        necro += bonus;
-    } else {
-        necro = std::_cpp_min(necro, static_cast<int>(bonus));
-    }
-    if (necro <= 0)
-        return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * necro / 250;
-}
-
-VA(0x004326e0, 0x38)  // artifact get_value roster; dc 0x3652c
-long type_movement_artifact::get_value(const hero* owner, unsigned char,
-                                       unsigned char) const
-{
-    return (const_cast<hero*>(owner)->army.get_AI_value() + 2500) * bonus / 100;
-}
-
-VA(0x00432720, 0x54)  // artifact get_value roster; dc 0x3659c
-long type_spellcaster_artifact::get_value(const hero* owner, unsigned char,
-                                          unsigned char) const
-{
-    if (owner->value_of_power == 0)
-        return 0;
-    if (owner->wisdomLevel == 0)
-        return 0;
-    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
-}
-
-VA(0x00432780, 0x68)  // artifact get_value roster; dc 0x3662c
-long type_morale_artifact::get_value(const hero* owner, unsigned char equipped,
-                                     unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 0);
-    if (equipped)
-        morale -= bonus;
-    return static_cast<long>(AI_value_of_morale(morale, bonus)
-                             * const_cast<hero*>(owner)->army.get_AI_value());
-}
-
-VA(0x004327f0, 0x68)  // artifact get_value roster; dc 0x36720
-long type_luck_artifact::get_value(const hero* owner, unsigned char equipped,
-                                   unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 0);
-    if (equipped)
-        luck -= bonus;
-    return static_cast<long>(AI_value_of_luck(luck, bonus)
-                             * const_cast<hero*>(owner)->army.get_AI_value());
-}
-
-VA(0x00432860, 0x21)  // artifact get_value roster; dc 0x36814
-long type_duration_artifact::get_value(const hero* owner, unsigned char,
-                                       unsigned char exact) const
-{
-    if (exact)
-        return 0;
-    return owner->value_of_duration * bonus;
-}
-
-VA(0x00432a50, 0xc3)  // artifact get_value roster; dc 0x36a1c
-long type_antimagic_artifact::get_value(const hero* owner,
-                                        unsigned char equipped,
-                                        unsigned char exact) const
-{
-    long value;
-    if (bonus == 0)
-        value = const_cast<hero*>(owner)->army.get_AI_value() / 5;
-    else
-        value = const_cast<hero*>(owner)->army.get_AI_value() / 8;
-    if (exact)
-        return value;
-    if (!equipped)
-        return value;
-    if (bonus == 0) {
-        signed char sp = owner->stats[2];
-        int m;
-        if (sp > 99)
-            m = 99;
-        else if (sp > 0)
-            m = sp;
-        else
-            m = 1;
-        return value - m * 50;
-    }
-    signed char sp = owner->stats[2];
-    int m;
-    if (sp > 99)
-        m = 99;
-    else if (sp > 0)
-        m = sp;
-    else
-        m = 1;
-    return value - m * 25;
-}
-
-// Residual (90.68%): retail merges the conditional arm into a shared return
-// through a saved register; VC6 SP3 fuses that arm's epilogue instead.
-VA(0x00432b20, 0x78)  // artifact get_value roster; dc 0x36afc
-long type_antimorale_artifact::get_value(const hero* owner, unsigned char,
-                                         unsigned char exact) const
-{
-    long army = const_cast<hero*>(owner)->army.get_AI_value();
-    long result = static_cast<long>(AI_value_of_morale(0, 2) * army);
-    if (!exact) {
-        int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 1);
-        if (morale > 0)
-            result = static_cast<long>(
-                AI_value_of_morale(morale, -morale) * army + result);
-    }
-    return result;
-}
-
-// Residual (90.68%): the luck twin has the same merged-return generation
-// difference as antimorale; the remaining body and branches agree.
-VA(0x00432ba0, 0x78)  // artifact get_value roster; dc 0x36c90
-long type_antiluck_artifact::get_value(const hero* owner, unsigned char,
-                                       unsigned char exact) const
-{
-    long army = const_cast<hero*>(owner)->army.get_AI_value();
-    long result = static_cast<long>(AI_value_of_luck(0, 2) * army);
-    if (!exact) {
-        int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 1);
-        if (luck > 0)
-            result = static_cast<long>(
-                AI_value_of_luck(luck, -luck) * army + result);
-    }
-    return result;
-}
-
-VA(0x004330b0, 0x73)  // retail artifact vtable slot
-long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char,
-                                             unsigned char) const
-{
-    long total = 0;
-    for (int i = 0; i < 7; i++) {
-        int type = owner->army.armies[i];
-        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x4))
-            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
-    }
-    return bonus * total / 100;
-}
-
-VA(0x00433520, 0x5a)  // retail artifact vtable slot
-long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char,
-                                              unsigned char) const
-{
-    long total = 0;
-    for (int i = 0; i < 7; i++) {
-        int type = owner->army.armies[i];
-        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x10))
-            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
-    }
-    return total / 8;
 }
 
 // The nine functions below are located by the callee-fingerprint join against
@@ -3046,89 +2843,147 @@ void type_artifact_effect::type_artifact_effect()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:5065
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
+long type_scouting_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    return owner->maxMovePoints * bonus / 100;
 }
 
+#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5073
 VA(0x00432540, 0x15)  // anchor-vtable (??_7type_combat_artifact ctor), dc 0x36274
 void type_combat_artifact::type_combat_artifact(long new_bonus)
 {
     // @stub
 }
+#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:5081
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
+long type_combat_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
 }
 
 // E:\gamedcs\ai_player.cpp:5098
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+VA(0x004325a0, 0x40)  // artifact get_value cluster order-map + get_AI_value, dc 0x36320
+long type_might_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 40;
 }
 
 // E:\gamedcs\ai_player.cpp:5116
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+VA(0x004325e0, 0x21)  // artifact get_value cluster order-map, dc 0x36390
+long type_power_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    return owner->value_of_power * bonus;
 }
 
 // E:\gamedcs\ai_player.cpp:5134
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+VA(0x00432610, 0x21)  // artifact get_value cluster order-map, dc 0x363f0
+long type_knowledge_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    return owner->value_of_knowledge * bonus;
 }
 
+// Residual (82.56%): logic byte-exact ((1.0f - GetNecromancyFactor(0)) * 100.0f,
+// then min(necro,bonus) / necro=min(necro,0)+bonus, army*necro/250). The delta
+// is register scheduling: retail delays `push esi` past the skillLevel early-out
+// and spills necro to [ebp+8] only inside the min arm, while our SP3 CL pushes
+// esi in the prologue and hoists the spill above the equipped branch; the /250
+// sign-correction also keeps the quotient in edx where ours uses eax. The 1.0f
+// and 100.0f literals pool as __real@ COMDATs vs retail's const_23b6e0/const_23ac68
+// (cosmetic reloc-name difference). Register-homing class.
 // E:\gamedcs\ai_player.cpp:5152
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
+VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
+long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char) const
 {
-    // @stub
+    if (owner->skillLevel[12] == 0)
+        return 0;
+    int necro = static_cast<int>(
+        (1.0f - const_cast<hero*>(owner)->GetNecromancyFactor(0)) * 100.0f);
+    if (equipped) {
+        if (necro > 0)
+            necro = 0;
+        necro += bonus;
+    } else {
+        necro = std::_cpp_min(necro, static_cast<int>(bonus));
+    }
+    if (necro <= 0)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * necro / 250;
 }
 
 // E:\gamedcs\ai_player.cpp:5189
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+VA(0x004326e0, 0x38)  // artifact get_value cluster order-map + get_AI_value, dc 0x3652c
+long type_movement_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    return (const_cast<hero*>(owner)->army.get_AI_value() + 2500) * bonus / 100;
 }
 
 // E:\gamedcs\ai_player.cpp:5205
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+VA(0x00432720, 0x54)  // artifact get_value cluster order-map + get_AI_value, dc 0x3659c
+long type_spellcaster_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    if (owner->value_of_power == 0)
+        return 0;
+    if (owner->wisdomLevel == 0)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * bonus / 100;
 }
 
+// The morale/luck effects weight AI_value_of_morale/AI_value_of_luck (fastcall
+// free functions defined in philai.cpp, declared there and in ai_tactical.h)
+// by the hero's whole-army value. Declared locally here, as philai.cpp does,
+// to avoid pulling ai_tactical.h into this TU.
+double AI_value_of_morale(long morale, long change);
+double AI_value_of_luck(long luck, long change);
+
 // E:\gamedcs\ai_player.cpp:5226
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+VA(0x00432780, 0x68)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x3662c
+long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 0);
+    if (equipped)
+        morale -= bonus;
+    return static_cast<long>(AI_value_of_morale(morale, bonus)
+                             * const_cast<hero*>(owner)->army.get_AI_value());
 }
 
 // E:\gamedcs\ai_player.cpp:5250
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+VA(0x004327f0, 0x68)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36720
+long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 0);
+    if (equipped)
+        luck -= bonus;
+    return static_cast<long>(AI_value_of_luck(luck, bonus)
+                             * const_cast<hero*>(owner)->army.get_AI_value());
 }
 
 // E:\gamedcs\ai_player.cpp:5274
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+VA(0x00432860, 0x21)  // artifact get_value cluster order-map, dc 0x36814
+long type_duration_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    if (exact)
+        return 0;
+    return owner->value_of_duration * bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:5293
 VA(0x00432890, 0x1b2)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x3687c
@@ -3137,27 +2992,82 @@ long type_school_artifact::get_value(const hero* owner, unsigned char equipped, 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:5355
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+VA(0x00432a50, 0xc3)  // artifact get_value cluster order-map + get_AI_value, dc 0x36a1c
+long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact) const
 {
-    // @stub
+    long value;
+    if (bonus == 0)
+        value = const_cast<hero*>(owner)->army.get_AI_value() / 5;
+    else
+        value = const_cast<hero*>(owner)->army.get_AI_value() / 8;
+    if (exact)
+        return value;
+    if (!equipped)
+        return value;
+    if (bonus == 0) {
+        signed char sp = owner->stats[2];
+        int m;
+        if (sp > 99)
+            m = 99;
+        else if (sp > 0)
+            m = sp;
+        else
+            m = 1;
+        return value - m * 50;
+    }
+    signed char sp = owner->stats[2];
+    int m;
+    if (sp > 99)
+        m = 99;
+    else if (sp > 0)
+        m = sp;
+    else
+        m = 1;
+    return value - m * 25;
 }
 
+// Residual (90.68%): the sole delta is the morale>0 fall-through exit - retail
+// commits `result` to edi (mov edi,eax) and merges all three exits at one
+// mov eax,edi epilogue, while our SP3 CL fuses that arm's epilogue inline and
+// returns eax directly. Merged-return / stale-CL-generation class; a goto-done
+// spelling that pins the fall-through arm measured identical. Everything else
+// (army-double reuse, both AI_value_of_morale calls, the +result accumulation)
+// is byte-exact.
 // E:\gamedcs\ai_player.cpp:5387
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
+VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
+long type_antimorale_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long result = static_cast<long>(AI_value_of_morale(0, 2) * army);
+    if (!exact) {
+        int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 1);
+        if (morale > 0)
+            result = static_cast<long>(AI_value_of_morale(morale, -morale) * army + result);
+    }
+    return result;
 }
 
+// Residual (90.68%): same merged-return / stale-CL-generation delta as
+// antimorale above (the luck twin) - retail commits result to edi and merges
+// one epilogue; our CL fuses the morale>0 arm's exit. Rest byte-exact.
 // E:\gamedcs\ai_player.cpp:5413
-// Retail claim promoted to the reconstructed body above; DC source identity retained.
-long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
+long type_antiluck_artifact::get_value(const hero* owner, unsigned char, unsigned char exact) const
 {
-    // @stub
+    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long result = static_cast<long>(AI_value_of_luck(0, 2) * army);
+    if (!exact) {
+        int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 1);
+        if (luck > 0)
+            result = static_cast<long>(AI_value_of_luck(luck, -luck) * army + result);
+    }
+    return result;
 }
 
+#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5441
 VA(0x00432c20, 0xf5)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x36e28
 long type_tome_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
@@ -3192,11 +3102,21 @@ long type_spell_artifact::get_value(const hero* owner, unsigned char equipped, u
     // @stub
 }
 
-// Retail claim promoted to the reconstructed body above.
-long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+#endif  // @carcass
+
+VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
+long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    long total = 0;
+    for (int i = 0; i < 7; i++) {
+        int type = owner->army.armies[i];
+        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x4))
+            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
+    }
+    return bonus * total / 100;
 }
+
+#if 0  // @carcass
 
 // CORRECTION (2026-08-26): 0x33130 was claimed value_of_building on a unique-pair
 // heuristic (it calls armyGroup::get_AI_value AND town::get_army, and DC
@@ -3220,11 +3140,21 @@ long type_undead_king_cloak_artifact::get_value(const hero* owner, unsigned char
     // @stub
 }
 
-// Retail claim promoted to the reconstructed body above.
-long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+#endif  // @carcass
+
+VA(0x00433520, 0x5a)  // vtable-slot 0x63b77c (provisional type), retail-only
+long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char, unsigned char) const
 {
-    // @stub
+    long total = 0;
+    for (int i = 0; i < 7; i++) {
+        int type = owner->army.armies[i];
+        if (type != -1 && (akCreatureTypeTraits[type].attributes & 0x10))
+            total += akCreatureTypeTraits[type].AI_value * owner->army.numTroops[i];
+    }
+    return total / 8;
 }
+
+#if 0  // @carcass
 
 VA(0x00433580, 0x13a)  // vtable-slot 0x63b774 (provisional type), retail-only
 long type_statue_of_legion_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
