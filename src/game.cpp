@@ -10544,13 +10544,22 @@ VA_COMPGEN(0x004d3df0, 0x2C2, IMPLICIT_COPY_ASSIGN, town)
 VA_COMPGEN(0x004d40c0, 0x19B, IMPLICIT_COPY_ASSIGN, CObjectType)
 VA_COMPGEN(0x004d4260, 0x1E3, IMPLICIT_COPY_ASSIGN, type_creature_bank)
 VA_COMPGEN(0x004d4450, 0x3E, IMPLICIT_DTOR, TScenarioTown)
+VA_COMPGEN(0x004d4490, 0x67, BITSET_REFERENCE_ASSIGN, Bitset8)
 VA_COMPGEN(0x004d4500, 0x2CF, VECTOR_RESIZE, generator)
 VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, generator)
 VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, type_university)
 VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, type_university)
 VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
+// NewSMapHeader::Read materializes the eight-player availability setter and
+// the four-dword default mask initializer. Their immediate bounds/fill counts
+// distinguish these two retained bitset widths from the neighboring rows.
+VA_COMPGEN(0x004d4cc0, 0x60, BITSET_SET, Bitset8)
+// The 0x6c-byte copy stride followed by type_creature_bank tail destruction
+// identifies the intervening range erase rather than a generic vector helper.
+VA_COMPGEN(0x004d4d20, 0xBF, VECTOR_ERASE, type_creature_bank)
 VA_COMPGEN(0x004d4de0, 0x63, BITSET_SET, Bitset128)
 VA_COMPGEN(0x004d4e50, 0x37, BITSET_TEST, Bitset128)
+VA_COMPGEN(0x004d4e90, 0x1A, BITSET_TIDY, Bitset128)
 VA_COMPGEN(0x004d4eb0, 0xCB, BITSET_XRAN, Bitset12)
 VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
@@ -15802,6 +15811,14 @@ template<> std::bitset<70>& std::bitset<70>::reset()
     return *this;
 }
 
+template<> std::bitset<128>& std::bitset<128>::reset()
+{
+    typedef void (std::bitset<128>::*TidyMember)(unsigned long);
+    TidyMember volatile tidy = &std::bitset<128>::_Tidy;
+    (this->*tidy)(0);
+    return *this;
+}
+
 #pragma auto_inline(on)
 
 #pragma inline_depth(0)
@@ -15816,6 +15833,7 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
                                std::vector<type_map_hero_identity>& heroIdentities,
+                               std::vector<type_creature_bank>& creatureBanks,
                                THeroSetupMapMinComdatAnchor& heroSetupMap,
                                const THeroSetupMapMinComdatAnchor::Value& heroSetupValue)
 {
@@ -15825,6 +15843,7 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     spells.reset();
     heroIdentities.clear();
     heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
+    creatureBanks.erase(creatureBanks.begin(), creatureBanks.end());
     heroSetupMap.retain_min();
     heroSetupMap.retain_insert(heroSetupValue);
     spells[0] = true;
@@ -15835,6 +15854,8 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     availableHeroes.set(0, true);
     availableHeroes[0] = true;
     availableSkills.test(0);
+    heroPool.set(0, true);
+    objectTypes.reset();
     objectTypes.set(0, true);
     objectTypes.test(0);
 }
