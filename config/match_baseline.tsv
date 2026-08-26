@@ -929,7 +929,7 @@ dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
 dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x970e0
 dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	97.7363	97.7363	97.7363	0x99150
 dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	99.3389	99.3389	99.3389	0x994b0
-dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	81.3400	81.3400	81.3400	0x96fc0
+dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	100.0000	100.0000	100.0000	0x96fc0
 dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	99.2434	99.2434	99.2434	0x99700
 dxplay	?CreateTCPIPConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD0PAV2@@Z	99.6923	99.6923	99.6923	0x98d80
 dxplay	?DeleteGroupFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x97180
