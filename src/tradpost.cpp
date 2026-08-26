@@ -1278,7 +1278,8 @@ void TBuyArtifactWindow::Update(unsigned char bUpdate)
 VA(0x005ebe80, 0x6cb)  // ordermap clean run + arity ret 4, dc 0x18a02c
 void TSellArtifactWindow::Update(unsigned char bUpdate)
 {
-    message msg = {MESSAGE_WIDGET, 0, 0, 0, 0, 0, 0, 0};
+    message msg = {0, 0, 0, 0, 0, 0, 0, 0};
+    msg.id = MESSAGE_WIDGET;
 
     if (gSelectedArtifact != -1 && gLeftResource != -1) {
         int q = gRatioInverted ? gGiveQuantity : 1;
@@ -1306,8 +1307,8 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    sprintf(gText, (*gpGeneralText)[272], gpMarketHero->name);
     msg.codeY = 0xe;
+    sprintf(gText, (*gpGeneralText)[272], gpMarketHero->name);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[169]);
@@ -1342,8 +1343,8 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
 
     for (int i2 = 0; i2 < 2; ++i2) {
         if (gSelectedArtifact != -1 && gLeftResource != -1) {
+            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
             if (i2 == 0) {
-                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.codeY = 9;
                 if (gSelectedArtifact < 18) {
                     msg.extra = gpMarketHero->equipped[gSelectedArtifact].artifactId;
@@ -1356,15 +1357,21 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 4;
                 msg.extraText = gText;
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), gRightAmount);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
             } else {
-                msg.extra = gLeftResource;
                 msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.extra = gLeftResource;
                 msg.codeY = 0xb;
                 BroadcastMessage(&msg);
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gRatioInverted ? gRightAmount * gGiveQuantity : gRightAmount);
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), gRightAmount);
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 0xc;
                 msg.extraText = gText;
@@ -1386,9 +1393,11 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
                 msg.codeY = i + 0x4d;
                 msg.extraText = gText;
                 if (gSelectedArtifact != -1) {
-                    type_artifact art = (gSelectedArtifact < 18)
-                        ? gpMarketHero->equipped[gSelectedArtifact]
-                        : gpMarketHero->backpack[gSelectedArtifact - 18];
+                    type_artifact art;
+                    if (gSelectedArtifact < 18)
+                        art = gpMarketHero->equipped[gSelectedArtifact];
+                    else
+                        art = gpMarketHero->backpack[gSelectedArtifact - 18];
                     float v = static_cast<float>(akArtifactTraits[art.artifactId].cost)
                             * fArtifactPurchaseEfficency[gMarketCount];
                     float ratio = v / static_cast<float>(gMarketValues[i]);
@@ -1407,15 +1416,16 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
                 BroadcastMessage(&msg);
             }
         }
-    }
-
-    for (int slot = 0; slot < 0x17; ++slot) {
-        msg.codeX = widget::WIDGET_SET_TEXT;
-        msg.codeY = slot + 0x6b;
-        msg.extra = 6;
-        BroadcastMessage(&msg);
-        update_sell_artifact_widget(&msg, slot);
-        BroadcastMessage(&msg);
+        if (i2 == 0) {
+            for (int slot = 0; slot < 0x17; ++slot) {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = slot + 0x6b;
+                msg.extra = 6;
+                BroadcastMessage(&msg);
+                update_sell_artifact_widget(&msg, slot);
+                BroadcastMessage(&msg);
+            }
+        }
     }
 
     if (bUpdate)
