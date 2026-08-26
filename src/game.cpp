@@ -6151,6 +6151,16 @@ int NewSMapHeader::readString(void* infile, std::basic_string<char,std::char_tra
 
 #endif  // @carcass
 
+// NewSMapHeader::Read constructs this map value from a dword hero identity,
+// an owned string, and the eight-player availability mask. Retail copies all
+// three direct members and destroys the by-value string parameter.
+VA(0x004c4cc0, 0x130)
+type_map_hero_info::type_map_hero_info(int identity, std::string name,
+                                      std::bitset<8> availability)
+    : field_00(identity), field_04(name), field_14(availability)
+{
+}
+
 // victorylossconditions.cpp's `get_team` under a TU-local name: the
 // negative arm returns the player number itself, which is what lets VC6
 // thread `owner < 0` straight through the caller's `>= 0` test instead
