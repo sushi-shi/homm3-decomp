@@ -2874,18 +2874,29 @@ int TSellCreatureWindow::WindowHandler(message* msg)
 VA(0x005eebd0, 0x1a1)  // anchor-callee (TSellCreatureWindow::WindowHandler), dc 0x18c7b0
 void TSellCreatureWindow::SetRolloverText(int codeY)
 {
+    const char* rolloverText;
     switch (codeY) {
-    case MARKET_LEFT_PANEL_ID: strcpy(gText, gSellCreaHelpText[0].text); break;
-    case MARKET_RIGHT_PANEL_ID: strcpy(gText, gSellCreaHelpText[1].text); break;
-    case MARKET_LEFT_COUNT_ID: strcpy(gText, gSellCreaHelpText[2].text); break;
-    case MARKET_LEFT_LABEL_ID: strcpy(gText, gSellCreaHelpText[3].text); break;
-    case MARKET_COMMAND_ID: strcpy(gText, gSellCreaHelpText[4].text); break;
+    case MARKET_LEFT_PANEL_ID:
+        rolloverText = gSellCreaHelpText[0].text;
+        break;
+    case MARKET_RIGHT_PANEL_ID:
+        strcpy(gText, gSellCreaHelpText[1].text);
+        goto rollover_text_ready;
+    case MARKET_LEFT_COUNT_ID:
+        rolloverText = gSellCreaHelpText[2].text;
+        break;
+    case MARKET_LEFT_LABEL_ID:
+        strcpy(gText, gSellCreaHelpText[3].text);
+        goto rollover_text_ready;
+    case MARKET_COMMAND_ID:
+        strcpy(gText, gSellCreaHelpText[4].text);
+        goto rollover_text_ready;
     case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
     case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
     case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
     case MARKET_BUY_GOLD_ID:
         strcpy(gText, gResourceNames[codeY - MARKET_BUY_WOOD_ID]);
-        break;
+        goto rollover_text_ready;
     case MARKET_CREATURE_SLOT_0_ID: case MARKET_CREATURE_SLOT_1_ID:
     case MARKET_CREATURE_SLOT_2_ID: case MARKET_CREATURE_SLOT_3_ID:
     case MARKET_CREATURE_SLOT_4_ID: case MARKET_CREATURE_SLOT_5_ID:
@@ -2895,18 +2906,20 @@ void TSellCreatureWindow::SetRolloverText(int codeY)
             sprintf(gText, akCreatureTypeTraits[creatureType].m_plural_name);
         else
             sprintf(gText, emptyRolloverText);
-        break;
+        goto rollover_text_ready;
     }
-    default: strcpy(gText, emptyRolloverText); break;
+    default:
+        strcpy(gText, emptyRolloverText);
+        goto rollover_text_ready;
     }
+    strcpy(gText, rolloverText);
+rollover_text_ready:
     message update;
     update.extraText = gText;
     BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
-    // Residual (84.37%): control flow agrees (12/12 branches). The interleaved
-    // sprintf arms (creature name / empty) split the strcpy inlines into two
-    // cross-jumped tails that cl merges with a different length-spill register
-    // (eax vs retail's edx) and block order than retail's - the sunk-join /
-    // cross-jump class - plus the resource range's reloc-alias interior read.
+    // Residual (97.05%): block placement and branch structure agree. VC6 still
+    // chooses the opposite eax/edx tie for the inlined strcpy length spill and
+    // the creature sprintf operand; the resource lookup is a reloc alias.
 }
