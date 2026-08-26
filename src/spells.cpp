@@ -1402,17 +1402,21 @@ void combatManager::Armageddon(int level, int power)
 // emitted first, and retail converts `remaining` first. Worth 94.82 ->
 // 97.29 on the operand order alone.
 //
-// Residual (97.29%): TWO sites, ~9 instructions.
-//   * The sqrt's two deltas come out in the opposite order (retail does
-//     x then y, we do y then x). The `+` operand order does NOT reach
-//     it - both spellings measure exactly 97.2924, because VC6
-//     canonicalises the commutative sum - and hoisting the deltas into
-//     locals is worse in both declaration orders (93.98 / 88.19).
+// Residual (97.31%): the explicit squared-delta inline helper breaks C1's
+// commutative canonicalisation and gives the sqrt retail's x-then-y delta
+// order. Direct `+` operand order is byte-flat, while hoisting the deltas into
+// locals is worse in both declaration orders (93.98 / 88.19).
 //   * The progress divide uses two temp slots where retail reuses one:
 //     retail loads the numerator to st0 BEFORE materialising the
 //     denominator, so the numerator's slot is free again. Making the
 //     numerator a named float local (`travelled`) was needed for the
 //     rest of the shape but does not move this.
+static inline long BoltDeltaSquared(long destination, long current)
+{
+    long delta = abs(destination - current);
+    return delta * delta;
+}
+
 VA(0x005a5260, 0x1DC)  // order-map+arity, dc 0x1542b4
 void combatManager::ResetBoltAngle(SBolt* psBolt)
 {
@@ -1421,9 +1425,8 @@ void combatManager::ResetBoltAngle(SBolt* psBolt)
 
     long remaining = static_cast<long>(
         sqrt(static_cast<double>(
-            abs(psBolt->iDestY - psBolt->iY) * abs(psBolt->iDestY - psBolt->iY)
-            + abs(psBolt->iDestX - psBolt->iX)
-                * abs(psBolt->iDestX - psBolt->iX))));
+            BoltDeltaSquared(psBolt->iDestX, psBolt->iX)
+            + BoltDeltaSquared(psBolt->iDestY, psBolt->iY))));
     if (remaining > psBolt->iTotalLength) {
         psBolt->fProgress = 0;
     } else {
