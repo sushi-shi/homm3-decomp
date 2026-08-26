@@ -1110,6 +1110,7 @@ game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
 game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0
+game	??4SCampaign@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xbdc70
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800
 game	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xd4490
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0

@@ -1247,12 +1247,13 @@ public:
 };
 SIZE(SCampaignPools4c, 0x10);
 
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
+#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
+ || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
 // The retail PC layout agrees with IDA's independently recovered type record:
 // these are the concrete types hidden behind the declaration-only wrappers
-// above.  Expose them only to campaignwindow.obj, which emits/expands the
-// compiler-generated SCampaign members; other TUs must retain retail's
-// out-of-line COMDAT call boundary.
+// above. Expose them only where campaignwindow.obj emits the generated
+// members or game.obj reconstructs the retained generated assignment; other
+// TUs must retain retail's out-of-line COMDAT call boundary.
 typedef std::vector<std::vector<hero> > SCampaignHeroPoolsView;
 typedef std::vector<std::vector<type_artifact> > SCampaignArtifactPoolsView;
 #endif
@@ -1300,7 +1301,8 @@ public:
     // after it moves.
     std::string campaignFilename;
     unsigned char campaignCompleted[21];
-#ifdef HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN
+#if defined(HOMM3_CAMPAIGNWINDOW_IMPLICIT_SCAMPAIGN) \
+ || defined(HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW)
     SCampaignHeroPoolsView carryOverHeroes;
     SCampaignArtifactPoolsView field_4c;
 #else

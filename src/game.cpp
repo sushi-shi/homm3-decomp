@@ -59,6 +59,7 @@
 #define HOMM3_GAME_TOWN_HEROES_DECLS
 #define HOMM3_GAME_VALIDATE_VLC_DECLS
 #define HOMM3_GAME_NEW_MAP_DECLS
+#define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #define HOMM3_VLC_CHECKS_VIEW
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -3787,6 +3788,30 @@ int game::Load(TAbstractFile* infile)
 #pragma inline_depth(0)
     return 0;
 #pragma inline_depth()
+}
+
+// Retail retains SCampaign's generated memberwise assignment immediately
+// after game::Load. The first two nested-vector assignments expand while the
+// map-score and int-vector assignments remain calls, fixing the TU-local
+// concrete pool view without changing other game.h consumers.
+VA(0x004bdc70, 0x309)  // game::Load caller + generated SCampaign field walk
+SCampaign& SCampaign::operator=(const SCampaign& that)
+{
+    isCheater = that.isCheater;
+    secretActive = that.secretActive;
+    currentMap = that.currentMap;
+    currentCampaign = that.currentCampaign;
+    numMapRegions = that.numMapRegions;
+    crossoverArrayIndex = that.crossoverArrayIndex;
+    briefingChoice = that.briefingChoice;
+    campaignFilename = that.campaignFilename;
+    for (unsigned int i = 0; i < sizeof(campaignCompleted); ++i)
+        campaignCompleted[i] = that.campaignCompleted[i];
+    carryOverHeroes = that.carryOverHeroes;
+    field_4c = that.field_4c;
+    mapScores = that.mapScores;
+    field_6c = that.field_6c;
+    return *this;
 }
 
 // E:\gamedcs\game.cpp:3257, dc 0xa8b48.
