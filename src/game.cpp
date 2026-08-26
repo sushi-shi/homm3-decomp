@@ -9558,6 +9558,7 @@ VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
 VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
+VA_COMPGEN(0x004cf960, 0x34, BITSET_TEST, Bitset4)
 VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 
 // Retail keeps this run of Dinkumware vector COMDATs between ResetGame and
@@ -9580,9 +9581,11 @@ VA_COMPGEN(0x004cf800, 0x67, BITSET_REFERENCE_ASSIGN, Bitset5)
 VA_COMPGEN(0x004cf870, 0x53, BITSET_CTOR, Bitset28)
 VA_COMPGEN(0x004cf8d0, 0x1C, BITSET_COUNT, Bitset28)
 VA_COMPGEN(0x004cf8f0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset28)
+VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, type_university)
 VA_COMPGEN(0x004cfa60, 0x63, BITSET_SET, Bitset145)
 VA_COMPGEN(0x004cfad0, 0x37, BITSET_TEST, Bitset145)
 VA_COMPGEN(0x004cfef0, 0x34, BITSET_TEST, Bitset8)
+VA_COMPGEN(0x004d0070, 0x63, BITSET_SET, Bitset156)
 VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, TBlackMarket)
 VA_COMPGEN(0x004d03e0, 0x44, VECTOR_ERASE, TBlackMarket)
 VA_COMPGEN(0x004d0430, 0x31C, VECTOR_INSERT, town)
@@ -9600,6 +9603,7 @@ VA_COMPGEN(0x004d13e0, 0x300, VECTOR_INSERT, TRumour)
 VA_COMPGEN(0x004d16e0, 0x7F, VECTOR_ERASE, TRumour)
 VA_COMPGEN(0x004d1760, 0x23, VECTOR_DESTROY, TRumour)
 VA_COMPGEN(0x004d17b0, 0x11, BITSET_FLIP, Bitset28)
+VA_COMPGEN(0x004d17d0, 0x34, BITSET_TEST, Bitset28)
 VA_COMPGEN(0x004d1810, 0x15, BITSET_ANY, Bitset28)
 // The 0x44-byte stride and calls into the generated CObjectType copy helpers
 // distinguish this specialization from the smaller CObject record.
@@ -14847,10 +14851,18 @@ void CObjectType::~CObjectType()
 #pragma inline_depth(0)
 void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<144>& artifacts,
-                               const std::string& message)
+                               const std::string& message,
+                               std::bitset<4>& players,
+                               std::vector<type_university>& universities,
+                               std::bitset<156>& availableHeroes,
+                               std::bitset<28>& availableSkills)
 {
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
+    players.test(0);
+    universities.capacity();
+    availableHeroes.set(0, true);
+    availableSkills.test(0);
 }
 #pragma inline_depth()
