@@ -1082,11 +1082,14 @@ CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection
     return pConn;
 }
 
+// Residual (99.4%): the extent tree uniquely selects elements[10], making the
+// 0xf4 frame exact.  One EH-state store remains; the sibling's 25-candidate
+// allocation, delete, declaration, scope, and return tree was byte-flat.
 // E:\gamedcs\dxplay.cpp:1686
 VA(0x004994b0, 0x24E)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateModemConnection), dc 0x8b958
 CDPlayConnection* CDPlayLobby::CreateModemConnection(char* sName, char* sPhoneNbr, char* sModemString)
 {
-    DPCOMPOUNDADDRESSELEMENT elements[3];
+    DPCOMPOUNDADDRESSELEMENT elements[10];
     unsigned long dwAddressSize = 0;
     elements[0].guidDataType = s_dpaidServiceProvider;
     elements[0].dwDataSize = sizeof(GUID);
