@@ -742,6 +742,25 @@ struct type_map_hero_identity {
 SIZE(type_map_hero_identity, 0x14);
 
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
+// game.obj needs the protected Dinkumware vector triplet to recreate the
+// player-slot reader's retained copy/destroy/insert/erase boundaries.  This
+// view adds no storage and is exposed only to that TU.
+class TMapPlayerHeroVectorAccess
+    : public std::vector<type_map_hero_identity> {
+public:
+    __forceinline void clear_retail();
+    __forceinline void resize_retail(
+        unsigned int count, const type_map_hero_identity& value);
+};
+
+// One aggregate layer reproduces the two default identities created around
+// the inlined resize operation without changing the identity representation.
+struct TMapPlayerHeroResizeValue {
+    type_map_hero_identity value;
+
+    __forceinline ~TMapPlayerHeroResizeValue();
+};
+
 // game.obj's constructor copies these three members directly. Other TUs keep
 // the equivalent inherited view below so this PC-only declaration does not
 // perturb their already-banked compiler state.
@@ -1015,7 +1034,17 @@ public:
         // Doing that unguarded measured recruitUnit::Update 90.84 ->
         // 88.24 while changing no offset, so the slice is scoped to the
         // one TU that reads the field. Both arms are 12 bytes at +0x0c.
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+        // Complete split these two main-town fields out of the opaque PC
+        // extension.  The player-slot reader writes the presence flag at
+        // +0x0c and the signed town type at +0x10 before unpacking the
+        // coordinate at +0x14.
+        unsigned char hasMainTown;
+        char pad_0d[3];
+        int mainTownType;
+#else
         char pad_0c[8];
+#endif
         type_point CastleLoc;
         signed char hasRandomHero;
         char pad_19[3];
@@ -1023,16 +1052,31 @@ public:
         int nonRandomHeroCustomPortrait;
         char nonRandomHeroCustomName[12];
         int field_30;
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+        TMapPlayerHeroVectorAccess field_34;
+#else
         std::vector<type_map_hero_identity> field_34;
+#endif
 
         TPlayerSlotAttributes()
           : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),
             legalAlignments(0), HasRandomAlignment(0), GenerateHero(0),
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+            hasMainTown(0), mainTownType(-1),
+#endif
             hasRandomHero(0), nonRandomHeroId(-1),
             nonRandomHeroCustomPortrait(-1), field_30(0)
         {
             nonRandomHeroCustomName[0] = 0;
         }
+
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+        // Retail extracts this PC-only reader from NewSMapHeader::Read and
+        // passes the stream plus map-format version (`ret 8`).  Dreamcast
+        // keeps the equivalent logic in the parent reader, so the role name
+        // is provisional.
+        void readMapPlayerSlot(TAbstractFile* infile, int mapVersion);
+#endif
     };
 
     int version;
