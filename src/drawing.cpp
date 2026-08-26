@@ -756,9 +756,10 @@ void combatManager::UpdateMouseGrid(int iNewMouseGridIndex,
 // draws underlay obstacles, the eight-priority pass interleaves walls, corpses,
 // ordinary obstacles and living stacks, and the tail posts either the full
 // combat area or the accumulated creature-effect extent. All 117 CFG blocks
-// and branch targets agree with retail. The 98.38% residual is confined to
-// VC6 register lifetimes in the limited-background blit and first obstacle
-// walk (34 register-visible slots; no control-flow distance).
+// and branch targets agree with retail. Spelling the limited blit directly
+// from drawbridgeBounds restores retail's saved-minimum register schedule.
+// The 98.91% residual is confined to VC6 register lifetimes in the first
+// obstacle walk; there is no control-flow distance.
 // E:\gamedcs\drawing.cpp:1141
 VA(0x00494440, 0x7d5)  // anchor-global + retail arity, dc 0x84e2c
 void combatManager::DrawFrame(unsigned char update,
@@ -801,12 +802,11 @@ void combatManager::DrawFrame(unsigned char update,
                                  gpWindowManager->screenBitmap,
                                  0, 0, false);
             } else {
-                SLimitData& bounds = drawbridgeBounds;
                 field_53b0->Draw(
-                    bounds.iMinX, bounds.iMinY,
-                    bounds.Width(), bounds.Height(),
+                    drawbridgeBounds.iMinX, drawbridgeBounds.iMinY,
+                    drawbridgeBounds.Width(), drawbridgeBounds.Height(),
                     gpWindowManager->screenBitmap,
-                    bounds.iMinX, bounds.iMinY, false);
+                    drawbridgeBounds.iMinX, drawbridgeBounds.iMinY, false);
             }
             goto background_ready;
         }

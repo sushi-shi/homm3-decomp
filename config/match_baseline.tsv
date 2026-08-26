@@ -897,7 +897,7 @@ drawing	?DrawBackground@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93cf0
 drawing	?DrawCombatHero@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@E@Z	100.0000	100.0000	100.0000	0x952b0
 drawing	?DrawCreature@combatManager@@QAEHPBVCSprite@@HHHHPAUSLimitData@@HEH@Z	100.0000	100.0000	100.0000	0x951b0
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
-drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	98.3816	98.3816	98.3816	0x94440
+drawing	?DrawFrame@combatManager@@QAEXEEEHEE@Z	98.9130	98.9130	98.9130	0x94440
 drawing	?DrawMoatOverlay@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x95a10
 drawing	?DrawObject@combatManager@@QAEHPBVBitmap816@@HH@Z	100.0000	100.0000	100.0000	0x958e0
 drawing	?DrawObstacle@combatManager@@QAEHABVhexcell@@@Z	100.0000	100.0000	100.0000	0x95730
