@@ -9512,19 +9512,30 @@ void game::ResetGame(int difficulty, int version,
 // also used by the layout-identical garrison vector; the linker retained one
 // representative for both specializations.
 VA_COMPGEN(0x004cf0b0, 0x3B, VECTOR_DTOR, TScenarioTown)
+VA_COMPGEN(0x004cf0f0, 0x2D6, VECTOR_RESIZE, TBlackMarket)
 VA_COMPGEN(0x004cf3d0, 0x3B, VECTOR_DTOR, town)
+VA_COMPGEN(0x004cf410, 0x2A1, VECTOR_RESIZE, town)
 VA_COMPGEN(0x004cf6c0, 0x23, VECTOR_SIZE, town)
 VA_COMPGEN(0x004cf6f0, 0x38, VECTOR_DTOR, Sign)
 VA_COMPGEN(0x004cf730, 0x13, VECTOR_SIZE, mine)
 VA_COMPGEN(0x004cf780, 0x38, VECTOR_DTOR, type_creature_bank)
+VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, TBlackMarket)
 VA_COMPGEN(0x004d03e0, 0x44, VECTOR_ERASE, TBlackMarket)
+VA_COMPGEN(0x004d0430, 0x31C, VECTOR_INSERT, town)
+VA_COMPGEN(0x004d0750, 0x6D, VECTOR_ERASE, town)
 VA_COMPGEN(0x004d07c0, 0x26, VECTOR_DESTROY, town)
+VA_COMPGEN(0x004d0ba0, 0x26B, VECTOR_INSERT, mine)
 VA_COMPGEN(0x004d0e10, 0x44, VECTOR_ERASE, mine)
+VA_COMPGEN(0x004d0e60, 0x20A, VECTOR_INSERT, boat)
+VA_COMPGEN(0x004d1070, 0x2E4, VECTOR_INSERT, boat)
 VA_COMPGEN(0x004d1360, 0x44, VECTOR_ERASE, boat)
 VA_COMPGEN(0x004d13b0, 0x23, VECTOR_DESTROY, type_creature_bank)
 VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
+VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
 VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, town)
+VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, boat)
 VA_COMPGEN(0x004d2250, 0x31, VECTOR_UFILL, boat)
+VA_COMPGEN(0x004d2290, 0x372, VECTOR_INSERT, type_creature_bank)
 
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
