@@ -6645,6 +6645,136 @@ void game::read_map_hero_setups(TAbstractFile* mapFile, int mapVersion)
     }
 }
 
+// The victory-condition payload uses map-format byte fields for ids and
+// coordinates while keeping creature/resource amounts and the survival day
+// as dwords. Retail checks the two common flag writes, both amount writes and
+// the hall/castle bytes in the upgraded-town arm; the other arms preserve the
+// original unchecked serializer behavior.
+// EXACT 2026-08-26: Dreamcast CodeView's int_buffer/count/char_buffer roster is
+// also load-bearing on x86. Keeping those three function locals while giving
+// each unchecked case its own scoped payload buffer makes VC6 split their
+// lifetimes over the dead arguments, reproducing all 23 blocks and 744 bytes.
+VA(0x004c35a0, 0x2E8)  // sole NewSMapHeader::Save caller + DC helper identity
+int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
+{
+    int int_buffer;
+    int count;
+    char char_buffer;
+
+    char_buffer = victoryCondition.AllowNormalVictory;
+    count = outfile->Write(&char_buffer, sizeof(char_buffer));
+    if (count < sizeof(char_buffer))
+        return -1;
+
+    char_buffer = victoryCondition.AppliesToComputer;
+    count = outfile->Write(&char_buffer, sizeof(char_buffer));
+    if (count < sizeof(char_buffer))
+        return -1;
+
+    switch (type) {
+    case VICTORY_CONDITION_ARTIFACT: {
+        char artifact = victoryCondition.ArtifactNum;
+        outfile->Write(&artifact, sizeof(artifact));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_TOTAL_CREATURES: {
+        char creature = victoryCondition.CreatureType;
+        outfile->Write(&creature, sizeof(creature));
+        int_buffer = victoryCondition.NumCreatures;
+        count = outfile->Write(&int_buffer, sizeof(int_buffer));
+        if (count < sizeof(int_buffer))
+            return -1;
+        break;
+    }
+
+    case VICTORY_CONDITION_TOTAL_RESOURCES:
+        char_buffer = victoryCondition.ResourceType;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
+            return -1;
+        int_buffer = victoryCondition.ResourceAmount;
+        count = outfile->Write(&int_buffer, sizeof(int_buffer));
+        if (count < sizeof(int_buffer))
+            return -1;
+        break;
+
+    case VICTORY_CONDITION_UPGRADE_TOWN: {
+        char townValue = victoryCondition.TownX;
+        outfile->Write(&townValue, sizeof(townValue));
+        townValue = victoryCondition.TownY;
+        outfile->Write(&townValue, sizeof(townValue));
+        townValue = victoryCondition.TownZ;
+        outfile->Write(&townValue, sizeof(townValue));
+        char_buffer = victoryCondition.HallLevel;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
+            return -1;
+        char_buffer = victoryCondition.CastleLevel;
+        count = outfile->Write(&char_buffer, sizeof(char_buffer));
+        if (count < sizeof(char_buffer))
+            return -1;
+        break;
+    }
+
+    case VICTORY_CONDITION_BUILD_GRAIL: {
+        char grailTown = victoryCondition.TownX;
+        outfile->Write(&grailTown, sizeof(grailTown));
+        grailTown = victoryCondition.TownY;
+        outfile->Write(&grailTown, sizeof(grailTown));
+        grailTown = victoryCondition.TownZ;
+        outfile->Write(&grailTown, sizeof(grailTown));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_HERO: {
+        char heroId = victoryCondition.HeroID;
+        outfile->Write(&heroId, sizeof(heroId));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_CAPTURE_TOWN: {
+        char capturedTown = victoryCondition.TownX;
+        outfile->Write(&capturedTown, sizeof(capturedTown));
+        capturedTown = victoryCondition.TownY;
+        outfile->Write(&capturedTown, sizeof(capturedTown));
+        capturedTown = victoryCondition.TownZ;
+        outfile->Write(&capturedTown, sizeof(capturedTown));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_MONSTER: {
+        char monster = victoryCondition.MonsterX;
+        outfile->Write(&monster, sizeof(monster));
+        monster = victoryCondition.MonsterY;
+        outfile->Write(&monster, sizeof(monster));
+        monster = victoryCondition.MonsterZ;
+        outfile->Write(&monster, sizeof(monster));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_SURVIVE_TIME: {
+        int days = victoryCondition.NumDays;
+        outfile->Write(&days, sizeof(days));
+        return 0;
+    }
+
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
+        char transport = victoryCondition.ArtifactNum;
+        outfile->Write(&transport, sizeof(transport));
+        transport = victoryCondition.TownX;
+        outfile->Write(&transport, sizeof(transport));
+        transport = victoryCondition.TownY;
+        outfile->Write(&transport, sizeof(transport));
+        transport = victoryCondition.TownZ;
+        outfile->Write(&transport, sizeof(transport));
+        return 0;
+    }
+    }
+
+    return 0;
+}
+
 // The three loss-condition payloads are stored in the common live record as
 // widened coordinates or a 16-bit day limit. Map bytes remain unsigned when
 // widened; the time-limit read is the only arm whose short read is checked.
