@@ -1015,51 +1015,54 @@ have_conn:
     return ok;
 }
 
-// Residual (98.6%): the append-enumerate/copy loop, SP+INet element build and
-// connection wrap are byte-right (the local array's out-of-line Destroy(1) on the
-// EnumAddress-fail path emits CAutoArray::Destroy). The delta is guid struct-copy
-// store scheduling and one EH-state byte placement - register-homing class.
+// Residual (99.6923%): one redundant EH-state byte store after the inlined
+// connection constructor; split declaration, typed delete, and one-expression
+// lifetime spellings are byte-flat.
 // E:\gamedcs\dxplay.cpp:1540
-VA(0x00498d80, 0x3C9)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateTCPIPConnection), dc 0x8b950
-CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(char* sIPAddress, char* sName, CDPlayConnection* pConnAppend)
+VA(0x00498d80, 0x3C9)  // anchor-callee remote dispatcher, dc 0x8b950
+CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(
+    char* ipAddress, char* name, CDPlayConnection* append)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
+    unsigned long addressSize = 0;
     CAutoArray<CDPlayAddressElement> addresses;
-    unsigned long dwAddressSize = 0;
     unsigned long count = 0;
-    if (pConnAppend) {
-        if (!EnumAddress(pConnAppend->pConnection, pConnAppend->size, &addresses))
+    if (append) {
+        if (!EnumAddress(append->pConnection, append->size, &addresses))
             return 0;
         while (count < addresses.GetCount()) {
-            CDPlayAddressElement* elem = addresses.Get(count);
-            elements[count].guidDataType = elem->m_guid;
-            elements[count].dwDataSize = elem->m_dataSize;
-            elements[count].lpData = elem->m_pData;
+            CDPlayAddressElement* element = addresses.Get(count);
+            elements[count].guidDataType = element->m_guid;
+            elements[count].dwDataSize = element->m_dataSize;
+            elements[count].lpData = element->m_pData;
             ++count;
         }
     }
-    elements[count].guidDataType = s_dpaidServiceProvider;
+    elements[count].guidDataType = DPAID_ServiceProvider;
     elements[count].dwDataSize = sizeof(GUID);
-    elements[count].lpData = &s_spTCPIP;
+    elements[count].lpData = const_cast<GUID*>(&DPSPGUID_TCPIP);
     ++count;
-    if (sIPAddress) {
-        elements[count].guidDataType = s_dpaidINet;
-        elements[count].dwDataSize = strlen(sIPAddress) + 1;
-        elements[count].lpData = sIPAddress;
+    if (ipAddress) {
+        elements[count].guidDataType = DPAID_INet;
+        elements[count].dwDataSize = strlen(ipAddress) + 1;
+        elements[count].lpData = ipAddress;
         ++count;
     }
-    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, 0, &dwAddressSize);
+    m_hRes = m_lpLobby->CreateCompoundAddress(
+        elements, count, 0, &addressSize);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
         return 0;
-    void* pAddress = ::operator new(dwAddressSize);
-    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(elements, count, pAddress, &dwAddressSize);
+    void* address = ::operator new(addressSize);
+    m_hRes = m_lpLobby->CreateCompoundAddress(
+        elements, count, address, &addressSize);
     if (m_hRes < 0) {
-        ::operator delete(pAddress);
+        ::operator delete(address);
         return 0;
     }
-    CDPlayConnection* pConn = new CDPlayConnection(&s_spTCPIP, dwAddressSize, pAddress, sName);
-    ::operator delete(pAddress);
-    return pConn;
+    CDPlayConnection* connection = new CDPlayConnection(
+        &DPSPGUID_TCPIP, addressSize, address, name);
+    ::operator delete(address);
+    return connection;
 }
 
 // E:\gamedcs\dxplay.cpp:1617
@@ -1343,6 +1346,9 @@ void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __
 }
 
 #endif  // @carcass
+
+// CAutoArray<CDPlayAddressElement> scalar deleting destructor (vtable slot 0).
+VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
 
 // The rows below are DC-evidenced but not yet given retail claims:
 //  - CDPlay::CDPlay (dc 0x8a074) inlined into the CDPlayLobby ctor (0x498870,
