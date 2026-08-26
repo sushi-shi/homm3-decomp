@@ -6023,6 +6023,233 @@ type_creature_bank::~type_creature_bank()
 {
 }
 
+static __forceinline bool test_new_map_spell(
+    const std::bitset<70>& spells, int spell)
+{
+    return spells[spell];
+}
+
+// Complete reads a scenario from the already-open map stream. The PC path
+// keeps the three retail map generations distinct while normalizing their
+// artifact/spell masks into the Complete-width live rows, then reads the
+// rumour and hero customization records before handing the remainder to the
+// map-cell owner.
+//
+// Residual (70.64697%, 2026-08-26): all 63 conditional branches and all four
+// returns are present. The candidate has 107 basic blocks against retail's
+// 105 and a 0x90 frame against 0x78. The dominant remaining layout split is
+// the version-21 artifact arm: retail sinks it into the common mask-merge
+// loop's cold slot, while this CL lays it before that loop. The const-view
+// helper above is a codegen device for retail's bitset test shape: a direct
+// call inlines `_Xran` and its exception construction here; the extra inline
+// layer keeps operator[] and test expanded but leaves `_Xran` as the call
+// retail makes. Rumour failure uses a return-site depth pin so both failed
+// string reads share one out-of-line destructor and one retail-shaped exit.
+VA(0x004c2450, 0x88E)  // sole NewMap caller + full stream/callee sequence
+bool game::LoadMap(TAbstractFile* mapFile)
+{
+    if (mapHeader.Read(mapFile, campaign.currentMap) < 0)
+        return false;
+
+    apply_map_header_availability();
+    int mapSize = mapHeader.Size;
+    gMapWidth = mapSize;
+    gMapHeight = mapSize;
+    gpSearchArray->Close();
+
+    if (f_1f698 < 1)
+        memset(heroAvailability + 128, hero::HERO_AVAILABILITY_TAVERN_POOL,
+               HERO_COUNT - 128);
+
+    int artifact;
+    for (artifact = 0; artifact < 144; ++artifact)
+        artifactDisabled[artifact] = akArtifactTraits[artifact].disabled;
+
+    if (f_1f698 < 2) {
+        artifact = (((f_1f698 >= 1) - 1) & -2) + 129;
+        memset(artifactDisabled + artifact, 1,
+               sizeof(artifactDisabled) - artifact);
+    }
+
+    if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+#pragma inline_depth(0)
+        std::bitset<144> disabledArtifacts(0);
+#pragma inline_depth()
+        if (mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
+#pragma inline_depth(0)
+            std::bitset<144> serializedArtifacts(0);
+#pragma inline_depth()
+            unsigned char artifactBits[18];
+            mapFile->Read(artifactBits, sizeof(artifactBits));
+            for (unsigned int artifactBit = 0;
+                 artifactBit < sizeof(artifactDisabled); ++artifactBit) {
+                std::bitset<144>::reference serializedBit =
+                    serializedArtifacts[artifactBit];
+#pragma inline_depth(0)
+                serializedBit =
+                    (artifactBits[artifactBit >> 3]
+                     & (1 << (artifactBit & 7))) != 0;
+#pragma inline_depth()
+            }
+            disabledArtifacts = serializedArtifacts;
+        } else {
+            for (artifact = 0; artifact < 144; ++artifact) {
+#pragma inline_depth(0)
+                disabledArtifacts.set(
+                    artifact, akArtifactTraits[artifact].comboType != -1);
+#pragma inline_depth()
+            }
+
+#pragma inline_depth(0)
+            std::bitset<129> serializedArtifacts(0);
+#pragma inline_depth()
+            unsigned char artifactBits[17];
+            mapFile->Read(artifactBits, sizeof(artifactBits));
+            for (unsigned int legacyBit = 0; legacyBit < 129; ++legacyBit) {
+                std::bitset<129>::reference serializedBit =
+                    serializedArtifacts[legacyBit];
+#pragma inline_depth(0)
+                serializedBit =
+                    (artifactBits[legacyBit >> 3]
+                     & (1 << (legacyBit & 7))) != 0;
+#pragma inline_depth()
+            }
+            std::bitset<129> serializedCopy = serializedArtifacts;
+            for (unsigned int copyBit = 0; copyBit < 129; ++copyBit) {
+#pragma inline_depth(0)
+                disabledArtifacts[copyBit] = serializedCopy[copyBit];
+#pragma inline_depth()
+            }
+        }
+
+        for (artifact = 0; artifact < 144; ++artifact) {
+#pragma inline_depth(0)
+            bool serializedDisabled = disabledArtifacts[artifact];
+#pragma inline_depth()
+            artifactDisabled[artifact] =
+                artifactDisabled[artifact] || serializedDisabled;
+        }
+    }
+
+    if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+        && mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
+#pragma inline_depth(0)
+        std::bitset<70> serializedSpells(0);
+#pragma inline_depth()
+        unsigned char spellBits[9];
+        mapFile->Read(spellBits, sizeof(spellBits));
+        for (unsigned int spellBit = 0; spellBit < hero::NUM_SPELLS;
+             ++spellBit) {
+            std::bitset<70>::reference serializedBit =
+                serializedSpells[spellBit];
+#pragma inline_depth(0)
+            serializedBit =
+                (spellBits[spellBit >> 3] & (1 << (spellBit & 7))) != 0;
+#pragma inline_depth()
+        }
+
+        const std::bitset<70> serializedSpellCopy = serializedSpells;
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            if (serializedSpellCopy[spell]) {
+                for (artifact = 0; artifact < 144; ++artifact) {
+                    if (akArtifactTraits[artifact].givesSpells) {
+                        artifactDisabled[artifact] =
+                            artifactDisabled[artifact]
+                            || test_new_map_spell(
+                                mark_spells(artifact), spell);
+                    }
+                }
+            }
+            spellDisabled[spell] =
+                serializedSpellCopy[spell]
+                || (akSpellTraits[spell].field_c & 0x2000) != 0;
+        }
+
+#pragma inline_depth(0)
+        std::bitset<28> serializedSkills(0);
+#pragma inline_depth()
+        unsigned char skillBits[4];
+        mapFile->Read(skillBits, sizeof(skillBits));
+        for (unsigned int skillBit = 0; skillBit < sizeof(field_4e658);
+             ++skillBit) {
+            std::bitset<28>::reference serializedBit =
+                serializedSkills[skillBit];
+#pragma inline_depth(0)
+            serializedBit =
+                (skillBits[skillBit >> 3] & (1 << (skillBit & 7))) != 0;
+#pragma inline_depth()
+        }
+        const std::bitset<28> serializedSkillCopy = serializedSkills;
+        for (int skill = 0; skill < sizeof(field_4e658); ++skill)
+            field_4e658[skill] = serializedSkillCopy[skill];
+    } else {
+        for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+            spellDisabled[spell] =
+                (akSpellTraits[spell].field_c & 0x2000) != 0;
+        }
+        memset(field_4e658, 0, sizeof(field_4e658));
+    }
+
+    std::copy(spellDisabled,
+              spellDisabled + sizeof(spellDisabled), spellUsed);
+
+    int rumourCount;
+    if (mapFile->Read(&rumourCount, sizeof(rumourCount))
+        < sizeof(rumourCount)) {
+        return false;
+    }
+    rumours.resize(rumourCount);
+    for (TRumour* rumour = rumours.begin(); rumour != rumours.end();
+         ++rumour) {
+        std::string throwAway;
+        if (readMapString(mapFile, &throwAway) < 0
+            || readMapString(mapFile, &rumour->text) < 0) {
+#pragma inline_depth(0)
+            return false;
+#pragma inline_depth()
+        }
+        rumour->field_10 = 0;
+#pragma inline_depth(0)
+    }
+#pragma inline_depth()
+
+    if (mapHeader.version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+        && mapHeader.version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        std::map<int, type_map_hero_info>::iterator it =
+            mapHeader.heroPlayerSetups.begin();
+        for (; it != mapHeader.heroPlayerSetups.end();) {
+            HeroExtra* setupRecord = &heroSetup[it->first];
+            type_map_hero_info* headerRecord = &it->second;
+            if (headerRecord->field_00 != -1) {
+                setupRecord->bCustomPortraitNumber = 1;
+                setupRecord->PortraitNumber = headerRecord->field_00;
+            }
+            if (!headerRecord->field_04.empty()) {
+                setupRecord->bCustomName = 1;
+                strncpy(setupRecord->Name, headerRecord->field_04.c_str(),
+                        sizeof(setupRecord->Name));
+                setupRecord->Name[sizeof(setupRecord->Name) - 1] = 0;
+            }
+#pragma inline_depth(0)
+            ++it;
+#pragma inline_depth()
+        }
+        read_map_hero_setups(mapFile, mapHeader.version);
+    }
+
+    for (int pool = 0; pool < 8; ++pool) {
+        lithPools[pool].clear();
+        lithExitPools[pool].clear();
+    }
+    whirlpools.clear();
+    undergroundGateExits.clear();
+    undergroundGatePairs.clear();
+    monsterIdentifiers.clear();
+
+    return worldMap.Read(mapFile, mapHeader.Size, mapHeader.HasTwoLayers,
+                         mapHeader.version) >= 0;
+}
+
 // PC-only post-header normalization. The available-hero bitset controls the
 // live availability bytes, explicit per-player hero masks override the
 // all-player default, and artifact victory conditions reserve their target

@@ -1173,6 +1173,7 @@ game	?Load@game@@QAEHPAVTAbstractFile@@@Z	92.4127	92.4127	92.4127	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
+game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	70.6470	70.6470	70.6470	0xc2450
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070
