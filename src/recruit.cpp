@@ -49,6 +49,7 @@
 #include "textwdgt.h"
 #include "townmgr.h"
 #include "winmgr.h"
+#include "mousemgr.h"
 
 // E:\gamedcs\recruit.cpp:157
 // Retail takes FOUR args - both creature rows arrive in ecx/edx (the
@@ -185,14 +186,137 @@ void TRecruitWindow::add_creature_widgets(long start_x, long start_y, long name_
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\recruit.cpp:319
-DC_ONLY(0x11994c, 0x398)
+// The constructor allocation and four portrait probes close the
+// TRecruitWindow tail at 0x6c. The +0x4c back-pointer and recruitUnit's
+// +0xa8 error flag agree with the Dreamcast type records and are each
+// independently used by the retail body.
+VA(0x0054fea0, 0x42E)  // anchor-callee + anchor-global, dc 0x11994c
 int recruitUnit::Open(int newPriority)
 {
-    // @stub
-}
+    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int resCost[7];
 
-#endif  // @carcass
+    gpRecruitWindow = new TRecruitWindow(143, 16, altResource, this);
+    if (!gpRecruitWindow)
+        MemError();
+
+    gpRecruitWindow->recruit_info = this;
+    numberToBuy = 0;
+    totalGold = 0;
+    totalResources = 0;
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    gpRecruitWindow->BroadcastMessage(&msg);
+
+    const char* creatureName;
+    if (monsterType >= 0 && monsterType <= 150)
+        creatureName = akCreatureTypeTraits[monsterType].m_plural_name;
+    else
+        creatureName = "";
+    sprintf(gText, "%s %s",
+        gpGeneralText->GetText(GENERAL_TEXT_RECRUIT_TITLE), creatureName);
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x226;
+    msg.extraText = gText;
+    gpRecruitWindow->BroadcastMessage(&msg);
+
+    sprintf(gText, "%d", goldPerTroop);
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x200;
+    msg.extraText = gText;
+    gpRecruitWindow->BroadcastMessage(&msg);
+
+    if (altResource != -1) {
+        sprintf(gText, "%d", resourcesPerTroop);
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 0x204;
+        msg.extraText = gText;
+        gpRecruitWindow->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.codeY = 0x1fc;
+        msg.extra = altResource;
+        gpRecruitWindow->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.codeY = 0x211;
+        msg.extra = altResource;
+        gpRecruitWindow->BroadcastMessage(&msg);
+    } else {
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x1fc;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        gpRecruitWindow->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x211;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        gpRecruitWindow->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x204;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        gpRecruitWindow->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x213;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        gpRecruitWindow->BroadcastMessage(&msg);
+    }
+
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    for (int slot = 3; slot >= 0; slot--) {
+        if (gpRecruitWindow->creature_widgets[slot])
+            Update(1, slot);
+    }
+
+    gpWindowManager->BroadcastMessage(MESSAGE_WIDGET,
+        widget::WIDGET_SET_STATUS, 0x7800,
+        widget::WIDGET_DIMMED | widget::WIDGET_UPDATE);
+    gpWindowManager->AddWindow(gpRecruitWindow, -1, 1);
+
+    gpRecruitWindow->field_58->SetResolution(maxAvail + 1);
+    updateNeeded = 0;
+    errorExit = 0;
+    gpRecruitWindow->field_50->enable(0);
+
+    GetMonsterCost(monsterType, resCost);
+    if (*numAvail == 0 || gpCurrentPlayer->resources[6] < resCost[6]) {
+        gpRecruitWindow->field_50->enable(0);
+        gpRecruitWindow->field_54->enable(0);
+    }
+
+    gRecruitSavedMenu = currMenu;
+    KBChangeMenu(dfltMenu);
+
+    priority = newPriority;
+    id = 0x4000;
+    status = STATUS_ACTIVE;
+    strcpy(cMgrName,
+        DATA_COMPGEN(0x00682a18, recruitManagerName, "recruitManager"));
+
+    if (bVideoPaused && !gpCurrentPlayer->IsLocalHuman()) {
+        gpRecruitWindow->field_50->enable(0);
+        gpRecruitWindow->field_54->enable(0);
+    }
+    return 0;
+}
 
 // E:\gamedcs\recruit.cpp:453
 // The dialog teardown, and the one recruitUnit method that reaches

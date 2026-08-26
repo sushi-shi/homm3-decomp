@@ -13,6 +13,7 @@
 
 class armyGroup;
 class hero;
+class recruitUnit;
 class town;
 
 // Creature-record table POINTER at 0x6747b0 - armygrp.h's
@@ -41,12 +42,8 @@ void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
 // destructors (0x54fb20 / 0x5516e0) store ONE vptr (0x640c4c /
 // 0x640c7c) and then call heroWindow::~heroWindow (0x5fea80) - an
 // intermediate class with its own vtable would have stored its vptr
-// first. Own data members are NOT modeled: only the destructors are
-// reconstructed so far, and they touch nothing below heroWindow.
-// (recruitUnit::Update reads three widget handles at +0x50/+0x54/+0x58
-// of the global at 0x69d5e8, so TRecruitWindow's own fields start at
-// 0x4c - but that function is not reconstructed yet, so the fields
-// stay unmodeled rather than fabricated. No SIZE assert.)
+// first. recruitUnit::Open and Update now prove the complete 0x20-byte
+// tail below heroWindow.
 //
 // Three widget handles ARE now byte-proven, by recruitUnit::Update's
 // enable pass (0x550306..0x5503b7): +0x50 is enabled only when
@@ -54,16 +51,21 @@ void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
 // control), +0x54 on maxAvail > 0 && !view_only, and +0x58 is the
 // dialog's slider - the same pass drives its SetResolution/SetState
 // slots. Their NAMES are unattested, so they keep ordinal
-// placeholders; +0x4c stays padding.
+// placeholders. Open proves +0x4c is its recruitUnit back-pointer and
+// scans the four portrait pointers at +0x5c..+0x68.
 class TRecruitWindow : public heroWindow {
 public:
-    char pad_4c[4];
+    recruitUnit* recruit_info;
     widget* field_50;
     widget* field_54;
     slider* field_58;
+    widget* creature_widgets[4];
 
+    TRecruitWindow(int x2, int y2, int altResource,
+                   recruitUnit* recruit_info);
     virtual ~TRecruitWindow();
 };
+SIZE(TRecruitWindow, 0x6c);
 
 // The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
 // gp<Type> house convention); recruitUnit::Open builds it,
@@ -162,7 +164,7 @@ public:
     unsigned char bCurrArmyGroupIsTownGarrison;
     char pad_a0[4];
     int updateNeeded;
-    char pad_a8[4];
+    int errorExit;
     int maxAvail;
     long totalGold;
     int totalResources;
