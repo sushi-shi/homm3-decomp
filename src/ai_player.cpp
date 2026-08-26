@@ -2803,6 +2803,30 @@ long type_knowledge_artifact::get_value(const hero* owner, unsigned char,
     return owner->value_of_knowledge * bonus;
 }
 
+// Residual (82.56%): retail delays one saved-register push until after the
+// skill-level early-out and homes the necromancy percentage only inside the
+// minimum arm. The semantic and control-flow reconstruction is complete.
+VA(0x00432640, 0x97)  // artifact get_value roster; dc 0x36450
+long type_necromancy_artifact::get_value(const hero* owner,
+                                         unsigned char equipped,
+                                         unsigned char) const
+{
+    if (owner->skillLevel[12] == 0)
+        return 0;
+    int necro = static_cast<int>(
+        (1.0f - const_cast<hero*>(owner)->GetNecromancyFactor(0)) * 100.0f);
+    if (equipped) {
+        if (necro > 0)
+            necro = 0;
+        necro += bonus;
+    } else {
+        necro = std::_cpp_min(necro, static_cast<int>(bonus));
+    }
+    if (necro <= 0)
+        return 0;
+    return const_cast<hero*>(owner)->army.get_AI_value() * necro / 250;
+}
+
 VA(0x004326e0, 0x38)  // artifact get_value roster; dc 0x3652c
 long type_movement_artifact::get_value(const hero* owner, unsigned char,
                                        unsigned char) const
@@ -2890,6 +2914,40 @@ long type_antimagic_artifact::get_value(const hero* owner,
     else
         m = 1;
     return value - m * 25;
+}
+
+// Residual (90.68%): retail merges the conditional arm into a shared return
+// through a saved register; VC6 SP3 fuses that arm's epilogue instead.
+VA(0x00432b20, 0x78)  // artifact get_value roster; dc 0x36afc
+long type_antimorale_artifact::get_value(const hero* owner, unsigned char,
+                                         unsigned char exact) const
+{
+    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long result = static_cast<long>(AI_value_of_morale(0, 2) * army);
+    if (!exact) {
+        int morale = const_cast<hero*>(owner)->GetMorale(0, 0, 1);
+        if (morale > 0)
+            result = static_cast<long>(
+                AI_value_of_morale(morale, -morale) * army + result);
+    }
+    return result;
+}
+
+// Residual (90.68%): the luck twin has the same merged-return generation
+// difference as antimorale; the remaining body and branches agree.
+VA(0x00432ba0, 0x78)  // artifact get_value roster; dc 0x36c90
+long type_antiluck_artifact::get_value(const hero* owner, unsigned char,
+                                       unsigned char exact) const
+{
+    long army = const_cast<hero*>(owner)->army.get_AI_value();
+    long result = static_cast<long>(AI_value_of_luck(0, 2) * army);
+    if (!exact) {
+        int luck = const_cast<hero*>(owner)->GetLuck(0, 0, 1);
+        if (luck > 0)
+            result = static_cast<long>(
+                AI_value_of_luck(luck, -luck) * army + result);
+    }
+    return result;
 }
 
 VA(0x004330b0, 0x73)  // retail artifact vtable slot
