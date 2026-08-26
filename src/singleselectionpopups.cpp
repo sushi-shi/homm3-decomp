@@ -29,13 +29,8 @@
 // reconstructed (98.00 / 95.51) and cap on the register-homing family - the
 // schedule is aligned (why-reg flow-distance 0) but retail binds `this` to edi
 // and the per-widget temp to esi where our CL binds them the other way, a swap
-// the vc6 catalog reports as not source-addressable. The remaining three
-// (CHeroDlg 0x575a90, CTownDlg 0x575e60, CTeamAlignmentDlg 0x576540) stay
-// @stub: they share the same register cap AND add gpGeneralText font-table
-// reads (gpGeneralText->[0x20]->[0x138/0x13c]) plus sprintf/town-type/team
-// display logic, so they cannot reach 100.0000 from this TU. Reconstruct on
-// the CBonusDlg template (Add + the inlined CSpriteWidget/CBitmapWidget ctors)
-// when the register-homing binding becomes addressable.
+// the vc6 catalog reports as not source-addressable. CHeroDlg and CTownDlg
+// remain @stub; CTeamAlignmentDlg is reconstructed below.
 #include <va.h>
 #include "singleselectionpopups.h"
 #include "bitmap816.h"
@@ -45,6 +40,8 @@
 #include "remote.h"
 #include "kbwin.h"
 #include "game.h"
+#include "iconwdgt.h"
+#include "textresource.h"
 #include "textwdgt.h"
 
 // ============================================================================
@@ -387,16 +384,55 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
     GetTeams();
 }
 
-#if 0  // @carcass -- located, not reconstructed
-
 // E:\gamedcs\singleselectionpopups.cpp:365
-VA(0x00576540, 0x3e8)  // anchor-vtable CTeamAlignmentDlg::CreateWin (0 args, ret), dc 0x12eb24
+// Residual (99.11%): register-visible distance 15 after identical first
+// definitions. The bounded AST tree measured all 1,965 compatible depth-1..3
+// shapes from 25 local mutations, including inline-helper extraction; none
+// improved the seed. Volatile and TU-state noise were deliberately excluded.
+VA(0x00576540, 0x3e8)  // anchor-vtable, dc 0x12eb24
 unsigned char CTeamAlignmentDlg::CreateWin()
 {
-    // @stub
+    int xStart;
+    char sTemp[256];
+    int dialogHeight = ((numTeams * 50 + 56) / 64 + 1) * 64;
+    if (!Setup(272, (600 - dialogHeight) / 2, 256, dialogHeight))
+        return 0;
+
+    Add(new textWidget(10, 20, width - 20, 36,
+        gpGeneralText->GetText(658), "medfont.fnt", font::PRIMARY,
+        -1, 1, 0, 8));
+
+    for (int team = 0; team < numTeams; ++team) {
+        int y = team * 50 + 56;
+        sprintf(sTemp, gpGeneralText->GetText(657), team + 1);
+        Add(new textWidget(10, y, width - 20, 18, sTemp,
+            "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8));
+
+        int rowWidth = CountNumPlayers(team) * 18 - 3;
+        xStart = (width - rowWidth) / 2;
+        for (int player = 0; player < 8; ++player) {
+            if (teamMasks[team] & (1 << player)) {
+                iconWidget* flag = new iconWidget(
+                    xStart, y + 20, 15, 20, -1, "ITGFLAGS.DEF",
+                    0, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN);
+                flag->send_message(widget::WIDGET_SET_ICON_FRAME, player);
+                Add(flag);
+                xStart += 18;
+            }
+        }
+    }
+    return 1;
 }
 
-#endif  // @carcass
+int CTeamAlignmentDlg::CountNumPlayers(int teamNbr)
+{
+    int count = 0;
+    for (int player = 0; player < 8; ++player) {
+        if (teamMasks[teamNbr] & (1 << player))
+            ++count;
+    }
+    return count;
+}
 
 // E:\gamedcs\singleselectionpopups.cpp:424 - build the team-mask table off
 // gpGame: for each present player (setup.playerPos >= 0) not yet grouped,
