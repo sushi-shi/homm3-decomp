@@ -2708,15 +2708,15 @@ void TSellArtifactWindow::SetRolloverText(int codeY)
     case MARKET_ARTIFACT_SLOT_20_ID: case MARKET_ARTIFACT_SLOT_21_ID:
     case MARKET_ARTIFACT_SLOT_22_ID: {
         long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
-        type_artifact art;
+        type_artifact artifact;
         if (slot < 18) {
-            art = gpMarketHero->equipped[slot];
+            artifact = gpMarketHero->equipped[slot];
         } else {
-            long numInBackpack = gpMarketHero->get_number_in_backpack(1);
-            art = gpMarketHero->backpack[
-                ((gBackpackStart & 0xff) + slot - 18) % numInBackpack];
+            long backpackIndex = ((gBackpackStart & 0xff) + slot - 18)
+                                 % gpMarketHero->get_number_in_backpack(1);
+            artifact = gpMarketHero->backpack[backpackIndex];
         }
-        strcpy(gText, akArtifactTraits[art.artifactId].name);
+        strcpy(gText, akArtifactTraits[artifact.artifactId].name);
         break;
     }
     default: strcpy(gText, emptyRolloverText); break;
