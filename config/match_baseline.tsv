@@ -1102,6 +1102,7 @@ game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0
 game	??1CGameTransferDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xcbcf0
 game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520
+game	??1SavedGameHeader@@QAE@XZ	29.0580	29.0580	29.0580	0xbdf80
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230
 game	??1TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa40
 game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450
