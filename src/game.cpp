@@ -6023,6 +6023,63 @@ type_creature_bank::~type_creature_bank()
 {
 }
 
+// PC-only post-header normalization. The available-hero bitset controls the
+// live availability bytes, explicit per-player hero masks override the
+// all-player default, and artifact victory conditions reserve their target
+// before random artifact placement starts.
+VA(0x004c4e30, 0xD3)  // sole new-map caller + map-header/member layout
+void game::apply_map_header_availability()
+{
+    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+        if (mapHeader.availableHeroes.test(heroId))
+            heroAvailability[heroId] = -1;
+        else
+            heroAvailability[heroId] = 0x40;
+    }
+
+    for (std::map<int, type_map_hero_info>::iterator it =
+             mapHeader.heroPlayerSetups.begin();
+         it != mapHeader.heroPlayerSetups.end(); ++it) {
+        std::bitset<8> allPlayers;
+        allPlayers.set();
+        if (it->second.field_14 != allPlayers)
+            heroPoolMap[it->first] = it->second.field_14;
+    }
+
+    if (mapHeader.victoryCondition.Type == VICTORY_CONDITION_ARTIFACT
+        || mapHeader.victoryCondition.Type
+               == VICTORY_CONDITION_TRANSPORT_ARTIFACT) {
+        artifactDisabled[mapHeader.victoryCondition.ArtifactNum] = 1;
+    }
+}
+
+// Map-format strings use a dword length, unlike saved-game strings. Retail
+// treats nonpositive and sentinel-sized values as empty and otherwise keeps
+// the temporary allocation alive on a short payload read.
+#pragma auto_inline(off)
+VA(0x004c6010, 0x1CE)  // new-map/mapcell callers + 32-bit length protocol
+int __fastcall readMapString(TAbstractFile* infile, std::string* value)
+{
+    int length;
+
+    if (infile->Read(&length, sizeof(length)) < sizeof(length))
+        return -1;
+
+    if (length > 0 && length < 0xffff) {
+        char* buffer = new char[length + 1];
+        memset(buffer, 0, length + 1);
+        if (infile->Read(buffer, length) < length)
+            return -1;
+        *value = buffer;
+        delete[] buffer;
+    } else {
+        value->erase();
+    }
+
+    return length;
+}
+#pragma auto_inline(on)
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:4029
