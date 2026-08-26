@@ -62,6 +62,7 @@
 #define HOMM3_GAME_NEW_MAP_DECLS
 #define HOMM3_GAME_SCAMPAIGN_ASSIGN_VIEW
 #define HOMM3_VLC_CHECKS_VIEW
+#define HOMM3_VLC_TIME_SURVIVAL_DECLS
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
@@ -143,6 +144,19 @@ inline TCreatureType creature_type_from_int(int value)
     } storage;
     storage.value = value;
     return storage.creature;
+}
+
+// E:\\gamedcs\\CreatureType.h:296 (dc 0x1ef94). DoNewTurn's six uses
+// all inline in retail: the two signed range checks and the singular/plural
+// choice are visible at each call site.
+static inline const char* GetArmyName(int type, int count)
+{
+    if (type >= 0 && type <= 150) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    return "";
 }
 
 inline TArtifact artifact_from_int(int value)
@@ -437,6 +451,20 @@ const int RUMOUR_MAP_THRESHOLD = 33;
 const int RUMOUR_SPECIAL_THRESHOLD = 66;
 const int NEUTRAL_TOWN_OPEN_REINFORCEMENT_CHANCE = 40;
 const int NEUTRAL_TOWN_FORTIFIED_REINFORCEMENT_CHANCE = 80;
+
+// The ArrayTxt loader fills these calendar-name rows and the eight adjacent
+// new-turn message formats. Dreamcast supplies gWeekNames/gMonthNames; the
+// remaining spellings describe only the retail use proven in DoNewTurn.
+DATA(0x006a79c4) extern const char* gMonthNames[10];
+DATA(0x006a7710) extern const char* gWeekNames[15];
+DATA(0x006a77a8) extern const char* gLastDayWarningFormat;
+DATA(0x006a77ac) extern const char* gOneDayWarningFormat;
+DATA(0x006a77b0) extern const char* gNormalMonthFormat;
+DATA(0x006a77b4) extern const char* gCreatureMonthFormat;
+DATA(0x006a77b8) extern const char* gPlagueMonthText;
+DATA(0x006a77bc) extern const char* gNormalWeekFormat;
+DATA(0x006a77c0) extern const char* gCreatureWeekFormat;
+DATA(0x006a77c4) extern const char* gInfernoWeekFormat;
 
 // The 256 canned-rumour text pointers are filled by the game-data loader.
 // Its first store is 0x696d9c and SetCannedRumour is the table's only
@@ -10954,6 +10982,124 @@ void game::ProcessOnMapHeroes()
             currHero->HeroFn_004D8B30(heroExtra);
         }
     }
+}
+
+// E:\\gamedcs\\game.cpp:11028
+// Retail's two callers, the complete Dreamcast callee fingerprint and the
+// three CodeView locals identify this turn-start refresh. Complete adds the
+// time-survival check and retains the PC calendar announcement formats.
+// MATCH 2026-08-26: 100.0000%; all 1,534 bytes, 36 branches and three
+// return paths agree with retail.
+VA(0x004cc7d0, 0x5FE)  // callers/callees/body + dc 0xb9408
+void game::DoNewTurn()
+{
+    int new_hero;
+    char cSample[13];
+    char cTemp[50];
+
+    if (!gpCurrentPlayer->isHuman) {
+        CheckForTimeEvent();
+        CheckForTownEvent();
+        return;
+    }
+    if (!gpCurrentPlayer->isLocal)
+        return;
+
+    mapHeader.lossCondition.CheckForTimeLimitExpired();
+    mapHeader.victoryCondition.CheckForTotalResources();
+    mapHeader.victoryCondition.CheckForTimeSurvival();
+    CheckEndGame(0);
+    CheckForTimeEvent();
+    CheckForTownEvent();
+
+    if (gpCurrentPlayer->isHuman && gpCurrentPlayer->isLocal)
+        gpSoundManager->field_84 = 1;
+    gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+    gpAdvManager->SetInitialMapOrigin();
+    gpAdvManager->RedrawAdvScreen(0, 0);
+    gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_1, -1);
+    gpAdvManager->UpdBottomView(1, 1, 0);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+
+    if (gpCurrentPlayer->iDeathCountDown >= 0) {
+        if (gpCurrentPlayer->iDeathCountDown == 1) {
+            sprintf(gText, gOneDayWarningFormat,
+                    gpCurrentPlayer->GetName());
+        } else {
+            sprintf(gText, gLastDayWarningFormat,
+                    gpCurrentPlayer->GetName(),
+                    gpCurrentPlayer->iDeathCountDown);
+        }
+
+        if (gpCurrentPlayer->isHuman && gpCurrentPlayer->isLocal) {
+            NormalDialog(gText, 1, -1, -1, 10, gNetLocalGamePos,
+                         -1, 0, -1, 0, -1, 0);
+        }
+    }
+
+    gpAdvManager->DeactivateCurrHero(0);
+    new_hero = gpCurrentPlayer->NextHero();
+    if (new_hero >= 0) {
+        gpAdvManager->SetHeroContext(new_hero, 0, 0, 1);
+    } else if (gpCurrentPlayer->numTowns > 0) {
+        gpAdvManager->SetTownContext(gpCurrentPlayer->townIds[0], 0, 1);
+    }
+    gpAdvManager->CheckDimNextHeroBut();
+
+    if (field_1f63e != 1
+        || (field_1f642 == 1 && field_1f640 == 1)) {
+        gpSoundManager->field_84 = 1;
+        return;
+    }
+    if (giWeekType == -1)
+        return;
+
+    if (field_1f640 == 1)
+        strcpy(cSample, DATA_COMPGEN(0x006780d8, newMonthTurnSample,
+                                    "newmonth.wav"));
+    else
+        strcpy(cSample, DATA_COMPGEN(0x006780cc, newWeekTurnSample,
+                                    "newweek.wav"));
+
+    if (field_1f640 == 1 && giWeekType == WEEK_TYPE_NORMAL) {
+        if (giMonthTypeExtra == MONTH_EFFECT_NORMAL) {
+            sprintf(gText, gNormalMonthFormat, gMonthNames[giMonthType]);
+        } else if (giMonthTypeExtra == MONTH_EFFECT_CREATURE) {
+            strcpy(cTemp, GetArmyName(giMonthType, 1));
+            cTemp[0] = toupper(cTemp[0]);
+            sprintf(gText, gCreatureMonthFormat,
+                    GetArmyName(giMonthType, 1), cTemp);
+        } else {
+            strcpy(gText, gPlagueMonthText);
+        }
+    } else {
+        switch (giWeekType) {
+        case WEEK_TYPE_NORMAL:
+            sprintf(gText, gNormalWeekFormat, gWeekNames[giWeekTypeExtra]);
+            break;
+
+        case WEEK_TYPE_CREATURE:
+            strcpy(cTemp, GetArmyName(giWeekTypeExtra, 1));
+            sprintf(gText, gCreatureWeekFormat, cTemp, cTemp);
+            break;
+
+        case WEEK_TYPE_INFERNO_GRAIL:
+            sprintf(gText, gInfernoWeekFormat,
+                    akCreatureTypeTraits[CREATURE_IMP_ID].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP_ID].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP_ID].growthRate,
+                    akCreatureTypeTraits[CREATURE_FAMILIAR_ID].m_name,
+                    akCreatureTypeTraits[CREATURE_IMP_ID].growthRate);
+            break;
+        }
+    }
+
+    gpSoundManager->field_84 = 1;
+    launch_sample(cSample, 30000, 3);
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    gpAdvManager->advWindow->animateInBackground = 1;
+    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    gpAdvManager->advWindow->animateInBackground = 0;
 }
 
 // E:\gamedcs\game.cpp:11170

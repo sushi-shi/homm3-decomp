@@ -1135,6 +1135,7 @@ game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250
 game	?CreateTownHeroes@game@@QAEXPAH@Z	98.6076	98.6076	98.6076	0xca040
+game	?DoNewTurn@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcc7d0
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
