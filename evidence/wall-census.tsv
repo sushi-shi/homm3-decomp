@@ -427,7 +427,6 @@ register-homing (why-reg)	22	99.2000	2708	findpath	?TestPossibleDirections@searc
 control-flow (why-branch)	22	94.2771	377	singleselectionpopups	?Main@CHotspotWidget@@UAEHPAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	21	95.4379	467	town	?GiveSpells@town@@QAEXPAVhero@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclassified	21	98.1840	1172	advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
-register-homing (why-reg)	21	81.3400	114	dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 unclassified	21	98.1667	1156	advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	why-reg	run why-reg / why-branch for the full search
 unclaimed (no source binding)	21	0.0000	21	ai_player	type_combat_artifact_type_combat_artifact	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	21	96.6244	617	sacrifice_window	?sacrifice@type_sacrifice_window@@CIHAAVmessage@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
