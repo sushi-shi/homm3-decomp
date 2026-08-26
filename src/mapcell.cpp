@@ -4191,6 +4191,10 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 //     padding for the dwelling arms raises 96.9833 -> 97.1293. A generated
 //     383-candidate lifetime tree selected that shape; another 840-candidate
 //     tree over the DC-proven `int_buffer`/`count` roster was flat or worse.
+//     A final five-candidate expression tree raises this to 97.4369 by
+//     spelling the RANDOM_DWELLING_LVL level stores directly: VC6 CSEs the
+//     repeated object-type read and schedules both stores before insert setup,
+//     exactly as retail does.
 //   * the multi-site hypothesis is DISPROVED: a throwaway second growth site
 //     for vector<TQuestGuard> in another function of this TU moved readObject
 //     by exactly nothing. The /Ob2 budget is per CALLER.
@@ -4198,7 +4202,7 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 //     42.6246 -> 45.0977 and is still in place, but it is no longer what
 //     keeps that arm's insert out of line - see its own note.
 //
-// Residual (97.1293%): register/home only, with the branch sequence intact.
+// Residual (97.4369%): register/home only, with the branch sequence intact.
 // Retail's frame is 0x28 and ours is 0x2c. Retail spills three of the arms'
 // temporaries into the DEAD PARAMETER SLOT at [ebp+0x10] - the `mapVersion`
 // argument - where our compile gives each a fresh negative local: the
@@ -4441,10 +4445,10 @@ int NewfullMap::readObject(TAbstractFile* infile, CObject* tempObject,
             dwelling.factionMask = factionMask;
         }
 
-        unsigned char level = static_cast<unsigned char>(
+        dwelling.minLevel = static_cast<unsigned char>(
             objectTypes[tempObject->typeIndex].extra);
-        dwelling.minLevel = level;
-        dwelling.maxLevel = level;
+        dwelling.maxLevel = static_cast<unsigned char>(
+            objectTypes[tempObject->typeIndex].extra);
 
         dwelling.object = tempObject;
         {
