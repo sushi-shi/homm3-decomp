@@ -1156,7 +1156,7 @@ findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
 findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400
-findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	98.6032	98.6032	98.6032	0xb18c0
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
 findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
