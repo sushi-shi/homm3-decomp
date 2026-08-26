@@ -737,6 +737,12 @@ public:
                            unsigned char exact) const;
 };
 
+class type_necromancy_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
 class type_movement_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
@@ -756,6 +762,18 @@ public:
 };
 
 class type_luck_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_antimorale_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_antiluck_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;

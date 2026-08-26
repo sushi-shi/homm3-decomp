@@ -272,9 +272,9 @@ ai_player	type_AI_player_check_trade_supply	0.0000	0.0000	0.0000	0x2a2b0
 ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_player	type_AI_player_trade_resources	0.0000	0.0000	0.0000	0x2a470
 ai_player	type_angelic_alliance_artifact_get_value	0.0000	0.0000	0.0000	0x33130
-ai_player	type_antiluck_artifact_get_value	0.0000	0.0000	0.0000	0x32ba0
+ai_player	?get_value@type_antiluck_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32ba0
 ai_player	?get_value@type_antimagic_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32a50
-ai_player	type_antimorale_artifact_get_value	0.0000	0.0000	0.0000	0x32b20
+ai_player	?get_value@type_antimorale_artifact@@UBEJPBVhero@@EE@Z	90.6818	90.6818	90.6818	0x32b20
 ai_player	type_artifact_effect_type_artifact_effect	0.0000	0.0000	0.0000	0x32500
 ai_player	?get_value@type_combat_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32560
 ai_player	type_combat_artifact_type_combat_artifact	0.0000	0.0000	0.0000	0x32540
@@ -287,7 +287,7 @@ ai_player	?get_value@type_luck_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100
 ai_player	?get_value@type_might_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325a0
 ai_player	?get_value@type_morale_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32780
 ai_player	?get_value@type_movement_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x326e0
-ai_player	type_necromancy_artifact_get_value	0.0000	0.0000	0.0000	0x32640
+ai_player	?get_value@type_necromancy_artifact@@UBEJPBVhero@@EE@Z	82.5645	82.5645	82.5645	0x32640
 ai_player	?get_value@type_power_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x325e0
 ai_player	type_school_artifact_get_value	0.0000	0.0000	0.0000	0x32890
 ai_player	?get_value@type_scouting_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32510
