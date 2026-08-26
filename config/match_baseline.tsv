@@ -1299,6 +1299,7 @@ game	?insert@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXPAVtown@@IABV3@
 game	?load@SGameSetupOptions@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xbe260
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260
+game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90
 game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
 game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0

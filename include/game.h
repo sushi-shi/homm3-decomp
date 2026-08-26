@@ -1040,6 +1040,9 @@ public:
     // Its second stack argument is the concrete abstract stream used by Read;
     // the DC declarator obscures that pointer as void*.
     int readLossCondition(char type, TAbstractFile* infile);
+    // Retail adds the saved-game version as a third stack argument to the
+    // Dreamcast load helper (`ret 0xc` at 0x4c3d90).
+    int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
 #endif
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
