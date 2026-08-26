@@ -3894,6 +3894,18 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
     return 0;
 }
 
+// E:\gamedcs\ai_tactical.cpp:2876
+// The default enchantment pricer.  Retail's address-take at 0x43b7ff lands
+// on this 16-byte-aligned leaf, and the bytes are exactly `xor eax,eax; ret
+// 0x18` followed by alignment padding: the enemy and caster arguments are
+// deliberately unused and every unsupported spell is worth zero.
+VA(0x0043b680, 0x10)  // address-take + retail leaf bytes, dc 0x41a74
+long type_AI_spellcaster::unimplemented(const army* enemy,
+                                        type_enchant_data caster)
+{
+    return 0;
+}
+
 // E:\gamedcs\ai_tactical.cpp:2884
 // The enchantment dispatch: one pointer-to-member per priceable spell,
 // and `unimplemented` for everything else. Retail lowers it as a
@@ -3910,13 +3922,11 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
 // own out-of-range exit both resolve to the trailing return - one slot
 // each, which is exactly the 0x23/0x26 pair the byte table carries.
 //
-// The address-take is why this could not be written before: it needs
-// every handler EMITTED, not merely claimed, or the relocation names
-// the flat carve label instead of the member. Two rows are still
-// carcass stubs - get_fortune_value (0x438490) and unimplemented
-// (0x43b680, which the carve does not even cut as a row) - so their
-// two `mov eax, offset` instructions are the standing residual here.
-VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
+// The address-take is why every handler must be EMITTED, not merely claimed:
+// otherwise its relocation names a flat carve label rather than the member.
+// Promoting the retail-only 0x43b680 default leaf resolved the last such
+// relocation; the complete two-level dispatch is now exact.
+VA(0x0043b690, 0x251)  // exact enchantment dispatch, dc 0x41a7c
 type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function(SpellID spell)
 {
     switch (spell) {
@@ -4097,13 +4107,6 @@ void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:2876
-DC_ONLY(0x41a74, 0x8)
-long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data caster)
-{
-    // @stub
-}
 
 // E:\gamedcs\ai_tactical.cpp:3093
 // Same case as consider_mass_damage above: consider_spell's summon arm

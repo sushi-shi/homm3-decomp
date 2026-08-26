@@ -338,6 +338,7 @@ ai_tactical	?get_weakness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_
 ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	95.2778	95.2778	95.2778	0x3bf20
 ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	86.6781	86.6781	86.6781	0x36c60
 ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0
+ai_tactical	?unimplemented@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b680
 ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
 army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
@@ -697,7 +698,9 @@ combatwindow	?SendChat@CCombatChatEdit@@UAEXPBDH@Z	93.3486	93.3486	93.3486	0x726
 combatwindow	?UpdateScreen@CCombatChatEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x72850
 combatwindow	?combat_message@TCombatWindow@@QAEXPBDEE@Z	100.0000	100.0000	100.0000	0x72e90
 combatwindow	?handle_widget_hover@TCombatWindow@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x72b80
+combatwindow	?scroll_down@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72e40
 combatwindow	?scroll_rollover@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72db0
+combatwindow	?scroll_up@TCombatWindow@@SIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x72df0
 combatwindow	?show_messages@TCombatWindow@@QAEXJ@Z	100.0000	100.0000	100.0000	0x72c30
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?CheckChangeHighlighter@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x77c20

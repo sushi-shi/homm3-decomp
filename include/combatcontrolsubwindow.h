@@ -90,18 +90,6 @@ public:
 };
 SIZE(TCombatPlacementSubWindow, 0x3c);
 
-// The two message-log scroll handlers the control bar's arrows carry.
-// NEITHER IS CARVED: they sit in the 160-byte gap between 0x472db0+64 and
-// 0x472e90, which the entry heuristics skip because nothing CALLS them -
-// their addresses are only ever taken, here. Both are the same 79 bytes
-// apart from one opcode (`dec edx` against `inc edx`) and both hand the
-// adjusted line to 0x472c30. They belong to combatwindow.obj, not to this
-// compiland; they are declared here because this is the only consumer and
-// this header may not reach into another unit's. Names are provisional -
-// nothing attests them.
-int combat_log_scroll_up(message& msg);    // 0x472df0, uncarved
-int combat_log_scroll_down(message& msg);  // 0x472e40, uncarved
-
 // Retail's two construction sites allocate 0x5c bytes. The constructor and
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
 // fields at +0x34..+0x54, and the shown byte at +0x58.
