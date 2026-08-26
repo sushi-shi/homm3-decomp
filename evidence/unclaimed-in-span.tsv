@@ -3,11 +3,10 @@
 # span that no match_baseline row claims.
 unit	functions	bytes
 singleselectionwindow	109	71571
-game	123	54348
+game	121	54188
 ai_player	29	14733
 swapmgr	15	11006
 event_record	38	10226
-recruit	4	9176
 multiplayerwindow	22	6842
 philai	37	6065
 combatcontrolsubwindow	3	5796
