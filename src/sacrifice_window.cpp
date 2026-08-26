@@ -476,13 +476,6 @@ void type_skeleton_window::update_buttons()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2172
-DC_ONLY(0x127b68, 0x2E8)
-void type_skeleton_window::update(long group, long index)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2216
 DC_ONLY(0x127e50, 0x1F6)
 void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click)
 {
@@ -3007,6 +3000,67 @@ type_skeleton_window::~type_skeleton_window()
         death_samples[i]->Dispose();
     }
     delete_widgets();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2172
+// Both seven-slot widget grids and the original-to-undead mapping are
+// independently fixed by the constructor/caller graph. The DC xref census
+// accounts for the string result, format calls, text reads and help writes.
+VA(0x00566030, 0x45D)  // anchor-caller + dc-xref/body graph, dc 0x127b68
+void type_skeleton_window::update(long group, long index)
+{
+    TCreatureType type = armies[group]->armyTypes[index];
+    if (type == CREATURE_NONE) {
+        army_widget[group][index]->set_visible(0);
+        army_label[group][index]->set_visible(0);
+        select_border[group][index]->set_help_text(0, 0, 1);
+        army_widget[group][index]->set_help_text(0, 0, 1);
+        army_label[group][index]->set_help_text(0, 0, 1);
+        return;
+    }
+
+    std::string result;
+    const char* name = GetArmyName(
+        type, armies[group]->numTroops[index]);
+
+    army_widget[group][index]->SetIconFrame(type + 2);
+    result = format_string(
+        DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+        armies[group]->numTroops[index]);
+    army_label[group][index]->SetText(result.c_str());
+    army_widget[group][index]->set_visible(1);
+    army_label[group][index]->set_visible(1);
+
+    if (group == 0) {
+        result = format_string(
+            gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+    } else {
+        int transformed = giDeathCreature[type];
+        if (transformed != type) {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
+                name, GetArmyName(
+                    transformed, armies[group]->numTroops[index]));
+        } else if (armies[group]->numTroops[index] == 1) {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
+                name);
+        } else {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
+                name);
+        }
+    }
+
+    army_widget[group][index]->set_help_text(result.c_str(), 0, 1);
+    select_border[group][index]->set_help_text(result.c_str(), 0, 1);
+    result = format_string(
+        DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+        armies[group]->numTroops[index], name);
+    army_label[group][index]->set_help_text(result.c_str(), 0, 1);
 }
 
 VA(0x00566490, 0x258)
