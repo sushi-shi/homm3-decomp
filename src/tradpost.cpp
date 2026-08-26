@@ -914,6 +914,10 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
 // loop over the paying resources and the recipient player slots (colour icon,
 // colour name, selection). The inlined SetWidgetOn/Off/Disabled helpers expand
 // to the status broadcasts; the final repaint is bUpdate-gated.
+// Match plateau: 91.0868%; calls are 47/47, branches 23/23, and all 50 block
+// flows agree. The remaining delta is register/pseudo creation order. A
+// generated field_60 > k spelling reached 91.6293% but is rejected because it
+// changes retail's jge to jle; the other 74 atomic variants and why-reg were flat.
 VA(0x005eaf50, 0x744)  // ordermap clean run + arity ret 4, dc 0x1895a8
 void TGiveResourceWindow::Update(unsigned char bUpdate)
 {
@@ -999,22 +1003,25 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
                 msg.codeY = 3;
                 msg.extra = gSelectedArtifact;
                 BroadcastMessage(&msg);
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 4;
                 msg.extraText = gText;
-                BroadcastMessage(&msg);
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
             } else {
-                msg.codeY = 0xd;
                 msg.extra = slotPlayerColor[gLeftResource];
+                msg.codeY = 0xd;
                 BroadcastMessage(&msg);
                 strcpy(gText, gPlayerColorNames[slotPlayerColor[gLeftResource]]);
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 0xc;
                 msg.extraText = gText;
-                BroadcastMessage(&msg);
             }
+            BroadcastMessage(&msg);
         }
 
         for (int k = 0; k < 7; ++k) {
@@ -1027,11 +1034,11 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
                 BroadcastMessage(&msg);
                 msg.codeY = 0x23 + k;
                 BroadcastMessage(&msg);
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gpCurrentPlayer->resources[k]);
+                msg.extraText = gText;
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 0x23 + k;
-                msg.extraText = gText;
+                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                        gpCurrentPlayer->resources[k]);
                 BroadcastMessage(&msg);
                 msg.codeX = widget::WIDGET_SET_Y;
                 msg.codeY = 0x23 + k;
@@ -1069,8 +1076,6 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
                     msg.codeY = 0x31 + k;
                     BroadcastMessage(&msg);
                 }
-                msg.codeX = (k < field_60) ? widget::WIDGET_SET_STATUS
-                                           : widget::WIDGET_CLEAR_STATUS;
                 msg.codeY = GIVE_RECIPIENT_SLOT_0_ID + k;
                 msg.extra = 2;
                 BroadcastMessage(&msg);
