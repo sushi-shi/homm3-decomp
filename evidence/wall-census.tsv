@@ -29,7 +29,6 @@ unclaimed (no source binding)	1816	0.0000	1816	ai_player	type_AI_player_purchase
 unclaimed (no source binding)	1744	0.0000	1744	events	advManager_CreatureBankEvent	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1681	0.0000	1681	spellbookwindow	TSpellbookWindow_GotoPage	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1668	0.0000	1668	philai	get_skill_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	1648	0.0000	1648	singleselectionpopups	CTownDlg_CreateWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1572	0.0000	1572	singleselectionwindow	TSingleSelectionWindow_WindowHandler	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1548	0.0000	1548	philai	AI_enter_town	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	1470	0.0000	1470	ai_player	type_AI_player_can_trade_resources	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -50,7 +49,6 @@ unclaimed (no source binding)	935	0.0000	935	events	advManager_CombatMonsterEven
 unclaimed (no source binding)	915	0.0000	915	philai	type_spellvalue_type_spellvalue_126d40	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	912	0.0000	912	events	advManager_SendHeroTownData	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	907	0.0000	907	events	advManager_DoEventShipyard	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-unclaimed (no source binding)	896	0.0000	896	singleselectionpopups	CHeroDlg_CreateWin	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	889	0.0000	889	singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	886	0.0000	886	events	advManager_DoEventPrison	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 unclaimed (no source binding)	875	0.0000	875	command	combatManager_SetCombatDirections	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
@@ -147,6 +145,7 @@ unclaimed (no source binding)	224	0.0000	224	cmbtmgr	combatManager_check_obstacl
 register-homing (why-reg)	223	85.2335	1508	advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
 unclaimed (no source binding)	216	0.0000	216	events	advManager_DoTreasureDialog	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 register-homing (why-reg)	212	83.0188	1247	advmgr	?ShowRoute@advManager@@QAEXHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	210	87.2762	1648	singleselectionpopups	?CreateWin@CTownDlg@@QAEEPAVCSprite@@HW4TTownType@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	210	63.9403	581	advmgr	?SetEnvironmentOrigin@advManager@@QAEXUtype_point@@H@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	208	88.1009	1744	button	?Main@button@@UAEHPAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 under-inline (4 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	207	88.8564	1859	resourcemanager	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
@@ -318,6 +317,7 @@ control-flow (why-branch)	57	95.1901	1184	slider	?Main@slider@@UAEHPAVmessage@@@
 control-flow (why-branch)	56	79.8598	278	mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	56	86.9847	427	remote	?SendIt@CDPlayHeroes@@QAE_NPAVCNetMsg@@K_N@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	55	94.4335	997	command	?CheckGetAIMove@combatManager@@QAEXXZ	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
+register-homing (why-reg)	54	93.9279	896	singleselectionpopups	?CreateWin@CHeroDlg@@QAEEPAVBitmap816@@PBDPAVCSprite@@H11@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	54	95.0344	1091	cmbtmgr	?KeepAttack@combatManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	54	84.0350	337	event_record	?load@type_record_shroud@@UAEEPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline (2 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	53	92.9185	748	hero	?HeroFn_004E2550@hero@@QAEEJJ@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
