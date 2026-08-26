@@ -900,6 +900,7 @@ dxplay	?EnumLobbyConnections@CDPlayLobby@@UAEEPAV?$CAutoArray@VCDPlayConnection@
 dxplay	?EnumPlayers@CDPlay@@UAEEPAV?$CAutoArray@VCDPlayPlayer@@@@PAU_GUID@@K@Z	100.0000	100.0000	100.0000	0x97340
 dxplay	?EnumPlayersCallback@@YGHKKPBUDPNAME@@KPAX@Z	100.0000	100.0000	100.0000	0x99ed0
 dxplay	?EnumSession@@YGHPBUDPSESSIONDESC2@@PAKKPAX@Z	100.0000	100.0000	100.0000	0x99e50
+dxplay	?EnumSessions@CDPlay@@UAEEPAV?$CAutoArray@VCDPlaySession@@@@KK@Z	100.0000	100.0000	100.0000	0x97440
 dxplay	?Get@?$CAutoArray@VCDPlayAddressElement@@@@UAEPAVCDPlayAddressElement@@K@Z	100.0000	100.0000	100.0000	0x99fc0
 dxplay	?GetCaps@CDPlay@@UAEEPAUDPCAPS@@E@Z	100.0000	100.0000	100.0000	0x987a0
 dxplay	?GetConnectionSettings@CDPlayLobby@@QAEPAUDPLCONNECTION@@KPAK@Z	100.0000	100.0000	100.0000	0x98ae0
