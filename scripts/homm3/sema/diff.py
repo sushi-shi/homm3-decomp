@@ -14,6 +14,8 @@ the flat asm diff is the opt-in):
   --branches  the ordered conditional-branch comparison the masked views
               structurally cannot show (SIGNEDNESS/POLARITY/OTHER/
               TOPOLOGY)
+  --source    block/instruction alignment grouped beneath verified candidate
+              /Z7 source statements; metadata is attached after comparison
 
 rc: 0 = the requested VIEW found no difference, 1 = it did, 2 = error.
 The default skeleton compares flow shape + block sizes ONLY - a
@@ -32,6 +34,7 @@ import re
 import sys
 
 from homm3.sema import _asm
+from homm3.sema import source as source_view
 from homm3.sema._common import die
 from homm3.sema.context import get_context
 
@@ -284,6 +287,160 @@ def _branch_view(ctx, rva, name, unit, ordinal) -> int:
     return 1
 
 
+# --- --source: candidate statements attached AFTER instruction alignment ----------
+
+def _aligned_instruction_rows(base, target):
+    """[(kind, base-anchor, base-text, target-text)] for two block bodies.
+
+    Insertions borrow the nearest candidate offset solely for source grouping;
+    their base text remains None.  Metadata therefore never participates in
+    the SequenceMatcher or in the comparison verdict.
+    """
+    import difflib
+
+    bt = [text for _off, text in base]
+    tt = [text for _off, text in target]
+    out = []
+    matcher = difflib.SequenceMatcher(a=bt, b=tt, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for bi, ti in zip(range(i1, i2), range(j1, j2)):
+                out.append(("=", base[bi][0], base[bi][1], target[ti][1]))
+            continue
+        if tag == "delete":
+            out.extend(("-", base[bi][0], base[bi][1], None)
+                       for bi in range(i1, i2))
+            continue
+        if tag == "insert":
+            anchor = (base[i1][0] if i1 < len(base)
+                      else base[i1 - 1][0] if i1 else 0)
+            out.extend(("+", anchor, None, target[ti][1])
+                       for ti in range(j1, j2))
+            continue
+        shared = min(i2 - i1, j2 - j1)
+        for offset in range(shared):
+            bi, ti = i1 + offset, j1 + offset
+            out.append(("~", base[bi][0], base[bi][1], target[ti][1]))
+        for bi in range(i1 + shared, i2):
+            out.append(("-", base[bi][0], base[bi][1], None))
+        anchor = (base[i1 + shared - 1][0] if shared
+                  else base[i1][0] if i1 < len(base)
+                  else base[i1 - 1][0] if i1 else 0)
+        out.extend(("+", anchor, None, target[ti][1])
+                   for ti in range(j1 + shared, j2))
+    return out
+
+
+def _statement_groups(rows, source_map, origin: int):
+    groups = []
+    for row in rows:
+        statements = source_map.active_at(max(row[1] - origin, 0))
+        key = tuple((statement.offset, statement.line)
+                    for statement in statements)
+        if not groups or groups[-1][0] != key:
+            groups.append((key, statements, []))
+        groups[-1][2].append(row)
+    return groups
+
+
+def _render_source_block(out, block_number, base_block, target_block,
+                         source_map, origin, first_changed):
+    base_addr, base_body, base_term = base_block
+    target_addr, target_body, target_term = target_block
+    rows = _aligned_instruction_rows(base_body, target_body)
+    if base_term != target_term:
+        anchor = base_body[-1][0] if base_body else base_addr
+        rows.append(("flow", anchor, base_term or "", target_term or ""))
+    changed = any(row[0] != "=" for row in rows)
+    out.append(f"  B{block_number} @{base_addr:x}/@{target_addr:x}  "
+               f"{'DIFFERS' if changed else '=='}:")
+    for _key, statements, grouped_rows in _statement_groups(
+            rows, source_map, origin):
+        group_changed = any(row[0] != "=" for row in grouped_rows)
+        if statements:
+            for statement in statements:
+                out.append("    " + source_view.format_heading(
+                    statement, source_map.source, group_changed))
+            if group_changed and first_changed[0] is None:
+                first_changed[0] = statements[-1]
+        else:
+            out.append("    ; !! [no candidate source statement]"
+                       if group_changed else
+                       "    ; [no candidate source statement]")
+        if not group_changed:
+            out.append(f"      == {len(grouped_rows)} instruction(s)")
+            continue
+        for kind, _anchor, base_text, target_text in grouped_rows:
+            if kind == "=":
+                out.append(f"       = {base_text}")
+            elif kind == "~":
+                out.append(f"       ~ base   {base_text}")
+                out.append(f"         target {target_text}")
+            elif kind == "-":
+                out.append(f"       - base   {base_text}")
+            elif kind == "+":
+                out.append(f"       + target {target_text}")
+            else:
+                out.append(f"       ! flow   base [{base_text}] -> "
+                           f"target [{target_text}]")
+
+
+def _source_diff(base_text: str, target_text: str, source_map) -> tuple[str, bool]:
+    """Statement-grouped block diff; comments are attached after alignment."""
+    import difflib
+
+    base_cfg = _asm.cfg_rows(base_text)
+    target_cfg = _asm.cfg_rows(target_text)
+    _ordinary_output, exact = _asm.blocks_diff(base_text, target_text)
+    base_keys = ["\n".join([text for _off, text in body] + [term or ""])
+                 for _address, body, term in base_cfg]
+    target_keys = ["\n".join([text for _off, text in body] + [term or ""])
+                   for _address, body, term in target_cfg]
+    origin = next((body[0][0] for _address, body, _term in base_cfg if body), 0)
+    out = [f"[source diff: base {len(base_cfg)} blocks vs target "
+           f"{len(target_cfg)} blocks; candidate statements from "
+           f"{source_map.source}; metadata excluded from comparison]"]
+    first_changed = [None]
+    matcher = difflib.SequenceMatcher(a=base_keys, b=target_keys, autojunk=False)
+    display_block = 0
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for offset in range(i2 - i1):
+                _render_source_block(
+                    out, display_block, base_cfg[i1 + offset],
+                    target_cfg[j1 + offset], source_map, origin, first_changed)
+                display_block += 1
+            continue
+        for offset in range(max(i2 - i1, j2 - j1)):
+            bi = i1 + offset if i1 + offset < i2 else None
+            ti = j1 + offset if j1 + offset < j2 else None
+            if bi is not None and ti is not None:
+                _render_source_block(
+                    out, display_block, base_cfg[bi], target_cfg[ti],
+                    source_map, origin, first_changed)
+            elif bi is not None:
+                address, body, term = base_cfg[bi]
+                empty = (address, [], None)
+                _render_source_block(
+                    out, display_block, (address, body, term), empty,
+                    source_map, origin, first_changed)
+            else:
+                address, body, term = target_cfg[ti]
+                out.append(f"  B{display_block} @{address:x} TARGET-ONLY:")
+                out.append("    ; !! [no candidate statement for target-only block]")
+                out.extend(f"       + target {text}" for _off, text in body)
+                if term:
+                    out.append(f"       + flow   [{term}]")
+            display_block += 1
+    if first_changed[0] is not None:
+        statement = first_changed[0]
+        out.insert(1, f"[first divergent candidate statement: "
+                   f"{source_map.source}:{statement.line} | {statement.text}]")
+    out.append("[all aligned blocks identical]" if exact
+               else "[source-aware view differs]")
+    return "\n".join(out) + "\n", exact
+
+
 def run(args) -> None:
     ctx = get_context()
     name, unit, rva, _size, ordinal = ctx.symbols.resolve_fn(args.target)
@@ -293,15 +450,25 @@ def run(args) -> None:
         die(f"{name} [{unit or 'no unit'}] has no comparison objects - only "
             "delinked manifest units (config/units.toml) can diff; "
             "`homm3 sema disasm` views any retail function")
-    if args.verbose and (args.asm or args.branches):
+    if args.verbose and (args.asm or args.branches or args.source):
         die("--verbose modifies the default block diff; --asm and "
-            "--branches each have one rendering")
+            "--branches/--source each have one rendering")
 
     if args.branches:
         sys.exit(_branch_view(ctx, rva, name, unit, ordinal))
 
     base_text = _asm.objdump(normal_base, name, ordinal)
     target_text = _asm.objdump(normal_target, name, ordinal)
+
+    if args.source:
+        try:
+            source_map = source_view.load(
+                unit, name, ordinal, _asm.BASE / f"{unit}.obj")
+        except source_view.SourceError as exc:
+            die(str(exc))
+        output, exact = _source_diff(base_text, target_text, source_map)
+        print(output, end="")
+        sys.exit(0 if exact else 1)
 
     if args.asm:
         import difflib

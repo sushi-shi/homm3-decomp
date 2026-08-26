@@ -61,6 +61,26 @@ homm3 clean               # whole-build/ nuke; init restores everything
 `ninja` alone works for rapid iteration once configured. `homm3 build` never invokes the
 delinker (that step is not yet ported).
 
+## Source-labelled matching
+
+Use the candidate's VC6 debug lines to localize a mismatch to the C++ statement that
+lowered into it:
+
+```sh
+homm3 sema disasm 0x00554400 --base --source --verbose
+homm3 sema diff 0x00554400 --source
+```
+
+`--source` compiles a separate cached `/Z7` object under `build/debug/`; it never adds
+debug flags to the matching object. The tooling verifies that the selected function's
+code bytes are identical before applying the line offsets. In the diff view, assembly is
+aligned first and source headings are attached afterwards, so comments cannot change the
+verdict. Use the first `!!` statement to choose where to inspect or respell the source.
+
+These labels describe the **candidate build only**. They are navigation evidence about
+which candidate statement produced an instruction span, not evidence for retail source
+semantics, and they never outrank the retail bytes or objdiff score.
+
 ## Tooling layout
 
 One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:
