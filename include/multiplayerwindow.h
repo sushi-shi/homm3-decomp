@@ -198,6 +198,16 @@ public:
     unsigned long dwUser2;      // +0x100
     unsigned long dwUser3;      // +0x104
     unsigned long dwUser4;      // +0x108
+
+    inline bool IsJoinDisabled()
+    {
+        return (dwFlags & 0x21) || playerCount == maxPlayers;
+    }
+
+    inline bool IsPasswordProtected()
+    {
+        return dwFlags & 0x400;
+    }
 };
 SIZE(CDPlaySession, 0x10c);
 
@@ -299,6 +309,19 @@ public:
     }
 };
 
+class CHeroSessions : public CAutoArray<CDPlaySession> {
+public:
+    enum eSessionStatus {
+        closed,
+        open,
+        password
+    };
+
+    bool GetSessionInfo(unsigned long index, char* sessName, char* userName,
+                        int& numPlayers, eSessionStatus& status);
+};
+SIZE(CHeroSessions, 0x14);
+
 // CMultiPlayerWindowEdit - the text-entry widget the session-host name field
 // uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
 // its only addition is the key-handler override that gives it a distinct
@@ -341,7 +364,7 @@ public:
     unsigned char showSplash;               // +0x55
     int currentGame;                        // +0x58
     int currentIndex;                       // +0x5c
-    CAutoArray<CDPlaySession>* pSessions;   // +0x60
+    CHeroSessions* pSessions;               // +0x60
     unsigned long sessTimer;                // +0x64
     unsigned long sessionRefreshTimeout;    // +0x68
     char localIPAddress[80];                // +0x6c
