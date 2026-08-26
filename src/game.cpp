@@ -213,6 +213,7 @@ const int SAVED_HERO_PRE25_FIRST = 0x80;
 const int SAVED_HERO_PRE25_SECOND = 0x81;
 const int HERO_PRE25_FIRST_REMAP = 0x92;
 const int HERO_PRE25_SECOND_REMAP = 0x9c;
+const int MAP_VERSION_OLD_CAMPAIGN_HERO_IDS = 14;
 const int SAVE_VERSION_LOSS_HERO_COORDINATES = 16;
 const int SAVE_VERSION_COMPLETE_HERO_ROSTER = 25;
 
@@ -1527,6 +1528,44 @@ void playerData::ClearNetInfo()
     dpid = 0;
     isHuman = 0;
     isLocal = 0;
+}
+
+// The map and save streams both store hero ids as one unsigned byte.  Their
+// two retained /Gr helpers differ only in the legacy-version predicate:
+// original-format maps remap at exactly version 14, while saved records remap
+// every version before the Complete roster landed at version 25.
+VA(0x004ba1c0, 0x50)
+int __fastcall ReadHeroId(TAbstractFile* infile, int mapVersion)
+{
+    unsigned long value;
+    infile->Read(&value, sizeof(unsigned char));
+    int heroId = value & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (mapVersion == MAP_VERSION_OLD_CAMPAIGN_HERO_IDS) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
+}
+
+VA(0x004ba210, 0x50)
+int __fastcall LoadHeroId(TAbstractFile* infile, int saveVersion)
+{
+    unsigned long value;
+    infile->Read(&value, sizeof(unsigned char));
+    int heroId = value & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (saveVersion < SAVE_VERSION_COMPLETE_HERO_ROSTER) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
 }
 
 // E:\gamedcs\game.cpp:1409
@@ -15415,6 +15454,14 @@ template<> std::bitset<70>& std::bitset<70>::reset()
     (this->*tidy)(0);
     return *this;
 }
+
+template<> void std::vector<Sign, std::allocator<Sign> >::clear()
+{
+    typedef std::vector<Sign, std::allocator<Sign> > SignVector;
+    typedef void (SignVector::*DestroyMember)(Sign*, Sign*);
+    DestroyMember volatile destroy = &SignVector::_Destroy;
+    (this->*destroy)(begin(), end());
+}
 #pragma auto_inline(on)
 
 #pragma inline_depth(0)
@@ -15427,12 +15474,14 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<28>& availableSkills,
                                std::bitset<128>& objectTypes,
                                std::bitset<5>& spellLevels,
-                               std::bitset<8>& heroPool)
+                               std::bitset<8>& heroPool,
+                               std::vector<Sign>& signs)
 {
     spellLevels.reset();
     heroPool.reset();
     availableSkills.reset();
     spells.reset();
+    signs.clear();
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
@@ -15449,3 +15498,4 @@ VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
+VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, Sign)

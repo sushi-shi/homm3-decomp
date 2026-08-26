@@ -49,6 +49,12 @@ int __fastcall readMapString(TAbstractFile* infile, std::string* value);
 // Reached from readHeroData; the NAME is invented from that role, on
 // readMapString's own precedent.
 int __fastcall ReadHeroId(TAbstractFile* infile, int mapVersion);
+// 0x4ba210, 80 B. The save-record twin uses the Complete-roster version
+// threshold rather than ReadHeroId's one oldest-map-format equality. Its two
+// retail callers deserialize the visiting and garrison hero slots of the same
+// saved object record. The NAME is role-derived; the ABI and semantics are
+// retail-byte proven.
+int __fastcall LoadHeroId(TAbstractFile* infile, int saveVersion);
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
