@@ -25,6 +25,8 @@ long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
                               bool equipped, bool exact);
 long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
 void AI_equip_artifacts(hero* current_hero);
+long get_artifact_purchase_price(TArtifact artifact, long market_count,
+                                 EGameResource* best_resource);
 TCreatureType siege_artifact_to_creature(TArtifact engine);
 
 // ai_combat.h's whole-of-combat appraisal, declared file-locally rather
