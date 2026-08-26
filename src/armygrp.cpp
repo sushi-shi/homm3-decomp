@@ -2223,6 +2223,11 @@ std::string armyGroup::get_morale_description(
 // here - worth testing, but it is a non-additive change to a declarator
 // viewarmywindow.cpp also calls, so it needs an owner who can re-measure
 // that unit's rows in the same build.
+// [2026-08-26] Scoping a signed-byte snapshot of `ourTown->type` under the
+// nonnull gate raises 90.1916 -> 92.3623. The cache preserves retail's 33
+// conditional branches and symbolic branch targets. A generated one-line
+// town-type accessor reaches the same bytes, but no such accessor is attested
+// in the Dreamcast class record; the ordinary local is retained instead.
 static void apply_luck_magic_terrain(int magicTerrain, TCreatureType creature,
                                      int& currentLuck, std::string& result)
 {
@@ -2297,10 +2302,13 @@ std::string armyGroup::get_luck_description(
                                     armygrp_creature_plural_name(devilType));
     }
 
-    if (ourTown && ourTown->type == TOWN_RAMPART
-        && ourTown->HasBuilding(EXTRA_0_ID, 1)) {
-        result += format_string("\n%s +2",
-                                GetBuildingName(TOWN_RAMPART, EXTRA_0_ID));
+    if (ourTown) {
+        char ourTownType = ourTown->type;
+        if (ourTownType == TOWN_RAMPART
+            && ourTown->HasBuilding(EXTRA_0_ID, 1)) {
+            result += format_string(
+                "\n%s +2", GetBuildingName(TOWN_RAMPART, EXTRA_0_ID));
+        }
     }
 
     if (creature == CREATURE_HALFLING && currentLuck < 1) {
