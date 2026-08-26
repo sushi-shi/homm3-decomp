@@ -278,10 +278,10 @@ DATA(0x0068c4c0) static int gCreatureRowY[7];
 DATA(0x006a54ec) static char* gSellCreatureColumnLabel;
 
 // The resource-column row Y coordinates the Trade/Give/Buy Updates stamp on
-// each value widget (WIDGET_SET_Y), and the char[] subtitle the Buy/SellArt
+// each value widget (WIDGET_SET_Y), and the subtitle pointer the Buy/SellArt
 // Updates copy for the marketplace-mode caption. Provisional names.
 DATA(0x0068c4a0) static int gResourceValueWidgetY[7];
-DATA(0x006a542c) static char gMarketSubtitle[1];
+DATA(0x006a542c) static char* gMarketSubtitle;
 
 // The seven per-resource market values; get_market_value and the resource-trade
 // math read gMarketValues, the buy-artifact price math the second row.
@@ -750,8 +750,8 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    sprintf(gText, (*gpGeneralText)[271]);
     msg.codeY = 0xe;
+    sprintf(gText, (*gpGeneralText)[271]);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[169]);
@@ -950,8 +950,8 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    sprintf(gText, (*gpGeneralText)[271]);
     msg.codeY = 0xe;
+    sprintf(gText, (*gpGeneralText)[271]);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[170]);
@@ -1098,6 +1098,13 @@ void TGiveResourceWindow::Update(unsigned char bUpdate)
 // resources and the artifact-for-sale slots (icon, per-artifact price via the
 // inlined ratio math, selection highlight). The final repaint is bUpdate-gated.
 // The inlined SetWidgetOn/Off/Disabled helpers expand to the status broadcasts.
+// Current retail structure: all 52 calls and all 24 conditional branches agree;
+// 33/57 blocks are byte-identical. The remaining CFG delta is one cross-jumped
+// sprintf argument path (our shared block is forward, retail's is backward).
+// Six natural amount spellings compile byte-identically, and an 800-pair AST
+// sweep found only a +0.0087 equality-order allocator perturbation whose operand
+// order contradicts retail. Repeating msg.id at the retail store site is also a
+// measured loss (-0.39 raw), so both are intentionally left unbanked.
 VA(0x005eb6a0, 0x7d9)  // ordermap clean run + arity ret 4, dc 0x189aac
 void TBuyArtifactWindow::Update(unsigned char bUpdate)
 {
@@ -1108,14 +1115,15 @@ void TBuyArtifactWindow::Update(unsigned char bUpdate)
         const char* word;
         if (gRatioInverted) {
             qty = 1;
-            word = (*gpGeneralText)[162];
-        } else if (gGiveQuantity <= 1) {
-            qty = gGiveQuantity;
-            word = (*gpGeneralText)[162];
         } else {
             qty = gGiveQuantity;
-            word = (*gpGeneralText)[161];
+            if (qty > 1) {
+                word = (*gpGeneralText)[161];
+                goto have_word;
+            }
         }
+        word = (*gpGeneralText)[162];
+have_word:
         sprintf(gText, (*gpGeneralText)[268],
                 akArtifactTraits[gpMarketArtifacts.asIds[gLeftResource]].name,
                 qty, word, gResourceNames[gSelectedArtifact]);
@@ -1128,16 +1136,20 @@ void TBuyArtifactWindow::Update(unsigned char bUpdate)
     msg.extraText = gText;
     BroadcastMessage(&msg);
 
-    if (gMarketSource == MARKET_SOURCE_MARKETPLACE)
+    switch (gMarketSource) {
+    case MARKET_SOURCE_MARKETPLACE:
         strcpy(gText, gMarketSubtitle);
-    else if (gMarketSource == MARKET_SOURCE_BLACK_MARKET)
+        break;
+    case MARKET_SOURCE_BLACK_MARKET:
         sprintf(gText, (*gpGeneralText)[350]);
+        break;
+    }
 
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    sprintf(gText, (*gpGeneralText)[271]);
     msg.codeY = 0xe;
+    sprintf(gText, (*gpGeneralText)[271]);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[169]);
@@ -1257,8 +1269,10 @@ void TBuyArtifactWindow::Update(unsigned char bUpdate)
                         long q;
                         if (valEff == 0.0f || cost == 0.0f)
                             q = 0;
-                        else
-                            q = static_cast<long>(cost / valEff + 0.5);
+                        else {
+                            float ratio = cost / valEff;
+                            q = static_cast<long>(ratio + 0.5);
+                        }
                         sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), q);
                     } else {
                         sprintf(gText, emptyRolloverText);
