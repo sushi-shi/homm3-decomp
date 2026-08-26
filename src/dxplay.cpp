@@ -590,10 +590,12 @@ unsigned char CDPlay::SetPlayerName(unsigned long playerId, char* sShort, char* 
     unsigned char ok = m_hRes >= 0;
     return ok;
 }
-// Residual (90.4%): two-call get through a local CDPlayMsg buffer is byte-right;
-// retail homes the DPNAME buffer (pName) in ebx and the alloc size in edi, our CL
-// takes the opposite pair - a register-allocation wall - plus cosmetic EH-scope
-// reloc names.
+// Residual (90.4%): the CFG is exact, but retail homes the message buffer in
+// ebx and its allocation size in edi while our CL takes the opposite pair.
+// A bounded 53-candidate tree covered the DC-evidenced two-local spelling
+// (`size` + `CDPlayMsg name`), direct and inline AllocSize access, declaration
+// order, and the evidenced ~CDPlayMsg -> Destroy helper layering; all were
+// byte-flat or worse.  why-reg's volatile probe is also measured worse.
 // E:\gamedcs\dxplay.cpp:939
 VA(0x004982a0, 0x115)  // anchor-vtable CDPlay slot19 (GetPlayerName), dc 0x8b0d8
 unsigned char CDPlay::GetPlayerName(unsigned long playerId, char* sShort, int maxShort, char* sLong, int maxLong)
