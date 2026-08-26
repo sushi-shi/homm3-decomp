@@ -1167,6 +1167,26 @@ unsigned char CDPlay::EnumGroupPlayers(
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:446
+VA(0x00497440, 0xB5)  // anchor-vtable CDPlay slot26 (EnumSessions), dc 0x8a558
+unsigned char CDPlay::EnumSessions(
+    CAutoArray<CDPlaySession>* pSessionArray, unsigned long timeOut,
+    unsigned long dwFlags)
+{
+    if (!m_lpDP)
+        return 0;
+    m_pSessionArray = pSessionArray;
+    m_pSessionArray->Destroy(1);
+    DPSESSIONDESC2 desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.guidApplication = m_guid;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->EnumSessions(
+        &desc, timeOut, EnumSession, this, dwFlags);
+    unsigned char ok = m_hRes >= 0;
+    return ok;
+}
+
 // E:\gamedcs\dxplay.cpp:490
 VA(0x00497500, 0x53)
 unsigned char CDPlay::SendChat(
