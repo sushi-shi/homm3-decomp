@@ -66,6 +66,16 @@ static const long row_start[5][2] = {
 };
 static const long row_size[5] = {5, 5, 5, 5, 2};
 
+static const long const_creature_sources[2][2] = {
+    {45, 109}, {128, 305}
+};
+static const long const_source_sizes[2][2] = {
+    {3, 2}, {1, 1}
+};
+static const long const_creature_offerings[2][2] = {
+    {334, 109}, {417, 305}
+};
+
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
 
 // E:\gamedcs\sacrifice_window.cpp:125
@@ -113,13 +123,6 @@ unsigned char type_army_slot_widget::handle_click(unsigned char down_click, unsi
 // E:\gamedcs\sacrifice_window.cpp:287
 DC_ONLY(0x12419c, 0x51C)
 void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:536
-DC_ONLY(0x124e60, 0x76A)
-void type_sacrifice_window::create_creature_widgets(long* widget_id, int cur_player)
 {
     // @stub
 }
@@ -1840,6 +1843,168 @@ void type_sacrifice_window::create_artifact_widgets(
         "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
     Widgets.push_back(text_widget);
     artifact_widgets.push_back(text_widget);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:536
+// The constructor's adjacent call and the Dreamcast name/local roster fix
+// this builder. Retail proves the two static 3x2/1x1 coordinate grids, all
+// six pointers in each offering record, the two current-creature portraits,
+// help rows 5..12, and every Widgets/creature_widgets insertion.
+VA(0x005610f0, 0xE73)  // ctor caller + dc name/order/locals, dc 0x124e60
+void type_sacrifice_window::create_creature_widgets(
+    long& widget_id, int cur_player)
+{
+    std::string buffer;
+    long count;
+    creature_widgets.reserve(60);
+
+    bitmapBorder* background = new bitmapBorder(
+        0, 0, 600, 593, widget_id++, "AltarMon.pcx", 0x800);
+    background->SetPlayerPaletteColors(cur_player);
+    Widgets.push_back(background);
+    creature_widgets.push_back(background);
+
+    buffer = format_string(
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
+        current_hero->name);
+
+    textWidget* text_widget = new textWidget(
+        28, 21, 256, 18, buffer.c_str(), "smalfont.fnt",
+        font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    creature_name_widget = new textWidget(
+        29, 56, 256, 42, emptyRolloverText, "medfont.fnt",
+        font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(creature_name_widget);
+    creature_widgets.push_back(creature_name_widget);
+
+    text_widget = new textWidget(
+        317, 21, 256, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    text_widget = new textWidget(
+        318, 56, 256, 42,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    iconWidget* new_icon_widgets[7];
+    iconWidget* selection_frames[7];
+    textWidget* new_text_widgets[7];
+    long item_number = 0;
+    long def_index;
+
+    for (def_index = 0; def_index < 2; ++def_index) {
+        count = create_creature_icons(
+            const_creature_sources[def_index][0],
+            const_creature_sources[def_index][1],
+            const_source_sizes[def_index][0],
+            const_source_sizes[def_index][1], item_number, widget_id,
+            new_icon_widgets, selection_frames, new_text_widgets, 1);
+        for (long i = 0; i < count; ++i) {
+            creature_offerings[item_number + i].icon_widget =
+                new_icon_widgets[i];
+            creature_offerings[item_number + i].field_08 =
+                new_text_widgets[i];
+            creature_offerings[item_number + i].field_04 =
+                selection_frames[i];
+        }
+        item_number += count;
+    }
+
+    item_number = 0;
+    for (def_index = 0; def_index < 2; ++def_index) {
+        count = create_creature_icons(
+            const_creature_offerings[def_index][0],
+            const_creature_offerings[def_index][1],
+            const_source_sizes[def_index][0],
+            const_source_sizes[def_index][1], item_number, widget_id,
+            new_icon_widgets, selection_frames, new_text_widgets, 0);
+        for (long i = 0; i < count; ++i) {
+            type_creature_offering& offering =
+                creature_offerings[item_number + i];
+            offering.selection_widget = new_icon_widgets[i];
+            offering.field_14 = new_text_widgets[i];
+            offering.field_10 = selection_frames[i];
+        }
+        item_number += count;
+    }
+
+    current_creature.field_08 = new textWidget(
+        145, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    current_creature.field_08->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].text,
+        0, 1);
+    Widgets.push_back(current_creature.field_08);
+    creature_widgets.push_back(current_creature.field_08);
+
+    current_creature.icon_widget = new type_army_slot_widget(
+        149, 421, 58, 64, -1, widget_id++, "Twcrport.def", 1);
+    current_creature.icon_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].text,
+        0, 1);
+    Widgets.push_back(current_creature.icon_widget);
+    creature_widgets.push_back(current_creature.icon_widget);
+    current_creature.field_04 = 0;
+
+    current_creature.field_14 = new textWidget(
+        391, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    current_creature.field_14->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].text,
+        0, 1);
+    Widgets.push_back(current_creature.field_14);
+    creature_widgets.push_back(current_creature.field_14);
+
+    current_creature.selection_widget = new type_army_slot_widget(
+        395, 421, 58, 64, -2, widget_id++, "TwCrPort.def", 0);
+    current_creature.selection_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].text,
+        0, 1);
+    Widgets.push_back(current_creature.selection_widget);
+    creature_widgets.push_back(current_creature.selection_widget);
+    current_creature.field_10 = 0;
+
+    creature_slider = new slider(
+        230, 479, 138, 16, widget_id++, 1, creature_slider_change,
+        slider::BROWN, 0, 0);
+    creature_slider->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].text, 0, 1);
+    Widgets.push_back(creature_slider);
+    creature_widgets.push_back(creature_slider);
+
+    max_creatures_button = new type_func_button(
+        146, 520, 64, 32, widget_id++, "IrcBtns.def",
+        max_creatures, 0, 1);
+    max_creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].text, 0, 1);
+    Widgets.push_back(max_creatures_button);
+    creature_widgets.push_back(max_creatures_button);
+
+    all_creatures_button = new type_func_button(
+        392, 520, 64, 32, widget_id++, "AltArmy.def",
+        all_creatures, 0, 1);
+    all_creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].text, 0, 1);
+    Widgets.push_back(all_creatures_button);
+    creature_widgets.push_back(all_creatures_button);
+
+    artifacts_button = new type_func_button(
+        515, 421, 54, 32, widget_id++, "AltArt.def",
+        sacrifice_artifacts, 0, 1);
+    artifacts_button->set_help_text(
+        gSacrificeWindowHelp[
+            SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].text,
+        0, 1);
+    Widgets.push_back(artifacts_button);
+    creature_widgets.push_back(artifacts_button);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:699

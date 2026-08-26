@@ -2035,6 +2035,7 @@ sacrifice_window	?convert_with_commas@@YI?AV?$basic_string@DU?$char_traits@D@std
 sacrifice_window	?create_artifact_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x160380
 sacrifice_window	?create_creature_icons@type_sacrifice_window@@AAEJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@E@Z	100.0000	100.0000	100.0000	0x161f70
 sacrifice_window	?create_creature_icons@type_skeleton_window@@AAEXJJJJJJAAJPAPAViconWidget@@1PAPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x166760
+sacrifice_window	?create_creature_widgets@type_sacrifice_window@@AAEXAAJH@Z	100.0000	100.0000	100.0000	0x1610f0
 sacrifice_window	?creature_click@type_sacrifice_window@@QAEXJEE@Z	100.0000	100.0000	100.0000	0x164fe0
 sacrifice_window	?creature_click@type_skeleton_window@@QAEXJJE@Z	100.0000	100.0000	100.0000	0x166490
 sacrifice_window	?creature_slider_change@type_sacrifice_window@@CIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x165380
