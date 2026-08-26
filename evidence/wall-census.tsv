@@ -272,7 +272,6 @@ inliner (predict-inline)	76	94.8605	1481	mapcell	?readMapObjects@NewfullMap@@QAE
 control-flow (why-branch)	76	95.5202	1696	army	?do_attack@army@@QAEEPAV1@H@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	76	89.7235	737	townmgr	?WindowHandler@TTavernWindow@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	75	93.3162	1121	army	?WalkTo@army@@QAEEHE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	75	91.0171	832	tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	73	93.5088	1130	cmbtmgr	?ShootAnimatedMissile@combatManager@@QAEXHHHHHPBMPBQBD@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	73	88.4025	631	hero	?get_description@type_artifact@@QAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	73	81.3696	392	command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline
@@ -309,6 +308,7 @@ inliner (predict-inline)	59	94.4307	1055	resourcemanager	?GetBitmap816@ResourceM
 register-homing (why-reg)	59	90.4916	616	mapcell	?NewfullMapFn_004FD950@NewfullMap@@QAEXPAVTAbstractFile@@H@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	58	91.8870	721	mapcell	?Save@NewfullMap@@QAEHPAVTAbstractFile@@HE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 over-inline
 register-homing (why-reg)	58	88.5116	505	winmgr	?FadeToBlack@heroWindowManager@@QAEXHE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+register-homing (why-reg)	58	93.0819	832	tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	why-reg	spill to dead-parameter slot (B4)
 register-homing (why-reg)	58	88.1358	485	winmgr	?FadeFromBlack@heroWindowManager@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	57	94.6707	1076	hero	?HeroFn_004D8B30@hero@@QAEXPBVHeroExtra@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	57	95.0000	1144	mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
