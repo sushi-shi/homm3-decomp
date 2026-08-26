@@ -697,6 +697,10 @@ void TSellCreatureWindow::SetWidgetDisabled(short id)
 // enable-dim state, the Artifact-Merchant and Freelancer's-Guild tab gates, and
 // the two-column loop over the sell and buy resources (icon, stock, exchange
 // ratio, highlight). The final repaint is bUpdate-gated.
+// Match plateau: 86.1010%; calls are 49/49 and branches are 38/38. The two
+// remaining branch differences are early jle cross-jumps (77 vs 76 blocks);
+// generated AST/flow/register searches found no source-backed improvement.
+// The why-reg volatile proposal is intentionally rejected as a compiler hack.
 VA(0x005ea6e0, 0x862)  // ordermap clean run + arity ret 4, dc 0x188fa4
 void TTradeResourceWindow::Update(unsigned char bUpdate)
 {
@@ -704,12 +708,22 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
 
     if (gSelectedArtifact != -1 && gLeftResource != -1 &&
         gSelectedArtifact != gLeftResource) {
-        int qtyLeft = gRatioInverted ? gGiveQuantity : 1;
-        int qtyRight = gRatioInverted ? 1 : gGiveQuantity;
-        const char* wordLeft = (qtyLeft > 1) ? (*gpGeneralText)[161]
-                                             : (*gpGeneralText)[162];
-        const char* wordRight = (qtyRight > 1) ? (*gpGeneralText)[161]
-                                               : (*gpGeneralText)[162];
+        int qtyLeft, qtyRight;
+        const char* wordLeft;
+        const char* wordRight;
+        if (gRatioInverted) {
+            qtyLeft = gGiveQuantity;
+            qtyRight = 1;
+            wordRight = (*gpGeneralText)[162];
+            wordLeft = (qtyLeft > 1) ? (*gpGeneralText)[161]
+                                     : (*gpGeneralText)[162];
+        } else {
+            qtyRight = gGiveQuantity;
+            wordRight = (qtyRight > 1) ? (*gpGeneralText)[161]
+                                       : (*gpGeneralText)[162];
+            qtyLeft = 1;
+            wordLeft = (*gpGeneralText)[162];
+        }
         sprintf(gText, (*gpGeneralText)[158],
                 qtyLeft, wordLeft, gResourceNames[gLeftResource],
                 qtyRight, wordRight, gResourceNames[gSelectedArtifact]);
@@ -804,8 +818,12 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 4;
                 msg.extraText = gText;
-                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
-                        gRatioInverted ? gRightAmount : gRightAmount * gGiveQuantity);
+                if (gRatioInverted)
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount);
+                else
+                    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                            gRightAmount * gGiveQuantity);
             } else {
                 msg.codeX = widget::WIDGET_SET_ICON_FRAME;
                 msg.codeY = 0xb;
@@ -855,24 +873,26 @@ void TTradeResourceWindow::Update(unsigned char bUpdate)
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 0x4d + i;
                 msg.extraText = gText;
-                if (gSelectedArtifact == -1) {
-                    sprintf(gText, emptyRolloverText);
-                } else if (gSelectedArtifact == i) {
-                    sprintf(gText, (*gpGeneralText)[165]);
-                } else {
-                    float ratio = static_cast<float>(gMarketValues[i])
-                        / (static_cast<float>(gMarketValues[gSelectedArtifact])
-                           * fTradingPostEfficency[gMarketCount]);
-                    if (ratio >= 1.0f) {
-                        long n = static_cast<long>(ratio + 0.5);
-                        if (n == 1)
-                            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
-                        else
-                            sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), n);
+                if (gSelectedArtifact != -1) {
+                    if (gSelectedArtifact == i) {
+                        sprintf(gText, (*gpGeneralText)[165]);
                     } else {
-                        long n = static_cast<long>(1.0f / ratio + 0.5);
-                        sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                        float ratio = static_cast<float>(gMarketValues[i])
+                            / (static_cast<float>(gMarketValues[gSelectedArtifact])
+                               * fTradingPostEfficency[gMarketCount]);
+                        if (ratio >= 1.0f) {
+                            long n = static_cast<long>(ratio + 0.5);
+                            if (n != 1)
+                                sprintf(gText, DATA_COMPGEN(0x0068c5dc, inverseRatioFormat, "1/%d"), n);
+                            else
+                                sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                        } else {
+                            long n = static_cast<long>(1.0f / ratio + 0.5);
+                            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), n);
+                        }
                     }
+                } else {
+                    sprintf(gText, emptyRolloverText);
                 }
                 BroadcastMessage(&msg);
                 msg.codeX = (gLeftResource == i) ? widget::WIDGET_SET_STATUS

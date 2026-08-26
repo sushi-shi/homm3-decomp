@@ -99,7 +99,6 @@ unclaimed (no source binding)	391	0.0000	391	ai_player	type_AI_player_buy_mage_g
 inliner (predict-inline)	384	83.5000	2328	advmgr	?ProcessHover@advManager@@QAEHHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 control-flow (why-branch)	379	81.1528	2009	tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	372	0.0000	372	ai_player	type_undead_king_cloak_artifact_get_value	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
-control-flow (why-branch)	366	82.9430	2146	tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	350	88.5460	3056	advmgr	?DoAdvCommand@advManager@@QAEPAVNewmapCell@@PAUtype_point@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	333	82.0995	1860	tradpost	?Update@TGiveResourceWindow@@QAEXE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
 inliner (predict-inline)	323	70.5441	1096	resourcemanager	@game_sprite_1599e0@12	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 3 over-inline (30 name-unresolvable pair(s) discounted)
@@ -108,6 +107,7 @@ unclaimed (no source binding)	314	0.0000	314	ai_player	type_statue_of_legion_art
 unclaimed (no source binding)	312	0.0000	312	singleselectionwindow	TSingleSelectionWindow_ExitDialog	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 inliner (predict-inline)	305	83.3598	1834	combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 4 over-inline (3 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	304	87.5901	2446	advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	why-reg	spill to dead-parameter slot (B4)
+control-flow (why-branch)	298	86.1010	2146	tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 unclaimed (no source binding)	298	0.0000	298	events	advManager_monsters_give_reward	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	295	80.5129	1512	artifact	?InitializeArtifactTraitsTable@@YIEXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	287	92.4127	3778	game	?Load@game@@QAEHPAVTAbstractFile@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 3 under-inline, 2 over-inline (23 name-unresolvable pair(s) discounted)
