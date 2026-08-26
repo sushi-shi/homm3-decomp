@@ -2607,7 +2607,7 @@ spells	?LoadSpellEffect@combatManager@@QAEPAVCSprite@@H@Z	100.0000	100.0000	100.
 spells	?MirrorImage@combatManager@@QAEXHH@Z	82.3404	82.3404	82.3404	0x1a6c70
 spells	?ModifySpellDamage@combatManager@@QAEJJHPBVhero@@0PBVarmy@@E@Z	78.8954	78.8954	78.8954	0x1a78e0
 spells	?ModifySpellDamageForSpells@combatManager@@QAEJJHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x1a7bb0
-spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.2924	97.2924	97.2924	0x1a5260
+spells	?ResetBoltAngle@combatManager@@QAEXPAUSBolt@@@Z	97.3158	97.3158	97.3158	0x1a5260
 spells	?Resurrect@combatManager@@QAEXPAVarmy@@JE@Z	90.5846	90.5846	90.5846	0x1a7560
 spells	?SetMassSpellInfluence@combatManager@@QAEXPBVhero@@HJJJJ@Z	100.0000	100.0000	100.0000	0x1a66d0
 spells	?ShowMassSpell@combatManager@@QAEXPAY0BE@$$CBEHE@Z	96.3708	96.3708	96.3708	0x1a67c0
