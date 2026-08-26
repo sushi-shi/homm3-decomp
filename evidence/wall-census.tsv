@@ -470,7 +470,6 @@ register-homing (why-reg)	14	96.2453	381	army	?initialize@army@@QAEXHJPBVhero@@J
 register-homing (why-reg)	14	94.2468	248	hero	?Fly@hero@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 control-flow (why-branch)	14	96.2585	378	mapcell	??4TTimedEvent@@QAEAAV0@ABV0@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	14	94.5177	251	ai	?SOD_choose_faerie_dragon_spell@combatManager@@AAE_NPBVarmy@@AAJAAUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	14	98.5816	954	tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	13	97.7688	602	townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	13	96.3475	366	ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	13	99.5510	2969	army	?SetSpellInfluence@army@@QAEXHHHPBVhero@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (13 name-unresolvable pair(s) discounted)
