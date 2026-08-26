@@ -11,6 +11,7 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "resourcemanager.h"
 #include "sample.h"
 #include "slider.h"
 #include "spellbookwindow.h"
@@ -19,7 +20,7 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-static const int giDeathCreature[145] = {
+static const TCreatureType giDeathCreature[145] = {
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
@@ -390,13 +391,6 @@ void type_sacrifice_window::creature_click(long slot, unsigned char right_click,
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1796
-DC_ONLY(0x127390, 0x74)
-void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:1815
 // RETAIL_LOCATED(0x005653b0, 0x37): not reconstructed. One carve row ahead of
 // handle_widget_hover in the Dreamcast roster's own order, and the body is
 // that shape: a byte test at +0x75 selecting between two same-class helpers
@@ -469,13 +463,6 @@ void type_skeleton_window::unselect()
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2157
-DC_ONLY(0x127acc, 0x9C)
-void type_skeleton_window::update_buttons()
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2172
 DC_ONLY(0x127e50, 0x1F6)
 void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click)
 {
@@ -511,33 +498,6 @@ void type_skeleton_window::create_creature_icons(long icon_x, long icon_y, long 
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2385
-DC_ONLY(0x1282b0, 0x5E)
-void move_all_armies(armyGroup* source, armyGroup* dest)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2407
-DC_ONLY(0x128310, 0x9A)
-int type_skeleton_window::all_creatures(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2441
-DC_ONLY(0x1283ac, 0xBC)
-int type_skeleton_window::exit_click(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\sacrifice_window.cpp:2471
-DC_ONLY(0x128468, 0x134)
-int type_skeleton_window::sacrifice(message* msg)
-{
-    // @stub
-}
-
 // E:\gamedcs\Widget.h:225
 DC_ONLY(0x12859c, 0xC)
 void widget::clear_hover_widget()
@@ -2742,19 +2702,6 @@ int type_sacrifice_window::all_creatures(message& msg)
     return 0;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1796
-// Inlined into the max-creatures button callback below. Dreamcast records
-// this as a private static slider callback; Complete retains only its two
-// member calls at the constant-state caller.
-void type_sacrifice_window::creature_slider_change(
-    int state, heroWindow* parent_window)
-{
-    type_sacrifice_window* window =
-        static_cast<type_sacrifice_window*>(parent_window);
-    window->set_creature_sacrifice(window->current_creature.group, state);
-    window->update_experience();
-}
-
 // E:\gamedcs\sacrifice_window.cpp:1663
 // The constructor's callback pointer at 0x561962 independently proves this
 // previously missing retail boundary. Its 0x88-byte body ends in `ret` and
@@ -2776,8 +2723,6 @@ int type_sacrifice_window::max_creatures(message& msg)
         int maximum = window->creature_slider->get_maximum() - 1;
         window->creature_slider->SetState(maximum);
         creature_slider_change(maximum, window);
-        window->DrawWindow(
-            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
@@ -2879,6 +2824,18 @@ void type_sacrifice_window::creature_click(
         max_creatures_button->enable(maximum > 0);
         DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1796
+VA(0x00565380, 0x2e)  // callback address-take + dc name/signature/order
+void type_sacrifice_window::creature_slider_change(
+    int state, heroWindow* parent_window)
+{
+    type_sacrifice_window* window =
+        static_cast<type_sacrifice_window*>(parent_window);
+    window->set_creature_sacrifice(window->current_creature.group, state);
+    window->update_experience();
+    window->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
@@ -3000,6 +2957,24 @@ type_skeleton_window::~type_skeleton_window()
         death_samples[i]->Dispose();
     }
     delete_widgets();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2157
+// All Complete callers inline this source helper. The DC call edges and the
+// repeated retail expansion prove the transformed-army scan and the two
+// terminal button states.
+inline void type_skeleton_window::update_buttons()
+{
+    long i;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        long type = armies[1]->armyTypes[i];
+        if (type == CREATURE_NONE)
+            continue;
+        if (type != giDeathCreature[type])
+            break;
+    }
+    sacrifice_button->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+    all_creatures_button->enable(armies[0]->HasCreatures());
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2172
@@ -3205,6 +3180,123 @@ void type_skeleton_window::create_creature_icons(
         icon_y += 98;
     }
     transformer_grid_inline_surface();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2385
+// DC names this helper and records both transformer callbacks as callers.
+// Complete expands both calls: occupied source slots move into the same
+// destination slot when free, otherwise armyGroup::Add chooses a slot.
+inline void move_all_armies(armyGroup* source, armyGroup* dest)
+{
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (source->armyTypes[i] == CREATURE_NONE)
+            continue;
+        long dest_index = i;
+        if (dest->armyTypes[i] != CREATURE_NONE)
+            dest_index = -1;
+        dest->Add(source->armyTypes[i], source->numTroops[i], dest_index);
+        source->Dismiss(i);
+    }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2407
+// The AltArmy callback address in the constructor and DC's source/call graph
+// fix the identity. Complete inlines move_all_armies and update_buttons.
+VA(0x005669f0, 0x137)  // ctor callback + dc name/order/callees, dc 0x128310
+int type_skeleton_window::all_creatures(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        move_all_armies(window->armies[0], window->armies[1]);
+        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            window->update(0, i);
+            window->update(1, i);
+        }
+        window->update_buttons();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2441
+// The iCancel callback address, the standard dialog-close tail and the DC
+// move_all_armies edge identify this row and its reverse move direction.
+VA(0x00566b30, 0xE4)  // ctor callback + dc name/order/callees, dc 0x1283ac
+int type_skeleton_window::exit_click(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_EXIT].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        move_all_armies(window->armies[1], window->armies[0]);
+        msg.id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = 0;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2471
+// The AltSacr callback and DC xrefs prove the sample load/vector insertion,
+// sound-manager warmup, transformed-type store, update and button refresh.
+VA(0x00566c20, 0x15F)  // ctor callback + dc name/order/callees, dc 0x128468
+int type_skeleton_window::sacrifice(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            TCreatureType type = window->armies[1]->armyTypes[i];
+            if (type == CREATURE_NONE || type == giDeathCreature[type])
+                continue;
+
+            sprintf(gText,
+                    DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
+                                 "%skill.82M"),
+                    akCreatureTypeTraits[type].cSamplePrefix);
+            sample* new_sample = ResourceManager::GetSample(gText);
+            window->death_samples.push_back(new_sample);
+            gpSoundManager->MemorySample(new_sample);
+            window->armies[1]->armyTypes[i] = giDeathCreature[type];
+            window->update(1, i);
+        }
+        window->update_buttons();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
 }
 
 #if 0  // @carcass: final duplicate STLport helper rows
