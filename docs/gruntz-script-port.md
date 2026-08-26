@@ -5505,6 +5505,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `recruitUnit::Update` from 90.8376% to 90.8325%; both historical peaks remain
   recorded rather than being presented as semantic regressions.
 
+- **2026-08-26 — the new-map string reader and header-normalization helper
+  are byte-exact.** Retail 0x4c6010 uses the map format's signed dword string
+  length (rather than the saved-game helper's short), accepts only positive
+  lengths below 0xffff, and otherwise erases the destination string. The
+  211-byte helper at 0x4c4e30 maps the header's available-hero bits into the
+  live availability row, applies explicit player masks, and reserves the
+  artifact named by an artifact-victory condition. Its comparison/copy shape
+  independently proves that `type_map_hero_info` ends in a `bitset<8>`: a
+  default bitset followed by `set()` becomes retail's direct 0xff local, and
+  the mapped value copies as one dword. Both functions match every retail
+  instruction and relocation; no external implementation body was used.
+
 - **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
   fixes the prefix order after header restoration: clear recorded events,
   publish the loaded square map extent, close the path search array, restore

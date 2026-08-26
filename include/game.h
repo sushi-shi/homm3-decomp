@@ -730,7 +730,14 @@ struct type_map_hero_identity {
 SIZE(type_map_hero_identity, 0x14);
 
 struct type_map_hero_info : public type_map_hero_identity {
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+    // The map header stores one eight-player availability mask. The new-map
+    // normalization body compares it with bitset<8>(0xff) and copies the
+    // single backing dword directly into game::heroPoolMap.
+    std::bitset<8> field_14;
+#else
     int field_14;
+#endif
 };
 SIZE(type_map_hero_info, 0x18);
 
@@ -2139,6 +2146,7 @@ public:
     int setup_first_player_position(int firstHuman);
     void randomize_university(NewmapCell* cell);
     int LoadMap(TAbstractFile* mapFile);
+    void apply_map_header_availability();
     void RandomizeHolyGrail();
     void InitRandomArtifacts();
     void match_underground_gates();
