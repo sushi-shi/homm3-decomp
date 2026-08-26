@@ -1319,7 +1319,6 @@ SIZE(SavedGameHeader, 0x5a4);
 class Sign {
 public:
     unsigned char field_00;
-    char pad_01[3];
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > text;
 
     Sign() : field_00(0) {}
@@ -1683,7 +1682,6 @@ public:
     struct TRumour {
         std::basic_string<char, std::char_traits<char>, std::allocator<char> > text;
         unsigned char field_10;
-        char pad_11[3];
     };
 
 // +0x90, one byte: a shown-once latch on the "the Grail cannot be built
