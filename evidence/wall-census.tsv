@@ -460,7 +460,6 @@ register-homing (why-reg)	16	96.5625	460	armygrp	?GetArmyMorale@armyGroup@@QAEHH
 inliner (predict-inline)	16	92.6829	215	advmgr	?BVMessage@advManager@@QAEXPBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 control-flow (why-branch)	15	96.6429	461	advmgr	?garrison_quick_view@advManager@@QAEXHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	15	88.4426	132	slider	?SetKnob@slider@@IAEXH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
-register-homing (why-reg)	15	91.7097	183	dxplay	?RegisterApp@CDPlayLobby@@UAEEPAD00U_GUID@@0@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	15	96.7143	461	mapcell	??4TScenarioTown@@QAEAAU0@ABU0@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	15	90.7246	163	mapcell	?erase@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEPAVMonsterData@@PAV3@0@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	15	97.0930	520	remote	?CheckForWarning@CTurnDuration@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
