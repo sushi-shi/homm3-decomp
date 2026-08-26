@@ -2053,6 +2053,7 @@ sacrifice_window	?set_artifact_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0
 sacrifice_window	?set_creature_mode@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x163150
 sacrifice_window	?set_creature_sacrifice@type_sacrifice_window@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x164c00
 sacrifice_window	?set_visible@widget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1629b0
+sacrifice_window	?update@type_skeleton_window@@AAEXJJ@Z	100.0000	100.0000	100.0000	0x166030
 sacrifice_window	?update_all_slots@type_sacrifice_window@@QAEXXZ	100.0000	100.0000	100.0000	0x1629e0
 sacrifice_window	?update_artifact_offering@type_sacrifice_window@@QAEXJ@Z	100.0000	100.0000	100.0000	0x163a40
 sacrifice_window	?update_artifact_widget@@YIXPAViconWidget@@Utype_artifact@@@Z	100.0000	100.0000	100.0000	0x1639e0
