@@ -153,7 +153,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN",
                  "BITSET_TIDY", "BITSET_CTOR",
-                 "BITSET_REFERENCE_ASSIGN", "BITSET_FLIP",
+                 "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
+                 "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "STD_CONSTRUCT", "STD_COPY",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
@@ -615,6 +616,8 @@ def _demangle_key(mangled: str):
     if bitset_width is not None:
         if mangled.startswith("??0?$bitset@"):
             return f"bitset{bitset_width}@bitset_ctor"
+        if mangled.startswith("??A?$bitset@"):
+            return f"bitset{bitset_width}@bitset_subscript"
         if mangled.startswith("??4reference@?$bitset@"):
             return f"bitset{bitset_width}@bitset_reference_assign"
         for member in ("_Tidy", "flip", "count", "any", "set", "test"):
@@ -870,6 +873,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_copy_assign$" in r["name"]
                                or "$bitset_tidy$" in r["name"]
                                or "$bitset_ctor$" in r["name"]
+                               or "$bitset_subscript$" in r["name"]
                                or "$bitset_reference_assign$" in r["name"]
                                or "$bitset_flip$" in r["name"]
                                or "$bitset_count$" in r["name"]
@@ -951,8 +955,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             claim_keys.setdefault(f"{owner}@bitset_tidy", []).append(row)
             continue
         bitset_member = next((member for member in (
-            "ctor", "reference_assign", "flip", "count", "any", "set",
-            "test") if f"$bitset_{member}$" in row["name"]), None)
+            "ctor", "subscript", "reference_assign", "flip", "count",
+            "any", "set", "test")
+            if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
@@ -1419,6 +1424,8 @@ def selftest() -> list[str]:
         failures.append("MSVC bitset<10> _Tidy key regressed")
     bitset_cases = {
         "??0?$bitset@$0BM@@std@@QAE@K@Z": "bitset28@bitset_ctor",
+        "??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z":
+            "bitset145@bitset_subscript",
         "??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z":
             "bitset5@bitset_reference_assign",
         "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":

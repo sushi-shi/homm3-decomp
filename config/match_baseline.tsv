@@ -1097,6 +1097,7 @@ game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ
 game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780
 game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf6f0
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0
+game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230
 game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
@@ -1107,6 +1108,7 @@ game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0
 game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
+game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?CancelComputerScreen@game@@QAEXXZ	100.0000	100.0000	100.0000	0xca530
 game	?CheckForTimeEvent@game@@QAEXXZ	100.0000	100.0000	100.0000	0xcd910
@@ -1252,6 +1254,7 @@ game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9
 game	?any@?$bitset@$0BM@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xd1810
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0
 game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0
+game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010
 game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0
 game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	100.0000	100.0000	100.0000	0xd16e0
 game	?erase@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEPAVSign@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0b10
