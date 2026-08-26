@@ -231,7 +231,7 @@ ai_player	?check_towns@type_town_threat_checker@@QAEXXZ	100.0000	100.0000	100.00
 ai_player	?choose_weakest_army@type_AI_creature_swapper@@IAEJ_N0@Z	88.3357	88.3357	88.3357	0x2c690
 ai_player	?clear_marks@type_town_threat_checker@@UAEXXZ	100.0000	100.0000	100.0000	0x28260
 ai_player	?do_best_purchase@type_AI_creature_purchaser@@IAEJ_N@Z	97.2740	97.2740	97.2740	0x2d420
-ai_player	?do_best_swap@type_AI_creature_swapper@@IAEJ_N@Z	99.9557	99.9557	99.9557	0x2c280
+ai_player	?do_best_swap@type_AI_creature_swapper@@IAEJ_N@Z	100.0000	100.0000	100.0000	0x2c280
 ai_player	?do_purchase@type_AI_creature_purchaser@@QAEXPAVarmyGroup@@F0PAJEE@Z	97.5333	97.5333	97.5333	0x2d690
 ai_player	?do_resource_trade@type_AI_player@@QAEXPAH@Z	100.0000	100.0000	100.0000	0x2ac20
 ai_player	?dump_extra_creature@type_AI_creature_swapper@@IAEXXZ	100.0000	100.0000	100.0000	0x2c5b0
