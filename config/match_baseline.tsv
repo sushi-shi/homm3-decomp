@@ -1177,6 +1177,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
+game	?Load@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	92.5118	92.5118	92.5118	0xc5630
 game	?Load@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc750
 game	?Load@game@@QAEHPAVTAbstractFile@@@Z	92.4127	92.4127	92.4127	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00

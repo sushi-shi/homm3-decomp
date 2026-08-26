@@ -338,6 +338,10 @@ const int HERO_PRE25_SECOND_REMAP = 0x9c;
 const int MAP_VERSION_OLD_CAMPAIGN_HERO_IDS = 14;
 const int SAVE_VERSION_LOSS_HERO_COORDINATES = 16;
 const int SAVE_VERSION_COMPLETE_HERO_ROSTER = 25;
+const int SAVE_VERSION_MAX_HERO_LEVEL = 27;
+const int SAVE_VERSION_WIDE_ALIGNMENTS = 28;
+const int SAVE_VERSION_CUSTOM_HERO_SETUPS = 30;
+const int SAVE_VERSION_CUSTOM_HERO_AVAILABILITY = 31;
 
 // Four resource/game-format contexts, each carrying the feature bits exposed
 // by that install.  The player-slot reader tests bit one before admitting the
@@ -7571,6 +7575,218 @@ int NewSMapHeader::Save(TAbstractFile* outfile)
         }
         outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
     }
+
+    return 0;
+}
+
+static __forceinline void set_saved_header_availability(
+    std::bitset<8>& availability, unsigned int player, bool available)
+{
+    availability[player] = available;
+}
+
+// Saved headers share the scenario header's scalar layout but add four
+// versioned migrations: max hero level, widened alignment masks, custom hero
+// records, and per-player availability masks.  The two old campaign hero ids
+// use the same pre-25 remap as the other saved-game readers.
+//
+// Residual (92.51176%, 2026-08-26): the branch/return census is exact and the
+// ordinary header path is structurally aligned.  The remaining displacement
+// begins in the custom-hero availability loop: retail keeps bitset<8>::_Xran
+// out of line and selects two branch-local availability temporaries before the
+// shared map insert, while this compile expands _Xran and passes one local.
+// Measured and rejected here: byte-array indexing of the one-byte mask
+// (88.70), branch-local duplicate inserts (74.89), a conditional bitset
+// argument (84.30), and explicit bitset construction in the old arm (83.15).
+VA(0x004c5630, 0x7CD)  // DC Load identity + saved-header callers + helper edges
+int NewSMapHeader::Load(TAbstractFile* infile, int saveVersion)
+{
+    char enum_buffer;
+    int count;
+    int i;
+    unsigned int availabilityIndex;
+    unsigned char uchar_buffer;
+    char char_buffer;
+    char bool_buffer;
+    int x;
+
+    if (infile->Read(&version, sizeof(version)) < sizeof(version))
+        return -1;
+
+    if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+        < sizeof(bool_buffer))
+        return -1;
+    isPlayable = bool_buffer != 0;
+
+    if (infile->Read(&Size, sizeof(Size)) < sizeof(Size))
+        return -1;
+
+    if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+        < sizeof(bool_buffer))
+        return -1;
+    HasTwoLayers = bool_buffer != 0;
+
+    if (loadString(infile, &mapName) < 0)
+        return -1;
+    if (loadString(infile, &mapDescription) < 0)
+        return -1;
+
+    if (infile->Read(&uchar_buffer, sizeof(uchar_buffer))
+        < sizeof(uchar_buffer))
+        return -1;
+    difficulty = uchar_buffer;
+
+    if (saveVersion >= SAVE_VERSION_MAX_HERO_LEVEL) {
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        maxHeroLevel = char_buffer;
+    } else {
+        maxHeroLevel = 0;
+    }
+
+    numPlayers = 0;
+    minNumHumanPlayers = 0;
+    maxNumHumanPlayers = 0;
+
+    TPlayerSlotAttributes* player = playerSlotAttributes;
+    for (i = 0; i < 8; ++i, ++player) {
+        if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+        player->CanBeHuman = bool_buffer != 0;
+
+        if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+        player->CanBeComputer = bool_buffer != 0;
+
+        if (infile->Read(&enum_buffer, sizeof(enum_buffer))
+            < sizeof(enum_buffer))
+            return -1;
+        player->AIStrategy = enum_buffer;
+
+        if (player->CanBeHuman && !player->CanBeComputer)
+            ++minNumHumanPlayers;
+        if (player->CanBeHuman)
+            ++maxNumHumanPlayers;
+        if (player->CanBeComputer || player->CanBeHuman)
+            ++numPlayers;
+
+        if (saveVersion < SAVE_VERSION_WIDE_ALIGNMENTS) {
+            infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+            player->legalAlignments = uchar_buffer;
+        } else {
+            unsigned short short_buffer;
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            player->legalAlignments = short_buffer;
+        }
+
+        if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+        player->HasRandomAlignment = bool_buffer != 0;
+
+        if (infile->Read(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+        player->GenerateHero = bool_buffer != 0;
+
+        if (player->GenerateHero) {
+            if (infile->Read(&uchar_buffer, sizeof(uchar_buffer))
+                < sizeof(uchar_buffer))
+                return -1;
+            player->CastleLoc.x = uchar_buffer;
+            if (infile->Read(&uchar_buffer, sizeof(uchar_buffer))
+                < sizeof(uchar_buffer))
+                return -1;
+            player->CastleLoc.y = uchar_buffer;
+            if (infile->Read(&uchar_buffer, sizeof(uchar_buffer))
+                < sizeof(uchar_buffer))
+                return -1;
+            player->CastleLoc.z = uchar_buffer;
+        }
+
+        player->nonRandomHeroId =
+            load_saved_hero_id(infile, saveVersion);
+        if (player->nonRandomHeroId != -1) {
+            std::string strTemp;
+            player->nonRandomHeroCustomPortrait =
+                load_saved_hero_id(infile, saveVersion);
+            loadString(infile, &strTemp);
+            strcpy(player->nonRandomHeroCustomName, strTemp.c_str());
+        } else {
+            player->nonRandomHeroCustomPortrait = -1;
+            player->nonRandomHeroCustomName[0] = 0;
+        }
+    }
+
+    if (!minNumHumanPlayers)
+        minNumHumanPlayers = 1;
+
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    victoryCondition.Type = x;
+    victoryCondition.GameWon = 0;
+    victoryCondition.playerWinner = -1;
+    if (static_cast<unsigned char>(x) != SAVED_HERO_NONE)
+        loadVictoryCondition(x, infile, saveVersion);
+
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    lossCondition.Type = x;
+    lossCondition.GameLost = 0;
+    lossCondition.playerLoser = -1;
+    if (static_cast<unsigned char>(x) != SAVED_HERO_NONE)
+        loadLossCondition(x, infile, saveVersion);
+
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    numTeams = x;
+    if (numTeams) {
+        if (infile->Read(teamInfo, sizeof(teamInfo)) < sizeof(teamInfo))
+            return -1;
+    } else {
+        for (i = 0; i < 8; ++i)
+            teamInfo[i] = i;
+    }
+
+    heroPlayerSetups.clear();
+    if (saveVersion < SAVE_VERSION_CUSTOM_HERO_SETUPS)
+        return 0;
+
+    infile->Read(&x, sizeof(unsigned char));
+    x &= 0xff;
+    if (static_cast<unsigned int>(x) <= 0)
+        return 0;
+    count = x;
+
+    do {
+        infile->Read(&x, sizeof(unsigned char));
+        int heroKey = x & 0xff;
+
+        int heroId;
+        infile->Read(&heroId, sizeof(unsigned char));
+        heroId &= 0xff;
+        if (heroId == SAVED_HERO_NONE)
+            heroId = -1;
+
+        std::string strTemp = ReadLengthPrefixedString(infile);
+        std::bitset<8> availability;
+        if (saveVersion >= SAVE_VERSION_CUSTOM_HERO_AVAILABILITY) {
+            infile->Read(&uchar_buffer, sizeof(uchar_buffer));
+            for (availabilityIndex = 0;
+                 availabilityIndex < 8; ++availabilityIndex) {
+                set_saved_header_availability(
+                    availability, availabilityIndex,
+                    (uchar_buffer & (1 << (availabilityIndex & 7))) != 0);
+            }
+        } else {
+            availability.set();
+        }
+
+        heroPlayerSetups.insert(
+            std::pair<const int, type_map_hero_info>(
+                heroKey, type_map_hero_info(heroId, strTemp, availability)));
+    } while (--count != 0);
 
     return 0;
 }
