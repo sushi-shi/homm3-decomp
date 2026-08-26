@@ -1101,6 +1101,7 @@ game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
+game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0
 game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
@@ -1218,18 +1219,22 @@ game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	96.9556	96.9556	96.9556	0xc6c50
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840
-game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	91.8538	91.8538	91.8538	0xd3a10
+game	?_Construct@std@@YIXPAUTRumour@game@@ABU23@@Z	100.0000	100.0000	100.0000	0xd3a10
 game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.0000	0xd3d30
-game	?_Construct@std@@YIXPAVSign@@ABV2@@Z	93.1761	93.1761	93.1761	0xd3880
+game	?_Construct@std@@YIXPAVCObjectType@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3b70
+game	?_Construct@std@@YIXPAVSign@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3880
 game	?_Construct@std@@YIXPAVboat@@ABV2@@Z	100.0000	100.0000	100.0000	0xd39f0
 game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	59.8287	59.8287	59.8287	0xd3630
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0
 game	?_Ucopy@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEPAVboat@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd2210
+game	?_Ucopy@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEPAVgenerator@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd4f80
 game	?_Ucopy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEPAVtown@@PBV3@0PAV3@@Z	100.0000	100.0000	100.0000	0xd21a0
 game	?_Ufill@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2160
+game	?_Ufill@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@IAEXPAUtype_university@@IABU3@@Z	100.0000	100.0000	100.0000	0xd4a60
 game	?_Ufill@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd2250
+game	?_Ufill@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@IAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0xd4fc0
 game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd21e0
 # DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
 # reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
@@ -1243,8 +1248,8 @@ game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0
 game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0
-game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	49.8036	49.8036	49.8036	0xd16e0
-game	?erase@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEPAVSign@@PAV3@0@Z	46.5161	46.5161	46.5161	0xd0b10
+game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	100.0000	100.0000	100.0000	0xd16e0
+game	?erase@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEPAVSign@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0b10
 game	?erase@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEPAVboat@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd1360
 game	?erase@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QAEPAVmine@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0e10
 game	?erase@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEPAVtown@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0750
@@ -1259,10 +1264,10 @@ game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.410
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	?hasGivenArtifact@playerData@@QAE_NH@Z	100.0000	100.0000	100.0000	0xbacb0
 game	?insert@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd00e0
-game	?insert@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEXPAUTRumour@game@@IABU34@@Z	80.4172	80.4172	80.4172	0xd13e0
+game	?insert@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEXPAUTRumour@game@@IABU34@@Z	100.0000	100.0000	100.0000	0xd13e0
 game	?insert@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEXPAUtype_creature_bank@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2290
-game	?insert@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXPAUtype_university@@IABU3@@Z	31.1327	31.1327	31.1327	0xd1920
-game	?insert@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEXPAVSign@@IABV3@@Z	78.8867	78.8867	78.8867	0xd07f0
+game	?insert@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXPAVCObjectType@@IABV3@@Z	100.0000	100.0000	100.0000	0xd1920
+game	?insert@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEXPAVSign@@IABV3@@Z	100.0000	100.0000	100.0000	0xd07f0
 game	?insert@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEPAVboat@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0xd0e60
 game	?insert@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd1070
 game	?insert@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QAEXPAVmine@@IABV3@@Z	100.0000	100.0000	100.0000	0xd0ba0
@@ -1275,6 +1280,8 @@ game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0
 game	?replace_recruit@game@@QAEXHJ@Z	100.0000	100.0000	100.0000	0xc86a0
 game	?resize@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXIABUTBlackMarket@@@Z	100.0000	100.0000	100.0000	0xcf0f0
+game	?resize@?$vector@Utype_point@@V?$allocator@Utype_point@@@std@@@std@@QAEXIABUtype_point@@@Z	100.0000	100.0000	100.0000	0xd4aa0
+game	?resize@?$vector@Utype_university@@V?$allocator@Utype_university@@@std@@@std@@QAEXIABUtype_university@@@Z	100.0000	100.0000	100.0000	0xd4800
 game	?resize@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXIABVgenerator@@@Z	100.0000	100.0000	100.0000	0xd4500
 game	?resize@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAEXIABVtown@@@Z	100.0000	100.0000	100.0000	0xcf410
 game	?save@SGameSetupOptions@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbe140
@@ -1285,6 +1292,7 @@ game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	100.0000	100.0000	100.0000	0xc2330
 game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc23c0
 game	?setup_shipyards@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbcb30
 game	?size@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QBEIXZ	99.9286	99.9286	99.9286	0xcf750
+game	?size@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xd47d0
 game	?size@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf730
 game	?size@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf6c0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
@@ -1651,7 +1659,7 @@ mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	96.5000	96.5000	96.5000	0x1093f0
 mapcell	?erase@?$vector@UHeroPlaceholderData@@V?$allocator@UHeroPlaceholderData@@@std@@@std@@QAEPAUHeroPlaceholderData@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1086d0
 mapcell	?erase@?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAEPAUTScenarioTown@@PAU3@0@Z	95.0364	95.0364	95.0364	0x108730
 mapcell	?erase@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEPAVBlackBoxData@@PAV3@0@Z	98.5776	98.5776	98.5776	0x107480
-mapcell	?erase@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEPAVCObjectType@@PAV3@0@Z	91.1860	91.1860	91.1860	0x1068a0
+mapcell	?erase@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEPAVCObjectType@@PAV3@0@Z	91.4070	91.4070	91.4070	0x1068a0
 mapcell	?erase@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEPAVMonsterData@@PAV3@0@Z	90.7246	90.7246	90.7246	0x1070a0
 mapcell	?erase@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std@@@std@@QAEPAVTQuestGuard@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107dd0
 mapcell	?erase@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEPAVTSeerHut@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107840

@@ -262,20 +262,15 @@ public:
     // no serializer in this compiland reads or writes it, readObjectType
     // included.
     std::bitset<10> mask_34;
-    // loadObjectType stores the serialized type as a FULL DWORD - the
-    // stream carries two bytes and retail widens them into all four of
-    // +0x38..+0x3b. Overlaid rather than cast, exactly as NewmapCell's own
-    // type field is: a cast here would be the tree's first cast into an
-    // enum domain.
-    //
-    // GATED to the one view that deserializes the record. Unconditional,
-    // the extra declarator moved events.obj's monsters_sell_out 100.0 ->
-    // 99.95 through the include-set sensitivity class (measured 2026-08-20)
-    // with no semantic change anywhere; the layout is identical either way.
+    // loadObjectType stores the serialized type as a full dword. Keep one
+    // instance declarator here: VC6's generated union copy copies every
+    // declarator, whereas retail copies +0x38 exactly once. The unused
+    // static spelling preserves this header's established VC6 include-set
+    // sensitivity without adding a second field to generated copies.
     union {
         TAdventureObjectType objectType;
-        unsigned long objectTypeValue;
     };
+    static unsigned long objectTypeValue;
     int extra;
     unsigned char suppressDraw;
     // +0x41 remains implicit alignment, but retail's generated assignment
