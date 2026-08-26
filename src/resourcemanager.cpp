@@ -726,16 +726,19 @@ VA_COMPGEN(0x0055a7a0, 0x21, SCALAR_DELETING_DTOR,
 VA_COMPGEN(0x0055a7d0, 0x21, SCALAR_DELETING_DTOR,
            t_lod_file_adapter)
 
+static inline FILE* OpenResourcePath(const char* name)
+{
+    return fopen((gResourcePath + name).c_str(), "rb");
+}
+
 // Dreamcast fixes the public name/signature and the two Bitmap816 constructor
 // forms. Retail supplies the Complete-only cache head, ordinary-file probe,
 // active-LOD fallback walk, 12-byte bitmap header, packed 24-bit palette and
-// six-mask conversion tuple. WALL (94.4307%): the ordinary path has retail's
-// distinct return and the archive/fallback path has the complete cleanup and
-// insertion behavior. The remaining 32-vs-34-block difference is the known
-// positional string boundary: retail inlines c_str's null test but calls
-// _Tidy(true), while depth 0 calls both access and destructor and depth 1
-// inlines both. why-branch found both archive loops flat or worse, why-reg's
-// sole legal proposal did not compile, and RTM C2 emits the SP3 object exactly.
+// six-mask conversion tuple. Residual (97.6325%): OpenResourcePath closes the
+// positional string boundary without a site pragma; both sides now have 34
+// blocks and the same 20-branch sequence. The remaining early-cache insertion
+// and archive-local coloring differ. Replacing the explicit public-map wrapper
+// with AddToCache or the natural insert expression regresses to 90.14/89.45.
 VA(0x0055a800, 0x41F)  // bitmapBorder::SetImage loader; dc 0x121ac8
 Bitmap816* ResourceManager::GetBitmap816(const char* name)
 {
@@ -754,9 +757,7 @@ Bitmap816* ResourceManager::GetBitmap816(const char* name)
         }
     }
 
-#pragma inline_depth(0)
-    FILE* file = fopen((gResourcePath + name).c_str(), "rb");
-#pragma inline_depth()
+    FILE* file = OpenResourcePath(name);
 
     Bitmap816* result;
     if (file) {
@@ -1000,7 +1001,8 @@ Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
     return loaded;
 }
 
-// WALL (95.6920%): both resource paths read the exact 24-byte header and
+// WALL (95.6920%): both resource paths read the exact 24-byte header (DC type
+// 0x289e proves plain char[24]) and
 // 256-TRGBA payload, construct the shared-slot TPalette24, apply the optional
 // saturation transform, and feed the six retail pixel-mask globals to the
 // named TPalette16 constructor.  The ordinary path destroys the temporary
@@ -1022,7 +1024,7 @@ Bitmap16Bit* ResourceManager::GetBitmap16(const char* name)
 VA(0x0055b060, 0x377)  // public GetPalette callee + retail conversion tuple
 TPalette16* ResourceManager::LoadPalette(const char* name)
 {
-    unsigned char header[24];
+    char header[24];
     TRGBA paletteData[256];
 #pragma inline_depth(0)
     FILE* file = fopen((gResourcePath + name).c_str(), "rb");
@@ -1142,28 +1144,23 @@ TPalette16* ResourceManager::GetPalette(const char* name)
     return loaded;
 }
 
-// WALL (94.7045%): the complete 24-byte header + 256-TRGBA file shape,
+// Residual (99.9273%): the complete plain-char[24] header (DC type 0x289e) +
+// 256-TRGBA file shape,
 // ordinary/archive adapters, fallback search, reporter calls, allocation,
 // optional saturation and cleanup semantics agree. Both sides contain 220
-// body instructions. The remaining 22-vs-24-block split starts at the same
-// VC6 string-temporary midpoint as LoadFont: without a pin the full
-// destructor expands (93.1000), while inline_depth(0) calls both c_str and the
-// parent destructor; retail alone inlines c_str and stops at _Tidy(true).
-// why-reg confirms a later EBX/EDI role swap with equal definition slots but
-// different C1 pseudo processing. Its only legal creation-order proposal
-// (remaining/archive declaration order) worsens the distance 96 -> 116; a
-// parameter alias, shared result initialization and branch-local buffer
-// lifetimes are byte-flat or produce a doubled 0x85c frame.
+// body instructions. OpenResourcePath closes the string-temporary midpoint;
+// both sides now have 24 blocks and the same 14-branch sequence. Only local
+// coloring remains: candidate frame 0x444 versus retail 0x43c. A generated
+// 120-form declaration/result/file-lifetime tree is flat at this peak except
+// explicit zero initialization, which regresses to 93.10; eight natural helper
+// bodies also leave the direct expression best.
 VA(0x0055b470, 0x2D1)  // dc/hd public identity + retail palette-file shape
 TPalette24* ResourceManager::GetPalette24(const char* name)
 {
     TPalette24* result;
-    unsigned char header[24];
+    char header[24];
     TRGBA paletteData[256];
-#pragma inline_depth(0)
-    FILE* file = fopen((gResourcePath + name).c_str(), "rb");
-#pragma inline_depth()
-
+    FILE* file = OpenResourcePath(name);
     if (file) {
         try {
             t_stdio_file_adapter stream(file);
@@ -1314,12 +1311,9 @@ palette_ready:
 // retail inlines c_str() but leaves the temporary's _Tidy(true) child as a
 // call. Giving the natural path-open expression its own explicit inline
 // helper supplies that caller context without a pragma; the helper itself is
-// fully expanded and every instruction/relocation then matches retail.
-static inline FILE* OpenResourcePath(const char* name)
-{
-    return fopen((gResourcePath + name).c_str(), "rb");
-}
-
+// fully expanded and every instruction/relocation then matches retail. The
+// same ordinary helper is now also the best measured spelling for the two
+// earlier path-open sites.
 VA(0x0055b8d0, 0x229)  // dc GetFont semantics split at retail stream helper
 font* ResourceManager::LoadFont(const char* name)
 {
