@@ -561,13 +561,6 @@ void TBuyArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResou
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:2229
-DC_ONLY(0x18afd4, 0x140)
-void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:2250
 DC_ONLY(0x18b114, 0x1D4)
 void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
@@ -952,6 +945,33 @@ double get_trade_ratio(EGameResource source, EGameResource dest, double efficien
     else
         ratio = 1.0 / static_cast<double>(static_cast<long>(1.0 / ratio));
     return ratio;
+}
+
+// E:\gamedcs\tradpost.cpp:2229
+VA(0x005ecdc0, 0xbb)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18afd4
+void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource,
+                                             int inRightResource,
+                                             int* iInTradeRatio,
+                                             int* bInLeftDenominated,
+                                             int* iInMaxUnitsToTrade)
+{
+    type_artifact artifact;
+    if (inLeftResource < 18)
+        artifact = gpMarketHero->equipped[inLeftResource];
+    else
+        artifact = gpMarketHero->backpack[inLeftResource - 18];
+
+    float leftValue =
+        static_cast<float>(akArtifactTraits[artifact.artifactId].cost)
+        * fArtifactPurchaseEfficency[gMarketCount];
+    float result =
+        leftValue / static_cast<float>(gMarketValues[inRightResource]);
+    if (result < 1.0f)
+        result = 1.0f;
+
+    *bInLeftDenominated = 1;
+    *iInTradeRatio = static_cast<long>(result + 0.5);
+    *iInMaxUnitsToTrade = 1;
 }
 
 // E:\gamedcs\tradpost.cpp:2368
