@@ -213,6 +213,8 @@ const int SAVED_HERO_PRE25_FIRST = 0x80;
 const int SAVED_HERO_PRE25_SECOND = 0x81;
 const int HERO_PRE25_FIRST_REMAP = 0x92;
 const int HERO_PRE25_SECOND_REMAP = 0x9c;
+const int SAVE_VERSION_LOSS_HERO_COORDINATES = 16;
+const int SAVE_VERSION_COMPLETE_HERO_ROSTER = 25;
 
 // E:\gamedcs\game.cpp's file-static `resources` row (dc game.obj static
 // 0x2ffc). Complete retains the same four rare-resource ids in retail
@@ -6423,6 +6425,62 @@ int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
             < sizeof(shortValue))
             return -1;
         lossCondition.NumDays = shortValue;
+        return 0;
+    }
+    return 0;
+}
+
+// Saved headers use the map-format coordinate payload only at version 16.
+// Later saves store a signed 16-bit hero id; before the Complete roster was
+// serialized directly, its two appended campaign heroes used the old ids.
+// EXACT 2026-08-26: all 16 blocks and 350 bytes agree. The top-scope time
+// limit plus arm-scoped coordinate/id buffers let VC6 overlap the int at the
+// stream argument with the saved-id short at its upper half, as retail does.
+VA(0x004c3d90, 0x15E)  // DC loadLossCondition + sole NewSMapHeader::Load caller
+int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
+                                     int saveVersion)
+{
+    short timeLimit;
+    switch (type) {
+    case LOSS_CONDITION_LOSE_TOWN: {
+        int value;
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownX = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownY = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownZ = value & 0xff;
+        return 0;
+    }
+
+    case LOSS_CONDITION_LOSE_HERO:
+        if (saveVersion == SAVE_VERSION_LOSS_HERO_COORDINATES) {
+            int value;
+            infile->Read(&value, sizeof(char));
+            lossCondition.HeroX = value & 0xff;
+            infile->Read(&value, sizeof(char));
+            lossCondition.HeroY = value & 0xff;
+            infile->Read(&value, sizeof(char));
+            lossCondition.HeroZ = value & 0xff;
+            return 0;
+        } else {
+            short savedHeroId;
+            infile->Read(&savedHeroId, sizeof(savedHeroId));
+            int heroId = savedHeroId;
+            if (saveVersion < SAVE_VERSION_COMPLETE_HERO_ROSTER) {
+                if (heroId == SAVED_HERO_PRE25_FIRST)
+                    heroId = HERO_PRE25_FIRST_REMAP;
+                else if (heroId == SAVED_HERO_PRE25_SECOND)
+                    heroId = HERO_PRE25_SECOND_REMAP;
+            }
+            lossCondition.HeroID = heroId;
+            return 0;
+        }
+
+    case LOSS_CONDITION_TIME_LIMIT:
+        if (infile->Read(&timeLimit, sizeof(timeLimit)) < sizeof(timeLimit))
+            return -1;
+        lossCondition.NumDays = timeLimit;
         return 0;
     }
     return 0;
