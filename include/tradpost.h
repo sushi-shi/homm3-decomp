@@ -67,6 +67,7 @@ public:
 class TSellArtifactWindow : public CAdvPopup {
 public:
     void update_sell_artifact_widget(message* msg, long i);
+    void SetRolloverText(int codeY);
     virtual ~TSellArtifactWindow();
 };
 

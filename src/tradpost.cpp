@@ -199,6 +199,7 @@ void DoMarketplace()
 
 DATA(0x006a53a8) static THelpText gGiveHelpText[5];
 DATA(0x006a5868) static THelpText gMarketHelpText[6];
+DATA(0x006a6c50) static THelpText gSellArtHelpText[5];
 DATA(0x006a7da8) static THelpText gBuyArtHelpText[5];
 DATA(0x006aaa70) static int gBackpackStart;
 union TMarketArtifactList {
@@ -1098,6 +1099,54 @@ void TBuyArtifactWindow::SetRolloverText(int codeY)
         break;
     }
     case MARKET_COMMAND_ID: strcpy(gText, gBuyArtHelpText[4].text); break;
+    default: strcpy(gText, emptyRolloverText); break;
+    }
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
+    DrawWindow(0, 0x92, 0x93);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
+}
+
+VA(0x005ee6c0, 0x1cf)  // anchor-callee (TSellArtifactWindow::WindowHandler), dc 0x18c378
+void TSellArtifactWindow::SetRolloverText(int codeY)
+{
+    switch (codeY) {
+    case MARKET_LEFT_PANEL_ID: strcpy(gText, gSellArtHelpText[0].text); break;
+    case MARKET_LEFT_COUNT_ID: strcpy(gText, gSellArtHelpText[1].text); break;
+    case MARKET_LEFT_LABEL_ID: strcpy(gText, gSellArtHelpText[2].text); break;
+    case MARKET_RIGHT_LABEL_ID: strcpy(gText, gSellArtHelpText[3].text); break;
+    case MARKET_COMMAND_ID: strcpy(gText, gSellArtHelpText[4].text); break;
+    case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+    case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+    case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+    case MARKET_BUY_GOLD_ID:
+        strcpy(gText, gResourceNames[codeY - MARKET_BUY_WOOD_ID]);
+        break;
+    case MARKET_ARTIFACT_SLOT_00_ID: case MARKET_ARTIFACT_SLOT_01_ID:
+    case MARKET_ARTIFACT_SLOT_02_ID: case MARKET_ARTIFACT_SLOT_03_ID:
+    case MARKET_ARTIFACT_SLOT_04_ID: case MARKET_ARTIFACT_SLOT_05_ID:
+    case MARKET_ARTIFACT_SLOT_06_ID: case MARKET_ARTIFACT_SLOT_07_ID:
+    case MARKET_ARTIFACT_SLOT_08_ID: case MARKET_ARTIFACT_SLOT_09_ID:
+    case MARKET_ARTIFACT_SLOT_10_ID: case MARKET_ARTIFACT_SLOT_11_ID:
+    case MARKET_ARTIFACT_SLOT_12_ID: case MARKET_ARTIFACT_SLOT_13_ID:
+    case MARKET_ARTIFACT_SLOT_14_ID: case MARKET_ARTIFACT_SLOT_15_ID:
+    case MARKET_ARTIFACT_SLOT_16_ID: case MARKET_ARTIFACT_SLOT_17_ID:
+    case MARKET_ARTIFACT_SLOT_18_ID: case MARKET_ARTIFACT_SLOT_19_ID:
+    case MARKET_ARTIFACT_SLOT_20_ID: case MARKET_ARTIFACT_SLOT_21_ID:
+    case MARKET_ARTIFACT_SLOT_22_ID: {
+        long slot = codeY - MARKET_ARTIFACT_SLOT_00_ID;
+        type_artifact artifact;
+        if (slot < 18) {
+            artifact = gpMarketHero->equipped[slot];
+        } else {
+            long backpackIndex = ((gBackpackStart & 0xff) + slot - 18)
+                                 % gpMarketHero->get_number_in_backpack(1);
+            artifact = gpMarketHero->backpack[backpackIndex];
+        }
+        strcpy(gText, akArtifactTraits[artifact.artifactId].name);
+        break;
+    }
     default: strcpy(gText, emptyRolloverText); break;
     }
     message update;
