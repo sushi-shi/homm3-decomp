@@ -51,6 +51,12 @@ enum EMarketWidgetId {
     MARKET_COMMAND_ID = 0x7802
 };
 
+enum EMarketWidgetCommand {
+    MARKET_WIDGET_SELECT = 12,
+    MARKET_WIDGET_ACTIVATE = 13,
+    MARKET_WIDGET_QUICK_VIEW = 14
+};
+
 enum EMarketBuyArtifactSlotId {
     BUY_ARTIFACT_SLOT_0_ID = 0x3f,
     BUY_ARTIFACT_SLOT_1_ID, BUY_ARTIFACT_SLOT_2_ID,
