@@ -387,7 +387,7 @@ army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
 army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	92.2095	92.2095	92.2095	0x43320
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840
-army	?do_attack@army@@QAEEPAV1@H@Z	95.5202	95.5202	95.5585	0x41610
+army	?do_attack@army@@QAEEPAV1@H@Z	95.5585	95.5585	95.5585	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
 army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
 army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	99.9351	99.9351	99.9351	0x40310
@@ -1239,10 +1239,12 @@ game	?_Construct@std@@YIXPAVCObjectType@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3
 game	?_Construct@std@@YIXPAVSign@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3880
 game	?_Construct@std@@YIXPAVboat@@ABV2@@Z	100.0000	100.0000	100.0000	0xd39f0
 game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	59.8287	59.8287	59.8287	0xd3630
+game	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xd27b0
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
 game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0
+game	?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@IAE?AViterator@12@PAU_Node@12@0ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xd1d50
 game	?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@KIPAU_Node@12@PAU312@@Z	100.0000	100.0000	100.0000	0xd2050
 game	?_Tidy@?$bitset@$04@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1790
 game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30
@@ -1297,6 +1299,7 @@ game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.00
 game	?get_underground_gate_exit@game@@QAE?AUtype_point@@PBVNewmapCell@@@Z	81.4103	81.4103	81.4103	0xcde40
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	?hasGivenArtifact@playerData@@QAE_NH@Z	100.0000	100.0000	100.0000	0xbacb0
+game	?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAE?AU?$pair@Viterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@_N@2@ABU?$pair@$$CBHUtype_map_hero_info@@@2@@Z	100.0000	100.0000	100.0000	0xcff50
 game	?insert@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd00e0
 game	?insert@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEXPAUTRumour@game@@IABU34@@Z	100.0000	100.0000	100.0000	0xd13e0
 game	?insert@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEXPAUtype_creature_bank@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2290

@@ -157,6 +157,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
+                 "TREE_INSERT", "TREE_NODE_INSERT",
+                 "TREE_CONST_ITERATOR_DEC",
                  "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
@@ -598,6 +600,12 @@ def _demangle_key(mangled: str):
         mangled)
     if mangled.startswith("?_Min@?$_Tree@") and tree_value:
         return f"{tree_value.group(1).lower()}@tree_min"
+    if mangled.startswith("?insert@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_insert"
+    if mangled.startswith("?_Insert@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_node_insert"
+    if mangled.startswith("?_Dec@const_iterator@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_const_iterator_dec"
     vector_element = re.search(
         r"\?\$vector@(?:V|U|W4)?([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("??1?$vector@") and vector_element:
@@ -895,6 +903,9 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_test$" in r["name"]
                                or "$bitset_xran$" in r["name"]
                                or "$tree_min$" in r["name"]
+                               or "$tree_insert$" in r["name"]
+                               or "$tree_node_insert$" in r["name"]
+                               or "$tree_const_iterator_dec$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -983,6 +994,19 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$tree_min$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
+            continue
+        if "$tree_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_insert", []).append(row)
+            continue
+        if "$tree_node_insert$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_node_insert", []).append(row)
+            continue
+        if "$tree_const_iterator_dec$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@tree_const_iterator_dec", []).append(row)
             continue
         if "$pair_const_int_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1481,6 +1505,21 @@ def selftest() -> list[str]:
             "V?$allocator@Utype_map_hero_info@@@2@@std@@KAPAU_Node@12@"
             "PAU312@@Z") != "type_map_hero_info@tree_min":
         failures.append("MSVC map tree _Min key regressed")
+    tree_member_cases = {
+        "?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_insert",
+        "?_Insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_node_insert",
+        "?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@":
+            "type_map_hero_info@tree_const_iterator_dec",
+    }
+    for mangled, expected in tree_member_cases.items():
+        if _demangle_key(mangled) != expected:
+            failures.append(f"MSVC {expected} key regressed")
+    unrelated_tree_key = _demangle_key(
+        "?_Erase@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@")
+    if unrelated_tree_key in tree_member_cases.values():
+        failures.append("uncontracted MSVC tree member gained a tree key")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \

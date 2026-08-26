@@ -27,6 +27,13 @@
 // game::Load's tail needs load_recorded_events and setup_shipyards, and
 // neither is reached by any other body here. Same gate discipline as the
 // two groups above.
+// Retail's retained hero-setup tree helpers call std::_Lockit and carry the
+// nested cleanup states those calls require. Keep the pinned /ML runtime, but
+// expose the header's external-lock declarations while this TU is parsed;
+// the byte verdict below is the authority for that otherwise hidden PCH view.
+#if defined(_MSC_VER) && !defined(__clang__)
+#define _MT
+#endif
 #define HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
 #include "advmgr_objects.h"
 #include "advmgr.h"
@@ -99,6 +106,9 @@ type_point AI_attempt_puzzle_guess(long player);
 #include "recruit.h"
 #include "quicktownwindow.h"
 #include "imm_mouse.h"
+#if defined(_MSC_VER) && !defined(__clang__)
+#undef _MT
+#endif
 
 inline type_point::type_point(short new_x, short new_y, short new_z)
 {
@@ -169,6 +179,10 @@ inline EGameResource game_resource_from_int(int value)
     return converted.resource;
 }
 
+#if defined(_MSC_VER) && !defined(__clang__)
+std::pair<const int, type_map_hero_info>::~pair() {}
+#endif
+
 // Must precede the first real map use: VC6 fixes nested inline decisions when
 // it first instantiates this template member. Retail's retained copy calls
 // both _Lockit members rather than expanding them.
@@ -183,6 +197,84 @@ std::map<int, type_map_hero_info>::_Imp::_Min(
         node = node->_Left;
     return node;
 }
+#pragma inline_depth()
+
+template<>
+__forceinline THeroSetupMapMinComdatAnchor::NodePtr
+std::map<int, type_map_hero_info>::_Imp::_Max(
+    THeroSetupMapMinComdatAnchor::NodePtr node)
+{
+    {
+#pragma inline_depth(0)
+        std::_Lockit lock;
+#pragma inline_depth()
+        while (node->_Right != _Nil)
+            node = node->_Right;
+#pragma inline_depth(0)
+    }
+#pragma inline_depth()
+    return node;
+}
+
+template<>
+void std::map<int, type_map_hero_info>::_Imp::const_iterator::_Dec()
+{
+    {
+#pragma inline_depth(0)
+        std::_Lockit lock;
+#pragma inline_depth()
+        if (_Color(_Ptr) == _Red
+                && _Parent(_Parent(_Ptr)) == _Ptr)
+            _Ptr = _Right(_Ptr);
+        else if (_Left(_Ptr) != _Nil)
+            _Ptr = _Max(_Left(_Ptr));
+        else {
+            _Nodeptr parent;
+            while (_Ptr == _Left(parent = _Parent(_Ptr)))
+                _Ptr = parent;
+            _Ptr = parent;
+        }
+#pragma inline_depth(0)
+    }
+#pragma inline_depth()
+}
+
+template<>
+std::map<int, type_map_hero_info>::_Imp::_Pairib
+std::map<int, type_map_hero_info>::_Imp::insert(const value_type& value)
+{
+    _Nodeptr node = _Root();
+    _Nodeptr parent = _Head;
+    bool insertLeft = true;
+    {
+#pragma inline_depth(0)
+        std::_Lockit lock;
+#pragma inline_depth()
+        while (node != _Nil) {
+            parent = node;
+            insertLeft = key_compare(
+                THeroSetupMapMinComdatAnchor::KeyFunction()(value),
+                _Key(node));
+            node = insertLeft ? _Left(node) : _Right(node);
+        }
+#pragma inline_depth(0)
+    }
+#pragma inline_depth()
+    if (_Multi)
+        return _Pairib(_Insert(node, parent, value), true);
+    iterator position = iterator(parent);
+    if (!insertLeft)
+        ;
+    else if (position == begin())
+        return _Pairib(_Insert(node, parent, value), true);
+    else
+        --position;
+    if (key_compare(
+            _Key(position._Mynode()),
+            THeroSetupMapMinComdatAnchor::KeyFunction()(value)))
+        return _Pairib(_Insert(node, parent, value), true);
+    return _Pairib(position, false);
+}
 
 void THeroSetupMapMinComdatAnchor::retain_min()
 {
@@ -190,7 +282,11 @@ void THeroSetupMapMinComdatAnchor::retain_min()
     MinFunction volatile minFunction = &_Min;
     minFunction(_Nil);
 }
-#pragma inline_depth()
+
+void THeroSetupMapMinComdatAnchor::retain_insert(const Value& value)
+{
+    insert(value);
+}
 
 // Defined at the foot of this file, where retail emits it (0x4d2ac0):
 // declared here so game::Save's pool writes call it out of line.
@@ -15506,7 +15602,8 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
                                std::vector<type_map_hero_identity>& heroIdentities,
-                               THeroSetupMapMinComdatAnchor& heroSetupMap)
+                               THeroSetupMapMinComdatAnchor& heroSetupMap,
+                               const THeroSetupMapMinComdatAnchor::Value& heroSetupValue)
 {
     spellLevels.reset();
     heroPool.reset();
@@ -15515,6 +15612,7 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     heroIdentities.clear();
     heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
     heroSetupMap.retain_min();
+    heroSetupMap.retain_insert(heroSetupValue);
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
@@ -15536,3 +15634,6 @@ VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
 VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
 VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
 VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)
+VA_COMPGEN(0x004cff50, 0x115, TREE_INSERT, type_map_hero_info)
+VA_COMPGEN(0x004d1d50, 0x2F9, TREE_NODE_INSERT, type_map_hero_info)
+VA_COMPGEN(0x004d27b0, 0xB3, TREE_CONST_ITERATOR_DEC, type_map_hero_info)

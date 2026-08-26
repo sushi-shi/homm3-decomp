@@ -753,6 +753,30 @@ struct type_map_hero_info : public type_map_hero_identity {
 };
 SIZE(type_map_hero_info, 0x18);
 
+// VC6 retains this map value's implicit destructor in game.obj. Specializing
+// the user-type pair preserves the Dinkumware layout and constructors while
+// giving that one otherwise implicit member an out-of-line definition.
+#if defined(_MSC_VER) && !defined(__clang__)
+namespace std {
+template<>
+struct pair<const int, type_map_hero_info> {
+    typedef const int first_type;
+    typedef type_map_hero_info second_type;
+
+    pair() : first(int()), second(type_map_hero_info()) {}
+    pair(const int& firstValue, const type_map_hero_info& secondValue)
+        : first(firstValue), second(secondValue) {}
+    template<class U, class V>
+    pair(const pair<U, V>& value)
+        : first(value.first), second(value.second) {}
+    ~pair();
+
+    const int first;
+    type_map_hero_info second;
+};
+}
+#endif
+
 #ifdef HOMM3_GAME_OBJ_DECLS
 // Emission-only access shim for the retained Dinkumware _Tree::_Min COMDAT.
 // The real call is inside CMapHeaderData::Save after iterator::_Inc has been
@@ -762,7 +786,12 @@ class THeroSetupMapMinComdatAnchor
     : public std::map<int, type_map_hero_info>::_Imp {
 public:
     typedef _Nodeptr NodePtr;
+    typedef std::pair<const int, type_map_hero_info> Value;
+    typedef std::map<int, type_map_hero_info, std::less<int>,
+                     std::allocator<type_map_hero_info> > HeroMap;
+    typedef HeroMap::_Kfn KeyFunction;
     void retain_min();
+    void retain_insert(const Value& value);
 };
 #endif
 

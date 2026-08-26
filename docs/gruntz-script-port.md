@@ -382,6 +382,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   derived map shim takes the protected member's address without changing the
   authoritative `std::map<int, type_map_hero_info>` member or a runtime caller.
 
+- **2026-08-26 — the retained hero-setup red-black insertion cluster is exact.**
+  The 277-byte public `_Tree::insert`, its 761-byte protected `_Insert`, and
+  the 179-byte `const_iterator::_Dec` reproduce retail byte for byte. Their
+  search, duplicate-key, node-allocation, rotation, and predecessor paths are
+  the pinned VC6 `XTREE` algorithms; the mangled symbols independently bind
+  the value to `type_map_hero_info`. Retail keeps `_Lockit` calls and nested EH
+  cleanup in this cluster, so game.cpp exposes the header's external-lock
+  (`_MT`) view while retaining the `/ML` runtime profile. Statement-local
+  inline depth preserves the public search body and its inlined `_Max` path.
+
+  A broad explicit `pair` instantiation was rejected because VC6 cached its
+  constructor policy and regressed the unrelated insert-result pair. The
+  narrow `pair<const int, type_map_hero_info>` specialization instead preserves
+  Dinkumware's layout and constructors while keeping the previously exact
+  62-byte destructor out of line. `VA_COMPGEN` adds owner-keyed `TREE_INSERT`,
+  `TREE_NODE_INSERT`, and `TREE_CONST_ITERATOR_DEC` contracts with mangled-name
+  negative controls. The gated build reaches **2266/2700 linked exact**,
+  **96.79% linked fuzzy**, and **49.14% executable coverage** with no banked
+  loss.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in
