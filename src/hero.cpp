@@ -7998,7 +7998,7 @@ void hero::HeroFn_004E6120(int creature_type,
 
 // std::bitset<144>::any() - `mov eax,4` is _Nw = (144-1)/32, then
 // Dinkumware's descending `for (int _I=_Nw; 0<=_I; --_I) if (_A[_I])`.
-VA(0x004e64c0, 0x1B)  // stl-comdat, retail-only
+VA_COMPGEN(0x004e64c0, 0x1B, BITSET_ANY, Bitset144)
 bool std::bitset<144>::any() const
 {
     // @stub - <bitset>'s own definition; see h3_stl_comdat_anchor
@@ -8029,7 +8029,7 @@ void std::vector<int>::push_back(const int& _X)
 
 // std::bitset<70>::set(size_t, bool) - `cmp edi,0x46` is the _N bound,
 // 70 = the spell count; returns `this`, `ret 8`.
-VA(0x004e66f0, 0x60)  // stl-comdat, retail-only
+VA_COMPGEN(0x004e66f0, 0x60, BITSET_SET, Bitset70)
 std::bitset<70>& std::bitset<70>::set(size_t _P, bool _X)
 {
     // @stub - <bitset>'s own definition; see h3_stl_comdat_anchor
