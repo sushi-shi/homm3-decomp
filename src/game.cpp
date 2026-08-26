@@ -9551,7 +9551,9 @@ VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, TPickRandomTownName)
 // GetRandomMonster callers prove bitset<145> is one contributor. The five-word
 // sweep in the following count body independently proves the same width.
 VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
+VA_COMPGEN(0x004cefa0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset70)
 VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
+VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 
 // Retail keeps this run of Dinkumware vector COMDATs between ResetGame and
 // save_vector. Their element types are fixed independently by the pool
@@ -14828,3 +14830,20 @@ void CObjectType::~CObjectType()
 }
 
 #endif  // @carcass
+
+// STL COMDAT emission anchor. The original game bodies that exhausted VC6's
+// inline budget are not reconstructed yet, so this late definition restores
+// only their out-of-line bitset members without changing any runtime caller.
+// As with hero.cpp's established anchor, objdiff enumerates target functions;
+// this scaffold and any unclaimed helper it emits add no comparison rows.
+// The private bitset<70>::_Tidy at 0x4cfa10 remains unclaimed: these public
+// calls cannot emit it, and a whole-template instantiation would drag in a
+// broad, collision-prone COMDAT family.
+#pragma inline_depth(0)
+void h3_game_bitset_comdat_anchor(std::bitset<70>& spells,
+                                  std::bitset<144>& artifacts)
+{
+    spells[0] = true;
+    artifacts.set(0, true);
+}
+#pragma inline_depth()

@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — two missing game bitset COMDATs are restored with a late
+  emission anchor.** Retail's game callers prove the exact 103-byte
+  `bitset<70>::reference::operator=` at `0x4cefa0` and 99-byte
+  `bitset<144>::set` at `0x4cf9a0`; the same VC6 members were already emitted
+  byte-exact in hero.obj. The still-unreconstructed game bodies do not exhaust
+  this tree's /Ob2 budget at the same sites, so game.obj lacked both publics.
+
+  A trailing `#pragma inline_depth(0)` anchor, following hero.cpp's established
+  pattern, emits only those public template members after every real game body
+  has compiled. It creates no target-enumerated report row and leaves every
+  existing match unchanged. The private `bitset<70>::_Tidy` at `0x4cfa10`
+  remains unclaimed: a public call cannot emit it, while whole-template
+  instantiation is deliberately rejected as broad and collision-prone. The
+  synchronized build reaches **2234/2667 linked exact**, **96.84% linked
+  fuzzy**, and **48.76% executable coverage** with every gate clean.
+
 - **2026-08-26 — two owner-local generated destructors close exactly.** The
   nine-element random-town-name pool passes `TPickRandomTownName`'s destructor
   to VC6's teardown iterator; its 38-byte game.obj public is byte-identical to
