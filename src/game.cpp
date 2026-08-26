@@ -7382,6 +7382,199 @@ void game::apply_map_header_availability()
     }
 }
 
+// Scenario-header serialization mirrors Read's compact on-disk layout: the
+// live dword fields are narrowed back to their historical byte/word forms,
+// player custom names use the common length-prefixed string writer, and the
+// PC hero-setup map ends with one packed eight-player availability byte per
+// entry.  Dreamcast CodeView fixes the method identity and local roster; the
+// retail stream calls fix the Complete-only hero-map tail.
+//
+// Residual (87.0015%, 2026-08-26): the first fourteen CFG blocks are exact
+// and the player/condition/map-entry write order is complete.  Retail keeps
+// the fixed-name string's constructor and destructor expanded only through
+// calls to _Tidy, while this TU's /Ob2 budget expands those _Tidy bodies and
+// adds eleven CFG blocks.  Retail also packs the final availability byte as
+// a one-byte array; spelling that literally reproduces its index arithmetic
+// but changes the later bitset range-throw phase and falls to 80.44%.  The
+// scalar spelling below is the measured whole-function plateau.  Reusing the
+// saved name length, rather than calling length() again, is likewise
+// codegen-significant: the second inline candidate moves the throw phase and
+// falls to 79.19%.
+VA(0x004c4f10, 0x71D)  // game::Save caller + DC identity + stream-write order
+int NewSMapHeader::Save(TAbstractFile* outfile)
+{
+    char enum_buffer;
+    int count;
+    int i;
+    unsigned char uchar_buffer;
+    char char_buffer;
+    char bool_buffer;
+    char sbyte_buffer;
+
+    if (outfile->Write(&version, sizeof(version)) < sizeof(version))
+        return -1;
+
+    bool_buffer = isPlayable;
+    if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+        < sizeof(bool_buffer))
+        return -1;
+
+    if (outfile->Write(&Size, sizeof(Size)) < sizeof(Size))
+        return -1;
+
+    bool_buffer = HasTwoLayers;
+    if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+        < sizeof(bool_buffer))
+        return -1;
+
+    if (SaveAbstractString(outfile, &mapName) < 0)
+        return -1;
+    if (SaveAbstractString(outfile, &mapDescription) < 0)
+        return -1;
+
+    uchar_buffer = difficulty;
+    if (outfile->Write(&uchar_buffer, sizeof(uchar_buffer))
+        < sizeof(uchar_buffer))
+        return -1;
+
+    char_buffer = maxHeroLevel;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+
+    TPlayerSlotAttributes* player = playerSlotAttributes;
+    for (i = 0; i < 8; ++i, ++player) {
+
+        bool_buffer = player->CanBeHuman;
+        if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+
+        bool_buffer = player->CanBeComputer;
+        if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+
+        enum_buffer = player->AIStrategy;
+        if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+            < sizeof(enum_buffer))
+            return -1;
+
+        unsigned short alignment_buffer = player->legalAlignments;
+        outfile->Write(&alignment_buffer, sizeof(alignment_buffer));
+
+        bool_buffer = player->HasRandomAlignment;
+        if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+
+        bool_buffer = player->GenerateHero;
+        if (outfile->Write(&bool_buffer, sizeof(bool_buffer))
+            < sizeof(bool_buffer))
+            return -1;
+
+        if (player->GenerateHero) {
+            sbyte_buffer = player->CastleLoc.x;
+            if (outfile->Write(&sbyte_buffer, sizeof(sbyte_buffer))
+                < sizeof(sbyte_buffer))
+                return -1;
+            sbyte_buffer = player->CastleLoc.y;
+            if (outfile->Write(&sbyte_buffer, sizeof(sbyte_buffer))
+                < sizeof(sbyte_buffer))
+                return -1;
+            sbyte_buffer = player->CastleLoc.z;
+            if (outfile->Write(&sbyte_buffer, sizeof(sbyte_buffer))
+                < sizeof(sbyte_buffer))
+                return -1;
+        }
+
+        enum_buffer = player->nonRandomHeroId;
+        if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+            < sizeof(enum_buffer))
+            return -1;
+
+        if (player->nonRandomHeroId != -1) {
+            enum_buffer = player->nonRandomHeroCustomPortrait;
+            if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+                < sizeof(enum_buffer))
+                return -1;
+
+            std::string s;
+            s = player->nonRandomHeroCustomName;
+            if (SaveAbstractString(outfile, &s) < 0)
+                return -1;
+        }
+    }
+
+    enum_buffer = victoryCondition.Type;
+    if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+        < sizeof(enum_buffer))
+        return -1;
+    if (victoryCondition.Type != -1)
+        saveVictoryCondition(enum_buffer, outfile);
+
+    enum_buffer = lossCondition.Type;
+    if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+        < sizeof(enum_buffer))
+        return -1;
+
+    if (lossCondition.Type != -1) {
+        switch (enum_buffer) {
+        case LOSS_CONDITION_LOSE_TOWN:
+            char_buffer = lossCondition.TownX;
+            outfile->Write(&char_buffer, sizeof(char_buffer));
+            char_buffer = lossCondition.TownY;
+            outfile->Write(&char_buffer, sizeof(char_buffer));
+            char_buffer = lossCondition.TownZ;
+            outfile->Write(&char_buffer, sizeof(char_buffer));
+            break;
+
+        case LOSS_CONDITION_LOSE_HERO: {
+            short short_buffer = lossCondition.HeroID;
+            outfile->Write(&short_buffer, sizeof(short_buffer));
+            break;
+        }
+
+        case LOSS_CONDITION_TIME_LIMIT: {
+            short short_buffer = lossCondition.NumDays;
+            outfile->Write(&short_buffer, sizeof(short_buffer));
+            break;
+        }
+        }
+    }
+
+    enum_buffer = numTeams;
+    if (outfile->Write(&enum_buffer, sizeof(enum_buffer))
+        < sizeof(enum_buffer))
+        return -1;
+    if (numTeams) {
+        if (outfile->Write(teamInfo, sizeof(teamInfo)) < sizeof(teamInfo))
+            return -1;
+    }
+
+    uchar_buffer = heroPlayerSetups.size();
+    outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+    for (std::map<int, type_map_hero_info>::iterator it =
+             heroPlayerSetups.begin();
+         it != heroPlayerSetups.end(); ++it) {
+        enum_buffer = it->first;
+        outfile->Write(&enum_buffer, sizeof(enum_buffer));
+        enum_buffer = it->second.field_00;
+        outfile->Write(&enum_buffer, sizeof(enum_buffer));
+
+        count = it->second.field_04.length();
+        outfile->Write(&count, sizeof(count));
+        outfile->Write(it->second.field_04.c_str(), count);
+
+        uchar_buffer = 0;
+        for (i = 0; i < 8; ++i) {
+            if (it->second.field_14.test(i))
+                uchar_buffer |= 1 << i;
+        }
+        outfile->Write(&uchar_buffer, sizeof(uchar_buffer));
+    }
+
+    return 0;
+}
+
 // Complete widens the Dreamcast one-name helper to a directory, filename,
 // and campaign-map ordinal. The path is assembled with the same separator as
 // NewMap, then the stream-based reader owns all format interpretation. The

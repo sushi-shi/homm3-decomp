@@ -1206,6 +1206,7 @@ game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0
 game	?Reset@SavedGameHeader@@QAEXXZ	100.0000	100.0000	100.0000	0xbc350
 game	?ResetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50
 game	?ResetGame@game@@QAEXHHPAVNewSMapHeader@@@Z	100.0000	100.0000	100.0000	0xcecb0
+game	?Save@NewSMapHeader@@QAEHPAVTAbstractFile@@@Z	87.0015	87.0015	87.0015	0xc4f10
 game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
 game	?Save@game@@QAEHPAVTAbstractFile@@@Z	96.4044	96.4044	96.4044	0xbe3f0
 game	?SaveAbstractString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbbb60
