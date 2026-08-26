@@ -13,6 +13,7 @@
 #include "townmgr.h"
 #include "widget.h"
 #include "message.h"
+#include "slider.h"
 #include "winmgr.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -210,6 +211,12 @@ DATA(0x006aaa90) static int gSelectedArtifact;
 DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
+DATA(0x006aaa80) static int gRatioInverted;
+DATA(0x006aaa94) static int gMaxTradeUnits;
+DATA(0x006aaaac) static int gLeftDenominated;
+DATA(0x006aaab0) static int gRightAmount;
+DATA(0x006aaac0) static int gGiveQuantity;
+DATA(0x006aaacc) static int gLeftResource;
 
 // E:\gamedcs\tradpost.cpp:618
 // The retail entry points expand this file-local helper: count every owned
@@ -784,6 +791,116 @@ void TTradeResourceWindow::SetRolloverText(int codeY)
     BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
+}
+
+VA(0x005ed550, 0x2f1)  // vtable slot 9; dc 0x18b8d4
+int TGiveResourceWindow::WindowHandler(message* msg)
+{
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
+
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            switch (msg->codeY) {
+            case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+            case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+            case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+            case MARKET_SELL_GOLD_ID: {
+                int res = msg->codeY - MARKET_SELL_WOOD_ID;
+                if (res == gSelectedArtifact)
+                    return 1;
+                gSelectedArtifact = res;
+                if (gLeftResource != -1) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = 1;
+                    gMaxTradeUnits = gpCurrentPlayer->resources[gSelectedArtifact];
+                    resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            case GIVE_RECIPIENT_SLOT_0_ID: case GIVE_RECIPIENT_SLOT_1_ID:
+            case GIVE_RECIPIENT_SLOT_2_ID: case GIVE_RECIPIENT_SLOT_3_ID:
+            case GIVE_RECIPIENT_SLOT_4_ID: case GIVE_RECIPIENT_SLOT_5_ID:
+            case GIVE_RECIPIENT_SLOT_6_ID: {
+                int recip = msg->codeY - GIVE_RECIPIENT_SLOT_0_ID;
+                if (recip == gLeftResource)
+                    return 1;
+                gLeftResource = recip;
+                if (gSelectedArtifact != -1) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = 1;
+                    gMaxTradeUnits = gpCurrentPlayer->resources[gSelectedArtifact];
+                    resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                    gRightAmount = 0;
+                }
+                break;
+            }
+            default:
+                return 1;
+            }
+            break;
+
+        case widget::WIDGET_DESELECT:
+            switch (msg->codeY) {
+            case MARKET_LEFT_PANEL_ID: {
+                if (gRightAmount == 0)
+                    return 1;
+                gpCurrentPlayer->resources[gSelectedArtifact] -= gRightAmount;
+                int color = slotPlayerColor[gLeftResource];
+                gpGame->players[color].resources[gSelectedArtifact] += gRightAmount;
+                if (gNetworkActive69954c && gpGame->players[color].IsHuman()) {
+                    TGiveNetMsg m(gpGame->GetLocalPlayerGamePos(),
+                                  gSelectedArtifact, gRightAmount);
+                    TransmitRemoteData(&m, color, false, true);
+                }
+                gLeftDenominated = 1;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                break;
+            }
+            case MARKET_RIGHT_PANEL_ID:
+                gRightAmount = gMaxTradeUnits;
+                resourceSlider->SetState(gMaxTradeUnits);
+                break;
+            case MARKET_LEFT_COUNT_ID:
+            case MARKET_RIGHT_LABEL_ID:
+                bExit = 1;
+                gpWindowManager->dialogReturn = msg->codeY - MARKET_LEFT_COUNT_ID;
+                gLeftResource = -1;
+                gSelectedArtifact = -1;
+                gLeftDenominated = 0;
+                break;
+            default:
+                return 1;
+            }
+            break;
+
+        default:
+            return 1;
+        }
+
+        Update(1);
+        if (bExit) {
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return 2;
+        }
+        return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
 }
 
 VA(0x005ed850, 0x190)

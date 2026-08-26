@@ -8,6 +8,8 @@
 #include "town.h"
 #include "advmgr_popup.h"
 
+class slider;
+
 // --- the five marketplace dialogs -------------------------------------
 // Retail lays the compiland out in source order as five (constructor,
 // scalar-deleting-destructor, destructor) triples, and each constructor
@@ -41,8 +43,13 @@ public:
 class TGiveResourceWindow : public CAdvPopup {
     int field_60;
     int slotPlayerColor[7];
+    int field_80;
+    slider* resourceSlider;
+    int lastHoverId;
 public:
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);
     virtual ~TGiveResourceWindow();
 };
 
