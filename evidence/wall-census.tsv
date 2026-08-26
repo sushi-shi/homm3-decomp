@@ -455,7 +455,6 @@ control-flow (why-branch)	17	93.6598	264	mapcell	?CalculateCellExtra@NewfullMap@
 register-homing (why-reg)	17	97.2740	612	ai_player	?do_best_purchase@type_AI_creature_purchaser@@IAEJ_N@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	16	93.3333	247	advmgr	?BVResMsg@advManager@@QAEXPBDHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 register-homing (why-reg)	16	96.3533	450	ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	16	91.0526	181	dxplay	?EnumSessions@CDPlay@@UAEEPAV?$CAutoArray@VCDPlaySession@@@@KK@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	16	97.3418	595	advmgr	?AdvmgrFn_0040D670@@YIXPADPAVNewmapCell@@JPBDE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	16	96.5625	460	armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	16	92.6829	215	advmgr	?BVMessage@advManager@@QAEXPBD@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
