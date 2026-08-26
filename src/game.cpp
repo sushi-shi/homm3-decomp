@@ -15455,11 +15455,18 @@ template<> std::bitset<70>& std::bitset<70>::reset()
     return *this;
 }
 
-template<> void std::vector<Sign, std::allocator<Sign> >::clear()
+// The player-slot reader keeps the range erase and its protected destroy
+// helper for the 20-byte identity vector at +0x34.  Its dword copy at +0 and
+// string copy at +4 distinguish it from vector<Sign>; only the identical
+// element destructor was folded to Sign::~Sign in the retail image.
+template<> void std::vector<type_map_hero_identity,
+                            std::allocator<type_map_hero_identity> >::clear()
 {
-    typedef std::vector<Sign, std::allocator<Sign> > SignVector;
-    typedef void (SignVector::*DestroyMember)(Sign*, Sign*);
-    DestroyMember volatile destroy = &SignVector::_Destroy;
+    typedef std::vector<type_map_hero_identity,
+                        std::allocator<type_map_hero_identity> > IdentityVector;
+    typedef void (IdentityVector::*DestroyMember)(type_map_hero_identity*,
+                                                   type_map_hero_identity*);
+    DestroyMember volatile destroy = &IdentityVector::_Destroy;
     (this->*destroy)(begin(), end());
 }
 #pragma auto_inline(on)
@@ -15475,19 +15482,21 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<128>& objectTypes,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
-                               std::vector<Sign>& signs)
+                               std::vector<type_map_hero_identity>& heroIdentities)
 {
     spellLevels.reset();
     heroPool.reset();
     availableSkills.reset();
     spells.reset();
-    signs.clear();
+    heroIdentities.clear();
+    heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
     players.test(0);
     universities.capacity();
     availableHeroes.set(0, true);
+    availableHeroes[0] = true;
     availableSkills.test(0);
     objectTypes.set(0, true);
     objectTypes.test(0);
@@ -15498,4 +15507,6 @@ VA_COMPGEN(0x004cfa10, 0x25, BITSET_TIDY, Bitset70)
 VA_COMPGEN(0x004cff30, 0x17, BITSET_TIDY, Bitset8)
 VA_COMPGEN(0x004d1790, 0x15, BITSET_TIDY, Bitset5)
 VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
-VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, Sign)
+VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
+VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
+VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
