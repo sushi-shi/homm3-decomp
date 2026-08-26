@@ -4192,9 +4192,10 @@ static void readQuestGuardArm(NewfullMap* map, TAbstractFile* infile,
 //     383-candidate lifetime tree selected that shape; another 840-candidate
 //     tree over the DC-proven `int_buffer`/`count` roster was flat or worse.
 //     A final five-candidate expression tree raises this to 97.4369 by
-//     spelling the RANDOM_DWELLING_LVL level stores directly: VC6 CSEs the
-//     repeated object-type read and schedules both stores before insert setup,
-//     exactly as retail does.
+//     spelling the RANDOM_DWELLING_LVL level stores directly. This moves the
+//     first store before insert setup, toward retail's order. The residual is
+//     explicit in the bytes: our compile reloads the level and leaves the
+//     second store late; retail loads it once and performs both stores first.
 //   * the multi-site hypothesis is DISPROVED: a throwaway second growth site
 //     for vector<TQuestGuard> in another function of this TU moved readObject
 //     by exactly nothing. The /Ob2 budget is per CALLER.
