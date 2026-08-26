@@ -129,21 +129,25 @@ void GetMonsterCost(int monId, int* resCost)
 // three ctors and at the head of Update - see recruit.h) and
 // TRecruitQuickWindow::TRecruitQuickWindow (inlined into
 // QuickViewRecruit). SetRolloverText and ExitRecruitUnit likewise have
-// no slot between Update and Main and are presumed folded into Main.
-// RecruitSliderCallback is the one unresolved row: its address is taken
-// (slider callback), so it must exist out of line, but no carve row and
-// no gap in this span fits it - it may have been folded by /OPT:ICF
-// into an identical callback elsewhere.
+// no slot between Update and Main and are presumed folded into Main. The
+// constructor's hard callback operand locates RecruitSliderCallback in the
+// formerly unowned 0x54e800..0x54e84e gap.
 // ---------------------------------------------------------------------
 
-#if 0  // @carcass
-
 // E:\gamedcs\recruit.cpp:183
-DC_ONLY(0x118b68, 0x4A)
+// The constructor passes 0x54e800 as its slider callback. The complete
+// 0x4f-byte body copies the state, gates Buy, refreshes totals and redraws.
+VA(0x0054e800, 0x4F)  // anchor-address-taken + exact gap, dc 0x118b68
 void RecruitSliderCallback(int state, heroWindow* parent_window)
 {
-    // @stub
+    gpRecruitWindow->recruit_info->numberToBuy = state;
+    gpRecruitWindow->field_50->enable(state != 0);
+    gpRecruitWindow->recruit_info->Update(0, -1);
+    gpRecruitWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                WINDOW_ALL_WIDGETS_HIGH);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:192
 DC_ONLY(0x118bb4, 0xC08)
