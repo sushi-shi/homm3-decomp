@@ -1092,6 +1092,7 @@ game	??0VictoryConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0xbc340
 game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xc4df0
 game	??1?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf7c0
 game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf0b0
 game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780
@@ -1099,6 +1100,7 @@ game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0
 game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230
+game	??1TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa40
 game	??1TScenarioTown@@QAE@XZ	100.0000	100.0000	100.0000	0xd4450
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570

@@ -9541,6 +9541,12 @@ type_point game::GameFn_004CEF10(int identifier)
 // by the vector helpers below.
 VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
 
+// The map's int-keyed hero setup tree retains its value-pair destructor; the
+// owner token names the string-bearing mapped type. The random-town-name pool
+// passes its element destructor to VC6's nine-element teardown iterator.
+VA_COMPGEN(0x004c4df0, 0x3E, PAIR_CONST_INT_DTOR, type_map_hero_info)
+VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, TPickRandomTownName)
+
 // ICF retains one width-independent subscript body for several bitsets; the
 // GetRandomMonster callers prove bitset<145> is one contributor. The five-word
 // sweep in the following count body independently proves the same width.
@@ -10091,6 +10097,8 @@ void type_creature_bank::~type_creature_bank()
 }
 
 // E:\gamedcs\game.cpp:9801
+// Retail 0x4caa40 is claimed above through its exact implicit destructor
+// public; this row records the independent Dreamcast name and order.
 DC_ONLY(0xbd5ac, 0x1C)
 void TPickRandomTownName::~TPickRandomTownName()
 {

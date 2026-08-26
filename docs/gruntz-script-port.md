@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — two owner-local generated destructors close exactly.** The
+  nine-element random-town-name pool passes `TPickRandomTownName`'s destructor
+  to VC6's teardown iterator; its 38-byte game.obj public is byte-identical to
+  retail `0x4caa40`, and the Dreamcast roster independently supplies the class
+  name. Retail `0x4c4df0` is the exact 62-byte destructor for the value pair in
+  `map<int, type_map_hero_info>`: the mangled public fixes
+  `pair<const int, type_map_hero_info>`, while the body releases the mapped
+  type's string member.
+
+  `VA_COMPGEN` gains a narrow direct-symbol `PAIR_CONST_INT_DTOR` contract so
+  the template owner is bound from VC6's public rather than approximated by a
+  handwritten declarator; its join has an embedded negative control. The
+  synchronized build reaches **2232/2665 linked exact**, **96.84% linked
+  fuzzy**, and **48.75% executable coverage** with every gate clean.
+
 - **2026-08-26 — the quest-monster identifier append and reverse lookup are
   reconstructed byte-exact.** Retail `readMonsterData` supplies an integer
   stream identifier and packed `type_point` to `game+0x4e7bc`; the natural
