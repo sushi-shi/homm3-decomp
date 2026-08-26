@@ -94,6 +94,13 @@ enum EMarketWidgetId {
     MARKET_COMMAND_ID = 0x7802
 };
 
+// The three command subtypes shared by all five market-window handlers.
+enum EMarketWidgetCommand {
+    MARKET_WIDGET_SELECT = 12,
+    MARKET_WIDGET_ACTIVATE = 13,
+    MARKET_WIDGET_QUICK_VIEW = 14
+};
+
 // The buy-artifact left column: one widget id per artifact-for-sale slot
 // (0x3f..0x45). The same numeric range other windows use for the buy-side
 // resource buttons here selects an artifact out of gpMarketArtifacts, so it

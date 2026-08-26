@@ -68,7 +68,7 @@ public:
     int lastHoverId;          // +0x88, last widget the hover handler rolled over
 
     TGiveResourceWindow(int x2, int y2);
-    void Update(unsigned char bUpdate);
+    void Update(bool bUpdate);
     void SetRolloverText(int codeY);
     virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TGiveResourceWindow();
@@ -110,7 +110,10 @@ class TSellCreatureWindow : public CAdvPopup {
     int lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
     TSellCreatureWindow(int x2, int y2);
-    void Update(unsigned char bUpdate);
+    void SetWidgetOn(short id);
+    void SetWidgetOff(short id);
+    void SetWidgetDisabled(short id);
+    void Update(bool bUpdate);
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
                             int* iInMaxUnitsToTrade);

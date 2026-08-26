@@ -12,6 +12,7 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "resourcemanager.h"
 #include "sample.h"
 #include "slider.h"
 #include "spellbookwindow.h"
@@ -20,28 +21,59 @@
 #include "viewarmywindow.h"
 #include "winmgr.h"
 
-// The skeleton transformer's death table: each of the 145 creature types maps
-// to the undead it leaves behind, all Skeletons except the ten dragon rows,
-// which leave Bone Dragons. Retail keeps it in this TU's .rdata at 0x6412fc;
-// update() reads it to pick the death form and death sample, creature_click's
-// update_buttons inline compares armyTypes[i] against giDeathCreature[type] to
-// decide whether the sacrifice button still has work to do.
-static const int giDeathCreature[145] = {
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
-    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+static const TCreatureType giDeathCreature[145] = {
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
+    CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON, CREATURE_BONE_DRAGON,
+    CREATURE_BONE_DRAGON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON,
     CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON, CREATURE_SKELETON
+};
+
+// Complete adds the nineteenth SoD equipment slot to DC's 18-pair table.
+static const long slot_definitions[19][2] = {
+    {143, 18}, {202, 230}, {143, 68}, {17, 57}, {196, 172},
+    {143, 119}, {65, 57}, {244, 172}, {149, 283}, {17, 131},
+    {33, 181}, {49, 232}, {65, 283}, {198, 18}, {244, 18},
+    {244, 64}, {244, 110}, {244, 299}, {15, 283}
+};
+
+static const long row_start[5][2] = {
+    {314, 50}, {314, 120}, {314, 190}, {314, 260}, {395, 330}
+};
+static const long row_size[5] = {5, 5, 5, 5, 2};
+
+static const long const_creature_sources[2][2] = {
+    {45, 109}, {128, 305}
+};
+static const long const_source_sizes[2][2] = {
+    {3, 2}, {1, 1}
+};
+static const long const_creature_offerings[2][2] = {
+    {334, 109}, {417, 305}
 };
 
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
@@ -1559,6 +1591,48 @@ void type_artifact_offering::set(const type_artifact* artifact, long slot,
         value * owner->GetExperienceBonusFactor());
 }
 
+// The window member takes the ordinary empty-artifact construction. The
+// builder's local uses type_artifact's one-argument form, whose auxiliary-
+// then-id store order is independently exact in the artifact reward paths.
+inline type_artifact_offering::type_artifact_offering()
+{
+}
+
+inline type_artifact_offering::type_artifact_offering(TArtifact artifact)
+    : type_artifact(artifact)
+{
+}
+
+// E:\gamedcs\sacrifice_window.cpp:170
+// All Complete calls are expanded into the artifact widget builder.
+inline type_doll_slot_widget::type_doll_slot_widget(
+    const type_doll_slot_definition& def, long id)
+    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+                 0, 0, 0, 0, 16)
+{
+    slot = def.slot;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:204
+// All Complete calls are expanded into the artifact widget builder.
+inline type_backpack_slot_widget::type_backpack_slot_widget(
+    const type_icon_definition& def, long new_slot, long id)
+    : iconWidget(def.x, def.y, def.width, def.height, id, def.image,
+                 0, 0, 0, 0, 16)
+{
+    slot = new_slot;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:235
+// All Complete calls are expanded into the artifact widget builder.
+inline type_artifact_offering_widget::type_artifact_offering_widget(
+    long x, long y, long width, long height, long new_item_number,
+    long id, const char* image)
+    : iconWidget(x, y, width, height, id, image, 0, 0, 0, 0, 16)
+{
+    item_number = new_item_number;
+}
+
 // E:\gamedcs\sacrifice_window.cpp:178
 // The doll-slot twin of the two below: one carve row ahead of them, in the
 // Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
@@ -1713,26 +1787,314 @@ type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
     }
 }
 
-// E:\gamedcs\sacrifice_window.cpp:360 / :536
-// The ctor's two builder calls above (after Widgets.reserve(150)) fix these
-// rows in the Dreamcast roster's order. The artifact builder's row head loads
-// altrart2.pcx and the creature builder's loads altarmon.pcx (string-proven),
-// both are thiscall (long& widget_id, int cur_player) -> ret 8, and both sit
-// between the ctor (0x55fdd0) and create_creature_icons (0x561f70) in retail
-// link order. Located, not yet reconstructed.
-#if 0  // @carcass: located builder bodies, claim-only
-VA(0x00560380, 0xd67)  // ctor caller + altrart2.pcx string + arity, dc 0x1246b8
-void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player)
+// E:\gamedcs\sacrifice_window.cpp:360
+// DC fixes the function identity, local roster, reserve and callee counts.
+// Complete independently exposes all nineteen equipment coordinates, the
+// five-slot backpack strip, the 5/5/5/5/2 offering grid, every callback and
+// help row, and the insertion order into Widgets and artifact_widgets.
+VA(0x00560380, 0xD67)  // ctor caller + dc name/order/locals, dc 0x1246b8
+void type_sacrifice_window::create_artifact_widgets(
+    long& widget_id, int cur_player)
 {
-    // @stub
+    artifact_widgets.reserve(80);
+
+    bitmapBorder* background = new bitmapBorder(
+        0, 0, 600, 593, widget_id++,
+        gpGame->f_1f698 >= 2 ? "AltrArt2.pcx" : "AltarArt.pcx", 0x800);
+    background->SetPlayerPaletteColors(cur_player);
+    Widgets.push_back(background);
+    artifact_widgets.push_back(background);
+
+    type_doll_slot_definition def;
+    iconWidget* icon_widget;
+    def.width = 44;
+    def.height = 44;
+    def.image = "artifact.def";
+    long count = gpGame->f_1f698 >= 2 ? 19 : 18;
+    long i;
+    for (i = 0; i < count; ++i) {
+        def.x = slot_definitions[i][0];
+        def.y = slot_definitions[i][1];
+        def.slot = i;
+
+        icon_widget = new iconWidget(
+            def.x, def.y, def.width, def.height, widget_id++, def.image,
+            0, 0, 0, 0, 16);
+        Widgets.push_back(icon_widget);
+        slot_back_widgets.push_back(icon_widget);
+
+        icon_widget = new type_doll_slot_widget(def, widget_id++);
+        Widgets.push_back(icon_widget);
+        slot_widgets.push_back(icon_widget);
+        artifact_widgets.push_back(icon_widget);
+    }
+
+    def.x = 43;
+    def.y = 352;
+    for (i = 0; i < 5; ++i) {
+        icon_widget = new type_backpack_slot_widget(def, i, widget_id++);
+        def.x += 44;
+        Widgets.push_back(icon_widget);
+        backpack_widgets.push_back(icon_widget);
+        artifact_widgets.push_back(icon_widget);
+    }
+
+    left_backpack_button = new type_func_button(
+        20, 352, 22, 46, widget_id++, "hsbtns3.def",
+        scroll_backpack_left, 0, 1);
+    Widgets.push_back(left_backpack_button);
+    artifact_widgets.push_back(left_backpack_button);
+
+    right_backpack_button = new type_func_button(
+        264, 352, 22, 46, widget_id++, "hsbtns5.def",
+        scroll_backpack_right, 0, 1);
+    Widgets.push_back(right_backpack_button);
+    artifact_widgets.push_back(right_backpack_button);
+
+    type_artifact_offering artifact_offering(ARTIFACT_NONE);
+    long item_count = 0;
+    textWidget* text_widget;
+    for (long j = 0; j < 5; ++j) {
+        long item_x = row_start[j][0];
+        long item_y = row_start[j][1];
+        long text_x = item_x - 2;
+        long text_y = item_y + 47;
+        for (count = row_size[j]; count > 0; --count) {
+            text_widget = new textWidget(
+                text_x, text_y, 48, 16, emptyRolloverText,
+                "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+            Widgets.push_back(text_widget);
+            artifact_widgets.push_back(text_widget);
+            artifact_value_widgets.push_back(text_widget);
+
+            icon_widget = new type_artifact_offering_widget(
+                item_x, item_y, 44, 44, item_count++,
+                widget_id++, "artifact.def");
+            Widgets.push_back(icon_widget);
+            artifact_widgets.push_back(icon_widget);
+            artifact_offering_widgets.push_back(icon_widget);
+            artifact_offerings.push_back(artifact_offering);
+
+            text_x += 54;
+            item_x += 54;
+        }
+    }
+
+    current_artifact_value = new textWidget(
+        269, 492, 66, 16,
+        DATA_COMPGEN(0x00682a08, artifactZeroText, "0"),
+        "smalfont.fnt", font::PRIMARY, widget_id++, 1, 0, 8);
+    Widgets.push_back(current_artifact_value);
+    artifact_widgets.push_back(current_artifact_value);
+
+    current_artifact_widget = new iconWidget(
+        279, 440, 44, 44, widget_id++, "artifact.def",
+        0, 0, 0, 0, 16);
+    current_artifact_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_ARTIFACT].text, 0, 1);
+    Widgets.push_back(current_artifact_widget);
+    artifact_widgets.push_back(current_artifact_widget);
+
+    empty_backpack_button = new type_func_button(
+        146, 520, 64, 32, widget_id++, "AltEmBk.def",
+        empty_backpack, 0, 1);
+    empty_backpack_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_EMPTY_BACKPACK].text, 0, 1);
+    Widgets.push_back(empty_backpack_button);
+    artifact_widgets.push_back(empty_backpack_button);
+
+    all_artifacts_button = new type_func_button(
+        392, 520, 64, 32, widget_id++, "AltFill.def",
+        all_artifacts, 0, 1);
+    all_artifacts_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_ARTIFACTS].text, 0, 1);
+    Widgets.push_back(all_artifacts_button);
+    artifact_widgets.push_back(all_artifacts_button);
+
+    creatures_button = new type_func_button(
+        515, 421, 64, 32, widget_id++, "AltSacC.def",
+        sacrifice_creatures, 0, 1);
+    creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON].text,
+        0, 1);
+    Widgets.push_back(creatures_button);
+    artifact_widgets.push_back(creatures_button);
+
+    text_widget = new textWidget(
+        317, 23, 256, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    artifact_widgets.push_back(text_widget);
+
+    text_widget = new textWidget(
+        159, 415, 283, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURES_TITLE),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    artifact_widgets.push_back(text_widget);
 }
 
-VA(0x005610f0, 0xe73)  // ctor caller + altarmon.pcx string + arity, dc 0x124e60
-void type_sacrifice_window::create_creature_widgets(long* widget_id, int cur_player)
+// E:\gamedcs\sacrifice_window.cpp:536
+// The constructor's adjacent call and the Dreamcast name/local roster fix
+// this builder. Retail proves the two static 3x2/1x1 coordinate grids, all
+// six pointers in each offering record, the two current-creature portraits,
+// help rows 5..12, and every Widgets/creature_widgets insertion.
+VA(0x005610f0, 0xE73)  // ctor caller + dc name/order/locals, dc 0x124e60
+void type_sacrifice_window::create_creature_widgets(
+    long& widget_id, int cur_player)
 {
-    // @stub
+    std::string buffer;
+    long count;
+    creature_widgets.reserve(60);
+
+    bitmapBorder* background = new bitmapBorder(
+        0, 0, 600, 593, widget_id++, "AltarMon.pcx", 0x800);
+    background->SetPlayerPaletteColors(cur_player);
+    Widgets.push_back(background);
+    creature_widgets.push_back(background);
+
+    buffer = format_string(
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_HERO_NAME),
+        current_hero->name);
+
+    textWidget* text_widget = new textWidget(
+        28, 21, 256, 18, buffer.c_str(), "smalfont.fnt",
+        font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    creature_name_widget = new textWidget(
+        29, 56, 256, 42, emptyRolloverText, "medfont.fnt",
+        font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(creature_name_widget);
+    creature_widgets.push_back(creature_name_widget);
+
+    text_widget = new textWidget(
+        317, 21, 256, 18,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_SOURCE_CREATURES),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    text_widget = new textWidget(
+        318, 56, 256, 42,
+        gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_OFFERED_CREATURES),
+        "smalfont.fnt", font::HEADING, widget_id++, 1, 0, 8);
+    Widgets.push_back(text_widget);
+    creature_widgets.push_back(text_widget);
+
+    iconWidget* new_icon_widgets[7];
+    iconWidget* selection_frames[7];
+    textWidget* new_text_widgets[7];
+    long item_number = 0;
+
+    for (long def_index = 0; def_index < 2; ++def_index) {
+        count = create_creature_icons(
+            const_creature_sources[def_index][0],
+            const_creature_sources[def_index][1],
+            const_source_sizes[def_index][0],
+            const_source_sizes[def_index][1], item_number, widget_id,
+            new_icon_widgets, selection_frames, new_text_widgets, 1);
+        for (long i = 0; i < count; ++i) {
+            creature_offerings[item_number + i].icon_widget =
+                new_icon_widgets[i];
+            creature_offerings[item_number + i].field_08 =
+                new_text_widgets[i];
+            creature_offerings[item_number + i].field_04 =
+                selection_frames[i];
+        }
+        item_number += count;
+    }
+
+    item_number = 0;
+    for (def_index = 0; def_index < 2; ++def_index) {
+        count = create_creature_icons(
+            const_creature_offerings[def_index][0],
+            const_creature_offerings[def_index][1],
+            const_source_sizes[def_index][0],
+            const_source_sizes[def_index][1], item_number, widget_id,
+            new_icon_widgets, selection_frames, new_text_widgets, 0);
+        for (long i = 0; i < count; ++i) {
+            type_creature_offering& offering =
+                creature_offerings[item_number + i];
+            offering.selection_widget = new_icon_widgets[i];
+            offering.field_14 = new_text_widgets[i];
+            offering.field_10 = selection_frames[i];
+        }
+        item_number += count;
+    }
+
+    current_creature.field_08 = new textWidget(
+        145, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    current_creature.field_08->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_CREATURE_AMOUNT].text,
+        0, 1);
+    Widgets.push_back(current_creature.field_08);
+    creature_widgets.push_back(current_creature.field_08);
+
+    current_creature.icon_widget = new type_army_slot_widget(
+        149, 421, 58, 64, -1, widget_id++, "Twcrport.def", 1);
+    current_creature.icon_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_SOURCE_CREATURE].text,
+        0, 1);
+    Widgets.push_back(current_creature.icon_widget);
+    creature_widgets.push_back(current_creature.icon_widget);
+    current_creature.field_04 = 0;
+
+    current_creature.field_14 = new textWidget(
+        391, 493, 66, 16, emptyRolloverText, "smalfont.fnt",
+        font::PRIMARY, widget_id++, 1, 0, 8);
+    current_creature.field_14->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_AMOUNT].text,
+        0, 1);
+    Widgets.push_back(current_creature.field_14);
+    creature_widgets.push_back(current_creature.field_14);
+
+    current_creature.selection_widget = new type_army_slot_widget(
+        395, 421, 58, 64, -2, widget_id++, "TwCrPort.def", 0);
+    current_creature.selection_widget->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CURRENT_OFFERING_CREATURE].text,
+        0, 1);
+    Widgets.push_back(current_creature.selection_widget);
+    creature_widgets.push_back(current_creature.selection_widget);
+    current_creature.field_10 = 0;
+
+    creature_slider = new slider(
+        230, 479, 138, 16, widget_id++, 1, creature_slider_change,
+        slider::BROWN, 0, 0);
+    creature_slider->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_CREATURE_SLIDER].text, 0, 1);
+    Widgets.push_back(creature_slider);
+    creature_widgets.push_back(creature_slider);
+
+    max_creatures_button = new type_func_button(
+        146, 520, 64, 32, widget_id++, "IrcBtns.def",
+        max_creatures, 0, 1);
+    max_creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_MAX_CREATURES].text, 0, 1);
+    Widgets.push_back(max_creatures_button);
+    creature_widgets.push_back(max_creatures_button);
+
+    all_creatures_button = new type_func_button(
+        392, 520, 64, 32, widget_id++, "AltArmy.def",
+        all_creatures, 0, 1);
+    all_creatures_button->set_help_text(
+        gSacrificeWindowHelp[SACRIFICE_HELP_ALL_CREATURES].text, 0, 1);
+    Widgets.push_back(all_creatures_button);
+    creature_widgets.push_back(all_creatures_button);
+
+    artifacts_button = new type_func_button(
+        515, 421, 54, 32, widget_id++, "AltArt.def",
+        sacrifice_artifacts, 0, 1);
+    artifacts_button->set_help_text(
+        gSacrificeWindowHelp[
+            SACRIFICE_HELP_SACRIFICE_ARTIFACTS_BUTTON].text,
+        0, 1);
+    Widgets.push_back(artifacts_button);
+    creature_widgets.push_back(artifacts_button);
 }
-#endif  // @carcass
 
 // E:\gamedcs\sacrifice_window.cpp:699
 // The creature builder's sole retail caller, the two inlined army-slot
@@ -2041,6 +2403,12 @@ long sacrifice_value(TCreatureType creature)
 // Retail proves the record layout through its six widget loads and terminal
 // group/amount pair. The two general-text indices are the folded +0x1ec and
 // +0x788 rows of gpGeneralText's pointer table.
+// Residual: all 42 blocks, branch targets and instruction counts agree. VC6
+// colors four early string-return temporaries at ebp-0x30 instead of
+// retail's ebp-0x40; the later help_text/result slots themselves agree.
+// Hoisting the DC local roster, spelling explicit assign calls, and widening
+// help_text's conditional scope either changed unwind flow or left the same
+// slot choice, so this is banked as a stack-slot-coloring residual.
 VA(0x00562da0, 0x3a2)  // dc order/name/signature + retail field graph
 void type_sacrifice_window::update_creature_offering(
     type_creature_offering* creature)
@@ -2061,27 +2429,27 @@ void type_sacrifice_window::update_creature_offering(
         creature->selection_widget->set_visible(0);
         creature->field_14->set_visible(0);
     } else {
-        long experience = static_cast<long>(
+        long total_hits = static_cast<long>(
             (sacrifice_value(creature_type) * creature->amount)
             * current_hero->GetExperienceBonusFactor());
-        std::string text;
+        std::string result;
 
         creature->icon_widget->SetIconFrame(creature_type + 2);
         creature->icon_widget->set_visible(1);
         if (!creature->field_04)
-            text = convert_with_commas(creature->amount);
+            result = convert_with_commas(creature->amount);
         else
-            text = convert_with_commas(available);
-        creature->field_08->SetText(text.c_str());
+            result = convert_with_commas(available);
+        creature->field_08->SetText(result.c_str());
         creature->field_08->set_visible(1);
 
         creature->selection_widget->SetIconFrame(creature_type + 2);
         creature->selection_widget->set_visible(creature->amount > 0);
-        text = convert_with_commas(experience);
-        text = format_string(
+        result = convert_with_commas(total_hits);
+        result = format_string(
             gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_EXPERIENCE),
-            text.c_str());
-        creature->field_14->SetText(text.c_str());
+            result.c_str());
+        creature->field_14->SetText(result.c_str());
         creature->field_14->set_visible(creature->amount > 0);
     }
 
@@ -2090,12 +2458,12 @@ void type_sacrifice_window::update_creature_offering(
             creature->field_04->set_help_text(0, 0, 1);
             creature->field_10->set_help_text(0, 0, 1);
         } else {
-            std::string help;
-            help = format_string(
+            std::string help_text;
+            help_text = format_string(
                 gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE),
                 GetArmyName(creature_type, 0));
-            creature->field_04->set_help_text(help.c_str(), 0, 1);
-            creature->field_10->set_help_text(help.c_str(), 0, 1);
+            creature->field_04->set_help_text(help_text.c_str(), 0, 1);
+            creature->field_10->set_help_text(help_text.c_str(), 0, 1);
         }
     }
 }
@@ -2763,19 +3131,6 @@ int type_sacrifice_window::all_creatures(message& msg)
     return 0;
 }
 
-// E:\gamedcs\sacrifice_window.cpp:1796
-// Inlined into the max-creatures button callback below. Dreamcast records
-// this as a private static slider callback; Complete retains only its two
-// member calls at the constant-state caller.
-void type_sacrifice_window::creature_slider_change(
-    int state, heroWindow* parent_window)
-{
-    type_sacrifice_window* window =
-        static_cast<type_sacrifice_window*>(parent_window);
-    window->set_creature_sacrifice(window->current_creature.group, state);
-    window->update_experience();
-}
-
 // E:\gamedcs\sacrifice_window.cpp:1663
 // The constructor's callback pointer at 0x561962 independently proves this
 // previously missing retail boundary. Its 0x88-byte body ends in `ret` and
@@ -2797,8 +3152,6 @@ int type_sacrifice_window::max_creatures(message& msg)
         int maximum = window->creature_slider->get_maximum() - 1;
         window->creature_slider->SetState(maximum);
         creature_slider_change(maximum, window);
-        window->DrawWindow(
-            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         return MESSAGE_DISPATCH_CONSUME;
     }
     return 0;
@@ -2900,6 +3253,23 @@ void type_sacrifice_window::creature_click(
         max_creatures_button->enable(maximum > 0);
         DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1796
+// The creature-slider constructor takes this address at 0x5618c9, proving
+// the missing retail entry. Its fastcall register pair, current group read,
+// two refresh calls and final full-window draw agree with the Dreamcast
+// private static callback signature and source order.
+VA(0x00565380, 0x2e)  // callback address-take + dc name/signature/order
+void type_sacrifice_window::creature_slider_change(
+    int state, heroWindow* parent_window)
+{
+    type_sacrifice_window* window =
+        static_cast<type_sacrifice_window*>(parent_window);
+    window->set_creature_sacrifice(window->current_creature.group, state);
+    window->update_experience();
+    window->DrawWindow(
+        1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
@@ -3004,27 +3374,30 @@ type_transformer_slot::type_transformer_slot(
     group = new_group;
 }
 
-// The transformer window's three-record button help array, retail .bss at
-// 0x6a77d0: entry 0 rolls over the all-creatures button, entry 1 the sacrifice
-// button, entry 2 the exit button.
-DATA(0x006a77d0) extern THelpText gSkeletonWindowHelp[3];
+// The transformer dialog's own pair, found by the same vtable-uniqueness
+// scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
+// deleting destructor whose only image-wide reference is slot 0 of vtable
+// 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
+// itself is referenced exactly twice - here and in the 0xa3c constructor at
+// 0x5654f0 - so neither row is an /OPT:ICF fold.
+VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
 // E:\gamedcs\sacrifice_window.cpp:2056
-// The skeleton transformer dialog's constructor. Its row head loads
-// sktrnbk.pcx (string-proven), it is thiscall (armyGroup* new_army) -> ret 4,
-// and the prior vtable scan (see the 0x565f30 note below) already fixed this
-// 0xa3c body at 0x5654f0 as the second of exactly two references to vtable
-// 0x641694. Both armies are laid out as a two-pane 3x2 grid plus a seventh
-// slot, wired by four create_creature_icons calls; the three buttons and the
-// four labels bracket them, and every slot of the source army is refreshed
-// through update() before the widgets join the message stream.
-// Residual (98.35%): every block through the rollover-text widget is exact;
-// the sole divergence is the FINAL Widgets.push_back, where retail's /Ob2
-// budget expands vector::size() inline in the reallocation path (base x0 vs
-// retail x1, +4 instrs) while ours emits the call. Pure last-site inline
-// margin (predict-inline: 1 under-inline); no spelling moves it and it may
-// shift once the builder bodies change this TU's declarator population.
-VA(0x005654f0, 0xa3c)  // vtable 0x641694 + sktrnbk.pcx string + arity, dc 0x1275c0
+// The unique transformer vtable and townManager stack-construction edge fix
+// this boundary. The DC call graph proves the two grid calls, three button
+// callbacks, two general-text reads, seven widget insertions, selected-army
+// initialization and terminal update/AddWidgetsToMessageStream calls; retail
+// fixes every geometry, resource, help row and the four split grid calls.
+//
+// RETAIL RESIDUAL (98.3508%, 2026-08-26): every divergence is confined to
+// the final Widgets.push_back(rolloverText) expansion. Retail retains one
+// null-_First guard (51 branches versus 50) that this partial TU lets VC6
+// prove unnecessary; constructor args, EH states, prior vector growth and
+// the terminal loop align. Separate/combined assignment, textWidget*/
+// widget* temporaries, exit-button base typing and a local vector view were
+// compiled and rejected. This is a source-surface/inlining-context plateau,
+// not license for an opaque carrier or a raised exactness claim.
+VA(0x005654f0, 0xA3C)  // vtable/caller + dc name/order/body graph, dc 0x1275c0
 type_skeleton_window::type_skeleton_window(armyGroup* new_army)
     : CAdvPopup(100, 67, 600, 485, 18)
 {
@@ -3037,47 +3410,66 @@ type_skeleton_window::type_skeleton_window(armyGroup* new_army)
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 600, 485, widget_id++, "SkTrnBk.pcx", 0x800);
-    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
+    background->SetPlayerPaletteColors(
+        gpGame->GetLocalPlayerGamePos());
     Widgets.push_back(background);
 
     Widgets.push_back(new textWidget(
-        25, 21, 257, 18, gpGeneralText->GetText(486), "smalfont.fnt",
-        font::HEADING, -1, 1, 0, 8));
+        25, 21, 257, 18,
+        gpGeneralText->GetText(
+            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_TITLE),
+        "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     Widgets.push_back(new textWidget(
-        320, 21, 257, 18, gpGeneralText->GetText(487), "smalfont.fnt",
-        font::HEADING, -1, 1, 0, 8));
+        320, 21, 257, 18,
+        gpGeneralText->GetText(
+            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_TITLE),
+        "smalfont.fnt", font::HEADING, -1, 1, 0, 8));
     Widgets.push_back(new textWidget(
-        25, 55, 257, 42, gpGeneralText->GetText(488), "medfont.fnt",
-        font::HEADING, -1, 1, 0, 8));
+        25, 55, 257, 42,
+        gpGeneralText->GetText(
+            SACRIFICE_GENERAL_TEXT_TRANSFORMER_SOURCE_DESCRIPTION),
+        "medfont.fnt", font::HEADING, -1, 1, 0, 8));
     Widgets.push_back(new textWidget(
-        320, 55, 257, 42, gpGeneralText->GetText(489), "medfont.fnt",
-        font::HEADING, -1, 1, 0, 8));
+        320, 55, 257, 42,
+        gpGeneralText->GetText(
+            SACRIFICE_GENERAL_TEXT_TRANSFORMER_DESTINATION_DESCRIPTION),
+        "medfont.fnt", font::HEADING, -1, 1, 0, 8));
 
-    create_creature_icons(45, 109, 3, 2, 0, 0, widget_id,
-                          army_widget[0], select_border[0], army_label[0]);
-    create_creature_icons(128, 305, 1, 1, 0, 6, widget_id,
-                          &army_widget[0][6], &select_border[0][6],
-                          &army_label[0][6]);
-    create_creature_icons(334, 109, 3, 2, 1, 0, widget_id,
-                          army_widget[1], select_border[1], army_label[1]);
-    create_creature_icons(417, 305, 1, 1, 1, 6, widget_id,
-                          &army_widget[1][6], &select_border[1][6],
-                          &army_label[1][6]);
+    create_creature_icons(
+        45, 109, 3, 2, 0, 0, widget_id,
+        &army_widget[0][0], &select_border[0][0], &army_label[0][0]);
+    create_creature_icons(
+        128, 305, 1, 1, 0, 6, widget_id,
+        &army_widget[0][6], &select_border[0][6], &army_label[0][6]);
+    create_creature_icons(
+        334, 109, 3, 2, 1, 0, widget_id,
+        &army_widget[1][0], &select_border[1][0], &army_label[1][0]);
+    create_creature_icons(
+        417, 305, 1, 1, 1, 6, widget_id,
+        &army_widget[1][6], &select_border[1][6], &army_label[1][6]);
 
     all_creatures_button = new type_func_button(
-        146, 416, 64, 32, widget_id++, "AltArmy.def", all_creatures, 0, 1);
-    all_creatures_button->set_help_text(gSkeletonWindowHelp[0].text, 0, 1);
+        146, 416, 64, 32, widget_id++, "AltArmy.def",
+        all_creatures, 0, 1);
+    all_creatures_button->set_help_text(
+        gTransformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].text,
+        0, 1);
     Widgets.push_back(all_creatures_button);
 
     sacrifice_button = new type_func_button(
-        269, 416, 64, 32, widget_id++, "AltSacr.def", sacrifice, 0, 1);
-    sacrifice_button->set_help_text(gSkeletonWindowHelp[1].text, 0, 1);
+        269, 416, 64, 32, widget_id++, "AltSacr.def",
+        sacrifice, 0, 1);
+    sacrifice_button->set_help_text(
+        gTransformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].text,
+        0, 1);
     sacrifice_button->enable(0);
     Widgets.push_back(sacrifice_button);
 
     type_func_button* exit_button = new type_func_button(
-        392, 416, 64, 32, widget_id++, "iCancel.def", exit_click, 0, 1);
-    exit_button->set_help_text(gSkeletonWindowHelp[2].text, 0, 1);
+        392, 416, 64, 32, widget_id++, "iCancel.def",
+        exit_click, 0, 1);
+    exit_button->set_help_text(
+        gTransformerWindowHelp[TRANSFORMER_HELP_EXIT].text, 0, 1);
     Widgets.push_back(exit_button);
 
     rolloverText = new textWidget(
@@ -3085,18 +3477,10 @@ type_skeleton_window::type_skeleton_window(armyGroup* new_army)
         font::PRIMARY, widget_id++, 1, 0, 8);
     Widgets.push_back(rolloverText);
 
-    for (long i = 0; i < 7; ++i)
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i)
         update(0, i);
     AddWidgetsToMessageStream();
 }
-
-// The transformer dialog's own pair, found by the same vtable-uniqueness
-// scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
-// deleting destructor whose only image-wide reference is slot 0 of vtable
-// 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
-// itself is referenced exactly twice - here and in the 0xa3c constructor at
-// 0x5654f0 - so neither row is an /OPT:ICF fold.
-VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
 
 // E:\gamedcs\sacrifice_window.cpp:2129
 VA(0x00565f60, 0xC2)  // anchor-vtable 0x641694 + ??_G call edge, dc 0x127a08
@@ -3109,89 +3493,90 @@ type_skeleton_window::~type_skeleton_window()
     delete_widgets();
 }
 
-// E:\gamedcs\sacrifice_window.cpp:2172 / :2216
-// The two large skeleton members between the destructor and WindowHandler in
-// retail link order. update(long group, long index) -> ret 8 and
-// creature_click(long side, long slot, unsigned char right_click) -> ret 0xc
-// match the Dreamcast signatures by arity; creature_click 0x566490 is the call
-// target the transformer slot's handle_click pins (see 0x5654c0 above), which
-// the WindowHandler note below also cites. unselect() and update_buttons()
-// (both ret 0) have no surviving slot and are inlined away. Located, not yet
-// reconstructed.
-// Refreshes one army slot's icon, count label and rollover help. An empty
-// slot hides its widgets; a filled one frames the creature icon, prints the
-// count, and builds the rollover text - group 0 (the source army) shows the
-// creature name, group 1 (the death preview) shows what it will leave behind,
-// distinguishing the "already undead" case from the ordinary transform and
-// naming the resulting undead through the death table. The count/name pair
-// then feeds each widget's help text.
-// Residual (59.05%): the branch shape is correct (empty path and the
-// singular/plural name selection match in flow) but two codegen facts still
-// diverge. Retail memory-homes creature_type at [ebp-0x10] and reloads it,
-// keeping this/group/index in esi/edi/ebx, whereas VC6 gives creature_type
-// edi and spills index; every "==" flow block therefore differs by one or
-// two register moves. And the reused std::string's c_str()/COW-teardown
-// expansion emits more join blocks than retail's (60 vs 44). Both are the
-// register-home / string-internal families; no spelling tried here moved
-// them and closing it needs the creature_type home flipped to memory.
-VA(0x00566030, 0x45d)  // linkorder + update(long,long) arity, dc 0x127b68
+// E:\gamedcs\sacrifice_window.cpp:2157
+// All Complete callers inline this source helper. The DC call edges and the
+// repeated retail expansion prove the transformed-army scan and the two
+// terminal button states.
+inline void type_skeleton_window::update_buttons()
+{
+    long i;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        long type = armies[1]->armyTypes[i];
+        if (type == CREATURE_NONE)
+            continue;
+        if (type != giDeathCreature[type])
+            break;
+    }
+    sacrifice_button->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
+    all_creatures_button->enable(armies[0]->HasCreatures());
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2172
+// The constructor and the already-reconstructed creature-click/all-creatures
+// paths call this row once or twice with the same (group, slot) pair carried
+// by the transformer widgets. The DC xref census fixes its source surface:
+// one string result, six format_string assignments, four general-text reads,
+// two GetArmyName expansions, two set_visible expansions and six help writes.
+// Retail independently proves the two seven-slot widget grids and the
+// original-to-undead mapping at giDeathCreature.
+VA(0x00566030, 0x45D)  // dc order/name + caller/xref/body graph, dc 0x127b68
 void type_skeleton_window::update(long group, long index)
 {
-    TCreatureType creature_type = armies[group]->armyTypes[index];
-    if (creature_type == CREATURE_NONE) {
-        army_widget[group][index]->send_message(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-        army_label[group][index]->send_message(
-            widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+    TCreatureType type = armies[group]->armyTypes[index];
+    if (type == CREATURE_NONE) {
+        army_widget[group][index]->set_visible(0);
+        army_label[group][index]->set_visible(0);
         select_border[group][index]->set_help_text(0, 0, 1);
         army_widget[group][index]->set_help_text(0, 0, 1);
         army_label[group][index]->set_help_text(0, 0, 1);
-    } else {
-        std::string text;
-        const char* name =
-            GetArmyName(creature_type, armies[group]->numTroops[index]);
-
-        army_widget[group][index]->SetIconFrame(creature_type + 2);
-        text = format_string("%d", armies[group]->numTroops[index]);
-        army_label[group][index]->SetText(text.c_str());
-        army_widget[group][index]->send_message(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-        army_label[group][index]->send_message(
-            widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-
-        if (group == 0) {
-            text = format_string(
-                gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
-        } else {
-            long death = giDeathCreature[creature_type];
-            if (death == creature_type) {
-                if (armies[group]->numTroops[index] == 1)
-                    text = format_string(gpGeneralText->GetText(491), name);
-                else
-                    text = format_string(gpGeneralText->GetText(492), name);
-            } else {
-                const char* death_name =
-                    GetArmyName(death, armies[group]->numTroops[index]);
-                text = format_string(
-                    gpGeneralText->GetText(490), name, death_name);
-            }
-        }
-
-        army_widget[group][index]->set_help_text(text.c_str(), 0, 1);
-        select_border[group][index]->set_help_text(text.c_str(), 0, 1);
-        text = format_string(
-            "%d %s", armies[group]->numTroops[index], name);
-        army_label[group][index]->set_help_text(text.c_str(), 0, 1);
+        return;
     }
+
+    std::string result;
+    const char* name = GetArmyName(
+        type, armies[group]->numTroops[index]);
+
+    army_widget[group][index]->SetIconFrame(type + 2);
+    result = format_string(
+        DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+        armies[group]->numTroops[index]);
+    army_label[group][index]->SetText(result.c_str());
+    army_widget[group][index]->set_visible(1);
+    army_label[group][index]->set_visible(1);
+
+    if (group == 0) {
+        result = format_string(
+            gpGeneralText->GetText(SACRIFICE_GENERAL_TEXT_CREATURE), name);
+    } else {
+        int transformed = giDeathCreature[type];
+        if (transformed != type) {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_TRANSFORM_CREATURE),
+                name, GetArmyName(
+                    transformed, armies[group]->numTroops[index]));
+        } else if (armies[group]->numTroops[index] == 1) {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_ONE),
+                name);
+        } else {
+            result = format_string(
+                gpGeneralText->GetText(
+                    SACRIFICE_GENERAL_TEXT_ALREADY_TRANSFORMED_MANY),
+                name);
+        }
+    }
+
+    army_widget[group][index]->set_help_text(result.c_str(), 0, 1);
+    select_border[group][index]->set_help_text(result.c_str(), 0, 1);
+    result = format_string(
+        DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+        armies[group]->numTroops[index], name);
+    army_label[group][index]->set_help_text(result.c_str(), 0, 1);
 }
 
-// The transformer slot forwards (side, slot) ahead of right_click. A right
-// click - or a repeated click on the already-selected slot - opens the
-// creature detail window; a first click highlights the slot's select border;
-// a second click on another slot merges same-type stacks or swaps unlike ones,
-// refreshes both slots through update(), then clears the selection and
-// re-evaluates the sacrifice/all-creatures buttons.
-VA(0x00566490, 0x258)  // transformer-slot caller + creature_click arity, dc 0x127e50
+VA(0x00566490, 0x258)
 void type_skeleton_window::creature_click(
     long side, long slot, unsigned char right_click)
 {
@@ -3241,16 +3626,7 @@ void type_skeleton_window::creature_click(
         selected_group = -1;
         selected_index = -1;
 
-        long i;
-        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
-            long type = armies[1]->armyTypes[i];
-            if (type == CREATURE_NONE)
-                continue;
-            if (type != giDeathCreature[type])
-                break;
-        }
-        sacrifice_button->enable(i < armyGroup::ARMY_GROUP_SLOT_COUNT);
-        all_creatures_button->enable(armies[0]->HasCreatures());
+        update_buttons();
         DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
 }
@@ -3333,6 +3709,123 @@ void type_skeleton_window::create_creature_icons(
         icon_y += 98;
     }
     transformer_grid_inline_surface();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2385
+// DC names this helper and records both transformer callbacks as callers.
+// Complete expands both calls: occupied source slots move into the same
+// destination slot when free, otherwise armyGroup::Add chooses a slot.
+inline void move_all_armies(armyGroup* source, armyGroup* dest)
+{
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (source->armyTypes[i] == CREATURE_NONE)
+            continue;
+        long dest_index = i;
+        if (dest->armyTypes[i] != CREATURE_NONE)
+            dest_index = -1;
+        dest->Add(source->armyTypes[i], source->numTroops[i], dest_index);
+        source->Dismiss(i);
+    }
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2407
+// The AltArmy callback address in the constructor and DC's source/call graph
+// fix the identity. Complete inlines move_all_armies and update_buttons.
+VA(0x005669f0, 0x137)  // ctor callback + dc name/order/callees, dc 0x128310
+int type_skeleton_window::all_creatures(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_ALL_CREATURES].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        move_all_armies(window->armies[0], window->armies[1]);
+        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            window->update(0, i);
+            window->update(1, i);
+        }
+        window->update_buttons();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2441
+// The iCancel callback address, the standard dialog-close tail and the DC
+// move_all_armies edge identify this row and its reverse move direction.
+VA(0x00566b30, 0xE4)  // ctor callback + dc name/order/callees, dc 0x1283ac
+int type_skeleton_window::exit_click(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_EXIT].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        move_all_armies(window->armies[1], window->armies[0]);
+        msg.id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = 0;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2471
+// The AltSacr callback and DC xrefs prove the sample load/vector insertion,
+// sound-manager warmup, transformed-type store, update and button refresh.
+VA(0x00566c20, 0x15F)  // ctor callback + dc name/order/callees, dc 0x128468
+int type_skeleton_window::sacrifice(message& msg)
+{
+    if (msg.codeX == widget::WIDGET_RIGHT_SELECT
+        && (msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        NormalDialog(
+            gTransformerWindowHelp[TRANSFORMER_HELP_SACRIFICE].rclick,
+            4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+
+    if (msg.codeX == widget::WIDGET_DESELECT
+        && !(msg.qualifier & MESSAGE_MODIFIER_RIGHT)) {
+        type_skeleton_window* window =
+            static_cast<type_skeleton_window*>(msg.window);
+        for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            TCreatureType type = window->armies[1]->armyTypes[i];
+            if (type == CREATURE_NONE || type == giDeathCreature[type])
+                continue;
+
+            sprintf(gText,
+                    DATA_COMPGEN(0x006609e0, transformerKillSampleFormat,
+                                 "%skill.82M"),
+                    akCreatureTypeTraits[type].cSamplePrefix);
+            sample* new_sample = ResourceManager::GetSample(gText);
+            window->death_samples.push_back(new_sample);
+            gpSoundManager->MemorySample(new_sample);
+            window->armies[1]->armyTypes[i] = giDeathCreature[type];
+            window->update(1, i);
+        }
+        window->update_buttons();
+        window->DrawWindow(
+            1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        return MESSAGE_DISPATCH_CONSUME;
+    }
+    return 0;
 }
 
 #if 0  // @carcass: final duplicate STLport helper rows
