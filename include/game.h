@@ -49,6 +49,9 @@ int __fastcall readMapString(TAbstractFile* infile, std::string* value);
 // Reached from readHeroData; the NAME is invented from that role, on
 // readMapString's own precedent.
 int __fastcall ReadHeroId(TAbstractFile* infile, int mapVersion);
+// Saved records use the same byte encoding but retain the legacy campaign-id
+// remap for every version before the Complete hero roster.
+int __fastcall LoadHeroId(TAbstractFile* infile, int saveVersion);
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
