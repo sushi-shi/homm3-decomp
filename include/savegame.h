@@ -12,6 +12,8 @@
 #ifndef HOMM3_SAVEGAME_H
 #define HOMM3_SAVEGAME_H
 
+#include <exception>
+
 #include "armygrp.h"  // TAbstractFile
 
 // The zlib-backed save stream. RETAIL-PROVEN, three bodies:
@@ -33,6 +35,12 @@
 // no constructor body in this TU ever initialises a vptr.
 class TGzFile : public TAbstractFile {
 public:
+    // Retail RTTI at 0x677d48 and its two-entry catchable-type array prove
+    // this empty std::exception-derived tag. game::SaveGame catches it by
+    // value when opening the output stream fails.
+    class TOpenFailure : public std::exception {
+    };
+
     TGzFile(const char* path, const char* mode);
     ~TGzFile();
 #ifndef HOMM3_TABSTRACTFILE_VIRTUAL_DTOR_VIEW
