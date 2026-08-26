@@ -542,15 +542,15 @@ register-homing (why-reg)	5	95.1191	95	kb	?GetNextHumanPlayer@@YIHH@Z	why-reg	na
 inliner (predict-inline)	4	99.6497	1270	cmbtmgr	?SetNextArmy@combatManager@@QAEXHH@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 6 under-inline, 6 over-inline (7 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	4	98.1013	228	hero	?GetExperienceIncrement@hero@@SIHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	99.3919	673	resourcedisplay	??0TResourceDisplay@@QAE@PAVheroWindow@@E@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	4	99.3389	590	dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	4	98.5227	257	army	?get_estimated_damage@army@@QBEJPBV1@JEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-register-homing (why-reg)	4	99.2434	500	dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	4	99.2692	515	victorylossconditions	?CheckForGrailBuildingWin@VictoryConditionStruct@@QAEEXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	98.6813	284	hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	4	98.8426	320	puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	4	98.9923	359	game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	why-reg	register-homing knob (B-family)
 register-homing (why-reg)	4	96.5278	104	hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 register-homing (why-reg)	4	99.0992	389	ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+unclassified	3	99.3421	500	dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	(none)	run why-reg / why-branch for the full search
+unclassified	3	99.4444	590	dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	(none)	run why-reg / why-branch for the full search
 unclassified	3	98.4697	208	ai	?DoCompAI@combatManager@@QAEXH@Z	why-reg	run why-reg / why-branch for the full search
 register-homing (why-reg)	3	99.5679	725	seerhut	?DoProgressDialog@type_creature_quest@@UAEXXZ	why-reg	register-homing knob (B-family)
 unclassified	3	99.6923	969	dxplay	?CreateTCPIPConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD0PAV2@@Z	(none)	run why-reg / why-branch for the full search
