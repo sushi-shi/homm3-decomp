@@ -192,6 +192,8 @@ const int SAVED_HERO_PRE25_FIRST = 0x80;
 const int SAVED_HERO_PRE25_SECOND = 0x81;
 const int HERO_PRE25_FIRST_REMAP = 0x92;
 const int HERO_PRE25_SECOND_REMAP = 0x9c;
+const int MAP_VERSION_OLD_CAMPAIGN_HERO_IDS = 14;
+const int SAVE_VERSION_COMPLETE_HERO_ROSTER = 25;
 
 // The PC-only save-version remap is a real inline source boundary. Retail's
 // three expansions read through an unsigned dword buffer, keep the decoded id
@@ -1437,6 +1439,44 @@ void playerData::ClearNetInfo()
     dpid = 0;
     isHuman = 0;
     isLocal = 0;
+}
+
+// The map and save streams both store hero ids as one unsigned byte. Their
+// retained /Gr helpers differ only in the legacy-version predicate: original
+// maps remap at version 14, while saved records remap every version before
+// the Complete roster landed at version 25.
+VA(0x004ba1c0, 0x50)
+int __fastcall ReadHeroId(TAbstractFile* infile, int mapVersion)
+{
+    unsigned long value;
+    infile->Read(&value, sizeof(unsigned char));
+    int heroId = value & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (mapVersion == MAP_VERSION_OLD_CAMPAIGN_HERO_IDS) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
+}
+
+VA(0x004ba210, 0x50)
+int __fastcall LoadHeroId(TAbstractFile* infile, int saveVersion)
+{
+    unsigned long value;
+    infile->Read(&value, sizeof(unsigned char));
+    int heroId = value & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (saveVersion < SAVE_VERSION_COMPLETE_HERO_ROSTER) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
 }
 
 // E:\gamedcs\game.cpp:1409
