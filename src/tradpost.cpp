@@ -1438,6 +1438,9 @@ void TSellArtifactWindow::Update(unsigned char bUpdate)
 // panels and slider, and, in a two-pane loop, each army slot (creature icon +
 // count) and each buy-resource button (icon, exchange ratio, highlight). The
 // final repaint is gated by bUpdate.
+// Match plateau: 91.2354%; calls are 54/54 and branches 22/22. The remaining
+// header cross-jump and ESI/EDI handle-state permutation did not move under
+// the AST, statement-order, why-branch, or why-reg source-level sweeps.
 VA(0x005ec550, 0x7ba)  // ordermap clean run + arity ret 4, dc 0x18a550
 void TSellCreatureWindow::Update(unsigned char bUpdate)
 {
@@ -1447,22 +1450,23 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
         sprintf(gText, gLeftDenominated ? (*gpGeneralText)[163]
                                         : (*gpGeneralText)[164]);
     } else {
-        int cid = gpMarketHero->army.armies[gSelectedArtifact];
         const char* name;
         const char* word;
         int n1, n2;
         if (gRatioInverted) {
+            n1 = gGiveQuantity;
+            n2 = 1;
+            int cid = gpMarketHero->army.armies[gSelectedArtifact];
             name = akCreatureTypeTraits[cid].m_name;
             word = (gGiveQuantity > 1) ? (*gpGeneralText)[161]
                                        : (*gpGeneralText)[162];
-            n1 = gGiveQuantity;
-            n2 = 1;
         } else {
+            n1 = 1;
+            int cid = gpMarketHero->army.armies[gSelectedArtifact];
             name = (gGiveQuantity > 1) ? akCreatureTypeTraits[cid].m_plural_name
                                        : akCreatureTypeTraits[cid].m_name;
-            word = (*gpGeneralText)[162];
-            n1 = 1;
             n2 = gGiveQuantity;
+            word = (*gpGeneralText)[162];
         }
         sprintf(gText, (*gpGeneralText)[270],
                 n1, word, gResourceNames[gLeftResource], n2, name);
@@ -1476,8 +1480,8 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
     msg.codeY = 1;
     BroadcastMessage(&msg);
 
-    sprintf(gText, (*gpGeneralText)[273], gpMarketHero->name);
     msg.codeY = 0xe;
+    sprintf(gText, (*gpGeneralText)[273], gpMarketHero->name);
     BroadcastMessage(&msg);
 
     strcpy(gText, (*gpGeneralText)[169]);
@@ -1561,7 +1565,6 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
                     msg.codeY = 0x84 + slot;
                     BroadcastMessage(&msg);
                     msg.codeY = 0x23 + slot;
-                    BroadcastMessage(&msg);
                 } else {
                     msg.codeX = widget::WIDGET_SET_STATUS;
                     msg.extra = 2;
@@ -1583,8 +1586,8 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
                     BroadcastMessage(&msg);
                     msg.codeX = widget::WIDGET_SET_Y;
                     msg.extra = gCreatureRowY[slot];
-                    BroadcastMessage(&msg);
                 }
+                BroadcastMessage(&msg);
                 msg.codeX = (gSelectedArtifact == slot) ? widget::WIDGET_SET_STATUS
                                                         : widget::WIDGET_CLEAR_STATUS;
                 msg.codeY = MARKET_CREATURE_SLOT_0_ID + slot;
@@ -1602,9 +1605,7 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
                 msg.codeX = widget::WIDGET_SET_TEXT;
                 msg.codeY = 0x4d + slot;
                 msg.extraText = gText;
-                if (gSelectedArtifact == -1) {
-                    sprintf(gText, emptyRolloverText);
-                } else {
+                if (gSelectedArtifact != -1) {
                     int iInTradeRatio, bInLeftDenominated, iInMaxUnitsToTrade;
                     ComputeTradeRatios(gSelectedArtifact, slot, &iInTradeRatio,
                                        &bInLeftDenominated, &iInMaxUnitsToTrade);
@@ -1614,6 +1615,8 @@ void TSellCreatureWindow::Update(unsigned char bUpdate)
                     else
                         sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
                                 iInTradeRatio);
+                } else {
+                    sprintf(gText, emptyRolloverText);
                 }
                 BroadcastMessage(&msg);
                 msg.codeY = MARKET_BUY_WOOD_ID + slot;
