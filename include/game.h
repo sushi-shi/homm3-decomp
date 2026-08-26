@@ -741,16 +741,27 @@ struct type_map_hero_identity {
 };
 SIZE(type_map_hero_identity, 0x14);
 
-struct type_map_hero_info : public type_map_hero_identity {
 #ifdef HOMM3_GAME_NEW_MAP_DECLS
+// game.obj's constructor copies these three members directly. Other TUs keep
+// the equivalent inherited view below so this PC-only declaration does not
+// perturb their already-banked compiler state.
+struct type_map_hero_info {
     // The map header stores one eight-player availability mask. The new-map
     // normalization body compares it with bitset<8>(0xff) and copies the
     // single backing dword directly into game::heroPoolMap.
+    type_map_hero_info() {}
+    type_map_hero_info(int identity, std::string name,
+                       std::bitset<8> availability);
+
+    int field_00;
+    std::string field_04;
     std::bitset<8> field_14;
-#else
-    int field_14;
-#endif
 };
+#else
+struct type_map_hero_info : public type_map_hero_identity {
+    int field_14;
+};
+#endif
 SIZE(type_map_hero_info, 0x18);
 
 // VC6 retains this map value's implicit destructor in game.obj. Specializing

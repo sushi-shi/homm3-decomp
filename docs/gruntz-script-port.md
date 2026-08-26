@@ -402,6 +402,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   **96.79% linked fuzzy**, and **49.14% executable coverage** with no banked
   loss.
 
+- **2026-08-26 — the map hero-setup value constructor is reconstructed
+  byte-exact.** The sole retail caller in `NewSMapHeader::Read` passes an
+  identity dword, an owned 16-byte Dinkumware string, and a four-byte
+  `bitset<8>`; the callee writes them at `+0`, `+4`, and `+0x14`, destroys the
+  by-value string, and returns with `ret 0x18`. Those independent ABI and
+  member-offset facts identify the 304-byte body at `0x4c4cc0` as
+  `type_map_hero_info(int, string, bitset<8>)`.
+
+  A direct three-member game.obj view is codegen-significant: it lets VC6
+  expand the string copy into the constructor and reproduces every instruction,
+  branch, cleanup state, and relocation. Expressing the record as an inherited
+  identity instead leaves `string::assign` out of line. The direct view is
+  therefore scoped behind `HOMM3_GAME_NEW_MAP_DECLS`; other TUs retain the
+  layout-equivalent inherited declaration and their already-banked compiler
+  state. The gated build reaches **2267/2701 linked exact**, **96.79% linked
+  fuzzy**, and **49.16% executable coverage** with no banked loss.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in

@@ -6644,6 +6644,17 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
     return 0;
 }
 
+// NewSMapHeader::Read builds this value from the map hero id, its owned
+// by-value name, and the eight-player availability mask. Keeping the members
+// direct is codegen-significant: VC6 then expands the Dinkumware string copy
+// into this constructor, including its cleanup of the owned parameter.
+VA(0x004c4cc0, 0x130)
+type_map_hero_info::type_map_hero_info(int identity, std::string name,
+                                      std::bitset<8> availability)
+    : field_00(identity), field_04(name), field_14(availability)
+{
+}
+
 // PC-only post-header normalization. The available-hero bitset controls the
 // live availability bytes, explicit per-player hero masks override the
 // all-player default, and artifact victory conditions reserve their target
