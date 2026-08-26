@@ -454,14 +454,16 @@ CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
 }
 
 // E:\gamedcs\singleselectionpopups.cpp:365
-// Residual (99.11%): register-visible distance 15 after identical first
-// definitions. The bounded AST tree measured 1,965 compatible depth-1..3
-// shapes; follow-up trees measured 32 local lifetimes, 32 xStart computations,
-// and 20 CountNumPlayers inline-body forms. All clean variants were flat or
-// worse. `volatile xStart` cuts the distance to 8 but is not source evidence,
-// so it and synthetic TU-state noise remain deliberately excluded. Restoring
-// the two preceding real CreateWin bodies (CHeroDlg and CTownDlg), both with
-// retail-exact branch and call structure, leaves this score unchanged.
+// Residual (99.11%): all 41 CFG blocks and their edges agree; only B14/B17/B36
+// differ in size because C2 promotes xStart through EDI here while retail
+// stores it in one stack slot and reloads it through EAX/EDX. Dreamcast names
+// xStart as T_INT4 and sTemp as char[256], in this declaration order. The
+// bounded generator measured 1,965 depth-1..3 AST shapes, 124 lifetime/helper/
+// alias shapes, and 336 plausible names for the unrecorded loop locals; all
+// clean variants were flat or worse. The guided allocator sweep finds only
+// `volatile xStart` (distance 15 -> 8), which is neither source evidence nor
+// exact and is deliberately rejected. Restoring the two preceding real
+// CreateWin bodies (CHeroDlg and CTownDlg) also leaves this score unchanged.
 VA(0x00576540, 0x3e8)  // anchor-vtable, dc 0x12eb24
 unsigned char CTeamAlignmentDlg::CreateWin()
 {
