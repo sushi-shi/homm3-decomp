@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — `NewfullMap::NewfullMapFn_00505F20` closes at 100%.** The
+  settled candidate already agreed with retail in all 19 blocks and 10
+  branches; its 343-byte body differed only in four frame-slot encoding bytes.
+  The source
+  distinction is the non-const `bitset<10>::operator[]` proxy: spelling the
+  terrain-mask query as `.test(terrain)` lets VC6 compact the frame from 0xc
+  to 0x8, while `mask_34[terrain]` preserves retail's otherwise-dead proxy
+  slot and produces the exact object.  The older reference/push_back spelling
+  is rejected in the current include/delink generation because it over-inlines
+  to 21 branches versus retail's 10; a generated 316-candidate declaration,
+  lifetime, and identifier search was flat at 99.9771%.  The required
+  build/delink/build cycle leaves the ratchet and all repository gates clean.
+
 - **2026-08-26 — candidate assembly gains verified VC6 `/Z7` source
   statements.** `homm3 sema disasm <addr> --base --source [--verbose]`
   interleaves the candidate's real source lines with the ordinary matching
