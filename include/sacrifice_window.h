@@ -22,6 +22,9 @@ struct type_artifact_offering : public type_artifact {
     long source;
     long value;
 
+    type_artifact_offering();
+    explicit type_artifact_offering(TArtifact artifact);
+
     // Dreamcast types the slot as TArtifactSlot. Retail passes the same
     // four-byte domain used by the live sacrifice-window click handlers.
     void set(const type_artifact* artifact, long slot, const hero* owner);
@@ -34,6 +37,7 @@ enum ECommaFormatting {
 
 enum ESacrificeWindowHelp {
     SACRIFICE_HELP_EXIT_BUTTON = 0,
+    SACRIFICE_HELP_CURRENT_ARTIFACT = 1,
     SACRIFICE_HELP_EMPTY_BACKPACK = 2,
     SACRIFICE_HELP_ALL_ARTIFACTS = 3,
     SACRIFICE_HELP_SACRIFICE_CREATURES_BUTTON = 4,
@@ -70,6 +74,8 @@ enum ESacrificeGeneralText {
     SACRIFICE_GENERAL_TEXT_EXPERIENCE = 123,
     SACRIFICE_GENERAL_TEXT_NEXT_LEVEL = 476,
     SACRIFICE_GENERAL_TEXT_TOTAL_EXPERIENCE = 477,
+    SACRIFICE_GENERAL_TEXT_ARTIFACTS_TITLE = 478,
+    SACRIFICE_GENERAL_TEXT_CREATURES_TITLE = 479,
     SACRIFICE_GENERAL_TEXT_CREATURE = 482,
     SACRIFICE_GENERAL_TEXT_CANNOT_SACRIFICE_ARTIFACT = 483,
     SACRIFICE_GENERAL_TEXT_EMPTY_CREATURE = 484,
@@ -91,6 +97,21 @@ enum ETransformerWindowHelp {
 };
 DATA(0x006a77d0) extern THelpText
     gTransformerWindowHelp[TRANSFORMER_HELP_COUNT];
+
+struct type_icon_definition {
+    long x;
+    long y;
+    long width;
+    long height;
+    const char* image;
+};
+SIZE(type_icon_definition, 0x14);
+
+// DC field list 0x2712: a type_icon_definition base and slot at +0x14.
+struct type_doll_slot_definition : public type_icon_definition {
+    long slot;
+};
+SIZE(type_doll_slot_definition, 0x18);
 
 // DC proves a seven-element 224-byte array, hence 32 bytes per record.
 // Retail update_creature_offering independently proves the six widget
@@ -228,6 +249,8 @@ class type_doll_slot_widget : public iconWidget {
 public:
     long slot;
 
+    type_doll_slot_widget(const type_doll_slot_definition& def, long id);
+
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);
 };
@@ -237,6 +260,9 @@ class type_backpack_slot_widget : public iconWidget {
 public:
     long slot;
 
+    type_backpack_slot_widget(const type_icon_definition& def,
+                              long new_slot, long id);
+
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);
 };
@@ -245,6 +271,10 @@ SIZE(type_backpack_slot_widget, 0x4c);
 class type_artifact_offering_widget : public iconWidget {
 public:
     long item_number;
+
+    type_artifact_offering_widget(long x, long y, long width, long height,
+                                  long new_item_number, long id,
+                                  const char* image);
 
     virtual unsigned char handle_click(unsigned char down_click,
                                        unsigned char right_click);
