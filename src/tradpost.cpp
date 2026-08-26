@@ -762,6 +762,140 @@ double get_trade_ratio(EGameResource source, EGameResource dest, double efficien
     return ratio;
 }
 
+// E:\gamedcs\tradpost.cpp:2368
+VA(0x005ecfe0, 0x3ba)
+int TTradeResourceWindow::WindowHandler(message* msg)
+{
+    int r = CAdvPopup::WindowHandler(msg);
+    if (r != 0)
+        return r;
+
+    int bExit = 0;
+
+    if (msg->id != MESSAGE_MOUSE_MOVE) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 1;
+
+    switch (msg->codeX) {
+    case widget::WIDGET_DESELECT:
+        switch (msg->codeY) {
+        case MARKET_LEFT_PANEL_ID:
+            if (gRightAmount == 0)
+                return 1;
+            if (gRatioInverted) {
+                gpCurrentPlayer->resources[gLeftResource] +=
+                    gGiveQuantity * gRightAmount;
+                gpCurrentPlayer->resources[gSelectedArtifact] -= gRightAmount;
+            } else {
+                gpCurrentPlayer->resources[gSelectedArtifact] -=
+                    gGiveQuantity * gRightAmount;
+                gpCurrentPlayer->resources[gLeftResource] += gRightAmount;
+            }
+            gLeftDenominated = 1;
+            gLeftResource = -1;
+            gSelectedArtifact = -1;
+            break;
+        case MARKET_RIGHT_PANEL_ID:
+            gRightAmount = gMaxTradeUnits;
+            resourceSlider->SetState(gMaxTradeUnits);
+            break;
+        case MARKET_LEFT_LABEL_ID:
+        case MARKET_RIGHT_LABEL_ID:
+        case MARKET_TITLE_ID:
+            gpWindowManager->dialogReturn = msg->codeY - 0x10;
+            bExit = 1;
+            gLeftResource = -1;
+            gSelectedArtifact = -1;
+            gLeftDenominated = 0;
+            break;
+        default:
+            return 1;
+        }
+        break;
+    case widget::WIDGET_SELECT:
+        switch (msg->codeY) {
+        case MARKET_SELL_WOOD_ID: case MARKET_SELL_MERCURY_ID:
+        case MARKET_SELL_ORE_ID: case MARKET_SELL_SULFUR_ID:
+        case MARKET_SELL_CRYSTAL_ID: case MARKET_SELL_GEMS_ID:
+        case MARKET_SELL_GOLD_ID: {
+            int sellRes = msg->codeY - MARKET_SELL_WOOD_ID;
+            if (sellRes == gSelectedArtifact)
+                return 1;
+            int buyRes = gLeftResource;
+            gSelectedArtifact = sellRes;
+            if (buyRes != -1) {
+                float denom = static_cast<float>(gMarketValues[sellRes])
+                            * fTradingPostEfficency[gMarketCount];
+                float ratio = static_cast<float>(gMarketValues[buyRes]) / denom;
+                if (ratio >= 1.0f) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits =
+                        gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
+                } else {
+                    gRatioInverted = 1;
+                    gGiveQuantity =
+                        static_cast<long>(1.0f / ratio + 0.5);
+                    gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
+                }
+                resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                gRightAmount = 0;
+            }
+            break;
+        }
+        case MARKET_BUY_WOOD_ID: case MARKET_BUY_MERCURY_ID:
+        case MARKET_BUY_ORE_ID: case MARKET_BUY_SULFUR_ID:
+        case MARKET_BUY_CRYSTAL_ID: case MARKET_BUY_GEMS_ID:
+        case MARKET_BUY_GOLD_ID: {
+            int buyRes = msg->codeY - MARKET_BUY_WOOD_ID;
+            if (buyRes == gLeftResource)
+                return 1;
+            int sellRes = gSelectedArtifact;
+            gLeftResource = buyRes;
+            if (sellRes != -1) {
+                float denom = static_cast<float>(gMarketValues[sellRes])
+                            * fTradingPostEfficency[gMarketCount];
+                float ratio = static_cast<float>(gMarketValues[buyRes]) / denom;
+                if (ratio >= 1.0f) {
+                    gRatioInverted = 0;
+                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gMaxTradeUnits =
+                        gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
+                } else {
+                    gRatioInverted = 1;
+                    gGiveQuantity =
+                        static_cast<long>(1.0f / ratio + 0.5);
+                    gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
+                }
+                resourceSlider->SetResolution(gMaxTradeUnits + 1);
+                gRightAmount = 0;
+            }
+            break;
+        }
+        default:
+            return 1;
+        }
+        break;
+    default:
+        return 1;
+    }
+
+    Update(1);
+    if (bExit) {
+        msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+        return 2;
+    }
+    return 1;
+    }
+
+    gpWindowManager->ConvertToHover(*msg);
+    if (msg->codeY != lastHoverId) {
+        lastHoverId = msg->codeY;
+        SetRolloverText(msg->codeY);
+    }
+    return 1;
+}
+
 VA(0x005ed3a0, 0x1a2)
 void TTradeResourceWindow::SetRolloverText(int codeY)
 {

@@ -35,10 +35,15 @@ class slider;
 // size is asserted; the constructors that would prove the tails are 8 KB
 // EH-bearing rows still deferred.
 class TTradeResourceWindow : public CAdvPopup {
+    slider* resourceSlider;
+    int lastHoverId;
 public:
+    void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);
     virtual ~TTradeResourceWindow();
 };
+SIZE(TTradeResourceWindow, 0x68);
 
 class TGiveResourceWindow : public CAdvPopup {
     int field_60;
