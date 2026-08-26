@@ -9271,8 +9271,8 @@ game::game()
 // 0x4ce520 is the matching element DESTRUCTOR for that same class - it
 // releases the +0x30c triple - and it is address-taken immediately
 // beside 0x4ce4b0 in game::game. It is compiler-generated: the DC
-// roster has no row for it, and no claim kind fits an implicit
-// destructor, so it stays unclaimed and is recorded here instead.
+// roster has no row for it. The owner-specific IMPLICIT_DTOR contract
+// now binds it to VC6's exact HeroExtra destructor COMDAT.
 // ---------------------------------------------------------------------
 
 #endif  // @carcass
@@ -9282,6 +9282,8 @@ VA(0x004ce4b0, 0x68)  // address-take (game::game +0x46) + layout, dc 0xbd5f4
 HeroExtra::HeroExtra()
 {
 }
+
+VA_COMPGEN(0x004ce520, 0x4A, IMPLICIT_DTOR, HeroExtra)
 
 VA(0x004ce570, 0x32)  // address-take + ctor-proven layout (+0x90 triple), dc 0xbd630
 playerData::~playerData()
@@ -9509,6 +9511,12 @@ void game::ResetGame(int difficulty, int version,
 // Sign's one-string destructor is emitted out of line and is the callee used
 // by the vector helpers below.
 VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
+
+// ICF retains one width-independent subscript body for several bitsets; the
+// GetRandomMonster callers prove bitset<145> is one contributor. The five-word
+// sweep in the following count body independently proves the same width.
+VA_COMPGEN(0x004cef80, 0x12, BITSET_SUBSCRIPT, Bitset145)
+VA_COMPGEN(0x004cf010, 0x2E, BITSET_COUNT, Bitset145)
 
 // Retail keeps this run of Dinkumware vector COMDATs between ResetGame and
 // save_vector. Their element types are fixed independently by the pool

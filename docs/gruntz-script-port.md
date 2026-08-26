@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — the `HeroExtra` teardown and two more retained bitset
+  COMDATs are exact.** The 74-byte body at retail `0x4ce520` releases and
+  clears the string triple at `HeroExtra+0x30c`; its address is passed beside
+  the already exact constructor to the 156-element construction helper and
+  reused by `game::~game` and its unwind funclets. The owner-specific
+  `IMPLICIT_DTOR` join binds VC6's byte-identical generated destructor without
+  inventing a source definition.
+
+  The 18-byte body at `0x4cef80` is the width-independent
+  `bitset<N>::operator[]` that returns its two-word reference proxy.
+  `game::GetRandomMonster` supplies `bitset<145>` callers, while the matching
+  game.obj public supplies the exact COFF identity; the direct-symbol contract
+  therefore gains `BITSET_SUBSCRIPT` plus a negative-control join case. The
+  five-word nibble-count loop at `0x4cf010` independently identifies and
+  exactly matches `bitset<145>::count`. The synchronized build reaches
+  **2228/2661 linked exact**, **96.84% linked fuzzy**, and **48.72%
+  executable coverage** with every gate clean.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in
