@@ -1808,6 +1808,7 @@ recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
+recruit	?Open@recruitUnit@@UAEHH@Z	100.0000	100.0000	100.0000	0x14fea0
 # DELIBERATE LOWER 2026-08-20, integration of lane/mapcell4, and the
 # cause is PROVEN rather than guessed: recruit.cpp and every header it
 # sees are byte-identical to the pre-merge tree, yet this row moved
@@ -1842,7 +1843,7 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # and reconstructions (cast_spell exact among them) - the delink
 # generation moved, recruit.cpp and its headers untouched by the
 # regression commit. Same mechanism as above; hist keeps the peak.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
