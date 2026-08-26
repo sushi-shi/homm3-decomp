@@ -10859,6 +10859,15 @@ type_point game::GameFn_004CEF10(int identifier)
     return point;
 }
 
+// SavedGameHeader's scope-exit destructor is retained by the Load/Save
+// callers above. The 0x5a4-byte receiver and member order identify this
+// compiler-generated body between the explicit header methods and game::Load.
+// PARTIAL (29.0580%): retail expands SCampaign and NewSMapHeader teardown
+// here; this TU calls their exact out-of-line destructors. Exposing the
+// implicit member views globally is the already-measured ratchet loss
+// documented on SCampaign in game.h, so retain the honest call boundary.
+VA_COMPGEN(0x004bdf80, 0x1B1, IMPLICIT_DTOR, SavedGameHeader)
+
 // Sign's one-string destructor is emitted out of line and is the callee used
 // by the vector helpers below.
 VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
