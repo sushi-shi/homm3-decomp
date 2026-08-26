@@ -14,6 +14,7 @@ class TCombatHeroSubWindow;
 class textWidget;
 class textEntryWidget;
 class type_combat_sub_window;
+class message;
 
 // Eleven interleaved rollover/right-click rows at retail 0x6a6968. The
 // combat-window right-click handler consumes the same table as the combat
@@ -77,6 +78,8 @@ public:
     void set_rollover(const char* new_text);
     void show_messages(long start);
     void scroll_rollover(long delta);
+    static int scroll_up(message& msg);
+    static int scroll_down(message& msg);
     // combatwindow.cpp:221, dc 0x69850. combatManager::Open (0x462a20)
     // is the one constructor site in the tree and pushes a single byte,
     // the placement flag it has just computed.
