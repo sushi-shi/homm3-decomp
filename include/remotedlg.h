@@ -125,7 +125,7 @@ class CWaitForReadyPlayersDlg : public CAnimatedDlg {
 public:
     CWaitForReadyPlayersDlg();
     void Wait();
-    unsigned char AllPlayersReady();
+    bool AllPlayersReady();
     virtual int handle_message(message& msg);  // slot 3
 
 protected:
