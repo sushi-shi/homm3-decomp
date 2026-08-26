@@ -186,20 +186,11 @@ void slider::KeyAccel(int x1, int x2, int x3, int x4, int key)
 }
 
 // E:\gamedcs\slider.cpp:244
-// DC-census verdict (2026-08-14): the sole under-count row is
-// `GameTime::ElapsedSince` x1 (dc 0x1eed4) against the
-// `(int)(GameTime::Get() - repeatTime) > 0` head below, and modelling it
-// file-locally is byte-EXACTLY flat at 95.1901. Same result in button::Main.
-// The source-compatible 60-branch/11-return CFG is complete. Retail shares
-// the KP3/KP2 forward KeyAccel suffix; this VC6 invocation instead shares the
-// equivalent KP9/KP8 backward suffix, leaving the measured 95.190125% C2
-// tail-merging plateau after ordering and lifetime probes. The suffix choice
-// also decides the switch lowering: with the KP9/KP8 pair merged this C2
-// emits the compressed byte-selector form (`xor edx,edx; mov dl,[eax+tbl];
-// jmp [4*edx+jmp_tbl]`) where retail emits the direct ten-entry
-// `jmp [4*eax+tbl]` over the same 0x48..0x51 range. Rejected 2026-08-13:
-// respelling the KP8 arm's `return 0;` as the semantically identical
-// `break;` to break that pair - byte-inert, still 95.190125%.
+// Retail's direct 0x48..0x51 jump table proves that KP4 shares KP8's
+// decrement arm and KP6 shares KP2's increment arm. Letting all four action
+// arms reach the common zero return, and making the state-message arm join
+// its common success tail, reproduces all 85 blocks, 60 branches, 11 returns,
+// and ten jump-table slots exactly.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
 int slider::Main(message* msg)
 {
@@ -230,16 +221,16 @@ int slider::Main(message* msg)
         switch (msg->codeX) {
         case KEYCODE_KP_9:
             KeyAccel(1, 2, 0, 4, KEYCODE_KP_9);
-            return 0;
+            break;
         case KEYCODE_KP_3:
             KeyAccel(0, 3, 0, 4, KEYCODE_KP_3);
             break;
+        case KEYCODE_KP_4:
         case KEYCODE_KP_8:
-            if (currentState > 0) {
+            if (currentState > 0)
                 KeyAccel(1, 2, 0, 4, KEYCODE_KP_8);
-                return 0;
-            }
             break;
+        case KEYCODE_KP_6:
         case KEYCODE_KP_2:
             if (currentState < numStates - 1)
                 KeyAccel(0, 3, 0, 4, KEYCODE_KP_2);
@@ -331,7 +322,7 @@ int slider::Main(message* msg)
         case WIDGET_SET_SLIDER_STATE:
             if (msg->codeY == id) {
                 SetState(msg->extra);
-                return 1;
+                goto sliderMessageHandled;
             }
             break;
         case WIDGET_SET_SLIDER_RESOLUTION:
@@ -342,6 +333,9 @@ int slider::Main(message* msg)
             break;
         }
         goto callWidgetMain;
+
+    sliderMessageHandled:
+        return 1;
     }
 
 callWidgetMain:
