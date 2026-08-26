@@ -24,6 +24,9 @@ struct type_creature_bank {
 #ifdef HOMM3_GAME_CREATURE_BANK_DTOR_DECL
     ~type_creature_bank();
 #endif
+#ifdef HOMM3_GAME_CREATURE_BANK_LOAD_DECL
+    unsigned char load(void* infile);
+#endif
 };
 SIZE(type_creature_bank, 0x6c);
 

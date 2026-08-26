@@ -278,6 +278,211 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   source diff; the known 86.98% `CDPlayHeroes::SendIt` returns rc 1 and names
   its first divergent candidate statement. These are candidate-navigation
   records only and make no claim about retail source.
+- **2026-08-26 — seven game bitset `_Xran` boundaries are corrected and nine
+  generated rows close exactly.** The admitted carve stopped each `_Xran` at
+  the noreturn `__CxxThrowException` call after 200 bytes, but retail visibly
+  retains `pop edi; pop esi; pop ebx` immediately afterward and before the
+  next function's alignment. VC6's corresponding named publics are 203 bytes
+  and include those same three bytes. `config/retail-functions.tsv` therefore
+  corrects `0x4d1850`, `0x4d1c80`, `0x4d2090`, `0x4d2610`, `0x4d26e0`,
+  `0x4d4eb0`, and `0x4d5000` from 200 to 203 bytes; every corrected row then
+  matches byte-exact.
+
+  The public callers' bounds independently fix widths 4, 70, 156, 5, 28, 12,
+  and 128. `VA_COMPGEN` gains a narrow direct-symbol `BITSET_XRAN` contract
+  with a width-decoding selftest. A late-anchor call also emits the adjacent
+  exact `bitset<128>::set` and `test` rows. Finally, retail `0x4cf750` is
+  corrected from `vector<TRumour>::size` to `vector<boat>::size`: both callers
+  are boat-pool code and the body divides by `sizeof(boat) == 40`, not the
+  20-byte rumour stride. The synchronized build reaches **2249/2681 linked
+  exact**, **96.85% linked fuzzy**, and **48.87% executable coverage** over
+  the corrected **1,996,539-byte** function universe with every gate clean.
+
+- **2026-08-26 — four more public game STL helpers close through the late
+  emission anchor.** Retail's immediate bounds and element stride identify
+  52-byte `bitset<4>::test` at `0x4cf960`, 19-byte
+  `vector<type_university>::capacity` at `0x4cfa40`, 99-byte
+  `bitset<156>::set` at `0x4d0070`, and 52-byte `bitset<28>::test` at
+  `0x4d17d0`. Each is a named public already supported by a typed
+  `VA_COMPGEN` contract; extending the non-runtime game STL anchor makes VC6
+  emit all four byte-exact without disturbing an existing row.
+
+  The synchronized build reaches **2239/2672 linked exact**, **96.84% linked
+  fuzzy**, and **48.79% executable coverage** with every gate clean. Private
+  bitset `_Tidy` residuals remain excluded from this technique because public
+  calls cannot emit them and whole-template instantiation is too broad.
+
+- **2026-08-26 — the retained game `std::logic_error` constructor is exact.**
+  Retail `0x4c3090` is Dinkumware's 354-byte string-taking
+  `std::logic_error` constructor. Its public name fixes the class and overload,
+  and byte-identical copies already live in hero.obj, mapcell.obj, and
+  victory.obj. Extending game.cpp's trailing, non-runtime STL emission anchor
+  produces the same VC6 public after all real game bodies, without changing an
+  existing comparison row.
+
+  `VA_COMPGEN` gains the narrow direct-symbol `CLASS_CTOR` contract; the join
+  resolves the overload group by the uniquely claimed `0x162` extent, and its
+  demangled-key selftest pins the long Dinkumware string signature. The
+  synchronized build reaches **2235/2668 linked exact**, **96.84% linked
+  fuzzy**, and **48.78% executable coverage** with every gate clean.
+
+- **2026-08-26 — two missing game bitset COMDATs are restored with a late
+  emission anchor.** Retail's game callers prove the exact 103-byte
+  `bitset<70>::reference::operator=` at `0x4cefa0` and 99-byte
+  `bitset<144>::set` at `0x4cf9a0`; the same VC6 members were already emitted
+  byte-exact in hero.obj. The still-unreconstructed game bodies do not exhaust
+  this tree's /Ob2 budget at the same sites, so game.obj lacked both publics.
+
+  A trailing `#pragma inline_depth(0)` anchor, following hero.cpp's established
+  pattern, emits only those public template members after every real game body
+  has compiled. It creates no target-enumerated report row and leaves every
+  existing match unchanged. The private `bitset<70>::_Tidy` at `0x4cfa10`
+  remains unclaimed: a public call cannot emit it, while whole-template
+  instantiation is deliberately rejected as broad and collision-prone. The
+  synchronized build reaches **2234/2667 linked exact**, **96.84% linked
+  fuzzy**, and **48.76% executable coverage** with every gate clean.
+
+- **2026-08-26 — two owner-local generated destructors close exactly.** The
+  nine-element random-town-name pool passes `TPickRandomTownName`'s destructor
+  to VC6's teardown iterator; its 38-byte game.obj public is byte-identical to
+  retail `0x4caa40`, and the Dreamcast roster independently supplies the class
+  name. Retail `0x4c4df0` is the exact 62-byte destructor for the value pair in
+  `map<int, type_map_hero_info>`: the mangled public fixes
+  `pair<const int, type_map_hero_info>`, while the body releases the mapped
+  type's string member.
+
+  `VA_COMPGEN` gains a narrow direct-symbol `PAIR_CONST_INT_DTOR` contract so
+  the template owner is bound from VC6's public rather than approximated by a
+  handwritten declarator; its join has an embedded negative control. The
+  synchronized build reaches **2232/2665 linked exact**, **96.84% linked
+  fuzzy**, and **48.75% executable coverage** with every gate clean.
+
+- **2026-08-26 — the quest-monster identifier append and reverse lookup are
+  reconstructed byte-exact.** Retail `readMonsterData` supplies an integer
+  stream identifier and packed `type_point` to `game+0x4e7bc`; the natural
+  local-pair plus `vector::push_back` spelling reproduces all 464 bytes at
+  `0x4ced40`, including VC6's capacity growth, copy, insertion, cleanup, and
+  unwind shape. This also upgrades the final game member's eight-byte element
+  layout from a destructor-width hypothesis to executable proof.
+
+  The sole semantic consumer at `0x56ef20` resolves the same identifier for a
+  defeat-monster quest. Expressing its scan as `for (unsigned i = size();
+  i-- != 0;)` reproduces VC6's retail register schedule and all 104 bytes at
+  `0x4cef10`, including the packed all-minus-one miss sentinel. The synchronized
+  build reaches **2230/2663 linked exact**, **96.84% linked fuzzy**, and
+  **48.74% executable coverage** with every gate clean.
+
+- **2026-08-26 — the `HeroExtra` teardown and two more retained bitset
+  COMDATs are exact.** The 74-byte body at retail `0x4ce520` releases and
+  clears the string triple at `HeroExtra+0x30c`; its address is passed beside
+  the already exact constructor to the 156-element construction helper and
+  reused by `game::~game` and its unwind funclets. The owner-specific
+  `IMPLICIT_DTOR` join binds VC6's byte-identical generated destructor without
+  inventing a source definition.
+
+  The 18-byte body at `0x4cef80` is the width-independent
+  `bitset<N>::operator[]` that returns its two-word reference proxy.
+  `game::GetRandomMonster` supplies `bitset<145>` callers, while the matching
+  game.obj public supplies the exact COFF identity; the direct-symbol contract
+  therefore gains `BITSET_SUBSCRIPT` plus a negative-control join case. The
+  five-word nibble-count loop at `0x4cf010` independently identifies and
+  exactly matches `bitset<145>::count`. The synchronized build reaches
+  **2228/2661 linked exact**, **96.84% linked fuzzy**, and **48.72%
+  executable coverage** with every gate clean.
+
+- **2026-08-26 — the retained hero-setup map `_Tree::_Min` helper is admitted
+  exact.** Retail's `CMapHeaderData::Save` expands iterator increment but
+  keeps the protected static `_Min` call. Its sole argument, the 0x2c map
+  node's right child, and the loop over node +0 left links identify the helper;
+  VC6's pinned `XTREE` body reproduces all 50 bytes including `_Lockit`.
+  `VA_COMPGEN` gains the narrow direct-symbol `TREE_MIN` contract, keyed by
+  the mapped value type, with a mangled-name negative control. An emission-only
+  derived map shim takes the protected member's address without changing the
+  authoritative `std::map<int, type_map_hero_info>` member or a runtime caller.
+
+- **2026-08-26 — the retained hero-setup red-black insertion cluster is exact.**
+  The 277-byte public `_Tree::insert`, its 761-byte protected `_Insert`, and
+  the 179-byte `const_iterator::_Dec` reproduce retail byte for byte. Their
+  search, duplicate-key, node-allocation, rotation, and predecessor paths are
+  the pinned VC6 `XTREE` algorithms; the mangled symbols independently bind
+  the value to `type_map_hero_info`. Retail keeps `_Lockit` calls and nested EH
+  cleanup in this cluster, so game.cpp exposes the header's external-lock
+  (`_MT`) view while retaining the `/ML` runtime profile. Statement-local
+  inline depth preserves the public search body and its inlined `_Max` path.
+
+  A broad explicit `pair` instantiation was rejected because VC6 cached its
+  constructor policy and regressed the unrelated insert-result pair. The
+  narrow `pair<const int, type_map_hero_info>` specialization instead preserves
+  Dinkumware's layout and constructors while keeping the previously exact
+  62-byte destructor out of line. `VA_COMPGEN` adds owner-keyed `TREE_INSERT`,
+  `TREE_NODE_INSERT`, and `TREE_CONST_ITERATOR_DEC` contracts with mangled-name
+  negative controls. The gated build reaches **2266/2700 linked exact**,
+  **96.79% linked fuzzy**, and **49.14% executable coverage** with no banked
+  loss.
+
+- **2026-08-26 — the map hero-setup value constructor is reconstructed
+  byte-exact.** The sole retail caller in `NewSMapHeader::Read` passes an
+  identity dword, an owned 16-byte Dinkumware string, and a four-byte
+  `bitset<8>`; the callee writes them at `+0`, `+4`, and `+0x14`, destroys the
+  by-value string, and returns with `ret 0x18`. Those independent ABI and
+  member-offset facts identify the 304-byte body at `0x4c4cc0` as
+  `type_map_hero_info(int, string, bitset<8>)`.
+
+  A direct three-member game.obj view is codegen-significant: it lets VC6
+  expand the string copy into the constructor and reproduces every instruction,
+  branch, cleanup state, and relocation. Expressing the record as an inherited
+  identity instead leaves `string::assign` out of line. The direct view is
+  therefore scoped behind `HOMM3_GAME_NEW_MAP_DECLS`; other TUs retain the
+  layout-equivalent inherited declaration and their already-banked compiler
+  state. The gated build reaches **2267/2701 linked exact**, **96.79% linked
+  fuzzy**, and **49.16% executable coverage** with no banked loss.
+
+- **2026-08-26 — the split game transfer catch/continuation is folded back
+  into its parent.** The carve treated `0xcb1ec` (23 bytes) and `0xcb206`
+  (2,782 bytes) as functions following the 540-byte body at `0xcafd0`.
+  Retail's `HandlerType` record at `.rdata` `0x64db70` instead points to
+  `0xcb1ec` as that body's catch handler. The normal path jumps over it to
+  `0xcb206`; the resumed code uses the parent's saved EBP frame, reaches both
+  shared epilogues, and owns the trailing switch tables through `0xcbce4`.
+  The hand-owned inventory now records one 3,348-byte EH-bearing function,
+  removing two false independent targets without discarding any retail code.
+
+- **2026-08-26 — `game::SaveGame`'s typed failure path is restored and its
+  false catch entry is retired.** The old 615-byte extent stopped at the normal
+  return and treated `0xbf107` as an independent 122-byte function. Retail's
+  HandlerType record instead points there as the `TGzFile::TOpenFailure` catch;
+  it reads the parent's EBP-relative filename, formats general-text row 10,
+  shows `NormalDialog`, and returns the shared zero-result continuation at
+  `0xbf181`. The inventory now owns the complete 758-byte extent through
+  `0xbf196` and no longer counts the handler as a function.
+
+  Dreamcast independently names the `saveGameTimer` and `compression` locals.
+  Restoring the latter's default-plus-override spelling and the stream's nested
+  lifetime raises `SaveGame` from 93.8148% to **99.9057%**. All 27 CFG blocks
+  and 244 instruction sequences align; the residual is an eight-byte VC6 stack
+  coloring difference. The gated build remains **2281/2721 linked exact** at
+  **96.75% linked fuzzy** and reaches **49.86% executable coverage**, with no
+  banked loss or new cleanliness violation.
+
+- **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
+  and the direct-symbol annotation contract now covers the bitset family.**
+  The contiguous game COMDAT run independently exposes the encoded widths in
+  each mangled public and the matching retail bounds/masks: reference
+  assignment for `bitset<5>` and `bitset<28>`, the `bitset<28>` constructor,
+  `count`, `flip`, and `any`, `bitset<145>::set/test`, and
+  `bitset<8>::test`. All nine target extents equal the corresponding VC6
+  COMDAT extents and compare byte-exact.
+
+  `VA_COMPGEN` gains direct-symbol `BITSET_*` kinds rather than inventing
+  source bodies. The source join now decodes VC6's compact decimal and
+  hexadecimal non-type template arguments, keeps the existing
+  `bitset<10>::_Tidy` mapping, and carries negative-control cases for every
+  admitted member kind. The two pre-existing hero claims for
+  `bitset<144>::any` and `bitset<70>::set` migrate to the typed contract with
+  their exact bytes unchanged. The synchronized build reaches **2225/2658
+  linked exact**, **96.84% linked fuzzy**, and **48.71% executable
+  coverage**; all ratchet, banked-row, claim, single-view, and cleanliness
+  gates pass.
 
 - **2026-08-25 — the skeleton-transformer creature grid reproduces all 655
   retail bytes.** Its sole retail caller is the 0x5654f0 transformer-window
@@ -5391,6 +5596,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `initialize_game_data` row remeasures from 100% to 94.0741%, and
   `recruitUnit::Update` from 90.8376% to 90.8325%; both historical peaks remain
   recorded rather than being presented as semantic regressions.
+
+- **2026-08-26 — the new-map string reader and header-normalization helper
+  are byte-exact.** Retail 0x4c6010 uses the map format's signed dword string
+  length (rather than the saved-game helper's short), accepts only positive
+  lengths below 0xffff, and otherwise erases the destination string. The
+  211-byte helper at 0x4c4e30 maps the header's available-hero bits into the
+  live availability row, applies explicit player masks, and reserves the
+  artifact named by an artifact-victory condition. Its comparison/copy shape
+  independently proves that `type_map_hero_info` ends in a `bitset<8>`: a
+  default bitset followed by `set()` becomes retail's direct 0xff local, and
+  the mapped value copies as one dword. Both functions match every retail
+  instruction and relocation; no external implementation body was used.
 
 - **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
   fixes the prefix order after header restoration: clear recorded events,

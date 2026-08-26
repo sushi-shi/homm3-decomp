@@ -288,6 +288,13 @@ DATA(0x006a542c) static char* gMarketSubtitle;
 DATA(0x0068c482) static unsigned short gMarketValues[7];
 DATA(0x0068c492) static unsigned short gArtifactMarketValues[7];
 
+// The three consecutive eleven-float market-efficiency rows. The first name
+// is retail-public; the latter two preserve the established cross-TU names
+// used by philai and the reconstructed artifact/creature sale paths.
+DATA(0x00678344) float fTradingPostEfficency[11];
+DATA(0x00678370) float fArtifactPurchaseEfficency[11];
+DATA(0x0067839c) float fCreatureSaleEfficency[11];
+
 // The char* title the Trade/Give Updates copy for the freelancer-guild source
 // (gMarketSource == 3); runtime-set, single-use. Provisional name.
 DATA(0x006a7d40) static char* gMarketSource3Name;

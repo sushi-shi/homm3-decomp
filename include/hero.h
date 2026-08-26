@@ -251,6 +251,7 @@ public:
     // the id really is written twice in the source).
     enum {
         HERO_AVAILABILITY_TAVERN_POOL = 0x40,
+        HERO_AVAILABILITY_PRISON = 0x41,
         DEALLOCATE_CAMPAIGN_BY_PORTRAIT = 8,
         DEALLOCATE_CAMPAIGN_BY_HERO_ID = 12,
         DEALLOCATE_KEPT_PORTRAIT = 0x9e,
@@ -980,7 +981,8 @@ public:
     float GetOffenseFactor();
     float GetDefenseFactor();
     float GetIntelligenceFactor();
-#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
+#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
+ || defined(HOMM3_GAME_NEW_MAP_DECLS)
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions; the retail
     // hero.obj sites expand it byte-for-byte under /Ob2.
@@ -1180,6 +1182,11 @@ DATA(0x0067dce8) extern const THeroTraits (&akHeroTraits)[156];
 // CODEVIEW(E:\gamedcs\hero.cpp:219, dc 0xca728) unsigned char InitializeHeroSpecificAbilitiesTable();
 // CODEVIEW(E:\gamedcs\hero.cpp:267, dc 0xca7e8) unsigned char initialize_move_constants();
 // CODEVIEW(E:\gamedcs\hero.cpp:329, dc 0xca984) unsigned char initialize_ballistics_table();
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+// Complete returns the 70-bit grant set by value; game::LoadMap consumes it
+// when a scenario disables a spell supplied by an artifact.
+std::bitset<70> mark_spells(int artifactId);
+#endif
 // CODEVIEW(E:\gamedcs\hero.cpp:1527, dc 0xcc360) void mark_spells(unsigned char* spell_list, TSpellSchool school);
 // CODEVIEW(E:\gamedcs\hero.cpp:2014, dc 0xccf78) TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded);
 // CODEVIEW(E:\gamedcs\hero.cpp:2340, dc 0xcd68c) void update_artifact_slot(long id, TArtifact artifact);

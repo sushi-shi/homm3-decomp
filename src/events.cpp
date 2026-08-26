@@ -2708,7 +2708,7 @@ void advManager::DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
         TransmitRemoteData(&message, 0x7f, 0, 1);
     }
     gpGame->ResetVisibility(point.x, point.y, point.z, gNetLocalGamePos, 20);
-    gpGame->GameFn_004C7C50();
+    gpGame->ResetAllPlayerVisibility();
     CompleteDraw(0);
     UpdateScreen(0, 0);
 }

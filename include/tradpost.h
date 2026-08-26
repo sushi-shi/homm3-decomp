@@ -146,7 +146,7 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts);
 
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of
-// owned legal Marketplaces. Owner definition has not yet been admitted.
+// owned legal Marketplaces. tradpost.cpp owns the admitted definition.
 extern float fTradingPostEfficency[];
 
 // The two eleven-float efficiency rows immediately after fTradingPostEfficency
@@ -155,7 +155,7 @@ extern float fTradingPostEfficency[];
 // divides a creature's gold cost by the second - both indexed by the owned
 // Marketplace count. fArtifactPurchaseEfficency carries philai.h's spelling
 // (get_artifact_purchase_price shares it); the creature row's name is
-// provisional. Owner definition not yet admitted, as with the trade row.
+// provisional. tradpost.cpp owns both admitted definitions.
 extern float fArtifactPurchaseEfficency[];
 extern float fCreatureSaleEfficency[];
 

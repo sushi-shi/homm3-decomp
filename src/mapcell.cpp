@@ -4676,7 +4676,12 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
 
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
         return -1;
-    tempObjectType->objectTypeValue = value;
+    union {
+        unsigned long raw;
+        TAdventureObjectType typed;
+    } convertedType;
+    convertedType.raw = value;
+    tempObjectType->objectType = convertedType.typed;
     if (usedDefaultMask) {
         sprintf(gText,
                 DATA_COMPGEN(0x0067fb10, readObjectTypeMissingMask,
@@ -4686,9 +4691,9 @@ int NewfullMap::readObjectType(TAbstractFile* infile,
         MessageBoxA(hwndApp, gText, "Error!", 0);
     }
 
-    memcpy(&tempObjectType->objectTypeValue,
-           &gAdventureObjectTraits[tempObjectType->objectTypeValue][8],
-           sizeof(tempObjectType->objectTypeValue));
+    memcpy(&tempObjectType->objectType,
+           &gAdventureObjectTraits[tempObjectType->objectType][8],
+           sizeof(tempObjectType->objectType));
 
     if (infile->Read(&value, sizeof(value)) < sizeof(value))
         return -1;
@@ -4843,7 +4848,12 @@ int NewfullMap::loadObjectType(TAbstractFile* infile,
     unsigned short typeValue;
     if (infile->Read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
         return -1;
-    tempObjectType->objectTypeValue = typeValue;
+    union {
+        unsigned long raw;
+        TAdventureObjectType typed;
+    } convertedType;
+    convertedType.raw = typeValue;
+    tempObjectType->objectType = convertedType.typed;
 
     int extra;
     if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
