@@ -1865,10 +1865,9 @@ public:
     // its teardown here, at the highest offset it touches, with the bare
     // `operator delete(_First)` plus the three-word zeroing that a
     // Dinkumware vector of a trivially destructible element emits - no
-    // `_Destroy` loop at all. The element pair is what
-    // record_monster_identifier (0x4ced40) appends; the eight-byte width
-    // is the note on that declarator's, and the destructor is width-blind,
-    // so the widths are hypothesis while the MEMBER is byte-proven.
+    // `_Destroy` loop at all. The exact record_monster_identifier body at
+    // 0x4ced40 appends the identifier/packed-point pair at an eight-byte
+    // stride, byte-proving both the member and its element layout.
     struct MonsterIdentifier {
         int identifier;
         type_point point;
@@ -1881,7 +1880,7 @@ public:
     // stable object reference and receives the corresponding packed point;
     // the body is the reverse search over monsterIdentifiers above. Kept
     // ordinal because neither the Dreamcast roster nor NH3API names it.
-    TQuestPosition GameFn_004CEF10(int identifier);
+    type_point GameFn_004CEF10(int identifier);
 #endif
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
@@ -2098,12 +2097,11 @@ private:
     int LoadRumours(TAbstractFile* infile);       // 0x4bbe40
 public:
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
-    // Retail 0x4ced40, UNCLAIMED and PROVISIONALLY NAMED. readMonsterData
-    // ends by handing it the monster's stream identifier and the cell's
-    // packed point; the body appends the pair to the eight-byte-element
-    // vector at game+0x4e7bc. No Dreamcast row carries either the name or
-    // the signature, so the name describes only what the call site shows.
-    // Declared for that one call site, not reconstructed.
+    // Retail 0x4ced40, exact but PROVISIONALLY NAMED. readMonsterData ends by
+    // handing it the monster's stream identifier and the cell's packed point;
+    // the body appends the pair to the eight-byte-element vector at
+    // game+0x4e7bc. No Dreamcast row carries either the name or signature, so
+    // the spelling describes only what the call site and exact body prove.
     void record_monster_identifier(int identifier, type_point point);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
