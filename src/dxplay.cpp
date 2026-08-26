@@ -157,9 +157,6 @@ unsigned char CDPlay::JoinSession(GUID* lpSessionGuid, char* pPassword)
 }
 
 // E:\gamedcs\dxplay.cpp:212
-// Residual (78.8%): retail defers the edi push into the alloc block and couples
-// it with a merged success/fail tail; the two are register-homing-coupled. The
-// early-return-buf form below is the best of 3 structures measured.
 VA(0x00496f20, 0x6D)  // anchor-vtable CDPlay slot24 (GetCurrSession), dc 0x8a15c
 DPSESSIONDESC2* CDPlay::GetCurrSession()
 {
@@ -167,16 +164,15 @@ DPSESSIONDESC2* CDPlay::GetCurrSession()
         return 0;
     unsigned long dwSize = 0;
     m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(0, &dwSize);
-    if (m_hRes != DPERR_BUFFERTOOSMALL)
-        return 0;
-    if (dwSize == 0)
+    if (m_hRes != DPERR_BUFFERTOOSMALL || dwSize == 0)
         return 0;
     DPSESSIONDESC2* buf = static_cast<DPSESSIONDESC2*>(::operator new(dwSize));
     m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->GetSessionDesc(buf, &dwSize);
-    if (m_hRes >= 0)
-        return buf;
-    ::operator delete(buf);
-    return 0;
+    if (m_hRes < 0) {
+        ::operator delete(buf);
+        buf = 0;
+    }
+    return buf;
 }
 
 // E:\gamedcs\dxplay.cpp:239
