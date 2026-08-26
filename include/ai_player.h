@@ -697,6 +697,94 @@ long AI_value_of_observatory(struct type_point origin, long player_id, long rang
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5381, dc 0x38594) void* type_antimorale_artifact::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5381, dc 0x385c8) void type_antimorale_artifact::~type_antimorale_artifact();
 
+// Artifact-effect layout and virtual slot order are shared by the Dreamcast
+// roster and the retail get_value bodies.
+class type_artifact_effect {
+public:
+    long bonus;
+    virtual ~type_artifact_effect();
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_scouting_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_combat_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_might_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_power_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_knowledge_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_movement_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_spellcaster_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_morale_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_luck_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_duration_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_antimagic_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_shooter_bonus_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_elixir_of_life_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
 // --- type_artifact_effect ---
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5043, dc 0x361c8) void type_artifact_effect::type_artifact_effect();
 // CODEVIEW(E:\gamedcs\ai_player.cpp:5050, dc 0x361f4) void type_artifact_effect::~type_artifact_effect();
