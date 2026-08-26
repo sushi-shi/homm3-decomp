@@ -2606,12 +2606,11 @@ int TSellCreatureWindow::WindowHandler(message* msg)
     if (r != 0)
         return r;
 
-    int bExit = 0;
-
     if (msg->id != MESSAGE_MOUSE_MOVE) {
         if (msg->id != MESSAGE_WIDGET)
             return 1;
 
+        int bExit = 0;
         switch (msg->codeX) {
         case widget::WIDGET_SELECT:
             switch (msg->codeY) {
