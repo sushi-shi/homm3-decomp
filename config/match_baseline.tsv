@@ -1318,6 +1318,7 @@ game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@
 game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80
+game	?readMapPlayerSlot@TPlayerSlotAttributes@CMapHeaderData@@QAEXPAVTAbstractFile@@H@Z	95.6972	95.6972	95.7136	0xc3ef0
 game	?readMapString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xc6010
 game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	86.0884	86.0884	86.0884	0xc2ce0
 game	?record_monster_identifier@game@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xced40

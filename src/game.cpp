@@ -336,6 +336,33 @@ const int MAP_VERSION_OLD_CAMPAIGN_HERO_IDS = 14;
 const int SAVE_VERSION_LOSS_HERO_COORDINATES = 16;
 const int SAVE_VERSION_COMPLETE_HERO_ROSTER = 25;
 
+// Four resource/game-format contexts, each carrying the feature bits exposed
+// by that install.  The player-slot reader tests bit one before admitting the
+// ninth (Conflux) alignment.  The address and [*gpVideoGameState] indexing are
+// independently repeated by the hero-window and resource consumers; no
+// surviving symbol provides a semantic spelling.
+DATA(0x00699240) extern std::bitset<4> gGameContextFeatures[4];
+
+// Source-inline map counterpart of ReadHeroId.  Retail expands this shape at
+// both fixed-hero fields in the player-slot reader; the retained /Gr helper at
+// 0x4ba1c0 serves other callers.
+static __forceinline int read_map_header_hero_id(TAbstractFile* infile,
+                                                 int mapVersion)
+{
+    unsigned long value;
+    infile->Read(&value, sizeof(unsigned char));
+    int heroId = value & 0xff;
+    if (heroId == SAVED_HERO_NONE)
+        return -1;
+    if (mapVersion == MAP_VERSION_OLD_CAMPAIGN_HERO_IDS) {
+        if (heroId == SAVED_HERO_PRE25_FIRST)
+            return HERO_PRE25_FIRST_REMAP;
+        if (heroId == SAVED_HERO_PRE25_SECOND)
+            return HERO_PRE25_SECOND_REMAP;
+    }
+    return heroId;
+}
+
 // E:\gamedcs\game.cpp's file-static `resources` row (dc game.obj static
 // 0x2ffc). Complete retains the same four rare-resource ids in retail
 // game.obj at 0x63e668; PerDay indexes it with Random(0, 3) for the
@@ -6197,6 +6224,67 @@ static __forceinline void assign_map_hero_name(
 #pragma inline_depth()
 }
 
+static inline void read_map_player_name(char* destination,
+                                        TAbstractFile* infile)
+{
+    std::string name = ReadLengthPrefixedString(infile);
+    strcpy(destination, name.c_str());
+}
+
+// The VC6 vector members are inline at their declarations, so auto_inline is
+// not enough to recreate retail's clear -> erase boundary.  The header's
+// storage-neutral derived view exposes the protected triplet and pins only
+// copy and _Destroy, leaving clear itself expanded in the reader.
+__forceinline void TMapPlayerHeroVectorAccess::clear_retail()
+{
+    iterator last = _Last;
+    iterator first = _First;
+#pragma inline_depth(0)
+    iterator copiedEnd = std::copy(last, last, first);
+#pragma inline_depth()
+#pragma inline_depth(0)
+    _Destroy(copiedEnd, _Last);
+#pragma inline_depth()
+    _Last = copiedEnd;
+}
+
+__forceinline void TMapPlayerHeroVectorAccess::resize_retail(
+    unsigned int count, const type_map_hero_identity& value)
+{
+    size_type currentSize = _First == 0 ? 0 : _Last - _First;
+    if (currentSize < count) {
+        iterator position = _Last;
+#pragma inline_depth(0)
+        insert(position, count - size(), value);
+#pragma inline_depth()
+    } else {
+        size_type oldSize;
+#pragma inline_depth(0)
+        oldSize = size();
+#pragma inline_depth()
+        if (count < oldSize) {
+#pragma inline_depth(0)
+            erase(_First + count, _Last);
+#pragma inline_depth()
+        }
+    }
+}
+
+// The extra aggregate preserves resize's two retail default identities and
+// reduces the short-lived one's teardown to one semantic string-destructor
+// call.  Keeping the destructor definition out of class is codegen-relevant:
+// at depth two VC6 retains basic_string::~basic_string, while depth three
+// expands through _Tidy and its four reference-count blocks.
+#pragma inline_depth(2)
+__forceinline TMapPlayerHeroResizeValue::~TMapPlayerHeroResizeValue()
+{
+}
+#pragma inline_depth()
+
+// The retail player-slot reader expands vector::erase/resize themselves but
+// retains the algorithms each operation reaches.  One wrapper level lets the
+// local depth cap reproduce that two-level boundary without changing either
+// container operation's semantics.
 // Complete reads a scenario from the already-open map stream. The PC path
 // keeps the three retail map generations distinct while normalizing their
 // artifact/spell masks into the Complete-width live rows, then reads the
@@ -6642,6 +6730,135 @@ int NewSMapHeader::loadLossCondition(char type, TAbstractFile* infile,
         return 0;
     }
     return 0;
+}
+
+// Complete's extracted player-slot reader.  Dreamcast's NewSMapHeader::Read
+// carries the corresponding logic inline, while the retail caller passes one
+// 0x44-byte slot as `this`, the stream, and the map-format version.  The two
+// PC-only main-town fields occupy the eight-byte extension absent from the DC
+// record.  Player heroes are resized from a dword count after the separate
+// one-byte default-placeholder count; their ids use only 0xff as a sentinel.
+//
+// Residual (95.69718%, 2026-08-26): 58 candidate blocks against retail's 59,
+// with 41 exact skeleton blocks and the complete scalar/vector flow present.
+// The 0x48-vs-0x3c frame comes from three stack-coloring misses: retail reuses
+// the dead input/version slots for the word and count reads and for its two
+// default identities.  The remaining structural split is the established VC6
+// parent/child inline wall: depth two retains basic_string::~basic_string,
+// while depth three expands its _Tidy(true); retail alone expands the parent
+// and retains _Tidy.  Both choices are semantically identical, and the former
+// is the measured 58-block plateau.  Scoped read buffers recover retail's
+// exact fixed-hero helper and 19-instruction custom-name cleanup blocks.
+VA(0x004c3ef0, 0x498)  // sole NewSMapHeader::Read caller + slot stride/layout
+void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
+    TAbstractFile* infile, int mapVersion)
+{
+    {
+        signed char charBuffer;
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        CanBeHuman = charBuffer != 0;
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        CanBeComputer = charBuffer != 0;
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        AIStrategy = charBuffer;
+
+        if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            infile->Read(&charBuffer, sizeof(charBuffer));
+            legalAlignments = static_cast<unsigned char>(charBuffer);
+        } else {
+            if (mapVersion != MAP_FORMAT_ARMAGEDDONS_BLADE)
+                infile->Read(&charBuffer, sizeof(charBuffer));
+            unsigned short shortBuffer;
+            infile->Read(&shortBuffer, sizeof(shortBuffer));
+            legalAlignments = shortBuffer;
+        }
+    }
+
+    {
+        signed char charBuffer;
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        HasRandomAlignment = charBuffer != 0;
+        if (HasRandomAlignment)
+            legalAlignments |= 0x100;
+#pragma inline_depth(0)
+        if (!gGameContextFeatures[*gpVideoGameState].test(1))
+            legalAlignments &= 0xfeff;
+#pragma inline_depth()
+
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        hasMainTown = charBuffer != 0;
+        mainTownType = -1;
+        if (!hasMainTown) {
+            GenerateHero = 0;
+        } else {
+            if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+                GenerateHero = 1;
+            } else {
+                infile->Read(&charBuffer, sizeof(charBuffer));
+                GenerateHero = charBuffer != 0;
+                infile->Read(&charBuffer, sizeof(charBuffer));
+                mainTownType = charBuffer;
+            }
+
+            infile->Read(&charBuffer, sizeof(charBuffer));
+            CastleLoc.x = static_cast<unsigned char>(charBuffer);
+            infile->Read(&charBuffer, sizeof(charBuffer));
+            CastleLoc.y = static_cast<unsigned char>(charBuffer);
+            infile->Read(&charBuffer, sizeof(charBuffer));
+            CastleLoc.z = static_cast<unsigned char>(charBuffer);
+        }
+    }
+
+    infile->Read(&hasRandomHero, sizeof(hasRandomHero));
+    nonRandomHeroId = read_map_header_hero_id(infile, mapVersion);
+    field_30 = 0;
+    if (nonRandomHeroId != -1) {
+        nonRandomHeroCustomPortrait =
+            read_map_header_hero_id(infile, mapVersion);
+#pragma inline_depth(2)
+        read_map_player_name(nonRandomHeroCustomName, infile);
+#pragma inline_depth()
+    } else {
+        nonRandomHeroCustomPortrait = -1;
+        nonRandomHeroCustomName[0] = 0;
+    }
+
+    field_34.clear_retail();
+    if (mapVersion == MAP_FORMAT_RESTORATION_OF_ERATHIA)
+        return;
+
+    {
+        unsigned long byteValue;
+        infile->Read(&byteValue, sizeof(unsigned char));
+        field_30 = byteValue & 0xff;
+    }
+
+    int heroCount;
+    infile->Read(&heroCount, sizeof(heroCount));
+#pragma inline_depth(1)
+    type_map_hero_identity retainedDefault;
+#pragma inline_depth()
+    {
+#pragma inline_depth(1)
+        TMapPlayerHeroResizeValue resizeValue;
+#pragma inline_depth()
+        field_34.resize_retail(heroCount, resizeValue.value);
+    }
+    if (heroCount > 0) {
+        int heroIndex = 0;
+        do {
+            unsigned long heroValue;
+            infile->Read(&heroValue, sizeof(unsigned char));
+            int heroId = heroValue & 0xff;
+            if (heroId == SAVED_HERO_NONE)
+                heroId = -1;
+            field_34[heroIndex].field_00 = heroId;
+            assign_map_hero_name(field_34[heroIndex].field_04,
+                                 ReadLengthPrefixedString(infile));
+            ++heroIndex;
+            --heroCount;
+        } while (heroCount != 0);
+    }
 }
 
 // NewSMapHeader::Read builds this value from the map hero id, its owned
@@ -15585,20 +15802,6 @@ template<> std::bitset<70>& std::bitset<70>::reset()
     return *this;
 }
 
-// The player-slot reader keeps the range erase and its protected destroy
-// helper for the 20-byte identity vector at +0x34.  Its dword copy at +0 and
-// string copy at +4 distinguish it from vector<Sign>; only the identical
-// element destructor was folded to Sign::~Sign in the retail image.
-template<> void std::vector<type_map_hero_identity,
-                            std::allocator<type_map_hero_identity> >::clear()
-{
-    typedef std::vector<type_map_hero_identity,
-                        std::allocator<type_map_hero_identity> > IdentityVector;
-    typedef void (IdentityVector::*DestroyMember)(type_map_hero_identity*,
-                                                   type_map_hero_identity*);
-    DestroyMember volatile destroy = &IdentityVector::_Destroy;
-    (this->*destroy)(begin(), end());
-}
 #pragma auto_inline(on)
 
 #pragma inline_depth(0)
