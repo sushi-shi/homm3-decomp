@@ -2714,11 +2714,11 @@ tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	100.0000	100.0000	100.000
 tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	98.5915	98.5915	98.5915	0x1ee6c0
 tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	84.4030	84.4030	84.4030	0x1eebd0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0
-tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	81.1528	81.1528	81.1528	0x1eb6a0
-tradpost	?Update@TGiveResourceWindow@@QAEXE@Z	91.0868	91.0868	91.6293	0x1eaf50
-tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	97.8264	97.8264	97.8264	0x1ebe80
+tradpost	?Update@TBuyArtifactWindow@@QAEXE@Z	88.8247	88.8247	88.8247	0x1eb6a0
+tradpost	?Update@TGiveResourceWindow@@QAEXE@Z	91.2043	91.2043	91.6293	0x1eaf50
+tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	98.2500	98.2500	98.2500	0x1ebe80
 tradpost	?Update@TSellCreatureWindow@@QAEXE@Z	91.2354	91.2354	91.2354	0x1ec550
-tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.1010	86.1010	86.1010	0x1ea6e0
+tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	86.6466	86.6466	86.6466	0x1ea6e0
 tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	96.5116	96.5116	96.5116	0x1ed9e0
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	74.1310	74.1310	74.1310	0x1edf60
