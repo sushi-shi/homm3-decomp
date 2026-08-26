@@ -83,6 +83,15 @@ enum ESacrificeGeneralText {
 // text/right-click pairs from 0x6a6638 through 0x6a66d7.
 DATA(0x006a6638) extern THelpText gSacrificeWindowHelp[SACRIFICE_HELP_COUNT];
 
+enum ETransformerWindowHelp {
+    TRANSFORMER_HELP_ALL_CREATURES = 0,
+    TRANSFORMER_HELP_SACRIFICE = 1,
+    TRANSFORMER_HELP_EXIT = 2,
+    TRANSFORMER_HELP_COUNT = 3
+};
+DATA(0x006a77d0) extern THelpText
+    gTransformerWindowHelp[TRANSFORMER_HELP_COUNT];
+
 // DC proves a seven-element 224-byte array, hence 32 bytes per record.
 // Retail update_creature_offering independently proves the six widget
 // pointers followed by the group/amount pair at +0x18/+0x1c.
@@ -295,6 +304,10 @@ public:
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int WindowHandler(message* msg);                   // slot 9
 private:
+    static int all_creatures(message& msg);
+    static int exit_click(message& msg);
+    static int sacrifice(message& msg);
+    void update_buttons();
     void update(long group, long index);
     void create_creature_icons(
         long icon_x, long icon_y, long columns, long rows,
