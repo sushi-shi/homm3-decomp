@@ -2718,7 +2718,7 @@ tradpost	?Update@TGiveResourceWindow@@QAEXE@Z	82.0995	82.0995	82.0995	0x1eaf50
 tradpost	?Update@TSellArtifactWindow@@QAEXE@Z	86.3678	86.3678	86.3678	0x1ebe80
 tradpost	?Update@TSellCreatureWindow@@QAEXE@Z	81.4336	81.4336	81.4336	0x1ec550
 tradpost	?Update@TTradeResourceWindow@@QAEXE@Z	82.9430	82.9430	82.9430	0x1ea6e0
-tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	95.1827	95.1827	95.1827	0x1ed9e0
+tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	96.5116	96.5116	96.5116	0x1ed9e0
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	74.1310	74.1310	74.1310	0x1edf60
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	91.0171	91.0171	91.0171	0x1ee890
