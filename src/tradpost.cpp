@@ -2585,7 +2585,9 @@ void TSellArtifactWindow::SetRolloverText(int codeY)
     }
     default: strcpy(gText, emptyRolloverText); break;
     }
-    BroadcastMessage(0x200, 3, 0x93, 0);
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
 }
@@ -2750,7 +2752,9 @@ void TSellCreatureWindow::SetRolloverText(int codeY)
     }
     default: strcpy(gText, emptyRolloverText); break;
     }
-    BroadcastMessage(0x200, 3, 0x93, 0);
+    message update;
+    update.extraText = gText;
+    BroadcastMessage(0x200, 3, 0x93, update.extra);
     DrawWindow(0, 0x92, 0x93);
     gpWindowManager->UpdateScreen(x + 8, y + 0x238, 0x249, 0x12);
     // Residual (84.37%): control flow agrees (12/12 branches). The interleaved
