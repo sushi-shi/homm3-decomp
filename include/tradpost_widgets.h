@@ -1,6 +1,22 @@
 #ifndef HOMM3_TRADPOST_WIDGETS_H
 #define HOMM3_TRADPOST_WIDGETS_H
 
+#include "netmsg.h"
+
+class TGiveNetMsg : public CNetMsg {
+public:
+    int m_giver;
+    int m_resource;
+    int m_qty;
+
+    TGiveNetMsg(int giver, int resource, int qty)
+        : CNetMsg(0x432, sizeof(TGiveNetMsg)), m_giver(giver),
+          m_resource(resource), m_qty(qty) {}
+};
+
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg,
+                       bool guaranteed);
+
 extern const char* gResourceNames[7];
 
 enum EMarketWidgetId {
