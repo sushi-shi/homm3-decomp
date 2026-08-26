@@ -7194,6 +7194,34 @@ void game::apply_map_header_availability()
     }
 }
 
+// Complete widens the Dreamcast one-name helper to a directory, filename,
+// and campaign-map ordinal. The path is assembled with the same separator as
+// NewMap, then the stream-based reader owns all format interpretation. The
+// try scope is retail-visible: it catches both TGzFile construction and Read,
+// producing the exact third EH state and shared -1 cleanup tail.
+VA(0x004c5e00, 0x210)  // DC Get identity + five PC callers + TGzFile/Read edges
+int NewSMapHeader::Get(const char* path, const char* filename,
+                       int campaignMap)
+{
+    std::string fullPath(path);
+#pragma inline_depth(1)
+    fullPath += DATA_COMPGEN(0x00677dac, newMapGetPathSeparator, "\\");
+    fullPath += filename;
+#pragma inline_depth()
+
+    try {
+        TGzFile infile(
+            fullPath.c_str(),
+            DATA_COMPGEN(0x00677d6c, newMapGetGzReadMode, "rb"));
+        int result = Read(&infile, campaignMap);
+        if (result < 0)
+            return -1;
+    } catch (...) {
+        return -1;
+    }
+    return 0;
+}
+
 // Map-format strings use a dword length, unlike saved-game strings. Retail
 // treats nonpositive and sentinel-sized values as empty and otherwise keeps
 // the temporary allocation alive on a short payload read.
