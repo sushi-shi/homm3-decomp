@@ -342,6 +342,7 @@ const int SAVE_VERSION_MAX_HERO_LEVEL = 27;
 const int SAVE_VERSION_WIDE_ALIGNMENTS = 28;
 const int SAVE_VERSION_CUSTOM_HERO_SETUPS = 30;
 const int SAVE_VERSION_CUSTOM_HERO_AVAILABILITY = 31;
+const int SAVE_GAME_FAILURE_GENERAL_TEXT = 10;
 const int MAP_VERSION_ERROR_GENERAL_TEXT = 431;
 const int MAP_HEADER_PLAYER_COUNT = 8;
 const int MAP_HEADER_LEGACY_HERO_COUNT = 128;
@@ -4463,40 +4464,35 @@ int compare_heroes(const void* arg1, const void* arg2)
 // two reserved general-text names, and write the game through a zlib
 // stream.
 //
-// THE TWO timeGetTime CALLS ARE DEAD, and both are transcribed: retail
-// stamps one on entry and one after the stream closes, stores each to
-// its own stack slot and reads neither. Wall-clock instrumentation left
-// in the shipped build - the standing "dead args and stray calls are
-// real" rule. game::Save's int return is discarded too; this body always
-// answers 1.
+// Dreamcast's local roster names `saveGameTimer` and `compression`, and its
+// xref graph shows CTimer::start/stop. Complete inlines that instrumentation
+// into two otherwise-dead timeGetTime samples. The volatile two-dword spelling
+// is a PC codegen claim: plain storage removes the stores, while importing the
+// wider 16-byte Dreamcast timer semantics adds state work retail x86 lacks.
+// The independently named `compression` local is decisive codegen evidence;
+// spelling the mode as a ternary leaves the function at 98.7787%, while the
+// named default-plus-override form reaches 99.9057%.
 //
-// THE TWO TIMING LOCALS ARE `volatile`, AND THAT IS A CODEGEN CLAIM, NOT
-// A SOURCE TOKEN THIS TREE CAN PROVE. Written as plain unsigned longs,
-// VC6 dead-stores both away (nothing ever reads them) and the two
-// `mov [ebp-0x24], eax` / `mov [ebp-0x20], eax` retail carries vanish;
-// `volatile` is the only spelling tried that restores them, and it is
-// the ordinary idiom for a timing probe a programmer does not want
-// optimised out. Worth 93.0265 -> 93.8148.
+// The normal path is followed by a typed TOpenFailure catch at 0x4bf107
+// and its shared zero-return continuation at 0x4bf181. Retail's HandlerType
+// record points at the catch, whose EBP-relative filename and locals prove it
+// belongs to this frame rather than being an independent function.
 //
-// Residual (93.8148%): branches agree 8/8 with one ret on both sides.
-// Two things left. Retail homes ESP at [ebp-0x10] - the /GX unwind esp
-// slot - and our CL does not emit that store at all, which also shifts
-// nothing else; and retail loads `compressIt` into CL where we use AL,
-// so that the `mov eax, <mode>` ahead of the test does not clobber it.
-// Tried and rejected: hoisting the ternary into a named `const char*
-// mode` local ahead of the constructor (93.8148 either way, byte-inert).
-// Every other row of the diff is a reloc NAME on a datum the delinker
-// carries no symbol for.
-VA(0x004beea0, 0x267)  // arity (ret 0x14 = p6, unique in span) + '.\GAMES\' write modes, dc 0xa99d0
+// Residual (99.9057%): all 27 CFG blocks and all 244 instruction sequences are
+// aligned. Retail reserves a 0x448-byte frame and keeps the two timer samples
+// at -0x24/-0x20; VC6 rebuilds a 0x440-byte frame, overlaps them with the later
+// TGzFile lifetime, and shifts every larger local by eight bytes. why-reg finds
+// no applicable source mutation. A full Dreamcast CTimer view fell to 96.33%,
+// and a synthetic two-field timer object to 99.43%; both were removed.
+VA(0x004beea0, 0x2F6)  // arity + save paths + typed catch extent, dc 0xa99d0
 unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffix, unsigned char bCampaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
     char nameNoExtension[351] = {0};
     char saveName[351] = {0};
     char fullPath[351];
-    volatile unsigned long startTime;
-    volatile unsigned long endTime;
+    volatile unsigned long timerSamples[2];
 
-    startTime = timeGetTime();
+    timerSamples[0] = timeGetTime();
     if (!bCampaignWinMode)
         gpAdvManager->DemobilizeCurrHero(0, 1);
 
@@ -4539,15 +4535,26 @@ unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffi
             strcpy(gpGame->saveFileName, filename);
     }
 
-    {
-        TGzFile outfile(
-            fullPath,
-            compressIt ? DATA_COMPGEN(0x00677d80, gzDeflateWriteMode, "wb6+")
-                       : DATA_COMPGEN(0x00677d78, gzStoreWriteMode, "wb0+"));
-        Save(&outfile);
+    const char* compression =
+        DATA_COMPGEN(0x00677d80, gzDeflateWriteMode, "wb6+");
+    if (!compressIt)
+        compression = DATA_COMPGEN(0x00677d78, gzStoreWriteMode, "wb0+");
+
+    try {
+        {
+            TGzFile outfile(fullPath, compression);
+            Save(&outfile);
+        }
+        timerSamples[1] = timeGetTime();
+        return 1;
+    } catch (TGzFile::TOpenFailure) {
+        NormalDialog(
+            format_string(
+                gpGeneralText->GetText(SAVE_GAME_FAILURE_GENERAL_TEXT),
+                filename).c_str(),
+            1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 0;
     }
-    endTime = timeGetTime();
-    return 1;
 }
 
 // E:\gamedcs\game.cpp:3790, dc 0xa9e88.  Retail resets the original-map

@@ -429,6 +429,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   The hand-owned inventory now records one 3,348-byte EH-bearing function,
   removing two false independent targets without discarding any retail code.
 
+- **2026-08-26 — `game::SaveGame`'s typed failure path is restored and its
+  false catch entry is retired.** The old 615-byte extent stopped at the normal
+  return and treated `0xbf107` as an independent 122-byte function. Retail's
+  HandlerType record instead points there as the `TGzFile::TOpenFailure` catch;
+  it reads the parent's EBP-relative filename, formats general-text row 10,
+  shows `NormalDialog`, and returns the shared zero-result continuation at
+  `0xbf181`. The inventory now owns the complete 758-byte extent through
+  `0xbf196` and no longer counts the handler as a function.
+
+  Dreamcast independently names the `saveGameTimer` and `compression` locals.
+  Restoring the latter's default-plus-override spelling and the stream's nested
+  lifetime raises `SaveGame` from 93.8148% to **99.9057%**. All 27 CFG blocks
+  and 244 instruction sequences align; the residual is an eight-byte VC6 stack
+  coloring difference. The gated build remains **2281/2721 linked exact** at
+  **96.75% linked fuzzy** and reaches **49.86% executable coverage**, with no
+  banked loss or new cleanliness violation.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in
