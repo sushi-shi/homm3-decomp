@@ -2722,7 +2722,7 @@ tradpost	?WindowHandler@TBuyArtifactWindow@@UAEHPAVmessage@@@Z	95.1827	95.1827	9
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
 tradpost	?WindowHandler@TSellArtifactWindow@@UAEHPAVmessage@@@Z	74.1310	74.1310	74.1310	0x1edf60
 tradpost	?WindowHandler@TSellCreatureWindow@@UAEHPAVmessage@@@Z	91.0171	91.0171	91.0171	0x1ee890
-tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	98.5816	98.5816	98.5816	0x1ecfe0
+tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 tradpost	?get_trade_ratio@@YINW4EGameResource@@0N@Z	100.0000	100.0000	100.0000	0x1ecd20
 tradpost	?update_sell_artifact_widget@TSellArtifactWindow@@QAEXPAVmessage@@J@Z	100.0000	100.0000	100.0000	0x1ea5d0

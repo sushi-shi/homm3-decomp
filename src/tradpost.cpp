@@ -1891,9 +1891,9 @@ int TTradeResourceWindow::WindowHandler(message* msg)
                     gMaxTradeUnits =
                         gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
                 } else {
-                    ratio = 1.0f / ratio;
                     gRatioInverted = 1;
-                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gGiveQuantity =
+                        static_cast<long>(1.0f / ratio + 0.5);
                     gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
                 }
                 resourceSlider->SetResolution(gMaxTradeUnits + 1);
@@ -1920,9 +1920,9 @@ int TTradeResourceWindow::WindowHandler(message* msg)
                     gMaxTradeUnits =
                         gpCurrentPlayer->resources[sellRes] / gGiveQuantity;
                 } else {
-                    ratio = 1.0f / ratio;
                     gRatioInverted = 1;
-                    gGiveQuantity = static_cast<long>(ratio + 0.5);
+                    gGiveQuantity =
+                        static_cast<long>(1.0f / ratio + 0.5);
                     gMaxTradeUnits = gpCurrentPlayer->resources[sellRes];
                 }
                 resourceSlider->SetResolution(gMaxTradeUnits + 1);
