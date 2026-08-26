@@ -29,6 +29,11 @@ long get_artifact_purchase_price(TArtifact artifact, long market_count,
                                  EGameResource* best_resource);
 TCreatureType siege_artifact_to_creature(TArtifact engine);
 
+VA(0x0042c4a0, 0x108)
+long type_AI_creature_swapper::get_swap_value(
+    const hero* current_hero, const armyGroup* source_army,
+    const hero* second_hero, unsigned char new_has_angelic_alliance);
+
 // ai_combat.h's whole-of-combat appraisal, declared file-locally rather
 // than pulling that header's declarator population into this closure. The
 // /Gr fastcall ABI and (const hero*, const hero*, const armyGroup&,
@@ -301,11 +306,6 @@ static long get_artifact_purchase_value(
         value = 0;
     return value;
 }
-
-VA(0x0042c4a0, 0x108)
-long type_AI_creature_swapper::get_swap_value(
-    const hero* current_hero, const armyGroup* source_army,
-    const hero* second_hero, unsigned char new_has_angelic_alliance);
 
 // Residual (93.73%): all 15 CFG blocks align; EBX/EDI allocation remains
 // swapped after the inlined appraisal despite five source-order probes.
