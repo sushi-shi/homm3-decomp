@@ -126,7 +126,7 @@ unsigned char CDPlay::HostSession(char* sessionName, unsigned long flags,
         desc.lpszPasswordA = password;
     if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) != 0)
         desc.guidApplication = m_guid;
-    m_hRes = m_lpDP->Open(&desc, DPOPEN_CREATE);
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Open(&desc, 2);
     if (m_hRes < 0)
         return 0;
     m_isHost = 1;
@@ -1038,29 +1038,29 @@ CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(
             ++count;
         }
     }
-    elements[count].guidDataType = DPAID_ServiceProvider;
+    elements[count].guidDataType = s_dpaidServiceProvider;
     elements[count].dwDataSize = sizeof(GUID);
-    elements[count].lpData = const_cast<GUID*>(&DPSPGUID_TCPIP);
+    elements[count].lpData = &s_spTCPIP;
     ++count;
     if (ipAddress) {
-        elements[count].guidDataType = DPAID_INet;
+        elements[count].guidDataType = s_dpaidINet;
         elements[count].dwDataSize = strlen(ipAddress) + 1;
         elements[count].lpData = ipAddress;
         ++count;
     }
-    m_hRes = m_lpLobby->CreateCompoundAddress(
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(
         elements, count, 0, &addressSize);
     if (m_hRes != DPERR_BUFFERTOOSMALL)
         return 0;
     void* address = ::operator new(addressSize);
-    m_hRes = m_lpLobby->CreateCompoundAddress(
+    m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->CreateCompoundAddress(
         elements, count, address, &addressSize);
     if (m_hRes < 0) {
         ::operator delete(address);
         return 0;
     }
     CDPlayConnection* connection = new CDPlayConnection(
-        &DPSPGUID_TCPIP, addressSize, address, name);
+        &s_spTCPIP, addressSize, address, name);
     ::operator delete(address);
     return connection;
 }
