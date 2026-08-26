@@ -377,15 +377,27 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left,
 // `cellData[(z*Size + y)*Size + x]` chains reproduce them exactly, and the
 // whole register-homing residual the note described goes with them.
 // The same edit is worth 93.0950 -> 98.7182 on TestPossibleDirections.
-// Residual (98.6032%): scheduling around the nine-argument tail call.
+//
+// EXACT 2026-08-26: the three packed destination-field stores belong to one
+// inline source operation. Keeping them in the caller made VC6 use the z
+// source as a memory operand; the explicit inline helper below preserves the
+// source packed word in EAX, matching retail's final eager load and xor. The
+// helper emits no out-of-line body and carries only the coordinate semantics.
+static inline void make_terrain_destination(type_point& destination,
+                                            type_point start,
+                                            int direction)
+{
+    destination.x = start.x + gStepDeltaX[4 * direction];
+    destination.y = start.y + gStepDeltaY[4 * direction];
+    destination.z = start.z;
+}
+
 VA(0x004b18c0, 0x1A2)  // anchor-callee, dc 0x9f184
 int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left)
 {
     NewmapCell* from = gpGame->worldMap.cell(start.x, start.y, start.z);
     type_point to;
-    to.x = start.x + gStepDeltaX[4 * direction];
-    to.y = start.y + gStepDeltaY[4 * direction];
-    to.z = start.z;
+    make_terrain_destination(to, start, direction);
     NewmapCell* dest = gpGame->worldMap.cell(to.x, to.y, to.z);
     long flying = current_hero->flightLevel;
     long water_walking = current_hero->waterWalkLevel;

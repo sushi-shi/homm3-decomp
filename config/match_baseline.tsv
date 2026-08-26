@@ -435,7 +435,7 @@ army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?cast_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x48260
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?check_special_attack@army@@QAEEPAV1@@Z	100.0000	100.0000	100.0000	0x40500
-army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	92.2095	92.2095	92.2095	0x43320
+army	?compute_attacker_bonus@army@@QBEHHEPAV1@EJ@Z	100.0000	100.0000	100.0000	0x43320
 army	?consider_attack@army@@QAEXPBV1@JJ@Z	100.0000	100.0000	100.0000	0x48840
 army	?do_attack@army@@QAEEPAV1@H@Z	99.9962	99.9962	99.9962	0x41610
 army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
@@ -467,7 +467,7 @@ army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_combat_value@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x42e60
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?get_unit_combat_value@army@@QBENJJEPBV1@@Z	92.1581	92.1581	92.1581	0x42a50
-army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	96.2453	96.2453	96.2453	0x3d730
+army	?initialize@army@@QAEXHJPBVhero@@JJJ@Z	100.0000	100.0000	100.0000	0x3d730
 army	?is_adjacent@army@@QBEEH@Z	100.0000	100.0000	100.0000	0x466c0
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
 army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
@@ -1156,7 +1156,7 @@ findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.00
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
 findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	87.6468	87.6468	87.6468	0xb3400
-findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	98.6032	98.6032	98.6032	0xb18c0
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	100.0000	100.0000	100.0000	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
 findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	90.2555	90.2555	90.2555	0xb3bb0
@@ -2264,7 +2264,7 @@ resourcemanager	?GetSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@
 resourcemanager	?GetSprite@ResourceManager@@YIPAVCSprite@@PBD@Z	88.8564	88.8564	88.8564	0x15c7b0
 resourcemanager	?GetText@ResourceManager@@YIPAVTTextResource@@PBD@Z	100.0000	100.0000	100.0000	0x15bdd0
 resourcemanager	?LoadBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15ac40
-resourcemanager	?LoadFont@ResourceManager@@YIPAVfont@@PBD@Z	95.6292	95.6292	95.6292	0x15b8d0
+resourcemanager	?LoadFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15b8d0
 resourcemanager	?LoadFontData@ResourceManager@@YIPAVfont@@PBDPAVTAbstractFile@@H@Z	86.7419	86.7419	86.7419	0x15b750
 resourcemanager	?LoadPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	95.6920	95.6920	95.6920	0x15b060
 resourcemanager	?LoadSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c3c0
@@ -2523,7 +2523,7 @@ slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
 slider	?Deselect@slider@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x196af0
 slider	?Draw@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x196c40
 slider	?KeyAccel@slider@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x196230
-slider	?Main@slider@@UAEHPAVmessage@@@Z	95.1901	95.1901	95.1901	0x1964e0
+slider	?Main@slider@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1964e0
 slider	?OnKillFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197130
 slider	?OnSetFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197120
 slider	?Select@slider@@QAEHPAVmessage@@E@Z	100.0000	100.0000	100.0000	0x196980

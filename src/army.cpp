@@ -281,13 +281,13 @@ void army::WaitSample(army::TSampleID which)
 // nothing else in it.
 #endif  // @carcass
 
-// Residual (96.2453%): the scheduling family, all inside the closing
-// store run - retail computes `1 - new_group` at new_group's own load
-// (before the currFrameType/combatSide stores) where ours sinks it
-// after the -1 pair, and the origNumTroops/baseSpeed/origHitPoints
-// load-store triple rotates ecx/edx/eax against retail's edx/eax/ecx.
-// A named local for the subtraction is byte-inert (C2 forward-
-// substitutes it); no spelling reached the schedule.
+// CLOSED 96.2453 -> 100.0000 (2026-08-26): the five opening assignments
+// in the closing store run are source-ordered facing, currFrameType, side,
+// combatSide, slot. That makes C2 compute `1 - new_group` at the parameter
+// load, schedule the member stores in retail order, and select retail's
+// edx/eax/ecx rotation for the final origNumTroops/baseSpeed/origHitPoints
+// triple. All 120 ordinary assignment orders were generated and measured;
+// only the two orders beginning facing/currFrameType/side reached exact.
 //
 // The layout blocker above is DISSOLVED, not paid: the rep movsd is
 // reproduced by memcpy through the two-step static_cast the tree's
@@ -336,11 +336,11 @@ void army::initialize(int type, long number, const hero* owner,
         attackSkill++;
         defenseSkill++;
     }
-    currFrameType = cs_wait;
-    combatSide = new_group;
-    side = -1;
-    slot = -1;
     facing = 1 - new_group;
+    currFrameType = cs_wait;
+    side = -1;
+    combatSide = new_group;
+    slot = -1;
     bitIndex = new_index;
     gridIndex = new_grid_index;
     numTroopsBattleResurrected = 0;
@@ -3955,16 +3955,38 @@ int army::ComputeBaseDamage(unsigned char simulate_only) const
 // split it out because get_estimated_damage (0x443e30) needs the number
 // without the combat message and sound the wrapper adds. NAME IS A
 // BOOTSTRAP INVENTION, same class as get_estimated_damage below.
-// Residual (92.2095%): the string-teardown inline budget. Retail
-// keeps the SINGULAR hate-message temporary's destructor as a _Tidy
-// call and inlines the plural arm's and text's (the sites-remaining
-// divisor GROWS as the walk empties, so a later site can be accepted
-// where an earlier one was refused); ours inlines all three and runs
-// ~63 bytes long, pushing our jump tables past the carve span. A
-// discarded-c_str free-site probe before combat_message is inert.
-// Everything outside the announce block pairs, including both jump
-// tables, the shared sete tail of the Titan/Black Dragon cases and
-// the duplicated float-cast arms of the offense/archery tail.
+// EXACT 2026-08-26. Keeping the hate predicate in an ordinary inline
+// helper gives VC6 retail's string-teardown budget: the singular
+// temporary keeps its _Tidy call while the plural temporary and text
+// destructor inline. Making total live before controller also gives
+// retail's ESI/EDI allocation in the final hero-bonus arm.
+static inline unsigned char compute_hate_flag(int self_type, int target_type)
+{
+    switch (self_type) {
+    case CREATURE_ANGEL:
+    case CREATURE_ARCHANGEL:
+        return target_type == CREATURE_DEVIL
+               || target_type == CREATURE_ARCH_DEVIL;
+    case CREATURE_DEVIL:
+    case CREATURE_ARCH_DEVIL:
+        return target_type == CREATURE_ANGEL
+               || target_type == CREATURE_ARCHANGEL;
+    case CREATURE_EFREETI:
+    case CREATURE_EFREET_SULTAN:
+        return target_type == CREATURE_GENIE
+               || target_type == CREATURE_MASTER_GENIE;
+    case CREATURE_GENIE:
+    case CREATURE_MASTER_GENIE:
+        return target_type == CREATURE_EFREETI
+               || target_type == CREATURE_EFREET_SULTAN;
+    case CREATURE_BLACK_DRAGON:
+        return target_type == CREATURE_TITAN;
+    case CREATURE_TITAN:
+        return target_type == army::ARMY_CREATURE_BLACK_DRAGON;
+    }
+    return 0;
+}
+
 VA(0x00443320, 0x514)  // anchor-callee (0x443840 and 0x443e30 are its only
                        // callers) + arity ret 0x14, retail-only slot
 int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
@@ -4018,35 +4040,8 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
             break;
         }
 
-        unsigned char hates = 0;
-        switch (creatureType) {
-        case CREATURE_ANGEL:
-        case CREATURE_ARCHANGEL:
-            hates = defender->creatureType == CREATURE_DEVIL
-                    || defender->creatureType == CREATURE_ARCH_DEVIL;
-            break;
-        case CREATURE_DEVIL:
-        case CREATURE_ARCH_DEVIL:
-            hates = defender->creatureType == CREATURE_ANGEL
-                    || defender->creatureType == CREATURE_ARCHANGEL;
-            break;
-        case CREATURE_EFREETI:
-        case CREATURE_EFREET_SULTAN:
-            hates = defender->creatureType == CREATURE_GENIE
-                    || defender->creatureType == CREATURE_MASTER_GENIE;
-            break;
-        case CREATURE_GENIE:
-        case CREATURE_MASTER_GENIE:
-            hates = defender->creatureType == CREATURE_EFREETI
-                    || defender->creatureType == CREATURE_EFREET_SULTAN;
-            break;
-        case CREATURE_BLACK_DRAGON:
-            hates = defender->creatureType == CREATURE_TITAN;
-            break;
-        case CREATURE_TITAN:
-            hates = defender->creatureType == ARMY_CREATURE_BLACK_DRAGON;
-            break;
-        }
+        unsigned char hates =
+            compute_hate_flag(creatureType, defender->creatureType);
         if (hates) {
             bonus += base_damage / 2;
             if (announce) {
@@ -4072,10 +4067,10 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
         }
     }
 
+    long total = bonus;
     hero* controller =
         gpCombatManager->heroes[get_controlling_side()];
     if (controller != 0) {
-        long total;
         if (is_shooting)
             total = static_cast<long>(
                 controller->GetArcheryFactor()
@@ -4090,9 +4085,8 @@ int army::compute_attacker_bonus(int base_damage, unsigned char is_shooting,
             total += controller->GetHeroSpellBonus(SPELL_BLESS,
                                                    monInfoLevel,
                                                    base_damage);
-        return total;
     }
-    return bonus;
+    return total;
 }
 
 #if 0  // @carcass
