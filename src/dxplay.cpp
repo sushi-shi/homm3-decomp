@@ -408,31 +408,25 @@ unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPl
     return ReceiveMsg(*pFromID, *pToID, pMsg);
 }
 
-// Residual (62.7%): the discard-until-NOMESSAGES loop over a growable CDPlayMsg
-// buffer is modelled, but retail homes this in edi (we take esi), zero-inits four
-// slots up front, and keeps each buffer-teardown return inline where our CL
-// cross-jumps them - the same realloc-loop + merged-return walls as Receive.
+// Residual (72.9%): the loop, resize and cleanup branches are mapped, but
+// retail keeps one unpeeled Receive block and homes this/msg data in edi/esi;
+// our CL specializes the first iteration and assigns those pseudos to esi/edi.
 // E:\gamedcs\dxplay.cpp:574
 VA(0x004976b0, 0xDC)  // anchor-vtable CDPlay slot37 (FlushReceiveQueue), dc 0x8a744
 unsigned char CDPlay::FlushReceiveQueue()
 {
-    CDPlayMsg msg;
     unsigned long idFrom, idTo, dwSize = 0;
-    for (;;) {
+    CDPlayMsg msg;
+    do {
         m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(&idFrom, &idTo, 1, msg.pData, &dwSize);
         if (m_hRes == DPERR_NOMESSAGES)
             return 1;
         if (m_hRes == DPERR_BUFFERTOOSMALL) {
-            if (dwSize >= msg.dataSize) {
-                if (msg.pData)
-                    delete [] msg.pData;
-                msg.pData = new unsigned char[dwSize];
-                msg.dataSize = dwSize;
-            }
+            unsigned long dSize = dwSize;
+            if (dSize >= msg.dataSize)
+                msg.AllocSize(dSize);
         }
-        if (m_hRes != DPERR_BUFFERTOOSMALL && m_hRes != 0)
-            break;
-    }
+    } while (m_hRes == DPERR_BUFFERTOOSMALL || m_hRes == 0);
     if (m_hRes < 0)
         return 0;
     return 1;
