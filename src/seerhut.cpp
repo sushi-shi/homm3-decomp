@@ -1288,22 +1288,16 @@ void type_artifact_quest::DoProgressDialog()
 VA(0x0056fcb0, 0x1EE)  // anchor-vtable 0x641878 slot 11 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::Load(TAbstractFile* file, int version)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9482%): our frame is 0x20 against retail's 0x1c and every
-    // dword local sits 4 lower. The missing fact is decoded: retail reads the
-    // byte into [ebp-0x10] and stores the running loop index straight back
-    // into THAT SAME slot, so `count` and the loop counter are one variable,
-    // not two. Spelling the merge (`for (count &= 0xff; count > 0; --count)`)
-    // does give retail's 0x1c frame exactly - and then lands the merged local
-    // at [ebp-0xc] where retail has a push_back temp, pushing one temp down
-    // and transposing ecx/edx through the whole grow path: 99.9482 -> 97.3938.
-    // Retail carries TWO temps above the counter (-0x8 and -0xc) where our
-    // expansion makes only one, so the residual after the merge is a
-    // temp-allocation-order divergence inside the inlined insert, not the
-    // loop. Keeping the two-variable form, which is closer.
-    for (int i = count & 0xff; i > 0; --i) {
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    // The raw byte and normalized loop counter have non-overlapping source
+    // lifetimes, allowing VC6 to reuse their stack home while retaining the
+    // retail temporary order inside the inlined vector insertion.
+    for (; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
@@ -1316,13 +1310,13 @@ void type_artifact_quest::Load(TAbstractFile* file, int version)
 VA(0x0056fea0, 0x1FA)  // anchor-vtable 0x641878 slot 12 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::LoadFromMap(TAbstractFile* file)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9485%): same merged-counter class as slot 11 above, and
-    // the same measurement - spelling the merge fixes the frame and costs
-    // 2.54 points to the temp reshuffle.
-    for (int i = count & 0xff; i > 0; --i) {
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    for (; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
@@ -1567,15 +1561,15 @@ void type_creature_quest::DoProgressDialog()
 VA(0x00570e60, 0x208)  // anchor-vtable 0x6418b4 slot 11 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::Load(TAbstractFile* file, int version)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9310%): frame 0x28 against retail's 0x24 - the same
-    // merged-counter fact the artifact quest's readers carry. Retail masks
-    // the byte in place at [ebp-0xc] and reuses that slot for the running
-    // index; spelling the merge gives the 0x24 frame and costs 2.44 points
-    // to the temp reshuffle inside the inlined push_back.
-    int i = count & 0xff;
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    // The byte-read local expires before the loop starts, allowing VC6 to
+    // reuse its stack home for the normalized loop counter without changing
+    // the inlined vector insertion's temporary ordering.
     while (i--) {
         int type;
         int number;
@@ -1600,11 +1594,12 @@ void type_creature_quest::Load(TAbstractFile* file, int version)
 VA(0x00571070, 0x20A)  // anchor-vtable 0x6418b4 slot 12 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::LoadFromMap(TAbstractFile* file)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9307%): same merged-counter class as slot 11 above.
-    int i = count & 0xff;
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
     while (i--) {
         int type;
         int number;
