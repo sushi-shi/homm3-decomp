@@ -2186,7 +2186,8 @@ int TBuyArtifactWindow::WindowHandler(message* msg)
                         gGiveQuantity = 0;
                         gMaxTradeUnits = 0;
                     } else {
-                        q = static_cast<long>(cost / denom + 0.5);
+                        float ratio = cost / denom;
+                        q = static_cast<long>(ratio + 0.5);
                         gGiveQuantity = q;
                         gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
                     }
@@ -2215,7 +2216,8 @@ int TBuyArtifactWindow::WindowHandler(message* msg)
                         gGiveQuantity = 0;
                         gMaxTradeUnits = 0;
                     } else {
-                        q = static_cast<long>(cost / denom + 0.5);
+                        float ratio = cost / denom;
+                        q = static_cast<long>(ratio + 0.5);
                         gGiveQuantity = q;
                         gMaxTradeUnits = gpCurrentPlayer->resources[resIdx] / q;
                     }
