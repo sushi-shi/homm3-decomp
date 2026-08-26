@@ -1195,6 +1195,7 @@ game	??0VictoryConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0xbc340
 game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??0type_map_hero_info@@QAE@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$bitset@$07@2@@Z	100.0000	100.0000	100.0000	0xc4cc0
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
