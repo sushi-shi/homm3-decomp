@@ -323,6 +323,7 @@ unsigned char load_object_vector(TAbstractFile* infile,
                                  std::vector<type_creature_bank>* dest_vector);
 
 const int SAVED_CREATURE_NONE = 0xff;
+const int SAVED_MAP_COORDINATE_NONE = 0xff;
 // The on-disk hero-id domain playerData::load reads. 0xff is the "no
 // hero" sentinel the roster stores as -1. Saves older than version 25
 // spell two heroes 0x80/0x81 where the shipped roster carries them at
@@ -6768,6 +6769,158 @@ int NewSMapHeader::saveVictoryCondition(char type, TAbstractFile* outfile)
         outfile->Write(&transport, sizeof(transport));
         transport = victoryCondition.TownZ;
         outfile->Write(&transport, sizeof(transport));
+        return 0;
+    }
+    }
+
+    return 0;
+}
+
+// Saved victory payloads widen their byte-sized ids and coordinates into the
+// live retail record. The two common flags are normalized to bool; only the
+// creature/resource amounts, resource id and final upgraded-town byte retain
+// short-read checks. Saves before the Complete roster remap two campaign ids.
+// Residual (99.84%, 2026-08-26): all 34 blocks, control flow and operations
+// agree. Five blocks differ only in VC6's stack-slot coloring for the common
+// flag byte and the resource/upgraded-town case buffers; the reconstructed
+// int_buffer/count/char_buffer roster and all case semantics are DC-backed.
+VA(0x004c3890, 0x3E4)  // sole NewSMapHeader::Load caller + DC helper identity
+int NewSMapHeader::loadVictoryCondition(char type, TAbstractFile* infile,
+                                        int saveVersion)
+{
+    int int_buffer;
+    int count;
+    char char_buffer;
+
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    victoryCondition.AllowNormalVictory = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    victoryCondition.AppliesToComputer = char_buffer != 0;
+
+    switch (type) {
+    case VICTORY_CONDITION_ARTIFACT: {
+        int artifact;
+        infile->Read(&artifact, sizeof(char));
+        victoryCondition.ArtifactNum = artifact & 0xff;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_TOTAL_CREATURES: {
+        int creature;
+        infile->Read(&creature, sizeof(char));
+        victoryCondition.CreatureType =
+            creature_type_from_int(creature & 0xff);
+        count = infile->Read(&int_buffer, sizeof(int_buffer));
+        if (count < sizeof(int_buffer))
+            return -1;
+        victoryCondition.NumCreatures = int_buffer;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_TOTAL_RESOURCES: {
+        char resourceType;
+        count = infile->Read(&resourceType, sizeof(resourceType));
+        if (count < sizeof(resourceType))
+            return -1;
+        victoryCondition.ResourceType = resourceType;
+        count = infile->Read(&int_buffer, sizeof(int_buffer));
+        if (count < sizeof(int_buffer))
+            return -1;
+        victoryCondition.ResourceAmount = int_buffer;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_UPGRADE_TOWN: {
+        int townValue;
+        char hallLevel;
+        char castleLevel;
+        infile->Read(&townValue, sizeof(char));
+        victoryCondition.TownX = townValue & 0xff;
+        infile->Read(&townValue, sizeof(char));
+        victoryCondition.TownY = townValue & 0xff;
+        infile->Read(&townValue, sizeof(char));
+        victoryCondition.TownZ = townValue & 0xff;
+        infile->Read(&hallLevel, sizeof(hallLevel));
+        victoryCondition.HallLevel = hallLevel;
+        count = infile->Read(&castleLevel, sizeof(castleLevel));
+        if (count < sizeof(castleLevel))
+            return -1;
+        victoryCondition.CastleLevel = castleLevel;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_BUILD_GRAIL: {
+        int grailTown;
+        infile->Read(&grailTown, sizeof(char));
+        victoryCondition.TownX = grailTown & 0xff;
+        if (victoryCondition.TownX == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownX = -1;
+        infile->Read(&grailTown, sizeof(char));
+        victoryCondition.TownY = grailTown & 0xff;
+        if (victoryCondition.TownY == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownY = -1;
+        infile->Read(&grailTown, sizeof(char));
+        victoryCondition.TownZ = grailTown & 0xff;
+        if (victoryCondition.TownZ == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownZ = -1;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_HERO: {
+        int heroId;
+        infile->Read(&heroId, sizeof(char));
+        heroId &= 0xff;
+        if (heroId == SAVED_HERO_NONE) {
+            heroId = -1;
+        } else if (saveVersion < SAVE_VERSION_COMPLETE_HERO_ROSTER) {
+            if (heroId == SAVED_HERO_PRE25_FIRST)
+                heroId = HERO_PRE25_FIRST_REMAP;
+            else if (heroId == SAVED_HERO_PRE25_SECOND)
+                heroId = HERO_PRE25_SECOND_REMAP;
+        }
+        victoryCondition.HeroID = heroId;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_CAPTURE_TOWN: {
+        int capturedTown;
+        infile->Read(&capturedTown, sizeof(char));
+        victoryCondition.TownX = capturedTown & 0xff;
+        infile->Read(&capturedTown, sizeof(char));
+        victoryCondition.TownY = capturedTown & 0xff;
+        infile->Read(&capturedTown, sizeof(char));
+        victoryCondition.TownZ = capturedTown & 0xff;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_MONSTER: {
+        int monster;
+        infile->Read(&monster, sizeof(char));
+        victoryCondition.MonsterX = monster & 0xff;
+        infile->Read(&monster, sizeof(char));
+        victoryCondition.MonsterY = monster & 0xff;
+        infile->Read(&monster, sizeof(char));
+        victoryCondition.MonsterZ = monster & 0xff;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_SURVIVE_TIME: {
+        int days;
+        infile->Read(&days, sizeof(days));
+        victoryCondition.NumDays = days;
+        return 0;
+    }
+
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
+        int transport;
+        infile->Read(&transport, sizeof(char));
+        victoryCondition.ArtifactNum = transport & 0xff;
+        infile->Read(&transport, sizeof(char));
+        victoryCondition.TownX = transport & 0xff;
+        infile->Read(&transport, sizeof(char));
+        victoryCondition.TownY = transport & 0xff;
+        infile->Read(&transport, sizeof(char));
+        victoryCondition.TownZ = transport & 0xff;
         return 0;
     }
     }
