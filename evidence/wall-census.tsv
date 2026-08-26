@@ -416,7 +416,6 @@ register-homing (why-reg)	24	95.6600	552	townmgr	?WindowHandler@type_garrison_ba
 register-homing (why-reg)	24	98.5801	1662	townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	23	98.3426	1404	seerhut	?SetDefaultText@type_monster_quest@@UAEXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (18 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	23	98.5213	1568	bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
-control-flow (why-branch)	23	78.8235	109	dxplay	?GetCurrSession@CDPlay@@UAEPAUDPSESSIONDESC2@@XZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	23	96.9556	747	game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (1 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	23	96.4566	640	ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	22	96.3990	621	combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
