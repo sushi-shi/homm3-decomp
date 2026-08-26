@@ -975,7 +975,7 @@ dxplay	?InitConnection@CDPlay@@UAEEPAVCDPlayConnection@@@Z	100.0000	100.0000	100
 dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?JoinSession@CDPlay@@UAEEPAU_GUID@@PAD@Z	100.0000	100.0000	100.0000	0x96e60
 dxplay	?Put@?$CAutoArray@VCDPlayAddressElement@@@@UAEEKPAVCDPlayAddressElement@@@Z	100.0000	100.0000	100.0000	0x99fe0
-dxplay	?Receive@CDPlay@@UAEEPAK0PAVCDPlayMsg@@K@Z	75.6429	75.6429	75.6429	0x975b0
+dxplay	?Receive@CDPlay@@UAEEPAK0PAVCDPlayMsg@@K@Z	100.0000	100.0000	100.0000	0x975b0
 dxplay	?ReceiveMsg@CDPlay@@MAEEKKPAVCDPlayMsg@@@Z	100.0000	100.0000	100.0000	0x96cc0
 dxplay	?ReceiveSystemMsg@CDPlay@@MAEEKPAVCDPlayMsg@@@Z	100.0000	100.0000	100.0000	0x97910
 dxplay	?RegisterApp@CDPlayLobby@@UAEEPAD00U_GUID@@0@Z	91.7097	91.7097	91.7097	0x989a0
@@ -1958,7 +1958,7 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 # and reconstructions (cast_spell exact among them) - the delink
 # generation moved, recruit.cpp and its headers untouched by the
 # regression commit. Same mechanism as above; hist keeps the peak.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
