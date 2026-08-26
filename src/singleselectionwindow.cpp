@@ -657,27 +657,18 @@ int TSingleSelectionWindow::Update(message* msg)
 
 // The window's own modal runner: it nudges the file-list slider when the
 // dialog is being torn down under a paused video / mode-3 game, then pumps
-// through DoDialogDraw with HeroWindowHandler + the free Update pump. The
-// two guards are the adjacent-OR-of-two-ORs VC6 collapses across terms.
-//
-// Residual (97.59%): every instruction and reloc target matches; the sole
-// delta is the flag65 test's branch sense - retail folds `flag65==0 ->
-// BLOCK` directly (recognising the else-arm's flag64==0 makes term2 true)
-// where our CL emits `flag65!=0 -> TAIL` and reaches the block through
-// term2's own flag64==0 test. Both nested-if spellings (either outer test)
-// duplicate the SetState call without cross-jumping and score far lower;
-// the two ternary spellings materialise the guard with `sete`. The flat
-// && of two ORs below is the closest shape - the fold is a VC6 layout
-// coin-flip this source cannot force.
+// through DoDialogDraw with HeroWindowHandler + the free Update pump.
 // E:\gamedcs\singleselectionwindow.cpp:4420
 VA(0x00584bf0, 0x50)  // anchor-vtable vtbl 0x241cac slot6 (DoModal override; cf sibling THeroScreenWindow slot6 DoModal@heroWindow), dc 0x13b104
 int TSingleSelectionWindow::DoModal(unsigned char fade)
 {
-    if ((m_flag64 || m_flag65 == 0) &&
-        (m_flag64 == 0 || bVideoPaused != 0 || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))
+    if ((m_flag64 == 0 && m_flag65 == 0)
+            || (m_flag64 != 0
+                && (bVideoPaused != 0
+                    || gUnnamed6989f0 == WINDOW_MODE_6989F0_3)))
         m_fileSlider->SetState(11);
-    return gpWindowManager->DoDialogDraw(this, heroWindow::HeroWindowHandler,
-                                         ::Update, 0);
+    return gpWindowManager->DoDialogDraw(this,
+        heroWindow::HeroWindowHandler, ::Update, 0);
 }
 
 #if 0  // @carcass

@@ -2330,7 +2330,7 @@ singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	10
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
 singleselectionwindow	?CheckHandleNet@CSingleSelectionNetMsgHandler@@UAEPAVCNetMsg@@EPAE@Z	100.0000	100.0000	100.0000	0x18e310
 singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.0000	100.0000	0x177c90
-singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	97.5926	97.5926	97.5926	0x184bf0
+singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
 singleselectionwindow	?GetPlayerInPos@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@H@Z	100.0000	100.0000	100.0000	0x177bb0
