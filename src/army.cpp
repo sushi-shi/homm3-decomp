@@ -2630,20 +2630,27 @@ void army::do_post_attack(army* target, int iDamage, int iKilled,
 // the sprintf; get_controlling_side is a CALL here (the one this TU
 // keeps out of line); MarkCreatureEffect expands three times.
 //
-// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.46 -> 95.52): the two
-// over-inlines take statement-scoped depth(0) pins with the call
-// hoisted to a local (striking_side, creature_name); the berserk
-// criteria is an IF/ELSE around two GetAttackMask calls, not a
-// ternary - retail pushes the shared -1 once and duplicates the
-// {criteria, gridIndex} pushes per arm; total_life goes through a
-// `long life` block local (+0.06 over the ternary).
+// SPELLING LEDGER (0 -> 88.11 -> 93.99 -> 95.52 -> 98.59 -> 99.9616 -> 99.9962):
+// the two over-inlines take statement-scoped depth(0) pins with the call
+// hoisted to a local (striking_side, creature_name); the berserk criteria is
+// an IF/ELSE around two GetAttackMask calls, not a ternary. Naming the two
+// ComputeBaseDamage results and the adjacent hex fixes VC6's nested-argument
+// evaluation order. The DC prototype and retail's destination slots prove
+// do_multi_head_attack's fourth output is fire_shield_damage, not total_life.
+// A nested shield-charge scope gives retail's dead [ebp+8] parameter home;
+// spelling the null arm explicitly gives its fall-through and zero register.
+// Named side/index arguments select retail's address association in both
+// MarkCreatureEffect expansions.
 //
-// Residual (95.5202%): the register-mirror family again - the second
-// and third MarkCreatureEffect expansions home their byte-store lea
-// through the swapped ecx/ebx pair, the armyToAttack reload schedules
-// one slot later, and total_life's else arm keeps the product in EDX
-// where retail routes both arms through EAX into one store. Calls all
-// pair (23/23 after the pins).
+// Residual (99.9962%): ordering the result locals as damage, killed, damage2,
+// total_life, fire_shield_damage, killed2 selects retail's adjacent EDI/EBX
+// restores after do_multi_head_attack. Only two zero-initialization stores then
+// use the opposite total_life/killed2 stack homes. Branches agree 58/58,
+// returns 1/1 and all 106 blocks agree. A generated 1,090-variant
+// ordinary-source search covered argument temporaries, declaration order and
+// grouping, zero spellings and schedules, output roles, nested lifetimes,
+// positive/negative/duplicated null arms, named call arguments and pointer
+// aliases. No volatile, carrier, view, macro or new pragma was used.
 VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
 unsigned char army::do_attack(army* armyToAttack, int direction)
 {
@@ -2663,8 +2670,8 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
     } else {
         armyToAttack->hitByCreature = 1;
         if (Is(3) & 1) {
-            long behind_hex = GetAdjacentCellIndex(
-                get_adjacent_hex(gridIndex, direction), direction);
+            int adjacent_hex = get_adjacent_hex(gridIndex, direction);
+            long behind_hex = GetAdjacentCellIndex(adjacent_hex, direction);
             if (behind_hex >= 0 && behind_hex < COMBAT_GRID_CELLS) {
                 behind = gpCombatManager->cells[behind_hex].get_army();
                 if (behind) {
@@ -2704,17 +2711,23 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
     int damage = 0;
     int killed = 0;
     int damage2 = 0;
-    int killed2 = 0;
-    long fire_shield_damage = 0;
     long total_life = 0;
+    long fire_shield_damage = 0;
+    int killed2 = 0;
     if (Is(19) & 1) {
-        do_multi_head_attack(attackMask, &damage, &killed, &total_life);
+        do_multi_head_attack(attackMask, &damage, &killed,
+                             &fire_shield_damage);
     } else {
-        gpCombatManager->MarkCreatureEffect(armyToAttack->combatSide,
-                                            armyToAttack->bitIndex);
-        if (behind)
-            gpCombatManager->MarkCreatureEffect(behind->combatSide,
-                                                behind->bitIndex);
+        {
+            int marked_side = armyToAttack->combatSide;
+            int marked_index = armyToAttack->bitIndex;
+            gpCombatManager->MarkCreatureEffect(marked_side, marked_index);
+        }
+        if (behind) {
+            int marked_side = behind->combatSide;
+            int marked_index = behind->bitIndex;
+            gpCombatManager->MarkCreatureEffect(marked_side, marked_index);
+        }
         long life;
         if (armyToAttack->Is(23) & 1)
             life = 1;
@@ -2722,22 +2735,28 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
             life = armyToAttack->hitPoints * armyToAttack->numTroops
                    - armyToAttack->topCreatureDamage;
         total_life = life;
-        long shield_charge = 0;
-        if (armyToAttack) {
-            damage = adjust_damage(armyToAttack, ComputeBaseDamage(0), 0,
-                                   0, joustBonus, &shield_charge);
-            killed = armyToAttack->Damage(damage);
-            iLuckStatus = 0;
-        }
-        fire_shield_damage = shield_charge;
-        if (shield_charge > 0)
-            armyToAttack->show_fire_shield = 1;
-        if (behind) {
-            shield_charge = 0;
-            damage2 = adjust_damage(behind, ComputeBaseDamage(0), 0, 0,
-                                    joustBonus, &shield_charge);
-            killed2 = behind->Damage(damage2);
-            iLuckStatus = 0;
+        {
+            long shield_charge = 0;
+            if (!armyToAttack) {
+                shield_charge = 0;
+            } else {
+                int base_damage = ComputeBaseDamage(0);
+                damage = adjust_damage(armyToAttack, base_damage, 0, 0,
+                                       joustBonus, &shield_charge);
+                killed = armyToAttack->Damage(damage);
+                iLuckStatus = 0;
+            }
+            fire_shield_damage = shield_charge;
+            if (shield_charge > 0)
+                armyToAttack->show_fire_shield = 1;
+            if (behind) {
+                shield_charge = 0;
+                int base_damage = ComputeBaseDamage(0);
+                damage2 = adjust_damage(behind, base_damage, 0, 0,
+                                        joustBonus, &shield_charge);
+                killed2 = behind->Damage(damage2);
+                iLuckStatus = 0;
+            }
         }
     }
     gpCombatManager->ComputeMaxExtent();
