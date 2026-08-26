@@ -494,6 +494,8 @@ unsigned char CAutoArray<T>::Insert(unsigned long nextElementNbr, T* element)
 // at +4, which is the retail proof needed by this TU.
 class CDPlaySession {
 public:
+    CDPlaySession(const DPSESSIONDESC2* lpSession);
+
     unsigned long dwFlags;      // +0x00
     GUID guidInstance;          // +0x04
     GUID guidApp;               // +0x14
