@@ -2185,7 +2185,7 @@ remote	?OnEnter@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x154380
 remote	?OnEscape@CChatEdit@@UAEHVmessage@@@Z	100.0000	100.0000	100.0000	0x1543c0
 remote	?OnFunctionKey@CChatEdit@@UAEHVmessage@@H@Z	100.0000	100.0000	100.0000	0x154330
 remote	?OnKeyPress@CChatEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x154240
-remote	?OnPlayerDropUpdateMsg@@YIXK@Z	95.3028	95.3028	95.3028	0x1565e0
+remote	?OnPlayerDropUpdateMsg@@YIXK@Z	98.7064	98.7064	98.7064	0x1565e0
 remote	?Pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0
 remote	?PauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050
 remote	?PlayerDropMsg@@YAXPAVCChatManager@@PBDZZ	100.0000	100.0000	100.0000	0x153b60
