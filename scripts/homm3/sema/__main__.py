@@ -8,17 +8,19 @@ build/gen/symbol_names.csv name)
         Caller ancestry tree (the default; depth 4, 0 = unlimited),
         flat direct callers, or forward callees - always ending with
         the exact reloc-backed data-side references.
-  diff TARGET [--verbose | --asm | --branches]
+  diff TARGET [--verbose | --asm | --branches | --source]
         Base-vs-target comparison: block-SKELETON diff by default,
         --verbose = block bodies, --asm = flat masked asm diff,
-        --branches = symbolic branch-sequence comparison.
+        --branches = symbolic branch-sequence comparison,
+        --source = statement-grouped diff using candidate /Z7 lines.
         rc=1 when the REQUESTED VIEW differs (the skeleton compares
         flow shape + block sizes only; in-block changes need
         --verbose/--branches).
-  disasm TARGET [--base] [--blocks] [--verbose]
+  disasm TARGET [--base] [--source] [--blocks] [--verbose]
         One function's body, lite asm by default; ANY retail function
         renders (delinked-unit object when one exists, image bytes via
-        capstone otherwise).
+        capstone otherwise). --source labels candidate statements and
+        implies --base.
   rva ADDR
         The address dossier: symbol, universe class, src claim,
         vtable membership, match %.
@@ -66,12 +68,18 @@ def _build_parser() -> argparse.ArgumentParser:
     mode.add_argument("--branches", action="store_true",
                       help="symbolic branch-sequence comparison (the signal "
                            "the masked views cannot show)")
+    mode.add_argument("--source", action="store_true",
+                      help="statement-grouped diff labelled with candidate "
+                           "source from a verified /Z7 object")
 
     sa = ss.add_parser(
         "disasm", help="one function, lite asm default; any retail fn renders")
     sa.add_argument("target", help="0x<addr> or symbol name")
     sa.add_argument("--base", action="store_true",
                     help="your compiled obj instead of retail")
+    sa.add_argument("--source", action="store_true",
+                    help="label candidate asm with verified /Z7 source lines "
+                         "(implies --base; incompatible with --blocks)")
     sa.add_argument("--blocks", action="store_true",
                     help="basic-block CFG view (skeleton; --verbose = bodies)")
     sa.add_argument("--verbose", action="store_true",

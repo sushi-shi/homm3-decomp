@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — candidate assembly gains verified VC6 `/Z7` source
+  statements.** `homm3 sema disasm <addr> --base --source [--verbose]`
+  interleaves the candidate's real source lines with the ordinary matching
+  object's assembly, and `homm3 sema diff <addr> --source` aligns base/target
+  instructions first, then groups the result beneath candidate statement
+  headings. Source text is display-only: it cannot affect comparison or rc.
+
+  VC6 stores these lines as classic six-byte COFF `IMAGE_LINENUMBER` records,
+  not modern C13 records, so the in-tree reader resolves each function anchor
+  through its `.bf` auxiliary symbol and preserves repeated offsets. The
+  on-demand debug object is separately cached under `build/debug/`, keyed by
+  flags plus source/header contents; sema refuses its offsets unless the
+  selected function's logical code bytes equal the pristine base object's.
+  Live SP3 controls prove `GetRemoteData` at 0x554400 stays 15 bytes and exact
+  with `/Z7`, labels its return at `remote.cpp:1250`, and returns rc 0 in the
+  source diff; the known 86.98% `CDPlayHeroes::SendIt` returns rc 1 and names
+  its first divergent candidate statement. These are candidate-navigation
+  records only and make no claim about retail source.
+
 - **2026-08-25 — the skeleton-transformer creature grid reproduces all 655
   retail bytes.** Its sole retail caller is the 0x5654f0 transformer-window
   constructor, while the Dreamcast roster identifies the row at 0x566760 as

@@ -264,8 +264,8 @@ def mask_insn(text: str) -> str:
     return text
 
 
-def cfg(text: str):
-    """Ordered basic blocks as (address, [masked insns], terminator).
+def cfg_rows(text: str):
+    """Ordered blocks as ``(address, [(insn_addr, masked)], terminator)``.
 
     Terminators use block indices rather than code addresses, making
     normalized candidate and retail objects comparable. The block count
@@ -307,7 +307,7 @@ def cfg(text: str):
         op = instruction.lower().split(None, 1)[0]
         target = _branch_target(instruction, addresses)
         following = insns[i + 1][0] if i + 1 < len(insns) else None
-        block[1].append(mask_insn(instruction))
+        block[1].append((address, mask_insn(instruction)))
         if following is not None and following not in index:
             continue
         if target is not None:
@@ -327,6 +327,12 @@ def cfg(text: str):
         else:
             block[2] = "end"
     return [(address, body, term) for address, body, term in result]
+
+
+def cfg(text: str):
+    """Ordered basic blocks as (address, [masked insns], terminator)."""
+    return [(address, [instruction for _off, instruction in body], term)
+            for address, body, term in cfg_rows(text)]
 
 
 def predecessor_counts(graph) -> dict:
