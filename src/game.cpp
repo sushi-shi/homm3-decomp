@@ -342,6 +342,17 @@ const int SAVE_VERSION_MAX_HERO_LEVEL = 27;
 const int SAVE_VERSION_WIDE_ALIGNMENTS = 28;
 const int SAVE_VERSION_CUSTOM_HERO_SETUPS = 30;
 const int SAVE_VERSION_CUSTOM_HERO_AVAILABILITY = 31;
+const int MAP_VERSION_ERROR_GENERAL_TEXT = 431;
+const int MAP_HEADER_PLAYER_COUNT = 8;
+const int MAP_HEADER_LEGACY_HERO_COUNT = 128;
+const int MAP_HEADER_HERO_COUNT = 156;
+const int MAP_HEADER_COMPLETE_LEGACY_HERO_FIRST = 128;
+const int MAP_HEADER_COMPLETE_LEGACY_HERO_LAST = 143;
+const int MAP_HEADER_PADDING_SIZE = 31;
+const int CAMPAIGN_VICTORY_OVERRIDE_FIRST = 10;
+const int CAMPAIGN_VICTORY_OVERRIDE_SECOND = 11;
+const int CAMPAIGN_VICTORY_OVERRIDE_THIRD = 12;
+const int CAMPAIGN_VICTORY_OVERRIDE_DAYS = 112;
 
 // Four resource/game-format contexts, each carrying the feature bits exposed
 // by that install.  The player-slot reader tests bit one before admitting the
@@ -7343,6 +7354,241 @@ void CMapHeaderData::TPlayerSlotAttributes::readMapPlayerSlot(
             --heroCount;
         } while (heroCount != 0);
     }
+}
+
+// Scenario-map headers precede the world payload with the compact map-format
+// record written by Save. Complete extracts the player-slot reader above and
+// extends the original hero mask with 28 heroes plus optional per-player hero
+// setup records. Dreamcast CodeView proves the method/local identities; the
+// retail stream reads, helper edges and version branches prove the PC schema.
+// Current VC6 closure is 91.5614% (130 candidate blocks vs 127 retail): the
+// first 70 blocks are exact. The remaining tail is dominated by Dinkumware
+// nested-inliner boundaries around bitset::_Tidy and iterator copy/destruction;
+// forcing those sites synthetically reached a higher calibration score but was
+// rejected because it did not describe retail source. A header access shim was
+// also rejected after it perturbed already-exact functions in this TU.
+VA(0x004c4390, 0x92E)  // DC Read identity + LoadMap/Get callers + stream order
+int NewSMapHeader::Read(TAbstractFile* infile, int campaignMap)
+{
+    char padding[MAP_HEADER_PADDING_SIZE];
+
+#pragma inline_depth(1)
+    mapName.erase();
+    mapDescription.erase();
+#pragma inline_depth()
+
+    if (infile->Read(&version, sizeof(version)) < sizeof(version))
+        return -1;
+
+    if (version != MAP_FORMAT_SHADOW_OF_DEATH
+        && version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+        && version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        mapName = gpGeneralText->GetText(MAP_VERSION_ERROR_GENERAL_TEXT);
+        return -1;
+    }
+
+    char boolBuffer;
+    if (infile->Read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+        return -1;
+    isPlayable = boolBuffer != 0;
+
+    if (infile->Read(&Size, sizeof(Size)) < sizeof(Size))
+        return -1;
+
+    if (infile->Read(&boolBuffer, sizeof(boolBuffer)) < sizeof(boolBuffer))
+        return -1;
+    HasTwoLayers = boolBuffer != 0;
+
+    if (readMapString(infile, &mapName) < 0)
+        return -1;
+    if (readMapString(infile, &mapDescription) < 0)
+        return -1;
+
+    unsigned char ucharBuffer;
+    if (infile->Read(&ucharBuffer, sizeof(ucharBuffer))
+        < sizeof(ucharBuffer))
+        return -1;
+    difficulty = ucharBuffer;
+
+    if (version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        char charBuffer;
+        infile->Read(&charBuffer, sizeof(charBuffer));
+        maxHeroLevel = charBuffer;
+    } else {
+        maxHeroLevel = 0;
+    }
+
+    numPlayers = 0;
+    minNumHumanPlayers = 0;
+    maxNumHumanPlayers = 0;
+
+    // This source local exists in the retail lifetime graph even though the
+    // Complete-only tail uses a separate returned string for each hero name.
+    std::string strTemp;
+
+    TPlayerSlotAttributes* player = playerSlotAttributes;
+    for (int i = 0; i < MAP_HEADER_PLAYER_COUNT; ++i, ++player) {
+        player->readMapPlayerSlot(infile, version);
+        if (player->CanBeHuman && !player->CanBeComputer)
+            ++minNumHumanPlayers;
+        if (player->CanBeHuman)
+            ++maxNumHumanPlayers;
+        if (player->CanBeComputer || player->CanBeHuman)
+            ++numPlayers;
+    }
+
+    if (!minNumHumanPlayers)
+        minNumHumanPlayers = 1;
+
+    int x;
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    victoryCondition.Type = x;
+    victoryCondition.GameWon = 0;
+    victoryCondition.playerWinner = -1;
+    if (static_cast<unsigned char>(x) != SAVED_HERO_NONE)
+        readVictoryCondition(x, infile);
+
+    if (gbUnk69774c) {
+        switch (gpGame->campaign.currentCampaign) {
+        case CAMPAIGN_VICTORY_OVERRIDE_FIRST:
+            if (campaignMap == GAME_SCENARIO_2) {
+                victoryCondition.Type = VICTORY_CONDITION_DEFEAT_ALL_MONSTERS;
+                victoryCondition.AllowNormalVictory = 0;
+            }
+            break;
+
+        case CAMPAIGN_VICTORY_OVERRIDE_SECOND:
+            if (campaignMap == GAME_SCENARIO_2) {
+                victoryCondition.Type = VICTORY_CONDITION_SURVIVE_TIME;
+                victoryCondition.NumDays = CAMPAIGN_VICTORY_OVERRIDE_DAYS;
+            }
+            break;
+
+        case CAMPAIGN_VICTORY_OVERRIDE_THIRD:
+            if (campaignMap == GAME_SCENARIO_0) {
+                victoryCondition.Type = VICTORY_CONDITION_DEFEAT_ALL_MONSTERS;
+                victoryCondition.AllowNormalVictory = 1;
+            }
+            break;
+        }
+    }
+
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    lossCondition.Type = x;
+    lossCondition.GameLost = 0;
+    lossCondition.playerLoser = -1;
+    if (static_cast<unsigned char>(x) != SAVED_HERO_NONE)
+        readLossCondition(x, infile);
+
+    if (infile->Read(&x, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+    numTeams = x;
+    if (numTeams) {
+        if (infile->Read(teamInfo, sizeof(teamInfo)) < sizeof(teamInfo))
+            return -1;
+    } else {
+        for (int i = 0; i < MAP_HEADER_PLAYER_COUNT; ++i)
+            teamInfo[i] = i;
+    }
+
+    if (version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        availableHeroes.reset();
+#pragma inline_depth(1)
+        std::bitset<MAP_HEADER_LEGACY_HERO_COUNT> AvailableHeroesMask;
+#pragma inline_depth()
+        unsigned char heroBits[MAP_HEADER_LEGACY_HERO_COUNT / 8];
+        infile->Read(heroBits, sizeof(heroBits));
+        for (unsigned int i = 0; i < MAP_HEADER_LEGACY_HERO_COUNT; ++i) {
+#pragma inline_depth(0)
+            AvailableHeroesMask.set(
+                i, (heroBits[i >> 3] & (1 << (i & 7))) != 0);
+#pragma inline_depth()
+        }
+
+        std::copy(
+            bitset_iterator<MAP_HEADER_LEGACY_HERO_COUNT>(
+                AvailableHeroesMask, 0),
+            bitset_iterator<MAP_HEADER_LEGACY_HERO_COUNT>(
+                AvailableHeroesMask, MAP_HEADER_LEGACY_HERO_COUNT),
+            bitset_iterator<MAP_HEADER_HERO_COUNT>(availableHeroes, 0));
+
+        if (!gbUnk69774c) {
+            for (int i = MAP_HEADER_COMPLETE_LEGACY_HERO_FIRST;
+                 i <= MAP_HEADER_COMPLETE_LEGACY_HERO_LAST; ++i)
+                availableHeroes[i] = true;
+        }
+    } else {
+#pragma inline_depth(0)
+        std::bitset<MAP_HEADER_HERO_COUNT> AvailableHeroesMask(0);
+#pragma inline_depth()
+        unsigned char heroBits[(MAP_HEADER_HERO_COUNT + 7) / 8];
+        infile->Read(heroBits, sizeof(heroBits));
+        for (unsigned int i = 0; i < MAP_HEADER_HERO_COUNT; ++i) {
+#pragma inline_depth(0)
+            AvailableHeroesMask.set(
+                i, (heroBits[i >> 3] & (1 << (i & 7))) != 0);
+#pragma inline_depth()
+        }
+        availableHeroes = AvailableHeroesMask;
+    }
+
+    placeholders.erase(placeholders.begin(), placeholders.end());
+    if (version != MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        int count;
+        infile->Read(&count, sizeof(count));
+        if (count > 0) {
+            do {
+                infile->Read(&x, sizeof(unsigned char));
+                x &= 0xff;
+                placeholders.push_back(x);
+            } while (--count != 0);
+        }
+    }
+
+    heroPlayerSetups.clear();
+    if (version != MAP_FORMAT_RESTORATION_OF_ERATHIA
+        && version != MAP_FORMAT_ARMAGEDDONS_BLADE) {
+        infile->Read(&x, sizeof(unsigned char));
+        x &= 0xff;
+        if (static_cast<unsigned int>(x) > 0) {
+            int count = x;
+            do {
+                infile->Read(&x, sizeof(unsigned char));
+                int heroKey = x & 0xff;
+
+                int heroId;
+                infile->Read(&heroId, sizeof(unsigned char));
+                heroId &= 0xff;
+                if (heroId == SAVED_HERO_NONE)
+                    heroId = -1;
+
+                std::string heroName = ReadLengthPrefixedString(infile);
+#pragma inline_depth(1)
+                std::bitset<8> availability;
+#pragma inline_depth()
+                unsigned char availabilityBits[1];
+                infile->Read(availabilityBits, sizeof(availabilityBits));
+                for (unsigned int i = 0; i < MAP_HEADER_PLAYER_COUNT; ++i) {
+#pragma inline_depth(0)
+                    availability.set(
+                        i, (availabilityBits[i >> 3]
+                            & (1 << (i & 7))) != 0);
+#pragma inline_depth()
+                }
+
+                heroPlayerSetups.insert(
+                    std::pair<const int, type_map_hero_info>(
+                        heroKey,
+                        type_map_hero_info(heroId, heroName, availability)));
+            } while (--count != 0);
+        }
+    }
+
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
 // NewSMapHeader::Read builds this value from the map hero id, its owned

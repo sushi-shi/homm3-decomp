@@ -1203,6 +1203,7 @@ game	?ProcessOnMapTowns@game@@QAEXXZ	80.3907	80.3907	80.3907	0xcaa70
 game	?ProcessRandomObjects@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc9dd0
 game	?RandomizeEvents@game@@QAEXXZ	86.9275	86.9275	86.9275	0xc0cc0
 game	?RandomizeHolyGrail@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc0870
+game	?Read@NewSMapHeader@@QAEHPAVTAbstractFile@@H@Z	91.5614	91.5614	91.5614	0xc4390
 game	?ReadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba1c0
 game	?Reset@SavedGameHeader@@QAEXXZ	100.0000	100.0000	100.0000	0xbc350
 game	?ResetAllPlayerVisibility@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7c50
