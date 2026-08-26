@@ -2706,7 +2706,7 @@ tradpost	?DoArtifactMerchants@@YIXXZ	100.0000	100.0000	100.0000	0x1e9d20
 tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
 tradpost	?DoFreelancersGuild@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1e9e60
 tradpost	?DoFreelancersGuild@@YIXPAVtown@@@Z	100.0000	100.0000	100.0000	0x1e9ea0
-tradpost	?DoMarket@@YIXXZ	91.9480	91.9480	91.9480	0x1ea130
+tradpost	?DoMarket@@YIXXZ	94.6104	94.6104	94.6104	0x1ea130
 tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0

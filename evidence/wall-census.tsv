@@ -229,7 +229,6 @@ register-homing (why-reg)	97	81.4136	522	townmgr	?SetRolloverText@TTavernWindow@
 register-homing (why-reg)	97	96.2232	2568	cmbtmgr	?PowEffect@combatManager@@QAEXHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	97	95.1600	1996	mapcell	?readTownData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	96	98.9497	9170	townmgr	??0TTownScreenWindow@@QAE@XZ	predict-inline	callee expanded on one side only (A8/A9/A12): 5 under-inline, 6 over-inline (248 name-unresolvable pair(s) discounted)
-control-flow (why-branch)	95	91.9480	1180	tradpost	?DoMarket@@YIXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	95	90.1916	968	armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	why-reg	spill to dead-parameter slot (B4)
 register-homing (why-reg)	95	89.4646	898	ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	94	90.4313	985	mapcell	?StampObject@NewfullMap@@QAEXPAVNewmapCell@@PAUTObjectCell@2@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
@@ -292,6 +291,7 @@ control-flow (why-branch)	67	79.2453	321	swapmgr	?SwapMons@swapManager@@QAEXXZ	w
 inliner (predict-inline)	66	95.9319	1623	misc	?ReadPrefsFromRegistry@@YIXXZ	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline
 inliner (predict-inline)	65	87.1099	507	ai	?find_attack_hexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 over-inline (8 name-unresolvable pair(s) discounted)
 register-homing (why-reg)	65	84.4030	417	tradpost	?SetRolloverText@TSellCreatureWindow@@QAEXH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
+control-flow (why-branch)	64	94.6104	1180	tradpost	?DoMarket@@YIXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	64	94.3532	1125	cspriteframe	?Draw@CSpriteFrame@@QBEXHHHHPAGHHHHHAAVTPalette16@@EE@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
 inliner (predict-inline)	63	96.9833	2099	mapcell	?readObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline, 1 over-inline (3 name-unresolvable pair(s) discounted)
 control-flow (why-branch)	63	90.0750	636	advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)

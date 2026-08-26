@@ -533,7 +533,7 @@ void DoMarket()
 
         default:
             gMarketWindow = MARKET_COMMAND_ID;
-            return;
+            continue;
         }
         gMarketWindow = gpWindowManager->dialogReturn;
     }
