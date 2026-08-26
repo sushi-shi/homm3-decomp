@@ -372,6 +372,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   **2228/2661 linked exact**, **96.84% linked fuzzy**, and **48.72%
   executable coverage** with every gate clean.
 
+- **2026-08-26 — the retained hero-setup map `_Tree::_Min` helper is admitted
+  exact.** Retail's `CMapHeaderData::Save` expands iterator increment but
+  keeps the protected static `_Min` call. Its sole argument, the 0x2c map
+  node's right child, and the loop over node +0 left links identify the helper;
+  VC6's pinned `XTREE` body reproduces all 50 bytes including `_Lockit`.
+  `VA_COMPGEN` gains the narrow direct-symbol `TREE_MIN` contract, keyed by
+  the mapped value type, with a mangled-name negative control. An emission-only
+  derived map shim takes the protected member's address without changing the
+  authoritative `std::map<int, type_map_hero_info>` member or a runtime caller.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in

@@ -169,6 +169,29 @@ inline EGameResource game_resource_from_int(int value)
     return converted.resource;
 }
 
+// Must precede the first real map use: VC6 fixes nested inline decisions when
+// it first instantiates this template member. Retail's retained copy calls
+// both _Lockit members rather than expanding them.
+#pragma inline_depth(0)
+template<>
+THeroSetupMapMinComdatAnchor::NodePtr
+std::map<int, type_map_hero_info>::_Imp::_Min(
+    THeroSetupMapMinComdatAnchor::NodePtr node)
+{
+    std::_Lockit lock;
+    while (node->_Left != _Nil)
+        node = node->_Left;
+    return node;
+}
+
+void THeroSetupMapMinComdatAnchor::retain_min()
+{
+    typedef _Nodeptr (__fastcall *MinFunction)(_Nodeptr);
+    MinFunction volatile minFunction = &_Min;
+    minFunction(_Nil);
+}
+#pragma inline_depth()
+
 // Defined at the foot of this file, where retail emits it (0x4d2ac0):
 // declared here so game::Save's pool writes call it out of line.
 unsigned char save_vector(TAbstractFile* outfile,
@@ -15482,7 +15505,8 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<128>& objectTypes,
                                std::bitset<5>& spellLevels,
                                std::bitset<8>& heroPool,
-                               std::vector<type_map_hero_identity>& heroIdentities)
+                               std::vector<type_map_hero_identity>& heroIdentities,
+                               THeroSetupMapMinComdatAnchor& heroSetupMap)
 {
     spellLevels.reset();
     heroPool.reset();
@@ -15490,6 +15514,7 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     spells.reset();
     heroIdentities.clear();
     heroIdentities.erase(heroIdentities.begin(), heroIdentities.end());
+    heroSetupMap.retain_min();
     spells[0] = true;
     artifacts.set(0, true);
     std::logic_error error(message);
@@ -15510,3 +15535,4 @@ VA_COMPGEN(0x004d1830, 0x17, BITSET_TIDY, Bitset28)
 VA_COMPGEN(0x004cf040, 0x6A, BITSET_REFERENCE_ASSIGN, Bitset156)
 VA_COMPGEN(0x004cfe30, 0x8F, VECTOR_ERASE, type_map_hero_identity)
 VA_COMPGEN(0x004cfec0, 0x23, VECTOR_DESTROY, type_map_hero_identity)
+VA_COMPGEN(0x004d2050, 0x32, TREE_MIN, type_map_hero_info)

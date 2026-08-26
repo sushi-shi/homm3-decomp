@@ -156,7 +156,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "BITSET_XRAN", "PAIR_CONST_INT_DTOR",
+                 "BITSET_TEST", "BITSET_XRAN", "TREE_MIN",
+                 "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
@@ -592,6 +593,11 @@ def _demangle_key(mangled: str):
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor. Assignment (??4) keys to the declarator scanner's stable
     `Class_Class_operator` spelling; other special operators return None."""
+    tree_value = re.search(
+        r"\?\$_Tree@H(?:V|U)\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@",
+        mangled)
+    if mangled.startswith("?_Min@?$_Tree@") and tree_value:
+        return f"{tree_value.group(1).lower()}@tree_min"
     vector_element = re.search(
         r"\?\$vector@(?:V|U|W4)?([A-Za-z_]\w*)@", mangled)
     if mangled.startswith("??1?$vector@") and vector_element:
@@ -888,6 +894,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
                                or "$bitset_xran$" in r["name"]
+                               or "$tree_min$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -972,6 +979,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$tree_min$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}@tree_min", []).append(row)
             continue
         if "$pair_const_int_dtor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1463,6 +1474,13 @@ def selftest() -> list[str]:
     for mangled, expected in bitset_cases.items():
         if _demangle_key(mangled) != expected:
             failures.append(f"MSVC {expected} key regressed")
+    if _demangle_key(
+            "?_Min@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@"
+            "U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@"
+            "V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@"
+            "V?$allocator@Utype_map_hero_info@@@2@@std@@KAPAU_Node@12@"
+            "PAU312@@Z") != "type_map_hero_info@tree_min":
+        failures.append("MSVC map tree _Min key regressed")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \
