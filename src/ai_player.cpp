@@ -2185,11 +2185,11 @@ long type_AI_creature_swapper::do_best_swap(bool can_take_all)
                 }
             }
         }
-        long weighted = improvement * value / 10;
+        long weighted = improvement * value / 40;
         if (weighted > best_value) {
             best_value = weighted;
-            best_source_slot = source;
             best_army_slot = slot;
+            best_source_slot = source;
             best_amount = count;
         }
     }
