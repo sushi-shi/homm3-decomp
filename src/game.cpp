@@ -6388,6 +6388,46 @@ void game::read_map_hero_setups(TAbstractFile* mapFile, int mapVersion)
     }
 }
 
+// The three loss-condition payloads are stored in the common live record as
+// widened coordinates or a 16-bit day limit. Map bytes remain unsigned when
+// widened; the time-limit read is the only arm whose short read is checked.
+// EXACT 2026-08-26: the top-scope short/int roster is load-bearing. VC6 parks
+// the short at the upper half of the dead type argument and the int over the
+// cached stream argument, matching all nine blocks and all 267 retail bytes.
+VA(0x004c3c80, 0x10B)  // DC readLossCondition + sole NewSMapHeader::Read caller
+int NewSMapHeader::readLossCondition(char type, TAbstractFile* infile)
+{
+    short shortValue;
+    int value;
+    switch (type) {
+    case LOSS_CONDITION_LOSE_TOWN:
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownX = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownY = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.TownZ = value & 0xff;
+        return 0;
+
+    case LOSS_CONDITION_LOSE_HERO:
+        infile->Read(&value, sizeof(char));
+        lossCondition.HeroX = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.HeroY = value & 0xff;
+        infile->Read(&value, sizeof(char));
+        lossCondition.HeroZ = value & 0xff;
+        return 0;
+
+    case LOSS_CONDITION_TIME_LIMIT:
+        if (infile->Read(&shortValue, sizeof(shortValue))
+            < sizeof(shortValue))
+            return -1;
+        lossCondition.NumDays = shortValue;
+        return 0;
+    }
+    return 0;
+}
+
 // PC-only post-header normalization. The available-hero bitset controls the
 // live availability bytes, explicit per-player hero masks override the
 // all-player default, and artifact victory conditions reserve their target
