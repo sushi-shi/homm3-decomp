@@ -839,10 +839,6 @@ CDPlayLobby::~CDPlayLobby()
         static_cast<IDirectPlayLobby3A*>(m_lpLobby)->Release();
 }
 
-// Residual (91.7%): the DPAPPLICATIONDESC field set is byte-right, but the
-// scheduler interleaves the guidApplication struct-copy dwords and the curDir
-// pointer stores differently from retail (register-homing / store-scheduling
-// class); measured worse both ways when the assignment order is permuted.
 // E:\gamedcs\dxplay.cpp:1224
 VA(0x004989a0, 0xB7)  // anchor-vtable CDPlayLobby slot62 (RegisterApp); GetCurrentDirectoryA, dc 0x8b60c
 unsigned char CDPlayLobby::RegisterApp(char* appName, char* fileName, char* commandLine, GUID appGuid, char* executableName)
@@ -858,11 +854,11 @@ unsigned char CDPlayLobby::RegisterApp(char* appName, char* fileName, char* comm
     desc.lpszDescriptionW = 0;
     if (!GetCurrentDirectoryA(0x105, curDir))
         return 0;
+    desc.lpszPathA = curDir;
+    desc.lpszCurrentDirectoryA = curDir;
     desc.lpszFilenameA = fileName;
     desc.guidApplication = appGuid;
     desc.lpszCommandLineA = commandLine;
-    desc.lpszPathA = curDir;
-    desc.lpszCurrentDirectoryA = curDir;
     desc.lpszExecutableA = executableName;
     m_hRes = static_cast<IDirectPlayLobby3A*>(m_lpLobby)->RegisterApplication(0, &desc);
     unsigned char ok = m_hRes >= 0;
