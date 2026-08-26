@@ -5861,18 +5861,13 @@ CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
 // randomDwellings idiom) with end() and the value hoisted out so operator[]
 // and end() stay inline; sprites is named as a reference so its _Last is read
 // through &sprites, not folded off `this`.
-// Residual (99.98%): retail reserves a dead 4-byte frame temp at [ebp-0x8]
-// (frame 0xc vs 0x8), landing its &mask_34 cache at [ebp-0xc] where this
-// compile compacts it to [ebp-0x8] - three displacement bytes, no semantic
-// delta and no lever found (a VC6 temp-slot-count artifact).  The four
-// reloc-name rows (vector<CObjectType>/<CSprite*>::insert, bitset<10>::_Xran,
-// _Nullstr) are cosmetic cross-TU unclaimed STL COMDATs and do not score.
-// Tried and rejected: a `candidate` reference (reschedules the loop body, -3);
-// swapping the extra-compare operands (moves the cmp, not the schedule).
-// The baseline hist 100.0000 above this max is an objdiff target-padding-span
-// / delink-generation artifact recorded by a transitional --fast; the settled
-// build->delink->build value is 99.9771 and the frame-slot delta is real
-// bytes, so 99.9771 is the honest number - do not chase the 100.
+// EXACT 2026-08-26 (99.9771 -> 100.0000): retail's otherwise-dead third
+// frame slot comes from the non-const bitset operator[] proxy.  Spelling the
+// mask test as `.test(terrain)` emits identical executable operations but
+// lets VC6 compact the frame from 0xc to 0x8.  The three remaining displayed
+// reloc-name rows are cosmetic cross-TU unclaimed STL/data identities and do
+// not score.  A 316-candidate generated declaration/name search was flat;
+// the older reference/push_back hypothesis over-inlines (21 vs 10 branches).
 VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
 void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
                                        int objectIndex, int terrain)
@@ -5882,7 +5877,7 @@ void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
         if (objectTypeIndex[objectType][i].extra == objectIndex) {
             if (terrain == -1)
                 break;
-            if (objectTypeIndex[objectType][i].mask_34.test(terrain))
+            if (objectTypeIndex[objectType][i].mask_34[terrain])
                 break;
         }
     }
