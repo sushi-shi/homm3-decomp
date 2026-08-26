@@ -338,6 +338,8 @@ SIZE(CDPlayLobby, 0x60);
 class CDPlayMsg {
 public:
     CDPlayMsg() : pData(0), dataSize(0) {}
+    unsigned char AllocSize(unsigned long dSize);
+
     ~CDPlayMsg()
     {
         if (pData) {
@@ -351,6 +353,15 @@ public:
     unsigned long dataSize;
 };
 SIZE(CDPlayMsg, 0x08);
+
+inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
+{
+    if (pData)
+        delete [] pData;
+    pData = new unsigned char[dSize];
+    dataSize = dSize;
+    return 1;
+}
 
 // Dreamcast publishes the complete 0x98-byte value layout. Retail's two
 // inlined delete paths in remote::InitConnection independently prove the
