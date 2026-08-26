@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
+  and the direct-symbol annotation contract now covers the bitset family.**
+  The contiguous game COMDAT run independently exposes the encoded widths in
+  each mangled public and the matching retail bounds/masks: reference
+  assignment for `bitset<5>` and `bitset<28>`, the `bitset<28>` constructor,
+  `count`, `flip`, and `any`, `bitset<145>::set/test`, and
+  `bitset<8>::test`. All nine target extents equal the corresponding VC6
+  COMDAT extents and compare byte-exact.
+
+  `VA_COMPGEN` gains direct-symbol `BITSET_*` kinds rather than inventing
+  source bodies. The source join now decodes VC6's compact decimal and
+  hexadecimal non-type template arguments, keeps the existing
+  `bitset<10>::_Tidy` mapping, and carries negative-control cases for every
+  admitted member kind. The two pre-existing hero claims for
+  `bitset<144>::any` and `bitset<70>::set` migrate to the typed contract with
+  their exact bytes unchanged. The synchronized build reaches **2225/2658
+  linked exact**, **96.84% linked fuzzy**, and **48.71% executable
+  coverage**; all ratchet, banked-row, claim, single-view, and cleanliness
+  gates pass.
+
 - **2026-08-25 — the skeleton-transformer creature grid reproduces all 655
   retail bytes.** Its sole retail caller is the 0x5654f0 transformer-window
   constructor, while the Dreamcast roster identifies the row at 0x566760 as
