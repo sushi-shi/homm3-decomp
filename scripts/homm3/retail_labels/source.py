@@ -156,7 +156,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "PAIR_CONST_INT_DTOR",
+                 "BITSET_TEST", "BITSET_XRAN", "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
                  "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
@@ -622,7 +622,8 @@ def _demangle_key(mangled: str):
             return f"bitset{bitset_width}@bitset_subscript"
         if mangled.startswith("??4reference@?$bitset@"):
             return f"bitset{bitset_width}@bitset_reference_assign"
-        for member in ("_Tidy", "flip", "count", "any", "set", "test"):
+        for member in (
+                "_Tidy", "_Xran", "flip", "count", "any", "set", "test"):
             if mangled.startswith(f"?{member}@?$bitset@"):
                 return (f"bitset{bitset_width}@bitset_"
                         f"{member.lstrip('_').lower()}")
@@ -886,6 +887,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_any$" in r["name"]
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
+                               or "$bitset_xran$" in r["name"]
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
@@ -964,7 +966,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             continue
         bitset_member = next((member for member in (
             "ctor", "subscript", "reference_assign", "flip", "count",
-            "any", "set", "test")
+            "any", "set", "test", "xran")
             if f"$bitset_{member}$" in row["name"]), None)
         if bitset_member is not None:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1456,6 +1458,7 @@ def selftest() -> list[str]:
         "?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z":
             "bitset145@bitset_set",
         "?test@?$bitset@$07@std@@QBE_NI@Z": "bitset8@bitset_test",
+        "?_Xran@?$bitset@$0BM@@std@@ABEXXZ": "bitset28@bitset_xran",
     }
     for mangled, expected in bitset_cases.items():
         if _demangle_key(mangled) != expected:

@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — seven game bitset `_Xran` boundaries are corrected and nine
+  generated rows close exactly.** The admitted carve stopped each `_Xran` at
+  the noreturn `__CxxThrowException` call after 200 bytes, but retail visibly
+  retains `pop edi; pop esi; pop ebx` immediately afterward and before the
+  next function's alignment. VC6's corresponding named publics are 203 bytes
+  and include those same three bytes. `config/retail-functions.tsv` therefore
+  corrects `0x4d1850`, `0x4d1c80`, `0x4d2090`, `0x4d2610`, `0x4d26e0`,
+  `0x4d4eb0`, and `0x4d5000` from 200 to 203 bytes; every corrected row then
+  matches byte-exact.
+
+  The public callers' bounds independently fix widths 4, 70, 156, 5, 28, 12,
+  and 128. `VA_COMPGEN` gains a narrow direct-symbol `BITSET_XRAN` contract
+  with a width-decoding selftest. A late-anchor call also emits the adjacent
+  exact `bitset<128>::set` and `test` rows. Finally, retail `0x4cf750` is
+  corrected from `vector<TRumour>::size` to `vector<boat>::size`: both callers
+  are boat-pool code and the body divides by `sizeof(boat) == 40`, not the
+  20-byte rumour stride. The synchronized build reaches **2249/2681 linked
+  exact**, **96.85% linked fuzzy**, and **48.87% executable coverage** over
+  the corrected **1,996,539-byte** function universe with every gate clean.
+
 - **2026-08-26 — four more public game STL helpers close through the late
   emission anchor.** Retail's immediate bounds and element stride identify
   52-byte `bitset<4>::test` at `0x4cf960`, 19-byte

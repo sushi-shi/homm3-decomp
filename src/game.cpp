@@ -9565,8 +9565,9 @@ VA_COMPGEN(0x004cf9a0, 0x63, BITSET_SET, Bitset144)
 // save_vector. Their element types are fixed independently by the pool
 // callers and by the byte strides in the bodies. The mine size/erase rows are
 // also used by the layout-identical garrison vector; the linker retained one
-// representative for both specializations. Sign and TRumour likewise share
-// the 20-byte size helper and the TreasureData destructor retained elsewhere.
+// representative for both specializations. The boat-size row is called by
+// both LoadBoatPool and the retained boat insert, and its divide-by-40 body
+// independently fixes that element type.
 VA_COMPGEN(0x004cf0b0, 0x3B, VECTOR_DTOR, TScenarioTown)
 VA_COMPGEN(0x004cf0f0, 0x2D6, VECTOR_RESIZE, TBlackMarket)
 VA_COMPGEN(0x004cf3d0, 0x3B, VECTOR_DTOR, town)
@@ -9574,7 +9575,7 @@ VA_COMPGEN(0x004cf410, 0x2A1, VECTOR_RESIZE, town)
 VA_COMPGEN(0x004cf6c0, 0x23, VECTOR_SIZE, town)
 VA_COMPGEN(0x004cf6f0, 0x38, VECTOR_DTOR, Sign)
 VA_COMPGEN(0x004cf730, 0x13, VECTOR_SIZE, mine)
-VA_COMPGEN(0x004cf750, 0x21, VECTOR_SIZE, TRumour)
+VA_COMPGEN(0x004cf750, 0x21, VECTOR_SIZE, boat)
 VA_COMPGEN(0x004cf780, 0x38, VECTOR_DTOR, type_creature_bank)
 VA_COMPGEN(0x004cf7c0, 0x38, VECTOR_DTOR, TRumour)
 VA_COMPGEN(0x004cf800, 0x67, BITSET_REFERENCE_ASSIGN, Bitset5)
@@ -9605,15 +9606,23 @@ VA_COMPGEN(0x004d1760, 0x23, VECTOR_DESTROY, TRumour)
 VA_COMPGEN(0x004d17b0, 0x11, BITSET_FLIP, Bitset28)
 VA_COMPGEN(0x004d17d0, 0x34, BITSET_TEST, Bitset28)
 VA_COMPGEN(0x004d1810, 0x15, BITSET_ANY, Bitset28)
+// Each retained _Xran body has a three-pop unreachable epilogue after its
+// noreturn throw call. Retail preserves those bytes before alignment; the
+// hand-admitted extents include them just as VC6's public symbols do.
+VA_COMPGEN(0x004d1850, 0xCB, BITSET_XRAN, Bitset4)
 // The 0x44-byte stride and calls into the generated CObjectType copy helpers
 // distinguish this specialization from the smaller CObject record.
 VA_COMPGEN(0x004d1920, 0x359, VECTOR_INSERT, CObjectType)
+VA_COMPGEN(0x004d1c80, 0xCB, BITSET_XRAN, Bitset70)
+VA_COMPGEN(0x004d2090, 0xCB, BITSET_XRAN, Bitset156)
 VA_COMPGEN(0x004d2160, 0x31, VECTOR_UFILL, TBlackMarket)
 VA_COMPGEN(0x004d21a0, 0x3E, VECTOR_UCOPY, town)
 VA_COMPGEN(0x004d21e0, 0x2C, VECTOR_UFILL, town)
 VA_COMPGEN(0x004d2210, 0x3B, VECTOR_UCOPY, boat)
 VA_COMPGEN(0x004d2250, 0x31, VECTOR_UFILL, boat)
 VA_COMPGEN(0x004d2290, 0x372, VECTOR_INSERT, type_creature_bank)
+VA_COMPGEN(0x004d2610, 0xCB, BITSET_XRAN, Bitset5)
+VA_COMPGEN(0x004d26e0, 0xCB, BITSET_XRAN, Bitset28)
 
 // Calls from those vector bodies fix this bracketed helper tail as game, not
 // the following gametypewindow TU. The two one-string constructors and town
@@ -9634,8 +9643,12 @@ VA_COMPGEN(0x004d47d0, 0x23, VECTOR_SIZE, generator)
 VA_COMPGEN(0x004d4800, 0x25E, VECTOR_RESIZE, type_university)
 VA_COMPGEN(0x004d4a60, 0x40, VECTOR_UFILL, type_university)
 VA_COMPGEN(0x004d4aa0, 0x1F1, VECTOR_RESIZE, type_point)
+VA_COMPGEN(0x004d4de0, 0x63, BITSET_SET, Bitset128)
+VA_COMPGEN(0x004d4e50, 0x37, BITSET_TEST, Bitset128)
+VA_COMPGEN(0x004d4eb0, 0xCB, BITSET_XRAN, Bitset12)
 VA_COMPGEN(0x004d4f80, 0x3B, VECTOR_UCOPY, generator)
 VA_COMPGEN(0x004d4fc0, 0x31, VECTOR_UFILL, generator)
+VA_COMPGEN(0x004d5000, 0xCB, BITSET_XRAN, Bitset128)
 
 // E:\gamedcs\game.cpp:2716
 // The pool writer game::Save uses five times over its type_point
@@ -14855,7 +14868,8 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
                                std::bitset<4>& players,
                                std::vector<type_university>& universities,
                                std::bitset<156>& availableHeroes,
-                               std::bitset<28>& availableSkills)
+                               std::bitset<28>& availableSkills,
+                               std::bitset<128>& objectTypes)
 {
     spells[0] = true;
     artifacts.set(0, true);
@@ -14864,5 +14878,7 @@ void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
     universities.capacity();
     availableHeroes.set(0, true);
     availableSkills.test(0);
+    objectTypes.set(0, true);
+    objectTypes.test(0);
 }
 #pragma inline_depth()
