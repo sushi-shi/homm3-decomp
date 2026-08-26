@@ -1100,6 +1100,7 @@ game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ
 game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780
 game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf6f0
 game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0
+game	??1CGameTransferDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xcbcf0
 game	??1HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce520
 game	??1Sign@@QAE@XZ	100.0000	100.0000	100.0000	0xb9230
 game	??1TPickRandomTownName@@QAE@XZ	100.0000	100.0000	100.0000	0xcaa40
@@ -1319,6 +1320,7 @@ game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a
 game	?load@playerData@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba260
 game	?loadLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xc3d90
 game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
+game	?load_object_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0xd2870
 game	?match_underground_gates@game@@QAEXXZ	98.3451	98.3451	98.3451	0xc0b60
 game	?randomize_university@game@@QAEXPAVNewmapCell@@@Z	99.7464	99.7464	99.7464	0xc06f0
 game	?readLossCondition@NewSMapHeader@@QAEHDPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xc3c80
