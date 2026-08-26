@@ -281,13 +281,13 @@ void army::WaitSample(army::TSampleID which)
 // nothing else in it.
 #endif  // @carcass
 
-// Residual (96.2453%): the scheduling family, all inside the closing
-// store run - retail computes `1 - new_group` at new_group's own load
-// (before the currFrameType/combatSide stores) where ours sinks it
-// after the -1 pair, and the origNumTroops/baseSpeed/origHitPoints
-// load-store triple rotates ecx/edx/eax against retail's edx/eax/ecx.
-// A named local for the subtraction is byte-inert (C2 forward-
-// substitutes it); no spelling reached the schedule.
+// CLOSED 96.2453 -> 100.0000 (2026-08-26): the five opening assignments
+// in the closing store run are source-ordered facing, currFrameType, side,
+// combatSide, slot. That makes C2 compute `1 - new_group` at the parameter
+// load, schedule the member stores in retail order, and select retail's
+// edx/eax/ecx rotation for the final origNumTroops/baseSpeed/origHitPoints
+// triple. All 120 ordinary assignment orders were generated and measured;
+// only the two orders beginning facing/currFrameType/side reached exact.
 //
 // The layout blocker above is DISSOLVED, not paid: the rep movsd is
 // reproduced by memcpy through the two-step static_cast the tree's
@@ -336,11 +336,11 @@ void army::initialize(int type, long number, const hero* owner,
         attackSkill++;
         defenseSkill++;
     }
-    currFrameType = cs_wait;
-    combatSide = new_group;
-    side = -1;
-    slot = -1;
     facing = 1 - new_group;
+    currFrameType = cs_wait;
+    side = -1;
+    combatSide = new_group;
+    slot = -1;
     bitIndex = new_index;
     gridIndex = new_grid_index;
     numTroopsBattleResurrected = 0;
