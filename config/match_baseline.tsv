@@ -1093,6 +1093,7 @@ game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@@Z	100.0000	100.0000	100.0000	0xc3090
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??0type_map_hero_info@@QAE@HV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$bitset@$07@2@@Z	100.0000	100.0000	100.0000	0xc4cc0
 game	??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xc4df0
 game	??1?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf7c0
 game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf0b0
