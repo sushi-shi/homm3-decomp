@@ -124,6 +124,11 @@ protected:
 
 public:
     type_AI_creature_swapper();
+    long get_swap_value(const hero* current_hero,
+                        const armyGroup* source_army,
+                        const hero* second_hero,
+                        unsigned char new_has_angelic_alliance);
+    long get_army_value_increase() const { return army_value_increase; }
 };
 SIZE(type_AI_creature_swapper, 0x20);
 
