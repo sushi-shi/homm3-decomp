@@ -8,8 +8,6 @@
 #include "town.h"
 #include "advmgr_popup.h"
 
-class slider;
-
 // --- the five marketplace dialogs -------------------------------------
 // Retail lays the compiland out in source order as five (constructor,
 // scalar-deleting-destructor, destructor) triples, and each constructor
@@ -34,53 +32,96 @@ class slider;
 // call are attested by the destructors, so no member is modelled and no
 // size is asserted; the constructors that would prove the tails are 8 KB
 // EH-bearing rows still deferred.
+// The three dialogs that build a `slider` (TradeResourceSlider,
+// GiveResourceSlider, SellCreatureSlider) hold its widget pointer as a member;
+// forward-declared here for the pointer, defined where the ctor `new`s it.
+class slider;
+
+// Object sizes are byte-proven by DoMarket's `new` immediates
+// (0x68/0x8c/0x64/0x64/0x68) and each ctor's `push <size>`. Members past the
+// CAdvPopup base (0x60) are named where a reconstructed body attests the store
+// and left as field_NN placeholders where only the size is proven so far.
 class TTradeResourceWindow : public CAdvPopup {
-    slider* resourceSlider;
-    int lastHoverId;
+    slider* resourceSlider;   // +0x60, set by the ctor (TradeResourceSlider)
+    int lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
+    TTradeResourceWindow(int x2, int y2);
     void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TTradeResourceWindow();
 };
 SIZE(TTradeResourceWindow, 0x68);
 
 class TGiveResourceWindow : public CAdvPopup {
-    int field_60;
-    int slotPlayerColor[7];
-    int field_80;
-    slider* resourceSlider;
-    int lastHoverId;
 public:
+    // +0x60. The 0x46..0x4c recipient buttons index gPlayerColorNames by this
+    // per-slot player-colour array; SetRolloverText's byte-proven
+    // `[this + 4*id - 0xb4]` read fixes the array at +0x64, hence the leading
+    // dword. DoMarket fills field_60 (recipient count) and slotPlayerColor;
+    // the ctor stores resourceSlider at +0x84 and WindowHandler's hover uses
+    // lastHoverId at +0x88. field_80 is proven only by the 0x8c object size.
+    int field_60;
+    int slotPlayerColor[7];   // +0x64
+    int field_80;             // +0x80
+    slider* resourceSlider;   // +0x84, set by the ctor (GiveResourceSlider)
+    int lastHoverId;          // +0x88, last widget the hover handler rolled over
+
+    TGiveResourceWindow(int x2, int y2);
     void Update(bool bUpdate);
     void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TGiveResourceWindow();
 };
+SIZE(TGiveResourceWindow, 0x8c);
 
 class TBuyArtifactWindow : public CAdvPopup {
-    int lastHoverId;
+    int lastHoverId;          // +0x60, last widget the hover handler rolled over
 public:
+    TBuyArtifactWindow(int x2, int y2);
     void Update(unsigned char bUpdate);
     void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TBuyArtifactWindow();
 };
+SIZE(TBuyArtifactWindow, 0x64);
 
 class TSellArtifactWindow : public CAdvPopup {
+    int lastHoverId;          // +0x60, last widget the hover handler rolled over
+    void SetupNewTrade();
+    void UpdateMarketBackpack();
+    void increment_backpack_start();
+    void decrement_backpack_start();
 public:
+    TSellArtifactWindow(int x2, int y2);
     void update_sell_artifact_widget(message* msg, long i);
+    void Update(unsigned char bUpdate);
     void ComputeTradeRatios(int inLeftResource, int inRightResource,
                             int* iInTradeRatio, int* bInLeftDenominated,
                             int* iInMaxUnitsToTrade);
     void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TSellArtifactWindow();
 };
+SIZE(TSellArtifactWindow, 0x64);
 
 class TSellCreatureWindow : public CAdvPopup {
+    slider* creatureSlider;   // +0x60, set by the ctor (SellCreatureSlider)
+    int lastHoverId;          // +0x64, last widget the hover handler rolled over
 public:
+    TSellCreatureWindow(int x2, int y2);
+    void SetWidgetOn(short id);
+    void SetWidgetOff(short id);
+    void SetWidgetDisabled(short id);
+    void Update(bool bUpdate);
+    void ComputeTradeRatios(int inLeftResource, int inRightResource,
+                            int* iInTradeRatio, int* bInLeftDenominated,
+                            int* iInMaxUnitsToTrade);
+    void SetRolloverText(int codeY);
+    virtual int WindowHandler(message* msg);   // slot 9
     virtual ~TSellCreatureWindow();
 };
+SIZE(TSellCreatureWindow, 0x68);
 
 long get_market_value(EGameResource resource);
 
@@ -107,7 +148,16 @@ void DoBlackMarket(hero* inHero, char* blackArtifacts);
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. Owner definition has not yet been admitted.
 extern float fTradingPostEfficency[];
+
+// The two eleven-float efficiency rows immediately after fTradingPostEfficency
+// (0x678370, 0x67839c), byte-verified from the retail image. The artifact-sale
+// window divides an artifact's gold cost by the first; the creature-sale window
+// divides a creature's gold cost by the second - both indexed by the owned
+// Marketplace count. fArtifactPurchaseEfficency carries philai.h's spelling
+// (get_artifact_purchase_price shares it); the creature row's name is
+// provisional. Owner definition not yet admitted, as with the trade row.
 extern float fArtifactPurchaseEfficency[];
+extern float fCreatureSaleEfficency[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);

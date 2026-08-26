@@ -6,8 +6,6 @@
 #define HOMM3_DXPLAY_H
 
 #include <windows.h>
-#include <dplobby.h>
-#include <string.h>
 #include <va.h>
 
 class CDPlayConnection;
@@ -33,24 +31,99 @@ class CDPlayPlayer;
 #endif
 class CDPlaySession;
 template<class T> class CAutoArray;
+struct DPCAPS;
+struct DPLCONNECTION;
+struct DPNAME;
+struct DPSESSIONDESC2;
+struct DPMSG_ADDGROUPTOGROUP;
+struct DPMSG_ADDPLAYERTOGROUP;
+struct DPMSG_CHAT;
+struct DPMSG_CREATEPLAYERORGROUP;
+struct DPMSG_DESTROYPLAYERORGROUP;
+struct DPMSG_GENERIC;
+struct DPMSG_SECUREMESSAGE;
+struct DPMSG_SETPLAYERORGROUPDATA;
+struct DPMSG_SETPLAYERORGROUPNAME;
+struct DPMSG_SETSESSIONDESC;
+struct DPMSG_STARTSESSION;
+
+#ifdef HOMM3_REMOTE_LOBBY_DECLS
+// DirectPlay 6 structures used by remote's retail lobby-connect path. The
+// layouts are published in the Dreamcast CodeView stream and independently
+// fixed on PC by the field loads in LobbyLaunchConnect.
+struct DPNAME {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    union {
+        unsigned short* lpszShortName;
+        char* lpszShortNameA;
+    };
+    union {
+        unsigned short* lpszLongName;
+        char* lpszLongNameA;
+    };
+};
+SIZE(DPNAME, 0x10);
+
+struct DPSESSIONDESC2 {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    GUID guidInstance;
+    GUID guidApplication;
+    unsigned long dwMaxPlayers;
+    unsigned long dwCurrentPlayers;
+    union {
+        unsigned short* lpszSessionName;
+        char* lpszSessionNameA;
+    };
+    union {
+        unsigned short* lpszPassword;
+        char* lpszPasswordA;
+    };
+    unsigned long dwReserved1;
+    unsigned long dwReserved2;
+    unsigned long dwUser1;
+    unsigned long dwUser2;
+    unsigned long dwUser3;
+    unsigned long dwUser4;
+};
+SIZE(DPSESSIONDESC2, 0x50);
+
+struct DPLCONNECTION {
+    unsigned long dwSize;
+    unsigned long dwFlags;
+    DPSESSIONDESC2* lpSessionDesc;
+    DPNAME* lpPlayerName;
+    GUID guidSP;
+    void* lpAddress;
+    unsigned long dwAddressSize;
+};
+SIZE(DPLCONNECTION, 0x28);
+
+enum EDPlayConnectionFlags {
+    DPLAY_CONNECTION_CREATE_SESSION = 0x2
+};
+
+enum EDPlaySessionFlags {
+    DPLAY_SESSION_MIGRATE_HOST = 0x4,
+    DPLAY_SESSION_KEEP_ALIVE = 0x40
+};
+#endif
+
+// The SDK macro values are also the exact HRESULT immediates used by the
+// DirectPlay send path. The domain lives here instead of importing DPLAY.H's
+// anonymous typedef structs over these hand-owned forward declarations.
+enum EDPlaySendError {
+    DPLAY_SEND_ERROR_INVALID_PARAMETER = 0x80070057,
+    DPLAY_SEND_ERROR_INVALID_PLAYER = 0x88770096
+};
+
 // Dreamcast CodeView proves this complete virtual order. Retail's
 // CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
 // IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main
 // menu and oldmain. Retail bodies also prove the complete base data layout.
 class CDPlay {
 public:
-    friend int PASCAL EnumSession(const DPSESSIONDESC2* session,
-        unsigned long* timeout, unsigned long flags, void* context);
-    friend int PASCAL EnumConnectionsCallback(const GUID* serviceProvider,
-        void* connection, unsigned long connectionSize, const DPNAME* name,
-        unsigned long flags, void* context);
-    friend int PASCAL EnumGroupsCallback(unsigned long groupId,
-        unsigned long playerType, const DPNAME* name, unsigned long flags,
-        void* context);
-    friend int PASCAL EnumPlayersCallback(unsigned long playerId,
-        unsigned long playerType, const DPNAME* name, unsigned long flags,
-        void* context);
-
     CDPlay();
     virtual ~CDPlay();
     virtual unsigned char Init();
@@ -159,8 +232,10 @@ protected:
         DPMSG_CREATEPLAYERORGROUP* message, unsigned long toId);
     virtual unsigned char SysMsgDestroyPlayerOrGroup(
         DPMSG_DESTROYPLAYERORGROUP* message, unsigned long toId);
-
 public:
+    // The DirectPlay enum trampolines are file-scope callbacks that forward to
+    // these virtuals through the lpContext object; keep them reachable without
+    // reordering (vtable slots 58-61 are unchanged).
     virtual unsigned char AddGroupEnum(
         unsigned long groupId, const DPNAME* name, unsigned long flags);
     virtual unsigned char AddPlayerEnum(
@@ -173,12 +248,13 @@ public:
         unsigned long flags);
 
 protected:
-    // CDPlayLobby's retail bodies access these base members directly.
+    // Protected (not private): CDPlayLobby's own methods write m_lpDP, m_hRes,
+    // m_isHost and the array pointers directly, exactly as retail does.
     // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
     // offsets. The intervening names are Dreamcast CodeView's and agree
-    // with the PC methods.
+    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
     char m_caps[0x28];                  // +0x04
-    IDirectPlay4A* m_lpDP;              // +0x2c
+    void* m_lpDP;                       // +0x2c
     GUID m_guid;                        // +0x30
     int m_hRes;                         // +0x40
     CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
@@ -197,9 +273,6 @@ SIZE(CDPlay, 0x58);
 // in retail, so this is also the complete PC layout needed by CDPlayHeroes.
 class CDPlayLobby : public CDPlay {
 public:
-    friend int PASCAL EnumAddressCallback(const GUID& type,
-        unsigned long size, const void* data, void* context);
-
     CDPlayLobby();
     virtual ~CDPlayLobby();
     virtual unsigned char Init();
@@ -215,11 +288,13 @@ public:
     CDPlayConnection* CreateSerialConnection(
         char* name, struct _DPCOMPORTADDRESS* comportInfo);
     unsigned char TestLobbied();
+#ifdef HOMM3_REMOTE_LOBBY_DECLS
     DPLCONNECTION* GetConnectionSettings(
         unsigned long appId, unsigned long* size);
     unsigned char SetConnectionSettings(
         unsigned long appId, DPLCONNECTION* connection);
     unsigned char Connect();
+#endif
     virtual unsigned char EnumLobbyConnections(
         CAutoArray<CDPlayConnection>* connections);
     virtual unsigned char SetGroupConnectionSettings(
@@ -244,13 +319,13 @@ public:
 protected:
     virtual unsigned char HandleSystemLobbyMsg(
         unsigned long appId, CDPlayMsg* message);
-
 public:
+    // Reachable by the EnumAddress file-scope callback (vtable slot unchanged).
     virtual unsigned char AddAddressEnum(
         const GUID* type, unsigned long size, const void* data);
 
 private:
-    IDirectPlayLobby3A* m_lpLobby;           // +0x58
+    void* m_lpLobby;                         // +0x58
     CAutoArray<CDPlayAddressElement>* m_pAddressArray; // +0x5c
 };
 SIZE(CDPlayLobby, 0x60);
@@ -263,6 +338,8 @@ SIZE(CDPlayLobby, 0x60);
 class CDPlayMsg {
 public:
     CDPlayMsg() : pData(0), dataSize(0) {}
+    unsigned char AllocSize(unsigned long dSize);
+
     ~CDPlayMsg()
     {
         if (pData) {
@@ -277,18 +354,27 @@ public:
 };
 SIZE(CDPlayMsg, 0x08);
 
+inline unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
+{
+    if (pData)
+        delete [] pData;
+    pData = new unsigned char[dSize];
+    dataSize = dSize;
+    return 1;
+}
+
 // Dreamcast publishes the complete 0x98-byte value layout. Retail's two
 // inlined delete paths in remote::InitConnection independently prove the
 // owned connection buffer at +0x10 and the trivial non-virtual destructor.
 class CDPlayConnection {
 public:
-    CDPlayConnection(const GUID* serviceProvider, unsigned long connSize,
-        void* connection, char* name)
+    CDPlayConnection(const GUID* lpGuid, unsigned long connSize, void* lpConn,
+        char* name)
     {
-        guidSP = *serviceProvider;
+        guidSP = *lpGuid;
         size = connSize;
         pConnection = new unsigned char[connSize];
-        memcpy(pConnection, connection, size);
+        memcpy(pConnection, lpConn, size);
         strcpy(sName, name);
     }
 
@@ -360,6 +446,11 @@ protected:
     unsigned long size;       // +0x10
 };
 
+// The non-inline array virtuals. Get/GetCount/Destroy/~ stay inline in the
+// class (VC6 expands them into the enum wrappers exactly as retail did); Put is
+// the one non-inline virtual retail keeps out of line in dxplay.obj. Add/Delete/
+// Insert instantiate only for the address-element array's vtable and ICF-fold
+// onto identical instantiations outside this TU.
 template<class T>
 unsigned char CAutoArray<T>::Put(unsigned long elementNbr, T* element)
 {

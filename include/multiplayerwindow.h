@@ -39,102 +39,34 @@ SIZE(CHotSeatMan, 0xac);
 
 DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 
-class CSprite;
-class CDPlaySession;
-class bitmapBorder;
-class button;
-class slider;
-
-// E:\gamedcs\array.h's five-dword auto-growing pointer array.  The DC
-// field list and retail's inlined Destroy path agree on this layout.
-template<class T>
-class CAutoArray {
-public:
-    unsigned long step;
-    T** pArray;
-    unsigned long allocSize;
-    unsigned long size;
-
-    virtual ~CAutoArray() { Destroy(); }
-    virtual unsigned char Add(T* element);
-    virtual T* Get(unsigned long elementNbr);
-    virtual unsigned char Put(unsigned long elementNbr, T* element);
-    virtual unsigned char Delete(unsigned long elementNbr);
-    virtual unsigned char Insert(unsigned long nextElementNbr, T* element);
-    virtual unsigned long GetCount();
-
-    void Destroy(unsigned char deleteData = 1)
-    {
-        if (deleteData) {
-            for (unsigned long i = 0; i < size; ++i)
-                delete Get(i);
-        }
-        if (pArray)
-            delete pArray;
-        pArray = 0;
-        allocSize = 0;
-        size = 0;
-    }
-};
-
-// DC publishes this complete member tail at +0x4c..+0xf8. Retail's
-// CHeroWindowEx base is one dword wider, translating the tail to
-// +0x50..+0xfc; the getter at 0x50ed50 independently proves the final offset.
-class TMultiPlayerWindow : public CHeroWindowEx {
-public:
-    CSprite* GameState;                 // +0x50
-    unsigned char inSessionList;        // +0x54
-    unsigned char showSplash;           // +0x55
-    int currentGame;                    // +0x58
-    int currentIndex;                   // +0x5c
-    CAutoArray<CDPlaySession>* pSessions; // +0x60
-    unsigned long sessTimer;            // +0x64
-    unsigned long sessionRefreshTimeout; // +0x68
-    char localIPAddress[80];             // +0x6c
-    textWidget* playerName;              // +0xbc
-    unsigned char hostJoinScreen;        // +0xc0
-    widget* splash;                      // +0xc4
-    widget* hotSeat;                     // +0xc8
-    widget* ipx;                         // +0xcc
-    widget* tcp;                         // +0xd0
-    widget* modem;                       // +0xd4
-    widget* direct;                      // +0xd8
-    widget* online;                      // +0xdc
-    widget* host;                        // +0xe0
-    widget* join;                        // +0xe4
-    widget* search;                      // +0xe8
-    widget* cancel;                      // +0xec
-    widget* gameSlider;                  // +0xf0
-    textWidget* sessNameHeader;          // +0xf4
-    textWidget* userNameHeader;          // +0xf8
-    textWidget* RolloverWidget;           // +0xfc
-
-    virtual ~TMultiPlayerWindow();
-    virtual int WindowHandler(message* msg);
-    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
-    virtual textWidget* GetRolloverWidget();
-    void GoSessionList();
-    void GoMainMenu();
-};
-SIZE(TMultiPlayerWindow, 0x100);
-
-DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
-
-// The dialog edit controls share the two-link tail at +0x70/+0x74. Retail's
-// constructors and vtable stores prove the inheritance split below.
+// The text-entry widgets the two multiplayer dialogs use. All three add the
+// same doubly-linked next/prev pair (@0x70/@0x74) to textEntryWidget so a
+// dialog can chase focus around its field ring; the hierarchy is proven by
+// the CMPInputDlg/CHotSeatDlg constructors and the four vtables 0x640184
+// (CMPEdit), 0x640130 (CMPInputEdit), 0x640210 (CHotSeatEdit).
+//
+// CMPEdit's constructor is emitted OUT OF LINE at retail 0x510760 (it stores
+// vtable 0x640184 and zeros the two links); CMPInputEdit derives it and its
+// own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
+// 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
+// constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
+// CMPEdit overrides SetFocus(14)/OnKeyPress(15); CMPInputEdit re-overrides
+// OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
+// OnKeyPress(15). Only the constructors and the two inline setters are
+// reached from this TU; the override bodies live in their own carve rows.
 class CMPEdit : public textEntryWidget {
 public:
-    CMPEdit* nextEdit;
-    CMPEdit* prevEdit;
+    CMPEdit* nextEdit;   // +0x70
+    CMPEdit* prevEdit;   // +0x74
 
     CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
             const char* fontName, font::TColor color, unsigned justification,
             const char* backgroundIcon, int backgroundFrame, int id,
             int style, int readType, int insetX, int insetY);
-    void SetNextEdit(CMPEdit* next) { nextEdit = next; }
-    void SetPrevEdit(CMPEdit* prev) { prevEdit = prev; }
-    virtual void SetFocus(unsigned char state);
-    virtual int OnKeyPress(message* msg);
+    void SetNextEdit(CMPEdit* pNextEdit) { nextEdit = pNextEdit; }
+    void SetPrevEdit(CMPEdit* pPrevEdit) { prevEdit = pPrevEdit; }
+    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
+    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
 };
 
 class CMPInputEdit : public CMPEdit {
@@ -145,17 +77,17 @@ public:
                  int backgroundFrame, int id, int style, int readType,
                  int insetX, int insetY)
         : CMPEdit(x, y, w, h, textSize, text, fontName, color, justification,
-                  backgroundIcon, backgroundFrame, id, style, readType,
-                  insetX, insetY)
+                  backgroundIcon, backgroundFrame, id, style, readType, insetX,
+                  insetY)
     {
     }
-    virtual int OnKeyPress(message* msg);
+    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50de50
 };
 
 class CHotSeatEdit : public textEntryWidget {
 public:
-    CHotSeatEdit* nextEdit;
-    CHotSeatEdit* prevEdit;
+    CHotSeatEdit* nextEdit;   // +0x70
+    CHotSeatEdit* prevEdit;   // +0x74
 
     CHotSeatEdit(int x, int y, int w, int h, int textSize, const char* text,
                  const char* fontName, font::TColor color,
@@ -169,44 +101,12 @@ public:
         nextEdit = 0;
         prevEdit = 0;
     }
-    void SetNextEdit(CHotSeatEdit* next) { nextEdit = next; }
-    void SetPrevEdit(CHotSeatEdit* prev) { prevEdit = prev; }
-    virtual void OnKillFocus();
-    virtual void SetFocus(unsigned char state);
-    virtual int OnKeyPress(message* msg);
+    void SetNextEdit(CHotSeatEdit* pNextEdit) { nextEdit = pNextEdit; }
+    void SetPrevEdit(CHotSeatEdit* pPrevEdit) { prevEdit = pPrevEdit; }
+    virtual void OnKillFocus();                   // slot 11, retail 0x50dee0
+    virtual void SetFocus(unsigned char state);   // slot 14, retail 0x510890
+    virtual int OnKeyPress(message* msg);         // slot 15, retail 0x50df60
 };
-
-// DC supplies the five-member tail at +0x4c..+0x5c and the CHeroWindowEx
-// base. Retail's base is four bytes wider; the getter at 0x510970 proves the
-// translated rollover offset +0x60 independently.
-class CMPInputDlg : public CHeroWindowEx {
-public:
-    enum {
-        BACKGROUND_ID = 500,
-        FIELD1_ID = 501,
-        FIELD2_ID = 502,
-        HEADER1_ID = 503,
-        HEADER2_ID = 504,
-        OKAY_ID = 505,
-        BACK_ID = 506,
-        ROLLOVER_ID = 507
-    };
-
-    CMPInputEdit* field1;  // +0x50
-    CMPInputEdit* field2;  // +0x54
-    textWidget* header1;   // +0x58
-    textWidget* header2;   // +0x5c
-    textWidget* rollover;  // +0x60
-
-    CMPInputDlg(int maxChars1, int maxChars2);
-    virtual ~CMPInputDlg();
-    virtual int OnWidgetDeselect(int id, unsigned char* exitFlag);
-    virtual textWidget* GetRolloverWidget();
-    void UpdateOK();
-    unsigned char OnOK();
-    void DisableOK();
-};
-SIZE(CMPInputDlg, 0x64);
 
 // DC derives CHotSeatDlg from CHeroWindowEx and places its `edit` run at
 // +0x4c, followed by m_rollover at +0x6c. Retail's independently proven
@@ -236,6 +136,270 @@ public:
     unsigned char OnOK();
 };
 SIZE(CHotSeatDlg, 0x114);
+
+// CMPInputDlg - a CHeroWindowEx text-entry dialog (host name / password).
+// DC field list 0x4493 (base CHeroWindowEx @0, DC size 0x60) lays out
+// field1@0x4c, field2@0x50 (CMPInputEdit*), header1@0x54, header2@0x58,
+// rollover@0x5c (textWidget*). Retail's CHeroWindowEx is four bytes wider,
+// so every member shifts +4: the getter at 0x510970 reads rollover@0x60 and
+// OnWidgetDeselect reads field1@0x50 (status@0x16 & WIDGET_ACTIVE, Text@0x30).
+// The vtable 0x6400f4 is 14 slots (CHeroWindowEx's roster): overrides at slot
+// 0 (sdd/dtor), 12 (OnWidgetDeselect), 13 (GetRolloverWidget) - exactly the
+// CHotSeatDlg shape. UpdateOK/DisableOK/OnOK are non-virtual. field1/field2
+// are DC CMPInputEdit* but reached only as textWidget here.
+class CMPInputDlg : public CHeroWindowEx {
+public:
+    enum {
+        BACKGROUND_ID = 500,
+        FIELD1_ID = 501,
+        FIELD2_ID = 502,
+        HEADER1_ID = 503,
+        HEADER2_ID = 504,
+        OKAY_ID = 505,
+        BACK_ID = 506,
+        ROLLOVER_ID = 507
+    };
+
+    CMPInputEdit* field1;  // +0x50
+    CMPInputEdit* field2;  // +0x54
+    textWidget* header1;   // +0x58
+    textWidget* header2;   // +0x5c
+    textWidget* rollover;  // +0x60
+
+    CMPInputDlg(int maxChars1, int maxChars2);
+    virtual ~CMPInputDlg();
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    unsigned char OnOK();
+    void UpdateOK();
+    void DisableOK();
+};
+SIZE(CMPInputDlg, 0x64);
+
+class CSprite;
+
+// CDPlaySession - the DirectPlay session record CAutoArray<CDPlaySession>
+// stores. dxplay.h carries the same class for the network TUs, but that header
+// redefines the CAutoArray template THIS header owns, so the two are never
+// co-included; only multiplayerwindow.cpp reads mpw.h, so the definition lives
+// here. TMultiPlayerWindow::Update reads dwFlags, maxPlayers, playerCount and
+// the sessionName string; the two 16-byte GUID blobs are padded so windows.h
+// need not enter this closure. Layout byte-for-byte matches dxplay.h.
+class CDPlaySession {
+public:
+    unsigned long dwFlags;      // +0x00
+    char guidInstance[16];      // +0x04
+    char guidApp[16];           // +0x14
+    unsigned long maxPlayers;   // +0x24
+    unsigned long playerCount;  // +0x28
+    char sessionName[128];      // +0x2c
+    char password[80];          // +0xac
+    unsigned long dwUser1;      // +0xfc
+    unsigned long dwUser2;      // +0x100
+    unsigned long dwUser3;      // +0x104
+    unsigned long dwUser4;      // +0x108
+
+    inline bool IsJoinDisabled()
+    {
+        return (dwFlags & 0x21) || playerCount == maxPlayers;
+    }
+
+    inline bool IsPasswordProtected()
+    {
+        return dwFlags & 0x400;
+    }
+};
+SIZE(CDPlaySession, 0x10c);
+
+// CAutoArray<T> - E:\gamedcs\array.h's hand-rolled auto-growing pointer
+// array. DC field list 0x2967 (no STLport shift; a plain class): vfptr@0,
+// step@4, pArray@8, allocSize@0xc, size@0x10; total 0x14. The 7-slot vtable
+// (0x6400d8 for <CDPlaySession>) is ~/sdd, Add, Get, Put, Delete, Insert,
+// GetCount. Destroy() (NH3API name) is the inlined "delete every element via
+// the virtual Get, free pArray, reset to empty" that ~TMPW and GoMainMenu
+// both expand; elements are freed with a bare operator delete because T is
+// incomplete here (matches retail's ??3 with no element dtor).
+template<class T>
+class CAutoArray {
+public:
+    unsigned long step;       // +0x4
+    T** pArray;               // +0x8
+    unsigned long allocSize;  // +0xc
+    unsigned long size;       // +0x10
+
+    CAutoArray()
+    {
+        step = 25;
+        size = 0;
+        allocSize = 0;
+        pArray = 0;
+    }
+
+    // The delete-every-element teardown the compiler-generated scalar
+    // deleting destructor inlines (retail 0x512670 for <CDPlaySession>).
+    // Delegating to Destroy() rather than writing the loop here is what keeps
+    // retail's virtual Get(i) dispatch: in a destructor VC6 devirtualizes+
+    // inlines a virtual call on `this`, but inside the inlined Destroy (a
+    // normal member) the exact type is not assumed, so Get stays a vtable
+    // dispatch - the same shape GoMainMenu's inlined Destroy already matches.
+    virtual ~CAutoArray()
+    {
+        Destroy();
+    }
+
+    virtual unsigned char Add(T* element)
+    {
+        if (size >= allocSize) {
+            allocSize += step;
+            T** newArray = new T*[allocSize];
+            for (unsigned long i = 0; i < size; i++)
+                newArray[i] = pArray[i];
+            if (pArray)
+                delete pArray;
+            pArray = newArray;
+        }
+        pArray[size] = element;
+        size++;
+        return 1;
+    }
+
+    virtual T* Get(unsigned long elementNbr)
+    {
+        if (elementNbr < size)
+            return pArray[elementNbr];
+        return 0;
+    }
+
+    virtual unsigned char Put(unsigned long elementNbr, T* element)
+    {
+        pArray[elementNbr] = element;
+        return 1;
+    }
+
+    virtual unsigned char Delete(unsigned long elementNbr)
+    {
+        for (unsigned long i = elementNbr; i + 1 < size; i++)
+            pArray[i] = pArray[i + 1];
+        size--;
+        return 1;
+    }
+
+    virtual unsigned char Insert(unsigned long nextElementNbr, T* element)
+    {
+        Add(element);
+        for (unsigned long i = size - 1; i > nextElementNbr; i--)
+            pArray[i] = pArray[i - 1];
+        pArray[nextElementNbr] = element;
+        return 1;
+    }
+
+    virtual unsigned long GetCount() { return size; }
+
+    void Destroy(unsigned char deleteData = 1)
+    {
+        if (deleteData) {
+            for (unsigned long i = 0; i < size; i++)
+                delete Get(i);
+        }
+        if (pArray)
+            delete pArray;
+        pArray = 0;
+        allocSize = 0;
+        size = 0;
+    }
+};
+
+class CHeroSessions : public CAutoArray<CDPlaySession> {
+public:
+    enum eSessionStatus {
+        closed,
+        open,
+        password
+    };
+
+    bool GetSessionInfo(unsigned long index, char* sessName, char* userName,
+                        int& numPlayers, eSessionStatus& status);
+};
+SIZE(CHeroSessions, 0x14);
+
+// CMultiPlayerWindowEdit - the text-entry widget the session-host name field
+// uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
+// its only addition is the key-handler override that gives it a distinct
+// vtable (retail 0x640054, stored by the TMultiPlayerWindow constructor).
+class CMultiPlayerWindowEdit : public textEntryWidget {
+public:
+    CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
+                           const char* text, const char* fontName,
+                           font::TColor color, unsigned justification,
+                           const char* backgroundIcon, int backgroundFrame,
+                           int id, int style, int readType, int insetX,
+                           int insetY)
+        : textEntryWidget(x, y, w, h, textSize, text, fontName, color,
+                          justification, backgroundIcon, backgroundFrame, id,
+                          style, readType, insetX, insetY)
+    {
+    }
+    virtual int Main(message* msg);  // slot 2 override
+};
+
+// TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
+// DC field list 0x472e (base CHeroWindowEx @0, DC size 252); retail's four-
+// byte-wider base shifts every trailing member +4 (all are pointers, a char
+// array, or small scalars, so the shift is uniform). Retail proofs:
+// GetRolloverWidget reads RolloverWidget@0xfc; InitRemote reads playerName
+// @0xbc and sessTimer@0x68; ~dtor reads GameState@0x50 and pSessions@0x60;
+// GoSessionList/GoMainMenu toggle the button run @0xc4..0xf8. Total 0x100.
+// The 14-slot vtable 0x6400a0 overrides slot 0 (sdd/dtor), 9 (WindowHandler),
+// 12 (OnWidgetDeselect), 13 (GetRolloverWidget).
+//
+// The DC types of the widget members are bitmapBorder* (splash), button*
+// (the ten screen buttons), slider* (gameSlider) and textWidget* (the three
+// headers); they are modelled as their widget/textWidget base here because
+// every reconstructed body reaches them only through widget::send_message /
+// textWidget::Text, and narrowing the include set avoids the declarator wall.
+class TMultiPlayerWindow : public CHeroWindowEx {
+public:
+    CSprite* GameState;                     // +0x50
+    unsigned char inSessionList;            // +0x54
+    unsigned char showSplash;               // +0x55
+    int currentGame;                        // +0x58
+    int currentIndex;                       // +0x5c
+    CHeroSessions* pSessions;               // +0x60
+    unsigned long sessTimer;                // +0x64
+    unsigned long sessionRefreshTimeout;    // +0x68
+    char localIPAddress[80];                // +0x6c
+    textWidget* playerName;                 // +0xbc (DC textEntryWidget*)
+    unsigned char hostJoinScreen;           // +0xc0
+    widget* splash;                         // +0xc4 (DC bitmapBorder*)
+    widget* hotSeat;                        // +0xc8 (DC button*)
+    widget* ipx;                            // +0xcc
+    widget* tcp;                            // +0xd0
+    widget* modem;                          // +0xd4
+    widget* direct;                         // +0xd8
+    widget* online;                         // +0xdc
+    widget* host;                           // +0xe0
+    widget* join;                           // +0xe4
+    widget* search;                         // +0xe8
+    widget* cancel;                         // +0xec
+    widget* gameSlider;                     // +0xf0 (DC slider*)
+    textWidget* sessNameHeader;             // +0xf4
+    textWidget* userNameHeader;             // +0xf8
+    textWidget* RolloverWidget;             // +0xfc
+
+    TMultiPlayerWindow();
+    virtual ~TMultiPlayerWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    void GoSessionList();
+    void GoMainMenu();
+    void Update();
+};
+SIZE(TMultiPlayerWindow, 0x100);
+
+// The singleton the ctor latches to `this` (0x50e050+0x66) and the dtor
+// nulls (0x50ee40+0x51). No DC public names it - provisional house name.
+DATA(0x0069ca28) extern TMultiPlayerWindow* gpMultiPlayerWindow;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\multiplayerwindow.cpp:94, dc 0xffaac) void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick);

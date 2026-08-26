@@ -152,8 +152,15 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_RESIZE", "VECTOR_INSERT", "VECTOR_ERASE",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN",
-                 "BITSET_TIDY", "STD_CONSTRUCT", "STD_COPY",
-                 "IMPLICIT_COPY_ASSIGN", "IMPLICIT_DTOR"}
+                 "BITSET_TIDY", "BITSET_CTOR",
+                 "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
+                 "BITSET_FLIP",
+                 "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
+                 "BITSET_TEST", "BITSET_XRAN", "PAIR_CONST_INT_DTOR",
+                 "STD_CONSTRUCT", "STD_COPY",
+                 "CLASS_CTOR",
+                 "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
+                 "IMPLICIT_DTOR"}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -561,6 +568,22 @@ def unit_ir_names(path) -> dict | None:
     return None if ir is None else ir_va_names(ir)
 
 
+def _bitset_width(mangled: str) -> int | None:
+    """Decode VC6's non-type template argument in ``bitset<N>`` names."""
+    match = re.search(r"\?\$bitset@\$0([0-9A-P]+)@", mangled)
+    if not match:
+        return None
+    encoded = match.group(1)
+    if len(encoded) == 1 and encoded.isdigit():
+        return int(encoded) + 1
+    value = 0
+    for digit in encoded:
+        if digit < "A" or digit > "P":
+            return None
+        value = value * 16 + ord(digit) - ord("A")
+    return value
+
+
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_file's declarator spelling (:: -> _).
@@ -591,9 +614,19 @@ def _demangle_key(mangled: str):
         return f"{vector_element.group(1).lower()}@vector_ufill"
     if mangled.startswith("??4?$vector@") and vector_element:
         return f"{vector_element.group(1).lower()}@vector_copy_assign"
-    if mangled.startswith("?_Tidy@?$bitset@$09@"):
-        # VC6's compact template-number spelling `$09` is bitset<10>.
-        return "bitset10@bitset_tidy"
+    bitset_width = _bitset_width(mangled)
+    if bitset_width is not None:
+        if mangled.startswith("??0?$bitset@"):
+            return f"bitset{bitset_width}@bitset_ctor"
+        if mangled.startswith("??A?$bitset@"):
+            return f"bitset{bitset_width}@bitset_subscript"
+        if mangled.startswith("??4reference@?$bitset@"):
+            return f"bitset{bitset_width}@bitset_reference_assign"
+        for member in (
+                "_Tidy", "_Xran", "flip", "count", "any", "set", "test"):
+            if mangled.startswith(f"?{member}@?$bitset@"):
+                return (f"bitset{bitset_width}@bitset_"
+                        f"{member.lstrip('_').lower()}")
     construct_owner = re.match(
         r"^\?_Construct@std@@YIXPA(?:V|U)([A-Za-z_]\w*)@", mangled)
     if construct_owner:
@@ -611,6 +644,9 @@ def _demangle_key(mangled: str):
         # SCALAR_DELETING_DTOR claims (owner = the class)
         owner = mangled[4:]
         if owner.startswith("?$"):
+            # A class-template owner starts `?$Class@...`; only the stable
+            # template name joins, exactly as the ??_D arm below already does
+            # (pairs CAutoArray<T> scalar-deleting-dtors in dxplay/mpw).
             cls = owner[2:].split("@", 1)[0]
         else:
             cls = owner.split("@@", 1)[0].split("@")[0]
@@ -629,6 +665,10 @@ def _demangle_key(mangled: str):
             return f"{vector_element.group(1).lower()}@fctor"
         cls = mangled[4:].split("@@", 1)[0].split("@")[0]
         return f"{cls.lower()}@fctor" if cls else None
+    pair_const_int = re.match(
+        r"^\?\?1\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@@@std@@", mangled)
+    if pair_const_int:
+        return f"{pair_const_int.group(1).lower()}@pair_const_int_dtor"
     if mangled.startswith("??_D"):
         # MSVC's `vbase destructor' closure. Claim-only carcass rows use
         # the compiler's own backtick spelling, which scan_file normalizes
@@ -846,8 +886,20 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$vector_ufill$" in r["name"]
                                or "$vector_copy_assign$" in r["name"]
                                or "$bitset_tidy$" in r["name"]
+                               or "$bitset_ctor$" in r["name"]
+                               or "$bitset_subscript$" in r["name"]
+                               or "$bitset_reference_assign$" in r["name"]
+                               or "$bitset_flip$" in r["name"]
+                               or "$bitset_count$" in r["name"]
+                               or "$bitset_any$" in r["name"]
+                               or "$bitset_set$" in r["name"]
+                               or "$bitset_test$" in r["name"]
+                               or "$bitset_xran$" in r["name"]
+                               or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
+                               or "$class_ctor$" in r["name"]
+                               or "$implicit_copy_ctor$" in r["name"]
                                or "$implicit_copy_assign$" in r["name"]
                                or "$implicit_dtor$" in r["name"])))]
     if not unit_rows:
@@ -919,6 +971,20 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@bitset_tidy", []).append(row)
             continue
+        bitset_member = next((member for member in (
+            "ctor", "subscript", "reference_assign", "flip", "count",
+            "any", "set", "test", "xran")
+            if f"$bitset_{member}$" in row["name"]), None)
+        if bitset_member is not None:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$pair_const_int_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@pair_const_int_dtor", []).append(row)
+            continue
         if "$std_construct$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_construct", []).append(row)
@@ -926,6 +992,14 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$std_copy$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$class_ctor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
+            continue
+        if "$implicit_copy_ctor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
             continue
         if "$implicit_copy_assign$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1350,6 +1424,10 @@ def selftest() -> list[str]:
             "@std@@QAE@XZ") != "blackboxdata@vector_dtor":
         failures.append("MSVC vector destructor key regressed")
     if _demangle_key(
+            "??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ") != \
+            "type_map_hero_info@pair_const_int_dtor":
+        failures.append("MSVC pair<const int, T> destructor key regressed")
+    if _demangle_key(
             "?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@"
             "@std@@QBEIXZ") != "cobjecttype@vector_size":
         failures.append("MSVC vector size key regressed")
@@ -1374,6 +1452,24 @@ def selftest() -> list[str]:
     if _demangle_key("?_Tidy@?$bitset@$09@std@@AAEXK@Z") != \
             "bitset10@bitset_tidy":
         failures.append("MSVC bitset<10> _Tidy key regressed")
+    bitset_cases = {
+        "??0?$bitset@$0BM@@std@@QAE@K@Z": "bitset28@bitset_ctor",
+        "??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z":
+            "bitset145@bitset_subscript",
+        "??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z":
+            "bitset5@bitset_reference_assign",
+        "?flip@?$bitset@$0BM@@std@@QAEAAV12@XZ":
+            "bitset28@bitset_flip",
+        "?count@?$bitset@$0BM@@std@@QBEIXZ": "bitset28@bitset_count",
+        "?any@?$bitset@$0BM@@std@@QBE_NXZ": "bitset28@bitset_any",
+        "?set@?$bitset@$0JB@@std@@QAEAAV12@I_N@Z":
+            "bitset145@bitset_set",
+        "?test@?$bitset@$07@std@@QBE_NI@Z": "bitset8@bitset_test",
+        "?_Xran@?$bitset@$0BM@@std@@ABEXXZ": "bitset28@bitset_xran",
+    }
+    for mangled, expected in bitset_cases.items():
+        if _demangle_key(mangled) != expected:
+            failures.append(f"MSVC {expected} key regressed")
     if _demangle_key(
             "?_Destroy@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@"
             "@std@@@std@@IAEXPAVTTimedEvent@@0@Z") != \
@@ -1409,6 +1505,10 @@ def selftest() -> list[str]:
     if _demangle_key("??4MonsterData@@QAEAAV0@ABV0@@Z") != \
             "monsterdata_monsterdata_operator":
         failures.append("MSVC implicit copy-assignment key regressed")
+    if _demangle_key(
+            "??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@"
+            "std@@V?$allocator@D@2@@1@@Z") != "logic_error_logic_error":
+        failures.append("MSVC named class constructor key regressed")
     if _demangle_key("??1TreasureData@@QAE@XZ") != \
             "treasuredata_treasuredata@dtor":
         failures.append("MSVC implicit destructor key regressed")

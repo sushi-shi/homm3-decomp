@@ -5771,14 +5771,65 @@ int NewfullMap::PlaceObject(int objectIndex, unsigned char setExtraInfo)
     return 0;
 }
 
-VA(0x00505d60, 0x3F)
+#if 0  // @carcass -- located/reconstruction-pending bodies
+// NewfullMap map-object-data broadcast twin at 0x505d20, immediately after
+// PlaceObject in the mapcell link-order bracket and owned by this TU: `this`
+// reaches the std::vector at +0xb0 (mapObjectData, game.h:278), walks it
+// re-reading _First/_Last every pass (the do-not-cache shape), and calls one
+// CMapObjectData virtual per element (slot +0x24) with two stack arguments
+// (ret 8).  Not in the DC mapcell.cpp roster (the Dreamcast build inlined the
+// broadcast into its callers); retail emits it out of line.
+// BLOCKED ON A SHARED HEADER: unlike its +0x28 twin 0x505d60 (declared in
+// game.h below), this member has NO declaration in game.h's NewfullMap class,
+// so reconstructing it needs a NEW `NewfullMapFn_00505D20` declarator there,
+// which is out of this lane's scope.
+VA(0x00505d20, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x24 to every record, retail-only (DC-inlined); BLOCKED: needs a game.h NewfullMap declaration
+void NewfullMap::NewfullMapFn_00505D20()
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// 0x505d60 (declared game.h:461) broadcasts virtual slot +0x28 across the
+// mapObjectData vector (+0xb0), handing every record a (point, player) pair.
+// The loop re-reads _First/_Last each pass, the same std::vector broadcast
+// shape ~NewfullMap emits for `sprites[i]->Dispose()` above. Reached only
+// from events.cpp's monsters_flee/join/sell_out
+// (0x4a6eda/0x4a70ee/0x4a7444) and DoCombat.  Not in the DC mapcell.cpp
+// roster (DC inlined it); retail-only body.
+VA(0x00505d60, 0x3F)  // linkorder + this@+0xb0=mapObjectData; broadcasts CMapObjectData vslot+0x28 to every record, retail-only (DC-inlined)
 void NewfullMap::NewfullMapFn_00505D60(type_point point, int player)
 {
     for (unsigned int i = 0; i < mapObjectData.size(); ++i)
         mapObjectData[i]->NewMapVFn28(point, player);
 }
 
-VA(0x00505ea0, 0x80)
+#if 0  // @carcass -- located/reconstruction-pending bodies
+// The objects.txt object-type loader at 0x505da0, run once from startup
+// (LoadMenu/WinMain path) to populate NewfullMap::objectTypeIndex: `this`
+// reaches the same +0xdc array (`lea ecx,[esi+edx+0xdc]` /
+// `mov edx,[esi+edx+0xe4]`), it EH-guards a per-record parse it delegates to
+// 0x506080, and destroys a std::string temporary per row.
+// BLOCKED ON A SHARED HEADER: this member has NO declaration in game.h's
+// NewfullMap class, so it needs a NEW `NewfullMapFn_00505DA0` declarator
+// there, out of this lane's scope.  Its parse callee 0x506080 (and that
+// callee's small helpers 0x506780 / 0x5067e0 / 0x506820) are the rest of this
+// family, for a lane that can confirm whether they are members or statics.
+VA(0x00505da0, 0xF8)  // linkorder + this@+0xdc=objectTypeIndex; objects.txt loader, startup caller, retail-only (DC-inlined); BLOCKED: needs a game.h NewfullMap declaration
+void NewfullMap::NewfullMapFn_00505DA0()
+{
+    // @stub
+}
+#endif  // @carcass
+
+// 0x505ea0 (game::ConvertObject's helper, declared game.h:475) reverse-scans
+// objectTypeIndex[objectType] for the record whose `extra` (CObjectType+0x3c)
+// equals `extra` and returns &objectTypeIndex[objectType][i], with i == -1 as
+// the not-found sentinel (return &...[-1]).  The size()-1..0 reverse-scan tell
+// with _First re-read per pass; same idiom as NewfullMapFn_005042C0 above.
+// Not in the DC mapcell.cpp roster (DC inlined it); retail-only body.
+VA(0x00505ea0, 0x80)  // linkorder + this@+0xdc=objectTypeIndex; reverse-find CObjectType by extra, caller game::ConvertObject, retail-only (DC-inlined)
 CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
 {
     int i = objectTypeIndex[objectType].size();
@@ -5787,6 +5838,63 @@ CObjectType* NewfullMap::NewfullMapFn_00505EA0(int objectType, int extra)
             break;
     }
     return &objectTypeIndex[objectType][i];
+}
+
+// 0x505f20 (game::InsertObject's helper, declared game.h:466) reverse-scans
+// objectTypeIndex[objectType] for the record matching `objectIndex` (its
+// .extra) and, when terrain != -1, applicable to `terrain` (its mask_34 bit).
+// If the matched record has no resolved objectTypes index yet (field_42 < 0),
+// it appends a copy to objectTypes and its sprite to sprites and records the
+// new index, then writes the resolved index into object->typeIndex.
+// Not in the DC mapcell.cpp roster (DC inlined it); retail-only body.
+// MATCHING_DEBT: the two vector inserts are pinned with inline_depth(0) (the
+// randomDwellings idiom) with end() and the value hoisted out so operator[]
+// and end() stay inline; sprites is named as a reference so its _Last is read
+// through &sprites, not folded off `this`.
+// Residual (99.98%): retail reserves a dead 4-byte frame temp at [ebp-0x8]
+// (frame 0xc vs 0x8), landing its &mask_34 cache at [ebp-0xc] where this
+// compile compacts it to [ebp-0x8] - three displacement bytes, no semantic
+// delta and no lever found (a VC6 temp-slot-count artifact).  The four
+// reloc-name rows (vector<CObjectType>/<CSprite*>::insert, bitset<10>::_Xran,
+// _Nullstr) are cosmetic cross-TU unclaimed STL COMDATs and do not score.
+// Tried and rejected: a `candidate` reference (reschedules the loop body, -3);
+// swapping the extra-compare operands (moves the cmp, not the schedule).
+// The baseline hist 100.0000 above this max is an objdiff target-padding-span
+// / delink-generation artifact recorded by a transitional --fast; the settled
+// build->delink->build value is 99.9771 and the frame-slot delta is real
+// bytes, so 99.9771 is the honest number - do not chase the 100.
+VA(0x00505f20, 0x157)  // linkorder + this@+0xdc=objectTypeIndex; caller game::InsertObject, retail-only (DC-inlined)
+void NewfullMap::NewfullMapFn_00505F20(CObject* object, int objectType,
+                                       int objectIndex, int terrain)
+{
+    int i = objectTypeIndex[objectType].size();
+    while (i--) {
+        if (objectTypeIndex[objectType][i].extra == objectIndex) {
+            if (terrain == -1)
+                break;
+            if (objectTypeIndex[objectType][i].mask_34.test(terrain))
+                break;
+        }
+    }
+
+    if (static_cast<short>(objectTypeIndex[objectType][i].field_42) < 0) {
+        objectTypeIndex[objectType][i].field_42 =
+            static_cast<unsigned short>(objectTypes.size());
+        CObjectType& newType = objectTypeIndex[objectType][i];
+        std::vector<CObjectType>::iterator typeEnd = objectTypes.end();
+#pragma inline_depth(0)
+        objectTypes.insert(typeEnd, 1, newType);
+#pragma inline_depth()
+        CSprite* sprite = ResourceManager::GetSprite(
+            objectTypeIndex[objectType][i].ImageName.c_str());
+        std::vector<CSprite*>& spriteList = sprites;
+        std::vector<CSprite*>::iterator spriteEnd = spriteList.end();
+#pragma inline_depth(0)
+        spriteList.insert(spriteEnd, 1, sprite);
+#pragma inline_depth()
+    }
+
+    object->typeIndex = objectTypeIndex[objectType][i].field_42;
 }
 
 // These Dinkumware template members are already emitted by NewfullMap's

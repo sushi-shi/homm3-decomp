@@ -712,11 +712,29 @@ type_event_record_type type_record_shroud::get_type()
 #if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:935
-DC_ONLY(0x8dcd8, 0xB0)
-unsigned char type_record_shroud::load(void* infile)
+#endif  // @carcass
+VA(0x0049bc90, 0x151)  // dc 0x8dcd8
+unsigned char type_record_shroud::load(TAbstractFile* infile, int version)
 {
-    // @stub
+    if (infile->Read(&player_id, 1) != 1)
+        return 0;
+
+    short count;
+    if (infile->Read(&count, sizeof(count)) != sizeof(count))
+        return 0;
+
+    changes.clear();
+    changes.reserve(count);
+
+    while (count--) {
+        type_shroud_change change;
+        if (infile->Read(&change, sizeof(change)) != sizeof(change))
+            return 0;
+        changes.push_back(change);
+    }
+    return 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:960
 DC_ONLY(0x8dd88, 0x62)
