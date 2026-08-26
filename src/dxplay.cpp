@@ -1159,6 +1159,37 @@ unsigned char CDPlay::Send(void* data, unsigned long size,
     return ok;
 }
 
+inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
+{
+    if (lpSession) {
+        dwFlags = lpSession->dwFlags;
+        guidInstance = lpSession->guidInstance;
+        guidApp = lpSession->guidApplication;
+        maxPlayers = lpSession->dwMaxPlayers;
+        playerCount = lpSession->dwCurrentPlayers;
+        dwUser1 = lpSession->dwUser1;
+        dwUser2 = lpSession->dwUser2;
+        dwUser3 = lpSession->dwUser3;
+        dwUser4 = lpSession->dwUser4;
+        strcpy(sessionName, lpSession->lpszSessionNameA);
+        if (lpSession->lpszPasswordA)
+            strcpy(password, lpSession->lpszPasswordA);
+        else
+            password[0] = 0;
+    }
+}
+
+// E:\gamedcs\dxplay.cpp:605
+VA(0x004977c0, 0x144)  // anchor-vtable CDPlay slot60 (AddSessionEnum); ret 8, dc 0x8a7e0
+unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long dwFlags)
+{
+    if (dwFlags & 1)
+        return 0;
+    CDPlaySession* pSession = new CDPlaySession(lpDPSessionDesc);
+    m_pSessionArray->Add(pSession);
+    return 1;
+}
+
 // E:\gamedcs\dxplay.cpp:617
 VA(0x00497910, 0x180)  // anchor-vtable CDPlay slot43 (ReceiveSystemMsg); dispatches SysMsg slots, dc 0x8a828
 unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
