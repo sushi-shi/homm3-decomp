@@ -446,33 +446,33 @@ unsigned char CDPlay::FlushReceiveQueue()
     return 1;
 }
 
-// Residual (73.8%): the CDPlaySession field-copy body is byte-right, but retail
-// defers the ebx/esi/edi pushes into the alloc path and duplicates the
-// Add(pSession)/return tail across the password branches rather than sharing it
-// (register-homing / merged-return class). Field mapping and order are exact.
+inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
+{
+    if (lpSession) {
+        dwFlags = lpSession->dwFlags;
+        guidInstance = lpSession->guidInstance;
+        guidApp = lpSession->guidApplication;
+        maxPlayers = lpSession->dwMaxPlayers;
+        playerCount = lpSession->dwCurrentPlayers;
+        dwUser1 = lpSession->dwUser1;
+        dwUser2 = lpSession->dwUser2;
+        dwUser3 = lpSession->dwUser3;
+        dwUser4 = lpSession->dwUser4;
+        strcpy(sessionName, lpSession->lpszSessionNameA);
+        if (lpSession->lpszPasswordA)
+            strcpy(password, lpSession->lpszPasswordA);
+        else
+            password[0] = 0;
+    }
+}
+
 // E:\gamedcs\dxplay.cpp:605
 VA(0x004977c0, 0x144)  // anchor-vtable CDPlay slot60 (AddSessionEnum); ret 8, dc 0x8a7e0
 unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long dwFlags)
 {
     if (dwFlags & 1)
         return 0;
-    CDPlaySession* pSession = new CDPlaySession;
-    if (pSession && lpDPSessionDesc) {
-        pSession->dwFlags = lpDPSessionDesc->dwFlags;
-        pSession->guidInstance = lpDPSessionDesc->guidInstance;
-        pSession->guidApp = lpDPSessionDesc->guidApplication;
-        pSession->maxPlayers = lpDPSessionDesc->dwMaxPlayers;
-        pSession->playerCount = lpDPSessionDesc->dwCurrentPlayers;
-        pSession->dwUser1 = lpDPSessionDesc->dwUser1;
-        pSession->dwUser2 = lpDPSessionDesc->dwUser2;
-        pSession->dwUser3 = lpDPSessionDesc->dwUser3;
-        pSession->dwUser4 = lpDPSessionDesc->dwUser4;
-        strcpy(pSession->sessionName, lpDPSessionDesc->lpszSessionNameA);
-        if (lpDPSessionDesc->lpszPasswordA)
-            strcpy(pSession->password, lpDPSessionDesc->lpszPasswordA);
-        else
-            pSession->password[0] = 0;
-    }
+    CDPlaySession* pSession = new CDPlaySession(lpDPSessionDesc);
     m_pSessionArray->Add(pSession);
     return 1;
 }
