@@ -419,6 +419,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   state. The gated build reaches **2267/2701 linked exact**, **96.79% linked
   fuzzy**, and **49.16% executable coverage** with no banked loss.
 
+- **2026-08-26 — the split game transfer catch/continuation is folded back
+  into its parent.** The carve treated `0xcb1ec` (23 bytes) and `0xcb206`
+  (2,782 bytes) as functions following the 540-byte body at `0xcafd0`.
+  Retail's `HandlerType` record at `.rdata` `0x64db70` instead points to
+  `0xcb1ec` as that body's catch handler. The normal path jumps over it to
+  `0xcb206`; the resumed code uses the parent's saved EBP frame, reaches both
+  shared epilogues, and owns the trailing switch tables through `0xcbce4`.
+  The hand-owned inventory now records one 3,348-byte EH-bearing function,
+  removing two false independent targets without discarding any retail code.
+
 - **2026-08-26 — nine retained Dinkumware bitset members are admitted exact,
   and the direct-symbol annotation contract now covers the bitset family.**
   The contiguous game COMDAT run independently exposes the encoded widths in

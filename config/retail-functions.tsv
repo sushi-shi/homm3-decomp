@@ -50,6 +50,14 @@
 # 0x19b080 member body, then tail-jumps to `__endthread`. Dreamcast CodeView
 # independently publishes `void ProcessMP3Stop(void*)` and its sole outgoing
 # edge to soundManager::ThreadStopMP3. 11934 rows since.
+# BOUNDARY CORRECTION 2026-08-26: game.obj's EH-bearing body at 0xcafd0 is
+# one 0xd14-byte function through 0xcbce4, including its in-line catch handler
+# at 0xcb1ec and the resumed body at 0xcb206. The HandlerType record at retail
+# .rdata 0x64db70 points to 0xcb1ec; the normal path jumps over that handler to
+# 0xcb206, which uses the parent's saved EBP frame and reaches both shared
+# epilogues before the switch tables ending at 0xcbce4. The carve's standalone
+# 0xcb1ec/23 and 0xcb206/2782 rows were therefore interior chunks, not entries.
+# 11939 rows since.
 rva	size
 0x1000	89
 0x1060	96
@@ -2446,9 +2454,7 @@ rva	size
 0xcaa40	38
 0xcaa70	924
 0xcae10	433
-0xcafd0	540
-0xcb1ec	23
-0xcb206	2782
+0xcafd0	3348
 0xcbcf0	75
 0xcbd40	2691
 0xcc7d0	1534
