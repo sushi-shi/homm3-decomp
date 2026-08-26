@@ -1147,6 +1147,10 @@ public:
     // The paired retail writer at 0x4c35a0 serializes the condition-specific
     // payload after NewSMapHeader::Save writes the type byte.
     int saveVictoryCondition(char type, TAbstractFile* outfile);
+    // Complete's saved-header reader carries the save version as a third
+    // argument so pre-25 campaign hero ids can be remapped.
+    int loadVictoryCondition(char type, TAbstractFile* infile,
+                             int saveVersion);
     // Retail adds the saved-game version as a third stack argument to the
     // Dreamcast load helper (`ret 0xc` at 0x4c3d90).
     int loadLossCondition(char type, TAbstractFile* infile, int saveVersion);
