@@ -869,6 +869,7 @@ drawing	__h3cg$drawing$static_dtor$old_hexes	100.0000	100.0000	100.0000	0x94370
 dxplay	??0CDPlayLobby@@QAE@XZ	100.0000	100.0000	100.0000	0x98870
 dxplay	??1CDPlay@@UAE@XZ	100.0000	100.0000	100.0000	0x96d10
 dxplay	??1CDPlayLobby@@UAE@XZ	100.0000	100.0000	100.0000	0x98930
+dxplay	??_G?$CAutoArray@VCDPlayAddressElement@@@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x9a020
 dxplay	??_GCDPlay@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x96ce0
 dxplay	??_GCDPlayLobby@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x98900
 dxplay	?AddAddressEnum@CDPlayLobby@@UAEEPBU_GUID@@KPBX@Z	100.0000	100.0000	100.0000	0x99bb0
@@ -884,6 +885,7 @@ dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x
 dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	100.0000	100.0000	100.0000	0x96fc0
 dxplay	?DeleteGroupFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x97180
 dxplay	?DeletePlayerFromGroup@CDPlay@@UAEEKK@Z	100.0000	100.0000	100.0000	0x98220
+dxplay	?Destroy@?$CAutoArray@VCDPlayAddressElement@@@@QAEXE@Z	100.0000	100.0000	100.0000	0x99f60
 dxplay	?DestroyGroup@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97150
 dxplay	?DestroyPlayer@CDPlay@@UAEEK@Z	100.0000	100.0000	100.0000	0x97040
 dxplay	?EnumAddress@CDPlayLobby@@UAEEPAXKPAV?$CAutoArray@VCDPlayAddressElement@@@@@Z	100.0000	100.0000	100.0000	0x99b20
@@ -1713,6 +1715,7 @@ multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x110060
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
 multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
+multiplayerwindow	??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112670
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0

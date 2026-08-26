@@ -55,7 +55,7 @@ public:
     unsigned long allocSize;
     unsigned long size;
 
-    virtual ~CAutoArray();
+    virtual ~CAutoArray() { Destroy(); }
     virtual unsigned char Add(T* element);
     virtual T* Get(unsigned long elementNbr);
     virtual unsigned char Put(unsigned long elementNbr, T* element);

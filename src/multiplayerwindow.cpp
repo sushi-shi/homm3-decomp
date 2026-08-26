@@ -870,3 +870,6 @@ void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 #endif  // @carcass
+
+template class CAutoArray<CDPlaySession>;
+VA_COMPGEN(0x00512670, 0x6C, SCALAR_DELETING_DTOR, CAutoArray)

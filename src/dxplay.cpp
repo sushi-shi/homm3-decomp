@@ -781,13 +781,6 @@ void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
     // @stub
 }
 
-// E:\gamedcs\array.h:51
-DC_ONLY(0x8c180, 0x64)
-void CAutoArray<CDPlayAddressElement>::Destroy(unsigned char deleteData)
-{
-    // @stub
-}
-
 // E:\gamedcs\array.h:73
 DC_ONLY(0x8c1e4, 0x68)
 unsigned char CAutoArray<CDPlayAddressElement>::Add(CDPlayAddressElement* element)
@@ -1906,6 +1899,11 @@ int PASCAL EnumPlayersCallback(unsigned long dpid,
         dpid, lpName, dwFlags);
 }
 
+VA(0x00499f60, 0x60)
+template void CAutoArray<CDPlayAddressElement>::Destroy(
+    unsigned char deleteData);
+template class CAutoArray<CDPlayAddressElement>;
+
 VA(0x00499fc0, 0x1D)
 template CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(
     unsigned long elementNbr);
@@ -1916,3 +1914,5 @@ template unsigned char CAutoArray<CDPlayAddressElement>::Put(
 
 VA(0x0049a010, 0x4)
 template unsigned long CAutoArray<CDPlayAddressElement>::GetCount();
+
+VA_COMPGEN(0x0049a020, 0x73, SCALAR_DELETING_DTOR, CAutoArray)
