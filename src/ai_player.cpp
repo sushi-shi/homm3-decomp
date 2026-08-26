@@ -2301,6 +2301,60 @@ void type_AI_creature_swapper::add_creatures(
     army->Add(type, amount, slot);
 }
 
+// E:\gamedcs\ai_player.cpp:2096
+VA(0x0042c280, 0x126)  // dc 0x3166c
+long type_AI_creature_swapper::do_best_swap(bool can_take_all)
+{
+    long best_value = 0;
+    short best_army_slot = -1;
+    short best_source_slot = -1;
+    short best_amount = 0;
+    get_alignments();
+
+    for (short source = 0; source < armyGroup::ARMY_GROUP_SLOT_COUNT; ++source) {
+        TCreatureType type = adjacent_army->armyTypes[source];
+        if (type == CREATURE_NONE)
+            continue;
+        short count = adjacent_army->numTroops[source];
+        short slot;
+        long value;
+        if (can_take_all) {
+            value = value_of_adding_army(type, count, slot, false);
+        } else {
+            value = value_of_adding_army(type, count, slot, true);
+            if (count > 1) {
+                short reduced_slot;
+                long reduced_value = value_of_adding_army(
+                    type, count - 1, reduced_slot, false);
+                if (reduced_value > value) {
+                    count = count - 1;
+                    value = reduced_value;
+                    slot = reduced_slot;
+                }
+            }
+        }
+        long weighted = improvement * value / 40;
+        if (weighted > best_value) {
+            best_value = weighted;
+            best_army_slot = slot;
+            best_source_slot = source;
+            best_amount = count;
+        }
+    }
+
+    if (best_value <= 0)
+        return best_value;
+
+    TCreatureType swap_type = adjacent_army->armyTypes[best_source_slot];
+    if (static_cast<short>(adjacent_army->numTroops[best_source_slot])
+        == best_amount)
+        adjacent_army->Dismiss(best_source_slot);
+    else
+        adjacent_army->numTroops[best_source_slot] -= best_amount;
+    add_creatures(swap_type, best_amount, best_army_slot);
+    return best_value;
+}
+
 // DC proves this method's identity, signature, and call graph. Retail adds a
 // separate get_alignments call after temporarily dismissing each candidate;
 // the surrounding capacity checks and the restore/add split are byte-visible.

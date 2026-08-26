@@ -116,6 +116,7 @@ protected:
 
     void get_alignments();
     void add_creatures(TCreatureType type, short amount, short slot);
+    long do_best_swap(bool can_take_all);
     void dump_extra_creature();
     long choose_weakest_army(bool is_shooter, bool check_alignments);
     long value_of_adding_army(TCreatureType type, short count,
