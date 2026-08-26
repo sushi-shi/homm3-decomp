@@ -1036,6 +1036,10 @@ public:
     // Complete's scenario reader consumes the abstract stream and the
     // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
     int Read(TAbstractFile* infile, int campaignMap);
+    // Retail 0x4c3c80 is the PC counterpart of the Dreamcast-named helper.
+    // Its second stack argument is the concrete abstract stream used by Read;
+    // the DC declarator obscures that pointer as void*.
+    int readLossCondition(char type, TAbstractFile* infile);
 #endif
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
