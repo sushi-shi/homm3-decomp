@@ -926,6 +926,31 @@ unsigned char CDPlay::InitConnection(CDPlayConnection* connection)
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:134
+VA(0x00496db0, 0xB0)  // dc 0x8a154
+unsigned char CDPlay::HostSession(char* sessionName, unsigned long flags,
+                                  unsigned long maxPlayers, char* password)
+{
+    if (!m_lpDP)
+        return 0;
+    DPSESSIONDESC2 desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.dwSize = sizeof(desc);
+    desc.dwFlags = flags;
+    desc.dwMaxPlayers = maxPlayers;
+    desc.lpszSessionNameA = sessionName;
+    if (password)
+        desc.lpszPasswordA = password;
+    if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) != 0)
+        desc.guidApplication = m_guid;
+    m_hRes = m_lpDP->Open(&desc, DPOPEN_CREATE);
+    if (m_hRes < 0)
+        return 0;
+    m_isHost = 1;
+    GetCaps(static_cast<DPCAPS*>(static_cast<void*>(m_caps)), 1);
+    return 1;
+}
+
 VA(0x00496e60, 0xB8)
 unsigned char CDPlay::JoinSession(GUID* sessionGuid, char* password)
 {
