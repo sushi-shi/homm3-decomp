@@ -7118,19 +7118,10 @@ void game::InsertObject(int x, int y, int z, int objType, int objectIndex, int e
 // The sprite push_back goes through this->worldMap while
 // CalculateCellExtra RELOADS gpGame; do not unify them.
 //
-// Residual (97.2390%): one block, the town arm's three building-mask
-// tests, and it is the register-homing family. Retail loads
-// theTown->built once into an EDX:ESI pair, HOMES the town pointer to a
-// stack slot, and threads all three masks through that pair; we load
-// built once as well but keep the town pointer in a register and pick
-// the opposite registers for the mask ANDs, which shifts the whole
-// block. The two raw `built & bitNumber[...]` tests and the third as a
-// real HasBuilding call are retail's own asymmetry - it emits a bare
-// and/and/or/je with no setne for the first two and a call for the
-// third - so they are transcribed as they stand rather than tidied into
-// three of a kind. The remaining rows are cosmetic reloc names: the five
-// .def tables, gpGame and the STL COMDATs have no name on the target
-// side, and _Nullstr's empty-string datum is shared image-wide.
+// Residual (97.5098%): 395 generated ordinary-source variants lift the town
+// arm by copying built to __int64 and materializing its decision in a byte.
+// DC names only thisTown, so the two extra locals remain PC codegen hypotheses;
+// all tested types and scopes plateau at the same register/stack schedule.
 VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
 void game::ConvertObject(NewmapCell* tempCell)
 {
@@ -7163,15 +7154,20 @@ void game::ConvertObject(NewmapCell* tempCell)
             break;
         case RANDOM_TOWN:
         case TOWN: {
-            town* theTown = gpGame->GetTown(tempCell->get_map_extraInfo());
-            if (theTown->built & bitNumber[HALL_CAPITOL_ID])
+            town* thisTown = gpGame->GetTown(tempCell->get_map_extraInfo());
+            __int64 buildings = thisTown->built;
+            if (buildings & bitNumber[HALL_CAPITOL_ID]) {
                 strcpy(defName, gTownCapitolObjectDefs[tempCell->objectIndex]);
-            else if ((theTown->built & bitNumber[CASTLE_FORT_ID])
-                     || (theTown->built & bitNumber[CASTLE_CITADEL_ID])
-                     || theTown->HasBuilding(CASTLE_CASTLE_ID, 0))
-                strcpy(defName, gTownFortObjectDefs[tempCell->objectIndex]);
-            else
-                strcpy(defName, gTownVillageObjectDefs[tempCell->objectIndex]);
+            } else {
+                unsigned char hasFort =
+                    (buildings & bitNumber[CASTLE_FORT_ID])
+                    || (buildings & bitNumber[CASTLE_CITADEL_ID])
+                    || thisTown->HasBuilding(CASTLE_CASTLE_ID, 0);
+                if (hasFort)
+                    strcpy(defName, gTownFortObjectDefs[tempCell->objectIndex]);
+                else
+                    strcpy(defName, gTownVillageObjectDefs[tempCell->objectIndex]);
+            }
             break;
         }
         }

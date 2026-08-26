@@ -23,6 +23,7 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "border.h"
+#include "buildinginfo.h"
 #include "button.h"
 #include "castle.h"
 // gpExecutive: TCastleWindow::Recruit needs the global.
@@ -150,7 +151,7 @@ DATA(0x006aaa5c) extern unsigned char gBuildAllBuildings;
 // CycleOutline publishes the objId of the object it is animating into
 // it and townObject::Draw reads it back, which is the whole role.
 DATA(0x006aa9e8) static int gUnnamed6aa9e8;
-DATA(0x006aa9ec) static int gUnnamed6aa9ec;
+DATA(0x006aa9ec) static heroWindow* gUnnamed6aa9ec;
 
 // The eight resource icons of the town screen's bottom bar, as x/y
 // pairs; the constructor's one loop walks them. Its single image-wide
@@ -409,15 +410,20 @@ DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
 // to each lands inside this compiland's bracket and nothing in the image
 // writes them.
 DATA(0x006a5d84) extern const char* gUnnamed6a5d84;
-DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
-DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
 DATA(0x006a5d90) extern const char* gUnnamed6a5d90;
 DATA(0x006a5da4) extern const char* gUnnamed6a5da4;
 DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
-DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
 DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
 DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
 DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
+// SetArmyCommand's own status formats, on the same standing (sole reader
+// is SetArmyCommand 0x5c7400, nothing in the image writes them): 0x6a5d88
+// and 0x6a5d98 are the two nothing-changed refusal lines it strcpy's when
+// the divide flag is up, and 0x6a5d8c the "divide this stack" one-name
+// format its own-owner else-arm takes the creature name into.
+DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
+DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
+DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
 DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
 DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
 DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
@@ -916,6 +922,27 @@ void TTownScreenWindow::UpdateTownLocators()
                          widget::WIDGET_DIMMED_NODRAW);
     DrawWindow(0, 0x9b, 0xa3);
 }
+
+// Located, not reconstructed: the bonus-display formatter and the town
+// page's Open. Both sit between UpdateTownLocators (0x5c5aa0) and
+// HandleGiftMsg (0x5c66b0) in retail link order; the two DC helpers
+// DoTownKnob/bonus_right_click that precede set_bonus_display in the DC
+// roster have no distinct retail carve row (inlined here).
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:2562
+VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
+void TTownScreenWindow::set_bonus_display(town* currTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2716
+VA(0x005c63c0, 0x2E1)  // anchor-caller(the three pure managers Open/Close/Main) + order-map + arity(ret 4, int), dc 0x16b718
+int townManager::Open(int newPriority)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // The town page's one network hook: a gift arriving while the player is
 // inside a town is handled exactly as the adventure map handles it, and
@@ -1420,8 +1447,17 @@ void townManager::SetHeroCommand()
     strcpy(statusText, gUnnamed6a5da8);
 }
 
+// The army-strip counterpart of SetHeroCommand: given the anchor cell
+// (field_134/field_138) and the cell under the cursor (field_12c/field_130)
+// it writes the status line for the pending troop move and stamps a command
+// number into field_19c. `splitEnabled` is the divide flag, `join_dialog`
+// the owner-cell flag it forwards to select_army. The `flag` local records
+// whether the source stack is the town's only army - the two "you cannot
+// leave the town empty" refusal lines it strcpy's turn on it. Every creature
+// name is materialised inline through akCreatureTypeTraits with retail's own
+// `id in 0..150 ? .name/.plural : emptyRolloverText` guard.
 // E:\gamedcs\townmgr.cpp:3274
-VA(0x005c7400, 0x391)  // order-map + select_army/GetNumArmies callees, dc 0x16c6a8
+VA(0x005c7400, 0x391)  // order-map(SetHeroCommand 0x5c7250 .. select_army 0x5c8080) + anchor-callee(select_army 0x5c8080 + GetNumArmies) + arity(ret 8, 2 args), dc 0x16c6a8
 void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
 {
     char flag = 0;
@@ -1527,6 +1563,18 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
     sprintf(statusText, gUnnamed6a5da0, nameSel, nameAnchor);
     field_19c = 3;
 }
+
+// Located, not reconstructed: SetCommandAndText sits between SetArmyCommand
+// (0x5c7400) and select_army (0x5c8080) in retail link order;
+// SetCommandAndText2 (dc 0x16ceb4) has no distinct retail carve row here.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:3383
+VA(0x005c77a0, 0x8DD)  // order-map + anchor-callee(SetHeroCommand 0x5c7250) + arity(ret 4, message*), dc 0x16c940
+void townManager::SetCommandAndText(message* msg)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
 // full-screen CAdvPopup with eight player columns and thirteen category
@@ -1707,11 +1755,140 @@ TThievesGuildWindow::~TThievesGuildWindow()
     }
 }
 
+// The thieves' guild's three widget->game maps, addressed straight by the
+// hovered/clicked widget id (codeY) with no rebasing, so the folded reloc
+// lands on the array base. heroWidgetMap turns a hero-portrait widget into a
+// heroes[] index; creatureWidgetMap1 is the column selector and creatureSlotMap
+// the 14-wide row table that together turn a creature-portrait widget into an
+// akCreatureTypeTraits[] index. Owned outside this compiland (SetupThievesGuild
+// fills them); declared here as the two consumers' externs.
 DATA(0x006a9e00) extern int heroWidgetMap[];
 DATA(0x006a98ec) extern int creatureWidgetMap1[];
+// One armyGroup per player column: SetRolloverText reads a single slot out of a
+// row, WindowHandler hands a whole row to game::ViewArmy.
 DATA(0x006aa660) extern armyGroup creatureArmies[];
 
-VA(0x005c9930, 0x2AC)
+// Located, not reconstructed: the thieves' guild rollover-text setter and
+// its message handler. show_side (dc 0x16df0c) has no distinct retail carve
+// row (inlined into the ctor/SetupThievesGuild).
+//
+// SetRolloverText DECODE (2026-08-25, for the next lane). A dispatch over
+// codeY = the hovered widget id, writing the rollover into gText:
+//   - codeY 1..27  : VC6 COMPRESSED JUMP TABLE (byte-index at func+0x204,
+//                    jump table of 4 entries at func+0x1f4 - both embedded in
+//                    the body as self-relocs, the high-repro-risk part).
+//                    Decoded byte-index (codeY-1 = 0..26) and jt targets:
+//                      codeY 1..8   -> sprintf(gText, gRankFormat[0]=0x6a5390)
+//                      codeY 10..17 -> sprintf(gText, gRankFormat[1]=0x6a5394)
+//                      codeY 20..27 -> sprintf(gText, gRankFormat[2]=0x6a5398)
+//                      codeY 9,18,19-> default (adventureRolloverEmptyText)
+//   - codeY 30..37 : sprintf(gText, gRankFormat[3]=0x6a539c) - a range test
+//                    (`cmp 0x1e/jge`) SPLIT OUT ahead of the jump table.
+//   - codeY 750..757 (0x2ee..0x2f5): heroIdx = table 0x6a9e00[codeY]; if not
+//                    -1, strcpy(gText, gpGame heroes[heroIdx].name) with hero
+//                    stride 1170 (0x492) at gpGame+0x21620, name at hero+0x23.
+//   - codeY 850..857 (0x352..0x359): idx = 0x6a98ec[codeY]; slot =
+//                    0x6aa660[7*(codeY-0x352)+idx]; if 0<=slot<=0x96 strcpy the
+//                    creature-traits name at akCreatureTypeTraits+0x18 (base
+//                    0x6747b0, stride 0x2c) else adventureRolloverEmptyText.
+//   - codeY 0x7800 : strcpy(gText, gpGeneralText->GetText(601)).
+//   - else         : strcpy(gText, adventureRolloverEmptyText).
+// Tail (all arms): BroadcastMessage(0x200,3,0x29,gText) then vslot20(0,0x28,
+//   0x29) then gpWindowManager->UpdateScreen(x+8, y+0x22c, 0x2e0, 0x12).
+// The four gRankFormat char* (0x6a5390..0x6a539c) and the widget->hero/creature
+// maps (0x6a9e00, 0x6a98ec, 0x6aa660) are unmodelled; reconstruction needs the
+// compressed-switch reproduced AND those tables + the hero-record stride
+// declared. Deferred as the flagged high-repro-risk class.
+// The rollover-line setter, reconstructed 2026-08-25 from the prior lane's
+// decode. codeY is the hovered widget id: 1..27 index a VC6 COMPRESSED SWITCH
+// (byte table + 4-entry jump table) onto gPrimarySkillNames[0..2], 30..37 add
+// gPrimarySkillNames[3] as a range test, the 0x2ee..0x2f5 window is a hero
+// portrait (heroWidgetMap -> gpGame->heroes[].name, null-safe via the ternary),
+// the 0x352..0x359 window a creature portrait (creatureWidgetMap1 column into
+// the 14-wide creatureSlotMap, then akCreatureTypeTraits[].m_plural_name), and
+// 0x7800 the general-text exit line; everything else copies emptyRolloverText.
+//
+// Residual (94.18%): the register-homing family plus the compressed-switch
+// encoding, and why-branch finds no source-addressable lever (all D9 case-order
+// mutations are byte-flat). The block SHAPE now matches retail (168 instrs both
+// sides); what remains is scratch-register choice that cascades from a handful
+// of independent VC6 scheduling decisions: rank3 loads its format into eax vs
+// retail's edx; the hero arm loads gpGame before the heroId*1170 scale where
+// retail loads it after; the creature arm computes the row (codeY-0x352) into a
+// fresh reg before the column load where retail repurposes eax for the row
+// after reading the column; and the tail's vtable load lands in eax vs retail's
+// edx, rotating the UpdateScreen argument regs. Named locals (col) and the
+// eval-order rewrites that fixed the block layout do not move the register
+// choice. The two jump-table dispatch instructions also differ only in whether
+// the table offset rides the displacement (retail) or the self-reloc (ours) -
+// the delinker folds the table into the function symbol, VC6 emits a $L label.
+// E:\gamedcs\townmgr.cpp:4070
+VA(0x005c9710, 0x21F)  // anchor-caller(WindowHandler 0x5c9930 hover arm) + body(sprintf rollover text + adventureRolloverEmptyText) + arity(ret 4), dc 0x16e2f4
+void TThievesGuildWindow::SetRolloverText(int codeY)
+{
+    if (codeY <= 37) {
+        if (codeY < 30) {
+            switch (codeY) {
+            case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
+            case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
+                sprintf(gText, gPrimarySkillNames[0]);
+                break;
+            case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
+            case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
+                sprintf(gText, gPrimarySkillNames[1]);
+                break;
+            case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
+            case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
+                sprintf(gText, gPrimarySkillNames[2]);
+                break;
+            default:
+                strcpy(gText, emptyRolloverText);
+                break;
+            }
+        } else {
+            sprintf(gText, gPrimarySkillNames[3]);
+        }
+    } else if (codeY <= 0x359) {
+        if (codeY < 0x352) {
+            if (codeY >= 0x2ee && codeY <= 0x2f5) {
+                int heroId = heroWidgetMap[codeY];
+                hero* h = (heroId == -1) ? 0 : &gpGame->heroes[heroId];
+                strcpy(gText, h->name);
+            } else {
+                strcpy(gText, emptyRolloverText);
+            }
+        } else {
+            int slot = creatureArmies[codeY - 0x352].armies[creatureWidgetMap1[codeY]];
+            if (slot >= 0 && slot <= 0x96)
+                strcpy(gText, akCreatureTypeTraits[slot].m_plural_name);
+            else
+                strcpy(gText, emptyRolloverText);
+        }
+    } else if (codeY != EXIT_BUTTON_ID) {
+        strcpy(gText, emptyRolloverText);
+    } else {
+        strcpy(gText, gpGeneralText->GetText(601));
+    }
+
+    message textMessage;
+    textMessage.extraText = gText;
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x29,
+                     textMessage.extra);
+    DrawWindow(0, 0x28, 0x29);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x22c, 0x2e0, 0x12);
+}
+
+// The thieves' guild's message handler, reconstructed 2026-08-25 from the
+// prior lane's decode. Right-clicks (WIDGET_RIGHT_SELECT) on a rank cell open a
+// NormalDialog headed by the matching gPrimaryStatNames column; right-clicks on
+// a hero or creature portrait open that unit's detail view, but only for the
+// local player's own column (owners[player] == GetLocalPlayerGamePos()). Mouse
+// moves refresh the rollover line through the window manager's hover latch.
+// The two big-value portrait rows dispatch through a second compressed switch;
+// the creature row hands game::ViewArmy a whole armyGroup out of the same
+// 0x6aa660 storage SetRolloverText reads one slot from.
+// E:\gamedcs\townmgr.cpp:4154
+VA(0x005c9930, 0x2AC)  // anchor-vtable 0x643764 slot 9 + anchor-callee(SetRolloverText 0x5c9710 + ViewArmy/HeroView/ConvertToHover) + arity(ret 4), dc 0x16e43c
 int TThievesGuildWindow::WindowHandler(message* msg)
 {
     int result = CAdvPopup::WindowHandler(msg);
@@ -1727,41 +1904,39 @@ int TThievesGuildWindow::WindowHandler(message* msg)
                     case RANK_A0: case RANK_A1: case RANK_A2: case RANK_A3:
                     case RANK_A4: case RANK_A5: case RANK_A6: case RANK_A7:
                         NormalDialog(gPrimaryStatNames[0], 4, -1, -1, -1, 0,
-                            -1, 0, -1, 0, -1, 0);
+                                     -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_B0: case RANK_B1: case RANK_B2: case RANK_B3:
                     case RANK_B4: case RANK_B5: case RANK_B6: case RANK_B7:
                         NormalDialog(gPrimaryStatNames[1], 4, -1, -1, -1, 0,
-                            -1, 0, -1, 0, -1, 0);
+                                     -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     case RANK_C0: case RANK_C1: case RANK_C2: case RANK_C3:
                     case RANK_C4: case RANK_C5: case RANK_C6: case RANK_C7:
                         NormalDialog(gPrimaryStatNames[2], 4, -1, -1, -1, 0,
-                            -1, 0, -1, 0, -1, 0);
+                                     -1, 0, -1, 0, -1, 0);
                         return MESSAGE_DISPATCH_CONSUME;
                     }
                 } else {
                     NormalDialog(gPrimaryStatNames[3], 4, -1, -1, -1, 0,
-                        -1, 0, -1, 0, -1, 0);
+                                 -1, 0, -1, 0, -1, 0);
                     return MESSAGE_DISPATCH_CONSUME;
                 }
             } else {
                 switch (msg->codeY) {
                 case HERO_P0: case HERO_P1: case HERO_P2: case HERO_P3:
                 case HERO_P4: case HERO_P5: case HERO_P6: case HERO_P7:
-                    if (gpGame->GetLocalPlayerGamePos()
-                            == owners[msg->codeY - HERO_P0])
+                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - HERO_P0])
                         HeroView(heroWidgetMap[msg->codeY], 1, 0, 1);
                     return MESSAGE_DISPATCH_CONSUME;
                 case CREATURE_P0: case CREATURE_P1: case CREATURE_P2:
                 case CREATURE_P3: case CREATURE_P4: case CREATURE_P5:
                 case CREATURE_P6: case CREATURE_P7:
-                    if (gpGame->GetLocalPlayerGamePos()
-                            == owners[msg->codeY - CREATURE_P0]) {
+                    if (gpGame->GetLocalPlayerGamePos() == owners[msg->codeY - CREATURE_P0]) {
                         int player = msg->codeY - CREATURE_P0;
                         gpGame->ViewArmy(creatureArmies[player],
-                            creatureWidgetMap1[player + CREATURE_P0],
-                            0, 0, 0x77, 0x14, 0, 1);
+                                         creatureWidgetMap1[player + CREATURE_P0],
+                                         0, 0, 0x77, 0x14, 0, 1);
                     }
                     return MESSAGE_DISPATCH_CONSUME;
                 }
@@ -4072,6 +4247,76 @@ void townManager::DoPortalOfSummoning()
 // condition rather than to a nested if: retail's `jl` skips the
 // assignment and leaves the already-chosen hero standing.
 
+// The building-description formatter: fourteen call sites, a townmgr.cpp
+// static. Bands the buildingId exactly as GetBuildingName does, copying the
+// matching description into a local buffer, then (for Rampart's special
+// building 17 and grail 21, when `extended`) appends the town's own custom
+// text via GetText(678)/format_string(GetText(679), ...). Dwellings (>=30)
+// return their description straight. The result is prefixed with the bracketed
+// building name when bIncludeTitle, and returned through gInfoText.
+//
+// Residual (99.96%): BYTE-IDENTICAL - the masked instruction diff is empty.
+// The gap is compgen string-literal reloc naming only: our base emits the
+// pooled "\n\n"/"{%s}\n\n" literals as local ??_C@ COMDATs and the c_str()
+// null fallback as _Nullstr, where the delinked target names them
+// advmgr/townmgr $-compgen symbols and adventureTownRolloverEmptyText. Same
+// class the multiplayerwindow OnWidgetDeselect note calls cosmetic; the sibling
+// castle::GetBuildingName reaches 100.0 because it carries no string literals.
+// The format_string result MUST be an unnamed temporary
+// (`format_string(...).c_str()`), not a named std::string - the named form
+// spills the COW _Ptr to a slot and costs the whole arm (92.94 -> 96.34 was
+// the >=30 sink, 96.34 -> 99.96 was the temporary).
+// E:\gamedcs\townmgr.cpp:5586
+VA(0x005d2a40, 0x335)  // anchor-global(retail symbol GetBuildingInfo) + anchor-callee(GetBuildingName/format_string) + arity(ret 8, 4 args, /Gr fastcall), dc 0x174f78
+char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
+{
+    char buffer[0x1ac];
+    int type = this_town->type;
+
+    if (buildingId < SPECIAL_BUILDING_ID) {
+        if (buildingId == BLACKSMITH_ID)
+            strcpy(buffer, gBuildingDescBlacksmith[type]);
+        else if (buildingId == MARKETPLACE_SILO_ID)
+            strcpy(buffer, gBuildingDescDwelling[type * 11]);
+        else
+            strcpy(buffer, gBuildingDescCommon[buildingId]);
+    } else if (buildingId < DWELLING_0_ID) {
+        strcpy(buffer, gBuildingDescTown[type * 11 + buildingId]);
+        if (type == 1 && extended) {
+            if (buildingId == EXTRA_0_ID) {
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                strcat(buffer, gRampartExtraDesc);
+                goto emit_custom;
+            }
+            if (buildingId == SPECIAL_BUILDING_ID) {
+            emit_custom:
+                strcat(buffer, DATA_COMPGEN(0x006603b0, quickInfoSeparator, "\n\n"));
+                if (this_town->field_34 == 0) {
+                    strcat(buffer, gpGeneralText->GetText(678));
+                } else {
+                    strcat(buffer, format_string(
+                                       gpGeneralText->GetText(679),
+                                       this_town->field_34,
+                                       gRampartCustomText[this_town->field_38])
+                                       .c_str());
+                }
+            }
+        }
+    } else {
+        strcpy(gInfoText, gBuildingDescUpgrade[buildingId + type * 14]);
+        return gInfoText;
+    }
+
+    if (bIncludeTitle) {
+        sprintf(gInfoText, DATA_COMPGEN(0x0068c3b8, buildingTitleFormat, "{%s}\n\n"),
+                GetBuildingName(type, buildingId));
+        strcat(gInfoText, buffer);
+    } else {
+        strcpy(gInfoText, buffer);
+    }
+    return gInfoText;
+}
+
 // The university record's default set, and this compiland owns the body.
 // Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
 // a bare `ret` - a frameless constructor returning `this` - and it sits at
@@ -4321,6 +4566,20 @@ static void MoveHeroToGarrison(townManager* mgr)
     mgr->field_11c = 0;
     mgr->NewStrips();
 }
+
+// Located, not reconstructed: the town manager's modal message loop, the
+// third of the three pure managers (Open/Close/Main) and the compiland's
+// largest control body. ExitTownManager (dc 0x174f60) and GetBuildingInfo
+// precede it in the DC roster; Main is the last unclaimed body before
+// DoCommand in retail link order.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:5854
+VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
+int townManager::Main(message* msg)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:6598
 VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634
@@ -4817,6 +5076,106 @@ static void clear_buybuild_buttons(TBuyBuildWindow* window, message& msg)
     window->BroadcastMessage(&msg);
     msg.codeY = 0;
     window->BroadcastMessage(&msg);
+}
+
+// The buy-build window's prerequisite-text formatter. It starts from the
+// town's hierarchy mask for this building, drops the special free-Grail
+// slot in the network-owner case, removes the buildings already active,
+// and prunes every requirement transitively included by another set bit
+// (skipping the two roots 18/24). What remains is the set of missing
+// prerequisites: their names are assembled into gText, comma-separated and
+// word-wrapped to the rollover widget's pixel width by rewriting a
+// separator byte into '\n' whenever get_string_width overflows. Building 13
+// (a second capitol) and 6 (a dock with no water) short-circuit to their
+// own refusal lines; a building the town can never build gets the generic
+// refusal; otherwise the assembled list (or GetText(220) when nothing is
+// missing) becomes the rollover text.
+//
+// The three runtime message pointers at 0x6a7428/2c/30 are filled by an
+// unlocated init TU (retail writer near 0x461cxx) and only read here; the
+// SetArmyCommand round-1 precedent above DATA-claims such townmgr-consumed
+// message globals - kept on townmgr as nearest consumer until that TU lands.
+DATA(0x006a7428) extern const char* gUnnamed6a7428;
+DATA(0x006a742c) extern const char* gUnnamed6a742c;
+DATA(0x006a7430) extern const char* gUnnamed6a7430;
+
+// Residual (87.42%): a register-homing wall (why-reg: flow-distance 0,
+// register-distance 68). Retail keeps lineStart in ebx across both
+// get_string_width calls and spills namePos to [ebp-0xc]; our CL makes the
+// opposite choice (namePos in ebx, lineStart reloaded from its slot), so the
+// two locals' ebx/slot bindings and the count/namePos slot pair are swapped.
+// The branch graph and schedule align exactly. why-reg tried nine catalog
+// mutations (decl-order swap, flag naming, zero-store hoist, count/local
+// volatile) and NONE moved the divergence - the knob is outside its library.
+// The one remaining data delta is the gHierarchyMask high-dword read
+// (`[8*ecx+4]` vs the delinker's split bss_29779c symbol at +4), an __int64
+// symbol-split artifact no source form reaches. Tried and rejected:
+// `lineStart = gText` in the count==0 arm (87.42 -> 80.04); reversing the
+// lineStart/namePos decl order (byte-flat).
+// E:\gamedcs\townmgr.cpp:7272
+VA(0x005d5be0, 0x34C)  // order-map(~TBuyBuildWindow 0x5d5b70 .. BuyBuild 0x5d5f30) + anchor-callee(get_string_width/GetBuildingName) + arity(ret 8, 2 args), dc 0x179090
+void TBuyBuildWindow::set_prerequisite_text(const town* current_town, int building)
+{
+    int count = 0;
+    __int64 mask = gHierarchyMask[current_town->type][building];
+
+    if (gpGame->field_1f69d && building == DWELLING_2_ID && current_town->type == 0)
+        mask &= ~bitNumber[BLACKSMITH_ID];
+
+    mask &= ~current_town->active;
+
+    for (int i = 0; i < MAX_BUILDING_TYPE; ++i) {
+        if ((bitNumber[i] & mask) != 0 && i != HORDE_ID && i != HORDE_2_ID)
+            mask &= ~town::included_buildings[current_town->type][i];
+    }
+
+    char* lineStart = gText;
+    char* namePos = gText;
+    font* pFont = rolloverText->Font;
+    for (int j = 0; j < MAX_BUILDING_TYPE; ++j) {
+        if ((bitNumber[j] & mask) != 0) {
+            if (count == 0) {
+                strcpy(gText, gpGeneralText->GetText(53));
+                strcat(gText, DATA_COMPGEN(0x006603bc, quickInfoNewLine, "\n"));
+            } else {
+                strcat(gText, DATA_COMPGEN(0x00660db4, commaText, ","));
+                if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                    namePos[-1] = '\n';
+                    lineStart = namePos;
+                }
+                strcat(gText, DATA_COMPGEN(0x0068c3d0, doubleSpaceText, "  "));
+            }
+            ++count;
+            namePos = lineStart + strlen(lineStart);
+            strcat(gText, GetBuildingName(current_town->type, j));
+            if (pFont->get_string_width(lineStart) > rolloverText->width) {
+                namePos[-1] = '\n';
+                lineStart = namePos;
+            }
+        }
+    }
+
+    if (building == HALL_CAPITOL_ID) {
+        if (gpGame->players[current_town->owner].HasCapitol()) {
+            rolloverText->SetText(gUnnamed6a7428);
+            return;
+        }
+    } else if (building == DOCK_ID) {
+        if (!gpTownManager->townToView->CanBuildDock()) {
+            rolloverText->SetText(gUnnamed6a742c);
+            return;
+        }
+    }
+
+    if (!gpTownManager->townToView->can_ever_build(building)) {
+        rolloverText->SetText(gUnnamed6a7430);
+        return;
+    }
+
+    if (count != 0)
+        rolloverText->SetText(gText);
+    else
+        rolloverText->SetText(gpGeneralText->GetText(220));
 }
 
 // E:\gamedcs\townmgr.cpp:7354
@@ -6260,6 +6619,116 @@ void DoMapTavern(type_point point)
 // fetch is dereferenced UNGUARDED (`mov al,[edi+0x34]` with no null
 // test), which is retail's own code and not a spelling artefact: the
 // hire two calls earlier is what makes the id non-negative.
+// The tavern chooser: builds the tavern window over the two recruitable
+// heroes the local player's tavern is currently offering
+// (playerData::recruits), broadcasts their portraits, the gold price and
+// the highlighted hero's name/class/artifact line, dims the recruit widget
+// when the hire cannot happen, then runs the modal. gTavernHero is left
+// pointing at whichever hero the panel is showing so DoMapTavern/DoTownTavern
+// can hire it. Returns whether the player confirmed (dialogReturn == recruit
+// widget 0xc). Human-only text is gated on IsLocalHuman for network play.
+// Residual (96.48%): register-homing - retail keeps recruits[1] live in esi
+// across the second-hero block and re-materialises -1 as an immediate at
+// each `== -1`, while our CL CSEs -1 into esi and re-reads recruits[1];
+// forcing the recruits[1] CSE with a named local measured WORSE (95.59 ->
+// 91.19), so it is left as retail's allocator tie-break. Plus the EH
+// prologue `push <scopetable>` addend (a reloc addend, not a state count),
+// a deferred `push ebx`, and the singular-artifact `.`-append indexing
+// gText[len-2] off the end pointer rather than off gText's base.
+// E:\gamedcs\townmgr.cpp:8055
+VA(0x005d7ec0, 0x3EA)  // anchor-caller(DoMapTavern 0x5d7e90) + anchor-callee(TTavernWindow ctor 0x5d70b0 + BroadcastMessage) + arity(bare ret), dc 0x17ad8c
+unsigned char DoTavern()
+{
+    gUnnamed6aa9d8 = 1;
+    gUnnamed6aa9ec = new TTavernWindow(0xca, 0x30);
+    if (!gUnnamed6aa9ec)
+        MemError();
+    SetWinText(gUnnamed6aa9ec, 0x16);
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    gUnnamed6aa9ec->BroadcastMessage(&msg);
+
+    msg.extraText = gText;
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        sprintf(gText, gpGeneralText->GetText(217), gpGame->currentRumour);
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 2;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    playerData* player = gpGame->GetLocalPlayer();
+    sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"), gHeroGoldCost);
+    msg.codeY = 4;
+    gUnnamed6aa9ec->BroadcastMessage(&msg);
+
+    if (player->recruits[0] == -1) {
+        gTavernHero = 0;
+        gUnnamed6aa9ec->WidgetClearStatus(8, widget::WIDGET_DRAWN);
+    } else {
+        gTavernHero = &gpGame->heroes[player->recruits[0]];
+        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
+        msg.codeX = widget::WIDGET_SET_IMAGE;
+        msg.codeY = 5;
+        msg.extraText =
+            akHeroTraits[gpGame->GetHero(player->recruits[0])->portrait]
+                .largePortraitName;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (player->recruits[1] == -1) {
+        gUnnamed6aa9ec->WidgetClearStatus(9, widget::WIDGET_DRAWN);
+    } else {
+        msg.codeY = 6;
+        msg.extraText =
+            akHeroTraits[gpGame->GetHero(player->recruits[1])->portrait]
+                .largePortraitName;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+        if (gTavernHero == 0)
+            gTavernHero = &gpGame->heroes[player->recruits[1]];
+    }
+
+    if (gTavernHero) {
+        int total = gTavernHero->get_number_in_backpack(0)
+                  + gTavernHero->get_equipped_artifacts(0);
+        sprintf(gText, gpGeneralText->GetText(216), gTavernHero->name,
+                gTavernHero->level, gTavernHero->HeroFn_004D8F70(), total);
+        if (total == 1) {
+            int len = strlen(gText);
+            gText[len - 2] = '.';
+            gText[len - 1] = 0;
+        }
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 7;
+        msg.extraText = gText;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (player->resources[6] < gHeroGoldCost || gTavernHero == 0
+        || player->numHeroes >= 8
+        || (gMapTavern == 0
+            && gpTownManager->townToView->visitingHeroId != -1)) {
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.codeY = TTavernWindow::HIRE_BUTTON_ID;
+        msg.extra = widget::WIDGET_DIMMED_NODRAW;
+        gUnnamed6aa9ec->BroadcastMessage(&msg);
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman())
+        gUnnamed6aa9ec->GetWidget(TTavernWindow::HIRE_BUTTON_ID)->enable(0);
+    gUnnamed6aa9ec->DoModal(0);
+    delete gUnnamed6aa9ec;
+    gUnnamed6aa9d8 = 0;
+    return gpWindowManager->dialogReturn == TTavernWindow::HIRE_BUTTON_ID;
+}
 
 // E:\gamedcs\townmgr.cpp:8164
 VA(0x005d82b0, 0x1D0)  // order-map(after DoMapTavern) + DoTavern/RedrawTownScreen edges + arity(bare ret), dc 0x17b154
@@ -7763,6 +8232,18 @@ void townManager::SetupWell(TCastleWindow* wellWin)
                                   textMessage.extra);
     }
 }
+
+// Located, not reconstructed: the thieves' guild scoreboard builder, the
+// largest body between SetupWell (0x5dd390) and GetCategoryStats (0x5dee70)
+// in retail link order.
+#if 0  // @carcass: located, not reconstructed
+// E:\gamedcs\townmgr.cpp:9296
+VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
+void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
+{
+    // @stub
+}
+#endif  // @carcass
 
 // 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
 // its own; this is the file-local fallback the header discipline allows.

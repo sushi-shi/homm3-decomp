@@ -9,6 +9,10 @@ struct type_point;
 
 unsigned char DoTavern();
 void DoMapTavern(type_point point);
+
+// hero.obj's four primary-stat column headers (0x6a7540, claimed in hero.cpp),
+// reused by TThievesGuildWindow::WindowHandler as the NormalDialog title on a
+// rank-cell right-click. Declared here because hero.h does not carry it.
 extern const char* gPrimaryStatNames[4];
 
 // The nine columns of the thieves' guild table, in the order
@@ -227,19 +231,33 @@ public:
     // stay literal. 0x7800 is the same dialog-button enumerator
     // TTavernWindow spells CANCEL_BUTTON_ID.
     enum {
-        EXIT_BUTTON_ID = 0x7800,
+        EXIT_BUTTON_ID = 0x7800
+    };
+
+    // The rank grid the rollover setter dispatches on: four category rows over
+    // eight player columns, so the hovered cell id (codeY) is category*10 plus
+    // the column. Only the first three rows go through SetRolloverText's
+    // compressed switch; the fourth (30..37) is handled by a range test, and
+    // gaps 9/18/19 fall to the empty line.
+    enum {
         RANK_A0 = 1, RANK_A1, RANK_A2, RANK_A3,
         RANK_A4, RANK_A5, RANK_A6, RANK_A7,
         RANK_B0 = 10, RANK_B1, RANK_B2, RANK_B3,
         RANK_B4, RANK_B5, RANK_B6, RANK_B7,
         RANK_C0 = 20, RANK_C1, RANK_C2, RANK_C3,
         RANK_C4, RANK_C5, RANK_C6, RANK_C7,
+        // The two portrait rows the right-click opens into a detail view: one
+        // hero and one creature cell per player column.
         HERO_P0 = 0x2ee, HERO_P1, HERO_P2, HERO_P3,
         HERO_P4, HERO_P5, HERO_P6, HERO_P7,
         CREATURE_P0 = 0x352, CREATURE_P1, CREATURE_P2, CREATURE_P3,
         CREATURE_P4, CREATURE_P5, CREATURE_P6, CREATURE_P7
     };
 
+    // +0x60: one game-position per player column, filled by SetupThievesGuild.
+    // WindowHandler's right-click arms gate the hero/creature view on
+    // owners[player] == GetLocalPlayerGamePos(), so only the local player's own
+    // column opens the detail view.
     int owners[8];
     // +0x80: attested only as the destructor's first teardown - deleted
     // through slot 0 before the widget list, so it is an owned object
@@ -251,8 +269,9 @@ public:
     // Retail 0x5dda10, the compiland's second largest body and the
     // constructor's last statement. Declared, not reconstructed.
     void SetupThievesGuild(int iThievesGuilds);
+    // Retail 0x5c9710 (dc 0x16e2f4). The page's rollover line.
     void SetRolloverText(int codeY);
-    virtual int WindowHandler(message* msg) OVERRIDE;
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5c9930
 };
 
 // The town hall page: one background per town type over a grid of

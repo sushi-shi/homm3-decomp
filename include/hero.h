@@ -670,6 +670,18 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
+    // Dreamcast keeps these Hero.h accessors out of line; retail /Ob2 folds
+    // them into their callers. The DC TArtifactSlot parameter is an ordinal
+    // enum, whereas this reconstruction already uses that name for the slot
+    // record, so the byte-equivalent retail index is represented as long.
+    const type_artifact* get_artifact(long slot) const
+    {
+        return &equipped[slot];
+    }
+    const type_artifact* get_backpack(long slot) const
+    {
+        return &backpack[slot];
+    }
     // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
     // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
     // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source

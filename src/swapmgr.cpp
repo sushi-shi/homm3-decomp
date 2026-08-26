@@ -8,6 +8,7 @@
 #include "advmgr.h"
 #include "bitmap816.h"
 #include "winmgr.h"
+#include "netgame.h"
 
 DATA(0x006a3d08) static int gUnnamed6a3d08;
 // swapmgr singleton (bss 0x6a3d30): the ctor stores `this`, Reset/Open/Close consult it.
@@ -440,6 +441,36 @@ CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 
 #endif  // @carcass
 
+VA(0x005b0da0, 0x141)  // anchor-global, dc 0x15e8bc
+void swapManager::SwapMons()
+{
+    armyGroup* source = &heroes[field_48]->army;
+    // MATCHING_DEBT: retail retains this otherwise-dead seven-slot pointer
+    // walk at entry; keep it explicit until the source-level cause is known.
+    int* troops = source->numTroops;
+    for (int slot = 0; slot < 7; ++slot)
+        ++troops;
+    armyGroup* destination = &heroes[field_4c]->army;
+
+    if (destination->armies[field_54] == source->armies[field_50]) {
+        if (source->GetNumArmies() == 1)
+            return;
+        destination->numTroops[field_54] += source->numTroops[field_50];
+        source->armies[field_50] = CREATURE_NONE;
+        source->numTroops[field_50] = 0;
+        return;
+    }
+
+    if (source != destination
+        && source->GetNumArmies() == 1
+        && destination->armies[field_54] == CREATURE_NONE)
+        return;
+
+    if (CanModHero(field_4c)
+        || destination->armies[field_54] == CREATURE_NONE)
+        source->Swap(field_50, destination, field_54);
+}
+
 // E:\gamedcs\swapmgr.cpp:2231
 VA(0x005b1380, 0x1C)
 bool swapManager::IsLeftHero()
@@ -447,4 +478,15 @@ bool swapManager::IsLeftHero()
     if (heroes[0]->owner == gpGame->GetLocalPlayerGamePos())
         return true;
     return false;
+}
+
+unsigned char swapManager::CanModHero(int whichHero)
+{
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        return gpGame->OnSameTeam(
+            heroes[whichHero]->owner, gpGame->GetLocalPlayerGamePos());
+    }
+    if (field_5c && !field_5d)
+        return 0;
+    return heroes[whichHero]->owner == gpGame->GetLocalPlayerGamePos();
 }
