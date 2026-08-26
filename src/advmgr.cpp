@@ -111,6 +111,12 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X > _Y ? _X : _Y);
 }
 
+template <class _TYPE>
+inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 // E:\gamedcs\includes.h:124/134 - the reference-returning template and its
 // by-value wrapper, the same pair quicktownwindow and armygrp carry.
 template <class T>
@@ -10007,59 +10013,25 @@ unsigned char advManager::DoSystemOptions()
 }
 
 // E:\gamedcs\advmgr.cpp:11444
-// Retail proves the whole shape: a 7x7 neighbourhood clamped to the world
-// extents, a 47-entry jump table over the contiguous decorative-terrain
-// block TERRAIN_BRUSH(0x72)..TERRAIN_YUCCA_TREE(0xa0) collapsed into three
-// counted groups, and a three-way majority vote. The 0/1/2 result indexes
-// gTerrainCombatBackgrounds[combatTerrain][.] at the cmbtmgr call site,
-// so group 0 is the dead-vegetation background, 1 the mountain one and 2
-// the wooded default. type_point's `short x:10, y:10, z:4` packing puts y
-// and z in the second allocation unit, which is why retail walks the loop
-// variable through `xor word ptr [p+2]` bitfield writes.
-// CASE ARM ORDER IS SOURCE ORDER HERE (99.0975 -> 99.1483, 2026-08-21).
-// This dispatches through a jump table (`jmp dword ptr [4*edx + tbl]`), so
-// the arm BODIES emerge in source order, and retail's run is
-// `inc [trees] / inc [mountains] / inc [dead]` against our
-// `trees / dead / mountains`. The counters' own slots are NOT the tell and
-// do not move - the majority vote at the bottom reads trees at -0xc, dead
-// at -0x8 and mountains at -0x4 identically on both sides, which is what
-// identifies each arm. Retail's source simply wrote DEAD_VEGETATION last.
-//
-// Residual (99.15%): the two lower clamps only. Retail tests `value < 0`
-// and yields the zero (`jl`), where this TU's `_cpp_max` spelling
-// (`_X > _Y ? _X : _Y`) tests `value > 0` and yields the value (`jg`).
-// RE-MEASURED at this plateau, both combinations. `_cpp_max(0, value)` buys
-// the retail polarity AND retail's whole temp-slot numbering (-0x1c value,
-// -0x14 zero, and the counter-init store order) - but it costs the shared
-// zero. Retail materialises one `xor esi, esi` that is STILL LIVE at the
-// minX clamp; the swapped order picks edx instead, loses it to the
-// gMapHeight load in the maxY clamp sitting between the two lower clamps,
-// and re-emits an immediate 0. Measured 98.7331 alone and 98.7839 with the
-// arm reorder, against 99.1483 for the order that stands. The template is
-// NOT the knob: FindAdjacentMonster four functions up uses the same
-// `_cpp_max(value, 0)` idiom and retail emits `jg` there, so this TU's
-// spelling is byte-proven and MoreTreesNear's source genuinely differed.
-// Beyond the polarity, exactly one dword: our frame is 0x2c against
-// retail's 0x30 because retail gives maxX a real slot (-0x28) and spends
-// the recycled parameter home [ebp+8] on the loop's shifted-point temp,
-// where we do the reverse.
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
 int advManager::MoreTreesNear(type_point point)
 {
+    RECT rect;
+    const int RADIUS = 3;
     int trees = 0;
-    int dead = 0;
     int mountains = 0;
+    int dead = 0;
+    type_point pt;
 
-    int minY = _cpp_max(point.y - 3, 0);
-    int maxY = _cpp_min(point.y + 4, gMapHeight);
-    int minX = _cpp_max(point.x - 3, 0);
-    int maxX = _cpp_min(point.x + 4, gMapWidth);
+    rect.top = max_ref(point.y - RADIUS, 0);
+    rect.bottom = _cpp_min(point.y + RADIUS + 1, gMapHeight);
+    rect.left = max_ref(point.x - RADIUS, 0);
+    rect.right = _cpp_min(point.x + RADIUS + 1, gMapWidth);
 
-    type_point p;
-    p.z = point.z;
-    for (p.y = minY; p.y < maxY; p.y++) {
-        for (p.x = minX; p.x < maxX; p.x++) {
-            NewmapCell* cell = GetCell(p);
+    pt.z = point.z;
+    for (pt.y = rect.top; pt.y < rect.bottom; pt.y++) {
+        for (pt.x = rect.left; pt.x < rect.right; pt.x++) {
+            NewmapCell* cell = GetCell(pt);
             switch (cell->type) {
             case TERRAIN_BRUSH:
             case TERRAIN_BUSH:
