@@ -252,7 +252,6 @@ inliner (predict-inline)	87	78.8633	412	hero	?HeroFn_004E2840@hero@@QAEEJJ@Z	pre
 control-flow (why-branch)	87	89.5263	830	ai_player	?end_turn@type_AI_player@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	86	87.1048	669	seerhut	?DoProposalDialog@type_resource_quest@@UAEXPAVhero@@@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 register-homing (why-reg)	86	87.1912	669	smackmgr	?VideoPlay@@YIHHHHHH@Z	why-reg	cache-vs-reload a member/local (B13) / homing (B2/B3)
-control-flow (why-branch)	85	73.7840	324	dxplay	?AddSessionEnum@CDPlay@@UAEEPBUDPSESSIONDESC2@@K@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	84	92.7034	1154	advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	84	90.2555	860	findpath	?PushCombatPoint@searchArray@@QAEXHHHHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 control-flow (why-branch)	83	94.5074	1508	advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
