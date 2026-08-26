@@ -927,7 +927,7 @@ dxplay	?CloseSession@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x97290
 dxplay	?Connect@CDPlayLobby@@QAEEXZ	100.0000	100.0000	100.0000	0x98cd0
 dxplay	?CreateGroup@CDPlay@@UAEKPADPAXKE@Z	100.0000	100.0000	100.0000	0x97070
 dxplay	?CreateGroupInGroup@CDPlay@@UAEKKPADPAXKE@Z	100.0000	100.0000	100.0000	0x970e0
-dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	97.7363	97.7363	97.7363	0x99150
+dxplay	?CreateIPXConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAV2@@Z	99.6575	99.6575	99.6575	0x99150
 dxplay	?CreateModemConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PAD00@Z	99.4444	99.4444	99.4444	0x994b0
 dxplay	?CreatePlayer@CDPlay@@UAEKPADPAXK1@Z	100.0000	100.0000	100.0000	0x96fc0
 dxplay	?CreateSerialConnection@CDPlayLobby@@QAEPAVCDPlayConnection@@PADPAU_DPCOMPORTADDRESS@@@Z	99.3421	99.3421	99.3421	0x99700

@@ -1045,14 +1045,18 @@ CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(
     return connection;
 }
 
+// Residual (99.7%): exact 19-branch/36-block CFG; declaration-order tree
+// uniquely selects size, count, then addresses.  The only emitted delta is
+// one extra EH-state byte store before freeing the temporary address; 30
+// allocation/lifetime and four scalar-delete spellings were byte-flat.
 // E:\gamedcs\dxplay.cpp:1617
 VA(0x00499150, 0x356)  // anchor-callee dispatcher 0x1556e0 + SP-GUID, src-order (CreateIPXConnection), dc 0x8b954
 CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection* pConnAppend)
 {
     DPCOMPOUNDADDRESSELEMENT elements[10];
-    CAutoArray<CDPlayAddressElement> addresses;
     unsigned long dwAddressSize = 0;
     unsigned long count = 0;
+    CAutoArray<CDPlayAddressElement> addresses;
     if (pConnAppend) {
         if (!EnumAddress(pConnAppend->pConnection, pConnAppend->size, &addresses))
             return 0;
