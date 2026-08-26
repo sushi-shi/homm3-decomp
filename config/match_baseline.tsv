@@ -1110,6 +1110,7 @@ game	??4CObjectType@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd40c0
 game	??4reference@?$bitset@$04@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf800
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0
 game	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0
+game	??4reference@?$bitset@$0JM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf040
 game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
 game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80
@@ -1240,7 +1241,7 @@ game	?_Construct@std@@YIXPAVboat@@ABV2@@Z	100.0000	100.0000	100.0000	0xd39f0
 game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	59.8287	59.8287	59.8287	0xd3630
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
-game	?_Destroy@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@IAEXPAVSign@@0@Z	100.0000	100.0000	100.0000	0xcfec0
+game	?_Destroy@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@IAEXPAUtype_map_hero_identity@@0@Z	100.0000	100.0000	100.0000	0xcfec0
 game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0
 game	?_Tidy@?$bitset@$04@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xd1790
 game	?_Tidy@?$bitset@$07@std@@AAEXK@Z	100.0000	100.0000	100.0000	0xcff30
@@ -1279,6 +1280,7 @@ game	?count@?$bitset@$0BM@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf8d0
 game	?count@?$bitset@$0JB@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf010
 game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0
 game	?erase@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEPAUTRumour@game@@PAU34@0@Z	100.0000	100.0000	100.0000	0xd16e0
+game	?erase@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@QAEPAUtype_map_hero_identity@@PAU3@0@Z	100.0000	100.0000	100.0000	0xcfe30
 game	?erase@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEPAVSign@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0b10
 game	?erase@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEPAVboat@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd1360
 game	?erase@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QAEPAVmine@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0e10
