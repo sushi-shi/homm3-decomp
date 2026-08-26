@@ -2242,6 +2242,7 @@ soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	10
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590
 soundmgr	?service_sounds@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a7d0
 spellbookwindow	??1TSpellbookWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x19c8f0
+spellbookwindow	??MTSpellbookEntry@TSpellbookWindow@@QBE_NABV01@@Z	100.0000	100.0000	100.0000	0x19dbe0
 spellbookwindow	??_GTSpellbookWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x19c8c0
 spellbookwindow	?Close@TSpellbookWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x19c990
 spellbookwindow	?Open@TSpellbookWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x19c970

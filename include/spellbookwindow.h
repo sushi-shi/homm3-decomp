@@ -33,6 +33,17 @@ public:
 
     enum { SPELLS_PER_PAGE = 12 };
 
+    class TSpellbookEntry {
+    public:
+        SpellID Id;
+        TSpellSchool School;
+        int Mastery;
+
+        TSpellbookEntry(SpellID id, TSpellSchool school,
+                        int mastery);
+        bool operator<(const TSpellbookEntry& y) const;
+    };
+
     TSpellbookWindow(const hero* h, const armyGroup* g,
                      TSpellContext context, int magicTerrain);
     virtual ~TSpellbookWindow();
@@ -74,6 +85,7 @@ private:
     void DisplayNewSchool(int position);
 };
 SIZE(TSpellbookWindow, 0xcc);
+SIZE(TSpellbookWindow::TSpellbookEntry, 0x0c);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:115, dc 0x14bc80) const char* get_level_string(SpellID spell);
