@@ -1481,9 +1481,10 @@ VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 
 // E:\gamedcs\remote.cpp:1547 - the EH frame, sprite Dispose virtual call and
 // CDialog teardown match retail instruction for instruction.
-// MATCHING_DEBT(progress branch): leaving the TU's default auto-inlining on
-// improves the later implicit CWaitForReadyPlayersDlg destructor from 79.75%
-// to 90.92%, but regresses WaitForReadyToPlayMsg from 84.02% to 75.80%.
+// MATCHING_DEBT: the TU's default auto-inlining is required by the later
+// implicit CWaitForReadyPlayersDlg destructor (90.9167% versus 79.75% with
+// this body suppressed).  That caller-specific decision remains coupled to
+// WaitForReadyToPlayMsg's final cleanup.
 VA(0x00554ab0, 0x55)  // anchor-vtable + dc-order-map, dc 0x11d250
 CAnimatedDlg::~CAnimatedDlg()
 {
@@ -1644,13 +1645,15 @@ void CAnimatedDlg::DrawWindow(unsigned char update, int iLowID, int iHighID)
     DrawSprite();
 }
 
-// E:\gamedcs\remote.cpp:1708
+// E:\gamedcs\remote.cpp:1708. The order is byte-proven by the constructor's
+// expansion in WaitForReadyToPlayMsg: clear/mark playerReady first, then clear
+// the timestamps. Dreamcast independently gives the member identities.
 CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg()
 {
-    startTime = 0;
-    lastMsg = 0;
     memset(playerReady, 0, sizeof(playerReady));
     playerReady[gLocalGamePos] = 1;
+    startTime = 0;
+    lastMsg = 0;
 }
 
 // E:\gamedcs\remote.cpp:1718
@@ -1676,8 +1679,9 @@ void CWaitForReadyPlayersDlg::Wait()
     }
 }
 
-// E:\gamedcs\remote.cpp:1798
-unsigned char CWaitForReadyPlayersDlg::AllPlayersReady()
+// E:\gamedcs\remote.cpp:1798. Dreamcast's `_N` return mangling proves bool;
+// retail independently proves the eight-entry human/ready scan when inlined.
+bool CWaitForReadyPlayersDlg::AllPlayersReady()
 {
     for (int i = 0; i < 8; ++i) {
         if (gpGame->IsHuman(i) && !playerReady[i])
@@ -1702,27 +1706,27 @@ int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message& msg)
 // modal at all. Constructor, AllPlayersReady, Wait and the complete
 // destructor chain are all expanded into this retail body by /Ob2.
 //
-// Residual wall (84.02484%): every gameplay block is reconstructed, but C2
-// makes the opposite asymmetric decision in the two cleanup copies. Retail
-// expands CNetMsgHandlerPause at both exits, calls its CNetMsgHandler base at
-// both exits, and calls SetNetMsgHandler only on fall-through; this compile
-// additionally expands the base destructor on the early return. A depth-2
-// pin at the implicit base site removes that expansion but then expands the
-// fall-through setter (83.77019); extending the pin to the setter makes both
-// sites call the whole pause destructor (84.509315, structurally wrong).
-// Function-, declaration-, and return-site inline_depth placements are
-// byte-flat. An explicit empty derived destructor reaches 84.24223, but DC
-// marks this destructor compgenx, so that source claim is false and rejected.
-// These trials also leave standalone ~CNetMsgHandlerPause at its existing
-// 91.111115% wall. The retained form is the highest source-authoritative one.
+// Residual (81.360245%; historical isolated peak 84.02484%): retail expands
+// both CNetMsgHandlerPause cleanups, calls their CNetMsgHandler base at both
+// exits, and calls SetNetMsgHandler only on fall-through. This compile expands
+// the base destructor on the early exit and duplicates the final animated
+// cleanup. Generated trees measured more than 100 ordinary wrapper, literal,
+// scope, and base-destructor spellings. The retained branch-local return is
+// the best form that keeps the separately banked implicit
+// CWaitForReadyPlayersDlg
+// destructor at 90.9167%. Suppressing CAnimatedDlg auto-inlining reaches
+// 88.07453% here but drops that destructor to 79.75%, so the global pragma
+// trade is rejected. Statement pins either remain inert or call the whole
+// pause destructor and are structurally wrong. DC marks the derived destructor
+// compgenx, ruling out an explicit source destructor as a routing device.
 VA(0x00554f10, 0x23A)  // anchor-vtable + dc-order-map, dc 0x11d6c8
 void WaitForReadyToPlayMsg()
 {
     CWaitForReadyPlayersDlg dlg;
-    if (dlg.AllPlayersReady()) {
+    if (!dlg.AllPlayersReady()) {
+        dlg.Wait();
         return;
     }
-    dlg.Wait();
 }
 
 // E:\gamedcs\remote.h:632 - CNetMsgHandler::Copy. The popup byte comes off

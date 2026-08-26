@@ -2228,7 +2228,7 @@ remote	?UpdateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100
 remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0
 remote	?Wait@CWaitForRemoteBattleDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x157090
 remote	?WaitForLevels@CLevelPickWaitDlg@@QAEXH@Z	100.0000	100.0000	100.0000	0x156ba0
-remote	?WaitForReadyToPlayMsg@@YIXXZ	75.7950	75.7950	84.0248	0x154f10
+remote	?WaitForReadyToPlayMsg@@YIXXZ	81.3602	81.3602	84.0248	0x154f10
 remote	?handle_message@CAnimatedDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x154d90
 remote	?handle_message@CLevelPickWaitDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x156c20
 remote	?handle_message@CWaitForReadyPlayersDlg@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x155190
