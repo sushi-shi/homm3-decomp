@@ -714,8 +714,17 @@ struct type_map_hero_identity {
 };
 SIZE(type_map_hero_identity, 0x14);
 
-struct type_map_hero_info : public type_map_hero_identity {
-    int field_14;
+// The map-header tree's value is layout-compatible with the identity record,
+// but its constructor copies a dword id and its availability tail is the
+// eight-player bitset used by the new-map reader.
+struct type_map_hero_info {
+    type_map_hero_info() {}
+    type_map_hero_info(int identity, std::string name,
+                       std::bitset<8> availability);
+
+    int field_00;
+    std::string field_04;
+    std::bitset<8> field_14;
 };
 SIZE(type_map_hero_info, 0x18);
 
