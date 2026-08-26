@@ -1470,11 +1470,9 @@ void type_creature_quest::TakePayment(hero* current_hero)
 // quest count. The display keeps the full required count (not the deficit),
 // both in the localized text fragment and in the packed creature picture.
 //
-// Residual (97.4706%): all 33 CFG blocks and every branch target agree; 32
-// block instruction counts are exact. The sole size difference is the same
-// quest-text copy schedule as the artifact proposal: this compile folds the
-// row offset into two memory operands where retail materializes one add.
-// Naming the source reference is byte-flat, so retain the direct expression.
+// Retail computes the five-column quest group once before copying its progress
+// string. Keeping that group pointer explicit preserves the materialized row
+// addition used by the retail string-copy schedule.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570880, 0x2F8)  // anchor-vtable 0x6418b4 slot 4 + creature picture class, retail-only
 void type_creature_quest::DoProposalDialog(hero* current_hero)
@@ -1501,7 +1499,8 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
     }
 
     if (progressText.length() == 0) {
-        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        const std::string* texts = quest_texts();
+        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
             join_quest_requirements(requirements).c_str());
