@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-26 — the retained game `std::logic_error` constructor is exact.**
+  Retail `0x4c3090` is Dinkumware's 354-byte string-taking
+  `std::logic_error` constructor. Its public name fixes the class and overload,
+  and byte-identical copies already live in hero.obj, mapcell.obj, and
+  victory.obj. Extending game.cpp's trailing, non-runtime STL emission anchor
+  produces the same VC6 public after all real game bodies, without changing an
+  existing comparison row.
+
+  `VA_COMPGEN` gains the narrow direct-symbol `CLASS_CTOR` contract; the join
+  resolves the overload group by the uniquely claimed `0x162` extent, and its
+  demangled-key selftest pins the long Dinkumware string signature. The
+  synchronized build reaches **2235/2668 linked exact**, **96.84% linked
+  fuzzy**, and **48.78% executable coverage** with every gate clean.
+
 - **2026-08-26 — two missing game bitset COMDATs are restored with a late
   emission anchor.** Retail's game callers prove the exact 103-byte
   `bitset<70>::reference::operator=` at `0x4cefa0` and 99-byte

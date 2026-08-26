@@ -158,6 +158,7 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
                  "BITSET_TEST", "PAIR_CONST_INT_DTOR",
                  "STD_CONSTRUCT", "STD_COPY",
+                 "CLASS_CTOR",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 
@@ -888,6 +889,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
+                               or "$class_ctor$" in r["name"]
                                or "$implicit_copy_ctor$" in r["name"]
                                or "$implicit_copy_assign$" in r["name"]
                                or "$implicit_dtor$" in r["name"])))]
@@ -981,6 +983,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$std_copy$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$class_ctor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
             continue
         if "$implicit_copy_ctor$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1489,6 +1495,10 @@ def selftest() -> list[str]:
     if _demangle_key("??4MonsterData@@QAEAAV0@ABV0@@Z") != \
             "monsterdata_monsterdata_operator":
         failures.append("MSVC implicit copy-assignment key regressed")
+    if _demangle_key(
+            "??0logic_error@std@@QAE@ABV?$basic_string@DU?$char_traits@D@"
+            "std@@V?$allocator@D@2@@1@@Z") != "logic_error_logic_error":
+        failures.append("MSVC named class constructor key regressed")
     if _demangle_key("??1TreasureData@@QAE@XZ") != \
             "treasuredata_treasuredata@dtor":
         failures.append("MSVC implicit destructor key regressed")

@@ -9547,6 +9547,11 @@ VA_COMPGEN(0x004b9230, 0x3E, IMPLICIT_DTOR, Sign)
 VA_COMPGEN(0x004c4df0, 0x3E, PAIR_CONST_INT_DTOR, type_map_hero_info)
 VA_COMPGEN(0x004caa40, 0x26, IMPLICIT_DTOR, TPickRandomTownName)
 
+// InitNewGame's exception path retains Dinkumware's string-taking
+// std::logic_error constructor. The late STL anchor emits the identical named
+// public until that large caller is reconstructed.
+VA_COMPGEN(0x004c3090, 0x162, CLASS_CTOR, logic_error)
+
 // ICF retains one width-independent subscript body for several bitsets; the
 // GetRandomMonster callers prove bitset<145> is one contributor. The five-word
 // sweep in the following count body independently proves the same width.
@@ -14833,17 +14838,19 @@ void CObjectType::~CObjectType()
 
 // STL COMDAT emission anchor. The original game bodies that exhausted VC6's
 // inline budget are not reconstructed yet, so this late definition restores
-// only their out-of-line bitset members without changing any runtime caller.
+// only their named out-of-line members without changing any runtime caller.
 // As with hero.cpp's established anchor, objdiff enumerates target functions;
 // this scaffold and any unclaimed helper it emits add no comparison rows.
 // The private bitset<70>::_Tidy at 0x4cfa10 remains unclaimed: these public
 // calls cannot emit it, and a whole-template instantiation would drag in a
 // broad, collision-prone COMDAT family.
 #pragma inline_depth(0)
-void h3_game_bitset_comdat_anchor(std::bitset<70>& spells,
-                                  std::bitset<144>& artifacts)
+void h3_game_stl_comdat_anchor(std::bitset<70>& spells,
+                               std::bitset<144>& artifacts,
+                               const std::string& message)
 {
     spells[0] = true;
     artifacts.set(0, true);
+    std::logic_error error(message);
 }
 #pragma inline_depth()
