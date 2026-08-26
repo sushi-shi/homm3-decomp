@@ -1159,6 +1159,49 @@ unsigned char CDPlay::Send(void* data, unsigned long size,
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:617
+VA(0x00497910, 0x180)  // anchor-vtable CDPlay slot43 (ReceiveSystemMsg); dispatches SysMsg slots, dc 0x8a828
+unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
+{
+    DPMSG_GENERIC* pGeneric = static_cast<DPMSG_GENERIC*>(static_cast<void*>(pMsg->pData));
+    unsigned long messageType;
+    if (!pGeneric)
+        messageType = 0xFFFFFFFF;
+    else
+        messageType = pGeneric->dwType;
+    switch (messageType) {
+    case DPSYS_ADDGROUPTOGROUP:
+        return SysMsgAddGroupToGroup(static_cast<DPMSG_ADDGROUPTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_CHAT:
+        return SysMsgChat(static_cast<DPMSG_CHAT*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DELETEGROUPFROMGROUP:
+        return SysMsgDeleteGroupFromGroup(static_cast<DPMSG_ADDGROUPTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SECUREMESSAGE:
+        return SysMsgSecureMessage(static_cast<DPMSG_SECUREMESSAGE*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SETSESSIONDESC:
+        return SysMsgSetSessionDesc(static_cast<DPMSG_SETSESSIONDESC*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_STARTSESSION:
+        return SysMsgStartSession(static_cast<DPMSG_STARTSESSION*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_CREATEPLAYERORGROUP:
+        return SysMsgCreatePlayerOrGroup(static_cast<DPMSG_CREATEPLAYERORGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DESTROYPLAYERORGROUP:
+        return SysMsgDestroyPlayerOrGroup(static_cast<DPMSG_DESTROYPLAYERORGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_ADDPLAYERTOGROUP:
+        return SysMsgAddPlayerToGroup(static_cast<DPMSG_ADDPLAYERTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_DELETEPLAYERFROMGROUP:
+        return SysMsgDeletePlayerFromGroup(static_cast<DPMSG_ADDPLAYERTOGROUP*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SESSIONLOST:
+        return SysMsgSessionLost(pGeneric, toID);
+    case DPSYS_HOST:
+        return SysMsgHost(pGeneric, toID);
+    case DPSYS_SETPLAYERORGROUPDATA:
+        return SysMsgSetPlayerOrGroupData(static_cast<DPMSG_SETPLAYERORGROUPDATA*>(static_cast<void*>(pGeneric)), toID);
+    case DPSYS_SETPLAYERORGROUPNAME:
+        return SysMsgSetPlayerOrGroupName(static_cast<DPMSG_SETPLAYERORGROUPNAME*>(static_cast<void*>(pGeneric)), toID);
+    }
+    return 1;
+}
+
 // E:\gamedcs\dxplay.cpp:654
 VA(0x00497a90, 0x6B)
 unsigned char CDPlay::AddGroupEnum(
