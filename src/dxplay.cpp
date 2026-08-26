@@ -1159,6 +1159,37 @@ unsigned char CDPlay::Send(void* data, unsigned long size,
     return ok;
 }
 
+// E:\gamedcs\dxplay.cpp:544
+VA(0x004975b0, 0xF3)  // anchor-vtable CDPlay slot34 (Receive), dc 0x8a678
+unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPlayMsg* pMsg, unsigned long dwFlags)
+{
+    if (!m_lpDP)
+        return 0;
+    unsigned long dwSize = pMsg->dataSize;
+    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+    for (;;) {
+        if (m_hRes == DPERR_NOMESSAGES)
+            return 0;
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            break;
+        unsigned long dSize = dwSize;
+        if (dSize >= pMsg->dataSize) {
+            if (pMsg->pData)
+                delete [] pMsg->pData;
+            pMsg->pData = new unsigned char[dSize];
+            pMsg->dataSize = dSize;
+        }
+        if (m_hRes != DPERR_BUFFERTOOSMALL)
+            break;
+        m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Receive(pFromID, pToID, dwFlags, pMsg->pData, &dwSize);
+    }
+    if (m_hRes < 0)
+        return 0;
+    if (!*pFromID)
+        return ReceiveSystemMsg(*pToID, pMsg);
+    return ReceiveMsg(*pFromID, *pToID, pMsg);
+}
+
 inline CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
 {
     if (lpSession) {
