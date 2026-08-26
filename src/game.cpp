@@ -515,8 +515,14 @@ const int PRODUCTION_ARTIFACT_MERCURY = 0x6f;
 const int PRODUCTION_ARTIFACT_ORE = 0x70;
 const int PRODUCTION_ARTIFACT_SULFUR = 0x71;
 const int PRODUCTION_ARTIFACT_WOOD = 0x72;
+const int PRODUCTION_ARTIFACT_ENDLESS_SACK_OF_GOLD = 0x73;
+const int PRODUCTION_ARTIFACT_ENDLESS_BAG_OF_GOLD = 0x74;
+const int PRODUCTION_ARTIFACT_ENDLESS_PURSE_OF_GOLD = 0x75;
 const int PRODUCTION_ARTIFACT_CORNUCOPIA = 0x8c;
 const int PRODUCTION_CREATURE_CRYSTAL_DRAGON = 0x85;
+const int GAME_DIFFICULTY_EASY = 0;
+const int GAME_DIFFICULTY_EXPERT = 3;
+const int GAME_DIFFICULTY_IMPOSSIBLE = 4;
 
 #if 0  // @carcass
 
@@ -7733,6 +7739,60 @@ void game::PerMonth()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\game.cpp:7898
+// The gold row is split from calculate_production because it also accounts
+// for garrisoned heroes, gold-producing artifacts, AI difficulty and the
+// scenario's per-player handicap. Retail's two callers and the Dreamcast
+// roster independently identify this otherwise late-linked body.
+VA(0x004c7930, 0x266)  // calculate_production callee + dc 0xb2ad4
+int game::ComputeDailyGold(int iWhichPlayer, unsigned char include_silo)
+{
+    playerData* p = &players[iWhichPlayer];
+    int iGold = 0;
+    int i;
+
+    for (i = 0; i < mines.size(); ++i) {
+        if (mines[i].playerOwner == iWhichPlayer && mines[i].type == GOLD)
+            iGold += 1000;
+    }
+
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].owner == iWhichPlayer) {
+            iGold += towns[i].get_gold_income(include_silo);
+            if (towns[i].garrisonHeroId >= 0)
+                iGold += GetHero(towns[i].garrisonHeroId)->GetEstatesBonus();
+        }
+    }
+
+    iGold += p->NumOfGivenArtifact(
+                 PRODUCTION_ARTIFACT_ENDLESS_SACK_OF_GOLD) * 1000;
+    iGold += p->NumOfGivenArtifact(
+                 PRODUCTION_ARTIFACT_ENDLESS_BAG_OF_GOLD) * 750;
+    iGold += p->NumOfGivenArtifact(
+                 PRODUCTION_ARTIFACT_ENDLESS_PURSE_OF_GOLD) * 500;
+
+    for (i = 0; i < p->numHeroes; ++i)
+        iGold += GetHero(p->heroes[i])->GetEstatesBonus();
+
+    int humanId = iWhichPlayer;
+    if (humanId >= 8 || humanId < 0)
+        humanId = 0;
+    if (!players[humanId].isHuman) {
+        if (setup.difficulty == GAME_DIFFICULTY_EASY)
+            iGold = static_cast<int>(iGold * 0.75);
+        if (setup.difficulty == GAME_DIFFICULTY_EXPERT)
+            iGold = static_cast<int>(iGold * 1.25);
+        if (setup.difficulty == GAME_DIFFICULTY_IMPOSSIBLE)
+            iGold = static_cast<int>(iGold * 1.5);
+    }
+
+    if (setup.handicap[iWhichPlayer] == NEW_MAP_HANDICAP_MILD)
+        return static_cast<int>(iGold * 0.85);
+    if (setup.handicap[iWhichPlayer] == NEW_MAP_HANDICAP_SEVERE)
+        return static_cast<int>(iGold * 0.7);
+    return iGold;
+}
 
 // E:\gamedcs\game.cpp:7958
 // Every built Necropolis Cover of Darkness blanks a radius-20 visibility

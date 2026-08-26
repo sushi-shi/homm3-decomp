@@ -720,7 +720,8 @@ enum ENewMapStartingBonus {
 
 enum ENewMapHandicap {
     NEW_MAP_HANDICAP_NONE = 0,
-    NEW_MAP_HANDICAP_MILD = 1
+    NEW_MAP_HANDICAP_MILD = 1,
+    NEW_MAP_HANDICAP_SEVERE = 2
 };
 #endif
 

@@ -1128,6 +1128,7 @@ game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0x
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClaimTown@game@@QAEXHHEE@Z	99.3282	99.3282	99.3282	0xc61e0
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
+game	?ComputeDailyGold@game@@QAEHHE@Z	100.0000	100.0000	100.0000	0xc7930
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ConvertObject@game@@QAEXPAVNewmapCell@@@Z	97.2390	97.2390	97.2390	0xc9990
 game	?CreateBoat@game@@QAEHHHHHEC@Z	100.0000	100.0000	100.0000	0xbb250
