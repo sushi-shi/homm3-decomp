@@ -2253,10 +2253,10 @@ resourcemanager	?Dispose@CSprite@@UAEXXZ	100.0000	100.0000	100.0000	0x15d1a0
 resourcemanager	?Dispose@resource@@UAEXXZ	100.0000	100.0000	100.0000	0x15d0f0
 resourcemanager	?GetBackdrop@ResourceManager@@YIXPBDPAVBitmap16Bit@@@Z	100.0000	100.0000	100.0000	0x15cf00
 resourcemanager	?GetBitmap16@ResourceManager@@YIPAVBitmap16Bit@@PBD@Z	100.0000	100.0000	100.0000	0x15afd0
-resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	94.4307	94.4307	94.4307	0x15a800
+resourcemanager	?GetBitmap816@ResourceManager@@YIPAVBitmap816@@PBD@Z	97.6325	97.6325	97.6325	0x15a800
 resourcemanager	?GetBitmapResourceSize@ResourceManager@@YIHPBD@Z	96.7742	96.7742	96.7742	0x15d070
 resourcemanager	?GetFont@ResourceManager@@YIPAVfont@@PBD@Z	100.0000	100.0000	100.0000	0x15bb00
-resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	94.7045	94.7045	94.7045	0x15b470
+resourcemanager	?GetPalette24@ResourceManager@@YIPAVTPalette24@@PBD@Z	99.9273	99.9273	99.9273	0x15b470
 resourcemanager	?GetPalette@ResourceManager@@YIPAVTPalette16@@PBD@Z	100.0000	100.0000	100.0000	0x15b3e0
 resourcemanager	?GetSample@ResourceManager@@YIPAVsample@@PBD@Z	100.0000	100.0000	100.0000	0x15c720
 resourcemanager	?GetSoundFile@ResourceManager@@YI_NPBDAAV?$auto_ptr@D@std@@PAH@Z	100.0000	100.0000	100.0000	0x15c130
