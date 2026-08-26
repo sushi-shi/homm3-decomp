@@ -111,6 +111,7 @@ inline CMCDeadHero::CMCDeadHero(int id, type_point location)
 
 #include "mousemgr.h"
 #include "widget.h"
+
 // The hero screen's own widget zoo: THeroScreenWindow's constructor
 // builds 138 of them by hand.
 #include "border.h"

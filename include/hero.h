@@ -251,6 +251,7 @@ public:
     // the id really is written twice in the source).
     enum {
         HERO_AVAILABILITY_TAVERN_POOL = 0x40,
+        HERO_AVAILABILITY_PRISON = 0x41,
         DEALLOCATE_CAMPAIGN_BY_PORTRAIT = 8,
         DEALLOCATE_CAMPAIGN_BY_HERO_ID = 12,
         DEALLOCATE_KEPT_PORTRAIT = 0x9e,
@@ -968,7 +969,8 @@ public:
     float GetOffenseFactor();
     float GetDefenseFactor();
     float GetIntelligenceFactor();
-#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS)
+#if defined(HOMM3_HERO_OBJ_VIEW) || defined(HOMM3_TOWN_OBJ_DECLS) \
+ || defined(HOMM3_GAME_NEW_MAP_DECLS)
     // Header inline at E:\gamedcs\Hero.h:634 (dc 0x669fc). Dreamcast's
     // xrefs put direct calls in both hero-screen functions; the retail
     // hero.obj sites expand it byte-for-byte under /Ob2.

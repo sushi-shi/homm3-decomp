@@ -153,7 +153,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "VECTOR_DESTROY", "VECTOR_UCOPY", "VECTOR_UFILL",
                  "VECTOR_COPY_ASSIGN",
                  "BITSET_TIDY", "STD_CONSTRUCT", "STD_COPY",
-                 "IMPLICIT_COPY_ASSIGN", "IMPLICIT_DTOR"}
+                 "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
+                 "IMPLICIT_DTOR"}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -844,6 +845,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_tidy$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
+                               or "$implicit_copy_ctor$" in r["name"]
                                or "$implicit_copy_assign$" in r["name"]
                                or "$implicit_dtor$" in r["name"])))]
     if not unit_rows:
@@ -922,6 +924,10 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
         if "$std_copy$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(f"{owner}@std_copy", []).append(row)
+            continue
+        if "$implicit_copy_ctor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(f"{owner}_{owner}", []).append(row)
             continue
         if "$implicit_copy_assign$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()

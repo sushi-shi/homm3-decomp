@@ -240,7 +240,7 @@ void CheckAdvCheatCode(std::string& chatString)
                    "ajpvtabenaprvfoyvff"))) {
         for (int level = 0; level < gpGame->GetNumMapLevels(); level++)
             gpGame->ResetVisibility(0, 0, level, -1, 200);
-        gpGame->GameFn_004C7C50();
+        gpGame->ResetAllPlayerVisibility();
         if (currentHero)
             gpAdvManager->Reseed(0, 0);
         gpAdvManager->RedrawAdvScreen(1, 0);
