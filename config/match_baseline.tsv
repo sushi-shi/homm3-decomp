@@ -1762,6 +1762,7 @@ philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
 philai	?value_of_custom_item@@YIJPBVhero@@PAVNewmapCell@@J@Z	100.0000	100.0000	100.0000	0x129890
 philai	?value_of_pyramid@@YIJPBVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x12a410
+philai	?value_of_reinforcing@@YIJPAVhero@@PAVtown@@F@Z	100.0000	100.0000	100.0000	0x12b090
 puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	98.8426	98.8426	98.8426	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0

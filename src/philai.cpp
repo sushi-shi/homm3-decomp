@@ -1024,7 +1024,7 @@ int ValueOfStables(const hero* current_hero, long* move_cost)
 
 // E:\gamedcs\philai.cpp:3096
 DC_ONLY(0x112830, 0xE4)
-long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
+long value_of_reinforcing(hero* current_hero, town* current_town, short move_cost)
 {
     // @stub
 }
@@ -1303,6 +1303,39 @@ long ValueOfResource(const hero* current_hero, NewmapCell* cell,
     return static_cast<long>(static_cast<double>(amount)
             * player->resourceValue[resource_type]
         + static_cast<double>(combat_value));
+}
+
+// E:\gamedcs\philai.cpp:3096
+VA(0x0052b090, 0x14e)  // anchor-callee, dc 0x112830
+long value_of_reinforcing(hero* current_hero, town* current_town,
+    short move_cost)
+{
+    long player_id = current_hero->owner;
+    playerData* player = &gpGame->players[player_id];
+    type_AI_creature_purchaser purchaser(player_id, current_town);
+
+    hero* garrison_hero = 0;
+    if (current_town->garrisonHeroId >= 0)
+        garrison_hero = gpGame->GetHero(current_town->garrisonHeroId);
+
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    long swap_value = purchaser.get_swap_value(
+        current_hero,
+        &static_cast<const town*>(current_town)->get_army(), garrison_hero,
+        has_angelic_alliance);
+    long purchase_value = purchaser.get_purchase_value(
+        &current_hero->army, current_hero->GetMorale(0, 0, 1),
+        &static_cast<const town*>(current_town)->get_army(), player->resources,
+        has_angelic_alliance);
+
+    if (move_cost >= 400
+        && purchaser.get_army_value_increase()
+               < current_hero->army.get_AI_value() / 3)
+        return 0;
+
+    return purchase_value + swap_value / 2;
 }
 
 // E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
