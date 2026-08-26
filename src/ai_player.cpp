@@ -3047,7 +3047,7 @@ void type_artifact_effect::type_artifact_effect()
 }
 
 // E:\gamedcs\ai_player.cpp:5065
-VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_scouting_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
@@ -3061,70 +3061,70 @@ void type_combat_artifact::type_combat_artifact(long new_bonus)
 }
 
 // E:\gamedcs\ai_player.cpp:5081
-VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_combat_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5098
-VA(0x004325a0, 0x40)  // artifact get_value cluster order-map + get_AI_value, dc 0x36320
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_might_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5116
-VA(0x004325e0, 0x21)  // artifact get_value cluster order-map, dc 0x36390
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_power_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5134
-VA(0x00432610, 0x21)  // artifact get_value cluster order-map, dc 0x363f0
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_knowledge_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5152
-VA(0x00432640, 0x97)  // artifact get_value cluster order-map + get_AI_value, dc 0x36450
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_necromancy_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char __formal)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5189
-VA(0x004326e0, 0x38)  // artifact get_value cluster order-map + get_AI_value, dc 0x3652c
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_movement_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5205
-VA(0x00432720, 0x54)  // artifact get_value cluster order-map + get_AI_value, dc 0x3659c
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_spellcaster_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5226
-VA(0x00432780, 0x68)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x3662c
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_morale_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5250
-VA(0x004327f0, 0x68)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36720
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_luck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5274
-VA(0x00432860, 0x21)  // artifact get_value cluster order-map, dc 0x36814
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_duration_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
@@ -3138,21 +3138,21 @@ long type_school_artifact::get_value(const hero* owner, unsigned char equipped, 
 }
 
 // E:\gamedcs\ai_player.cpp:5355
-VA(0x00432a50, 0xc3)  // artifact get_value cluster order-map + get_AI_value, dc 0x36a1c
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_antimagic_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5387
-VA(0x00432b20, 0x78)  // artifact get_value order-map + AI_value_of_morale/GetMorale, dc 0x36afc
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_antimorale_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char exact)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_player.cpp:5413
-VA(0x00432ba0, 0x78)  // artifact get_value order-map + AI_value_of_luck/GetLuck, dc 0x36c90
+// Retail claim promoted to the reconstructed body above; DC source identity retained.
 long type_antiluck_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
@@ -3192,7 +3192,7 @@ long type_spell_artifact::get_value(const hero* owner, unsigned char equipped, u
     // @stub
 }
 
-VA(0x004330b0, 0x73)  // vtable-slot 0x63b758 (provisional type), retail-only
+// Retail claim promoted to the reconstructed body above.
 long type_shooter_bonus_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
@@ -3220,7 +3220,7 @@ long type_undead_king_cloak_artifact::get_value(const hero* owner, unsigned char
     // @stub
 }
 
-VA(0x00433520, 0x5a)  // vtable-slot 0x63b77c (provisional type), retail-only
+// Retail claim promoted to the reconstructed body above.
 long type_elixir_of_life_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
 {
     // @stub
