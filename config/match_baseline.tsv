@@ -1138,6 +1138,7 @@ game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.00
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
 game	?GameFn_004CEF10@game@@QAE?AUtype_point@@H@Z	100.0000	100.0000	100.0000	0xcef10
+game	?Get@NewSMapHeader@@QAEHPBD0H@Z	100.0000	100.0000	100.0000	0xc5e00
 game	?GetBoatsBuilt@game@@QAEHXZ	100.0000	100.0000	100.0000	0xccdd0
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20
 game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900
