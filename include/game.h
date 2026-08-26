@@ -723,8 +723,14 @@ enum ENewMapHandicap {
 // tree stores the same record plus a four-byte tail. Names remain ordinal
 // because no approved retail or Dreamcast symbol names them.
 struct type_map_hero_identity {
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+    // Complete's LoadMap compares the whole portrait sentinel dword before
+    // narrowing it into HeroExtra::PortraitNumber.
+    int field_00;
+#else
     signed char field_00;
     char pad_01[3];
+#endif
     std::string field_04;
 };
 SIZE(type_map_hero_identity, 0x14);
@@ -1026,6 +1032,11 @@ public:
     ~NewSMapHeader();
     NewSMapHeader& operator=(const NewSMapHeader& that);
     int Save(TAbstractFile* outfile);
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
+    // Complete's scenario reader consumes the abstract stream and the
+    // selected campaign-map ordinal (`ret 8` at retail 0x4c4390).
+    int Read(TAbstractFile* infile, int campaignMap);
+#endif
     // Retail carries the save-version argument absent from the Dreamcast
     // declarator; the 0x4c5630 body returns with `ret 8`.
     int Load(TAbstractFile* infile, int saveVersion);
@@ -2145,8 +2156,9 @@ public:
     void SetupFirstPlayer();
     int setup_first_player_position(int firstHuman);
     void randomize_university(NewmapCell* cell);
-    int LoadMap(TAbstractFile* mapFile);
+    bool LoadMap(TAbstractFile* mapFile);
     void apply_map_header_availability();
+    void read_map_hero_setups(TAbstractFile* mapFile, int mapVersion);
     void RandomizeHolyGrail();
     void InitRandomArtifacts();
     void match_underground_gates();
