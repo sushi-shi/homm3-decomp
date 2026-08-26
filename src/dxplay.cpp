@@ -1339,7 +1339,7 @@ unsigned long CAutoArray<CDPlayAddressElement>::GetCount()
 
 
 // ..\stlport\stl_bvector.h:144
-VA(0x0049a020, 0x73)  // anchor-vtable CAutoArray<CDPlayAddressElement> slot0 (scalar deleting dtor), dc 0x8c35c
+// Retail claim promoted to the compiler-generated body below; DC identity retained.
 void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
