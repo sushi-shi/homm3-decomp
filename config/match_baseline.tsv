@@ -1193,6 +1193,7 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
 game	?NewMap@game@@QAEEPBD0PAHH@Z	99.4000	99.4000	99.4000	0xc0520
 game	?NewMap@game@@QAEXPAVTAbstractFile@@PAHPAVNewMapCampaignContext@@H@Z	100.0000	100.0000	100.0000	0xbfe70
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
+game	?NextPlayer@game@@QAEXXZ	83.3584	83.3584	83.3584	0xc6fe0
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?PerDay@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc7fe0
