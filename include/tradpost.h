@@ -52,7 +52,7 @@ class TGiveResourceWindow : public CAdvPopup {
     slider* resourceSlider;
     int lastHoverId;
 public:
-    void Update(unsigned char bUpdate);
+    void Update(bool bUpdate);
     void SetRolloverText(int codeY);
     virtual int WindowHandler(message* msg);
     virtual ~TGiveResourceWindow();

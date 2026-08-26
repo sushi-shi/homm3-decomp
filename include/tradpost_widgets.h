@@ -19,6 +19,13 @@ int TransmitRemoteData(CNetMsg* pMsg, int toWho, bool compressMsg,
 
 extern const char* gResourceNames[7];
 
+enum EMarketSource {
+    MARKET_SOURCE_MARKETPLACE = 0,
+    MARKET_SOURCE_TRADING_POST = 1,
+    MARKET_SOURCE_BLACK_MARKET = 2,
+    MARKET_SOURCE_FREELANCER = 3
+};
+
 enum EMarketWidgetId {
     MARKET_LEFT_PANEL_ID = 5,
     MARKET_RIGHT_PANEL_ID = 7,
