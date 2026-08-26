@@ -111,7 +111,7 @@ long get_artifact_purchase_value(TArtifact artifact, long market_count, long* fu
 }
 
 // E:\gamedcs\philai.cpp:326
-VA(0x00524400, 0x149)  // anchor-callee, dc 0x10da30
+// Retail claim promoted to the reconstructed body below; DC identity retained.
 void buy_artifacts(hero* current_hero, TArtifact* artifact_list, long market_count)
 {
     // @stub
