@@ -156,7 +156,8 @@ COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "BITSET_SUBSCRIPT", "BITSET_REFERENCE_ASSIGN",
                  "BITSET_FLIP",
                  "BITSET_COUNT", "BITSET_ANY", "BITSET_SET",
-                 "BITSET_TEST", "STD_CONSTRUCT", "STD_COPY",
+                 "BITSET_TEST", "PAIR_CONST_INT_DTOR",
+                 "STD_CONSTRUCT", "STD_COPY",
                  "IMPLICIT_COPY_CTOR", "IMPLICIT_COPY_ASSIGN",
                  "IMPLICIT_DTOR"}
 
@@ -655,6 +656,10 @@ def _demangle_key(mangled: str):
             return f"{vector_element.group(1).lower()}@fctor"
         cls = mangled[4:].split("@@", 1)[0].split("@")[0]
         return f"{cls.lower()}@fctor" if cls else None
+    pair_const_int = re.match(
+        r"^\?\?1\?\$pair@\$\$CBH(?:V|U)([A-Za-z_]\w*)@@@std@@", mangled)
+    if pair_const_int:
+        return f"{pair_const_int.group(1).lower()}@pair_const_int_dtor"
     if mangled.startswith("??_D"):
         # MSVC's `vbase destructor' closure. Claim-only carcass rows use
         # the compiler's own backtick spelling, which scan_file normalizes
@@ -880,6 +885,7 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
                                or "$bitset_any$" in r["name"]
                                or "$bitset_set$" in r["name"]
                                or "$bitset_test$" in r["name"]
+                               or "$pair_const_int_dtor$" in r["name"]
                                or "$std_construct$" in r["name"]
                                or "$std_copy$" in r["name"]
                                or "$implicit_copy_ctor$" in r["name"]
@@ -962,6 +968,11 @@ def join_unit(unit: str, rows: list[dict], taken: set | None = None) -> None:
             owner = row["name"].rsplit("$", 1)[1].lower()
             claim_keys.setdefault(
                 f"{owner}@bitset_{bitset_member}", []).append(row)
+            continue
+        if "$pair_const_int_dtor$" in row["name"]:
+            owner = row["name"].rsplit("$", 1)[1].lower()
+            claim_keys.setdefault(
+                f"{owner}@pair_const_int_dtor", []).append(row)
             continue
         if "$std_construct$" in row["name"]:
             owner = row["name"].rsplit("$", 1)[1].lower()
@@ -1397,6 +1408,10 @@ def selftest() -> list[str]:
             "??1?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@"
             "@std@@QAE@XZ") != "blackboxdata@vector_dtor":
         failures.append("MSVC vector destructor key regressed")
+    if _demangle_key(
+            "??1?$pair@$$CBHUtype_map_hero_info@@@std@@QAE@XZ") != \
+            "type_map_hero_info@pair_const_int_dtor":
+        failures.append("MSVC pair<const int, T> destructor key regressed")
     if _demangle_key(
             "?size@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@"
             "@std@@QBEIXZ") != "cobjecttype@vector_size":
