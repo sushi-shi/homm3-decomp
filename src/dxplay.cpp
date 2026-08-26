@@ -110,22 +110,23 @@ unsigned char CDPlay::InitConnection(CDPlayConnection* pConnection)
     return ok;
 }
 // E:\gamedcs\dxplay.cpp:134
-VA(0x00496db0, 0xB0)  // anchor-vtable CDPlay slot3 (HostSession); ret 0x10, dc 0x8a154
-unsigned char CDPlay::HostSession(char* sessionName, unsigned long dwFlags, unsigned long maxPlayers, char* password)
+VA(0x00496db0, 0xB0)  // dc 0x8a154
+unsigned char CDPlay::HostSession(char* sessionName, unsigned long flags,
+                                  unsigned long maxPlayers, char* password)
 {
     if (!m_lpDP)
         return 0;
     DPSESSIONDESC2 desc;
     memset(&desc, 0, sizeof(desc));
     desc.dwSize = sizeof(desc);
-    desc.dwFlags = dwFlags;
-    desc.lpszSessionNameA = sessionName;
+    desc.dwFlags = flags;
     desc.dwMaxPlayers = maxPlayers;
+    desc.lpszSessionNameA = sessionName;
     if (password)
         desc.lpszPasswordA = password;
-    if (memcmp(&m_guid, &s_guidNull, sizeof(GUID)) != 0)
+    if (memcmp(&m_guid, &GUID_NULL, sizeof(GUID)) != 0)
         desc.guidApplication = m_guid;
-    m_hRes = static_cast<IDirectPlay4A*>(m_lpDP)->Open(&desc, 2);
+    m_hRes = m_lpDP->Open(&desc, DPOPEN_CREATE);
     if (m_hRes < 0)
         return 0;
     m_isHost = 1;
