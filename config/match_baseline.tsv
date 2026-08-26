@@ -1091,6 +1091,10 @@ game	??0VictoryConditionStruct@@QAE@XZ	100.0000	100.0000	100.0000	0xbc340
 game	??0game@@QAE@XZ	87.8496	87.8496	87.8496	0xcdf20
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??1?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf0b0
+game	??1?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf780
+game	??1?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf6f0
+game	??1?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QAE@XZ	100.0000	100.0000	100.0000	0xcf3d0
 game	??1game@@QAE@XZ	78.8428	78.8428	78.8428	0xce5b0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	??1type_creature_bank@@QAE@XZ	100.0000	100.0000	100.0000	0xc2420
@@ -1209,6 +1213,11 @@ game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 game	?ValidateVictoryLossConditions@game@@QAEXE@Z	89.0407	89.0407	89.0407	0xbf780
 game	?ViewArmy@game@@QAEXAAVarmyGroup@@HPBVhero@@PBVtown@@HHEE@Z	96.9556	96.9556	96.9556	0xc6c50
 game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840
+game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
+game	?_Destroy@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@0@Z	100.0000	100.0000	100.0000	0xd07c0
+game	?_Ufill@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@IAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2160
+game	?_Ufill@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@IAEXPAVboat@@IABV3@@Z	100.0000	100.0000	100.0000	0xd2250
+game	?_Ufill@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@IAEXPAVtown@@IABV3@@Z	100.0000	100.0000	100.0000	0xd21e0
 # DELIBERATE LOWER 2026-08-20. The 100.0000 above it was real but is not
 # reachable at the same time as town ?SwapHeroes@town@@QAEXXZ: both bodies
 # inline the one CMCHideHero constructor and they disagree on where its
@@ -1220,6 +1229,9 @@ game	?WaitForPlayer@game@@QAEXPADH@Z	100.0000	100.0000	100.0000	0xca840
 # CMCHideHero in include/netmsg.h and above the body in src/game.cpp.
 game	?add_garrison_hero@playerData@@QAEEPAVtown@@@Z	98.9923	98.9923	98.9923	0xb9fc0
 game	?calculate_production@game@@QAEXXZ	94.4126	94.4126	94.4126	0xb8af0
+game	?erase@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEPAUTBlackMarket@@PAU3@0@Z	100.0000	100.0000	100.0000	0xd03e0
+game	?erase@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEPAVboat@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd1360
+game	?erase@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QAEPAVmine@@PAV3@0@Z	100.0000	100.0000	100.0000	0xd0e10
 game	?get_alignment@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xc6690
 game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_puzzle_origin@game@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0xcea70
@@ -1244,6 +1256,8 @@ game	?save_vector@@YIEPAVTAbstractFile@@PAV?$vector@Utype_point@@V?$allocator@Ut
 game	?set_pyramid@ExtraInfoUnion@@QAEX_NH@Z	100.0000	100.0000	100.0000	0xc2330
 game	?set_witch_skill@ExtraInfoUnion@@QAEXH@Z	100.0000	100.0000	100.0000	0xc23c0
 game	?setup_shipyards@game@@QAEXXZ	100.0000	100.0000	100.0000	0xbcb30
+game	?size@?$vector@Vmine@@V?$allocator@Vmine@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf730
+game	?size@?$vector@Vtown@@V?$allocator@Vtown@@@std@@@std@@QBEIXZ	100.0000	100.0000	100.0000	0xcf6c0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
