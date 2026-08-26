@@ -8006,6 +8006,76 @@ void game::PerDay()
     field_90 = 0;
 }
 
+// E:\gamedcs\game.cpp:8373
+// Complete takes the player position explicitly and fills each empty tavern
+// recruit slot.  The early campaign-week arms select fixed hero classes;
+// otherwise the opposite recruit's class is excluded from the normal roll.
+// Retail then reserves the hero, equips every usable backpack artifact,
+// restores full mana and creates the default starting army.
+VA(0x004c8450, 0x248)  // NewMap/PerWeek calls + retail fields/ABI
+void game::set_recruits(int playerPos)
+{
+    playerData* player = &players[playerPos];
+    type_artifact artifact;
+    int recruitSlot;
+
+    for (recruitSlot = 0; recruitSlot < 2; ++recruitSlot) {
+        if (player->recruits[recruitSlot] >= 0)
+            continue;
+
+        THeroClass otherClass;
+        if (player->recruits[1 - recruitSlot] < 0)
+            otherClass = kNumHeroClasses;
+        else
+            otherClass = hero_class_from_int(
+                GetHero(player->recruits[1 - recruitSlot])->heroClass);
+
+        int heroId;
+        if (field_1f69d
+            && static_cast<unsigned short>(field_1f640) <= 2) {
+            if (field_1f640 == 1) {
+                for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
+                    if (gpGame->GetHero(heroId)->heroClass == eClassCleric
+                        && gpGame->heroAvailability[heroId] == -1)
+                        break;
+                }
+            } else if (recruitSlot == 0) {
+                for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
+                    if (gpGame->GetHero(heroId)->heroClass == eClassPagan
+                        && gpGame->heroAvailability[heroId] == -1)
+                        break;
+                }
+            } else {
+                for (heroId = 0; heroId < HERO_COUNT; ++heroId) {
+                    if (gpGame->GetHero(heroId)->heroClass == eClassHeretic
+                        && gpGame->heroAvailability[heroId] == -1)
+                        break;
+                }
+            }
+        } else {
+            heroId = GetNewHeroId(
+                playerPos, otherClass, recruitSlot == 0, kNumHeroClasses);
+        }
+
+        player->recruits[recruitSlot] = heroId;
+        if (heroId == -1)
+            continue;
+
+        heroAvailability[heroId] = 64;
+        hero* newHero = &heroes[heroId];
+        int backpackSlot = HERO_BACKPACK_CAPACITY - 1;
+        do {
+            artifact = newHero->backpack[backpackSlot];
+            if (artifact.artifactId != -1
+                && newHero->equip_artifact(&artifact, -1))
+                newHero->remove_backpack_artifact(backpackSlot);
+        } while (backpackSlot--);
+
+        newHero->mana = static_cast<short>(newHero->GetMaxMana());
+        SetRandomHeroArmies(heroId, 0, 0);
+    }
+}
+
 // E:\gamedcs\game.cpp:8358
 // Complete owns the two recruit ids inside playerData.  It excludes the
 // opposite slot's hero class from the replacement roll, reserves the new
