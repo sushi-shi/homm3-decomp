@@ -10627,6 +10627,10 @@ VA_COMPGEN(0x004cf8f0, 0x67, BITSET_REFERENCE_ASSIGN, Bitset28)
 VA_COMPGEN(0x004cfa40, 0x13, VECTOR_CAPACITY, type_university)
 VA_COMPGEN(0x004cfa60, 0x63, BITSET_SET, Bitset145)
 VA_COMPGEN(0x004cfad0, 0x37, BITSET_TEST, Bitset145)
+// readMapPlayerSlot retains the three-argument insert reached by its expanded
+// resize. The 0x14-byte stride and type_map_hero_identity copy/destructor
+// callees distinguish this specialization from the other vector inserts.
+VA_COMPGEN(0x004cfb10, 0x31C, VECTOR_INSERT, type_map_hero_identity)
 VA_COMPGEN(0x004cfef0, 0x34, BITSET_TEST, Bitset8)
 VA_COMPGEN(0x004d0070, 0x63, BITSET_SET, Bitset156)
 VA_COMPGEN(0x004d00e0, 0x2FC, VECTOR_INSERT, TBlackMarket)

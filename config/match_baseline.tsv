@@ -1310,6 +1310,7 @@ game	?insert@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype
 game	?insert@?$vector@UTBlackMarket@@V?$allocator@UTBlackMarket@@@std@@@std@@QAEXPAUTBlackMarket@@IABU3@@Z	100.0000	100.0000	100.0000	0xd00e0
 game	?insert@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@QAEXPAUTRumour@game@@IABU34@@Z	100.0000	100.0000	100.0000	0xd13e0
 game	?insert@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@QAEXPAUtype_creature_bank@@IABU3@@Z	100.0000	100.0000	100.0000	0xd2290
+game	?insert@?$vector@Utype_map_hero_identity@@V?$allocator@Utype_map_hero_identity@@@std@@@std@@QAEXPAUtype_map_hero_identity@@IABU3@@Z	100.0000	100.0000	100.0000	0xcfb10
 game	?insert@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXPAVCObjectType@@IABV3@@Z	100.0000	100.0000	100.0000	0xd1920
 game	?insert@?$vector@VSign@@V?$allocator@VSign@@@std@@@std@@QAEXPAVSign@@IABV3@@Z	100.0000	100.0000	100.0000	0xd07f0
 game	?insert@?$vector@Vboat@@V?$allocator@Vboat@@@std@@@std@@QAEPAVboat@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0xd0e60
