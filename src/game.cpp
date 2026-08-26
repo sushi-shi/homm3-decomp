@@ -6646,6 +6646,169 @@ void game::read_map_hero_setups(TAbstractFile* mapFile, int mapVersion)
     }
 }
 
+// Map victory payloads use byte coordinates and ids, except that non-RoE
+// artifact and creature ids are signed words. The live record widens every
+// value, and the no-payload conditions still run the common validation pass.
+// Exact case scopes let VC6 colour the mutually exclusive payload buffers
+// into the dead type argument, reproducing all 26 blocks and 920 bytes.
+VA(0x004c3200, 0x398)  // sole NewSMapHeader::Read caller + DC helper identity
+int NewSMapHeader::readVictoryCondition(char type, TAbstractFile* infile)
+{
+    char char_buffer;
+
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    victoryCondition.AllowNormalVictory = char_buffer != 0;
+    infile->Read(&char_buffer, sizeof(char_buffer));
+    victoryCondition.AppliesToComputer = char_buffer != 0;
+
+    switch (type) {
+    case VICTORY_CONDITION_ARTIFACT: {
+        if (version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            int int_buffer;
+            infile->Read(&int_buffer, sizeof(char));
+            victoryCondition.ArtifactNum = int_buffer & 0xff;
+        } else {
+            short short_buffer;
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            victoryCondition.ArtifactNum = short_buffer;
+        }
+        break;
+    }
+
+    case VICTORY_CONDITION_TOTAL_CREATURES: {
+        if (version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            int int_buffer;
+            infile->Read(&int_buffer, sizeof(char));
+            victoryCondition.CreatureType =
+                creature_type_from_int(int_buffer & 0xff);
+        } else {
+            short short_buffer;
+            infile->Read(&short_buffer, sizeof(short_buffer));
+            victoryCondition.CreatureType =
+                creature_type_from_int(short_buffer);
+        }
+        {
+            int int_buffer;
+            infile->Read(&int_buffer, sizeof(int_buffer));
+            victoryCondition.NumCreatures = int_buffer;
+        }
+        break;
+    }
+
+    case VICTORY_CONDITION_TOTAL_RESOURCES: {
+        {
+            char resource;
+            infile->Read(&resource, sizeof(resource));
+            victoryCondition.ResourceType = resource;
+        }
+        {
+            int int_buffer;
+            infile->Read(&int_buffer, sizeof(int_buffer));
+            victoryCondition.ResourceAmount = int_buffer;
+        }
+        break;
+    }
+
+    case VICTORY_CONDITION_UPGRADE_TOWN: {
+        {
+            int int_buffer;
+            infile->Read(&int_buffer, sizeof(char));
+            victoryCondition.TownX = int_buffer & 0xff;
+            infile->Read(&int_buffer, sizeof(char));
+            victoryCondition.TownY = int_buffer & 0xff;
+            infile->Read(&int_buffer, sizeof(char));
+            victoryCondition.TownZ = int_buffer & 0xff;
+        }
+        {
+            char level;
+            infile->Read(&level, sizeof(level));
+            victoryCondition.HallLevel = level;
+            infile->Read(&level, sizeof(level));
+            victoryCondition.CastleLevel = level;
+        }
+        break;
+    }
+
+    case VICTORY_CONDITION_BUILD_GRAIL: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownX = int_buffer & 0xff;
+        if (victoryCondition.TownX == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownX = -1;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownY = int_buffer & 0xff;
+        if (victoryCondition.TownY == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownY = -1;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownZ = int_buffer & 0xff;
+        if (victoryCondition.TownZ == SAVED_MAP_COORDINATE_NONE)
+            victoryCondition.TownZ = -1;
+        break;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_HERO: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.HeroX = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.HeroY = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.HeroZ = int_buffer & 0xff;
+        break;
+    }
+
+    case VICTORY_CONDITION_CAPTURE_TOWN: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownX = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownY = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownZ = int_buffer & 0xff;
+        break;
+    }
+
+    case VICTORY_CONDITION_DEFEAT_MONSTER: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.MonsterX = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.MonsterY = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.MonsterZ = int_buffer & 0xff;
+        break;
+    }
+
+    case VICTORY_CONDITION_FLAG_ALL_GENERATORS:
+    case VICTORY_CONDITION_FLAG_ALL_MINES:
+    case VICTORY_CONDITION_DEFEAT_ALL_MONSTERS:
+        break;
+
+    case VICTORY_CONDITION_SURVIVE_TIME: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(int_buffer));
+        victoryCondition.NumDays = int_buffer;
+        break;
+    }
+
+    case VICTORY_CONDITION_TRANSPORT_ARTIFACT: {
+        int int_buffer;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.ArtifactNum = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownX = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownY = int_buffer & 0xff;
+        infile->Read(&int_buffer, sizeof(char));
+        victoryCondition.TownZ = int_buffer & 0xff;
+        break;
+    }
+    }
+
+    gpGame->ValidateVictoryLossConditions(0);
+    return 0;
+}
+
 // The victory-condition payload uses map-format byte fields for ids and
 // coordinates while keeping creature/resource amounts and the survival day
 // as dwords. Retail checks the two common flag writes, both amount writes and
