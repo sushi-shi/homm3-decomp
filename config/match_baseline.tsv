@@ -2552,6 +2552,7 @@ tradpost	?DoMarketplace@@YIXXZ	100.0000	100.0000	100.0000	0x1e9fe0
 tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?SetRolloverText@TBuyArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1eddd0
 tradpost	?SetRolloverText@TGiveResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed850
+tradpost	?SetRolloverText@TSellArtifactWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ee6c0
 tradpost	?SetRolloverText@TTradeResourceWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ed3a0
 tradpost	?WindowHandler@TGiveResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ed550
 tradpost	?WindowHandler@TTradeResourceWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ecfe0
