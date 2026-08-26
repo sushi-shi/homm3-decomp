@@ -339,7 +339,7 @@ unsigned char CDPlay::EnumSessions(CAutoArray<CDPlaySession>* pSessionArray, uns
     if (!m_lpDP)
         return 0;
     m_pSessionArray = pSessionArray;
-    pSessionArray->Destroy(1);
+    m_pSessionArray->Destroy(1);
     DPSESSIONDESC2 desc;
     memset(&desc, 0, sizeof(desc));
     desc.dwSize = sizeof(desc);
