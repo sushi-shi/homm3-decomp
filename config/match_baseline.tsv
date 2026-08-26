@@ -1748,6 +1748,7 @@ philai	?AI_VisitSirens@@YIHPBVhero@@PAVarmyGroup@@@Z	100.0000	100.0000	100.0000	
 philai	?AI_bribe_monsters@@YIEPBVhero@@PAVNewmapCell@@W4TCreatureType@@FJ@Z	100.0000	100.0000	100.0000	0x127f60
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
+philai	?AI_visit_war_factory@@YIXPAVhero@@@Z	100.0000	100.0000	100.0000	0x124fc0
 philai	?LuckIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127d80
 philai	?MoraleIncreaseValue@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0x127cf0
 philai	?SoD_get_seer_skill_value@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0x124630

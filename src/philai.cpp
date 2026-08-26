@@ -10,6 +10,7 @@
 #include "town.h"
 #include "tradpost.h"
 #include "game.h"
+#include "recruit.h"
 #include "advmgr.h"
 
 // Keep the needed cross-TU declarations narrow: ai_tactical.h's current
@@ -18,6 +19,12 @@ double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
 long AI_value_of_combat(const hero*, const hero*, const armyGroup&,
     const town*, NewmapCell*);
+TCreatureType siege_artifact_to_creature(TArtifact engine);
+// The callee body is not admitted on strict master yet.  Keeping only its
+// real declaration reproduces retail's three out-of-line calls without the
+// road branch's partial body or auto_inline pragma.
+long value_of_war_factory(const hero* current_hero, TArtifact engine,
+    long move_cost);
 
 #if 0  // @carcass
 
@@ -431,6 +438,29 @@ int hero::SoD_get_seer_skill_value(int skill, int level)
             return 0;
     }
     return get_skill_value(this, typed_skill.skill, 1);
+}
+
+static void visit_war_factory(hero* current_hero, TArtifact engine)
+{
+    if (value_of_war_factory(current_hero, engine, 0) > 0) {
+        TCreatureType creature = siege_artifact_to_creature(engine);
+        int* costs = gCreatureRecords
+            + creature * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
+        for (int resource = 0; resource < 7; resource++)
+            gpCurrentPlayer->resources[resource] -= costs[resource];
+
+        type_artifact artifact(engine, -1);
+        current_hero->GiveArtifact(&artifact, 1, 1);
+    }
+}
+
+// E:\gamedcs\philai.cpp:583
+VA(0x00524fc0, 0x156)  // anchor-callee, dc 0x10e0f8
+void AI_visit_war_factory(hero* current_hero)
+{
+    visit_war_factory(current_hero, ARTIFACT_BALLISTA);
+    visit_war_factory(current_hero, ARTIFACT_FIRST_AID_TENT);
+    visit_war_factory(current_hero, ARTIFACT_AMMO_CART);
 }
 
 // The AI's spell-appraisal curve, one 32-byte row per "times castable"
