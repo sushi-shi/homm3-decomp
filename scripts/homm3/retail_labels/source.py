@@ -728,6 +728,12 @@ def _base_authority_names(unit: str) -> dict:
             if key:
                 ordered.append((section, key, name,
                                 section_sizes.get(section, 0)))
+            elif name.startswith("??"):
+                # The IR join already has the exact Clang-mangled spelling;
+                # keep other C++ operators in the authority set even when
+                # the weaker lexical-key join has no safe operator key.
+                ordered.append((section, "@mangled:" + name, name,
+                                section_sizes.get(section, 0)))
         aux = data[o + 17]
         o += 18 * (1 + aux)
         i += 1 + aux
