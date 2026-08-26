@@ -2523,7 +2523,7 @@ slider	??_Gslider@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x196020
 slider	?Deselect@slider@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x196af0
 slider	?Draw@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x196c40
 slider	?KeyAccel@slider@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x196230
-slider	?Main@slider@@UAEHPAVmessage@@@Z	95.1901	95.1901	95.1901	0x1964e0
+slider	?Main@slider@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1964e0
 slider	?OnKillFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197130
 slider	?OnSetFocus@slider@@UAEXXZ	100.0000	100.0000	100.0000	0x197120
 slider	?Select@slider@@QAEHPAVmessage@@E@Z	100.0000	100.0000	100.0000	0x196980
