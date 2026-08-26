@@ -184,9 +184,13 @@ int TPuzzleWindow::UpdatePuzzle(int full)
 // into AI_attempt_puzzle_guess's array-construction loop.
 
 // E:\gamedcs\puzzlewindow.cpp:294
-// Residual (98.843%): the object_type bitfield assignment uses EAX where
-// retail preserves EAX and merges through EDX. Signed-enum, unsigned, and
-// chained-call spellings were equal or worse; all other instructions match.
+// Residual (99.444%): naming the source field by const reference makes VC6
+// preserve the packed destination in EDX, as retail does. The remaining two
+// instruction-selection differences are one eager source-field load in
+// retail versus our address increment plus memory-source xor; every branch,
+// immediate and other instruction agrees. The direct field assignment was
+// 98.843%, while value locals, casts and inline getter/setter helpers either
+// reproduced that output or were worse.
 // E:\gamedcs\puzzlewindow.cpp:294
 VA(0x0052c770, 0x140)  // link-order + cell/object callees, dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
@@ -210,7 +214,8 @@ type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
             &gpGame->worldMap.objects[cell->object_type_index];
         CObjectType* objectType = cell_object->get_object_type_ptr();
 
-        object_type = objectType->objectType;
+        const TAdventureObjectType& objectTypeValue = objectType->objectType;
+        object_type = objectTypeValue;
         object_x = cell_object->x - point.x;
         object_y = cell_object->y - point.y;
     }
