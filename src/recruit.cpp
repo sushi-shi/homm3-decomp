@@ -50,6 +50,7 @@
 #include "townmgr.h"
 #include "winmgr.h"
 #include "mousemgr.h"
+#include "iconwdgt.h"
 
 // E:\gamedcs\recruit.cpp:157
 // Retail takes FOUR args - both creature rows arrive in ecx/edx (the
@@ -729,18 +730,14 @@ recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int bInInTownMainS
     UpdateCost();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
-// QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
+// QuickViewRecruit(TCreatureType, short*) (0x551780), so /Ob2 inlined it and
 // the single-call-site STATIC rule dropped the out-of-line copy.
-DC_ONLY(0x11af24, 0x74)
-void TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+inline TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+    : heroWindow(x2, y2, 160, 320, 0x12)
 {
-    // @stub
+    Widgets.reserve(49);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:1221 - TRecruitQuickWindow::`scalar deleting
 // destructor' (dc 0x11b570); same shape and same placement rule as
@@ -758,21 +755,161 @@ TRecruitQuickWindow::~TRecruitQuickWindow()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\recruit.cpp:1232
-DC_ONLY(0x11affc, 0x2C)
+// ECX carries the town and EDX the dwelling slot. Retail forms the
+// population pointer and creature id, then tail-jumps to the enum overload.
+VA(0x00551750, 0x24)  // anchor-global + tail-jump bracket, dc 0x11affc
 void QuickViewRecruit(town* newTown, int newDwellingIndex)
 {
-    // @stub
+    QuickViewRecruit(
+        gTownDwellingCreatures[newTown->type * TOWN_DWELLING_SLOTS
+                               + newDwellingIndex],
+        &newTown->population[newDwellingIndex]);
 }
 
 // E:\gamedcs\recruit.cpp:1239
-DC_ONLY(0x11b028, 0x514)
-void QuickViewRecruit(char MonType, short* numMon)
+// General-text rows 218 and 347 provide the availability and cost captions.
+// The no-alternative arm clears ACTIVE|DRAWN on the second resource pair.
+VA(0x00551780, 0x641)  // anchor-window family + literal bracket, dc 0x11b028
+void QuickViewRecruit(TCreatureType MonType, short* numMon)
 {
-    // @stub
+    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int cost[7];
+    GetMonsterCost(MonType, cost);
+
+    int i;
+    for (i = 0; i < 6; i++) {
+        if (cost[i] != 0)
+            break;
+    }
+    int altResource;
+    int resourcesPerTroop;
+    int resourceX;
+    if (i < 6) {
+        altResource = i;
+        resourcesPerTroop = cost[i];
+        resourceX = 0;
+    } else {
+        altResource = -1;
+        resourcesPerTroop = 0;
+        resourceX = 24;
+    }
+
+    TRecruitQuickWindow* recruit_window =
+        new TRecruitQuickWindow(356, 16);
+    if (!recruit_window)
+        MemError();
+
+    recruit_window->AddWidget(
+        new bitmapBorder(0, 0, 161, 324, 0,
+            DATA_COMPGEN(0x00682a28, quickRecruitBackground,
+                "crtoinfo.pcx"),
+            0x800), -1);
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    recruit_window->BroadcastMessage(&msg);
+
+    recruit_window->AddWidget(new textWidget(0, 20, 161, 20,
+        MonType >= 0 && MonType <= 150
+            ? akCreatureTypeTraits[MonType].m_plural_name
+            : DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
+        DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 0x222,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+
+    recruit_window->AddWidget(new bitmapBorder(30, 44, 100, 130, 0x21e,
+        akCreatureBackgrounds[
+            gpGame->f_1f698 == 0
+                && (MonType == CREATURE_AIR_ELEMENTAL
+                    || MonType == CREATURE_EARTH_ELEMENTAL
+                    || MonType == CREATURE_FIRE_ELEMENTAL
+                    || MonType == CREATURE_WATER_ELEMENTAL)
+            ? -1 : akCreatureTypeTraits[MonType].townType],
+        0x800), -1);
+    recruit_window->AddWidget(new iconWidget(30, 44, 100, 130, 0x216,
+        akCreatureTypeTraits[MonType].m_sprite_name,
+        0, 2, 0, 0, iconWidget::ICON_STYLE_CREATURE), -1);
+
+    sprintf(gText,
+        DATA_COMPGEN(0x00660c98, quickRecruitAvailabilityFormat, "%s %d"),
+        gpGeneralText->GetText(218), *numMon);
+    recruit_window->AddWidget(new textWidget(30, 182, 100, 17, gText,
+        DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 0x209,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+    recruit_window->AddWidget(new textWidget(32, 218, 96, 19,
+        gpGeneralText->GetText(347),
+        DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 0x1f4,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8), -1);
+
+    recruit_window->AddWidget(new iconWidget(resourceX + 40, 238, 32, 32,
+        0x1f8,
+        DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
+            "resource.def"),
+        6, 0, 0, 0,
+        iconWidget::ICON_STYLE_PLAIN), -1);
+    recruit_window->AddWidget(new iconWidget(90, 238, 32, 32, 0x1fc,
+        DATA_COMPGEN(0x00660224, quickRecruitResourceSprite,
+            "resource.def"),
+        6, 0, 0, 0, iconWidget::ICON_STYLE_PLAIN), -1);
+    recruit_window->AddWidget(new textWidget(resourceX + 40, 273, 32, 17,
+        DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
+        DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 0x200,
+        font::CENTER_JUSTIFIED, 0, 8), -1);
+    recruit_window->AddWidget(new textWidget(90, 273, 32, 17,
+        DATA_COMPGEN(0x00691210, quickRecruitEmptyText, ""),
+        DATA_COMPGEN(0x0065f2f8, quickRecruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 0x204,
+        font::CENTER_JUSTIFIED, 0, 8), -1);
+
+    sprintf(gText,
+        DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
+        cost[6]);
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x200;
+    msg.extraText = gText;
+    recruit_window->BroadcastMessage(&msg);
+
+    if (altResource != -1) {
+        sprintf(gText,
+            DATA_COMPGEN(0x00660a1c, quickRecruitDecimalFormat, "%d"),
+            resourcesPerTroop);
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = 0x204;
+        msg.extraText = gText;
+        msg.extraText = gText;
+        recruit_window->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.codeY = 0x1fc;
+        msg.extra = altResource;
+        recruit_window->BroadcastMessage(&msg);
+    } else {
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x1fc;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        recruit_window->BroadcastMessage(&msg);
+
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.codeY = 0x204;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        recruit_window->BroadcastMessage(&msg);
+    }
+
+    gpWindowManager->DoQuickView(recruit_window);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:288
 DC_ONLY(0x11b53c, 0x34)

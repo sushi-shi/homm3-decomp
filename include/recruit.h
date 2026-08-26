@@ -36,6 +36,10 @@ void GetMonsterCost(int monId, int* resCost);
 // from armygrp.h, which recruit.cpp includes first.
 void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
     long amount, int* cost);
+void QuickViewRecruit(town* newTown, int newDwellingIndex);
+// The forwarding overload loads a full dword from the town creature table;
+// Complete therefore takes the enum in ECX, not the byte in the older DC row.
+void QuickViewRecruit(enum TCreatureType MonType, short* numMon);
 
 // The recruit dialog's own window and its quick-view twin. Both derive
 // DIRECTLY from heroWindow, not from CHeroWindowEx: their retail
@@ -108,6 +112,7 @@ extern SUnnamed6aacb0* gUnnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
 public:
+    TRecruitQuickWindow(int x2, int y2);
     virtual ~TRecruitQuickWindow();
 };
 
@@ -138,7 +143,7 @@ public:
 //   0xa4 updateNeeded  Close reads it
 //   0xac maxAvail / 0xb0 totalGold / 0xb4 totalResources /
 //   0xb8 numberToBuy   Update computes and displays all four
-// The gaps (0x38, 0x80, 0x94, 0xa0, 0xa8) stay padding: the Dreamcast
+// The gaps (0x38, 0x80, 0x94, 0xa0) stay padding: the Dreamcast
 // names them but no retail body reconstructed here touches them.
 class recruitUnit : public baseManager {
 public:
