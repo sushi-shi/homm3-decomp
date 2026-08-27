@@ -2746,6 +2746,23 @@ inline void advManager::DoArtifactSkillRequirement(
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
 VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
+// Residual (78.12%): retail expands DoArtifactSkillRequirement in BOTH
+// skill arms and cross-jumps everything after each arm's text load +
+// skill-byte test + human test into ONE shared dialog/GiveArtifact/
+// refusal tail; our two expansions stay separate (~85 instructions).
+// Measured 2026-08-27 and REVERTED, both worse in combination (66.10):
+// the refusal text hoisted into a named call-site local (reproduces
+// retail's early per-arm text load exactly) and the has-skill dialog
+// reading gArtifactEventText[index] instead of dialog_text (reproduces
+// the merged block's content - retail's shared dialog provably reads
+// the artifact's own text, so that half IS the retail source). With
+// both, the arms become identical except ONE register (point reloads
+// through edx in arm 1 and eax in arm 2; retail reloads human_player
+// per use where ours caches it in ebx) and the cross-jumper still
+// refuses; why-reg reports no addressable knob (B1 binding + B2
+// homing, reference memory-homes [ebp-0x75]). The next lane should
+// re-try the pair AFTER any inline-structure change here - the merged
+// content is byte-proven, only the merge itself is missing.
 void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
                                  type_point point, bool human_player)
 {
