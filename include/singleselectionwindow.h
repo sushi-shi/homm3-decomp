@@ -318,7 +318,9 @@ public:
     // SortMaps admits a row into SelectionHeaders only when it is clear
     // or equal to the row's Size; SetFilter stores it.
     int mapSizeFilter;                 // 0x1860
-    char pad_1864[0x1865 - 0x1864];
+    // DC scenarioOptionsStarted (2876 on the linear run); cleared by
+    // the host-handover reset before SetupScenarioOptions(0).
+    unsigned char scenarioOptionsStarted;  // 0x1864
     unsigned char chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
     char pad_1866[0x1868 - 0x1866];
     // DC chatToggle: the show/hide-chat textButton whose label the
@@ -402,7 +404,7 @@ public:
     unsigned char OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
-    void OnSetAsHostMsg(CNetMsg* pNetMsg);
+    unsigned char OnSetAsHostMsg(CNetMsg* pNetMsg);
     unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
     void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
@@ -451,6 +453,12 @@ public:
     void GetHeaders();
     int GetHeader(char* dir, char* cFilename,
                   GameSelectionHeadersStruct* pHeader);
+    // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
+    // random-maps mode byte (the body compares it to m_flag66 and
+    // stores it there). ShowWidget = retail 0x57fb20 (its only caller
+    // is OnSetAsHostMsg - extern linkage keeps it emitted).
+    void SetupScenarioOptions(unsigned char randomMaps);
+    void ShowWidget(int id);
 #endif
 
 private:

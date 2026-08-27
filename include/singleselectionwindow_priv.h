@@ -7,6 +7,7 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 #define HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 
+#include <bitset>
 #include <vector>
 
 #include "inputmgr.h"
@@ -32,6 +33,14 @@ namespace ResourceManager {
 // for SaveValid's disk gate rather than pulling misc.h into this
 // closure - the ResourceManager::GetText precedent above.
 unsigned long get_available_disk_space();
+
+// The game-context feature bits and their index cell (game.cpp/
+// resourcemanager.cpp own the claims); OnSetAsHostMsg gates the
+// game-type widget (0x82) on bit one - the same test(1) game.cpp's
+// player-slot reader spells. Declared file-locally, the
+// get_available_disk_space precedent.
+extern std::bitset<4> gGameContextFeatures[4];
+extern int* gpVideoGameState;
 
 // The CRT entries SaveValid/OnMapFileNameMsg touch, declared
 // file-locally instead of including <io.h>/<direct.h>: those two
@@ -498,6 +507,12 @@ public:
 class CNewHostMsg : public CNetMsg {
 public:
     unsigned long m_dpidNewHost;  // +0x14
+
+    CNewHostMsg(unsigned long dpidNewHost)
+        : CNetMsg(RS_NEW_HOST, sizeof(CNewHostMsg))
+    {
+        m_dpidNewHost = dpidNewHost;
+    }
 };
 
 class CMapHeaderRequestMsg : public CNetMsg {
