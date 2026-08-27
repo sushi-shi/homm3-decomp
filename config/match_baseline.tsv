@@ -1106,6 +1106,8 @@ events	?InitializeAdventureEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e0e0
 events	?InitializeArtifactEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e100
 events	?InitializeRandomSignText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e140
 events	?PayForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50
+events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	52.9649	52.9649	52.9649	0xaeee0
+events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	31.4198	31.4198	31.4198	0xaeb50
 events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaafd0
 events	?do_event_dragon_city@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2140
 events	?do_event_hero@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2800
@@ -1145,8 +1147,6 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 events	advManager_DoCombat	0.0000	0.0000	0.0000	0xad470
 events	advManager_GiveBlackBoxReward	0.0000	0.0000	0.0000	0x9fa90
-events	advManager_ReceiveHeroTownData	0.0000	0.0000	0.0000	0xaeee0
-events	advManager_SendHeroTownData	0.0000	0.0000	0.0000	0xaeb50
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10

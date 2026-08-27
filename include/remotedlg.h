@@ -188,8 +188,13 @@ public:
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;
     unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
+    // 0x512d40, the send half of the 0x512e00 bridge: serialize this
+    // message and hand it to the transport (toWho / compress /
+    // guaranteed mirror TransmitRemoteData's tail). Ordinal name for
+    // the same reason as its receive twin. Not claimed from here.
+    unsigned char RemoteFn_00512D40(int toWho, unsigned char compressMsg,
+                                    unsigned char guaranteed);
 
-protected:
     CNetMsg netmsg;  // +0x04
 };
 SIZE(t_complex_net_message, 0x18);

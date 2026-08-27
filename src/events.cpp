@@ -11,6 +11,7 @@
 #include "game.h"
 #include "advmgr.h"
 #undef HOMM3_EVENTS_PRISON_DECL
+#include "command.h"
 #include "cursor.h"
 #include "events.h"
 #include "exec.h"
@@ -8027,20 +8028,126 @@ int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGr
 }
 #endif  // @carcass
 
-// E:\gamedcs\events.cpp:6725.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:6725.  Pack one finished (or starting) remote
+// combat into a CCombatInitMsg - flags for which records ride along, the
+// two gold purses, both armies by value, then the optional town and hero
+// payloads (the town copy is the compiler-generated memberwise assign
+// expanded in place; the hero copies go through the declared-only
+// ??4hero COMDAT) - and ship it, shutting down on a transport failure.
+// [2026-08-27] Residual (31.42%): retail EXPANDS town's compiler-generated
+// memberwise operator= at the m_town assignment (and again in
+// ReceiveHeroTownData); our CL keeps ??4town out of line at both sites,
+// and an if(0) caller-mass titration (4/16/40) is byte-flat, so the
+// refusal is cost-side, not budget-side. The decisive detail: our
+// COMDAT's leading bytes copy through a LOOP (jb +0x59) where retail's
+// inline is fully unrolled - town.h models the first ten retail byte
+// members as pad ARRAYS, and an array member both raises the front-end
+// cost estimate and changes the copy shape. Remodelling town's
+// +0x00..+0x14 (and the +0x16 short band) as scalars should let the
+// synthesized assign inline to retail's shape - a town.h surgery too
+// wide for this lane. Everything around the copy (flags, purses, army
+// copies, ??4hero calls, the send/ShutDown tail) matches.
 VA(0x004aeb50, 0x390)  // anchor-callee 0x512c50 (shared w/ DoNetCombat), ret 0x30=p13, dc 0x9c35c
 void advManager::SendHeroTownData(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, int toWhoNetPos, int iWinner, unsigned char bRetreatWin, unsigned char bCombatSurrender)
 {
-    // @stub
-}
-#endif  // @carcass
+    CCombatInitMsg combatInitMsg;
+    combatInitMsg.m_point = point;
+    combatInitMsg.m_leftHero = leftHero != 0;
+    combatInitMsg.m_rightHero = rightHero != 0;
+    combatInitMsg.m_rightTown = rightTown != 0;
+    combatInitMsg.m_seed = iSeed;
+    combatInitMsg.m_winner = iWinner;
+    combatInitMsg.m_retreatWin = bRetreatWin;
+    combatInitMsg.m_combatSurrender = bCombatSurrender;
 
-// E:\gamedcs\events.cpp:6781.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+    if (leftHero) {
+        combatInitMsg.m_leftOwner = leftHero->owner;
+        combatInitMsg.m_leftGold =
+            gpGame->players[leftHero->owner].resources[GOLD];
+    } else {
+        combatInitMsg.m_leftGold = 0;
+    }
+    combatInitMsg.m_rightOwner = right_player;
+    if (rightHero)
+        combatInitMsg.m_rightGold =
+            gpGame->players[rightHero->owner].resources[GOLD];
+    else
+        combatInitMsg.m_rightGold = 0;
+
+    combatInitMsg.m_leftArmyGroup = *leftArmyGroup;
+    combatInitMsg.m_rightArmyGroup = *rightArmyGroup;
+    if (rightTown)
+        combatInitMsg.m_town = *rightTown;
+    if (leftHero)
+        combatInitMsg.m_leftHeroData = *leftHero;
+    if (rightHero)
+        combatInitMsg.m_rightHeroData = *rightHero;
+
+    int result = combatInitMsg.RemoteFn_00512D40(toWhoNetPos, 0, 1);
+    if (!result)
+        ShutDown(0);
+}
+
+// E:\gamedcs\events.cpp:6781.  Unpack a received CCombatInitMsg into
+// freshly allocated adventure objects - the mirror of SendHeroTownData,
+// and DoNetCombat's supplier. The combat-control pair records who sent
+// it and which seat this machine holds.
+// [2026-08-27] Residual (52.96%): the same out-of-line ??4town as
+// SendHeroTownData's note - retail expands the memberwise town copy in
+// the hasRightTown arm; ours calls the COMDAT whose leading-pad loop
+// shape town.h's pad arrays impose. The out-pointer prologue, purse
+// write-backs, the four new-with-ctor blocks and both ??4hero calls
+// match.
 VA(0x004aeee0, 0x3DF)  // dc-bracket forced, ret 0x34=p14 (unique), dc 0x9c554
 void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromWho, type_point* point, hero** leftHero, armyGroup** leftArmyGroup, int* right_player, town** rightTown, hero** rightHero, armyGroup** rightArmyGroup, int* iSeed, signed char* iWinner, unsigned char* bRetreatWin, unsigned char* bCombatSurrender)
 {
-    // @stub
+    *leftHero = 0;
+    *leftArmyGroup = 0;
+    *rightTown = 0;
+    *rightHero = 0;
+    *rightArmyGroup = 0;
+    *right_player = -1;
+
+    *iFromWho = pCombatInitMsg->netmsg.field_00;
+    *point = pCombatInitMsg->m_point;
+    int hasLeftHero = pCombatInitMsg->m_leftHero;
+    int hasRightHero = pCombatInitMsg->m_rightHero;
+    int hasRightTown = pCombatInitMsg->m_rightTown;
+    *iSeed = pCombatInitMsg->m_seed;
+    *iWinner = pCombatInitMsg->m_winner;
+    *bRetreatWin = pCombatInitMsg->m_retreatWin;
+    *bCombatSurrender = pCombatInitMsg->m_combatSurrender;
+
+    if (pCombatInitMsg->m_leftOwner > 0)
+        gpGame->players[pCombatInitMsg->m_leftOwner].resources[GOLD] =
+            pCombatInitMsg->m_leftGold;
+    *right_player = pCombatInitMsg->m_rightOwner;
+    if (pCombatInitMsg->m_rightOwner > 0)
+        gpGame->players[pCombatInitMsg->m_rightOwner].resources[GOLD] =
+            pCombatInitMsg->m_rightGold;
+
+    *leftArmyGroup = new armyGroup;
+    **leftArmyGroup = pCombatInitMsg->m_leftArmyGroup;
+    *rightArmyGroup = new armyGroup;
+    **rightArmyGroup = pCombatInitMsg->m_rightArmyGroup;
+
+    if (hasRightTown) {
+        town* newTown = new town;
+        *rightTown = newTown;
+        *newTown = pCombatInitMsg->m_town;
+    }
+
+    iCombatControlNetPos[0] = *iFromWho;
+    iCombatControlNetPos[1] = gpGame->GetLocalPlayerGamePos();
+
+    if (hasLeftHero) {
+        hero* newHero = new hero;
+        *leftHero = newHero;
+        *newHero = pCombatInitMsg->m_leftHeroData;
+    }
+    if (hasRightHero) {
+        hero* newHero = new hero;
+        *rightHero = newHero;
+        *newHero = pCombatInitMsg->m_rightHeroData;
+    }
 }
-#endif  // @carcass
