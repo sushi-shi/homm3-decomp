@@ -232,6 +232,7 @@ ai_player	?AI_get_value_of_artifact@@YIJUtype_artifact@@PBVhero@@EE@Z	92.7585	92
 ai_player	?AI_swap_artifacts@@YIXPAVhero@@0@Z	100.0000	100.0000	100.0000	0x33fe0
 ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000	100.0000	0x33e20
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
+ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	52.9459	52.9459	52.9459	0x2fc50
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40
 ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	74.2046	74.2046	74.2046	0x2ba60
 ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0
@@ -300,7 +301,6 @@ ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0
 ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0
 ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
 ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
-ai_player	attempt_step	0.0000	0.0000	0.0000	0x2fc50
 ai_player	consider_hiring	0.0000	0.0000	0.0000	0x31800
 ai_player	find_all_destinations	0.0000	0.0000	0.0000	0x2edd0
 ai_player	mark_destinations	0.0000	0.0000	0.0000	0x2f570
