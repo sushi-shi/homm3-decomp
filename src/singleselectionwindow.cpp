@@ -879,8 +879,6 @@ int CSaveGameEdit::OnKeyPress(message* msg)
     return ret;
 }
 
-#if 0  // @carcass
-
 // Retail-only (no DC roster row - the DC lobby has no filter panel).
 // Walks the filter panel's widget ranges (0x119..0x11c size buttons,
 // 0x11d, 0x11f..0x127, 0x129..0x131) setting/clearing status from the
@@ -888,8 +886,89 @@ int CSaveGameEdit::OnKeyPress(message* msg)
 VA(0x0057ef70, 0x3B9)  // anchor-callee Update's inFilterOptions arm calls it (no-arg, this) after the 739/740 title pair; body reads field_18A0[0..3] and dispatches a size switch over 0x24/0x48/0x6c, retail-only
 void TSingleSelectionWindow::UpdateFilterWidgets()
 {
-    // @stub
+    if (!inFilterOptions)
+        return;
+    int i;
+    for (i = 0x119; i <= 0x11c; ++i)
+        WidgetClearStatus(i, 0x10);
+    switch (field_18A0[0]) {
+    case MAP_DIMENSION_SMALL:
+        WidgetSetStatus(0x119, 0x10);
+        break;
+    case MAP_DIMENSION_MEDIUM:
+        WidgetSetStatus(0x11a, 0x10);
+        break;
+    case MAP_DIMENSION_LARGE:
+        WidgetSetStatus(0x11b, 0x10);
+        break;
+    case MAP_DIMENSION_EXTRA_LARGE:
+        WidgetSetStatus(0x11c, 0x10);
+        break;
+    }
+    if (field_18A0[1] == 1)
+        WidgetClearStatus(0x11d, 0x10);
+    else
+        WidgetSetStatus(0x11d, 0x10);
+    for (i = 0x11f; i <= 0x127; ++i)
+        WidgetClearStatus(i, 0x10);
+    int lo = field_18A0[2];
+    int hi = field_18A0[2];
+    if (field_18A0[2] == -1) {
+        lo = 1;
+        hi = 8;
+        WidgetSetStatus(0x127, 0x10);
+    } else {
+        WidgetSetStatus(field_18A0[2] + 0x11e, 0x10);
+    }
+    for (i = 0x129; i <= 0x131; ++i)
+        WidgetClearStatus(i, 0x10);
+    for (i = 0x12a; i < hi + 0x129; ++i)
+        WidgetClearStatus(i, 0x1000);
+    for (; i <= 0x130; ++i)
+        WidgetSetStatus(i, 0x1000);
+    if (field_18A0[3] == -1)
+        WidgetSetStatus(0x131, 0x10);
+    else
+        WidgetSetStatus(std::_cpp_min(hi, field_18A0[3]) + 0x129,
+                        0x10);
+    for (i = 0x133; i <= 0x13b; ++i)
+        WidgetClearStatus(i, 0x10);
+    for (i = 0x134; i <= 0x13b - lo; ++i)
+        WidgetClearStatus(i, 0x1000);
+    for (; i <= 0x13a; ++i)
+        WidgetSetStatus(i, 0x1000);
+    int n = std::_cpp_min(8 - lo, field_18A0[4]);
+    if (field_18A0[4] == -1) {
+        n = 8 - lo;
+        WidgetSetStatus(0x13b, 0x10);
+    } else {
+        WidgetSetStatus(n + 0x133, 0x10);
+    }
+    for (i = 0x13d; i <= 0x144; ++i)
+        WidgetClearStatus(i, 0x10);
+    for (i = 0x13e; i < n + 0x13d; ++i)
+        WidgetClearStatus(i, 0x1000);
+    for (; i <= 0x143; ++i)
+        WidgetSetStatus(i, 0x1000);
+    if (field_18A0[5] == -1)
+        WidgetSetStatus(0x144, 0x10);
+    else
+        WidgetSetStatus(std::_cpp_min(n, field_18A0[5]) + 0x13d, 0x10);
+    for (i = 0x146; i <= 0x149; ++i)
+        WidgetClearStatus(i, 0x10);
+    if (field_18A0[6] == 3)
+        WidgetSetStatus(0x149, 0x10);
+    else
+        WidgetSetStatus(field_18A0[6] + 0x146, 0x10);
+    for (i = 0x14b; i <= 0x14e; ++i)
+        WidgetClearStatus(i, 0x10);
+    if (field_18A0[7] == -1)
+        WidgetSetStatus(0x14e, 0x10);
+    else
+        WidgetSetStatus(field_18A0[7] + 0x14b, 0x10);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:2635
 VA(0x0057F330, 0x3E3)  // anchor-callee the 11.6KB ctor calls it at +0x2bc4, back-to-back with its DC neighbor below - the DC adjacency; size 1.13x dc 0x348, dc 0x13575c
