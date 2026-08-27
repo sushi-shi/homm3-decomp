@@ -3041,7 +3041,7 @@ unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
         static_cast<CGameHeaderInfoInitLongMsg*>(pNetMsg);
     const char* version =
         DATA_COMPGEN(0x00683900, defaultRemoteVersion, "1.0");
-    if (pMsg->size == 0x30)
+    if (pMsg->size == sizeof(CGameHeaderInfoInitLongMsg))
         version = pMsg->m_version;
     if (!IsVersionCompatible(version)) {
         CBadVersionMsg reply;
