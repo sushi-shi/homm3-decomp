@@ -1484,6 +1484,25 @@ long value_of_horde_upgrade(town* current_town, type_building_id building, unsig
     return traits.AI_value * horde->bonus;
 }
 
+// E:\gamedcs\game.h:1370
+// The retail COMDAT of the game.h inline member, selected into
+// ai_player.obj. The DC parameter name player_number is STALE - every
+// retail caller hands it a TEAM (buy_creatures expands GetTeam at the
+// call site first, ClaimTown negates the bool result) and the body is
+// the guarded IsHumanTeam scan with no teamInfo pre-read of its own.
+VA(0x0042b9e0, 0x45)  // anchor-bracket + body (guarded teamInfo/IsHuman scan), dc 0x37fd8
+bool game::is_human_ally(int player_number) const
+{
+    if (player_number >= 0) {
+        for (int player = 0; player < 8; ++player) {
+            if (mapHeader.teamInfo[player] == player_number
+                && gpGame->IsHuman(player))
+                return true;
+        }
+    }
+    return false;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1808
@@ -1536,13 +1555,22 @@ void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
                                    ->get_army()),
                           funds, 1, alliance);
 
+    // MAX ACCEPTED DOWN 2026-08-27: 74.2046 -> 73.6571 (hist keeps the peak).
+    // The peak relied on a FAT game::is_human_ally model with GetTeam folded
+    // inside; the real 0x42b9e0 retail body is the simple guarded scan (now
+    // claimed and 100.0000), so this call site spells GetTeam as a ternary
+    // and the inline copy prices 0.55 lower. Byte-proven trade:
+    // +69 B exact vs -6 fuzzy-weighted bytes here.
     // Residual note: retail's inlined TownAlreadyBuiltOn (dc 0x3803c)
     // materialises the byte in BL before testing; a named local AND a
     // single-call-site static both fold back to the direct cmp (74.20 /
     // 74.18 - measured 2026-08-27).
     if (!gpGame->towns[current_town->id].field_02) {
         if (gpGame->setup.difficulty
-            || gpGame->is_human_ally(gNetLocalGamePos)) {
+            || gpGame->is_human_ally(
+                   gNetLocalGamePos >= 0
+                       ? gpGame->mapHeader.teamInfo[gNetLocalGamePos]
+                       : gNetLocalGamePos)) {
             long best_value = 0;
             union {
                 int index;
@@ -3331,27 +3359,11 @@ int game::GetTeam(int playerNum)
     // @stub
 }
 
-// is_human_ally (dc 0x37fd8, game.h:1370) has no retail out-of-line body:
-// every retail caller expands it (buy_creatures 0x42b7db..0x42b826 shows the
-// full GetTeam guard + IsHumanTeam scan inline). Defined for real below the
-// carcass so same-TU callers can inline it; unclaimed by design.
+// is_human_ally (dc 0x37fd8, game.h:1370) is claimed at its retail COMDAT
+// slot below (0x42b9e0); the callers additionally expand GetTeam at the
+// call site before handing it the team.
 
 #endif  // @carcass
-
-// GetTeam's guard is spelled inline here because its one retail body is the
-// COMDAT copy events.obj selected (0x4a5960) - a cross-TU call could never
-// reproduce buy_creatures' inline expansion.
-bool game::is_human_ally(int player_number) const
-{
-    int team;
-    if (player_number < 0)
-        team = player_number;
-    else
-        team = mapHeader.teamInfo[player_number];
-    if (team >= 0)
-        return IsHumanTeam(team);
-    return false;
-}
 
 // E:\gamedcs\game.h:1380
 VA(0x0042ed80, 0x4D)  // anchor-global, dc 0x38000
