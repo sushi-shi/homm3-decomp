@@ -7,6 +7,7 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 #define HOMM3_SINGLESELECTIONWINDOW_PRIV_H
 
+#include <bitset>
 #include <vector>
 
 #include "inputmgr.h"
@@ -33,14 +34,24 @@ namespace ResourceManager {
 // closure - the ResourceManager::GetText precedent above.
 unsigned long get_available_disk_space();
 
-// The three CRT entries SaveValid touches, declared file-locally
-// instead of including <io.h>/<direct.h>: those two system headers
-// cost HandleNetMsg 90.16 -> 86.33 through the include-set wall
-// (measured 2026-08-27); three declarators do not.
+// The game-context feature bits and their index cell (game.cpp/
+// resourcemanager.cpp own the claims); OnSetAsHostMsg gates the
+// game-type widget (0x82) on bit one - the same test(1) game.cpp's
+// player-slot reader spells. Declared file-locally, the
+// get_available_disk_space precedent.
+extern std::bitset<4> gGameContextFeatures[4];
+extern int* gpVideoGameState;
+
+// The CRT entries SaveValid/OnMapFileNameMsg touch, declared
+// file-locally instead of including <io.h>/<direct.h>: those two
+// system headers cost HandleNetMsg 90.16 -> 86.33 through the
+// include-set wall (measured 2026-08-27); a few declarators do not.
+// _access = retail CRT 0x61a26e (OnMapFileNameMsg's existence gate).
 extern "C" {
 int __cdecl _chdir(const char* path);
 int __cdecl _open(const char* filename, int oflag, ...);
 int __cdecl _close(int handle);
+int __cdecl _access(const char* path, int mode);
 }
 
 // The five difficulty names at .bss 0x6a77ec, indexed by the header's
@@ -227,6 +238,16 @@ class CScrollMsg : public CNetMsg {
 public:
     int m_map;    // +0x14
     int m_index;  // +0x18
+
+    // SetCurrentMap's host-broadcast site expands it (the
+    // CMapHeaderRequestMsg pattern); the higher-offset store lands
+    // first there, as in that ctor.
+    CScrollMsg(int map, int index)
+        : CNetMsg(RS_SCROLL, sizeof(CScrollMsg))
+    {
+        m_index = index;
+        m_map = map;
+    }
 };
 
 class CSortMapsMsg : public CNetMsg {
@@ -434,6 +455,30 @@ public:
     virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
+// The re-requested-row reply (subtype RS_GAME_HEADER_INFO through the
+// t_complex_net_message subtype ctor 0x512c50): the same
+// flag/number/header payload as the transfer stream. Retail widened
+// DC's (headerNbr, pHeader) ctor with the list-select flag and
+// expands it in HandleRequests - base ctor and the header's member
+// assign (the 0x578440 COMDAT) stay calls, the member default
+// construction and the flag/number stores inline.
+class CGameHeaderInfoMsg : public t_complex_net_message {
+public:
+    unsigned char m_flag;                 // +0x18
+    char pad_19[3];
+    int m_number;                         // +0x1c
+    GameSelectionHeadersStruct m_header;  // +0x20
+
+    CGameHeaderInfoMsg(unsigned char flag, int number,
+                       GameSelectionHeadersStruct* pHeader)
+        : t_complex_net_message(RS_GAME_HEADER_INFO)
+    {
+        m_flag = flag;
+        m_number = number;
+        m_header = *pHeader;
+    }
+};
+
 // The full-roster broadcast (DC ctor takes both player arrays); the
 // receiver reads the human records at +0x14 and the computer block at
 // +0x3f4.
@@ -454,8 +499,26 @@ public:
 };
 
 // The per-handicap label pointers the seat rows are retitled from
-// (cell 0x6a7800, owner unclaimed).
-extern char* gUnnamed6a7800[];
+// (cell 0x6a7800, owner unclaimed). Declared as int cells: the only
+// consumer (SetCurrentMap's seat loop) feeds them verbatim into
+// send_message's int payload, and the int view spells that without a
+// pointer cast.
+extern int gUnnamed6a7800[];
+
+// The scenario-description scroller class of the +0x196c widget
+// (retail band 0x5ba600..0x5ba920, between text.obj and textntry.obj;
+// no DC roster counterpart). SetText (retail 0x5ba6e0, thiscall ret 4)
+// refills the lines vector from the font; only that entry is modeled,
+// and the class stays abstract - it exists to type the call.
+class CScrollTextWidget : public widget {
+public:
+    void SetText(const char* text);
+};
+
+// The selected row's difficulty mirror at .data 0x683454 (initial 1).
+// Owner is this TU; unclaimed pending the data phase - the
+// gUnnamed6a77ec precedent.
+extern int gUnnamed683454;
 
 // The per-row header broadcast Tick streams (subtype 0x406, 0x84 B);
 // retail's inline expansion fixes every field offset. DC's ctor takes
@@ -496,6 +559,12 @@ public:
 class CNewHostMsg : public CNetMsg {
 public:
     unsigned long m_dpidNewHost;  // +0x14
+
+    CNewHostMsg(unsigned long dpidNewHost)
+        : CNetMsg(RS_NEW_HOST, sizeof(CNewHostMsg))
+    {
+        m_dpidNewHost = dpidNewHost;
+    }
 };
 
 class CMapHeaderRequestMsg : public CNetMsg {
@@ -505,12 +574,14 @@ public:
     int m_number;          // +0x18
 
     // Retail widened the DC (nbr) ctor with the list-select flag; both
-    // CheckMissingHeaders expansions fix the field order.
+    // CheckMissingHeaders expansions fix the field order - and the
+    // STORE order: number lands before flag on every expansion (the
+    // CheckMissingHeaders pair and OnMapFileNameMsg's mismatch arm).
     CMapHeaderRequestMsg(unsigned char flag, int number)
         : CNetMsg(RS_MAP_HEADER_REQUEST, 0x1c)
     {
-        m_flag = flag;
         m_number = number;
+        m_flag = flag;
     }
 };
 

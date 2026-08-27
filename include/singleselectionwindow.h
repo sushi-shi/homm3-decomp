@@ -65,7 +65,10 @@ struct GameSelectionHeadersStruct {
     // Second ctor-zeroed text band (extent = the second fill); role
     // unexercised by reconstructed bodies - provisional name.
     char description[0x6f6 - 0x5c9];  // +0x5c9
-    char pad_6f6[2];
+    // +0x6f6..+0x6f8 is an UNNAMED alignment hole: retail's synthesized
+    // operator= copies description's 0x12d bytes then stores fileTime's
+    // two dwords directly (OnMapFileNameMsg's two expansions) - a named
+    // pad array here adds a fourth byte-copy loop retail lacks.
     // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
     // its address to FileTimeToLocalFileTime.
     _FILETIME fileTime;               // +0x6f8
@@ -98,6 +101,12 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // extent.  The containing handler's two eight-record arrays and four tail
 // dwords are the complete 0x7d0-byte Windows layout.  Defined ahead of
 // TSingleSelectionWindow because that window embeds one at +0x1064.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// The ctor below seeds version from the game-context cell
+// (resourcemanager.cpp owns the claim).
+extern int* gpVideoGameState;
+#endif
+
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
     int heroIndex;             // +0x20
@@ -119,6 +128,17 @@ public:
         townIndex = -1;
         heroIndex = -1;
     }
+
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // DC's seat-record ctor. Declared here, DEFINED OUT OF CLASS in the
+    // TU (retail 0x57c790): /Ob2 then reproduces retail's per-site
+    // split - SetCurrentMap's CUpdatePlayerPosMsg local expands both
+    // array-init loops in full, while OnNewPlayerMsg's keeps the CTOR
+    // out of line (one call-per-element loop, one ??_L vector-iterator
+    // call). Gated to the owning TU: a user ctor makes the record
+    // non-POD for every includer.
+    CNetPlayerHandlerPlayer();
+#endif
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
@@ -242,7 +262,17 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // The window's own scratch header row - 0x38c..0x1030 is exactly one
+    // 0xCA4 element. The 11.6KB ctor constructs it in place (the
+    // SavedGameHeader member ctor at this+0x38c+0x700 on its claim), and
+    // SetCurrentMap points pCurrentHeader at it when field_37F selects
+    // the setup-local row. Gated with the vectors: the element type must
+    // be complete.
+    GameSelectionHeadersStruct m_localHeader;  // 0x38c
+#else
     char pad_38c[0x1030 - 0x38c];
+#endif
     // The three header lists are real Dinkumware vectors, 0x1030/0x1040/
     // 0x1050 (allocator, _First, _Last, _End - the size() null-_First
     // ternary and the 0xCA4 magic-multiply in every consumer, plus
@@ -315,7 +345,9 @@ public:
     // SortMaps admits a row into SelectionHeaders only when it is clear
     // or equal to the row's Size; SetFilter stores it.
     int mapSizeFilter;                 // 0x1860
-    char pad_1864[0x1865 - 0x1864];
+    // DC scenarioOptionsStarted (2876 on the linear run); cleared by
+    // the host-handover reset before SetupScenarioOptions(0).
+    unsigned char scenarioOptionsStarted;  // 0x1864
     unsigned char chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
     char pad_1866[0x1868 - 0x1866];
     // DC chatToggle: the show/hide-chat textButton whose label the
@@ -364,7 +396,9 @@ public:
     void UpdateFilterWidgets();
     // Retail 0x584c40 (no DC row proven): the post-join roster
     // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
-    void WindowFn_00584c40();
+    // DC SetHumanSlot (dc 0x13b22c, 0.84x): re-seat the human players
+    // against the refreshed slot attributes.
+    void SetHumanSlot();
     // The advanced-options row accessors (DC names; retail
     // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
     // THeroID from GetDisplayFace; spelled int so the public closure
@@ -395,10 +429,11 @@ public:
     void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
     // Returns 0 when the row number is out of range (retail sets al).
     unsigned char OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
-    void OnMapFileNameMsg(CNetMsg* pNetMsg);
+    // Always returns 1 (retail sets al on every exit); DC agrees.
+    unsigned char OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
-    void OnSetAsHostMsg(CNetMsg* pNetMsg);
+    unsigned char OnSetAsHostMsg(CNetMsg* pNetMsg);
     unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
     void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
@@ -432,9 +467,28 @@ public:
     // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
     // byte; retail's takes none. Provisional.
     int GetPlayerCount();
-    // Retail 0x583580 - rebuilt after the header transfer completes.
-    // Name provisional.
-    void RefreshFileList();
+    // Retail 0x583580: copies the selected header's planes into
+    // gpGame (+0x1f6a0 header band, +0x4df18 setup band) - the DC
+    // UpdateGameVars role (dc 0x139090, void()). Called after the
+    // header transfer completes.
+    void UpdateGameVars();
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // The disk header reader family around it, visible only to the
+    // owning TU (the vectors gate): GetHeaders scans the picked
+    // directory ("random_maps"/"games"/"maps" by mode) into the lists;
+    // GetHeader fills one row's header temp from (dir, filename) -
+    // retail widened DC's (cFilename, pHeader) with the dir argument
+    // its chdir dance needs.
+    void GetHeaders();
+    int GetHeader(char* dir, char* cFilename,
+                  GameSelectionHeadersStruct* pHeader);
+    // Retail 0x580a70 widened DC's no-arg SetupScenarioOptions with the
+    // random-maps mode byte (the body compares it to m_flag66 and
+    // stores it there). ShowWidget = retail 0x57fb20 (its only caller
+    // is OnSetAsHostMsg - extern linkage keeps it emitted).
+    void SetupScenarioOptions(unsigned char randomMaps);
+    void ShowWidget(int id);
+#endif
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();
