@@ -19,6 +19,12 @@
 // end_turn's marketplace gate is a town::HasBuilding call in the
 // Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
 // town.h for why the inline's visibility is scoped.
+// find_all_destinations' grail-spot tail calls ?cell@NewfullMap out of
+// line - the advmgr.cpp gate, joined 2026-08-27.
+#define HOMM3_NEWFULLMAP_CELL_OUTOFLINE
+// Joins VICTORY_CONDITION_BUILD_GRAIL (game.h gates the enumerator);
+// find_all_destinations prices the grail spot 1968 under that victory.
+#define HOMM3_AI_PLAYER_OBJ_DECLS
 #include <va.h>
 #include <algorithm>
 #include <functional>
@@ -3393,13 +3399,192 @@ NewmapCell* game::get_cell(type_point point)
 //           type_spellvalue::get_best_spell_value all unique to this fn.
 //   0x33fe0 AI_swap_artifacts - 4 backpack callees (equip/remove_artifact,
 //           get_last_backpack_index, remove_backpack_artifact), r=1.03.
-#if 0  // @carcass
+// Residual (35.92%): call skeleton, guards and both HeroDestination
+// records agree; the mass of the delta is ONE inline notch - retail's
+// push_back expansion stops at called _Ucopy x4 / _Ufill x2 COMDATs
+// while ours expands their loops in place (75 vs 54 branches), which
+// misaligns the whole tail. Tried and rejected: a dead candidate site
+// (byte-flat), the grail-call pin (banked, +3.8). No statement-level
+// lever reaches a depth-4 nested refusal; same bounded class as
+// buy_creatures' set() depth notch.
 // E:\gamedcs\ai_player.cpp:3225
+// Builds the candidate-destination list: every visited search cell that is
+// a trigger (or an unexplored tile while the player still has towns) inside
+// the patrol radius becomes a HeroDestination - valued 100/100000 for
+// exploration or by AI_value_of_event, cost-adjusted, with the escort
+// classes gated on the friendly-distance map. Inside a town only enemy
+// heroes within this turn's movement qualify (is_critical). The tail adds
+// the player's puzzle-guess grail spot, valued 1968 under the build-grail
+// victory or as the Holy Grail artifact otherwise. Returns the danger under
+// the hero (mark_destinations' result).
+// Forward prototypes: all three bodies sit later in RVA order.
+long mark_destinations(hero* current_hero, long max_distance,
+                       searchArray* search_array,
+                       unsigned short* friendly_distances,
+                       type_search_type search_type);
+long AI_value_of_event(const hero* current_hero, type_point point,
+                       long* move_cost);
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
+
 VA(0x0042edd0, 0x79b)  // anchor-callee + arity, dc 0x33038
-long find_all_destinations(hero* current_hero, searchArray* search_array, std::vector<HeroDestination,std::allocator<HeroDestination>* destinations, long max_distance, unsigned char hiring_hero, unsigned char allow_spells, unsigned char explore_mode)
+long find_all_destinations(hero* current_hero, searchArray* search_array,
+                           std::vector<HeroDestination>* destinations,
+                           long max_distance, unsigned char hiring_hero,
+                           unsigned char allow_spells,
+                           unsigned char explore_mode)
 {
-    // @stub
+    int map_cells = gMapWidth * gMapHeight;
+    int level_cells = gpGame->worldMap.GetNumLevels() * map_cells;
+    unsigned short* friendly_distances = new unsigned short[level_cells];
+    memset(friendly_distances, -1, level_cells * sizeof(unsigned short));
+    long danger = mark_destinations(current_hero, max_distance, search_array,
+                                    friendly_distances,
+                                    allow_spells ? const_AI_search
+                                                 : const_AI_alternate_search);
+
+    unsigned char in_town = 0;
+    int town_id = gpGame->GetTownId(current_hero->x, current_hero->y,
+                                    current_hero->z);
+    if (town_id >= 0) {
+        town* current_town = gpGame->GetTown(town_id);
+        if (current_town->threatening_heroes > 0) {
+            in_town = 1;
+            if (current_town->threatening_heroes > 1) {
+                delete[] friendly_distances;
+                return danger;
+            }
+        }
+    }
+
+    for (int j = static_cast<int>(search_array->visited_points.size());
+         j-- != 0;) {
+        pathCell* cell = search_array->visited_points[j];
+        if (!allow_spells && cell->cost < cell->adjusted_cost)
+            continue;
+        NewmapCell* map_cell = gpAdvManager->GetCell(cell->point);
+        if (!map_cell->is_trigger) {
+            type_point probe = cell->point;
+            if (GetMapExtra(probe.x, probe.y, probe.z) & gUnnamed69ccc4)
+                continue;
+            if (gpCurrentPlayer->numTowns == 0)
+                continue;
+        }
+        if (!current_hero->is_in_patrol_radius(cell->point))
+            continue;
+        gpAdvManager->advWindow->animate_bottom_view(0);
+        CheckDoMain(0, 0);
+
+        HeroDestination dest;
+        dest.is_critical = 0;
+        if (in_town) {
+            if (map_cell->type != HERO)
+                continue;
+            hero* other = gpGame->GetHero(map_cell->extraInfo);
+            if (gpGame->OnSameTeam(other->owner, current_hero->owner))
+                continue;
+            if (static_cast<int>(cell->cost) > current_hero->movePoints)
+                continue;
+            dest.is_critical = 1;
+        }
+
+        dest.point.x = cell->point.x;
+        dest.point.y = cell->point.y;
+        dest.point.z = cell->point.z;
+        type_point hero_point;
+        hero_point.x = current_hero->x;
+        hero_point.y = current_hero->y;
+        hero_point.z = current_hero->z;
+        dest.move_cost = cell->cost;
+        if (dest.point == &hero_point)
+            continue;
+
+        if (gUnnamed693718[map_cell->type]) {
+            unsigned short friendly_cost = friendly_distances[
+                dest.point.z * map_cells + dest.point.y * gMapWidth
+                + dest.point.x];
+            if (dest.move_cost > friendly_cost)
+                continue;
+        }
+        dest.move_cost = cell->adjusted_cost;
+        if (hiring_hero)
+            dest.move_cost = 10000;
+        if (!(GetMapExtra(dest.point.x, dest.point.y, dest.point.z)
+              & gUnnamed69ccc4)
+            && gpCurrentPlayer->numTowns > 0) {
+            dest.value = explore_mode ? 100000 : 100;
+        } else {
+            dest.value = AI_value_of_event(current_hero, dest.point,
+                                           &dest.move_cost);
+            if (dest.value <= 0) {
+                if (dest.value != 0)
+                    continue;
+                if (danger >= 0)
+                    continue;
+            }
+        }
+        destinations->push_back(dest);
+    }
+
+    if (!in_town) {
+        playerData* player = &gpGame->players[current_hero->owner];
+        // The odd-offset packed guess: word-sized memcpy bridges, the
+        // value_of_obelisk (philai.cpp) precedent.
+        unsigned short guess_lo;
+        unsigned short guess_hi;
+        memcpy(&guess_lo, player->puzzle_guess, sizeof guess_lo);
+        memcpy(&guess_hi, player->puzzle_guess + 2, sizeof guess_hi);
+        if (static_cast<short>(guess_lo << 6) >= 0) {
+            HeroDestination dest;
+            dest.point.x = static_cast<short>(
+                static_cast<short>(guess_lo << 6) >> 6);
+            dest.point.y = static_cast<short>(
+                static_cast<short>(guess_hi << 6) >> 6);
+            dest.point.z = static_cast<short>(
+                static_cast<short>(guess_hi << 2) >> 12);
+            pathCell* guess_cell = search_array->get_cell(dest.point, 0);
+            if (guess_cell->visited) {
+                NewmapCell* map_cell = gpGame->worldMap.cell(
+                    dest.point.x, dest.point.y, dest.point.z);
+                if (!(map_cell->type == HERO && map_cell->is_trigger)
+                    || map_cell->extraInfo
+                        == static_cast<unsigned long>(current_hero->id)) {
+                    if (current_hero->is_in_patrol_radius(dest.point)) {
+                        dest.move_cost = guess_cell->cost;
+                        unsigned short friendly_cost = friendly_distances[
+                            (dest.point.z * gMapHeight + dest.point.y)
+                                * gMapWidth + dest.point.x];
+                        if (dest.move_cost <= friendly_cost) {
+                            if (gpGame->mapHeader.victoryCondition.Type
+                                == VICTORY_CONDITION_BUILD_GRAIL) {
+                                dest.value = 1968;
+                            } else {
+                                type_artifact grail(ARTIFACT_HOLY_GRAIL, -1);
+                                // Retail calls the helper here (it expands
+                                // it in consider_hiring's backpack loop).
+#pragma inline_depth(0)
+                                dest.value = AI_get_artifact_player_value(
+                                    grail, current_hero->owner);
+#pragma inline_depth()
+                            }
+                            dest.move_cost = _cpp_min(
+                                static_cast<long>(dest.move_cost),
+                                static_cast<long>(
+                                    current_hero->GetMobility()
+                                    + current_hero->movePoints));
+                            if (dest.value > 0)
+                                destinations->push_back(dest);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    delete[] friendly_distances;
+    return danger;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

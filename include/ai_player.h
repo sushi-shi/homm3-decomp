@@ -276,6 +276,15 @@ void fill_prohibited_array(playerData* player, unsigned char* prohibited);
 extern const char* gResourceNames[7];
 extern char gAIResourceWarningFormat[];
 
+// Retail .bss 0x693718, one byte per TAdventureObjectType.
+// find_all_destinations tests it for each trigger destination and, when
+// set, requires the friendly-distance map to cover the cell at least as
+// cheaply - a "wait for backup" class of objects. No DC symbol reaches
+// it; named in the gUnnamed69ccc4 style. ai_player.obj is the nearest
+// admitted consumer.
+DATA(0x00693718)
+extern unsigned char gUnnamed693718[];
+
 // 0x432220 - find_magus_hut_value's only callee, reached with
 // (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and
 // puts the two longs in ECX/EDX, which is exactly the register split
