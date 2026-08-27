@@ -3,7 +3,9 @@
 // 213 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "event_record.h"
+#define HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "game.h"
+#undef HOMM3_EVENT_RECORD_CLEAR_DECL
 #include "abstractfile.h"
 #define HOMM3_EVENT_RECORD_MOVE_DECLS
 #include "advmgr.h"
@@ -1282,14 +1284,29 @@ void game::clear_event_records()
         delete eventRecords[i];
     eventRecords.clear();
 }
-#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1251
-DC_ONLY(0x8e77c, 0xB2)
+// Drops the leading block of records up to and including the run that
+// belongs to `player_id`. Retail emits BOTH find loops in full - the first
+// walks past the foreign prefix, the second across the player's own run -
+// then a signed delete loop and vector::erase of [0, i). `i` is an int,
+// which is what makes the size compares unsigned (jae, the usual
+// promotion) while the delete loop's own bound stays signed (jl).
+VA(0x0049d6c0, 0xD3)  // linkorder dc-label, dc 0x8e77c
 void game::clear_event_records(char player_id)
 {
-    // @stub
+    int i = 0;
+    while (i < eventRecords.size() && eventRecords[i]->player_id != player_id)
+        ++i;
+    if (i == eventRecords.size())
+        return;
+    while (i < eventRecords.size() && eventRecords[i]->player_id == player_id)
+        ++i;
+    for (int j = 0; j < i; ++j)
+        delete eventRecords[j];
+    eventRecords.erase(eventRecords.begin(), eventRecords.begin() + i);
 }
+#if 0  // @carcass
 
 // E:\gamedcs\event_record.cpp:1282
 DC_ONLY(0x8e830, 0x258)
@@ -2128,6 +2145,55 @@ unsigned char game::replay_available() const
             return 1;
     }
     return 0;
+}
+
+// The record factory table, retail .data 0x6776b0. Eleven slots indexed by
+// the type byte load_recorded_events reads off the stream, in
+// type_event_record_type order, plus the unused zero slot; the retail
+// dispatch is `call dword ptr [ecx*4 + 0x6776b0]` after a 1..11 range check.
+DATA(0x006776b0)
+type_event_record* (*gRecordCreators[12])() = {
+    0,
+    type_record_move_hero::create,
+    type_record_teleport::create,
+    type_record_claim_mine::create,
+    type_record_claim_town::create,
+    type_record_hide_boat::create,
+    type_record_show_boat::create,
+    type_record_erase::create,
+    type_record_hide_hero::create,
+    type_record_show_hero::create,
+    type_record_player_death::create,
+    type_record_shroud::create
+};
+
+// E:\gamedcs\event_record.cpp:1380
+// save_recorded_events' mirror and ASYMMETRIC with it: retail forwards a
+// save-version parameter to every record's own load. clear_event_records()
+// is EXPANDED at the head (the reverse delete walk plus the clear), and the
+// type byte indexes the factory table above after a 1..11 range check.
+VA(0x0049dac0, 0x19C)  // linkorder dc-label + factory-table dispatch, dc 0x8ead0
+unsigned char game::load_recorded_events(TAbstractFile* infile, int version)
+{
+    int count;
+    if (infile->Read(&count, sizeof(count)) != sizeof(count))
+        return 0;
+
+    clear_event_records();
+    eventRecords.reserve(count);
+
+    while (count--) {
+        unsigned char type;
+        if (infile->Read(&type, 1) != 1)
+            return 0;
+        if (type <= 0 || type > RECORD_SHROUD)
+            return 0;
+        type_event_record* record = (*gRecordCreators[type])();
+        if (!record->load(infile, version))
+            return 0;
+        eventRecords.push_back(record);
+    }
+    return 1;
 }
 
 // E:\gamedcs\event_record.cpp:1426

@@ -2213,7 +2213,17 @@ public:
     int TransmitSaveGame(int iToWho, int thisPlayerDead,
                          unsigned char inGame, unsigned char makeOrig);
     void DoNewTurn();
-    void clear_event_records(char playerId);
+#endif
+// SPLIT around the declarator below rather than moved, so the preprocessed
+// text every HOMM3_GAME_NEW_MAP_DECLS consumer sees is unchanged, line for
+// line - GameFn_004CA780's pattern. event_record.obj owns 0x49d6c0's body
+// and needs this ONE declarator; taking the whole gate would put nine more
+// into its class-type stream at once.
+#if defined(HOMM3_GAME_NEW_MAP_DECLS) \
+    || defined(HOMM3_EVENT_RECORD_CLEAR_DECL)
+    void clear_event_records(char playerId);              // 0x49d6c0
+#endif
+#ifdef HOMM3_GAME_NEW_MAP_DECLS
     // Game.h:1390 in the DC roster. Retail expands this short calendar
     // accessor at every game.obj call site and retains no standalone row.
     short get_current_turn()
