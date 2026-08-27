@@ -54,7 +54,8 @@ DATA(0x0069ca50) extern CHotSeatMan* gpHotSeatMan;
 // own constructor is inline, so `new CMPInputEdit` calls 0x510760 then stores
 // 0x640130. CHotSeatEdit derives textEntryWidget directly with an inline
 // constructor, so `new CHotSeatEdit` inlines the base ctor and stores 0x640210.
-// CMPEdit overrides SetFocus(14)/OnKeyPress(15); CMPInputEdit re-overrides
+// CMPEdit overrides SetFocus(14)/OnKeyPress(15) and introduces the virtual
+// OnPrevEdit(19)/OnNextEdit(20) pair; CMPInputEdit re-overrides
 // OnKeyPress(15); CHotSeatEdit overrides OnKillFocus(11)/SetFocus(14)/
 // OnKeyPress(15). Only the constructors and the two inline setters are
 // reached from this TU; the override bodies live in their own carve rows.
@@ -71,6 +72,8 @@ public:
     void SetPrevEdit(CMPEdit* pPrevEdit) { prevEdit = pPrevEdit; }
     virtual void SetFocus(unsigned char state);  // slot 14, retail 0x510890
     virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5107d0
+    virtual void OnPrevEdit();                   // slot 19, retail 0x510870
+    virtual void OnNextEdit();                   // slot 20, retail 0x510850
 };
 
 class CMPInputEdit : public CMPEdit {
