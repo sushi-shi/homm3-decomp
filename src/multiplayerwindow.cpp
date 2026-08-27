@@ -15,6 +15,7 @@
 #include "netgame.h"
 #include "kb.h"
 #include "kbwin.h"
+#include "soundmgr.h"
 #define HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
 #include "remote.h"
 #undef HOMM3_MULTIPLAYERWINDOW_OWNS_DXPLAY_TYPES
@@ -915,15 +916,29 @@ return_to_main_menu:
     return 1;
 }
 
-#if 0  // @carcass
 VA(0x0050f940, 0xC5)  // anchor-vtable 0x6400a0 slot 9 (WindowHandler); ret 4 = (this,message*)->int.
                       // 197 B vs DC 40: retail inlines the timer-gated session refresh (PollSound +
                       // GameTime::Get) that DC keeps in RefreshSessions/CheckSessions. dc 0x100c1c
 int TMultiPlayerWindow::WindowHandler(message* msg)
 {
-    // @stub
+    PollSound();
+    // Retail keeps the pre-call timestamp in EDI, then reuses that saved
+    // register for pSessions once the timeout gate succeeds.
+    unsigned long timer = sessTimer;
+    if (timer && GameTime::Get() - timer > sessionRefreshTimeout) {
+        pSessions->Destroy();
+        pDPlay->EnumSessions(pSessions, sessionRefreshTimeout, 0x52);
+        sessTimer = GameTime::Get();
+        static_cast<slider*>(gameSlider)->UpdateResolution(
+            pSessions->GetCount() - 12);
+        Update();
+        sessTimer = GameTime::Get();
+    }
+
+    return CHeroWindowEx::WindowHandler(msg);
 }
 
+#if 0  // @carcass
 VA(0x0050fab0, 0x106)  // anchor-callee: 2-arg member (ret 8) called from every host flow (0x50fc50/0x50fda0); sprintf-formats a 256B session-name buffer, size 0.98x DC, dc 0x100d0c
 unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
 {
