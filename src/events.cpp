@@ -7472,14 +7472,141 @@ void advManager::GeneratorEvent(hero* who, NewmapCell* eventCell, type_point poi
     delete manager;
 }
 
-// E:\gamedcs\events.cpp:5661.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// townmgr.obj's creature-type join report (0x5d11d0, reconstructed there);
+// the creature-bank joiner arm is its only consumer here. Declared
+// file-locally, the armyGroup-overload precedent above.
+void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount);
+
+// E:\gamedcs\events.cpp:5661.  The shared creature-bank fight-and-loot:
+// pick the strongest guardian for the report, reseed from the cell's
+// coordinates, fight in the bank's surround layout, then pay the record
+// out - joiner stack, artifacts, all seven resources - and stamp the
+// cell's emptied bit. cText is never read; retail keeps the parameter
+// (`ret 0x14`), so this does too. The Dreamcast publishes every local.
+// [2026-08-27] Residual (89.3406%): a whole-body esi/edi/ebx 3-cycle -
+// retail creates the traits-base/best pseudo first (ESI), then this
+// (EDI), then bank (EBX); ours runs bank, best, this. why-reg's model
+// confirms slots and order agree with only the bindings permuted and its
+// creation-order edit is copy-propagated (C1 handle-state class). The
+// call structure, both insert-overload families, the expanded ", "
+// append and the seed CSE all match; tried and rejected: a named seed
+// local (byte-flat), the model's best/leader store swap (+0).
 VA(0x004abdc0, 0x6D0)  // anchor-callee ExtraInfoUnion::get_creature_bank, ret 0x14=p6, dc 0x9a898
-int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, char* cText, type_point point, unsigned char human_player)
+int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, const char* cText, type_point point, unsigned char human_player)
 {
-    // @stub
+    type_creature_bank& bank = cell_extra(cell)->get_creature_bank();
+    int leader_monster = -1;
+    long creature_count = bank.guards.get_creature_total();
+    if (human_player) {
+        int best = 0;
+        for (int i = 0; i < 7; i++) {
+            int type = bank.guards.armies[i];
+            if (type != CREATURE_NONE
+                && akCreatureTypeTraits[type].AI_value > best) {
+                best = akCreatureTypeTraits[type].AI_value;
+                leader_monster = type;
+            }
+        }
+    }
+
+    DemobilizeCurrHero(0, 1);
+    int seed = point.y * 0x36814 + point.z * 0x3d0b5 + point.x * 0x29875
+               + 0x14075;
+    SRand(seed);
+    int winner = DoCombat(point, who, &who->army, -1, 0, 0, &bank.guards,
+                          seed, 1, 1);
+    MobilizeCurrHero(0, 0, 1);
+    if (winner)
+        return 0;
+
+    if (human_player) {
+        std::vector<type_dialog_resource> resources;
+        std::vector<std::string> reward_strings;
+        std::string result;
+        type_dialog_resource resource;
+
+        if (bank.reward_creatures > 0) {
+            resource.resource = 0x15;
+            resource.qualifier = bank.reward_creature;
+            resources.push_back(resource);
+            result = format_string(
+                DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
+                bank.reward_creatures,
+                GetArmyName(bank.reward_creature, bank.reward_creatures));
+            reward_strings.push_back(result);
+        }
+
+        unsigned int i;
+        for (i = 0; i < bank.artifacts.size(); i++) {
+            resource.resource = 8;
+            resource.qualifier = bank.artifacts[i];
+            resources.push_back(resource);
+            result = format_string(
+                gpAdventureEventText->GetText(45),
+                akArtifactTraits[bank.artifacts[i]].name);
+            reward_strings.push_back(result);
+        }
+
+        for (int j = 0; j <= 6; j++) {
+            if (bank.resources[j] > 0) {
+                resource.resource = j;
+                resource.qualifier = bank.resources[j];
+                if (j == 6 && bank.artifacts.size() != 0)
+                    resource.resource = 0x24;
+                resources.push_back(resource);
+                result = format_string(
+                    DATA_COMPGEN(0x006778a4, resourceQuantityFormat,
+                                 "%d %s"),
+                    bank.resources[j], gResourceNames[j]);
+                reward_strings.push_back(result);
+            }
+        }
+
+        result = reward_strings[0];
+        for (i = 1; i < reward_strings.size(); i++) {
+            if (i == reward_strings.size() - 1)
+                result += gpGeneralText->GetText(142);
+            else
+                result += ", ";
+            result += reward_strings[i];
+        }
+
+        std::string reward_text;
+        reward_text = format_string(
+            gpAdventureEventText->GetText(34),
+            GetArmyName(leader_monster, creature_count), result.c_str());
+        extended_dialog(reward_text.c_str(), resources, -1, -1, 0);
+    }
+
+    if (bank.reward_creatures > 0) {
+        if (!who->army.Add(bank.reward_creature, bank.reward_creatures,
+                           -1)) {
+            if (human_player)
+                do_monster_join_dialog(
+                    who, creature_type_from_int(bank.reward_creature),
+                    bank.reward_creatures);
+            else
+                AI_join_decision(who,
+                                 creature_type_from_int(bank.reward_creature),
+                                 bank.reward_creatures);
+        }
+    }
+
+    unsigned int k;
+    for (k = 0; k < bank.artifacts.size(); k++) {
+        type_artifact art;
+        art.artifactId = bank.artifacts[k];
+        art.extra = -1;
+        who->GiveArtifact(&art, 1, 1);
+    }
+
+    for (int m = 0; m <= 6; m++)
+        who->GiveResource(m, bank.resources[m]);
+
+    cell->extraInfo |= 0x2000000;
+    who->CheckLevel();
+    return 1;
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:5805.  Shared handler for the three undead lairs:
 // ask a human (or price the visit for the AI), record the visit, then either
