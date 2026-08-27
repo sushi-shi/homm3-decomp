@@ -11,6 +11,7 @@
 class hero;
 class town;
 class garrison;
+class generator;
 struct TBlackMarket;
 struct type_university;
 
@@ -50,6 +51,10 @@ void AI_enter_town(hero* current_hero, town* current_town);
 // register-for-register (0x524370 / 0x5243f0 / hill fort / university /
 // war factory). None of the rows is claimed from here.
 void AI_enter_garrison(hero* current_hero, garrison* our_garrison);
+// The dwelling purchaser DoEventCreatureGenerator's AI tail calls
+// (dc AI_PurchaseCreatures, philai.obj); retail 0x527b00, /Gr
+// (hero in ECX, generator in EDX). Not claimed from here.
+void AI_PurchaseCreatures(hero* current_hero, generator* current_generator);
 void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market);
 void AI_visit_hill_fort(hero* current_hero);
 void AI_visit_university(hero* current_hero, type_university* university);
