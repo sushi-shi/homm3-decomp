@@ -90,7 +90,7 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x370 - 0x66];
+    char pad_66[0x36c - 0x66];
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
     // 864/868/872) followed by the two option-mode bytes, the save-name
     // editor and the update-proc manager (dc 876/877/880/888) - the whole
@@ -101,6 +101,8 @@ public:
     // stores its state to +0x378 alongside gpGame->setup.turnDuration,
     // WindowHandler's Enter arm reads the editor's text through +0x380,
     // and its net pump ticks the manager at +0x388.
+    unsigned char sortDirection;       // 0x36c (DC sortDirection, a byte here)
+    char pad_36d[0x370 - 0x36d];
     int currentIndex;                  // 0x370, top visible file row
     int currentMap;                    // 0x374
     int durationIndex;                 // 0x378
@@ -129,7 +131,8 @@ public:
     // UpdatePlayerPositions reads the per-slot alignments through it.
     GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
     CNetPlayerHandler m_players;       // 0x1064
-    char pad_1834[0x1838 - 0x1834];
+    unsigned char receivedMaps;        // 0x1834 (DC receivedMaps)
+    char pad_1835[0x1838 - 0x1835];
     // The DC chatSlider/fileSlider/durationSlider/nameSlider run (dc
     // 2832..2844). fileSlider is the one the WindowHandler scroll arms
     // SetState through (+0x183c); +0x1840 - previously misfiled as the
@@ -139,9 +142,15 @@ public:
     slider* fileSlider;                // 0x183c
     slider* durationSlider;            // 0x1840
     slider* nameSlider;                // 0x1844
-    char pad_1848[0x1870 - 0x1848];
+    char pad_1848[0x1865 - 0x1848];
+    unsigned char field_1865;          // 0x1865, gates the 179 widget show
+    char pad_1866[0x186c - 0x1866];
+    unsigned char field_186c;          // 0x186c, cleared on header-end
+    char pad_186d[0x1870 - 0x186d];
     CSaveScreen* flagBack;             // 0x1870, DC-attested name
-    char pad_1874[0x1970 - 0x1874];
+    char pad_1874[0x1898 - 0x1874];
+    int field_1898;                    // 0x1898, player count cached on drop
+    char pad_189c[0x1970 - 0x189c];
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
@@ -160,6 +169,39 @@ public:
     void DrawHeroAdvancedOption(int playerPos, unsigned char update,
                                 int position);
     unsigned int GetMapCount() const;
+    unsigned char OnNewSetupInfoMsg(CNetMsg* pNetMsg);
+    unsigned char OnNewPlayerMsg(CNetMsg* pNetMsg);
+    unsigned char OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg);
+    // Provisional spelling: the SoD-only 0x43b init arm's handler; DC has
+    // a single OnGameHeaderInfoInitMsg.
+    void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
+    void OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
+    void OnMapFileNameMsg(CNetMsg* pNetMsg);
+    void OnNewHostMsg(CNetMsg* pNetMsg);
+    unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
+    void OnSetAsHostMsg(CNetMsg* pNetMsg);
+    void OnBadVersionMsg(CNetMsg* pNetMsg);
+    void OnPingMsg(CNetMsg* pNetMsg);
+    void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
+    void OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg,
+                                   unsigned char inPopup);
+    unsigned char CheckMissingHeaders(unsigned long dpidHost);
+    void SortMaps(int how, unsigned char sendSortMsg,
+                  unsigned char bUpdate);
+    void SetFilter(int size);
+    void DisplayChat();
+    void GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer);
+    // DC takes TTownType; spelled int here so the public closure needs no
+    // town.h - retype when the body lands.
+    void UpdateTown(int pos, int town, unsigned char inPopup);
+    void UpdateNameLists();
+    // Retail 0x58ea00 (past the stale span end) - the no-arg count the
+    // drop arm caches at +0x1898. DC's GetPlayerCount takes a filter
+    // byte; retail's takes none. Provisional.
+    int GetPlayerCount();
+    // Retail 0x583580 - rebuilt after the header transfer completes.
+    // Name provisional.
+    void RefreshFileList();
 
 private:
     CNetPlayerHandlerPlayer* GetThisPlayer();

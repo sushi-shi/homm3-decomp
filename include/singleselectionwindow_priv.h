@@ -40,10 +40,49 @@ CNetMsg* GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompress
 // proves the two tail fields (the polled message pointer at +0x78, the awaited
 // dpid at +0x7c). Its vtable 0x241cf8 replaces CAnimatedDlg slot 0 (the ??_G)
 // and slot 3 (handle_message).
+// misc.cpp's PRNG pair and kb's fatal exit, declared here so the
+// CHostWaitDlg::Wait inline below can reach them (the cpp-local rule
+// would hide them from a header inline).
+int Random(int min, int max);
+void SRand(int iSeed);
+
+// Devil / Arch Devil, ids fixed by army.h's Inferno-run arithmetic
+// (Demon 0x30 opens it, 0x35..0x37 close it); the wait dialog rerolls
+// its random flavor creature past both. TU-private for the same
+// include-set reason army.h scopes its own creature ids.
+enum EWaitDialogCreatures {
+    WAIT_CREATURE_DEVIL = 0x36,
+    WAIT_CREATURE_ARCH_DEVIL = 0x37
+};
+
 class CHostWaitDlg : public CAnimatedDlg {
 public:
+    CHostWaitDlg()
+    {
+        m_pMsg = 0;
+        m_forWho = 0;
+    }
     virtual ~CHostWaitDlg();
     virtual int handle_message(message& msg);  // slot 3
+
+    // DC Wait takes the dpid alone; retail's two expansions differ only
+    // in the general-text row, so the text rides as a parameter here
+    // (provisional widening). Inline - both HandleNetMsg arms expand it,
+    // and the virtual Setup/DoModal calls stay virtual because they go
+    // through the inlined body's `this`.
+    void Wait(unsigned long forWho, const char* cText)
+    {
+        m_forWho = forWho;
+        SRand(GameTime::Get());
+        int creature;
+        do {
+            creature = Random(0, 111);
+        } while (creature == WAIT_CREATURE_ARCH_DEVIL
+                 || creature == WAIT_CREATURE_DEVIL);
+        Setup(cText, gpMediumFont,
+              akCreatureTypeTraits[creature].m_sprite_name, 0);
+        DoModal(0);
+    }
 
     CNetMsg* m_pMsg;         // +0x78
     unsigned long m_forWho;  // +0x7c
@@ -98,11 +137,109 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // 1081 end (SoD renumbered/extended the header-transfer family). Values
 // byte-proven at their build sites in this TU; TU-private so the shared
 // netmsg.h ladder - a measured include-set trigger - is untouched.
+// The DC eRS_Messages rungs this TU dispatches that the shared
+// netmsg.h ladder does not carry (values are the DC enum verbatim),
+// plus the three retail-only rungs past the DC ladder's 1081 end.
+// TU-private so netmsg.h - a measured include-set trigger - is
+// untouched.
 enum eRS_LobbyMessages {
-    RS_NEW_SETUP_INFO_EX = 0x402,       // 1026 DC RS_NEW_SETUP_INFO
-    RS_SETUP_PING_EX = 0x417,           // 1047 DC RS_SETUP_PING
-    RS_SETUP_PING_RESPONSE_EX = 0x418,  // 1048 DC RS_SETUP_PING_RESPONSE
-    RS_GAME_HEADER_INFO_INIT = 0x43b    // 1083, CGameHeaderInfoInitMsg
+    RS_GAME_HEADER_INFO = 1023,
+    RS_GAME_HEADER_INFO_INIT = 1024,
+    RS_GAME_HEADER_INFO_END = 1025,
+    RS_NEW_SETUP_INFO = 1026,
+    RS_SCROLL = 1027,
+    RS_NEW_MAP_HEADER_INFO = 1028,
+    RS_MAP_HEADER_REQUEST = 1029,
+    RS_MAP_FILE_NAME = 1030,
+    RS_SORT_MAPS = 1031,
+    RS_SET_FILTER = 1032,
+    RS_REQUEST_HERO_FACE = 1035,
+    RS_REQUEST_HERO_FACE_REPLY = 1036,
+    RS_SETAGR = 1037,
+    RS_NEW_HOST = 1038,
+    RS_UPDATE_PLAYER_POS = 1039,
+    RS_NEW_PLAYER = 1040,
+    RS_REQ_HEADER_CONFIRM = 1041,
+    RS_HEADER_CONFIRM = 1042,
+    RS_CLICK = 1043,
+    RS_TOWN_UPDATE = 1044,
+    RS_LAUNCHING_GAME = 1045,
+    RS_BAD_VERSION = 1046,
+    RS_GAME_TRANSMIT_PENDING = 1082,     // retail-only hold msg
+    RS_GAME_HEADER_INFO_INIT_EX = 1083,  // retail-only, CGameHeaderInfoInitMsg
+    RS_HEADERS_REQUEST = 1084            // retail-only, starts a transfer job
+};
+
+// The lobby message shapes HandleNetMsg reads and builds. All are
+// DC-attested class names (SingleSelectionWindow.cpp 473..773); only the
+// fields the retail arms touch are modeled, at the offsets the arms fix
+// (first derived field at +0x14 over the 0x14-byte CNetMsg base).
+class CScrollMsg : public CNetMsg {
+public:
+    int m_map;    // +0x14
+    int m_index;  // +0x18
+};
+
+class CSortMapsMsg : public CNetMsg {
+public:
+    int m_how;        // +0x14
+    int m_direction;  // +0x18
+};
+
+class CSetFilterMsg : public CNetMsg {
+public:
+    int m_size;  // +0x14
+};
+
+class CRequestHeroFaceMsg : public CNetMsg {
+public:
+    int m_which;  // +0x14
+};
+
+class CRequestHeroFaceReplyMsg : public CNetMsg {
+public:
+    int m_pos;   // +0x14
+    int m_face;  // +0x18
+
+    CRequestHeroFaceReplyMsg(int pos, int face)
+        : CNetMsg(RS_REQUEST_HERO_FACE_REPLY,
+                  sizeof(CRequestHeroFaceReplyMsg))
+    {
+        m_pos = pos;
+        m_face = face;
+    }
+};
+
+class CSetAGRMsg : public CNetMsg {
+public:
+    int m_gamePos;  // +0x14
+    int m_agr;      // +0x18
+};
+
+class CHeaderConfirmMsg : public CNetMsg {
+public:
+    CHeaderConfirmMsg()
+        : CNetMsg(RS_HEADER_CONFIRM, 0x14)
+    {
+    }
+};
+
+class CClickMsg : public CNetMsg {
+public:
+    int m_widgetId;  // +0x14
+};
+
+class CTownUpdateMsg : public CNetMsg {
+public:
+    int m_gamePos;  // +0x14
+    int m_town;     // +0x18
+};
+
+class CMapHeaderRequestMsg : public CNetMsg {
+public:
+    unsigned char m_flag;  // +0x14
+    char pad_15[3];
+    int m_number;          // +0x18
 };
 
 // DC SingleSelectionWindow.h's header-transfer opener (dc 0x1478a4 takes
@@ -113,7 +250,8 @@ public:
     unsigned long m_numMaps;  // +0x14
 
     CGameHeaderInfoInitMsg(unsigned long numMaps)
-        : CNetMsg(RS_GAME_HEADER_INFO_INIT, sizeof(CGameHeaderInfoInitMsg))
+        : CNetMsg(RS_GAME_HEADER_INFO_INIT_EX,
+                  sizeof(CGameHeaderInfoInitMsg))
     {
         m_numMaps = numMaps;
     }
@@ -159,8 +297,47 @@ class CNewPlayerUpdateMan {
 public:
     CNewPlayerUpdateProc* m_procs[8];
 
+    // DC GetFirstAvailable; HandleNetMsg's transfer-start arm expands it.
+    int GetFirstAvailable()
+    {
+        for (int i = 0; i < 8; ++i)
+            if (m_procs[i] == 0)
+                return i;
+        return -1;
+    }
+
+    // DC GetProc (protected there); the HeaderConfirmed body expands it.
+    CNewPlayerUpdateProc* GetProc(unsigned long dpid)
+    {
+        for (int i = 0; i < 8; ++i)
+            if (m_procs[i] && m_procs[i]->m_dpid == dpid)
+                return m_procs[i];
+        return 0;
+    }
+
     void Tick();
     void PlayerDropped(unsigned long dpid);  // retail 0x589480
+    void HeaderConfirmed(unsigned long dpid);  // retail 0x589270
+    // Retail widened the DC (dpid, number) pair with a middle byte; the
+    // 1029 arm forwards the request-msg fields verbatim.
+    void HeaderRequested(unsigned long dpid, unsigned char flag,
+                         int number);  // retail 0x5892b0
+};
+
+// The header-cache loader shared by the constructor and the
+// header-transfer-end arm (retail 0x58eab0, past the stale span end):
+// fastcall on the address of the window's SelectionHeaders vector
+// pointers, returning the loaded count. Name provisional - no attested
+// spelling survives.
+unsigned int LoadHeadersList(void* headerVector);
+
+// Layout-identical message subtype carrying the zeroing default ctor the
+// RS_CLICK arm calls out of line (retail 0x589190) - message itself must
+// stay ctor-less for every POD-style site in the shared closure (the
+// townmgr mage_message precedent).
+class lobby_message : public message {
+public:
+    lobby_message();
 };
 
 // The lobby player-name editor (one per name row, widget ids 353..360).

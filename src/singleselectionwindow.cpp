@@ -4,11 +4,19 @@
 #include <string.h>
 #include <va.h>
 // UpdatePlayerPositions reaches SetupFirstPlayer and the new-map bonus
-// array, both scoped behind game.h's new-map view gate.
+// array, both scoped behind game.h's new-map view gate; HandleNetMsg
+// reads the incoming chat text through netmsg.h's gated CChatMsg shape.
 #define HOMM3_GAME_NEW_MAP_DECLS
+#define HOMM3_REMOTE_SEND_CHAT_DECLS
+// The launch/hold arms hand gpMediumFont to CAnimatedDlg::Setup - the
+// same scoped view CWaitForReadyPlayersDlg uses.
+#define HOMM3_REMOTE_WAIT_READY_DECLS
 #include "advmgr.h"
 #include "game.h"
+#include "armygrp.h"
+#include "gametypewindow.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "newgame.h"
 #include "savegame.h"
 #include "text.h"
@@ -120,6 +128,12 @@ void UnloadProgressBar();
 void WritePrefs();
 // kb.cpp owns the located body (0x4ed490); same rule.
 void PollSound();
+// kb.cpp owns the located 0x4f3690 fatal-exit body; misc.cpp owns the
+// PRNG pair; remote.cpp owns the session teardown. Same rule.
+void ShutDown(const char* cInExitMessage);
+int Random(int min, int max);
+void SRand(int iSeed);
+void RemoteCleanup();
 // This TU's own file-scope save-name validator; its definition sits in
 // the carcass under the 0x577360 claim until reconstructed.
 unsigned char SaveValid(const char* filename);
@@ -890,7 +904,7 @@ void TSingleSelectionWindow::OnSortMaps(int how)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4646
-DC_ONLY(0x13b780, 0x27A)
+VA(0x00585050, 0x2A8)  // anchor-callee HandleNetMsg's RS_SORT_MAPS arm calls it (how, 1, 1) - the DC 3-arg signature; size 1.07x dc 0x27a, dc 0x13b780
 void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg, unsigned char bUpdate)
 {
     // @stub
@@ -979,7 +993,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:5000
-DC_ONLY(0x13c434, 0x262)
+VA(0x00585d90, 0x2C5)  // anchor-callee HandleNetMsg's RS_SET_FILTER arm forwards the msg size to it; also called from OnWidgetDeselect 0x5865b0 per xref; size 1.16x dc 0x262, dc 0x13c434
 void TSingleSelectionWindow::SetFilter(int size)
 {
     // @stub
@@ -1334,12 +1348,342 @@ commit:
 #if 0  // @carcass
 
 
+#endif  // @carcass
+
+// The lobby's network dispatcher. Until the header transfer completes
+// (receivedMaps), only the transfer/keepalive subtypes pass the front
+// filter; every arm below is the retail jump table's layout order
+// (source order for a table switch). Returns 1 when the pump must tear
+// the dialog down (transmit-init handled, session lost, bad version,
+// failed header init); every path destroys the message.
 // E:\gamedcs\singleselectionwindow.cpp:6443 - relocated for RVA order.
 VA(0x005887a0, 0x9ED)  // anchor-callee WindowHandler's net pump calls it (pMsg, &cancel) right after GetRemoteData(1,0) - the DC signature; size 1.5x dc 0x6a0, dc 0x13fd74
 unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel)
 {
-    // @stub
+    if (!receivedMaps) {
+        switch (pNetMsg->subType) {
+        case RS_GAME_TRANSMIT_INIT:
+        case RS_CHAT_MSG:
+        case RS_PLAYER_DROPPED:
+        case RS_SET_AS_HOST:
+        case RS_GAME_HEADER_INFO:
+        case RS_GAME_HEADER_INFO_INIT:
+        case RS_GAME_HEADER_INFO_END:
+        case RS_MAP_FILE_NAME:
+        case RS_UPDATE_PLAYER_POS:
+        case RS_REQ_HEADER_CONFIRM:
+        case RS_LAUNCHING_GAME:
+        case RS_BAD_VERSION:
+        case RS_SETUP_PING:
+        case RS_SETUP_PING_RESPONSE:
+        case RS_SESSION_LOST:
+        case RS_GAME_TRANSMIT_PENDING:
+        case RS_GAME_HEADER_INFO_INIT_EX:
+        case RS_HEADERS_REQUEST:
+            break;
+        default:
+            DestroyMsg(pNetMsg);
+            return 0;
+        }
+    }
+
+    switch (pNetMsg->subType) {
+    case RS_UPDATE_PLAYER_POS:
+        OnUpdatePlayerPosMsg(pNetMsg);
+        break;
+    case RS_NEW_SETUP_INFO:
+        OnNewSetupInfoMsg(pNetMsg);
+        break;
+    case RS_NEW_PLAYER:
+        OnNewPlayerMsg(pNetMsg);
+        break;
+    case RS_HEADERS_REQUEST:
+        if (!bVideoPaused || pDPlay->IsHost()) {
+            unsigned long dpid = pNetMsg->field_04;
+            CNewPlayerUpdateMan* man = pNewPlayerUpdateMan;
+            int slot = man->GetFirstAvailable();
+            if (slot != -1) {
+                CNewPlayerUpdateProc* proc =
+                    new CNewPlayerUpdateProc(dpid);
+                man->m_procs[slot] = proc;
+                proc->Go();
+            }
+        }
+        break;
+    case RS_GAME_TRANSMIT_INIT: {
+        receivedMaps = 1;
+        // GetThisPlayer open-coded twice: this caller keeps the inner
+        // GetPlayer OUT of line (budget) while ExitDialog's expansions
+        // inline it - a per-site split the shared inline cannot spell.
+        CNetPlayerHandlerPlayer* p;
+        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+            p = &m_players.humanPlayers[0];
+        else {
+#pragma inline_depth(0)
+            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+#pragma inline_depth()
+        }
+        if (p) {
+            if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+                p = &m_players.humanPlayers[0];
+            else {
+#pragma inline_depth(0)
+                p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+#pragma inline_depth()
+            }
+            if (p->playerPos == -1) {
+                DestroyMsg(pNetMsg);
+                RemoteCleanup();
+                *cancel = 1;
+                NormalDialog(gpGeneralText->GetText(525), 1, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+                return 1;
+            }
+        }
+        if (OnGameTransmitInitMsg(pNetMsg)) {
+            DestroyMsg(pNetMsg);
+            return 1;
+        }
+    }
+        // fall through - a failed transfer is a lost session
+    case RS_SESSION_LOST:
+        NormalDialog(gpGeneralText->GetText(329), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        ShutDown(0);
+        break;
+    case RS_PLAYER_DROPPED: {
+#pragma inline_depth(0)
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(pNetMsg->field_04);
+        m_players.DeletePlayer(pNetMsg->field_04);
+        field_1898 = GetPlayerCount();
+        pNewPlayerUpdateMan->PlayerDropped(pNetMsg->field_04);
+#pragma inline_depth()
+        if (p)
+            PlayerDropMsg(&chatMan, gpGeneralText->GetText(527),
+                          p->sName);
+        UpdateNameLists();
+        DisplayChat();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    }
+    case RS_SET_AS_HOST:
+        if (gbRestrictedGameTypeMenu) {
+            RemoteCleanup();
+            NormalDialog(gpGeneralText->GetText(655), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+            *cancel = 1;
+            return 1;
+        }
+        OnSetAsHostMsg(pNetMsg);
+        break;
+    case RS_NEW_MAP_HEADER_INFO: {
+        // Residual: retail wraps this header in an 0x18-byte stream-reader
+        // base (ctor 0x512c20, vtable 0x641d30) and fills it from the
+        // message via 0x512e00; the reader class is not yet modeled, so
+        // only the header local, its teardown and the SetupOrigData tail
+        // survive here.
+#pragma inline_depth(0)
+        NewSMapHeader header;
+#pragma inline_depth()
+        gpGame->SetupOrigData();
+        break;
+    }
+    case RS_GAME_HEADER_INFO:
+        OnGameHeaderInfoMsg(pNetMsg);
+        break;
+    case RS_GAME_HEADER_INFO_END:
+        receivedMaps = 1;
+        currentIndex = 0;
+        currentMap = 0;
+        field_186c = 0;
+        if (field_1865)
+            GetWidget(179)->send_message(
+                widget::WIDGET_SET_STATUS,
+                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+        fileSlider->SetResolution(
+            GetMapCount() - gUnnamed69fdc8 + 1);
+        if (LoadHeadersList(&SelectionHeadersFirst) > 0)
+            RefreshFileList();
+        DrawWindow(0, 0xffff0001, 0xffff);
+        Update();
+        break;
+    case RS_SCROLL: {
+        CScrollMsg* pMsg = static_cast<CScrollMsg*>(pNetMsg);
+        currentIndex = pMsg->m_index;
+        fileSlider->SetState(pMsg->m_index);
+        SetCurrentMap(pMsg->m_map, 1);
+        break;
+    }
+    case RS_GAME_HEADER_INFO_INIT:
+        if (!OnGameHeaderInfoInitMsg(pNetMsg)) {
+            *cancel = 1;
+            DestroyMsg(pNetMsg);
+            return 1;
+        }
+        break;
+    case RS_GAME_HEADER_INFO_INIT_EX:
+        OnGameHeaderInfoInitMsgEx(pNetMsg);
+        break;
+    case RS_SORT_MAPS: {
+        CSortMapsMsg* pMsg = static_cast<CSortMapsMsg*>(pNetMsg);
+        sortDirection = pMsg->m_direction != 0;
+        SortMaps(pMsg->m_how, 1, 1);
+        break;
+    }
+    case RS_SET_FILTER:
+        SetFilter(static_cast<CSetFilterMsg*>(pNetMsg)->m_size);
+        break;
+    case RS_REQUEST_HERO_FACE:
+        if (!bVideoPaused || pDPlay->IsHost()) {
+#pragma inline_depth(0)
+            CNetPlayerHandlerPlayer* p =
+                m_players.GetPlayer(pNetMsg->field_04);
+#pragma inline_depth()
+            if (p && p->playerPos != -1) {
+                GetHeroFace(
+                    static_cast<CRequestHeroFaceMsg*>(pNetMsg)->m_which,
+                    p);
+                CRequestHeroFaceReplyMsg reply(p->playerPos,
+                                               p->heroIndex);
+                TransmitRemoteDataDPID(&reply, 0, false, true);
+                OnRequestHeroFaceReplyMsg(&reply, 0);
+            }
+        }
+        break;
+    case RS_REQUEST_HERO_FACE_REPLY: {
+        CRequestHeroFaceReplyMsg* pMsg =
+            static_cast<CRequestHeroFaceReplyMsg*>(pNetMsg);
+#pragma inline_depth(0)
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayerInPos(pMsg->m_pos);
+#pragma inline_depth()
+        if (p) {
+            p->heroIndex = pMsg->m_face;
+            DrawWindow(0, 0xffff0001, 0xffff);
+            Update();
+        }
+        break;
+    }
+    case RS_SETAGR: {
+        CSetAGRMsg* pMsg = static_cast<CSetAGRMsg*>(pNetMsg);
+#pragma inline_depth(0)
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayerInPos(pMsg->m_gamePos);
+#pragma inline_depth()
+        if (!p)
+            p = &m_players.computerPlayers[pMsg->m_gamePos];
+        if (p) {
+            p->startBonusIndex = pMsg->m_agr;
+            DrawHeroAdvancedOption(pMsg->m_gamePos, 1, -1);
+        }
+        break;
+    }
+    case RS_NEW_HOST:
+        OnNewHostMsg(pNetMsg);
+        break;
+    case RS_CHAT_MSG: {
+#pragma inline_depth(0)
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(pNetMsg->field_04);
+#pragma inline_depth()
+        if (p) {
+            AddChat(&chatMan,
+                    DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat,
+                                 "%s: %s"),
+                    p->sName,
+                    static_cast<CChatMsg*>(pNetMsg)->m_text);
+            DisplayChat();
+        }
+        break;
+    }
+    case RS_MAP_FILE_NAME:
+        OnMapFileNameMsg(pNetMsg);
+        break;
+    case RS_HEADER_CONFIRM:
+        pNewPlayerUpdateMan->HeaderConfirmed(pNetMsg->field_04);
+        logFile.Log(DATA_COMPGEN(0x006838c0, headerConfirmedLog,
+                        "Header confirmed [%d]"),
+                    pNetMsg->field_04);
+        break;
+    case RS_REQ_HEADER_CONFIRM:
+        if (!CheckMissingHeaders(pNetMsg->field_04)) {
+            logFile.Log(DATA_COMPGEN(0x006838ac, noMissingHeadersLog,
+                            "No Missing Headers"));
+            CHeaderConfirmMsg confirm;
+            TransmitRemoteDataDPID(&confirm, pNetMsg->field_04,
+                                   false, true);
+        }
+        break;
+    case RS_MAP_HEADER_REQUEST: {
+        CMapHeaderRequestMsg* pMsg =
+            static_cast<CMapHeaderRequestMsg*>(pNetMsg);
+        pNewPlayerUpdateMan->HeaderRequested(pNetMsg->field_04,
+                                             pMsg->m_flag,
+                                             pMsg->m_number);
+        logFile.Log(DATA_COMPGEN(0x0068388c, headerRequestedLog,
+                        "Header requested [%d] [%d] [%d]"),
+                    pNetMsg->field_04, pMsg->m_flag, pMsg->m_number);
+        break;
+    }
+    case RS_CLICK: {
+        lobby_message m;
+        unsigned char bExitFlag;
+        m.codeY = static_cast<CClickMsg*>(pNetMsg)->m_widgetId;
+        OnWidgetDeselect(&m, &bExitFlag, 1);
+        break;
+    }
+    case RS_TOWN_UPDATE: {
+        CTownUpdateMsg* pMsg = static_cast<CTownUpdateMsg*>(pNetMsg);
+        UpdateTown(pMsg->m_gamePos, pMsg->m_town, 0);
+        break;
+    }
+    case RS_LAUNCHING_GAME: {
+        CHostWaitDlg dlg;
+        dlg.Wait(pNetMsg->field_04, gpGeneralText->GetText(731));
+        HandleNetMsg(dlg.m_pMsg, cancel);
+        break;
+    }
+    case RS_GAME_TRANSMIT_PENDING: {
+        CHostWaitDlg dlg;
+        dlg.Wait(pNetMsg->field_04, gpGeneralText->GetText(534));
+        HandleNetMsg(dlg.m_pMsg, cancel);
+        break;
+    }
+    case RS_BAD_VERSION:
+        OnBadVersionMsg(pNetMsg);
+        *cancel = 1;
+        return 1;
+    case RS_SETUP_PING:
+        OnPingMsg(pNetMsg);
+        break;
+    case RS_SETUP_PING_RESPONSE:
+        OnPingResponseMsg(pNetMsg, 0);
+        break;
+    }
+
+    DestroyMsg(pNetMsg);
+    return 0;
 }
+
+// The zeroing message ctor the RS_CLICK arm calls; the shared message
+// class stays ctor-less (mage_message precedent), so the body lives on
+// the TU-local layout-identical subtype.
+VA(0x00589190, 0x1C)  // anchor-callee the RS_CLICK arm's out-of-line ctor call on its stack message, dc 0x145128
+lobby_message::lobby_message()
+{
+    id = 0;
+    codeX = 0;
+    codeY = 0;
+    qualifier = 0;
+    mouseX = 0;
+    mouseY = 0;
+    extra = 0;
+    window = 0;
+}
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
@@ -1365,6 +1709,28 @@ CHostWaitDlg::~CHostWaitDlg()
 {
 }
 
+// E:\gamedcs\singleselectionwindow.cpp:1484
+VA(0x00589270, 0x3E)  // anchor-callee HandleNetMsg's RS_HEADER_CONFIRM arm calls it with the sender dpid before its 'Header confirmed' log line, dc 0x148838
+void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
+{
+    CNewPlayerUpdateProc* proc = GetProc(dpid);
+    if (proc) {
+        proc->m_finished = 1;
+        proc->_vslot02();
+    }
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\singleselectionwindow.cpp:1492
+VA(0x005892b0, 0x1C1)  // anchor-callee HandleNetMsg's RS_MAP_HEADER_REQUEST arm forwards (dpid, flag, number) to it on the update manager, dc 0x14886c
+void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, unsigned char flag, int number)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:1500
 VA(0x00589480, 0x44)  // anchor-callee calls ~CNewPlayerUpdateProc 0x583ef0 inside an 8-slot dpid scan-and-reap - the DC PlayerDropped shape, dc 0x1488a4
 void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
@@ -1377,21 +1743,44 @@ void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
     }
 }
 
-#if 0  // @carcass
-
+// Bounce the setup ping straight back at its sender, echoing the
+// timestamp (netmsg.h's CPingMsg shape, 0x18 bytes).
 // E:\gamedcs\singleselectionwindow.cpp:6649
-DC_ONLY(0x140414, 0x3C)
+VA(0x005894D0, 0x40)  // anchor-callee HandleNetMsg's RS_SETUP_PING arm forwards the msg here; body builds the 0x418 echo and returns it to pNetMsg->field_04, dc 0x140414
 void TSingleSelectionWindow::OnPingMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CPingMsg response(static_cast<CPingMsg*>(pNetMsg)->m_pingTime,
+                      RS_SETUP_PING_RESPONSE);
+    TransmitRemoteDataDPID(&response, pNetMsg->field_04, false, true);
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\singleselectionwindow.cpp:6655
-DC_ONLY(0x140450, 0xB8)
+VA(0x00589510, 0xA3)  // anchor-callee HandleNetMsg's RS_SETUP_PING_RESPONSE arm calls it (pNetMsg, 0); calls timeGetTime per label, dc 0x140450
 void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup)
 {
     // @stub
 }
+
+// E:\gamedcs\singleselectionwindow.cpp:6689
+VA(0x005895C0, 0x14F)  // anchor-callee HandleNetMsg's RS_REQ_HEADER_CONFIRM arm gates its confirm reply on this; owns the 'missing header %d' log line, dc 0x140588
+unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6723. The 6-byte DC body is the
+// VMU stub; retail's is the real one (owns the 'Random Maps' path).
+VA(0x00589710, 0x40F)  // anchor-callee HandleNetMsg's RS_MAP_FILE_NAME arm forwards the msg, dc 0x140664
+void TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:6664
 DC_ONLY(0x140508, 0x46)
@@ -1407,13 +1796,6 @@ unsigned char TSingleSelectionWindow::OnHeaderConfirmMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:6689
-DC_ONLY(0x140588, 0x82)
-unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:6709
 DC_ONLY(0x14060c, 0x56)
 unsigned char TSingleSelectionWindow::OnReqHeaderConfirmMsg(CNetMsg* pNetMsg)
@@ -1421,30 +1803,9 @@ unsigned char TSingleSelectionWindow::OnReqHeaderConfirmMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:6723
-DC_ONLY(0x140664, 0xA)
-unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6837
-DC_ONLY(0x140898, 0x13A)
-unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:6861
 DC_ONLY(0x1409d4, 0xA0)
 unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersion)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:6884
-DC_ONLY(0x140a74, 0x214)
-unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -1480,20 +1841,6 @@ unsigned char TSingleSelectionWindow::SendGameHeaders(unsigned long dpidTo)
 // E:\gamedcs\singleselectionwindow.cpp:7009
 DC_ONLY(0x140ee4, 0x40)
 unsigned char TSingleSelectionWindow::SendSetupInfo(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7017
-DC_ONLY(0x140f24, 0x1F8)
-unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7077
-DC_ONLY(0x14111c, 0x1E0)
-unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -1561,20 +1908,6 @@ void TSingleSelectionWindow::ReceiveChat(unsigned long dpid, char* cChat, unsign
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:7226
-DC_ONLY(0x1416f4, 0x12E)
-void TSingleSelectionWindow::DisplayChat()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7245
-DC_ONLY(0x141824, 0x146)
-void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:7298
 DC_ONLY(0x14196c, 0xA8)
 void TSingleSelectionWindow::OnRequestHeroFaceMsg(CNetMsg* pNetMsg, unsigned char inPopup)
@@ -1589,30 +1922,9 @@ CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:7337
-DC_ONLY(0x141a74, 0x7C)
-void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:7356
 DC_ONLY(0x141af0, 0xA8)
 void TSingleSelectionWindow::OnSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7377
-DC_ONLY(0x141b98, 0x1C4)
-unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7417
-DC_ONLY(0x141d5c, 0x13E)
-void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -1627,13 +1939,6 @@ void TSingleSelectionWindow::OnNameClick(int pos)
 // E:\gamedcs\singleselectionwindow.cpp:7512
 DC_ONLY(0x142028, 0x180)
 void TSingleSelectionWindow::OnPlayerPosClick(int pos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7591
-DC_ONLY(0x1421a8, 0x38C)
-void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -1704,13 +2009,6 @@ void TSingleSelectionWindow::TurnChatOff(unsigned char update)
 // E:\gamedcs\singleselectionwindow.cpp:7990
 DC_ONLY(0x1430cc, 0x6C)
 void TSingleSelectionWindow::OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:7997
-DC_ONLY(0x143138, 0x84)
-void TSingleSelectionWindow::UpdateTown(int pos, TTownType town, unsigned char inPopup)
 {
     // @stub
 }
@@ -1788,13 +2086,6 @@ unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 // E:\gamedcs\singleselectionwindow.cpp:8643
 DC_ONLY(0x145008, 0xA0)
 int TSingleSelectionWindow::CalcPosition(int playerPos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8662
-DC_ONLY(0x1450a8, 0x76)
-unsigned char TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -1878,11 +2169,108 @@ unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
     return 1;
 }
 
+#if 0  // @carcass - the HandleNetMsg dispatch family, order-mapped by its
+// arms (each VA below is the direct callee of exactly one subtype arm).
+
+// E:\gamedcs\singleselectionwindow.cpp:6837
+VA(0x00589C60, 0xCE)  // anchor-callee RS_NEW_SETUP_INFO arm, size 0.66x dc 0x13a, dc 0x140898
+unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6884
+VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
+unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7017
+VA(0x0058A440, 0x33E)  // anchor-callee RS_GAME_HEADER_INFO_INIT (1024) arm calls it and cancels on failure, size 1.65x dc 0x1f8, dc 0x140f24
+unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// The SoD-only 0x43b init arm's handler (provisional Ex spelling; DC has
+// one OnGameHeaderInfoInitMsg and no 1083 rung). retail-only
+VA(0x0058A780, 0x2BA)  // anchor-callee the 1083 arm's single call
+void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7077
+VA(0x0058AA40, 0x3AE)  // anchor-callee RS_GAME_HEADER_INFO arm; owns the "rec'd game header %d" log line, size 1.96x dc 0x1e0, dc 0x14111c
+void TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7226
+VA(0x0058AE80, 0x93)  // anchor-callee called by SendChat 0x57cc00, the RS_CHAT_MSG arm and the drop arm right after AddChat, size 0.49x dc 0x12e, dc 0x1416f4
+void TSingleSelectionWindow::DisplayChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7245
+VA(0x0058AF20, 0x182)  // anchor-callee RS_REQUEST_HERO_FACE arm calls it (which, pPlayer) - the DC signature, size 1.18x dc 0x146, dc 0x141824
+void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7337
+VA(0x0058B0B0, 0x67)  // anchor-callee RS_REQUEST_HERO_FACE arm applies its own reply through it (msg, 0), size 0.83x dc 0x7c, dc 0x141a74
+void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7377
+VA(0x0058B120, 0x3E8)  // anchor-callee RS_SET_AS_HOST arm calls it behind the gbRestrictedGameTypeMenu gate, size 2.2x dc 0x1c4, dc 0x141b98
+void TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7417
+VA(0x0058B510, 0x10D)  // anchor-callee RS_NEW_HOST arm's single call, size 0.85x dc 0x13e, dc 0x141d5c
+void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7591
+VA(0x0058BA40, 0x175)  // anchor-callee RS_UPDATE_PLAYER_POS arm's single call, size 0.41x dc 0x38c, dc 0x1421a8
+unsigned char TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7997
+VA(0x0058CD50, 0x119)  // anchor-callee RS_TOWN_UPDATE arm calls it (pos, town, 0) - the DC 3-arg signature; also calls DrawHeroAdvancedOption per xref, size 2.1x dc 0x84, dc 0x143138
+void TSingleSelectionWindow::UpdateTown(int pos, int town, unsigned char inPopup)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 #if 0  // @carcass - relocated here for RVA order (claims ascend per file)
 
 // E:\gamedcs\singleselectionwindow.cpp:8297
 VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
 void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos, unsigned char update, int position)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8662
+VA(0x0058DF50, 0x57)  // anchor-callee RS_BAD_VERSION arm calls it then cancels, size 0.74x dc 0x76, dc 0x1450a8
+void TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
@@ -2369,20 +2757,6 @@ void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
 // E:\gamedcs\singleselectionwindow.cpp:1466
 DC_ONLY(0x148790, 0xA8)
 void CNewPlayerUpdateMan::Tick()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1484
-DC_ONLY(0x148838, 0x34)
-void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:1492
-DC_ONLY(0x14886c, 0x38)
-void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, int number)
 {
     // @stub
 }

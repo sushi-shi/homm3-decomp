@@ -85,6 +85,11 @@ enum eRS_Messages {
     RS_READY_TO_PLAY = 1012,
     RS_ALL_READY_TO_PLAY = 1013,
     RS_SET_AS_HOST = 1015,
+    // The lobby keepalive pair (DC rungs verbatim); singleselectionwindow's
+    // OnPingMsg builds the response as a CPingMsg, whose ctor takes this
+    // enum - same scoped view, same reason.
+    RS_SETUP_PING = 1047,
+    RS_SETUP_PING_RESPONSE = 1048,
 #endif
     RS_GIFT = 1074,
     RS_GIFT_REQUEST = 1075,
