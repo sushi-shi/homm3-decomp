@@ -1156,7 +1156,7 @@ events	?InitializeAdventureEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e0e0
 events	?InitializeArtifactEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e100
 events	?InitializeRandomSignText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e140
 events	?PayForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50
-events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	60.3719	60.3719	60.3719	0xaeee0
+events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	100.0000	100.0000	100.0000	0xaeee0
 events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	98.8821	98.8821	98.8821	0xaeb50
 events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaafd0
 events	?do_event_dragon_city@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2140
@@ -1838,11 +1838,11 @@ mapcell	??1NewfullMap@@QAE@XZ	95.8833	95.8833	95.8833	0xfd1e0
 mapcell	??1NewmapCell@@QAE@XZ	100.0000	100.0000	100.0000	0xfd4c0
 mapcell	??1TreasureData@@QAE@XZ	100.0000	100.0000	100.0000	0xfca60
 mapcell	??4?$vector@W4TArtifact@@V?$allocator@W4TArtifact@@@std@@@std@@QAEAAV01@ABV01@@Z	100.0000	100.0000	100.0000	0x10ac00
-mapcell	??4BlackBoxData@@QAEAAV0@ABV0@@Z	98.5693	98.5693	98.5693	0x10a400
-mapcell	??4MonsterData@@QAEAAV0@ABV0@@Z	94.3617	94.3617	94.3617	0x10a290
-mapcell	??4TScenarioTown@@QAEAAU0@ABU0@@Z	96.7143	96.7143	96.7143	0x10aa30
-mapcell	??4TTimedEvent@@QAEAAV0@ABV0@@Z	96.2585	96.2585	96.2585	0x10a700
-mapcell	??4TTownEvent@@QAEAAV0@ABV0@@Z	94.0625	94.0625	94.0625	0x10a880
+mapcell	??4BlackBoxData@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a400
+mapcell	??4MonsterData@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a290
+mapcell	??4TScenarioTown@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0x10aa30
+mapcell	??4TTimedEvent@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a700
+mapcell	??4TTownEvent@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0x10a880
 mapcell	??_ENewmapCell@@QAEPAXI@Z	100.0000	100.0000	100.0000	0xfd460
 mapcell	??_F?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xfd1c0
 mapcell	?CalculateCellExtra@NewfullMap@@QAEXPAVNewmapCell@@E@Z	93.6598	93.6598	93.6598	0x105a10
@@ -1888,17 +1888,17 @@ mapcell	?copy@std@@YIPAHPAH00@Z	100.0000	100.0000	100.0000	0x1093c0
 mapcell	?copy@std@@YIPAUSecondarySkillData@@PBU2@0PAU2@@Z	100.0000	100.0000	100.0000	0x10adb0
 mapcell	?copy@std@@YIPAUtype_creature_bank@@PAU2@00@Z	100.0000	100.0000	100.0000	0x109620
 mapcell	?copy@std@@YIPAUtype_university@@PAU2@00@Z	100.0000	100.0000	100.0000	0x1095e0
-mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	96.5000	96.5000	96.5000	0x1093f0
+mapcell	?copy@std@@YIPAVTTimedEvent@@PAV2@00@Z	100.0000	100.0000	100.0000	0x1093f0
 mapcell	?erase@?$vector@UHeroPlaceholderData@@V?$allocator@UHeroPlaceholderData@@@std@@@std@@QAEPAUHeroPlaceholderData@@PAU3@0@Z	100.0000	100.0000	100.0000	0x1086d0
-mapcell	?erase@?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAEPAUTScenarioTown@@PAU3@0@Z	95.0364	95.0364	95.0364	0x108730
-mapcell	?erase@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEPAVBlackBoxData@@PAV3@0@Z	98.5776	98.5776	98.5776	0x107480
-mapcell	?erase@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEPAVCObjectType@@PAV3@0@Z	91.4070	91.4070	91.4070	0x1068a0
-mapcell	?erase@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEPAVMonsterData@@PAV3@0@Z	90.7246	90.7246	90.7246	0x1070a0
+mapcell	?erase@?$vector@UTScenarioTown@@V?$allocator@UTScenarioTown@@@std@@@std@@QAEPAUTScenarioTown@@PAU3@0@Z	100.0000	100.0000	100.0000	0x108730
+mapcell	?erase@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEPAVBlackBoxData@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107480
+mapcell	?erase@?$vector@VCObjectType@@V?$allocator@VCObjectType@@@std@@@std@@QAEPAVCObjectType@@PAV3@0@Z	100.0000	100.0000	100.0000	0x1068a0
+mapcell	?erase@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEPAVMonsterData@@PAV3@0@Z	100.0000	100.0000	100.0000	0x1070a0
 mapcell	?erase@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std@@@std@@QAEPAVTQuestGuard@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107dd0
 mapcell	?erase@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEPAVTSeerHut@@PAV3@0@Z	100.0000	100.0000	100.0000	0x107840
-mapcell	?erase@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEPAVTTimedEvent@@PAV3@0@Z	98.5897	98.5897	98.5897	0x108150
-mapcell	?erase@?$vector@VTTownEvent@@V?$allocator@VTTownEvent@@@std@@@std@@QAEPAVTTownEvent@@PAV3@0@Z	97.6087	97.6087	97.6087	0x1085a0
-mapcell	?erase@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEPAVTreasureData@@PAV3@0@Z	88.0435	88.0435	88.0435	0x106cc0
+mapcell	?erase@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEPAVTTimedEvent@@PAV3@0@Z	100.0000	100.0000	100.0000	0x108150
+mapcell	?erase@?$vector@VTTownEvent@@V?$allocator@VTTownEvent@@@std@@@std@@QAEPAVTTownEvent@@PAV3@0@Z	100.0000	100.0000	100.0000	0x1085a0
+mapcell	?erase@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEPAVTreasureData@@PAV3@0@Z	100.0000	100.0000	100.0000	0x106cc0
 mapcell	?erase@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEPAVgenerator@@PAV3@0@Z	100.0000	100.0000	100.0000	0x108860
 mapcell	?get_magic_terrain_type@NewmapCell@@QAEHXZ	100.0000	100.0000	100.0000	0xfcf40
 mapcell	?get_map_extraInfo@NewmapCell@@QAEKXZ	100.0000	100.0000	100.0000	0xfcc30
@@ -1908,12 +1908,12 @@ mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.8598
 mapcell	?get_trigger_cell@NewmapCell@@QAEPAV1@XZ	90.8763	90.8763	90.8763	0xfcaa0
 mapcell	?insert@?$vector@URandomDwellingData@@V?$allocator@URandomDwellingData@@@std@@@std@@QAEXPAURandomDwellingData@@IABU3@@Z	100.0000	100.0000	100.0000	0x1089e0
 mapcell	?insert@?$vector@VBlackBoxData@@V?$allocator@VBlackBoxData@@@std@@@std@@QAEXPAVBlackBoxData@@IABV3@@Z	100.0000	100.0000	100.0000	0x107150
-mapcell	?insert@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEXPAVMonsterData@@IABV3@@Z	98.8511	98.8511	98.8511	0x106d70
+mapcell	?insert@?$vector@VMonsterData@@V?$allocator@VMonsterData@@@std@@@std@@QAEXPAVMonsterData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106d70
 mapcell	?insert@?$vector@VTQuestGuard@@V?$allocator@VTQuestGuard@@@std@@@std@@QAEPAVTQuestGuard@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0x1078b0
 mapcell	?insert@?$vector@VTSeerHut@@V?$allocator@VTSeerHut@@@std@@@std@@QAEPAVTSeerHut@@PAV3@ABV3@@Z	100.0000	100.0000	100.0000	0x1075d0
-mapcell	?insert@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEXPAVTTimedEvent@@IABV3@@Z	96.8557	96.8557	96.8557	0x107e20
+mapcell	?insert@?$vector@VTTimedEvent@@V?$allocator@VTTimedEvent@@@std@@@std@@QAEXPAVTTimedEvent@@IABV3@@Z	100.0000	100.0000	100.0000	0x107e20
 mapcell	?insert@?$vector@VTTownEvent@@V?$allocator@VTTownEvent@@@std@@@std@@QAEXPAVTTownEvent@@IABV3@@Z	100.0000	100.0000	100.0000	0x108250
-mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	83.9968	83.9968	83.9968	0x106980
+mapcell	?insert@?$vector@VTreasureData@@V?$allocator@VTreasureData@@@std@@@std@@QAEXPAVTreasureData@@IABV3@@Z	100.0000	100.0000	100.0000	0x106980
 mapcell	?insert@?$vector@Vgenerator@@V?$allocator@Vgenerator@@@std@@@std@@QAEXPAVgenerator@@IABV3@@Z	100.0000	100.0000	100.0000	0x1090b0
 mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
 mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	95.0000	95.0000	95.0000	0x100430
@@ -2198,7 +2198,7 @@ recruit	?RecruitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000	100.0000	100.0000
 # and reconstructions (cast_spell exact among them) - the delink
 # generation moved, recruit.cpp and its headers untouched by the
 # regression commit. Same mechanism as above; hist keeps the peak.
-recruit	?Update@recruitUnit@@QAEXEJ@Z	88.2360	88.2360	90.8376	0x1503a0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?add_creature_widgets@TRecruitWindow@@QAEXJJJW4TCreatureType@@J@Z	93.6325	93.6325	93.6325	0x14fb90
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
