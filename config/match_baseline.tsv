@@ -1291,7 +1291,7 @@ game	?LoadGame@game@@QAEHPBDHH@Z	100.0000	100.0000	100.0000	0xbf330
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadHeroId@@YIHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xba210
 game	?LoadMap@game@@QAE_NPAVTAbstractFile@@@Z	70.6470	70.6470	70.6470	0xc2450
-game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
+game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9487	99.9487	99.9487	0xb9340
 game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070
 game	?MakeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240

@@ -1243,24 +1243,24 @@ int game::SaveSignPool(TAbstractFile* outfile)
 // E:\gamedcs\game.cpp:896
 #endif  // @carcass
 
-// Residual (99.9385%): all 25 blocks and every operation agree. During the
-// inlined vector growth, retail homes the saved end pointer in the local slot
-// later reused by the loop counter ([ebp-0xc]); this VC6 invocation uses the
-// already-dead infile argument slot ([ebp+8]). Explicitly naming the default
-// mine and narrowing the counter to the for-init both compile identically.
-// This is a two-instruction stack-slot allocation tie with no semantic delta.
-// why-reg 2026-08-21 corroborates: routed B4 (param-slot), all 10 catalog
-// mutations flat or worse - the spill-home choice is C2 state, not source.
+// Residual (99.9487%): all 25 blocks, branches and operations agree. Giving
+// the initial pool count its true short lifetime lets VC6 place the inlined
+// growth's saved end pointer in retail's later loop-counter slot. The only
+// remaining delta is the initial count itself: retail homes it at [ebp-8],
+// while this compile reuses the dead infile argument home at [ebp+8]. Index
+// declaration positions are byte-flat; plausible resize helpers change the
+// inlining boundary and fall to 83%.
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
 int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 {
-    int count;
-    unsigned int i;
-    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
-        return -1;
-
-    mines.resize(static_cast<unsigned char>(count));
-    for (i = 0; i < mines.size(); ++i) {
+    {
+        int poolCount;
+        if (infile->Read(&poolCount, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        mines.resize(static_cast<unsigned char>(poolCount));
+    }
+    for (unsigned int i = 0; i < mines.size(); ++i) {
+        int count;
         unsigned char value;
         if (infile->Read(&value, sizeof(value)) < sizeof(value))
             return -1;
