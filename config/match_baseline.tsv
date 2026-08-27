@@ -1085,7 +1085,7 @@ event_record	?undo@type_record_shroud@@UAEXXZ	100.0000	100.0000	100.0000	0x9bf20
 events	??1type_university_window@@UAE@XZ	100.0000	100.0000	100.0000	0xaaa40
 events	?CombatMonsterEvent@advManager@@QAEHPAVhero@@HPAHPAVNewmapCell@@Utype_point@@W4TCreatureType@@HH4HH@Z	99.2966	99.2966	99.2966	0xac580
 events	?CreatureBankEvent@advManager@@QAEHPAVhero@@PAVNewmapCell@@PBDUtype_point@@E@Z	89.3406	89.3406	89.3406	0xabdc0
-events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9881	99.9911	99.9911	0xa84f0
+events	?DispatchEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.9881	99.9881	99.9911	0xa84f0
 events	?DoAIEvent@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xacca0
 events	?DoCombat@advManager@@QAEHUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HEE@Z	98.5741	98.5741	99.1139	0xad470
 events	?DoCustomArtifact@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	99.1492	99.1492	99.1492	0x9f070
@@ -1195,7 +1195,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # a later lane, not lost work. Do NOT hunt a local spelling: see the
 # initialize_game_data block further down for the sweep that
 # established the class is non-monotonic and not source-nameable.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	99.9517	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2575,6 +2575,7 @@ singleselectionpopups	?handle_message@CSingleSelPopup@@UAEHAAVmessage@@@Z	99.963
 singleselectionwindow	??0lobby_message@@QAE@XZ	100.0000	100.0000	100.0000	0x189190
 singleselectionwindow	??1CHostWaitDlg@@UAE@XZ	0.0000	0.0000	0.0000	0x189230
 singleselectionwindow	??1CNewPlayerUpdateProc@@QAE@XZ	100.0000	100.0000	100.0000	0x183ef0
+singleselectionwindow	??1TSingleSelectionWindow@@UAE@XZ	0.4864	0.4864	0.4864	0x183b40
 singleselectionwindow	??_GCHostWaitDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x189200
 singleselectionwindow	??_GTSingleSelectionWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x17d130
 singleselectionwindow	?AddNewPlayer@CNetPlayerHandler@@QAEEPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0x177be0
@@ -2584,6 +2585,7 @@ singleselectionwindow	?DeletePlayer@CNetPlayerHandler@@QAE_NK@Z	100.0000	100.000
 singleselectionwindow	?DisplayChat@TSingleSelectionWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x18ae80
 singleselectionwindow	?DoModal@TSingleSelectionWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x184bf0
 singleselectionwindow	?Draw@CChatWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x17ca90
+singleselectionwindow	?DrawHeroAdvancedOption@TSingleSelectionWindow@@QAEXHEH@Z	90.5627	90.5627	90.5627	0x18d510
 singleselectionwindow	?ExitDialog@TSingleSelectionWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x187bc0
 singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	65.6968	65.6968	65.6968	0x18af20
 singleselectionwindow	?GetPlayer@CNetPlayerHandler@@QAEPAVCNetPlayerHandlerPlayer@@K@Z	100.0000	100.0000	100.0000	0x177ce0
@@ -2600,7 +2602,7 @@ singleselectionwindow	?OnBadVersionMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@
 singleselectionwindow	?OnGameTransmitInitMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	99.6237	99.6237	99.6237	0x189b20
 singleselectionwindow	?OnKeyPress@CEnterNameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17cdc0
 singleselectionwindow	?OnKeyPress@CSaveGameEdit@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x17d0b0
-singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	100.0000	100.0000	100.0000	0x17cee0
+singleselectionwindow	?OnKillFocus@CEnterNameEdit@@UAEXXZ	99.8710	99.8710	100.0000	0x17cee0
 singleselectionwindow	?OnNewHostMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	97.5366	97.5366	97.5366	0x18b510
 singleselectionwindow	?OnNewSetupInfoMsg@TSingleSelectionWindow@@QAEEPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x189c60
 singleselectionwindow	?OnPingMsg@TSingleSelectionWindow@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1894d0
@@ -2612,6 +2614,7 @@ singleselectionwindow	?SetNextPlayer@CNetPlayerHandler@@QAEEH@Z	96.2353	96.2353	
 singleselectionwindow	?SetResolution@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17c9d0
 singleselectionwindow	?SetState@CChatSlider@@UAEXH@Z	100.0000	100.0000	100.0000	0x17ca00
 singleselectionwindow	?Tick@CNewPlayerUpdateProc@@UAEXXZ	62.4785	62.4785	62.4785	0x177de0
+singleselectionwindow	?Update@TSingleSelectionWindow@@QAEHXZ	96.9019	96.9019	96.9019	0x184550
 singleselectionwindow	?UpdateAllyEnemyFlags@TSingleSelectionWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x185300
 singleselectionwindow	?UpdatePlayerPositions@TSingleSelectionWindow@@QAEXE@Z	70.4601	70.4601	70.4601	0x188330
 singleselectionwindow	?UpdateTown@TSingleSelectionWindow@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x18cd50
@@ -2621,7 +2624,15 @@ singleselectionwindow	CNewPlayerUpdateMan_HeaderRequested	0.0000	0.0000	0.0000	0
 singleselectionwindow	CNewPlayerUpdateProc_HandleRequests	0.0000	0.0000	0.0000	0x178010
 singleselectionwindow	CSingleSelectionNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x18e340
 singleselectionwindow	SaveValid	0.0000	0.0000	0.0000	0x177360
-singleselectionwindow	TSingleSelectionWindow_DrawHeroAdvancedOption	0.0000	0.0000	0.0000	0x18d510
+singleselectionwindow	TSingleSelectionWindow_CanChooseHero	0.0000	0.0000	0.0000	0x18cfb0
+singleselectionwindow	TSingleSelectionWindow_CanChooseTown	0.0000	0.0000	0.0000	0x18ceb0
+singleselectionwindow	TSingleSelectionWindow_DrawBasicMapInfo	0.0000	0.0000	0.0000	0x1840f0
+singleselectionwindow	TSingleSelectionWindow_GetDisplayFace	0.0000	0.0000	0.0000	0x18d0e0
+singleselectionwindow	TSingleSelectionWindow_GetFileName	0.0000	0.0000	0.0000	0x183f20
+singleselectionwindow	TSingleSelectionWindow_GetHeroName	0.0000	0.0000	0.0000	0x18d1f0
+singleselectionwindow	TSingleSelectionWindow_GetMapName	0.0000	0.0000	0.0000	0x184010
+singleselectionwindow	TSingleSelectionWindow_HasMultipleTowns	0.0000	0.0000	0.0000	0x18ce70
+singleselectionwindow	TSingleSelectionWindow_HighlightFile	0.0000	0.0000	0.0000	0x18d3e0
 singleselectionwindow	TSingleSelectionWindow_MakeHeroFilter	0.0000	0.0000	0.0000	0x183890
 singleselectionwindow	TSingleSelectionWindow_OnDeleteFile	0.0000	0.0000	0.0000	0x18dfb0
 singleselectionwindow	TSingleSelectionWindow_OnGameHeaderInfoInitMsg	0.0000	0.0000	0.0000	0x18a440
@@ -2640,7 +2651,7 @@ singleselectionwindow	TSingleSelectionWindow_TurnChatOff	0.0000	0.0000	0.0000	0x
 singleselectionwindow	TSingleSelectionWindow_TurnChatOn	0.0000	0.0000	0.0000	0x18ca80
 singleselectionwindow	TSingleSelectionWindow_TurnOffAdvancedOptions	0.0000	0.0000	0.0000	0x181b20
 singleselectionwindow	TSingleSelectionWindow_TurnOffScenarioOptions	0.0000	0.0000	0.0000	0x1819a0
-singleselectionwindow	TSingleSelectionWindow_Update	0.0000	0.0000	0.0000	0x184550
+singleselectionwindow	TSingleSelectionWindow_UpdateFilterWidgets	0.0000	0.0000	0.0000	0x17ef70
 singleselectionwindow	TSingleSelectionWindow_UpdateNameLists	0.0000	0.0000	0.0000	0x18c960
 slider	??0slider@@QAE@HHHHHHP6IXHPAVheroWindow@@@ZW4EGraphics@0@HE@Z	100.0000	100.0000	100.0000	0x1960d0
 slider	??1slider@@UAE@XZ	100.0000	100.0000	100.0000	0x196180

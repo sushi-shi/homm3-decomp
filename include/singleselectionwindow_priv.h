@@ -24,6 +24,13 @@ namespace ResourceManager {
     TTextResource* GetText(const char* name);
 }
 
+// The starting-bonus name table at .bss 0x6a5e14 (rows 0..2 =
+// Artifact/Gold/Resource; the random rung draws general-text 523
+// instead), read by DrawHeroAdvancedOption's bonus column in both
+// mode arms. No attested name survives - house unnamed-cell spelling.
+// Owner TU unlocated - extern only, no DATA claim.
+extern const char* gUnnamed6a5e14[];
+
 // The chat/duration/file-menu slider. DC gives it a `slider` base and a
 // SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
 // Both bodies read the slider base fields retail's slider.obj proves
@@ -127,7 +134,24 @@ public:
 // would take the add-fix form retail lacks). The DC record
 // (SingleSelectionWindow.h:73) awaits field reconstruction.
 struct GameSelectionHeadersStruct {
-    char pad_0[0x314];
+    // The record's head mirrors CMapHeaderData field-for-field: Update
+    // (0x584550) reads the format dword at +0, the numPlayers /
+    // maxNumHumanPlayers byte pair at +6/+8, the Size dword at +0x18
+    // and the two condition type bytes at +0x30/+0x7c - exactly game.h's
+    // CMapHeaderData offsets (the placeholders vector at +0x20 and the
+    // 0x4c-byte VictoryConditionStruct fix the two condition rows).
+    int version;                       // +0x00, EMapFormatVersion
+    char pad_04[2];
+    unsigned char numPlayers;          // +0x06
+    char pad_07[1];
+    unsigned char maxNumHumanPlayers;  // +0x08
+    char pad_09[0x18 - 0x09];
+    int Size;                          // +0x18, EMapDimension
+    char pad_1c[0x30 - 0x1c];
+    signed char victoryConditionType;  // +0x30, -1..11 (icon frame)
+    char pad_31[0x7c - 0x31];
+    signed char lossConditionType;     // +0x7c, -1..3 (icon frame)
+    char pad_7d[0x314 - 0x7d];
     // UpdatePlayerPositions copies the slot's town alignment out of the
     // selected header through this row (int, 8 slots at +0x314).
     int slotAlignments[8];
@@ -142,9 +166,45 @@ struct GameSelectionHeadersStruct {
     char pad_4a6[0x6f8 - 0x4a6];
     unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
     unsigned int fileTimeHigh;  // +0x6fc
-    char pad_700[0xCA4 - 0x700];
+    char pad_700[0xbe0 - 0x700];
+    // Multiplayer rows only: the campaign flag and ordinal Update's
+    // version-icon remap (the jump-table switch) dispatches on.
+    unsigned char isCampaign;   // +0xbe0
+    char pad_be1[0xbe8 - 0xbe1];
+    int campaignIndex;          // +0xbe8, ECampaignOrdinal
+    char pad_bec[0xCA4 - 0xbec];
 };
 SIZE(GameSelectionHeadersStruct, 0xCA4);
+
+// Update (0x584550) remaps a campaign scenario's version icon from the
+// row's campaign ordinal: rows 0..6 are Restoration of Erathia's seven
+// campaigns, 7..12 Armageddon's Blade's six, 13..19 Shadow of Death's
+// seven - the same shipping-order split campaignwindow.h's
+// ECampaignSets pages by (byte table at 0x584bd4: 7x0, 6x1, 7x2).
+// Title identities are deliberately not imported (the
+// EGameCampaignOrdinal precedent).
+enum ECampaignOrdinal {
+    CAMPAIGN_ROE_0 = 0,
+    CAMPAIGN_ROE_1 = 1,
+    CAMPAIGN_ROE_2 = 2,
+    CAMPAIGN_ROE_3 = 3,
+    CAMPAIGN_ROE_4 = 4,
+    CAMPAIGN_ROE_5 = 5,
+    CAMPAIGN_ROE_6 = 6,
+    CAMPAIGN_AB_0 = 7,
+    CAMPAIGN_AB_1 = 8,
+    CAMPAIGN_AB_2 = 9,
+    CAMPAIGN_AB_3 = 10,
+    CAMPAIGN_AB_4 = 11,
+    CAMPAIGN_AB_5 = 12,
+    CAMPAIGN_SOD_0 = 13,
+    CAMPAIGN_SOD_1 = 14,
+    CAMPAIGN_SOD_2 = 15,
+    CAMPAIGN_SOD_3 = 16,
+    CAMPAIGN_SOD_4 = 17,
+    CAMPAIGN_SOD_5 = 18,
+    CAMPAIGN_SOD_6 = 19
+};
 
 // The lobby-only message subtypes past the DC eRS_Messages ladder's
 // 1081 end (SoD renumbered/extended the header-transfer family). Values

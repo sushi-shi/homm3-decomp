@@ -13,7 +13,9 @@
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
 class slider;
+class Bitmap816;
 class CSaveScreen;
+class CSprite;
 class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
@@ -80,6 +82,12 @@ public:
 
     bool DeletePlayer(unsigned long dpid);
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
+    // DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
+    // fallback through it (lea into the computer bank).
+    CNetPlayerHandlerPlayer* GetCompPlayerInPos(int pos)
+    {
+        return &computerPlayers[pos];
+    }
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
     unsigned char IsFaceTaken(int face, int exclude);
     unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
@@ -103,7 +111,34 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x36c - 0x66];
+    char pad_66[0x6c - 0x66];
+    // The scenario list's three icon strips, byte-proven by Update
+    // (0x584550): each is the receiver of a CSprite::Draw at columns
+    // 91/309/342 with its own Width/Height re-read off the same load -
+    // map format (frames 0..2), victory condition (0..11) and loss
+    // condition (0..3).
+    CSprite* versionIcons;             // 0x6c
+    CSprite* victoryConditionIcons;    // 0x70
+    CSprite* lossConditionIcons;       // 0x74
+    // The advanced-options row art, all byte-proven by
+    // DrawHeroAdvancedOption (0x58d510): the town strip (frames
+    // 2*town+2 at column 0xb0), the bonus strip (frames 3/8/9/10/town
+    // at 0x148), the eight seat flags at 0x39 (element 0 supplies the
+    // blit extent), the portrait plates at 0xfc (again extent from
+    // element 0; the array extent to +0x35c is the layout bound, the
+    // interior count is not otherwise attested), and the three special
+    // plates - random town (drawn with the random-hero plate's
+    // extent, exactly as retail does), random hero, and the locked
+    // no-hero plate.
+    CSprite* townIcons;                // 0x78
+    CSprite* bonusIcons;               // 0x7c
+    char pad_80[0xa8 - 0x80];
+    Bitmap816* playerFlags[8];         // 0xa8
+    Bitmap816* heroFaces[165];         // 0xc8..0x35c
+    Bitmap816* randomTownBmp;          // 0x35c
+    Bitmap816* randomHeroBmp;          // 0x360
+    char pad_364[0x368 - 0x364];
+    Bitmap816* noHeroBmp;              // 0x368
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
     // 864/868/872) followed by the two option-mode bytes, the save-name
     // editor and the update-proc manager (dc 876/877/880/888) - the whole
@@ -121,7 +156,11 @@ public:
     int durationIndex;                 // 0x378
     unsigned char inAdvancedOptions;   // 0x37c
     unsigned char inScenarioOptions;   // 0x37d
-    char pad_37e[0x37f - 0x37e];
+    // The third right-panel mode byte of the run: the scenario-filter
+    // panel (retail-only - no DC counterpart). Update gates the
+    // general-text 739/740 title pair and the filter-widget refresh
+    // (0x57ef70) on it.
+    unsigned char inFilterOptions;     // 0x37e
     // 0x37f: a setup byte the duration slider snapshots into
     // CNewSetupInfoMsg and OnNewSetupInfoMsg writes back. Role
     // unattested - ordinal placeholder.
@@ -198,6 +237,26 @@ public:
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
+    // DC-named row-name getters (dc 0x139a20/0x139b08) and the selected-
+    // scenario info panel painter (dc 0x139ccc); retail 0x583f20 /
+    // 0x584010 / 0x5840f0, all three called by Update.
+    const char* GetFileName(int which);
+    const char* GetMapName(int which);
+    void DrawBasicMapInfo();
+    // Retail-only (no DC row): refreshes the filter panel's widget
+    // statuses from field_18A0; Update calls it under inFilterOptions.
+    void UpdateFilterWidgets();
+    // The advanced-options row accessors (DC names; retail
+    // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
+    // THeroID from GetDisplayFace; spelled int so the public closure
+    // needs no hero enums - retype when the body lands.
+    unsigned char HasMultipleTowns(int gamePos);
+    unsigned char CanChooseTown(int gamePos);
+    unsigned char CanChooseHero(int gamePos);
+    int GetDisplayFace(int gamePos);
+    const char* GetHeroName(int gamePos);
+    int GetThisPlayerGamePos();
+    unsigned char HighlightFile(char* filename);
     unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
     int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
                          unsigned char remoteClick);
