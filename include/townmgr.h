@@ -174,7 +174,11 @@ class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
 public:
     TResourceDisplay* pResourceDisplay;  // +0x0c
 
-    CTownNetMsgHandler(TResourceDisplay* display);
+    // The only retail construction site (townManager::Open) expands this
+    // constructor in place: CAdvMgrNetMsgHandler's constructor remains a
+    // call, followed by the derived vptr and resource-display stores.
+    CTownNetMsgHandler(TResourceDisplay* display)
+    { pResourceDisplay = display; }
     // Four bytes on the Dreamcast and no retail row of its own, so it
     // is a header one-liner every caller expands: DoHall 0x5d27b0
     // emits the bare `mov [handler+0xc], bar` at both of its two
@@ -701,9 +705,10 @@ public:
     // pointer for the same budget reason - a second declaration would
     // spend room that buys no bytes, DoHall being byte-exact without it.
     CTownNetMsgHandler* netMsgHandler;    // +0x1b0
-    // +0x1b4: handed to the message pump's setter (0x553770) on the way
-    // out of a network game, which is what types it.
-    CUnnamed69d808_f0* field_1b4;
+    // +0x1b4: the previous CDPlayHeroes message handler, saved by Open
+    // through GetNetMsgHandler (0x5537a0) and restored by Close through
+    // SetNetMsgHandler (0x553770).
+    CNetMsgHandler* field_1b4;
     int field_1b8;                // +0x1b8  ctor -1
     // +0x1bc, NAMED AND TYPED 2026-08-14: DoHall 0x5d27b0 stores its
     // `new THallWindow(townToView->type)` here and drives the whole

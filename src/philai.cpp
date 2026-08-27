@@ -1369,18 +1369,145 @@ long value_of_bank(const hero* current_hero, NewmapCell* cell)
 }
 
 // E:\gamedcs\philai.cpp:2128
+#endif  // @carcass
+
 VA(0x00529a30, 0x27f)  // anchor-callee, dc 0x1109b8
 int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
 {
-    // @stub
+    generator current_generator;
+    long value = 0;
+    short generator_id = gpGame->GetGeneratorId(x, y, z);
+    current_generator = gpGame->generators[generator_id];
+
+    if (current_generator.playerOwner != gNetLocalGamePos
+        && gpGame->OnSameTeam(current_generator.playerOwner,
+                              gNetLocalGamePos))
+        return 0;
+    if (current_generator.playerOwner != gNetLocalGamePos
+        && current_generator.guards.HasCreatures()) {
+        value = AI_value_of_combat(current_hero, 0,
+                                   current_generator.guards, 0, cell);
+    }
+
+    if (value <= -500000000)
+        return value;
+
+    type_AI_creature_purchaser purchaser(current_hero->owner,
+                                          &current_generator);
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    long purchase_value = purchaser.get_purchase_value(
+        &current_hero->army,
+        const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 0,
+        gpCurrentPlayer->resources, has_angelic_alliance);
+
+    if (move_cost >= 400
+        && current_generator.playerOwner == gNetLocalGamePos
+        && purchaser.get_army_value_increase()
+               < const_cast<hero*>(current_hero)->army.get_AI_value() / 3)
+        purchase_value = 0;
+    value += purchase_value;
+
+    if (static_cast<unsigned char>(
+            gpGame->mapHeader.victoryCondition.applies_to_player(
+                gNetLocalGamePos))
+        && gpGame->mapHeader.victoryCondition.Type
+               == VICTORY_CONDITION_FLAG_ALL_GENERATORS
+        && !gpGame->OnSameTeam(current_generator.playerOwner,
+                               gNetLocalGamePos)
+        && (gpGame->f_1f698 != 0
+            || (current_generator.type[0] != CREATURE_AIR_ELEMENTAL
+                && current_generator.type[0] != CREATURE_EARTH_ELEMENTAL
+                && current_generator.type[0] != CREATURE_FIRE_ELEMENTAL
+                && current_generator.type[0] != CREATURE_WATER_ELEMENTAL))
+        && akCreatureTypeTraits[current_generator.type[0]].townType != -1) {
+        value += 5000000 / gpGame->generators.size();
+    }
+    return value;
 }
 
+inline int AI_resource_cost(const playerData* player, const int* resources)
+{
+    int value = 0;
+    for (int resource = 0; resource < NUM_RESOURCES; resource++)
+        value += resources[resource] * player->resourceValue[resource];
+    return value;
+}
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
+
 // E:\gamedcs\philai.cpp:2306
+#endif  // @carcass
+
 VA(0x00529cb0, 0x2d9)  // anchor-callee, dc 0x11105c
 long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
 {
-    // @stub
+    hero* defending_hero;
+    playerData* player = const_cast<hero*>(current_hero)->get_player();
+    defending_hero = 0;
+    if (enemy_town->garrisonHeroId >= 0)
+        defending_hero = gpGame->GetHero(enemy_town->garrisonHeroId);
+
+    long combat_value = AI_value_of_combat(
+        current_hero, defending_hero, enemy_town->get_army(), enemy_town,
+        cell);
+    if (combat_value <= -500000000) {
+        if (player->numTowns > 0)
+            return combat_value;
+        combat_value = -2500000;
+    }
+
+    long town_value = static_cast<long>(
+        enemy_town->get_gold_income(0) * player->resourceValue[GOLD] * 3.0);
+    if (enemy_town->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
+        int* silo_income = enemy_town->get_silo_income();
+        town_value += 3 * AI_resource_cost(player, silo_income);
+    }
+
+    unsigned char include_growth = 0;
+    if ((move_cost - current_hero->movePoints)
+                / current_hero->maxMovePoints
+            + gpGame->field_1f63e
+        >= 7)
+        include_growth = 1;
+    for (int dwelling = 0; dwelling < TOWN_DWELLING_SLOTS; dwelling++) {
+        long population = enemy_town->population[dwelling];
+        if (include_growth)
+            population += const_cast<town*>(enemy_town)->get_growth_rate(
+                dwelling);
+
+        if (population > 0) {
+            TCreatureType creature = gTownDwellingCreatures[
+                TOWN_DWELLING_SLOTS * enemy_town->type + dwelling];
+            int creature_cost[NUM_RESOURCES];
+            GetMonsterCost(creature, creature_cost);
+            long profit = akCreatureTypeTraits[creature].AI_value
+                - AI_resource_cost(player, creature_cost);
+            if (profit > 0)
+                town_value += profit * population;
+        }
+    }
+
+    town_value = static_cast<long>(
+        (type_AI_player::get_attack_bonus(enemy_town->owner) + 1.0f)
+        * town_value);
+    if (player->numTowns == 0)
+        town_value += 5000000;
+    else
+        town_value += 5000000 / gpGame->towns.size();
+
+    LossConditionStruct& loss = gpGame->mapHeader.lossCondition;
+    if (loss.Type == LOSS_CONDITION_LOSE_TOWN
+        && loss.TownX == enemy_town->mapX
+        && loss.TownY == enemy_town->mapY
+        && loss.TownZ == enemy_town->mapZ)
+        town_value += 5000000;
+
+    return combat_value + town_value;
 }
+
+#if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2668.  Value a wandering monster stack: exact cross-TU
 // callee set {armyGroup::armyGroup(TCreatureType,int), AI_value_of_combat} - the

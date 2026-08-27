@@ -1570,6 +1570,12 @@ public:
     // spelling like the tomb and the wagon.
     void DoEventSkeleton(class hero* current_hero, ExtraInfoUnion* cell,
                          bool human_player);
+    // The three shrine tiers share one handler.  Dreamcast publishes the
+    // complete five-argument signature; retail's `ret 0x14` agrees and its
+    // cell reads include both the packed spell lane and the visit mask.
+    void DoEventShrine(class hero* current_hero, NewmapCell* cell,
+                       const char* prompt, GlobalInfoFlags type,
+                       bool human_player);
     // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
     // shape as the stables below and the cell equally unused.
     void DoEventSiren(class hero* current_hero, NewmapCell* cell,
@@ -1893,6 +1899,12 @@ public:
     // playerData::IsLocalHuman's bool result unwidened.
     void DoEventShipyard(NewmapCell* cell, type_point point,
                          unsigned char human_player);
+#ifdef HOMM3_EVENTS_PRISON_DECL
+    // MATCHING_DEBT: one events-only declaration view. Exposing this
+    // CodeView-proven member to all consumers perturbs unrelated exact TUs.
+    void DoEventPrison(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool human_player);
+#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).

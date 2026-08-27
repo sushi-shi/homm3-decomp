@@ -2045,6 +2045,7 @@ public:
                              unsigned char minimal);           // 0x4c9730
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
+    void CheckHeroConsistency();                 // DC game.cpp:10132
     type_point get_puzzle_origin() const;         // 0x4cea70
     void SetupDynamicStuff(int bUpdate, int bForceUpdate); // 0x51bd50
     void SetupNewOverviewType(int iWhichType,
@@ -2668,6 +2669,15 @@ class CTradeHeroesMsg : public CNetMsg {
 public:
     hero m_hero1;
     hero m_hero2;
+
+    // Dreamcast names this constructor CHeroUpdateMsg; retail's
+    // RS_TRADE_REQUEST payload has this exact base and two-hero shape.
+    CTradeHeroesMsg(hero* left, hero* right)
+        : CNetMsg(RS_TRADE_REQUEST, sizeof(CTradeHeroesMsg))
+    {
+        m_hero1 = *left;
+        m_hero2 = *right;
+    }
 };
 
 // Two game-band routines StartLocalPlayerTurn drives, spelled as /Gr free

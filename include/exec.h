@@ -31,6 +31,11 @@ public:
 // invisible to every TU with no consumer.
 extern executive* gpExecutive;  // retail .bss 0x699500
 
+// philai.obj's cooperative main-loop pump. ai_player.obj calls it between
+// each enemy mobility calculation and path seed; keeping the declaration in
+// this narrow executive surface avoids importing philai.h's skill roster.
+void CheckDoMain(int bForceMouseCheck, int bMouseOnly);         // 0x5242d0
+
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();
 // CODEVIEW(E:\gamedcs\exec.cpp:43, dc 0x9e520) int executive::InitSystem();

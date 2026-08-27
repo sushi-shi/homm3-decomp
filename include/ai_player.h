@@ -14,6 +14,7 @@ class hero;
 class playerData;
 class searchArray;
 class town;
+class generator;
 
 // The two gift messages extend the shared 20-byte network-message head.
 // Their subtype and total-size constants are the immediates retail stores at
@@ -129,6 +130,8 @@ protected:
     long do_best_purchase(bool trade_allowed);
 
 public:
+    type_AI_creature_purchaser(long player,
+                               generator* current_generator);
     type_AI_creature_purchaser(long player, town* current_town);
     void set(town* current_town);
     void do_purchase(armyGroup* new_army, short new_morale,
@@ -192,6 +195,7 @@ public:
     void reset_magus_hut_value();                 // 0x429ab0
     void calculate_reserve();                     // 0x429ad0
     long get_total_value(long basic_value, int* cost);  // 0x42a150
+    void buy_mage_guild(hero* current_hero, town* current_town); // 0x42beb0
     unsigned char purchase_buildings(unsigned char* prohibited_creatures);
     unsigned char hire_heroes();
     bool check_trade_supply(const int* cost, long number, int* supply,
@@ -775,6 +779,14 @@ class type_duration_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
+};
+
+class type_school_artifact : public type_power_artifact {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    TSpellSchool school;
 };
 
 class type_antimagic_artifact : public type_artifact_effect {

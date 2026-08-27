@@ -81,6 +81,9 @@ public:
     // ai_spellvalue.h:84 in the Dreamcast roster - the guard
     // AI_get_spell_value applies before appraising anything.
     unsigned char can_cast_spells() const { return power > 0; }
+    // DC ai_spellvalue.h:114 - the one-store setter, inlined at both
+    // type_school_artifact::get_value call sites in retail.
+    void set_power(long arg) { power = arg; }
     // DC ai_spellvalue.h:124 - the one-store setter, inlined at every
     // retail call site (dc 0x27c74 is the 4-byte out-of-line copy).
     // combatManager::do_combat_ai is a located caller: it writes the
