@@ -24,6 +24,7 @@
 #include <functional>
 #include "ai_player.h"
 #include "ai_combat.h"
+#include "ai_spellvalue.h"
 #include "armygrp.h"
 #include "findpath.h"
 #include "exec.h"
@@ -33,6 +34,7 @@
 #include "misc.h"
 #include "netgame.h"
 #include "remote.h"
+#include "soundmgr.h"
 #include "town.h"
 #include "tradpost.h"
 #include "recruit.h"
@@ -1403,11 +1405,53 @@ void type_AI_player::buy_creatures(hero* current_hero, town* current_town)
 }
 
 // E:\gamedcs\ai_player.cpp:1954
+#endif  // @carcass
+
 VA(0x0042beb0, 0x187)  // retail callee set + arity, dc 0x31398
 void type_AI_player::buy_mage_guild(hero* current_hero, town* current_town)
 {
-    // @stub
+    union {
+        int index;
+        type_building_id id;
+    } building;
+    building.index = current_town->field_14;
+
+    if (building.index >= 5
+        || building.index >= current_hero->wisdomLevel + 2
+        || !current_town->can_build(building.index))
+        return;
+
+    if ((current_hero->GetPrimarySkill(2) < 3
+         || current_hero->GetPrimarySkill(3) < 3)
+        && (building.index > 0
+            || current_hero->SpellIsAvailable(SPELL_CURE)
+            || current_hero->SpellIsAvailable(SPELL_DISPEL)))
+        return;
+
+    if (building.index > 0
+        || resource_supply[WOOD] < resource_demand[WOOD]
+        || resource_supply[ORE] < resource_demand[ORE]) {
+        playerData* player = &gpGame->players[team];
+        for (int town_index = 0; town_index < player->numTowns;
+             ++town_index) {
+            town* other_town = gpGame->GetTown(player->townIds[town_index]);
+            int other_level = other_town->field_14;
+            if (other_level > building.index
+                && other_level < current_hero->wisdomLevel + 2
+                && other_town->can_build(other_town->field_14))
+                return;
+        }
+    }
+
+    int cost[7];
+    current_town->get_build_cost(building.id, cost);
+    trade_resources(cost, 1);
+    if (CanBuy(current_town, building.index)
+        && !gpGame->towns[current_town->id].field_02)
+        current_town->buy_building(building.id);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:2022
 DC_ONLY(0x31514, 0xA8)
@@ -2835,16 +2879,53 @@ void split_armies(hero* current_hero, const hero* enemy_hero,
     AI_arrange_army(army);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:2975
-VA(0x0042de50, 0x25c)  // unique AI_value_of_combat callee, dc 0x32894
-void mark_danger_zones(const hero* our_hero, hero* enemy_hero,
-                       long* danger_zones)
+// Retail folds the Dreamcast wrapper's enemy-hero census into this body:
+// the sole x86 caller passes only our_hero in ECX and danger_zones in EDX,
+// and the plain return confirms there is no third stack argument. Computer
+// enemies outside our team are searched from their current position with
+// 300 bonus movement. Every reachable cell accumulates a survivable combat
+// result; a catastrophic loss writes the shared unreachable sentinel.
+VA(0x0042de50, 0x25c)  // unique AI_value_of_combat callee + sole x86 caller, dc 0x32894
+void mark_danger_zones(const hero* our_hero, long* danger_zones)
 {
-    // @stub
+    for (int player_id = 0; player_id < 8; ++player_id) {
+        const playerData& player = gpGame->players[player_id];
+        if (!gpGame->OnSameTeam(player_id, our_hero->owner)
+            && !gpGame->playerDisabled[player_id]) {
+            for (int hero_index = 0; hero_index < player.numHeroes;
+                 ++hero_index) {
+                hero* enemy_hero = gpGame->GetHero(player.heroes[hero_index]);
+                long value = AI_value_of_combat(
+                    our_hero, enemy_hero, enemy_hero->army, 0, 0);
+                if (value < 0) {
+                    int mobility = enemy_hero->GetMobility() + 300;
+                    CheckDoMain(0, 0);
+                    type_point start(enemy_hero->x, enemy_hero->y,
+                                     enemy_hero->z);
+                    type_point target(-1, -1, -1);
+                    gpSearchArray->SeedPosition(
+                        enemy_hero, start, target, mobility,
+                        (enemy_hero->flags >> 18) & 1,
+                        const_AI_enemy_search, mobility, 0);
+
+                    for (long visited_index =
+                             gpSearchArray->visited_points.size();
+                         visited_index--;) {
+                        const type_point& point = gpSearchArray
+                            ->visited_points[visited_index]->point;
+                        if (value >= -500000000) {
+                            *get_danger_cell(danger_zones, point) += value;
+                        } else {
+                            *get_danger_cell(danger_zones, point) =
+                                -1000000000;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\findpath.h:270
 VA(0x0042ed30, 0x4E)  // anchor-global, dc 0x37eec
@@ -2853,6 +2934,36 @@ long searchArray::get_danger_value(type_point point) const
     if (!danger_zones)
         return 0;
     return *get_danger_cell(danger_zones, point);
+}
+
+// The Dreamcast roster marks both coordinate lookups static, and its
+// AI_build_ship xrefs mark both calls inlined. Retail retains those two
+// source-level passes: owned town docks first, then claimed map shipyards.
+static town* get_shipyard_town(const playerData* player, long x, long y,
+                               long z)
+{
+    for (long i = 0; i < player->numTowns; ++i) {
+        town* current_town = gpGame->GetTown(player->townIds[i]);
+        if (current_town->dockSite == x && current_town->dockSiteY == y
+            && current_town->mapZ == z)
+            return current_town;
+    }
+    return 0;
+}
+
+static unsigned char get_map_shipyard(const playerData* player, long x,
+                                      long y, long z)
+{
+    for (unsigned long i = 0; i < player->shipyards.size(); ++i) {
+        if (player->shipyards[i].z == z) {
+            NewmapCell* cell = gpGame->get_cell(player->shipyards[i]);
+            const ShipyardInfo* shipyard = static_cast<const ShipyardInfo*>(
+                static_cast<const void*>(&cell->extraInfo));
+            if (shipyard->boatX == x && shipyard->boatY == y)
+                return 1;
+        }
+    }
+    return 0;
 }
 
 #if 0  // @carcass
@@ -2944,12 +3055,38 @@ unsigned char attempt_step(hero* current_hero, pathCell* path_cell, unsigned cha
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:4607
-VA(0x00430f80, 0x1d2)  // anchor-callee unique (game::CreateBoat), dc 0x35910
+// A computer hero may buy and launch from either an owned town dock or a
+// claimed map shipyard. Human heroes only enter through the remote-move
+// path. Retail charges the fixed ten wood and one-thousand gold only after
+// CreateBoat returns a real boat id.
+VA(0x00430f80, 0x1d2)  // unique CreateBoat + belongs_to_human callees, dc 0x35910
 void AI_build_ship(const hero* our_hero, long x, long y, long z)
 {
-    // @stub
+    if (const_cast<hero*>(our_hero)->belongs_to_human() && !gbUnk691209)
+        return;
+
+    playerData* player = &gpGame->players[our_hero->owner];
+    town* shipyard_town = get_shipyard_town(player, x, y, z);
+    if (!shipyard_town) {
+        if (!get_map_shipyard(player, x, y, z))
+            return;
+    } else if (!shipyard_town->HasBuilding(DOCK_ID, 1)
+               && !shipyard_town->buy_building(DOCK_ID)) {
+        return;
+    }
+
+    if (player->resources[WOOD] < 10 || player->resources[GOLD] < 1000)
+        return;
+    if (gpGame->CreateBoat(x, y, z, our_hero->owner, 0, 1) == -1)
+        return;
+    player->resources[GOLD] -= 1000;
+    player->resources[WOOD] -= 10;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:4476
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
@@ -3105,16 +3242,54 @@ long type_duration_artifact::get_value(const hero* owner, unsigned char, unsigne
     return owner->value_of_duration * bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:5293
 VA(0x00432890, 0x1b2)  // artifact get_value order-map + get_raw_spell_value/akSpellTraits, dc 0x3687c
-long type_school_artifact::get_value(const hero* owner, unsigned char equipped, unsigned char exact)
+long type_school_artifact::get_value(const hero* owner, unsigned char equipped,
+                                     unsigned char exact) const
 {
-    // @stub
-}
+    if (exact)
+        return 0;
 
-#endif  // @carcass
+    type_spellvalue caster(owner);
+    if (!caster.can_cast_spells())
+        return 0;
+
+    signed char spell_power = owner->stats[2];
+    long power;
+    if (spell_power > 99)
+        power = 99;
+    else {
+        power = spell_power;
+        if (spell_power <= 0)
+            power = 1;
+    }
+
+    long best_value = 0;
+    long base_value;
+    if (equipped) {
+        base_value = power;
+        power = power * 100 / (bonus + 100);
+    } else {
+        base_value = power * (bonus + 100) / 100;
+    }
+
+    for (SpellID spell = 0; spell < 70; spell++) {
+        if (!owner->SpellIsAvailable(spell)
+            || !(akSpellTraits[spell].schoolBits & school)
+            || !(akSpellTraits[spell].field_c & 0x200))
+            continue;
+
+        caster.set_power(power);
+        long value = caster.get_raw_spell_value(spell);
+        caster.set_power(base_value);
+        value = caster.get_raw_spell_value(spell) - value;
+        if (bonus < 0)
+            best_value = _cpp_max(best_value, value);
+        else
+            best_value = _cpp_max(value, best_value);
+    }
+    return best_value;
+}
 
 // E:\gamedcs\ai_player.cpp:5355
 VA(0x00432a50, 0xc3)  // artifact get_value cluster order-map + get_AI_value, dc 0x36a1c

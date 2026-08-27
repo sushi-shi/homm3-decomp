@@ -20560,7 +20560,6 @@ site_rva	kind
 0x129be5	dir32
 0x129c00	dir32
 0x129c4e	dir32
-0x129c84	dir32
 0x129ce2	dir32
 0x129d48	dir32
 0x129d53	dir32
@@ -20570,9 +20569,6 @@ site_rva	kind
 0x129e9e	dir32
 0x129edb	dir32
 0x129ef2	dir32
-0x129f01	dir32
-0x129f33	dir32
-0x129f76	dir32
 0x129ff1	dir32
 0x12a01f	dir32
 0x12a043	dir32

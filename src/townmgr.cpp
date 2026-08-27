@@ -44,6 +44,7 @@
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "inputmgr.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "message.h"
@@ -923,11 +924,10 @@ void TTownScreenWindow::UpdateTownLocators()
     DrawWindow(0, 0x9b, 0xa3);
 }
 
-// Located, not reconstructed: the bonus-display formatter and the town
-// page's Open. Both sit between UpdateTownLocators (0x5c5aa0) and
-// HandleGiftMsg (0x5c66b0) in retail link order; the two DC helpers
-// DoTownKnob/bonus_right_click that precede set_bonus_display in the DC
-// roster have no distinct retail carve row (inlined here).
+// Located, not reconstructed: the bonus-display formatter. It sits between
+// UpdateTownLocators (0x5c5aa0) and Open (0x5c63c0) in retail link order;
+// the two DC helpers DoTownKnob/bonus_right_click that precede it have no
+// distinct retail carve row (inlined here).
 #if 0  // @carcass: located, not reconstructed
 // E:\gamedcs\townmgr.cpp:2562
 VA(0x005c5b40, 0x878)  // order-map(UpdateTownLocators 0x5c5aa0 .. HandleGiftMsg 0x5c66b0) + body(get_growth_rate/get_castle_growth_bonus/GetBuildingName/format_string) + arity(ret 4, town*), dc 0x16b0e8
@@ -936,13 +936,82 @@ void TTownScreenWindow::set_bonus_display(town* currTown)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\townmgr.cpp:2716
 VA(0x005c63c0, 0x2E1)  // anchor-caller(the three pure managers Open/Close/Main) + order-map + arity(ret 4, int), dc 0x16b718
 int townManager::Open(int newPriority)
 {
-    // @stub
+    gpInputManager->Flush();
+    StartMouseThread();
+    gpGame->CheckHeroConsistency();
+    PollSound();
+
+    TownWindow = new TTownScreenWindow;
+    if (!TownWindow)
+        MemError();
+
+    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::Get() + 150;
+    field_1b8 = -1;
+    hallWindow = 0;
+    pResourceDisplay = 0;
+    dialogResourceDisplay = 0;
+    field_1c0 = 0;
+    gUnnamed6aa9ec = 0;
+    netMsgHandler = 0;
+    field_1b4 = 0;
+    memset(MonPix, 0, sizeof(MonPix));
+    memset(TownObjects, 0, sizeof(TownObjects));
+    field_128 = -1;
+    field_130 = -1;
+    field_138 = -1;
+    field_19c = -1;
+    field_110 = -1;
+    gUnnamed6aa9d8 = 0;
+    lastHover = -1;
+    lastQualifier = 0;
+    TownObjectCount = 0;
+    field_114 = 0;
+    field_11c = 0;
+    field_120 = 0;
+    selectedStrip = 0;
+    field_12c = 0;
+    field_134 = 0;
+    field_3c = 0;
+    field_1c4 = 0;
+    strcpy(statusText, emptyRolloverText);
+    gUnnamed6aa9e8 = -1;
+
+    gUnnamed6aaa50 = gpGame->GetLocalPlayer()->FindTown(townToView->id);
+    SetupExtraStuff();
+
+    pResourceDisplay = new TResourceDisplay(TownWindow, 0);
+    SetupTown(1);
+    StopMouseThread();
+
+    status = STATUS_ACTIVE;
+    id = 0x800;
+    priority = newPriority;
+    strcpy(cMgrName, "townManager");
+    gpInputManager->Flush();
+
+    if (townToView->garrisonHeroId != -1)
+        townToView->ApplySpecialBuildingEffect(
+            gpGame->GetHero(townToView->garrisonHeroId));
+    if (townToView->visitingHeroId != -1)
+        townToView->ApplySpecialBuildingEffect(
+            gpGame->GetHero(townToView->visitingHeroId));
+
+    if (gNetworkActive69954c) {
+        CTownNetMsgHandler* handler =
+            new CTownNetMsgHandler(pResourceDisplay);
+        netMsgHandler = handler;
+        field_1b4 = pDPlay->GetNetMsgHandler();
+        pDPlay->SetNetMsgHandler(netMsgHandler);
+    }
+
+    return 0;
 }
-#endif  // @carcass
 
 // The town page's one network hook: a gift arriving while the player is
 // inside a town is handled exactly as the adventure map handles it, and
@@ -1372,7 +1441,7 @@ void townManager::Close()
     }
     gpWindowManager->FadeScreen(1, 4, 1);
     if (gNetworkActive69954c && netMsgHandler) {
-        gUnnamed69d808->set_field_f0(field_1b4);
+        pDPlay->SetNetMsgHandler(field_1b4);
         delete netMsgHandler;
         netMsgHandler = 0;
     }

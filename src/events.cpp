@@ -4,9 +4,12 @@
 #include <stdio.h>
 #include <string.h>
 #include <va.h>
+#define HOMM3_EVENTS_PRISON_DECL
 #include "advmgr_objects.h"
+#include "swapmgr.h"
 #include "game.h"
 #include "advmgr.h"
+#undef HOMM3_EVENTS_PRISON_DECL
 #include "cursor.h"
 #include "events.h"
 #include "exec.h"
@@ -20,6 +23,14 @@
 #include "soundmgr.h"
 #include "winmgr.h"
 #include "textresource.h"
+
+// Retail uses the same 0x20-byte 0x424 map-change shape when a prison hero
+// enters the map. Keep the constructor inline at its only events.obj site.
+inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
+    : CMapChange(RS_TELEPORT_HERO, sizeof(CMCTeleportHero)),
+      heroId(id), point(location), playerPos(gNetLocalGamePos)
+{
+}
 
 #if 0  // @carcass
 
@@ -2308,6 +2319,11 @@ void AI_equip_artifacts(hero* current_hero);
 // on the stack.
 long AI_value_of_event(const hero* current_hero, type_point point);
 
+// CreatureType.h's header-inline accessor.  FightForArtifact is its first
+// expansion site in retail address order; the ordinary definition remains
+// below, next to the other creature-event users.
+static const char* GetArmyName(int type, int count);
+
 // E:\gamedcs\events.cpp:478.  The artifact hand-over every arm of
 // DoEventArtifact (0x49f7e0) ends on: fetch the cell back out of the map,
 // give the hero whatever artifact it names, and pick the object up.
@@ -2341,14 +2357,51 @@ void advManager::GiveArtifact(hero* current_hero, type_point point,
     current_hero->CheckLevel();
 }
 
-// E:\gamedcs\events.cpp:516.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x0049ea40, 0x304)  // dc-bracket forced, ret 0x10=p5, dc 0x908dc
-void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+// E:\gamedcs\events.cpp:516.  Dreamcast supplies the three locals and the
+// complete helper roster.  Retail widens the packed defender from the DC's
+// eight-bit lane to a signed nine-bit lane (bits 4..12), leaving fourteen
+// bits for the count (17..30); the shifts below are the retail accessors.
+VA(0x0049ea40, 0x304)  // DC identity + unique call/CFG stream, dc 0x908dc
+void advManager::FightForArtifact(hero* current_hero, NewmapCell* cell,
+                                  type_point point, bool human_player)
 {
-    // @stub
+    int monster_type = static_cast<long>(cell->extraInfo << 19) >> 23;
+    int amount = (cell->extraInfo >> 17) & 0x3fff;
+    short artifact = cell->objectIndex;
+
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        sprintf(gText, gpGeneralText->GetText(421),
+                armyGroup::GetArmySizeName(amount, 2),
+                GetArmyName(monster_type, 2),
+                GetArmyName(monster_type, 2));
+        NormalDialog(gText, 2, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+            NormalDialog(gpAdventureEventText->GetText(11),
+                         1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+            return;
+        }
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    if (CombatMonsterEvent(current_hero, monster_type, &amount, cell, point,
+                           CREATURE_NONE, 0, 0,
+                           CREATURE_NONE, 0, 0))
+        return;
+
+    current_hero->CheckLevel();
+    if (human_player) {
+        sprintf(gText, gpAdventureEventText->GetText(8),
+                akArtifactTraits[artifact].name);
+        NormalDialog(gText, 1, -1, -1,
+                     8, artifact, -1, 0, -1, 0, -1, 0);
+    }
+    GiveArtifact(current_hero, point, human_player);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:570. Dreamcast names the two locals as an
 // EGameResource and char[50], and its xrefs publish the artifact/resource
@@ -3674,14 +3727,72 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
     current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
 }
 
-// E:\gamedcs\events.cpp:2515.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:2515
 VA(0x004a3eb0, 0x376)  // dc-bracket forced, ret 0x10=p5, dc 0x94760
-void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DoEventPrison(hero* current_hero, NewmapCell* cell,
+                               type_point point, bool human_player)
 {
-    // @stub
+    const int prisonRescueText = 102;
+    const int prisonHeroLimitText = 103;
+    const int prisonEmptyText = 104;
+    int heroId = cell->extraInfo;
+    if (gpGame->heroAvailability[heroId]
+            != hero::HERO_AVAILABILITY_PRISON) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             prisonEmptyText),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+        return;
+    }
+
+    if (gpCurrentPlayer->numHeroes >= playerData::HERO_SLOT_COUNT) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             prisonHeroLimitText),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         prisonRescueText),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+
+    unsigned char savedFlag = gUnnamed67f574;
+    gUnnamed67f574 = 0;
+    unsigned char savedPause = animCtrPaused;
+    animCtrPaused = 1;
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
+    EraseObj(cell, point, 1);
+
+    hero* prisoner = &gpGame->heroes[heroId];
+    gpGame->record_show_hero(prisoner, current_hero->owner, point, 0);
+    prisoner->owner = current_hero->owner;
+    gpGame->heroAvailability[heroId] = current_hero->owner;
+    gpGame->heroPoolMap[heroId][current_hero->owner] = 1;
+    gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = heroId;
+    ++gpCurrentPlayer->numHeroes;
+    prisoner->x = point.x;
+    prisoner->y = point.y;
+    prisoner->z = point.z;
+    prisoner->flags = 0;
+    prisoner->facing = hero::kFacingE;
+    prisoner->movePoints = prisoner->GetMobility();
+    prisoner->maxMovePoints = prisoner->movePoints;
+    cell->is_trigger = 0;
+    cell->type_value = 0;
+    prisoner->obscure_cell();
+
+    FizzleCenter(FIZZLE_SOUND_PICKUP);
+    animCtrPaused = savedPause;
+    gUnnamed67f574 = savedFlag;
+
+    CMCTeleportHero change(heroId, point);
+    SendMapChange(&change);
+    advWindow->UpdateHeroLocators(-1, 1, 1);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:2601.  The pyramid (jump-table arm 0x3f): a
 // yes/no prompt, two Golem stacks to beat, and then the spell it was
@@ -3806,11 +3917,6 @@ void advManager::DoEventRallyFlag(hero* current_hero, NewmapCell* cell,
 // its only consumer and, with it, that RecruitEvent has no out-of-line
 // retail body at all - see the note on the handler.
 void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number);
-
-// The creature-name accessor is defined further down this file; the refugee
-// camp is the first of its expansion sites in address order, so it needs
-// the declarator here. VC6 inlines callees defined later in the same TU.
-static const char* GetArmyName(int type, int count);
 
 // E:\gamedcs\events.cpp:2709.  The refugee camp (jump-table arm 0x4e): a
 // stack of one creature type waiting to be hired, run through the ordinary
@@ -4163,14 +4269,58 @@ void advManager::DoEventSkeleton(hero* current_hero, ExtraInfoUnion* cell,
     gpCurrentPlayer->DeadGuyFlags |= 1 << cell->GetItemId();
 }
 
-// E:\gamedcs\events.cpp:3039.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x004a5610, 0x346)  // dc-bracket forced, ret 0x14=p6, dc 0x957fc
-void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell, const char* prompt, GlobalInfoFlags type, unsigned char human_player)
+// E:\gamedcs\events.cpp:3039.  The shared handler for all three shrine
+// tiers.  Dreamcast names the string local and its helper stream; retail
+// fixes the packed spell as the signed ten-bit lane at bits 13..22.  The
+// three refusal tails are advevent.txt rows 174 (already known), 131 (no
+// spellbook), and 130 (insufficient Wisdom).
+VA(0x004a5610, 0x346)  // DC identity + unique call/CFG stream, dc 0x957fc
+void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
+                               const char* prompt, GlobalInfoFlags type,
+                               bool human_player)
 {
-    // @stub
+    int spell = static_cast<long>(cell->extraInfo << 9) >> 22;
+    std::string result;
+
+    if (human_player)
+        result = format_string("%s'%s'.", prompt,
+                               akSpellTraits[spell].name);
+
+    gpGame->SetInfoFlag(type, gNetLocalGamePos);
+    cell->SetCellVisited(current_hero->owner);
+
+    if (current_hero->in_spellbook[spell]) {
+        if (!human_player)
+            return;
+        result += gpAdventureEventText->GetText(174);
+        NormalDialog(result.c_str(), 1, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (!current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        if (human_player) {
+            result += gpAdventureEventText->GetText(131);
+            NormalDialog(result.c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2) {
+        if (human_player) {
+            result += gpAdventureEventText->GetText(130);
+            NormalDialog(result.c_str(), 1, -1, -1,
+                         -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    if (human_player)
+        NormalDialog(result.c_str(), 1, -1, -1,
+                     9, spell, -1, 0, -1, 0, -1, 0);
+    current_hero->AddSpell(spell);
 }
-#endif  // @carcass
 
 // Declared inline in the original Game.h (DC line 865); this is the retail
 // COMDAT copy selected into events.obj. Negative player ids are their own
@@ -5766,14 +5916,27 @@ void advManager::EraseObj(NewmapCell* thisCell, type_point point,
         1);
 }
 
-// E:\gamedcs\events.cpp:5240.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:5240
 VA(0x004aadf0, 0x1DC)  // linkorder + ret 0x8=p3 (note above), dc 0x99d98
 void advManager::HeroSwap(hero* leftHero, hero* rightHero)
 {
-    // @stub
+    swapManager* manager = new swapManager(leftHero, rightHero);
+    if (!manager)
+        MemError();
+
+    if (gNetworkActive69954c
+        && gpCurrentPlayer->IsLocalHuman()
+        && gpGame->IsHuman(rightHero->owner)
+        && rightHero->owner != leftHero->owner)
+    {
+        CTradeHeroesMsg message(leftHero, rightHero);
+        TransmitRemoteData(&message, rightHero->owner, 1, 1);
+    }
+
+    gpExecutive->DoDialog(manager);
+    delete manager;
+    RedrawAdvScreen(1, 0);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:5264.  A hero steps onto a town tile. Three
 // outcomes: the town is already friendly and is simply entered, the town
