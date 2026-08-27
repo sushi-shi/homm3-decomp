@@ -1230,12 +1230,31 @@ unsigned char type_AI_player::check_trade_supply(const int* cost, long number, i
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1446
+// Residual (90.12%): control flow, callees and vector cleanup agree; the
+// remaining delta is register homing around the two supply checks.
 VA(0x0042a470, 0x110)  // retail link order + arity, dc 0x304cc
 void type_AI_player::trade_resources(const int* cost, long number)
 {
-    // @stub
+    std::vector<long> trade_qty;
+    int supply[7];
+    if (!check_trade_supply(cost, number, supply, trade_qty))
+        return;
+    if (!can_trade_resources(cost, supply, trade_qty))
+        return;
+    if (build_markets(supply)) {
+        trade_qty.erase(trade_qty.begin(), trade_qty.end());
+        if (!check_trade_supply(cost, number, supply, trade_qty))
+            return;
+        if (!can_trade_resources(cost, supply, trade_qty))
+            return;
+    }
+    do_resource_trade(supply);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1474
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
@@ -2706,14 +2725,117 @@ void AI_consolidate_army(armyGroup* current_army)
     AI_consolidate_army_impl(current_army);
 }
 
-#if 0  // @carcass
+// These two helpers are DC-roster neighbours of split_armies. Their bodies
+// remain in the carcass, but retail labels are sufficient call targets.
+void AI_arrange_army(armyGroup* current_army);
+long split_army(armyGroup* current_army, short index, short limit,
+                short open_slots);
+
 // E:\gamedcs\ai_player.cpp:2817
+// Residual (79.53%): the merge, combat-value census and both split passes are
+// reconstructed; retail allocates the loop indices differently and duplicates
+// the final AI_arrange_army exit that this compiler cross-jumps.
 VA(0x0042db20, 0x249)  // retail callee set + arity, dc 0x32670
 void split_armies(hero* current_hero, const hero* enemy_hero,
                   const armyGroup* enemy)
 {
-    // @stub
+    armyGroup* army = &current_hero->army;
+    for (int i = 1; i < 7; ++i) {
+        TCreatureType type = army->armyTypes[i - 1];
+        if (type == CREATURE_NONE)
+            continue;
+        for (int j = i; j < 7; ++j) {
+            if (army->armyTypes[j] == type) {
+                army->numTroops[i - 1] += army->numTroops[j];
+                army->Dismiss(j);
+            }
+        }
+    }
+
+    int open_slots = 7 - army->GetNumArmies();
+    if (open_slots > 0) {
+        float ratio;
+        if (enemy_hero == 0)
+            ratio = 1.0f;
+        else
+            ratio = const_cast<hero*>(enemy_hero)
+                        ->get_combat_value_modifier();
+        ratio /= current_hero->get_combat_value_modifier();
+
+        int enemy_shooter_count = 0;
+        int enemy_shooter_value = 0;
+        int enemy_max_value = 0;
+        int k;
+        for (k = 0; k < 7; ++k) {
+            TCreatureType type = enemy->armyTypes[k];
+            if (type == CREATURE_NONE)
+                continue;
+            long value = static_cast<long>(
+                enemy->numTroops[k] * akCreatureTypeTraits[type].AI_value
+                * ratio);
+            if (akCreatureTypeTraits[type].attributes & CTA_SHOOTER) {
+                ++enemy_shooter_count;
+                enemy_shooter_value += value;
+            }
+            if (value > enemy_max_value)
+                enemy_max_value = value;
+        }
+
+        int slot;
+        for (slot = 0; slot < 7; ++slot) {
+            TCreatureType type = army->armyTypes[slot];
+            if (type != CREATURE_NONE
+                && (akCreatureTypeTraits[type].attributes & CTA_SHOOTER)) {
+                open_slots -= split_army(army, slot, enemy_max_value * 5,
+                                         open_slots);
+                if (open_slots == 0)
+                    break;
+            }
+        }
+
+        if (open_slots != 0 && enemy_shooter_count != 0) {
+            long hero_shooter_value = 0;
+            int hero_nonshooter_count = 0;
+            int m;
+            for (m = 0; m < 7; ++m) {
+                TCreatureType type = army->armyTypes[m];
+                if (type == CREATURE_NONE)
+                    continue;
+                if (akCreatureTypeTraits[type].attributes & CTA_SHOOTER)
+                    hero_shooter_value += army->numTroops[m]
+                        * akCreatureTypeTraits[type].AI_value;
+                else
+                    ++hero_nonshooter_count;
+            }
+
+            if (hero_shooter_value < enemy_shooter_value) {
+                int splits_needed = (enemy_shooter_count
+                    - hero_shooter_value * enemy_shooter_count
+                        / enemy_shooter_value
+                    + 1) / 2 - hero_nonshooter_count;
+                if (splits_needed > 0) {
+                    if (splits_needed < open_slots)
+                        open_slots = splits_needed;
+                    for (slot = 0; slot < 7; ++slot) {
+                        TCreatureType type = army->armyTypes[slot];
+                        if (type != CREATURE_NONE
+                            && !(akCreatureTypeTraits[type].attributes
+                                 & CTA_SHOOTER)) {
+                            open_slots -= split_army(army, slot,
+                                                     enemy_max_value,
+                                                     open_slots);
+                            if (open_slots == 0)
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    AI_arrange_army(army);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:2975
 VA(0x0042de50, 0x25c)  // unique AI_value_of_combat callee, dc 0x32894
