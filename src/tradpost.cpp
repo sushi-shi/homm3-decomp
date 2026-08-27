@@ -5,10 +5,17 @@
 #include <string.h>
 #include <va.h>
 #include "tradpost.h"
+#include "border.h"
+// The marketplace ctors need button.h's push_back arm of set_hotkey (see
+// the gate comment there).
+#define HOMM3_TRADPOST_OBJ_VIEW
+#include "button.h"
 #include "game.h"
+#include "iconwdgt.h"
 #include "kb.h"
 #include "text.h"
 #include "textresource.h"
+#include "textwdgt.h"
 #include "townmgr.h"
 #include "widget.h"
 #include "message.h"
@@ -17,30 +24,26 @@
 #include "slider.h"
 #include "tradpost_widgets.h"
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
+// The three slider callbacks (E:\gamedcs\tradpost.cpp:74/80/86). Retail's
+// /Gy link placed each COMDAT body immediately AFTER the constructor that
+// takes its address (0x5e1600 / 0x5e3670 / 0x5e9c60, in the three gaps the
+// carve originally left unowned there), so the definitions sit at their
+// claims below and only the declarations precede the constructors.
+void TradeResourceSlider(int state, heroWindow* parent_window);
+void GiveResourceSlider(int state, heroWindow* parent_window);
+void SellCreatureSlider(int state, heroWindow* parent_window);
 
-// E:\gamedcs\tradpost.cpp:74
-DC_ONLY(0x181a34, 0x1A)
-void TradeResourceSlider(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:80
-DC_ONLY(0x181a50, 0x1A)
-void GiveResourceSlider(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:86
-DC_ONLY(0x181a6c, 0x1A)
-void SellCreatureSlider(int state, heroWindow* parent_window)
-{
-    // @stub
-}
-
-#endif  // @carcass
+// Market state the slider callbacks reach (declared ahead of their
+// definitions inside the dialog band below; the rest of the file-static
+// market state block follows the dialogs, where its consumers start).
+// gRightAmount is the pending right-side quantity the resource-trade
+// handlers drive. The window pointers are the constructed dialog objects;
+// DoMarket news one per gMarketWindow value, keeps its pointer here for
+// the modal loop, and deletes it on close.
+DATA(0x006aaab0) static int gRightAmount;
+DATA(0x006aaab4) static TTradeResourceWindow* gpTradeWindow;
+DATA(0x006aaa8c) static TGiveResourceWindow* gpGiveWindow;
+DATA(0x006aaabc) static TSellCreatureWindow* gpSellCreatureWindow;
 
 // --- the five marketplace dialog (constructor, ??_G, destructor) triples ---
 // Retail emits each dialog as (constructor, ??_G, destructor) in image order;
@@ -57,14 +60,224 @@ void SellCreatureSlider(int state, heroWindow* parent_window)
 // CAdvPopup base. They differ only in the vtable immediate and their EH
 // state table, which is also why /OPT:ICF could not fold them.
 
-#if 0  // @carcass -- located/reconstruction-pending body
+// The resource-for-resource trade pane. Sixty fixed widgets in retail
+// emission order: the background/title/ratio-text head, the two selected-
+// resource icons with their quantity labels, the two column headers, the
+// five command buttons, then the left column's icon/value/cell-border
+// triple of seven, the right column's mirror, the quantity slider, the
+// status bar pair and the wide OK button. reserve(144) is byte-proven
+// (`cmp edx, 0x90`), far above the sixty ever pushed - the retail source
+// simply over-reserved.
 // E:\gamedcs\tradpost.cpp:93
 VA(0x005df5f0, 0x200c)  // anchor-vtable 0x6439f8 store, dc 0x181a88
-void TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
-    // @stub
+    Widgets.reserve(144);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+        DATA_COMPGEN(0x0068c53c, tradeResourcesBackground, "TPMrkReS.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(0, 15, width, 30, 0,
+        DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
+        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 2,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(306, 520, 64, 32, 5,
+        DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 521, 64, 32, 17,
+        DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 451, 64, 32, 18,
+        DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(515, 451, 64, 32, 20,
+        DATA_COMPGEN(0x0068c500, marketButton4Sprite, "TPMrkBu4.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(228, 520, 64, 32, 7,
+        DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
+        0, 1, 0, 0, 2));
+
+    Widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+        MARKET_SELL_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+        MARKET_SELL_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+        MARKET_BUY_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+        MARKET_BUY_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    resourceSlider = new slider(231, 490, 137, 16, 6, 11,
+        TradeResourceSlider, slider::BROWN, 0, 0);
+    Widgets.push_back(resourceSlider);
+
+    Widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+        DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
+    Widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+
+    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+        DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
+        0, 1, 1, 28, 2);
+    okButton->set_hotkey(1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
-#endif  // @carcass
+
+// Copies the slider state into the pending right-side quantity and
+// refreshes the trade pane. Retail identity is fixed independently of the
+// Dreamcast address: the constructor above passes 0x5e1600 as its slider
+// callback, and the previously unowned bytes there form this complete
+// 0x14-byte body (gRightAmount store, gpTradeWindow Update(1) tail).
+// E:\gamedcs\tradpost.cpp:74
+VA(0x005e1600, 0x14)  // anchor-address-taken + exact gap bracket, dc 0x181a34
+void TradeResourceSlider(int state, heroWindow* parent_window)
+{
+    gRightAmount = state;
+    gpTradeWindow->Update(1);
+}
 
 VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
 
@@ -78,14 +291,222 @@ TTradeResourceWindow::~TTradeResourceWindow()
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending body
+// The give-resources pane. Fifty-nine fixed widgets: the same head as the
+// trade pane (ratio text shifted to x 33, the right selected icon replaced
+// by a crest58 recipient portrait, no BU4 button), the left resource
+// column triple of seven, then a recipient column of seven crest58
+// portraits over TPMrkSe2 cells with the quantity labels between, the
+// slider, the status bar pair and the OK button. reserve(151) byte-proven
+// (`cmp edx, 0x97`).
 // E:\gamedcs\tradpost.cpp:196
 VA(0x005e16c0, 0x1fab)  // anchor-vtable 0x643a34 store, dc 0x182e24
-void TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
-    // @stub
+    Widgets.reserve(151);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+        DATA_COMPGEN(0x0068c56c, giveResourcesBackground, "TPMrkPtS.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(0, 15, width, 30, 0,
+        DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
+        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(33, 47, 250, 77, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 2,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(416, 451, 58, 64, 13,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 517, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(317, 48, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(306, 520, 64, 32, 5,
+        DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(515, 451, 64, 32, 16,
+        DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 451, 64, 32, 18,
+        DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(228, 520, 64, 32, 7,
+        DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
+        0, 1, 0, 0, 2));
+
+    Widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+        MARKET_SELL_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+        MARKET_SELL_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new iconWidget(333, 84, 58, 64, 49,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(416, 84, 58, 64, 50,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(499, 84, 58, 64, 51,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(333, 202, 58, 64, 52,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(416, 202, 58, 64, 53,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(499, 202, 58, 64, 54,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(416, 320, 58, 64, 55,
+        DATA_COMPGEN(0x006601fc, playerCrestSprite, "crest58.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(328, 151, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 151, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 151, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(328, 269, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 269, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 269, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 387, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(326, 81, 72, 91,
+        GIVE_RECIPIENT_SLOT_0_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(409, 81, 72, 91,
+        GIVE_RECIPIENT_SLOT_1_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(492, 81, 72, 91,
+        GIVE_RECIPIENT_SLOT_2_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(326, 199, 72, 91,
+        GIVE_RECIPIENT_SLOT_3_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(409, 199, 72, 91,
+        GIVE_RECIPIENT_SLOT_4_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(492, 199, 72, 91,
+        GIVE_RECIPIENT_SLOT_5_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(409, 317, 72, 91,
+        GIVE_RECIPIENT_SLOT_6_ID,
+        DATA_COMPGEN(0x0068c54c, giveCellSprite, "TPMrkSe2.pcx"), 0x800));
+
+    resourceSlider = new slider(231, 490, 137, 16, 6, 11,
+        GiveResourceSlider, slider::BROWN, 0, 0);
+    Widgets.push_back(resourceSlider);
+
+    Widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+        DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
+    Widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+
+    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+        DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
+        0, 1, 1, 28, 2);
+    okButton->set_hotkey(1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
-#endif  // @carcass
+
+// The give-pane twin of TradeResourceSlider, at the same after-the-ctor
+// slot (0x5e3670, the second formerly unowned gap).
+// E:\gamedcs\tradpost.cpp:80
+VA(0x005e3670, 0x14)  // anchor-address-taken + exact gap bracket, dc 0x181a50
+void GiveResourceSlider(int state, heroWindow* parent_window)
+{
+    gRightAmount = state;
+    gpGiveWindow->Update(1);
+}
 
 VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
 
@@ -99,14 +520,206 @@ TGiveResourceWindow::~TGiveResourceWindow()
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending body
+// The buy-artifacts pane. Fifty-eight fixed widgets: the trade-pane head
+// with the right selected icon replaced by an artifact.def portrait and
+// the BU3 button in place of BU4/BU6, the left resource column triple of
+// seven, then seven artifact.def slots over TPMrkSe1 cells with the price
+// labels between, the status bar pair and the OK button - no slider.
 // E:\gamedcs\tradpost.cpp:299
 VA(0x005e3730, 0x1f56)  // anchor-vtable 0x643a70 store, dc 0x183f30
-void TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
-    // @stub
+    Widgets.reserve(144);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+        DATA_COMPGEN(0x0068c58c, buyArtifactBackground, "TPMrkAbS.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(0, 15, width, 30, 0,
+        DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
+        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 2,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new iconWidget(141, 457, 32, 32, 3,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(424, 448, 44, 44, 8,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(124, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(28, 140, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(268, 520, 64, 32, 5,
+        DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(515, 451, 64, 32, 16,
+        DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 521, 64, 32, 17,
+        DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 451, 64, 32, 19,
+        DATA_COMPGEN(0x0068c57c, marketButton3Sprite, "TPMrkBu3.def"),
+        0, 1, 0, 0, 2));
+
+    Widgets.push_back(new iconWidget(58, 190, 32, 32, 21,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 190, 32, 32, 22,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 190, 32, 32, 23,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(58, 269, 32, 32, 24,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 269, 32, 32, 25,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(223, 269, 32, 32, 26,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(141, 348, 32, 32, 27,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(37, 180, 74, 70, MARKET_SELL_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 180, 74, 70,
+        MARKET_SELL_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 180, 74, 70, MARKET_SELL_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(37, 259, 74, 70, MARKET_SELL_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 259, 74, 70,
+        MARKET_SELL_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(203, 259, 74, 70, MARKET_SELL_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(120, 338, 74, 70, MARKET_SELL_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new iconWidget(341, 182, 44, 44, 56,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(424, 182, 44, 44, 57,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(506, 182, 44, 44, 58,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(341, 261, 44, 44, 59,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(424, 261, 44, 44, 60,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(506, 261, 44, 44, 61,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(424, 340, 44, 44, 62,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(325, 180, 74, 70,
+        BUY_ARTIFACT_SLOT_0_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+        BUY_ARTIFACT_SLOT_1_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 180, 74, 70,
+        BUY_ARTIFACT_SLOT_2_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(325, 259, 74, 70,
+        BUY_ARTIFACT_SLOT_3_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+        BUY_ARTIFACT_SLOT_4_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 259, 74, 70,
+        BUY_ARTIFACT_SLOT_5_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 338, 74, 70,
+        BUY_ARTIFACT_SLOT_6_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+        DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
+    Widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+
+    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+        DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
+        0, 1, 1, 28, 2);
+    okButton->set_hotkey(1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
-#endif  // @carcass
 
 VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
 
@@ -120,14 +733,292 @@ TBuyArtifactWindow::~TBuyArtifactWindow()
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending body
+// The sell-artifacts pane, the largest of the five (85 widgets): the
+// common head (selected artifact at 135,469 and its price at 124,519),
+// four buttons, the right resource column triple of seven, then the
+// paper-doll - twenty-three artifact.def slots (18 equipped, ids 84..101,
+// and five backpack rows, ids 102..106), the two backpack scroll arrows,
+// the twenty-three TPMrkSe3 cell borders under them (ids 107..129, the
+// MARKET_ARTIFACT_SLOT range SetRolloverText dispatches on), the status
+// bar pair and the OK button - no slider.
 // E:\gamedcs\tradpost.cpp:393
 VA(0x005e5730, 0x24a7)  // anchor-vtable 0x643aac store, dc 0x185208
-void TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
-    // @stub
+    Widgets.reserve(144);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+        DATA_COMPGEN(0x0068c5ac, sellArtifactBackground, "TPMrkAsS.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(0, 15, width, 30, 0,
+        DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
+        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(319, 50, 250, 77, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 2,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new iconWidget(429, 480, 32, 32, 11,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(135, 469, 44, 44, 9,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(124, 519, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 520, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(28, 48, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(268, 520, 64, 32, 5,
+        DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(515, 471, 64, 32, 16,
+        DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 521, 64, 32, 17,
+        DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 471, 64, 32, 18,
+        DATA_COMPGEN(0x0068c510, marketButton2Sprite, "TPMrkBu2.def"),
+        0, 1, 0, 0, 2));
+
+    Widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+        MARKET_BUY_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+        MARKET_BUY_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new iconWidget(148, 76, 44, 44, 84,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(207, 288, 44, 44, 85,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(148, 126, 44, 44, 86,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(22, 115, 44, 44, 87,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(201, 230, 44, 44, 88,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(148, 177, 44, 44, 89,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(70, 115, 44, 44, 90,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(249, 230, 44, 44, 91,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(154, 341, 44, 44, 92,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(22, 189, 44, 44, 93,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(38, 239, 44, 44, 94,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(54, 290, 44, 44, 95,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(70, 341, 44, 44, 96,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(203, 76, 44, 44, 97,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(249, 76, 44, 44, 98,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(249, 122, 44, 44, 99,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(249, 168, 44, 44, 100,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(249, 357, 44, 44, 101,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(42, 411, 44, 44, 102,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(88, 411, 44, 44, 103,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(134, 411, 44, 44, 104,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(180, 411, 44, 44, 105,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(226, 411, 44, 44, 106,
+        DATA_COMPGEN(0x00660214, artifactIconSprite, "artifact.def"),
+        0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new button(18, 410, 22, 46,
+        MARKET_ARTIFACT_LEFT_ARROW_ID,
+        DATA_COMPGEN(0x00679d48, heroScreenLeftArrowSprite, "hsbtns3.def"),
+        0, 1, 0, 75, 2));
+    Widgets.push_back(new button(271, 410, 22, 46,
+        MARKET_ARTIFACT_RIGHT_ARROW_ID,
+        DATA_COMPGEN(0x00679d3c, heroScreenRightArrowSprite, "hsbtns5.def"),
+        0, 1, 0, 77, 2));
+
+    Widgets.push_back(new bitmapBorder(146, 74, 48, 48,
+        MARKET_ARTIFACT_SLOT_00_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(205, 286, 48, 48,
+        MARKET_ARTIFACT_SLOT_01_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(146, 124, 48, 48,
+        MARKET_ARTIFACT_SLOT_02_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(20, 113, 48, 48,
+        MARKET_ARTIFACT_SLOT_03_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(199, 228, 48, 48,
+        MARKET_ARTIFACT_SLOT_04_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(146, 175, 48, 48,
+        MARKET_ARTIFACT_SLOT_05_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(68, 113, 48, 48,
+        MARKET_ARTIFACT_SLOT_06_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(247, 228, 48, 48,
+        MARKET_ARTIFACT_SLOT_07_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(152, 339, 48, 48,
+        MARKET_ARTIFACT_SLOT_08_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(20, 187, 48, 48,
+        MARKET_ARTIFACT_SLOT_09_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(36, 237, 48, 48,
+        MARKET_ARTIFACT_SLOT_10_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(52, 288, 48, 48,
+        MARKET_ARTIFACT_SLOT_11_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(68, 339, 48, 48,
+        MARKET_ARTIFACT_SLOT_12_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(201, 74, 48, 48,
+        MARKET_ARTIFACT_SLOT_13_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(247, 74, 48, 48,
+        MARKET_ARTIFACT_SLOT_14_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(247, 120, 48, 48,
+        MARKET_ARTIFACT_SLOT_15_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(247, 166, 48, 48,
+        MARKET_ARTIFACT_SLOT_16_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(247, 355, 48, 48,
+        MARKET_ARTIFACT_SLOT_17_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(40, 409, 48, 48,
+        MARKET_ARTIFACT_SLOT_18_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(86, 409, 48, 48,
+        MARKET_ARTIFACT_SLOT_19_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(132, 409, 48, 48,
+        MARKET_ARTIFACT_SLOT_20_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(178, 409, 48, 48,
+        MARKET_ARTIFACT_SLOT_21_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(224, 409, 48, 48,
+        MARKET_ARTIFACT_SLOT_22_ID,
+        DATA_COMPGEN(0x0068c59c, artifactCellSprite, "TPMrkSe3.pcx"), 0x800));
+
+    Widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+        DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
+    Widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+
+    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+        DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
+        0, 1, 1, 28, 2);
+    okButton->set_hotkey(1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
-#endif  // @carcass
 
 VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
 
@@ -141,14 +1032,236 @@ TSellArtifactWindow::~TSellArtifactWindow()
     }
 }
 
-#if 0  // @carcass -- located/reconstruction-pending body
+// The sell-creatures pane. Fifty-nine fixed widgets: the common head with
+// a twcrport.def creature portrait as the left selected icon, four
+// buttons, the left value labels WITHOUT their icon/cell columns (the
+// army rows replace them), the right resource column triple of seven,
+// then seven twcrport.def army slots (ids 139..145 cells beneath, the
+// MARKET_CREATURE range shifted up by the seven portraits at 132..138),
+// the quantity slider, the status bar pair and the OK button.
 // E:\gamedcs\tradpost.cpp:522
 VA(0x005e7c80, 0x1fd5)  // anchor-vtable 0x643ae8 store, dc 0x186c98
-void TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 601, 593, 0x12)
 {
-    // @stub
+    Widgets.reserve(144);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+        DATA_COMPGEN(0x0068c5cc, sellCreatureBackground, "TPMrkCrS.pcx"),
+        0x800));
+    Widgets.push_back(new textWidget(0, 15, width, 30, 0,
+        DATA_COMPGEN(0x00660b24, recruitBigFont, "bigfont.fnt"),
+        font::HEADING, 1, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(319, 47, 250, 77, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 2,
+        font::CENTER_JUSTIFIED | font::VERT_CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new iconWidget(429, 457, 32, 32, 11,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(128, 450, 58, 64, 10,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(124, 518, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 4, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 497, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 12, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(28, 93, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 14, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(317, 139, 257, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 15, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new button(306, 520, 64, 32, 5,
+        DATA_COMPGEN(0x0068c530, marketDealButtonSprite, "TPMrkB.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(515, 451, 64, 32, 16,
+        DATA_COMPGEN(0x0068c55c, marketButton5Sprite, "TPMrkBu5.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(18, 521, 64, 32, 17,
+        DATA_COMPGEN(0x0068c520, marketButton1Sprite, "TPMrkBu1.def"),
+        0, 1, 0, 0, 2));
+    Widgets.push_back(new button(228, 520, 64, 32, 7,
+        DATA_COMPGEN(0x0068c4f0, marketButton6Sprite, "TPMrkBu6.def"),
+        0, 1, 0, 0, 2));
+
+    Widgets.push_back(new textWidget(41, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 35, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 36, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 37, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(41, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 38, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 39, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(207, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 40, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(124, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 41, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new iconWidget(346, 190, 32, 32, 42,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 190, 32, 32, 43,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 190, 32, 32, 44,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(346, 269, 32, 32, 45,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 269, 32, 32, 46,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(512, 269, 32, 32, 47,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 348, 32, 32, 48,
+        DATA_COMPGEN(0x00660224, recruitResourceSprite, "resource.def"),
+        6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(328, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 77, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 78, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 230, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 79, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(328, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 80, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 81, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(494, 309, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 82, font::CENTER_JUSTIFIED, 0, 8));
+    Widgets.push_back(new textWidget(411, 388, 66, 20, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 83, font::CENTER_JUSTIFIED, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(325, 180, 74, 70, MARKET_BUY_WOOD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 180, 74, 70,
+        MARKET_BUY_MERCURY_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 180, 74, 70, MARKET_BUY_ORE_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(325, 259, 74, 70, MARKET_BUY_SULFUR_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 259, 74, 70,
+        MARKET_BUY_CRYSTAL_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(491, 259, 74, 70, MARKET_BUY_GEMS_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+    Widgets.push_back(new bitmapBorder(408, 338, 74, 70, MARKET_BUY_GOLD_ID,
+        DATA_COMPGEN(0x0068c4e0, marketCellSprite, "TPMrkSe1.pcx"), 0x800));
+
+    Widgets.push_back(new iconWidget(45, 123, 58, 64, 132,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(128, 123, 58, 64, 133,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(211, 123, 58, 64, 134,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(45, 221, 58, 64, 135,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(128, 221, 58, 64, 136,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(211, 221, 58, 64, 137,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(128, 319, 58, 64, 138,
+        DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                     "twcrport.def"),
+        0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new bitmapBorder(38, 120, 72, 90, MARKET_CREATURE_SLOT_0_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(121, 120, 72, 90,
+        MARKET_CREATURE_SLOT_1_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(204, 120, 72, 90,
+        MARKET_CREATURE_SLOT_2_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(38, 218, 72, 90,
+        MARKET_CREATURE_SLOT_3_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(121, 218, 72, 90,
+        MARKET_CREATURE_SLOT_4_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(204, 218, 72, 90,
+        MARKET_CREATURE_SLOT_5_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+    Widgets.push_back(new bitmapBorder(121, 316, 72, 90,
+        MARKET_CREATURE_SLOT_6_ID,
+        DATA_COMPGEN(0x0068c5bc, creatureCellSprite, "TPMrkSe4.pcx"),
+        0x800));
+
+    creatureSlider = new slider(231, 490, 137, 16, 6, 11,
+        SellCreatureSlider, slider::BROWN, 0, 0);
+    Widgets.push_back(creatureSlider);
+
+    Widgets.push_back(new bitmapBorder(8, 568, 585, 18, 146,
+        DATA_COMPGEN(0x00660b10, recruitStatusBar, "StatBar.pcx"), 0x800));
+    Widgets.push_back(new textWidget(8, 568, 585, 18, 0,
+        DATA_COMPGEN(0x0065f2f8, recruitSmallFont, "smalfont.fnt"),
+        font::PRIMARY, 147, font::CENTER_JUSTIFIED, 0, 8));
+
+    button* okButton = new button(515, 520, 64, 32, MARKET_COMMAND_ID,
+        DATA_COMPGEN(0x0065f470, okWideButtonSprite, "iOk6432.def"),
+        0, 1, 1, 28, 2);
+    okButton->set_hotkey(1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
-#endif  // @carcass
+
+// The sell-creature twin of TradeResourceSlider, at the same
+// after-the-ctor slot (0x5e9c60, the third formerly unowned gap).
+// E:\gamedcs\tradpost.cpp:86
+VA(0x005e9c60, 0x14)  // anchor-address-taken + exact gap bracket, dc 0x181a6c
+void SellCreatureSlider(int state, heroWindow* parent_window)
+{
+    gRightAmount = state;
+    gpSellCreatureWindow->Update(1);
+}
 
 VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
 
@@ -241,21 +1354,18 @@ DATA(0x006aaa98) static int gMarketCount;
 DATA(0x006aaaa4) static int gMarketWindow;
 DATA(0x006aaac4) static int gMarketSource;
 
-// The five constructed dialog objects; DoMarket news one per gMarketWindow
-// value, keeps its pointer here for the modal loop, and deletes it on close.
-DATA(0x006aaab4) static TTradeResourceWindow* gpTradeWindow;
-DATA(0x006aaa8c) static TGiveResourceWindow* gpGiveWindow;
+// The remaining two constructed dialog objects (their trade/give/creature
+// siblings and gRightAmount are declared ahead of the dialog band above,
+// where the slider callbacks reach them).
 DATA(0x006aaae4) static TBuyArtifactWindow* gpBuyWindow;
 DATA(0x006aaac8) static TSellArtifactWindow* gpSellArtWindow;
-DATA(0x006aaabc) static TSellCreatureWindow* gpSellCreatureWindow;
 
 // The shared trade selection reset before every window opens (DoMarket) and
 // driven by the resource-trade handlers. gLeftResource/gRightResource(=
 // gSelectedArtifact) index gpCurrentPlayer's resource row; gLeftDenominated is
-// the ratio orientation flag; gRightAmount is the pending right-side quantity.
-// Names provisional (no producer attests the spellings yet).
+// the ratio orientation flag. Names provisional (no producer attests the
+// spellings yet).
 DATA(0x006aaaac) static int gLeftDenominated;
-DATA(0x006aaab0) static int gRightAmount;
 DATA(0x006aaacc) static int gLeftResource;
 
 // Resource-trade computation state the resource handler seeds and the execute
