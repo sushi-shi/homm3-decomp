@@ -6703,17 +6703,17 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
                 break;
             }
             switch (cell->objectIndex) {
-            case 0:
+            case CARTOGRAPHER_WATER:
                 NormalDialog(gpAdventureEventText->GetText(
                                  ADV_EVENT_TEXT_CARTOGRAPHER_WATER),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
-            case 1:
+            case CARTOGRAPHER_LAND:
                 NormalDialog(gpAdventureEventText->GetText(
                                  ADV_EVENT_TEXT_CARTOGRAPHER_LAND),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 break;
-            case 2:
+            case CARTOGRAPHER_UNDERGROUND:
                 NormalDialog(gpAdventureEventText->GetText(
                                  ADV_EVENT_TEXT_CARTOGRAPHER_UNDERGROUND),
                              2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -7247,7 +7247,8 @@ void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point 
         break;
     case UNDERGROUND_GATE: {
         type_point exitPoint = gpGame->get_underground_gate_exit(cell);
-        if (exitPoint.x == 0xff) {
+        const int noGateExit = 0xff;
+        if (exitPoint.x == noGateExit) {
             NormalDialog(gpAdventureEventText->GetText(
                              ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED),
                          1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
@@ -7860,7 +7861,7 @@ int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, const char* cText
             if (bank.resources[j] > 0) {
                 resource.resource = j;
                 resource.qualifier = bank.resources[j];
-                if (j == 6 && bank.artifacts.size() != 0)
+                if (j == GOLD && bank.artifacts.size() != 0)
                     resource.resource = 0x24;
                 resources.push_back(resource);
                 result = format_string(
