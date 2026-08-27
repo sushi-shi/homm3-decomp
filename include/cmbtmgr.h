@@ -250,6 +250,16 @@ enum ECombatGrid {
     COMBAT_HEX_LOWER_TOWER = 0xfb
 };
 
+// SetCombatDirections has two approach records per ordinary six-way combat
+// direction. These four endpoints are the source's asymmetric tie-break set.
+enum ECombatAttackAngle {
+    COMBAT_ATTACK_ANGLE_0 = 0,
+    COMBAT_ATTACK_ANGLE_5 = 5,
+    COMBAT_ATTACK_ANGLE_6 = 6,
+    COMBAT_ATTACK_ANGLE_11 = 11,
+    COMBAT_ATTACK_ANGLE_COUNT = 12
+};
+
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
 // (0x4671c0) walks it 3 -> 2 -> 1 with one DrawFrame per step and
 // leaves it at 1; RaiseDoor (0x4672e0) refuses to run unless it already
@@ -1001,7 +1011,11 @@ public:
     // the same loop, and ResetLimitCreature memsets exactly 2x20 at
     // +0x14000. Name is an address ordinal - nothing decoded WRITES it
     // yet. Sliced out of pad_13304 in place.
-    char pad_13304[0x134];
+    char pad_13304[0xc8];
+    // SetCombatDirections fills twelve direction/hex pairs here. Retail
+    // addresses the second row exactly 0x30 bytes after the first.
+    int combatDirections[2][12];      // +0x133cc
+    char pad_1342c[0xc];
     unsigned char field_13438[2][20]; // +0x13438
     // Sliced in place off PowEffect, which zeroes it beside field_13438
     // and then asks it, after the death sweep, whether MakeCreaturesVanish
@@ -2374,6 +2388,9 @@ public:
     void ResetMouse();
 #ifdef HOMM3_COMMAND_GRID_VIEW
     unsigned char automate_first_aid_tent();
+    // MATCHING_DEBT: command-only declaration view; broad exposure perturbs
+    // VC6 member-handle allocation in unrelated combat translation units.
+    void SetCombatDirections(int hex);
     void ResetRound();
     void auto_resolve_combat();
     int CheckWin(message* msg);

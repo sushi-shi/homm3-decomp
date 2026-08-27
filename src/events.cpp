@@ -6,6 +6,7 @@
 #include <va.h>
 #define HOMM3_EVENTS_PRISON_DECL
 #include "advmgr_objects.h"
+#include "creature_bank.h"
 #include "swapmgr.h"
 #include "game.h"
 #include "advmgr.h"
@@ -21,6 +22,7 @@
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
+#include "townmgr.h"
 #include "winmgr.h"
 #include "textresource.h"
 
@@ -2159,6 +2161,14 @@ bool InitializeRandomSignText()
     return true;
 }
 
+// game.h's map-cell accessor is inline in the original source; retail
+// expands its 38-byte cell-stride calculation at the shipyard use site.
+inline NewmapCell* game::get_cell(type_point point)
+{
+    return &worldMap.cellData[(point.z * worldMap.Size + point.y)
+                              * worldMap.Size + point.x];
+}
+
 // E:\gamedcs\events.cpp:300.  Removes a picked-up adventure object and
 // plays the vanish flash over the map centre. Both the adventure-map
 // animation pause and the .data byte at 0x67f574 are SAVED, forced, and
@@ -2186,14 +2196,64 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
     gUnnamed67f574 = savedFlag;
 }
 
-// E:\gamedcs\events.cpp:317.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:317.
 VA(0x0049e2e0, 0x38B)  // dc-bracket forced, ret 0xc=p4, dc 0x903b4
 void advManager::DoEventShipyard(NewmapCell* cell, type_point point, unsigned char human_player)
 {
-    // @stub
+    MobilizeCurrHero(0, 0, 1);
+
+    int owner = static_cast<int>(cell->extraInfo << 24) >> 24;
+    if (!gpGame->OnSameTeam(owner, gNetLocalGamePos))
+        gpGame->ClaimShipyard(point, gNetLocalGamePos);
+
+    if (!human_player)
+        return;
+
+    type_point boat_point;
+    boat_point.x = static_cast<short>((cell->extraInfo >> 8) & 0xff);
+    boat_point.y = static_cast<short>((cell->extraInfo >> 16) & 0xff);
+    boat_point.z = static_cast<short>(point.z);
+
+    const int noBoatPosition = 0xff;
+    if (boat_point.x == noBoatPosition) {
+        if (!gpGame->GetCurrHero()) {
+            NormalDialog(gpAdventureEventText->GetText(189),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            NormalDialog(format_string(gpGeneralText->GetText(135),
+                         gpGame->GetCurrHero()->name).c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    NewmapCell* boat_cell = gpGame->get_cell(boat_point);
+
+    if (boat_cell->is_trigger
+        && (boat_cell->type == BOAT || boat_cell->type == HERO
+            || gpGame->GetBoatsBuilt() >= 64)) {
+        NormalDialog(gpGeneralText->GetText(52),
+                     1, 208, 40, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (gpGame->players[gNetLocalGamePos].resources[GOLD] < 1000
+        || gpGame->players[gNetLocalGamePos].resources[WOOD] < 10) {
+        NormalDialog(gpGeneralText->GetText(330),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    DoShipyard(0);
+    if (gpWindowManager->dialogReturn == DIALOG_RETURN_OK
+        && gpGame->CreateBoat(
+               static_cast<unsigned char>(cell->extraInfo >> 8),
+               static_cast<unsigned char>(cell->extraInfo >> 16),
+               boat_point.z, gNetLocalGamePos, 0, 1) != -1) {
+        gpGame->players[gNetLocalGamePos].resources[GOLD] -= 1000;
+        gpGame->players[gNetLocalGamePos].resources[WOOD] -= 10;
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:380.  The anchor point (jump-table arm 0x03): a
 // hero steps off his boat. The whole body is DoEventBoat run backwards -
@@ -2898,14 +2958,41 @@ void advManager::DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
     UpdateScreen(0, 0);
 }
 
-// E:\gamedcs\events.cpp:1456.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:1456.
 VA(0x004a15a0, 0x301)  // dc-bracket forced, ret 0x10=p5, dc 0x925fc
-void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DoEventCreatureBank(hero* current_hero, NewmapCell* cell,
+                                     type_point point, bool human_player)
 {
-    // @stub
+    std::string name = const_creature_bank_traits[cell->objectIndex].name;
+    std::string dialog_text;
+
+    cell->SetCellVisited(current_hero->owner);
+    if (cell->extraInfo & 0x2000000) {
+        if (human_player) {
+            dialog_text = format_string(gpAdventureEventText->GetText(33),
+                                        name.c_str());
+            NormalDialog(dialog_text.c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        return;
+    }
+
+    if (human_player) {
+        dialog_text = format_string(gpAdventureEventText->GetText(32),
+                                    name.c_str());
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(dialog_text.c_str(),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    CreatureBankEvent(current_hero, cell, emptyRolloverText, point,
+                      human_player);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:1505.  Located, not reconstructed.
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
@@ -6186,14 +6273,61 @@ void advManager::EventSound(int eventID, int extraInfo)
         launch_sample(sampleName.c_str(), -1, 3);
 }
 
-// E:\gamedcs\events.cpp:5590.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:5590.
 VA(0x004aba50, 0x361)  // anchor-callee game::GetGeneratorId, ret 0xc=p4, dc 0x9a5b0
 void advManager::GeneratorEvent(hero* who, NewmapCell* eventCell, type_point point)
 {
-    // @stub
+    int id = gpGame->GetGeneratorId(point.x, point.y, point.z);
+    generator& currentGenerator = gpGame->generators[id];
+
+    if (currentGenerator.get_owner() == gNetLocalGamePos) {
+        bool canRecruit = false;
+        std::string result;
+
+        for (int i = 0; i < 4; i++) {
+            TCreatureType creature = currentGenerator.type[i];
+            if (creature == CREATURE_NONE)
+                continue;
+
+            if (akCreatureTypeTraits[creature].level != 0) {
+                canRecruit = true;
+                continue;
+            }
+
+            if (currentGenerator.population[i] == 0) {
+                result += format_string(gpGeneralText->GetText(423),
+                    akCreatureTypeTraits[creature].m_plural_name);
+            } else if (!who->army.Add(creature,
+                                      currentGenerator.population[i], -1)) {
+                result += format_string(gpGeneralText->GetText(426),
+                    GetArmyName(creature, currentGenerator.population[i]));
+            } else {
+                currentGenerator.population[i] = 0;
+            }
+        }
+
+        if (result.length() > 0) {
+            NormalDialog(result.c_str(), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        }
+
+        if (!canRecruit)
+            return;
+    }
+
+    recruitUnit* manager = new recruitUnit(&who->army, 0,
+        currentGenerator.type[0], &currentGenerator.population[0],
+        currentGenerator.type[1], &currentGenerator.population[1],
+        currentGenerator.type[2], &currentGenerator.population[2],
+        currentGenerator.type[3], &currentGenerator.population[3]);
+    if (!manager)
+        MemError();
+
+    manager->view_only = currentGenerator.get_owner() != gNetLocalGamePos
+                         && currentGenerator.get_owner() >= 0;
+    gpExecutive->DoDialog(manager);
+    delete manager;
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:5661.  Located, not reconstructed.
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate

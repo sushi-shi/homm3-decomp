@@ -215,12 +215,136 @@ int combatManager::Main(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:475
+// Build the twelve legal approach records around the selected target hex.
+// Dreamcast proves the local names and the two header-inline army helpers;
+// retail fixes the Complete grid layout, validation order and tie-breaking.
+// Residual: 90.8771%, with all 39 branches and the return agreeing; VC6 keeps
+// `this` in EDI instead of EBX, adding one reload block (60 vs 59). 64 D1 and
+// 256 D2 ordinary-source trees were exhausted. Exposing OffsetToFront's real
+// header inline was byte-flat, so its folded expression avoids another view.
 VA(0x00474690, 0x36B)  // anchor-callee: CanFit/SeedCombatPosition/GetSpeed + order-map, dc 0x6b66c
 void combatManager::SetCombatDirections(int hex)
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat()
+            || is_computer_action(get_current_army()))
+        return;
+
+    unsigned char second_is_valid;
+    long attack_angle;
+    long first_hex;
+    int target_index;
+    int target_group;
+    army* current_army;
+    unsigned char first_is_valid;
+    long closest;
+    long second_hex;
+
+    current_army = get_current_army();
+    int old_side = current_army->side;
+    int old_slot = current_army->slot;
+    current_army->side = -1;
+    current_army->slot = -1;
+
+    gpSearchArray->SeedCombatPosition(current_army, currentSide,
+                                     current_army->GetSpeed(), 0, -1);
+
+    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
+            combatDirections[0][i] = 0;
+            combatDirections[1][i] = -1;
+        }
+    }
+
+    for (attack_angle = COMBAT_ATTACK_ANGLE_0;
+         attack_angle < COMBAT_ATTACK_ANGLE_COUNT; attack_angle++) {
+        target_index = attack_angle / 2;
+        first_hex = adjacentCells[hex][target_index];
+        if (!ValidHex(first_hex))
+            continue;
+        first_is_valid =
+            cells[first_hex].field_4a
+            && current_army->CanFit(first_hex, 0, 0)
+            && !gpSearchArray->is_moat(first_hex);
+        if (first_is_valid && (current_army->Is(0) & 1)
+                && gpSearchArray->is_moat(
+                    first_hex + (current_army->facing ? 1 : -1)))
+            first_is_valid = 0;
+
+        target_group = (target_index + 3) % 6;
+        if (first_is_valid) {
+            combatDirections[1][attack_angle] = first_hex;
+            combatDirections[0][attack_angle] = target_group + 7;
+        }
+
+        if (!(current_army->Is(0) & 1))
+            continue;
+
+        second_hex = first_hex - (current_army->facing ? 1 : -1);
+        second_is_valid =
+            cells[second_hex].field_4a
+            && current_army->CanFit(second_hex, 0, 0)
+            && !gpSearchArray->is_moat(second_hex);
+        if (second_is_valid && (current_army->Is(0) & 1)
+                && gpSearchArray->is_moat(
+                    second_hex + (current_army->facing ? 1 : -1)))
+            second_is_valid = 0;
+
+        if (!first_is_valid && !second_is_valid)
+            continue;
+
+        combatDirections[0][attack_angle] = target_group + 7;
+        if (target_index == COMBAT_DIRECTION_1
+                || target_index == COMBAT_DIRECTION_4) {
+            if (second_is_valid)
+                combatDirections[1][attack_angle] = second_hex;
+            continue;
+        }
+
+        if ((current_army->facing == 0) == (target_index <= 2)) {
+            std::swap(first_hex, second_hex);
+            std::swap(first_is_valid, second_is_valid);
+        }
+
+        target_group = target_index >= 2 && target_index <= 3 ? 13 : 14;
+        if (first_is_valid && (!second_is_valid
+                || (attack_angle != COMBAT_ATTACK_ANGLE_5
+                    && attack_angle != COMBAT_ATTACK_ANGLE_6
+                    && attack_angle != COMBAT_ATTACK_ANGLE_0
+                    && attack_angle != COMBAT_ATTACK_ANGLE_11))) {
+            combatDirections[1][attack_angle] = first_hex;
+        } else {
+            combatDirections[1][attack_angle] = second_hex;
+            combatDirections[0][attack_angle] = target_group;
+        }
+    }
+
+    { for (long i = 0; i < COMBAT_ATTACK_ANGLE_COUNT; i++) {
+            if (combatDirections[0][i])
+                continue;
+
+            closest = COMBAT_ATTACK_ANGLE_COUNT;
+            for (long j = 0; j < COMBAT_ATTACK_ANGLE_COUNT; j++) {
+                if (i == j)
+                    continue;
+                long distance = abs(i - j);
+                if (distance > 6)
+                    distance = 6 - distance;
+                if (combatDirections[0][j] && distance < closest) {
+                    closest = distance;
+                    combatDirections[0][i] = combatDirections[0][j];
+                    combatDirections[1][i] = combatDirections[1][j];
+                }
+            }
+        }
+    }
+
+    current_army->side = old_side;
+    current_army->slot = old_slot;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:709
 DC_ONLY(0x6ba7c, 0x362)

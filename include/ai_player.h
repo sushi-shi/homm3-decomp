@@ -15,6 +15,10 @@ class playerData;
 class searchArray;
 class town;
 class generator;
+struct type_artifact;
+
+long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
+                              unsigned char equipped, unsigned char exact);
 
 // The two gift messages extend the shared 20-byte network-message head.
 // Their subtype and total-size constants are the immediates retail stores at
@@ -770,6 +774,22 @@ public:
 };
 
 class type_antiluck_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+};
+
+class type_creature_growth_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    // This concrete type's inherited +4 word is its dwelling level; its
+    // growth bonus is the second constructor argument stored at +8.
+    long growthBonus;
+};
+
+class type_undead_king_cloak_artifact : public type_necromancy_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
