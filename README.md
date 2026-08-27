@@ -70,5 +70,7 @@ domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
 Files carrying separate copyright or license notices — notably everything under
 `vendor/` — retain those terms. No binary game assets are stored in this
 repository; retail inputs and build outputs incorporating them are not covered
-by this dedication. Thanks to [NH3API](https://github.com/void2012/NH3API),
-whose names and signatures inform the symbol reconstruction.
+by this dedication. Thanks to
+[HoMM3-Dreamcast-Dump](https://github.com/void2012/HoMM3-Dreamcast-Dump) and
+[NH3API](https://github.com/void2012/NH3API), whose debug information, names,
+and signatures inform the labelling of the executable.
