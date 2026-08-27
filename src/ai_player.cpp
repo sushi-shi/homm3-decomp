@@ -1882,12 +1882,11 @@ void initialize_artifact_effects()
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5050
-DC_ONLY(0x361f4, 0x20)
-void type_artifact_effect::~type_artifact_effect()
-{
-    // @stub
-}
+// ~type_artifact_effect (dc 0x361f4) promoted to VA(0x00432500) below: the
+// 7-byte retail body stores the class vtable WITHOUT the mov eax,ecx a VC6
+// ctor's this-return always emits, and its one caller is the ICF-folded
+// scalar deleting dtor 0x433080 - so the slot is the plain dtor, and the
+// default CTOR (dc 0x361c8) is retail-inlined at its construction sites.
 
 // E:\gamedcs\ai_player.cpp:5057
 DC_ONLY(0x36214, 0x44)
@@ -3196,14 +3195,16 @@ unsigned char consider_hiring(long player_id, hero* candidate)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:5043
-VA(0x00432500, 0x7)  // anchor-vtable (??_7type_artifact_effect ctor), dc 0x361c8
-void type_artifact_effect::type_artifact_effect()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\ai_player.cpp:5050
+// Reattributed from the DC ctor (0x361c8): a VC6 ctor returns this in eax
+// and this 7-byte body never writes eax; its sole caller is the shared
+// scalar deleting dtor 0x433080. The ctor is retail-inlined (/Ob2).
+VA(0x00432500, 0x7)  // anchor-callee (0x433080 ??_G) + no this-return, dc 0x361f4
+type_artifact_effect::~type_artifact_effect()
+{
+}
 
 // E:\gamedcs\ai_player.cpp:5065
 VA(0x00432510, 0x24)  // artifact get_value cluster order-map + get_AI_value, dc 0x36258
@@ -3212,14 +3213,12 @@ long type_scouting_artifact::get_value(const hero* owner, unsigned char, unsigne
     return owner->maxMovePoints * bonus / 100;
 }
 
-#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5073
 VA(0x00432540, 0x15)  // anchor-vtable (??_7type_combat_artifact ctor), dc 0x36274
-void type_combat_artifact::type_combat_artifact(long new_bonus)
+type_combat_artifact::type_combat_artifact(long new_bonus)
 {
-    // @stub
+    bonus = new_bonus;
 }
-#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:5081
 VA(0x00432560, 0x32)  // artifact get_value cluster order-map + get_AI_value, dc 0x362b8
@@ -3492,15 +3491,18 @@ long type_tome_artifact::get_value(const hero* owner, unsigned char equipped,
     return best_value;
 }
 
-#if 0  // @carcass
 // E:\gamedcs\ai_player.cpp:5486
+// gAIPlayers sits at 0x692950 with resource_value at +0x60: retail's
+// [8*(19*owner + resource) + 0x6929b0] double load is exactly
+// gAIPlayers[owner->owner].resource_value[resource] with the 152-byte
+// stride folded. The pooled 3.0 lives at 0x63ac28.
 VA(0x00432d20, 0x49)  // artifact get_value cluster order-map, dc 0x36f54
-long type_income_artifact::get_value(const hero* owner, unsigned char __formal, unsigned char __formal)
+long type_income_artifact::get_value(const hero* owner, unsigned char,
+                                     unsigned char) const
 {
-    // @stub
+    return static_cast<long>(
+        amount * gAIPlayers[owner->owner].get_resource_value(resource) * 3.0);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_player.cpp:5505
 VA(0x00432d70, 0x219)  // artifact get_value cluster order-map, dc 0x3704c
