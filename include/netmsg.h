@@ -26,6 +26,16 @@ enum eRS_Messages {
     // pairing the two names describe. Gated for the same reason its
     // neighbours are.
     RS_RESET_VISIBILITY = 0x3fe,
+#ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
+    // 1052 and 1053, the two rungs directly below RS_CLAIM_GENERATOR on the
+    // gapless DC ladder, and the Dreamcast enumerates both by name. Retail
+    // agrees: game::record_claim_mine (0x49bf90) and record_claim_town
+    // (0x49c190) stamp 0x41c and 0x41d into 0x1c-byte stack records whose
+    // layout is CMCClaimMine's / CMCClaimTown's member for member. GATED
+    // for exactly the reason RS_ERASE_OBJECT below is.
+    RS_CLAIM_MINE = 0x41c,
+    RS_CLAIM_TOWN = 0x41d,
+#endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
@@ -299,6 +309,35 @@ public:
     CMapChange(eRS_Messages id, unsigned long messageSize)
         : CNetMsg(id, messageSize) {}
 };
+
+#ifdef HOMM3_EVENT_RECORD_NETMSG_DECLS
+// Dreamcast CodeView names both classes and both constructors
+// (netmsg.h:577 / netmsg.h:591, dc 0x8f2c8 / 0x8f2fc), and the constructors
+// are the only bodies retail keeps - expanded into the two recorders. The
+// 0x1c extent and the +0x14 / +0x18 member offsets are what those
+// expansions store, in the CNetMsg base's own field order.
+class CMCClaimMine : public CMapChange {
+public:
+    signed char mineId;
+    int playerPos;
+
+    CMCClaimMine(signed char id, int player)
+        : CMapChange(RS_CLAIM_MINE, sizeof(CMCClaimMine)),
+          mineId(id), playerPos(player) {}
+};
+SIZE(CMCClaimMine, 0x1c);
+
+class CMCClaimTown : public CMapChange {
+public:
+    signed char townId;
+    int playerPos;
+
+    CMCClaimTown(signed char id, int player)
+        : CMapChange(RS_CLAIM_TOWN, sizeof(CMCClaimTown)),
+          townId(id), playerPos(player) {}
+};
+SIZE(CMCClaimTown, 0x1c);
+#endif
 
 class CMCClaimGarrison : public CMapChange {
 public:
