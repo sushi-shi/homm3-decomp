@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer edit-navigation trio is byte-exact.**
+  Retail `CMPEdit::OnNextEdit`, `OnPrevEdit`, and `SetFocus` at
+  `0x510850`, `0x510870`, and `0x510890` follow the active adjacent edit via
+  the owning window or forward focus state to `textEntryWidget`. Dreamcast
+  CodeView supplies the virtual identities and proves that the navigation
+  pair extends CMPEdit's vtable at slots 19/20; retail fixes the shifted PC
+  fields, active-bit gates and short widget-id loads. All 70 VC6 bytes are
+  exact. The synchronized report reaches **2520/3086 functions exact**,
+  **92.93% fuzzy**, and **60.67% executable coverage**.
+
 - **2026-08-27 — the multiplayer input-dialog OK updater is byte-exact.**
   Retail `CMPInputDlg::UpdateOK` at `0x510980` checks whether the first edit is
   active, explicitly disables or enables widget 505 from the edit string's

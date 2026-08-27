@@ -283,26 +283,11 @@ int CMPEdit::OnKeyPress(message* msg)
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:309
-DC_ONLY(0x10215c, 0x28)
-void CMPEdit::OnNextEdit()
-{
-    // @stub
-}
+// OnNextEdit promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:322
-DC_ONLY(0x102184, 0x28)
-void CMPEdit::OnPrevEdit()
-{
-    // @stub
-}
+// OnPrevEdit promoted to a VA claim (retail-located block).
 
-// E:\gamedcs\multiplayerwindow.cpp:335
-DC_ONLY(0x1021ac, 0x18)
-void CMPEdit::SetFocus(unsigned char state)
-{
-    // @stub
-}
+// SetFocus promoted to a VA claim (retail-located block).
 
 // E:\gamedcs\multiplayerwindow.cpp:339
 DC_ONLY(0x1021c4, 0x34)
@@ -1171,6 +1156,34 @@ CMPEdit::CMPEdit(int x, int y, int w, int h, int textSize, const char* text,
 {
     nextEdit = 0;
     prevEdit = 0;
+}
+
+// Byte-exact navigation pair. Each method follows its adjacent edit only when
+// it exists and remains active, then asks the owning window to focus that
+// edit's retail-proven short id. DC supplies the virtual names and order;
+// retail fixes the shifted PC fields and identical four-block shape.
+// E:\gamedcs\multiplayerwindow.cpp:309
+VA(0x00510850, 0x1B)  // dc 0x10215c; nextEdit/status/id + parent SetFocus
+void CMPEdit::OnNextEdit()
+{
+    if (nextEdit && (nextEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(nextEdit->id);
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:322
+VA(0x00510870, 0x1B)  // dc 0x102184; prevEdit/status/id + parent SetFocus
+void CMPEdit::OnPrevEdit()
+{
+    if (prevEdit && (prevEdit->status & widget::WIDGET_ACTIVE))
+        parentWindow->SetFocus(prevEdit->id);
+}
+
+// Byte-exact one-call forwarder to the text-entry base implementation.
+// E:\gamedcs\multiplayerwindow.cpp:335
+VA(0x00510890, 0x10)  // dc 0x1021ac; exact base SetFocus forwarder
+void CMPEdit::SetFocus(unsigned char state)
+{
+    textEntryWidget::SetFocus(state);
 }
 
 // E:\gamedcs\multiplayerwindow.cpp:465
