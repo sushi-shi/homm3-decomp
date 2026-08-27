@@ -235,7 +235,7 @@ ai_player	?add_artifact@@YIEPAVhero@@Utype_artifact@@PAJ0J2J@Z	100.0000	100.0000
 ai_player	?add_creatures@type_AI_creature_swapper@@IAEXW4TCreatureType@@FF@Z	100.0000	100.0000	100.0000	0x2c130
 ai_player	?attempt_step@@YIEPAVhero@@PAUpathCell@@EE@Z	52.9459	52.9459	52.9459	0x2fc50
 ai_player	?build_markets@type_AI_player@@QAE_NPAH@Z	100.0000	100.0000	100.0000	0x2ab40
-ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	74.2046	74.2046	74.2046	0x2ba60
+ai_player	?buy_creatures@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	73.6571	73.6571	74.2046	0x2ba60
 ai_player	?buy_mage_guild@type_AI_player@@QAEXPAVhero@@PAVtown@@@Z	100.0000	100.0000	100.0000	0x2beb0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	97.4340	97.4340	97.4340	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
@@ -285,6 +285,7 @@ ai_player	?get_value@type_spellcaster_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0
 ai_player	?get_value@type_statue_of_legion_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x33580
 ai_player	?get_value@type_tome_artifact@@UBEJPBVhero@@EE@Z	100.0000	100.0000	100.0000	0x32c20
 ai_player	?get_value@type_undead_king_cloak_artifact@@UBEJPBVhero@@EE@Z	96.7778	96.7778	96.7778	0x333a0
+ai_player	?is_human_ally@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0x2b9e0
 ai_player	?make_gift@type_AI_player@@QAEXJ@Z	84.5868	84.5868	84.5868	0x29110
 ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de50
 ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580
