@@ -235,6 +235,20 @@ public:
     int m_town;     // +0x18
 };
 
+class CNewSetupInfoMsg : public CNetMsg {
+public:
+    SGameSetupOptions m_setup;  // +0x14
+    unsigned char m_flag;       // +0x1e0, the window's +0x37f byte
+    char pad_1e1[3];
+    int m_extras[8];            // +0x1e4, the window's +0x18a0 run
+};
+
+class CBadVersionMsg : public CNetMsg {
+public:
+    char m_version[20];   // +0x14
+    char m_errText[1];    // +0x28, format string (extent unmodeled)
+};
+
 class CMapHeaderRequestMsg : public CNetMsg {
 public:
     unsigned char m_flag;  // +0x14

@@ -16,6 +16,7 @@ class slider;
 class CSaveScreen;
 class textEntryWidget;
 class CNewPlayerUpdateMan;
+class CChatWidget;
 struct GameSelectionHeadersStruct;
 
 // DC supplies the source identities and member names.  Retail independently
@@ -108,7 +109,12 @@ public:
     int durationIndex;                 // 0x378
     unsigned char inAdvancedOptions;   // 0x37c
     unsigned char inScenarioOptions;   // 0x37d
-    char pad_37e[0x380 - 0x37e];
+    char pad_37e[0x37f - 0x37e];
+    // 0x37f: a setup byte the duration slider snapshots into
+    // CNewSetupInfoMsg and OnNewSetupInfoMsg writes back. Role
+    // unattested - ordinal placeholder.
+    unsigned char field_37F;
+
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
@@ -142,15 +148,24 @@ public:
     slider* fileSlider;                // 0x183c
     slider* durationSlider;            // 0x1840
     slider* nameSlider;                // 0x1844
-    char pad_1848[0x1865 - 0x1848];
+    CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
+    char pad_184c[0x1865 - 0x184c];
     unsigned char field_1865;          // 0x1865, gates the 179 widget show
     char pad_1866[0x186c - 0x1866];
     unsigned char field_186c;          // 0x186c, cleared on header-end
     char pad_186d[0x1870 - 0x186d];
     CSaveScreen* flagBack;             // 0x1870, DC-attested name
-    char pad_1874[0x1898 - 0x1874];
+    // DC gameVersion (a 20-byte TFileVersionInfo product string there);
+    // OnBadVersionMsg formats it against the offender's.
+    char gameVersion[20];              // 0x1874
+    char pad_1888[0x1898 - 0x1888];
     int field_1898;                    // 0x1898, player count cached on drop
-    char pad_189c[0x1970 - 0x189c];
+    char pad_189c[0x18a0 - 0x189c];
+    // Eight setup dwords CNewSetupInfoMsg carries behind the
+    // SGameSetupOptions copy; the duration slider reads them back out.
+    // Role unattested - ordinal placeholder.
+    int field_18A0[8];                 // 0x18a0
+    char pad_18c0[0x1970 - 0x18c0];
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
@@ -180,7 +195,7 @@ public:
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
     void OnSetAsHostMsg(CNetMsg* pNetMsg);
-    void OnBadVersionMsg(CNetMsg* pNetMsg);
+    unsigned char OnBadVersionMsg(CNetMsg* pNetMsg);
     void OnPingMsg(CNetMsg* pNetMsg);
     void OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup);
     void OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg,
@@ -191,6 +206,8 @@ public:
     void SetFilter(int size);
     void DisplayChat();
     void GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer);
+    void MakeHeroFilter();
+    void CheckFaces();
     // DC takes TTownType; spelled int here so the public closure needs no
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);
