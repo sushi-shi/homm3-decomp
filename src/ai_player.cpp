@@ -1778,12 +1778,9 @@ void AI_arrange_army(armyGroup* current_army)
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:2778
-DC_ONLY(0x325bc, 0xB4)
-long split_army(armyGroup* current_army, short index, short limit, short open_slots)
-{
-    // @stub
-}
+// split_army (dc 0x325bc) promoted to VA(0x0042dd70) in RVA order below:
+// split_armies (0x42db20) calls it at 0x42dc72/0x42dd32, matching the DC
+// bsr=2 census exactly.
 
 // split_armies (dc 0x32670) is claimed in retail-RVA order below.
 
@@ -3182,6 +3179,38 @@ void split_armies(hero* current_hero, const hero* enemy_hero,
         }
     }
     AI_arrange_army(army);
+}
+
+// E:\gamedcs\ai_player.cpp:2778
+// Splits stack `index` into up to (value*count/limit, capped by open_slots+1
+// and by the stack count) pieces across the empty slots, returning how many
+// new stacks were made. numTroops[index] is re-read at every step, and the
+// in-loop return gives retail's duplicated pieces-1 exit pair.
+VA(0x0042dd70, 0xdc)  // anchor-callee (split_armies 0x42dc72/0x42dd32, DC bsr=2), dc 0x325bc
+long split_army(armyGroup* current_army, short index, short limit,
+                short open_slots)
+{
+    TCreatureType type = current_army->armyTypes[index];
+    int pieces = akCreatureTypeTraits[type].AI_value
+        * current_army->numTroops[index] / limit;
+    if (pieces > open_slots + 1)
+        pieces = open_slots + 1;
+    if (pieces > current_army->numTroops[index])
+        pieces = current_army->numTroops[index];
+    if (pieces <= 1)
+        return 0;
+    int remaining = pieces;
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        if (current_army->armyTypes[slot] == CREATURE_NONE) {
+            long per = current_army->numTroops[index] / remaining;
+            current_army->Add(type, per, slot);
+            current_army->numTroops[index] -= per;
+            --remaining;
+            if (remaining <= 1)
+                return pieces - 1;
+        }
+    }
+    return pieces - 1;
 }
 
 // E:\gamedcs\ai_player.cpp:2975
