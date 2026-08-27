@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer player-name key override is byte-exact.**
+  Retail `CMultiPlayerWindowEdit::OnKeyPress` at `0x50ed60` suppresses Enter,
+  delegates every other key to `textEntryWidget`, and redraws the multiplayer
+  window only when the base editor consumes the key. Dreamcast supplies the
+  identity and three-call graph; retail vtable `0x640054` corrects the class
+  declaration from slot-2 `Main` to slot-15 `OnKeyPress`. All 67 VC6 bytes
+  and five control-flow blocks are exact. The synchronized report reaches
+  **2522/3088 functions exact**, **92.94% fuzzy**, and **60.68% executable
+  coverage**.
+
 - **2026-08-27 — the multiplayer edit key dispatcher is byte-exact.**
   Retail `CMPEdit::OnKeyPress` at `0x5107d0` rejects keys while the edit lacks
   focus, sends Shift+Tab and keypad Up through virtual slot 20, sends plain

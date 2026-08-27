@@ -330,8 +330,9 @@ SIZE(CHeroSessions, 0x14);
 
 // CMultiPlayerWindowEdit - the text-entry widget the session-host name field
 // uses. Derives textEntryWidget, forwarding all sixteen constructor arguments;
-// its only addition is the key-handler override that gives it a distinct
-// vtable (retail 0x640054, stored by the TMultiPlayerWindow constructor).
+// its only addition is the slot-15 key-handler override that gives it a
+// distinct vtable (retail 0x640054, stored by the TMultiPlayerWindow
+// constructor).
 class CMultiPlayerWindowEdit : public textEntryWidget {
 public:
     CMultiPlayerWindowEdit(int x, int y, int w, int h, int textSize,
@@ -345,7 +346,7 @@ public:
                           style, readType, insetX, insetY)
     {
     }
-    virtual int Main(message* msg);  // slot 2 override
+    virtual int OnKeyPress(message* msg);  // slot 15, retail 0x50ed60
 };
 
 // TMultiPlayerWindow - CHeroWindowEx multiplayer session browser / host UI.
