@@ -25,6 +25,8 @@ class CSprite;
 class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
+class textWidget;
+class textButton;
 struct GameSelectionHeadersStruct;
 
 #ifdef HOMM3_SSWINDOW_HEADER_VECTORS
@@ -296,18 +298,39 @@ public:
     slider* durationSlider;            // 0x1840
     slider* nameSlider;                // 0x1844
     CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
-    char pad_184c[0x185c - 0x184c];
-    // 0x185c: DC chatEdit (a CCombatChatEdit there); OnNewHostMsg nulls
-    // it on the host handover. Base-typed until its widget lands.
-    textEntryWidget* chatEdit;
+    // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
+    // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
+    // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
+    // 2880->0x1868, receivingMaps 2884->0x186c, flagBack 2888->0x1870).
+    // The two 4-seat name columns: UpdateNameLists (0x58c960) rebuilds
+    // their text (virtual SetText, slot 13) and the TurnChat pair
+    // shows/hides them.
+    textWidget* nameList1;             // 0x184c (DC nameList1)
+    textWidget* nameList2;             // 0x1850 (DC nameList2)
+    // DC mapChanged/readingMaps; no reconstructed body exercises them
+    // yet - position is the linear-run proof above.
+    unsigned char mapChanged;          // 0x1854
+    unsigned char readingMaps;         // 0x1855
+    char pad_1856[0x1858 - 0x1856];
+    // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
+    // focuses its id on chat-open. Base-typed until its widget lands.
+    textEntryWidget* chatEdit;         // 0x1858
+    // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
+    // an earlier note here claimed; OnNewHostMsg resets it on the host
+    // handover (the dword store 0x58b510+0xd5 the old model read as a
+    // chatEdit null).
+    int sortWhich;                     // 0x185c
     // The scenario size filter (0 = all, else an EMapDimension):
     // SortMaps admits a row into SelectionHeaders only when it is clear
     // or equal to the row's Size; SetFilter stores it.
     int mapSizeFilter;                 // 0x1860
     char pad_1864[0x1865 - 0x1864];
-    unsigned char field_1865;          // 0x1865, gates the 179 widget show
-    char pad_1866[0x186c - 0x1866];
-    unsigned char field_186c;          // 0x186c, cleared on header-end
+    unsigned char chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
+    char pad_1866[0x1868 - 0x1866];
+    // DC chatToggle: the show/hide-chat textButton whose label the
+    // TurnChat pair rewrites from general-text rows 532/533.
+    textButton* chatToggle;            // 0x1868
+    unsigned char receivingMaps;       // 0x186c (DC receivingMaps), cleared on header-end
     char pad_186d[0x1870 - 0x186d];
     CSaveScreen* flagBack;             // 0x1870, DC-attested name
     // DC gameVersion (a 20-byte TFileVersionInfo product string there);
@@ -320,7 +343,12 @@ public:
     // SGameSetupOptions copy; the duration slider reads them back out.
     // Role unattested - ordinal placeholder.
     int field_18A0[8];                 // 0x18a0
-    char pad_18c0[0x1970 - 0x18c0];
+    char pad_18c0[0x196c - 0x18c0];
+    // Retail-only tail member (no DC counterpart - DC's roster ends at
+    // netMsgHandler): the widget the TurnChat pair shows with widget 105
+    // when chat is OFF and hides when it is ON, always addressed
+    // directly, never through GetWidget. Ordinal placeholder.
+    widget* field_196c;                // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
