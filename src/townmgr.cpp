@@ -5235,6 +5235,24 @@ static void MoveHeroToGarrison(townManager* mgr)
     mgr->NewStrips();
 }
 
+// Residual (66.81%): the tail-merge GENERATION class, in both of its
+// directions at once and dominating the delta. (1) Retail keeps ONE
+// shared return-1 exit block that every arm jmps to; our CL duplicates
+// the 9-instruction EH epilogue into ~40 arm exits (41 vs 3 rets).
+// goto-to-a-shared-label measured WORSE (62.67, reverted - VC6
+// re-duplicates the joined return anyway). (2) The mirror image on
+// call tails: our CL MERGES the two locator-knob arms' identical
+// UpdateTownLocators+RedrawTownScreen tails and folds the three
+// recruit-dialog tails to two, where retail keeps 9 separate
+// RedrawTownScreen call sites - predict-inline reads this as base x7
+// vs retail x9 but no inliner knob is involved: the statement-scoped
+// inline_depth(0) pin AND file-scoped auto_inline(off) around
+// RedrawTownScreen's definition both measured byte-inert (the sites
+// are merged, not expanded). SetCommandAndText x5 vs x4 is the same
+// merge running the other way (retail shares the strip/hover call
+// site; a goto spelling costs 1.6, reverted). The content itself -
+// arm order, dispatch tables, every call - aligns at 156=156 in the
+// ordered stream.
 // The town manager's modal message loop, the third of the three pure
 // managers and the compiland's largest control body. The head runs the
 // turn-duration/network abort check, drains the build-cheat latch at
@@ -5948,7 +5966,9 @@ building_popup:
                 if (win->field_4c > 0)
                     win->field_4c--;
                 win->UpdateTownLocators();
+#pragma inline_depth(0)
                 RedrawTownScreen();
+#pragma inline_depth()
                 break;
             }
             case TTownScreenWindow::DIVIDE_ID: {
