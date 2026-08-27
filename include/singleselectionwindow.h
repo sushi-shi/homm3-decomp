@@ -64,7 +64,11 @@ struct GameSelectionHeadersStruct {
     // CheckMissingHeaders requests every row whose byte here is still
     // clear - the received flag of the transfer.
     unsigned char received;  // +0x4a5
-    char pad_4a6[0x6f8 - 0x4a6];
+    char pad_4a6[0x58c - 0x4a6];
+    // The row's display title: the name getters return it for the
+    // single-player list and the net-mode selected panel, and the name
+    // comparator ranks it against the "autosave" prefix rule.
+    char title[0x6f8 - 0x58c];  // +0x58c (full extent unmodeled)
     unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
     unsigned int fileTimeHigh;  // +0x6fc
     char pad_700[0xbe0 - 0x700];

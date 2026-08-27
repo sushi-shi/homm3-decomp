@@ -545,6 +545,23 @@ void CNewPlayerUpdateProc::HandleRequests()
 
 #if 0  // @carcass
 
+// The compiler-generated GameSelectionHeadersStruct member family the
+// vector machinery calls (declared-only in the struct; see the gated
+// header block). 0x578760 (the third pre-ctor row) is the
+// ~CNewMapHeaderInfoMsg-shaped dtor destroying an embedded header at
+// this+0x20 - unclaimed until that msg class is modeled.
+VA(0x00578290, 0x1AB)  // anchor-callee _Destroy 0x58f080 + ~vector 0x58ea70 loop over it per element; EH-framed teardown of the +0x700 SavedGameHeader-shaped tail, dc-none (compiler-generated)
+GameSelectionHeadersStruct::~GameSelectionHeadersStruct()
+{
+    // @stub
+}
+
+VA(0x00578440, 0x312)  // anchor-callee SortMaps' erase move-loop calls it per element (thiscall, one stack arg); memberwise head copies the version/isPlayable/difficulty/numPlayers run, dc-none (compiler-generated)
+GameSelectionHeadersStruct& GameSelectionHeadersStruct::operator=(
+    const GameSelectionHeadersStruct& that)
+{
+    // @stub
+}
 
 // E:\gamedcs\singleselectionwindow.cpp:1953
 VA(0x00579960, 0x2d63)  // anchor-callee CAdvPopup base ctor (??0CAdvPopup@@QAE@HHHHI@Z) + SavedGameHeader member ctor at this+0x38c+0x700, fs:[0] EH frame, ret4, dc 0x1309f0
@@ -868,21 +885,48 @@ CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 }
 #pragma auto_inline(on)
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:4074
 VA(0x00583f20, 0xEF)  // anchor-callee DrawBasicMapInfo 0x5840f0 selects it over GetMapName on m_flag64/m_flag65; body owns the header +0x33d fileName / +0x58c title reads and the general-text 508/509 fallbacks, size 1.03x dc 0xE6, dc 0x139a20
 const char* TSingleSelectionWindow::GetFileName(int which)
 {
-    // @stub
+    if (which == -1)
+        return gpGame->mapHeader.mapName.c_str();
+    if (m_flag64 == 0 && m_flag65 == 0)
+        return SelectionHeaders[which].fileName;
+    const char* name;
+    if (GetMapCount() != 0
+            && GetMapCount() > static_cast<unsigned int>(which))
+        name = SelectionHeaders[which].title;
+    else
+        name = gpGeneralText->GetText(508);
+    if (strlen(name) == 0)
+        name = gpGeneralText->GetText(509);
+    return name;
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4099
 VA(0x00584010, 0xDF)  // anchor-callee Update's row loop + DrawBasicMapInfo's plain arm call it (index); body reads field_37F->general-text 741, -1->setup.filename, else header +0x58c/+0x33d, size 0.49x dc 0x10A, dc 0x139b08
 const char* TSingleSelectionWindow::GetMapName(int which)
 {
-    // @stub
+    if (field_37F != 0)
+        return gpGeneralText->GetText(741);
+    if (which == -1)
+        return gpGame->setup.filename;
+    if (m_flag64 == 0 && m_flag65 == 0) {
+        const char* name;
+        if (which >= 0
+                && GetMapCount() > static_cast<unsigned int>(which))
+            name = SelectionHeaders[which].title;
+        else
+            name = gpGeneralText->GetText(508);
+        if (strlen(name) == 0)
+            name = gpGeneralText->GetText(509);
+        return name;
+    }
+    return SelectionHeaders[which].fileName;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\singleselectionwindow.cpp:4122
 DC_ONLY(0x139c14, 0x90)
