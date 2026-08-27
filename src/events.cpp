@@ -5434,6 +5434,16 @@ unsigned char AI_choose_resource_or_experience(hero* current_hero,
 // current_hero=EDI; ours edi/esi) plus the AI-arm branch polarity. A
 // register-homing wall - no local spelling reaches the pseudo order.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
+// Residual (83.04%): the merged-return class (path.obj/AppWndProc
+// family), in the direction where RETAIL DUPLICATES. Our source already
+// writes GiveResource(GOLD, amount); return; twice (the CHOICE_1 arm
+// and the shared tail) and our CL cross-jumps them into one exit
+// (`jne` back into the shared copy); retail keeps both byte-identical
+// GiveResource+ret exits - the accept je and the AI fall-through share
+// the second - while merging the GiveExperience tail exactly as we do.
+// No structured respelling changes which copy survives; the register
+// story (this in ebx vs our edi, amount edi vs esi) is downstream of
+// that extra exit's pressure. 2026-08-27.
 void advManager::DoTreasureDialog(hero* current_hero, int amount,
                                   bool human_player)
 {
@@ -5698,6 +5708,15 @@ int IsBaseCreature(TCreatureType type);
 // materializes -1 into EDI and counts up; current_hero binds the other
 // register. Register-homing/loop-form wall on a 298 B leaf.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
+// Residual (88.61%): a -1-pooling register cascade. Retail compares
+// reward->Artifact against an IMMEDIATE -1 and pushes immediate -1
+// dialog arguments, loading current_hero from [ebp+8] only after that
+// gate (and reloading it per GiveResource iteration); our CL pools -1
+// into edi at the first compare, which frees it to cache current_hero
+// in ebx, which in turn denies the resource loop retail's ebx=7
+// down-counter and denies human_player its callee-saved bl home.
+// The two-arg type_artifact ctor (seerhut precedent) measured
+// byte-flat and is kept as the cleaner spelling. 2026-08-27.
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
                                       bool human_player)
 {
@@ -5714,9 +5733,7 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
             if (human_player)
                 NormalDialog(emptyRolloverText, 1, -1, -1, 8,
                              reward->Artifact, -1, 0, -1, 0, -1, 0);
-            type_artifact artifact;
-            artifact.artifactId = reward->Artifact;
-            artifact.extra = -1;
+            type_artifact artifact(reward->Artifact, -1);
             current_hero->GiveArtifact(&artifact, 1, 1);
             if (!human_player)
                 AI_equip_artifacts(current_hero);
