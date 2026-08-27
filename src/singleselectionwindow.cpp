@@ -20,6 +20,12 @@
 #include "newgame.h"
 #include "savegame.h"
 #include "text.h"
+// Update draws the scenario rows: the three icon strips are CSprite
+// draws and the columns render through the shared font cells;
+// DrawHeroAdvancedOption blits the flag/portrait plates.
+#include "bitmap816.h"
+#include "csprite.h"
+#include "font.h"
 #include "singleselectionwindow.h"
 #include "singleselectionwindow_priv.h"
 
@@ -621,13 +627,18 @@ void CChatWidget::Draw()
     textWidget::Draw();
 }
 
-// NOTE (2026-08-27): OnKeyPress/OnKillFocus banked 100.0000 at the
-// delink generation where the carcass DrawHeroAdvancedOption claim
-// paired against this TU's undefined mangled symbol; the generation
-// after the TurnOff*/TurnChat* claims landed, the pairing reverted to
-// the flat name and both sit at 99.89/99.87 (max accepted downward,
-// hist keeps the peak). They return to exact when
-// DrawHeroAdvancedOption is compiled for real.
+// NOTE (2026-08-27, round 2): DrawHeroAdvancedOption compiling for real
+// restored OnKeyPress to 100.0000. OnKillFocus holds 99.87 on a pure
+// data-name pairing deadlock (max accepted downward, hist keeps the
+// peak): its bytes are exact and the two deltas are reloc names only -
+// (a) our compile references the Dinkumware `_Nullstr` "" COMDAT while
+// the delinker names the merged retail cell 0x63a608 after
+// adventuremapwindow's DATA_COMPGEN claim (one shared pooled literal,
+// two legitimate names - whichever the synth PDB picks, the other TU's
+// row shows the mismatch); (b) gLocalPlayerName's 0x698817 cell is not
+// carried by the delink data manifest, so the target side keeps the
+// flat data_298817. Closes only via a data-manifest change (a pipeline
+// contract, not a lane edit).
 // The shared name-commit helper both CEnterNameEdit overrides expand. DC
 // keeps it out of line (dc 0x149238, 88 B); retail has no row for it - the
 // two overrides carry its whole body - so the definition is `inline`.
@@ -732,6 +743,16 @@ int CSaveGameEdit::OnKeyPress(message* msg)
 
 #if 0  // @carcass
 
+// Retail-only (no DC roster row - the DC lobby has no filter panel).
+// Walks the filter panel's widget ranges (0x119..0x11c size buttons,
+// 0x11d, 0x11f..0x127, 0x129..0x131) setting/clearing status from the
+// field_18A0 filter block, gated on inFilterOptions.
+VA(0x0057ef70, 0x3B9)  // anchor-callee Update's inFilterOptions arm calls it (no-arg, this) after the 739/740 title pair; body reads field_18A0[0..3] and dispatches a size switch over 0x24/0x48/0x6c, retail-only
+void TSingleSelectionWindow::UpdateFilterWidgets()
+{
+    // @stub
+}
+
 // E:\gamedcs\singleselectionwindow.cpp:2635
 DC_ONLY(0x13575c, 0x348)
 void TSingleSelectionWindow::SetupLoadGameMode()
@@ -831,50 +852,8 @@ void TSingleSelectionWindow::MakeHeroFilter()
 }
 
 // E:\gamedcs\singleselectionwindow.cpp:4012
-DC_ONLY(0x1396d8, 0x348)
+VA(0x00583b40, 0x37D)  // anchor-callee the claimed ??_G (0x57d130) calls exactly this row (its only callee besides operator delete), size 1.06x dc 0x348, dc 0x1396d8
 void TSingleSelectionWindow::~TSingleSelectionWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4074
-DC_ONLY(0x139a20, 0xE6)
-const char* TSingleSelectionWindow::GetFileName(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4099
-DC_ONLY(0x139b08, 0x10A)
-const char* TSingleSelectionWindow::GetMapName(int which)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4122
-DC_ONLY(0x139c14, 0x90)
-void GetVCText(VictoryConditionStruct* vc, char* sText)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4136
-DC_ONLY(0x139ca4, 0x28)
-void GetLCText(LossConditionStruct* lc, char* sText)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4141
-DC_ONLY(0x139ccc, 0x62A)
-void TSingleSelectionWindow::DrawBasicMapInfo()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:4219
-DC_ONLY(0x13a2f8, 0x86)
-int TSingleSelectionWindow::MaxPlayers()
 {
     // @stub
 }
@@ -895,6 +874,52 @@ CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 {
 }
 #pragma auto_inline(on)
+
+#if 0  // @carcass
+
+// E:\gamedcs\singleselectionwindow.cpp:4074
+VA(0x00583f20, 0xEF)  // anchor-callee DrawBasicMapInfo 0x5840f0 selects it over GetMapName on m_flag64/m_flag65; body owns the header +0x33d fileName / +0x58c title reads and the general-text 508/509 fallbacks, size 1.03x dc 0xE6, dc 0x139a20
+const char* TSingleSelectionWindow::GetFileName(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4099
+VA(0x00584010, 0xDF)  // anchor-callee Update's row loop + DrawBasicMapInfo's plain arm call it (index); body reads field_37F->general-text 741, -1->setup.filename, else header +0x58c/+0x33d, size 0.49x dc 0x10A, dc 0x139b08
+const char* TSingleSelectionWindow::GetMapName(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4122
+DC_ONLY(0x139c14, 0x90)
+void GetVCText(VictoryConditionStruct* vc, char* sText)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4136
+DC_ONLY(0x139ca4, 0x28)
+void GetLCText(LossConditionStruct* lc, char* sText)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4141
+VA(0x005840f0, 0x45C)  // anchor-callee Update's first body call (no-arg, this); selects GetMapName/GetFileName by mode for the title at (0x1a6,0x2d) and owns the save-date format literal (flat name game_d_d_d_d_02d), size 0.71x dc 0x62A, dc 0x139ccc
+void TSingleSelectionWindow::DrawBasicMapInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4219
+DC_ONLY(0x13a2f8, 0x86)
+int TSingleSelectionWindow::MaxPlayers()
+{
+    // @stub
+}
+
+#endif  // @carcass
 
 // Ticks every live transfer job and reaps the finished ones. Retail
 // keeps this out-of-line copy (not yet located among the 0x5892xx rows)
@@ -923,18 +948,202 @@ inline unsigned int TSingleSelectionWindow::GetMapCount() const
         : SelectionHeadersLast - SelectionHeadersFirst;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\singleselectionwindow.cpp:4239. Retail dropped the message
 // parameter: the no-arg redraw member OnGameTransmitInitMsg (99.6%)
 // provably calls at its failure path and the m_flag64 handlers tail-call.
+// Retail also split DC's monolith (dc 0xd84): the selected-map panel went
+// to DrawBasicMapInfo (0x5840f0), the row names come back through
+// GetMapName, and DC's MaxPlayers left no retail row. Before the headers
+// arrive only the hosting hint is painted: general-text 510 under
+// !pDPlay->IsHost(). The three panel sections mirror the mode bytes -
+// scenario rows (players "%d/%d", size text, the three icon strips, the
+// name column), advanced options (names, titles, turn duration, the
+// per-seat DrawHeroAdvancedOption walk), and the retail-only filter
+// panel (739/740 + UpdateFilterWidgets).
+// Residual (96.9): the TU's documented register-homing/CSE class (the
+// WindowHandler note): all three vector-size expansions CSE the header
+// vector's _First (esi) where retail reloads it per expansion in eax
+// and lets the imul clobber it - the hdr lea/spill scheduling and the
+// version load fold drift with it. Also the hero walk's two provably-
+// equal counters coalesce onto one register where retail keeps i/pos
+// split (edi/esi) - tried and rejected: named-local index (spill,
+// worse), reusing the names-loop counter re-zeroed (byte-flat).
+// Structure exact otherwise: guarded do/while over the rows,
+// switch-with-ternary-default for the version icon, if/else over two
+// SetText calls, GetWidget receiver named before the argument.
 VA(0x00584550, 0x698)  // anchor-callee OnGameTransmitInitMsg (0x589b20) calls it no-arg after DrawWindow; owns the '%d/%d' literal; also tailed by SliderDuration 0x57c7f0 + WindowHandler, size 0.49x dc 0xd84, dc 0x13a380
 int TSingleSelectionWindow::Update()
 {
-    // @stub
+    if (receivedMaps == 0) {
+        if (bVideoPaused == 0)
+            return 1;
+        if (pDPlay->IsHost())
+            return 1;
+        gUnnamed698a08->DrawBoundedString(
+            gpGeneralText->GetText(510), gpWindowManager->screenBitmap,
+            433, 46, 210, 23, 4, 4, -1);
+    } else {
+        DrawBasicMapInfo();
+        if (inScenarioOptions) {
+            int rows = gUnnamed69fdc8;
+            if (GetMapCount() < static_cast<unsigned int>(rows))
+                rows = GetMapCount();
+            gUnnamed698a08->DrawBoundedString(
+                gpGeneralText->GetText(511), gpWindowManager->screenBitmap,
+                25, 52, 132, 32, 2, 5, -1);
+            int i = 0;
+            if (rows > 0) {
+                int y = 123;
+                do {
+                    int color = currentMap == currentIndex + i ? 5 : 4;
+                    if (GetMapCount()
+                            > static_cast<unsigned int>(currentIndex + i)) {
+                        GameSelectionHeadersStruct* hdr =
+                            &SelectionHeadersFirst[currentIndex + i];
+                        int frame;
+                        switch (hdr->version) {
+                        case MAP_FORMAT_RESTORATION_OF_ERATHIA:
+                            frame = 0;
+                            break;
+                        case MAP_FORMAT_ARMAGEDDONS_BLADE:
+                            frame = 1;
+                            break;
+                        default:
+                            frame = hdr->version == MAP_FORMAT_SHADOW_OF_DEATH
+                                ? 2 : -1;
+                            break;
+                        }
+                        if ((m_flag65 != 0 || m_flag64 != 0)
+                                && hdr->isCampaign != 0) {
+                            switch (hdr->campaignIndex) {
+                            case CAMPAIGN_ROE_0:
+                            case CAMPAIGN_ROE_1:
+                            case CAMPAIGN_ROE_2:
+                            case CAMPAIGN_ROE_3:
+                            case CAMPAIGN_ROE_4:
+                            case CAMPAIGN_ROE_5:
+                            case CAMPAIGN_ROE_6:
+                                frame = 0;
+                                break;
+                            case CAMPAIGN_AB_0:
+                            case CAMPAIGN_AB_1:
+                            case CAMPAIGN_AB_2:
+                            case CAMPAIGN_AB_3:
+                            case CAMPAIGN_AB_4:
+                            case CAMPAIGN_AB_5:
+                                frame = 1;
+                                break;
+                            case CAMPAIGN_SOD_0:
+                            case CAMPAIGN_SOD_1:
+                            case CAMPAIGN_SOD_2:
+                            case CAMPAIGN_SOD_3:
+                            case CAMPAIGN_SOD_4:
+                            case CAMPAIGN_SOD_5:
+                            case CAMPAIGN_SOD_6:
+                                frame = 2;
+                                break;
+                            }
+                        }
+                        char text[100];
+                        sprintf(text,
+                                DATA_COMPGEN(0x00679dc8, mapPlayersFormat,
+                                             "%d/%d"),
+                                hdr->numPlayers, hdr->maxNumHumanPlayers);
+                        gUnnamed698a08->DrawBoundedString(
+                            text, gpWindowManager->screenBitmap,
+                            26, y - 1, 30, 25, color, 5, -1);
+                        const char* sizeText;
+                        if (hdr->Size == MAP_DIMENSION_SMALL)
+                            sizeText = gpGeneralText->GetText(512);
+                        else if (hdr->Size == MAP_DIMENSION_MEDIUM)
+                            sizeText = gpGeneralText->GetText(513);
+                        else if (hdr->Size == MAP_DIMENSION_LARGE)
+                            sizeText = gpGeneralText->GetText(514);
+                        else
+                            sizeText = gpGeneralText->GetText(515);
+                        strcpy(text, sizeText);
+                        gUnnamed698a08->DrawBoundedString(
+                            text, gpWindowManager->screenBitmap,
+                            59, y - 1, 30, 25, color, 5, -1);
+                        if (frame >= 0)
+                            versionIcons->Draw(0, frame, 0, 0,
+                                versionIcons->Width, versionIcons->Height,
+                                gpWindowManager->screenBitmap, 91, y, 0, 1);
+                        gUnnamed698a08->DrawBoundedString(
+                            GetMapName(currentIndex + i),
+                            gpWindowManager->screenBitmap,
+                            125, y - 1, 184, 25, color, 5, -1);
+                        if (hdr->victoryConditionType >= 0
+                                && hdr->victoryConditionType <= 11)
+                            victoryConditionIcons->Draw(0,
+                                hdr->victoryConditionType, 0, 0,
+                                victoryConditionIcons->Width,
+                                victoryConditionIcons->Height,
+                                gpWindowManager->screenBitmap, 309, y, 0, 1);
+                        else
+                            victoryConditionIcons->Draw(0, 11, 0, 0,
+                                victoryConditionIcons->Width,
+                                victoryConditionIcons->Height,
+                                gpWindowManager->screenBitmap, 309, y, 0, 1);
+                        if (hdr->lossConditionType >= 0)
+                            lossConditionIcons->Draw(0,
+                                hdr->lossConditionType, 0, 0,
+                                lossConditionIcons->Width,
+                                lossConditionIcons->Height,
+                                gpWindowManager->screenBitmap, 342, y, 0, 1);
+                        else
+                            lossConditionIcons->Draw(0, 3, 0, 0,
+                                lossConditionIcons->Width,
+                                lossConditionIcons->Height,
+                                gpWindowManager->screenBitmap, 342, y, 0, 1);
+                    }
+                    ++i;
+                    y += 25;
+                } while (i < rows);
+            }
+        }
+        if (inAdvancedOptions) {
+            int pos;
+            for (pos = 0; pos < 8; ++pos) {
+                CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(pos);
+                textWidget* w =
+                    static_cast<textWidget*>(GetWidget(pos + 345));
+                if (p == 0)
+                    w->SetText(gpGeneralText->GetText(469));
+                else
+                    w->SetText(p->sName);
+            }
+            gpBigFont->DrawBoundedString(
+                gpGeneralText->GetText(516), gpWindowManager->screenBitmap,
+                58, 24, 334, 25, 8, 1, -1);
+            gUnnamed698a08->DrawBoundedString(
+                gpGeneralText->GetText(517), gpWindowManager->screenBitmap,
+                58, 48, 334, 34, 4, 1, -1);
+            gUnnamed698a08->DrawBoundedString(
+                gTurnDurationText[gpGame->setup.turnDuration],
+                gpWindowManager->screenBitmap, 256, 556, 134, 18, 4, 5, -1);
+            pos = 0;
+            for (int i = 0; i < 8; ++i) {
+                if (gpGame->setup.playerPos[i] >= 0
+                        && (m_flag64 == 0
+                            || gpGame->playerDisabled[i] == 0))
+                    DrawHeroAdvancedOption(i, 0, pos);
+                ++pos;
+            }
+        }
+        if (inFilterOptions) {
+            gpBigFont->DrawBoundedString(
+                gpGeneralText->GetText(739), gpWindowManager->screenBitmap,
+                58, 24, 334, 25, 8, 1, -1);
+            gUnnamed698a08->DrawBoundedString(
+                gpGeneralText->GetText(740), gpWindowManager->screenBitmap,
+                58, 48, 334, 34, 4, 1, -1);
+            UpdateFilterWidgets();
+        }
+    }
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    return 1;
 }
-
-#endif  // @carcass
 
 // The window's own modal runner: it nudges the file-list slider when the
 // dialog is being torn down under a paused video / mode-3 game, then pumps
@@ -990,6 +1199,13 @@ inline CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
     if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
         return &m_players.humanPlayers[0];
     return m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+}
+
+// Like GetThisPlayer above: retail keeps no out-of-line copy (the
+// DC_ONLY row below stays), every caller expands the GetGamePos chain.
+inline int TSingleSelectionWindow::GetThisPlayerGamePos()
+{
+    return m_players.GetGamePos(gsThisNetPlayerInfo.dpid);
 }
 
 VA(0x00585300, 0x1FA)  // anchor-callee cross-module fingerprint w4.07 (CChatManager 0x157350/0x157390/0x157400 refs) + monotone order + size 0.84x, dc 0x13b9fc
@@ -2125,34 +2341,6 @@ void TSingleSelectionWindow::OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inP
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:8018
-DC_ONLY(0x1431bc, 0x58)
-unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8034
-DC_ONLY(0x143214, 0x116)
-unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8067
-DC_ONLY(0x14332c, 0x116)
-unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8107
-DC_ONLY(0x143444, 0x104)
-THeroID TSingleSelectionWindow::GetDisplayFace(int gamePos)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:8143
 DC_ONLY(0x143548, 0xB0)
 THeroID TSingleSelectionWindow::GetHeroInPos(int gamePos)
@@ -2167,13 +2355,6 @@ TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:8201
-DC_ONLY(0x1436b4, 0x15C)
-const char* TSingleSelectionWindow::GetHeroName(int gamePos)
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:8230
 DC_ONLY(0x143810, 0xA8)
 void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
@@ -2184,13 +2365,6 @@ void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
 // E:\gamedcs\singleselectionwindow.cpp:8256
 DC_ONLY(0x1438b8, 0x9A)
 void TSingleSelectionWindow::UpdateNames()
-{
-    // @stub
-}
-
-// E:\gamedcs\singleselectionwindow.cpp:8273
-DC_ONLY(0x143954, 0x128)
-unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 {
     // @stub
 }
@@ -2583,20 +2757,324 @@ void TSingleSelectionWindow::UpdateTown(int pos, int town, unsigned char inPopup
     }
 }
 
-#if 0  // @carcass
+#if 0  // @carcass - the DC cpp-order rows 8018..8273, relocated here
+// for RVA order (claims ascend per file)
 
-#endif  // @carcass
+// E:\gamedcs\singleselectionwindow.cpp:8018
+VA(0x0058CE70, 0x40)  // anchor-callee DrawHeroAdvancedOption's town pick ORs it with slot.HasRandomAlignment; body reads the same playerSlotAttributes row (+0xa0 band off gpGame->mapHeader), size 0.73x dc 0x58, dc 0x1431bc
+unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
+{
+    // @stub
+}
 
-#if 0  // @carcass - relocated here for RVA order (claims ascend per file)
+// E:\gamedcs\singleselectionwindow.cpp:8034
+VA(0x0058CEB0, 0xF7)  // anchor-callee DrawHeroAdvancedOption gates the town arrows (0xd7/0xdf ids) and the bonus arrows on it; head tests m_flag64 first, size 0.88x dc 0x116, dc 0x143214
+unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
+{
+    // @stub
+}
 
-// E:\gamedcs\singleselectionwindow.cpp:8297
-VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
-void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos, unsigned char update, int position)
+// E:\gamedcs\singleselectionwindow.cpp:8067
+VA(0x0058CFB0, 0x129)  // anchor-callee DrawHeroAdvancedOption gates the hero arrows (0xe7/0xef ids) on it; same m_flag64 head as its town sibling, size 1.06x dc 0x116, dc 0x14332c
+unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8107
+VA(0x0058D0E0, 0x10A)  // anchor-callee DrawHeroAdvancedOption calls it (gamePos) in both mode arms and indexes the heroFaces plates with the result (-1 = the random/none plates); head is the GetPlayerInPos scan, size 1.02x dc 0x104, dc 0x143444
+int TSingleSelectionWindow::GetDisplayFace(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8201
+// Retail 0x58d1f0's 1.4x growth over the DC row absorbs GetHeroInPos
+// (dc 0xB0, no retail row of its own - the two DC_ONLY rows above stay
+// unlocated).
+VA(0x0058D1F0, 0x1E7)  // anchor-callee DrawHeroAdvancedOption pushes its return as the hero-name text in both mode arms; head reads the same playerSlotAttributes band, size 1.4x dc 0x15C, dc 0x1436b4
+const char* TSingleSelectionWindow::GetHeroName(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8273
+VA(0x0058D3E0, 0x122)  // arity ret4 on a char* it strlens at entry (the flat carve name records the 0x57f330 SetupNewGameMode-band caller); monotone slot between GetHeroName and DrawHeroAdvancedOption, size 0.98x dc 0x128, dc 0x143954
+unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
 {
     // @stub
 }
 
 #endif  // @carcass
+
+// One advanced-options seat row: the row highlight and flag plate, then
+// per-column art and arrows. The network arm (m_flag64) paints the
+// committed setup values with no arrow logic; the local arm derives the
+// shown town (attribute band or pick_alignment), gates each arrow pair
+// through the CanChoose accessors, and repairs an impossible
+// resource-bonus pick in place (no town chosen -> the seat's record is
+// rewritten to random). A -1 position recomputes the visible row the
+// same way CalcPosition (DC-only) does.
+// Residual (90.6): the register-homing/scheduling family. Retail homes
+// the arm-scoped locals in the dead parameter slots ([ebp+8] iconY,
+// [ebp+0x10] alignment/q, [ebp+0xb] canChooseHero) and re-reads them
+// per site, while our CL keeps register copies - the resource-bonus
+// arm's self-store ternary elides with it, textY takes an add-in-place
+// where ours preserves rowY's register, and every draw block's push
+// schedule drifts around those homes. Structure is exact: block count
+// 96 vs 98 with the only extra target block being that elided
+// self-store, and all seven DrawBoundedString sites cross-jump onto
+// shared tails exactly as retail lays them out. Tried and rejected:
+// slot-pointer vs longhand attribute reads (byte-flat); assigning the
+// alignment through the spent `position` parameter is KEPT (it lands
+// the [ebp+0x10] home retail has).
+// E:\gamedcs\singleselectionwindow.cpp:8297
+VA(0x0058d510, 0xA40)  // anchor-callee both CEnterNameEdit overrides call it (pos, 1, -1) after the name commit, matching DC OnNameChange->DrawHeroAdvancedOption; also called from WindowHandler per DC edge; size 0.48x dc 0x158a, dc 0x143a7c
+void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos,
+                                                    unsigned char update,
+                                                    int position)
+{
+    if (position == -1) {
+        position = 0;
+        for (int i = 0; i < playerPos; ++i)
+            if (gpGame->setup.playerPos[i] >= 0
+                    && (m_flag64 == 0 || gpGame->playerDisabled[i] == 0))
+                ++position;
+    }
+    GetWidget(playerPos + 263)->Draw();
+    int rowY = position * 50;
+    playerFlags[playerPos]->Draw(0, 0, playerFlags[0]->Width,
+                                 playerFlags[0]->Height,
+                                 gpWindowManager->screenBitmap, 57,
+                                 rowY + 128, 1);
+    GetWidget(playerPos + 199)->Draw();
+    GetWidget(playerPos + 207)->Draw();
+    CNetPlayerHandlerPlayer* p = m_players.GetPlayerInPos(playerPos);
+    if (p == 0)
+        p = m_players.GetCompPlayerInPos(playerPos);
+    if (m_flag64 != 0) {
+        // The committed alignment takes over the spent `position`
+        // parameter (retail homes it in [ebp+0x10], the dead third-arg
+        // slot, and the resource-bonus arm's self-store below only
+        // exists against that memory home).
+        position = gpGame->setup.alignment[playerPos];
+        int iconY = rowY + 130;
+        townIcons->Draw(0, position * 2 + 2, 0, 0, townIcons->Width,
+                        townIcons->Height, gpWindowManager->screenBitmap,
+                        176, iconY, 0, 1);
+        int textY = rowY + 162;
+        // (textY/iconY keep retail's dead-slot homes)
+        gpTinyFont->DrawBoundedString(gUnnamed6a74f4[position],
+            gpWindowManager->screenBitmap, 164, textY, 71, 16, 4, 5, -1);
+        int face = GetDisplayFace(playerPos);
+        if (face != -1) {
+            heroFaces[face]->Draw(0, 0, heroFaces[0]->Width,
+                heroFaces[0]->Height, gpWindowManager->screenBitmap,
+                252, iconY, 0);
+            const char* name = GetHeroName(playerPos);
+            gpTinyFont->DrawBoundedString(name,
+                gpWindowManager->screenBitmap, 240, textY, 71, 16, 4, 5,
+                -1);
+        } else {
+            noHeroBmp->Draw(0, 0, noHeroBmp->Width, noHeroBmp->Height,
+                gpWindowManager->screenBitmap, 252, iconY, 0);
+            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(524),
+                gpWindowManager->screenBitmap, 240, textY, 71, 16, 4, 5,
+                -1);
+        }
+        int bonus = gpGame->setup.startingBonus[playerPos];
+        switch (bonus) {
+        case NEW_MAP_BONUS_ARTIFACT:
+            position = 9;
+            break;
+        case NEW_MAP_BONUS_GOLD:
+            position = 8;
+            break;
+        case NEW_MAP_BONUS_RESOURCE:
+            position = position == TOWN_CONFLUX ? 3 : position;
+            break;
+        case NEW_MAP_BONUS_RANDOM:
+            position = 10;
+            break;
+        }
+        bonusIcons->Draw(0, position, 0, 0, bonusIcons->Width,
+                         bonusIcons->Height,
+                         gpWindowManager->screenBitmap, 328, iconY, 0, 1);
+        if (bonus == NEW_MAP_BONUS_RANDOM)
+            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
+                gpWindowManager->screenBitmap, 316, textY, 71, 16, 4, 5,
+                -1);
+        else
+            gpTinyFont->DrawBoundedString(gUnnamed6a5e14[bonus],
+                gpWindowManager->screenBitmap, 316, textY, 71, 16, 4, 5,
+                -1);
+    } else {
+        CNetPlayerHandlerPlayer* q = m_players.GetPlayerInPos(playerPos);
+        if (q == 0)
+            q = m_players.GetCompPlayerInPos(playerPos);
+        int town;
+        {
+            CMapHeaderData::TPlayerSlotAttributes* slot =
+                &gpGame->mapHeader.playerSlotAttributes[playerPos];
+            if (slot->HasRandomAlignment != 0
+                    || HasMultipleTowns(playerPos))
+                town = q->townIndex;
+            else
+                town = pick_alignment(
+                    static_cast<unsigned short>(slot->legalAlignments),
+                    1);
+        }
+        widget* townLeft = GetWidget(playerPos + 215);
+        widget* townRight = GetWidget(playerPos + 223);
+        if (CanChooseTown(playerPos)) {
+            townLeft->enable(1);
+            townRight->enable(1);
+            townLeft->send_message(widget::WIDGET_SET_STATUS, 6);
+            townRight->send_message(widget::WIDGET_SET_STATUS, 6);
+            townLeft->Draw();
+            townRight->Draw();
+        } else {
+            townLeft->enable(0);
+            townRight->enable(0);
+            townLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            townRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+        }
+        if (town == -1) {
+            randomTownBmp->Draw(0, 0, randomHeroBmp->Width,
+                randomHeroBmp->Height, gpWindowManager->screenBitmap,
+                176, rowY + 130, 0);
+            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
+                gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
+                4, 5, -1);
+        } else {
+            townIcons->Draw(0, town * 2 + 2, 0, 0, townIcons->Width,
+                townIcons->Height, gpWindowManager->screenBitmap, 176,
+                rowY + 130, 0, 1);
+            gpTinyFont->DrawBoundedString(gUnnamed6a74f4[town],
+                gpWindowManager->screenBitmap, 164, rowY + 162, 71, 16,
+                4, 5, -1);
+        }
+        int face = GetDisplayFace(playerPos);
+        widget* heroLeft = GetWidget(playerPos + 231);
+        widget* heroRight = GetWidget(playerPos + 239);
+        unsigned char canChooseHero = CanChooseHero(playerPos);
+        if (canChooseHero) {
+            heroLeft->enable(1);
+            heroRight->enable(1);
+            heroLeft->send_message(widget::WIDGET_SET_STATUS, 6);
+            heroRight->send_message(widget::WIDGET_SET_STATUS, 6);
+            heroLeft->Draw();
+            heroRight->Draw();
+        } else {
+            heroLeft->enable(0);
+            heroRight->enable(0);
+            heroLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            heroRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+        }
+        unsigned char noHero = 0;
+        if (face == -1) {
+            if (gpGame->mapHeader.playerSlotAttributes[playerPos]
+                        .hasRandomHero == 0
+                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
+                           .GenerateHero == 0
+                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
+                           .nonRandomHeroId == -1)
+                noHero = 1;
+            if (canChooseHero == 0 && (town != -1 || noHero != 0)
+                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
+                           .hasRandomHero == 0
+                    && gpGame->mapHeader.playerSlotAttributes[playerPos]
+                           .GenerateHero == 0) {
+                noHeroBmp->Draw(0, 0, noHeroBmp->Width, noHeroBmp->Height,
+                    gpWindowManager->screenBitmap, 252, rowY + 130, 0);
+                gpTinyFont->DrawBoundedString(
+                    gpGeneralText->GetText(524),
+                    gpWindowManager->screenBitmap, 240, rowY + 162, 71,
+                    16, 4, 5, -1);
+            } else {
+                randomHeroBmp->Draw(0, 0, randomHeroBmp->Width,
+                    randomHeroBmp->Height,
+                    gpWindowManager->screenBitmap, 252, rowY + 130, 0);
+                gpTinyFont->DrawBoundedString(
+                    gpGeneralText->GetText(523),
+                    gpWindowManager->screenBitmap, 240, rowY + 162, 71,
+                    16, 4, 5, -1);
+            }
+        } else {
+            const char* name = GetHeroName(playerPos);
+            heroFaces[face]->Draw(0, 0, heroFaces[0]->Width,
+                heroFaces[0]->Height, gpWindowManager->screenBitmap,
+                252, rowY + 130, 0);
+            gpTinyFont->DrawBoundedString(name,
+                gpWindowManager->screenBitmap, 240, rowY + 162, 71, 16,
+                4, 5, -1);
+        }
+        widget* bonusLeft = GetWidget(playerPos + 247);
+        widget* bonusRight = GetWidget(playerPos + 255);
+        int bonus = p->startBonusIndex;
+        int frame;
+        switch (bonus) {
+        case NEW_MAP_BONUS_ARTIFACT:
+            frame = 9;
+            break;
+        case NEW_MAP_BONUS_GOLD:
+            frame = 8;
+            break;
+        case NEW_MAP_BONUS_RESOURCE:
+            if (town == TOWN_CONFLUX) {
+                frame = 3;
+                break;
+            }
+            if (town != -1) {
+                frame = town;
+                break;
+            }
+            p->startBonusIndex = NEW_MAP_BONUS_RANDOM;
+        case NEW_MAP_BONUS_RANDOM:
+            frame = 10;
+            break;
+        }
+        if (bonus == NEW_MAP_BONUS_RANDOM)
+            gpTinyFont->DrawBoundedString(gpGeneralText->GetText(523),
+                gpWindowManager->screenBitmap, 316, rowY + 162, 71, 16,
+                4, 5, -1);
+        else
+            gpTinyFont->DrawBoundedString(gUnnamed6a5e14[bonus],
+                gpWindowManager->screenBitmap, 316, rowY + 162, 71, 16,
+                4, 5, -1);
+        bonusIcons->Draw(0, frame, 0, 0, bonusIcons->Width,
+            bonusIcons->Height, gpWindowManager->screenBitmap, 328,
+            rowY + 130, 0, 1);
+        unsigned char townChosen = 1;
+        if (town == -1)
+            townChosen = 0;
+        if (GetThisPlayerGamePos() == playerPos
+                || ((bVideoPaused == 0
+                        || (pDPlay->IsHost() && p->dpid == 0))
+                    && (CanChooseTown(playerPos) || townChosen != 0
+                        || gUnnamed6989f0 == WINDOW_MODE_6989F0_3))) {
+            bonusLeft->enable(1);
+            bonusRight->enable(1);
+            bonusLeft->send_message(widget::WIDGET_SET_STATUS, 6);
+            bonusRight->send_message(widget::WIDGET_SET_STATUS, 6);
+            bonusLeft->Draw();
+            bonusRight->Draw();
+        } else {
+            bonusLeft->enable(0);
+            bonusRight->enable(0);
+            bonusLeft->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            bonusRight->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+        }
+    }
+    widget* nameText = GetWidget(playerPos + 345);
+    nameText->send_message(widget::WIDGET_SET_STATUS, 6);
+    nameText->Draw();
+    if (bVideoPaused == 0
+            && gUnnamed6989f0 != WINDOW_MODE_6989F0_3)
+        GetWidget(playerPos + 353)->Draw();
+    if (update)
+        gpWindowManager->UpdateScreen(13, rowY + 127, 382, 54);
+}
 
 // Version mismatch: tear the session down and show the offender's
 // message formatted with both version strings.
