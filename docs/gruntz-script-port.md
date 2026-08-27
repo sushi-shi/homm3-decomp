@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the complete multiplayer host dispatcher is byte-exact.**
+  Retail `TMultiPlayerWindow::OnHost` at `0x50fda0` dispatches modem hosting,
+  delegates the serial path to `OnDirectHost`, and opens the generic
+  session-name/password dialog for every other protocol. The decisive source
+  boundary is the retained `OnModemHost` helper: VC6 inlines it one level into
+  `OnHost` but leaves its nested member `InitRemote` call out of line, exactly
+  matching Complete's emission. Dreamcast CodeView supplies both member
+  signatures, the `CMPInputDlg sessDlg` local and the dialog/callee xref set;
+  retail fixes the three dialog-text cells, empty-password null conversion,
+  21-block CFG and all seven destructor-bearing returns. The resulting
+  695-byte VC6 body is exact. The synchronized report reaches **2516/3082
+  functions exact**, **92.93% fuzzy**, and **60.66% executable coverage**.
+
 - **2026-08-27 — the direct-serial multiplayer host path is byte-exact.**
   Retail `TMultiPlayerWindow::OnDirectHost` at `0x50fc50` expands the complete
   `MP_SERIAL` initialization, arms the two host-state dwords, balances the
