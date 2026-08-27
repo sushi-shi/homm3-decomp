@@ -8328,7 +8328,57 @@ int advManager::DoNetCombat(CNetMsg* pNetMsg)
     return 1;
 }
 
-// E:\gamedcs\events.cpp:6283.  Located, not reconstructed.
+// E:\gamedcs\events.cpp:6283.  Located, not reconstructed - 5,425 EH-framed
+// bytes DOMINATED by the same inline hero/town-copy walls that cap
+// Send/ReceiveHeroTownData at 31-53% (see their notes below): a
+// reconstruction inherits that ceiling, so this row is deferred until
+// town.h's leading-pad-array surgery lands and lets the synthesized
+// memberwise assign inline to retail's shape.
+//
+// STRUCTURE FULLY DECODED 2026-08-27 (dc 0x9b970), for the lane that takes
+// it after the copy wall falls.  DC locals: iLeftPlayer, loser,
+// winning_player, iSavePlayer, bSaveShowIt, turnDurationPause, iWinner,
+// iFromWho, trightTown/tleftHero/temp_right_player/trightHero/
+// tleftArmyGroup/trightArmyGroup (the ReceiveHeroTownData out-params),
+// sText, target, msg, two dlg locals.  Body in order:
+//   1. CTurnDuration turnDurationPause(&gUnnamed29d630); .Pause().  If
+//      gbInCombatReplay (0x291209): mark BOTH combat-control seats busy
+//      (gpGame+0x20bb1 / +0x20bb2 indexed by 0x29120c*0x48).
+//   2. iLeftPlayer = rightHero ? rightHero->owner-ish... no: ebx =
+//      leftHero ? leftHero->x22(owner byte) : -1.  bLeftHuman =
+//      iRightPlayer>=0 && IsHuman(iRightPlayer); bRightHuman =
+//      ebx>=0 && IsHuman(ebx).  iSeed = (iSeed==-1) ? Random(1,1000).
+//   3. DemobilizeCurrHero(0,1); Reseed(0,0).
+//   4. FAST PATH: if !bLeftHuman && !bRightHuman && !(replay && replaySub):
+//      compute the cell via worldMap 65*9*2 chain, call
+//      AI_quick_combat(leftHero, rightHero, rightArmyGroup, rightTown,
+//      cell); result -> winner; CheckForHeroDefeatWin(winner, loser) ->
+//      game_2450_sub18_f2ce0 (CheckEndGame); MobilizeCurrHero(0,0,1);
+//      turnDurationPause.Resume(); clear the two busy seats; return winner.
+//   5. INTERACTIVE: SetPointer(0,2)/ShowPointer(1).  iSavePlayer =
+//      gNetLocalGamePos, bSaveShowIt = gbShowIt(0x2989c0).
+//   6. REMOTE arm (iRightPlayer>=0 && IsHuman && !IsLocalHuman):
+//      GetLocalPlayerGamePos->iCombatControlNetPos, SendHeroTownData(...),
+//      if !IsHuman(iLeftPlayer): CWaitForRemoteBattleDlg dlg; dlg.Wait();
+//      if the received byte is set: ReceiveHeroTownData(&dlg's msg, ...)
+//      then the big inline hero copies (+0x3da string, +0x3ea/+0x430
+//      spell tables, +0x476 stats) and operator delete of each t* - THE
+//      WALL.  ~CNetMsgHandlerPause / game_ad470_sub03_ad130 / ~CAnimatedDlg.
+//   7. if !IsLocalHuman(iLeftPlayer): TurnOffAIMusic; GetPlayerName +
+//      sprintf(sText) + WaitForPlayer(sText, iLeftPlayer).
+//   8. SetupCombat(point, leftHero, leftArmyGroup, iRightPlayer, rightTown,
+//      rightHero, rightArmyGroup, iSeed, bFinishHeroes, alternate_layout,
+//      showIt); split_armies(leftHero,...) x2; gpExecutive->CallManager
+//      (gpCombatManager) - runs the battle; SetPointer/ShowPointer.
+//   9. winner = gpCombatManager result; CheckLevel both heroes; if remote
+//      TransmitRemoteData + CLevelPickWaitDlg::WaitForLevels(iFromWho).
+//  10. NewfullMapFn_00505D20 x2 + 00505D60 redraw; CheckForHeroDefeatWin
+//      x3 with CheckEndGame; loser-side sound (Random/sprintf/
+//      LoadPlaySample "COMBT*.wav"); MobilizeCurrHero; Resume; clear busy
+//      seats; return winner.
+// cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
+// level-pick wait.  All callees are already declared (cmbtmgr.h,
+// remotedlg.h, exec.h, game.h).
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
 VA(0x004ad470, 0x1531)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
 int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
