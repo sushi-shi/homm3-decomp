@@ -462,11 +462,12 @@ long get_school_value(const hero* our_hero, TSecondarySkill skill)
     type_spellvalue value(our_hero);
     long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
 
-    int old_level = our_hero->skillLevel[skill];
+    signed char level = our_hero->skillLevel[skill];
+    int old_level = level;
     if (old_level == 0)
         const_cast<hero*>(our_hero)->skillLevel[skill] = 3;
     else
-        const_cast<hero*>(our_hero)->skillLevel[skill] = old_level + 1;
+        const_cast<hero*>(our_hero)->skillLevel[skill] = level + 1;
 
     long school_value =
         value.get_best_spell_value(SPELL_VALUE_CLASS_MASK) - base_value;
@@ -1401,8 +1402,12 @@ void AI_set_hero_bonuses(hero* our_hero)
 {
     type_spellvalue value(our_hero);
 
+    // value_of_experience expanded over the hero's own army; the direct
+    // member store is what keeps retail's fdiv result out of a temp.
+    int increment = hero::GetExperienceIncrement(our_hero->level);
     our_hero->turnExperienceToRVRatio =
-        value_of_experience(our_hero, &our_hero->army);
+        (static_cast<float>(our_hero->army.get_AI_value()) + gHeroGoldCost)
+        / static_cast<float>(increment * 40);
 
     long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
     our_hero->value_of_power =
