@@ -14,6 +14,7 @@
 #include "cursor.h"
 #include "events.h"
 #include "exec.h"
+#include "hillfortwindow.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -23,8 +24,11 @@
 #include "remote.h"
 #include "remotedlg.h"
 #include "resourcemanager.h"
+#include "sacrifice_window.h"
 #include "soundmgr.h"
+#include "tradpost.h"
 #include "townmgr.h"
+#include "university_window.h"
 #include "winmgr.h"
 #include "textresource.h"
 
@@ -833,7 +837,7 @@ void advManager::do_event_whirlpool(hero* current_hero, NewmapCell* cell, unsign
 // Promoting the DC_ONLY row onto this address is ordinary locate work;
 // it is left for a lane that models the window layout.
 // RETAIL_LOCATED(0x004aaa40, 0x5C)  // body: 2-vector dtor + ~CAdvPopup, dc 0x9ce08
-void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, bool human_player)
 {
     // @stub
 }
@@ -5903,26 +5907,792 @@ void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell,
     gpAdvManager->TeleportTo(current_hero, point, "telptout.wav", 0, 1, 0);
 }
 
-// E:\gamedcs\events.cpp:4302.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
-void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+// The DC's `NewmapCell : public ExtraInfoUnion` upcast, spelled the way
+// game.cpp's randomizers already spell it - retail's NewmapCell cannot
+// derive from a union, so the handlers whose parameter is the union view
+// take the cell's own +0x00 dword through this no-op bridge.
+static inline ExtraInfoUnion* cell_extra(NewmapCell* cell)
 {
-    // @stub
+    return static_cast<ExtraInfoUnion*>(static_cast<void*>(&cell->extraInfo));
 }
-#endif  // @carcass
 
-// E:\gamedcs\events.cpp:5140.  Located, not reconstructed.  The carcass note
-// above 0x4aaa40 identifies it: a 2-vector destructor (this+0xdc/+0xec freed
-// in reverse decl order) tail-calling ~CAdvPopup (0x41b120) - the only
-// events.obj CAdvPopup child carrying exactly two std::vector members.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x004aaa40, 0x5C)  // anchor-callee ~CAdvPopup + 2-vector teardown, ret 0, dc 0x9ce08
-void type_university_window::~type_university_window()
+// E:\gamedcs\events.cpp:4302.  The adventure map's object dispatcher: a
+// 94-arm jump-table switch over cell->type, biased by 2 and indexed
+// through a 214-entry byte table.  Fifty-six arms are a single call to a
+// handler this file already carries; the rest are the handlers the retail
+// branch folded into the dispatcher itself (their DC rows are the DC_ONLY
+// stubs in the carcass above).  Case order IS layout order - the 0xd4/0xd5/
+// 0xd7 retail additions sit between DRAGON_CITY and EYE_OF_MAGI, and the
+// whirlpool between the two monolith arms - and the five EH states run
+// 0..4 in exactly that order: sacrifice window, hill fort window, thieves
+// guild new, university window, war factory new.
+// [2026-08-27] Residual (99.9911%): three one-byte SIB base/index swaps, all
+// inside SetInfoFlag expansions - the sacrifice arm's loop read (ours
+// [esi+eax], retail [eax+esi]) and the university arm's first/loop pair
+// swapped in opposite directions. why-reg --model reports bindings agree at
+// every first definition (the values already live in the same registers);
+// this is the documented encoder tie-break class (B18), not source-local.
+// Tried and rejected: named flag locals, comparison operand order, g-pointer
+// spellings (each fixed a DIFFERENT byte family and is kept above).
+VA(0x004a84f0, 0x2542)  // anchor-callee cell->type jump table + ret 0x10=p5 (note above), dc 0x9824c
+void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, bool human_player)
 {
-    // @stub
+    int eventType = cell->type;
+    MobilizeCurrHero(1, 0, 0);
+
+    switch (eventType) {
+    case ALTAR_OF_SACRIFICE:
+        if (human_player) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpMouseManager->ShowPointer(1);
+            {
+                type_sacrifice_window sacrificeWindow(
+                    current_hero, gpGame->GetLocalPlayerGamePos());
+                sacrificeWindow.CenterWindow(-1, -1);
+                sacrificeWindow.DoModal(0);
+                Reseed(0, 0);
+            }
+            gpGame->SetInfoFlag(const_sacrifice_info, gNetLocalGamePos);
+        }
+        break;
+    case ANCHOR_POINT:
+        DoEventAnchor(current_hero, human_player);
+        break;
+    case ARENA:
+        DoEventArena(current_hero, cell, human_player);
+        break;
+    case ARTIFACT:
+        DoEventArtifact(current_hero, cell, point, human_player);
+        break;
+    case BLACK_BOX:
+        DoEventBlackBox(current_hero, cell, point, human_player);
+        break;
+    case BLACK_MARKET:
+        if (!human_player)
+            AI_visit_black_market(current_hero,
+                                  &gpGame->field_1f680[cell->extraInfo]);
+        else
+            DoBlackMarket(current_hero,
+                          static_cast<char*>(static_cast<void*>(
+                              &gpGame->field_1f680[cell->extraInfo])));
+        break;
+    case BOAT:
+        DoEventBoat(current_hero, cell);
+        break;
+    case BORDER_GUARD: {
+        unsigned char visitedFlags =
+            gpGame->borderTentVisitFlags[cell->objectIndex];
+        if (visitedFlags & gUnnamed69ccc4) {
+            if (human_player) {
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BORDER_GUARD_PROMPT),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                    break;
+            }
+            EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+        } else if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+    case BORDER_TENT:
+        if (gpGame->borderTentVisitFlags[cell->objectIndex]
+            & gUnnamed69ccc4) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BORDER_TENT_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BORDER_TENT),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            gpGame->borderTentVisitFlags[cell->objectIndex]
+                |= gUnnamed69ccc4;
+        }
+        break;
+    case BUOY:
+        if (current_hero->flags & 4) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BUOY_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            current_hero->flags |= 4;
+            current_hero->field_11a += 1;
+            game* g = gpGame;
+            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
+#pragma inline_depth(0)
+                int team = g->GetTeam(gNetLocalGamePos);
+#pragma inline_depth()
+                for (int i = 0; i < 8; i++) {
+                    if (g->mapHeader.teamInfo[i] == team)
+                        g->globalInfoFlags[BuoyInfo] |= 1 << i;
+                }
+            }
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BUOY),
+                             1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    case CAMPFIRE:
+        DoEventCampfire(current_hero, cell, point, human_player);
+        break;
+    case CARTOGRAPHER:
+        if (human_player) {
+            if (gpGame->cartographerFlags[cell->objectIndex]
+                & gUnnamed69ccc4) {
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+            if (gpCurrentPlayer->resources[GOLD] < 1000) {
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_NO_GOLD),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+            switch (cell->objectIndex) {
+            case 0:
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_WATER),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            case 1:
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_LAND),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            case 2:
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CARTOGRAPHER_UNDERGROUND),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                break;
+            gpCurrentPlayer->resources[GOLD] += -1000;
+            gpGame->MakeTerrainVisible(
+                gNetLocalGamePos,
+                gpGame->cartographerMask[cell->objectIndex]);
+            gpGame->cartographerFlags[cell->objectIndex]
+                |= gUnnamed69ccc4;
+            CompleteDraw(false);
+            UpdateScreen(0, 0);
+        }
+        break;
+    case CLOVER_FIELD:
+        if (current_hero->flags & 8) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CLOVER_FIELD_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            current_hero->flags |= 8;
+            game* g = gpGame;
+            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
+#pragma inline_depth(0)
+                int team = g->GetTeam(gNetLocalGamePos);
+#pragma inline_depth()
+                for (int i = 0; i < 8; i++) {
+                    if (g->mapHeader.teamInfo[i] == team)
+                        g->globalInfoFlags[CloverFieldInfo] |= 1 << i;
+                }
+            }
+            current_hero->field_11b += 2;
+            current_hero->movePoints = 0;
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_CLOVER_FIELD),
+                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    case COVER_OF_DARKNESS:
+        DoEventCoverOfDarkness(cell, point, human_player);
+        break;
+    case CREATURE_BANK:
+        DoEventCreatureBank(current_hero, cell, point, human_player);
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        DoEventCreatureGenerator(current_hero, cell, point, human_player);
+        break;
+    case DEAD_GUY:
+        DoEventSkeleton(current_hero, cell_extra(cell), human_player);
+        break;
+    case DEFENSE_TOWER:
+#pragma inline_depth(0)
+        DoEventDefenseTower(current_hero, cell, human_player);
+#pragma inline_depth()
+        break;
+    case DERELICT_SHIP:
+        do_event_undead_lair(current_hero, cell,
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_DERELICT_PROMPT),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_DERELICT_EMPTY),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_DERELICT_TREASURE),
+                             0x800, point);
+        break;
+    case DRAGON_CITY:
+        do_event_dragon_city(current_hero, cell, point, human_player);
+        break;
+    case BORDER_GATE:
+        if (!(gpGame->borderTentVisitFlags[cell->objectIndex]
+              & gUnnamed69ccc4)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_BORDER_GUARD_DENIED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    case FREELANCERS_GUILD:
+        if (human_player)
+            DoFreelancersGuild(current_hero);
+        break;
+    case QUEST_GUARD:
+        fullMap->QuestGuardList[cell->extraInfo].DoEvent(
+            current_hero, human_player, cell, point);
+        break;
+    case EYE_OF_MAGI:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_EYE_OF_MAGI),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case FAERIE_RING:
+        if (current_hero->flags & 0x2000) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_FAERIE_RING_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_FAERIE_RING),
+                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+            current_hero->flags |= 0x2000;
+            gpGame->SetInfoFlag(FaerieRingInfo, gNetLocalGamePos);
+            current_hero->field_11b += 1;
+        }
+        break;
+    case FLOTSAM:
+        DoEventFlotsam(current_hero, cell, point, human_player);
+        break;
+    case FOUNTAIN_OF_FORTUNE:
+        DoEventFountain(current_hero, cell_extra(cell), human_player);
+        break;
+    case FOUNTAIN_OF_YOUTH:
+        DoEventFountainOfYouth(current_hero, cell, human_player);
+        break;
+    case GARDEN_OF_REVELATION:
+#pragma inline_depth(0)
+        DoEventGarden(current_hero, cell, human_player);
+#pragma inline_depth()
+        break;
+    case GARRISON: {
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpMouseManager->ShowPointer(1);
+        garrison* thisGarrison = &gpGame->garrisons[cell->extraInfo];
+        if (!gpGame->OnSameTeam(thisGarrison->playerOwner,
+                                gNetLocalGamePos)) {
+            if (thisGarrison->garrisonArmy.HasCreatures()) {
+                if (DoCombat(point, current_hero, &current_hero->army,
+                             thisGarrison->playerOwner, 0, 0,
+                             &thisGarrison->garrisonArmy, -1, 1, 0))
+                    break;
+            }
+            gpGame->ClaimGarrison(cell->extraInfo, gNetLocalGamePos);
+            current_hero->CheckLevel();
+        }
+        if (!human_player)
+            AI_enter_garrison(current_hero, thisGarrison);
+        else
+            DoEventGarrison(current_hero, thisGarrison);
+        break;
+    }
+    case HERO:
+        do_event_hero(current_hero, cell, point, human_player);
+        break;
+    case HILL_FORT:
+        if (!human_player) {
+            AI_visit_hill_fort(current_hero);
+        } else {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpMouseManager->ShowPointer(1);
+            THillFortWindow hillFortWindow;
+            hillFortWindow.CenterWindow(-1, -1);
+            hillFortWindow.DoModal();
+        }
+        gpGame->SetInfoFlag(HillFortInfo, gNetLocalGamePos);
+        break;
+    case HUT_OF_MAGI: {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_HUT_OF_MAGI),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gNetworkActive69954c && pDPlay
+            && gNetLocalGamePos == gpGame->GetLocalPlayerGamePos()) {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (handler)
+                handler->SetInPopup(0);
+        }
+        type_point savedOrigin = radarOrigin;
+        DemobilizeCurrHero(0, 1);
+        for (int z = 0; z < gpGame->worldMap.GetNumLevels(); z++) {
+            for (int x = 0; x < gMapWidth; x++) {
+                for (int y = 0; y < gMapHeight; y++) {
+                    NewmapCell* eyeCell =
+                        &gpGame->worldMap.cellData
+                             [(z * gpGame->worldMap.Size + y)
+                                  * gpGame->worldMap.Size
+                              + x];
+                    if (eyeCell->type == EYE_OF_MAGI
+                        && eyeCell->is_trigger) {
+                        gpGame->SetVisibility(x, y, z, gNetLocalGamePos,
+                                              10, 0);
+                        if (human_player) {
+                            radarOrigin.x = x - 9;
+                            radarOrigin.y = y - 8;
+                            radarOrigin.z = z;
+                            CompleteDraw(false);
+                            UpdateRadar(1, 1, 0, 0, 0);
+                            UpdateScreen(0, 0);
+                            GameTime::DelayTil(GameTime::Get() + 2000);
+                        }
+                    }
+                }
+            }
+        }
+        radarOrigin = savedOrigin;
+        if (human_player) {
+            CompleteDraw(false);
+            UpdateScreen(0, 0);
+        }
+        break;
+    }
+    case IDOL_OF_FORTUNE:
+        DoEventIdol(current_hero, cell, human_player);
+        break;
+    case LEAN_TO:
+        DoEventLeanTo(current_hero, cell_extra(cell), human_player);
+        break;
+    case LIBRARY:
+        DoEventLibrary(current_hero, cell, human_player);
+        break;
+    case LIGHTHOUSE:
+        if (!gpGame->OnSameTeam(gpGame->mines[cell->extraInfo].playerOwner,
+                                gNetLocalGamePos)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_LIGHTHOUSE),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            gpGame->ClaimMine(cell->extraInfo, gNetLocalGamePos,
+                              const_normal_action);
+        }
+        break;
+    case LITH_ONEWAY_ENTRANCE:
+        do_event_lith_one_way(current_hero, cell, human_player);
+        break;
+    case LITH_ONEWAY_EXIT:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_LITH_EXIT),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case LITH_TWOWAY:
+        do_event_lith_two_way(current_hero, cell, human_player);
+        break;
+    case WHIRLPOOL: {
+        DoWhirlpool(current_hero);
+        type_point destination;
+        if (gpGame->get_random_whirlpool(cell->extraInfo, &destination)) {
+            StopCursor(1);
+            gpAdvManager->TeleportTo(current_hero, destination, 0, 0, 1, 0);
+        }
+        break;
+    }
+    case MAGIC_SCHOOL:
+        DoEventMagicSchool(current_hero, cell, point, human_player);
+        break;
+    case MAGIC_SPRING:
+        DoEventMagicSpring(current_hero, cell_extra(cell), human_player);
+        break;
+    case MAGIC_WELL:
+        DoEventMagicWell(current_hero, cell_extra(cell), human_player);
+        break;
+    case MERC_CAMP:
+#pragma inline_depth(0)
+        DoEventMercenaryCamp(current_hero, cell, human_player);
+#pragma inline_depth()
+        break;
+    case MERMAID:
+        if (current_hero->flags & 0x8000) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MERMAID_VISITED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MERMAID),
+                             1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+            current_hero->flags |= 0x8000;
+            gpGame->SetInfoFlag(MermaidInfo, gNetLocalGamePos);
+            current_hero->field_11b += 1;
+        }
+        break;
+    case MINE:
+        DoEventMine(cell, current_hero, point, human_player);
+        break;
+    case MONSTER:
+        movingObjectIndex = cell->object_type_index;
+        movingObjectSequence = cell->objectIndex;
+        movingObjectFrame = current_hero->x < point.x;
+        CompleteDraw(false);
+        UpdateScreen(0, 0);
+        DoWanderingMonsterResult(cell, current_hero, point, human_player);
+        movingObjectIndex = -1;
+        movingObjectSequence = -1;
+        break;
+    case MYSTICAL_GARDEN:
+        DoEventMysticalGarden(current_hero, cell_extra(cell), human_player);
+        break;
+    case OASIS:
+        DoEventOasis(current_hero, cell, human_player);
+        break;
+    case OBELISK: {
+        signed char* obeliskFlags =
+            &gpGame->obeliskFlags[cell->extraInfo];
+        if (!(*obeliskFlags & gUnnamed69ccc4)) {
+            unsigned char teamBits = 0;
+            if (gNetLocalGamePos >= 0 && gNetLocalGamePos < 8) {
+                int team = gpGame->mapHeader.teamInfo[gNetLocalGamePos];
+                for (int i = 0; i < 8; i++) {
+                    if (gpGame->mapHeader.teamInfo[i] == team)
+                        teamBits |= 1 << i;
+                }
+            }
+            *obeliskFlags |= teamBits;
+            if (human_player) {
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_OBELISK),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                ViewPuzzle();
+            } else {
+                ComputeUALoc(current_hero->owner);
+            }
+        } else if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_OBELISK_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+    case OBSERVATORY:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_OBSERVATORY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gNetworkActive69954c) {
+            CSetVisibilityMsg message(point, gNetLocalGamePos, 20);
+            TransmitRemoteData(&message, 0x7f, 0, 1);
+        }
+        gpGame->SetVisibility(point.x, point.y, point.z,
+                              gNetLocalGamePos, 20, 0);
+        if (human_player) {
+            CompleteDraw(false);
+            UpdateScreen(0, 0);
+        }
+        break;
+    case PILLAR_OF_FIRE:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_PILLAR_OF_FIRE),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gNetworkActive69954c) {
+            CSetVisibilityMsg message(point, gNetLocalGamePos, 20);
+            TransmitRemoteData(&message, 0x7f, 0, 1);
+        }
+        gpGame->SetVisibility(point.x, point.y, point.z,
+                              gNetLocalGamePos, 20, 0);
+        if (human_player) {
+            CompleteDraw(false);
+            UpdateScreen(0, 0);
+        }
+        break;
+    case OCEAN_BOTTLE: {
+        if (!human_player)
+            break;
+        int signIndex = cell->extraInfo;
+        if (signIndex == -1)
+            break;
+        if (gpGame->signs[signIndex].field_00) {
+            NormalDialog(gpGame->signs[signIndex].text.c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            NormalDialog(gRandomSignText[point.x % 25],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+        break;
+    }
+    case POWER_SCHOOL:
+#pragma inline_depth(0)
+        DoEventPowerSchool(current_hero, cell, human_player);
+#pragma inline_depth()
+        break;
+    case PRISON:
+        DoEventPrison(current_hero, cell, point, human_player);
+        break;
+    case PYRAMID:
+        do_event_pyramid(current_hero, cell, point, human_player);
+        break;
+    case RALLY_FLAG:
+        DoEventRallyFlag(current_hero, cell, human_player);
+        break;
+    case REFUGEE_CAMP:
+        DoEventRefugeeCamp(current_hero, cell, human_player);
+        break;
+    case RESOURCE:
+        DoEventResource(cell, current_hero, point, human_player);
+        break;
+    case SANCTUARY:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SANCTUARY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case SCHOLAR:
+        DoEventScholar(current_hero, cell, point, human_player);
+        break;
+    case SEA_CHEST:
+        DoEventSeaChest(current_hero, cell, point, human_player);
+        break;
+    case SEER:
+        fullMap->SeerHutList[cell->extraInfo].DoSeerEvent(current_hero,
+                                                          human_player);
+        break;
+    case SEPULCHER:
+        do_event_undead_lair(current_hero, cell,
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SEPULCHER_PROMPT),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SEPULCHER_EMPTY),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SEPULCHER_TREASURE),
+                             0x400, point);
+        break;
+    case SHIPWRECK:
+        do_event_undead_lair(current_hero, cell,
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SHIPWRECK_PROMPT),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SHIPWRECK_EMPTY),
+                             gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SHIPWRECK_TREASURE),
+                             0x200, point);
+        break;
+    case SHIPWRECK_SURVIVOR:
+        DoEventSurvivor(current_hero, cell, point, human_player);
+        break;
+    case SHIPYARD:
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpMouseManager->ShowPointer(1);
+        DoEventShipyard(cell, point, human_player);
+        break;
+    case SHRINE1:
+        DoEventShrine(current_hero, cell,
+                      gpAdventureEventText->GetText(ADV_EVENT_TEXT_SHRINE1),
+                      Shrine1Info, human_player);
+        break;
+    case SHRINE2:
+        DoEventShrine(current_hero, cell,
+                      gpAdventureEventText->GetText(ADV_EVENT_TEXT_SHRINE2),
+                      Shrine2Info, human_player);
+        break;
+    case SHRINE3:
+        DoEventShrine(current_hero, cell,
+                      gpAdventureEventText->GetText(ADV_EVENT_TEXT_SHRINE3),
+                      Shrine3Info, human_player);
+        break;
+    case SIGN: {
+        if (!human_player)
+            break;
+        int signIndex = cell->extraInfo;
+        if (signIndex == -1)
+            break;
+        if (gpGame->signs[signIndex].field_00) {
+            NormalDialog(gpGame->signs[signIndex].text.c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            NormalDialog(gRandomSignText[point.x % 25],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        break;
+    }
+    case SIREN:
+        DoEventSiren(current_hero, cell, human_player);
+        break;
+    case SPELL_SCROLL:
+        DoEventSpellScroll(current_hero, cell, point, human_player);
+        break;
+    case STABLES:
+        DoEventStables(current_hero, cell, human_player);
+        break;
+    case TAVERN: {
+        if (!human_player)
+            break;
+        type_point heroPos(current_hero->x, current_hero->y,
+                           current_hero->z);
+        if (heroPos.x != point.x || heroPos.y != point.y
+            || heroPos.z != point.z) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpMouseManager->ShowPointer(1);
+            DoMapTavern(point);
+            advWindow->UpdateHeroLocators(-1, 1, 1);
+        }
+        break;
+    }
+    case TEMPLE:
+        DoEventTemple(current_hero, cell, human_player);
+        break;
+    case THIEVES_DEN: {
+        if (!human_player)
+            break;
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpMouseManager->ShowPointer(1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_THIEVES_DEN),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        TThievesGuildWindow* guildWindow =
+            new TThievesGuildWindow(99);
+        if (!guildWindow)
+            MemError();
+        guildWindow->DoModal(0);
+        if (guildWindow)
+            delete guildWindow;
+        RedrawAdvScreen(1, 0);
+        break;
+    }
+    case TOWN:
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpMouseManager->ShowPointer(1);
+        TownEvent(cell, point, human_player);
+        break;
+    case TRADING_POST:
+        if (human_player)
+            DoTradingPost();
+        break;
+    case TRAINING_GROUNDS:
+        DoEventTrainingGrounds(current_hero, cell, human_player);
+        break;
+    case TREASURE_CHEST:
+        DoEventTreasure(current_hero, cell, point, human_player);
+        break;
+    case TREE_OF_KNOWLEDGE:
+        DoEventTreeOfKnowledge(current_hero, cell_extra(cell),
+                               human_player);
+        break;
+    case UNDERGROUND_GATE: {
+        type_point exitPoint = gpGame->get_underground_gate_exit(cell);
+        if (exitPoint.x == 0xff) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            break;
+        }
+        NewmapCell* exitCell = gpGame->worldMap.cell(
+            exitPoint.x, exitPoint.y, exitPoint.z);
+        if (exitCell->type == HERO) {
+            if (gNetworkActive69954c) {
+                CSetVisibilityMsg message(exitPoint, gNetLocalGamePos, 1);
+                TransmitRemoteData(&message, 0x7f, 0, 1);
+            }
+            gpGame->SetVisibility(exitPoint.x, exitPoint.y, exitPoint.z,
+                                  gNetLocalGamePos, 1, 0);
+            do_event_hero(current_hero, exitCell, exitPoint, human_player);
+            if (current_hero->owner < 0)
+                break;
+        }
+        if (exitCell->type == UNDERGROUND_GATE)
+            gpAdvManager->TeleportTo(current_hero, exitPoint, 0, 0, 1, 0);
+        break;
+    }
+    case UNIVERSITY:
+        if (human_player && !gbUnk691209) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+            gpMouseManager->ShowPointer(1);
+            {
+                type_university_window universityWindow(
+                    current_hero, cell_extra(cell)->get_university(), 0);
+                universityWindow.CenterWindow(-1, -1);
+                universityWindow.DoModal(0);
+            }
+            gpGame->SetInfoFlag(UniversityInfo, gNetLocalGamePos);
+        } else {
+            AI_visit_university(current_hero,
+                                cell_extra(cell)->get_university());
+        }
+        break;
+    case WAGON:
+        DoEventWagon(current_hero, cell_extra(cell), human_player);
+        break;
+    case WAR_MACHINE_FACTORY:
+        if (!human_player) {
+            AI_visit_war_factory(current_hero);
+        } else {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAR_FACTORY_PROMPT),
+                         2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                break;
+            short quantity = 4000;
+            recruitUnit* unitRecruiter = new recruitUnit(
+                current_hero, CREATURE_BALLISTA, &quantity,
+                CREATURE_FIRST_AID_TENT, &quantity,
+                CREATURE_AMMO_CART, &quantity, CREATURE_NONE, 0);
+            if (!unitRecruiter)
+                MemError();
+            gpExecutive->DoDialog(unitRecruiter);
+            delete unitRecruiter;
+        }
+        break;
+    case WAR_SCHOOL:
+        DoEventWarSchool(current_hero, cell_extra(cell), human_player);
+        break;
+    case WARRIOR_TOMB:
+        do_event_warrior_tomb(current_hero, cell_extra(cell), human_player);
+        break;
+    case WATER_WHEEL:
+        do_event_water_wheel(current_hero, cell_extra(cell), human_player);
+        break;
+    case WATERING_HOLE:
+        do_event_watering_hole(current_hero, cell, human_player);
+        break;
+    case WINDMILL:
+        do_event_windmill(current_hero, cell_extra(cell), human_player);
+        break;
+    case WITCH_HUT:
+        do_event_witch_hut(current_hero, cell_extra(cell), human_player);
+        break;
+    }
 }
-#endif  // @carcass
+
+// E:\gamedcs\events.cpp:5140.  The carcass note above 0x4aaa40 identifies
+// it: a 2-vector destructor (this+0xdc/+0xec freed in reverse decl order)
+// calling ~CAdvPopup (0x41b120) - the only events.obj CAdvPopup child
+// carrying exactly two std::vector members.  The dtor is IMPLICIT: retail's
+// body has NO derived-vtable store, and an explicit empty body inserts one
+// (combatwindow.cpp CCombatChatEdit precedent).  The COMDAT is emitted here
+// because DispatchEvent's university arm destroys a stack window.
+VA_COMPGEN(0x004aaa40, 0x5C, IMPLICIT_DTOR, type_university_window)  // dc 0x9ce08
 
 // E:\gamedcs\events.cpp:5146.  The adventure map's post-move event
 // entry point: reseed the object animations, play the object's sound,

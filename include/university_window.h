@@ -61,6 +61,12 @@ public:
     // gates one extra 0x48-byte widget on it.
     type_university_window(hero* newHero, const type_university* university,
                            unsigned char bTownUniversity);
+    // Retail 0x5f0a20 (dc 0x18f508); DispatchEvent's university arm and
+    // townManager::DoUniversity both run the window through it. The DC
+    // decorates it void; heroWindow's slot-6 virtual is int, so the
+    // override keeps the base's return type (the sacrifice window's own
+    // DoModal records the same adjustment).
+    virtual int DoModal(unsigned char bFade);  // slot 6
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int ExitDialog(message* msg);  // slot 14

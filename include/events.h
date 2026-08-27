@@ -7,6 +7,16 @@
 
 #include <va.h>
 
+class garrison;
+class hero;
+
+// townmgr.cpp's 0x5d1130. advManager::DispatchEvent's garrison arm is the
+// one out-of-TU caller; the declarator lives HERE rather than in townmgr.h
+// because townmgr.h rides in recruit.cpp's closure and one declarator there
+// costs recruitUnit::Update (the known include-set-sensitive row, and
+// recruit.cpp's own +0x1b0 note records the same trade).
+void DoEventGarrison(hero* inHero, garrison* thisGarrison);
+
 // The six ordinary artifact pickup conditions plus the defended sentinel.
 // Dreamcast publishes this enum as ArtifactPrices; retail's
 // advManager::DoEventArtifact sign-extends the low four bits and dispatches
@@ -66,6 +76,58 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_BLACK_BOX_PROMPT = 14,
     ADV_EVENT_TEXT_BLACK_BOX_NOTHING = 15,
     ADV_EVENT_TEXT_BLACK_BOX_GUARDED = 16,
+    // The rows DispatchEvent (0x4a84f0) consumes directly - the arms whose
+    // handlers were folded into the dispatcher itself. Every index is
+    // byte-proven by a [Text._First + 4*i] load inside that body, and each
+    // lands where the alphabet puts its object, corroborating the run:
+    // border guard/tent 17..20, buoy 21/22, cartographer 24..28, clover
+    // field 29/30, derelict ship 41..43, eye of the magi 48, faerie ring
+    // 49/50, hut of the magi 61, lighthouse 69, monolith exit 70, mermaid
+    // 82/83, obelisk 96/97, observatory 98, pillar of fire 99, sanctuary
+    // 114, sepulcher 119..121, shipwreck 122..124, shrines 127..129,
+    // thieves' den 142, blocked subterranean gate 153, war machine
+    // factory 157 (directly before the war school's proven 158).
+    ADV_EVENT_TEXT_BORDER_GUARD_PROMPT = 17,
+    ADV_EVENT_TEXT_BORDER_GUARD_DENIED = 18,
+    ADV_EVENT_TEXT_BORDER_TENT = 19,
+    ADV_EVENT_TEXT_BORDER_TENT_VISITED = 20,
+    ADV_EVENT_TEXT_BUOY = 21,
+    ADV_EVENT_TEXT_BUOY_VISITED = 22,
+    ADV_EVENT_TEXT_CARTOGRAPHER_VISITED = 24,
+    ADV_EVENT_TEXT_CARTOGRAPHER_WATER = 25,
+    ADV_EVENT_TEXT_CARTOGRAPHER_LAND = 26,
+    ADV_EVENT_TEXT_CARTOGRAPHER_UNDERGROUND = 27,
+    ADV_EVENT_TEXT_CARTOGRAPHER_NO_GOLD = 28,
+    ADV_EVENT_TEXT_CLOVER_FIELD = 29,
+    ADV_EVENT_TEXT_CLOVER_FIELD_VISITED = 30,
+    ADV_EVENT_TEXT_DERELICT_PROMPT = 41,
+    ADV_EVENT_TEXT_DERELICT_EMPTY = 42,
+    ADV_EVENT_TEXT_DERELICT_TREASURE = 43,
+    ADV_EVENT_TEXT_EYE_OF_MAGI = 48,
+    ADV_EVENT_TEXT_FAERIE_RING = 49,
+    ADV_EVENT_TEXT_FAERIE_RING_VISITED = 50,
+    ADV_EVENT_TEXT_HUT_OF_MAGI = 61,
+    ADV_EVENT_TEXT_LIGHTHOUSE = 69,
+    ADV_EVENT_TEXT_LITH_EXIT = 70,
+    ADV_EVENT_TEXT_MERMAID_VISITED = 82,
+    ADV_EVENT_TEXT_MERMAID = 83,
+    ADV_EVENT_TEXT_OBELISK = 96,
+    ADV_EVENT_TEXT_OBELISK_VISITED = 97,
+    ADV_EVENT_TEXT_OBSERVATORY = 98,
+    ADV_EVENT_TEXT_PILLAR_OF_FIRE = 99,
+    ADV_EVENT_TEXT_SANCTUARY = 114,
+    ADV_EVENT_TEXT_SEPULCHER_PROMPT = 119,
+    ADV_EVENT_TEXT_SEPULCHER_EMPTY = 120,
+    ADV_EVENT_TEXT_SEPULCHER_TREASURE = 121,
+    ADV_EVENT_TEXT_SHIPWRECK_PROMPT = 122,
+    ADV_EVENT_TEXT_SHIPWRECK_EMPTY = 123,
+    ADV_EVENT_TEXT_SHIPWRECK_TREASURE = 124,
+    ADV_EVENT_TEXT_SHRINE1 = 127,
+    ADV_EVENT_TEXT_SHRINE2 = 128,
+    ADV_EVENT_TEXT_SHRINE3 = 129,
+    ADV_EVENT_TEXT_THIEVES_DEN = 142,
+    ADV_EVENT_TEXT_SUBTERRANEAN_BLOCKED = 153,
+    ADV_EVENT_TEXT_WAR_FACTORY_PROMPT = 157,
     // DoEventCampfire (0x4a1120), the object's only row: one line carrying
     // BOTH payouts, the gold and the resource, as its two picture/quantity
     // pairs. 23 sits below the cover of darkness at 31, which is where the
