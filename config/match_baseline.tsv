@@ -1157,7 +1157,7 @@ events	?InitializeArtifactEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e100
 events	?InitializeRandomSignText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e140
 events	?PayForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50
 events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	100.0000	100.0000	100.0000	0xaeee0
-events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	98.8821	98.8821	98.8821	0xaeb50
+events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	100.0000	100.0000	100.0000	0xaeb50
 events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaafd0
 events	?do_event_dragon_city@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2140
 events	?do_event_hero@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2800
