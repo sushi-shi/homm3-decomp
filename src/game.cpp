@@ -1371,11 +1371,11 @@ int game::LoadGarrisonPool(TAbstractFile* infile, int saveVersion)
         garrisons[i].mapZ = static_cast<unsigned char>(count);
 
         if (saveVersion < 28) {
-            garrisons[i].pad_3c = !gbUnk69774c;
+            garrisons[i].removableTroops = !gbUnk69774c;
         } else {
             unsigned char value;
             infile->Read(&value, sizeof(value));
-            garrisons[i].pad_3c = value != 0;
+            garrisons[i].removableTroops = value != 0;
         }
     }
     return 0;
@@ -1410,7 +1410,7 @@ int game::SaveGarrisonPool(TAbstractFile* outfile)
         if (outfile->Write(&count, sizeof(count)) < sizeof(count))
             return -1;
 
-        unsigned char last = garrisons[i].pad_3c;
+        unsigned char last = garrisons[i].removableTroops;
         outfile->Write(&last, sizeof(last));
     }
     return 0;

@@ -89,6 +89,20 @@ public:
     // combatManager::do_combat_ai is a located caller: it writes the
     // side's whole combat value here before asking for a spell value.
     void set_stack_value(long arg) { stack_value = arg; }
+    // DC ai_spellvalue.h:99/119 - the mana pair (dc 0x114bdc/0x114be0
+    // are philai.obj's 4-byte out-of-line copies).  Retail
+    // AI_set_hero_bonuses (0x527760) is the byte-proven consumer: it
+    // reseeds the valuer from hero::mana and reads the initial pool for
+    // the well/spring valuations.
+    long get_mana() const { return mana; }
+    void set_mana(long arg) { mana = arg; }
+    // E:\gamedcs\philai.cpp:1699 (dc 0x10fe64) - the what-if probe:
+    // bump power/duration/mana, re-ask get_best_spell_value, restore,
+    // return the delta against the caller's baseline.  DEFINED in
+    // philai.cpp as the DC build does; retail keeps no out-of-line row
+    // (AI_set_hero_bonuses expands it at all six probe sites).
+    long get_value_of_increase(long base_value, long power_change,
+                               long duration_change, long mana_change);
 
     long get_raw_spell_value(SpellID spell) const;
     long get_best_spell_value(long bits) const;

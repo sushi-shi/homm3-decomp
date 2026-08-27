@@ -1550,7 +1550,13 @@ public:
     char playerOwner;
     char pad_01[3];
     armyGroup garrisonArmy;
-    char pad_3c;
+    // +0x3c, retyped in place (no declarator added, the include-set-free
+    // edit class): AI_enter_garrison (0x524370) gates the troop grab on
+    // this byte being nonzero - the AB/SoD "removable troops" property.
+    // The DC roster instead starts its map triple here (mapX at DC 60);
+    // retail's one byte-proven reader of +0x3c is the boolean gate, so
+    // the flag keeps the slot and the triple stays at +0x3d..+0x3f.
+    unsigned char removableTroops;
     unsigned char mapX;
     unsigned char mapY;
     unsigned char mapZ;
