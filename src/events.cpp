@@ -2745,7 +2745,6 @@ inline void advManager::DoArtifactSkillRequirement(
 // E:\gamedcs\events.cpp:760. The Dreamcast signature and helper roster
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
-VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 // Residual (78.12%): retail expands DoArtifactSkillRequirement in BOTH
 // skill arms and cross-jumps everything after each arm's text load +
 // skill-byte test + human test into ONE shared dialog/GiveArtifact/
@@ -2763,6 +2762,7 @@ VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0
 // homing, reference memory-homes [ebp-0x75]). The next lane should
 // re-try the pair AFTER any inline-structure change here - the merged
 // content is byte-proven, only the merge itself is missing.
+VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
 void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
                                  type_point point, bool human_player)
 {
