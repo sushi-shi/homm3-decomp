@@ -4349,6 +4349,28 @@ long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
     return value;
 }
 
+// Retail-only helper (name provisional - no DC row): the best value this
+// artifact would have on any of the player's heroes, floored at 10.
+// consider_hiring (0x431800) expands it per backpack slot and calls it per
+// worn slot; the by-reference artifact is what makes ECX carry a pointer
+// where AI_get_equip_value takes the 8-byte record by value.
+VA(0x00433aa0, 0x9e)  // anchor-callee (consider_hiring 0x432a25 call + inline twin), retail-only
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id)
+{
+    if (artifact.artifactId == -1)
+        return 0;
+    playerData* player = &gpGame->players[player_id];
+    long best = 10;
+    for (int i = 0; i < player->numHeroes; ++i) {
+        hero* best_hero = gpGame->GetHero(player->heroes[i]);
+        long value = AI_get_equip_value(artifact, best_hero, 0);
+        if (value > best)
+            best = value;
+    }
+    return best;
+}
+
 // E:\gamedcs\ai_player.cpp:5792
 VA(0x00433bb0, 0xad)  // AI_swap_artifacts direct callee + DC size/signature, dc 0x377f0
 long remove_negative_artifacts(hero* our_hero)
