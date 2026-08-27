@@ -189,20 +189,6 @@ void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell, type_poin
     // @stub
 }
 
-// E:\gamedcs\events.cpp:826
-DC_ONLY(0x912bc, 0x4A)
-void show_rewards(std::basic_string<char,std::char_traits<char>,std::allocator<char>* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards, long threshold)
-{
-    // @stub
-}
-
-// E:\gamedcs\events.cpp:838
-DC_ONLY(0x91308, 0x84)
-void add_reward(std::basic_string<char,std::char_traits<char>,std::allocator<char>* text, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* alternate, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards, EGameResource resource, long qualifier)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:852
 // RETAIL_LOCATED(0x0049fa90, 0x106B)  // located @stub (promoted to active VA), dc 0x9138c
 unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
@@ -2764,14 +2750,315 @@ void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
     }
 }
 
-// E:\gamedcs\events.cpp:852.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
-unsigned char advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player, BlackBoxData* BlackBox)
+// The two joiner reports GiveBlackBoxReward's creature tail needs before
+// their own consumers further down declare them: philai.obj's
+// AI_join_decision (0x52bc60) and townmgr.obj's armyGroup-overload join
+// dialog (0x5d11d0 family). Both declarations repeat verbatim at the
+// monsters_* family below.
+void AI_join_decision(hero* current_hero, TCreatureType creature,
+                      int amount);
+void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flag);
+
+// E:\gamedcs\events.cpp:838.  The reward-line collector, Dreamcast's
+// add_reward: push one icon/quantity pair and seed the dialog text from
+// the per-reward alternate when nothing has claimed it yet. A static
+// whose every site /Ob2 expands, so no retail body exists (dc 0x91308,
+// DC_ONLY).
+inline void add_reward(std::string& text, const std::string& alternate,
+                       std::vector<type_dialog_resource>& rewards,
+                       int resource, long qualifier)
 {
-    // @stub
+    type_dialog_resource reward;
+    reward.resource = resource;
+    reward.qualifier = qualifier;
+    rewards.insert(rewards.end(), reward);
+    if (text.length() == 0)
+        text = alternate;
 }
-#endif  // @carcass
+
+void show_rewards(std::string& text,
+                  std::vector<type_dialog_resource>& rewards,
+                  long threshold);
+
+// E:\gamedcs\events.cpp:852.  Pandora's Box's shared payout: walk the
+// record's ten reward classes, collecting up to eight icon lines per
+// extended_dialog page through add_reward/show_rewards, and apply each
+// reward as it is reported. The cell parameter is never read; retail
+// keeps it (`ret 0x18`), so this does too. Returns whether anything at
+// all was paid out.
+// [2026-08-27] Residual (79.66%): per-site expansion depth inside the
+// nine remaining show_rewards expansions. Retail's threshold-8 copies
+// keep vector::size() and clear() as COMDAT calls while its threshold-1
+// flushes inline size and call erase(begin,end); ours inlines size
+// everywhere and splits clear/erase differently, and the 2-arg
+// vector::insert wrapper expands at nine add_reward copies retail keeps
+// as calls. All are depth-2 A9-quotient decisions a statement pin cannot
+// split (N=0 only). Tried and rejected: pinning add_reward's insert
+// (67.0), the same with end() hoisted (69.1), the creature site written
+// longhand (71.2). The five show_rewards site pins above are measured
+// (+12.8) and load-bearing.
+VA(0x0049fa90, 0x106B)  // dc-bracket forced, ret 0x18=p7 + format_string reward text, dc 0x9138c
+bool advManager::GiveBlackBoxReward(const char* text, hero* current_hero, NewmapCell* cell, type_point point, bool human_player, BlackBoxData* BlackBox)
+{
+    unsigned char gave = 0;
+    int exp = 0;
+    std::string message;
+    message = text;
+    std::string alternate;
+    std::vector<type_dialog_resource> rewards;
+    alternate = format_string(gpAdventureEventText->GetText(175),
+                              current_hero->name);
+
+    if (BlackBox->ExperienceBonus > 0) {
+        exp = current_hero->GetExperienceBonusFactor()
+              * BlackBox->ExperienceBonus;
+        if (human_player) {
+            add_reward(message, alternate, rewards, 17, exp);
+#pragma inline_depth(0)
+            show_rewards(message, rewards, 8);
+#pragma inline_depth()
+        }
+        gave = 1;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (BlackBox->PrimarySkillBonus[i] > 0) {
+            if (human_player) {
+                add_reward(message, alternate, rewards, 31 + i,
+                           BlackBox->PrimarySkillBonus[i]);
+#pragma inline_depth(0)
+                show_rewards(message, rewards, 8);
+#pragma inline_depth()
+            }
+            gave = 1;
+            current_hero->stats[i] += BlackBox->PrimarySkillBonus[i];
+        }
+    }
+
+    for (unsigned int j = 0; j < BlackBox->SecondarySkills.size(); j++) {
+        int skill = BlackBox->SecondarySkills[j].type;
+        int level = BlackBox->SecondarySkills[j].level;
+        signed char have = current_hero->skillLevel[skill];
+        if (have == 0 && current_hero->skillCount < 8) {
+            current_hero->GiveSS(skill, level);
+        } else if (have > 0 && have < level) {
+            current_hero->GiveSS(skill, level - have);
+        } else {
+            continue;
+        }
+        if (human_player) {
+            add_reward(message, alternate, rewards, 20,
+                       skill * 3 + level + 2);
+#pragma inline_depth(0)
+            show_rewards(message, rewards, 8);
+#pragma inline_depth()
+        }
+        gave = 1;
+    }
+
+    int mana = BlackBox->ManaBonus;
+    if (mana != 0) {
+        if (current_hero->mana + mana > 999) {
+            mana = 999 - current_hero->mana;
+        } else if (current_hero->mana + mana < 0) {
+            mana = -current_hero->mana;
+            alternate = format_string(gpAdventureEventText->GetText(176),
+                                      current_hero->name);
+        } else {
+            alternate = format_string(gpAdventureEventText->GetText(177),
+                                      current_hero->name);
+        }
+        if (human_player && mana != 0) {
+            add_reward(message, alternate, rewards, 35, mana);
+#pragma inline_depth(0)
+            show_rewards(message, rewards, 8);
+#pragma inline_depth()
+        }
+        current_hero->mana += mana;
+        gave = 1;
+    }
+
+    if (BlackBox->MoraleBonus != 0) {
+        if (human_player) {
+            if (BlackBox->MoraleBonus < 0) {
+                std::string moraleText = format_string(
+                    gpAdventureEventText->GetText(178),
+                    current_hero->name);
+                add_reward(message, moraleText, rewards, 16,
+                           BlackBox->MoraleBonus);
+#pragma inline_depth(0)
+                show_rewards(message, rewards, 8);
+#pragma inline_depth()
+            } else {
+                std::string moraleText = format_string(
+                    gpAdventureEventText->GetText(179),
+                    current_hero->name);
+                add_reward(message, moraleText, rewards, 14,
+                           BlackBox->MoraleBonus);
+                show_rewards(message, rewards, 8);
+            }
+        }
+        gave = 1;
+        current_hero->field_11a += BlackBox->MoraleBonus;
+    }
+
+    if (BlackBox->LuckBonus != 0) {
+        if (human_player) {
+            if (BlackBox->LuckBonus < 0) {
+                std::string luckText = format_string(
+                    gpAdventureEventText->GetText(180),
+                    current_hero->name);
+                add_reward(message, luckText, rewards, 13,
+                           BlackBox->LuckBonus);
+                show_rewards(message, rewards, 8);
+            } else {
+                std::string luckText = format_string(
+                    gpAdventureEventText->GetText(181),
+                    current_hero->name);
+                add_reward(message, luckText, rewards, 11,
+                           BlackBox->LuckBonus);
+                show_rewards(message, rewards, 8);
+            }
+        }
+        gave = 1;
+        current_hero->field_11b += BlackBox->LuckBonus;
+    }
+    show_rewards(message, rewards, 1);
+
+    for (int k = 0; k < 7; k++) {
+        if (BlackBox->ResQty[k] != 0) {
+            if (human_player) {
+                if (BlackBox->ResQty[k] > 0) {
+                    std::string resText = format_string(
+                        gpAdventureEventText->GetText(183),
+                        current_hero->name);
+                    add_reward(message, resText, rewards, k,
+                               BlackBox->ResQty[k]);
+                    show_rewards(message, rewards, 8);
+                } else {
+                    std::string resText = format_string(
+                        gpAdventureEventText->GetText(182),
+                        current_hero->name);
+                    add_reward(message, resText, rewards, k,
+                               BlackBox->ResQty[k] - 100000);
+                    show_rewards(message, rewards, 8);
+                }
+            }
+            current_hero->GiveResource(k, BlackBox->ResQty[k]);
+            gave = 1;
+        }
+    }
+    show_rewards(message, rewards, 1);
+
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_NONE;
+    artifact.extra = -1;
+    for (unsigned int m = 0; m < BlackBox->Artifacts.size(); m++) {
+        if (current_hero->get_number_in_backpack(1) < 64) {
+            if (human_player) {
+                std::string artText = format_string(
+                    gpAdventureEventText->GetText(183),
+                    current_hero->name);
+                add_reward(message, artText, rewards, 8,
+                           BlackBox->Artifacts[m]);
+                show_rewards(message, rewards, 8);
+            }
+            artifact.artifactId = BlackBox->Artifacts[m];
+            current_hero->GiveArtifact(&artifact, 1, 1);
+            if (!human_player)
+                AI_equip_artifacts(current_hero);
+            gave = 1;
+        }
+    }
+    show_rewards(message, rewards, 1);
+
+    if (current_hero->IsWieldingArtifact(0)) {
+        for (unsigned int n = 0; n < BlackBox->Spells.size(); n++) {
+            if (akSpellTraits[BlackBox->Spells[n]].level
+                    <= current_hero->wisdomLevel + 2
+                && !current_hero->in_spellbook[BlackBox->Spells[n]]) {
+                if (human_player) {
+                    if (rewards.size() != 0) {
+                        std::string pendingText = format_string(
+                            gpAdventureEventText->GetText(188),
+                            current_hero->name);
+                        message = pendingText;
+                    }
+                    std::string spellText = format_string(
+                        gpAdventureEventText->GetText(184),
+                        current_hero->name);
+                    add_reward(message, spellText, rewards, 9,
+                               BlackBox->Spells[n]);
+                    show_rewards(message, rewards, 8);
+                }
+                current_hero->AddSpell(BlackBox->Spells[n]);
+                gave = 1;
+            }
+        }
+    }
+    show_rewards(message, rewards, 1);
+
+    armyGroup creatures = BlackBox->Creatures;
+    unsigned char joinFailed = 0;
+    for (int p = 0; p < 7; p++) {
+        int type = creatures.armies[p];
+        int count = creatures.numTroops[p];
+        if (type == CREATURE_NONE)
+            continue;
+        if (human_player) {
+            if (count == 1)
+                alternate = format_string(
+                    gpAdventureEventText->GetText(185),
+                    GetArmyName(type, 1), current_hero->name);
+            else
+                alternate = format_string(
+                    gpAdventureEventText->GetText(186),
+                    GetArmyName(type, 2), current_hero->name);
+            add_reward(message, alternate, rewards, 21,
+                       ((count & 0xffff) << 16) | (type & 0xffff));
+            show_rewards(message, rewards, 8);
+        }
+        if (current_hero->army.Add(type, count, -1)) {
+            creatures.Dismiss(p);
+        } else if (human_player) {
+            joinFailed = 1;
+        } else {
+            AI_join_decision(current_hero, creature_type_from_int(type),
+                             count);
+        }
+        gave = 1;
+    }
+
+    if (human_player) {
+        if (message.length() > 0)
+            extended_dialog(message.c_str(), rewards, -1, -1, 0);
+    }
+    if (joinFailed)
+        do_monster_join_dialog(current_hero, &creatures, 0);
+    if (exp > 0)
+        current_hero->GiveExperience(exp, 1, 1);
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+    UpdBottomView(1, 1, 1);
+    return gave;
+}
+
+// E:\gamedcs\events.cpp:826.  The page flusher, Dreamcast's
+// show_rewards: once `threshold` lines are pending, show the page and
+// reset both collectors. Five of the nine sites call this body and the
+// other four expand it, which is the /Ob2 quotient growing as sites are
+// consumed.
+VA(0x004a0b00, 0x112)  // anchor-callee extended_dialog + erase pair, dc 0x912bc
+void show_rewards(std::string& text,
+                  std::vector<type_dialog_resource>& rewards,
+                  long threshold)
+{
+    if (rewards.size() >= static_cast<unsigned long>(threshold)) {
+        extended_dialog(text.c_str(), rewards, -1, -1, 0);
+        text = DATA_COMPGEN(0x00691210, adventureRolloverEmptyText, "");
+        rewards.clear();
+    }
+}
 
 VA(0x004a0c20, 0x23)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const

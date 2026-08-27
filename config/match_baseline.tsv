@@ -1099,6 +1099,7 @@ events	?FizzleCenter@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0xacbb0
 events	?GeneratorEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0xaba50
 events	?GetTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960
 events	?GiveArtifact@advManager@@QAEXPAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0x9e8f0
+events	?GiveBlackBoxReward@advManager@@QAE_NPBDPAVhero@@PAVNewmapCell@@Utype_point@@_NPAVBlackBoxData@@@Z	79.6642	79.6642	79.6642	0x9fa90
 events	?HandleMapEvent@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa0ed0
 events	?HeroLoses@advManager@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xac930
 events	?HeroSwap@advManager@@QAEXPAVhero@@0@Z	100.0000	100.0000	100.0000	0xaadf0
@@ -1145,8 +1146,8 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # initialize_game_data block further down for the sweep that
 # established the class is non-monotonic and not source-nameable.
 events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
+events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 events	advManager_DoCombat	0.0000	0.0000	0.0000	0xad470
-events	advManager_GiveBlackBoxReward	0.0000	0.0000	0.0000	0x9fa90
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
