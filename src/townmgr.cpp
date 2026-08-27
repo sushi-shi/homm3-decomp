@@ -93,6 +93,17 @@
 // inline, is the only consumer here.
 void StartMouseThread();
 void StopMouseThread();
+// ai_combat.h owns this pair, but that header belongs to another lane's
+// closure and this compiland needs nothing else out of it.
+// SetupThievesGuild and GetCategoryStats rank heroes with it.
+long AI_approximate_strength(const hero* current_hero);
+long AI_approximate_strength(const hero* current_hero,
+                             const armyGroup* current_army);
+// The scoreboard's statistics pair, defined (with their claims) after
+// SetupThievesGuild in link order; declared here so the builder above
+// them can call both.
+void GetCategoryStats(int whichCat, long* value, signed char* index);
+void SortStats(long* value, signed char* index);
 
 
 
@@ -483,6 +494,13 @@ DATA(0x006a5df8) extern const char* gUnnamed6a5df8;
 // INVENTED (no DC symbol); owner TU unlocated - declared, not defined.
 DATA(0x0068a364) extern const unsigned char gHordeDwellingSlot[TOWN_TYPE_COUNT][2];
 DATA(0x0068a378) extern const unsigned char gHorde2DwellingSlot[TOWN_TYPE_COUNT][2];
+// SetupThievesGuild's two name tables, on the rollover pool's
+// standing (readers only, no writer in the admitted surface):
+// 0x68a2d4 holds the eight per-player crest sprite names
+// (PRRed.pcx .. PRRose.pcx, read from the image) and 0x6a7794 the
+// personality display names playerData::personality indexes.
+DATA(0x0068a2d4) extern const char* const gPlayerFlagSprites[8];
+DATA(0x006a7794) extern const char* gPersonalityNames[];
 // The fort page's shared pair (see the survey block ahead of
 // TCastleWindow::SetRolloverText below for the evidence): 0x6a56e0 is
 // a per-building eight-byte record whose first dword is the building's
@@ -9673,26 +9691,258 @@ void townManager::SetupWell(TCastleWindow* wellWin)
     }
 }
 
-// Located, not reconstructed: the thieves' guild scoreboard builder, the
-// largest body between SetupWell (0x5dd390) and GetCategoryStats (0x5dee70)
-// in retail link order.
-#if 0  // @carcass: located, not reconstructed
+// The scoreboard builder: per category a rank row of player flags
+// (ties grouped side by side out of the two [8][8] layout tables the
+// head spells member by member), then per alive player the crest
+// column, the strongest hero's portrait and four primary-skill cells,
+// the personality line, and the best creature across every town and
+// hero army - each band gated on the guild count. The two layout
+// tables and every coordinate below are read straight out of the
+// retail image; the guild-count -> category-count ladder is the
+// 9/8/6/4/2 chain with the ==2 arm's sbb ternary.
 // E:\gamedcs\townmgr.cpp:9296
 VA(0x005dda10, 0x145F)  // order-map(SetupWell 0x5dd390 .. GetCategoryStats 0x5dee70) + anchor-callee(GetNumThievesGuilds/GetLocalPlayerGamePos) + arity(ret 4), dc 0x180204
 void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
 {
-    // @stub
+    int flagX[8][8] = {
+        { 18, 0, 0, 0, 0, 0, 0, 0 },
+        { 12, 24, 0, 0, 0, 0, 0, 0 },
+        { 6, 18, 30, 0, 0, 0, 0, 0 },
+        { 0, 12, 24, 36, 0, 0, 0, 0 },
+        { 0, 12, 24, 36, 18, 0, 0, 0 },
+        { 0, 12, 24, 36, 18, 30, 0, 0 },
+        { 0, 12, 24, 36, 6, 18, 30, 0 },
+        { 0, 12, 24, 36, 6, 18, 30, 42 }
+    };
+    int flagY[8][8] = {
+        { 1, 0, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 0, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 0, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 0, 0, 0, 0 },
+        { 1, 1, 1, 1, 5, 0, 0, 0 },
+        { 1, 1, 1, 1, 5, 5, 0, 0 },
+        { 1, 1, 1, 1, 5, 5, 5, 0 },
+        { 1, 1, 1, 1, 5, 5, 5, 5 }
+    };
+
+    int gamePos = gpGame->GetLocalPlayerGamePos();
+    if (iThievesGuilds == -1)
+        iThievesGuilds = gpGame->GetNumThievesGuilds(gamePos);
+
+    int numCategories;
+    if (iThievesGuilds >= 5)
+        numCategories = 9;
+    else if (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_4)
+        numCategories = 8;
+    else if (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_3)
+        numCategories = 6;
+    else
+        numCategories =
+            (iThievesGuilds == TTownScreenWindow::GUILD_COUNT_2) ? 4 : 2;
+
+    int numDisabled = 0;
+    for (int k = 0; k < 8; k++) {
+        if (gpGame->playerDisabled[k])
+            numDisabled++;
+    }
+
+    for (k = 7 - numDisabled; k < 7; k++)
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                         0x2bc + k, widget::WIDGET_DRAWN);
+    for (k = 8 - numDisabled; k < 8; k++) {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                         0x2bc + k + 0x64, widget::WIDGET_DRAWN);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                         0x2bc + k + 0xc8, widget::WIDGET_DRAWN);
+    }
+
+    for (int category = 0; category < numCategories; category++) {
+        long value[8];
+        signed char index[8];
+        GetCategoryStats(category, value, index);
+        SortStats(value, index);
+
+        int start = 0;
+        int last = 0;
+        int x = 0x103;
+        for (;;) {
+            if (start
+                == gpGame->field_1f634 - numDisabled)
+                break;
+            int group = 1;
+            for (k = last + 1; k < gpGame->field_1f634; k++) {
+                if (value[last + 1] != value[last])
+                    break;
+                if (gpGame->playerDisabled[index[k]])
+                    break;
+                group++;
+                last++;
+            }
+            for (int m = start; m <= last; m++) {
+                Widgets.push_back(new iconWidget(
+                    flagX[group - 1][m - start] + x,
+                    flagY[group - 1][m - start] + 32 * category + 0x28,
+                    0xf, 0x14, -1,
+                    DATA_COMPGEN(0x00660d18, itgFlagsSprite, "itgflags.def"),
+                    index[m], 0, 0, 0, 0x10));
+                AddWidget(Widgets.back(), -1);
+            }
+            last++;
+            x += 0x42;
+            start = last;
+            if (x >= 0x313)
+                break;
+        }
+    }
+
+    int player_index = 0;
+    for (int column = 0; column < 8; column++) {
+        int who = player_index;
+        while (who < 8 && gpGame->playerDisabled[who])
+            who++;
+        if (who == TTownScreenWindow::GUILD_PLAYER_COLUMNS)
+            break;
+        player_index = who;
+
+        owners[column] = who;
+        strcpy(gText, gPlayerFlagSprites[who]);
+        message textMessage;
+        textMessage.extraText = gText;
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+                         column + 0x384, textMessage.extra);
+
+        hero* bestHero = 0;
+        if (iThievesGuilds >= 1) {
+            long bestStrength = 0;
+            for (k = 0; k < gpGame->players[who].numHeroes; k++) {
+                int id = gpGame->players[who].heroes[k];
+                hero* h = (id == -1) ? 0 : &gpGame->heroes[id];
+                long strength = AI_approximate_strength(h);
+                if (strength > bestStrength) {
+                    bestStrength = strength;
+                    bestHero = h;
+                }
+            }
+            if (bestHero) {
+                heroWidgetMap[HERO_P0 + column] = bestHero->id;
+                Widgets.push_back(new bitmapBorder(
+                    66 * column + 0x104, 0x168, 0x30, 0x20,
+                    column + HERO_P0,
+                    akHeroTraits[bestHero->portrait].smallPortraitName,
+                    0x800));
+                AddWidget(Widgets.back(), -1);
+            }
+        }
+
+        if (iThievesGuilds >= 2 && bestHero) {
+            Widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x18c, 0x35, 0x2c,
+                gpGeneralText->GetText(185),
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, -1, 0, 0, 8));
+            AddWidget(Widgets.back(), -1);
+
+            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->GetPrimarySkill(0));
+            Widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x18c, 0x35, 0x14, gText,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_A0, 2, 0, 8));
+            AddWidget(Widgets.back(), -1);
+
+            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->GetPrimarySkill(1));
+            Widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x197, 0x35, 0x14, gText,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_B0, 2, 0, 8));
+            AddWidget(Widgets.back(), -1);
+
+            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->GetPrimarySkill(2));
+            Widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x1a2, 0x35, 0x14, gText,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + RANK_C0, 2, 0, 8));
+            AddWidget(Widgets.back(), -1);
+
+            sprintf(gText, DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                    bestHero->GetPrimarySkill(3));
+            Widgets.push_back(new textWidget(
+                66 * column + 0x102, 0x1ad, 0x35, 0x14, gText,
+                DATA_COMPGEN(0x00660cb4, tinyFontName, "tiny.fnt"),
+                font::PRIMARY, column + 30, 2, 0, 8));
+            AddWidget(Widgets.back(), -1);
+        }
+
+        if (iThievesGuilds >= 3) {
+            strcpy(gText,
+                   gPersonalityNames[gpGame->players[who].personality]);
+            Widgets.push_back(new textWidget(
+                66 * column + 0xfb, 0x1c4, 0x42, 0x14, gText,
+                DATA_COMPGEN(0x0065f2f8, combatChatSmallFont,
+                             "smalfont.fnt"),
+                font::PRIMARY, -1, 1, 0, 8));
+            AddWidget(Widgets.back(), -1);
+        }
+
+        if (iThievesGuilds >= 4) {
+            int bestCreature = -1;
+            long bestValue = 0;
+            for (int n = 0; n < gpGame->players[who].numTowns; n++) {
+                int id = gpGame->players[who].townIds[n];
+                const town* t = (id == -1) ? 0 : &gpGame->towns[id];
+                for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                    if (t->get_army().armies[slot] != -1
+                        && t->get_army().numTroops[slot] > 0
+                        && akCreatureTypeTraits[t->get_army().armies[slot]]
+                                   .AI_value
+                               > bestValue) {
+                        bestCreature = t->get_army().armies[slot];
+                        bestValue = akCreatureTypeTraits[
+                            t->get_army().armies[slot]].AI_value;
+                        creatureArmies[column] = t->get_army();
+                        creatureWidgetMap1[CREATURE_P0 + column] = slot;
+                    }
+                }
+            }
+            for (k = 0; k < gpGame->players[who].numHeroes; k++) {
+                int id = gpGame->players[who].heroes[k];
+                hero* h = (id == -1) ? 0 : &gpGame->heroes[id];
+                for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+                    if (h->army.armies[slot] != -1
+                        && h->army.numTroops[slot] > 0
+                        && akCreatureTypeTraits[h->army.armies[slot]]
+                                   .AI_value
+                               > bestValue) {
+                        bestCreature = h->army.armies[slot];
+                        bestValue = akCreatureTypeTraits[
+                            h->army.armies[slot]].AI_value;
+                        creatureArmies[column] = h->army;
+                        creatureWidgetMap1[CREATURE_P0 + column] = slot;
+                    }
+                }
+            }
+            if (bestCreature != -1) {
+                Widgets.push_back(new iconWidget(
+                    66 * column + 0xff, 0x1de, 0x3a, 0x40,
+                    column + CREATURE_P0,
+                    DATA_COMPGEN(0x006601e0, townCreaturePortraitSprite,
+                                 "twcrport.def"),
+                    bestCreature + 2, 2, 0, 0, 0x11));
+                AddWidget(Widgets.back(), -1);
+            }
+        }
+        player_index++;
+    }
+
+    field_80 = new TResourceDisplay(this, 1);
+    field_80->Update(0, 0);
 }
-#endif  // @carcass
 
 // 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
 // its own; this is the file-local fallback the header discipline allows.
 int GetNumObelisks(int whichPlayer);
-// ai_combat.h owns this pair, but that header belongs to another lane's
-// closure and this compiland needs nothing else out of it.
-long AI_approximate_strength(const hero* current_hero);
-long AI_approximate_strength(const hero* current_hero,
-                             const armyGroup* current_army);
 
 // E:\gamedcs\townmgr.cpp:9597
 // One column of the thieves' guild table: for every player position in
