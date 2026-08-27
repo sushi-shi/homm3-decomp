@@ -187,6 +187,12 @@ class TAbstractFile;
 // is retained because neither retail nor DC names that PC-only bridge.
 class t_complex_net_message {
 public:
+    // The no-subtype form at 0x512c20 (stores the base vtable and
+    // zeroes the netmsg image); singleselectionwindow's received-row
+    // message constructs through it. ADDITIVE 2026-08-27 - one
+    // declarator; re-measure the include-set-sensitive rows of the
+    // five includers on merge.
+    t_complex_net_message();
     t_complex_net_message(int subType);
     virtual unsigned char read(TAbstractFile* infile);
     virtual unsigned char write(TAbstractFile* outfile) const;

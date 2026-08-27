@@ -615,6 +615,17 @@ GameSelectionHeadersStruct::~GameSelectionHeadersStruct()
 {
 }
 
+// The default-construction COMDAT (retail 0x578e00, unclaimed until
+// its span is admitted): member ctors, the two text-band fills, and
+// the difficulty preset. See the header note for why it is defined
+// here rather than in class.
+GameSelectionHeadersStruct::GameSelectionHeadersStruct()
+{
+    memset(title, 0, sizeof(title));
+    memset(description, 0, sizeof(description));
+    setup.difficulty = 1;
+}
+
 #if 0  // @carcass
 
 VA(0x00578440, 0x312)  // anchor-callee SortMaps' erase move-loop calls it per element (thiscall, one stack arg); memberwise head copies the version/isPlayable/difficulty/numPlayers run, dc-none (compiler-generated)
@@ -1528,6 +1539,17 @@ void TSingleSelectionWindow::OnSortMaps(int how)
     // @stub
 }
 
+// Retail-only (no DC row fits: SetupNewGameMode 1.34x is the nearest
+// and unproven): gated on m_flag65, calls RefreshFileList 0x583580
+// first, clears every seat's playerPos and the disabled slots'
+// CanBeHuman, then re-seats under the net-mode gates. OnNewPlayerMsg's
+// non-advanced arm calls it no-arg. Ordinal placeholder name.
+VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 calls it no-arg on this; head calls RefreshFileList 0x583580 + walks m_players at 0x7c stride
+void TSingleSelectionWindow::WindowFn_00584c40()
+{
+    // @stub
+}
+
 #endif  // @carcass
 
 // Sort the source list (TransferHeaders in transfer mode, HeadersA
@@ -2169,8 +2191,14 @@ unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned ch
             CNewPlayerUpdateMan* man = pNewPlayerUpdateMan;
             int slot = man->GetFirstAvailable();
             if (slot != -1) {
+                // Retail CALLS the derived proc ctor 0x589240 here
+                // while Man::NewPlayer expands it; the pin keeps this
+                // site retail's call now that the ctor has an inline
+                // body (ungated it cost this row 90.16 -> 88.14).
+#pragma inline_depth(0)
                 CNewPlayerUpdateProc* proc =
                     new CNewPlayerUpdateProc(dpid);
+#pragma inline_depth()
                 man->m_procs[slot] = proc;
                 proc->Go();
             }
@@ -3006,16 +3034,94 @@ unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersi
     return 0;
 }
 
-#if 0  // @carcass
-
+// A player joins the lobby: log the dpid, version-gate them (host
+// side only - a non-host client under video pause skips straight to
+// the roster merge) with a CBadVersionMsg reply on failure, seat the
+// newcomer, keep chat fresh, start their header-transfer job, place
+// them on the advanced pane (first free human-legal seat) or re-seat
+// the main pane, then broadcast the full roster and announce them in
+// chat.
+// Residual (79.5): one missing branch - retail runs the
+// CNetPlayerHandlerPlayer ctor 0x57c790 over the broadcast msg's two
+// seat arrays (an inline 8-loop plus the ??_L vector-ctor-iterator
+// call at 0x4013d0), which the POD record model cannot emit - plus
+// the reply arm's GetText loads scheduled above the first strncpy
+// (the same shape OnGameHeaderInfoInitMsg's reply arm carries; a
+// named-local hoist measured WORSE there).
 // E:\gamedcs\singleselectionwindow.cpp:6884
 VA(0x00589FA0, 0x2D9)  // anchor-callee RS_NEW_PLAYER arm; owns the 'OnNewPlayerMsg %d' log line, size 1.37x dc 0x214, dc 0x140a74
 unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CNewPlayerMsg* pMsg = static_cast<CNewPlayerMsg*>(pNetMsg);
+    logFile.Log(DATA_COMPGEN(0x0068392c, onNewPlayerLog,
+                             "OnNewPlayerMsg (%d)"),
+                pMsg->m_playerInfo.dpid);
+    if (!bVideoPaused || pDPlay->IsHost()) {
+        if (!IsVersionCompatible(pMsg->m_version)) {
+            logFile.Log(
+                DATA_COMPGEN(0x00683904, incompatibleVersionLog,
+                             "New Player has incompatible version #%s"),
+                pMsg->m_version);
+            CBadVersionMsg reply;
+            strncpy(reply.m_version, gameVersion, 20);
+            strncpy(reply.m_errText, gpGeneralText->GetText(666), 80);
+            TransmitRemoteDataDPID(&reply, pNetMsg->field_04, 0, 1);
+            return 1;
+        }
+    }
+    if (!m_players.GetPlayer(pMsg->m_playerInfo.dpid))
+        SetNewPlayerSlot(&pMsg->m_playerInfo);
+    if (chatShowing)
+        TurnChatOn(1);
+    if (!bVideoPaused || pDPlay->IsHost()) {
+        pNewPlayerUpdateMan->NewPlayer(pNetMsg->field_04);
+        if (inAdvancedOptions) {
+            CNetPlayerHandlerPlayer* p =
+                m_players.GetPlayer(pNetMsg->field_04);
+            if (p) {
+                for (int pos = 0; pos < 8; ++pos) {
+                    if (m_players.GetPlayerInPos(pos))
+                        continue;
+                    if (!gpGame->mapHeader.playerSlotAttributes[pos]
+                             .CanBeHuman)
+                        continue;
+                    if (m_flag64 && gpGame->playerDisabled[pos])
+                        continue;
+                    p->playerPos = pos;
+                    DrawWindow(0, 0xffff0001, 0xffff);
+                    Update();
+                    break;
+                }
+            }
+        } else {
+            WindowFn_00584c40();
+        }
+        CUpdatePlayerPosMsg msg;
+        memcpy(msg.m_players, m_players.humanPlayers,
+               sizeof(msg.m_players));
+        memcpy(msg.m_compPlayers, m_players.computerPlayers,
+               sizeof(msg.m_compPlayers));
+        TransmitRemoteDataDPID(&msg, 0, 1, 1);
+    }
+    PlayerEnterMsg(&chatMan, gpGeneralText->GetText(526),
+                   pMsg->m_playerInfo.sName);
+    DisplayChat();
+    return 1;
 }
 
-#endif  // @carcass
+// DC NewPlayer, LOCATED round 2 (dc 0x14870c -> retail 0x58a280, 123 B
+// vs dc 132): take the first free transfer slot and start a job for
+// the joining dpid - GetFirstAvailable and the proc ctor expand in
+// place (retail even keeps the unguarded Go through a null new).
+VA(0x0058A280, 0x7B)  // anchor-callee OnNewPlayerMsg calls it (dpid) on pNewPlayerUpdateMan; body news the 0x24-byte proc + vcalls slot 0 (Go), size 0.93x dc 0x84, dc 0x14870c
+void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
+{
+    int i = GetFirstAvailable();
+    if (i != -1) {
+        m_procs[i] = new CNewPlayerUpdateProc(dpid);
+        m_procs[i]->Go();
+    }
+}
 
 // The transfer opener: version-gate the sender (the short EX form
 // carries none - "1.0" stands in), build the never-sent CBadVersionMsg
@@ -3086,16 +3192,43 @@ void TSingleSelectionWindow::OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg)
         TransferHeaders[i].setup.fileInitialized = 0;
 }
 
-#if 0  // @carcass
-
+// One received header row: deserialize the wire message, log the row
+// number, land the record in the flag-picked source list (transfer vs
+// initial - out-of-range returns 0), and mirror it into the filtered
+// list when the row exists there too. The implicit operator= is what
+// reproduces retail's split: both source-list arms expand the
+// memberwise copy (header op= call, setup rep movsd, the int[8]
+// dword loop and the char-band byte loops, the shared fileTime/saved
+// tail) while the SelectionHeaders mirror calls the 0x578440 COMDAT.
+// Residual (81.1): two extra branches in our copy tails (retail
+// cross-jumps more of the two expansions), the wire ctor's vtbl
+// store register (ours via edi), and the teardown depth of the two
+// exits (retail destroys the message shallowly on the failure path
+// and leaf-deep on success; ours picks one shape).
 // E:\gamedcs\singleselectionwindow.cpp:7077
 VA(0x0058AA40, 0x3AE)  // anchor-callee RS_GAME_HEADER_INFO arm; owns the "rec'd game header %d" log line, size 1.96x dc 0x1e0, dc 0x14111c
-void TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
+unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CNewMapHeaderInfoMsg msg;
+    msg.RemoteFn_00512E00(pNetMsg);
+    logFile.Log(DATA_COMPGEN(0x00683940, recvGameHeaderLog,
+                             "rec'd game header %d"),
+                msg.m_number);
+    if (msg.m_flag) {
+        if (static_cast<unsigned int>(msg.m_number)
+                >= TransferHeaders.size())
+            return 0;
+        TransferHeaders[msg.m_number] = msg.m_header;
+    } else {
+        if (static_cast<unsigned int>(msg.m_number) >= HeadersA.size())
+            return 0;
+        HeadersA[msg.m_number] = msg.m_header;
+    }
+    if (static_cast<unsigned int>(msg.m_number)
+            < SelectionHeaders.size())
+        SelectionHeaders[msg.m_number] = msg.m_header;
+    return 1;
 }
-
-#endif  // @carcass
 
 // Repaint the chat pane: refresh the widget from the chat manager,
 // re-seat the chat slider, then draw both when the pane is showing.

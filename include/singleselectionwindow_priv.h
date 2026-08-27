@@ -406,6 +406,34 @@ public:
     char m_version[20];        // +0x1c
 };
 
+// The join announcement: the joining player's full CNetPlayerInfo
+// record plus a version string tail. OnNewPlayerMsg reads the record
+// at +0x14, the name at +0x18 and gates on the version at +0x34; the
+// sender's dpid rides the CNetMsg field_04 slot.
+class CNewPlayerMsg : public CNetMsg {
+public:
+    CNetPlayerInfo m_playerInfo;  // +0x14 (dpid/sName/version int)
+    char m_version[20];           // +0x34
+};
+
+// The per-row header-transfer payload: a t_complex_net_message wrapping
+// one full GameSelectionHeadersStruct plus the transfer flag and row
+// number. vtable 0x641b20; OnGameHeaderInfoMsg's inline construction
+// calls the base default ctor 0x512c20 and the record ctor COMDAT
+// 0x578e00, and 0x578760 is the compiler-generated teardown.
+class CNewMapHeaderInfoMsg : public t_complex_net_message {
+public:
+    unsigned char m_flag;                 // +0x18, 1 = a TransferHeaders row
+    char pad_19[3];
+    int m_number;                         // +0x1c
+    GameSelectionHeadersStruct m_header;  // +0x20
+
+    CNewMapHeaderInfoMsg() {}
+    ~CNewMapHeaderInfoMsg() {}
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+};
+
 // The full-roster broadcast (DC ctor takes both player arrays); the
 // receiver reads the human records at +0x14 and the computer block at
 // +0x3f4.
@@ -413,6 +441,16 @@ class CUpdatePlayerPosMsg : public CNetMsg {
 public:
     CNetPlayerHandlerPlayer m_players[8];      // +0x014
     CNetPlayerHandlerPlayer m_compPlayers[8];  // +0x3f4
+
+    // OnNewPlayerMsg's broadcast site proves the pair: sizeof is the
+    // 0x7d4 size dword. Retail also runs the CNetPlayerHandlerPlayer
+    // ctor (0x57c790) over both arrays - one inline loop, one ??_L
+    // vector-iterator call - which our POD record model cannot emit;
+    // that delta is OnNewPlayerMsg's documented residual.
+    CUpdatePlayerPosMsg()
+        : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
+    {
+    }
 };
 
 // The per-handicap label pointers the seat rows are retitled from
@@ -514,7 +552,16 @@ struct SHeaderRequest {
 // buffer triple the dtor frees and zeroes, m_finished +0x20).
 class __declspec(novtable) CNewPlayerUpdateProc {
 public:
-    CNewPlayerUpdateProc(unsigned long dpid);
+    // Defined inline: Man::NewPlayer expands it (retail 0x58a280's
+    // guts), where the novtable model costs only the 0x641d44 vtbl
+    // store the real derived ctor 0x589240 performs.
+    CNewPlayerUpdateProc(unsigned long dpid)
+    {
+        m_dpid = dpid;
+        m_nextHeader = 0;
+        m_finished = 0;
+        m_lastSendTime = 0;
+    }
     virtual void Go();          // slot 0, 0x577d70
     virtual void Tick();        // slot 1, 0x577de0
     virtual void _vslot02();    // slot 2, 0x578930
@@ -568,6 +615,10 @@ public:
     // 1029 arm forwards the request-msg fields verbatim.
     void HeaderRequested(unsigned long dpid, unsigned char flag,
                          int number);  // retail 0x5892b0
+    // DC NewPlayer (dc 0x14870c, LOCATED round 2 at retail 0x58a280):
+    // take the first free slot and start a transfer job for the
+    // joining dpid.
+    void NewPlayer(unsigned long dpid);  // retail 0x58a280
 };
 
 // RESOLVED (round 2): the round-1 "LoadHeadersList" at 0x58eab0 is the
