@@ -101,6 +101,12 @@ SIZE(GameSelectionHeadersStruct, 0xCA4);
 // extent.  The containing handler's two eight-record arrays and four tail
 // dwords are the complete 0x7d0-byte Windows layout.  Defined ahead of
 // TSingleSelectionWindow because that window embeds one at +0x1064.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// The ctor below seeds version from the game-context cell
+// (resourcemanager.cpp owns the claim).
+extern int* gpVideoGameState;
+#endif
+
 class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
 public:
     int heroIndex;             // +0x20
@@ -122,6 +128,17 @@ public:
         townIndex = -1;
         heroIndex = -1;
     }
+
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // DC's seat-record ctor. Declared here, DEFINED OUT OF CLASS in the
+    // TU (retail 0x57c790): /Ob2 then reproduces retail's per-site
+    // split - SetCurrentMap's CUpdatePlayerPosMsg local expands both
+    // array-init loops in full, while OnNewPlayerMsg's keeps the CTOR
+    // out of line (one call-per-element loop, one ??_L vector-iterator
+    // call). Gated to the owning TU: a user ctor makes the record
+    // non-POD for every includer.
+    CNetPlayerHandlerPlayer();
+#endif
 };
 SIZE(CNetPlayerHandlerPlayer, 0x7c);
 
@@ -245,7 +262,17 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    // The window's own scratch header row - 0x38c..0x1030 is exactly one
+    // 0xCA4 element. The 11.6KB ctor constructs it in place (the
+    // SavedGameHeader member ctor at this+0x38c+0x700 on its claim), and
+    // SetCurrentMap points pCurrentHeader at it when field_37F selects
+    // the setup-local row. Gated with the vectors: the element type must
+    // be complete.
+    GameSelectionHeadersStruct m_localHeader;  // 0x38c
+#else
     char pad_38c[0x1030 - 0x38c];
+#endif
     // The three header lists are real Dinkumware vectors, 0x1030/0x1040/
     // 0x1050 (allocator, _First, _Last, _End - the size() null-_First
     // ternary and the 0xCA4 magic-multiply in every consumer, plus
