@@ -212,6 +212,9 @@ public:
     };
 
 #ifdef HOMM3_TOWNMGR_WIDGET_IDS
+    // (This gate also carries gCombatStamp698998's declaration at the
+    // bottom of the file - townmgr.cpp's private view of the shared
+    // frame-pacing stamp, kept out of cmbtmgr.h's include weight.)
     // The declarators below are GATED to townmgr.cpp, their one
     // consumer: ungated they moved recruitUnit::Update 90.84 -> 88.24
     // through the include-set wall (townmgr.h reaches recruit.cpp),
@@ -225,7 +228,14 @@ public:
         // The failed hotspot remap's sentinel: SetCommandAndText's
         // switch carries it as a real case (the -1-biased dispatch
         // table proves it), sharing the default's empty line.
-        TOWN_HOTSPOT_NONE = -1
+        TOWN_HOTSPOT_NONE = -1,
+        // The build-cheat latch's domain (gUnnamed67832c, drained by
+        // Main): 100 = build everything the town may ever build; 0x37
+        // is a value past MAX_BUILDING_TYPE that Main's eligibility
+        // test admits unconditionally - both compares are retail's,
+        // names INVENTED.
+        TOWN_CHEAT_BUILD_ALL = 100,
+        TOWN_CHEAT_BUILD_EXTRA = 0x37
     };
 
     // The DC field list's nested enum (LF_ENUM 0x71A1, 85 enumerators),
@@ -730,6 +740,7 @@ class strip;
 class townObject;
 class heroWindow;
 class widget;
+class bitmapBorder16;
 class CUnnamed69d808_f0;
 class CSprite;
 class TResourceDisplay;
@@ -752,7 +763,12 @@ class CTownNetMsgHandler;
 class townManager : public baseManager {
 public:
     town* townToView;             // +0x38
-    widget* field_3c;             // +0x3c
+    // +0x3c: the panorama background, a bitmapBorder16 -
+    // UpdateTownInfo builds it with `new bitmapBorder16(0, 0, 800,
+    // 374, 147, gText, 0x800)` and Main paces its animation with the
+    // non-virtual Draw2. Retyped from widget* 2026-08-27 (rename-free:
+    // every existing site assigns or deletes it).
+    bitmapBorder16* field_3c;     // +0x3c
     // +0x40, NAMED AND TYPED 2026-08-14. The Dreamcast fieldlist's
     // `MonPix` is an LF_ARRAY of seven CSprite* at its own 72, which is
     // this offset under the same -8 shift that puts currTown/panorama/
@@ -1143,5 +1159,13 @@ void DoShipyard(int type);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5136, dc 0x172f34) void type_monster_join_window::type_monster_join_window(hero* inHero, armyGroup* monsters);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181604) void* type_monster_join_window::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5156, dc 0x181638) void type_monster_join_window::~type_monster_join_window();
+
+#ifdef HOMM3_TOWNMGR_WIDGET_IDS
+// The shared frame-pacing stamp at .bss 0x698998. cmbtmgr.h owns the
+// DATA claim (advmgr's Open/Main and drawing.cpp share the cell);
+// townManager::Main paces the panorama animation with it. Gated so no
+// other includer of this header gains the declarator.
+extern unsigned long gCombatStamp698998;
+#endif  /* HOMM3_TOWNMGR_WIDGET_IDS */
 
 #endif  /* HOMM3_TOWNMGR_H */

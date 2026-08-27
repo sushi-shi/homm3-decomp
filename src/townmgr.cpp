@@ -60,6 +60,8 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "quickherowindow.h"
+#include "quicktownwindow.h"
 #include "recruit.h"
 #include "remote.h"
 #include "resourcedisplay.h"
@@ -70,6 +72,9 @@
 #include "textresource.h"
 #include "textwdgt.h"
 #include "towngatewindow.h"
+// DoMarketplace / DoArtifactMerchants / DoFreelancersGuild, for Main's
+// marketplace and special-building arms.
+#include "tradpost.h"
 // Opens university_window.h's layout tail and constructor declarator for
 // DoUniversity, which puts one of these windows on the STACK and so needs
 // its real size and its implicit destructor. Gated so the two TUs that
@@ -88,6 +93,8 @@
 // inline, is the only consumer here.
 void StartMouseThread();
 void StopMouseThread();
+
+
 
 // The tree's representation-bridge idiom (game.cpp 0x60, ai_combat.cpp
 // 0x108), copied here for this compiland's two int-to-enum edges: it
@@ -435,6 +442,11 @@ DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
 DATA(0x006a5d88) extern const char* gUnnamed6a5d88;
 DATA(0x006a5d8c) extern const char* gUnnamed6a5d8c;
 DATA(0x006a5d98) extern const char* gUnnamed6a5d98;
+// The build-cheat latch at retail .data 0x67832c: townManager::Main
+// drains it every pass (-1 = empty, 100 = build everything, else one
+// building id), and nothing in the admitted surface writes it - the
+// cheat console's TU is unlocated. Declared, not defined.
+DATA(0x0067832c) extern int gUnnamed67832c;
 // SetCommandAndText's rollover pool, on the same standing as the four
 // above: one .bss text cell per town-screen thing under the cursor,
 // every image-wide reference landing in this compiland's bracket and
@@ -5205,19 +5217,812 @@ static void MoveHeroToGarrison(townManager* mgr)
     mgr->NewStrips();
 }
 
-// Located, not reconstructed: the town manager's modal message loop, the
-// third of the three pure managers (Open/Close/Main) and the compiland's
-// largest control body. ExitTownManager (dc 0x174f60) and GetBuildingInfo
-// precede it in the DC roster; Main is the last unclaimed body before
-// DoCommand in retail link order.
-#if 0  // @carcass: located, not reconstructed
+// The town manager's modal message loop, the third of the three pure
+// managers and the compiland's largest control body. The head runs the
+// turn-duration/network abort check, drains the build-cheat latch at
+// 0x67832c, and paces the panorama animation off the shared frame
+// stamp; the dispatch is the same merged hotspot/widget domain as
+// SetCommandAndText (codeY 0..43 remapped through the town screen's
+// zBuffer word under the mouse), with the qualifier's bit 9 carrying
+// the right-button state into every arm. TTownScreenWindow::DoTownKnob
+// and ::bonus_right_click are single-call-site DC helpers /Ob2 folded
+// into this body (their arms are the locator-knob and creature-popup
+// blocks below); ChangeTown's roster twin is the town-switch tail the
+// locator and keypad arms share.
 // E:\gamedcs\townmgr.cpp:5854
 VA(0x005d3240, 0x19CF)  // anchor-caller(the three pure managers Open/Close/Main) + order-map(handle_hall_click 0x5d30d0 .. DoCommand 0x5d4c10) + anchor-callee(service_sounds/IsExpired/GetLocalPlayer) + arity(ret 4, message*), dc 0x175160
-int townManager::Main(message* msg)
+int townManager::Main(message& msg)
 {
-    // @stub
+    playerData* player = gpGame->GetLocalPlayer();
+    unsigned char netMsgSeen;
+    char text[400];
+
+    gpSoundManager->service_sounds();
+    if (!gTurnDuration69d630.IsExpired()) {
+        if (!gNetworkActive69954c)
+            goto turn_alive;
+        netMsgSeen = 0;
+        {
+            CNetMsgHandler* handler = pDPlay->GetNetMsgHandler();
+            if (!handler)
+                goto turn_alive;
+            handler->CheckHandleNet(1, &netMsgSeen);
+            if (!netMsgSeen)
+                goto turn_alive;
+            if (!handler->GetAbortPopupMsg())
+                goto turn_alive;
+        }
+    }
+    gpWindowManager->dialogReturn = TTownScreenWindow::EXIT_BUTTON_ID;
+    msg.id = MESSAGE_EXECUTIVE;
+    msg.codeX = 1;
+    msg.codeY = 0xa;
+    return 2;
+
+turn_alive:
+    int rclick = (msg.qualifier >> 9) & 1;
+    if (gUnnamed67832c != -1) {
+        int build = gUnnamed67832c;
+        gUnnamed67832c = -1;
+        if (build == TTownScreenWindow::TOWN_CHEAT_BUILD_ALL) {
+            for (build = 0; build < 0x2c; build++) {
+                if ((gTownEligibleBuildMask[townToView->type]
+                     & (1 << build))
+                    || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA)
+                    BuildObj(build);
+            }
+        } else if ((gTownEligibleBuildMask[townToView->type]
+                    & (1 << build))
+                   || build == TTownScreenWindow::TOWN_CHEAT_BUILD_EXTRA) {
+            BuildObj(build);
+        }
+    }
+
+    {
+        int delta = GameTime::Get() - gCombatStamp698998;
+        if (delta >= 0) {
+            gCombatStamp698998 += _cpp_min(delta, 150);
+            field_3c->Draw2();
+            PollSound();
+            for (int i = 0; i < TownObjectCount; i++) {
+                TownObjects[i]->Draw(1, 0);
+                PollSound();
+            }
+            gpWindowManager->UpdateScreen(0, 0, 800, 374);
+        }
+    }
+
+    switch (msg.id) {
+    case MESSAGE_WIDGET:
+        switch (msg.codeX) {
+        case widget::WIDGET_SELECT:
+        case widget::WIDGET_RIGHT_SELECT: {
+            int code = msg.codeY;
+            if (code >= 0 && code <= DWELLING_6_UPG_ID)
+                code = static_cast<TTownScreenWindow*>(TownWindow)
+                           ->zBuffer[msg.mouseY * 800 + msg.mouseX] - 1;
+            switch (code) {
+            case HORDE_ID:
+            case HORDE_UPG_ID:
+                if (rclick) {
+                    QuickViewRecruit(
+                        townToView,
+                        gHordeDwellingSlot[townToView->type]
+                                          [code - HORDE_ID]);
+                } else {
+                    gpRecruitUnit = new recruitUnit(
+                        townToView,
+                        gHordeDwellingSlot[townToView->type]
+                                          [code - HORDE_ID],
+                        1);
+                    if (!gpRecruitUnit)
+                        MemError();
+                    gpExecutive->DoDialog(gpRecruitUnit);
+                    delete gpRecruitUnit;
+                    RedrawTownScreen();
+                }
+                break;
+            case HALL_VILLAGE_ID:
+            case HALL_TOWN_ID:
+            case HALL_CITY_ID:
+            case HALL_CAPITOL_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    handle_hall_click();
+                }
+                break;
+            case MAGE_GUILD_ID:
+            case MAGE_GUILD2_ID:
+            case MAGE_GUILD3_ID:
+            case MAGE_GUILD4_ID:
+            case MAGE_GUILD5_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    handle_mage_guild_click();
+                    townToView->GiveSpells(0);
+                    RedrawTownScreen();
+                }
+                break;
+            case CASTLE_FORT_ID:
+            case CASTLE_CITADEL_ID:
+            case CASTLE_CASTLE_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    TCastleWindow* castleWin = new TCastleWindow;
+                    if (!castleWin)
+                        MemError();
+                    SetupWell(castleWin);
+                    castleWin->CastleBank =
+                        new TResourceDisplay(castleWin, 1);
+                    castleWin->CastleBank->Update(1, 0);
+                    castleWin->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                                          WINDOW_ALL_WIDGETS_HIGH);
+                    gCombatStamp698998 = GameTime::Get() + 100;
+                    if (netMsgHandler)
+                        netMsgHandler->SetResourceDisplay(
+                            castleWin->CastleBank);
+                    castleWin->DoModal(0);
+                    if (netMsgHandler)
+                        netMsgHandler->SetResourceDisplay(pResourceDisplay);
+                    if (castleWin->CastleBank)
+                        delete castleWin->CastleBank;
+                    delete castleWin;
+                    RedrawTownScreen();
+                }
+                break;
+            case TAVERN_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    DoTownTavern();
+                    RedrawTownScreen();
+                }
+                break;
+            case DOCK_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                        TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
+                    if (gpGame->GetBoatsBuilt() < 0x40) {
+                        gpShipWindow = new TShipWindow(townToView->type);
+                        if (!gpShipWindow)
+                            MemError();
+                        gpShipWindow->DoModal(0);
+                        delete gpShipWindow;
+                        pResourceDisplay->Update(1, 1);
+                        if (gpWindowManager->dialogReturn
+                            == TShipWindow::BUY_BUTTON_ID) {
+                            if (gpGame->CreateBoat(
+                                    townToView->dockSite,
+                                    townToView->dockSiteY,
+                                    townToView->mapZ,
+                                    gpGame->GetLocalPlayerGamePos(), 0, 1)
+                                != -1) {
+                                BuildObj(DOCK_WITH_BOAT_ID);
+                                gpGame->players[
+                                    gpGame->GetLocalPlayerGamePos()]
+                                    .resources[6] -= 1000;
+                                gpGame->players[
+                                    gpGame->GetLocalPlayerGamePos()]
+                                    .resources[0] -= 10;
+                                pResourceDisplay->Update(1, 1);
+                            }
+                        }
+                    } else {
+                        NormalDialog(gpGeneralText->GetText(52), 1, 208, 40,
+                                     -1, 0, -1, 0, -1, 0, -1, 0);
+                    }
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS,
+                        TTownScreenWindow::EXIT_BUTTON_ID, 0x4008);
+                }
+                break;
+            case DOCK_WITH_BOAT_ID:
+                break;
+            case MARKETPLACE_ID:
+                if (rclick)
+                    goto building_popup;
+                else if (gpCurrentPlayer->IsLocalHuman()
+                           && townToView->owner == gNetLocalGamePos) {
+                    DoMarketplace();
+                    pResourceDisplay->Update(1, 1);
+                    if (field_12c)
+                        field_12c->current = -2;
+                    if (field_134)
+                        field_134->current = -2;
+                    field_1c4 = 0;
+                    field_120->Draw(CREATURE_NONE);
+                    field_11c->Draw(CREATURE_NONE);
+                    field_134 = 0;
+                    field_12c = 0;
+                    field_138 = -2;
+                    field_130 = -2;
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                        TTownScreenWindow::DIVIDE_ID, 0x4008);
+                }
+                break;
+            case MARKETPLACE_SILO_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    sprintf(text,
+                            GetBuildingInfo(townToView, MARKETPLACE_SILO_ID,
+                                            1, 1));
+                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                                 MARKETPLACE_SILO_ID, -1, 0, -1, 0, -1, 0);
+                }
+                break;
+            case BLACKSMITH_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    DoBlacksmith(townToView->visitingHeroId,
+                                 townToView->type);
+                    pResourceDisplay->Update(1, 1);
+                }
+                break;
+            case EXTRA_0_ID:
+                if (rclick) {
+                    std::string info;
+                    info = GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1);
+                    NormalDialog(info.c_str(), 4, -1, -1,
+                                 townToView->type + 0x16, EXTRA_0_ID,
+                                 -1, 0, -1, 0, -1, 0);
+                } else switch (townToView->type) {
+                case TOWN_STRONGHOLD:
+                    DoFreelancersGuild(townToView);
+                    pResourceDisplay->Update(1, 1);
+                    if (field_12c)
+                        field_12c->current = -2;
+                    if (field_134)
+                        field_134->current = -2;
+                    field_1c4 = 0;
+                    field_120->Draw(CREATURE_NONE);
+                    field_11c->Draw(CREATURE_NONE);
+                    field_134 = 0;
+                    field_12c = 0;
+                    field_138 = -2;
+                    field_130 = -2;
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                        TTownScreenWindow::DIVIDE_ID, 0x4008);
+                    break;
+                case TOWN_CONFLUX:
+                    DoUniversity();
+                    pResourceDisplay->Update(1, 1);
+                    break;
+                default: {
+                    std::string info;
+                    info = GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1);
+                    NormalDialog(info.c_str(), 1, -1, -1,
+                                 townToView->type + 0x16, EXTRA_0_ID,
+                                 -1, 0, -1, 0, -1, 0);
+                    break;
+                }
+                }
+                break;
+            case EXTRA_1_ID:
+                if (rclick)
+                    goto building_popup;
+                else {
+                    switch (townToView->type) {
+                    case TOWN_CASTLE:
+                        DoTownTavern();
+                        RedrawTownScreen();
+                        break;
+                    case TOWN_INFERNO:
+                        if (townToView->visitingHeroId == -1)
+                            NormalDialog(gpGeneralText->GetText(127), 1,
+                                         -1, -1, -1, 0, -1, 0, -1, 0,
+                                         -1, 0);
+                        else
+                            DoTownGate();
+                        break;
+                    case TOWN_STRONGHOLD:
+                        DoBlacksmith(townToView->visitingHeroId, 0);
+                        pResourceDisplay->Update(1, 1);
+                        break;
+                    case TOWN_NECROPOLIS:
+                        DoSkeletonTransformer();
+                        break;
+                    case TOWN_DUNGEON:
+                        DoPortalOfSummoning();
+                        RedrawTownScreen();
+                        break;
+                    default:
+                        strcpy(text,
+                               GetBuildingInfo(townToView, EXTRA_1_ID,
+                                               1, 1));
+                        NormalDialog(text, 1, -1, -1,
+                                     townToView->type + 0x16, EXTRA_1_ID,
+                                     -1, 0, -1, 0, -1, 0);
+                        break;
+                    }
+                }
+                break;
+            case EXTRA_2_ID:
+                switch (townToView->type) {
+                case TOWN_TOWER:
+                case TOWN_INFERNO:
+                case TOWN_DUNGEON:
+                case TOWN_STRONGHOLD:
+                    if (rclick)
+                        goto building_popup;
+                    else {
+                        strcpy(text,
+                               GetBuildingInfo(townToView, EXTRA_2_ID,
+                                               1, 1));
+                        NormalDialog(text, 1, -1, -1,
+                                     townToView->type + 0x16, EXTRA_2_ID,
+                                     -1, 0, -1, 0, -1, 0);
+                    }
+                    break;
+                }
+                break;
+            case SPECIAL_BUILDING_ID:
+                if (rclick)
+                    goto building_popup;
+                else if (townToView->type == TOWN_TOWER
+                         || townToView->type == TOWN_DUNGEON
+                         || townToView->type == TOWN_CONFLUX) {
+                    DoArtifactMerchants();
+                    pResourceDisplay->Update(1, 1);
+                    if (field_12c)
+                        field_12c->current = -2;
+                    if (field_134)
+                        field_134->current = -2;
+                    field_1c4 = 0;
+                    field_120->Draw(CREATURE_NONE);
+                    field_11c->Draw(CREATURE_NONE);
+                    field_134 = 0;
+                    field_12c = 0;
+                    field_138 = -2;
+                    field_130 = -2;
+                    gpWindowManager->BroadcastMessage(
+                        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+                        TTownScreenWindow::DIVIDE_ID, 0x4008);
+                } else {
+                    strcpy(text,
+                           GetBuildingInfo(townToView, SPECIAL_BUILDING_ID,
+                                           1, 1));
+                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                                 SPECIAL_BUILDING_ID, -1, 0, -1, 0, -1, 0);
+                }
+                break;
+            case HORDE_2_ID:
+            case HORDE_2_UPG_ID:
+                if (rclick) {
+                    QuickViewRecruit(
+                        townToView,
+                        gHorde2DwellingSlot[townToView->type]
+                                           [code - HORDE_2_ID]);
+                } else {
+                    gpRecruitUnit = new recruitUnit(
+                        townToView,
+                        gHorde2DwellingSlot[townToView->type]
+                                           [code - HORDE_2_ID],
+                        1);
+                    if (!gpRecruitUnit)
+                        MemError();
+                    gpExecutive->DoDialog(gpRecruitUnit);
+                    delete gpRecruitUnit;
+                    RedrawTownScreen();
+                }
+                break;
+            case DWELLING_0_ID:
+            case DWELLING_1_ID:
+            case DWELLING_2_ID:
+            case DWELLING_3_ID:
+            case DWELLING_4_ID:
+            case DWELLING_5_ID:
+            case DWELLING_6_ID:
+            case DWELLING_0_UPG_ID:
+            case DWELLING_1_UPG_ID:
+            case DWELLING_2_UPG_ID:
+            case DWELLING_3_UPG_ID:
+            case DWELLING_4_UPG_ID:
+            case DWELLING_5_UPG_ID:
+            case DWELLING_6_UPG_ID:
+                if (rclick) {
+                    QuickViewRecruit(townToView, code - DWELLING_0_ID);
+                } else {
+                    gpRecruitUnit = new recruitUnit(
+                        townToView, code - DWELLING_0_ID, 1);
+                    if (!gpRecruitUnit)
+                        MemError();
+                    gpExecutive->DoDialog(gpRecruitUnit);
+                    delete gpRecruitUnit;
+                    RedrawTownScreen();
+                }
+                break;
+            case HOLY_GRAIL_ID:
+                if (rclick) {
+building_popup:
+                    strcpy(text, GetBuildingInfo(townToView, code, 1, 1));
+                    NormalDialog(text, 4, -1, -1, townToView->type + 0x16,
+                                 code, -1, 0, -1, 0, -1, 0);
+                } else {
+                    strcpy(text, GetBuildingInfo(townToView, code, 1, 1));
+                    NormalDialog(text, 1, -1, -1, townToView->type + 0x16,
+                                 code, -1, 0, -1, 0, -1, 0);
+                }
+                break;
+            case TTownScreenWindow::TOWN_UP_ARROW_ID:
+            case TTownScreenWindow::TOWN_DOWN_ARROW_ID:
+                strcpy(text,
+                       gUnnamed6a56e0[2 * (code - 0x89) + 1]);
+                if (rclick)
+                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                else
+                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                break;
+            case TTownScreenWindow::TOWN_GARRISON_0_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_1_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_2_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_3_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_4_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_5_SELECTOR_ID:
+            case TTownScreenWindow::TOWN_GARRISON_6_SELECTOR_ID:
+            case TTownScreenWindow::GARRISON_PORTRAIT_SELECTOR_ID:
+            case TTownScreenWindow::PORTRAIT_ID:
+            case TTownScreenWindow::VISITING_PORTRAIT_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_1_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_2_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_3_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_4_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_5_SELECTOR_ID:
+            case TTownScreenWindow::HERO_ARMY_6_SELECTOR_ID:
+                if (rclick) {
+                    if (msg.codeY
+                            == TTownScreenWindow::
+                                   VISITING_PORTRAIT_SELECTOR_ID
+                        && townToView->visitingHeroId != -1) {
+                        hero* h = (townToView->visitingHeroId == -1)
+                                      ? 0
+                                      : &gpGame->heroes[
+                                            townToView->visitingHeroId];
+                        TQuickHeroWindow quickHero(
+                            h, TQuickHeroWindow::ViewAll);
+                        quickHero.QuickWindowWait();
+                    } else if (msg.codeY
+                                   == TTownScreenWindow::
+                                          GARRISON_PORTRAIT_SELECTOR_ID
+                               && townToView->garrisonHeroId != -1) {
+                        hero* h = (townToView->garrisonHeroId == -1)
+                                      ? 0
+                                      : &gpGame->heroes[
+                                            townToView->garrisonHeroId];
+                        TQuickHeroWindow quickHero(
+                            h, TQuickHeroWindow::ViewAll);
+                        quickHero.QuickWindowWait();
+                    } else {
+                        int found = 0;
+                        if (msg.codeY >= TTownScreenWindow::
+                                              TOWN_GARRISON_0_SELECTOR_ID
+                            && msg.codeY <= TTownScreenWindow::
+                                                 TOWN_GARRISON_6_SELECTOR_ID) {
+                            selectedStrip = field_11c;
+                            field_128 =
+                                msg.codeY
+                                - TTownScreenWindow::
+                                      TOWN_GARRISON_0_SELECTOR_ID;
+                            found = 1;
+                        }
+                        if (msg.codeY >= TTownScreenWindow::
+                                              HERO_ARMY_0_SELECTOR_ID
+                            && msg.codeY <= TTownScreenWindow::
+                                                 HERO_ARMY_6_SELECTOR_ID) {
+                            selectedStrip = field_120;
+                            field_128 =
+                                msg.codeY
+                                - TTownScreenWindow::HERO_ARMY_0_SELECTOR_ID;
+                        } else if (!found) {
+                            break;
+                        }
+                        if (selectedStrip->group
+                            && selectedStrip->group->armies[field_128]
+                                   != -1) {
+                            gpGame->ViewArmy(*selectedStrip->group,
+                                             field_128,
+                                             selectedStrip->thisHero,
+                                             townToView, 0x77, 0x14, 0, 1);
+                        }
+                    }
+                } else {
+                    DoCommand(field_19c, 0, 0);
+                    SetCommandAndText(&msg);
+                }
+                break;
+            case TTownScreenWindow::TOWN_0_ID:
+            case TTownScreenWindow::TOWN_1_ID:
+            case TTownScreenWindow::TOWN_2_ID:
+                if (rclick) {
+                    int id = gpCurrentPlayer->townIds[
+                        static_cast<TTownScreenWindow*>(TownWindow)
+                            ->field_4c
+                        + msg.codeY - TTownScreenWindow::TOWN_0_ID];
+                    town* t = (id == -1) ? 0 : &gpGame->towns[id];
+                    TQuickTownWindow quickTown(
+                        t, TQuickTownWindow::ViewAll);
+                    quickTown.QuickWindowWait();
+                } else {
+                    int index =
+                        static_cast<TTownScreenWindow*>(TownWindow)
+                            ->field_4c
+                        + msg.codeY - TTownScreenWindow::TOWN_0_ID;
+                    if (gUnnamed6aaa50 != index) {
+                        gUnnamed6aaa50 = index;
+                        int id = player->townIds[index];
+                        townToView = (id == -1) ? 0 : &gpGame->towns[id];
+                        StartMouseThread();
+                        SetupExtraStuff();
+                        SetupTown(1);
+                        message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                        textMessage.id = MESSAGE_WIDGET;
+                        textMessage.codeY = -1;
+                        SetCommandAndText(&textMessage);
+                        StopMouseThread();
+                    }
+                }
+                break;
+            case TTownScreenWindow::BONUS_0_ID:
+            case TTownScreenWindow::BONUS_1_ID:
+            case TTownScreenWindow::BONUS_2_ID:
+            case TTownScreenWindow::BONUS_3_ID:
+            case TTownScreenWindow::BONUS_4_ID:
+            case TTownScreenWindow::BONUS_5_ID:
+            case TTownScreenWindow::BONUS_6_ID:
+                if (rclick) {
+                    TTownScreenWindow* win =
+                        static_cast<TTownScreenWindow*>(TownWindow);
+                    int creature = win->bonus_creatures[
+                        code - TTownScreenWindow::BONUS_0_ID];
+                    if (creature != -1) {
+                        widget* w = win->growth_bonus_icon[
+                            code - TTownScreenWindow::BONUS_0_ID];
+                        const char* popupText = w->RightClick;
+                        if (!popupText)
+                            popupText = w->RollOver;
+                        NormalDialog(popupText, 4, w->x + w->width, w->y,
+                                     0x15, creature, -1, 0, -1, 0, -1, 0);
+                    }
+                }
+                break;
+            case TTownScreenWindow::HALL_ICON_ID:
+                if (rclick) {
+                    int building;
+                    if (townToView->HasBuilding(HALL_VILLAGE_ID, 0))
+                        building = HALL_VILLAGE_ID;
+                    else if (townToView->HasBuilding(HALL_TOWN_ID, 0))
+                        building = HALL_TOWN_ID;
+                    else if (townToView->HasBuilding(HALL_CITY_ID, 0))
+                        building = HALL_CITY_ID;
+                    else
+                        building = HALL_CAPITOL_ID;
+                    strcpy(text,
+                           GetBuildingInfo(townToView, building, 1, 1));
+                    NormalDialog(text, 4, -1, -1, townToView->type + 0x16,
+                                 building, -1, 0, -1, 0, -1, 0);
+                }
+                break;
+            case TTownScreenWindow::CASTLE_ICON_ID:
+                if (rclick) {
+                    if (townToView->HasBuilding(CASTLE_FORT_ID, 0)) {
+                        strcpy(text, GetBuildingInfo(townToView,
+                                                     CASTLE_FORT_ID, 1, 1));
+                        NormalDialog(text, 4, -1, -1,
+                                     townToView->type + 0x16,
+                                     CASTLE_FORT_ID, -1, 0, -1, 0, -1, 0);
+                    } else if (townToView->HasBuilding(CASTLE_CITADEL_ID,
+                                                       0)) {
+                        strcpy(text,
+                               GetBuildingInfo(townToView,
+                                               CASTLE_CITADEL_ID, 1, 1));
+                        NormalDialog(text, 4, -1, -1,
+                                     townToView->type + 0x16,
+                                     CASTLE_CITADEL_ID, -1, 0, -1, 0,
+                                     -1, 0);
+                    } else if (townToView->HasBuilding(CASTLE_CASTLE_ID,
+                                                       0)) {
+                        strcpy(text,
+                               GetBuildingInfo(townToView,
+                                               CASTLE_CASTLE_ID, 1, 1));
+                        NormalDialog(text, 4, -1, -1,
+                                     townToView->type + 0x16,
+                                     CASTLE_CASTLE_ID, -1, 0, -1, 0,
+                                     -1, 0);
+                    }
+                }
+                break;
+            case TTownScreenWindow::BONUS_0_TEXT_ID:
+            case TTownScreenWindow::BONUS_1_TEXT_ID:
+            case TTownScreenWindow::BONUS_2_TEXT_ID:
+            case TTownScreenWindow::BONUS_3_TEXT_ID:
+            case TTownScreenWindow::BONUS_4_TEXT_ID:
+            case TTownScreenWindow::BONUS_5_TEXT_ID:
+            case TTownScreenWindow::BONUS_6_TEXT_ID:
+                if (rclick) {
+                    TTownScreenWindow* win =
+                        static_cast<TTownScreenWindow*>(TownWindow);
+                    int creature = win->bonus_creatures[
+                        code - TTownScreenWindow::BONUS_0_TEXT_ID];
+                    if (creature != -1) {
+                        widget* w = win->growth_bonus_icon[
+                            code - TTownScreenWindow::BONUS_0_TEXT_ID];
+                        const char* popupText = w->RightClick;
+                        if (!popupText)
+                            popupText = w->RollOver;
+                        NormalDialog(popupText, 4, w->x + w->width, w->y,
+                                     0x15, creature, -1, 0, -1, 0, -1, 0);
+                    }
+                }
+                break;
+            case TResourceDisplay::RESOURCE_TEXT_0_ID:
+            case TResourceDisplay::RESOURCE_TEXT_1_ID:
+            case TResourceDisplay::RESOURCE_TEXT_2_ID:
+            case TResourceDisplay::RESOURCE_TEXT_3_ID:
+            case TResourceDisplay::RESOURCE_TEXT_4_ID:
+            case TResourceDisplay::RESOURCE_TEXT_5_ID:
+            case TResourceDisplay::RESOURCE_TEXT_6_ID:
+            case TResourceDisplay::RESOURCE_TEXT_7_ID:
+                strcpy(text,
+                       gUnnamed6a56e0[
+                           2 * gUnnamed642e70[
+                                   code
+                                   - TResourceDisplay::RESOURCE_TEXT_0_ID]
+                           + 1]);
+                if (rclick)
+                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                else
+                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                break;
+            case TResourceDisplay::RESOURCE_BORDER_0_ID:
+            case TResourceDisplay::RESOURCE_BORDER_1_ID:
+            case TResourceDisplay::RESOURCE_BORDER_2_ID:
+            case TResourceDisplay::RESOURCE_BORDER_3_ID:
+            case TResourceDisplay::RESOURCE_BORDER_4_ID:
+            case TResourceDisplay::RESOURCE_BORDER_5_ID:
+            case TResourceDisplay::RESOURCE_BORDER_6_ID:
+                strcpy(text,
+                       gUnnamed6a56e0[
+                           2 * gUnnamed642e70[
+                                   code
+                                   - TResourceDisplay::
+                                         RESOURCE_BORDER_0_ID]
+                           + 1]);
+                if (rclick)
+                    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                else
+                    NormalDialog(text, 1, -1, -1, -1, 0, -1, 0, -1, 0,
+                                 -1, 0);
+                break;
+            }
+            break;
+        }
+        case widget::WIDGET_DESELECT:
+            switch (msg.codeY) {
+            case TTownScreenWindow::TOWN_DOWN_ARROW_ID: {
+                player = gpGame->GetLocalPlayer();
+                TTownScreenWindow* win =
+                    static_cast<TTownScreenWindow*>(TownWindow);
+                if (win->field_4c < player->numTowns - 3)
+                    win->field_4c++;
+                win->UpdateTownLocators();
+                RedrawTownScreen();
+                break;
+            }
+            case TTownScreenWindow::TOWN_UP_ARROW_ID: {
+                gpGame->GetLocalPlayer();
+                TTownScreenWindow* win =
+                    static_cast<TTownScreenWindow*>(TownWindow);
+                if (win->field_4c > 0)
+                    win->field_4c--;
+                win->UpdateTownLocators();
+                RedrawTownScreen();
+                break;
+            }
+            case TTownScreenWindow::DIVIDE_ID: {
+                enum TCreatureType id = creature_type_from_int(
+                    field_12c->group->armies[field_130]);
+                field_11c->Draw(id);
+                field_120->Draw(id);
+                break;
+            }
+            case TTownScreenWindow::EXIT_BUTTON_ID:
+                if (!rclick) {
+                    msg.id = MESSAGE_EXECUTIVE;
+                    msg.codeX = 1;
+                    return 2;
+                }
+                break;
+            }
+            break;
+        case widget::WIDGET_END_DIALOG:
+            msg.id = MESSAGE_EXECUTIVE;
+            msg.codeX = 1;
+            return 2;
+        }
+        break;
+    case MESSAGE_MOUSE_MOVE: {
+        gpWindowManager->ConvertToHover(msg);
+        int hover = msg.codeY;
+        if (hover >= 0 && hover <= DWELLING_6_UPG_ID)
+            hover = static_cast<TTownScreenWindow*>(TownWindow)
+                        ->zBuffer[msg.mouseY * 800 + msg.mouseX] - 1;
+        if (hover != lastHover || msg.qualifier != lastQualifier) {
+            lastHover = hover;
+            lastQualifier = msg.qualifier;
+            SetCommandAndText(&msg);
+        }
+        break;
+    }
+    case MESSAGE_KEY_UP:
+        switch (msg.codeX) {
+        case KEYCODE_SPACE:
+            if (townToView->visitingHeroId != -1
+                && townToView->garrisonHeroId != -1)
+                DoCommand(9, 0, 0);
+            break;
+        case KEYCODE_KP_2:
+            if (gUnnamed6aaa50
+                < gpGame->GetLocalPlayer()->numTowns - 1) {
+                TTownScreenWindow* win =
+                    static_cast<TTownScreenWindow*>(TownWindow);
+                if (win->field_4c
+                    < gpGame->GetLocalPlayer()->numTowns - 3)
+                    win->field_4c++;
+                win->UpdateTownLocators();
+                gUnnamed6aaa50++;
+                int id = player->townIds[gUnnamed6aaa50];
+                townToView = (id == -1) ? 0 : &gpGame->towns[id];
+                StartMouseThread();
+                SetupExtraStuff();
+                SetupTown(1);
+                message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                textMessage.id = MESSAGE_WIDGET;
+                textMessage.codeY = -1;
+                SetCommandAndText(&textMessage);
+                StopMouseThread();
+            }
+            break;
+        case KEYCODE_KP_8:
+            if (gUnnamed6aaa50 > 0) {
+                TTownScreenWindow* win =
+                    static_cast<TTownScreenWindow*>(TownWindow);
+                gpGame->GetLocalPlayer();
+                if (win->field_4c > 0)
+                    win->field_4c--;
+                win->UpdateTownLocators();
+                gUnnamed6aaa50--;
+                int id = player->townIds[gUnnamed6aaa50];
+                townToView = (id == -1) ? 0 : &gpGame->towns[id];
+                StartMouseThread();
+                SetupExtraStuff();
+                SetupTown(1);
+                message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+                textMessage.id = MESSAGE_WIDGET;
+                textMessage.codeY = -1;
+                SetCommandAndText(&textMessage);
+                StopMouseThread();
+            }
+            break;
+        }
+        break;
+    }
+    return 1;
 }
-#endif  // @carcass
 
 // E:\gamedcs\townmgr.cpp:6598
 VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634

@@ -1209,7 +1209,7 @@ events	?monsters_join@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@
 # (push 0xb4 in townManager::Open), layout-required and not gateable
 # per-TU. hist keeps 100.0000; the saturation law says a later
 # declarator can carry it back.
-events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	99.9517	99.9517	100.0000	0xa7250
+events	?monsters_sell_out@advManager@@QAE_NPAVhero@@PAVNewmapCell@@Utype_point@@_N3@Z	100.0000	100.0000	100.0000	0xa7250
 events	?show_rewards@@YIXAAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAV?$vector@Utype_dialog_resource@@V?$allocator@Utype_dialog_resource@@@std@@@2@J@Z	100.0000	100.0000	100.0000	0xa0b00
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
@@ -2905,6 +2905,7 @@ townmgr	?GetBuildingInfo@@YIPADPBVtown@@HEE@Z	99.9592	99.9592	99.9592	0x1d2a40
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
+townmgr	?Main@townManager@@UAEHAAVmessage@@@Z	66.8064	66.8064	66.8064	0x1d3240
 townmgr	?MoveHeroFromGarrison@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5220
 townmgr	?NewStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c6e10
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
@@ -2948,7 +2949,6 @@ townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	
 townmgr	?set_bonus_display@TTownScreenWindow@@QAEXPAVtown@@@Z	87.9325	87.9325	87.9325	0x1c5b40
 townmgr	?set_prerequisite_text@TBuyBuildWindow@@QAEXPBVtown@@H@Z	87.4164	87.4164	87.4164	0x1d5be0
 townmgr	TThievesGuildWindow_SetupThievesGuild	0.0000	0.0000	0.0000	0x1dda10
-townmgr	townManager_Main	0.0000	0.0000	0.0000	0x1d3240
 tradpost	??0TBuyArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e3730
 tradpost	??0TGiveResourceWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e16c0
 tradpost	??0TSellArtifactWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1e5730
