@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer DirectPlay initializer is byte-exact.**
+  Retail `TMultiPlayerWindow::InitRemote` at `0x50fbc0` first records the
+  selected network protocol, passes the player-name widget's string to the
+  global `InitRemote`, and opens the protocol-specific connection through
+  `InitConnection`. Only success reaches `CDPlay::GetCaps`: the timeout at
+  `DPCAPS+0x24` becomes the session refresh interval plus 100 ms, except TCP
+  uses the fixed 1,000 ms interval. Dreamcast CodeView supplies the member
+  signature and 0x28-byte `dpCaps` local; retail independently fixes the PC
+  object offsets, calls and complete four-branch/three-return CFG. The
+  resulting 134-byte VC6 body is exact. The synchronized report reaches
+  **2512/3079 functions exact**, **92.91% fuzzy**, and **60.59% executable
+  coverage**.
+
 - **2026-08-27 — the multiplayer session-refresh handler is byte-exact.**
   Retail `TMultiPlayerWindow::WindowHandler` at `0x50f940` polls sound, gates
   session enumeration on the elapsed refresh timeout, tears down the old

@@ -9,7 +9,10 @@
 #include "window.h"
 #include "textwdgt.h"
 #include "textntry.h"
+#include "netgame.h"
 #include "va.h"
+
+struct _DPCOMPORTADDRESS;
 
 // DC's nested char[21][8] type gives this class its complete 0xac-byte
 // layout. Retail OnOK independently proves the same 21-byte stride and the
@@ -416,6 +419,8 @@ public:
     unsigned char OnTCP();
     unsigned char OnSearch();
     unsigned char OnHotSeat();
+    unsigned char InitRemote(eNetGameType netGameType, const char* sExtra,
+                             _DPCOMPORTADDRESS* comportInfo);
 };
 SIZE(TMultiPlayerWindow, 0x100);
 

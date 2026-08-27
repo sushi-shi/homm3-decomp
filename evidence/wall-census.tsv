@@ -119,7 +119,6 @@ inliner (predict-inline)	142	75.5550	579	cmbtmgr	?place_obstacle@combatManager@@
 register-homing (why-reg)	139	80.2110	700	ai_tactical	?get_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@W4TSpellSchool@@JJJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 control-flow (why-branch)	137	72.0056	491	iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	why-branch	loop-form / merged-return placement / case order (D1-D9)
 inliner (predict-inline)	137	91.1006	1542	advmgr	?ProcessMapSelect@advManager@@QAEXPBVmessage@@PAUtype_point@@PAPAVNewmapCell@@@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 1 under-inline
-unclaimed (no source binding)	134	0.0000	134	multiplayerwindow	TMultiPlayerWindow_InitRemote	reconstruct	no source claim owns this address - carve a VA() claim and reconstruct the body
 control-flow (why-branch)	132	65.6968	386	singleselectionwindow	?GetHeroFace@TSingleSelectionWindow@@QAEXHPAVCNetPlayerHandlerPlayer@@@Z	why-branch	loop-form / merged-return placement / case order (D1-D9)
 register-homing (why-reg)	131	90.8376	1428	recruit	?Update@recruitUnit@@QAEXEJ@Z	why-reg	name a value to steer pseudo order->EAX (B14) / decl order (B6)
 inliner (predict-inline)	130	86.0884	936	game	?read_map_hero_setups@game@@QAEXPAVTAbstractFile@@H@Z	predict-inline	callee expanded on one side only (A8/A9/A12): 2 under-inline, 2 over-inline (3 name-unresolvable pair(s) discounted)

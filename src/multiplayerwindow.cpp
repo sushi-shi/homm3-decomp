@@ -945,13 +945,30 @@ unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* 
     // @stub
 }
 
-VA(0x0050fbc0, 0x86)  // anchor-callee: sole 3-arg member (ret 0xC) calling free InitRemote/InitConnection; stores netGameType global, dc 0x100e18
+#endif
+
+// Byte-exact. Retail initializes the protocol and player name first, then the
+// protocol-specific DirectPlay connection. Only a fully initialized pair
+// reaches the caps query and derives the session-refresh timeout; TCP keeps
+// the original fixed one-second override. DC supplies the signature, local
+// DPCAPS identity and source name; retail fixes the PC layout and every edge.
+VA(0x0050fbc0, 0x86)  // anchor-callee: ret 0xC + global InitRemote/InitConnection pair, dc 0x100e18
 unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const char* sExtra, _DPCOMPORTADDRESS* comportInfo)
 {
-    // @stub
-}
+    DPCAPS dpCaps;
 
-#endif
+    iMPNetProtocol = netGameType;
+    if (!::InitRemote(netGameType, playerName->Text.c_str()))
+        return 0;
+    if (!InitConnection(const_cast<char*>(sExtra), comportInfo))
+        return 0;
+
+    pDPlay->GetCaps(&dpCaps, 1);
+    sessionRefreshTimeout = dpCaps.dwTimeout + 100;
+    if (iMPNetProtocol == MP_TCP)
+        sessionRefreshTimeout = 1000;
+    return 1;
+}
 
 // E:\gamedcs\multiplayerwindow.cpp:418
 VA(0x00510060, 0x6F7)  // anchor-vtable 0x6400f4 into this + CHeroWindowEx base + mudialog.pcx, dc 0x1022f4
