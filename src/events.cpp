@@ -15,16 +15,52 @@
 #include "events.h"
 #include "exec.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
 #include "mousemgr.h"
 #include "philai.h"
 #include "recruit.h"
 #include "remote.h"
+#include "remotedlg.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "townmgr.h"
 #include "winmgr.h"
 #include "textresource.h"
+
+// E:\gamedcs\includes.h:97. The Dreamcast DoAIEvent call graph names this
+// wrapper, and the by-value template beneath it is the same helper shape
+// already preserved by diff.obj.
+template <class T>
+inline const T& _cpp_max(T left, T right)
+{
+    return left < right ? right : left;
+}
+
+inline int event_max(int left, int right)
+{
+    return _cpp_max(left, right);
+}
+
+// E:\gamedcs\netmsg.h:264. The combat message constructor is a header
+// inline in the DC symbols. Retail expands the same member sequence here
+// before copying the received payload into the local message.
+inline CCombatInitMsg::CCombatInitMsg()
+    : t_complex_net_message(RS_COMBAT_INIT)
+{
+    m_point = type_point(0, 0, 0);
+    m_leftHero = 0;
+    m_rightTown = 0;
+    m_rightHero = 0;
+    m_seed = 0;
+    m_winner = 0;
+    m_retreatWin = 0;
+    m_combatSurrender = 0;
+    m_leftOwner = 0;
+    m_leftGold = 0;
+    m_rightOwner = 0;
+    m_rightGold = 0;
+}
 
 // Retail uses the same 0x20-byte 0x424 map-change shape when a prison hero
 // enters the map. Keep the constructor inline at its only events.obj site.
@@ -6339,14 +6375,37 @@ int advManager::CreatureBankEvent(hero* who, NewmapCell* cell, char* cText, type
 }
 #endif  // @carcass
 
-// E:\gamedcs\events.cpp:5805.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:5805.  Shared handler for the three undead lairs:
+// ask a human (or price the visit for the AI), record the visit, then either
+// run the creature bank or apply the emptied-lair penalty once per hero.
 VA(0x004ac490, 0xEE)  // dc-bracket forced, ret 0x1c=p8 (unique), dc 0x9adcc
 void advManager::do_event_undead_lair(hero* current_hero, NewmapCell* cell, const char* question_text, const char* empty_text, const char* reward_text, unsigned long visited_flag, type_point point)
 {
-    // @stub
+    unsigned char human_player = current_hero->belongs_to_human();
+    if (human_player) {
+        NormalDialog(question_text, 2, -1, -1,
+                     -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    if (cell->extraInfo & 0x2000000) {
+        if (human_player)
+            NormalDialog(empty_text, 1, -1, -1,
+                         0x10, 0, -1, 0, -1, 0, -1, 0);
+        if (current_hero->flags & visited_flag)
+            return;
+        current_hero->flags |= visited_flag;
+        current_hero->field_11a--;
+        return;
+    }
+
+    CreatureBankEvent(current_hero, cell, emptyRolloverText, point,
+                      human_player);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:5851.
 VA(0x004ac580, 0x3A7)  // dc-bracket forced, ret 0x2c=p12 (unique), dc 0x9af34
@@ -6565,14 +6624,42 @@ void advManager::HeroLoses(hero* who, int vanish_sound)
     }
 }
 
-// E:\gamedcs\events.cpp:6030.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:6030.  Human heroes without the Sea Captain's
+// Hat lose half of their least valuable occupied stack to a whirlpool.
+// The retail walk keeps only the current minimum in a register and reloads
+// the army arrays from the hero on each pass; the final dialog is
+// advevent.txt row 168, bracketed by the water-hole and windmill rows.
 VA(0x004acaa0, 0x106)  // dc-bracket forced, ret 0x4=p2, dc 0x9b448
 void advManager::DoWhirlpool(hero* who)
 {
-    // @stub
+    if (!gpGame->IsHuman(who->owner)
+        || who->IsWieldingArtifact(ARTIFACT_SEA_CAPTAINS_HAT))
+        return;
+
+    int weakestValue = 99999999;
+    int weakestArmy = -1;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (who->army.numTroops[i] > 0) {
+            int value = who->army.numTroops[i]
+                * akCreatureTypeTraits[who->army.armies[i]].baseFightValue;
+            if (value < weakestValue) {
+                weakestArmy = i;
+                weakestValue = value;
+            }
+        }
+    }
+
+    if (who->army.GetNumArmies() > 1) {
+        who->army.numTroops[weakestArmy] >>= 1;
+        if (!who->army.numTroops[weakestArmy])
+            who->army.armies[weakestArmy] = CREATURE_NONE;
+    } else if (who->army.numTroops[weakestArmy] > 1) {
+        who->army.numTroops[weakestArmy] >>= 1;
+    }
+
+    NormalDialog(gpAdventureEventText->GetText(168), 1, -1, -1,
+                 -1, 0, -1, 0, -1, 0, -1, 0);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:6076.  The pickup/vanish flash over the centre
 // of the adventure map: pick the sample by kind, play it, and fizzle the
@@ -6604,23 +6691,92 @@ void advManager::FizzleCenter(int whichSound)
 }
 
 
-// E:\gamedcs\events.cpp:6118.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:6118.  The AI event path clears a completed route,
+// spends one movement point without going below zero, dispatches without a
+// human dialog, and checks the two aggregate victory conditions.
 VA(0x004acca0, 0xC3)  // anchor-callee DispatchEvent(0x4a84f0), ret 0xc=p4, dc 0x9b670
 void advManager::DoAIEvent(NewmapCell* cell, hero* current_hero, type_point point)
 {
-    // @stub
-}
-#endif  // @carcass
+    if (point.x == current_hero->pathTargetX
+        && point.y == current_hero->pathTargetY
+        && point.z == current_hero->pathTargetZ)
+        current_hero->pathTargetX = current_hero->pathTargetY = -1;
 
-// E:\gamedcs\events.cpp:6149.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
-VA(0x004acd70, 0x365)  // dc-bracket forced, ret 0x4=p2, armyGroup ctors, dc 0x9b788
-int advManager::DoNetCombat(CCombatInitMsg* pCombatInitMsg)
-{
-    // @stub
+    current_hero->movePoints = event_max(--current_hero->movePoints, 0);
+    DispatchEvent(current_hero, cell, point, 0);
+
+    if (current_hero->owner != -1)
+        current_hero->CheckLevel();
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalCreatures())
+        CheckEndGame(0);
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalResources())
+        CheckEndGame(0);
 }
-#endif  // @carcass
+
+// E:\gamedcs\events.cpp:6149.  A remote combat payload is copied to local
+// storage, unpacked into temporary adventure objects, fought, and returned
+// to the sending player when that player is remote. ReceiveHeroTownData owns
+// every allocation returned through the five pointer slots; this wrapper
+// releases them after the result has been sent.
+VA(0x004acd70, 0x365)  // dc-bracket forced, ret 0x4=p2, armyGroup ctors, dc 0x9b788
+int advManager::DoNetCombat(CNetMsg* pNetMsg)
+{
+    hero* leftHero = 0;
+    armyGroup* leftArmyGroup = 0;
+    town* rightTown = 0;
+    hero* rightHero = 0;
+    armyGroup* rightArmyGroup = 0;
+    int rightPlayer = -1;
+
+    CCombatInitMsg combatInitMsg;
+    combatInitMsg.RemoteFn_00512E00(pNetMsg);
+
+    if (IsIconic(hwndApp))
+        ShowWindow(hwndApp, SW_RESTORE);
+    SetForegroundWindow(hwndApp);
+
+    int fromWho;
+    type_point point;
+    int seed;
+    signed char winner;
+    ReceiveHeroTownData(&combatInitMsg, &fromWho, &point,
+                        &leftHero, &leftArmyGroup, &rightPlayer,
+                        &rightTown, &rightHero, &rightArmyGroup,
+                        &seed, &winner,
+                        &gCombatFlag6985a3, &gCombatFlag697744);
+
+    int leftPlayer = leftHero->owner;
+    if (gNetworkActive69954c && !gbThisNetGotAdventureControl) {
+        if (rightHero)
+            SetHeroContext(rightHero->id, 0, 1, 1);
+        else if (rightTown)
+            SetTownContext(rightTown->id, 1, 1);
+    }
+
+    winner = DoCombat(point, leftHero, leftArmyGroup, rightPlayer,
+                      rightTown, rightHero, rightArmyGroup, seed, 0, 0);
+
+    if (!gpGame->IsHuman(leftPlayer))
+        SendHeroTownData(point, leftHero, leftArmyGroup, rightPlayer,
+                         rightTown, rightHero, rightArmyGroup, seed,
+                         fromWho, winner,
+                         gCombatFlag6985a3, gCombatFlag697744);
+
+    if (leftArmyGroup)
+        delete leftArmyGroup;
+    if (rightArmyGroup)
+        delete rightArmyGroup;
+    if (rightTown)
+        delete rightTown;
+    if (rightHero)
+        delete rightHero;
+    if (leftHero)
+        delete leftHero;
+
+    gCombatFlag6985a3 = 0;
+    gCombatFlag697744 = 0;
+    return 1;
+}
 
 // E:\gamedcs\events.cpp:6283.  Located, not reconstructed.
 #if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate

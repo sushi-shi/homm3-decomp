@@ -99,7 +99,7 @@ static const char* const aszUpgradeAllIcons[3] = {
 };
 
 DATA(0x0063eb4c)
-static const float afUpgradeCostFactor[7] = {
+const float afUpgradeCostFactor[7] = {
     0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
 };
 

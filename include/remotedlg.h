@@ -16,12 +16,10 @@
 #include "bitmap16.h"
 #include "dialogbox.h"
 #include "remote.h"
-#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
 #include "armygrp.h"
 #include "hero.h"
 #include "netmsg.h"
 #include "town.h"
-#endif
 
 class CSprite;
 
@@ -177,7 +175,25 @@ protected:
 };
 SIZE(CLevelPickWaitDlg, 0x90);
 
-#ifdef HOMM3_COMBAT_INIT_MSG_DECLS
+class TAbstractFile;
+
+// Retail's complex wire-message base is a vptr followed by an ordinary
+// 20-byte CNetMsg image. The subtype constructor at 0x512c50 writes exactly
+// that layout, and 0x512e00 copies a received header into netmsg before
+// dispatching the remaining payload through virtual read(). The ordinal name
+// is retained because neither retail nor DC names that PC-only bridge.
+class t_complex_net_message {
+public:
+    t_complex_net_message(int subType);
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
+    unsigned char RemoteFn_00512E00(CNetMsg* pNetMsg);
+
+protected:
+    CNetMsg netmsg;  // +0x04
+};
+SIZE(t_complex_net_message, 0x18);
+
 // DC supplies all seventeen payload names and their order. Retail shifts the
 // scalar prefix by four bytes for t_complex_net_message's vptr, retains both
 // 0x38-byte army groups, aligns town to +0xb0, and widens each hero to 0x492.
@@ -209,7 +225,6 @@ public:
     hero m_rightHeroData;           // +0x6aa
 };
 SIZE(CCombatInitMsg, 0xb40);
-#endif
 
 #ifdef HOMM3_REMOTE_BATTLE_DLG_DECLS
 // The remote-combat wait dialog shares CAnimatedDlg's 0x78-byte prefix.

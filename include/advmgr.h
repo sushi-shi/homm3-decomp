@@ -1355,6 +1355,7 @@ public:
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
     void HeroLoses(class hero* who, int vanish_sound);
+    void DoWhirlpool(class hero* who);
     void BVResMsg(const char* message, int resourceType, int quantity);
     void BVMessage(const char* message);
     void OverrideBottomView(EBottomViewType view, int time);
@@ -1424,7 +1425,13 @@ public:
     // rather than casting at the call.
     int CreatureBankEvent(class hero* who, NewmapCell* cell,
                           const char* cText, type_point point,
-                          bool human_player);
+                          unsigned char human_player);
+    void do_event_undead_lair(class hero* current_hero, NewmapCell* cell,
+                              const char* question_text,
+                              const char* empty_text,
+                              const char* reward_text,
+                              unsigned long visited_flag,
+                              type_point point);
     // The two objects that pay a resource out of the cell's own packed
     // record. Both take ExtraInfoUnion for the same reason the war school
     // and the two mills do: nothing but the +0x00 dword is ever touched.
@@ -1672,6 +1679,9 @@ public:
                         int fizzleSound);
     void EraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
+    void DoAIEvent(NewmapCell* cell, class hero* current_hero,
+                   type_point point);
+    int DoNetCombat(class CNetMsg* pNetMsg);
 // advmgr.obj joins the gate for its own DoAdvCommand, whose route walker
 // hands the trigger cell straight to this dispatcher. The guard is SPLIT
 // around the one declarator rather than moved, so the preprocessed text
@@ -1700,6 +1710,23 @@ public:
                  armyGroup* rightArmyGroup, int iSeed,
                  unsigned char bFinishHeroes,
                  unsigned char alternate_layout);
+    void SendHeroTownData(type_point point, hero* leftHero,
+                          armyGroup* leftArmyGroup, long rightPlayer,
+                          town* rightTown, hero* rightHero,
+                          armyGroup* rightArmyGroup, int seed,
+                          int toWhoNetPos, int winner,
+                          unsigned char retreatWin,
+                          unsigned char combatSurrender);
+    void ReceiveHeroTownData(class CCombatInitMsg* pCombatInitMsg,
+                             int* fromWho, type_point* point,
+                             hero** leftHero,
+                             armyGroup** leftArmyGroup,
+                             int* rightPlayer, town** rightTown,
+                             hero** rightHero,
+                             armyGroup** rightArmyGroup, int* seed,
+                             signed char* winner,
+                             unsigned char* retreatWin,
+                             unsigned char* combatSurrender);
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);
@@ -1824,12 +1851,10 @@ public:
     void ScreenScroll(int iDir, int bChangeMouse);
     void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
-    // Two retail-only member ordinals HandleNetMsg drives on gpAdvManager:
-    //   0x482010  the map-change record applier (the 1049..1063 batch)
-    //   0x4acd70  the combat-init hand-off
-    // Neither row is claimed here; both live outside advmgr.obj's band.
+    // Retail-only member ordinal HandleNetMsg drives on gpAdvManager:
+    // 0x482010 is the map-change record applier (the 1049..1063 batch).
+    // Its row remains unclaimed and lives outside advmgr.obj's band.
     void AdvmgrFn_00482010(class CNetMsg* pNetMsg);
-    void AdvmgrFn_004ACD70(class CNetMsg* pNetMsg);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
     void EnableButtons();
@@ -1913,6 +1938,7 @@ public:
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
+extern int gbThisNetGotAdventureControl;
 
 // Two town.obj-owned globals advManager::Close reads. town::View holds the
 // sole DATA claims for both (retail .data 0x6aa5f0 and 0x699548) because it

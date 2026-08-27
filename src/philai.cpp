@@ -16,6 +16,7 @@
 #include "kb.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
+#include "hillfortwindow.h"
 
 // ai_tactical.h's current TSkillMastery view collides with herospec.h's
 // independently reconstructed enum, already included through philai.h.
@@ -32,6 +33,8 @@ void AI_equip_artifacts(hero* current_hero);
 long get_artifact_purchase_price(TArtifact artifact, long market_count,
                                  EGameResource* best_resource);
 TCreatureType siege_artifact_to_creature(TArtifact engine);
+TCreatureType UpgradedCreatureType(TCreatureType type);
+long get_skill_value(const hero* our_hero, int skill, int complex_choice);
 
 VA(0x0042c4a0, 0x108)
 long type_AI_creature_swapper::get_swap_value(
@@ -442,24 +445,108 @@ long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char 
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:3645.  Retail 0x524dd0/243 B: same (hero, skill, uchar)
+// E:\gamedcs\philai.cpp:3645.  Retail 0x524dd0/243 B: same three-argument
 // shape returning a byte, sweeping the 28 skill slots against the hero class's
 // gainSecondarySkillChance row and calling get_skill_value above.  312 -> 243 B,
-// and AI_choose_secondary_skill's tail is its one caller.
-VA(0x00524dd0, 0xF3)  // anchor-callee, dc 0x113ae4
+// and AI_choose_secondary_skill's tail is its one caller. Complete's call site
+// passes the skill and choice as full-width integers.
+// Retail claim promoted to the reconstructed body below.
 unsigned char wants_skill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
 {
     // @stub
 }
 
 // E:\gamedcs\philai.cpp:3744
-VA(0x00524ed0, 0xed)  // anchor-callee, dc 0x113cbc
+// Retail claim promoted to the reconstructed Complete-signature body below.
 void AI_visit_university(hero* current_hero, NewmapCell* cell)
 {
     // @stub
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:3645. Complete passes both the university's int-width
+// skill ids and complex_choice unchanged. The 28-entry score/index arrays are
+// explicit in both retail's 0xe8-byte frame and the two DC locals; the DC
+// std::swap edge is inlined in the ascending selection sort. The descending
+// pass ignores already-known skills and tests `first` against the hero's
+// remaining secondary-skill capacity.
+VA(0x00524dd0, 0xF3)  // anchor-callee + frame, dc 0x113ae4
+unsigned char wants_skill(const hero* our_hero, int first, int complex_choice)
+{
+    long skill_value[28];
+    int skill_index[28];
+
+    int open_slots;
+    int i;
+    for (i = 0; i < 28; i++) {
+        if (our_hero->skillLevel[i] <= 0
+            && (akHeroClasses[our_hero->heroClass]
+                    .gainSecondarySkillChance[i]
+                || first == i))
+            skill_value[i] = get_skill_value(our_hero, i, complex_choice);
+        else
+            skill_value[i] = 0;
+        skill_index[i] = i;
+    }
+
+    for (i = 0; i < 27; i++) {
+        for (int j = i + 1; j < 28; j++) {
+            if (skill_value[skill_index[i]] > skill_value[skill_index[j]])
+                std::swap(skill_index[i], skill_index[j]);
+        }
+    }
+
+    open_slots = 8 - our_hero->skillCount;
+    for (i = 27; i >= 0; i--) {
+        int skill = skill_index[i];
+        if (our_hero->skillLevel[skill] == 0) {
+            if (skill == first)
+                return 1;
+            if (--open_slots <= 0)
+                return 0;
+        }
+    }
+    return 1;
+}
+
+// E:\gamedcs\philai.cpp:3744. Complete's two retail callers first invoke
+// ExtraInfoUnion::get_university and pass its result in EDX, correcting the
+// older DC NewmapCell* parameter to type_university*. The four offered skills
+// are ranked through the hero class's gain chance plus wants_skill/value;
+// ties favour the later slot. Each accepted skill costs 2,000 gold.
+VA(0x00524ed0, 0xED)  // anchor-callee + caller-argument, dc 0x113cbc
+void AI_visit_university(hero* current_hero, type_university* university)
+{
+    if (current_hero->skillCount >= 8)
+        return;
+    if (gpCurrentPlayer->resources[GOLD] < 2000)
+        return;
+
+    const THeroClassTraits* traits = &akHeroClasses[current_hero->heroClass];
+    do {
+        int best_skill = -1;
+        long best_value = 0;
+
+        for (int i = 0; i < 4; i++) {
+            int skill = university->skills[i];
+            if (traits->gainSecondarySkillChance[skill]
+                && current_hero->skillLevel[skill] <= 0
+                && wants_skill(current_hero, skill, 1)) {
+                long value = get_skill_value(current_hero, skill, 1);
+                if (value >= best_value) {
+                    best_value = value;
+                    best_skill = skill;
+                }
+            }
+        }
+
+        if (best_skill == -1)
+            return;
+        current_hero->GiveSS(best_skill, 1);
+        gpCurrentPlayer->resources[GOLD] -= 2000;
+    } while (gpCurrentPlayer->resources[GOLD] >= 2000);
+}
 
 static long value_of_war_factory(const hero* current_hero,
                                  TArtifact engine, long move_cost);
@@ -1330,9 +1417,7 @@ long value_of_hill_fort(const hero* current_hero, long move_cost)
 }
 
 // E:\gamedcs\philai.cpp:2513
-VA(0x00527bb0, 0x11D)  // anchor-callee, dc 0x111630 -- exact xmod callee set
-                       // {UpgradedCreatureType, get_upgrade_cost}; value_of_hill_fort
-                       // ruled out (its armyGroup::get_AI_value cross-TU edge absent)
+// Retail claim promoted to the reconstructed body below; DC identity retained.
 void AI_visit_hill_fort(hero* current_hero)
 {
     // @stub
@@ -1545,6 +1630,50 @@ int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
 
 #endif  // @carcass
 
+// E:\gamedcs\philai.cpp:2513. The retail loop visits the hero's seven army
+// slots and calls exactly UpgradedCreatureType and get_upgrade_cost, matching
+// the two outgoing edges of the DC body. Complete's elemental gate precedes
+// the upgrade lookup. An affordable upgrade consumes all seven resources;
+// its gold component is first scaled by the creature-level hill-fort factor.
+VA(0x00527bb0, 0x11D)  // anchor-callee, dc 0x111630
+void AI_visit_hill_fort(hero* current_hero)
+{
+    int cost[NUM_RESOURCES];
+
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        TCreatureType creature = current_hero->army.armyTypes[i];
+        if (creature == CREATURE_NONE)
+            continue;
+        if (gpGame->f_1f698 == 0
+            && (creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL))
+            continue;
+
+        TCreatureType upgrade = UpgradedCreatureType(creature);
+        if (upgrade == CREATURE_NONE)
+            continue;
+
+        get_upgrade_cost(creature, upgrade,
+                         current_hero->army.numTroops[i], cost);
+        cost[GOLD] = static_cast<int>(static_cast<float>(cost[GOLD])
+            * afUpgradeCostFactor[akCreatureTypeTraits[creature].level]);
+
+        int resource;
+        for (resource = 0; resource <= GOLD; resource++) {
+            if (cost[resource] > gpCurrentPlayer->resources[resource])
+                break;
+        }
+
+        if (resource > GOLD) {
+            for (resource = 0; resource <= GOLD; resource++)
+                gpCurrentPlayer->resources[resource] -= cost[resource];
+            current_hero->army.armyTypes[i] = upgrade;
+        }
+    }
+}
+
 // E:\gamedcs\philai.cpp:2692. Retail changes the DC static's explicit
 // hero parameter into the receiver, but preserves its statement shape:
 // undead armies get no morale credit, the morale curve supplies the only
@@ -1657,7 +1786,7 @@ long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_
 #if 0  // @carcass -- philai body-evidence claims, retail RVA order (divergent from DC link order)
 
 // E:\gamedcs\philai.cpp:2054
-VA(0x00529920, 0x10d)  // anchor-callee, dc 0x110808
+// Retail claim promoted to the reconstructed body below.
 long value_of_bank(const hero* current_hero, NewmapCell* cell)
 {
     // @stub
@@ -1665,6 +1794,45 @@ long value_of_bank(const hero* current_hero, NewmapCell* cell)
 
 // E:\gamedcs\philai.cpp:2128
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2054. Retail first resolves the cell's creature-bank
+// record, rejects an already emptied bank, then values its guards. The record
+// layout and the subsequent +0x38 resource row, creature reward, and artifact
+// vector are independently fixed by the shared creature-bank model.
+VA(0x00529920, 0x10d)  // anchor-callee + record layout, dc 0x110808
+long value_of_bank(const hero* current_hero, NewmapCell* cell)
+{
+    long value;
+    long resource_value;
+    int resource;
+
+    ExtraInfoUnion* info = static_cast<ExtraInfoUnion*>(
+        static_cast<void*>(cell));
+    type_creature_bank& bank = info->get_creature_bank();
+    if (cell->extraInfo & 0x2000000)
+        return 0;
+
+    value = AI_value_of_combat(current_hero, 0, bank.guards, 0, cell);
+    if (value <= -500000000)
+        return value;
+
+    resource_value = 0;
+    for (resource = 0; resource < NUM_RESOURCES; resource++)
+        resource_value = static_cast<long>(
+            static_cast<double>(bank.resources[resource])
+                * gpGame->players[current_hero->owner]
+                      .resourceValue[resource]
+            + static_cast<double>(resource_value));
+    value += resource_value;
+
+    if (bank.reward_creatures > 0)
+        value += bank.reward_creatures
+            * akCreatureTypeTraits[bank.reward_creature].AI_value;
+
+    value = bank.artifacts.size() * gpCurrentPlayer->turnValueOfAvgArtifact
+        + value;
+    return value;
+}
 
 VA(0x00529a30, 0x27f)  // anchor-callee, dc 0x1109b8
 int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
@@ -1878,13 +2046,31 @@ long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
 #if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:2208
-VA(0x0052a710, 0xad)  // anchor-callee, dc 0x110c90
+// Retail claim promoted to the reconstructed body below.
 long value_of_recruiting(const hero* current_hero, TCreatureType creature, short amount)
 {
     // @stub
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\philai.cpp:2208. Retail constructs the purchaser from the
+// hero's owner, the offered creature and a pointer to the local amount, then
+// prices the purchase against the hero army, morale and current-player funds.
+VA(0x0052a710, 0xad)  // exact callee set + frame, dc 0x110c90
+long value_of_recruiting(const hero* current_hero, TCreatureType creature,
+                         short amount)
+{
+    type_AI_creature_purchaser purchaser(
+        current_hero->owner, creature, &amount, 0);
+    unsigned char has_angelic_alliance =
+        gpGame->players[current_hero->owner].hasGivenArtifact(
+            ARTIFACT_ANGELIC_ALLIANCE);
+    return purchaser.get_purchase_value(
+        &current_hero->army,
+        const_cast<hero*>(current_hero)->GetMorale(0, 0, 1), 0,
+        gpCurrentPlayer->resources, has_angelic_alliance);
+}
 
 // E:\gamedcs\philai.cpp:2903.  A resource pile: worth the player's own
 // valuation of that resource times the amount (gold counts hundreds), plus

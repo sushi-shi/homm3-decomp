@@ -22,6 +22,8 @@ long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
 void AI_swap_artifacts(hero* source, hero* destination);
 long AI_get_equip_value(type_artifact artifact, const hero* our_hero,
                         unsigned char exact);
+long get_full_value(const hero* our_hero);
+long remove_negative_artifacts(hero* our_hero);
 
 // The two gift messages extend the shared 20-byte network-message head.
 // Their subtype and total-size constants are the immediates retail stores at
@@ -143,6 +145,8 @@ public:
     type_AI_creature_purchaser(long player,
                                generator* current_generator);
     type_AI_creature_purchaser(long player, town* current_town);
+    type_AI_creature_purchaser(long player, TCreatureType type,
+                               short* amount, unsigned char is_free);
     void set(town* current_town);
     void do_purchase(armyGroup* new_army, short new_morale,
                      armyGroup* new_adjacent_army, long* new_funds,
@@ -713,7 +717,6 @@ long AI_value_of_observatory(struct type_point origin, long player_id, long rang
 // roster and the retail get_value bodies.
 class type_artifact_effect {
 public:
-    long bonus;
     virtual ~type_artifact_effect();
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
@@ -728,57 +731,61 @@ class type_scouting_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
+
+    long bonus;
 };
 
 class type_combat_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
+
+    long bonus;
 };
 
-class type_might_artifact : public type_artifact_effect {
+class type_might_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_power_artifact : public type_artifact_effect {
+class type_power_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_knowledge_artifact : public type_artifact_effect {
+class type_knowledge_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_necromancy_artifact : public type_artifact_effect {
+class type_necromancy_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_movement_artifact : public type_artifact_effect {
+class type_movement_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_spellcaster_artifact : public type_artifact_effect {
+class type_spellcaster_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_morale_artifact : public type_artifact_effect {
+class type_morale_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_luck_artifact : public type_artifact_effect {
+class type_luck_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
@@ -801,8 +808,9 @@ public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 
-    // This concrete type's inherited +4 word is its dwelling level; its
-    // growth bonus is the second constructor argument stored at +8.
+    // This concrete type's +4 word is its dwelling level; its growth bonus
+    // is the second constructor argument stored at +8.
+    long bonus;
     long growthBonus;
 };
 
@@ -812,7 +820,7 @@ public:
                            unsigned char exact) const;
 };
 
-class type_duration_artifact : public type_artifact_effect {
+class type_duration_artifact : public type_power_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
@@ -830,15 +838,29 @@ class type_antimagic_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
+
+    long bonus;
 };
 
-class type_shooter_bonus_artifact : public type_artifact_effect {
+// Retail's vtable at 0x63b74c identifies the concrete spell-granting
+// artifact. Its get_value body reads this SpellID at +4. This also proves
+// that the common virtual base is only its vptr; effect data belongs to each
+// concrete branch, as in the Dreamcast/NH3API hierarchy.
+class type_spell_artifact : public type_artifact_effect {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    SpellID spell;
+};
+
+class type_shooter_bonus_artifact : public type_combat_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
 };
 
-class type_angelic_alliance_artifact : public type_artifact_effect {
+class type_angelic_alliance_artifact : public type_might_artifact {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
@@ -854,6 +876,14 @@ class type_statue_of_legion_artifact : public type_artifact_effect {
 public:
     virtual long get_value(const hero* owner, unsigned char equipped,
                            unsigned char exact) const;
+};
+
+class type_tome_artifact : public type_combat_artifact {
+public:
+    virtual long get_value(const hero* owner, unsigned char equipped,
+                           unsigned char exact) const;
+
+    TSpellSchool school;
 };
 
 // --- type_artifact_effect ---
