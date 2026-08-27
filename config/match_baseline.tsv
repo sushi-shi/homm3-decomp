@@ -287,6 +287,10 @@ ai_player	?split_armies@@YIXPAVhero@@PBV1@PBVarmyGroup@@@Z	79.5286	79.5286	79.52
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_player	?trade_resources@type_AI_player@@QAEXPBHJ@Z	90.1171	90.1171	90.1171	0x2a470
 ai_player	?value_of_adding_army@type_AI_creature_swapper@@IAEJW4TCreatureType@@FAAF_N@Z	89.0856	89.0856	89.0856	0x2c830
+ai_player	?value_of_dwelling@@YIJPAVtown@@FPAEPAH@Z	100.0000	100.0000	100.0000	0x2b520
+ai_player	?value_of_dwelling_upgrade@@YIJPAVtown@@FPAH@Z	100.0000	100.0000	100.0000	0x2b5b0
+ai_player	?value_of_horde@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b790
+ai_player	?value_of_horde_upgrade@@YIJPAVtown@@W4type_building_id@@PAEPAH@Z	100.0000	100.0000	100.0000	0x2b800
 ai_player	attempt_step	0.0000	0.0000	0.0000	0x2fc50
 ai_player	consider_hiring	0.0000	0.0000	0.0000	0x31800
 ai_player	find_all_destinations	0.0000	0.0000	0.0000	0x2edd0
@@ -298,10 +302,6 @@ ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_player	type_artifact_effect_type_artifact_effect	0.0000	0.0000	0.0000	0x32500
 ai_player	type_combat_artifact_type_combat_artifact	0.0000	0.0000	0.0000	0x32540
 ai_player	type_income_artifact_get_value	0.0000	0.0000	0.0000	0x32d20
-ai_player	value_of_dwelling	0.0000	0.0000	0.0000	0x2b520
-ai_player	value_of_dwelling_upgrade	0.0000	0.0000	0.0000	0x2b5b0
-ai_player	value_of_horde	0.0000	0.0000	0.0000	0x2b790
-ai_player	value_of_horde_upgrade	0.0000	0.0000	0.0000	0x2b800
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
 ai_tactical	??0type_AI_combat_parameters@@QAE@PBVcombatManager@@J@Z	100.0000	100.0000	100.0000	0x35ec0
