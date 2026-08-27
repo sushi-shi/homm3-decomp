@@ -69,6 +69,5 @@ Project-authored reconstruction source and tooling are dedicated to the public
 domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
 Files carrying separate copyright or license notices — notably everything under
 `vendor/` — retain those terms. No binary game assets are stored in this
-repository; retail inputs and build outputs incorporating them are not covered
-by this dedication. Thanks to [NH3API](https://github.com/void2012/NH3API)
+repository. Thanks to [NH3API](https://github.com/void2012/NH3API)
 for labelling the executable.
