@@ -209,6 +209,9 @@ DATA(0x0069fbe8) static TSingleSelectionWindow* gUnnamed69fbe8;
 // pop the general-text 686 notice once. 0x69fdc8: the visible file-list
 // row count every scroll arm pages by.
 DATA(0x0069fda0) static unsigned char gUnnamed69fda0;
+// 0x69fda4: the eight-seat join-order table SetHumanSlot consults in
+// net-new-game mode before the plain unassigned fill.
+DATA(0x0069fda4) static int gUnnamed69fda4[8];
 DATA(0x0069fdc8) static int gUnnamed69fdc8;
 // DC-attested static name (globals.csv lastIMHoverID, this TU); the
 // WindowHandler mouse arm highlights the hero-face row under the cursor
@@ -1565,13 +1568,6 @@ unsigned char TSingleSelectionWindow::SetNewPlayerSlot(unsigned long dpid)
     // @stub
 }
 
-// E:\gamedcs\singleselectionwindow.cpp:4470
-DC_ONLY(0x13b22c, 0x4D8)
-void TSingleSelectionWindow::SetHumanSlot()
-{
-    // @stub
-}
-
 // E:\gamedcs\singleselectionwindow.cpp:4621
 DC_ONLY(0x13b704, 0x7C)
 void TSingleSelectionWindow::OnSortMaps(int how)
@@ -1579,18 +1575,139 @@ void TSingleSelectionWindow::OnSortMaps(int how)
     // @stub
 }
 
-// Retail-only (no DC row fits: SetupNewGameMode 1.34x is the nearest
-// and unproven): gated on m_flag65, calls UpdateGameVars 0x583580
-// first, clears every seat's playerPos and the disabled slots'
-// CanBeHuman, then re-seats under the net-mode gates. OnNewPlayerMsg's
-// non-advanced arm calls it no-arg. Ordinal placeholder name.
-VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 calls it no-arg on this; head calls UpdateGameVars 0x583580 + walks m_players at 0x7c stride
-void TSingleSelectionWindow::WindowFn_00584c40()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// DC SetHumanSlot: refresh the game vars, clear every seat and the
+// disabled slots' CanBeHuman, then re-seat. Multiplayer fills seats
+// from the unassigned pool (the join-order table 0x69fda4 first in
+// net-new-game mode); single-player walks the attribute rungs -
+// first human-only slot (converting the rest to computer-only and
+// seeding townIndex from the row's alignment), else first human
+// slot, else the first enabled slot with its CanBeComputer dropped.
+// E:\gamedcs\singleselectionwindow.cpp:4470
+VA(0x00584C40, 0x40D)  // anchor-callee OnNewPlayerMsg 0x589fa0 + SetCurrentMap call it no-arg; head calls UpdateGameVars 0x583580; body is DC SetHumanSlot's seat walk verbatim, size 0.84x dc 0x4D8, dc 0x13b22c
+void TSingleSelectionWindow::SetHumanSlot()
+{
+    if (m_flag65)
+        return;
+    UpdateGameVars();
+    CMapHeaderData& hdr = gpGame->mapHeader;
+    CMapHeaderData::TPlayerSlotAttributes* attrs =
+        hdr.playerSlotAttributes;
+    int i;
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        m_players.humanPlayers[i].playerPos = -1;
+        if (m_flag64 && gpGame->playerDisabled[i])
+            attrs[i].CanBeHuman = 0;
+    }
+    // Residual (19.8): the whole multiplayer arm SINKS - our CL lays
+    // the single-player arm at fallthrough and moves this block past
+    // it, where retail keeps it in source order (fallthrough from the
+    // mode test). if/else, inverted-condition, and two-goto dispatch
+    // spellings all emit the identical inverted layout (measured
+    // 13.82/19.84 across the hdr-split variants); the content and the
+    // branch senses match retail arm-for-arm. The positional masking
+    // then discounts every block. Documented merged-return/layout
+    // class; revisit with a layout-family lever.
+    if (bVideoPaused || gUnnamed6989f0 == WINDOW_MODE_6989F0_3) {
+        if (m_flag64) {
+            for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+                if (gUnnamed69fda4[i] && attrs[i].CanBeHuman) {
+                    int n = m_players.GetUnassignedPlayerPos();
+                    if (n == -1)
+                        break;
+                    m_players.humanPlayers[n].playerPos = i;
+                }
+            }
+            for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+                if (attrs[i].CanBeHuman
+                        && !m_players.GetPlayerInPos(i)) {
+                    int n = m_players.GetUnassignedPlayerPos();
+                    if (n == -1)
+                        return;
+                    m_players.humanPlayers[n].playerPos = i;
+                }
+            }
+            return;
+        }
+        for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+            if (attrs[i].CanBeHuman) {
+                int n = m_players.GetUnassignedPlayerPos();
+                if (n == -1)
+                    return;
+                m_players.humanPlayers[n].playerPos = i;
+            }
+        }
+        return;
+    }
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        if (hdr.playerSlotAttributes[i].CanBeHuman
+                && !hdr.playerSlotAttributes[i].CanBeComputer)
+            break;
+    }
+    if (i < CNetPlayerHandler::MAX_PLAYERS) {
+        for (int j = i; j < CNetPlayerHandler::MAX_PLAYERS; ++j) {
+            hdr.playerSlotAttributes[j].CanBeHuman = 0;
+            hdr.playerSlotAttributes[j].CanBeComputer = 1;
+        }
+        if (bVideoPaused && !pDPlay->IsHost())
+            return;
+        if (SelectionHeaders.size() == 0)
+            return;
+        CNetPlayerHandlerPlayer* p;
+        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+            p = &m_players.humanPlayers[0];
+        else
+            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        if (!p)
+            return;
+        if (field_37F) {
+            p->playerPos = i;
+            p->townIndex = m_localHeader.setup.alignment[i];
+        } else {
+            p->playerPos = i;
+            p->townIndex =
+                SelectionHeaders[currentMap].setup.alignment[i];
+        }
+        return;
+    }
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        if (attrs[i].CanBeHuman)
+            break;
+    }
+    if (i < CNetPlayerHandler::MAX_PLAYERS) {
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        if (!p)
+            return;
+        p->playerPos = i;
+        return;
+    }
+    for (i = 0; i < CNetPlayerHandler::MAX_PLAYERS; ++i) {
+        if (hdr.playerSlotAttributes[i].CanBeHuman
+                || hdr.playerSlotAttributes[i].CanBeComputer)
+            break;
+    }
+    if (i < CNetPlayerHandler::MAX_PLAYERS) {
+        hdr.playerSlotAttributes[i].CanBeComputer = 0;
+        if (bVideoPaused && !pDPlay->IsHost())
+            return;
+        CNetPlayerHandlerPlayer* p;
+        if (gUnnamed6989f0 == WINDOW_MODE_6989F0_3)
+            p = &m_players.humanPlayers[0];
+        else
+            p = m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        if (!p)
+            return;
+        p->playerPos = i;
+    } else {
+        CNetPlayerHandlerPlayer* p =
+            m_players.GetPlayer(gsThisNetPlayerInfo.dpid);
+        if (!p)
+            return;
+        p->playerPos = -1;
+    }
+}
 
 // Sort the source list (TransferHeaders in transfer mode, HeadersA
 // otherwise) by the picked column, refill SelectionHeaders through the
@@ -1831,7 +1948,7 @@ void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
             m_players.computerPlayers[i].heroIndex = -1;
             m_players.computerPlayers[i].townIndex = -1;
         }
-        WindowFn_00584c40();
+        SetHumanSlot();
         MakeHeroFilter();
         if (m_flag65) {
             saveGameEdit->SetText(DATA_COMPGEN(0x0068333c,
@@ -3388,7 +3505,7 @@ unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
                 }
             }
         } else {
-            WindowFn_00584c40();
+            SetHumanSlot();
         }
         // Residual (97.1): the caller-shrink static is what flips the
         // seat-record ctor to retail's out-of-line split (62.4 -> 92.0
