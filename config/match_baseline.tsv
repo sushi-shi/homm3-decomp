@@ -1156,8 +1156,8 @@ events	?InitializeAdventureEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e0e0
 events	?InitializeArtifactEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e100
 events	?InitializeRandomSignText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e140
 events	?PayForArtifact@advManager@@AAEXPAVhero@@PAVNewmapCell@@Utype_point@@PBDFF_N@Z	100.0000	100.0000	100.0000	0x9ed50
-events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	52.9649	52.9649	52.9649	0xaeee0
-events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	31.4198	31.4198	31.4198	0xaeb50
+events	?ReceiveHeroTownData@advManager@@QAEXPAVCCombatInitMsg@@PAHPAUtype_point@@PAPAVhero@@PAPAVarmyGroup@@1PAPAVtown@@341PACPAE7@Z	60.3719	60.3719	60.3719	0xaeee0
+events	?SendHeroTownData@advManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHEE@Z	98.8821	98.8821	98.8821	0xaeb50
 events	?TownEvent@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaafd0
 events	?do_event_dragon_city@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2140
 events	?do_event_hero@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa2800
@@ -1273,7 +1273,7 @@ game	??4reference@?$bitset@$07@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0x
 game	??4reference@?$bitset@$0BM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf8f0
 game	??4reference@?$bitset@$0EG@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcefa0
 game	??4reference@?$bitset@$0JM@@std@@QAEAAV012@_N@Z	100.0000	100.0000	100.0000	0xcf040
-game	??4town@@QAEAAV0@ABV0@@Z	54.6197	54.6197	54.6197	0xd3df0
+game	??4town@@QAEAAV0@ABV0@@Z	100.0000	100.0000	100.0000	0xd3df0
 game	??4type_creature_bank@@QAEAAU0@ABU0@@Z	100.0000	100.0000	100.0000	0xd4260
 game	??A?$bitset@$0JB@@std@@QAE?AVreference@01@I@Z	100.0000	100.0000	100.0000	0xcef80
 game	??D?$bitset_iterator@$0JB@@@QBE?AVreference@?$bitset@$0JB@@std@@XZ	100.0000	100.0000	100.0000	0xd4ca0
@@ -1408,7 +1408,7 @@ game	?_Construct@std@@YIXPAUtype_creature_bank@@ABU2@@Z	100.0000	100.0000	100.00
 game	?_Construct@std@@YIXPAVCObjectType@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3b70
 game	?_Construct@std@@YIXPAVSign@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3880
 game	?_Construct@std@@YIXPAVboat@@ABV2@@Z	100.0000	100.0000	100.0000	0xd39f0
-game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	59.8287	59.8287	59.8287	0xd3630
+game	?_Construct@std@@YIXPAVtown@@ABV2@@Z	100.0000	100.0000	100.0000	0xd3630
 game	?_Dec@const_iterator@?$_Tree@HU?$pair@$$CBHUtype_map_hero_info@@@std@@U_Kfn@?$map@HUtype_map_hero_info@@U?$less@H@std@@V?$allocator@Utype_map_hero_info@@@3@@2@U?$less@H@2@V?$allocator@Utype_map_hero_info@@@2@@std@@QAEXXZ	100.0000	100.0000	100.0000	0xd27b0
 game	?_Destroy@?$vector@UTRumour@game@@V?$allocator@UTRumour@game@@@std@@@std@@IAEXPAUTRumour@game@@0@Z	100.0000	100.0000	100.0000	0xd1760
 game	?_Destroy@?$vector@Utype_creature_bank@@V?$allocator@Utype_creature_bank@@@std@@@std@@IAEXPAUtype_creature_bank@@0@Z	100.0000	100.0000	100.0000	0xd13b0
