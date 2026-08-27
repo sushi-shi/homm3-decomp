@@ -12,15 +12,15 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 <!-- match-score:start -->
 
-**Executable matched: 58.10%** — fuzzy-weighted bytes over all 1,997,013 unfiltered bytes.
+**Executable matched: 58.29%** — fuzzy-weighted bytes over all 1,997,013 unfiltered bytes.
 
-**Match score** — 2,467 / 4,765 functions exact (51.8%) across the full engine (3042 in linked units).
+**Match score** — 2,480 / 4,765 functions exact (52.0%) across the full engine (3058 in linked units).
 
 | Module        | Units |     Functions exact |   Fuzzy | Fuzzy Max |
 | :------------ | ----: | ------------------: | ------: | --------: |
-| `game`        |   117 | 2398 / 2973 (80.7%) |  90.39% |    90.39% |
+| `game`        |   117 | 2411 / 2989 (80.7%) |  90.11% |    90.11% |
 | `zlib-1.1.3`  |    14 |    69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |    0 / 1,723 (0.0%) |    0.0% |      0.0% |
+| `(unmatched)` |     — |    0 / 1,707 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
@@ -62,12 +62,3 @@ homm3 build           # configure + ninja: compile every manifest unit
 homm3 link            # OPT-IN candidate link (layout study; the EXE is not runnable)
 homm3 clean           # nuke build/ entirely; `homm3 init` restores it
 ```
-
-## License
-
-Project-authored reconstruction source and tooling are dedicated to the public
-domain under [CC0 1.0](LICENSE), to the extent the contributors can do so.
-Files carrying separate copyright or license notices — notably everything under
-`vendor/` — retain those terms. No binary game assets are stored in this
-repository; retail inputs and build outputs incorporating them are not covered
-by this dedication.

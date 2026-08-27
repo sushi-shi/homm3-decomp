@@ -9,15 +9,87 @@
 #include "advmgr_popup.h"
 #include "va.h"
 
+// The TU-only full-vector view of the three header lists (see the
+// member block); the element type must be complete for it.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+#include <vector>
+#endif
+
 // Forward-declared for TSingleSelectionWindow's slider members
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
 class slider;
+class Bitmap816;
 class CSaveScreen;
+class CSprite;
 class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
+class textWidget;
+class textButton;
 struct GameSelectionHeadersStruct;
+
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// One cached map/save header row of the file list. Only the stride is
+// modeled: 0xCA4 is fixed by the size() magic-multiply in every
+// vector<GameSelectionHeadersStruct>::size() expansion (WindowHandler's
+// scroll arms): 0x5102371 * 2^-38 is 1/3236 exactly (the /3235 constant
+// would take the add-fix form retail lacks). The DC record
+// (SingleSelectionWindow.h:73) awaits field reconstruction.
+struct GameSelectionHeadersStruct {
+    // COMPOSITION byte-proven round 2 by OnGameHeaderInfoInitMsg's two
+    // resize temps (0x58a440): the default construction calls
+    // ??0NewSMapHeader at +0, the SGameSetupOptions ctor at +0x304 and
+    // ??0SavedGameHeader at +0x700, then zero-fills 61 B at +0x58c and
+    // 301 B at +0x5c9 and stores 1 to setup.difficulty; the temp
+    // teardown calls ??1SavedGameHeader then ??1NewSMapHeader. Every
+    // previously proven field lands inside a member: version/numPlayers/
+    // maxNumHumanPlayers/Size/condition types are header's own
+    // CMapHeaderData band, slotAlignments +0x314 = setup.alignment,
+    // fileName +0x33d = setup.filename, the received flag +0x4a5 =
+    // setup.fileInitialized, isCampaign +0xbe0 = saved.campaignGame and
+    // campaignIndex +0xbe8 = saved.campaign.currentCampaign. 0xCA4 =
+    // 0x304 + 0x1cc + 0xbc + 0x3d + 0x12d + 2 + 8 + 0x5a4 exactly.
+    NewSMapHeader header;             // +0x000
+    SGameSetupOptions setup;          // +0x304
+    // The synthesized operator='s copy shapes split this band: a
+    // dword loop copies eight ints at +0x4d0, a byte loop the 0x9c
+    // band after them. Roles unexercised - ordinal placeholders.
+    int field_4d0[8];                 // +0x4d0
+    char pad_4f0[0x58c - 0x4f0];
+    // The row's display title: the name getters return it for the
+    // single-player list and the net-mode selected panel, and the name
+    // comparator ranks it against the "autosave" prefix rule. Extent =
+    // the ctor's first zero-fill.
+    char title[0x5c9 - 0x58c];        // +0x58c
+    // Second ctor-zeroed text band (extent = the second fill); role
+    // unexercised by reconstructed bodies - provisional name.
+    char description[0x6f6 - 0x5c9];  // +0x5c9
+    char pad_6f6[2];
+    // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
+    // its address to FileTimeToLocalFileTime.
+    _FILETIME fileTime;               // +0x6f8
+    SavedGameHeader saved;            // +0x700
+
+    // Defined out of class in the TU (plain, not inline-marked): /Ob2
+    // expands it at the transfer-opener resize temps exactly as retail
+    // does (member ctors stay calls, the fills and difficulty store
+    // inline) while OnGameHeaderInfoMsg's wire-message construction
+    // keeps retail's call to the 0x578e00 COMDAT.
+    GameSelectionHeadersStruct();
+    // The copy ctor stays DECLARED-ONLY so its call sites keep
+    // retail's out-of-line call (the declare-but-do-not-define
+    // lever). operator= is IMPLICIT: the synthesized memberwise body
+    // is retail's 0x578440 COMDAT, and /Ob2 then reproduces retail's
+    // per-site split - called in SortMaps'/OnDeleteFile's move loops
+    // and the SelectionHeaders mirror, expanded for
+    // OnGameHeaderInfoMsg's source-list row.
+    GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
+    ~GameSelectionHeadersStruct();
+};
+SIZE(GameSelectionHeadersStruct, 0xCA4);
+
+#endif
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -80,6 +152,12 @@ public:
 
     bool DeletePlayer(unsigned long dpid);
     CNetPlayerHandlerPlayer* GetPlayerInPos(int pos);
+    // DC GetCompPlayerInPos; DrawHeroAdvancedOption expands the null
+    // fallback through it (lea into the computer bank).
+    CNetPlayerHandlerPlayer* GetCompPlayerInPos(int pos)
+    {
+        return &computerPlayers[pos];
+    }
     CNetPlayerHandlerPlayer* GetPlayer(unsigned long dpid);
     unsigned char IsFaceTaken(int face, int exclude);
     unsigned char AddNewPlayer(CNetPlayerInfo* pNetPlayer);
@@ -103,7 +181,37 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x36c - 0x66];
+    // Third mode byte of the run: SortMaps (0x585050) sorts and refills
+    // from TransferHeaders when it is set, HeadersA otherwise.
+    unsigned char m_flag66;            // 0x66
+    char pad_67[0x6c - 0x67];
+    // The scenario list's three icon strips, byte-proven by Update
+    // (0x584550): each is the receiver of a CSprite::Draw at columns
+    // 91/309/342 with its own Width/Height re-read off the same load -
+    // map format (frames 0..2), victory condition (0..11) and loss
+    // condition (0..3).
+    CSprite* versionIcons;             // 0x6c
+    CSprite* victoryConditionIcons;    // 0x70
+    CSprite* lossConditionIcons;       // 0x74
+    // The advanced-options row art, all byte-proven by
+    // DrawHeroAdvancedOption (0x58d510): the town strip (frames
+    // 2*town+2 at column 0xb0), the bonus strip (frames 3/8/9/10/town
+    // at 0x148), the eight seat flags at 0x39 (element 0 supplies the
+    // blit extent), the portrait plates at 0xfc (again extent from
+    // element 0; the array extent to +0x35c is the layout bound, the
+    // interior count is not otherwise attested), and the three special
+    // plates - random town (drawn with the random-hero plate's
+    // extent, exactly as retail does), random hero, and the locked
+    // no-hero plate.
+    CSprite* townIcons;                // 0x78
+    CSprite* bonusIcons;               // 0x7c
+    char pad_80[0xa8 - 0x80];
+    Bitmap816* playerFlags[8];         // 0xa8
+    Bitmap816* heroFaces[165];         // 0xc8..0x35c
+    Bitmap816* randomTownBmp;          // 0x35c
+    Bitmap816* randomHeroBmp;          // 0x360
+    char pad_364[0x368 - 0x364];
+    Bitmap816* noHeroBmp;              // 0x368
     // The DC currentIndex/currentMap/durationIndex run (dc offsets
     // 864/868/872) followed by the two option-mode bytes, the save-name
     // editor and the update-proc manager (dc 876/877/880/888) - the whole
@@ -121,7 +229,11 @@ public:
     int durationIndex;                 // 0x378
     unsigned char inAdvancedOptions;   // 0x37c
     unsigned char inScenarioOptions;   // 0x37d
-    char pad_37e[0x37f - 0x37e];
+    // The third right-panel mode byte of the run: the scenario-filter
+    // panel (retail-only - no DC counterpart). Update gates the
+    // general-text 739/740 title pair and the filter-widget refresh
+    // (0x57ef70) on it.
+    unsigned char inFilterOptions;     // 0x37e
     // 0x37f: a setup byte the duration slider snapshots into
     // CNewSetupInfoMsg and OnNewSetupInfoMsg writes back. Role
     // unattested - ordinal placeholder.
@@ -130,27 +242,37 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
-    char pad_38c[0x1034 - 0x38c];
-    // A third header vector (same stride); CheckMissingHeaders scans it
-    // with request-flag 0 where the +0x1044 one takes flag 1. Role
-    // naming provisional.
+    char pad_38c[0x1030 - 0x38c];
+    // The three header lists are real Dinkumware vectors, 0x1030/0x1040/
+    // 0x1050 (allocator, _First, _Last, _End - the size() null-_First
+    // ternary and the 0xCA4 magic-multiply in every consumer, plus
+    // SortMaps' erase/insert calling the out-of-line element operator=
+    // 0x578440 and the _Destroy loop 0x58f080, and the out-of-line
+    // size() COMDAT 0x58eab0 seventeen callers reach with ecx =
+    // this+0x1050). The full vector view needs the element type
+    // complete, so it is gated to this TU; other includers keep the
+    // byte-proven _First/_Last pointer pairs.
+    // HeadersA: scanned by CheckMissingHeaders with request-flag 0.
+    // TransferHeaders: counted by CNewPlayerUpdateProc::Go's init msg;
+    // the transfer path walks it. SortMaps sorts one of the two by
+    // m_flag66 and refills SelectionHeaders from it through the
+    // mapSizeFilter.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    std::vector<GameSelectionHeadersStruct> HeadersA;         // 0x1030
+    std::vector<GameSelectionHeadersStruct> TransferHeaders;  // 0x1040
+    std::vector<GameSelectionHeadersStruct> SelectionHeaders; // 0x1050
+#else
+    char pad_1030[0x1034 - 0x1030];
     GameSelectionHeadersStruct* HeadersAFirst;          // 0x1034
     GameSelectionHeadersStruct* HeadersALast;           // 0x1038
     char pad_103c[0x1044 - 0x103c];
-    // A second header vector at +0x1040 (same 0xCA4 stride, proven by
-    // CNewPlayerUpdateProc::Go's size() expansion feeding the header-count
-    // init msg). Role naming provisional: the transfer path counts THIS
-    // one, the scroll arms walk the +0x1050 one.
     GameSelectionHeadersStruct* TransferHeadersFirst;   // 0x1044
     GameSelectionHeadersStruct* TransferHeadersLast;    // 0x1048
     char pad_104c[0x1054 - 0x104c];
-    // DC SelectionHeaders (a plain pointer there) is a std::vector here:
-    // allocator/_First/_Last/_End at +0x1050..+0x105c. Only the two
-    // pointers the size() expansions read are named; the element stride
-    // 0xCA4 is fixed by the size() magic-multiply in every consumer.
     GameSelectionHeadersStruct* SelectionHeadersFirst;  // 0x1054
     GameSelectionHeadersStruct* SelectionHeadersLast;   // 0x1058
     char pad_105c[0x1060 - 0x105c];
+#endif
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
     GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
@@ -167,14 +289,39 @@ public:
     slider* durationSlider;            // 0x1840
     slider* nameSlider;                // 0x1844
     CChatWidget* chatWidget;           // 0x1848 (DC chatWidget)
-    char pad_184c[0x185c - 0x184c];
-    // 0x185c: DC chatEdit (a CCombatChatEdit there); OnNewHostMsg nulls
-    // it on the host handover. Base-typed until its widget lands.
-    textEntryWidget* chatEdit;
-    char pad_1860[0x1865 - 0x1860];
-    unsigned char field_1865;          // 0x1865, gates the 179 widget show
-    char pad_1866[0x186c - 0x1866];
-    unsigned char field_186c;          // 0x186c, cleared on header-end
+    // The DC chatWidget..flagBack member run (dc 2848..2888) maps onto
+    // retail 0x1848..0x1870 LINEARLY (constant delta 3368, every
+    // already-proven anchor agrees: chatShowing 2877->0x1865, chatToggle
+    // 2880->0x1868, receivingMaps 2884->0x186c, flagBack 2888->0x1870).
+    // The two 4-seat name columns: UpdateNameLists (0x58c960) rebuilds
+    // their text (virtual SetText, slot 13) and the TurnChat pair
+    // shows/hides them.
+    textWidget* nameList1;             // 0x184c (DC nameList1)
+    textWidget* nameList2;             // 0x1850 (DC nameList2)
+    // DC mapChanged/readingMaps; no reconstructed body exercises them
+    // yet - position is the linear-run proof above.
+    unsigned char mapChanged;          // 0x1854
+    unsigned char readingMaps;         // 0x1855
+    char pad_1856[0x1858 - 0x1856];
+    // DC chatEdit (a CCombatChatEdit there): TurnChatOn (0x58ca80)
+    // focuses its id on chat-open. Base-typed until its widget lands.
+    textEntryWidget* chatEdit;         // 0x1858
+    // DC sortWhich - the linear run puts IT at 0x185c, not chatEdit as
+    // an earlier note here claimed; OnNewHostMsg resets it on the host
+    // handover (the dword store 0x58b510+0xd5 the old model read as a
+    // chatEdit null).
+    int sortWhich;                     // 0x185c
+    // The scenario size filter (0 = all, else an EMapDimension):
+    // SortMaps admits a row into SelectionHeaders only when it is clear
+    // or equal to the row's Size; SetFilter stores it.
+    int mapSizeFilter;                 // 0x1860
+    char pad_1864[0x1865 - 0x1864];
+    unsigned char chatShowing;         // 0x1865 (DC chatShowing), gates the 179 widget show
+    char pad_1866[0x1868 - 0x1866];
+    // DC chatToggle: the show/hide-chat textButton whose label the
+    // TurnChat pair rewrites from general-text rows 532/533.
+    textButton* chatToggle;            // 0x1868
+    unsigned char receivingMaps;       // 0x186c (DC receivingMaps), cleared on header-end
     char pad_186d[0x1870 - 0x186d];
     CSaveScreen* flagBack;             // 0x1870, DC-attested name
     // DC gameVersion (a 20-byte TFileVersionInfo product string there);
@@ -182,12 +329,20 @@ public:
     char gameVersion[20];              // 0x1874
     char pad_1888[0x1898 - 0x1888];
     int field_1898;                    // 0x1898, player count cached on drop
-    char pad_189c[0x18a0 - 0x189c];
+    // A widget id the advanced pane records: TurnOffAdvancedOptions
+    // hides GetWidget(field_189c) between the 340 and 343 titles.
+    // Ordinal placeholder.
+    int field_189c;                    // 0x189c
     // Eight setup dwords CNewSetupInfoMsg carries behind the
     // SGameSetupOptions copy; the duration slider reads them back out.
     // Role unattested - ordinal placeholder.
     int field_18A0[8];                 // 0x18a0
-    char pad_18c0[0x1970 - 0x18c0];
+    char pad_18c0[0x196c - 0x18c0];
+    // Retail-only tail member (no DC counterpart - DC's roster ends at
+    // netMsgHandler): the widget the TurnChat pair shows with widget 105
+    // when chat is OFF and hides when it is ON, always addressed
+    // directly, never through GetWidget. Ordinal placeholder.
+    widget* field_196c;                // 0x196c
 
     TSingleSelectionWindow(int gameMode);
     virtual ~TSingleSelectionWindow();
@@ -198,6 +353,32 @@ public:
     void UpdatePlayerPositions(unsigned char updateCurPlayer);
     int Update();
     unsigned char OnGameTransmitInitMsg(CNetMsg* pNetMsg);
+    // DC-named row-name getters (dc 0x139a20/0x139b08) and the selected-
+    // scenario info panel painter (dc 0x139ccc); retail 0x583f20 /
+    // 0x584010 / 0x5840f0, all three called by Update.
+    const char* GetFileName(int which);
+    const char* GetMapName(int which);
+    void DrawBasicMapInfo();
+    // Retail-only (no DC row): refreshes the filter panel's widget
+    // statuses from field_18A0; Update calls it under inFilterOptions.
+    void UpdateFilterWidgets();
+    // Retail 0x584c40 (no DC row proven): the post-join roster
+    // re-seat OnNewPlayerMsg's non-advanced arm runs. Ordinal name.
+    void WindowFn_00584c40();
+    // The advanced-options row accessors (DC names; retail
+    // 0x58ce70/0x58ceb0/0x58cfb0/0x58d0e0/0x58d1f0). DC returns
+    // THeroID from GetDisplayFace; spelled int so the public closure
+    // needs no hero enums - retype when the body lands.
+    unsigned char HasMultipleTowns(int gamePos);
+    unsigned char CanChooseTown(int gamePos);
+    unsigned char CanChooseHero(int gamePos);
+    int GetDisplayFace(int gamePos);
+    const char* GetHeroName(int gamePos);
+    int GetThisPlayerGamePos();
+    unsigned char HighlightFile(char* filename);
+    // DC name; retail 0x589d30 (located round 2 - the version matrix
+    // the transfer opener and OnNewPlayerMsg gate on).
+    unsigned char IsVersionCompatible(const char* otherVersion);
     unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
     int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
                          unsigned char remoteClick);
@@ -212,7 +393,8 @@ public:
     // Provisional spelling: the SoD-only 0x43b init arm's handler; DC has
     // a single OnGameHeaderInfoInitMsg.
     void OnGameHeaderInfoInitMsgEx(CNetMsg* pNetMsg);
-    void OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
+    // Returns 0 when the row number is out of range (retail sets al).
+    unsigned char OnGameHeaderInfoMsg(CNetMsg* pNetMsg);
     void OnMapFileNameMsg(CNetMsg* pNetMsg);
     void OnNewHostMsg(CNetMsg* pNetMsg);
     unsigned char OnUpdatePlayerPosMsg(CNetMsg* pNetMsg);
@@ -237,7 +419,11 @@ public:
     // Retail 0x58e700 (past the stale span end) hands the whole incoming
     // record to the seat assigner; DC's SetNewPlayerSlot takes the dpid
     // alone. Provisional widening.
-    unsigned char SetNewPlayerSlot(CNetPlayerHandlerPlayer* pPlayer);
+    // Retail 0x58e700 (past the stale span end) takes the incoming
+    // CNetPlayerInfo record itself: OnNewPlayerMsg hands it
+    // &pMsg->m_playerInfo and OnUpdatePlayerPosMsg a full seat record
+    // (derived-to-base). DC's takes the dpid alone.
+    unsigned char SetNewPlayerSlot(CNetPlayerInfo* pPlayer);
     // DC takes TTownType; spelled int here so the public closure needs no
     // town.h - retype when the body lands.
     void UpdateTown(int pos, int town, unsigned char inPopup);

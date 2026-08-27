@@ -16,6 +16,10 @@
 #include "textntry.h"
 #include "netmsg.h"
 #include "winmgr.h"
+// TurnChatOn/TurnChatOff relabel chatToggle through textButton's
+// inherited header-inline SetText (retail expands the std::string
+// assign in place, calling only _Grow/_Eos - the button.h shape).
+#include "button.h"
 
 // The namespace-level text-resource loader (retail body 0x55bdd0), fastcall
 // under /Gr. Declared file-locally rather than pulling resourcemanager.h into
@@ -23,6 +27,33 @@
 namespace ResourceManager {
     TTextResource* GetText(const char* name);
 }
+
+// misc.cpp's free-space probe (retail 0x50c7a0), declared file-locally
+// for SaveValid's disk gate rather than pulling misc.h into this
+// closure - the ResourceManager::GetText precedent above.
+unsigned long get_available_disk_space();
+
+// The three CRT entries SaveValid touches, declared file-locally
+// instead of including <io.h>/<direct.h>: those two system headers
+// cost HandleNetMsg 90.16 -> 86.33 through the include-set wall
+// (measured 2026-08-27); three declarators do not.
+extern "C" {
+int __cdecl _chdir(const char* path);
+int __cdecl _open(const char* filename, int oflag, ...);
+int __cdecl _close(int handle);
+}
+
+// The five difficulty names at .bss 0x6a77ec, indexed by the header's
+// difficulty byte in DrawBasicMapInfo's bottom row. Owner TU unlocated -
+// extern only, no DATA claim; house unnamed-cell spelling.
+extern const char* gUnnamed6a77ec[];
+
+// The starting-bonus name table at .bss 0x6a5e14 (rows 0..2 =
+// Artifact/Gold/Resource; the random rung draws general-text 523
+// instead), read by DrawHeroAdvancedOption's bonus column in both
+// mode arms. No attested name survives - house unnamed-cell spelling.
+// Owner TU unlocated - extern only, no DATA claim.
+extern const char* gUnnamed6a5e14[];
 
 // The chat/duration/file-menu slider. DC gives it a `slider` base and a
 // SetResolution/SetState override pair (slots 13/14 of the 0x241b8c vtable).
@@ -120,31 +151,36 @@ public:
     CChatSave* m_save;  // +0x50
 };
 
-// One cached map/save header row of the file list. Only the stride is
-// modeled: 0xCA4 is fixed by the size() magic-multiply in every
-// vector<GameSelectionHeadersStruct>::size() expansion (WindowHandler's
-// scroll arms): 0x5102371 * 2^-38 is 1/3236 exactly (the /3235 constant
-// would take the add-fix form retail lacks). The DC record
-// (SingleSelectionWindow.h:73) awaits field reconstruction.
-struct GameSelectionHeadersStruct {
-    char pad_0[0x314];
-    // UpdatePlayerPositions copies the slot's town alignment out of the
-    // selected header through this row (int, 8 slots at +0x314).
-    int slotAlignments[8];
-    char pad_334[0x33d - 0x334];
-    // Tick's CMapFileNameMsg expansion strncpy's the row's filename from
-    // here (0x3c-byte bound).
-    char fileName[0x3c + 0x2c];  // +0x33d (full extent unmodeled)
-    char pad_3a5[0x4a5 - 0x3a5];
-    // CheckMissingHeaders requests every row whose byte here is still
-    // clear - the received flag of the transfer.
-    unsigned char received;  // +0x4a5
-    char pad_4a6[0x6f8 - 0x4a6];
-    unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
-    unsigned int fileTimeHigh;  // +0x6fc
-    char pad_700[0xCA4 - 0x700];
+
+// Update (0x584550) remaps a campaign scenario's version icon from the
+// row's campaign ordinal: rows 0..6 are Restoration of Erathia's seven
+// campaigns, 7..12 Armageddon's Blade's six, 13..19 Shadow of Death's
+// seven - the same shipping-order split campaignwindow.h's
+// ECampaignSets pages by (byte table at 0x584bd4: 7x0, 6x1, 7x2).
+// Title identities are deliberately not imported (the
+// EGameCampaignOrdinal precedent).
+enum ECampaignOrdinal {
+    CAMPAIGN_ROE_0 = 0,
+    CAMPAIGN_ROE_1 = 1,
+    CAMPAIGN_ROE_2 = 2,
+    CAMPAIGN_ROE_3 = 3,
+    CAMPAIGN_ROE_4 = 4,
+    CAMPAIGN_ROE_5 = 5,
+    CAMPAIGN_ROE_6 = 6,
+    CAMPAIGN_AB_0 = 7,
+    CAMPAIGN_AB_1 = 8,
+    CAMPAIGN_AB_2 = 9,
+    CAMPAIGN_AB_3 = 10,
+    CAMPAIGN_AB_4 = 11,
+    CAMPAIGN_AB_5 = 12,
+    CAMPAIGN_SOD_0 = 13,
+    CAMPAIGN_SOD_1 = 14,
+    CAMPAIGN_SOD_2 = 15,
+    CAMPAIGN_SOD_3 = 16,
+    CAMPAIGN_SOD_4 = 17,
+    CAMPAIGN_SOD_5 = 18,
+    CAMPAIGN_SOD_6 = 19
 };
-SIZE(GameSelectionHeadersStruct, 0xCA4);
 
 // The lobby-only message subtypes past the DC eRS_Messages ladder's
 // 1081 end (SoD renumbered/extended the header-transfer family). Values
@@ -197,11 +233,100 @@ class CSortMapsMsg : public CNetMsg {
 public:
     int m_how;        // +0x14
     int m_direction;  // +0x18
+
+    // SortMaps expands this ctor at its host-broadcast site (the
+    // CRequestHeroFaceReplyMsg pattern).
+    CSortMapsMsg(int how, int direction)
+        : CNetMsg(RS_SORT_MAPS, sizeof(CSortMapsMsg))
+    {
+        m_how = how;
+        m_direction = direction;
+    }
+};
+
+// The sort columns SortMaps' jump table dispatches (`how`), in the file
+// list's column order. Values are the RS_SORT_MAPS payload rungs.
+enum ESortMapsColumn {
+    SORT_MAPS_BY_NAME = 0,
+    SORT_MAPS_BY_PLAYERS = 1,
+    SORT_MAPS_BY_VERSION = 2,
+    SORT_MAPS_BY_SIZE = 3,
+    SORT_MAPS_BY_VICTORY = 4,
+    SORT_MAPS_BY_LOSS = 5
+};
+
+// The six std::sort predicates SortMaps instantiates - retail's band at
+// 0x590070..0x591cf0 is six Dinkumware _Sort instantiations (the
+// one-line sort() wrapper inlines to the observed 4-arg
+// _Sort(_F,_L,_P,(_Ty*)0) calls) and the out-of-line comparator bodies
+// beside them are these functors' operator()s (0x5903b0 tests the
+// "autosave" prefix and picks the +0x33d filename over the +0x58c title
+// on its +1 byte; 0x590e00 ranks numPlayers*10+maxNumHumanPlayers).
+// operator() stays DECLARED-ONLY so every instantiation calls it out of
+// line exactly as retail does; the ctors assign in the body - the
+// isNet-first store order is the byte-proven one.
+struct TSortMapsByName {
+    unsigned char direction;  // +0
+    unsigned char isNet;      // +1
+    TSortMapsByName(unsigned char dir, unsigned char net)
+    {
+        isNet = net;
+        direction = dir;
+    }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByPlayers {
+    unsigned char direction;  // +0
+    TSortMapsByPlayers(unsigned char dir) { direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByVersion {
+    unsigned char direction;  // +0
+    unsigned char isNet;      // +1
+    TSortMapsByVersion(unsigned char dir, unsigned char net)
+    {
+        isNet = net;
+        direction = dir;
+    }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsBySize {
+    unsigned char direction;  // +0
+    TSortMapsBySize(unsigned char dir) { direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByVictory {
+    unsigned char direction;  // +0
+    TSortMapsByVictory(unsigned char dir) { direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
+};
+
+struct TSortMapsByLoss {
+    unsigned char direction;  // +0
+    TSortMapsByLoss(unsigned char dir) { direction = dir; }
+    bool operator()(const GameSelectionHeadersStruct& a,
+                    const GameSelectionHeadersStruct& b) const;
 };
 
 class CSetFilterMsg : public CNetMsg {
 public:
     int m_size;  // +0x14
+
+    // SetFilter expands this ctor at its host-broadcast site.
+    CSetFilterMsg(int size)
+        : CNetMsg(RS_SET_FILTER, sizeof(CSetFilterMsg))
+    {
+        m_size = size;
+    }
 };
 
 class CRequestHeroFaceMsg : public CNetMsg {
@@ -259,7 +384,54 @@ public:
 class CBadVersionMsg : public CNetMsg {
 public:
     char m_version[20];   // +0x14
-    char m_errText[1];    // +0x28, format string (extent unmodeled)
+    // Extent 80 byte-proven by OnGameHeaderInfoInitMsg's reply: the
+    // strncpy bound 0x50 AND the inlined ctor's 0x78 size dword agree.
+    char m_errText[80];   // +0x28, format string
+
+    CBadVersionMsg()
+        : CNetMsg(RS_BAD_VERSION, sizeof(CBadVersionMsg))
+    {
+    }
+};
+
+// The 1024-path long form of the header-transfer opener: count, the
+// net-mode byte and the sender's 20-char version. The receiver
+// distinguishes the two forms by the size dword (0x30 long vs the
+// version-less EX short form) and falls back to "1.0".
+class CGameHeaderInfoInitLongMsg : public CNetMsg {
+public:
+    unsigned long m_numMaps;   // +0x14
+    unsigned char m_netGame;   // +0x18
+    char pad_19[3];
+    char m_version[20];        // +0x1c
+};
+
+// The join announcement: the joining player's full CNetPlayerInfo
+// record plus a version string tail. OnNewPlayerMsg reads the record
+// at +0x14, the name at +0x18 and gates on the version at +0x34; the
+// sender's dpid rides the CNetMsg field_04 slot.
+class CNewPlayerMsg : public CNetMsg {
+public:
+    CNetPlayerInfo m_playerInfo;  // +0x14 (dpid/sName/version int)
+    char m_version[20];           // +0x34
+};
+
+// The per-row header-transfer payload: a t_complex_net_message wrapping
+// one full GameSelectionHeadersStruct plus the transfer flag and row
+// number. vtable 0x641b20; OnGameHeaderInfoMsg's inline construction
+// calls the base default ctor 0x512c20 and the record ctor COMDAT
+// 0x578e00, and 0x578760 is the compiler-generated teardown.
+class CNewMapHeaderInfoMsg : public t_complex_net_message {
+public:
+    unsigned char m_flag;                 // +0x18, 1 = a TransferHeaders row
+    char pad_19[3];
+    int m_number;                         // +0x1c
+    GameSelectionHeadersStruct m_header;  // +0x20
+
+    CNewMapHeaderInfoMsg() {}
+    ~CNewMapHeaderInfoMsg() {}
+    virtual unsigned char read(TAbstractFile* infile);
+    virtual unsigned char write(TAbstractFile* outfile) const;
 };
 
 // The full-roster broadcast (DC ctor takes both player arrays); the
@@ -269,6 +441,16 @@ class CUpdatePlayerPosMsg : public CNetMsg {
 public:
     CNetPlayerHandlerPlayer m_players[8];      // +0x014
     CNetPlayerHandlerPlayer m_compPlayers[8];  // +0x3f4
+
+    // OnNewPlayerMsg's broadcast site proves the pair: sizeof is the
+    // 0x7d4 size dword. Retail also runs the CNetPlayerHandlerPlayer
+    // ctor (0x57c790) over both arrays - one inline loop, one ??_L
+    // vector-iterator call - which our POD record model cannot emit;
+    // that delta is OnNewPlayerMsg's documented residual.
+    CUpdatePlayerPosMsg()
+        : CNetMsg(RS_UPDATE_PLAYER_POS, sizeof(CUpdatePlayerPosMsg))
+    {
+    }
 };
 
 // The per-handicap label pointers the seat rows are retitled from
@@ -295,11 +477,11 @@ public:
     {
         m_flag = flag;
         m_number = number;
-        strncpy(m_fileName, hdr->fileName, 0x3c);
-        m_fileTimeLow = hdr->fileTimeLow;
-        m_fileTimeHigh = hdr->fileTimeHigh;
+        strncpy(m_fileName, hdr->setup.filename, 0x3c);
+        m_fileTimeLow = hdr->fileTime.dwLowDateTime;
+        m_fileTimeHigh = hdr->fileTime.dwHighDateTime;
         for (int i = 0; i < 8; ++i)
-            m_townTypes[i] = hdr->slotAlignments[i];
+            m_townTypes[i] = hdr->setup.alignment[i];
     }
 };
 
@@ -348,11 +530,14 @@ public:
 };
 
 // One queued header re-request (CMapHeaderRequestMsg's payload pair);
-// CNewPlayerUpdateProc::HandleRequests drains a vector of these.
+// CNewPlayerUpdateProc::HandleRequests drains a vector of these. Field
+// order is byte-proven by both ends: HeaderRequested's push_back fills
+// the byte at +0 and the dword at +4, and HandleRequests reads
+// [elem+8*i] as the transfer flag and [elem+8*i+4] as the row number.
 struct SHeaderRequest {
-    int m_number;
     unsigned char m_flag;
-    char pad_5[3];
+    char pad_1[3];
+    int m_number;
 };
 
 // One per-joining-player header-transfer job. Retail vtable 0x641d38
@@ -367,7 +552,16 @@ struct SHeaderRequest {
 // buffer triple the dtor frees and zeroes, m_finished +0x20).
 class __declspec(novtable) CNewPlayerUpdateProc {
 public:
-    CNewPlayerUpdateProc(unsigned long dpid);
+    // Defined inline: Man::NewPlayer expands it (retail 0x58a280's
+    // guts), where the novtable model costs only the 0x641d44 vtbl
+    // store the real derived ctor 0x589240 performs.
+    CNewPlayerUpdateProc(unsigned long dpid)
+    {
+        m_dpid = dpid;
+        m_nextHeader = 0;
+        m_finished = 0;
+        m_lastSendTime = 0;
+    }
     virtual void Go();          // slot 0, 0x577d70
     virtual void Tick();        // slot 1, 0x577de0
     virtual void _vslot02();    // slot 2, 0x578930
@@ -421,14 +615,17 @@ public:
     // 1029 arm forwards the request-msg fields verbatim.
     void HeaderRequested(unsigned long dpid, unsigned char flag,
                          int number);  // retail 0x5892b0
+    // DC NewPlayer (dc 0x14870c, LOCATED round 2 at retail 0x58a280):
+    // take the first free slot and start a transfer job for the
+    // joining dpid.
+    void NewPlayer(unsigned long dpid);  // retail 0x58a280
 };
 
-// The header-cache loader shared by the constructor and the
-// header-transfer-end arm (retail 0x58eab0, past the stale span end):
-// fastcall on the address of the window's SelectionHeaders vector
-// pointers, returning the loaded count. Name provisional - no attested
-// spelling survives.
-unsigned int LoadHeadersList(void* headerVector);
+// RESOLVED (round 2): the round-1 "LoadHeadersList" at 0x58eab0 is the
+// out-of-line vector<GameSelectionHeadersStruct>::size() COMDAT
+// (thiscall on the vector at this+0x1050; seventeen callers). The
+// vector view (HOMM3_SSWINDOW_HEADER_VECTORS) spells those sites
+// .size() and /Ob2 reproduces the call-vs-expand split per caller.
 
 // Layout-identical message subtype carrying the zeroing default ctor the
 // RS_CLICK arm calls out of line (retail 0x589190) - message itself must
