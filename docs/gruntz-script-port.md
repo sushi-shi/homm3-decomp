@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the multiplayer session-join path is byte-exact.** Retail
+  `TMultiPlayerWindow::JoinSession` at `0x50fa10` joins through the selected
+  session's instance GUID, creates the local DirectPlay player with the
+  current game-version dword, and publishes the resulting DPID, name, and
+  version through `gsThisNetPlayerInfo`. The stored DirectPlay error is the
+  success gate; only a clean result clears the session timer. Dreamcast
+  CodeView supplies the member signature and emission-order bracket, while
+  retail independently fixes the session layout, virtual calls, global
+  writes, and complete two-branch/three-return CFG. The resulting 159-byte
+  VC6 body is exact. The synchronized report reaches **2514/3080 functions
+  exact**, **92.93% fuzzy**, and **60.61% executable coverage**.
+
 - **2026-08-27 — the multiplayer session-host path is byte-exact.** Retail
   `TMultiPlayerWindow::HostSession` at `0x50fab0` formats the advertised name
   as `"%s%c%s"` with the `0xfa` separator and local player name, derives the

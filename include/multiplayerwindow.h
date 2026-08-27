@@ -5,6 +5,7 @@
 #ifndef HOMM3_MULTIPLAYERWINDOW_H
 #define HOMM3_MULTIPLAYERWINDOW_H
 
+#include <windows.h>
 #include <string.h>
 #include "window.h"
 #include "textwdgt.h"
@@ -186,13 +187,12 @@ class CSprite;
 // redefines the CAutoArray template THIS header owns, so the two are never
 // co-included; only multiplayerwindow.cpp reads mpw.h, so the definition lives
 // here. TMultiPlayerWindow::Update reads dwFlags, maxPlayers, playerCount and
-// the sessionName string; the two 16-byte GUID blobs are padded so windows.h
-// need not enter this closure. Layout byte-for-byte matches dxplay.h.
+// the sessionName string. Layout byte-for-byte matches dxplay.h.
 class CDPlaySession {
 public:
     unsigned long dwFlags;      // +0x00
-    char guidInstance[16];      // +0x04
-    char guidApp[16];           // +0x14
+    GUID guidInstance;          // +0x04
+    GUID guidApp;               // +0x14
     unsigned long maxPlayers;   // +0x24
     unsigned long playerCount;  // +0x28
     char sessionName[128];      // +0x2c
@@ -414,6 +414,7 @@ public:
     void GoSessionList();
     void GoMainMenu();
     void Update();
+    unsigned char JoinSession(CDPlaySession* pSession, const char* password);
     unsigned char OnHost();
     unsigned char OnJoin();
     unsigned char OnTCP();
