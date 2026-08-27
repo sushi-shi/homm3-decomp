@@ -90,8 +90,29 @@ type_event_record* type_record_move_hero::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:116
 #endif  // @carcass
+
+// Slot 0 of TEN derived vtables at once: 0x63de8c 0x63dea4 0x63debc 0x63ded4
+// 0x63deec 0x63df04 0x63df1c 0x63df34 0x63df4c and 0x63df64 all name this
+// address. Every one of those classes has a trivial implicit destructor that
+// collapses to the base vptr store at 0x49abe0, so the ten wrappers were
+// byte-identical and /OPT:ICF folded them onto one body; the claim names the
+// first of the ten in link order.
+VA_COMPGEN(0x0049a620, 0x21, SCALAR_DELETING_DTOR, type_record_move_hero)
+
+// E:\gamedcs\event_record.cpp:108
+// Entry 1 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x18 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049a650, 0x27)  // anchor-global (factory table 0x6776b0 slot 1), dc 0x8c7c0
+type_event_record* type_record_move_hero::create()
+{
+    return new type_record_move_hero();
+}
+
+// E:\gamedcs\event_record.cpp:116
 VA(0x0049a680, 0x6)  // anchor-vtable, dc 0x8c7e8
 type_event_record_type type_record_move_hero::get_type()
 {
@@ -200,8 +221,21 @@ type_event_record* type_record_teleport::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:219
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:211
+// Entry 2 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x18 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049a980, 0x27)  // anchor-global (factory table 0x6776b0 slot 2), dc 0x8cac4
+type_event_record* type_record_teleport::create()
+{
+    return new type_record_teleport();
+}
+
+// E:\gamedcs\event_record.cpp:219
 VA(0x0049a9b0, 0x6)  // anchor-vtable, dc 0x8caec
 type_event_record_type type_record_teleport::get_type()
 {
@@ -251,6 +285,19 @@ type_event_record_type type_record_claim_mine::get_type()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:247
+// Entry 3 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x10 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049aa40, 0x27)  // anchor-global (factory table 0x6776b0 slot 3), dc 0x8cb88
+type_event_record* type_record_claim_mine::create()
+{
+    return new type_record_claim_mine();
+}
+
 // E:\gamedcs\event_record.cpp:263
 VA(0x0049aa70, 0x71)  // anchor-vtable, dc 0x8cbb4
 unsigned char type_record_claim_mine::load(TAbstractFile* infile, int version)
@@ -338,6 +385,19 @@ type_event_record_type type_record_claim_town::get_type()
 
 #endif  // @carcass
 
+
+// E:\gamedcs\event_record.cpp:331
+// Entry 4 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x10 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049abf0, 0x27)  // anchor-global (factory table 0x6776b0 slot 4), dc 0x8cd5c
+type_event_record* type_record_claim_town::create()
+{
+    return new type_record_claim_town();
+}
+
 // E:\gamedcs\event_record.cpp:347
 // Slot 4 of type_record_claim_town's retail vtable (0x63ded4). The town is
 // re-subscripted for the visibility test: retail forms &towns[id] twice.
@@ -377,8 +437,21 @@ type_event_record* type_record_hide_boat::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:392
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:384
+// Entry 5 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x18 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049acc0, 0x27)  // anchor-global (factory table 0x6776b0 slot 5), dc 0x8ceb0
+type_event_record* type_record_hide_boat::create()
+{
+    return new type_record_hide_boat();
+}
+
+// E:\gamedcs\event_record.cpp:392
 VA(0x0049acf0, 0x6)  // anchor-vtable, dc 0x8ced8
 type_event_record_type type_record_hide_boat::get_type()
 {
@@ -494,8 +567,21 @@ type_event_record* type_record_show_boat::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:466
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:458
+// Entry 6 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x20 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049af00, 0x27)  // anchor-global (factory table 0x6776b0 slot 6), dc 0x8d044
+type_event_record* type_record_show_boat::create()
+{
+    return new type_record_show_boat();
+}
+
+// E:\gamedcs\event_record.cpp:466
 VA(0x0049af30, 0x6)  // anchor-vtable, dc 0x8d06c
 type_event_record_type type_record_show_boat::get_type()
 {
@@ -575,8 +661,21 @@ type_event_record* type_record_erase::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:552
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:544
+// Entry 7 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x18 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049b150, 0x27)  // anchor-global (factory table 0x6776b0 slot 7), dc 0x8d290
+type_event_record* type_record_erase::create()
+{
+    return new type_record_erase();
+}
+
+// E:\gamedcs\event_record.cpp:552
 VA(0x0049b180, 0x6)  // anchor-vtable, dc 0x8d2b8
 type_event_record_type type_record_erase::get_type()
 {
@@ -664,6 +763,19 @@ type_event_record_type type_record_hide_hero::get_type()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:638
+// Entry 8 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x10 / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049b400, 0x27)  // anchor-global (factory table 0x6776b0 slot 8), dc 0x8d500
+type_event_record* type_record_hide_hero::create()
+{
+    return new type_record_hide_hero();
+}
+
 // E:\gamedcs\event_record.cpp:654
 VA(0x0049b430, 0xC8)  // anchor-vtable, dc 0x8d52c
 unsigned char type_record_hide_hero::load(TAbstractFile* infile, int version)
@@ -775,6 +887,19 @@ type_event_record_type type_record_show_hero::get_type()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:736
+// Entry 9 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x1c / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049b6a0, 0x27)  // anchor-global (factory table 0x6776b0 slot 9), dc 0x8d7c0
+type_event_record* type_record_show_hero::create()
+{
+    return new type_record_show_hero();
+}
+
 // E:\gamedcs\event_record.cpp:752
 VA(0x0049b6d0, 0x85)  // anchor-vtable, dc 0x8d7ec
 unsigned char type_record_show_hero::load(TAbstractFile* infile, int version)
@@ -878,8 +1003,21 @@ type_event_record* type_record_player_death::create()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:858
 #endif  // @carcass
+
+// E:\gamedcs\event_record.cpp:850
+// Entry 10 of the record factory table at .data 0x6776b0 (see the table's
+// own note beside game::load_recorded_events). Thirty-nine bytes:
+// `push 0x0c / call operator new / test / base vptr /
+// player_id = gNetLocalGamePos / derived vptr / ret`, and the allocation
+// size is this class's modelled extent exactly.
+VA(0x0049ba00, 0x27)  // anchor-global (factory table 0x6776b0 slot 10), dc 0x8dac0
+type_event_record* type_record_player_death::create()
+{
+    return new type_record_player_death();
+}
+
+// E:\gamedcs\event_record.cpp:858
 VA(0x0049ba30, 0x6)  // anchor-vtable, dc 0x8dae8
 type_event_record_type type_record_player_death::get_type()
 {

@@ -66,6 +66,19 @@
 # same SEH frame and returns with the parent's `ret 0x14`; 0xbf196..0xbf19f is
 # alignment padding before SetupOrigData. The carve's 0xbf107/122 row was an
 # interior catch funclet, not an independent entry. 11938 rows since.
+# BOUNDARY CORRECTION 2026-08-27: TEN function entries the carve missed,
+# all inside event_record.obj's span and all previously scored as inter-
+# function padding. .data 0x6776b0 holds an ELEVEN-entry table of record
+# factory pointers indexed by the type byte load_recorded_events reads off
+# the save stream (`call dword ptr [ecx*4 + 0x6776b0]` at 0x49dc16), and its
+# entries 1..11 are 0x9a650 0x9a980 0x9aa40 0x9abf0 0x9acc0 0x9af00 0x9b150
+# 0x9b400 0x9b6a0 0x9ba00 0x9bc30 - exactly the type_event_record_type
+# roster's order. Entry 11 (0x9bc30, shroud) was already carved; the other
+# ten are 39-byte bodies of the identical shape (`push <cb> / call
+# operator new / test / base vptr / player_id = gNetLocalGamePos / derived
+# vptr / ret`) followed by 0x90 padding, each storing its own class's
+# vftable and each allocating exactly the size event_record.h models for
+# that class (0x18/0x18/0x10/0x10/0x18/0x20/0x18/0x10/0x1c/0x0c). 11948 rows.
 rva	size
 0x1000	89
 0x1060	96
@@ -1981,43 +1994,53 @@ rva	size
 0x9a5e0	29
 0x9a600	29
 0x9a620	33
+0x9a650	39
 0x9a680	6
 0x9a690	177
 0x9a750	99
 0x9a7c0	324
 0x9a910	101
+0x9a980	39
 0x9a9b0	6
 0x9a9c0	123
+0x9aa40	39
 0x9aa70	113
 0x9aaf0	74
 0x9ab40	116
 0x9abc0	25
 0x9abe0	7
+0x9abf0	39
 0x9ac20	126
 0x9aca0	29
+0x9acc0	39
 0x9acf0	6
 0x9ad00	231
 0x9adf0	138
 0x9ae80	68
 0x9aed0	35
+0x9af00	39
 0x9af30	6
 0x9af40	81
 0x9afa0	159
 0x9b040	181
 0x9b100	78
+0x9b150	39
 0x9b180	6
 0x9b190	139
 0x9b220	87
 0x9b280	234
 0x9b370	131
+0x9b400	39
 0x9b430	200
 0x9b500	97
 0x9b570	258
 0x9b680	31
+0x9b6a0	39
 0x9b6d0	133
 0x9b760	149
 0x9b800	350
 0x9b960	158
+0x9ba00	39
 0x9ba30	6
 0x9ba40	61
 0x9ba80	48
