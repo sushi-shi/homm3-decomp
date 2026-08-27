@@ -188,6 +188,17 @@ struct type_creature_value {
     }
 };
 
+// DC classes.csv: 16 B - point, value(+4), move_cost(+8), is_nearby(+12),
+// is_critical(+13). net_value_of_location (0x42f980) adjusts move_cost and
+// sets is_critical; find_all_destinations vectors these records.
+struct HeroDestination {
+    type_point point;
+    long value;
+    long move_cost;
+    unsigned char is_nearby;
+    unsigned char is_critical;
+};
+
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
 // offset is corroborated by a retail reader: reset_magus_hut_value
 // (0x429ab0) reads the short at +0 and writes the long at +4, and

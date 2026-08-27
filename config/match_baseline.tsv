@@ -287,6 +287,7 @@ ai_player	?mark_danger_zones@@YIXPBVhero@@PAJ@Z	100.0000	100.0000	100.0000	0x2de
 ai_player	?mark_town@type_garrison_purchaser@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28580
 ai_player	?mark_town@type_town_threat_checker@@UAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x28570
 ai_player	?mark_towns@type_town_threat_checker@@IAEXPAVhero@@PAVsearchArray@@@Z	99.9554	99.9554	99.9554	0x282b0
+ai_player	?net_value_of_location@@YIHPAVhero@@PAUHeroDestination@@PAJPAUpathCell@@PAVsearchArray@@@Z	85.3476	85.3476	85.3476	0x2f980
 ai_player	?remove_negative_artifacts@@YIJPAVhero@@@Z	100.0000	100.0000	100.0000	0x33bb0
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0
 ai_player	?set@type_AI_creature_purchaser@@QAEXPAVtown@@@Z	100.0000	100.0000	100.0000	0x2d1b0
@@ -303,7 +304,6 @@ ai_player	attempt_step	0.0000	0.0000	0.0000	0x2fc50
 ai_player	consider_hiring	0.0000	0.0000	0.0000	0x31800
 ai_player	find_all_destinations	0.0000	0.0000	0.0000	0x2edd0
 ai_player	mark_destinations	0.0000	0.0000	0.0000	0x2f570
-ai_player	net_value_of_location	0.0000	0.0000	0.0000	0x2f980
 ai_player	type_AI_player_can_trade_resources	0.0000	0.0000	0.0000	0x2a580
 ai_player	type_AI_player_purchase_building	0.0000	0.0000	0.0000	0x2ae00
 ai_tactical	??0army@@QAE@ABV0@@Z	100.0000	100.0000	100.0000	0x37a00

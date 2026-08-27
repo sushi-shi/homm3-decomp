@@ -24,6 +24,7 @@
 #include <functional>
 #include <math.h>
 #include "ai_player.h"
+#include "advmgr.h"
 #include "ai_combat.h"
 #include "ai_spellvalue.h"
 #include "armygrp.h"
@@ -3398,12 +3399,95 @@ long mark_destinations(hero* current_hero, long max_distance, searchArray* searc
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3498
-VA(0x0042f980, 0x2c9)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
-int net_value_of_location(hero* current_hero, HeroDestination* destination, long* strategic_map, pathCell* path_cell, searchArray* search_array)
+#endif  // @carcass
+
+// The per-TU inline copy every retail reader expands (game.cpp:131 is the
+// same pattern); ai_player.obj's own selected COMDAT is the unclaimed
+// 69-byte row at 0x42ec20.
+inline unsigned char type_point::operator==(const type_point* arg)
 {
-    // @stub
+    return arg->x == x && arg->y == y && arg->z == z;
 }
+
+// philai.obj's three-argument event appraisal (0x528040, dc 0x113e24);
+// declared locally the way events.cpp declares its two-argument wrapper.
+long AI_value_of_event(const hero* current_hero, type_point point,
+                       long* move_cost);
+
+// Residual (85.35%): flow-distance 0; why-reg v2 reports first defs agree
+// (ebx=destination, esi=point, edi=point) and the residual is a mid-body
+// edx<->ecx x15 / eax<->ebx x12 rename family plus retail's RMW
+// `add [dest+8], ecx` where we load-add-store - handle-state, no local
+// spelling reaches it (measured 2026-08-27).
+// E:\gamedcs\ai_player.cpp:3498
+// Prices one candidate destination: a pickupable trigger already visited by
+// this player refunds the final step (move_cost re-based to last_point's
+// cost), the strategic map plus the path's barrier/danger fields give the
+// base value, an adjacent monster other than the path's own adds its event
+// value, and the hero's current path target scales the result by 1.5 (+20)
+// where anything else is scaled by Random(1,25)+75 percent.
+VA(0x0042f980, 0x2c9)  // anchor-callee unique (Random, FindAdjacentMonster), dc 0x33854
+int net_value_of_location(hero* current_hero, HeroDestination* destination,
+                          long* strategic_map, pathCell* path_cell,
+                          searchArray* search_array)
+{
+    type_point point = destination->point;
+    NewmapCell* cell = gpAdvManager->GetCell(point);
+    int type = cell->type;
+    if (cell->is_trigger && gAdventureObjectTraits[type][0]) {
+        if (GetMapExtra(point.x, point.y, point.z) & gUnnamed69ccc4) {
+            destination->move_cost -= path_cell->cost;
+            point = path_cell->last_point;
+            pathCell* last_cell = search_array->get_cell(point, 0);
+            destination->move_cost += last_cell->cost;
+        }
+    }
+
+    long value = *get_danger_cell(strategic_map, point)
+        + path_cell->barrier_value;
+    if (path_cell->danger_value <= -500000000 && value >= 1968)
+        path_cell->danger_value = -2500000;
+    if (value >= -500000000)
+        value += path_cell->danger_value;
+
+    if (!gAdventureObjectTraits[type][0]) {
+        type_point monster_pos;
+        if (gpAdvManager->FindAdjacentMonster(destination->point,
+                                              &monster_pos,
+                                              destination->point)) {
+            if (!(path_cell->monster == &monster_pos)
+                && value >= -500000000)
+                value += AI_value_of_event(current_hero, monster_pos,
+                                           &destination->move_cost);
+        }
+    }
+
+    if (destination->point.x == current_hero->pathTargetX
+        && destination->point.y == current_hero->pathTargetY
+        && destination->point.z == current_hero->pathTargetZ) {
+        float scaled = static_cast<float>(value);
+        if (value < 0)
+            scaled = scaled / 1.5f;
+        else
+            scaled = scaled * 1.5f;
+        int result = static_cast<int>(scaled) + 20;
+        if (current_hero->targetIsCritical) {
+            destination->is_critical = 1;
+            return result;
+        }
+        return result;
+    }
+
+    int factor = Random(1, 25) + 75;
+    if (value <= 0)
+        return static_cast<int>(100.0 / factor * value);
+    int result = factor * value / 100;
+    if (result < 1)
+        result = 1;
+    return result;
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:3832
 VA(0x0042fc50, 0x285)  // anchor-callee unique (NewmapCell::cell_is_trigger), dc 0x341f4
