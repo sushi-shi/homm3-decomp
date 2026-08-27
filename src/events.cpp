@@ -4112,14 +4112,73 @@ void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell,
     cell->extraInfo = available;
 }
 
-// E:\gamedcs\events.cpp:2746.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:2746.  The customised resource pile: the editor's
+// TreasureData record may add a message and guardians in front of the
+// payout. The Dreamcast publishes the locals - treasure first, then TWO
+// separate block-scoped `prompt` buffers, one per path, 200 bytes in the
+// guarded arm (DoEventResource's own size) and 52 in the plain one; the
+// &Guardians spill slot sits at -0xc below the 52-byte buffer, which is
+// what the 0x108-byte frame is. get_treasure_data and both EraseAndFizzle+FizzleCenter copies are
+// /Ob2 expansions.
 VA(0x004a4780, 0x45D)  // dc-bracket forced, ret 0x10=p5, dc 0x94ea4
-void advManager::DoCustomResource(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)
+void advManager::DoCustomResource(NewmapCell* cell, hero* current_hero,
+                                  type_point point, bool human_player)
 {
-    // @stub
+    TreasureData* treasure = get_treasure_data(cell);
+    int type = cell->objectIndex;
+    int amount = cell->extraInfo & 0x7ffff;
+    if (type == GOLD)
+        amount = amount * 100;
+
+    if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies()) {
+        if (human_player) {
+            if (treasure->Message.length() > 0) {
+                OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+                UpdBottomView(0, 1, 1);
+                NormalDialog(treasure->Message.c_str(),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                    return;
+            }
+        } else if (AI_value_of_event(current_hero, point) <= 0) {
+            return;
+        }
+
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &treasure->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+        current_hero->GiveResource(type, amount);
+        if (human_player) {
+            char prompt[200];
+            strcpy(prompt, gResourceNames[type]);
+            prompt[0] = tolower(prompt[0]);
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                    prompt);
+            BVResMsg(gText, type, amount);
+        }
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+        return;
+    }
+
+    if (human_player) {
+        if (treasure->Message.length() > 0)
+            NormalDialog(treasure->Message.c_str(),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        char prompt[52];
+        strcpy(prompt, gResourceNames[type]);
+        prompt[0] = tolower(prompt[0]);
+        sprintf(gText,
+                gpAdventureEventText->GetText(
+                    ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                prompt);
+        BVResMsg(gText, type, amount);
+    }
+    current_hero->GiveResource(type, amount);
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:2825.  The resource pile (jump-table arm 0x4f): a
 // customised cell goes straight to DoCustomResource, an ordinary one pays
@@ -4514,14 +4573,79 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
     current_hero->flags |= 0x100000;
 }
 
-// E:\gamedcs\events.cpp:3133.  Located, not reconstructed.
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
+// E:\gamedcs\events.cpp:3133.  The customised spell scroll: the editor
+// record may add a message and guardians ahead of the scroll itself. The
+// Dreamcast publishes the locals - treasure, the {SPELL_SCROLL, spell}
+// artifact record, and the `text` string of the message-less human arm,
+// whose default-ctor-then-assign spelling is what keeps _Tidy and
+// assign(str,0,npos) out of line. The AI guard arm jumps back into the
+// combat preparation, and both exits carry their own EraseAndFizzle
+// expansion - the guarded one keeps FizzleCenter as a call, the plain
+// one folds it.
+// [2026-08-27] Residual (97.4451%): six head instructions - retail
+// interleaves the cell-deref and fullMap load chains 1:1 (cell, fullMap,
+// extraInfo, _First) where our CL serializes the accessor's chain first;
+// everything after the prologue matches. Tried and rejected: spell
+// declared before treasure (97.42), the treasure address written longhand
+// (94.64 - the accessor-tell cuts the other way here).
 VA(0x004a5a80, 0x41E)  // dc-bracket forced, ret 0x10=p5, dc 0x95b54
-void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
+void advManager::DoCustomSpellScroll(hero* current_hero, NewmapCell* cell,
+                                     type_point point, bool human_player)
 {
-    // @stub
+    TreasureData* treasure = get_treasure_data(cell);
+    int spell = cell->extraInfo & 0xff;
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_SPELL_SCROLL;
+    artifact.extra = spell;
+
+    if (treasure->HasCustomGuardians && treasure->Guardians.GetNumArmies()) {
+        if (human_player) {
+            if (treasure->Message.length() > 0) {
+                NormalDialog(treasure->Message.c_str(),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                    return;
+            }
+        } else if (AI_value_of_event(current_hero, point) <= 0) {
+            return;
+        }
+
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &treasure->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_SPELL_SCROLL_GUARDED),
+                    akSpellTraits[spell].name);
+            NormalDialog(gText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+        return;
+    }
+
+    if (human_player) {
+        if (treasure->Message.length() > 0) {
+            NormalDialog(treasure->Message.c_str(),
+                         1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+        } else {
+            std::string text;
+            text = format_string(gpAdventureEventText->GetText(
+                                     ADV_EVENT_TEXT_SPELL_SCROLL),
+                                 akSpellTraits[spell].name);
+            NormalDialog(text.c_str(),
+                         1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+        }
+    }
+    current_hero->GiveArtifact(&artifact, 1, 1);
+    if (!human_player)
+        AI_equip_artifacts(current_hero);
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
-#endif  // @carcass
 
 // E:\gamedcs\events.cpp:3207.  The spell scroll (jump-table arm 0x5d): one
 // scroll, refused outright to a hero with all sixty-four backpack slots

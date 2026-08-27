@@ -59,6 +59,9 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_ARTIFACT_COST_2000 = 5,
     ADV_EVENT_TEXT_ARTIFACT_COST_2500 = 6,
     ADV_EVENT_TEXT_ARTIFACT_COST_3000 = 7,
+    // DoCustomSpellScroll (0x4a5a80): the sprintf format its guarded arm
+    // pays out with, one row after the artifact-cost block.
+    ADV_EVENT_TEXT_SPELL_SCROLL_GUARDED = 8,
     // PayForArtifact (0x49ed50): the affordability refusal followed by
     // the line shown when the player declines the offered artifact.
     ADV_EVENT_TEXT_ARTIFACT_CANT_AFFORD = 12,
