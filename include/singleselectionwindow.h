@@ -37,60 +37,48 @@ struct GameSelectionHeadersStruct;
 // would take the add-fix form retail lacks). The DC record
 // (SingleSelectionWindow.h:73) awaits field reconstruction.
 struct GameSelectionHeadersStruct {
-    // The record's head mirrors CMapHeaderData field-for-field: Update
-    // (0x584550) reads the format dword at +0, the numPlayers /
-    // maxNumHumanPlayers byte pair at +6/+8, the Size dword at +0x18
-    // and the two condition type bytes at +0x30/+0x7c - exactly game.h's
-    // CMapHeaderData offsets (the placeholders vector at +0x20 and the
-    // 0x4c-byte VictoryConditionStruct fix the two condition rows).
-    int version;                       // +0x00, EMapFormatVersion
-    char pad_04[2];
-    unsigned char numPlayers;          // +0x06
-    char pad_07[1];
-    unsigned char maxNumHumanPlayers;  // +0x08
-    char pad_09[0x18 - 0x09];
-    int Size;                          // +0x18, EMapDimension
-    char pad_1c[0x30 - 0x1c];
-    signed char victoryConditionType;  // +0x30, -1..11 (icon frame)
-    char pad_31[0x7c - 0x31];
-    signed char lossConditionType;     // +0x7c, -1..3 (icon frame)
-    char pad_7d[0x314 - 0x7d];
-    // UpdatePlayerPositions copies the slot's town alignment out of the
-    // selected header through this row (int, 8 slots at +0x314).
-    int slotAlignments[8];
-    char pad_334[0x33d - 0x334];
-    // Tick's CMapFileNameMsg expansion strncpy's the row's filename from
-    // here (0x3c-byte bound).
-    char fileName[0x3c + 0x2c];  // +0x33d (full extent unmodeled)
-    char pad_3a5[0x4a5 - 0x3a5];
-    // CheckMissingHeaders requests every row whose byte here is still
-    // clear - the received flag of the transfer.
-    unsigned char received;  // +0x4a5
-    char pad_4a6[0x58c - 0x4a6];
+    // COMPOSITION byte-proven round 2 by OnGameHeaderInfoInitMsg's two
+    // resize temps (0x58a440): the default construction calls
+    // ??0NewSMapHeader at +0, the SGameSetupOptions ctor at +0x304 and
+    // ??0SavedGameHeader at +0x700, then zero-fills 61 B at +0x58c and
+    // 301 B at +0x5c9 and stores 1 to setup.difficulty; the temp
+    // teardown calls ??1SavedGameHeader then ??1NewSMapHeader. Every
+    // previously proven field lands inside a member: version/numPlayers/
+    // maxNumHumanPlayers/Size/condition types are header's own
+    // CMapHeaderData band, slotAlignments +0x314 = setup.alignment,
+    // fileName +0x33d = setup.filename, the received flag +0x4a5 =
+    // setup.fileInitialized, isCampaign +0xbe0 = saved.campaignGame and
+    // campaignIndex +0xbe8 = saved.campaign.currentCampaign. 0xCA4 =
+    // 0x304 + 0x1cc + 0xbc + 0x3d + 0x12d + 2 + 8 + 0x5a4 exactly.
+    NewSMapHeader header;             // +0x000
+    SGameSetupOptions setup;          // +0x304
+    char pad_4d0[0x58c - 0x4d0];
     // The row's display title: the name getters return it for the
     // single-player list and the net-mode selected panel, and the name
-    // comparator ranks it against the "autosave" prefix rule.
-    char title[0x6f8 - 0x58c];  // +0x58c (full extent unmodeled)
+    // comparator ranks it against the "autosave" prefix rule. Extent =
+    // the ctor's first zero-fill.
+    char title[0x5c9 - 0x58c];        // +0x58c
+    // Second ctor-zeroed text band (extent = the second fill); role
+    // unexercised by reconstructed bodies - provisional name.
+    char description[0x6f6 - 0x5c9];  // +0x5c9
+    char pad_6f6[2];
     // The row's file stamp - a real FILETIME: DrawBasicMapInfo hands
     // its address to FileTimeToLocalFileTime.
-    _FILETIME fileTime;         // +0x6f8
-    char pad_700[0xbe0 - 0x700];
-    // Multiplayer rows only: the campaign flag and ordinal Update's
-    // version-icon remap (the jump-table switch) dispatches on.
-    unsigned char isCampaign;   // +0xbe0
-    char pad_be1[0xbe8 - 0xbe1];
-    int campaignIndex;          // +0xbe8, ECampaignOrdinal
-    char pad_bec[0xCA4 - 0xbec];
+    _FILETIME fileTime;               // +0x6f8
+    SavedGameHeader saved;            // +0x700
 
-    // The out-of-line compiler-generated member family emitted ahead of
-    // the window ctor: destructor 0x578290 (EH-framed, tears down the
-    // +0x700 SavedGameHeader-shaped tail - _Destroy 0x58f080 and
-    // ~vector 0x58ea70 loop over it) and memberwise operator= 0x578440
-    // (SortMaps' erase move-loop calls it per element). Declared, not
-    // defined: retail's own COMDATs are the definitions, and a hand
-    // body would have to model the +0x700 tail first. The ctor pair
-    // rides along for vector<>::insert/resize instantiation.
-    GameSelectionHeadersStruct();
+    // Expanded at the resize temps exactly as retail has it: member
+    // ctors stay calls, the body's fills and difficulty store inline.
+    GameSelectionHeadersStruct()
+    {
+        memset(title, 0, sizeof(title));
+        memset(description, 0, sizeof(description));
+        setup.difficulty = 1;
+    }
+    // The copy ctor and memberwise operator= (retail COMDATs 0x578440
+    // op=; SortMaps' erase move-loop calls it per element) stay
+    // DECLARED-ONLY so every call site keeps retail's out-of-line call
+    // (the declare-but-do-not-define lever).
     GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
     ~GameSelectionHeadersStruct();
     GameSelectionHeadersStruct& operator=(
@@ -382,6 +370,9 @@ public:
     const char* GetHeroName(int gamePos);
     int GetThisPlayerGamePos();
     unsigned char HighlightFile(char* filename);
+    // DC name; retail 0x589d30 (located round 2 - the version matrix
+    // the transfer opener and OnNewPlayerMsg gate on).
+    unsigned char IsVersionCompatible(const char* otherVersion);
     unsigned char HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel);
     int OnWidgetDeselect(message* msg, unsigned char* bExitFlag,
                          unsigned char remoteClick);
