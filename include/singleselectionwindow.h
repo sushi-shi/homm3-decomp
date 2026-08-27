@@ -9,6 +9,12 @@
 #include "advmgr_popup.h"
 #include "va.h"
 
+// The TU-only full-vector view of the three header lists (see the
+// member block); the element type must be complete for it.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+#include <vector>
+#endif
+
 // Forward-declared for TSingleSelectionWindow's slider members
 // (+0x1838..+0x1844); the full layouts stay in the private header so this
 // public header's include closure is unchanged for advmgr/townmgr.
@@ -20,6 +26,72 @@ class textEntryWidget;
 class CNewPlayerUpdateMan;
 class CChatWidget;
 struct GameSelectionHeadersStruct;
+
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+// One cached map/save header row of the file list. Only the stride is
+// modeled: 0xCA4 is fixed by the size() magic-multiply in every
+// vector<GameSelectionHeadersStruct>::size() expansion (WindowHandler's
+// scroll arms): 0x5102371 * 2^-38 is 1/3236 exactly (the /3235 constant
+// would take the add-fix form retail lacks). The DC record
+// (SingleSelectionWindow.h:73) awaits field reconstruction.
+struct GameSelectionHeadersStruct {
+    // The record's head mirrors CMapHeaderData field-for-field: Update
+    // (0x584550) reads the format dword at +0, the numPlayers /
+    // maxNumHumanPlayers byte pair at +6/+8, the Size dword at +0x18
+    // and the two condition type bytes at +0x30/+0x7c - exactly game.h's
+    // CMapHeaderData offsets (the placeholders vector at +0x20 and the
+    // 0x4c-byte VictoryConditionStruct fix the two condition rows).
+    int version;                       // +0x00, EMapFormatVersion
+    char pad_04[2];
+    unsigned char numPlayers;          // +0x06
+    char pad_07[1];
+    unsigned char maxNumHumanPlayers;  // +0x08
+    char pad_09[0x18 - 0x09];
+    int Size;                          // +0x18, EMapDimension
+    char pad_1c[0x30 - 0x1c];
+    signed char victoryConditionType;  // +0x30, -1..11 (icon frame)
+    char pad_31[0x7c - 0x31];
+    signed char lossConditionType;     // +0x7c, -1..3 (icon frame)
+    char pad_7d[0x314 - 0x7d];
+    // UpdatePlayerPositions copies the slot's town alignment out of the
+    // selected header through this row (int, 8 slots at +0x314).
+    int slotAlignments[8];
+    char pad_334[0x33d - 0x334];
+    // Tick's CMapFileNameMsg expansion strncpy's the row's filename from
+    // here (0x3c-byte bound).
+    char fileName[0x3c + 0x2c];  // +0x33d (full extent unmodeled)
+    char pad_3a5[0x4a5 - 0x3a5];
+    // CheckMissingHeaders requests every row whose byte here is still
+    // clear - the received flag of the transfer.
+    unsigned char received;  // +0x4a5
+    char pad_4a6[0x6f8 - 0x4a6];
+    unsigned int fileTimeLow;   // +0x6f8, the row's FILETIME pair
+    unsigned int fileTimeHigh;  // +0x6fc
+    char pad_700[0xbe0 - 0x700];
+    // Multiplayer rows only: the campaign flag and ordinal Update's
+    // version-icon remap (the jump-table switch) dispatches on.
+    unsigned char isCampaign;   // +0xbe0
+    char pad_be1[0xbe8 - 0xbe1];
+    int campaignIndex;          // +0xbe8, ECampaignOrdinal
+    char pad_bec[0xCA4 - 0xbec];
+
+    // The out-of-line compiler-generated member family emitted ahead of
+    // the window ctor: destructor 0x578290 (EH-framed, tears down the
+    // +0x700 SavedGameHeader-shaped tail - _Destroy 0x58f080 and
+    // ~vector 0x58ea70 loop over it) and memberwise operator= 0x578440
+    // (SortMaps' erase move-loop calls it per element). Declared, not
+    // defined: retail's own COMDATs are the definitions, and a hand
+    // body would have to model the +0x700 tail first. The ctor pair
+    // rides along for vector<>::insert/resize instantiation.
+    GameSelectionHeadersStruct();
+    GameSelectionHeadersStruct(const GameSelectionHeadersStruct& that);
+    ~GameSelectionHeadersStruct();
+    GameSelectionHeadersStruct& operator=(
+        const GameSelectionHeadersStruct& that);
+};
+SIZE(GameSelectionHeadersStruct, 0xCA4);
+
+#endif
 
 // DC supplies the source identities and member names.  Retail independently
 // proves the Windows layout used here: DeletePlayer walks eight records with
@@ -111,7 +183,10 @@ public:
     char pad_60[0x64 - 0x60];
     unsigned char m_flag64;            // 0x64
     unsigned char m_flag65;            // 0x65
-    char pad_66[0x6c - 0x66];
+    // Third mode byte of the run: SortMaps (0x585050) sorts and refills
+    // from TransferHeaders when it is set, HeadersA otherwise.
+    unsigned char m_flag66;            // 0x66
+    char pad_67[0x6c - 0x67];
     // The scenario list's three icon strips, byte-proven by Update
     // (0x584550): each is the receiver of a CSprite::Draw at columns
     // 91/309/342 with its own Width/Height re-read off the same load -
@@ -169,27 +244,37 @@ public:
     textEntryWidget* saveGameEdit;     // 0x380
     char pad_384[0x388 - 0x384];
     CNewPlayerUpdateMan* pNewPlayerUpdateMan;  // 0x388
-    char pad_38c[0x1034 - 0x38c];
-    // A third header vector (same stride); CheckMissingHeaders scans it
-    // with request-flag 0 where the +0x1044 one takes flag 1. Role
-    // naming provisional.
+    char pad_38c[0x1030 - 0x38c];
+    // The three header lists are real Dinkumware vectors, 0x1030/0x1040/
+    // 0x1050 (allocator, _First, _Last, _End - the size() null-_First
+    // ternary and the 0xCA4 magic-multiply in every consumer, plus
+    // SortMaps' erase/insert calling the out-of-line element operator=
+    // 0x578440 and the _Destroy loop 0x58f080, and the out-of-line
+    // size() COMDAT 0x58eab0 seventeen callers reach with ecx =
+    // this+0x1050). The full vector view needs the element type
+    // complete, so it is gated to this TU; other includers keep the
+    // byte-proven _First/_Last pointer pairs.
+    // HeadersA: scanned by CheckMissingHeaders with request-flag 0.
+    // TransferHeaders: counted by CNewPlayerUpdateProc::Go's init msg;
+    // the transfer path walks it. SortMaps sorts one of the two by
+    // m_flag66 and refills SelectionHeaders from it through the
+    // mapSizeFilter.
+#ifdef HOMM3_SSWINDOW_HEADER_VECTORS
+    std::vector<GameSelectionHeadersStruct> HeadersA;         // 0x1030
+    std::vector<GameSelectionHeadersStruct> TransferHeaders;  // 0x1040
+    std::vector<GameSelectionHeadersStruct> SelectionHeaders; // 0x1050
+#else
+    char pad_1030[0x1034 - 0x1030];
     GameSelectionHeadersStruct* HeadersAFirst;          // 0x1034
     GameSelectionHeadersStruct* HeadersALast;           // 0x1038
     char pad_103c[0x1044 - 0x103c];
-    // A second header vector at +0x1040 (same 0xCA4 stride, proven by
-    // CNewPlayerUpdateProc::Go's size() expansion feeding the header-count
-    // init msg). Role naming provisional: the transfer path counts THIS
-    // one, the scroll arms walk the +0x1050 one.
     GameSelectionHeadersStruct* TransferHeadersFirst;   // 0x1044
     GameSelectionHeadersStruct* TransferHeadersLast;    // 0x1048
     char pad_104c[0x1054 - 0x104c];
-    // DC SelectionHeaders (a plain pointer there) is a std::vector here:
-    // allocator/_First/_Last/_End at +0x1050..+0x105c. Only the two
-    // pointers the size() expansions read are named; the element stride
-    // 0xCA4 is fixed by the size() magic-multiply in every consumer.
     GameSelectionHeadersStruct* SelectionHeadersFirst;  // 0x1054
     GameSelectionHeadersStruct* SelectionHeadersLast;   // 0x1058
     char pad_105c[0x1060 - 0x105c];
+#endif
     // The header row of the currently selected map/save;
     // UpdatePlayerPositions reads the per-slot alignments through it.
     GameSelectionHeadersStruct* pCurrentHeader;         // 0x1060
@@ -210,7 +295,11 @@ public:
     // 0x185c: DC chatEdit (a CCombatChatEdit there); OnNewHostMsg nulls
     // it on the host handover. Base-typed until its widget lands.
     textEntryWidget* chatEdit;
-    char pad_1860[0x1865 - 0x1860];
+    // The scenario size filter (0 = all, else an EMapDimension):
+    // SortMaps admits a row into SelectionHeaders only when it is clear
+    // or equal to the row's Size; SetFilter stores it.
+    int mapSizeFilter;                 // 0x1860
+    char pad_1864[0x1865 - 0x1864];
     unsigned char field_1865;          // 0x1865, gates the 179 widget show
     char pad_1866[0x186c - 0x1866];
     unsigned char field_186c;          // 0x186c, cleared on header-end
