@@ -26,7 +26,7 @@
 double AI_value_of_morale(long morale, long change);
 double AI_value_of_luck(long luck, long change);
 long AI_get_value_of_artifact(type_artifact artifact, const hero* owner,
-                              bool equipped, bool exact);
+                              unsigned char equipped, unsigned char exact);
 long AI_get_value_of_artifact(const type_artifact& artifact, long player_id);
 void AI_set_hero_bonuses(hero* our_hero);
 void AI_equip_artifacts(hero* current_hero);
@@ -1380,13 +1380,14 @@ long type_spellvalue::get_value_of_increase(long base_value,
     return increased - base_value;
 }
 
-// The Dinkumware max shape retail expands around the two floored
-// valuations below: by-value parameters, const-reference result, so the
-// picked side comes back by address (advmgr.cpp precedent).
+// E:\gamedcs\includes.h:124 - the reference-returning max the tree's
+// other personalities carry (advmgr/quicktownwindow/armygrp precedent):
+// by-value parameters, const-reference result, so the picked side comes
+// back by address and the branch keeps retail's jl polarity.
 template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
 {
-    return (_X > _Y ? _X : _Y);
+    return (_X < _Y ? _Y : _X);
 }
 
 // E:\gamedcs\philai.cpp:1725.  Refresh the per-hero AI valuations: the
@@ -1405,10 +1406,10 @@ void AI_set_hero_bonuses(hero* our_hero)
 
     long base_value = value.get_best_spell_value(SPELL_VALUE_CLASS_MASK);
     our_hero->value_of_power =
-        _cpp_max<long>(value.get_value_of_increase(base_value, 1, 1, 0), 10);
+        max_ref<long>(value.get_value_of_increase(base_value, 1, 1, 0), 10);
     our_hero->value_of_duration =
         value.get_value_of_increase(base_value, 0, 1, 0);
-    our_hero->value_of_knowledge = _cpp_max<long>(
+    our_hero->value_of_knowledge = max_ref<long>(
         value.get_value_of_increase(base_value, 0, 0, 30) / 3, 10);
 
     long initial_mana = value.get_mana();
@@ -2104,10 +2105,9 @@ int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
     if (player->resources[GOLD] < 1000)
         return 0;
 
-    long knowledge_value = current_hero->value_of_knowledge;
-    long power_value = current_hero->value_of_power;
     return static_cast<int>(
-        (power_value < knowledge_value ? knowledge_value : power_value)
+        max_ref<long>(current_hero->value_of_power,
+                      current_hero->value_of_knowledge)
         - player->resourceValue[GOLD] * 1000.0);
 }
 
@@ -2122,11 +2122,13 @@ VA(0x0052a010, 0x12a)  // anchor: mines-vector record walk + gMineCharacteristic
 int ValueOfMine(const hero* current_hero, NewmapCell* cell)
 {
     mine* current_mine = &gpGame->mines[cell->extraInfo];
+    long value = 0;
     int mine_type = current_mine->type;
-    if (gpGame->OnSameTeam(current_mine->playerOwner, gNetLocalGamePos))
+    int same_team =
+        gpGame->OnSameTeam(current_mine->playerOwner, gNetLocalGamePos);
+    if (same_team)
         return 0;
 
-    long value = 0;
     if (current_mine->guards.HasCreatures()) {
         value = AI_value_of_combat(current_hero, 0, current_mine->guards, 0,
                                    cell);
@@ -2174,12 +2176,12 @@ int value_of_move_source(const hero* current_hero, long flag, short increase,
 {
     if (current_hero->flags & flag)
         return 0;
-    if (*move_cost < increase) {
-        *move_cost = 0;
-        return 10000;
+    if (*move_cost >= increase) {
+        *move_cost -= increase;
+        return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
     }
-    *move_cost -= increase;
-    return const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
+    *move_cost = 0;
+    return 10000;
 }
 
 // E:\gamedcs\philai.cpp:2752.  An obelisk's worth: nothing once this
@@ -2199,11 +2201,19 @@ int value_of_obelisk(NewmapCell* cell, long player_id)
         return 0;
 
     playerData* player = &gpGame->players[player_id];
-    type_point guess;
-    memcpy(&guess, player->puzzle_guess, sizeof guess);
-    if (guess.x == gpGame->ultimateArtifactX
-        && guess.y == gpGame->ultimateArtifactY
-        && guess.z == gpGame->ultimateArtifactZ)
+    // The odd-offset packed guess: word-sized memcpy bridges, the
+    // playerData::Init precedent (game.cpp), then the type_point field
+    // extractions spelled at short width as retail reads them.
+    unsigned short guess_lo;
+    unsigned short guess_hi;
+    memcpy(&guess_lo, player->puzzle_guess, sizeof guess_lo);
+    memcpy(&guess_hi, player->puzzle_guess + 2, sizeof guess_hi);
+    short guess_x = static_cast<short>(guess_lo << 6);
+    short guess_y = static_cast<short>(guess_hi << 6);
+    if (static_cast<short>(guess_x >> 6) == gpGame->ultimateArtifactX
+        && static_cast<short>(guess_y >> 6) == gpGame->ultimateArtifactY
+        && static_cast<short>(static_cast<short>(guess_hi << 2) >> 12)
+            == static_cast<short>(gpGame->ultimateArtifactZ))
         return 0;
 
     type_artifact grail_artifact(ARTIFACT_HOLY_GRAIL, -1);
@@ -2320,12 +2330,12 @@ int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
         return 0;
 
     int value;
-    if (*move_cost < 200) {
-        *move_cost = 0;
-        value = 10000;
-    } else {
+    if (*move_cost >= 200) {
         *move_cost -= 200;
         value = const_cast<hero*>(current_hero)->MoraleIncreaseValue(1);
+    } else {
+        *move_cost = 0;
+        value = 10000;
     }
     return static_cast<int>(
         AI_value_of_morale(
@@ -2570,7 +2580,11 @@ long value_of_town_buildings(const hero* current_hero, town* current_town)
     if (current_town->type == TOWN_CONFLUX
         && current_town->HasBuilding(EXTRA_0_ID, 1)) {
         type_university university;
+        // Retail CALLS the university appraisal here (the arm in
+        // AI_value_of_event does too); our /Ob2 otherwise expands it.
+#pragma inline_depth(0)
         value = value_of_university(current_hero, &university, 1);
+#pragma inline_depth()
     }
 
     if (current_town->HasBuilding(MAGE_GUILD_ID, 1)) {
@@ -2642,13 +2656,14 @@ VA(0x0052b4e0, 0xbf)  // anchor: three ratio/gold max pairs + turnValueOfAvgArti
 int ValueOfTreasure(const hero* current_hero)
 {
     playerData* player = const_cast<hero*>(current_hero)->get_player();
-    int value = static_cast<int>(
-        current_hero->turnExperienceToRVRatio * 160.0f);
-    int gold_part = static_cast<int>(player->resourceValue[GOLD] * 320.0);
-    if (value <= gold_part)
-        value = gold_part;
-
     int experience_part = static_cast<int>(
+        current_hero->turnExperienceToRVRatio * 160.0f);
+    int gold_part =
+        static_cast<int>(player->resourceValue[GOLD] * 320.0);
+    int value = experience_part;
+    if (experience_part <= gold_part)
+        value = gold_part;
+    experience_part = static_cast<int>(
         current_hero->turnExperienceToRVRatio * 320.0f);
     gold_part = static_cast<int>(player->resourceValue[GOLD] * 480.0);
     if (experience_part > gold_part)
@@ -2663,7 +2678,6 @@ int ValueOfTreasure(const hero* current_hero)
         value += experience_part;
     else
         value += gold_part;
-
     return static_cast<int>(player->turnValueOfAvgArtifact / 20.0f
         + static_cast<float>(value));
 }
