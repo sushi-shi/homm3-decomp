@@ -792,14 +792,14 @@ int TSingleSelectionWindow::MaxPlayers()
 // The header-transfer job teardown: frees the staging buffer and zeroes
 // the buffer triple. Non-virtual - WindowHandler's inlined Tick deletes
 // through a direct call to this body.
-// E:\gamedcs\singleselectionwindow.cpp:1553
-#pragma auto_inline(off)
-VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 // Residual (72.2%): retail spills the freed pointer to a dead [ebp-4]
 // temp inside an ebp frame; volatile reproduces the store (plus one
 // re-read our CL adds) - tried and rejected: plain delete / delete[] /
 // named local (DCE'd) / struct-ptr delete / empty-dtor element type
 // (adds a null test, 38.9).
+// E:\gamedcs\singleselectionwindow.cpp:1553
+#pragma auto_inline(off)
+VA(0x00583ef0, 0x26)  // anchor-callee direct dtor call in WindowHandler's delete site + in ??_G-shaped 0x583ec0 + Man::PlayerDropped 0x589480, dc 0x148a28
 CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
 {
     GameSelectionHeadersStruct* volatile buffer = m_buffer;
