@@ -253,6 +253,19 @@ public:
     char m_errText[1];    // +0x28, format string (extent unmodeled)
 };
 
+// The full-roster broadcast (DC ctor takes both player arrays); the
+// receiver reads the human records at +0x14 and the computer block at
+// +0x3f4.
+class CUpdatePlayerPosMsg : public CNetMsg {
+public:
+    CNetPlayerHandlerPlayer m_players[8];      // +0x014
+    CNetPlayerHandlerPlayer m_compPlayers[8];  // +0x3f4
+};
+
+// The per-handicap label pointers the seat rows are retitled from
+// (cell 0x6a7800, owner unclaimed).
+extern char* gUnnamed6a7800[];
+
 class CNewHostMsg : public CNetMsg {
 public:
     unsigned long m_dpidNewHost;  // +0x14
