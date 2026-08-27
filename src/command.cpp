@@ -11,6 +11,7 @@
 #define HOMM3_COMMAND_TOWER_STRING_VIEW
 #define HOMM3_DRAWING_UPDATE_MOUSE_GRID_DECLS
 #include <va.h>
+#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "cmbtmgr.h"
 #include "combatcontrolsubwindow.h"
 #include "command.h"
@@ -72,7 +73,7 @@ unsigned char combatManager::automate_catapult()
 
     long count;
     hero* controller = current_army->get_controller();
-    long skill = controller->ballisticsLevel;
+    long skill = controller->skillLevel[eSecSkillSiegeBallistics];
     if (static_cast<const combatManager*>(this)->IsQuickCombat()
             || is_computer_action(get_current_army())) {
         if (skill > 0
@@ -465,7 +466,7 @@ unsigned char combatManager::is_computer_action(const army* current_army)
             return 0;
         if (field_132c4 && gUnnamed698758.combatCatapult)
             return 1;
-        if (owner->ballisticsLevel == 0)
+        if (owner->skillLevel[eSecSkillSiegeBallistics] == 0)
             return 1;
         break;
     case CREATURE_FIRST_AID_TENT:

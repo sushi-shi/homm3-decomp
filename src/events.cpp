@@ -5,12 +5,23 @@
 #include <string.h>
 #include <va.h>
 #define HOMM3_EVENTS_PRISON_DECL
+#define HOMM3_EVENTS_TURN_PAUSE_DECL
+// DoCombat's remote arms: the wait dialog whose payload feeds
+// ReceiveHeroTownData, and the level-update message the winner's side
+// transmits after CheckLevel.
+#define HOMM3_REMOTE_BATTLE_DLG_DECLS
+#define HOMM3_REMOTE_WAIT_READY_DECLS
 #include "advmgr_objects.h"
 #include "creature_bank.h"
 #include "swapmgr.h"
 #include "game.h"
 #include "advmgr.h"
 #undef HOMM3_EVENTS_PRISON_DECL
+// DoCombat needs the full combatManager type (SetupCombat and the
+// result/raised-creature fields); added 2026-08-27 with the DoCombat
+// reconstruction and measured through the ratchet like every other
+// include-closure change.
+#include "cmbtmgr.h"
 #include "command.h"
 #include "cursor.h"
 #include "events.h"
@@ -73,6 +84,47 @@ inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
     : CMapChange(RS_TELEPORT_HERO, sizeof(CMCTeleportHero)),
       heroId(id), point(location), playerPos(gNetLocalGamePos)
 {
+}
+
+// E:\gamedcs\netmsg.h:488 (dc 0x9cb78) - the level-update payload DoCombat
+// transmits after the winner's CheckLevel. Retail expands this ctor in
+// place: the CNetMsg header fields, the hero id, the 28-byte mastery band
+// as an intrinsic dword copy, the four primary stats as one dword, and
+// the skill count.
+inline CHeroLevelUpdateMsg::CHeroLevelUpdateMsg(int hero, int numSSs,
+                                                signed char* ssLevel,
+                                                signed char* stats)
+    : CNetMsg(RS_HERO_LEVEL_UPDATE, sizeof(CHeroLevelUpdateMsg))
+{
+    m_hero = hero;
+    memcpy(m_ssLevel, ssLevel, sizeof(m_ssLevel));
+    memcpy(m_stats, stats, sizeof(m_stats));
+    m_numSSs = numSSs;
+}
+
+// E:\gamedcs\events.cpp:6248/6261 (dc 0x9ce40 / 0x9ceb0) - the RAII pause
+// DoCombat holds across a whole battle; the class shape lives in
+// events.h, the two bodies are this TU's own (their DC line numbers are
+// events.cpp's). Retail inlines both at DoCombat's entry and at each of
+// its two returns: Pause() plus the solo-seat marking on the way in;
+// Resume() plus the seat clearing - gated on this machine still being
+// the solo seat - on the way out.
+inline CTurnDurationPause::CTurnDurationPause()
+{
+    gTurnDuration69d630.Pause();
+    if (gUnnamed691209) {
+        gpGame->players[gUnnamed69120c].isLocal = 1;
+        gpGame->players[gUnnamed69120c].isHuman = 1;
+    }
+}
+
+inline CTurnDurationPause::~CTurnDurationPause()
+{
+    gTurnDuration69d630.Resume();
+    if (gUnnamed691209 && gNetLocalGamePos == gUnnamed69120c) {
+        gpGame->players[gUnnamed69120c].isLocal = 0;
+        gpGame->players[gUnnamed69120c].isHuman = 0;
+    }
 }
 
 #if 0  // @carcass
@@ -2694,6 +2746,23 @@ inline void advManager::DoArtifactSkillRequirement(
 // identify the source surface; retail fixes the price-arm order, costs and
 // text indices. This is the ordinary artifact event dispatcher.
 VA(0x0049f7e0, 0x2A4)  // anchor-callee DoCustomArtifact+FightForArtifact, ret 0x10=p5, dc 0x91104
+// Residual (78.12%): retail expands DoArtifactSkillRequirement in BOTH
+// skill arms and cross-jumps everything after each arm's text load +
+// skill-byte test + human test into ONE shared dialog/GiveArtifact/
+// refusal tail; our two expansions stay separate (~85 instructions).
+// Measured 2026-08-27 and REVERTED, both worse in combination (66.10):
+// the refusal text hoisted into a named call-site local (reproduces
+// retail's early per-arm text load exactly) and the has-skill dialog
+// reading gArtifactEventText[index] instead of dialog_text (reproduces
+// the merged block's content - retail's shared dialog provably reads
+// the artifact's own text, so that half IS the retail source). With
+// both, the arms become identical except ONE register (point reloads
+// through edx in arm 1 and eax in arm 2; retail reloads human_player
+// per use where ours caches it in ebx) and the cross-jumper still
+// refuses; why-reg reports no addressable knob (B1 binding + B2
+// homing, reference memory-homes [ebp-0x75]). The next lane should
+// re-try the pair AFTER any inline-structure change here - the merged
+// content is byte-proven, only the merge itself is missing.
 void advManager::DoEventArtifact(hero* current_hero, NewmapCell* cell,
                                  type_point point, bool human_player)
 {
@@ -2981,7 +3050,7 @@ bool advManager::GiveBlackBoxReward(const char* text, hero* current_hero, Newmap
     if (current_hero->IsWieldingArtifact(0)) {
         for (unsigned int n = 0; n < BlackBox->Spells.size(); n++) {
             if (akSpellTraits[BlackBox->Spells[n]].level
-                    <= current_hero->wisdomLevel + 2
+                    <= current_hero->skillLevel[eSecSkillWisdom] + 2
                 && !current_hero->in_spellbook[BlackBox->Spells[n]]) {
                 if (human_player) {
                     if (rewards.size() != 0) {
@@ -4493,7 +4562,7 @@ void advManager::do_event_pyramid(hero* current_hero, NewmapCell* cell,
                               ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK));
             NormalDialog(cText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-    } else if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2) {
+    } else if (akSpellTraits[spell].level > current_hero->skillLevel[eSecSkillWisdom] + 2) {
         if (human_player) {
             strcat(cText, gpAdventureEventText->GetText(
                               ADV_EVENT_TEXT_PYRAMID_NO_WISDOM));
@@ -4765,7 +4834,7 @@ void advManager::DoEventScholar(hero* current_hero, NewmapCell* cell,
     if (award == const_scholar_spell) {
         int spell = cell->GetScholarSpell();
         if (!current_hero->in_spellbook[spell]
-            && akSpellTraits[spell].level <= current_hero->wisdomLevel + 2
+            && akSpellTraits[spell].level <= current_hero->skillLevel[eSecSkillWisdom] + 2
             && current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
             if (human_player)
                 NormalDialog(gpAdventureEventText->GetText(
@@ -5006,7 +5075,7 @@ void advManager::DoEventShrine(hero* current_hero, NewmapCell* cell,
         return;
     }
 
-    if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2) {
+    if (akSpellTraits[spell].level > current_hero->skillLevel[eSecSkillWisdom] + 2) {
         if (human_player) {
             result += gpAdventureEventText->GetText(130);
             NormalDialog(result.c_str(), 1, -1, -1,
@@ -5365,6 +5434,16 @@ unsigned char AI_choose_resource_or_experience(hero* current_hero,
 // current_hero=EDI; ours edi/esi) plus the AI-arm branch polarity. A
 // register-homing wall - no local spelling reaches the pseudo order.
 VA(0x004a6440, 0xD8)  // dc-bracket forced, ret 0xc=p4, dc 0x962dc
+// Residual (83.04%): the merged-return class (path.obj/AppWndProc
+// family), in the direction where RETAIL DUPLICATES. Our source already
+// writes GiveResource(GOLD, amount); return; twice (the CHOICE_1 arm
+// and the shared tail) and our CL cross-jumps them into one exit
+// (`jne` back into the shared copy); retail keeps both byte-identical
+// GiveResource+ret exits - the accept je and the AI fall-through share
+// the second - while merging the GiveExperience tail exactly as we do.
+// No structured respelling changes which copy survives; the register
+// story (this in ebx vs our edi, amount edi vs esi) is downstream of
+// that extra exit's pressure. 2026-08-27.
 void advManager::DoTreasureDialog(hero* current_hero, int amount,
                                   bool human_player)
 {
@@ -5629,6 +5708,15 @@ int IsBaseCreature(TCreatureType type);
 // materializes -1 into EDI and counts up; current_hero binds the other
 // register. Register-homing/loop-form wall on a 298 B leaf.
 VA(0x004a6b30, 0x12A)  // dc-bracket forced, ret 0xc=p4, dc 0x96994
+// Residual (88.61%): a -1-pooling register cascade. Retail compares
+// reward->Artifact against an IMMEDIATE -1 and pushes immediate -1
+// dialog arguments, loading current_hero from [ebp+8] only after that
+// gate (and reloading it per GiveResource iteration); our CL pools -1
+// into edi at the first compare, which frees it to cache current_hero
+// in ebx, which in turn denies the resource loop retail's ebx=7
+// down-counter and denies human_player its callee-saved bl home.
+// The two-arg type_artifact ctor (seerhut precedent) measured
+// byte-flat and is kept as the cleaner spelling. 2026-08-27.
 void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
                                       bool human_player)
 {
@@ -5645,9 +5733,7 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell,
             if (human_player)
                 NormalDialog(emptyRolloverText, 1, -1, -1, 8,
                              reward->Artifact, -1, 0, -1, 0, -1, 0);
-            type_artifact artifact;
-            artifact.artifactId = reward->Artifact;
-            artifact.extra = -1;
+            type_artifact artifact(reward->Artifact, -1);
             current_hero->GiveArtifact(&artifact, 1, 1);
             if (!human_player)
                 AI_equip_artifacts(current_hero);
@@ -8379,13 +8465,316 @@ int advManager::DoNetCombat(CNetMsg* pNetMsg)
 // cText/alternate_layout ride to SetupCombat; bFinishHeroes gates the
 // level-pick wait.  All callees are already declared (cmbtmgr.h,
 // remotedlg.h, exec.h, game.h).
-#if 0  // @carcass -- @stub, order/size/class-checked by the va-claims gate
 VA(0x004ad470, 0x1531)  // anchor-callee CTurnDuration::Pause, ret 0x28=p11 (unique), dc 0x9b970
 int advManager::DoCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long iRightPlayer, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int iSeed, unsigned char bFinishHeroes, unsigned char alternate_layout)
 {
-    // @stub
+    int iLeftPlayer = leftHero ? leftHero->owner : -1;
+    long winning_player;
+    hero* loser;
+    CTurnDurationPause turnDurationPause;
+
+    unsigned char bRightHuman =
+        iRightPlayer >= 0 && gpGame->IsHuman(iRightPlayer);
+    unsigned char bLeftHuman = iLeftPlayer >= 0 && gpGame->IsHuman(iLeftPlayer);
+    if (iSeed == -1)
+        iSeed = Random(1, 1000);
+    DemobilizeCurrHero(0, 1);
+    Reseed(0, 0);
+
+    unsigned char bReplay = (gUnnamed691209 && gUnnamed691208) ? 1 : 0;
+    if (!bRightHuman && !bLeftHuman && !bReplay) {
+        int winner;
+        NewmapCell* target = gpGame->worldMap.cell(point);
+        if (AI_quick_combat(leftHero, rightHero, rightArmyGroup, rightTown,
+                            target)) {
+            winning_player = iLeftPlayer;
+            winner = 0;
+            loser = rightHero;
+        } else {
+            winner = 1;
+            winning_player = iRightPlayer;
+            loser = leftHero;
+        }
+        if (gpGame->mapHeader.victoryCondition.CheckForHeroDefeatWin(
+                winning_player, loser))
+            CheckEndGame(0);
+        MobilizeCurrHero(0, 0, 1);
+        return winner;
+    }
+
+    gpMouseManager->SetPointer(2, mouseManager::DEFAULT_SET);
+    gpMouseManager->ShowPointer(1);
+    int iSavePlayer = gNetLocalGamePos;
+    int bSaveShowIt = gCompleteDrawEnabled;
+    gUnnamed699540 = 1;
+
+    if (iLeftPlayer >= 0 && iRightPlayer >= 0
+        && gpGame->IsHuman(iRightPlayer)) {
+        if (!gpGame->IsLocalHuman(iRightPlayer)) {
+            iCombatControlNetPos[0] = gpGame->GetLocalPlayerGamePos();
+            iCombatControlNetPos[1] = iRightPlayer;
+            SendHeroTownData(point, leftHero, leftArmyGroup, iRightPlayer,
+                             rightTown, rightHero, rightArmyGroup, iSeed,
+                             iRightPlayer, 0, 0, 0);
+            if (!gpGame->IsHuman(iLeftPlayer)) {
+                CWaitForRemoteBattleDlg dlg;
+                dlg.Wait(iRightPlayer);
+                if (dlg.m_combatInitMsgReceived) {
+                    int iFromWho;
+                    hero* tleftHero;
+                    armyGroup* tleftArmyGroup;
+                    int temp_right_player;
+                    town* trightTown;
+                    hero* trightHero;
+                    armyGroup* trightArmyGroup;
+                    signed char iWinner;
+                    ReceiveHeroTownData(&dlg.m_combatInitMsg, &iFromWho,
+                                        &point, &tleftHero, &tleftArmyGroup,
+                                        &temp_right_player, &trightTown,
+                                        &trightHero, &trightArmyGroup, &iSeed,
+                                        &iWinner, &gCombatFlag6985a3,
+                                        &gCombatFlag697744);
+                    if (trightTown) {
+                        *rightTown = *trightTown;
+                        delete trightTown;
+                    }
+                    if (trightHero) {
+                        *rightHero = *trightHero;
+                        delete trightHero;
+                    }
+                    if (tleftHero) {
+                        *leftHero = *tleftHero;
+                        delete tleftHero;
+                    }
+                    if (tleftArmyGroup) {
+                        *leftArmyGroup = *tleftArmyGroup;
+                        delete tleftArmyGroup;
+                    }
+                    if (trightArmyGroup) {
+                        *rightArmyGroup = *trightArmyGroup;
+                        delete trightArmyGroup;
+                    }
+                    gpCombatManager->field_13d48 = iWinner;
+                } else {
+                    gpCombatManager->field_13d48 = 0;
+                }
+                goto aftermath;
+            }
+        } else if (!gpGame->IsLocalHuman(iLeftPlayer)) {
+            gCompleteDrawEnabled = 1;
+            gpGame->TurnOffAIMusic();
+            char sText[112];
+            const char* target;
+            if (rightTown)
+                target = gpGeneralText->GetText(49);
+            else if (rightHero)
+                target = gpGeneralText->GetText(50);
+            else
+                target = gpGeneralText->GetText(430);
+            sprintf(sText, gpGeneralText->GetText(48),
+                    gpGame->GetPlayerName(iRightPlayer), target);
+            gpGame->WaitForPlayer(sText, iRightPlayer);
+        }
+    }
+
+    gCompleteDrawEnabled = 1;
+    gpCombatManager->SetupCombat(point, leftHero, leftArmyGroup, iRightPlayer,
+                                 rightTown, rightHero, rightArmyGroup,
+                                 point.x, point.y, iSeed, alternate_layout);
+    if (!bLeftHuman)
+        split_armies(leftHero, rightHero, rightArmyGroup);
+    if (!bRightHuman && rightHero
+        && rightHero->skillLevel[eSecSkillBattleTactics]
+               > leftHero->skillLevel[eSecSkillBattleTactics])
+        split_armies(rightHero, leftHero, leftArmyGroup);
+    if (giHighMemBuffer > 2900)
+        gUnnamed699548 = 2;
+    else if (giHighMemBuffer > 900)
+        gUnnamed699548 = 1;
+    gpExecutive->CallManager(gpCombatManager);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpMouseManager->ShowPointer(1);
+    gUnnamed699548 = 0;
+    if (leftHero)
+        leftHero->CheckLevel();
+    if (rightHero) {
+        if (gNetworkActive69954c && bRightHuman && bLeftHuman
+            && gpCombatManager->field_13d48 == 1) {
+            if (gpGame->IsLocalHuman(rightHero->owner)) {
+                rightHero->CheckLevel();
+                CHeroLevelUpdateMsg msg(rightHero->id, rightHero->skillCount,
+                                        rightHero->skillLevel,
+                                        rightHero->stats);
+                TransmitRemoteData(&msg, gNetLocalGamePos, 0, 1);
+            } else {
+                CLevelPickWaitDlg dlg2;
+                dlg2.WaitForLevels(rightHero->owner);
+                if (dlg2.m_playerDropped)
+                    rightHero->CheckLevel();
+            }
+        } else {
+            rightHero->CheckLevel();
+        }
+    }
+
+aftermath: {
+    int winner = gpCombatManager->field_13d48;
+    if (winner != 0)
+        gpGame->worldMap.NewfullMapFn_00505D20(leftHero->id, iRightPlayer);
+    if (winner != 1) {
+        if (rightHero)
+            gpGame->worldMap.NewfullMapFn_00505D20(rightHero->id, iLeftPlayer);
+        else
+            gpGame->worldMap.NewfullMapFn_00505D60(point, iLeftPlayer);
+    }
+    if (winner == -1) {
+        if (gpGame->mapHeader.victoryCondition.CheckForHeroDefeatWin(
+                iLeftPlayer, rightHero)
+            || gpGame->mapHeader.victoryCondition.CheckForHeroDefeatWin(
+                   iRightPlayer, leftHero))
+            CheckEndGame(0);
+    } else {
+        if (winner == 0) {
+            winning_player = iLeftPlayer;
+            loser = rightHero;
+        } else if (winner == 1) {
+            winning_player = iRightPlayer;
+            loser = leftHero;
+        }
+        gpGame->mapHeader.victoryCondition.CheckForHeroDefeatWin(
+            winning_player, loser);
+    }
+
+    if (gpCombatManager->raisedCreatureCount > 0 && winner == 0
+        && gpGame->IsLocalHuman(iLeftPlayer)) {
+        sprintf(gText, "pickup%02d.82M", Random(1, 7));
+        SAMPLE2 sample = LoadPlaySample(gText);
+        if (gpCombatManager->raisedCreatureCount == 1) {
+            const char* creatureName;
+            if (gpCombatManager->raisedCreatureType >= 0
+                && gpCombatManager->raisedCreatureType <= 150)
+                creatureName =
+                    akCreatureTypeTraits[gpCombatManager->raisedCreatureType]
+                        .m_name;
+            else
+                creatureName = "";
+            sprintf(gText, gpGeneralText->GetText(147), creatureName);
+        } else {
+            const char* creatureName;
+            if (gpCombatManager->raisedCreatureType >= 0
+                && gpCombatManager->raisedCreatureType <= 150)
+                creatureName =
+                    akCreatureTypeTraits[gpCombatManager->raisedCreatureType]
+                        .m_plural_name;
+            else
+                creatureName = "";
+            sprintf(gText, gpGeneralText->GetText(146),
+                    gpCombatManager->raisedCreatureCount, creatureName);
+        }
+        NormalDialog(
+            gText, 1, -1, -1, 0x15,
+            (static_cast<unsigned short>(gpCombatManager->raisedCreatureCount)
+             << 16)
+                | static_cast<unsigned short>(
+                      gpCombatManager->raisedCreatureType),
+            -1, 0, -1, 15000, -1, 0);
+        gpGame->mapHeader.victoryCondition.CheckForTotalCreatures();
+        ClearMemSample(sample);
+    }
+
+    if (bFinishHeroes) {
+        switch (gpCombatManager->field_13d48) {
+        case COMBAT_WINNER_NONE: {
+            // Retail CALLS HeroLoses at all three sites; unpinned, our
+            // /Ob2 expands the same-TU body (and FizzleCenter inside
+            // it), scattering its CompleteDraw/UpdateRadar/CheckEndGame
+            // innards across the census.
+#pragma inline_depth(0)
+            HeroLoses(leftHero, 0);
+            if (rightTown && rightHero
+                && rightTown->garrisonHeroId == rightHero->id)
+                HeroLoses(rightHero, -1);
+            else
+                HeroLoses(rightHero, 0);
+#pragma inline_depth()
+            break;
+        }
+        case COMBAT_WINNER_LEFT: {
+            if (rightTown && rightHero
+                && rightTown->garrisonHeroId == rightHero->id) {
+                CompleteDraw(0);
+                UpdateScreen(0, 0);
+                int iLoser = rightHero->owner;
+                rightHero->Deallocate(1, 0);
+                // Retail calls FizzleCenter here (same-TU body).
+#pragma inline_depth(0)
+                FizzleCenter(-1);
+#pragma inline_depth()
+                UpdateRadar(1, 1, 0, 0, 0);
+                advWindow->UpdateHeroLocators(-1, 1, 1);
+                if (gpGame->mapHeader.lossCondition.HeroKilled(rightHero)) {
+                    gpGame->mapHeader.lossCondition.playerLoser = iLoser;
+                    CheckEndGame(0);
+                }
+            } else if (rightHero) {
+                CompleteDraw(0);
+                UpdateScreen(0, 0);
+                int iLoser = rightHero->owner;
+                rightHero->Deallocate(1, 0);
+#pragma inline_depth(0)
+                FizzleCenter(0);
+#pragma inline_depth()
+                UpdateRadar(1, 1, 0, 0, 0);
+                advWindow->UpdateHeroLocators(-1, 1, 1);
+                if (gpGame->mapHeader.lossCondition.HeroKilled(rightHero)) {
+                    gpGame->mapHeader.lossCondition.playerLoser = iLoser;
+                    CheckEndGame(0);
+                }
+            }
+            break;
+        }
+        case COMBAT_WINNER_RIGHT: {
+            if (leftHero) {
+                CompleteDraw(0);
+                UpdateScreen(0, 0);
+                int iLoser = leftHero->owner;
+                leftHero->Deallocate(1, 0);
+#pragma inline_depth(0)
+                FizzleCenter(0);
+#pragma inline_depth()
+                UpdateRadar(1, 1, 0, 0, 0);
+                advWindow->UpdateHeroLocators(-1, 1, 1);
+                if (gpGame->mapHeader.lossCondition.HeroKilled(leftHero)) {
+                    gpGame->mapHeader.lossCondition.playerLoser = iLoser;
+                    CheckEndGame(0);
+                }
+            }
+            break;
+        }
+        }
+    }
+
+    gCompleteDrawEnabled = bSaveShowIt;
+    gNetLocalGamePos = iSavePlayer;
+    if (!gpCurrentPlayer->IsHuman()) {
+        if (!gNetworkActive69954c)
+            gpGame->ShowComputerScreen();
+        gpGame->TurnOnAIMusic();
+        SetNoDialogMenus(0);
+    } else {
+        SetNoDialogMenus(1);
+    }
+    MobilizeCurrHero(0, 0, 1);
+    if (bFinishHeroes) {
+        gCombatFlag6985a3 = 0;
+        gCombatFlag697744 = 0;
+    }
+    gUnnamed699540 = 0;
+    gpMouseManager->ShowPointer(1);
+    CheckEndGame(0);
+    return gpCombatManager->field_13d48;
 }
-#endif  // @carcass
+}
 
 // E:\gamedcs\events.cpp:6725.  Pack one finished (or starting) remote
 // combat into a CCombatInitMsg - flags for which records ride along, the
@@ -8424,6 +8813,7 @@ void advManager::SendHeroTownData(type_point point, hero* leftHero, armyGroup* l
         combatInitMsg.m_leftGold =
             gpGame->players[leftHero->owner].resources[GOLD];
     } else {
+        combatInitMsg.m_leftOwner = -1;
         combatInitMsg.m_leftGold = 0;
     }
     combatInitMsg.m_rightOwner = right_player;
@@ -8470,8 +8860,8 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     *iFromWho = pCombatInitMsg->netmsg.field_00;
     *point = pCombatInitMsg->m_point;
     int hasLeftHero = pCombatInitMsg->m_leftHero;
-    int hasRightHero = pCombatInitMsg->m_rightHero;
     int hasRightTown = pCombatInitMsg->m_rightTown;
+    int hasRightHero = pCombatInitMsg->m_rightHero;
     *iSeed = pCombatInitMsg->m_seed;
     *iWinner = pCombatInitMsg->m_winner;
     *bRetreatWin = pCombatInitMsg->m_retreatWin;
@@ -8480,9 +8870,10 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
     if (pCombatInitMsg->m_leftOwner > 0)
         gpGame->players[pCombatInitMsg->m_leftOwner].resources[GOLD] =
             pCombatInitMsg->m_leftGold;
-    *right_player = pCombatInitMsg->m_rightOwner;
-    if (pCombatInitMsg->m_rightOwner > 0)
-        gpGame->players[pCombatInitMsg->m_rightOwner].resources[GOLD] =
+    int rightOwner = pCombatInitMsg->m_rightOwner;
+    *right_player = rightOwner;
+    if (rightOwner > 0)
+        gpGame->players[rightOwner].resources[GOLD] =
             pCombatInitMsg->m_rightGold;
 
     *leftArmyGroup = new armyGroup;
@@ -8510,3 +8901,28 @@ void advManager::ReceiveHeroTownData(CCombatInitMsg* pCombatInitMsg, int* iFromW
         *newHero = pCombatInitMsg->m_rightHeroData;
     }
 }
+
+// E:\gamedcs\events.cpp:6709 (dc 0x9cf24). The interior pin makes the
+// implicit member teardown CALL ~CNetMsgHandlerPause, ~CCombatInitMsg
+// (retail's 0x4ad130 COMDAT) and ~CAnimatedDlg instead of expanding
+// them; the dtor itself stays an /Ob2 candidate and expands at its one
+// invocation site (DoCombat's remote-receive exit). ~CCombatInitMsg
+// stays COMPILER-GENERATED: SendHeroTownData and DoNetCombat need its
+// inline expansion at their own exits (declaring it cost both their
+// 100.0000). DEFINED AT THE FILE'S END, and the placement is
+// load-bearing: defined at the top, the pinned body is where the
+// synthesized ~CCombatInitMsg first MATERIALIZES, and the pin bakes
+// into that shared IL - a per-callee knob that turned Send/DoNet's
+// expanded string teardowns into member-dtor calls (100.00 -> 97.3 /
+// 92.2). Down here the msg dtor materializes first, unpinned, at
+// SendHeroTownData's own exit.
+// Residual: this user-defined dtor re-stores the vptr at
+// entry where retail's expansion has no vtable store - measured
+// against the synthesized-dtor spelling (98.54, three _Tidy
+// expansions) and kept as the closer shape.
+CWaitForRemoteBattleDlg::~CWaitForRemoteBattleDlg()
+{
+#pragma inline_depth(0)
+}
+#pragma inline_depth()
+

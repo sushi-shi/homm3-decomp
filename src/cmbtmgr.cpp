@@ -61,6 +61,7 @@
 // and bPowSequenceComplete from army.h, the death sequence from
 // csprite.h and the Immersion hook from game.h.
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
+#include "herospec.h"  // TSecondarySkill, for the skillLevel slot names
 #include "bitmap816.h"
                                      // it in InitNonVisualVars' siege arms
 #include "cmbtmgr.h"
@@ -4485,7 +4486,7 @@ void combatManager::LearnSpellFromEagleEye(int side)
         SpellID spell = *it;
         if (heroes[side]->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
             && akSpellTraits[spell].level
-                <= heroes[side]->wisdomLevel + 2)
+                <= heroes[side]->skillLevel[eSecSkillWisdom] + 2)
             heroes[side]->AddSpell(spell);
     }
 }

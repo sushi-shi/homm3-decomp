@@ -230,7 +230,12 @@ public:
     // dock square" sentinel the CanBuildDock family tests.
     unsigned char dockSite;
     unsigned char dockSiteY;
-    char pad_0a[0x2];
+    // +0x0a..+0x0b is alignment padding, NOT a member: retail's own
+    // ??4town COMDAT (0x4d3df0) copies +0x00..+0x09 as ten byte moves
+    // and goes straight to the dword at +0x0c - a named pad array here
+    // makes the synthesized memberwise assign COPY it (as a byte loop),
+    // which is what kept ??4town off retail's shape. Removed 2026-08-27;
+    // the same applies to the former pads at +0x15/+0x35/+0x42/+0xc1.
     // The hero standing inside the town, -1 for none.
     // remove_garrison_hero moves this id into visitingHeroId and hands
     // the hero to hero::PlaceInMap; SwapHeroes exchanges the pair.
@@ -242,7 +247,7 @@ public:
     // BuildBuilding re-reads it with movsx at both spell-count loops
     // and guards them with `cmp cl,1 / jl`.
     signed char field_14;
-    char pad_15[0x1];
+    // +0x15 alignment padding (retail's ??4town skips it).
     // +0x16, fourteen shorts - the accumulated population of each
     // dwelling slot, base then upgrade, the same 14-wide slot space
     // generatorBonus and gTownDwellingCreatures use. Sliced 2026-08-08
@@ -259,7 +264,7 @@ public:
     // jbe` and widens it `and eax,0xff`. A signed `char` gives `jle` and
     // `movsx`, and the row plateaus 2.2 points lower.
     unsigned char field_34;
-    char pad_35[0x3];
+    // +0x35..+0x37 alignment padding (retail's ??4town skips it).
     int field_38;
     // +0x3c, NAMED AND TYPED 2026-08-14. DC `summoningType` at its own
     // 52, the row straight ahead of summoningPopulation below; the type
@@ -282,13 +287,14 @@ public:
     // the tree's documented include-set canary and one extra member
     // anywhere in town takes initialize_game_data 100.0 -> 96.09.
     short summoningPopulation;
-    char pad_42[2];
+    // +0x42..+0x43 alignment padding (retail's ??4town skips it).
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
     int mageGuildSpells[5][6];
     signed char mageGuildSpellCounts[5];
-    char pad_c1[3];
+    // +0xc1..+0xc3 alignment padding (retail's ??4town copies the five
+    // count bytes and goes straight to the string assign).
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
     // Its element semantics are not yet reached, so the name is ordinal.
@@ -336,6 +342,17 @@ public:
     __int64 available;
 
     unsigned char CanBuildDock();
+    // DC Town.h:299 / :305 header inlines, declaration-only here
+    // (?get_building_mask@town@@QBA_JXZ kept out of line by the DC
+    // linker in ai_player.obj, ?get_generator_bonus@town@@QBAJJ@Z in
+    // townmgr.obj). Declared 2026-08-27 with IsCastle/IsCapitol below:
+    // four DC-attested members that also hold town's class-declarator
+    // count when the five pad arrays left (the include-set wall:
+    // deleting them alone cost sacrifice_window's
+    // create_artifact_widgets 100.0 -> 99.59, a cross-jump/reload
+    // quirk in a textWidget arm; count restored, the row returns).
+    __int64 get_building_mask() const;
+    long get_generator_bonus(long dwelling) const;
     // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
     // linker kept an out-of-line copy in advmgr.obj). Packs the town's
     // three map bytes into a type_point and returns it BY VALUE - the
@@ -413,6 +430,12 @@ public:
     // const), and retail's thiscall is identical either way.
     unsigned char HasBuilding(int buildingId,
                               unsigned char check_included) const;
+    // DC Town.h:337 / :342 header inlines, declaration-only here
+    // (?IsCastle@town@@QBA_NXZ / ?IsCapitol@town@@QBA_NXZ, both kept
+    // out of line by the DC linker in game.obj). See the
+    // get_building_mask note above for why they landed together.
+    bool IsCastle() const;
+    bool IsCapitol() const;
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
