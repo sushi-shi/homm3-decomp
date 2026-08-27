@@ -1900,12 +1900,8 @@ void AI_AttemptMove(hero* current_hero, HeroDestination* best_point, long* best_
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:4320
-DC_ONLY(0x34fb8, 0x446)
-long value_of_hiring(town* current_town, hero* candidate, searchArray* search_array)
-{
-    // @stub
-}
+// value_of_hiring (dc 0x34fb8) promoted to the VA(0x00431bd0) carcass claim
+// in RVA order below - see consider_hiring's anchor pair.
 
 // total_artifact_value (dc 0x35400) promoted to VA(0x004339e0) in RVA order below.
 
@@ -3619,11 +3615,114 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z)
     player->resources[WOOD] -= 10;
 }
 
-#if 0  // @carcass
+// Local prototypes, the events.cpp pattern: value_of_hiring's body is the
+// carcass VA stub below (retail 0x431bd0); AI_resource_cost is philai.obj's
+// long-id overload (philai.cpp:1040); CanBuy is castle.h's free checker.
+long value_of_hiring(town* current_town, hero* candidate,
+                     searchArray* search_array);
+int AI_resource_cost(long player_id, const int* resources);
+int CanBuy(const town* currTown, int buildingId);
+long AI_get_artifact_player_value(const type_artifact& artifact,
+                                  long player_id);
 
+// Residual (75.38%): all phases and the call census agree except one
+// nested inline decision - retail's phase-1 copy of
+// AI_get_artifact_player_value CALLS game::GetHero out of line while both
+// our copy and the (exact) standalone helper expand the game.h inline; a
+// statement pin cannot split a nested callee per context. The rest is the
+// ebx-total register homing family.
 // E:\gamedcs\ai_player.cpp:4476
+// Prices the candidate: every artifact valued on the player's best hero
+// (backpack expands the helper, worn slots call it with extra reset to -1
+// by the default ctor), the army priced through the traits cost columns
+// against the player's per-resource doubles, then the best unoccupied
+// town - building its tavern if it must and can - is compared against a
+// numHeroes * gold-value * gHeroGoldCost bar seeded as the initial best.
 VA(0x00431800, 0x3c2)  // anchor-callee unique (town::hire), dc 0x354bc
 unsigned char consider_hiring(long player_id, hero* candidate)
+{
+    long total = 0;
+    playerData* player = &gpGame->players[player_id];
+    int slot;
+    for (slot = 0; slot < HERO_BACKPACK_CAPACITY; ++slot) {
+        type_artifact probe;
+        probe.artifactId = candidate->backpack[slot].artifactId;
+        total += AI_get_artifact_player_value(probe, player_id);
+    }
+    for (slot = 0; slot < 19; ++slot) {
+        type_artifact probe;
+        probe.artifactId = candidate->equipped[slot].artifactId;
+        // Retail expands the helper into the backpack loop above but CALLS
+        // it here - the statement pin imposes the second decision.
+#pragma inline_depth(0)
+        total += AI_get_artifact_player_value(probe, player_id);
+#pragma inline_depth()
+    }
+
+    for (slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        TCreatureType type = candidate->army.armyTypes[slot];
+        if (type != CREATURE_NONE) {
+            double troops = candidate->army.numTroops[slot];
+            const TCreatureTypeTraits& traits = akCreatureTypeTraits[type];
+            for (int resource = 0; resource < 7; ++resource)
+                total = static_cast<long>(
+                    traits.cost[resource]
+                    * player->resourceValue[resource] * troops + total);
+        }
+    }
+
+    searchArray search_array;
+    long threshold = static_cast<long>(
+        static_cast<double>(player->numHeroes)
+        * player->resourceValue[GOLD] * gHeroGoldCost);
+    if (threshold > total
+        && player->resources[GOLD] < player->numHeroes * gHeroGoldCost)
+        return 0;
+
+    long best_value = threshold;
+    town* best_town = 0;
+    for (int i = 0; i < player->numTowns; ++i) {
+        town* current_town = gpGame->GetTown(player->townIds[i]);
+        if (current_town->visitingHeroId >= 0)
+            continue;
+        long value = total;
+        if (!current_town->HasBuilding(TAVERN_ID, 1)) {
+            if (!current_town->can_build(TAVERN_ID))
+                continue;
+            if (!CanBuy(current_town, TAVERN_ID))
+                continue;
+            value -= AI_resource_cost(
+                player_id, current_town->get_build_cost_array(TAVERN_ID));
+        }
+        value += value_of_hiring(current_town, candidate, &search_array);
+        if (value > best_value) {
+            best_value = value;
+            best_town = current_town;
+        }
+    }
+    if (best_town == 0)
+        return 0;
+
+    if (!best_town->HasBuilding(TAVERN_ID, 1)) {
+        if (!best_town->buy_building(TAVERN_ID))
+            return 0;
+        if (player->resources[GOLD] < gHeroGoldCost)
+            return 0;
+    }
+    best_town->hire(candidate, player_id);
+    return 1;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\ai_player.cpp:4320
+// value_of_hiring (dc 0x34fb8, 1094 B static) grew to retail's 1611 B.
+// Double anchor: consider_hiring calls it at 0x432bce with (town ECX,
+// candidate EDX, &searchArray stacked) - the DC three-argument signature -
+// and its own body calls AI_arrange_army at 0x431d9d. Body is the
+// successor's first target in this unit.
+VA(0x00431bd0, 0x64b)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d), dc 0x34fb8
+long value_of_hiring(town* current_town, hero* candidate, searchArray* search_array)
 {
     // @stub
 }
