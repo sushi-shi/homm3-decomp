@@ -1478,7 +1478,7 @@ void philAI::GetTurnAIVars(int whichPlayer)
 VA(0x00527aa0, 0x56)  // anchor-global, dc 0x110574
 int hero::ValueOfSpell(SpellID spell) const
 {
-    if (akSpellTraits[spell].level <= wisdomLevel + 2
+    if (akSpellTraits[spell].level <= skillLevel[eSecSkillWisdom] + 2
         && !in_spellbook[spell]
         && const_cast<hero*>(this)->IsWieldingArtifact(ARTIFACT_SPELLBOOK))
         return AI_get_spell_value(this, spell);
@@ -1908,7 +1908,7 @@ long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_
 VA(0x005298d0, 0x4b)  // anchor-callee {IsWieldingArtifact, AI_get_spell_value tail-call}, SHRINE + BLACK_BOX arm sites, dc 0x1105ac
 long value_of_learning(const hero* current_hero, SpellID spell)
 {
-    if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2
+    if (akSpellTraits[spell].level > current_hero->skillLevel[eSecSkillWisdom] + 2
         || current_hero->in_spellbook[spell]
         || !const_cast<hero*>(current_hero)->IsWieldingArtifact(
                ARTIFACT_SPELLBOOK))
@@ -2290,7 +2290,7 @@ long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
     guardians.Add(0x74, 0x28, -1);
     guardians.Add(0x75, 0x14, -1);
 
-    if (current_hero->wisdomLevel >= 3) {
+    if (current_hero->skillLevel[eSecSkillWisdom] >= 3) {
         for (int spell = 0; spell < hero::NUM_SPELLS; spell++) {
             if (akSpellTraits[spell].level == PYRAMID_SPELL_LEVEL) {
                 if (!current_hero->available_spells[spell]) {
@@ -2618,7 +2618,7 @@ long value_of_town_buildings(const hero* current_hero, town* current_town)
                 value += 1000;
         } else {
             for (int level = 0;
-                 level < current_hero->wisdomLevel + 2; level++) {
+                 level < current_hero->skillLevel[eSecSkillWisdom] + 2; level++) {
                 if (level > current_town->field_14)
                     break;
                 for (int slot = 0;
