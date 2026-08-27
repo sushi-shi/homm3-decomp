@@ -564,6 +564,14 @@ int CMultiPlayerWindowEdit::OnKeyPress(message* msg)
     return result;
 }
 
+// Byte-exact pair. CHeroSessions has no source-written destructor. VC6 emits
+// this deleting wrapper beside the multiplayer window and the implicit
+// destructor body at 0x558350; the wrapper's direct call proves their identity.
+// The latter first installs the CAutoArray<CDPlaySession> vtable and then
+// inlines Destroy().
+VA_COMPGEN(0x0050ede0, 0x21, SCALAR_DELETING_DTOR, CHeroSessions)
+VA_COMPGEN(0x00558350, 0x54, IMPLICIT_DTOR, CHeroSessions)
+
 VA_COMPGEN(0x0050edb0, 0x21, SCALAR_DELETING_DTOR, TMultiPlayerWindow)
 
 // E:\gamedcs\multiplayerwindow.cpp:1012
@@ -1450,19 +1458,8 @@ void CHeroSessions::CHeroSessions()
     // @stub
 }
 
-// E:\gamedcs\multiplayerwindow.cpp:1000
-DC_ONLY(0x103008, 0x34)
-void* CHeroSessions::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\multiplayerwindow.cpp:1000
-DC_ONLY(0x10303c, 0x18)
-void CHeroSessions::~CHeroSessions()
-{
-    // @stub
-}
+// CHeroSessions' scalar deleting destructor and implicit destructor promoted
+// to retail VA_COMPGEN claims above.
 
 // E:\gamedcs\array.h:37
 DC_ONLY(0x103054, 0x30)
