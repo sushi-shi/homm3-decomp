@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-27 — the CHeroSessions destructor pair is byte-exact.**
+  Retail's scalar deleting destructor at `0x50ede0` calls the implicit
+  `CHeroSessions` destructor at `0x558350`, then conditionally frees the
+  object. The implicit body installs the `CAutoArray<CDPlaySession>` vtable,
+  deletes every session through virtual `Get`, frees the backing array, and
+  zeros its three bookkeeping fields. That call edge, vtable relocation, and
+  exact candidate topology prove both compiler-generated identities; all 117
+  VC6 bytes and eight control-flow blocks are exact. The synchronized report
+  reaches **2524/3090 functions exact**, **92.94% fuzzy**, and **60.68%
+  executable coverage**.
+
 - **2026-08-27 — the multiplayer player-name key override is byte-exact.**
   Retail `CMultiPlayerWindowEdit::OnKeyPress` at `0x50ed60` suppresses Enter,
   delegates every other key to `textEntryWidget`, and redraws the multiplayer

@@ -2025,10 +2025,12 @@ multiplayerwindow	??0CHotSeatDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x111e20
 multiplayerwindow	??0CMPEdit@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x110760
 multiplayerwindow	??0CMPInputDlg@@QAE@HH@Z	100.0000	100.0000	100.0000	0x110060
 multiplayerwindow	??0TMultiPlayerWindow@@QAE@XZ	80.5858	80.5858	80.5858	0x10e050
+multiplayerwindow	??1CHeroSessions@@UAE@XZ	100.0000	100.0000	100.0000	0x158350
 multiplayerwindow	??1CHotSeatDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1123d0
 multiplayerwindow	??1CMPInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0x1108a0
 multiplayerwindow	??1TMultiPlayerWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x10ee40
 multiplayerwindow	??_G?$CAutoArray@VCDPlaySession@@@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112670
+multiplayerwindow	??_GCHeroSessions@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10ede0
 multiplayerwindow	??_GCHotSeatDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x112540
 multiplayerwindow	??_GCMPInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1109e0
 multiplayerwindow	??_GTMultiPlayerWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10edb0
