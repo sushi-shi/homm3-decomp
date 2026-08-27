@@ -3401,14 +3401,100 @@ long find_all_destinations(hero* current_hero, searchArray* search_array, std::v
     // @stub
 }
 
-// E:\gamedcs\ai_player.cpp:3044
-VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
-long mark_destinations(hero* current_hero, long max_distance, searchArray* search_array, unsigned short* friendly_distances, type_search_type search_type)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// Residual (77.61%): flow-distance 0 after the ==0-arm swap and the
+// j-- reverse walk; the remainder is the ecx<->eax / edx<->ecx rename
+// family (why-reg: schedule aligned) around the two point builds and the
+// SeedPosition argument formation - handle-state, measured 2026-08-27.
+// E:\gamedcs\ai_player.cpp:3044
+// Seeds the hero's own search, then for every OTHER hero of the current
+// player seeds a friendly allied search from that hero's path target (or
+// position when the target is invalid) and folds each visited cell's cost
+// plus the friend's remaining-target cost into the friendly-distance map,
+// clipped to the patrol radius. Returns the danger under the hero's feet.
+VA(0x0042f570, 0x40e)  // anchor-callee + arity, dc 0x32a84
+long mark_destinations(hero* current_hero, long max_distance,
+                       searchArray* search_array,
+                       unsigned short* friendly_distances,
+                       type_search_type search_type)
+{
+    int map_cells = gMapHeight * gMapWidth;
+    searchArray friendly_search;
+    long move_points = current_hero->movePoints;
+    long hero_danger;
+    type_point point;
+    {
+        type_point danger_point;
+        danger_point.x = current_hero->x;
+        danger_point.y = current_hero->y;
+        danger_point.z = current_hero->z;
+        long* danger_zones = search_array->danger_zones;
+        if (danger_zones == 0)
+            hero_danger = 0;
+        else
+            hero_danger = *get_danger_cell(danger_zones, danger_point);
+    }
+    gpAdvManager->advWindow->animate_bottom_view(0);
+    point.x = current_hero->x;
+    point.y = current_hero->y;
+    point.z = current_hero->z;
+    search_array->SeedPosition(current_hero, point, type_point(-1, -1, -1),
+                               max_distance,
+                               (current_hero->flags >> 18) & 1, search_type,
+                               move_points, 0);
+
+    for (int i = 0; i < gpCurrentPlayer->numHeroes; ++i) {
+        hero* friendly = gpGame->GetHero(gpCurrentPlayer->heroes[i]);
+        if (friendly == current_hero)
+            continue;
+        point.x = friendly->x;
+        point.y = friendly->y;
+        point.z = friendly->z;
+        pathCell* friend_cell = search_array->get_cell(point, 0);
+        if (!friend_cell->visited)
+            continue;
+
+        type_point target;
+        target.x = friendly->pathTargetX;
+        target.y = friendly->pathTargetY;
+        target.z = friendly->pathTargetZ;
+        unsigned short extra_cost;
+        if (!target.is_valid()) {
+            target.x = friendly->x;
+            target.y = friendly->y;
+            target.z = friendly->z;
+            extra_cost = 0;
+        } else {
+            extra_cost = friendly->field_041;
+            if (extra_cost > friendly->movePoints)
+                extra_cost = 0;
+            else
+                extra_cost -= friendly->movePoints;
+        }
+
+        NewmapCell* target_cell = gpAdvManager->GetCell(target);
+        gpAdvManager->advWindow->animate_bottom_view(0);
+        friendly_search.SeedPosition(
+            friendly, target, type_point(-1, -1, -1),
+            friendly->maxMovePoints,
+            target_cell->GroundSet == eTerrainWater, const_AI_allied_search,
+            friendly->maxMovePoints, 0);
+
+        for (int j = static_cast<int>(friendly_search.visited_points.size());
+             j-- != 0;) {
+            pathCell* visited = friendly_search.visited_points[j];
+            if (current_hero->is_in_patrol_radius(visited->point)) {
+                int index = visited->point.z * map_cells
+                    + visited->point.y * gMapWidth + visited->point.x;
+                unsigned short cost = visited->cost + extra_cost;
+                if (cost < friendly_distances[index])
+                    friendly_distances[index] = cost;
+            }
+        }
+    }
+    return hero_danger;
+}
 
 // The per-TU inline copy every retail reader expands (game.cpp:131 is the
 // same pattern); ai_player.obj's own selected COMDAT is the unclaimed
