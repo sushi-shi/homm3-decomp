@@ -3699,7 +3699,7 @@ VA(0x005d1130, 0x96)  // anchor-callee 0x5d0e00 TGarrisonWindow ctor, dc 0x17320
 void DoEventGarrison(hero* inHero, garrison* thisGarrison)
 {
     int owner = thisGarrison->playerOwner;
-    if (!thisGarrison->pad_3c)
+    if (!thisGarrison->removableTroops)
         owner = -1;
     TGarrisonWindow garrisonWindow(inHero, owner, &thisGarrison->garrisonArmy);
     garrisonWindow.DoModal(0);
