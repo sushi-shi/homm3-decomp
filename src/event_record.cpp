@@ -17,23 +17,20 @@ inline void boat::obscure_cell()
     type_obscuring_object::obscure_cell(BOAT, id);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\event_record.cpp:36
-DC_ONLY(0x8c624, 0x34)
-void type_event_record::type_event_record()
+// E:\gamedcs\event_record.cpp:36. NO RETAIL BODY of its own - every
+// construction site expands it - but the expansions prove the whole body:
+// the vptr store followed by `mov dl,byte ptr [gNetLocalGamePos] /
+// mov [this+4],dl`, i.e. the acting seat truncated into the signed byte.
+// type_record_shroud::create (0x49bc30) is the clearest witness.
+type_event_record::type_event_record()
 {
-    // @stub
+    player_id = gNetLocalGamePos;
 }
 
-// E:\gamedcs\event_record.cpp:44
-DC_ONLY(0x8c658, 0x20)
-void type_event_record::~type_event_record()
-{
-    // @stub
-}
-
-#endif  // @carcass
+// Slot 0 of the base vtable at 0x63de74. The standard VC6 wrapper, except
+// that the destructor below is small enough for /Ob2 to expand into it -
+// hence the inline `mov [esi],&vftable` where the derived wrappers call.
+VA_COMPGEN(0x0049a5b0, 0x23, SCALAR_DELETING_DTOR, type_event_record)
 
 // E:\gamedcs\event_record.cpp:51
 VA(0x0049a5e0, 0x1D)  // anchor-vtable, dc 0x8c678
@@ -887,22 +884,37 @@ void type_record_player_death::undo()
     // @stub
 }
 
-// E:\gamedcs\event_record.cpp:912
+// E:\gamedcs\event_record.cpp:912. NO RETAIL BODY: create expands it.
 DC_ONLY(0x8dc24, 0x8C)
 void type_record_shroud::type_record_shroud()
 {
     // @stub
 }
 
+#endif  // @carcass
+
+// Slot 0 of type_record_shroud's retail vtable (0x63df7c) and the only
+// scalar-deleting wrapper in this compiland that is NOT the ten-way ICF fold
+// at 0x49a620, because the change vector gives the class a real destructor.
+VA_COMPGEN(0x0049bbd0, 0x21, SCALAR_DELETING_DTOR, type_record_shroud)
+
+// The implicit destructor the wrapper above calls: the change vector's
+// _Tidy inlined (`operator delete(_First)` then the three-pointer clear)
+// followed by the base's vptr store.
+VA_COMPGEN(0x0049bc00, 0x2C, IMPLICIT_DTOR, type_record_shroud)
+
 // E:\gamedcs\event_record.cpp:919
-DC_ONLY(0x8dcb0, 0x24)
+// The only factory in the compiland with a retail body. The record is built
+// entirely in line: base vptr, the acting seat's byte, the vector's empty
+// allocator copied out of an UNINITIALISED stack byte, the three null
+// pointers, then the derived vptr.
+VA(0x0049bc30, 0x42)  // anchor-vtable (constructs 0x63df7c), dc 0x8dcb0
 type_event_record* type_record_shroud::create()
 {
-    // @stub
+    return new type_record_shroud();
 }
 
 // E:\gamedcs\event_record.cpp:927
-#endif  // @carcass
 VA(0x0049bc80, 0x6)  // anchor-vtable, dc 0x8dcd4
 type_event_record_type type_record_shroud::get_type()
 {
