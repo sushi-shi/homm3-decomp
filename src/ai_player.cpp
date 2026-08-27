@@ -1320,16 +1320,111 @@ void type_AI_player::trade_resources(const int* cost, long number)
     do_resource_trade(supply);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:1474
+// Prices whether the surplus resources can cover every shortfall: markets
+// (built, or buildable while wood production holds) set the trade
+// efficiency; base_cost[j]/unit_cost[j] accumulate, per trade_qty
+// candidate, the market value of what candidate j still lacks and its
+// per-unit price; market_value totals what selling the surplus earns. The
+// largest affordable candidate is refined by whole units of unit_cost and
+// the supply shortfalls are relaxed to what that quantity leaves out.
+// Residual (81.35%): the call multiset is 2 apart - retail folds the
+// (_M < size()) compare/max of base_cost's fresh-vector insert (its size()
+// inlines and folds against the ctor constants; ours stays the out-of-line
+// COMDAT call, +2 size calls) - and the register story downstream of the
+// players[team] address: retail computes it ONCE into the [ebp-0x18] temp,
+// reloads it per use, and rebases the same temp by +0x9c as the resources
+// walker, with markets in EDI / flag in BL; every spelling tried gives the
+// address a callee-saved register instead. Tried and rejected: named
+// playerData* player (78.94/79.42 - grabs EDI), markets/flag declared
+// first (byte-flat on the grab), hoisted int town_index (79.42), unnaming
+// efficiency (82.79 fuzzy but byte-FALSE: it moves the table read into
+// the loop as fmul dword, where retail flds once into the named qword
+// home - do not resurrect), why-reg volatile proposals (doctrine).
 VA(0x0042a580, 0x5BE)  // retail link order + arity, dc 0x305b4
-unsigned char type_AI_player::can_trade_resources(const int* cost, int* supply, std::vector<long,std::allocator<long>* trade_qty)
+bool type_AI_player::can_trade_resources(const int* cost, int* supply,
+                                         std::vector<long>& trade_qty)
 {
-    // @stub
-}
+    long markets = 0;
+    unsigned char can_build_market = 0;
+    if (supply[0] >= 0
+        && gpGame->players[team].turnProductionResource[0] > 0)
+        can_build_market = 1;
 
-#endif  // @carcass
+    for (int town_index = 0; town_index < gpGame->players[team].numTowns;
+         ++town_index) {
+        town* current_town = gpGame->GetTown(
+            gpGame->players[team].townIds[town_index]);
+        if ((current_town->active & bitNumber[MARKETPLACE_ID])
+            || (can_build_market
+                && current_town->can_build(MARKETPLACE_ID)))
+            ++markets;
+    }
+
+    markets = _cpp_min(markets, 10L);
+    if (markets == 0)
+        return false;
+    double efficiency = fTradingPostEfficency[markets];
+    long market_value = 0;
+
+    std::vector<long> base_cost;
+    std::vector<long> unit_cost;
+    base_cost.insert(base_cost.begin(), trade_qty.size(), 0);
+    unit_cost.insert(unit_cost.begin(), trade_qty.size(), 0);
+
+    int i;
+    for (i = 0; i < 7; ++i) {
+        if (supply[i] > 0) {
+            market_value = static_cast<long>(
+                get_market_value(game_resource_from_int(i)) * supply[i]
+                * efficiency + market_value);
+        } else if (supply[i] < 0) {
+            long on_hand = gpGame->players[team].resources[i];
+            long value = get_market_value(game_resource_from_int(i));
+            for (unsigned int j = 0; j < trade_qty.size(); ++j) {
+                if (trade_qty[j] * cost[i] > on_hand) {
+                    base_cost[j] += (trade_qty[j] * cost[i] - on_hand)
+                        * value;
+                    unit_cost[j] += cost[i] * value;
+                }
+            }
+        }
+    }
+
+    int j;
+    for (j = static_cast<int>(base_cost.size()) - 1; j >= 0; --j) {
+        if (base_cost[j] <= market_value)
+            break;
+    }
+    if (j < 0)
+        return false;
+
+    if (j == static_cast<int>(trade_qty.size()) - 1)
+        return true;
+
+    long qty = trade_qty[j];
+    if (j + 1 < static_cast<int>(trade_qty.size())
+        && trade_qty[j] + 1 < trade_qty[j + 1]) {
+        qty += (market_value - base_cost[j]) / unit_cost[j];
+        if (qty >= trade_qty[j + 1])
+            qty = trade_qty[j + 1] - 1;
+    }
+
+    long remaining = trade_qty.back() - qty;
+    for (int k = 0; k < 7; ++k) {
+        if (supply[k] < 0) {
+            supply[k] += cost[k] * remaining;
+            if (supply[k] > 0)
+                supply[k] = 0;
+        }
+    }
+    // Retail calls ~vector<long> for both locals at this exit only, while
+    // expanding the teardown at the two earlier ones - the return-statement
+    // pin reaches the scope-exit destructors of function-scoped locals.
+#pragma inline_depth(0)
+    return true;
+#pragma inline_depth()
+}
 
 // E:\gamedcs\ai_player.cpp:1587
 VA(0x0042ab40, 0xD1)  // dc 0x309d4
@@ -3898,8 +3993,8 @@ void AI_build_ship(const hero* our_hero, long x, long y, long z)
     player->resources[WOOD] -= 10;
 }
 
-// Local prototypes, the events.cpp pattern: value_of_hiring's body is the
-// carcass VA stub below (retail 0x431bd0); AI_resource_cost is philai.obj's
+// Local prototypes, the events.cpp pattern: value_of_hiring's body follows
+// consider_hiring below (retail 0x431bd0); AI_resource_cost is philai.obj's
 // long-id overload (philai.cpp:1040); CanBuy is castle.h's free checker.
 long value_of_hiring(town* current_town, hero* candidate,
                      searchArray* search_array);
@@ -3996,21 +4091,113 @@ unsigned char consider_hiring(long player_id, hero* candidate)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:4320
 // value_of_hiring (dc 0x34fb8, 1094 B static) grew to retail's 1611 B.
 // Double anchor: consider_hiring calls it at 0x432bce with (town ECX,
 // candidate EDX, &searchArray stacked) - the DC three-argument signature -
-// and its own body calls AI_arrange_army at 0x431d9d. Body is the
-// successor's first target in this unit.
+// and its own body calls AI_arrange_army at 0x431d9d (inside the expanded
+// do_swap). Simulates hiring the candidate at this town: army and funds are
+// staged on copies, the candidate is teleported onto the town square, and
+// find_all_destinations prices what the new hero could reach - shared
+// against every own hero whose cell the search touched.
+// Residual (99.95%): every instruction, branch and the frame agree; the
+// delta is the scalar slot-homing permutation {player_id,-0x1c <-> i,-0x14}
+// (their colored partners hero_index/heroes_touched follow) plus the
+// point-temp/monster_cell pair {-0x24/-0x28 <-> -0x28/-0x20}, and the EH
+// unwind-table push addend (reloc addend, not a state count). Tried and
+// rejected: declaration-order hoists (byte-flat, twice), unifying the three
+// loop indices into one int i (98.20 - flips the loop-3 bitfield RMW to
+// memory form), block-scoping cell/monster_cell per loop (94.40).
 VA(0x00431bd0, 0x64b)  // anchor-callee (consider_hiring 0x432bce + AI_arrange_army 0x431d9d), dc 0x34fb8
-long value_of_hiring(town* current_town, hero* candidate, searchArray* search_array)
+long value_of_hiring(town* current_town, hero* candidate,
+                     searchArray* search_array)
 {
-    // @stub
-}
+    short player_id = current_town->owner;
+    playerData* player = &gpGame->players[current_town->owner];
+    armyGroup hero_army = candidate->army;
+    armyGroup town_army = static_cast<const town*>(current_town)->get_army();
+    type_AI_creature_purchaser purchaser(player_id, current_town);
 
-#endif  // @carcass
+    candidate->turnExperienceToRVRatio = 0;
+    candidate->owner = static_cast<char>(player_id);
+    int resources[7];
+    memcpy(resources, player->resources, sizeof(resources));
+    short population[14];
+    memcpy(population, current_town->population, sizeof(population));
+    player->resources[GOLD] -= gHeroGoldCost;
+
+    unsigned char has_alliance =
+        candidate->IsWieldingArtifact(ARTIFACT_ANGELIC_ALLIANCE)
+        || player->hasGivenArtifact(ARTIFACT_ANGELIC_ALLIANCE);
+    purchaser.do_swap(candidate, &town_army, 0, has_alliance);
+    purchaser.do_purchase(&candidate->army, candidate->GetMorale(0, 0, 1),
+                          &town_army, player->resources, 0, has_alliance);
+
+    std::vector<HeroDestination> destinations;
+    candidate->x = current_town->mapX;
+    candidate->y = current_town->mapY;
+    candidate->z = current_town->mapZ;
+    find_all_destinations(candidate, search_array, &destinations, 0x7fff,
+                          1, 0, 0);
+
+    std::vector<pathCell*> monsters;
+    long total_value = 0;
+    HeroDestination destination;
+    pathCell* monster_cell;
+    unsigned int i;
+    for (i = 0; i < destinations.size(); ++i) {
+        destination = destinations[i];
+        pathCell* cell = search_array->get_cell(destination.point, 0);
+        NewmapCell* map_cell = gpAdvManager->GetCell(destination.point);
+        if (map_cell->type == HERO && map_cell->is_trigger
+            && gpGame->GetHero(map_cell->extraInfo)->owner == player_id) {
+            cell->barrier_value = destination.value;
+        } else if (cell->barrier_value < 0
+                   && cell->monster.x < 255) {
+            monster_cell = search_array->get_cell(cell->monster, 0);
+            if (monster_cell->visited) {
+                monsters.push_back(monster_cell);
+                monster_cell->visited = 0;
+            }
+            monster_cell->barrier_value += destination.value;
+        } else {
+            total_value += destination.value;
+        }
+    }
+    for (i = 0; i < monsters.size(); ++i) {
+        monster_cell = monsters[i];
+        if (monster_cell->barrier_value > 0)
+            total_value += monster_cell->barrier_value;
+    }
+
+    long heroes_touched = 1;
+    long best_hero_value = 0;
+    for (int hero_index = 0; hero_index < player->numHeroes; ++hero_index) {
+        hero* other = gpGame->GetHero(player->heroes[hero_index]);
+        if (other->z == candidate->z) {
+            pathCell* cell = search_array->get_cell(
+                type_point(other->x, other->y, other->z), 0);
+
+            if (cell->visited) {
+                ++heroes_touched;
+                long value = cell->barrier_value;
+                if (cell->monster.x < 255) {
+                    monster_cell = search_array->get_cell(cell->monster, 0);
+                    if (monster_cell->barrier_value < 0)
+                        value += monster_cell->barrier_value;
+                }
+                if (value > best_hero_value)
+                    best_hero_value = value;
+            }
+        }
+    }
+
+    candidate->owner = -1;
+    candidate->army = hero_army;
+    memcpy(player->resources, resources, sizeof(resources));
+    memcpy(current_town->population, population, sizeof(population));
+    return (best_hero_value + total_value) / heroes_touched;
+}
 
 // E:\gamedcs\ai_player.cpp:5050
 // Reattributed from the DC ctor (0x361c8): a VC6 ctor returns this in eax
