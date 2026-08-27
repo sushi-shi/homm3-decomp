@@ -62,6 +62,7 @@ public:
 // serialized. undo (0x49a910) restores source, +0x10 and re-obscures the cell.
 class type_record_move_hero : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -79,6 +80,7 @@ public:
 // get_type and replay differ.
 class type_record_teleport : public type_record_move_hero {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
 };
@@ -88,6 +90,7 @@ public:
 // undo reads old_owner at +0x0d and restores mines[id].playerOwner.
 class type_record_claim_mine : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -103,6 +106,7 @@ public:
 // towns[id].owner; undo restores old_owner from the following byte.
 class type_record_claim_town : public type_record_claim_mine {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
@@ -115,6 +119,7 @@ public:
 // default them to {1,0,-1,-1}.
 class type_record_hide_boat : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -135,6 +140,7 @@ public:
 // and that is what types them.
 class type_record_show_boat : public type_record_hide_boat {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -149,6 +155,7 @@ public:
 // object's id, its extra-info word and its object-list index.
 class type_record_erase : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -165,6 +172,7 @@ public:
 // hero was a town garrison, in which case undo must not put it on the map.
 class type_record_hide_hero : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -179,6 +187,7 @@ public:
 
 class type_record_player_death : public type_event_record {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
@@ -190,6 +199,7 @@ public:
 // undo reads the second pair.
 class type_record_show_hero : public type_record_hide_hero {
 public:
+    static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
