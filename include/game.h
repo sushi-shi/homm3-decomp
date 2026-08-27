@@ -2346,7 +2346,24 @@ public:
     TCreatureType GetRandomMonster(int minLevel, int maxLevel);  // 0x4c92c0
     void ProcessRandomObjects();                                 // 0x4c9dd0
     void record_show_hero(hero* who, signed char player, type_point point,
-                          unsigned char reset);
+                          unsigned char reset);                  // 0x49cb20
+#ifdef HOMM3_EVENT_RECORD_DECLS
+    // The four remaining recorders, all located by the same vtable-store
+    // evidence as their claimed siblings: each expands `new type_record_X`
+    // in line and the class it constructs is named by the derived vftable
+    // it stores last (0x63deec / 0x63df34 / 0x63de8c / 0x63dea4). Arity is
+    // retail's own `ret` immediate - 0xc, 0xc, 0xc, 8. GATED to
+    // event_record.obj until a real caller elsewhere needs one: game.h
+    // rides in every compiland's closure and this header's declarator
+    // population is codegen-sensitive.
+    void record_hide_boat(boat* current_boat, unsigned char occupied,
+                          int occupying_hero);                   // 0x49c560
+    void record_hide_hero(hero* who, char new_owner,
+                          unsigned char town_garrison);          // 0x49c720
+    void record_move(hero* who, int direction,
+                     type_point destination);                    // 0x49cd50
+    void record_teleport(hero* who, type_point destination);     // 0x49cf50
+#endif
     // Retail-only 0x4f32a0 / 0x4f3540, the standalone morale and luck
     // describe dialogs THeroScreenWindow::WindowHandler opens for widgets
     // 0x74 and 0x75. Both are `ret 8` taking (hero*, dialogType); the

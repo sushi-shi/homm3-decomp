@@ -68,6 +68,12 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
+    // Retail's record_move (0x49cd50) expands this: the hero, its CURRENT
+    // facing byte snapshotted into restore_flag, the step direction, the
+    // hero's own map point into source and the caller's into destination.
+    type_record_move_hero(hero* who, char _direction, type_point _destination);
+    type_record_move_hero() {}
+
     hero* current_hero;          // +0x08
     type_point source;           // +0x0c - hero position before the move
     signed char restore_flag;    // +0x10 - hero+0x47 snapshot (not serialized)
@@ -80,6 +86,12 @@ public:
 // get_type and replay differ.
 class type_record_teleport : public type_record_move_hero {
 public:
+    // record_teleport (0x49cf50) reads hero+0x47 TWICE - once at the call
+    // site for this argument and once inside the base body for
+    // restore_flag - which is what proves the facing is forwarded here.
+    type_record_teleport(hero* who, type_point _destination);
+    type_record_teleport() {}
+
     static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -97,6 +109,9 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
+    type_record_claim_mine(long _id, char _new_owner);
+    type_record_claim_mine() {}
+
     int id;                 // +0x08
     signed char new_owner;  // +0x0c
     signed char old_owner;  // +0x0d
@@ -106,6 +121,9 @@ public:
 // towns[id].owner; undo restores old_owner from the following byte.
 class type_record_claim_town : public type_record_claim_mine {
 public:
+    type_record_claim_town(long _id, char _new_owner);
+    type_record_claim_town() {}
+
     static type_event_record* create();
     virtual type_event_record_type get_type() OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
@@ -125,6 +143,13 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
+    // The +0xc/+0x10 pair is the state replay installs and comes from the
+    // caller; the +0xd/+0x14 pair is the boat's CURRENT state, snapshotted
+    // here for undo.
+    type_record_hide_boat(boat* _current_boat, unsigned char _occupied,
+                          int _occupying_hero);
+    type_record_hide_boat() {}
+
     boat* current_boat;      // +0x08
     unsigned char field_0c;  // +0x0c - flag (default 1)
     unsigned char field_0d;  // +0x0d - flag (default 0)
@@ -146,6 +171,9 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
+    type_record_show_boat(boat* _current_boat, type_point _location);
+    type_record_show_boat() {}
+
     type_point location;           // +0x18 - replay destination
     type_point previous_location;  // +0x1c - restored by undo
 };
@@ -161,6 +189,10 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
+    type_record_erase(type_point _location, long _object_id,
+                      unsigned long _extra_info, long _object_index);
+    type_record_erase() {}
+
     type_point location;         // +0x08
     int object_id;               // +0x0c
     unsigned int extra_info;     // +0x10
@@ -179,6 +211,10 @@ public:
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
 
+    type_record_hide_hero(hero* who, char _new_owner,
+                          unsigned char _town_garrison);
+    type_record_hide_hero() {}
+
     hero* current_hero;          // +0x08
     signed char new_owner;       // +0x0c
     signed char prev_owner;      // +0x0d
@@ -191,6 +227,8 @@ public:
     virtual type_event_record_type get_type() OVERRIDE;
     virtual unsigned char load(TAbstractFile* infile, int version) OVERRIDE;
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
+    type_record_player_death() {}
+
     unsigned char extra;  // +0x08 - second serialized byte (role TBD)
 };
 
@@ -205,6 +243,10 @@ public:
     virtual unsigned char save(TAbstractFile* outfile) OVERRIDE;
     virtual void replay(unsigned char draw) OVERRIDE;
     virtual void undo() OVERRIDE;
+    type_record_show_hero(hero* who, char _new_owner, type_point _location,
+                          unsigned char _on_boat);
+    type_record_show_hero() {}
+
     type_point location;          // +0x10 - replay destination
     type_point previous_location; // +0x14 - restored by undo
     unsigned char on_boat;        // +0x18 - replay state
