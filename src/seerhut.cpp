@@ -1288,22 +1288,16 @@ void type_artifact_quest::DoProgressDialog()
 VA(0x0056fcb0, 0x1EE)  // anchor-vtable 0x641878 slot 11 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::Load(TAbstractFile* file, int version)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9482%): our frame is 0x20 against retail's 0x1c and every
-    // dword local sits 4 lower. The missing fact is decoded: retail reads the
-    // byte into [ebp-0x10] and stores the running loop index straight back
-    // into THAT SAME slot, so `count` and the loop counter are one variable,
-    // not two. Spelling the merge (`for (count &= 0xff; count > 0; --count)`)
-    // does give retail's 0x1c frame exactly - and then lands the merged local
-    // at [ebp-0xc] where retail has a push_back temp, pushing one temp down
-    // and transposing ecx/edx through the whole grow path: 99.9482 -> 97.3938.
-    // Retail carries TWO temps above the counter (-0x8 and -0xc) where our
-    // expansion makes only one, so the residual after the merge is a
-    // temp-allocation-order divergence inside the inlined insert, not the
-    // loop. Keeping the two-variable form, which is closer.
-    for (int i = count & 0xff; i > 0; --i) {
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    // The raw byte and normalized loop counter have non-overlapping source
+    // lifetimes, allowing VC6 to reuse their stack home while retaining the
+    // retail temporary order inside the inlined vector insertion.
+    for (; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
@@ -1316,13 +1310,13 @@ void type_artifact_quest::Load(TAbstractFile* file, int version)
 VA(0x0056fea0, 0x1FA)  // anchor-vtable 0x641878 slot 12 + TAbstractFile::Read shape, retail-only
 void type_artifact_quest::LoadFromMap(TAbstractFile* file)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9485%): same merged-counter class as slot 11 above, and
-    // the same measurement - spelling the merge fixes the frame and costs
-    // 2.54 points to the temp reshuffle.
-    for (int i = count & 0xff; i > 0; --i) {
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    for (; i > 0; --i) {
         short id;
 
         file->Read(&id, sizeof(id));
@@ -1470,11 +1464,9 @@ void type_creature_quest::TakePayment(hero* current_hero)
 // quest count. The display keeps the full required count (not the deficit),
 // both in the localized text fragment and in the packed creature picture.
 //
-// Residual (97.4706%): all 33 CFG blocks and every branch target agree; 32
-// block instruction counts are exact. The sole size difference is the same
-// quest-text copy schedule as the artifact proposal: this compile folds the
-// row offset into two memory operands where retail materializes one add.
-// Naming the source reference is byte-flat, so retain the direct expression.
+// Retail computes the five-column quest group once before copying its progress
+// string. Keeping that group pointer explicit preserves the materialized row
+// addition used by the retail string-copy schedule.
 // E:\gamedcs\seerhut.cpp
 VA(0x00570880, 0x2F8)  // anchor-vtable 0x6418b4 slot 4 + creature picture class, retail-only
 void type_creature_quest::DoProposalDialog(hero* current_hero)
@@ -1501,7 +1493,8 @@ void type_creature_quest::DoProposalDialog(hero* current_hero)
     }
 
     if (progressText.length() == 0) {
-        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        const std::string* texts = quest_texts();
+        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
             join_quest_requirements(requirements).c_str());
@@ -1568,15 +1561,15 @@ void type_creature_quest::DoProgressDialog()
 VA(0x00570e60, 0x208)  // anchor-vtable 0x6418b4 slot 11 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::Load(TAbstractFile* file, int version)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9310%): frame 0x28 against retail's 0x24 - the same
-    // merged-counter fact the artifact quest's readers carry. Retail masks
-    // the byte in place at [ebp-0xc] and reuses that slot for the running
-    // index; spelling the merge gives the 0x24 frame and costs 2.44 points
-    // to the temp reshuffle inside the inlined push_back.
-    int i = count & 0xff;
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
+    // The byte-read local expires before the loop starts, allowing VC6 to
+    // reuse its stack home for the normalized loop counter without changing
+    // the inlined vector insertion's temporary ordering.
     while (i--) {
         int type;
         int number;
@@ -1601,11 +1594,12 @@ void type_creature_quest::Load(TAbstractFile* file, int version)
 VA(0x00571070, 0x20A)  // anchor-vtable 0x6418b4 slot 12 + TAbstractFile::Read shape, retail-only
 void type_creature_quest::LoadFromMap(TAbstractFile* file)
 {
-    int count;
-
-    file->Read(&count, sizeof(unsigned char));
-    // Residual (99.9307%): same merged-counter class as slot 11 above.
-    int i = count & 0xff;
+    int i;
+    {
+        int count;
+        file->Read(&count, sizeof(unsigned char));
+        i = count & 0xff;
+    }
     while (i--) {
         int type;
         int number;
@@ -1774,28 +1768,21 @@ void type_resource_quest::TakePayment(hero* current_hero)
 // (player treasury, quest price, localized resource name) into pointers, then
 // builds both the missing-requirement strings and their dialog pictures.
 //
-// Residual (87.1048%): all 25 blocks, all 12 branches and the 0x6c frame
-// agree. Keeping the dialog record at function scope is load-bearing: it
-// prevents the later text-format local from reusing the record's two slots
-// and recovers retail's complete temporary layout (86.9301 -> 87.1048).
-// What remains is register homing: our VC6 promotes `i` in EBX and homes
-// `this` at -0x10; retail keeps `this` in EBX and recycles the dead hero
-// parameter slot for `i`, moving eleven otherwise-corresponding blocks.
-// for/while forms, scalar declaration order and an explicit `this` alias are
-// byte-flat; an expression-temporary format string breaks the CFG and falls
-// to 80.2795%. Retain the source-shaped lifetime rather than fake the homes.
+// Computing the five-column quest group once fixes the former function-wide
+// register cascade. With that lookup shape in place, keeping the loop index in
+// the for initializer gives VC6 retail's parameter-home reuse; all 25 blocks,
+// all 12 branches and the 0x6c frame then agree exactly.
 VA(0x00571840, 0x29D)  // anchor-vtable + player-resource stride, retail-only
 void type_resource_quest::DoProposalDialog(hero* current_hero)
 {
     std::vector<std::string> requirements;
     std::string text;
     std::vector<type_dialog_resource> dialogResources;
-    int i = 0;
     type_dialog_resource resource;
     long* playerResources =
         gpGame->players[current_hero->owner].resources;
 
-    while (i <= 6) {
+    for (int i = 0; i <= 6; ++i) {
         if (playerResources[i] < resources[i]) {
             text = format_string(
                 DATA_COMPGEN(0x006778a4, resourceQuantityFormat, "%d %s"),
@@ -1806,11 +1793,11 @@ void type_resource_quest::DoProposalDialog(hero* current_hero)
             resource.qualifier = resources[i];
             dialogResources.push_back(resource);
         }
-        ++i;
     }
 
     if (progressText.length() == 0) {
-        std::string textFormat = quest_text(QUEST_TEXT_PROGRESS);
+        const std::string* texts = quest_texts();
+        std::string textFormat = texts[QUEST_TEXT_PROGRESS];
         text = format_string(
             textFormat.c_str(),
             join_quest_requirements(requirements).c_str());
