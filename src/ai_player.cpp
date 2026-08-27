@@ -3026,9 +3026,57 @@ void AI_consolidate_army(armyGroup* current_army)
     }
 }
 
-// These two helpers are DC-roster neighbours of split_armies. Their bodies
-// remain in the carcass, but retail labels are sufficient call targets.
-void AI_arrange_army(armyGroup* current_army);
+// E:\gamedcs\ai_player.cpp:2718
+// Empties the army into a vector of (type, speed, amount) records - the
+// sort key is akCreatureTypeTraits[type].speed (traits+0x50) - sorts
+// ascending, then deals shooters from the fast end into slots 0/2/4/6
+// (wrapping to 1) and finally packs the non-shooters into the first free
+// slots with a persistent forward scan.
+VA(0x0042d8e0, 0x239)  // anchor-callee (do_swap tail 0x42c485, buy_creatures 0x42bbae, split_armies x2, 0x431d9d), dc 0x32430
+void AI_arrange_army(armyGroup* current_army)
+{
+    std::vector<type_creature_value> values;
+    // One function-scoped record serves all three passes: push_back takes
+    // its address in the collect pass, so the later per-iteration copies
+    // materialise all three fields into the same frame slots as retail.
+    type_creature_value entry;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        TCreatureType type = current_army->armyTypes[i];
+        if (type != CREATURE_NONE) {
+            entry.type = type;
+            entry.amount = static_cast<short>(current_army->numTroops[i]);
+            entry.value = akCreatureTypeTraits[type].speed;
+            values.push_back(entry);
+            current_army->Dismiss(i);
+        }
+    }
+    std::sort(values.begin(), values.end());
+
+    int slot = 0;
+    for (int shooter = static_cast<int>(values.size()) - 1; shooter >= 0;
+         --shooter) {
+        entry = values[shooter];
+        if (akCreatureTypeTraits[entry.type].attributes & CTA_SHOOTER) {
+            current_army->Add(entry.type, entry.amount, slot);
+            slot += 2;
+            if (slot >= armyGroup::ARMY_GROUP_SLOT_COUNT)
+                slot = 1;
+        }
+    }
+
+    int free_slot = 0;
+    for (unsigned int walker = 0; walker < values.size(); ++walker) {
+        entry = values[walker];
+        if (!(akCreatureTypeTraits[entry.type].attributes & CTA_SHOOTER)) {
+            while (current_army->armyTypes[free_slot] != CREATURE_NONE)
+                ++free_slot;
+            current_army->Add(entry.type, entry.amount, free_slot);
+        }
+    }
+}
+
+// split_army is split_armies' DC-roster neighbour; its body remains in the
+// carcass, but the retail label is a sufficient call target.
 long split_army(armyGroup* current_army, short index, short limit,
                 short open_slots);
 
