@@ -621,12 +621,13 @@ public:
 SIZE(town, 360);
 
 // Retail 0x526d20, a 30-byte /Gr fastcall shim on the computer-player
-// side: it scales its first argument by 152 into the .bss array at
-// 0x692950 and tail-calls 0x42a470 with the other two. town::buy_building
-// (0x5bf3c0) is the only reader this tree has - it runs the shim for a
-// non-human owner before charging the cost row - and no roster attests a
-// name, so this keeps a house ordinal placeholder (the general-text
-// precedent). Owner TU unlocated; declared, not claimed.
+// side: it routes the cost row through the owning AI player's
+// trade_resources. town::buy_building (0x5bf3c0) is the only reader -
+// it runs the shim for a non-human owner before charging the row - and
+// no roster attests a name, so this keeps a house ordinal placeholder
+// (the general-text precedent). CLAIMED AND DEFINED in src/philai.cpp
+// (exact, 2026-08-27): the body sits in philai's span between the
+// AI_resource_cost pair and the spellvalue constructor.
 void Unnamed526d20(int playerId, int* costs, int flag);
 
 // The 1i64 << n building-bit table every mask builder indexes (DC
