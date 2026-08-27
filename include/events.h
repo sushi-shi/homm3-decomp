@@ -49,6 +49,10 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_ARTIFACT_COST_2000 = 5,
     ADV_EVENT_TEXT_ARTIFACT_COST_2500 = 6,
     ADV_EVENT_TEXT_ARTIFACT_COST_3000 = 7,
+    // PayForArtifact (0x49ed50): the affordability refusal followed by
+    // the line shown when the player declines the offered artifact.
+    ADV_EVENT_TEXT_ARTIFACT_CANT_AFFORD = 12,
+    ADV_EVENT_TEXT_ARTIFACT_DECLINED = 13,
     // The four "one permanent primary skill, once per hero" objects, and
     // each one is a PAIR: the reward line, then the already-visited line
     // straight after it. The rows land where the alphabet puts each

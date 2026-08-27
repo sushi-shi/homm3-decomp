@@ -1780,6 +1780,7 @@ public:
     // caller target at 0x5a3700 with (army*, hex).
     unsigned char is_valid_teleport(const army* this_army, long new_hex);
     unsigned char valid_wall_target(TWallTargetId wall);       // 0x476440
+    unsigned char automate_catapult();                         // 0x473c00
     // 0x474bf0. `ret 4` proves the retail body takes the acting stack
     // that the DC roster's nullary prototype omits; the body reaches
     // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
@@ -2372,6 +2373,7 @@ public:
     void ResetCycleTimers();
     void ResetMouse();
 #ifdef HOMM3_COMMAND_GRID_VIEW
+    unsigned char automate_first_aid_tent();
     void ResetRound();
     void auto_resolve_combat();
     int CheckWin(message* msg);

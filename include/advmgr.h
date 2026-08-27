@@ -240,6 +240,7 @@ union ExtraInfoUnion {
     void SetWagon(enum EGameResource resource, short amount);
     void SetWagon(int artifact);
     void set_witch_skill(int skill);
+    enum EGameResource GetArtifactResourceCost() const;
 
     // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
     // GetLeanToAmount is decorated `short` and that WIDTH is what makes
@@ -1505,10 +1506,12 @@ public:
                       bool human_player);
     void FightForArtifact(class hero* current_hero, NewmapCell* cell,
                           type_point point, bool human_player);
+private:
     void PayForArtifact(class hero* current_hero, NewmapCell* cell,
                         type_point point, const char* dialog_text,
                         short gold_cost, short resource_cost,
                         bool human_player);
+public:
     void DoArtifactSkillRequirement(class hero* current_hero,
                                     NewmapCell* cell, type_point point,
                                     int skill, const char* dialog_text,
